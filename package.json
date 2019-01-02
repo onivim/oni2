@@ -1,0 +1,32 @@
+{
+  "name": "Oni2",
+  "version": "0.2.0",
+  "description": "Lightweight code editor",
+  "license": "MIT",
+  "esy": {
+    "build": "refmterr dune build -p Oni2",
+    "buildsInSource": "_build"
+  },
+  "dependencies": {
+    "ocaml": "~4.6.0",
+    "@esy-ocaml/reason": "*",
+    "@opam/ocamlbuild": "*",
+    "revery": "*",
+    "flex": "^1.2.1",
+    "@opam/msgpck": "*",
+    "@opam/dune": "*",
+    "@opam/lwt": "*",
+    "@opam/camomile": "^1.0.1",
+    "@opam/zed": "1.6",
+    "rench": "*"
+  },
+  "resolutions": {
+    "@esy-ocaml/reason": "github:facebook/reason#d5a26ac",
+    "revery": "github:bryphe/revery#080288909e1a0d1cbf760290b33112705bf6198d",
+    "rench": "github:bryphe/rench#fba6966"
+  },
+  "devDependencies": {
+    "ocaml": "~4.6.0",
+    "@opam/merlin": "*"
+  }
+}
