@@ -8,6 +8,9 @@ open Revery;
 open Revery.Core;
 open Revery.UI;
 
+open CamomileLibraryDefault.Camomile;
+open Zed_utf8;
+
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -22,12 +25,24 @@ let init = app => {
   /* Set up some styles */
   let textHeaderStyle =
     Style.make(
-      ~backgroundColor,
       ~color=Colors.white,
       ~fontFamily="FiraCode-Regular.ttf",
       ~fontSize=14,
       (),
     );
+
+  /* Set up some styles */
+  let fontAwesomeStyle =
+    Style.make(
+      ~color=Colors.white,
+      ~fontFamily="FontAwesome5FreeRegular.otf",
+      ~fontSize=14,
+      (),
+    );
+
+
+  let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
+
 
   let render = () => {
     <view
@@ -42,7 +57,9 @@ let init = app => {
             ~alignItems=LayoutTypes.AlignCenter,
             (),
         )}>
-        <text style=textHeaderStyle>{"Hello, World!"}</text>
+        <text style=fontAwesomeStyle>{fontAwesomeIcon}</text>
+        <text style=textHeaderStyle>"Hello, World!"</text>
+        <text style=fontAwesomeStyle>{fontAwesomeIcon}</text>
     </view>;
   };
 
