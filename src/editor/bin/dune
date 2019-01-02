@@ -1,0 +1,21 @@
+(ignored_subdirs (node_modules _esy))
+
+(executable
+    (name Oni2)
+    (package Oni2)
+    (public_name Oni2)
+    (libraries
+        bigarray
+        zed
+        reglfw
+        msgpck
+        lwt
+        lwt.unix
+        Rench
+        Revery
+            )
+  (preprocess (
+               pps
+               lwt_ppx
+    ))
+)
