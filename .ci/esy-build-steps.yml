@@ -1,0 +1,11 @@
+# Cross-platform set of build steps for building esy projects
+
+steps:
+  - script: npm install -g esy@0.4.3
+    displayName: 'npm install -g esy@0.4.3'
+  - script: esy install
+    displayName: 'esy install'
+  - script: esy build
+    displayName: 'esy build'
+  # Run tests or any additional steps here
+  # - script: esy b dune runtest
