@@ -25,7 +25,7 @@
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@esy-ocaml/reason": "facebook/reason#ab49908",
-    "revery": "github:revery-ui/revery#3dd5836",
+    "revery": "github:revery-ui/revery#20d19c7",
     "rench": "github:bryphe/rench#fba6966"
   },
   "devDependencies": {
