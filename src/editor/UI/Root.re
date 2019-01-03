@@ -4,40 +4,30 @@
  * Root editor component - contains all UI elements
  */
 
-open Revery.Core;
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
 
-let backgroundColor = Color.rgb(33. /. 255., 39. /. 255., 51. /. 255.);
-
 /* Set up some styles */
 let textHeaderStyle =
-  Style.make(
-    ~color=Colors.white,
-    ~fontFamily="FiraCode-Regular.ttf",
-    ~fontSize=14,
-    (),
-  );
+  Style.make(~fontFamily="FiraCode-Regular.ttf", ~fontSize=14, ());
 
 /* Set up some styles */
 let fontAwesomeStyle =
-  Style.make(
-    ~color=Colors.white,
-    ~fontFamily="FontAwesome5FreeRegular.otf",
-    ~fontSize=14,
-    (),
-  );
+  Style.make(~fontFamily="FontAwesome5FreeRegular.otf", ~fontSize=14, ());
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 include (
           val component((render, ~children, ()) =>
                 render(
-                  () =>
+                  () => {
+                    let theme = useContext(Theme.context);
+
                     <view
                       style={Style.make(
-                        ~backgroundColor,
+                        ~backgroundColor=theme.background,
+                        ~color=theme.foreground,
                         ~position=LayoutTypes.Absolute,
                         ~top=0,
                         ~left=0,
@@ -50,7 +40,8 @@ include (
                       <text style=fontAwesomeStyle> fontAwesomeIcon </text>
                       <text style=textHeaderStyle> "Hello, World!" </text>
                       <text style=fontAwesomeStyle> fontAwesomeIcon </text>
-                    </view>,
+                    </view>;
+                  },
                   ~children,
                 )
               )
