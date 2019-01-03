@@ -14,12 +14,12 @@ Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](ht
 
 - __Modern UX__ - an experience on par with modern code editors like VSCode and Atom
 - __VSCode Plugin Support__ - use all of the features of VSCode plugins, including language servers and debuggers
-- __Cross-Platform__ - works on Windows, OSSX, and Linux
+- __Cross-Platform__ - works on Windows, OSX, and Linux
 - __Batteries Included__ - works out of the box
 - __Performance__ - no compromises: native performance, minimal input latency
 - __Ease Learning Curve__ - Oni 2 should be comfortable for non-vimmers, too!
 
-The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of of modal editing, and the _rich tooling_ that comes with a lighweight editor like VSCode.
+The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lighweight editor like VSCode.
 
 ## Build
 
