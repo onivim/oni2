@@ -8,13 +8,13 @@ open Revery.Core;
 open Revery.UI;
 
 type t = {
-   background: Color.t,
-   foreground: Color.t,
+  background: Color.t,
+  foreground: Color.t,
 };
 
 let default: t = {
-    background: Color.hex("#2e3440"),
-    foreground: Color.hex("#eceff4"),
+  background: Color.hex("#2e3440"),
+  foreground: Color.hex("#eceff4"),
 };
 
 let context = createContext(default);
