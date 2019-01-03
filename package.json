@@ -4,8 +4,12 @@
   "description": "Lightweight code editor",
   "license": "MIT",
   "esy": {
-    "build": "refmterr dune build -p Oni2",
-    "buildsInSource": "_build"
+    "build": "refmterr dune build --root . -j4",
+    "buildsInSource": "_build",
+    "install": [
+        "esy-installer Oni2.install",
+        "esy-installer Oni_UI.install"
+    ]
   },
   "dependencies": {
     "ocaml": "~4.6.0",

@@ -1,0 +1,13 @@
+(library
+    (name Oni_UI)
+    (public_name Oni_UI)
+    (libraries 
+        bigarray
+        zed
+        reglfw
+        msgpck
+        lwt
+        lwt.unix
+        Rench
+        Revery
+    ))
