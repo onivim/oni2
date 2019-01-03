@@ -23,8 +23,12 @@ let init = app => {
       "Oni2",
     );
 
+  let themeProvider = Theme.provider;
+
   let render = () => {
-    <Root />;
+      <themeProvider value={Theme.default}>
+          <Root />
+      </themeProvider>;
   };
 
   UI.start(w, render);
