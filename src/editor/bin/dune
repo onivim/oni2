@@ -13,6 +13,7 @@
         lwt.unix
         Rench
         Revery
+        Oni_UI
             )
   (preprocess (
                pps
