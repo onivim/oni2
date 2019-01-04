@@ -8,7 +8,10 @@ open Revery;
 open Revery.Core;
 open Revery.UI;
 
+open Oni_Core;
 open Oni_UI;
+
+hello();
 
 /* The 'main' function for our app */
 let init = app => {
