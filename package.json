@@ -23,7 +23,8 @@
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
     "@opam/zed": "1.6",
-    "rench": "*"
+    "rench": "*",
+    "@reason-native/rely": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
