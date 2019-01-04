@@ -2,10 +2,10 @@
 
 steps:
   - script: npm install -g esy@0.4.9
-    displayName: 'npm install -g esy@0.4.9'
+    displayName: 'Install Esy: npm install -g esy@0.4.9'
   - script: esy install
-    displayName: 'esy install'
+    displayName: 'Install Dependencies: esy install'
   - script: esy build
-    displayName: 'esy build'
-  # Run tests or any additional steps here
-  # - script: esy b dune runtest
+    displayName: 'Build: esy build'
+  - script: esy b dune runtest
+    displayName: 'Unit Tests: esy b dune runtest'
