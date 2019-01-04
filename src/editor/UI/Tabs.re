@@ -1,31 +1,36 @@
 /*
- * Root.re
+ * Tabs.re
  *
- * Root editor component - contains all UI elements
+ * Container for <Tab /> components
  */
 
 open Revery.UI;
 
+let noop = () => ();
+
+type tabInfo = {
+    title: string,
+    active: bool,
+    onClick: Tab.tabAction,
+    onClose: Tab.tabAction,
+};
+
 include (
-          val component((render, ~children, ()) =>
+          val component((render, ~tabs:list(tabInfo), ~children, ()) =>
                 render(
                   () => {
-                    let theme = useContext(Theme.context);
+
+                    let toTab = (t: tabInfo) => {
+                        <Tab title={t.title} active={t.active} onClick={t.onClick} onClose={t.onClose} />   
+                    };
+                    let tabComponents = List.map(toTab, tabs);
 
                     <view
                       style={Style.make(
-                        ~backgroundColor=theme.background,
-                        ~color=theme.foreground,
-                        ~position=LayoutTypes.Absolute,
-                        ~top=0,
-                        ~left=0,
-                        ~right=0,
-                        ~bottom=0,
-                        ~justifyContent=LayoutTypes.JustifyCenter,
-                        ~alignItems=LayoutTypes.AlignCenter,
+                        ~flexDirection=LayoutTypes.Row,
                         (),
                       )}>
-                      <Editor />
+                      ...tabComponents
                     </view>;
                   },
                   ~children,

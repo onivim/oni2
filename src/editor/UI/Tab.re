@@ -5,6 +5,7 @@
  */
 
 open Revery.UI;
+open Revery.UI.Components;
 
 type tabAction = unit => unit;
 
@@ -22,26 +23,28 @@ include (
 
                     let opacity = active ? 1.0 : 0.6;
 
-                    <view
-                      style={Style.make(
-                        ~backgroundColor=theme.editorBackground,
-                        ~opacity,
-                        ~height=tabHeight,
-                        ~width=maxWidth,
-                        ~flexDirection=LayoutTypes.Row,
-                        ~justifyContent=LayoutTypes.JustifyCenter,
-                        ~alignItems=LayoutTypes.AlignCenter,
-                        (),
-                      )}>
-                        <text style={
-                            Style.make(
-                                ~fontFamily,
-                                ~fontSize,
-                                ~color=theme.editorForeground,
-                                ()
-                            )
-                        }>{title}</text>
-                    </view>;
+                    <Clickable>
+                        <view
+                          style={Style.make(
+                            ~backgroundColor=theme.editorBackground,
+                            ~opacity,
+                            ~height=tabHeight,
+                            ~width=maxWidth,
+                            ~flexDirection=LayoutTypes.Row,
+                            ~justifyContent=LayoutTypes.JustifyCenter,
+                            ~alignItems=LayoutTypes.AlignCenter,
+                            (),
+                          )}>
+                            <text style={
+                                Style.make(
+                                    ~fontFamily,
+                                    ~fontSize,
+                                    ~color=theme.editorForeground,
+                                    ()
+                                )
+                            }>{title}</text>
+                        </view>
+                    </Clickable>;
                   },
                   ~children,
                 )

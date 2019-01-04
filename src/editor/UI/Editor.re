@@ -22,6 +22,23 @@ let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let noop = () => ();
 
+let tabs: list(Tabs.tabInfo) = [{
+   title: "file1.re",
+   active: true,
+   onClick: noop,
+   onClose: noop,
+}, {
+   title: "file2.re",
+   active: false,
+   onClick: noop,
+   onClose: noop,
+}, {
+   title: "file3.re",
+   active: false,
+   onClick: noop,
+   onClose: noop,
+}]
+
 include (
           val component((render, ~children, ()) =>
                 render(
@@ -40,8 +57,7 @@ include (
                         ~flexDirection=LayoutTypes.Column,
                         (),
                       )}>
-                      <Tab title={"file1.re"} active=true onClick=noop onClose=noop />
-                      <Tab title={"file2.re"} active=false onClick=noop onClose=noop />
+                      <Tabs tabs />
                       <text style=fontAwesomeStyle> fontAwesomeIcon </text>
                       <text style=textHeaderStyle> "Hello, World!" </text>
                       <text style=fontAwesomeStyle> fontAwesomeIcon </text>
