@@ -1,0 +1,10 @@
+(executable
+    (name TestRunner)
+    (libraries
+        rely
+        Oni_Core_Test
+            ))
+
+(alias
+    (name runtest)
+    (action (run ./TestRunner.exe)))
