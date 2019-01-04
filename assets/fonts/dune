@@ -1,4 +1,4 @@
 (install
     (section bin)
     (package Oni2)
-    (files FiraCode-Regular.ttf FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf selawk.ttf selawkb.ttf selawkl.ttf selawksb.ttf selawksl.ttf seti.woff))
+    (files Inter-UI-Regular.ttf Inter-UI-SemiBold.ttf FiraCode-Regular.ttf FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf selawk.ttf selawkb.ttf selawkl.ttf selawksb.ttf selawksl.ttf seti.woff))

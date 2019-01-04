@@ -60,4 +60,6 @@ Oni 2 is licensed under the [CC-BY-NC-4.0](https://creativecommons.org/licenses/
 
 This means that Oni 2 is __free to use__ for __non-commercial__ or __educational__ uses. You are free to distribute and modify Oni 2 for personal use, as long as this README and License are included unmodified.
 
+Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
+
 Copyright 2019 Outrun Labs, LLC.
