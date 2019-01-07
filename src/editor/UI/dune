@@ -8,6 +8,7 @@
         msgpck
         lwt
         lwt.unix
+        Oni_Core
         Rench
         Revery
     ))
