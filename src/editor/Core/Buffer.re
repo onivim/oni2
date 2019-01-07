@@ -5,14 +5,11 @@
  */
 
 type t = {
-    file: option(string),
-    lines: array(string),
+  file: option(string),
+  lines: array(string),
 };
 
 let ofLines = (lines: array(string)) => {
-    let ret: t = {
-        file: None,
-        lines,
-    };
-    ret;
-}
+  let ret: t = {file: None, lines};
+  ret;
+};
