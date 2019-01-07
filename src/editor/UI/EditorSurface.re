@@ -23,7 +23,7 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let _viewTokensToElements = (_bufferView: array(BufferViewLine.t)) => {
+let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
     let ret = [
       <text style=textHeaderStyle> "Hello" </text>,
       <text style=textHeaderStyle> "World" </text>
@@ -41,7 +41,7 @@ include (
                     |> TokenizedBuffer.ofBuffer
                     |> TokenizedBufferView.ofTokenizedBuffer;
 
-                    let textElements = _viewTokensToElements(bufferView.viewLines);
+                    let textElements = _viewLinesToElements(bufferView.viewLines);
 
                     <view
                       style={Style.make(
