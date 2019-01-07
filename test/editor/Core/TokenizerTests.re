@@ -24,13 +24,25 @@ describe("tokenize", ({test, _}) => {
         expect.int(List.length(result)).toBe(0);
     });
 
-    test("empty string", ({expect}) => {
+    test("single word token", ({expect}) => {
         let result = Tokenizer.tokenize("testWord");
 
         let expectedTokens: list(Tokenizer.t) = [{
           text: "testWord",
           startPosition: ZeroBasedPosition(0),
-          endPosition: ZeroBasedPosition(7)
+          endPosition: ZeroBasedPosition(8)
+        }];
+
+        validateTokens(expect, result, expectedTokens);
+    });
+
+    test("single word token, surrounded by whitespace", ({expect}) => {
+        let result = Tokenizer.tokenize("  testWord  ");
+
+        let expectedTokens: list(Tokenizer.t) = [{
+          text: "testWord",
+          startPosition: ZeroBasedPosition(2),
+          endPosition: ZeroBasedPosition(10)
         }];
 
         validateTokens(expect, result, expectedTokens);

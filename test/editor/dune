@@ -1,10 +1,8 @@
 (executable
-    (name TestRunner)
+    (name OniUnitTestRunner)
+    (public_name OniUnitTestRunner)
+    (package OniUnitTestRunner)
     (libraries
         rely
         Oni_Core_Test
             ))
-
-(alias
-    (name runtest)
-    (action (run ./TestRunner.exe)))
