@@ -7,5 +7,5 @@ steps:
     displayName: 'Install Dependencies: esy install'
   - script: esy build
     displayName: 'Build: esy build'
-  - script: esy b dune runtest
-    displayName: 'Unit Tests: esy b dune runtest'
+  - script: esy x OniUnitTestRunner
+    displayName: 'Unit Tests: esy x OniUnitTestRunner'
