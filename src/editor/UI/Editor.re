@@ -20,7 +20,6 @@ include (
           val component((render, ~children, ()) =>
                 render(
                   () => {
-
                     let theme = useContext(Theme.context);
 
                     <view

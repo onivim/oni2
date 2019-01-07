@@ -1,7 +1,7 @@
 /*
  * EditorSurface.re
  *
- * Component that handles rendering of the 'editor surface' - 
+ * Component that handles rendering of the 'editor surface' -
  * the view of the buffer in the window.
  */
 
@@ -24,11 +24,11 @@ let fontAwesomeStyle =
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
-    let ret = [
-      <text style=textHeaderStyle> "Hello" </text>,
-      <text style=textHeaderStyle> "World" </text>
-    ];
-    ret;
+  let ret = [
+    <text style=textHeaderStyle> "Hello" </text>,
+    <text style=textHeaderStyle> "World" </text>,
+  ];
+  ret;
 };
 
 include (
@@ -37,11 +37,17 @@ include (
                   () => {
                     let theme = useContext(Theme.context);
 
-                    let bufferView = Buffer.ofLines([|"- Hello from line 1", "- Hello from line 2", "--- Hello from line 3"|])
-                    |> TokenizedBuffer.ofBuffer
-                    |> TokenizedBufferView.ofTokenizedBuffer;
+                    let bufferView =
+                      Buffer.ofLines([|
+                        "- Hello from line 1",
+                        "- Hello from line 2",
+                        "--- Hello from line 3",
+                      |])
+                      |> TokenizedBuffer.ofBuffer
+                      |> TokenizedBufferView.ofTokenizedBuffer;
 
-                    let textElements = _viewLinesToElements(bufferView.viewLines);
+                    let textElements =
+                      _viewLinesToElements(bufferView.viewLines);
 
                     <view
                       style={Style.make(
