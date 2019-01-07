@@ -6,6 +6,8 @@
  * - Handle 'virtual' (screen) lines
  */
 
+open Types;
+
 module BufferViewLine {
     type t = {
         /* 
@@ -28,21 +30,26 @@ module BufferViewLine {
 }
 
 type t = {
-  viewLines: array(BufferViewLine),
+  viewLines: array(BufferViewLine.t),
 };
 
 let _toViewWithoutWrapping = (tokenizedBuffer: TokenizedBuffer.t) => {
  
-    let f: (list(Tokenizer.t), int) => BufferViewLine.t = (tokens, i) => {
-        lineNumber: ZeroBasedPosition(i),
-        lineOffset: ZeroBasedPosition(0),
-        tokens,
+    let f: (int, list(Tokenizer.t)) => BufferViewLine.t = (i, tokens) => {
+        let ret: BufferViewLine.t = {
+            lineNumber: ZeroBasedPosition(i),
+            lineOffset: ZeroBasedPosition(0),
+            tokens,
+        };
+        ret;
     };
-    let viewLines = Array.map(f, tokenizedBuffer.tokenizedLines);
+
+    let viewLines = Array.mapi(f, tokenizedBuffer.tokenizedLines);
 
     let ret: t = {
-        viewLines,
-    }
+        viewLines: viewLines
+    };
+    ret;
 };
 
 let ofTokenizedBuffer = (~_wrap=false, ~_width:int=80, tokenizedBuffer: TokenizedBuffer.t) => {
