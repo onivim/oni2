@@ -1,0 +1,8 @@
+(executable
+    (name OniUnitTestRunner)
+    (public_name OniUnitTestRunner)
+    (package OniUnitTestRunner)
+    (libraries
+        rely
+        Oni_Core_Test
+            ))
