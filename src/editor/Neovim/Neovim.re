@@ -35,16 +35,9 @@
  * testable layer as a foundation for interacting with the other pieces in the Oni2 architecture.
  */
 
-type t = {
-    pid: int,
-};
+type t = {pid: int};
 
-
-let start = (
-    ~_neovimPath: string,
-) => {
-
+let start = (~_neovimPath: string) => {
+  ();
     /* TODO */
-    ();
 };
-
