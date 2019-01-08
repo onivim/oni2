@@ -10,16 +10,21 @@ type t = {
     pid: int,
 };
 
+let version = (
+    ~neovimPath: string,
+) => {
+    let ret = ChildProcess.spawnSync(neovimPath, [|"--version"|]);
+    ret.stdout;
+};
+
 
 let start = (
     ~neovimPath: string,
+    ~args: array(string),
 ) => {
 
-    let proc = ChildProcess.spawn(neovimPath, [|"--embed"|], {env: Unix.environment()});
+    /* let nvimBinaryPath = Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH"); */
 
-    let ret: t = {
-
-    };
-
+    ChildProcess.spawn(neovimPath, args);
 };
 

@@ -1,0 +1,5 @@
+(library
+    (name Oni_Neovim_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries Oni_Neovim rely.lib))

@@ -5,4 +5,5 @@
     (libraries
         rely
         Oni_Core_Test
+        Oni_Neovim_Test
             ))
