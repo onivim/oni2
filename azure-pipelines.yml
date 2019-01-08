@@ -34,9 +34,12 @@ jobs:
     STAGING_DIRECTORY_UNIX: /Users/vsts/STAGING
     ESY__CACHE_INSTALL_PATH: /Users/vsts/.esy/3____________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/vsts/.esy/source/i
+    ONI2_NEOVIM_PATH: $(Build.Repository.LocalPath)\vendor\neovim-0.3.3\nvim-osx64\bin\nvim
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
+  - script: '$(ONI2_NEOVIM_PATH) --version'
+    displayName: 'Check neovim version'
   - script: brew update
   - script: brew install libpng ragel
   - template: .ci/use-node.yml
