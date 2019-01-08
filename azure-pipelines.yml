@@ -54,9 +54,12 @@ jobs:
     STAGING_DIRECTORY_UNIX: /C/Users/VssAdministrator/STAGING
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3_/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    ONI2_NEOVIM_PATH: ${Build.Repository.LocalPath}\vendor\neovim-0.3.3\nvim-win64\bin\nvim.exe
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
+  - script: ${ONI2_NEOVIM_PATH} --version
+    displayName: 'Check neovim version'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
   - template: .ci/esy-build-steps.yml
