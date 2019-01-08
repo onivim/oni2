@@ -135,6 +135,6 @@ The above document is optimistic and paints a rosy picture for this new architec
 
 ## Open Questions
 
-- What syntax highlighting strategy would be best? Textmate Highlighting, Treesitter? Could we contribute one of these back to core Neovim, or would it be better for performance to run out-of-band?
+- What syntax highlighting strategy would be best? Textmate Highlighting, Treesitter? Could we contribute one of these back to core Neovim, or would it be better for performance to run out-of-band? (tree-sitter integration is ongoing in neovim: https://github.com/neovim/neovim/pull/9219)
 - Could there be a story for native-code plugins? This would be great for things like buffer layers. OCaml has a feature called `dynlink` which is for dynamically loading libraries - this could be leveraged for a native-code plugin story (would be ideal for performance-critical extensions like buffer layers)
 - How will features like Markdown Preview be implemented in this new architecture?
