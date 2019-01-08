@@ -1,0 +1,14 @@
+(library
+    (name Oni_Neovim)
+    (public_name Oni_Neovim)
+    (libraries
+        bigarray
+        zed
+        reglfw
+        msgpck
+        lwt
+        lwt.unix
+        Oni_Core
+        Rench
+        Revery
+    ))

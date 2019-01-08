@@ -65,3 +65,5 @@ typings/
 _build/
 _esy/
 esy.lock/
+
+.DS_Store
