@@ -11,3 +11,5 @@
  * model using a linked `libnvim`. This will reduce interop overhead as well as allowed
  * the ability to share buffer stroage, instead of duplicating it on Oni2's side.
  */
+
+module NeovimProcess = NeovimProcess;

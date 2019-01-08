@@ -41,12 +41,10 @@ type t = {
 
 
 let start = (
-    ~neovimPath: string,
+    ~_neovimPath: string,
 ) => {
 
-    let ret: t = {
-
-    };
-
+    /* TODO */
+    ();
 };
 
