@@ -23,6 +23,7 @@
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
+    "@opam/msgpck": "^1.4",
     "@opam/zed": "1.6",
     "rench": "*",
     "@reason-native/rely": "*"
