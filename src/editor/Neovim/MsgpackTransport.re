@@ -9,12 +9,12 @@ type t = {
     close: unit => unit
 };
 
-let make = (~onData: onDataEvent, ~writeFn: writeFunction, ()) => {
+let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
     let onMessage: Event.t(Msgpck.t) = Event.create();
    
-    let write = (m: Msgpck.t) => {
+    let writeFn = (m: Msgpck.t) => {
         Msgpck.Bytes.to_string(m)  
-        |> writeFn;
+        |> write;
     };
 
     let close = Event.subscribe(onData, (bytes) => {
@@ -25,7 +25,7 @@ let make = (~onData: onDataEvent, ~writeFn: writeFunction, ()) => {
     });
 
     let ret: t = {
-        write,
+        write: writeFn,
         onMessage,
         close,
     };

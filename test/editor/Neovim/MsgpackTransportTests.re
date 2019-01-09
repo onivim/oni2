@@ -1,11 +1,26 @@
 
-/* open Rench; */
+open Rench;
 
-/* open Oni_Neovim; */
+open Oni_Neovim;
 open TestFramework;
 
-describe("MsgpackTransport", ({test, _}) =>
+let noopWrite = (_) => ();
+
+describe("MsgpackTransport", ({test, _}) => {
   test("writing a simple message dispatches message event", ({expect}) => {
-      expect.int(0).toBe(1);
-  })
-);
+      let evt: Event.t(Bytes.t) = Event.create();
+
+      let msgpack = MsgpackTransport.make(~onData=evt, ~write=noopWrite, ());
+
+      let latestMessages: ref(list(Msgpck.t)) = ref([]);
+      let _ = Event.subscribe(msgpack.onMessage, (m) => {
+          latestMessages := List.append([m], latestMessages^);
+      });
+
+      let bytes = Msgpck.List([Msgpck.Int(0), Msgpck.String("Hello World!")])
+                  |> Msgpck.Bytes.to_string;
+
+      Event.dispatch(evt, bytes);
+      expect.int(List.length(latestMessages^)).toBe(1);
+  });
+});
