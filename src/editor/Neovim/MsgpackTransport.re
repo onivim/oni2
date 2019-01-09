@@ -17,14 +17,20 @@ let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
         |> write;
     };
 
+
+    let buffer = Buffer.create(0);
     let close = Event.subscribe(onData, (bytes) => {
-      switch(Msgpck.Bytes.read_all(bytes)) {
+      Buffer.add_bytes(buffer, bytes);
+      let contents = Buffer.to_bytes(buffer);
+      switch(Msgpck.Bytes.read_all(contents)) {
       | (_c, msgs) => {
+          Buffer.clear(buffer);
           let f = (msg) => Event.dispatch(onMessage, msg);
           List.iter(f, msgs);
       }
       | exception Invalid_argument(_) => {
-        prerr_endline ("unable to read");
+          /* No-op  - we'll continue reading */
+          ();
       }
       };
 
