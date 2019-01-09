@@ -3,21 +3,11 @@ open Rench;
 open Oni_Neovim;
 open TestFramework;
 
-/* open Helpers; */
-
-exception EnvironmentVariableNotFound;
-
-let optOrThrow = (s: option(string)) => {
-  switch (s) {
-  | Some(v) => v
-  | _ => raise(EnvironmentVariableNotFound)
-  };
-};
+open Helpers;
 
 describe("NeovimProcess", ({test, _}) =>
   test("version", ({expect}) => {
-    let neovimPath =
-      Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
+    let neovimPath = Helpers.getNeovimPath();
 
     let version = NeovimProcess.version(~neovimPath);
 
