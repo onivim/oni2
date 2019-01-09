@@ -18,10 +18,16 @@ let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
     };
 
     let close = Event.subscribe(onData, (bytes) => {
-      let (_c, msgs) = Msgpck.Bytes.read_all(bytes);  
+      switch(Msgpck.Bytes.read_all(bytes)) {
+      | (_c, msgs) => {
+          let f = (msg) => Event.dispatch(onMessage, msg);
+          List.iter(f, msgs);
+      }
+      | exception Invalid_argument(_) => {
+        prerr_endline ("unable to read");
+      }
+      };
 
-      let f = (msg) => Event.dispatch(onMessage, msg);
-      List.iter(f, msgs);
     });
 
     let ret: t = {
