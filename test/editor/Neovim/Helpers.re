@@ -1,7 +1,7 @@
 open Rench;
 
-open Oni_Neovim;
-open TestFramework;
+/* open Oni_Neovim; */
+/* open TestFramework; */
 
 /* open Helpers; */
 

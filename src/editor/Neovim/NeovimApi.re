@@ -8,10 +8,10 @@
 
 open Rench;
 
-type requestSyncFunction = (methodName: string, args: list(Msgpck.t));
+type requestSyncFunction = (string, Msgpck.t) => Msgpck.t;
 
 type t = {
-    requestSync: requestSyncFunction;
+    requestSync: requestSyncFunction,
 };
 
 let currentId = ref(0);
@@ -29,7 +29,7 @@ type response = {
 
 let waitForCondition = (~timeout=1.0, f) => {
     let s = Unix.gettimeofday();
-    while (!f() && (Unix.gettimeofday() -. s < timeout) {
+    while (!f() && (Unix.gettimeofday() -. s < timeout)) {
         Unix.sleepf(0.005);
     };   
 };
@@ -39,27 +39,30 @@ let make = (msgpack: MsgpackTransport.t) => {
     let queuedResponses: ref(list(response)) = ref([]);
     let queuedNotifications: ref(list(Msgpck.t)) = ref([]);
 
-    let clearQueuedResponses = () => queuedResponses := [];
+    let clearQueuedResponses = () => {
+        queuedResponses := [];
+    };
+
 
     let handleMessage = (m: Msgpck.t) => {
+        prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|");
         switch (m) {
-        | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), ...m]) => {
-            queuedResponses := List.append([{responseId: id, payload: m}], queuedResponses);
-            prerr_endline ("Got response: " ++ msg);
+        | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), v, _]) => {
+            queuedResponses := List.append([{responseId: id, payload: v}], queuedResponses^);
         }
-        | Msgpck.List([Msgpck.Int(2), Msgpck.String(msg), ...m]) => {
-            queuedNotifications := List.append([m], queuedNotifications);
+        | Msgpck.List([Msgpck.Int(2), Msgpck.String(msg), v, _]) => {
+            queuedNotifications := List.append([v], queuedNotifications^);
             prerr_endline ("Got notification: " ++ msg);
         }
         | _ => prerr_endline ("Unknown message");
         };
     };
 
-    Event.subscribe(msgpack.onMesssage, (m) => {
+    let _ = Event.subscribe(msgpack.onMessage, (m) => {
         handleMessage(m);
     });
 
-    let requestSync = (methodName: string, args: list(Msgpck.t)) => {
+    let requestSync: requestSyncFunction = (methodName: string, args: Msgpck.t) => {
         let requestId = getNextId();
 
         let request = Msgpck.List([Msgpck.Int(0), Msgpck.Int(requestId), Msgpck.String(methodName), args]);
@@ -68,7 +71,7 @@ let make = (msgpack: MsgpackTransport.t) => {
         msgpack.write(request);
 
         prerr_endline ("starting request");
-        waitForCondition(() => List.length(queuedResponses) >= 1);
+        waitForCondition(() => List.length(queuedResponses^) >= 1);
         prerr_endline ("ending request");
 
         let matchingResponse = 
@@ -76,10 +79,12 @@ let make = (msgpack: MsgpackTransport.t) => {
             |> List.hd;
 
         prerr_endline ("Got response!");
-        matchingResponse.payload
+        let ret: Msgpck.t = matchingResponse.payload;
+        ret;
     };
 
     let ret: t = {
-        requestSync
+        requestSync: requestSync,
     };
+    ret;
 };

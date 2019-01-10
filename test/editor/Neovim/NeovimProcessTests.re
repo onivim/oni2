@@ -1,9 +1,5 @@
-open Rench;
-
 open Oni_Neovim;
 open TestFramework;
-
-open Helpers;
 
 describe("NeovimProcess", ({test, _}) =>
   test("version", ({expect}) => {
