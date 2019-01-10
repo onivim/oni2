@@ -39,32 +39,68 @@ describe("NeovimApi", ({test, _}) => {
 
 
     withNeovimApi(api => {
-        Helpers.repeat(100, () => {
+        Helpers.repeat(1, () => {
 
           let attach =
               api.requestSync(
                   "nvim_ui_attach",
                   Msgpck.List([
-                    Msgpck.Int(10),
-                    Msgpck.Int(10),
-                    Msgpck.Map([])
+                    Msgpck.Int(20),
+                    Msgpck.Int(20),
+                    Msgpck.Map([
+                               (Msgpck.String("rgb"), Msgpck.Bool(true)),
+                               (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
+                               (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
+                               (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
+                               (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
+                               (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
+                               /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
+                               /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
+                    ])
                   ]));
+
           prerr_endline ("ATTACH: " ++ Msgpck.show(attach));
 
+          /* let derp = ref(0); */
+          /* while (derp^  < 20) { */
+            Unix.sleepf(0.1);
+          /*   derp := derp^ + 1; */
+          /* }; */
 
-          let result =
-            api.requestSync(
-              "nvim_input",
-              Msgpck.List([
-                  Msgpck.String("iabc<CR>"),
-              ]),
-            );
+          /* prerr_endline ("starting put..."); */
+          /* let _result = */
+          /*   api.requestSync( */
+          /*     "nvim_command_output", */
+          /*     Msgpck.List([ */
+          /*         Msgpck.String(":echo 'Hello!'"), */
+          /*     ]), */
+          /*   ); */
 
-          let line = api.requestSync(
-            "nvim_get_current_line",
-            Msgpck.List([]),
-          );
-          prerr_endline ("LINE: " ++ Msgpck.show(line));
+          /* prerr_endline ("ending put..." ++ Msgpck.show(_result)); */
+          let result = Msgpck.List([]);
+
+          /* let input = api.requestSync( */
+          /*   "nvim_input", */
+          /*   Msgpck.List([Msgpck.String("iabc")]) */
+          /* ); */
+          /* prerr_endline ("INPUT: " ++ Msgpck.show(input)); */
+          /* let derp = ref(0); */
+          /* while (derp^  < 20) { */
+          /*   Unix.sleepf(0.11); */
+          /*   derp := derp^ + 1; */
+          /* }; */
+
+          /* let line = api.requestSync( */
+          /*   "nvim_list_runtime_paths", */
+          /*   Msgpck.List([]), */
+          /* ); */
+          /* prerr_endline ("LINE: " ++ Msgpck.show(line)); */
+
+          /* let line2 = api.requestSync( */
+          /*   "nvim_list_uis", */
+          /*   Msgpck.List([]), */
+          /* ); */
+          /* prerr_endline ("UIs: " ++ Msgpck.show(line2)); */
 
           switch (result) {
           | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>

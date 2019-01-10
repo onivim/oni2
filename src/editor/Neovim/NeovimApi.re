@@ -26,10 +26,15 @@ type response = {
 };
 
 let waitForCondition = (~timeout=1.0, f) => {
-  let s = Unix.gettimeofday();
-  while (!f() && Unix.gettimeofday() -. s < timeout) {
-    Unix.sleepf(0.0005);
-  };
+  let thread = Thread.create(() => {
+      let s = Unix.gettimeofday();
+      while (!f() && Unix.gettimeofday() -. s < timeout) {
+        Unix.sleepf(0.002);
+        /* Unix.sleepf(0.002); */
+      };
+  }, ());
+
+  Thread.join(thread);
 };
 
 let make = (msgpack: MsgpackTransport.t) => {
@@ -41,7 +46,7 @@ let make = (msgpack: MsgpackTransport.t) => {
   };
 
   let handleMessage = (m: Msgpck.t) => {
-    /* prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|"); */
+    prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|");
     switch (m) {
     | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), _, v]) =>
       queuedResponses :=
