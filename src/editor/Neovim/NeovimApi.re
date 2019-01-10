@@ -43,18 +43,17 @@ let make = (msgpack: MsgpackTransport.t) => {
         queuedResponses := [];
     };
 
-
     let handleMessage = (m: Msgpck.t) => {
-        prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|");
+        /* prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|"); */
         switch (m) {
-        | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), v, _]) => {
+        | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), _, v]) => {
             queuedResponses := List.append([{responseId: id, payload: v}], queuedResponses^);
         }
         | Msgpck.List([Msgpck.Int(2), Msgpck.String(msg), v, _]) => {
             queuedNotifications := List.append([v], queuedNotifications^);
-            prerr_endline ("Got notification: " ++ msg);
+            /* prerr_endline ("Got notification: " ++ msg); */
         }
-        | _ => prerr_endline ("Unknown message");
+        | _ => prerr_endline ("Unknown message: " ++ Msgpck.show(m));
         };
     };
 
