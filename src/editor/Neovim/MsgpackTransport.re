@@ -17,24 +17,21 @@ let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
   };
 
   let rec flushMessages = (bytes: Bytes.t) => {
-
     switch (Msgpck.Bytes.read(bytes)) {
-    | (c, msg) => {
-       Event.dispatch(onMessage, msg); 
+    | (c, msg) =>
+      Event.dispatch(onMessage, msg);
 
-       let remainder = Bytes.length(bytes) - c;
-       if (remainder > 0) {
-           let newBytes = Bytes.sub(bytes, c, remainder);
-           flushMessages(newBytes)
-       } else {
-            Bytes.create(0);
-       }
-    }
-    | exception (Invalid_argument(_)) => {
-       prerr_endline ("Warning - partial buffer");
-       bytes 
-    }
-    }
+      let remainder = Bytes.length(bytes) - c;
+      if (remainder > 0) {
+        let newBytes = Bytes.sub(bytes, c, remainder);
+        flushMessages(newBytes);
+      } else {
+        Bytes.create(0);
+      };
+    | exception (Invalid_argument(_)) =>
+      prerr_endline("Warning - partial buffer");
+      bytes;
+    };
   };
 
   let buffer = Buffer.create(0);
