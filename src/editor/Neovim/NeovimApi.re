@@ -28,7 +28,7 @@ type response = {
 let waitForCondition = (~timeout=1.0, f) => {
   let s = Unix.gettimeofday();
   while (!f() && Unix.gettimeofday() -. s < timeout) {
-    Unix.sleepf(0.005);
+    Unix.sleepf(0.0005);
   };
 };
 
@@ -46,7 +46,7 @@ let make = (msgpack: MsgpackTransport.t) => {
     | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), _, v]) =>
       queuedResponses :=
         List.append([{responseId: id, payload: v}], queuedResponses^)
-    | Msgpck.List([Msgpck.Int(2), Msgpck.String(msg), v, _]) =>
+    | Msgpck.List([Msgpck.Int(2), Msgpck.String(_msg), v, _]) =>
       queuedNotifications := List.append([v], queuedNotifications^)
       /* prerr_endline ("Got notification: " ++ msg); */
     | _ => prerr_endline("Unknown message: " ++ Msgpck.show(m))
@@ -70,9 +70,11 @@ let make = (msgpack: MsgpackTransport.t) => {
       clearQueuedResponses();
       msgpack.write(request);
 
-      prerr_endline("starting request");
+      let startTime = Unix.gettimeofday();
+      prerr_endline ("starting request: " ++ string_of_float(startTime));
       waitForCondition(() => List.length(queuedResponses^) >= 1);
-      prerr_endline("ending request");
+      let endTime = Unix.gettimeofday();
+      prerr_endline ("ending request: " ++ string_of_float(endTime) ++ "|" ++ string_of_float(endTime -. startTime));
 
       let matchingResponse =
         List.filter(m => m.responseId == requestId, queuedResponses^)

@@ -16,3 +16,12 @@ let optOrThrow = (s: option(string)) => {
 
 let getNeovimPath = () =>
   Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
+
+let repeat = (times: int, f) => {
+    let count = ref(0);   
+
+    while(count^ < times) {
+        f(); 
+        count := count^ + 1;
+    };
+};
