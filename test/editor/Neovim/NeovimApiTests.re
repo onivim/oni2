@@ -34,32 +34,49 @@ describe("NeovimApi", ({test, _}) => {
   );
 
   test("nvim__id_array", ({expect}) => {
+
     let count = ref(0);
 
-    withNeovimApi(api =>
-      Helpers.repeat(
-        100,
-        () => {
+
+    withNeovimApi(api => {
+        Helpers.repeat(100, () => {
+
+          let attach =
+              api.requestSync(
+                  "nvim_ui_attach",
+                  Msgpck.List([
+                    Msgpck.Int(10),
+                    Msgpck.Int(10),
+                    Msgpck.Map([])
+                  ]));
+          prerr_endline ("ATTACH: " ++ Msgpck.show(attach));
+
+
           let result =
             api.requestSync(
-              "nvim__id",
+              "nvim_input",
               Msgpck.List([
-                Msgpck.List([
-                  Msgpck.String("hey, neovim!"),
-                  Msgpck.String("hey again, neovim!"),
-                ]),
+                  Msgpck.String("iabc<CR>"),
               ]),
             );
+
+          let line = api.requestSync(
+            "nvim_get_current_line",
+            Msgpck.List([]),
+          );
+          prerr_endline ("LINE: " ++ Msgpck.show(line));
 
           switch (result) {
           | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>
             expect.string(msg1).toEqual("hey, neovim!");
             expect.string(msg2).toEqual("hey again, neovim!");
-          | _ => expect.string("FAIL").toEqual("")
+          | _ => {
+              prerr_endline ("MSGPCK: " ++ Msgpck.show(result));
+              expect.string("FAIL").toEqual("FAIL");
+          };
           };
           count := count^ + 1;
-        },
-      )
-    );
-  });
+        });
+    });
+    });
 });

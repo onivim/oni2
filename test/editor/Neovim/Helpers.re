@@ -21,6 +21,7 @@ let repeat = (times: int, f) => {
   let count = ref(0);
 
   while (count^ < times) {
+    prerr_endline ("Iteration: " ++ string_of_int(count^));
     f();
     count := count^ + 1;
   };
