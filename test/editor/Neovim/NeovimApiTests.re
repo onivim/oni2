@@ -34,12 +34,12 @@ describe("NeovimApi", ({test, _}) => {
   );
 
   test("nvim__id_array", ({expect}) => {
-
     let count = ref(0);
 
-
-    withNeovimApi(api => {
-        Helpers.repeat(100, () => {
+    withNeovimApi(api =>
+      Helpers.repeat(
+        100,
+        () => {
           let result =
             api.requestSync(
               "nvim__id",
@@ -58,7 +58,8 @@ describe("NeovimApi", ({test, _}) => {
           | _ => expect.string("FAIL").toEqual("")
           };
           count := count^ + 1;
-        });
-    });
-    });
+        },
+      )
+    );
+  });
 });

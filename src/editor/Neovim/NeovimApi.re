@@ -48,7 +48,7 @@ let make = (msgpack: MsgpackTransport.t) => {
         List.append([{responseId: id, payload: v}], queuedResponses^)
     | Msgpck.List([Msgpck.Int(2), Msgpck.String(_msg), v, _]) =>
       queuedNotifications := List.append([v], queuedNotifications^)
-      /* prerr_endline ("Got notification: " ++ msg); */
+    /* prerr_endline ("Got notification: " ++ msg); */
     | _ => prerr_endline("Unknown message: " ++ Msgpck.show(m))
     };
   };
@@ -71,10 +71,15 @@ let make = (msgpack: MsgpackTransport.t) => {
       msgpack.write(request);
 
       let startTime = Unix.gettimeofday();
-      prerr_endline ("starting request: " ++ string_of_float(startTime));
+      prerr_endline("starting request: " ++ string_of_float(startTime));
       waitForCondition(() => List.length(queuedResponses^) >= 1);
       let endTime = Unix.gettimeofday();
-      prerr_endline ("ending request: " ++ string_of_float(endTime) ++ "|" ++ string_of_float(endTime -. startTime));
+      prerr_endline(
+        "ending request: "
+        ++ string_of_float(endTime)
+        ++ "|"
+        ++ string_of_float(endTime -. startTime),
+      );
 
       let matchingResponse =
         List.filter(m => m.responseId == requestId, queuedResponses^)

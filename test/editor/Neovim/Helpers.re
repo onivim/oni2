@@ -18,10 +18,10 @@ let getNeovimPath = () =>
   Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
 
 let repeat = (times: int, f) => {
-    let count = ref(0);   
+  let count = ref(0);
 
-    while(count^ < times) {
-        f(); 
-        count := count^ + 1;
-    };
+  while (count^ < times) {
+    f();
+    count := count^ + 1;
+  };
 };
