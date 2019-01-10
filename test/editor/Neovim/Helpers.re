@@ -14,6 +14,5 @@ let optOrThrow = (s: option(string)) => {
   };
 };
 
-let getNeovimPath = () => 
-    Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH")
-    |> optOrThrow;
+let getNeovimPath = () =>
+  Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
