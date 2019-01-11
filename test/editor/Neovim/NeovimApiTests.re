@@ -76,24 +76,7 @@ describe("NeovimApi", ({describe, test, _}) => {
               notifications := List.append([n], notifications^)
             );
 
-          let _result =
-            api.requestSync(
-              "nvim_ui_attach",
-              Msgpck.List([
-                Msgpck.Int(20),
-                Msgpck.Int(20),
-                Msgpck.Map([
-                  (Msgpck.String("rgb"), Msgpck.Bool(true)),
-                  (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
-                  (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
-                  (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
-                  (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
-                  (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
-                  /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
-                  /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
-                ]),
-              ]),
-            );
+          let _result = Helpers.uiAttach(api);
 
           let f = () => {
             api.pump();
@@ -109,6 +92,37 @@ describe("NeovimApi", ({describe, test, _}) => {
           List.iter(s, notifications^);
 
           expect.bool(List.length(notifications^) >= 1).toBe(true);
+        })
+      )
+    )
+  );
+
+  describe("basic buffer edit", ({test, _}) =>
+    test("modify lines in buffer", ({expect}) =>
+      Helpers.repeat(10, () =>
+        withNeovimApi(api => {
+          let notifications: ref(list(NeovimApi.notification)) = ref([]);
+
+          let _ =
+            Event.subscribe(api.onNotification, n =>
+              notifications := List.append([n], notifications^)
+            );
+
+          let _result = Helpers.uiAttach(api);
+
+          let _response =
+            api.requestSync(
+              "nvim_input",
+              Msgpck.List([Msgpck.String("iabcd<CR>efghi")]),
+            );
+
+          let lines =
+            api.requestSync("nvim_get_current_line", Msgpck.List([]));
+
+          switch (lines) {
+          | Msgpck.String(s) => expect.string(s).toEqual("efghi")
+          | _ => expect.string("fail").toEqual("to get proper input")
+          };
         })
       )
     )
