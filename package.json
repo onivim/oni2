@@ -27,7 +27,7 @@
     "@opam/msgpck": "^1.4",
     "@opam/zed": "1.6",
     "rench": "^1.1.0",
-    "@reason-native/rely": "*"
+    "@reason-native/rely": "0.0.0"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
