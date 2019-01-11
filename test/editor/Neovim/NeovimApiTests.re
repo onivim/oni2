@@ -1,4 +1,6 @@
+open Oni_Core;
 open Oni_Neovim;
+open Rench;
 open TestFramework;
 
 let withNeovimApi = f => {
@@ -17,7 +19,7 @@ let withNeovimApi = f => {
   msgpackTransport.close();
 };
 
-describe("NeovimApi", ({test, _}) => {
+describe("NeovimApi", ({describe, test, _}) => {
   test("nvim__id", ({expect}) =>
     withNeovimApi(api => {
       let result =
@@ -38,7 +40,7 @@ describe("NeovimApi", ({test, _}) => {
 
     withNeovimApi(api =>
       Helpers.repeat(
-        100,
+        10,
         () => {
           let result =
             api.requestSync(
@@ -62,4 +64,53 @@ describe("NeovimApi", ({test, _}) => {
       )
     );
   });
+
+  describe("ui_attach", ({test, _}) =>
+    test("basic ui_attach / ui_detach", ({expect}) =>
+      Helpers.repeat(10, () =>
+        withNeovimApi(api => {
+          let notifications: ref(list(NeovimApi.notification)) = ref([]);
+
+          let _ =
+            Event.subscribe(api.onNotification, n =>
+              notifications := List.append([n], notifications^)
+            );
+
+          let _result =
+            api.requestSync(
+              "nvim_ui_attach",
+              Msgpck.List([
+                Msgpck.Int(20),
+                Msgpck.Int(20),
+                Msgpck.Map([
+                  (Msgpck.String("rgb"), Msgpck.Bool(true)),
+                  (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
+                  (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
+                  (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
+                  (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
+                  (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
+                  /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
+                  /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
+                ]),
+              ]),
+            );
+
+          let f = () => {
+            api.pump();
+            List.length(notifications^) > 0;
+          };
+
+          Utility.waitForCondition(f);
+
+          let s = (n: NeovimApi.notification) => {
+            prerr_endline("NOTIFICATION: " ++ Msgpck.show(n.payload));
+          };
+
+          List.iter(s, notifications^);
+
+          expect.bool(List.length(notifications^) >= 1).toBe(true);
+        })
+      )
+    )
+  );
 });
