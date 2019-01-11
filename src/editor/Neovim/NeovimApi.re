@@ -85,7 +85,7 @@ let make = (msgpack: MsgpackTransport.t) => {
         List.filter(m => m.responseId == requestId, queuedResponses^)
         |> List.hd;
 
-      prerr_endline("Got response!");
+      /* prerr_endline("Got response!"); */
       let ret: Msgpck.t = matchingResponse.payload;
       ret;
     };
