@@ -1,10 +1,5 @@
 open Rench;
 
-/* open Oni_Neovim; */
-/* open TestFramework; */
-
-/* open Helpers; */
-
 exception EnvironmentVariableNotFound;
 
 let optOrThrow = (s: option(string)) => {
