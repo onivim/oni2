@@ -78,7 +78,6 @@ describe("NeovimApi", ({describe, test, _}) => {
 
           let _result = Helpers.uiAttach(api);
 
-
           let f = () => {
             api.pump();
             List.length(notifications^) > 0;
@@ -98,9 +97,8 @@ describe("NeovimApi", ({describe, test, _}) => {
     )
   );
 
-  describe("basic buffer edit", ({test, _}) => {
-    test("modify lines in buffer", ({expect}) => {
-
+  describe("basic buffer edit", ({test, _}) =>
+    test("modify lines in buffer", ({expect}) =>
       Helpers.repeat(10, () =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
@@ -112,20 +110,21 @@ describe("NeovimApi", ({describe, test, _}) => {
 
           let _result = Helpers.uiAttach(api);
 
-            let _response = api.requestSync(
-              "nvim_input", Msgpck.List([Msgpck.String("iabcd<CR>efghi")]));
-
-
-            let lines = api.requestSync(
-               "nvim_get_current_line", Msgpck.List([]) 
+          let _response =
+            api.requestSync(
+              "nvim_input",
+              Msgpck.List([Msgpck.String("iabcd<CR>efghi")]),
             );
 
-            switch (lines) {
-            | Msgpck.String(s) => expect.string(s).toEqual("efghi");
-            | _ => expect.string("fail").toEqual("to get proper input");
-            };
+          let lines =
+            api.requestSync("nvim_get_current_line", Msgpck.List([]));
+
+          switch (lines) {
+          | Msgpck.String(s) => expect.string(s).toEqual("efghi")
+          | _ => expect.string("fail").toEqual("to get proper input")
+          };
         })
-      );
-    });
-  });
+      )
+    )
+  );
 });

@@ -24,21 +24,21 @@ let repeat = (times: int, f) => {
 };
 
 let uiAttach = (api: NeovimApi.t) => {
-        api.requestSync(
-          "nvim_ui_attach",
-          Msgpck.List([
-            Msgpck.Int(20),
-            Msgpck.Int(20),
-            Msgpck.Map([
-              (Msgpck.String("rgb"), Msgpck.Bool(true)),
-              (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
-              (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
-              (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
-              (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
-              (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
-              /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
-              /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
-            ]),
-          ]),
-        );
+  api.requestSync(
+    "nvim_ui_attach",
+    Msgpck.List([
+      Msgpck.Int(20),
+      Msgpck.Int(20),
+      Msgpck.Map([
+        (Msgpck.String("rgb"), Msgpck.Bool(true)),
+        (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
+        (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
+        (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
+        (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
+        (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
+        /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
+        /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
+      ]),
+    ]),
+  );
 };
