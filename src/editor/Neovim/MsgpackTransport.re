@@ -16,6 +16,24 @@ let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
     Msgpck.Bytes.to_string(m) |> write;
   };
 
+  let rec flushMessages = (bytes: Bytes.t) => {
+    switch (Msgpck.Bytes.read(bytes)) {
+    | (c, msg) =>
+      Event.dispatch(onMessage, msg);
+
+      let remainder = Bytes.length(bytes) - c;
+      if (remainder > 0) {
+        let newBytes = Bytes.sub(bytes, c, remainder);
+        flushMessages(newBytes);
+      } else {
+        Bytes.create(0);
+      };
+    | exception (Invalid_argument(_)) =>
+      prerr_endline("Warning - partial buffer");
+      bytes;
+    };
+  };
+
   let buffer = Buffer.create(0);
   let close =
     Event.subscribe(
@@ -23,15 +41,9 @@ let make = (~onData: onDataEvent, ~write: writeFunction, ()) => {
       bytes => {
         Buffer.add_bytes(buffer, bytes);
         let contents = Buffer.to_bytes(buffer);
-        switch (Msgpck.Bytes.read_all(contents)) {
-        | (_c, msgs) =>
-          Buffer.clear(buffer);
-          let f = msg => Event.dispatch(onMessage, msg);
-          List.iter(f, msgs);
-        | exception (Invalid_argument(_)) =>
-          /* No-op  - we'll continue reading */
-          ()
-        };
+        Buffer.clear(buffer);
+        let newBytes = flushMessages(contents);
+        Buffer.add_bytes(buffer, newBytes);
       },
     );
 
