@@ -108,7 +108,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
           List.iter(s, notifications^);
 
-          expect.int(List.length(notifications^) >= 1).toBe(true);
+          expect.bool(List.length(notifications^) >= 1).toBe(true);
         })
       )
     )
