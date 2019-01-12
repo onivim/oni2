@@ -34,6 +34,7 @@
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@esy-ocaml/reason": "facebook/reason#ab49908",
+    "esy-cmake": "github:esy-packages/esy-cmake#b37ac43",
     "reason-reactify": "2.2.0",
     "revery": "github:revery-ui/revery#c62c6a0"
   },
