@@ -5,7 +5,6 @@
  */
 
 open Revery.Core;
-open Revery.UI;
 
 type t = {
   background: Color.t,
