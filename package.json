@@ -26,15 +26,14 @@
     "@opam/camomile": "^1.0.1",
     "@opam/msgpck": "^1.4",
     "@opam/zed": "1.6",
-    "rench": "^1.1.0",
+    "rench": "^1.2.0",
     "@reason-native/rely": "1.0.1"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
-    "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#7901934",
-    "rench": "github:bryphe/rench#49ad8d7"
+    "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#7901934"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
