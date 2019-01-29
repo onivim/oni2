@@ -15,53 +15,49 @@ open Oni_Core.TokenizedBufferView;
 
 /* Set up some styles */
 let textHeaderStyle =
-  Style.make(~fontFamily="FiraCode-Regular.ttf", ~fontSize=14, ());
+  Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];
 
 /* Set up some styles */
 let fontAwesomeStyle =
-  Style.make(~fontFamily="FontAwesome5FreeRegular.otf", ~fontSize=14, ());
+  Style.[fontFamily("FontAwesome5FreeRegular.otf"), fontSize(14)];
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
   let ret = [
-    <text style=textHeaderStyle> "Hello" </text>,
-    <text style=textHeaderStyle> "World" </text>,
+    <Text style=textHeaderStyle text="Hello" />,
+    <Text style=textHeaderStyle text="World" />,
   ];
   ret;
 };
 
-include (
-          val component((render, ~children, ()) =>
-                render(
-                  () => {
-                    let theme = useContext(Theme.context);
+let component = React.component("EditorSurface");
 
-                    let bufferView =
-                      Buffer.ofLines([|
-                        "- Hello from line 1",
-                        "- Hello from line 2",
-                        "--- Hello from line 3",
-                      |])
-                      |> TokenizedBuffer.ofBuffer
-                      |> TokenizedBufferView.ofTokenizedBuffer;
+let make = () =>
+  component((_slots: React.Hooks.empty) => {
+    let theme = Theme.get();
 
-                    let textElements =
-                      _viewLinesToElements(bufferView.viewLines);
+    let bufferView =
+      Buffer.ofLines([|
+        "- Hello from line 1",
+        "- Hello from line 2",
+        "--- Hello from line 3",
+      |])
+      |> TokenizedBuffer.ofBuffer
+      |> TokenizedBufferView.ofTokenizedBuffer;
 
-                    <view
-                      style={Style.make(
-                        /* ~backgroundColor=Colors.red, */
-                        ~backgroundColor=theme.background,
-                        ~color=theme.foreground,
-                        ~flexGrow=1,
-                        ~flexShrink=1,
-                        (),
-                      )}>
-                      ...textElements
-                    </view>;
-                  },
-                  ~children,
-                )
-              )
-        );
+    let textElements = _viewLinesToElements(bufferView.viewLines);
+
+    let style =
+      Style.
+        [
+          backgroundColor(theme.background),
+          color(theme.foreground),
+          flexGrow(1),
+        ];
+        /* flexShrink(1), */
+
+    <View style> ...textElements </View>;
+  });
+
+let createElement = (~children as _, ()) => React.element(make());

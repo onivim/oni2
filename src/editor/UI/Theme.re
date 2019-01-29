@@ -5,7 +5,6 @@
  */
 
 open Revery.Core;
-open Revery.UI;
 
 type t = {
   background: Color.t,
@@ -21,5 +20,7 @@ let default: t = {
   editorForeground: Color.hex("#DCDCDC"),
 };
 
-let context = createContext(default);
-let provider = getProvider(context);
+let get: unit => t =
+  () => {
+    default;
+  };

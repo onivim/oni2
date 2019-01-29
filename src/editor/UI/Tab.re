@@ -11,52 +11,46 @@ type tabAction = unit => unit;
 
 let tabHeight = 35;
 let maxWidth = 145;
-let fontFamily = "Inter-UI-SemiBold.ttf";
-let fontSize = 12;
+let fontName = "Inter-UI-SemiBold.ttf";
+let fontPixelSize = 12;
 
-include (
-          val component(
-                (
-                  render,
-                  ~title,
-                  ~active: bool,
-                  ~onClick: tabAction,
-                  ~onClose: tabAction,
-                  ~children,
-                  (),
-                ) =>
-                render(
-                  () => {
-                    let _ = (onClick, onClose);
-                    let theme = useContext(Theme.context);
+let component = React.component("Tab");
 
-                    let opacity = active ? 1.0 : 0.6;
+let make = (~title, ~active, ~onClick, ~onClose, ()) =>
+  component((_slots: React.Hooks.empty) => {
+    /* ~title, */
+    /* ~active: bool, */
+    /* ~onClick: tabAction, */
+    /* ~onClose: tabAction, */
+    /* ~children, */
+    let _ = (onClick, onClose);
+    let theme = Theme.get();
 
-                    <Clickable>
-                      <view
-                        style={Style.make(
-                          ~backgroundColor=theme.editorBackground,
-                          ~opacity,
-                          ~height=tabHeight,
-                          ~width=maxWidth,
-                          ~flexDirection=LayoutTypes.Row,
-                          ~justifyContent=LayoutTypes.JustifyCenter,
-                          ~alignItems=LayoutTypes.AlignCenter,
-                          (),
-                        )}>
-                        <text
-                          style={Style.make(
-                            ~fontFamily,
-                            ~fontSize,
-                            ~color=theme.editorForeground,
-                            (),
-                          )}>
-                          title
-                        </text>
-                      </view>
-                    </Clickable>;
-                  },
-                  ~children,
-                )
-              )
-        );
+    let opacityValue = active ? 1.0 : 0.6;
+
+    let containerStyle =
+      Style.[
+        backgroundColor(theme.editorBackground),
+        opacity(opacityValue),
+        height(tabHeight),
+        width(maxWidth),
+        flexDirection(`Row),
+        justifyContent(`Center),
+        alignItems(`Center),
+      ];
+
+    let textStyle =
+      Style.[
+        fontFamily(fontName),
+        fontSize(fontPixelSize),
+        color(theme.editorForeground),
+      ];
+
+    <Clickable>
+      <View style=containerStyle> <Text style=textStyle text=title /> </View>
+    </Clickable>;
+  });
+
+let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) => {
+  React.element(make(~title, ~active, ~onClick, ~onClose, ()));
+};
