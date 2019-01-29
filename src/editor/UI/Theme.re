@@ -21,5 +21,6 @@ let default: t = {
   editorForeground: Color.hex("#DCDCDC"),
 };
 
-let context = createContext(default);
-let provider = getProvider(context);
+let get: unit => t = () => {
+    default
+}

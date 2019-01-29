@@ -20,7 +20,7 @@ include (
           val component((render, ~children, ()) =>
                 render(
                   () => {
-                    let theme = useContext(Theme.context);
+                    let theme = Theme.get();
 
                     <view
                       style={Style.make(

@@ -28,7 +28,7 @@ include (
                 render(
                   () => {
                     let _ = (onClick, onClose);
-                    let theme = useContext(Theme.context);
+                    let theme = Theme.get();
 
                     let opacity = active ? 1.0 : 0.6;
 
