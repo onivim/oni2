@@ -25,16 +25,15 @@ let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
   let ret = [
-    <text style=textHeaderStyle> "Hello" </text>,
-    <text style=textHeaderStyle> "World" </text>,
+    <Text style=textHeaderStyle text="Hello" />
+    <Text style=textHeaderStyle text="World" />
   ];
   ret;
 };
 
-include (
-          val component((render, ~children, ()) =>
-                render(
-                  () => {
+let component = React.component("EditorSurface");
+
+let make = () => {
                     let theme = Theme.get();
 
                     let bufferView =
@@ -49,19 +48,18 @@ include (
                     let textElements =
                       _viewLinesToElements(bufferView.viewLines);
 
-                    <view
-                      style={Style.make(
-                        /* ~backgroundColor=Colors.red, */
-                        ~backgroundColor=theme.background,
-                        ~color=theme.foreground,
-                        ~flexGrow=1,
-                        ~flexShrink=1,
-                        (),
-                      )}>
+                    let style = Style.[
+                        backgroundColor(theme.background),
+                        color(theme.foreground),
+                        flexGrow(1),
+                        flexShrink(1),
+                    ];
+
+                    <View
+                      style>
                       ...textElements
-                    </view>;
-                  },
-                  ~children,
-                )
-              )
-        );
+                    </View>;
+    
+}
+
+let createElement = (~children as _, ()) => React.element(make());
