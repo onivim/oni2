@@ -18,7 +18,8 @@ let tabs: list(Tabs.tabInfo) = [
 
 let component = React.component("Editor");
 
-let editorViewStyle = (background, foreground) => Style.[
+let editorViewStyle = (background, foreground) =>
+  Style.[
     backgroundColor(background),
     color(foreground),
     position(`Absolute),
@@ -27,18 +28,15 @@ let editorViewStyle = (background, foreground) => Style.[
     right(0),
     bottom(0),
     flexDirection(`Column),
-];
+  ];
 
-let make = () => component((_slots: React.Hooks.empty) => {
+let make = () =>
+  component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
     let style = editorViewStyle(theme.background, theme.foreground);
 
-    <View
-      style>
-      <Tabs tabs />
-      <EditorSurface />
-    </View>;
-});
+    <View style> <Tabs tabs /> <EditorSurface /> </View>;
+  });
 
 let createElement = (~children as _, ()) => React.element(make());

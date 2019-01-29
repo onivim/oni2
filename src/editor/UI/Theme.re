@@ -20,6 +20,7 @@ let default: t = {
   editorForeground: Color.hex("#DCDCDC"),
 };
 
-let get: unit => t = () => {
-    default
-}
+let get: unit => t =
+  () => {
+    default;
+  };

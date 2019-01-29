@@ -8,7 +8,8 @@ open Revery.UI;
 
 let component = React.component("Root");
 
-let rootStyle = (background, foreground) => Style.[
+let rootStyle = (background, foreground) =>
+  Style.[
     backgroundColor(background),
     color(foreground),
     position(`Absolute),
@@ -17,16 +18,15 @@ let rootStyle = (background, foreground) => Style.[
     right(0),
     bottom(0),
     justifyContent(`Center),
-    alignItems(`Center)
-];
+    alignItems(`Center),
+  ];
 
-let make = () => component((_slots: React.Hooks.empty) => {
-                    let theme = Theme.get();
-                    let style = rootStyle(theme.background, theme.foreground);
+let make = () =>
+  component((_slots: React.Hooks.empty) => {
+    let theme = Theme.get();
+    let style = rootStyle(theme.background, theme.foreground);
 
-                    <View style>
-                        <Editor />
-                    </View>;
-});
+    <View style> <Editor /> </View>;
+  });
 
 let createElement = (~children as _, ()) => React.element(make());
