@@ -3,7 +3,7 @@ open Oni_Core.Types;
 
 let validateToken =
     (
-      expect: Rely__DefaultMatchers.matchers,
+      expect: Rely__DefaultMatchers.matchers(string),
       actualToken: Tokenizer.t,
       expectedToken: Tokenizer.t,
     ) => {
@@ -18,7 +18,7 @@ let validateToken =
 
 let validateTokens =
     (
-      expect: Rely__DefaultMatchers.matchers,
+      expect: Rely__DefaultMatchers.matchers(string),
       actualTokens: list(Tokenizer.t),
       expectedTokens: list(Tokenizer.t),
     ) => {
