@@ -49,7 +49,7 @@ let make = (~title, ~active, ~onClick, ~onClose, ()) => component((_slots: React
                       <View
                         style={containerStyle}>
                         <Text
-                          style={textStyle} textContent={title} />
+                          style={textStyle} text={title} />
                       </View>
                     </Clickable>;
         });
