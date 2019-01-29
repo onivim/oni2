@@ -14,18 +14,22 @@ open Oni_Core;
 open Oni_Core.TokenizedBufferView;
 
 /* Set up some styles */
-let textHeaderStyle =
-  Style.make(~fontFamily="FiraCode-Regular.ttf", ~fontSize=14, ());
+let textHeaderStyle = Style.[
+    fontFamily("FiraCode-Regular.ttf"),
+    fontSize(14),
+];
 
 /* Set up some styles */
-let fontAwesomeStyle =
-  Style.make(~fontFamily="FontAwesome5FreeRegular.otf", ~fontSize=14, ());
+let fontAwesomeStyle = Style.[
+    fontFamily("FontAwesome5FreeRegular.otf"),
+    fontSize(14)
+];
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
   let ret = [
-    <Text style=textHeaderStyle text="Hello" />
+    <Text style=textHeaderStyle text="Hello" />,
     <Text style=textHeaderStyle text="World" />
   ];
   ret;
@@ -33,7 +37,7 @@ let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
 
 let component = React.component("EditorSurface");
 
-let make = () => {
+let make = () => (component((_slots: React.Hooks.empty) => {
                     let theme = Theme.get();
 
                     let bufferView =
@@ -52,7 +56,7 @@ let make = () => {
                         backgroundColor(theme.background),
                         color(theme.foreground),
                         flexGrow(1),
-                        flexShrink(1),
+                        /* flexShrink(1), */
                     ];
 
                     <View
@@ -60,6 +64,6 @@ let make = () => {
                       ...textElements
                     </View>;
     
-}
+}));
 
 let createElement = (~children as _, ()) => React.element(make());

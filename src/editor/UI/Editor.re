@@ -16,29 +16,29 @@ let tabs: list(Tabs.tabInfo) = [
   {title: "file3.re", active: false, onClick: noop, onClose: noop},
 ];
 
-include (
-          val component((render, ~children, ()) =>
-                render(
-                  () => {
-                    let theme = Theme.get();
+let component = React.component("Editor");
 
-                    <view
-                      style={Style.make(
-                        ~backgroundColor=theme.background,
-                        ~color=theme.foreground,
-                        ~position=LayoutTypes.Absolute,
-                        ~top=0,
-                        ~left=0,
-                        ~right=0,
-                        ~bottom=0,
-                        ~flexDirection=LayoutTypes.Column,
-                        (),
-                      )}>
-                      <Tabs tabs />
-                      <EditorSurface />
-                    </view>;
-                  },
-                  ~children,
-                )
-              )
-        );
+let editorViewStyle = (background, foreground) => Style.[
+    backgroundColor(background),
+    color(foreground),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+    flexDirection(`Column),
+];
+
+let make = () => component((_slots: React.Hooks.empty) => {
+    let theme = Theme.get();
+
+    let style = editorViewStyle(theme.background, theme.foreground);
+
+    <View
+      style>
+      <Tabs tabs />
+      <EditorSurface />
+    </View>;
+});
+
+let createElement = (~children as _, ()) => React.element(make());

@@ -15,26 +15,27 @@ type tabInfo = {
   onClose: Tab.tabAction,
 };
 
-include (
-          val component((render, ~tabs: list(tabInfo), ~children, ()) =>
-                render(
-                  () => {
-                    let toTab = (t: tabInfo) => {
-                      <Tab
-                        title={t.title}
-                        active={t.active}
-                        onClick={t.onClick}
-                        onClose={t.onClose}
-                      />;
-                    };
-                    let tabComponents = List.map(toTab, tabs);
+let component = React.component("Tabs");
 
-                    <view
-                      style={Style.make(~flexDirection=LayoutTypes.Row, ())}>
+let toTab = (t: tabInfo) => {
+  <Tab
+    title={t.title}
+    active={t.active}
+    onClick={t.onClick}
+    onClose={t.onClose}
+  />;
+};
+
+let viewStyle = Style.[
+    flexDirection(`Row)
+];
+
+let make = (~tabs: list(tabInfo), ()) => component((_slots: React.Hooks.empty) => {
+                    let tabComponents = List.map(toTab, tabs);
+                    <View
+                      style={viewStyle}>
                       ...tabComponents
-                    </view>;
-                  },
-                  ~children,
-                )
-              )
-        );
+                    </View>;
+});
+
+let createElement = (~children as _, ~tabs, ()) => React.element(make(~tabs, ()));
