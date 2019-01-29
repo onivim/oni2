@@ -15,10 +15,10 @@
     ]
   },
   "dependencies": {
-    "ocaml": "~4.6.0",
-    "@esy-ocaml/reason": "*",
+    "ocaml": "~4.7.0",
+    "@esy-ocaml/reason": "3.4.0",
     "@opam/ocamlbuild": "*",
-    "revery": "*",
+    "revery": "0.5.1",
     "flex": "^1.2.1",
     "@opam/msgpck": "*",
     "@opam/dune": "*",
@@ -27,18 +27,17 @@
     "@opam/msgpck": "^1.4",
     "@opam/zed": "1.6",
     "rench": "^1.1.0",
-    "@reason-native/rely": "0.0.0"
+    "@reason-native/rely": "1.0.1"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
-    "@esy-ocaml/reason": "facebook/reason#ab49908",
-    "reason-reactify": "2.2.0",
-    "revery": "github:revery-ui/revery#c62c6a0"
+    "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#7901934",
+    "rench": "github:bryphe/rench#49ad8d7"
   },
   "devDependencies": {
-    "ocaml": "~4.6.0",
+    "ocaml": "~4.7.0",
     "@opam/merlin": "*"
   }
 }
