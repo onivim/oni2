@@ -87,6 +87,15 @@ let init = app => {
     let _ = nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String(c)]));
   });
 
+  let _ = Event.subscribe(w.onKeyDown, (event) => {
+   let _ = switch (event.key) {
+    | Key.KEY_BACKSPACE => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<BS>")])))
+    | Key.KEY_ENTER => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<CR>")])))
+    | Key.KEY_ESCAPE => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<ESC>")])))
+    | _ => ()
+   } 
+  });
+
   let _ = Tick.interval((_) => {
     nvimApi.pump(); 
   }, Seconds(0.));
