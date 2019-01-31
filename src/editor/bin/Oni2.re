@@ -67,6 +67,21 @@ let init = app => {
     ]),
   );
 
+  let buf = nvimApi.requestSync(
+    "nvim_get_current_buf",
+    Msgpck.List([]),
+  );
+  prerr_endline ("BUF: " ++ Msgpck.show(buf));
+
+  let _ = nvimApi.requestSync(
+    "nvim_buf_attach",
+    Msgpck.List([
+        Msgpck.Int(0),
+        Msgpck.Bool(true),
+        Msgpck.Map([]),
+    ])
+  );
+
   let _ = Event.subscribe(w.onKeyPress, (event) => {
       let c = event.character;
     let _ = nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String(c)]));
