@@ -14,6 +14,7 @@
         Rench
         Revery
         Oni_Core
+        Oni_Neovim
         Oni_UI
             )
   (preprocess (

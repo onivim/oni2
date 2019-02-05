@@ -15,3 +15,5 @@
 module MsgpackTransport = MsgpackTransport;
 module NeovimProcess = NeovimProcess;
 module NeovimApi = NeovimApi;
+module NeovimProtocol = NeovimProtocol;
+module Notification = Notification;
