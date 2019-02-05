@@ -7,9 +7,6 @@
 /* open Oni_Core; */
 open Rench;
 
-type notification = 
-| ModeChanged(string);
-
 /* 
  * Simple API for interacting with Neovim,
  * abstracted from Msgpck
@@ -21,7 +18,51 @@ type t = {
 
   /* TODO */
   /* Typed notifications */
-  onNotification: Event.t(notification),
+  onNotification: Event.t(Notification.t),
 };
 
-/* TODO */
+let make = (nvimApi: NeovimApi.t) => {
+
+   let onNotification: Event.t(Notification.t) = Event.create();
+
+   let uiAttach = () => {
+      let _ = nvimApi.requestSync(
+        "nvim_ui_attach",
+        Msgpck.List([
+          Msgpck.Int(20),
+          Msgpck.Int(20),
+          Msgpck.Map([
+            (Msgpck.String("rgb"), Msgpck.Bool(true)),
+            (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
+            (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
+            (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
+            (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
+            (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
+            /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
+            /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
+          ]),
+        ])
+      );
+   };
+
+   let input = (key: string) => {
+        let _ = nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String(key)]));
+   };
+
+   let _ = Event.subscribe(nvimApi.onNotification, (n) => {
+        let parsedEvent = Notification.parse(n.notificationType, n.payload); 
+
+        let f = (n) => {
+            Event.dispatch(onNotification, n);
+        };
+
+        List.iter(f, parsedEvent);
+   })
+
+   let ret: t = {
+       uiAttach,
+       input,
+       onNotification,
+   };
+   ret;
+};

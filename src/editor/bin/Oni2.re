@@ -49,29 +49,15 @@ let init = app => {
     );
 
   let nvimApi: NeovimApi.t = NeovimApi.make(msgpackTransport);
-  let _ = nvimApi.requestSync(
-    "nvim_ui_attach",
-    Msgpck.List([
-      Msgpck.Int(20),
-      Msgpck.Int(20),
-      Msgpck.Map([
-        (Msgpck.String("rgb"), Msgpck.Bool(true)),
-        (Msgpck.String("ext_popupmenu"), Msgpck.Bool(true)),
-        (Msgpck.String("ext_tabline"), Msgpck.Bool(true)),
-        (Msgpck.String("ext_cmdline"), Msgpck.Bool(true)),
-        (Msgpck.String("ext_wildmenu"), Msgpck.Bool(true)),
-        (Msgpck.String("ext_linegrid"), Msgpck.Bool(true)),
-        /* (Msgpck.String("ext_multigrid"), Msgpck.Bool(true)), */
-        /* (Msgpck.String("ext_hlstate"), Msgpck.Bool(true)), */
-      ]),
-    ]),
-  );
+  let neovimProtocol: NeovimProtocol.t = NeovimProtocol.make(nvimApi);
 
-  let buf = nvimApi.requestSync(
-    "nvim_get_current_buf",
-    Msgpck.List([]),
-  );
-  prerr_endline ("BUF: " ++ Msgpck.show(buf));
+  neovimProtocol.uiAttach();
+
+  /* let buf = nvimApi.requestSync( */
+  /*   "nvim_get_current_buf", */
+  /*   Msgpck.List([]), */
+  /* ); */
+  /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
 
   let _ = nvimApi.requestSync(
     "nvim_buf_attach",
@@ -84,14 +70,14 @@ let init = app => {
 
   let _ = Event.subscribe(w.onKeyPress, (event) => {
       let c = event.character;
-    let _ = nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String(c)]));
+      neovimProtocol.input(c);
   });
 
   let _ = Event.subscribe(w.onKeyDown, (event) => {
    let _ = switch (event.key) {
-    | Key.KEY_BACKSPACE => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<BS>")])))
-    | Key.KEY_ENTER => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<CR>")])))
-    | Key.KEY_ESCAPE => ignore(nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String("<ESC>")])))
+    | Key.KEY_BACKSPACE => ignore(neovimProtocol.input("<BS>"))
+    | Key.KEY_ENTER => ignore(neovimProtocol.input("<CR>"))
+    | Key.KEY_ESCAPE => ignore(neovimProtocol.input("<ESC>"))
     | _ => ()
    } 
   });
@@ -101,7 +87,11 @@ let init = app => {
   }, Seconds(0.));
 
   let _  = Event.subscribe(nvimApi.onNotification, (n) => {
-    prerr_endline ("Notification: " ++ n.notificationType ++ " | " ++ Msgpck.show(n.payload)); 
+    prerr_endline ("Raw Notification: " ++ n.notificationType ++ " | " ++ Msgpck.show(n.payload)); 
+  });
+
+  let _  = Event.subscribe(neovimProtocol.onNotification, (n) => {
+    prerr_endline ("Protocol Notification: " ++ Notification.show(n));
   });
 };
 
