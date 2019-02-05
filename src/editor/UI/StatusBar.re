@@ -1,22 +1,13 @@
 /*
- * Tabs.re
+ * StatusBar.re
  *
- * Container for <Tab /> components
+ * Container for StatusBar
  */
 
 open Revery.Core;
 open Revery.UI;
 
 open Oni_Core;
-
-let noop = () => ();
-
-type tabInfo = {
-  title: string,
-  active: bool,
-  onClick: Tab.tabAction,
-  onClose: Tab.tabAction,
-};
 
 let component = React.component("StatusBar");
 
@@ -26,15 +17,6 @@ let textStyle =
     fontFamily("Inter-UI-Regular.ttf"),
     fontSize(14),
   ];
-
-let toTab = (t: tabInfo) => {
-  <Tab
-    title={t.title}
-    active={t.active}
-    onClick={t.onClick}
-    onClose={t.onClose}
-  />;
-};
 
 let viewStyle =
   Style.[
