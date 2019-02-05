@@ -39,7 +39,7 @@ let init = app => {
   let render = () => {
     let state: Core.State.t = App.getState(app);
     prerr_endline("[STATE] Mode: " ++ Core.State.Mode.show(state.mode));
-    <Root />;
+    <Root state />;
   };
 
   UI.start(w, render);
