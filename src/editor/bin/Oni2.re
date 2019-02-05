@@ -13,6 +13,8 @@ open Rench;
 open Oni_UI;
 open Oni_Neovim;
 
+module Core = Oni_Core;
+
 exception NeovimNotFound;
 
 /* The 'main' function for our app */
@@ -35,7 +37,9 @@ let init = app => {
     };
 
   let render = () => {
-    <Root />;
+    let state: Core.State.t = App.getState(app);
+    prerr_endline("[STATE] Mode: " ++ Core.State.Mode.show(state.mode));
+    <Root state />;
   };
 
   UI.start(w, render);
@@ -102,11 +106,23 @@ let init = app => {
     );
 
   let _ =
-    Event.subscribe(neovimProtocol.onNotification, n =>
-      prerr_endline("Protocol Notification: " ++ Notification.show(n))
+    Event.subscribe(
+      neovimProtocol.onNotification,
+      n => {
+        let msg =
+          switch (n) {
+          | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
+          | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
+          | ModeChanged(_) => Core.Actions.ChangeMode(Other)
+          | _ => Noop
+          };
+
+        App.dispatch(app, msg);
+        prerr_endline("Protocol Notification: " ++ Notification.show(n));
+      },
     );
   ();
 };
 
 /* Let's get this party started! */
-App.start(init);
+App.startWithState(Core.State.create(), Core.Reducer.reduce, init);
