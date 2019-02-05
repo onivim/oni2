@@ -53,7 +53,7 @@ let make = (state: State.t) =>
     let style = rootStyle(theme.background, theme.foreground);
 
     <View style>
-      <View style=surfaceStyle> <Editor state/> </View>
+      <View style=surfaceStyle> <Editor state /> </View>
       <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
     </View>;
   });

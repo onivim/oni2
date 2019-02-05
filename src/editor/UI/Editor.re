@@ -25,27 +25,28 @@ let editorViewStyle = (background, foreground) =>
   ];
 
 let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
-    let f = (t: Oni_Core.State.Tab.t) => {
-       let ret: Tabs.tabInfo = {
-           title: t.title,
-            active: t.active,
-            onClick: noop,
-            onClose: noop,
-       };
-       ret;
-    }
+  let f = (t: Oni_Core.State.Tab.t) => {
+    let ret: Tabs.tabInfo = {
+      title: t.title,
+      active: t.active,
+      onClick: noop,
+      onClose: noop,
+    };
+    ret;
+  };
 
-    List.map(f, tabs);
+  List.map(f, tabs);
 };
 
 let make = (state: Oni_Core.State.t) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
-    let tabs = toUiTabs(state.tabs)
+    let tabs = toUiTabs(state.tabs);
     let style = editorViewStyle(theme.background, theme.foreground);
 
     <View style> <Tabs tabs /> <EditorSurface /> </View>;
   });
 
-let createElement = (~state: Oni_Core.State.t, ~children as _, ()) => React.element(make(state));
+let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
+  React.element(make(state));
