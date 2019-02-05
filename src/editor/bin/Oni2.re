@@ -37,8 +37,8 @@ let init = app => {
     };
 
   let render = () => {
-      let state: Core.State.t = App.getState(app);
-      prerr_endline ("[STATE] Mode: " ++ Core.State.Mode.show(state.mode));
+    let state: Core.State.t = App.getState(app);
+    prerr_endline("[STATE] Mode: " ++ Core.State.Mode.show(state.mode));
     <Root />;
   };
 
@@ -106,20 +106,23 @@ let init = app => {
     );
 
   let _ =
-    Event.subscribe(neovimProtocol.onNotification, n => {
-      let msg = switch (n) {
-      | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
-      | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
-      | ModeChanged(_) => Core.Actions.ChangeMode(Other)
-      | _ => Noop
-      };
+    Event.subscribe(
+      neovimProtocol.onNotification,
+      n => {
+        let msg =
+          switch (n) {
+          | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
+          | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
+          | ModeChanged(_) => Core.Actions.ChangeMode(Other)
+          | _ => Noop
+          };
 
-      App.dispatch(app, msg);
-      prerr_endline("Protocol Notification: " ++ Notification.show(n))
-    });
+        App.dispatch(app, msg);
+        prerr_endline("Protocol Notification: " ++ Notification.show(n));
+      },
+    );
   ();
 };
-
 
 /* Let's get this party started! */
 App.startWithState(Core.State.create(), Core.Reducer.reduce, init);

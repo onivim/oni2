@@ -7,6 +7,5 @@
 open State;
 
 type t =
-| ChangeMode(Mode.t)
-| Noop
-;
+  | ChangeMode(Mode.t)
+  | Noop;

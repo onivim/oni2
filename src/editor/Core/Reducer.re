@@ -6,14 +6,12 @@
 
 open Actions;
 
-let reduce: (State.t, Actions.t) => State.t = (s, a) => {
+let reduce: (State.t, Actions.t) => State.t =
+  (s, a) => {
     switch (a) {
-    | ChangeMode(m) => { 
-        let ret: State.t = {
-            mode: m,
-        };
-        ret;
-    }
+    | ChangeMode(m) =>
+      let ret: State.t = {mode: m};
+      ret;
     | Noop => s
     };
-};
+  };
