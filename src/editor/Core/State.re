@@ -14,7 +14,7 @@ module Mode = {
     switch (v) {
     | Insert => "insert"
     | Normal => "normal"
-    | Other => "unknwon"
+    | Other => "unknown"
     };
 };
 
