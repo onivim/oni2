@@ -21,7 +21,11 @@ type tabInfo = {
 let component = React.component("StatusBar");
 
 let textStyle =
-  Style.[color(Color.hex("#9da5b4")), fontFamily("Inter-UI-Regular.ttf"), fontSize(14)];
+  Style.[
+    color(Color.hex("#9da5b4")),
+    fontFamily("Inter-UI-Regular.ttf"),
+    fontSize(14),
+  ];
 
 let toTab = (t: tabInfo) => {
   <Tab
@@ -32,12 +36,19 @@ let toTab = (t: tabInfo) => {
   />;
 };
 
-let viewStyle = Style.[flexDirection(`Row), justifyContent(`Center), alignItems(`Center)];
+let viewStyle =
+  Style.[
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 
 let make = (~mode: State.Mode.t, ()) =>
-  component((_slots: React.Hooks.empty) => {
-    <View style=viewStyle><Text style=textStyle text={State.Mode.show(mode)} /></View>
-  });
+  component((_slots: React.Hooks.empty) =>
+    <View style=viewStyle>
+      <Text style=textStyle text={State.Mode.show(mode)} />
+    </View>
+  );
 
 let createElement = (~children as _, ~mode, ()) =>
   React.element(make(~mode, ()));

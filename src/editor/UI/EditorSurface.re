@@ -49,13 +49,12 @@ let make = () =>
     let textElements = _viewLinesToElements(bufferView.viewLines);
 
     let style =
-      Style.
-        [
-          backgroundColor(theme.background),
-          color(theme.foreground),
-          flexGrow(1),
-        ];
-        /* flexShrink(1), */
+      Style.[
+        backgroundColor(theme.background),
+        color(theme.foreground),
+        flexGrow(1),
+      ];
+    /* flexShrink(1), */
 
     <View style> ...textElements </View>;
   });
