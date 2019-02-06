@@ -64,8 +64,8 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
     | [M.Int(activeBufferId), M.Int(cursorLine), M.Int(cursorColumn)] =>
       Types.AutoCommandContext.create(
         ~activeBufferId,
-        ~cursorLine,
-        ~cursorColumn,
+        ~cursorLine=OneBasedIndex(cursorLine),
+        ~cursorColumn=OneBasedIndex(cursorColumn),
         (),
       )
     | _ => raise(InvalidAutoCommandContext)

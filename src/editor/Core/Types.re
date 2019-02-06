@@ -1,12 +1,12 @@
-module Position = {
+module Index = {
   type t =
-    | ZeroBasedPosition(int)
-    | OneBasedPosition(int);
+    | ZeroBasedIndex(int)
+    | OneBasedIndex(int);
 
-  let toZeroBasedIndex = (pos: t) =>
+  let toZeroBasedInt = (pos: t) =>
     switch (pos) {
-    | ZeroBasedPosition(n) => n
-    | OneBasedPosition(n) => n - 1
+    | ZeroBasedIndex(n) => n
+    | OneBasedIndex(n) => n - 1
     };
 };
 
@@ -23,6 +23,22 @@ module Mode = {
     | Other => "unknown"
     };
 };
+
+module BufferPosition = {
+    type t = {
+        line: Index.t,
+        character: Index.t,
+    };
+
+    let create = (line, character) => {
+        line, character
+    };
+
+    let createFromZeroBasedIndices = (line: int, character: int) => {
+        line: ZeroBasedIndex(line),
+        character: ZeroBasedIndex(character),
+    };
+}
 
 module BufferUpdate = {
   type t = {

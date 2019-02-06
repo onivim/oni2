@@ -20,8 +20,8 @@ describe("tokenize", ({test, _}) => {
     let expectedTokens: list(Tokenizer.t) = [
       {
         text: "testWord",
-        startPosition: ZeroBasedPosition(0),
-        endPosition: ZeroBasedPosition(8),
+        startPosition: ZeroBasedIndex(0),
+        endPosition: ZeroBasedIndex(8),
       },
     ];
 
@@ -34,8 +34,8 @@ describe("tokenize", ({test, _}) => {
     let expectedTokens: list(Tokenizer.t) = [
       {
         text: "testWord",
-        startPosition: ZeroBasedPosition(2),
-        endPosition: ZeroBasedPosition(10),
+        startPosition: ZeroBasedIndex(2),
+        endPosition: ZeroBasedIndex(10),
       },
     ];
 
@@ -48,8 +48,8 @@ describe("tokenize", ({test, _}) => {
     let expectedTokens: list(Tokenizer.t) = [
       {
         text: "a",
-        startPosition: ZeroBasedPosition(0),
-        endPosition: ZeroBasedPosition(1),
+        startPosition: ZeroBasedIndex(0),
+        endPosition: ZeroBasedIndex(1),
       },
     ];
 
@@ -62,13 +62,13 @@ describe("tokenize", ({test, _}) => {
     let expectedTokens: list(Tokenizer.t) = [
       {
         text: "a",
-        startPosition: ZeroBasedPosition(1),
-        endPosition: ZeroBasedPosition(2),
+        startPosition: ZeroBasedIndex(1),
+        endPosition: ZeroBasedIndex(2),
       },
       {
         text: "btest",
-        startPosition: ZeroBasedPosition(3),
-        endPosition: ZeroBasedPosition(8),
+        startPosition: ZeroBasedIndex(3),
+        endPosition: ZeroBasedIndex(8),
       },
     ];
 

@@ -14,20 +14,20 @@ module BufferViewLine = {
      * The original line number for this line. May be less than the
      * line index, if any lines were wrapped
      */
-    lineNumber: Position.t,
+    lineNumber: Index.t,
     /*
      * The 'virtual' line number - this is the screen-space line number
      * that accounts for wrapping. If there is no wrapping, this will be
      * equal to the lineNumber - if there is wrapping, this may be greater
      * than the original lineNumber */
-    virtualLineNumber: Position.t,
+    virtualLineNumber: Index.t,
     /*
      * lineOffset is the value that position 0 of the virtual line
      * maps to in the original buffer line. If `lineOffset` is 0,
      * that means this is not a wrapped line. If `lineOffset` <> 0,
      * it is a wrapped line.
      */
-    lineOffset: Position.t,
+    lineOffset: Index.t,
     tokens: list(Tokenizer.t),
   };
 };
@@ -38,9 +38,9 @@ let _toViewWithoutWrapping = (tokenizedBuffer: TokenizedBuffer.t) => {
   let f: (int, list(Tokenizer.t)) => BufferViewLine.t =
     (i, tokens) => {
       let ret: BufferViewLine.t = {
-        lineNumber: ZeroBasedPosition(i),
-        virtualLineNumber: ZeroBasedPosition(i),
-        lineOffset: ZeroBasedPosition(0),
+        lineNumber: ZeroBasedIndex(i),
+        virtualLineNumber: ZeroBasedIndex(i),
+        lineOffset: ZeroBasedIndex(0),
         tokens,
       };
       ret;

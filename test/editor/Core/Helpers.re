@@ -10,11 +10,11 @@ let validateToken =
       expectedToken: Tokenizer.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
-  expect.int(Position.toZeroBasedIndex(actualToken.startPosition)).toBe(
-    Position.toZeroBasedIndex(expectedToken.startPosition),
+  expect.int(Index.toZeroBasedInt(actualToken.startPosition)).toBe(
+    Index.toZeroBasedInt(expectedToken.startPosition),
   );
-  expect.int(Position.toZeroBasedIndex(actualToken.endPosition)).toBe(
-    Position.toZeroBasedIndex(expectedToken.endPosition),
+  expect.int(Index.toZeroBasedInt(actualToken.endPosition)).toBe(
+    Index.toZeroBasedInt(expectedToken.endPosition),
   );
 };
 
