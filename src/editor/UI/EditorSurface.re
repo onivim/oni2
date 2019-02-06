@@ -5,7 +5,7 @@
  * the view of the buffer in the window.
  */
 
-/* open Revery.Core; */
+open Revery.Core;
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -80,6 +80,27 @@ let make = (state: State.t) =>
         bufferView,
       );
 
+    let fontHeight = state.editorFont.measuredHeight;
+    let fontWidth = state.editorFont.measuredWidth;
+
+    let cursorWidth = switch(state.mode) {
+        | Insert => 2
+        | _ => fontWidth
+        };
+
+    let cursorStyle =
+        Style.[
+            position(`Absolute),
+            top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
+            left(fontWidth * Index.toZeroBasedInt(state.cursorPosition.character)),
+            height(fontHeight),
+            width(cursorWidth),
+            opacity(0.8),
+            backgroundColor(Colors.white),
+        ];
+
+    let elements = [ <View style=cursorStyle />, ...textElements ];
+
     let style =
       Style.[
         backgroundColor(theme.background),
@@ -87,7 +108,7 @@ let make = (state: State.t) =>
         flexGrow(1),
       ];
 
-    <View style> ...textElements </View>;
+    <View style> ...elements </View>;
   });
 
 let createElement = (~state, ~children as _, ()) =>
