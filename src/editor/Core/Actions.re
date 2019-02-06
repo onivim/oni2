@@ -4,10 +4,10 @@
  * Encapsulates actions that can impact the editor state
  */
 
-open State;
 open Types;
 
 type t =
+  | BufferUpdate(BufferUpdate.t)
   | ChangeMode(Mode.t)
   | SetEditorFont(EditorFont.t)
   | Noop;

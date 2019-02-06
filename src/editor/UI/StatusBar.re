@@ -25,10 +25,10 @@ let viewStyle =
     alignItems(`Center),
   ];
 
-let make = (~mode: State.Mode.t, ()) =>
+let make = (~mode: Types.Mode.t, ()) =>
   component((_slots: React.Hooks.empty) =>
     <View style=viewStyle>
-      <Text style=textStyle text={State.Mode.show(mode)} />
+      <Text style=textStyle text={Types.Mode.show(mode)} />
     </View>
   );
 

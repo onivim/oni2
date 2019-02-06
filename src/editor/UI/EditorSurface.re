@@ -69,12 +69,7 @@ let make = (state: State.t) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
-    let bufferView =
-      Buffer.ofLines([|
-        "- Hello from line 1",
-        "- Hello from line 2",
-        "--- Hello from line 3",
-      |])
+    let bufferView = state.buffer
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
@@ -91,7 +86,6 @@ let make = (state: State.t) =>
         color(theme.foreground),
         flexGrow(1),
       ];
-    /* flexShrink(1), */
 
     <View style> ...textElements </View>;
   });

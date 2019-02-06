@@ -40,7 +40,7 @@ let init = app => {
     let state: Core.State.t = App.getState(app);
     prerr_endline(
       "[DEBUG - STATE] Mode: "
-      ++ Core.State.Mode.show(state.mode)
+      ++ Core.Types.Mode.show(state.mode)
       ++ " editor font measured width: "
       ++ string_of_int(state.editorFont.measuredWidth)
       ++ " editor font measured height: "
@@ -154,6 +154,7 @@ let init = app => {
           | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
+          | BufferLines(bc) => Core.Actions.BufferUpdate(Core.Types.BufferUpdate.create(~startLine=bc.firstLine, ~endLine=bc.lastLine, ~lines=bc.lines, ()))
           | _ => Noop
           };
 

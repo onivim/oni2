@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+module Buffer = Oni_Core.Buffer;
+
 let validateToken =
     (
       expect: Rely__DefaultMatchers.matchers(unit),
@@ -29,4 +31,23 @@ let validateTokens =
   };
 
   List.iter2(f, actualTokens, expectedTokens);
+};
+
+let validateBuffer =
+    (
+      expect: Rely__DefaultMatchers.matchers(unit),
+      actualBuffer: Buffer.t,
+      expectedLines: array(string),
+    ) => {
+  expect.int(Array.length(actualBuffer.lines)).toBe(Array.length(expectedLines));
+
+  let validateLine = (actualLine, expectedLine) => {
+    expect.string(actualLine).toEqual(expectedLine);
+  }
+
+  let f = (actual, expected) => {
+    validateLine(actual, expected);
+  };
+
+  Array.iter2(f, actualBuffer.lines, expectedLines);
 };

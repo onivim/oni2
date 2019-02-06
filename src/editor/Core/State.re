@@ -5,21 +5,6 @@
  */
 
 open Types;
-
-module Mode = {
-  type t =
-    | Insert
-    | Normal
-    | Other;
-
-  let show = v =>
-    switch (v) {
-    | Insert => "insert"
-    | Normal => "normal"
-    | Other => "unknown"
-    };
-};
-
 module Tab = {
   type t = {
     id: int,
@@ -33,12 +18,14 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
+  buffer: Buffer.t,
   editorFont: EditorFont.t,
 };
 
 let create: unit => t =
   () => {
     mode: Insert,
+    buffer: Buffer.ofLines([|"testing"|]),
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
