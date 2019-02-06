@@ -42,7 +42,9 @@ let init = app => {
       "[DEBUG - STATE] Mode: "
       ++ Core.State.Mode.show(state.mode)
       ++ " editor font measured width: "
-      ++ string_of_int(state.editorFont.measuredWidth),
+      ++ string_of_int(state.editorFont.measuredWidth)
+      ++ " editor font measured height: "
+      ++ string_of_int(state.editorFont.measuredHeight),
     );
     <Root state />;
   };
@@ -88,8 +90,8 @@ let init = app => {
             EditorFont.create(
               ~fontFile=fontFamily,
               ~fontSize,
-              ~measuredWidth=glyph.width,
-              ~measuredHeight=glyph.height,
+              ~measuredWidth=glyph.advance / 64,
+              ~measuredHeight=glyph.bearingY + 2,
               (),
             ),
           ),
