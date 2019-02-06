@@ -25,7 +25,7 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let _tokensToElement =
+let tokensToElement =
     (
       fontWidth: int,
       fontHeight: int,
@@ -49,10 +49,10 @@ let _tokensToElement =
   List.map(f, tokens);
 };
 
-let _viewLinesToElements =
+let viewLinesToElements =
     (fontWidth: int, fontHeight: int, bufferView: TokenizedBufferView.t) => {
   let f = (b: BufferViewLine.t) => {
-    _tokensToElement(
+    tokensToElement(
       fontWidth,
       fontHeight,
       Position.toZeroBasedIndex(b.virtualLineNumber),
@@ -79,7 +79,7 @@ let make = (state: State.t) =>
       |> TokenizedBufferView.ofTokenizedBuffer;
 
     let textElements =
-      _viewLinesToElements(
+      viewLinesToElements(
         state.editorFont.measuredWidth,
         state.editorFont.measuredHeight,
         bufferView,
