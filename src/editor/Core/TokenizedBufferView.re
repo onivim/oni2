@@ -15,15 +15,12 @@ module BufferViewLine = {
      * line index, if any lines were wrapped
      */
     lineNumber: Position.t,
-
-
     /*
      * The 'virtual' line number - this is the screen-space line number
      * that accounts for wrapping. If there is no wrapping, this will be
      * equal to the lineNumber - if there is wrapping, this may be greater
      * than the original lineNumber */
     virtualLineNumber: Position.t,
-
     /*
      * lineOffset is the value that position 0 of the virtual line
      * maps to in the original buffer line. If `lineOffset` is 0,
