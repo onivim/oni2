@@ -25,7 +25,7 @@ type t = {
 let create: unit => t =
   () => {
     mode: Insert,
-    buffer: Buffer.ofLines([||]),
+    buffer: Buffer.ofLines([|"testing"|]),
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",

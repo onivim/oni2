@@ -86,7 +86,6 @@ let make = (state: State.t) =>
         color(theme.foreground),
         flexGrow(1),
       ];
-    /* flexShrink(1), */
 
     <View style> ...textElements </View>;
   });

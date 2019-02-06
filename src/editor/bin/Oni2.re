@@ -154,6 +154,7 @@ let init = app => {
           | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
+          | BufferLines(bc) => Core.Actions.BufferUpdate(Core.Types.BufferUpdate.create(~startLine=bc.firstLine, ~endLine=bc.lastLine, ~lines=bc.lines, ()))
           | _ => Noop
           };
 

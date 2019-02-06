@@ -12,7 +12,7 @@ let reduce: (State.t, Actions.t) => State.t =
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
-    | BufferUpdate(_bu) => s
+    | BufferUpdate(bu) => {...s, buffer: Buffer.update(s.buffer, bu)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | Noop => s
     };
