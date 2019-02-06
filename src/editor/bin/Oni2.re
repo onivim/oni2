@@ -40,7 +40,7 @@ let init = app => {
     let state: Core.State.t = App.getState(app);
     prerr_endline(
       "[DEBUG - STATE] Mode: "
-      ++ Core.State.Mode.show(state.mode)
+      ++ Core.Types.Mode.show(state.mode)
       ++ " editor font measured width: "
       ++ string_of_int(state.editorFont.measuredWidth)
       ++ " editor font measured height: "
