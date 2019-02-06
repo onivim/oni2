@@ -59,19 +59,23 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
 exception InvalidAutoCommandContext;
 
 let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
-
-    let context = switch(args) {
-    | [M.Int(activeBufferId), M.Int(cursorLine), M.Int(cursorColumn)] => {
-       Types.AutoCommandContext.create(~activeBufferId, ~cursorLine, ~cursorColumn, ());
-    }
-    | _ => raise(InvalidAutoCommandContext);
+  let context =
+    switch (args) {
+    | [M.Int(activeBufferId), M.Int(cursorLine), M.Int(cursorColumn)] =>
+      Types.AutoCommandContext.create(
+        ~activeBufferId,
+        ~cursorLine,
+        ~cursorColumn,
+        (),
+      )
+    | _ => raise(InvalidAutoCommandContext)
     };
 
-    switch (autocmd) {
-    | "CursorMoved" => CursorMoved(context)
-    | "CursorMovedI" => CursorMoved(context)
-    | _ => Ignored
-    };
+  switch (autocmd) {
+  | "CursorMoved" => CursorMoved(context)
+  | "CursorMovedI" => CursorMoved(context)
+  | _ => Ignored
+  };
 };
 
 let parse = (t: string, msg: Msgpck.t) => {
@@ -97,10 +101,14 @@ let parse = (t: string, msg: Msgpck.t) => {
           ),
         ),
       ]
-    | ("oni_plugin_notify", M.List([M.List([M.String("autocmd"), M.String(autocmd), M.List(args)])])) => {
-        let result = parseAutoCommand(autocmd, args);
-        [result]
-    }
+    | (
+        "oni_plugin_notify",
+        M.List([
+          M.List([M.String("autocmd"), M.String(autocmd), M.List(args)]),
+        ]),
+      ) =>
+      let result = parseAutoCommand(autocmd, args);
+      [result];
     | ("redraw", M.List(msgs)) => parseRedraw(msgs)
     | _ => [Ignored]
     };
