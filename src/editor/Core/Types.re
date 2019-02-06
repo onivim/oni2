@@ -24,6 +24,18 @@ module Mode = {
     };
 };
 
+module BufferPosition = {
+    type t = {
+        line: Index.t,
+        character: Index.t,
+    };
+
+    let createFromZeroBasedIndices = (line: int, character: int) => {
+        line: ZeroBasedIndex(line),
+        character: ZeroBasedIndex(character),
+    };
+}
+
 module BufferUpdate = {
   type t = {
     startLine: int,

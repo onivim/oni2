@@ -3,8 +3,8 @@ open Oni_Core.Types;
 
 module CursorPosition = {
   type t = {
-    line: Position.t,
-    character: Position.t,
+    line: Index.t,
+    character: Index.t,
   };
 };
 
