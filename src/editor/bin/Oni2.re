@@ -38,7 +38,12 @@ let init = app => {
 
   let render = () => {
     let state: Core.State.t = App.getState(app);
-    prerr_endline("[STATE] Mode: " ++ Core.State.Mode.show(state.mode));
+    prerr_endline(
+      "[DEBUG - STATE] Mode: "
+      ++ Core.State.Mode.show(state.mode)
+      ++ " editor font measured width: "
+      ++ string_of_int(state.editorFont.measuredWidth),
+    );
     <Root state />;
   };
 
@@ -62,6 +67,39 @@ let init = app => {
   /*   Msgpck.List([]), */
   /* ); */
   /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
+
+  let setFont = (fontFamily, fontSize) => {
+    Fontkit.fk_new_face(
+      Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
+      fontSize,
+      font => {
+        open Oni_Core.Actions;
+        open Oni_Core.Types;
+
+        /* Measure text */
+        let shapedText = Fontkit.fk_shape(font, "H");
+        let firstShape = shapedText[0];
+        let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
+
+        /* Set editor text based on measurements */
+        App.dispatch(
+          app,
+          SetEditorFont(
+            EditorFont.create(
+              ~fontFile=fontFamily,
+              ~fontSize,
+              ~measuredWidth=glyph.width,
+              ~measuredHeight=glyph.height,
+              (),
+            ),
+          ),
+        );
+      },
+      _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
+    );
+  };
+
+  setFont("FiraCode-Regular.ttf", 14);
 
   let _ =
     nvimApi.requestSync(

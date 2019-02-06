@@ -5,7 +5,9 @@
  */
 
 open State;
+open Types;
 
 type t =
   | ChangeMode(Mode.t)
+  | SetEditorFont(EditorFont.t)
   | Noop;

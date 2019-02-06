@@ -12,6 +12,7 @@ let reduce: (State.t, Actions.t) => State.t =
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
+    | SetEditorFont(font) => {...s, editorFont: font}
     | Noop => s
     };
   };

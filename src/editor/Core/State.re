@@ -4,6 +4,8 @@
  * Top-level state of the editor
  */
 
+open Types;
+
 module Mode = {
   type t =
     | Insert
@@ -31,7 +33,19 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
+  editorFont: EditorFont.t,
 };
 
 let create: unit => t =
-  () => {mode: Insert, tabs: [Tab.create(0, "[No Name]")]};
+  () => {
+    mode: Insert,
+    editorFont:
+      EditorFont.create(
+        ~fontFile="FiraCode-Regular.ttf",
+        ~fontSize=14,
+        ~measuredWidth=0,
+        ~measuredHeight=0,
+        (),
+      ),
+    tabs: [Tab.create(0, "[No Name]")],
+  };
