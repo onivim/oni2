@@ -4,19 +4,7 @@
  * Top-level state of the editor
  */
 
-module Mode = {
-  type t =
-    | Insert
-    | Normal
-    | Other;
-
-  let show = v =>
-    switch (v) {
-    | Insert => "insert"
-    | Normal => "normal"
-    | Other => "unknown"
-    };
-};
+open Types;
 
 module Tab = {
   type t = {
@@ -31,7 +19,8 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
+  buffer: Buffer.t,
 };
 
 let create: unit => t =
-  () => {mode: Insert, tabs: [Tab.create(0, "[No Name]")]};
+  () => {mode: Insert, buffer: Buffer.ofLines([||]), tabs: [Tab.create(0, "[No Name]")]};

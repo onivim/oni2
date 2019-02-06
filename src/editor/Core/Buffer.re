@@ -4,7 +4,7 @@
  * In-memory text buffer representation
  */
 
-open Actions;
+open Types;
 
 type t = {
   file: option(string),

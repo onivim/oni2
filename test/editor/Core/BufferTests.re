@@ -3,7 +3,7 @@ open TestFramework;
 
 open Helpers;
 
-open Oni_Core.Actions;
+open Oni_Core.Types;
 module Buffer = Oni_Core.Buffer;
 
 describe("update", ({test, _}) => {
