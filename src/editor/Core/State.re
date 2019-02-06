@@ -5,7 +5,6 @@
  */
 
 open Types;
-
 module Tab = {
   type t = {
     id: int,
@@ -20,11 +19,20 @@ type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
   buffer: Buffer.t,
+  editorFont: EditorFont.t,
 };
 
 let create: unit => t =
   () => {
     mode: Insert,
     buffer: Buffer.ofLines([||]),
+    editorFont:
+      EditorFont.create(
+        ~fontFile="FiraCode-Regular.ttf",
+        ~fontSize=14,
+        ~measuredWidth=0,
+        ~measuredHeight=0,
+        (),
+      ),
     tabs: [Tab.create(0, "[No Name]")],
   };

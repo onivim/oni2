@@ -13,6 +13,8 @@ open CamomileLibraryDefault.Camomile;
 open Oni_Core;
 open Oni_Core.TokenizedBufferView;
 
+open Types;
+
 /* Set up some styles */
 let textHeaderStyle =
   Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];
@@ -23,17 +25,47 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let _viewLinesToElements = (_bufferView: array(BufferViewLine.t)) => {
-  let ret = [
-    <Text style=textHeaderStyle text="Hello" />,
-    <Text style=textHeaderStyle text="World" />,
-  ];
-  ret;
+let tokensToElement =
+    (
+      fontWidth: int,
+      fontHeight: int,
+      virtualLineNumber: int,
+      tokens: list(Tokenizer.t),
+    ) => {
+  let f = (token: Tokenizer.t) => {
+    let style =
+      Style.[
+        position(`Absolute),
+        top(fontHeight * virtualLineNumber),
+        left(fontWidth * Position.toZeroBasedIndex(token.startPosition)),
+        fontFamily("FiraCode-Regular.ttf"),
+        fontSize(14),
+        height(fontHeight),
+      ];
+
+    <Text style text={token.text} />;
+  };
+
+  List.map(f, tokens);
+};
+
+let viewLinesToElements =
+    (fontWidth: int, fontHeight: int, bufferView: TokenizedBufferView.t) => {
+  let f = (b: BufferViewLine.t) => {
+    tokensToElement(
+      fontWidth,
+      fontHeight,
+      Position.toZeroBasedIndex(b.virtualLineNumber),
+      b.tokens,
+    );
+  };
+
+  Array.map(f, bufferView.viewLines) |> Array.to_list |> List.flatten;
 };
 
 let component = React.component("EditorSurface");
 
-let make = () =>
+let make = (state: State.t) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
@@ -46,7 +78,12 @@ let make = () =>
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
-    let textElements = _viewLinesToElements(bufferView.viewLines);
+    let textElements =
+      viewLinesToElements(
+        state.editorFont.measuredWidth,
+        state.editorFont.measuredHeight,
+        bufferView,
+      );
 
     let style =
       Style.[
@@ -59,4 +96,5 @@ let make = () =>
     <View style> ...textElements </View>;
   });
 
-let createElement = (~children as _, ()) => React.element(make());
+let createElement = (~state, ~children as _, ()) =>
+  React.element(make(state));

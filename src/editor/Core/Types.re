@@ -37,3 +37,19 @@ module BufferUpdate = {
     lines,
   };
 };
+
+module EditorFont = {
+  type t = {
+    fontFile: string,
+    fontSize: int,
+    measuredWidth: int,
+    measuredHeight: int,
+  };
+
+  let create = (~fontFile, ~fontSize, ~measuredWidth, ~measuredHeight, ()) => {
+    fontFile,
+    fontSize,
+    measuredWidth,
+    measuredHeight,
+  };
+};
