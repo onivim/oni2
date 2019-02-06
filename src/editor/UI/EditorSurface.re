@@ -37,7 +37,7 @@ let tokensToElement =
       Style.[
         position(`Absolute),
         top(fontHeight * virtualLineNumber),
-        left(fontWidth * Position.toZeroBasedIndex(token.startPosition)),
+        left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
         height(fontHeight),
@@ -55,7 +55,7 @@ let viewLinesToElements =
     tokensToElement(
       fontWidth,
       fontHeight,
-      Position.toZeroBasedIndex(b.virtualLineNumber),
+      Index.toZeroBasedInt(b.virtualLineNumber),
       b.tokens,
     );
   };

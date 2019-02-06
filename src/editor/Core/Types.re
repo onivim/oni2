@@ -1,12 +1,12 @@
-module Position = {
+module Index = {
   type t =
-    | ZeroBasedPosition(int)
-    | OneBasedPosition(int);
+    | ZeroBasedIndex(int)
+    | OneBasedIndex(int);
 
-  let toZeroBasedIndex = (pos: t) =>
+  let toZeroBasedInt = (pos: t) =>
     switch (pos) {
-    | ZeroBasedPosition(n) => n
-    | OneBasedPosition(n) => n - 1
+    | ZeroBasedIndex(n) => n
+    | OneBasedIndex(n) => n - 1
     };
 };
 

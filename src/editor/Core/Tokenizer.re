@@ -6,8 +6,8 @@ open Types;
 
 type t = {
   text: string,
-  startPosition: Position.t,
-  endPosition: Position.t,
+  startPosition: Index.t,
+  endPosition: Index.t,
 };
 
 let _isWhitespace = c => {
@@ -52,8 +52,8 @@ let tokenize: string => list(t) =
 
         let token: t = {
           text: tokenText,
-          startPosition: ZeroBasedPosition(startToken),
-          endPosition: ZeroBasedPosition(endToken),
+          startPosition: ZeroBasedIndex(startToken),
+          endPosition: ZeroBasedIndex(endToken),
         };
 
         tokens := List.append([token], tokens^);
