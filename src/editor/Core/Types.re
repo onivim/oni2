@@ -30,6 +30,10 @@ module BufferPosition = {
         character: Index.t,
     };
 
+    let create = (line, character) => {
+        line, character
+    };
+
     let createFromZeroBasedIndices = (line: int, character: int) => {
         line: ZeroBasedIndex(line),
         character: ZeroBasedIndex(character),

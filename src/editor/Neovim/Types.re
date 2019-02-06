@@ -18,8 +18,8 @@ module EditorState = {
 module AutoCommandContext = {
   type t = {
     activeBufferId: int,
-    cursorLine: int,
-    cursorColumn: int,
+    cursorLine: Index.t,
+    cursorColumn: Index.t,
   };
 
   let create = (~activeBufferId, ~cursorLine, ~cursorColumn, ()) => {
@@ -32,8 +32,8 @@ module AutoCommandContext = {
     "activeBufferId: "
     ++ string_of_int(v.activeBufferId)
     ++ " line: "
-    ++ string_of_int(v.cursorLine)
+    ++ string_of_int(Index.toZeroBasedInt(v.cursorLine))
     ++ " column: "
-    ++ string_of_int(v.cursorColumn);
+    ++ string_of_int(Index.toZeroBasedInt(v.cursorColumn));
   };
 };

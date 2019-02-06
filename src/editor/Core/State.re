@@ -20,12 +20,14 @@ type t = {
   tabs: list(Tab.t),
   buffer: Buffer.t,
   editorFont: EditorFont.t,
+  cursorPosition: BufferPosition.t,
 };
 
 let create: unit => t =
   () => {
     mode: Insert,
     buffer: Buffer.ofLines([|"testing"|]),
+    cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
