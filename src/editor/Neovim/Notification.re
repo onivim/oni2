@@ -7,6 +7,8 @@
 /* open Oni_Core; */
 /* open Rench; */
 
+open Types;
+
 module BufferLinesNotification = {
   type t = {
     changedTick: int,
@@ -34,6 +36,7 @@ type t =
   | Redraw
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
+  | CursorMoved(AutoCommandContext.t)
   | Ignored;
 
 module M = Msgpck;
@@ -51,6 +54,28 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
   };
 
   msgs |> List.map(p);
+};
+
+exception InvalidAutoCommandContext;
+
+let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
+  let context =
+    switch (args) {
+    | [M.Int(activeBufferId), M.Int(cursorLine), M.Int(cursorColumn)] =>
+      Types.AutoCommandContext.create(
+        ~activeBufferId,
+        ~cursorLine,
+        ~cursorColumn,
+        (),
+      )
+    | _ => raise(InvalidAutoCommandContext)
+    };
+
+  switch (autocmd) {
+  | "CursorMoved" => CursorMoved(context)
+  | "CursorMovedI" => CursorMoved(context)
+  | _ => Ignored
+  };
 };
 
 let parse = (t: string, msg: Msgpck.t) => {
@@ -76,6 +101,14 @@ let parse = (t: string, msg: Msgpck.t) => {
           ),
         ),
       ]
+    | (
+        "oni_plugin_notify",
+        M.List([
+          M.List([M.String("autocmd"), M.String(autocmd), M.List(args)]),
+        ]),
+      ) =>
+      let result = parseAutoCommand(autocmd, args);
+      [result];
     | ("redraw", M.List(msgs)) => parseRedraw(msgs)
     | _ => [Ignored]
     };
@@ -87,6 +120,7 @@ let show = (n: t) => {
   switch (n) {
   | Redraw => "redraw"
   | ModeChanged(s) => "mode changed: " ++ s
+  | CursorMoved(c) => "cursor moved: " ++ AutoCommandContext.show(c)
   | BufferLines(_) => "buffer lines"
   | _ => "unknown"
   };

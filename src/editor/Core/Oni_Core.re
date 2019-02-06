@@ -6,6 +6,7 @@
 
 module Actions = Actions;
 module Buffer = Buffer;
+module Log = Log;
 module Reducer = Reducer;
 module State = State;
 module TokenizedBuffer = TokenizedBuffer;

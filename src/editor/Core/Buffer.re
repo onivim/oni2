@@ -30,26 +30,23 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
   };
 };
 
-let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
+let applyUpdate = (lines: array(string), update: BufferUpdate.t) =>
+  if (update.endLine <= update.startLine) {
+    Array.of_list(update.lines);
+  } else {
+    let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
+    let post =
+      slice(
+        ~lines,
+        ~start=update.endLine,
+        ~length=Array.length(lines) - update.endLine,
+        (),
+      );
 
-    if (update.endLine <= update.startLine) {
-        Array.of_list(update.lines)
-    } else {
+    let lines = Array.of_list(update.lines);
 
-  let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
-  let post =
-    slice(
-      ~lines,
-      ~start=update.endLine,
-      ~length=Array.length(lines) - update.endLine,
-      (),
-    );
-
-  let lines = Array.of_list(update.lines);
-
-  Array.concat([prev, lines, post]);
-    }
-};
+    Array.concat([prev, lines, post]);
+  };
 
 let update = (buf: t, update: BufferUpdate.t) => {
   let ret: t = {...buf, lines: applyUpdate(buf.lines, update)};

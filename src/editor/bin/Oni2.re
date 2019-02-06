@@ -51,7 +51,12 @@ let init = app => {
 
   UI.start(w, render);
 
-  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
+  let initVimPath =
+    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
+  Core.Log.debug("initVimPath: " ++ initVimPath);
+
+  let nvim =
+    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
@@ -154,7 +159,15 @@ let init = app => {
           | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
-          | BufferLines(bc) => Core.Actions.BufferUpdate(Core.Types.BufferUpdate.create(~startLine=bc.firstLine, ~endLine=bc.lastLine, ~lines=bc.lines, ()))
+          | BufferLines(bc) =>
+            Core.Actions.BufferUpdate(
+              Core.Types.BufferUpdate.create(
+                ~startLine=bc.firstLine,
+                ~endLine=bc.lastLine,
+                ~lines=bc.lines,
+                (),
+              ),
+            )
           | _ => Noop
           };
 
