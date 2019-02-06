@@ -10,12 +10,6 @@ open Revery.UI;
 
 let noop = () => ();
 
-let tabs: list(Tabs.tabInfo) = [
-  {title: "file1.re", active: true, onClick: noop, onClose: noop},
-  {title: "file2.re", active: false, onClick: noop, onClose: noop},
-  {title: "file3.re", active: false, onClick: noop, onClose: noop},
-];
-
 let component = React.component("Editor");
 
 let editorViewStyle = (background, foreground) =>
@@ -30,13 +24,29 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let make = () =>
+let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
+  let f = (t: Oni_Core.State.Tab.t) => {
+    let ret: Tabs.tabInfo = {
+      title: t.title,
+      active: t.active,
+      onClick: noop,
+      onClose: noop,
+    };
+    ret;
+  };
+
+  List.map(f, tabs);
+};
+
+let make = (state: Oni_Core.State.t) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
+    let tabs = toUiTabs(state.tabs);
     let style = editorViewStyle(theme.background, theme.foreground);
 
     <View style> <Tabs tabs /> <EditorSurface /> </View>;
   });
 
-let createElement = (~children as _, ()) => React.element(make());
+let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
+  React.element(make(state));
