@@ -34,6 +34,7 @@ let _tokensToElement = (fontWidth: int, fontHeight: int, virtualLineNumber: int,
             left(fontWidth * Position.toZeroBasedIndex(token.startPosition)),
             fontFamily("FiraCode-Regular.ttf"),
             fontSize(14),
+            height(fontHeight),
         ];
 
         <Text style text={token.text} />
