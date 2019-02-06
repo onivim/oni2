@@ -10,8 +10,8 @@ let isDebugLoggingEnabled = switch(Sys.getenv_opt("ONI2_DEBUG")) {
 }
 
 
-let info = (msg) => print_endline(["[INFO] " ++ msg);
+let info = (msg) => print_endline("[INFO] " ++ msg);
 
-let debug = (msg) => isDebugLoggingEnabled ? print_endline("[DEBUG] " ++ msg);
+let debug = (msg) => isDebugLoggingEnabled ? print_endline("[DEBUG] " ++ msg) : ();
 
 let error = (msg) => prerr_endline("[ERROR] " ++ msg);

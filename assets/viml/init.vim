@@ -20,34 +20,31 @@ function OniNotify(args)
     call rpcnotify(1, "oni_plugin_notify", a:args)
 endfunction
 
-function OniNotifyEvent(eventName)
+function OniNotifyAutocmd(eventName)
     let context = OniGetContext()
-    call OniNotify(["event", a:eventName, context])
+    call OniNotify(["autocmd", a:eventName, context])
 endfunction
 
 augroup OniEventListeners
     autocmd!
-    autocmd! BufWritePre * :call OniNotifyEvent("BufWritePre")
-    autocmd! BufWritePost * :call OniNotifyEvent("BufWritePost")
-    autocmd! BufEnter * :call OniNotifyEvent("BufEnter")
-    autocmd! BufRead * :call OniNotifyEvent("BufRead")
-    autocmd! BufWinEnter * :call OniNotifyEvent("BufWinEnter")
-    autocmd! BufDelete * :call OniNotifyEvent("BufDelete")
-    autocmd! BufUnload * :call OniNotifyEvent("BufUnload")
-    autocmd! BufWipeout * :call OniNotifyEvent("BufWipeout")
-    autocmd! CursorMoved * :call OniNotifyEvent("CursorMoved")
-    autocmd! CursorMovedI * :call OniNotifyEvent("CursorMovedI")
+    autocmd! BufWritePre * :call OniNotifyAutocmd("BufWritePre")
+    autocmd! BufWritePost * :call OniNotifyAutocmd("BufWritePost")
+    autocmd! BufEnter * :call OniNotifyAutocmd("BufEnter")
+    autocmd! BufRead * :call OniNotifyAutocmd("BufRead")
+    autocmd! BufWinEnter * :call OniNotifyAutocmd("BufWinEnter")
+    autocmd! BufDelete * :call OniNotifyAutocmd("BufDelete")
+    autocmd! BufUnload * :call OniNotifyAutocmd("BufUnload")
+    autocmd! BufWipeout * :call OniNotifyAutocmd("BufWipeout")
+    autocmd! CursorMoved * :call OniNotifyAutocmd("CursorMoved")
+    autocmd! CursorMovedI * :call OniNotifyAutocmd("CursorMovedI")
 augroup END
 
 function OniGetContext()
-let context = {}
-let context.bufferNumber = bufnr("%")
-let context.line = line(".")
-let context.column = col(".")
+let bufferNumber = bufnr("%")
+let line = line(".")
+let column = col(".")
 
-if exists("b:last_change_tick")
-    let context.version = b:last_change_tick
-endif
+let context = [bufferNumber, line, column]
 
 return context
 endfunction

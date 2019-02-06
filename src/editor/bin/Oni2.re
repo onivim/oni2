@@ -52,7 +52,7 @@ let init = app => {
   UI.start(w, render);
 
   let initVimPath = Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
-  Log.debug("initVimPath: " ++ initVimPath);
+  Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let nvim = NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
