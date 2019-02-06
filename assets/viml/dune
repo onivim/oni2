@@ -1,0 +1,4 @@
+(install
+    (section bin)
+    (package Oni2)
+    (files init.vim))
