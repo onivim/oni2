@@ -25,34 +25,42 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let _tokensToElement = (fontWidth: int, fontHeight: int, virtualLineNumber: int, tokens: list(Tokenizer.t)) => {
-   
-    let f = (token: Tokenizer.t) => {
-        let style = Style.[
-            position(`Absolute),
-            top(fontHeight * virtualLineNumber),
-            left(fontWidth * Position.toZeroBasedIndex(token.startPosition)),
-            fontFamily("FiraCode-Regular.ttf"),
-            fontSize(14),
-            height(fontHeight),
-        ];
+let _tokensToElement =
+    (
+      fontWidth: int,
+      fontHeight: int,
+      virtualLineNumber: int,
+      tokens: list(Tokenizer.t),
+    ) => {
+  let f = (token: Tokenizer.t) => {
+    let style =
+      Style.[
+        position(`Absolute),
+        top(fontHeight * virtualLineNumber),
+        left(fontWidth * Position.toZeroBasedIndex(token.startPosition)),
+        fontFamily("FiraCode-Regular.ttf"),
+        fontSize(14),
+        height(fontHeight),
+      ];
 
-        <Text style text={token.text} />
-    };
-
-    List.map(f, tokens);
-};
-
-let _viewLinesToElements = (fontWidth: int, fontHeight: int, bufferView: TokenizedBufferView.t) => {
-
-  let f = (b: BufferViewLine.t) => {
-    _tokensToElement(fontWidth, fontHeight, Position.toZeroBasedIndex(b.virtualLineNumber), b.tokens);
+    <Text style text={token.text} />;
   };
 
+  List.map(f, tokens);
+};
 
-  Array.map(f, bufferView.viewLines)
-    |> Array.to_list
-    |> List.flatten
+let _viewLinesToElements =
+    (fontWidth: int, fontHeight: int, bufferView: TokenizedBufferView.t) => {
+  let f = (b: BufferViewLine.t) => {
+    _tokensToElement(
+      fontWidth,
+      fontHeight,
+      Position.toZeroBasedIndex(b.virtualLineNumber),
+      b.tokens,
+    );
+  };
+
+  Array.map(f, bufferView.viewLines) |> Array.to_list |> List.flatten;
 };
 
 let component = React.component("EditorSurface");
@@ -70,7 +78,12 @@ let make = (state: State.t) =>
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
-    let textElements = _viewLinesToElements(state.editorFont.measuredWidth, state.editorFont.measuredHeight, bufferView);
+    let textElements =
+      _viewLinesToElements(
+        state.editorFont.measuredWidth,
+        state.editorFont.measuredHeight,
+        bufferView,
+      );
 
     let style =
       Style.[
@@ -83,4 +96,5 @@ let make = (state: State.t) =>
     <View style> ...textElements </View>;
   });
 
-let createElement = (~state, ~children as _, ()) => React.element(make(state));
+let createElement = (~state, ~children as _, ()) =>
+  React.element(make(state));
