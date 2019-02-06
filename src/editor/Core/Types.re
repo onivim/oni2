@@ -24,16 +24,16 @@ module Mode = {
     };
 };
 
-module BufferUpdate {
-    type t = {
-        startLine: int,
-        endLine: int,
-        lines: list(string),
-    };
+module BufferUpdate = {
+  type t = {
+    startLine: int,
+    endLine: int,
+    lines: list(string),
+  };
 
-    let create = (~startLine, ~endLine, ~lines, ()) => {
-        startLine,
-        endLine,
-        lines,
-    };
-}
+  let create = (~startLine, ~endLine, ~lines, ()) => {
+    startLine,
+    endLine,
+    lines,
+  };
+};

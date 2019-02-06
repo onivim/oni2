@@ -16,35 +16,36 @@ let ofLines = (lines: array(string)) => {
   ret;
 };
 
-let slice =  (~lines: array(string), ~start, ~length, ()) => {
- 
-    let len = Array.length(lines);
-    if (start >= len) {
-        [||] 
+let slice = (~lines: array(string), ~start, ~length, ()) => {
+  let len = Array.length(lines);
+  if (start >= len) {
+    [||];
+  } else {
+    let len = min(start + length, len) - start;
+    if (len <= 0) {
+      [||];
     } else {
-        let len = min(start + length, len) - start;
-        if (len <= 0) {
-            [||] 
-        } else {
-            Array.sub(lines, start, len)
-        }
-    }
+      Array.sub(lines, start, len);
+    };
+  };
 };
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
+  let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
+  let post =
+    slice(
+      ~lines,
+      ~start=update.endLine,
+      ~length=Array.length(lines) - update.endLine,
+      (),
+    );
 
-    let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
-    let post = slice(~lines, ~start=update.endLine, ~length=Array.length(lines) - update.endLine, ());
+  let lines = Array.of_list(update.lines);
 
-    let lines = Array.of_list(update.lines);
-
-    Array.concat([prev, lines, post])
+  Array.concat([prev, lines, post]);
 };
 
 let update = (buf: t, update: BufferUpdate.t) => {
-    let ret: t = {
-        ...buf,
-        lines: applyUpdate(buf.lines, update),   
-    };
-    ret;
-}
+  let ret: t = {...buf, lines: applyUpdate(buf.lines, update)};
+  ret;
+};

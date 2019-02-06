@@ -23,4 +23,8 @@ type t = {
 };
 
 let create: unit => t =
-  () => {mode: Insert, buffer: Buffer.ofLines([||]), tabs: [Tab.create(0, "[No Name]")]};
+  () => {
+    mode: Insert,
+    buffer: Buffer.ofLines([||]),
+    tabs: [Tab.create(0, "[No Name]")],
+  };

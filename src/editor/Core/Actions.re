@@ -6,7 +6,6 @@
 
 open Types;
 
-
 type t =
   | BufferUpdate(BufferUpdate.t)
   | ChangeMode(Mode.t)
