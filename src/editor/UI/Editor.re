@@ -47,7 +47,7 @@ let make = (state: Oni_Core.State.t) =>
 
     <View style>
       <Tabs tabs />
-      <Commandline command={state.commandline} />
+      <Commandline theme command={state.commandline} />
       <EditorSurface state />
     </View>;
   });
