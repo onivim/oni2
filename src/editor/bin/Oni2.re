@@ -173,6 +173,7 @@ let init = app => {
               ),
             )
           | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
+          | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
           | _ => Noop
           };
 
