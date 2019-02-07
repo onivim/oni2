@@ -65,9 +65,9 @@ let showCommandline = args => {
       List.fold_left(
         (accum, v) =>
           switch (v) {
-          | M.List([M.Int(_), M.String(chunk)]) =>
-            print_endline("v: " ++ chunk);
-            {input: accum.input ++ chunk};
+          | M.List([M.Int(_), M.String(chunk)]) => {
+              input: accum.input ++ chunk,
+            }
           | _ => accum
           },
         {input: ""},
