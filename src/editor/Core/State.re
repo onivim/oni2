@@ -21,11 +21,20 @@ type t = {
   buffer: Buffer.t,
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
+  commandline: Commandline.t,
 };
 
 let create: unit => t =
   () => {
     mode: Insert,
+    commandline: {
+      content: "",
+      firstC: "",
+      position: 0,
+      index: 0,
+      level: 0,
+      show: false,
+    },
     buffer: Buffer.ofLines([|"testing"|]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:

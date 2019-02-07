@@ -25,20 +25,18 @@ module Mode = {
 };
 
 module BufferPosition = {
-    type t = {
-        line: Index.t,
-        character: Index.t,
-    };
+  type t = {
+    line: Index.t,
+    character: Index.t,
+  };
 
-    let create = (line, character) => {
-        line, character
-    };
+  let create = (line, character) => {line, character};
 
-    let createFromZeroBasedIndices = (line: int, character: int) => {
-        line: ZeroBasedIndex(line),
-        character: ZeroBasedIndex(character),
-    };
-}
+  let createFromZeroBasedIndices = (line: int, character: int) => {
+    line: ZeroBasedIndex(line),
+    character: ZeroBasedIndex(character),
+  };
+};
 
 module BufferUpdate = {
   type t = {
@@ -67,5 +65,16 @@ module EditorFont = {
     fontSize,
     measuredWidth,
     measuredHeight,
+  };
+};
+
+module Commandline = {
+  type t = {
+    content: string,
+    firstC: string,
+    position: int,
+    level: int,
+    index: int,
+    show: bool,
   };
 };

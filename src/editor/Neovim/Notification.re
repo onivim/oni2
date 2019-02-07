@@ -37,13 +37,59 @@ type t =
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
   | CursorMoved(AutoCommandContext.t)
+  | CommandlineShow(Commandline.t)
   | Ignored;
 
+type commandlineInput = {input: string};
+
 module M = Msgpck;
+
+let parseCommandline = args => {
+  /*
+     Structure of a cmdline_show response
+     [cmdline_show, [[[attr, inputStr]], position, firstCharacter, indentAmount, index, level]]
+
+     TODO: handle the attributes being sent
+   */
+  switch (args) {
+  | [
+      M.List([M.List(c)]),
+      M.Int(position),
+      M.String(firstC),
+      M.String(_prompt),
+      M.Int(index),
+      M.Int(level),
+    ] =>
+    print_endline("firstC =========================: " ++ firstC);
+    let {input} =
+      List.fold_left(
+        (accum, v) =>
+          switch (v) {
+          | M.List([M.Int(_), M.String(chunk)]) =>
+            print_endline("v: " ++ chunk);
+            {input: accum.input ++ chunk};
+          | _ => accum
+          },
+        {input: ""},
+        c,
+      );
+    CommandlineShow({
+      content: input,
+      firstC,
+      position,
+      index,
+      level,
+      show: true,
+    });
+  | _ => Ignored
+  };
+};
 
 let parseRedraw = (msgs: list(Msgpck.t)) => {
   let p = (msg: Msgpck.t) => {
     switch (msg) {
+    | M.List([M.String("cmdline_show"), M.List(msgs)]) =>
+      parseCommandline(msgs)
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
