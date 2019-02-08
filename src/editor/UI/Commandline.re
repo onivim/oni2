@@ -18,16 +18,16 @@ let make = (~command: Types.Commandline.t, ~theme: Theme.t) => {
           <View
             style=Style.[
               width(400),
-              height(100),
-              top(30),
-              left(200),
+              height(40),
+              top(-30),
+              left(50),
               backgroundColor(theme.editorBackground),
               boxShadow(
-                ~xOffset=-10.,
-                ~yOffset=20.,
-                ~blurRadius=10.,
-                ~spreadRadius=2.,
-                ~color=Color.rgba(0., 0., 0., 0.5),
+                ~xOffset=-15.,
+                ~yOffset=5.,
+                ~blurRadius=30.,
+                ~spreadRadius=5.,
+                ~color=Color.rgba(0., 0., 0., 0.2),
               ),
             ]>
             <Text
