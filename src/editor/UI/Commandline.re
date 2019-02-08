@@ -9,18 +9,18 @@ let make = (~command: Types.Commandline.t, ~theme: Theme.t) => {
     command.show
       ? <View
           style=Style.[
-            position(`Relative),
+            position(`Absolute),
             top(0),
             right(0),
             left(0),
             bottom(0),
+            alignItems(`Center),
           ]>
           <View
             style=Style.[
               width(400),
               height(40),
-              top(-30),
-              left(50),
+              top(50),
               backgroundColor(theme.editorBackground),
               boxShadow(
                 ~xOffset=-15.,
