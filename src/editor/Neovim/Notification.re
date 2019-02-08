@@ -48,7 +48,7 @@ module M = Msgpck;
 let showCommandline = args => {
   /*
      Structure of a cmdline_show response
-     [cmdline_show, [[[attr, inputStr]], position, firstCharacter, indentAmount, index, level]]
+     [cmdline_show, [[[attr, inputStr]], position, firstCharacter, prompt, indentAmount, index, level]]
 
      TODO: handle the attributes being sent
    */
