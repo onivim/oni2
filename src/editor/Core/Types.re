@@ -14,12 +14,14 @@ module Mode = {
   type t =
     | Insert
     | Normal
+    | Commandline
     | Other;
 
   let show = v =>
     switch (v) {
     | Insert => "insert"
     | Normal => "normal"
+    | Commandline => "commandline"
     | Other => "unknown"
     };
 };

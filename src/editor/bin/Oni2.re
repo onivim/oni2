@@ -158,6 +158,8 @@ let init = app => {
           switch (n) {
           | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
+          | ModeChanged("cmdline_normal") =>
+            Core.Actions.ChangeMode(Commandline)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(
