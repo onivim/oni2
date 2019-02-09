@@ -10,7 +10,6 @@ let cmdFontColor = Colors.white;
 let cmdTextStyles =
   Style.[
     fontFamily("FiraCode-Regular.ttf"),
-    marginTop(10),
     marginLeft(10),
     fontSize(cmdFontSize),
     color(cmdFontColor),
@@ -21,16 +20,30 @@ let cmdTextStyles =
 
 let isZeroIndex = num => num - 1 <= 0;
 
+let safeStrSub = (str, strStart, strEnd) =>
+  switch (String.sub(str, strStart, strEnd)) {
+  | v => v
+  | exception (Invalid_argument(_)) =>
+    print_endline(
+      "Error getting substring from "
+      ++ str
+      ++ " starting at "
+      ++ string_of_int(strStart)
+      ++ " ending at "
+      ++ string_of_int(strEnd),
+    );
+    "";
+  };
+
 let getStringParts = (index, str) => {
   switch (String.length(str), index) {
   | (0, _) => ("", "")
   | (_, i) when isZeroIndex(i) => (str, "")
   | (l, _) when isZeroIndex(l) => (str, "")
+  | (l, i) when l == i => (str, "")
   | (len, idx) =>
-    let strBeginning = String.sub(str, 0, idx - 1);
-    let strEnd = String.sub(str, idx - 1, len);
-    print_endline("strBeginning =========================: " ++ strBeginning);
-    print_endline("strEnd: " ++ strEnd);
+    let strBeginning = safeStrSub(str, 0, idx - 1);
+    let strEnd = safeStrSub(str, idx - 1, len - 1);
     (strBeginning, strEnd);
   };
 };
@@ -39,11 +52,6 @@ let make = (~command: Types.Commandline.t, ~theme: Theme.t) => {
   component((_slots: React.Hooks.empty) => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
-    print_endline(
-      "string_of_int(command.index),
-    : "
-      ++ string_of_int(command.position),
-    );
     command.show
       ? <View
           style=Style.[
@@ -81,7 +89,7 @@ let make = (~command: Types.Commandline.t, ~theme: Theme.t) => {
             <Text style=cmdTextStyles text=endStr />
           </View>
         </View>
-      : <View />;
+      : React.listToElement([]);
   });
 };
 
