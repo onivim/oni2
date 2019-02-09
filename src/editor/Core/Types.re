@@ -76,7 +76,7 @@ module Commandline = {
     firstC: string,
     position: int,
     level: int,
-    index: int,
+    indent: int,
     show: bool,
   };
 };

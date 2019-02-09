@@ -31,7 +31,7 @@ let create: unit => t =
       content: "",
       firstC: "",
       position: 0,
-      index: 0,
+      indent: 0,
       level: 0,
       show: false,
     },
