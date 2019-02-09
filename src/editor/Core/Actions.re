@@ -11,4 +11,6 @@ type t =
   | ChangeMode(Mode.t)
   | CursorMove(BufferPosition.t)
   | SetEditorFont(EditorFont.t)
+  | CommandlineShow(Commandline.t)
+  | CommandlineHide(Commandline.t)
   | Noop;

@@ -15,6 +15,8 @@ let reduce: (State.t, Actions.t) => State.t =
     | CursorMove(b) => {...s, cursorPosition: b}
     | BufferUpdate(bu) => {...s, buffer: Buffer.update(s.buffer, bu)}
     | SetEditorFont(font) => {...s, editorFont: font}
+    | CommandlineShow(commandline) => {...s, commandline}
+    | CommandlineHide(commandline) => {...s, commandline}
     | Noop => s
     };
   };

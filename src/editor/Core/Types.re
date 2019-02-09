@@ -14,31 +14,31 @@ module Mode = {
   type t =
     | Insert
     | Normal
+    | Commandline
     | Other;
 
   let show = v =>
     switch (v) {
     | Insert => "insert"
     | Normal => "normal"
+    | Commandline => "commandline"
     | Other => "unknown"
     };
 };
 
 module BufferPosition = {
-    type t = {
-        line: Index.t,
-        character: Index.t,
-    };
+  type t = {
+    line: Index.t,
+    character: Index.t,
+  };
 
-    let create = (line, character) => {
-        line, character
-    };
+  let create = (line, character) => {line, character};
 
-    let createFromZeroBasedIndices = (line: int, character: int) => {
-        line: ZeroBasedIndex(line),
-        character: ZeroBasedIndex(character),
-    };
-}
+  let createFromZeroBasedIndices = (line: int, character: int) => {
+    line: ZeroBasedIndex(line),
+    character: ZeroBasedIndex(character),
+  };
+};
 
 module BufferUpdate = {
   type t = {
@@ -67,5 +67,17 @@ module EditorFont = {
     fontSize,
     measuredWidth,
     measuredHeight,
+  };
+};
+
+module Commandline = {
+  type t = {
+    content: string,
+    firstC: string,
+    position: int,
+    level: int,
+    indent: int,
+    prompt: string,
+    show: bool,
   };
 };

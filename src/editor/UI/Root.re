@@ -54,6 +54,7 @@ let make = (state: State.t) =>
 
     <View style>
       <View style=surfaceStyle> <Editor state /> </View>
+      <Commandline theme command={state.commandline} />
       <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
     </View>;
   });
