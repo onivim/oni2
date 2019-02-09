@@ -81,7 +81,7 @@ let make = (~command: Types.Commandline.t, ~theme: Theme.t) => {
             <Text style=cmdTextStyles text={command.firstC ++ startStr} />
             <View
               style=Style.[
-                width(3),
+                width(2),
                 height(cmdFontSize),
                 backgroundColor(cmdFontColor),
               ]
