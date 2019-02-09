@@ -77,6 +77,7 @@ module Commandline = {
     position: int,
     level: int,
     indent: int,
+    prompt: string,
     show: bool,
   };
 };

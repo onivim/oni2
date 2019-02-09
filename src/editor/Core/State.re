@@ -30,6 +30,7 @@ let create: unit => t =
     commandline: {
       content: "",
       firstC: "",
+      prompt: "",
       position: 0,
       indent: 0,
       level: 0,

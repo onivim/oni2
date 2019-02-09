@@ -57,7 +57,7 @@ let showCommandline = args => {
       M.List(c),
       M.Int(position),
       M.String(firstC),
-      M.String(_prompt),
+      M.String(prompt),
       M.Int(indent),
       M.Int(level),
     ] =>
@@ -75,6 +75,7 @@ let showCommandline = args => {
       );
     CommandlineShow({
       content: input,
+      prompt,
       firstC,
       position,
       indent,
@@ -91,6 +92,7 @@ let hideCommandline = _msgs => {
     firstC: "",
     position: 0,
     indent: 0,
+    prompt: "",
     level: 0,
     show: false,
   });
