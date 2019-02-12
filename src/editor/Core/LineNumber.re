@@ -4,8 +4,6 @@
  * Settings and utilities for managing Linumbers
  */
 
-open Types;
-
 type setting =
 | On
 | Off
@@ -34,19 +32,16 @@ let getLineNumberPixelWidth = (~lines: int, ~fontPixelWidth: int, ()) => {
     (digits + 2) * fontPixelWidth
 };
 
-let getLineNumber = (~bufferLine: Index.t, ~cursorLine: Index.t, ~setting: setting, ()) => {
+let getLineNumber = (~bufferLine: int, ~cursorLine: int, ~setting: setting, ()) => {
     switch (setting) {
     | Relative => {
 
-        let oneBasedBufferLine = Index.toOneBasedInt(bufferLine);
-        let oneBasedCursorLine = Index.toOneBasedInt(cursorLine);
-
-        if (oneBasedBufferLine === oneBasedCursorLine) {
-            oneBasedBufferLine
+        if (bufferLine === cursorLine) {
+            bufferLine
         } else {
-            abs(oneBasedCursorLine - oneBasedBufferLine)
+            abs(bufferLine - cursorLine)
         }
     }
-    | _ => Index.toOneBasedInt(bufferLine)
+    | _ => bufferLine
     }
 }

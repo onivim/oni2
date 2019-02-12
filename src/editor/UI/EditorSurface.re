@@ -34,9 +34,14 @@ let tokensToElement =
       lineNumberWidth: int,
       tokens: list(Tokenizer.t),
       theme: Theme.t,
+      cursorLine: int,
     ) => {
 
   let lineHeight = fontHeight;
+
+  let isActiveLine = lineNumber == cursorLine;
+  let lineNumberTextColor = isActiveLine ? theme.editorActiveLineNumberForeground : theme.editorLineNumberForeground;
+  let lineNumberAlignment = isActiveLine ? `FlexStart : `FlexEnd;
 
   let f = (token: Tokenizer.t) => {
     let style =
@@ -65,7 +70,7 @@ let tokensToElement =
     width(lineNumberWidth),
     backgroundColor(theme.editorLineNumberBackground),
     justifyContent(`Center),
-    alignItems(`Center),
+    alignItems(lineNumberAlignment),
   ];
 
   let lineContentsStyle = Style.[
@@ -80,14 +85,14 @@ let tokensToElement =
     fontFamily("FiraCode-Regular.ttf"),
     fontSize(14),
     height(fontHeight),
-    color(theme.editorLineNumberForeground),
+    color(lineNumberTextColor),
   ];
 
   let tokens = List.map(f, tokens);
 
   <View style={lineStyle}>
     <View style={lineNumberStyle}>
-        <Text style={lineNumberTextStyle} text={string_of_int(lineNumber)} />
+        <Text style={lineNumberTextStyle} text={string_of_int(LineNumber.getLineNumber(~bufferLine=lineNumber+1, ~cursorLine=cursorLine+1, ~setting=Relative, ()))} />
     </View>
     <View style={lineContentsStyle}>
       ...tokens
@@ -96,7 +101,7 @@ let tokensToElement =
 };
 
 let viewLinesToElements =
-    (fontWidth: int, fontHeight: int, lineNumberWidth: int, bufferView: TokenizedBufferView.t, theme) => {
+    (fontWidth: int, fontHeight: int, lineNumberWidth: int, bufferView: TokenizedBufferView.t, theme, cursorLine) => {
   let f = (b: BufferViewLine.t) => {
     tokensToElement(
       fontWidth,
@@ -106,6 +111,7 @@ let viewLinesToElements =
       lineNumberWidth,
       b.tokens,
       theme,
+      Index.toZeroBasedInt(cursorLine),
     );
   };
 
@@ -135,6 +141,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         lineNumberWidth,
         bufferView,
         state.theme,
+        state.cursorPosition.line,
       );
 
     let fontHeight = state.editorFont.measuredHeight;

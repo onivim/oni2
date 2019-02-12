@@ -4,7 +4,7 @@ open TestFramework;
 /* open Oni_Core.Types; */
 module LineNumber = Oni_Core.LineNumber;
 
-describe("LineNumber", ({test, describe, _}) => {
+describe("LineNumber", ({test,  _}) => {
   test("getNumberOfDigitsForLines", ({expect}) => {
     (LineNumber.getNumberOfDigitsForLines(0)
     |> expect.int).toBe(1);
@@ -32,20 +32,5 @@ describe("LineNumber", ({test, describe, _}) => {
 
     (LineNumber.getNumberOfDigitsForLines(999999)
     |> expect.int).toBe(6);
-  });
-
-  describe("getLineNumber", ({test, _}) => {
-    test("non-relative - returns buffer line", ({expect}) => {
-         (LineNumber.getLineNumber(~bufferLine=OneBasedIndex(1), ~cursorLine=OneBasedIndex(99), ~setting=On, ())
-          |> expect.int).toBe(1);
-    });
-    test("relative - same line - returns buffer line", ({expect}) => {
-         (LineNumber.getLineNumber(~bufferLine=OneBasedIndex(5), ~cursorLine=OneBasedIndex(5), ~setting=Relative, ())
-          |> expect.int).toBe(5);
-    });
-    test("relative - different line - returns delta", ({expect}) => {
-         (LineNumber.getLineNumber(~bufferLine=OneBasedIndex(5), ~cursorLine=OneBasedIndex(1), ~setting=Relative, ())
-          |> expect.int).toBe(4);
-    });
   });
 });
