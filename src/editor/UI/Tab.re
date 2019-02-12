@@ -18,7 +18,8 @@ let fontPixelSize = 12;
 
 let component = React.component("Tab");
 
-let createElement = (~title, ~active, ~onClick, ~onClose, ~theme: Theme.t, ~children as _, ()) =>
+let createElement =
+    (~title, ~active, ~onClick, ~onClose, ~theme: Theme.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     /* ~title, */
     /* ~active: bool, */

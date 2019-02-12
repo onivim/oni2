@@ -36,12 +36,14 @@ let tokensToElement =
       theme: Theme.t,
       cursorLine: int,
     ) => {
-
   let lineHeight = fontHeight;
 
   let isActiveLine = lineNumber == cursorLine;
-  let lineNumberTextColor = isActiveLine ? theme.editorActiveLineNumberForeground : theme.editorLineNumberForeground;
-  let lineNumberAlignment = isActiveLine ? `FlexStart : `FlexEnd;
+  let lineNumberTextColor =
+    isActiveLine
+      ? theme.editorActiveLineNumberForeground
+      : theme.editorLineNumberForeground;
+  let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
 
   let f = (token: Tokenizer.t) => {
     let style =
@@ -57,51 +59,67 @@ let tokensToElement =
     <Text style text={token.text} />;
   };
 
-  let lineStyle = Style.[
+  let lineStyle =
+    Style.[position(`Absolute), top(fontHeight * virtualLineNumber)];
+
+  let lineNumberStyle =
+    Style.[
       position(`Absolute),
-      top(fontHeight * virtualLineNumber),
-  ];
+      top(0),
+      height(lineHeight),
+      left(0),
+      width(lineNumberWidth),
+      backgroundColor(theme.editorLineNumberBackground),
+      justifyContent(`Center),
+      alignItems(lineNumberAlignment),
+    ];
 
-  let lineNumberStyle = Style.[
-    position(`Absolute),
-    top(0),
-    height(lineHeight),
-    left(0),
-    width(lineNumberWidth),
-    backgroundColor(theme.editorLineNumberBackground),
-    justifyContent(`Center),
-    alignItems(lineNumberAlignment),
-  ];
+  let lineContentsStyle =
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(lineNumberWidth),
+      right(0),
+      height(lineHeight),
+    ];
 
-  let lineContentsStyle = Style.[
-    position(`Absolute), 
-    top(0),
-    left(lineNumberWidth),
-    right(0),
-    height(lineHeight),
-  ];
-
-  let lineNumberTextStyle = Style.[
-    fontFamily("FiraCode-Regular.ttf"),
-    fontSize(14),
-    height(fontHeight),
-    color(lineNumberTextColor),
-  ];
+  let lineNumberTextStyle =
+    Style.[
+      fontFamily("FiraCode-Regular.ttf"),
+      fontSize(14),
+      height(fontHeight),
+      color(lineNumberTextColor),
+    ];
 
   let tokens = List.map(f, tokens);
 
-  <View style={lineStyle}>
-    <View style={lineNumberStyle}>
-        <Text style={lineNumberTextStyle} text={string_of_int(LineNumber.getLineNumber(~bufferLine=lineNumber+1, ~cursorLine=cursorLine+1, ~setting=Relative, ()))} />
+  <View style=lineStyle>
+    <View style=lineNumberStyle>
+      <Text
+        style=lineNumberTextStyle
+        text={string_of_int(
+          LineNumber.getLineNumber(
+            ~bufferLine=lineNumber + 1,
+            ~cursorLine=cursorLine + 1,
+            ~setting=Relative,
+            (),
+          ),
+        )}
+      />
     </View>
-    <View style={lineContentsStyle}>
-      ...tokens
-    </View>
-  </View>
+    <View style=lineContentsStyle> ...tokens </View>
+  </View>;
 };
 
 let viewLinesToElements =
-    (fontWidth: int, fontHeight: int, lineNumberWidth: int, bufferView: TokenizedBufferView.t, theme, cursorLine) => {
+    (
+      fontWidth: int,
+      fontHeight: int,
+      lineNumberWidth: int,
+      bufferView: TokenizedBufferView.t,
+      theme,
+      cursorLine,
+    ) => {
   let f = (b: BufferViewLine.t) => {
     tokensToElement(
       fontWidth,
@@ -124,10 +142,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = state.theme;
 
-    let lineNumberWidth = LineNumber.getLineNumberPixelWidth(
+    let lineNumberWidth =
+      LineNumber.getLineNumberPixelWidth(
         ~lines=Array.length(state.buffer.lines),
         ~fontPixelWidth=state.editorFont.measuredWidth,
-        ());
+        (),
+      );
 
     let bufferView =
       state.buffer
@@ -158,7 +178,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         position(`Absolute),
         top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
         left(
-          lineNumberWidth + fontWidth * Index.toZeroBasedInt(state.cursorPosition.character),
+          lineNumberWidth
+          + fontWidth
+          * Index.toZeroBasedInt(state.cursorPosition.character),
         ),
         height(fontHeight),
         width(cursorWidth),

@@ -4,11 +4,6 @@
  * Configuration settings for the editor
  */
 
-type t = {
-    editorLineNumbers: LineNumber.setting,
-};
+type t = {editorLineNumbers: LineNumber.setting};
 
-let create: unit => t =
-  () => {
-    editorLineNumbers: On,  
-  };
+let create: unit => t = () => {editorLineNumbers: On};
