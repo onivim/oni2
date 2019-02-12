@@ -161,11 +161,13 @@ let init = app => {
           switch (n) {
           | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
+          | ModeChanged("cmdline_normal") =>
+            Core.Actions.ChangeMode(Commandline)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
-          | CursorMoved(c) => Core.Actions.CursorMove(Core.Types.BufferPosition.create(
-                c.cursorLine,
-                c.cursorColumn,
-          ))
+          | CursorMoved(c) =>
+            Core.Actions.CursorMove(
+              Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
+            )
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(
@@ -175,6 +177,8 @@ let init = app => {
                 (),
               ),
             )
+          | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
+          | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
           | _ => Noop
           };
 

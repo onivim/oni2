@@ -54,6 +54,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     <View style>
       <View style=surfaceStyle> <Editor state /> </View>
+      <Commandline theme command={state.commandline} />
       <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
     </View>;
   });

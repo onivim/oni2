@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+module Commandline = Commandline;
+
 module CursorPosition = {
   type t = {
     line: Index.t,

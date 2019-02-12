@@ -5,7 +5,6 @@
   "license": "MIT",
   "esy": {
     "build": "refmterr dune build --root . -j4",
-    "buildsInSource": "_build",
     "install": [
         "esy-installer Oni2.install",
         "esy-installer Oni_Core.install",
