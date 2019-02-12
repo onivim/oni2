@@ -34,11 +34,10 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   let updateLines = Array.of_list(update.lines);
   if (Array.length(lines) == 0) {
-    updateLines
-  }
-  else if (update.startLine >= Array.length(lines)) {
+    updateLines;
+  } else if (update.startLine >= Array.length(lines)) {
     let ret = Array.concat([lines, updateLines]);
-    ret
+    ret;
   } else {
     let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
     let post =
