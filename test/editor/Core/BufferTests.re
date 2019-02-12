@@ -34,4 +34,13 @@ describe("update", ({test, _}) => {
     let updatedBuffer = Buffer.update(buffer, update);
     validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
   });
+
+  test("add new line after buffer", ({expect}) => {
+    let buffer = Buffer.ofLines([|"a", "b", "c"|]);
+    prerr_endline ("BEFORE");
+    let update = BufferUpdate.create(~startLine=3, ~endLine=3, ~lines=["d"], ());
+    let updatedBuffer = Buffer.update(buffer, update);
+    prerr_endline ("AFTER");
+    validateBuffer(expect, updatedBuffer, [|"a", "b", "c", "d"|]);
+  });
 });
