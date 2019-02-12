@@ -48,7 +48,8 @@ let getStringParts = (index, str) => {
   };
 };
 
-let createElement = (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) => {
+let createElement =
+    (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) => {
   component((_slots: React.Hooks.empty) => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
