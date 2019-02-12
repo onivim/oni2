@@ -65,7 +65,7 @@ let viewLinesToElements =
 
 let component = React.component("EditorSurface");
 
-let make = (state: State.t) =>
+let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
@@ -110,6 +110,3 @@ let make = (state: State.t) =>
 
     <View style> ...elements </View>;
   });
-
-let createElement = (~state, ~children as _, ()) =>
-  React.element(make(state));

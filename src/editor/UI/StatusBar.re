@@ -25,12 +25,9 @@ let viewStyle =
     alignItems(`Center),
   ];
 
-let make = (~mode: Types.Mode.t, ()) =>
+let createElement = (~children as _, ~mode: Types.Mode.t, ()) =>
   component((_slots: React.Hooks.empty) =>
     <View style=viewStyle>
       <Text style=textStyle text={Types.Mode.show(mode)} />
     </View>
   );
-
-let createElement = (~children as _, ~mode, ()) =>
-  React.element(make(~mode, ()));

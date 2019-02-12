@@ -16,7 +16,8 @@ let fontPixelSize = 12;
 
 let component = React.component("Tab");
 
-let make = (~title, ~active, ~onClick, ~onClose, ()) =>
+
+let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) => 
   component((_slots: React.Hooks.empty) => {
     /* ~title, */
     /* ~active: bool, */
@@ -50,7 +51,3 @@ let make = (~title, ~active, ~onClick, ~onClose, ()) =>
       <View style=containerStyle> <Text style=textStyle text=title /> </View>
     </Clickable>;
   });
-
-let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) => {
-  React.element(make(~title, ~active, ~onClick, ~onClose, ()));
-};
