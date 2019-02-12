@@ -33,6 +33,7 @@ let tokensToElement =
       virtualLineNumber: int,
       lineNumberWidth: int,
       tokens: list(Tokenizer.t),
+      theme: Theme.t,
     ) => {
 
   let lineHeight = fontHeight;
@@ -62,7 +63,7 @@ let tokensToElement =
     height(lineHeight),
     left(0),
     width(lineNumberWidth),
-    backgroundColor(Colors.red),
+    backgroundColor(theme.editorLineNumberBackground),
     justifyContent(`Center),
     alignItems(`Center),
   ];
@@ -79,7 +80,7 @@ let tokensToElement =
     fontFamily("FiraCode-Regular.ttf"),
     fontSize(14),
     height(fontHeight),
-    color(Colors.white),
+    color(theme.editorLineNumberForeground),
   ];
 
   let tokens = List.map(f, tokens);
@@ -95,7 +96,7 @@ let tokensToElement =
 };
 
 let viewLinesToElements =
-    (fontWidth: int, fontHeight: int, lineNumberWidth: int, bufferView: TokenizedBufferView.t) => {
+    (fontWidth: int, fontHeight: int, lineNumberWidth: int, bufferView: TokenizedBufferView.t, theme) => {
   let f = (b: BufferViewLine.t) => {
     tokensToElement(
       fontWidth,
@@ -104,6 +105,7 @@ let viewLinesToElements =
       Index.toZeroBasedInt(b.virtualLineNumber),
       lineNumberWidth,
       b.tokens,
+      theme,
     );
   };
 
@@ -114,9 +116,12 @@ let component = React.component("EditorSurface");
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
-    let theme = Theme.get();
+    let theme = state.theme;
 
-    let lineNumberWidth = 100;
+    let lineNumberWidth = LineNumber.getLineNumberPixelWidth(
+        ~lines=Array.length(state.buffer.lines),
+        ~fontPixelWidth=state.editorFont.measuredWidth,
+        ());
 
     let bufferView =
       state.buffer
@@ -129,6 +134,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         state.editorFont.measuredHeight,
         lineNumberWidth,
         bufferView,
+        state.theme,
       );
 
     let fontHeight = state.editorFont.measuredHeight;

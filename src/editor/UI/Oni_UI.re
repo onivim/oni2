@@ -5,4 +5,3 @@
  */
 
 module Root = Root;
-module Theme = Theme;

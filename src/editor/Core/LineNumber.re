@@ -17,13 +17,21 @@ type setting =
  */
 let getNumberOfDigitsForLines = (lines: int) => {
     if (lines <= 0) {
-        1
+        2
     } else {
         float_of_int(lines)
         |> log10
         |> v => v +. epsilon_float +. 1.0
         |> int_of_float
+        |> v => max(v, 2)
     }
+};
+
+let getLineNumberPixelWidth = (~lines: int, ~fontPixelWidth: int, ()) => {
+    let digits = getNumberOfDigitsForLines(lines);   
+
+    /* Add some padding around the line number */
+    (digits + 2) * fontPixelWidth
 };
 
 let getLineNumber = (~bufferLine: Index.t, ~cursorLine: Index.t, ~setting: setting, ()) => {

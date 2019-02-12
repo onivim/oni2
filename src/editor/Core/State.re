@@ -23,6 +23,7 @@ type t = {
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
   configuration: Configuration.t,
+  theme: Theme.t,
 };
 
 let create: unit => t =
@@ -49,4 +50,5 @@ let create: unit => t =
         (),
       ),
     tabs: [Tab.create(0, "[No Name]")],
+    theme: Theme.create(),
   };

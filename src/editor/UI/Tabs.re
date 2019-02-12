@@ -17,8 +17,9 @@ type tabInfo = {
 
 let component = React.component("Tabs");
 
-let toTab = (t: tabInfo) => {
+let toTab = (theme, t: tabInfo) => {
   <Tab
+    theme
     title={t.title}
     active={t.active}
     onClick={t.onClick}
@@ -28,8 +29,8 @@ let toTab = (t: tabInfo) => {
 
 let viewStyle = Style.[flexDirection(`Row)];
 
-let createElement = (~children as _, ~tabs: list(tabInfo), ()) =>
+let createElement = (~children as _, ~theme, ~tabs: list(tabInfo), ()) =>
   component((_slots: React.Hooks.empty) => {
-    let tabComponents = List.map(toTab, tabs);
+    let tabComponents = List.map(toTab(theme), tabs);
     <View style=viewStyle> ...tabComponents </View>;
   });
