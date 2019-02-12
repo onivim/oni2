@@ -69,7 +69,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
-    let bufferView = state.buffer
+    let bufferView =
+      state.buffer
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
@@ -83,23 +84,26 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let cursorWidth = switch(state.mode) {
-        | Insert => 2
-        | _ => fontWidth
-        };
+    let cursorWidth =
+      switch (state.mode) {
+      | Insert => 2
+      | _ => fontWidth
+      };
 
     let cursorStyle =
-        Style.[
-            position(`Absolute),
-            top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
-            left(fontWidth * Index.toZeroBasedInt(state.cursorPosition.character)),
-            height(fontHeight),
-            width(cursorWidth),
-            opacity(0.8),
-            backgroundColor(Colors.white),
-        ];
+      Style.[
+        position(`Absolute),
+        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
+        left(
+          fontWidth * Index.toZeroBasedInt(state.cursorPosition.character),
+        ),
+        height(fontHeight),
+        width(cursorWidth),
+        opacity(0.8),
+        backgroundColor(Colors.white),
+      ];
 
-    let elements = [ <View style=cursorStyle />, ...textElements ];
+    let elements = [<View style=cursorStyle />, ...textElements];
 
     let style =
       Style.[

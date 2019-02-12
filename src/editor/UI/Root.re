@@ -47,7 +47,6 @@ let statusBarStyle =
     alignItems(`Center),
   ];
 
-
 let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
