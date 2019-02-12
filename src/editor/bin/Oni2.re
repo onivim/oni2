@@ -88,6 +88,9 @@ let init = app => {
         let firstShape = shapedText[0];
         let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
 
+        let metrics = Fontkit.fk_get_metrics(font);
+        let actualHeight = int_of_float(float_of_int(fontSize) *. float_of_int(metrics.height) /. float_of_int(metrics.unitsPerEm));
+
         /* Set editor text based on measurements */
         App.dispatch(
           app,
@@ -96,7 +99,7 @@ let init = app => {
               ~fontFile=fontFamily,
               ~fontSize,
               ~measuredWidth=glyph.advance / 64,
-              ~measuredHeight=glyph.bearingY + 2,
+              ~measuredHeight=actualHeight,
               (),
             ),
           ),

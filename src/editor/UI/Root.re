@@ -47,7 +47,7 @@ let statusBarStyle =
     alignItems(`Center),
   ];
 
-let make = (state: State.t) =>
+let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
     let style = rootStyle(theme.background, theme.foreground);
@@ -58,6 +58,3 @@ let make = (state: State.t) =>
       <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
     </View>;
   });
-
-let createElement = (~state, ~children as _, ()) =>
-  React.element(make(state));

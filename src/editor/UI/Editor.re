@@ -38,7 +38,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
   List.map(f, tabs);
 };
 
-let make = (state: Oni_Core.State.t) =>
+let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     let theme = Theme.get();
 
@@ -47,6 +47,3 @@ let make = (state: Oni_Core.State.t) =>
 
     <View style> <Tabs tabs /> <EditorSurface state /> </View>;
   });
-
-let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
-  React.element(make(state));
