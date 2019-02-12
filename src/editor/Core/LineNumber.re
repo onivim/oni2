@@ -4,6 +4,8 @@
  * Settings and utilities for managing Linumbers
  */
 
+open Types;
+
 type setting =
 | On
 | Off
@@ -24,3 +26,19 @@ let getNumberOfDigitsForLines = (lines: int) => {
     }
 };
 
+let getLineNumber = (~bufferLine: Index.t, ~cursorLine: Index.t, ~setting: setting, ()) => {
+    switch (setting) {
+    | Relative => {
+
+        let oneBasedBufferLine = Index.toOneBasedInt(bufferLine);
+        let oneBasedCursorLine = Index.toOneBasedInt(cursorLine);
+
+        if (oneBasedBufferLine === oneBasedCursorLine) {
+            oneBasedBufferLine
+        } else {
+            abs(oneBasedCursorLine - oneBasedBufferLine)
+        }
+    }
+    | _ => Index.toOneBasedInt(bufferLine)
+    }
+}

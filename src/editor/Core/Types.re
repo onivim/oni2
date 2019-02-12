@@ -8,6 +8,12 @@ module Index = {
     | ZeroBasedIndex(n) => n
     | OneBasedIndex(n) => n - 1
     };
+
+  let toOneBasedInt = (pos: t) =>
+    switch (pos) {
+    | ZeroBasedIndex(n) => n + 1
+    | OneBasedIndex(n) => n
+    };
 };
 
 module Mode = {
