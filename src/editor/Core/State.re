@@ -22,10 +22,12 @@ type t = {
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
+  configuration: Configuration.t,
 };
 
 let create: unit => t =
   () => {
+    configuration: Configuration.create(),
     mode: Insert,
     commandline: {
       content: "",
