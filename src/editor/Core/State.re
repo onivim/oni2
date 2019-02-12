@@ -36,7 +36,7 @@ let create: unit => t =
       level: 0,
       show: false,
     },
-    buffer: Buffer.ofLines([|"testing"|]),
+    buffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(

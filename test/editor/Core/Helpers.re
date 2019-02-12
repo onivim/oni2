@@ -39,11 +39,13 @@ let validateBuffer =
       actualBuffer: Buffer.t,
       expectedLines: array(string),
     ) => {
-  expect.int(Array.length(actualBuffer.lines)).toBe(Array.length(expectedLines));
+  expect.int(Array.length(actualBuffer.lines)).toBe(
+    Array.length(expectedLines),
+  );
 
   let validateLine = (actualLine, expectedLine) => {
     expect.string(actualLine).toEqual(expectedLine);
-  }
+  };
 
   let f = (actual, expected) => {
     validateLine(actual, expected);
