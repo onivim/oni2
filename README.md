@@ -28,7 +28,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 ### Prerequisites
 
 - Install [Git](https://git-scm.com/)
-- Install [Esy](https://esy.sh)
+- Install [Esy](https://esy.sh) (__0.5.6__ is required)
 
 ##### `macOS`
 
