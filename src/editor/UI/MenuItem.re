@@ -15,7 +15,7 @@ let textStyles = (~theme: Theme.t) =>
 
 let containerStyles = (~selected, ~theme: Theme.t) =>
   Style.[
-    paddingHorizontal(10),
+    padding(10),
     flexDirection(`Row),
     backgroundColor(
       selected ? theme.editorMenuItemSelected : Colors.transparentWhite,
