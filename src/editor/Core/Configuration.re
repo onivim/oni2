@@ -5,7 +5,7 @@
  */
 
 type t = {
-    editorLineNumbers: LineNumber.setting
+    editorLineNumbers: LineNumber.setting,
     editorMinimapEnabled: bool,
 };
 

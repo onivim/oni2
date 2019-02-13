@@ -38,6 +38,9 @@ let init = app => {
 
   let render = () => {
     let state: Core.State.t = App.getState(app);
+    GlobalContext.set({
+        notifySizeChanged: (~width, ~height, ()) => prerr_endline ("size changed: " ++ string_of_int(width * height)),
+    })
     prerr_endline(
       "[DEBUG - STATE] Mode: "
       ++ Core.Types.Mode.show(state.mode)

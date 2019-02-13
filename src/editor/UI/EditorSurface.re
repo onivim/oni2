@@ -198,8 +198,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let onDimensionsChanged = ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-       print_endline ("WIDTH: " ++ string_of_int(width)) ;
-       print_endline ("HEIGHT: " ++ string_of_int(height)) ;
+       GlobalContext.current().notifySizeChanged(~width, ~height, ());
     };
 
     (hooks, <View style onDimensionsChanged> ...elements </View>);
