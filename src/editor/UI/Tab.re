@@ -17,7 +17,7 @@ let fontPixelSize = 12;
 let component = React.component("Tab");
 
 let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) =>
-  component((_slots: React.Hooks.empty) => {
+  component((hooks) => {
     /* ~title, */
     /* ~active: bool, */
     /* ~onClick: tabAction, */
@@ -46,7 +46,7 @@ let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) =>
         color(theme.editorForeground),
       ];
 
-    <Clickable>
+    (hooks, <Clickable>
       <View style=containerStyle> <Text style=textStyle text=title /> </View>
-    </Clickable>;
+    </Clickable>);
   });

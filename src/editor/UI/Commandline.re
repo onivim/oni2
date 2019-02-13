@@ -50,11 +50,11 @@ let getStringParts = (index, str) => {
 
 let createElement =
     (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) => {
-  component((_slots: React.Hooks.empty) => {
+  component((hooks) => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
     command.show
-      ? <View
+      ? (hooks, <View
           style=Style.[
             position(`Absolute),
             top(0),
@@ -89,7 +89,7 @@ let createElement =
             />
             <Text style=cmdTextStyles text=endStr />
           </View>
-        </View>
-      : React.listToElement([]);
+        </View>)
+      : (hooks, React.listToElement([]));
   });
 };

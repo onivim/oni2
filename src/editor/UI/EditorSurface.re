@@ -66,7 +66,7 @@ let viewLinesToElements =
 let component = React.component("EditorSurface");
 
 let createElement = (~state: State.t, ~children as _, ()) =>
-  component((_slots: React.Hooks.empty) => {
+  component((hooks) => {
     let theme = Theme.get();
 
     let bufferView =
@@ -112,5 +112,5 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         flexGrow(1),
       ];
 
-    <View style> ...elements </View>;
+    (hooks, <View style> ...elements </View>);
   });

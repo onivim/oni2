@@ -39,11 +39,11 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
 };
 
 let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
-  component((_slots: React.Hooks.empty) => {
+  component((hooks) => {
     let theme = Theme.get();
 
     let tabs = toUiTabs(state.tabs);
     let style = editorViewStyle(theme.background, theme.foreground);
 
-    <View style> <Tabs tabs /> <EditorSurface state /> </View>;
+    (hooks, <View style> <Tabs tabs /> <EditorSurface state /> </View>);
   });

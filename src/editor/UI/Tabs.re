@@ -29,7 +29,7 @@ let toTab = (t: tabInfo) => {
 let viewStyle = Style.[flexDirection(`Row)];
 
 let createElement = (~children as _, ~tabs: list(tabInfo), ()) =>
-  component((_slots: React.Hooks.empty) => {
+  component((hooks) => {
     let tabComponents = List.map(toTab, tabs);
-    <View style=viewStyle> ...tabComponents </View>;
+    (hooks, <View style=viewStyle> ...tabComponents </View>);
   });
