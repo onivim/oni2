@@ -1,1 +1,0 @@
-ONI2_PATH=/home/akin/Desktop/Coding/oni2/vendor/neovim-0.3.3/nvim-linux64/bin/nvim
