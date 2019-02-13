@@ -25,17 +25,19 @@ let containerStyles = (theme: Theme.t) =>
 
 let createElement =
     (~children as _, ~wildmenu: Types.Wildmenu.t, ~theme: Theme.t, ()) => {
-  component((_slots: React.Hooks.empty) =>
-    wildmenu.show
-      ? <ScrollView style={containerStyles(theme)}>
-          ...{List.mapi(
-            (index, item) => {
-              let selected = index == wildmenu.selected;
-              <MenuItem selected theme label=item />;
-            },
-            wildmenu.items,
-          )}
-        </ScrollView>
-      : React.listToElement([])
-  );
+  component(hooks => {
+    let element =
+      wildmenu.show
+        ? <ScrollView style={containerStyles(theme)}>
+            ...{List.mapi(
+              (index, item) => {
+                let selected = index == wildmenu.selected;
+                <MenuItem selected theme label=item />;
+              },
+              wildmenu.items,
+            )}
+          </ScrollView>
+        : React.listToElement([]);
+    (hooks, element);
+  });
 };

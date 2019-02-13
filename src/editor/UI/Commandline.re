@@ -75,30 +75,12 @@ let createElement =
           <Text style=cmdTextStyles text={command.firstC ++ startStr} />
           <View
             style=Style.[
-              width(400),
-              height(40),
-              top(50),
-              backgroundColor(theme.editorBackground),
-              flexDirection(`Row),
-              alignItems(`Center),
-              boxShadow(
-                ~xOffset=-15.,
-                ~yOffset=5.,
-                ~blurRadius=30.,
-                ~spreadRadius=5.,
-                ~color=Color.rgba(0., 0., 0., 0.2),
-              ),
-            ]>
-            <Text style=cmdTextStyles text={command.firstC ++ startStr} />
-            <View
-              style=Style.[
-                width(2),
-                height(cmdFontSize),
-                backgroundColor(cmdFontColor),
-              ]
-            />
-            <Text style=cmdTextStyles text=endStr />
-          </View>
+              width(2),
+              height(cmdFontSize),
+              backgroundColor(cmdFontColor),
+            ]
+          />
+          <Text style=cmdTextStyles text=endStr />
         </View>,
       )
       : (hooks, React.listToElement([]));

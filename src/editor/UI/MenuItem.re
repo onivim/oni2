@@ -31,11 +31,14 @@ let iconStyles =
 
 let createElement =
     (~children as _, ~style=[], ~icon={||}, ~label, ~selected, ~theme, ()) =>
-  component((_slots: React.Hooks.empty) => {
+  component(hooks => {
     let labelStyles =
       Style.(merge(~source=textStyles(~theme), ~target=style));
-    <View style={containerStyles(~theme, ~selected)}>
-      <Text style=iconStyles text=icon />
-      <Text style=labelStyles text=label />
-    </View>;
+    (
+      hooks,
+      <View style={containerStyles(~theme, ~selected)}>
+        <Text style=iconStyles text=icon />
+        <Text style=labelStyles text=label />
+      </View>,
+    );
   });
