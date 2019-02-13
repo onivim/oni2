@@ -6,17 +6,21 @@ let component = React.component("MenuItem");
 
 let menuItemFontSize = 20;
 
-let textStyles = (~selected, ~theme: Theme.t) =>
+let textStyles = (~theme: Theme.t) =>
   Style.[
     fontFamily("FiraCode-Regular.ttf"),
     fontSize(menuItemFontSize),
     color(theme.editorMenuForeground),
+  ];
+
+let containerStyles = (~selected, ~theme: Theme.t) =>
+  Style.[
+    paddingHorizontal(10),
+    flexDirection(`Row),
     backgroundColor(
       selected ? theme.editorMenuItemSelected : Colors.transparentWhite,
     ),
   ];
-
-let containerStyles = Style.[paddingHorizontal(10), flexDirection(`Row)];
 
 let iconStyles =
   Style.[
@@ -26,19 +30,11 @@ let iconStyles =
   ];
 
 let createElement =
-    (
-      ~children as _,
-      ~style=[],
-      ~icon={||},
-      ~label,
-      ~selected=false,
-      ~theme,
-      (),
-    ) =>
+    (~children as _, ~style=[], ~icon={||}, ~label, ~selected, ~theme, ()) =>
   component((_slots: React.Hooks.empty) => {
     let labelStyles =
-      Style.(merge(~source=textStyles(~selected, ~theme), ~target=style));
-    <View style=containerStyles>
+      Style.(merge(~source=textStyles(~theme), ~target=style));
+    <View style={containerStyles(~theme, ~selected)}>
       <Text style=iconStyles text=icon />
       <Text style=labelStyles text=label />
     </View>;

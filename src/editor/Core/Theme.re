@@ -29,7 +29,7 @@ let default: t = {
   editorActiveLineNumberForeground: Color.hex("#737984"),
   editorMenuBackground: Color.hex("#2F3440"),
   editorMenuForeground: Color.hex("#FFFFFF"),
-  editorMenuItemSelected: Color.hex("#2C323C"),
+  editorMenuItemSelected: Color.hex("#495162"),
 };
 
 let create: unit => t =
