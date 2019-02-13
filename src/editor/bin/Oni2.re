@@ -89,7 +89,12 @@ let init = app => {
         let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
 
         let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight = int_of_float(float_of_int(fontSize) *. float_of_int(metrics.height) /. float_of_int(metrics.unitsPerEm));
+        let actualHeight =
+          int_of_float(
+            float_of_int(fontSize)
+            *. float_of_int(metrics.height)
+            /. float_of_int(metrics.unitsPerEm),
+          );
 
         /* Set editor text based on measurements */
         App.dispatch(
@@ -135,6 +140,7 @@ let init = app => {
           | Key.KEY_BACKSPACE => ignore(neovimProtocol.input("<BS>"))
           | Key.KEY_ENTER => ignore(neovimProtocol.input("<CR>"))
           | Key.KEY_ESCAPE => ignore(neovimProtocol.input("<ESC>"))
+          | Key.KEY_TAB => ignore(neovimProtocol.input("<TAB>"))
           | _ => ()
           };
         ();

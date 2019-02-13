@@ -13,4 +13,6 @@ type t =
   | SetEditorFont(EditorFont.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | WildmenuShow(Wildmenu.t)
+  | WildmenuHide(Wildmenu.t)
   | Noop;

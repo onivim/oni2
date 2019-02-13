@@ -22,6 +22,7 @@ type t = {
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
+  wildmenu: Wildmenu.t,
   configuration: Configuration.t,
   theme: Theme.t,
 };
@@ -38,6 +39,10 @@ let create: unit => t =
       indent: 0,
       level: 0,
       show: false,
+    },
+    wildmenu: {
+      items: [],
+      selected: 0,
     },
     buffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),

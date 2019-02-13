@@ -76,6 +76,13 @@ module EditorFont = {
   };
 };
 
+module Wildmenu = {
+  type t = {
+    items: list(string),
+    selected: int,
+  };
+};
+
 module Commandline = {
   type t = {
     content: string,

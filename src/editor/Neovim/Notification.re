@@ -39,6 +39,8 @@ type t =
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | WildmenuShow(Wildmenu.t)
+  | WildmenuHide
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -98,6 +100,31 @@ let hideCommandline = _msgs => {
   });
 };
 
+let showWildmenu = (args: list(M.t)) => {
+  /* [[wildmenu_show, */
+  /*   [[help, :help, --help, :helpc, :helpg, :helpt, help.txt, helphelp, */
+  /*   help-tags, :helpgrep, :helptags, 'helpfile', 'helplang', :helpclose, */
+  /*   'helpheight', help-context, help-summary, help-writing, helphelp.txt, */
+  /*   help-translated, help-xterm-window, helpfile_name.txt, netrw-help, */
+  /*   gzip-helpfile, online-help, add-local-help, write-local-help, <Help>, */
+  /*   i_<Help>, :lhelpgrep, netrw-quickhelp]]], [wildmenu_select, [0]], */
+  switch (args) {
+  | [M.List(i)] =>
+    let items =
+      List.fold_left(
+        (accum, item) =>
+          switch (item) {
+          | M.String(i) => [i, ...accum]
+          | _ => accum
+          },
+        [],
+        i,
+      );
+    WildmenuShow({items, selected: 0});
+  | _ => Ignored
+  };
+};
+
 let parseRedraw = (msgs: list(Msgpck.t)) => {
   let p = (msg: Msgpck.t) => {
     switch (msg) {
@@ -105,6 +132,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       showCommandline(msgs)
     | M.List([M.String("cmdline_hide"), M.List(msgs)]) =>
       hideCommandline(msgs)
+    | M.List([M.String("wildmenu_show"), M.List(msgs)]) =>
+      showWildmenu(msgs)
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
