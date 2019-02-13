@@ -102,13 +102,7 @@ let hideCommandline = _msgs => {
 };
 
 let showWildmenu = (args: list(M.t)) => {
-  /* [[wildmenu_show, */
-  /*   [[help, :help, --help, :helpc, :helpg, :helpt, help.txt, helphelp, */
-  /*   help-tags, :helpgrep, :helptags, 'helpfile', 'helplang', :helpclose, */
-  /*   'helpheight', help-context, help-summary, help-writing, helphelp.txt, */
-  /*   help-translated, help-xterm-window, helpfile_name.txt, netrw-help, */
-  /*   gzip-helpfile, online-help, add-local-help, write-local-help, <Help>, */
-  /*   i_<Help>, :lhelpgrep, netrw-quickhelp]]], [wildmenu_select, [0]], */
+  /* [[wildmenu_show, [[list items]]] */
   switch (args) {
   | [M.List(i)] =>
     let items =
@@ -126,11 +120,12 @@ let showWildmenu = (args: list(M.t)) => {
   };
 };
 
-let hideWildmenu = () => {
+let hideWildmenu = _msgs => {
   WildmenuHide({items: [], show: false, selected: 0});
 };
 
 let updateWildmenu = selected => {
+  /* [wildmenu_select, [0]] */
   switch (selected) {
   | M.Int(s) => WildmenuSelected(s)
   | _ => Ignored
@@ -148,7 +143,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       showWildmenu(msgs)
     | M.List([M.String("wildmenu_select"), M.List([selected])]) =>
       updateWildmenu(selected)
-    | M.List([M.String("wildmenu_hide")]) => hideWildmenu()
+    | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
+      hideWildmenu(msgs)
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
