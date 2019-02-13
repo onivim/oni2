@@ -6,9 +6,11 @@
 
 module Actions = Actions;
 module Buffer = Buffer;
+module LineNumber = LineNumber;
 module Log = Log;
 module Reducer = Reducer;
 module State = State;
+module Theme = Theme;
 module TokenizedBuffer = TokenizedBuffer;
 module TokenizedBufferView = TokenizedBufferView;
 module Tokenizer = Tokenizer;

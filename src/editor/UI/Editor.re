@@ -40,7 +40,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
 
 let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
   component((hooks) => {
-    let theme = Theme.get();
+    let theme = state.theme;
 
     let tabs = toUiTabs(state.tabs);
     let style = editorViewStyle(theme.background, theme.foreground);
