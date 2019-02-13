@@ -21,7 +21,7 @@ append_line() {
 case "${machine}" in
   Linux)
       ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
-  Darwin)
+  Mac)
       ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
   *)
       ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
