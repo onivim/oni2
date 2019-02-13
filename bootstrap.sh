@@ -1,4 +1,4 @@
-# Set the path for file we are going to generate
+# Set the path for the file we are going to generate
 OUTPUT="$(pwd)/setup.txt"
 
 # Figure out what OS we are on
