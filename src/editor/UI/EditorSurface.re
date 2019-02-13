@@ -197,5 +197,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         flexGrow(1),
       ];
 
-    (hooks, <View style> ...elements </View>);
+    let onDimensionsChanged = ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+       print_endline ("WIDTH: " ++ string_of_int(width)) ;
+       print_endline ("HEIGHT: " ++ string_of_int(height)) ;
+    };
+
+    (hooks, <View style onDimensionsChanged> ...elements </View>);
   });
