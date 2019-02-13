@@ -79,6 +79,7 @@ module EditorFont = {
 module Wildmenu = {
   type t = {
     items: list(string),
+    show: bool,
     selected: int,
   };
 };

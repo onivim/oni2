@@ -41,6 +41,7 @@ type t =
   | CommandlineHide(Commandline.t)
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
+  | WildmenuSelected(int)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -120,7 +121,18 @@ let showWildmenu = (args: list(M.t)) => {
         [],
         i,
       );
-    WildmenuShow({items, selected: 0});
+    WildmenuShow({items, selected: 0, show: true});
+  | _ => Ignored
+  };
+};
+
+let hideWildmenu = () => {
+  WildmenuHide({items: [], show: false, selected: 0});
+};
+
+let updateWildmenu = selected => {
+  switch (selected) {
+  | M.Int(s) => WildmenuSelected(s)
   | _ => Ignored
   };
 };
@@ -134,6 +146,9 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       hideCommandline(msgs)
     | M.List([M.String("wildmenu_show"), M.List(msgs)]) =>
       showWildmenu(msgs)
+    | M.List([M.String("wildmenu_select"), M.List([selected])]) =>
+      updateWildmenu(selected)
+    | M.List([M.String("wildmenu_hide")]) => hideWildmenu()
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),

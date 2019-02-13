@@ -14,10 +14,10 @@ let cmdTextStyles =
     fontSize(cmdFontSize),
     color(cmdFontColor),
   ];
+
 /*
    TODO: Flow text around a "cursor"
  */
-
 let isZeroIndex = num => num - 1 <= 0;
 
 let safeStrSub = (str, strStart, strEnd) =>
@@ -50,19 +50,29 @@ let getStringParts = (index, str) => {
 
 let createElement =
     (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) => {
-  component((hooks) => {
+  component(hooks => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
     command.show
-      ? (hooks, <View
+      ? (
+        hooks,
+        <View
           style=Style.[
-            position(`Absolute),
-            top(0),
-            right(0),
-            left(0),
-            bottom(0),
+            width(400),
+            height(40),
+            top(50),
+            backgroundColor(theme.editorBackground),
+            flexDirection(`Row),
             alignItems(`Center),
+            boxShadow(
+              ~xOffset=-15.,
+              ~yOffset=5.,
+              ~blurRadius=30.,
+              ~spreadRadius=5.,
+              ~color=Color.rgba(0., 0., 0., 0.2),
+            ),
           ]>
+          <Text style=cmdTextStyles text={command.firstC ++ startStr} />
           <View
             style=Style.[
               width(400),
@@ -89,7 +99,8 @@ let createElement =
             />
             <Text style=cmdTextStyles text=endStr />
           </View>
-        </View>)
+        </View>,
+      )
       : (hooks, React.listToElement([]));
   });
 };

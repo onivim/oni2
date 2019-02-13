@@ -19,6 +19,13 @@ let reduce: (State.t, Actions.t) => State.t =
     | CommandlineHide(commandline) => {...s, commandline}
     | WildmenuShow(wildmenu) => {...s, wildmenu}
     | WildmenuHide(wildmenu) => {...s, wildmenu}
+    | WildmenuSelected(selected) => {
+        ...s,
+        wildmenu: {
+          ...s.wildmenu,
+          selected,
+        },
+      }
     | Noop => s
     };
   };

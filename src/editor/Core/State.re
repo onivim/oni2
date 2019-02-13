@@ -43,6 +43,7 @@ let create: unit => t =
     wildmenu: {
       items: [],
       selected: 0,
+      show: false,
     },
     buffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
