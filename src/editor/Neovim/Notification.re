@@ -114,7 +114,9 @@ let showWildmenu = (args: list(M.t)) => {
           },
         [],
         i,
-      );
+      )
+      /* reorder the list due to the spreading above adding items the wrong way round */
+      |> List.rev;
     WildmenuShow({items, selected: 0, show: true});
   | _ => Ignored
   };
