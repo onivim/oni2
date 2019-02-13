@@ -6,11 +6,11 @@ module LineNumber = Oni_Core.LineNumber;
 
 describe("LineNumber", ({test, _}) =>
   test("getNumberOfDigitsForLines", ({expect}) => {
-    (LineNumber.getNumberOfDigitsForLines(0) |> expect.int).toBe(1);
+    (LineNumber.getNumberOfDigitsForLines(0) |> expect.int).toBe(2);
 
-    (LineNumber.getNumberOfDigitsForLines(1) |> expect.int).toBe(1);
+    (LineNumber.getNumberOfDigitsForLines(1) |> expect.int).toBe(2);
 
-    (LineNumber.getNumberOfDigitsForLines(9) |> expect.int).toBe(1);
+    (LineNumber.getNumberOfDigitsForLines(9) |> expect.int).toBe(2);
 
     (LineNumber.getNumberOfDigitsForLines(10) |> expect.int).toBe(2);
 
