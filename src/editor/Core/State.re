@@ -24,8 +24,7 @@ type t = {
   commandline: Commandline.t,
   configuration: Configuration.t,
   theme: Theme.t,
-  pixelWidth: int,
-  pixelHeight: int,
+  size: EditorSize.t,
 };
 
 let create: unit => t =
@@ -53,6 +52,5 @@ let create: unit => t =
       ),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
-    pixelWidth: 0,
-    pixelHeight: 0,
+    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ())
   };
