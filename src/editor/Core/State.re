@@ -22,10 +22,13 @@ type t = {
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
+  configuration: Configuration.t,
+  theme: Theme.t,
 };
 
 let create: unit => t =
   () => {
+    configuration: Configuration.create(),
     mode: Insert,
     commandline: {
       content: "",
@@ -47,4 +50,5 @@ let create: unit => t =
         (),
       ),
     tabs: [Tab.create(0, "[No Name]")],
+    theme: Theme.create(),
   };

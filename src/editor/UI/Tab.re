@@ -7,6 +7,8 @@
 open Revery.UI;
 open Revery.UI.Components;
 
+open Oni_Core;
+
 type tabAction = unit => unit;
 
 let tabHeight = 35;
@@ -16,7 +18,8 @@ let fontPixelSize = 12;
 
 let component = React.component("Tab");
 
-let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) =>
+let createElement =
+    (~title, ~active, ~onClick, ~onClose, ~theme: Theme.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
     /* ~title, */
     /* ~active: bool, */
@@ -24,7 +27,6 @@ let createElement = (~title, ~active, ~onClick, ~onClose, ~children as _, ()) =>
     /* ~onClose: tabAction, */
     /* ~children, */
     let _ = (onClick, onClose);
-    let theme = Theme.get();
 
     let opacityValue = active ? 1.0 : 0.6;
 

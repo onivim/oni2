@@ -49,7 +49,7 @@ let statusBarStyle =
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component((_slots: React.Hooks.empty) => {
-    let theme = Theme.get();
+    let theme = state.theme;
     let style = rootStyle(theme.background, theme.foreground);
 
     <View style>
