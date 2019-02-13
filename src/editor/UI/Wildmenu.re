@@ -6,22 +6,12 @@ open Oni_Core;
 let component = React.component("wildmenu");
 
 let menuFontSize = 20;
-let menuFontColor = Colors.white;
-
-let textStyles = (~selected) =>
-  Style.[
-    fontFamily("FiraCode-Regular.ttf"),
-    marginLeft(10),
-    fontSize(menuFontSize),
-    color(menuFontColor),
-    backgroundColor(selected ? Colors.green : Colors.transparentWhite),
-  ];
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
     width(400),
     height(300),
-    backgroundColor(theme.editorLineNumberBackground),
+    backgroundColor(theme.editorMenuBackground),
     paddingVertical(20),
     overflow(LayoutTypes.Hidden),
     boxShadow(
@@ -41,7 +31,7 @@ let createElement =
           ...{List.mapi(
             (index, item) => {
               let selected = index == wildmenu.selected;
-              <Text style={textStyles(~selected)} text=item />;
+              <MenuItem selected theme label=item />;
             },
             wildmenu.items,
           )}
