@@ -40,7 +40,7 @@ type t =
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
   | WildmenuShow(Wildmenu.t)
-  | WildmenuHide
+  | WildmenuHide(Wildmenu.t)
   | Ignored;
 
 type commandlineInput = {input: string};

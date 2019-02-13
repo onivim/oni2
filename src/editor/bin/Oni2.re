@@ -183,6 +183,8 @@ let init = app => {
                 (),
               ),
             )
+          | WildmenuShow(w) => Core.Actions.WildmenuShow(w)
+          | WildmenuHide(w) => Core.Actions.WildmenuHide(w)
           | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
           | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
           | _ => Noop

@@ -17,12 +17,7 @@ let reduce: (State.t, Actions.t) => State.t =
     | SetEditorFont(font) => {...s, editorFont: font}
     | CommandlineShow(commandline) => {...s, commandline}
     | CommandlineHide(commandline) => {...s, commandline}
-    | WildmenuShow(wildmenu) =>
-      print_endline(
-        "wildmenu.selected =======================: "
-        ++ string_of_int(wildmenu.selected),
-      );
-      {...s, wildmenu};
+    | WildmenuShow(wildmenu) => {...s, wildmenu}
     | WildmenuHide(wildmenu) => {...s, wildmenu}
     | Noop => s
     };
