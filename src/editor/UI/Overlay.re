@@ -10,6 +10,7 @@ let createElement = (~children, ()) =>
         right(0),
         left(0),
         bottom(0),
+        paddingTop(20),
         alignItems(`Center),
         overflow(LayoutTypes.Hidden),
         flexDirection(`Column),

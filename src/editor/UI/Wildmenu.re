@@ -24,6 +24,13 @@ let containerStyles = (theme: Theme.t) =>
     backgroundColor(theme.editorLineNumberBackground),
     paddingVertical(20),
     overflow(LayoutTypes.Hidden),
+    boxShadow(
+      ~xOffset=-15.,
+      ~yOffset=5.,
+      ~blurRadius=30.,
+      ~spreadRadius=5.,
+      ~color=Color.rgba(0., 0., 0., 0.2),
+    ),
   ];
 
 let createElement =

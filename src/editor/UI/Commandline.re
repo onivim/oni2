@@ -60,10 +60,10 @@ let createElement =
           style=Style.[
             width(400),
             height(40),
-            top(50),
             backgroundColor(theme.editorBackground),
             flexDirection(`Row),
             alignItems(`Center),
+            marginBottom(20),
             boxShadow(
               ~xOffset=-15.,
               ~yOffset=5.,
