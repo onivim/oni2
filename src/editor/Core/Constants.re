@@ -20,7 +20,7 @@ type t = {
 };
 
 let default: t = {
-  minimapPadding: 8,
+  minimapPadding: 0,
   minimapCharacterWidth: 1,
   minimapCharacterHeight: 2,
   scrollBarThickness: 15,
