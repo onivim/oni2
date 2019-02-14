@@ -20,14 +20,15 @@ append_line() {
 # for the Oni2 binary
 case "${machine}" in
   Linux)
-    ONI_PATH="/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
+      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
   Darwin)
-    ONI_PATH="/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
+      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
   *)
-    ONI_PATH="/vendor/neovim-0.3.3/nvim-win64/nvim.exe"
+      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
+      ONI_PATH="$(cygpath -m $ONI_PATH)";;
 esac
 
-oni_bin_path="ONI2_PATH=$(pwd)$ONI_PATH"
+oni_bin_path="ONI2_PATH=$ONI_PATH"
 
 # create the output file, if it exists remove it first so it is recreated
 if [[ -e $OUTPUT ]]; then
