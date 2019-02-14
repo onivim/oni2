@@ -21,7 +21,7 @@ let extractParts = line => {
   };
 };
 
-let getOniPath = paths => {
+let getNeovimPath = paths => {
   let (_, path) =
     List.find(
       ((name, _)) =>
@@ -58,7 +58,7 @@ let getBuildVariablesFromSetup = (~path="/setup.txt", ()) => {
 
 let start = (~neovimPath as _: string, ~args: array(string)) => {
   let variables = getBuildVariablesFromSetup();
-  let neovimPath = getOniPath(variables);
+  let neovimPath = getNeovimPath(variables);
   print_endline("Starting oni from binary path: " ++ neovimPath);
   ChildProcess.spawn(neovimPath, args);
 };
