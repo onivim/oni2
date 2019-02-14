@@ -60,7 +60,11 @@ let getLayout =
 
   let bufferHeightInCharacters = pixelHeight / characterHeight;
   let minimapHeightInCharacters =
-    pixelHeight / Constants.default.minimapCharacterHeight;
+    pixelHeight
+    / (
+      Constants.default.minimapCharacterHeight
+      + Constants.default.minimapLineSpacing
+    );
 
   let leftOverWidth =
     pixelWidth

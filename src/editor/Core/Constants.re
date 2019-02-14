@@ -16,6 +16,10 @@ type t = {
    * Height of characters in minimap, in pixels
    */
   minimapCharacterHeight: int,
+  /*
+   * Number of pixels between each line in the minimap
+   */
+  minimapLineSpacing: int,
   scrollBarThickness: int,
 };
 
@@ -23,5 +27,6 @@ let default: t = {
   minimapPadding: 0,
   minimapCharacterWidth: 1,
   minimapCharacterHeight: 2,
+  minimapLineSpacing: 1,
   scrollBarThickness: 15,
 };

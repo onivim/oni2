@@ -36,7 +36,13 @@ let tokensToElement =
   let lineStyle =
     Style.[
       position(`Absolute),
-      top(Constants.default.minimapCharacterHeight * virtualLineNumber),
+      top(
+        (
+          Constants.default.minimapCharacterHeight
+          + Constants.default.minimapLineSpacing
+        )
+        * virtualLineNumber,
+      ),
     ];
 
   let tokens = List.map(f, tokens);
