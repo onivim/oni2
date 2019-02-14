@@ -13,7 +13,6 @@ let cmdTextStyles =
     fontSize(cmdFontSize),
     color(cmdFontColor),
     textWrap(TextWrapping.WhitespaceWrap),
-    overflow(LayoutTypes.Hidden),
     marginVertical(8),
   ];
 
@@ -42,6 +41,7 @@ let createElement =
         <View
           style=Style.[
             width(400),
+            overflow(LayoutTypes.Hidden),
             backgroundColor(theme.editorBackground),
             flexDirection(`Row),
             alignItems(`Center),
@@ -61,8 +61,10 @@ let createElement =
           <View
             style=Style.[
               width(2),
+              alignSelf(`FlexEnd),
               height(cmdFontSize),
               backgroundColor(cmdFontColor),
+              marginVertical(8),
             ]
           />
           <Text style=cmdTextStyles text=endStr />
