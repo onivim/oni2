@@ -119,12 +119,6 @@ let init = app => {
   setFont("FiraCode-Regular.ttf", 14);
 
   let _ =
-    nvimApi.requestSync(
-      "nvim_buf_attach",
-      Msgpck.List([Msgpck.Int(0), Msgpck.Bool(true), Msgpck.Map([])]),
-    );
-
-  let _ =
     Event.subscribe(
       w.onKeyPress,
       event => {
@@ -181,6 +175,7 @@ let init = app => {
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
             Core.Actions.ChangeMode(Commandline)
+          | BufferEnter(b) => Core.Actions.BufferEnter(b)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(

@@ -58,6 +58,10 @@ module BufferPosition = {
   };
 };
 
+module BufferEnter = {
+  type t = {bufferId: int};
+};
+
 module BufferUpdate = {
   type t = {
     startLine: int,

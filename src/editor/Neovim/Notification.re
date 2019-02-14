@@ -32,10 +32,26 @@ module BufferLinesNotification = {
   };
 };
 
+module Buffer = {
+  let attach = bufferId => {
+    ignore(
+      Oni2.nvimApi.requestSync(
+        "nvim_buf_attach",
+        Msgpck.List([
+          Msgpck.Int(bufferId),
+          Msgpck.Bool(true),
+          Msgpck.Map([]),
+        ]),
+      ),
+    );
+  };
+};
+
 type t =
   | Redraw
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
+  | BufferEnter(Types.BufferEnter.t)
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
@@ -175,6 +191,13 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
     };
 
   switch (autocmd) {
+  | "BufEnter" =>
+    switch (args) {
+    | [M.Int(bufferId), _, _] =>
+      BufferEnter.attach(bufferId);
+      BufferEnter({context, bufferId});
+    | _ => Ignored
+    }
   | "CursorMoved" => CursorMoved(context)
   | "CursorMovedI" => CursorMoved(context)
   | _ => Ignored

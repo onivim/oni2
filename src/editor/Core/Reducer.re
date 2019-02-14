@@ -13,6 +13,7 @@ let reduce: (State.t, Actions.t) => State.t =
       let ret: State.t = {...s, mode: m};
       ret;
     | CursorMove(b) => {...s, cursorPosition: b}
+    | BufferEnter(b) => {...s, buffer: Buffer.update(s.buffer)}
     | BufferUpdate(bu) => {...s, buffer: Buffer.update(s.buffer, bu)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | SetEditorSize(size) => {...s, size}
