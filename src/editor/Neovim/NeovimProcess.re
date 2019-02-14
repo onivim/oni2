@@ -5,6 +5,7 @@
  */
 
 open Rench;
+open Oni_Core;
 
 type t = {pid: int};
 
@@ -16,49 +17,34 @@ let version = (~neovimPath: string) => {
 let extractParts = line => {
   let parts = Str.split(Str.regexp("="), line);
   switch (parts) {
-  | [name, value] => (name, value)
-  | _ => ("", "")
+  | [name, value] => Some((name, value))
+  | _ => None
   };
 };
 
 let getNeovimPath = paths => {
-  let (_, path) =
-    List.find(
-      ((name, _)) =>
-        switch (name) {
-        | "ONI2_PATH" => true
-        | _ => false
-        },
-      paths,
-    );
-  path;
-};
-
-let getBuildVariablesFromSetup = (~path="setup.txt", ()) => {
-  let variableList = ref([]);
-
-  let setupFilePath = Environment.getExecutingDirectory() ++ "/" ++ path;
-  let fileInChannel = Pervasives.open_in(setupFilePath);
-
-  let fileStream =
-    Stream.from(_i =>
-      switch (Pervasives.input_line(fileInChannel)) {
-      | line => Some(line)
-      | exception End_of_file => None
+  List.find(
+    item =>
+      switch (item) {
+      | Some(("ONI2_PATH", _)) => true
+      | _ => false
+      },
+    paths,
+  )
+  |> (
+    path =>
+      switch (path) {
+      | Some((_, p)) => p
+      | None => raise(Not_found)
       }
-    );
-  fileStream
-  |> Stream.iter(line => {
-       let parts = extractParts(line);
-       variableList := [parts, ...variableList^];
-     });
-
-  variableList^;
+  );
 };
 
 let start = (~args: array(string)) => {
-  let variables = getBuildVariablesFromSetup();
-  let neovimPath = getNeovimPath(variables);
+  let setupFilePath = Environment.getExecutingDirectory() ++ "/setup.txt";
+  let neovimPath =
+    Utility.getFileContents(setupFilePath, ~handler=extractParts)
+    |> getNeovimPath;
   print_endline("Starting oni from binary path: " ++ neovimPath);
   ChildProcess.spawn(neovimPath, args);
 };
