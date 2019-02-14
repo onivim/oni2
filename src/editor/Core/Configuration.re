@@ -4,6 +4,10 @@
  * Configuration settings for the editor
  */
 
-type t = {editorLineNumbers: LineNumber.setting};
+type t = {
+  editorLineNumbers: LineNumber.setting,
+  editorMinimapEnabled: bool,
+};
 
-let create: unit => t = () => {editorLineNumbers: On};
+let create: unit => t =
+  () => {editorLineNumbers: On, editorMinimapEnabled: true};

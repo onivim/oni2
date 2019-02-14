@@ -16,6 +16,18 @@ module Index = {
     };
 };
 
+module EditorSize = {
+  type t = {
+    pixelWidth: int,
+    pixelHeight: int,
+  };
+
+  let create = (~pixelWidth: int, ~pixelHeight: int, ()) => {
+    pixelWidth,
+    pixelHeight,
+  };
+};
+
 module Mode = {
   type t =
     | Insert

@@ -39,7 +39,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
 };
 
 let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
-  component((hooks) => {
+  component(hooks => {
     let theme = state.theme;
 
     let tabs = toUiTabs(state.tabs);

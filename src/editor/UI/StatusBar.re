@@ -26,8 +26,11 @@ let viewStyle =
   ];
 
 let createElement = (~children as _, ~mode: Types.Mode.t, ()) =>
-  component((hooks) =>
-    (hooks, <View style=viewStyle>
-      <Text style=textStyle text={Types.Mode.show(mode)} />
-    </View>)
+  component(hooks =>
+    (
+      hooks,
+      <View style=viewStyle>
+        <Text style=textStyle text={Types.Mode.show(mode)} />
+      </View>,
+    )
   );

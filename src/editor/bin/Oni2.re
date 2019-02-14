@@ -38,6 +38,11 @@ let init = app => {
 
   let render = () => {
     let state: Core.State.t = App.getState(app);
+    GlobalContext.set({
+        notifySizeChanged: (~width, ~height, ()) => {
+            App.dispatch(app, Core.Actions.SetEditorSize(Core.Types.EditorSize.create(~pixelWidth=width, ~pixelHeight=height, ())));
+        }
+    })
     prerr_endline(
       "[DEBUG - STATE] Mode: "
       ++ Core.Types.Mode.show(state.mode)

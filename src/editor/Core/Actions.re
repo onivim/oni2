@@ -11,6 +11,7 @@ type t =
   | ChangeMode(Mode.t)
   | CursorMove(BufferPosition.t)
   | SetEditorFont(EditorFont.t)
+  | SetEditorSize(EditorSize.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
   | WildmenuShow(Wildmenu.t)
