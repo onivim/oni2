@@ -34,11 +34,11 @@ let getNeovimPath = paths => {
   path;
 };
 
-let getBuildVariablesFromSetup = (~path="/setup.txt", ()) => {
+let getBuildVariablesFromSetup = (~path="setup.txt", ()) => {
   let variableList = ref([]);
 
   let fileInChannel =
-    Pervasives.open_in(Environment.getWorkingDirectory() ++ path);
+    Pervasives.open_in(Environment.getExecutingDirectory() ++ "/" ++ path);
 
   let fileStream =
     Stream.from(_i =>
