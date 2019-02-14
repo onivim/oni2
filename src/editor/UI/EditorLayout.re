@@ -62,7 +62,14 @@ let getLayout =
   let minimapHeightInCharacters =
     pixelHeight / Constants.default.minimapCharacterHeight;
 
-  let leftOverWidth = pixelWidth - bufferWidthInPixels - minimapWidthInPixels - lineNumberWidthInPixels - Constants.default.scrollBarThickness - (Constants.default.minimapPadding * 2);
+  let leftOverWidth =
+    pixelWidth
+    - bufferWidthInPixels
+    - minimapWidthInPixels
+    - lineNumberWidthInPixels
+    - Constants.default.scrollBarThickness
+    - Constants.default.minimapPadding
+    * 2;
 
   {
     lineNumberWidthInPixels,
