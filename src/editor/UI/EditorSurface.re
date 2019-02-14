@@ -139,7 +139,7 @@ let viewLinesToElements =
 let component = React.component("EditorSurface");
 
 let createElement = (~state: State.t, ~children as _, ()) =>
-  component((hooks) => {
+  component(hooks => {
     let theme = state.theme;
 
     let lineCount = Array.length(state.buffer.lines);
@@ -199,56 +199,64 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         flexGrow(1),
       ];
 
-    let onDimensionsChanged = ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-       GlobalContext.current().notifySizeChanged(~width, ~height, ());
+    let onDimensionsChanged =
+        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+      GlobalContext.current().notifySizeChanged(~width, ~height, ());
     };
 
-    let layout = EditorLayout.getLayout(
+    let layout =
+      EditorLayout.getLayout(
         ~pixelWidth=state.size.pixelWidth,
         ~pixelHeight=state.size.pixelHeight,
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
         ~bufferLineCount=lineCount,
-        ());
+        (),
+      );
 
-    let bufferPixelWidth = layout.lineNumberWidthInPixels + layout.bufferWidthInPixels;
+    let bufferPixelWidth =
+      layout.lineNumberWidthInPixels + layout.bufferWidthInPixels;
 
-    let bufferViewStyle = Style.[
+    let bufferViewStyle =
+      Style.[
         position(`Absolute),
         top(0),
         left(0),
         width(bufferPixelWidth),
         bottom(0),
-    ];
+      ];
 
-
-    let minimapPixelWidth = layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
-    let minimapViewStyle = Style.[
+    let minimapPixelWidth =
+      layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
+    let minimapViewStyle =
+      Style.[
         position(`Absolute),
         top(0),
         left(bufferPixelWidth),
         width(minimapPixelWidth),
         backgroundColor(Colors.black),
         bottom(0),
-    ];
+      ];
 
-    let verticalScrollBarStyle = Style.[
+    let verticalScrollBarStyle =
+      Style.[
         position(`Absolute),
         top(0),
         left(bufferPixelWidth + minimapPixelWidth),
         width(Constants.default.scrollBarThickness),
         backgroundColor(Colors.purple),
         bottom(0),
-    ];
+      ];
 
-    (hooks, <View style onDimensionsChanged>
-                <View style={bufferViewStyle}>
-                    ...elements 
-                </View>
-                <View style={minimapViewStyle}>
-                    <Minimap state tokenizedBufferView=bufferView />
-                </View>
-                <View style={verticalScrollBarStyle} />
-                    </View>);
+    (
+      hooks,
+      <View style onDimensionsChanged>
+        <View style=bufferViewStyle> ...elements </View>
+        <View style=minimapViewStyle>
+          <Minimap state tokenizedBufferView=bufferView />
+        </View>
+        <View style=verticalScrollBarStyle />
+      </View>,
+    );
   });

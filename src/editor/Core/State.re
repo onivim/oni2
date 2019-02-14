@@ -52,5 +52,5 @@ let create: unit => t =
       ),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
-    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ())
+    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
   };

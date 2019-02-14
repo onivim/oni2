@@ -5,11 +5,9 @@
  */
 
 type t = {
-    editorLineNumbers: LineNumber.setting,
-    editorMinimapEnabled: bool,
+  editorLineNumbers: LineNumber.setting,
+  editorMinimapEnabled: bool,
 };
 
-let create: unit => t = () => {
-    editorLineNumbers: On,
-    editorMinimapEnabled: true,
-};
+let create: unit => t =
+  () => {editorLineNumbers: On, editorMinimapEnabled: true};

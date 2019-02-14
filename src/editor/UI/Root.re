@@ -48,13 +48,16 @@ let statusBarStyle =
   ];
 
 let createElement = (~state: State.t, ~children as _, ()) =>
-  component((hooks) => {
+  component(hooks => {
     let theme = state.theme;
     let style = rootStyle(theme.background, theme.foreground);
 
-    (hooks, <View style>
-      <View style=surfaceStyle> <Editor state /> </View>
-      <Commandline theme command={state.commandline} />
-      <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
-    </View>);
+    (
+      hooks,
+      <View style>
+        <View style=surfaceStyle> <Editor state /> </View>
+        <Commandline theme command={state.commandline} />
+        <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
+      </View>,
+    );
   });

@@ -20,7 +20,7 @@ let component = React.component("Tab");
 
 let createElement =
     (~title, ~active, ~onClick, ~onClose, ~theme: Theme.t, ~children as _, ()) =>
-  component((hooks) => {
+  component(hooks => {
     /* ~title, */
     /* ~active: bool, */
     /* ~onClick: tabAction, */
@@ -48,7 +48,10 @@ let createElement =
         color(theme.editorForeground),
       ];
 
-    (hooks, <Clickable>
-      <View style=containerStyle> <Text style=textStyle text=title /> </View>
-    </Clickable>);
+    (
+      hooks,
+      <Clickable>
+        <View style=containerStyle> <Text style=textStyle text=title /> </View>
+      </Clickable>,
+    );
   });

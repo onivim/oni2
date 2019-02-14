@@ -30,7 +30,7 @@ let toTab = (theme, t: tabInfo) => {
 let viewStyle = Style.[flexDirection(`Row)];
 
 let createElement = (~children as _, ~theme, ~tabs: list(tabInfo), ()) =>
-  component((hooks) => {
+  component(hooks => {
     let tabComponents = List.map(toTab(theme), tabs);
     (hooks, <View style=viewStyle> ...tabComponents </View>);
   });

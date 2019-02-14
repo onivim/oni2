@@ -13,18 +13,19 @@ open Oni_Core.TokenizedBufferView;
 open Types;
 
 let tokensToElement =
-    (
-      virtualLineNumber: int,
-      tokens: list(Tokenizer.t),
-      _theme: Theme.t,
-    ) => {
+    (virtualLineNumber: int, tokens: list(Tokenizer.t), _theme: Theme.t) => {
   let f = (token: Tokenizer.t) => {
-      let tokenWidth = Index.toZeroBasedInt(token.endPosition) - Index.toZeroBasedInt(token.startPosition);
+    let tokenWidth =
+      Index.toZeroBasedInt(token.endPosition)
+      - Index.toZeroBasedInt(token.startPosition);
     let style =
       Style.[
         position(`Absolute),
         top(0),
-        left(Constants.default.minimapCharacterWidth * Index.toZeroBasedInt(token.startPosition)),
+        left(
+          Constants.default.minimapCharacterWidth
+          * Index.toZeroBasedInt(token.startPosition),
+        ),
         height(Constants.default.minimapCharacterHeight),
         width(tokenWidth * Constants.default.minimapCharacterWidth),
         backgroundColor(Colors.white),
@@ -34,20 +35,17 @@ let tokensToElement =
   };
 
   let lineStyle =
-    Style.[position(`Absolute), top(Constants.default.minimapCharacterHeight * virtualLineNumber)];
+    Style.[
+      position(`Absolute),
+      top(Constants.default.minimapCharacterHeight * virtualLineNumber),
+    ];
 
   let tokens = List.map(f, tokens);
 
-  <View style=lineStyle>
-  ...tokens
-  </View>;
+  <View style=lineStyle> ...tokens </View>;
 };
 
-let viewLinesToElements =
-    (
-      bufferView: TokenizedBufferView.t,
-      theme,
-    ) => {
+let viewLinesToElements = (bufferView: TokenizedBufferView.t, theme) => {
   let f = (b: BufferViewLine.t) => {
     tokensToElement(
       Index.toZeroBasedInt(b.virtualLineNumber),
@@ -61,24 +59,18 @@ let viewLinesToElements =
 
 let component = React.component("Minimap");
 
-let createElement = (~state: State.t, ~tokenizedBufferView: TokenizedBufferView.t, ~children as _, ()) =>
-  component((hooks) => {
+let createElement =
+    (
+      ~state: State.t,
+      ~tokenizedBufferView: TokenizedBufferView.t,
+      ~children as _,
+      (),
+    ) =>
+  component(hooks => {
     let style =
-      Style.[
-        position(`Absolute),
-        top(0),
-        bottom(0),
-        left(0),
-        right(0),
-      ];
+      Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-    let elements =
-      viewLinesToElements(
-        tokenizedBufferView,
-        state.theme,
-      );
+    let elements = viewLinesToElements(tokenizedBufferView, state.theme);
 
-    (hooks, <View style >
-                    ...elements 
-                    </View>);
+    (hooks, <View style> ...elements </View>);
   });
