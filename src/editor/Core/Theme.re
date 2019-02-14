@@ -14,6 +14,7 @@ type t = {
   editorLineNumberBackground: Color.t,
   editorLineNumberForeground: Color.t,
   editorActiveLineNumberForeground: Color.t,
+  scrollbarSliderBackground: Color.t,
 };
 
 let default: t = {
@@ -24,6 +25,7 @@ let default: t = {
   editorLineNumberBackground: Color.hex("#2F3440"),
   editorLineNumberForeground: Color.hex("#495162"),
   editorActiveLineNumberForeground: Color.hex("#737984"),
+  scrollbarSliderBackground: Color.rgba(0., 0., 0., 0.2),
 };
 
 let create: unit => t =

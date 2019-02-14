@@ -244,7 +244,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(0),
         left(bufferPixelWidth + minimapPixelWidth),
         width(Constants.default.scrollBarThickness),
-        backgroundColor(Colors.purple),
+        backgroundColor(theme.scrollbarSliderBackground),
         bottom(0),
       ];
 
