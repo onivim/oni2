@@ -246,7 +246,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 <View style={bufferViewStyle}>
                     ...elements 
                 </View>
-                <View style={minimapViewStyle} />
+                <View style={minimapViewStyle}>
+                    <Minimap state tokenizedBufferView=bufferView />
+                </View>
                 <View style={verticalScrollBarStyle} />
                     </View>);
   });
