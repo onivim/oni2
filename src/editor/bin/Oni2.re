@@ -15,8 +15,6 @@ open Oni_Neovim;
 
 module Core = Oni_Core;
 
-exception NeovimNotFound;
-
 /* The 'main' function for our app */
 let init = app => {
   let w =

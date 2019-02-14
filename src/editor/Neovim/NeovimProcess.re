@@ -9,6 +9,8 @@ open Oni_Core;
 
 type t = {pid: int};
 
+exception NeovimNotFound;
+
 let version = (~neovimPath: string) => {
   let ret = ChildProcess.spawnSync(neovimPath, [|"--version"|]);
   ret.stdout;
@@ -35,7 +37,7 @@ let getNeovimPath = paths => {
     path =>
       switch (path) {
       | Some((_, p)) => p
-      | None => raise(Not_found)
+      | None => raise(NeovimNotFound)
       }
   );
 };
