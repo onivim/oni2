@@ -14,4 +14,7 @@ type t =
   | SetEditorSize(EditorSize.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | WildmenuShow(Wildmenu.t)
+  | WildmenuHide(Wildmenu.t)
+  | WildmenuSelected(int)
   | Noop;

@@ -39,6 +39,9 @@ type t =
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | WildmenuShow(Wildmenu.t)
+  | WildmenuHide(Wildmenu.t)
+  | WildmenuSelected(int)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -98,6 +101,39 @@ let hideCommandline = _msgs => {
   });
 };
 
+let showWildmenu = (args: list(M.t)) => {
+  /* [[wildmenu_show, [[list items]]] */
+  switch (args) {
+  | [M.List(i)] =>
+    let items =
+      List.fold_left(
+        (accum, item) =>
+          switch (item) {
+          | M.String(i) => [i, ...accum]
+          | _ => accum
+          },
+        [],
+        i,
+      )
+      /* reorder the list due to the spreading above adding items the wrong way round */
+      |> List.rev;
+    WildmenuShow({items, selected: 0, show: true});
+  | _ => Ignored
+  };
+};
+
+let hideWildmenu = _msgs => {
+  WildmenuHide({items: [], show: false, selected: 0});
+};
+
+let updateWildmenu = selected => {
+  /* [wildmenu_select, [0]] */
+  switch (selected) {
+  | M.Int(s) => WildmenuSelected(s)
+  | _ => Ignored
+  };
+};
+
 let parseRedraw = (msgs: list(Msgpck.t)) => {
   let p = (msg: Msgpck.t) => {
     switch (msg) {
@@ -105,6 +141,12 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       showCommandline(msgs)
     | M.List([M.String("cmdline_hide"), M.List(msgs)]) =>
       hideCommandline(msgs)
+    | M.List([M.String("wildmenu_show"), M.List(msgs)]) =>
+      showWildmenu(msgs)
+    | M.List([M.String("wildmenu_select"), M.List([selected])]) =>
+      updateWildmenu(selected)
+    | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
+      hideWildmenu(msgs)
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
