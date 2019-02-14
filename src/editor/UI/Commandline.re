@@ -10,13 +10,11 @@ let cmdFontColor = Colors.white;
 let cmdTextStyles =
   Style.[
     fontFamily("FiraCode-Regular.ttf"),
-    marginLeft(10),
     fontSize(cmdFontSize),
     color(cmdFontColor),
-    lineHeight(1.5),
     textWrap(TextWrapping.WhitespaceWrap),
     overflow(LayoutTypes.Hidden),
-    paddingLeft(10),
+    marginVertical(8),
   ];
 
 /*
@@ -56,7 +54,10 @@ let createElement =
               ~color=Color.rgba(0., 0., 0., 0.2),
             ),
           ]>
-          <Text style=cmdTextStyles text={command.firstC ++ startStr} />
+          <Text
+            style=Style.[marginLeft(10), ...cmdTextStyles]
+            text={command.firstC ++ startStr}
+          />
           <View
             style=Style.[
               width(2),
