@@ -12,6 +12,7 @@ case "${current_os}" in
 esac
 
 check_command_succeded() {
+  # $? variable is the return code of a command
   if [ $? -eq 0 ]; then
     echo Command: $1 Succeded
   else
