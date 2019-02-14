@@ -4,7 +4,6 @@
  * Component that handles Minimap rendering
  */
 
-open Revery.Core;
 open Revery.UI;
 
 open Oni_Core;
@@ -13,7 +12,7 @@ open Oni_Core.TokenizedBufferView;
 open Types;
 
 let tokensToElement =
-    (virtualLineNumber: int, tokens: list(Tokenizer.t), _theme: Theme.t) => {
+    (virtualLineNumber: int, tokens: list(Tokenizer.t), theme: Theme.t) => {
   let f = (token: Tokenizer.t) => {
     let tokenWidth =
       Index.toZeroBasedInt(token.endPosition)
@@ -28,7 +27,7 @@ let tokensToElement =
         ),
         height(Constants.default.minimapCharacterHeight),
         width(tokenWidth * Constants.default.minimapCharacterWidth),
-        backgroundColor(Colors.white),
+        backgroundColor(theme.editorForeground),
       ];
 
     <View style />;

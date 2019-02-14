@@ -235,7 +235,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(0),
         left(bufferPixelWidth),
         width(minimapPixelWidth),
-        backgroundColor(Colors.black),
         bottom(0),
       ];
 
