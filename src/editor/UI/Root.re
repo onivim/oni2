@@ -52,12 +52,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
     let style = rootStyle(theme.background, theme.foreground);
 
-    (hooks, <View style>
-      <View style=surfaceStyle> <Editor state /> </View>
-      <Overlay>
-        <Commandline theme command={state.commandline} />
-        <Wildmenu theme wildmenu={state.wildmenu} />
-      </Overlay>
-      <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
-    </View>);
+    (
+      hooks,
+      <View style>
+        <View style=surfaceStyle> <Editor state /> </View>
+        <Overlay>
+          <Commandline theme command={state.commandline} />
+          <Wildmenu theme wildmenu={state.wildmenu} />
+        </Overlay>
+        <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
+      </View>,
+    );
   });

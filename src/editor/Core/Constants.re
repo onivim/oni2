@@ -16,12 +16,10 @@ type t = {
    * Height of characters in minimap, in pixels
    */
   minimapCharacterHeight: int,
-
   /*
    * Number of pixels between each line in the minimap
    */
   minimapLineSpacing: int,
-
   scrollBarThickness: int,
 };
 
