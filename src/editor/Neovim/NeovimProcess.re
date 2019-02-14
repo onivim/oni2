@@ -56,7 +56,7 @@ let getBuildVariablesFromSetup = (~path="/setup.txt", ()) => {
   variableList^;
 };
 
-let start = (~neovimPath as _: string, ~args: array(string)) => {
+let start = (~args: array(string)) => {
   let variables = getBuildVariablesFromSetup();
   let neovimPath = getNeovimPath(variables);
   print_endline("Starting oni from binary path: " ++ neovimPath);
