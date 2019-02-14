@@ -2,6 +2,7 @@ open Oni_Core;
 open Oni_Core.Types;
 
 module Commandline = Commandline;
+module Wildmenu = Wildmenu;
 
 module CursorPosition = {
   type t = {

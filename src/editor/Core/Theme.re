@@ -14,6 +14,9 @@ type t = {
   editorLineNumberBackground: Color.t,
   editorLineNumberForeground: Color.t,
   editorActiveLineNumberForeground: Color.t,
+  editorMenuBackground: Color.t,
+  editorMenuForeground: Color.t,
+  editorMenuItemSelected: Color.t,
 };
 
 let default: t = {
@@ -24,6 +27,9 @@ let default: t = {
   editorLineNumberBackground: Color.hex("#2F3440"),
   editorLineNumberForeground: Color.hex("#495162"),
   editorActiveLineNumberForeground: Color.hex("#737984"),
+  editorMenuBackground: Color.hex("#2F3440"),
+  editorMenuForeground: Color.hex("#FFFFFF"),
+  editorMenuItemSelected: Color.hex("#495162"),
 };
 
 let create: unit => t =

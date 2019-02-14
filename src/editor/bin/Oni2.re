@@ -89,7 +89,12 @@ let init = app => {
         let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
 
         let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight = int_of_float(float_of_int(fontSize) *. float_of_int(metrics.height) /. float_of_int(metrics.unitsPerEm));
+        let actualHeight =
+          int_of_float(
+            float_of_int(fontSize)
+            *. float_of_int(metrics.height)
+            /. float_of_int(metrics.unitsPerEm),
+          );
 
         /* Set editor text based on measurements */
         App.dispatch(
@@ -131,10 +136,21 @@ let init = app => {
       w.onKeyDown,
       event => {
         let _ =
-          switch (event.key) {
-          | Key.KEY_BACKSPACE => ignore(neovimProtocol.input("<BS>"))
-          | Key.KEY_ENTER => ignore(neovimProtocol.input("<CR>"))
-          | Key.KEY_ESCAPE => ignore(neovimProtocol.input("<ESC>"))
+          switch (event.key, event.shiftKey, event.ctrlKey) {
+          | (Key.KEY_TAB, true, _) =>
+            ignore(neovimProtocol.input("<S-TAB>"))
+          | (Key.KEY_BACKSPACE, _, _) =>
+            ignore(neovimProtocol.input("<BS>"))
+          | (Key.KEY_ENTER, _, _) => ignore(neovimProtocol.input("<CR>"))
+          | (Key.KEY_ESCAPE, _, _) => ignore(neovimProtocol.input("<ESC>"))
+          | (Key.KEY_TAB, _, _) => ignore(neovimProtocol.input("<TAB>"))
+          | (Key.KEY_RIGHT_SHIFT, _, _)
+          | (Key.KEY_LEFT_SHIFT, _, _) =>
+            ignore(neovimProtocol.input("<SHIFT>"))
+          | (Key.KEY_UP, _, _) => ignore(neovimProtocol.input("<UP>"))
+          | (Key.KEY_LEFT, _, _) => ignore(neovimProtocol.input("<LEFT>"))
+          | (Key.KEY_RIGHT, _, _) => ignore(neovimProtocol.input("<RIGHT>"))
+          | (Key.KEY_DOWN, _, _) => ignore(neovimProtocol.input("<DOWN>"))
           | _ => ()
           };
         ();
@@ -177,6 +193,9 @@ let init = app => {
                 (),
               ),
             )
+          | WildmenuShow(w) => Core.Actions.WildmenuShow(w)
+          | WildmenuHide(w) => Core.Actions.WildmenuHide(w)
+          | WildmenuSelected(s) => Core.Actions.WildmenuSelected(s)
           | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
           | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
           | _ => Noop

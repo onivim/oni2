@@ -17,6 +17,15 @@ let reduce: (State.t, Actions.t) => State.t =
     | SetEditorFont(font) => {...s, editorFont: font}
     | CommandlineShow(commandline) => {...s, commandline}
     | CommandlineHide(commandline) => {...s, commandline}
+    | WildmenuShow(wildmenu) => {...s, wildmenu}
+    | WildmenuHide(wildmenu) => {...s, wildmenu}
+    | WildmenuSelected(selected) => {
+        ...s,
+        wildmenu: {
+          ...s.wildmenu,
+          selected,
+        },
+      }
     | Noop => s
     };
   };
