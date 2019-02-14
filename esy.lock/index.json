@@ -1,23 +1,21 @@
 {
-  "checksum": "e1a39670306714c5abfcc1524ac9f65e",
+  "checksum": "062f9b4bef90a3164ee66ebb998bdcd8",
   "root": "Oni2@link-dev:./package.json",
   "node": {
-    "revery@0.7.0@d41d8cd9": {
-      "id": "revery@0.7.0@d41d8cd9",
+    "revery@github:revery-ui/revery#ccac6fc@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#ccac6fc@d41d8cd9",
       "name": "revery",
-      "version": "0.7.0",
+      "version": "github:revery-ui/revery#ccac6fc",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.7.0.tgz#sha1:f269b759b9e466bbdd721ae2a3f9ff0beec3b861"
-        ]
+        "source": [ "github:revery-ui/revery#ccac6fc" ]
       },
       "overrides": [],
       "dependencies": [
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-glfw@3.2.1015@d41d8cd9",
         "reason-gl-matrix@0.9.9302@d41d8cd9",
-        "reason-fontkit@2.2.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "reason-fontkit@2.2.1@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "flex@1.2.2@d41d8cd9", "@opam/lwt_ppx@opam:1.2.1@db1172a7",
         "@opam/lwt@opam:4.1.0@111fc2bf",
         "@opam/js_of_ocaml-lwt@opam:3.3.0@ff746e31",
@@ -149,14 +147,14 @@
       ],
       "devDependencies": []
     },
-    "reason-fontkit@2.2.0@d41d8cd9": {
-      "id": "reason-fontkit@2.2.0@d41d8cd9",
+    "reason-fontkit@2.2.1@d41d8cd9": {
+      "id": "reason-fontkit@2.2.1@d41d8cd9",
       "name": "reason-fontkit",
-      "version": "2.2.0",
+      "version": "2.2.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.2.0.tgz#sha1:e9e1e3af4af85afa7379b21333538fe9f819eb4f"
+          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.2.1.tgz#sha1:cbff1c6ab566083c85aa13eead661174271417a0"
         ]
       },
       "overrides": [],
@@ -281,9 +279,9 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@0.7.0@d41d8cd9", "rench@1.2.0@d41d8cd9",
-        "ocaml@4.7.1004@d41d8cd9", "@reason-native/rely@1.0.1@d41d8cd9",
-        "@opam/zed@opam:1.6@004ea65e",
+        "revery@github:revery-ui/revery#ccac6fc@d41d8cd9",
+        "rench@1.2.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@reason-native/rely@1.0.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
         "@opam/ocamlbuild@opam:0.12.0@6c616094",
         "@opam/msgpck@opam:1.4@eb408207", "@opam/lwt@opam:4.1.0@111fc2bf",
         "@opam/dune@opam:1.7.1@6f40bfee",
