@@ -2,6 +2,7 @@
     (name Oni_UI)
     (public_name Oni_UI)
     (libraries 
+        str
         bigarray
         zed
         reglfw
