@@ -2,6 +2,7 @@
     (name Oni_Neovim)
     (public_name Oni_Neovim)
     (libraries
+        str
         bigarray
         zed
         reglfw
