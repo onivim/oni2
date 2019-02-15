@@ -47,6 +47,13 @@ Install the following packages with your package manager of choice:
 - `esy install`
 - `esy bootstrap`
 - `esy build`
+
+### Tests
+
+- `esy x OniUnitTestRunner`
+
+### Run
+
 - `esy x Oni2`
 
 ## Documentation
