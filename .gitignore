@@ -67,3 +67,4 @@ _esy/
 esy.lock/
 
 .DS_Store
+setup.txt

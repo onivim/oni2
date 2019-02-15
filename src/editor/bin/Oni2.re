@@ -15,8 +15,6 @@ open Oni_Neovim;
 
 module Core = Oni_Core;
 
-exception NeovimNotFound;
-
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -29,12 +27,6 @@ let init = app => {
       app,
       "Oni2",
     );
-
-  let neovimPath =
-    switch (Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH")) {
-    | Some(p) => p
-    | None => raise(NeovimNotFound)
-    };
 
   let render = () => {
     let state: Core.State.t = App.getState(app);
@@ -60,8 +52,7 @@ let init = app => {
     Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let nvim =
-    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
+  let nvim = NeovimProcess.start(~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,

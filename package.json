@@ -6,12 +6,15 @@
   "esy": {
     "build": "refmterr dune build --root . -j4",
     "install": [
-        "esy-installer Oni2.install",
-        "esy-installer Oni_Core.install",
-        "esy-installer Oni_UI.install",
-        "esy-installer Oni_Neovim.install",
-        "esy-installer OniUnitTestRunner.install"
+      "esy-installer Oni2.install",
+      "esy-installer Oni_Core.install",
+      "esy-installer Oni_UI.install",
+      "esy-installer Oni_Neovim.install",
+      "esy-installer OniUnitTestRunner.install"
     ]
+  },
+  "scripts": {
+    "bootstrap": "sh ./scripts/bootstrap.sh"
   },
   "dependencies": {
     "ocaml": "~4.7.0",

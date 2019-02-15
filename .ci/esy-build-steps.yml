@@ -5,6 +5,8 @@ steps:
     displayName: 'Install Esy: npm install -g esy@0.5.6'
   - script: esy install
     displayName: 'Install Dependencies: esy install'
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
   - script: esy x OniUnitTestRunner
