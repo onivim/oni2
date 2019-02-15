@@ -76,14 +76,14 @@ module ViewType = {
 };
 
 module BufferEnter = {
-  type minimalBuffer = {
-    viewType: ViewType.t,
+  type namedBuffer = {
     id: int,
+    filename: string,
   };
 
   type t = {
     bufferId: int,
-    buffers: list(minimalBuffer),
+    buffers: list(namedBuffer),
   };
 };
 

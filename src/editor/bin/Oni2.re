@@ -35,16 +35,11 @@ let init = app => {
     CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
   };
 
-  let convertMsgpackBuffer = (buffer: Msgpck.t) => {
+  let convertNeovimExtType = (buffer: Msgpck.t) => {
     Core.Types.(
       switch (buffer) {
       | Msgpck.Ext(kind, id) =>
-        Some(
-          BufferEnter.{
-            viewType: ViewType.getType(kind),
-            id: convertUTF8string(id),
-          },
-        )
+        Some((ViewType.getType(kind), convertUTF8string(id)))
       | _ => None
       }
     );
@@ -101,12 +96,16 @@ let init = app => {
 
   let getFullBufferList = () => {
     let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
+    /*
+       TODO: use "nvim_call_atomic" to get the names and other buffer vars for this list
+     */
     switch (bufs) {
     | Msgpck.List(handles) =>
       List.fold_left(
         (accum, buffer) =>
-          switch (convertMsgpackBuffer(buffer)) {
-          | Some(value) => [value, ...accum] |> List.rev
+          switch (convertNeovimExtType(buffer)) {
+          | Some((_, id)) =>
+            [Core.Types.BufferEnter.{id, filename: ""}, ...accum] |> List.rev
           | None => accum
           },
         [],
