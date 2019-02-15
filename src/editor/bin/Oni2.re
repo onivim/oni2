@@ -28,6 +28,28 @@ let init = app => {
       "Oni2",
     );
 
+  /*
+     TODO: Move this to a utility module?
+   */
+  let convertUTF8string = str => {
+    CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
+  };
+
+  let convertMsgpackBuffer = (buffer: Msgpck.t) => {
+    Core.Types.(
+      switch (buffer) {
+      | Msgpck.Ext(kind, id) =>
+        Some(
+          BufferEnter.{
+            viewType: ViewType.getType(kind),
+            id: convertUTF8string(id),
+          },
+        )
+      | _ => None
+      }
+    );
+  };
+
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
@@ -77,6 +99,23 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
+  let getFullBufferList = () => {
+    let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
+    switch (bufs) {
+    | Msgpck.List(handles) =>
+      List.fold_left(
+        (accum, buffer) =>
+          switch (convertMsgpackBuffer(buffer)) {
+          | Some(value) => [value, ...accum] |> List.rev
+          | None => accum
+          },
+        [],
+        handles,
+      )
+    | _ => []
+    };
+  };
+
   let attach = bufferId => {
     ignore(
       nvimApi.requestSync(
@@ -89,12 +128,6 @@ let init = app => {
       ),
     );
   };
-
-  /* let buf = nvimApi.requestSync( */
-  /*   "nvim_get_current_buf", */
-  /*   Msgpck.List([]), */
-  /* ); */
-  /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
 
   let setFont = (fontFamily, fontSize) => {
     Fontkit.fk_new_face(
@@ -201,7 +234,10 @@ let init = app => {
             )
           | BufferEnter(b) =>
             attach(b.bufferId);
-            Core.Actions.BufferEnter({bufferId: b.bufferId});
+            Core.Actions.BufferEnter({
+              bufferId: b.bufferId,
+              buffers: getFullBufferList(),
+            });
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(

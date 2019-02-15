@@ -135,7 +135,9 @@ let make = (msgpack: MsgpackTransport.t) => {
         "ending request: "
         ++ string_of_float(endTime)
         ++ "|"
-        ++ string_of_float(endTime -. startTime),
+        ++ string_of_float(endTime -. startTime)
+        ++ "| Request type: "
+        ++ methodName,
       );
 
       let matchingResponse =

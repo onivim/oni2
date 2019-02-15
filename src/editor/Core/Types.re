@@ -58,8 +58,33 @@ module BufferPosition = {
   };
 };
 
+module ViewType = {
+  type t =
+    | Window
+    | Tab
+    | Buffer
+    | Unknown;
+
+  let getType = (enumVal): t => {
+    switch (enumVal) {
+    | 1 => Buffer
+    | 2 => Tab
+    | 3 => Window
+    | _ => Unknown
+    };
+  };
+};
+
 module BufferEnter = {
-  type t = {bufferId: int};
+  type minimalBuffer = {
+    viewType: ViewType.t,
+    id: int,
+  };
+
+  type t = {
+    bufferId: int,
+    buffers: list(minimalBuffer),
+  };
 };
 
 module BufferUpdate = {

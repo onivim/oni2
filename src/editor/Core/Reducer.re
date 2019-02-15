@@ -6,6 +6,10 @@
 
 open Actions;
 
+let updateBufferList = (_next, prev) => {
+  prev;
+};
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     switch (a) {
@@ -13,7 +17,11 @@ let reduce: (State.t, Actions.t) => State.t =
       let ret: State.t = {...s, mode: m};
       ret;
     | CursorMove(b) => {...s, cursorPosition: b}
-    | BufferEnter(b) => {...s, activeBufferId: b.bufferId}
+    | BufferEnter(b) => {
+        ...s,
+        activeBufferId: b.bufferId,
+        buffers: updateBufferList(b.buffers, s.buffers),
+      }
     | BufferUpdate(bu) => {
         ...s,
         activeBuffer: Buffer.update(s.activeBuffer, bu),
