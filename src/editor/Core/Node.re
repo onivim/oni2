@@ -12,3 +12,8 @@ let version = () => {
     let ret = ChildProcess.spawnSync(getNodePath(), [|"--version"|]);
     ret.stdout;
 };
+
+let executeJs = (js) => {
+    let ret = ChildProcess.spawnSync(getNodePath(), [|"-e", js|]);
+    ret.stdout
+}
