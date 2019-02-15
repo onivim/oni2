@@ -1,18 +1,26 @@
-open Rench;
-
 open Oni_Neovim;
 
-exception EnvironmentVariableNotFound;
+let withNeovimApi = f => {
+  let nvim = NeovimProcess.start(~args=[|"--embed"|]);
+  let msgpackTransport =
+    MsgpackTransport.make(
+      ~onData=nvim.stdout.onData,
+      ~write=nvim.stdin.write,
+      (),
+    );
+  let nvimApi = NeovimApi.make(msgpackTransport);
 
-let optOrThrow = (s: option(string)) => {
-  switch (s) {
-  | Some(v) => v
-  | _ => raise(EnvironmentVariableNotFound)
-  };
+  f(nvimApi);
+
+  msgpackTransport.close();
 };
 
-let getNeovimPath = () =>
-  Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
+let withNeovimProtocol = f => {
+    withNeovimApi((nvimApi) => {
+        let neovimProtocol = NeovimProtocol.make(nvimApi);  
+        f(neovimProtocol);
+    });
+}
 
 let repeat = (times: int, f) => {
   let count = ref(0);

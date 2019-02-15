@@ -3,20 +3,7 @@ open Oni_Neovim;
 open Rench;
 open TestFramework;
 
-let withNeovimApi = f => {
-  let nvim = NeovimProcess.start(~args=[|"--embed"|]);
-  let msgpackTransport =
-    MsgpackTransport.make(
-      ~onData=nvim.stdout.onData,
-      ~write=nvim.stdin.write,
-      (),
-    );
-  let nvimApi = NeovimApi.make(msgpackTransport);
-
-  f(nvimApi);
-
-  msgpackTransport.close();
-};
+open Helpers;
 
 describe("NeovimApi", ({describe, test, _}) => {
   test("nvim__id", ({expect}) =>
@@ -38,7 +25,7 @@ describe("NeovimApi", ({describe, test, _}) => {
     let count = ref(0);
 
     withNeovimApi(api =>
-      Helpers.repeat(
+      repeat(
         10,
         () => {
           let result =
@@ -66,7 +53,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("ui_attach", ({test, _}) =>
     test("basic ui_attach / ui_detach", ({expect}) =>
-      Helpers.repeat(10, () =>
+      repeat(10, () =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 
@@ -75,7 +62,7 @@ describe("NeovimApi", ({describe, test, _}) => {
               notifications := List.append([n], notifications^)
             );
 
-          let _result = Helpers.uiAttach(api);
+          let _result = uiAttach(api);
 
           let f = () => {
             api.pump();
@@ -98,7 +85,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("basic buffer edit", ({test, _}) =>
     test("modify lines in buffer", ({expect}) =>
-      Helpers.repeat(10, () =>
+      repeat(10, () =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 
@@ -107,7 +94,7 @@ describe("NeovimApi", ({describe, test, _}) => {
               notifications := List.append([n], notifications^)
             );
 
-          let _result = Helpers.uiAttach(api);
+          let _result = uiAttach(api);
 
           let _response =
             api.requestSync(
