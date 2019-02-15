@@ -26,7 +26,6 @@ describe("NeovimApi", ({describe, test, _}) => {
 
     withNeovimApi(api =>
       repeat(
-        10,
         () => {
           let result =
             api.requestSync(
@@ -53,7 +52,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("ui_attach", ({test, _}) =>
     test("basic ui_attach / ui_detach", ({expect}) =>
-      repeat(10, () =>
+      repeat(() =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 
@@ -85,7 +84,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("basic buffer edit", ({test, _}) =>
     test("modify lines in buffer", ({expect}) =>
-      repeat(10, () =>
+      repeat(() =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 

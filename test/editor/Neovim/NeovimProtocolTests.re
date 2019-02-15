@@ -7,7 +7,7 @@ open Helpers;
 describe("NeovimProtocol", ({describe,  _}) => {
   describe("buffer updates", ({test, _}) =>
     test("Validate we get a buffer update", ({expect}) =>
-      repeat(10, () =>
+      repeat(() =>
         withNeovimProtocol(((api, protocol)) => {
           let gotMatchingNotification = ref(false);
 
@@ -15,12 +15,14 @@ describe("NeovimProtocol", ({describe,  _}) => {
 
           protocol.input("i");
           protocol.input("abc");
+          protocol.input("def");
+          protocol.input("ghi");
 
           let _ =
             Event.subscribe(protocol.onNotification, n =>
                 switch(n) {
                 | BufferLines({ lines, _}) => {
-                    if (lines == ["abc"]) {
+                    if (lines == ["abcdefghi"]) {
                     gotMatchingNotification := true;
                     }
                 }

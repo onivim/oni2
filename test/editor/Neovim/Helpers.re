@@ -1,9 +1,9 @@
 open Oni_Neovim;
 
-let repeat = (times: int, f) => {
+let repeat = (~iterations=3, f) => {
   let count = ref(0);
 
-  while (count^ < times) {
+  while (count^ < iterations) {
     f();
     count := count^ + 1;
   };
