@@ -20,8 +20,7 @@ describe("NeovimProtocol", ({describe,  _}) => {
             Event.subscribe(protocol.onNotification, n =>
                 switch(n) {
                 | BufferLines({ lines, _}) => {
-                    prerr_endline ("LINES: " ++ List.hd(lines));
-                    if (lines === ["abc"]) {
+                    if (lines == ["abc"]) {
                     gotMatchingNotification := true;
                     }
                 }
