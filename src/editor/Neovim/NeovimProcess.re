@@ -11,11 +11,6 @@ type t = {pid: int};
 
 exception NeovimNotFound(string);
 
-let version = (~neovimPath: string) => {
-  let ret = ChildProcess.spawnSync(neovimPath, [|"--version"|]);
-  ret.stdout;
-};
-
 let extractParts = line => {
   let parts = Str.split(Str.regexp("="), line);
   switch (parts) {
@@ -24,7 +19,7 @@ let extractParts = line => {
   };
 };
 
-let getNeovimPath = paths => {
+let getNeovimPathFromCandidates = paths => {
   List.find(
     item =>
       switch (item) {
@@ -42,11 +37,20 @@ let getNeovimPath = paths => {
   );
 };
 
-let start = (~args: array(string)) => {
+let getNeovimPath = () => {
   let setupFilePath = Environment.getExecutingDirectory() ++ "/setup.txt";
-  let neovimPath =
     Utility.getFileContents(setupFilePath, ~handler=extractParts)
-    |> getNeovimPath;
+    |> getNeovimPathFromCandidates;
+}
+
+let version = () => {
+  let neovimPath = getNeovimPath();
+  let ret = ChildProcess.spawnSync(neovimPath, [|"--version"|]);
+  ret.stdout;
+};
+
+let start = (~args: array(string)) => {
+  let neovimPath = getNeovimPath();
   print_endline("Starting oni from binary path: " ++ neovimPath);
   ChildProcess.spawn(neovimPath, args);
 };
