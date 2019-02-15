@@ -28,23 +28,6 @@ let init = app => {
       "Oni2",
     );
 
-  /*
-     TODO: Move this to a utility module?
-   */
-  let convertUTF8string = str => {
-    CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
-  };
-
-  let convertNeovimExtType = (buffer: Msgpck.t) => {
-    Core.Types.(
-      switch (buffer) {
-      | Msgpck.Ext(kind, id) =>
-        Some((ViewType.getType(kind), convertUTF8string(id)))
-      | _ => None
-      }
-    );
-  };
-
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
@@ -103,7 +86,7 @@ let init = app => {
     | Msgpck.List(handles) =>
       List.fold_left(
         (accum, buffer) =>
-          switch (convertNeovimExtType(buffer)) {
+          switch (Core.Utility.convertNeovimExtType(buffer)) {
           | Some((_, id)) =>
             [Core.Types.BufferEnter.{id, filename: ""}, ...accum] |> List.rev
           | None => accum
@@ -226,6 +209,7 @@ let init = app => {
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
             Core.Actions.ChangeMode(Commandline)
+          | TablineUpdate(tabs) => Core.Actions.TablineUpdate(tabs)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(

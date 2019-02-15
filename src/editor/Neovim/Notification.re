@@ -9,6 +9,8 @@
 
 open Types;
 
+module Core = Oni_Core;
+
 module BufferLinesNotification = {
   type t = {
     changedTick: int,
@@ -50,6 +52,7 @@ type t =
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
+  | TablineUpdate(Tabline.tabs)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -142,6 +145,59 @@ let updateWildmenu = selected => {
   };
 };
 
+/*
+   Msgpck has a special type for Maps, which returns a tuple
+   consisting of the key and the value, so we pattern
+   match on the name and value and use those to construct
+   the record type we want
+ */
+let parseTabMap = map => {
+  Core.(
+    Tabline.(
+      List.fold_left(
+        (accum, item) =>
+          switch (item) {
+          | (M.String("name"), M.String(value)) => {...accum, name: value}
+          | (M.String("tab"), value) =>
+            let tab =
+              switch (Utility.convertNeovimExtType(value)) {
+              | Some((_, id)) => id
+              | None => 0
+              };
+            {...accum, tab};
+          | _ => accum
+          },
+        {name: "", tab: 0},
+        map,
+      )
+    )
+  );
+};
+
+let parseTablineUpdate = msgs => {
+  /*
+     The structure of a tabline update is -
+     [tabline_update, [(2 "\001"), [{tab: (2 "\001"), name: string}]]],
+   */
+  switch (msgs) {
+  | [_view, Msgpck.List(tabs)] =>
+    let allTabs =
+      List.fold_left(
+        (accum, tab) =>
+          switch (tab) {
+          | M.Map(map) =>
+            let map = parseTabMap(map);
+            [Tabline.{tab: map.tab, name: map.name}, ...accum];
+          | _ => accum
+          },
+        [],
+        tabs,
+      );
+    TablineUpdate(allTabs);
+  | _ => Ignored
+  };
+};
+
 let parseRedraw = (msgs: list(Msgpck.t)) => {
   let p = (msg: Msgpck.t) => {
     switch (msg) {
@@ -155,6 +211,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       updateWildmenu(selected)
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
+    | M.List([M.String("tabline_update"), M.List(msgs)]) =>
+      parseTablineUpdate(msgs)
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),

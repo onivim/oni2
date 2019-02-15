@@ -1,3 +1,5 @@
+module M = Msgpck;
+
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     Thread.create(
@@ -32,4 +34,18 @@ let getFileContents = (path, ~handler) => {
      });
 
   contents^;
+};
+
+let convertUTF8string = str => {
+  CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
+};
+
+let convertNeovimExtType = (buffer: Msgpck.t) => {
+  Types.(
+    switch (buffer) {
+    | M.Ext(kind, id) =>
+      Some((ViewType.getType(kind), convertUTF8string(id)))
+    | _ => None
+    }
+  );
 };

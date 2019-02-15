@@ -10,6 +10,16 @@ let updateBufferList = (_next, prev) => {
   prev;
 };
 
+let updateTabline = tabs => {
+  Types.(
+    List.map(
+      ({tab, name}: Tabline.t) =>
+        State.Tab.{id: tab, title: name, active: false},
+      tabs,
+    )
+  );
+};
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     switch (a) {
@@ -26,6 +36,7 @@ let reduce: (State.t, Actions.t) => State.t =
         ...s,
         activeBuffer: Buffer.update(s.activeBuffer, bu),
       }
+    | TablineUpdate(tabs) => {...s, tabs: updateTabline(tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | SetEditorSize(size) => {...s, size}
     | CommandlineShow(commandline) => {...s, commandline}

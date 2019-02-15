@@ -101,6 +101,15 @@ module BufferUpdate = {
   };
 };
 
+module Tabline = {
+  type t = {
+    tab: int,
+    name: string,
+  };
+
+  type tabs = list(t);
+};
+
 module EditorFont = {
   type t = {
     fontFile: string,
