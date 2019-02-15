@@ -63,12 +63,14 @@ module BufferUpdate = {
     startLine: int,
     endLine: int,
     lines: list(string),
+    version: int,
   };
 
-  let create = (~startLine, ~endLine, ~lines, ()) => {
+  let create = (~startLine, ~endLine, ~lines, ~version, ()) => {
     startLine,
     endLine,
     lines,
+    version,
   };
 };
 

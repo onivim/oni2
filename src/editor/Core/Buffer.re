@@ -9,10 +9,11 @@ open Types;
 type t = {
   file: option(string),
   lines: array(string),
+  version: int,
 };
 
-let ofLines = (lines: array(string)) => {
-  let ret: t = {file: None, lines};
+let ofLines = (~version=0, lines: array(string)) => {
+  let ret: t = {file: None, lines, version};
   ret;
 };
 
@@ -54,7 +55,9 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) => {
-  let ret: t = {...buf, lines: applyUpdate(buf.lines, update)};
-  ret;
-};
+let update = (buf: t, update: BufferUpdate.t) =>
+  if (update.version > buf.version) {
+    {...buf, lines: applyUpdate(buf.lines, update), version: update.version};
+  } else {
+    buf;
+  };

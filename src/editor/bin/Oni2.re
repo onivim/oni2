@@ -31,10 +31,19 @@ let init = app => {
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
-        notifySizeChanged: (~width, ~height, ()) => {
-            App.dispatch(app, Core.Actions.SetEditorSize(Core.Types.EditorSize.create(~pixelWidth=width, ~pixelHeight=height, ())));
-        }
-    })
+      notifySizeChanged: (~width, ~height, ()) => {
+        App.dispatch(
+          app,
+          Core.Actions.SetEditorSize(
+            Core.Types.EditorSize.create(
+              ~pixelWidth=width,
+              ~pixelHeight=height,
+              (),
+            ),
+          ),
+        );
+      },
+    });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
       ++ Core.Types.Mode.show(state.mode)
@@ -186,6 +195,7 @@ let init = app => {
                 ~startLine=bc.firstLine,
                 ~endLine=bc.lastLine,
                 ~lines=bc.lines,
+                ~version=bc.changedTick,
                 (),
               ),
             )
