@@ -14,9 +14,7 @@ open Rench;
 type t = {
   uiAttach: unit => unit,
   input: string => unit,
-
   bufAttach: int => unit,
-
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -53,12 +51,14 @@ let make = (nvimApi: NeovimApi.t) => {
     ();
   };
 
-  let bufAttach = (id) => {
-    let _ = nvimApi.requestSync(
-      "nvim_buf_attach",
-      Msgpck.List([Msgpck.Int(id), Msgpck.Bool(true), Msgpck.Map([])]),
-    );
-  }
+  let bufAttach = id => {
+    let _ =
+      nvimApi.requestSync(
+        "nvim_buf_attach",
+        Msgpck.List([Msgpck.Int(id), Msgpck.Bool(true), Msgpck.Map([])]),
+      );
+    ();
+  };
 
   let _ =
     Event.subscribe(

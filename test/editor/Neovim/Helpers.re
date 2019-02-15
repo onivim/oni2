@@ -45,9 +45,9 @@ let withNeovimApi = f => {
 };
 
 let withNeovimProtocol = f => {
-    withNeovimApi((nvimApi) => {
-        let neovimProtocol = NeovimProtocol.make(nvimApi);  
-        let _ = uiAttach(nvimApi);
-        f((nvimApi, neovimProtocol));
-    });
-}
+  withNeovimApi(nvimApi => {
+    let neovimProtocol = NeovimProtocol.make(nvimApi);
+    let _ = uiAttach(nvimApi);
+    f((nvimApi, neovimProtocol));
+  });
+};

@@ -39,9 +39,9 @@ let getNeovimPathFromCandidates = paths => {
 
 let getNeovimPath = () => {
   let setupFilePath = Environment.getExecutingDirectory() ++ "/setup.txt";
-    Utility.getFileContents(setupFilePath, ~handler=extractParts)
-    |> getNeovimPathFromCandidates;
-}
+  Utility.getFileContents(setupFilePath, ~handler=extractParts)
+  |> getNeovimPathFromCandidates;
+};
 
 let version = () => {
   let neovimPath = getNeovimPath();

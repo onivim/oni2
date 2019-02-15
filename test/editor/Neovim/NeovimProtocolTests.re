@@ -4,7 +4,7 @@ open TestFramework;
 
 open Helpers;
 
-describe("NeovimProtocol", ({describe,  _}) => {
+describe("NeovimProtocol", ({describe, _}) =>
   describe("buffer updates", ({test, _}) =>
     test("Validate we get a buffer update", ({expect}) =>
       repeat(() =>
@@ -20,14 +20,13 @@ describe("NeovimProtocol", ({describe,  _}) => {
 
           let _ =
             Event.subscribe(protocol.onNotification, n =>
-                switch(n) {
-                | BufferLines({ lines, _}) => {
-                    if (lines == ["abcdefghi"]) {
-                    gotMatchingNotification := true;
-                    }
+              switch (n) {
+              | BufferLines({lines, _}) =>
+                if (lines == ["abcdefghi"]) {
+                  gotMatchingNotification := true;
                 }
-                | _ => ()
-                }
+              | _ => ()
+              }
             );
 
           let f = () => {
@@ -41,5 +40,5 @@ describe("NeovimProtocol", ({describe,  _}) => {
         })
       )
     )
-  );
-});
+  )
+);

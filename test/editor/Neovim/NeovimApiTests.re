@@ -25,28 +25,26 @@ describe("NeovimApi", ({describe, test, _}) => {
     let count = ref(0);
 
     withNeovimApi(api =>
-      repeat(
-        () => {
-          let result =
-            api.requestSync(
-              "nvim__id",
+      repeat(() => {
+        let result =
+          api.requestSync(
+            "nvim__id",
+            Msgpck.List([
               Msgpck.List([
-                Msgpck.List([
-                  Msgpck.String("hey, neovim!"),
-                  Msgpck.String("hey again, neovim!"),
-                ]),
+                Msgpck.String("hey, neovim!"),
+                Msgpck.String("hey again, neovim!"),
               ]),
-            );
+            ]),
+          );
 
-          switch (result) {
-          | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>
-            expect.string(msg1).toEqual("hey, neovim!");
-            expect.string(msg2).toEqual("hey again, neovim!");
-          | _ => expect.string("FAIL").toEqual("")
-          };
-          count := count^ + 1;
-        },
-      )
+        switch (result) {
+        | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>
+          expect.string(msg1).toEqual("hey, neovim!");
+          expect.string(msg2).toEqual("hey again, neovim!");
+        | _ => expect.string("FAIL").toEqual("")
+        };
+        count := count^ + 1;
+      })
     );
   });
 
