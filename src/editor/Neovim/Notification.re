@@ -35,10 +35,7 @@ module BufferLinesNotification = {
 };
 
 module BufferEnterNotification = {
-  type t = {
-    context: AutoCommandContext.t,
-    bufferId: int,
-  };
+  type t = {bufferId: int};
 };
 
 type t =
@@ -243,7 +240,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   switch (autocmd) {
   | "BufEnter" =>
     switch (args) {
-    | [M.Int(bufferId), _, _] => BufferEnter({context, bufferId})
+    | [M.Int(bufferId), _, _] => BufferEnter({bufferId: bufferId})
     | _ => Ignored
     }
   | "CursorMoved" => CursorMoved(context)
