@@ -77,6 +77,25 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
+  let attach = bufferId => {
+    ignore(
+      nvimApi.requestSync(
+        "nvim_buf_attach",
+        Msgpck.List([
+          Msgpck.Int(bufferId),
+          Msgpck.Bool(true),
+          Msgpck.Map([]),
+        ]),
+      ),
+    );
+  };
+
+  /* let buf = nvimApi.requestSync( */
+  /*   "nvim_get_current_buf", */
+  /*   Msgpck.List([]), */
+  /* ); */
+  /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
+
   let setFont = (fontFamily, fontSize) => {
     Fontkit.fk_new_face(
       Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
@@ -175,7 +194,9 @@ let init = app => {
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
             Core.Actions.ChangeMode(Commandline)
-          | BufferEnter(b) => Core.Actions.BufferEnter(b)
+          | BufferEnter(b) =>
+            attach(b.bufferId);
+            Core.Actions.BufferEnter({bufferId: b.bufferId});
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(

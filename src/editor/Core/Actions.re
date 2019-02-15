@@ -7,6 +7,7 @@
 open Types;
 
 type t =
+  | BufferEnter(BufferEnter.t)
   | BufferUpdate(BufferUpdate.t)
   | ChangeMode(Mode.t)
   | CursorMove(BufferPosition.t)
@@ -16,6 +17,5 @@ type t =
   | CommandlineHide(Commandline.t)
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
-  | BufferEnter(Buffer.t)
   | WildmenuSelected(int)
   | Noop;
