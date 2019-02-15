@@ -45,8 +45,8 @@ Install the following packages with your package manager of choice:
 
 - `git clone https://github.com/onivim/oni2`
 - `esy install`
-- `esy build`
 - `esy bootstrap`
+- `esy build`
 - `esy x Oni2`
 
 ## Documentation
