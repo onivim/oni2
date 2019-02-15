@@ -18,9 +18,9 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
-  activeBufferId: int,
   buffers: list(Buffer.t),
-  buffer: Buffer.t,
+  activeBufferId: int,
+  activeBuffer: Buffer.t,
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
@@ -50,7 +50,7 @@ let create: unit => t =
     },
     activeBufferId: 0,
     buffers: [],
-    buffer: Buffer.ofLines([||]),
+    activeBuffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(

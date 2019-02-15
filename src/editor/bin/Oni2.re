@@ -194,14 +194,14 @@ let init = app => {
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
             Core.Actions.ChangeMode(Commandline)
-          | BufferEnter(b) =>
-            attach(b.bufferId);
-            Core.Actions.BufferEnter({bufferId: b.bufferId});
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
+          | BufferEnter(b) =>
+            attach(b.bufferId);
+            Core.Actions.BufferEnter({bufferId: b.bufferId});
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(

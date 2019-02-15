@@ -14,7 +14,10 @@ let reduce: (State.t, Actions.t) => State.t =
       ret;
     | CursorMove(b) => {...s, cursorPosition: b}
     | BufferEnter(b) => {...s, activeBufferId: b.bufferId}
-    | BufferUpdate(bu) => {...s, buffer: Buffer.update(s.buffer, bu)}
+    | BufferUpdate(bu) => {
+        ...s,
+        activeBuffer: Buffer.update(s.activeBuffer, bu),
+      }
     | SetEditorFont(font) => {...s, editorFont: font}
     | SetEditorSize(size) => {...s, size}
     | CommandlineShow(commandline) => {...s, commandline}

@@ -142,7 +142,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 
-    let lineCount = Array.length(state.buffer.lines);
+    let lineCount = Array.length(state.activeBuffer.lines);
 
     let lineNumberWidth =
       LineNumber.getLineNumberPixelWidth(
@@ -152,7 +152,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       );
 
     let bufferView =
-      state.buffer
+      state.activeBuffer
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
