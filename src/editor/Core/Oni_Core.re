@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module Constants = Constants;
 module LineNumber = LineNumber;
 module Log = Log;
+module Node = Node;
 module Reducer = Reducer;
 module State = State;
 module Theme = Theme;
