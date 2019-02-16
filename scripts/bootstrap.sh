@@ -31,6 +31,7 @@ append_line() {
 # for the Oni2 binary
 case "${machine}" in
   Linux)
+      NODE_PATH="$(pwd)/vendor/node-v10.15.1/linux-x64/node"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
   Mac)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
