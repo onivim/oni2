@@ -33,6 +33,7 @@ case "${machine}" in
   Linux)
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
   Mac)
+      NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
   *)
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
