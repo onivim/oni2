@@ -77,26 +77,64 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  let getFullBufferList = () => {
-    open Core;
-    let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
-    /*
-       TODO: use "nvim_call_atomic" to get the names and other buffer vars for this list
-     */
-    switch (bufs) {
-    | Msgpck.List(handles) =>
-      List.fold_left(
-        (accum, buffer) =>
-          switch (Utility.convertNeovimExtType(buffer)) {
-          | Some((_, id)) =>
-            [Types.{id, filepath: ""}, ...accum] |> List.rev
-          | None => accum
+  let enrichBuffers = ((atomicCalls, buffers)) => {
+    let rsp =
+      nvimApi.requestSync(
+        "nvim_call_atomic",
+        Msgpck.List([Msgpck.List(atomicCalls)]),
+      );
+
+    switch (rsp) {
+    | Msgpck.List([Msgpck.List(paths), _]) =>
+      List.fold_left2(
+        (accum, buf, name) =>
+          switch (name) {
+          | Msgpck.String(filepath) => [
+              Core.Types.{...buf, filepath},
+              ...accum,
+            ]
+          | _ => [buf, ...accum]
           },
         [],
-        handles,
+        buffers,
+        paths,
       )
     | _ => []
     };
+  };
+
+  let getFullBufferList = () => {
+    let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
+    (
+      switch (bufs) {
+      | Msgpck.List(handles) =>
+        List.fold_left(
+          ((calls, bufs), buffer) =>
+            switch (Core.Utility.convertNeovimExtType(buffer)) {
+            | Some((_, id)) =>
+              let newCalls =
+                [
+                  Msgpck.List([
+                    Msgpck.String("nvim_buf_get_name"),
+                    Msgpck.List([Msgpck.Int(id)]),
+                  ]),
+                  ...calls,
+                ]
+                |> List.rev;
+
+              let newBufs =
+                [Core.Types.{id, filepath: "[No Name]"}, ...bufs] |> List.rev;
+
+              (newCalls, newBufs);
+            | None => (calls, bufs)
+            },
+          ([], []),
+          handles,
+        )
+      | _ => ([], [])
+      }
+    )
+    |> enrichBuffers;
   };
 
   let bufferAttach = bufferId => {
