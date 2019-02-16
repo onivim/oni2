@@ -15,11 +15,11 @@ describe("Node", ({test, _}) => {
 
   test("executeJs", ({expect}) => {
     let {nodePath, _}: Setup.t = Setup.init();
-    let v = Node.executeJs(~nodePath, "console.log(2+2);"); 
+    let v = Node.executeJs(~nodePath, "console.log(2+2);");
 
     let expected = "4";
 
     let actual = String.sub(v, 0, 1);
     expect.string(actual).toEqual(expected);
   });
-  });
+});

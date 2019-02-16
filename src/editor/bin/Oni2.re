@@ -31,10 +31,19 @@ let init = app => {
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
-        notifySizeChanged: (~width, ~height, ()) => {
-            App.dispatch(app, Core.Actions.SetEditorSize(Core.Types.EditorSize.create(~pixelWidth=width, ~pixelHeight=height, ())));
-        }
-    })
+      notifySizeChanged: (~width, ~height, ()) => {
+        App.dispatch(
+          app,
+          Core.Actions.SetEditorSize(
+            Core.Types.EditorSize.create(
+              ~pixelWidth=width,
+              ~pixelHeight=height,
+              (),
+            ),
+          ),
+        );
+      },
+    });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
       ++ Core.Types.Mode.show(state.mode)
@@ -54,7 +63,8 @@ let init = app => {
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
 
-  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
+  let nvim =
+    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
