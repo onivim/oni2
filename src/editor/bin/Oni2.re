@@ -89,7 +89,7 @@ let init = app => {
         (accum, buffer) =>
           switch (Utility.convertNeovimExtType(buffer)) {
           | Some((_, id)) =>
-            [Types.StateBuffer.{id, filepath: ""}, ...accum] |> List.rev
+            [Types.{id, filepath: ""}, ...accum] |> List.rev
           | None => accum
           },
         [],

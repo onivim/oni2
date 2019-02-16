@@ -51,11 +51,7 @@ let create: unit => t =
     },
     activeBufferId: 0,
     buffers:
-      BufferList.OniBuffers.add(
-        0,
-        StateBuffer.{filepath: "", id: 0},
-        BufferList.empty,
-      ),
+      BufferList.OniBuffers.add(0, {filepath: "", id: 0}, BufferList.empty),
     activeBuffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:

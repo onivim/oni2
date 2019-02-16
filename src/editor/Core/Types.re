@@ -75,17 +75,15 @@ module ViewType = {
   };
 };
 
-module StateBuffer = {
-  type t = {
-    filepath: string,
-    id: int,
-  };
+type buffer = {
+  filepath: string,
+  id: int,
 };
 
 module BufferEnter = {
   type t = {
     bufferId: int,
-    buffers: list(StateBuffer.t),
+    buffers: list(buffer),
   };
 };
 

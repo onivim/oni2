@@ -12,11 +12,11 @@ module OniBuffers =
   });
 
 let empty = OniBuffers.empty;
-type map = OniBuffers.t(StateBuffer.t);
+type map = OniBuffers.t(buffer);
 
 let update = (buffersMap, newBuffers) => {
   List.fold_left(
-    (m, buffer) => OniBuffers.add(StateBuffer.(buffer.id), buffer, m),
+    (m, buffer) => OniBuffers.add(buffer.id, buffer, m),
     buffersMap,
     newBuffers,
   );
