@@ -28,7 +28,11 @@ let showTablineBuffers = (state: State.t, buffers: list(buffer)) => {
   | Buffers =>
     List.map(
       ({id, filepath}) =>
-        State.Tab.{id, title: filepath |> truncateFilepath, active: false},
+        State.Tab.{
+          id,
+          title: filepath |> truncateFilepath,
+          active: state.activeBufferId == id,
+        },
       buffers,
     )
   | _ => state.tabs
