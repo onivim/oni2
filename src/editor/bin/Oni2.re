@@ -99,7 +99,7 @@ let init = app => {
     };
   };
 
-  let attach = bufferId => {
+  let bufferAttach = bufferId => {
     ignore(
       nvimApi.requestSync(
         "nvim_buf_attach",
@@ -217,7 +217,7 @@ let init = app => {
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
           | BufferEnter(b) =>
-            attach(b.bufferId);
+            bufferAttach(b.bufferId);
             Core.Actions.BufferEnter({
               bufferId: b.bufferId,
               buffers: getFullBufferList(),
