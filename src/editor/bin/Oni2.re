@@ -77,6 +77,13 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
+  /**
+     Enrich Buffers
+
+     Neovim allows us to get a list of all buffer ids
+     we then use the IDs of the buffers to request more
+     metadata about each buffer using "atomic calls"
+   */
   let enrichBuffers = ((atomicCalls, buffers)) => {
     let rsp =
       nvimApi.requestSync(
