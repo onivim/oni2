@@ -78,6 +78,7 @@ let init = app => {
   neovimProtocol.uiAttach();
 
   let getFullBufferList = () => {
+    open Core;
     let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
     /*
        TODO: use "nvim_call_atomic" to get the names and other buffer vars for this list
@@ -86,9 +87,9 @@ let init = app => {
     | Msgpck.List(handles) =>
       List.fold_left(
         (accum, buffer) =>
-          switch (Core.Utility.convertNeovimExtType(buffer)) {
+          switch (Utility.convertNeovimExtType(buffer)) {
           | Some((_, id)) =>
-            [Core.Types.BufferEnter.{id, filename: ""}, ...accum] |> List.rev
+            [Types.StateBuffer.{id, filepath: ""}, ...accum] |> List.rev
           | None => accum
           },
         [],

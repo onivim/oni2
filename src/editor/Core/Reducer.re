@@ -5,18 +5,13 @@
  */
 
 open Actions;
-
-let updateBufferList = (_next, prev) => {
-  prev;
-};
+open Types;
 
 let updateTabline = tabs => {
-  Types.(
-    List.map(
-      ({tab, name}: Tabline.t) =>
-        State.Tab.{id: tab, title: name, active: false},
-      tabs,
-    )
+  List.map(
+    ({tab, name}: Tabline.t) =>
+      State.Tab.{id: tab, title: name, active: false},
+    tabs,
   );
 };
 
@@ -27,10 +22,10 @@ let reduce: (State.t, Actions.t) => State.t =
       let ret: State.t = {...s, mode: m};
       ret;
     | CursorMove(b) => {...s, cursorPosition: b}
-    | BufferEnter(b) => {
+    | BufferEnter(bs) => {
         ...s,
-        activeBufferId: b.bufferId,
-        buffers: updateBufferList(b.buffers, s.buffers),
+        activeBufferId: bs.bufferId,
+        buffers: BufferList.update(s.buffers, bs.buffers),
       }
     | BufferUpdate(bu) => {
         ...s,
