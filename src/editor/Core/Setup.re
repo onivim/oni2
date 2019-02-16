@@ -4,8 +4,6 @@
  * Runtime configuration of dependencies
  */
 
-/* open Rench; */
-
 [@deriving yojson({strict: false, exn: true})]
 type t = {
   [@key "neovim"]
