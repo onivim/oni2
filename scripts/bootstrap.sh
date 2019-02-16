@@ -1,6 +1,6 @@
 # Set the path for the file we are going to generate
 config_path="$(pwd)/assets/configuration"
-OUTPUT="$config_path/setup.txt"
+OUTPUT="$config_path/setup.json"
 
 # Figure out what OS we are on
 current_os="$(uname -s)"
@@ -31,15 +31,19 @@ append_line() {
 # for the Oni2 binary
 case "${machine}" in
   Linux)
-      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
+      NODE_PATH="$(pwd)/vendor/node-v10.15.1/linux-x64/node"
+      NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim";;
   Mac)
-      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
+      NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
+      NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim";;
   *)
-      ONI_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
-      ONI_PATH="$(cygpath -m $ONI_PATH)";;
+      NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
+      NEOVIM_PATH="$(cygpath -m $NEOVIM_PATH)"
+      NODE_PATH="$(pwd)/vendor/node-v10.15.1/win-x64/node.exe"
+      NODE_PATH="$(cygpath -m $NODE_PATH)";;
 esac
 
-oni_bin_path="ONI2_PATH=$ONI_PATH"
+oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\"}"
 
 # create the current bin path as this might not exist yet
 if [ ! -d "$config_path" ]; then

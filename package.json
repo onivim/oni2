@@ -25,6 +25,9 @@
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
     "@opam/msgpck": "*",
+    "@opam/ppx_deriving": "*",
+    "@opam/ppx_deriving_yojson": "*",
+    "@opam/yojson": "*",
     "@opam/zed": "1.6",
     "rench": "^1.2.0",
     "@reason-native/rely": "1.0.1"

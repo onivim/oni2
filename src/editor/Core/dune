@@ -10,4 +10,7 @@
         lwt.unix
         Rench
         Revery
-    ))
+        yojson
+        ppx_deriving_yojson.runtime
+    )
+    (preprocess (pps ppx_deriving_yojson)))
