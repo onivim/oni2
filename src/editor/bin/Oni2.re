@@ -90,27 +90,52 @@ let init = app => {
         "nvim_call_atomic",
         Msgpck.List([Msgpck.List(atomicCalls)]),
       );
-
     switch (rsp) {
-    | Msgpck.List([Msgpck.List(paths), _]) =>
-      List.fold_left2(
-        (accum, buf, name) =>
-          switch (name) {
-          | Msgpck.String(filepath) => [
-              Core.Types.{
-                ...buf,
-                filepath: filepath != "" ? filepath : buf.filepath,
-              },
-              ...accum,
-            ]
-          | _ => [buf, ...accum]
-          },
-        [],
-        buffers,
-        paths,
+    | Msgpck.List(result) =>
+      /**
+      The last argument in an atomic call is either NIL or an
+      array of three items  a three-element array with the zero-based
+      index of the call which resulted in an error, the error type
+      and the error message. If an error occurred,
+      the values from all preceding calls will still be returned.
+     */
+      (
+        switch (List.rev(result)) {
+        | [] => []
+        | [_, ...responseItems] =>
+          switch (responseItems) {
+          | [Msgpck.List(items)] =>
+            List.fold_left2(
+              (accum, buf, name) =>
+                switch (name) {
+                | Msgpck.String(filepath) => [
+                    Core.Types.{
+                      ...buf,
+                      filepath: filepath != "" ? filepath : buf.filepath,
+                    },
+                    ...accum,
+                  ]
+                | _ => [buf, ...accum]
+                },
+              [],
+              buffers,
+              items,
+            )
+          | _ => []
+          }
+        }
       )
     | _ => []
     };
+  };
+
+  let constructMetadataCalls = id => {
+    [
+      Msgpck.List([
+        Msgpck.String("nvim_buf_get_name"),
+        Msgpck.List([Msgpck.Int(id)]),
+      ]),
+    ];
   };
 
   let getFullBufferList = () => {
@@ -123,14 +148,7 @@ let init = app => {
             switch (Core.Utility.convertNeovimExtType(buffer)) {
             | Some((_, id)) =>
               let newCalls =
-                [
-                  Msgpck.List([
-                    Msgpck.String("nvim_buf_get_name"),
-                    Msgpck.List([Msgpck.Int(id)]),
-                  ]),
-                  ...calls,
-                ]
-                |> List.rev;
+                constructMetadataCalls(id) |> List.append(calls) |> List.rev;
 
               let newBufs =
                 [Core.Types.{id, filepath: "[No Name]"}, ...bufs] |> List.rev;
