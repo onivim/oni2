@@ -3,7 +3,8 @@ open TestFramework;
 
 describe("Node", ({test, _}) => {
   test("version", ({expect}) => {
-    let version = Node.version();
+    let {nodePath, _}: Setup.t = Setup.init();
+    let version = Node.version(~nodePath, ());
 
     let expectedVersionString = "v10.15.1";
 
@@ -13,7 +14,8 @@ describe("Node", ({test, _}) => {
   });
 
   test("executeJs", ({expect}) => {
-    let v = Node.executeJs("console.log(2+2);"); 
+    let {nodePath, _}: Setup.t = Setup.init();
+    let v = Node.executeJs(~nodePath, "console.log(2+2);"); 
 
     let expected = "4";
 

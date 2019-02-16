@@ -4,7 +4,8 @@ open Rench;
 open TestFramework;
 
 let withNeovimApi = f => {
-  let nvim = NeovimProcess.start(~args=[|"--embed"|]);
+  let {neovimPath, _}: Setup.t = Setup.init();
+  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,

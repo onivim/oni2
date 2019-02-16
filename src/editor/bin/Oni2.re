@@ -52,7 +52,9 @@ let init = app => {
     Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let nvim = NeovimProcess.start(~args=[|"-u", initVimPath, "--embed"|]);
+  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+
+  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
@@ -64,12 +66,6 @@ let init = app => {
   let neovimProtocol: NeovimProtocol.t = NeovimProtocol.make(nvimApi);
 
   neovimProtocol.uiAttach();
-
-  /* let buf = nvimApi.requestSync( */
-  /*   "nvim_get_current_buf", */
-  /*   Msgpck.List([]), */
-  /* ); */
-  /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
 
   let setFont = (fontFamily, fontSize) => {
     Fontkit.fk_new_face(

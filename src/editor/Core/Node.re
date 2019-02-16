@@ -6,14 +6,12 @@
 
 open Rench;
 
-let getNodePath = () => "D:/oni2/vendor/node-v10.15.1/win-x64/node.exe";
-
-let version = () => {
-    let ret = ChildProcess.spawnSync(getNodePath(), [|"--version"|]);
+let version = (~nodePath, ()) => {
+    let ret = ChildProcess.spawnSync(nodePath, [|"--version"|]);
     ret.stdout;
 };
 
-let executeJs = (js) => {
-    let ret = ChildProcess.spawnSync(getNodePath(), [|"-e", js|]);
+let executeJs = (~nodePath, js) => {
+    let ret = ChildProcess.spawnSync(nodePath, [|"-e", js|]);
     ret.stdout
 }
