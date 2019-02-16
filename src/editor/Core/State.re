@@ -5,7 +5,6 @@
  */
 
 open Types;
-open BufferList;
 
 module Tab = {
   type t = {
@@ -51,7 +50,12 @@ let create: unit => t =
       show: false,
     },
     activeBufferId: 0,
-    buffers: OniBuffers.add(0, StateBuffer.{filepath: "", id: 0}, empty),
+    buffers:
+      BufferList.OniBuffers.add(
+        0,
+        StateBuffer.{filepath: "", id: 0},
+        BufferList.empty,
+      ),
     activeBuffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
