@@ -1,18 +1,10 @@
-open Rench;
-
+open Oni_Core;
 open Oni_Neovim;
 
-exception EnvironmentVariableNotFound;
-
-let optOrThrow = (s: option(string)) => {
-  switch (s) {
-  | Some(v) => v
-  | _ => raise(EnvironmentVariableNotFound)
-  };
-};
-
-let getNeovimPath = () =>
-  Environment.getEnvironmentVariable("ONI2_NEOVIM_PATH") |> optOrThrow;
+let getNeovimPath = () => {
+  let { neovimPath, _}: Setup.t = Setup.init();
+  neovimPath;
+}
 
 let repeat = (times: int, f) => {
   let count = ref(0);
