@@ -1,5 +1,3 @@
-module M = Msgpck;
-
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     Thread.create(
@@ -43,7 +41,7 @@ let convertUTF8string = str => {
 let convertNeovimExtType = (buffer: Msgpck.t) => {
   Types.(
     switch (buffer) {
-    | M.Ext(kind, id) =>
+    | Msgpck.Ext(kind, id) =>
       Some((ViewType.getType(kind), convertUTF8string(id)))
     | _ => None
     }
