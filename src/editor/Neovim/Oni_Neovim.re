@@ -12,6 +12,7 @@
  * the ability to share buffer stroage, instead of duplicating it on Oni2's side.
  */
 
+module Input = Input;
 module MsgpackTransport = MsgpackTransport;
 module NeovimProcess = NeovimProcess;
 module NeovimApi = NeovimApi;
