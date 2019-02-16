@@ -32,6 +32,8 @@ let createElement =
 
     let containerStyle =
       Style.[
+        overflow(LayoutTypes.Hidden),
+        paddingHorizontal(5),
         backgroundColor(theme.editorBackground),
         opacity(opacityValue),
         height(tabHeight),
