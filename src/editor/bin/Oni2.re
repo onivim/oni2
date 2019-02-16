@@ -97,7 +97,10 @@ let init = app => {
         (accum, buf, name) =>
           switch (name) {
           | Msgpck.String(filepath) => [
-              Core.Types.{...buf, filepath},
+              Core.Types.{
+                ...buf,
+                filepath: filepath != "" ? filepath : buf.filepath,
+              },
               ...accum,
             ]
           | _ => [buf, ...accum]
