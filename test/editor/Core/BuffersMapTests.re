@@ -28,9 +28,9 @@ describe("Buffer List Tests", ({ test, _ }) => {
   })
 
   test("Should correctly find the active bufferId", ({ expect }) => {
-          let bufferlist = BuffersMap.empty;
-          let updated = BuffersMap.Buffers.add(4, { filepath: "/myfile.js", id: 4 }, bufferlist);
-          let activeBuffer = BuffersMap.getActiveBuffer(4, updated);
-          expect.string(activeBuffer.filepath).toMatch("/myfile.js");
-      })
+    let bufferlist = BuffersMap.empty;
+    let updated = BuffersMap.Buffers.add(4, { filepath: "/myfile.js", id: 4 }, bufferlist);
+    let activeBuffer = BuffersMap.getActiveBuffer(4, updated);
+    expect.string(activeBuffer.filepath).toMatch("/myfile.js");
+  })
 })
