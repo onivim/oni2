@@ -1,48 +1,45 @@
-module Core = Oni_Core;
+open Oni_Core;
+open Types;
 
 let parseBufferContext = map =>
-  Core.(
-    Types.(
-      List.fold_left(
-        (accum, item) =>
-          switch (item) {
-          | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
-              ...accum,
-              filepath: value,
-            }
-          | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
-              ...accum,
-              id: bufNum,
-            }
-          | (Msgpck.String("modified"), Msgpck.Int(modified)) => {
-              ...accum,
-              modified: modified == 1,
-            }
-          | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
-              ...accum,
-              buftype: getBufType(buftype),
-            }
-          | (Msgpck.String("filetype"), Msgpck.String(filetype)) => {
-              ...accum,
-              filetype,
-            }
-          | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
-              ...accum,
-              hidden,
-            }
-          | _ => accum
-          },
-        {
-          filepath: "",
-          id: 0,
-          buftype: Empty,
-          filetype: "",
-          modified: false,
-          hidden: false,
-        },
-        map,
-      )
-    )
+  List.fold_left(
+    (accum, item) =>
+      switch (item) {
+      | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
+          ...accum,
+          filepath: value,
+        }
+      | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
+          ...accum,
+          id: bufNum,
+        }
+      | (Msgpck.String("modified"), Msgpck.Int(modified)) => {
+          ...accum,
+          modified: modified == 1,
+        }
+      | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
+          ...accum,
+          buftype: getBufType(buftype),
+        }
+      | (Msgpck.String("filetype"), Msgpck.String(filetype)) => {
+          ...accum,
+          filetype,
+        }
+      | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
+          ...accum,
+          hidden,
+        }
+      | _ => accum
+      },
+    {
+      filepath: "",
+      id: 0,
+      buftype: Empty,
+      filetype: "",
+      modified: false,
+      hidden: false,
+    },
+    map,
   );
 
 /**
@@ -111,14 +108,14 @@ let getBufferList = (api: NeovimApi.t) => {
     | Msgpck.List(handles) =>
       List.fold_left(
         ((calls, bufs), buffer) =>
-          switch (Core.Utility.convertNeovimExtType(buffer)) {
+          switch (Utility.convertNeovimExtType(buffer)) {
           | Some((_, id)) =>
             let newCalls =
               constructMetadataCalls(id) |> List.append(calls) |> List.rev;
 
             let newBuffers =
               [
-                Core.Types.{
+                {
                   id,
                   modified: false,
                   hidden: false,
