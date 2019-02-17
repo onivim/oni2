@@ -58,23 +58,6 @@ module BufferPosition = {
   };
 };
 
-module ViewType = {
-  type t =
-    | Window
-    | Tab
-    | Buffer
-    | Unknown;
-
-  let getType = (enumVal): t => {
-    switch (enumVal) {
-    | 1 => Buffer
-    | 2 => Tab
-    | 3 => Window
-    | _ => Unknown
-    };
-  };
-};
-
 type buftype =
   | Empty
   | Help
@@ -82,20 +65,19 @@ type buftype =
   | QuickFix
   | Terminal
   | NoWrite
-  | ACWrite
+  | ACWrite;
 
-let getBufType = (bt) => {
+let getBufType = bt =>
   switch (bt) {
-    | "help" => Help
-    | "nofile" => NoFile
-    | "quickfix" => QuickFix
-    | "terminal" => Terminal
-    | "nowrite" => NoWrite
-    | "acwrite" => ACWrite
-    | "" => Empty
-    | _ => Empty
-  }
-}
+  | "help" => Help
+  | "nofile" => NoFile
+  | "quickfix" => QuickFix
+  | "terminal" => Terminal
+  | "nowrite" => NoWrite
+  | "acwrite" => ACWrite
+  | "" => Empty
+  | _ => Empty
+  };
 
 type buffer = {
   filepath: string,
