@@ -31,7 +31,7 @@ let init = app => {
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
-      notifySizeChanged: (~width, ~height, ()) => {
+      notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,
           Core.Actions.SetEditorSize(
@@ -41,8 +41,7 @@ let init = app => {
               (),
             ),
           ),
-        );
-      },
+        ),
     });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
@@ -77,7 +76,7 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  let parseContextMap = map => {
+  let parseContextMap = map =>
     Core.(
       Types.(
         List.fold_left(
@@ -121,7 +120,6 @@ let init = app => {
         )
       )
     );
-  };
 
   /**
      Enrich Buffers
@@ -172,17 +170,15 @@ let init = app => {
     };
   };
 
-  let constructMetadataCalls = id => {
-    [
+  let constructMetadataCalls = id => [
+    Msgpck.List([
+      Msgpck.String("nvim_call_function"),
       Msgpck.List([
-        Msgpck.String("nvim_call_function"),
-        Msgpck.List([
-          Msgpck.String("OniGetBufferContext"),
-          Msgpck.List([Msgpck.Int(id)]),
-        ]),
+        Msgpck.String("OniGetBufferContext"),
+        Msgpck.List([Msgpck.Int(id)]),
       ]),
-    ];
-  };
+    ]),
+  ];
 
   let getFullBufferList = () => {
     let bufs = nvimApi.requestSync("nvim_list_bufs", Msgpck.List([]));
@@ -222,7 +218,7 @@ let init = app => {
     |> enrichBuffers;
   };
 
-  let bufferAttach = bufferId => {
+  let bufferAttach = bufferId =>
     ignore(
       nvimApi.requestSync(
         "nvim_buf_attach",
@@ -233,9 +229,8 @@ let init = app => {
         ]),
       ),
     );
-  };
 
-  let setFont = (fontFamily, fontSize) => {
+  let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
       Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
@@ -272,7 +267,6 @@ let init = app => {
       },
       _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
     );
-  };
 
   setFont("FiraCode-Regular.ttf", 14);
 
