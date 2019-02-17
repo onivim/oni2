@@ -65,7 +65,8 @@ type buftype =
   | QuickFix
   | Terminal
   | NoWrite
-  | ACWrite;
+  | ACWrite
+  | Unknown;
 
 let getBufType = bt =>
   switch (bt) {
@@ -76,7 +77,7 @@ let getBufType = bt =>
   | "nowrite" => NoWrite
   | "acwrite" => ACWrite
   | "" => Empty
-  | _ => Empty
+  | _ => Unknown
   };
 
 type buffer = {
