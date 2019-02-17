@@ -77,6 +77,52 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
+  let parseContextMap = map => {
+    Core.(
+      Types.(
+        List.fold_left(
+          (accum, item) =>
+            switch (item) {
+            | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
+                ...accum,
+                filepath: value,
+              }
+            | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
+                ...accum,
+                id: bufNum,
+              }
+            | (Msgpck.String("modified"), Msgpck.Int(modified)) => {
+                ...accum,
+                modified: modified == 1,
+              }
+            | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
+                ...accum,
+                buftype: getBufType(buftype),
+              }
+            | (Msgpck.String("filetype"), Msgpck.String(filetype)) => {
+                ...accum,
+                filetype,
+              }
+            | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
+                ...accum,
+                hidden,
+              }
+            | _ => accum
+            },
+          {
+            filepath: "",
+            id: 0,
+            buftype: Empty,
+            filetype: "",
+            modified: false,
+            hidden: false,
+          },
+          map,
+        )
+      )
+    );
+  };
+
   /**
      Enrich Buffers
 
@@ -102,17 +148,14 @@ let init = app => {
       (
         switch (List.rev(result)) {
         | [] => []
-        | [_, ...responseItems] =>
+        | [_errors, ...responseItems] =>
           switch (responseItems) {
           | [Msgpck.List(items)] =>
             List.fold_left2(
-              (accum, buf, name) =>
-                switch (name) {
-                | Msgpck.String(filepath) => [
-                    Core.Types.{
-                      ...buf,
-                      filepath: filepath != "" ? filepath : buf.filepath,
-                    },
+              (accum, buf, bufferContext) =>
+                switch (bufferContext) {
+                | Msgpck.Map(context) => [
+                    parseContextMap(context),
                     ...accum,
                   ]
                 | _ => [buf, ...accum]
@@ -132,8 +175,11 @@ let init = app => {
   let constructMetadataCalls = id => {
     [
       Msgpck.List([
-        Msgpck.String("nvim_buf_get_name"),
-        Msgpck.List([Msgpck.Int(id)]),
+        Msgpck.String("nvim_call_function"),
+        Msgpck.List([
+          Msgpck.String("OniGetBufferContext"),
+          Msgpck.List([Msgpck.Int(id)]),
+        ]),
       ]),
     ];
   };
@@ -150,10 +196,21 @@ let init = app => {
               let newCalls =
                 constructMetadataCalls(id) |> List.append(calls) |> List.rev;
 
-              let newBufs =
-                [Core.Types.{id, filepath: "[No Name]"}, ...bufs] |> List.rev;
+              let newBuffers =
+                [
+                  Core.Types.{
+                    id,
+                    modified: false,
+                    hidden: false,
+                    buftype: Empty,
+                    filetype: "",
+                    filepath: "[No Name]",
+                  },
+                  ...bufs,
+                ]
+                |> List.rev;
 
-              (newCalls, newBufs);
+              (newCalls, newBuffers);
             | None => (calls, bufs)
             },
           ([], []),

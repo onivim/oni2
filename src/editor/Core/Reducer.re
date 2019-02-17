@@ -27,7 +27,7 @@ let showTablineBuffers = (state: State.t, buffers: list(buffer)) => {
   switch (state.configuration.tablineMode) {
   | Buffers =>
     List.map(
-      ({id, filepath}) =>
+      ({id, filepath, _}) =>
         State.Tab.{
           id,
           title: filepath |> truncateFilepath,

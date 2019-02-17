@@ -75,8 +75,34 @@ module ViewType = {
   };
 };
 
+type buftype =
+  | Empty
+  | Help
+  | NoFile
+  | QuickFix
+  | Terminal
+  | NoWrite
+  | ACWrite
+
+let getBufType = (bt) => {
+  switch (bt) {
+    | "help" => Help
+    | "nofile" => NoFile
+    | "quickfix" => QuickFix
+    | "terminal" => Terminal
+    | "nowrite" => NoWrite
+    | "acwrite" => ACWrite
+    | "" => Empty
+    | _ => Empty
+  }
+}
+
 type buffer = {
   filepath: string,
+  filetype: string,
+  buftype,
+  modified: bool,
+  hidden: bool,
   id: int,
 };
 
