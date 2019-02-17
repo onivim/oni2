@@ -5,19 +5,23 @@ open Types;
    with a type that satisfies the interface
    i.e. specifies a compare function and a type
  */
-module OniBuffers =
+module Buffers =
   Map.Make({
     type t = int;
     let compare = compare;
   });
 
-let empty = OniBuffers.empty;
-type map = OniBuffers.t(buffer);
+let empty = Buffers.empty;
+type t = Buffers.t(buffer);
 
 let update = (buffersMap, newBuffers) => {
   List.fold_left(
-    (m, buffer) => OniBuffers.add(buffer.id, buffer, m),
+    (m, buffer) => Buffers.add(buffer.id, buffer, m),
     buffersMap,
     newBuffers,
   );
 };
+
+let getActiveBuffer = (activeBufferId, map) => {
+  Buffers.find(activeBufferId, map)
+}

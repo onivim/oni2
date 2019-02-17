@@ -19,7 +19,7 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
-  buffers: BufferList.map,
+  buffers: BuffersMap.t,
   activeBufferId: int,
   activeBuffer: Buffer.t,
   editorFont: EditorFont.t,
@@ -51,7 +51,7 @@ let create: unit => t =
     },
     activeBufferId: 0,
     buffers:
-      BufferList.OniBuffers.add(0, {filepath: "", id: 0}, BufferList.empty),
+      BuffersMap.Buffers.add(0, {filepath: "", id: 0}, BuffersMap.empty),
     activeBuffer: Buffer.ofLines([||]),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:

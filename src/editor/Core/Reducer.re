@@ -49,7 +49,7 @@ let reduce: (State.t, Actions.t) => State.t =
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
-        buffers: BufferList.update(s.buffers, bs.buffers),
+        buffers: BuffersMap.update(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers),
       }
     | BufferUpdate(bu) => {
