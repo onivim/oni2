@@ -1,7 +1,8 @@
 open Types;
 /*
    This creates a Map with uses an integer
-   as the key, you can pass a Functor/Module
+   as the key, this is not offered by default.
+   but you can pass a Functor
    with a type that satisfies the interface
    i.e. specifies a compare function and a type
  */
