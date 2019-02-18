@@ -15,14 +15,12 @@ module Buffers =
 let empty = Buffers.empty;
 type t = Buffers.t(buffer);
 
-let update = (buffersMap, newBuffers) => {
+let update = (buffersMap, newBuffers) =>
   List.fold_left(
     (m, buffer) => Buffers.add(buffer.id, buffer, m),
     buffersMap,
     newBuffers,
   );
-};
 
-let getActiveBuffer = (activeBufferId, map) => {
-  Buffers.find(activeBufferId, map)
-}
+let getActiveBuffer = (activeBufferId, map) =>
+  Buffers.find(activeBufferId, map);
