@@ -1,6 +1,16 @@
 open Oni_Core;
 open Types;
 
+let constructMetadataCalls = id => [
+  Msgpck.List([
+    Msgpck.String("nvim_call_function"),
+    Msgpck.List([
+      Msgpck.String("OniGetBufferContext"),
+      Msgpck.List([Msgpck.Int(id)]),
+    ]),
+  ]),
+];
+
 let parseBufferContext = map =>
   List.fold_left(
     (accum, item) =>
@@ -90,16 +100,6 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
   | _ => []
   };
 };
-
-let constructMetadataCalls = id => [
-  Msgpck.List([
-    Msgpck.String("nvim_call_function"),
-    Msgpck.List([
-      Msgpck.String("OniGetBufferContext"),
-      Msgpck.List([Msgpck.Int(id)]),
-    ]),
-  ]),
-];
 
 let getBufferList = (api: NeovimApi.t) => {
   let bufs = api.requestSync("nvim_list_bufs", Msgpck.List([]));
