@@ -20,12 +20,11 @@ module BufferLinesNotification = {
   };
 
   let make = (changedTick, firstLine, lastLine, lineData) => {
-    let f = s => {
+    let f = s =>
       switch (s) {
       | Msgpck.String(v) => v
       | _ => ""
       };
-    };
 
     let lines = List.map(f, lineData);
 
@@ -56,7 +55,7 @@ type commandlineInput = {input: string};
 
 module M = Msgpck;
 
-let showCommandline = args => {
+let showCommandline = args =>
   /*
      Structure of a cmdline_show response
      [cmdline_show, [[[attr, inputStr]], position, firstCharacter, prompt, indentAmount, level]]
@@ -95,9 +94,8 @@ let showCommandline = args => {
     });
   | _ => Ignored
   };
-};
 
-let hideCommandline = _msgs => {
+let hideCommandline = _msgs =>
   CommandlineHide({
     content: "",
     firstC: "",
@@ -107,9 +105,8 @@ let hideCommandline = _msgs => {
     level: 0,
     show: false,
   });
-};
 
-let showWildmenu = (args: list(M.t)) => {
+let showWildmenu = (args: list(M.t)) =>
   /* [[wildmenu_show, [[list items]]] */
   switch (args) {
   | [M.List(i)] =>
@@ -128,75 +125,19 @@ let showWildmenu = (args: list(M.t)) => {
     WildmenuShow({items, selected: 0, show: true});
   | _ => Ignored
   };
-};
 
-let hideWildmenu = _msgs => {
+let hideWildmenu = _msgs =>
   WildmenuHide({items: [], show: false, selected: 0});
-};
 
-let updateWildmenu = selected => {
+let updateWildmenu = selected =>
   /* [wildmenu_select, [0]] */
   switch (selected) {
   | M.Int(s) => WildmenuSelected(s)
   | _ => Ignored
   };
-};
-
-/*
-   Msgpck has a special type for Maps, which returns a tuple
-   consisting of the key and the value, so we pattern
-   match on the name and value and use those to construct
-   the record type we want
- */
-let parseTabMap = map => {
-  Core.(
-    Tabline.(
-      List.fold_left(
-        (accum, item) =>
-          switch (item) {
-          | (M.String("name"), M.String(value)) => {...accum, name: value}
-          | (M.String("tab"), value) =>
-            let tab =
-              switch (Utility.convertNeovimExtType(value)) {
-              | Some((_, id)) => id
-              | None => 0
-              };
-            {...accum, tab};
-          | _ => accum
-          },
-        {name: "", tab: 0},
-        map,
-      )
-    )
-  );
-};
-
-let parseTablineUpdate = msgs => {
-  /*
-     The structure of a tabline update is -
-     [tabline_update, [(2 "\001"), [{tab: (2 "\001"), name: string}]]],
-   */
-  switch (msgs) {
-  | [_view, Msgpck.List(tabs)] =>
-    let allTabs =
-      List.fold_left(
-        (accum, tab) =>
-          switch (tab) {
-          | M.Map(map) =>
-            let map = parseTabMap(map);
-            [Tabline.{tab: map.tab, name: map.name}, ...accum];
-          | _ => accum
-          },
-        [],
-        tabs,
-      );
-    TablineUpdate(allTabs);
-  | _ => Ignored
-  };
-};
 
 let parseRedraw = (msgs: list(Msgpck.t)) => {
-  let p = (msg: Msgpck.t) => {
+  let p = (msg: Msgpck.t) =>
     switch (msg) {
     | M.List([M.String("cmdline_show"), M.List(msgs)]) =>
       showCommandline(msgs)
@@ -209,7 +150,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
     | M.List([M.String("tabline_update"), M.List(msgs)]) =>
-      parseTablineUpdate(msgs)
+      let tabs = NeovimTab.parseTablineUpdate(msgs);
+      TablineUpdate(tabs);
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
@@ -217,7 +159,6 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       ModeChanged(mode)
     | _ => Ignored
     };
-  };
 
   msgs |> List.map(p);
 };
@@ -287,7 +228,7 @@ let parse = (t: string, msg: Msgpck.t) => {
   msgs |> List.filter(m => m !== Ignored);
 };
 
-let show = (n: t) => {
+let show = (n: t) =>
   switch (n) {
   | Redraw => "redraw"
   | ModeChanged(s) => "mode changed: " ++ s
@@ -295,4 +236,3 @@ let show = (n: t) => {
   | BufferLines(_) => "buffer lines"
   | _ => "unknown"
   };
-};

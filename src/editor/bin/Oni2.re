@@ -195,7 +195,7 @@ let init = app => {
             bufferAttach(b.bufferId);
             Core.Actions.BufferEnter({
               bufferId: b.bufferId,
-              buffers: BufferEvents.getBufferList(nvimApi),
+              buffers: NeovimBuffer.getBufferList(nvimApi),
             });
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
