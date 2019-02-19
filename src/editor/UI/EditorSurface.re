@@ -136,25 +136,25 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontWidth = state.editorFont.measuredWidth;
 
     let cursorLine = state.cursorPosition.line;
-    let cursorWidth =	    
-      switch (state.mode) {	
-      | Insert => 2	
-      | _ => fontWidth	
-      };	
+    let cursorWidth =
+      switch (state.mode) {
+      | Insert => 2
+      | _ => fontWidth
+      };
 
-     let cursorStyle =	
-      Style.[	
-        position(`Absolute),	
-        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),	
-        left(	
-          lineNumberWidth	
-          + fontWidth	
-          * Index.toZeroBasedInt(state.cursorPosition.character),	
-        ),	
-        height(fontHeight),	
-        width(cursorWidth),	
-        opacity(0.8),	
-        backgroundColor(Colors.white),	
+    let cursorStyle =
+      Style.[
+        position(`Absolute),
+        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
+        left(
+          lineNumberWidth
+          + fontWidth
+          * Index.toZeroBasedInt(state.cursorPosition.character),
+        ),
+        height(fontHeight),
+        width(cursorWidth),
+        opacity(0.8),
+        backgroundColor(Colors.white),
       ];
 
     let render = (b: BufferViewLine.t) =>
@@ -236,7 +236,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             height={state.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
           />
-          <View style={cursorStyle} />
+          <View style=cursorStyle />
         </View>
         <View style=minimapViewStyle>
           <Minimap
