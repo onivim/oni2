@@ -5,7 +5,7 @@
  * the view of the buffer in the window.
  */
 
-open Revery.Core;
+/* open Revery.Core; */
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -156,41 +156,56 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
-    let textElements =
-      viewLinesToElements(
-        state.editorFont.measuredWidth,
-        state.editorFont.measuredHeight,
-        lineNumberWidth,
-        bufferView,
-        state.theme,
-        state.cursorPosition.line,
-      );
+    /* let textElements = */
+    /*   viewLinesToElements( */
+    /*     state.editorFont.measuredWidth, */
+    /*     state.editorFont.measuredHeight, */
+    /*     lineNumberWidth, */
+    /*     bufferView, */
+    /*     state.theme, */
+    /*     state.cursorPosition.line, */
+    /*   ); */
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let cursorWidth =
-      switch (state.mode) {
-      | Insert => 2
-      | _ => fontWidth
-      };
+    let render = (fontWidth, fontHeight, lineNumberWidth, theme, cursorLine, b: BufferViewLine.t) => {
+        tokensToElement(
+          fontWidth,
+          fontHeight,
+          Index.toZeroBasedInt(b.lineNumber),
+          Index.toZeroBasedInt(b.virtualLineNumber),
+          lineNumberWidth,
+          b.tokens,
+          theme,
+          Index.toZeroBasedInt(cursorLine),
+        );
+    };
+    
+    let r = render(fontWidth, fontHeight, lineNumberWidth, theme, state.cursorPosition.line);
 
-    let cursorStyle =
-      Style.[
-        position(`Absolute),
-        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
-        left(
-          lineNumberWidth
-          + fontWidth
-          * Index.toZeroBasedInt(state.cursorPosition.character),
-        ),
-        height(fontHeight),
-        width(cursorWidth),
-        opacity(0.8),
-        backgroundColor(Colors.white),
-      ];
+    /* let cursorWidth = */
+    /*   switch (state.mode) { */
+    /*   | Insert => 2 */
+    /*   | _ => fontWidth */
+    /*   }; */
 
-    let elements = [<View style=cursorStyle />, ...textElements];
+    /* let cursorStyle = */
+    /*   Style.[ */
+    /*     position(`Absolute), */
+    /*     top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)), */
+    /*     left( */
+    /*       lineNumberWidth */
+    /*       + fontWidth */
+    /*       * Index.toZeroBasedInt(state.cursorPosition.character), */
+    /*     ), */
+    /*     height(fontHeight), */
+    /*     width(cursorWidth), */
+    /*     opacity(0.8), */
+    /*     backgroundColor(Colors.white), */
+    /*   ]; */
+
+    /* let elements = [<View style=cursorStyle />, ...textElements]; */
 
     let style =
       Style.[
@@ -251,7 +266,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle> ...elements </View>
+        <View style=bufferViewStyle>
+            <FlatList render={r} data={bufferView.viewLines} width={bufferPixelWidth} height={state.size.pixelHeight} rowHeight={state.editorFont.measuredHeight} />
+        </View>
         <View style=minimapViewStyle>
           <Minimap state tokenizedBufferView=bufferView />
         </View>

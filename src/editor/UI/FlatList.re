@@ -17,17 +17,21 @@ let createElement = (
     ~rowHeight: int,
     ~render: renderFunction('a),
     ~data: array('a),
+    ~children as _,
     (),
 ) => component((hooks) => {
    
 
-    let rowsToRender = rowHeight / height_;
+    let rowsToRender = (rowHeight >  0) ? height_ / rowHeight : 0;
 
     let i = ref(0);
 
     let items: ref(list(React.syntheticElement)) = ref([]);
 
-    while(i^ < rowsToRender) {
+    let len = Array.length(data);
+
+    while(i^ < rowsToRender && i^ < len) {
+        /* print_endline ("rendering row: " ++ string_of_int(i^)); */
 
         let item = data[i^];
         let v = render(item);
