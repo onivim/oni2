@@ -270,7 +270,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             <FlatList render={r} data={bufferView.viewLines} width={bufferPixelWidth} height={state.size.pixelHeight} rowHeight={state.editorFont.measuredHeight} />
         </View>
         <View style=minimapViewStyle>
-          <Minimap state tokenizedBufferView=bufferView />
+          <Minimap state width=layout.minimapWidthInPixels height=state.size.pixelHeight tokenizedBufferView=bufferView />
         </View>
         <View style=verticalScrollBarStyle />
       </View>,
