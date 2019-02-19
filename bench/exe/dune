@@ -1,0 +1,6 @@
+(executable
+    (name bench)
+    (public_name oni-bench)
+    (libraries OniBench.lib)
+    (package OniBench)
+)
