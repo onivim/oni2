@@ -32,10 +32,11 @@ let tokensToElement =
       lineNumber: int,
       virtualLineNumber: int,
       lineNumberWidth: int,
-      tokens: list(Tokenizer.t),
       theme: Theme.t,
       cursorLine: int,
+      bufferViewLine: BufferViewLine.t,
     ) => {
+  let tokens = bufferViewLine.tokens;
   let lineHeight = fontHeight;
 
   let isActiveLine = lineNumber == cursorLine;
@@ -111,31 +112,6 @@ let tokensToElement =
   </View>;
 };
 
-let viewLinesToElements =
-    (
-      fontWidth: int,
-      fontHeight: int,
-      lineNumberWidth: int,
-      bufferView: TokenizedBufferView.t,
-      theme,
-      cursorLine,
-    ) => {
-  let f = (b: BufferViewLine.t) => {
-    tokensToElement(
-      fontWidth,
-      fontHeight,
-      Index.toZeroBasedInt(b.lineNumber),
-      Index.toZeroBasedInt(b.virtualLineNumber),
-      lineNumberWidth,
-      b.tokens,
-      theme,
-      Index.toZeroBasedInt(cursorLine),
-    );
-  };
-
-  Array.map(f, bufferView.viewLines) |> Array.to_list;
-};
-
 let component = React.component("EditorSurface");
 
 let createElement = (~state: State.t, ~children as _, ()) =>
@@ -156,19 +132,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
-    let textElements =
-      viewLinesToElements(
-        state.editorFont.measuredWidth,
-        state.editorFont.measuredHeight,
-        lineNumberWidth,
-        bufferView,
-        state.theme,
-        state.cursorPosition.line,
-      );
-
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
+    let cursorLine = state.cursorPosition.line;
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
@@ -190,7 +157,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         backgroundColor(Colors.white),
       ];
 
-    let elements = [<View style=cursorStyle />, ...textElements];
+    let render = (b: BufferViewLine.t) =>
+      tokensToElement(
+        fontWidth,
+        fontHeight,
+        Index.toZeroBasedInt(b.lineNumber),
+        Index.toZeroBasedInt(b.virtualLineNumber),
+        lineNumberWidth,
+        theme,
+        Index.toZeroBasedInt(cursorLine),
+        b,
+      );
 
     let style =
       Style.[
@@ -251,9 +228,23 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle> ...elements </View>
+        <View style=bufferViewStyle>
+          <FlatList
+            render
+            data={bufferView.viewLines}
+            width=bufferPixelWidth
+            height={state.size.pixelHeight}
+            rowHeight={state.editorFont.measuredHeight}
+          />
+          <View style=cursorStyle />
+        </View>
         <View style=minimapViewStyle>
-          <Minimap state tokenizedBufferView=bufferView />
+          <Minimap
+            state
+            width={layout.minimapWidthInPixels}
+            height={state.size.pixelHeight}
+            tokenizedBufferView=bufferView
+          />
         </View>
         <View style=verticalScrollBarStyle />
       </View>,
