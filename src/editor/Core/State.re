@@ -52,8 +52,8 @@ let create: unit => t =
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
         ~fontSize=14,
-        ~measuredWidth=0,
-        ~measuredHeight=0,
+        ~measuredWidth=1,
+        ~measuredHeight=1,
         (),
       ),
     tabs: [Tab.create(0, "[No Name]")],

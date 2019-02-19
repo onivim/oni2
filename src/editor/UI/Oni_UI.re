@@ -5,4 +5,5 @@
  */
 
 module GlobalContext = GlobalContext;
+module EditorSurface = EditorSurface;
 module Root = Root;

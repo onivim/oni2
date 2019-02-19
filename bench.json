@@ -1,0 +1,12 @@
+{
+  "source": "./package.json",
+  "override": {
+      "build": ["dune build --root . -j4"],
+      "dependencies": {
+        "reperf": "*"
+      },
+      "install": [
+          "esy-installer OniBench.install"
+      ]
+  }
+}
