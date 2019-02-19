@@ -38,7 +38,8 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "revery": "github:revery-ui/revery#ccac6fc"
+    "revery": "github:revery-ui/revery#ccac6fc",
+    "reperf": "link:../reperf"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
