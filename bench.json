@@ -3,7 +3,7 @@
   "override": {
       "build": ["dune build --root . -j4"],
       "dependencies": {
-        "reperf": "*"
+        "reperf": "^1.2.0"
       },
       "install": [
           "esy-installer OniBench.install"
