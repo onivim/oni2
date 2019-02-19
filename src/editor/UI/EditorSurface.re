@@ -5,7 +5,6 @@
  * the view of the buffer in the window.
  */
 
-/* open Revery.Core; */
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -32,10 +31,11 @@ let tokensToElement =
       lineNumber: int,
       virtualLineNumber: int,
       lineNumberWidth: int,
-      tokens: list(Tokenizer.t),
       theme: Theme.t,
       cursorLine: int,
+      bufferViewLine: BufferViewLine.t,
     ) => {
+  let tokens = bufferViewLine.tokens;
   let lineHeight = fontHeight;
 
   let isActiveLine = lineNumber == cursorLine;
@@ -111,31 +111,6 @@ let tokensToElement =
   </View>;
 };
 
-let viewLinesToElements =
-    (
-      fontWidth: int,
-      fontHeight: int,
-      lineNumberWidth: int,
-      bufferView: TokenizedBufferView.t,
-      theme,
-      cursorLine,
-    ) => {
-  let f = (b: BufferViewLine.t) => {
-    tokensToElement(
-      fontWidth,
-      fontHeight,
-      Index.toZeroBasedInt(b.lineNumber),
-      Index.toZeroBasedInt(b.virtualLineNumber),
-      lineNumberWidth,
-      b.tokens,
-      theme,
-      Index.toZeroBasedInt(cursorLine),
-    );
-  };
-
-  Array.map(f, bufferView.viewLines) |> Array.to_list;
-};
-
 let component = React.component("EditorSurface");
 
 let createElement = (~state: State.t, ~children as _, ()) =>
@@ -156,56 +131,22 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 
-    /* let textElements = */
-    /*   viewLinesToElements( */
-    /*     state.editorFont.measuredWidth, */
-    /*     state.editorFont.measuredHeight, */
-    /*     lineNumberWidth, */
-    /*     bufferView, */
-    /*     state.theme, */
-    /*     state.cursorPosition.line, */
-    /*   ); */
-
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let render = (fontWidth, fontHeight, lineNumberWidth, theme, cursorLine, b: BufferViewLine.t) => {
-        tokensToElement(
-          fontWidth,
-          fontHeight,
-          Index.toZeroBasedInt(b.lineNumber),
-          Index.toZeroBasedInt(b.virtualLineNumber),
-          lineNumberWidth,
-          b.tokens,
-          theme,
-          Index.toZeroBasedInt(cursorLine),
-        );
-    };
-    
-    let r = render(fontWidth, fontHeight, lineNumberWidth, theme, state.cursorPosition.line);
+    let cursorLine = state.cursorPosition.line;
 
-    /* let cursorWidth = */
-    /*   switch (state.mode) { */
-    /*   | Insert => 2 */
-    /*   | _ => fontWidth */
-    /*   }; */
-
-    /* let cursorStyle = */
-    /*   Style.[ */
-    /*     position(`Absolute), */
-    /*     top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)), */
-    /*     left( */
-    /*       lineNumberWidth */
-    /*       + fontWidth */
-    /*       * Index.toZeroBasedInt(state.cursorPosition.character), */
-    /*     ), */
-    /*     height(fontHeight), */
-    /*     width(cursorWidth), */
-    /*     opacity(0.8), */
-    /*     backgroundColor(Colors.white), */
-    /*   ]; */
-
-    /* let elements = [<View style=cursorStyle />, ...textElements]; */
+    let render = (b: BufferViewLine.t) =>
+      tokensToElement(
+        fontWidth,
+        fontHeight,
+        Index.toZeroBasedInt(b.lineNumber),
+        Index.toZeroBasedInt(b.virtualLineNumber),
+        lineNumberWidth,
+        theme,
+        Index.toZeroBasedInt(cursorLine),
+        b,
+      );
 
     let style =
       Style.[
@@ -267,10 +208,21 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style onDimensionsChanged>
         <View style=bufferViewStyle>
-            <FlatList render={r} data={bufferView.viewLines} width={bufferPixelWidth} height={state.size.pixelHeight} rowHeight={state.editorFont.measuredHeight} />
+          <FlatList
+            render
+            data={bufferView.viewLines}
+            width=bufferPixelWidth
+            height={state.size.pixelHeight}
+            rowHeight={state.editorFont.measuredHeight}
+          />
         </View>
         <View style=minimapViewStyle>
-          <Minimap state width=layout.minimapWidthInPixels height=state.size.pixelHeight tokenizedBufferView=bufferView />
+          <Minimap
+            state
+            width={layout.minimapWidthInPixels}
+            height={state.size.pixelHeight}
+            tokenizedBufferView=bufferView
+          />
         </View>
         <View style=verticalScrollBarStyle />
       </View>,

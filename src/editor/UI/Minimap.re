@@ -50,14 +50,13 @@ let tokensToElement =
   <View style=lineStyle> ...tokens </View>;
 };
 
-  let renderLine = (theme, b: BufferViewLine.t) => {
-    tokensToElement(
-      Index.toZeroBasedInt(b.virtualLineNumber),
-      b.tokens,
-      theme,
-    );
-  };
-
+let renderLine = (theme, b: BufferViewLine.t) => {
+  tokensToElement(
+    Index.toZeroBasedInt(b.virtualLineNumber),
+    b.tokens,
+    theme,
+  );
+};
 
 let component = React.component("Minimap");
 
@@ -74,10 +73,21 @@ let createElement =
     let style =
       Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-    let rowHeight = Constants.default.minimapCharacterHeight + Constants.default.minimapLineSpacing;
-    let render =  renderLine(state.theme);
+    let rowHeight =
+      Constants.default.minimapCharacterHeight
+      + Constants.default.minimapLineSpacing;
+    let render = renderLine(state.theme);
 
-    (hooks, <View style>
-        <FlatList width height rowHeight render data={tokenizedBufferView.viewLines} />
-     </View>);
+    (
+      hooks,
+      <View style>
+        <FlatList
+          width
+          height
+          rowHeight
+          render
+          data={tokenizedBufferView.viewLines}
+        />
+      </View>,
+    );
   });
