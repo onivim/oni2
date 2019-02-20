@@ -21,7 +21,6 @@ type t = {
   tabs: list(Tab.t),
   buffers: BufferMap.t,
   activeBufferId: int,
-  activeBuffer: Buffer.t,
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
@@ -50,20 +49,7 @@ let create: unit => t =
       show: false,
     },
     activeBufferId: 0,
-    buffers:
-      BufferMap.Buffers.add(
-        0,
-        {
-          filepath: "",
-          filetype: "",
-          buftype: Empty,
-          modified: false,
-          id: 0,
-          hidden: false,
-        },
-        BufferMap.empty,
-      ),
-    activeBuffer: Buffer.ofLines([||]),
+    buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(
