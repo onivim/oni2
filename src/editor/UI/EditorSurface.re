@@ -37,7 +37,7 @@ let tokensToElement =
       bufferViewLine: BufferViewLine.t,
     ) => {
   let tokens = bufferViewLine.tokens;
-  let lineHeight = fontHeight;
+  let fontLineHeight = fontHeight;
 
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
@@ -55,6 +55,7 @@ let tokensToElement =
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
         height(fontHeight),
+        textWrap(Revery.Core.TextWrapping.NoWrap),
       ];
 
     <Text style text={token.text} />;
@@ -67,7 +68,7 @@ let tokensToElement =
     Style.[
       position(`Absolute),
       top(0),
-      height(lineHeight),
+      height(fontLineHeight),
       left(0),
       width(lineNumberWidth),
       backgroundColor(theme.editorLineNumberBackground),
@@ -81,7 +82,7 @@ let tokensToElement =
       top(0),
       left(lineNumberWidth),
       right(0),
-      height(lineHeight),
+      height(fontLineHeight),
     ];
 
   let lineNumberTextStyle =
@@ -90,6 +91,7 @@ let tokensToElement =
       fontSize(14),
       height(fontHeight),
       color(lineNumberTextColor),
+      textWrap(Revery.Core.TextWrapping.NoWrap),
     ];
 
   let tokens = List.map(f, tokens);
