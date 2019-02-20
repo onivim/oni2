@@ -54,7 +54,8 @@ let tokensToElement =
         left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
-        height(fontHeight),
+        lineHeight(1.0),
+        color(Revery.Core.Colors.white),
         textWrap(Revery.Core.TextWrapping.NoWrap),
       ];
 
@@ -62,7 +63,7 @@ let tokensToElement =
   };
 
   let lineStyle =
-    Style.[position(`Absolute), top(fontHeight * virtualLineNumber)];
+    Style.[position(`Absolute), top(fontHeight * virtualLineNumber), left(0), right(0)];
 
   let lineNumberStyle =
     Style.[
@@ -91,10 +92,11 @@ let tokensToElement =
       fontSize(14),
       height(fontHeight),
       color(lineNumberTextColor),
+      lineHeight(1.0),
       textWrap(Revery.Core.TextWrapping.NoWrap),
     ];
 
-  let tokens = List.map(f, tokens);
+  let _tokens = List.map(f, tokens);
 
   <View style=lineStyle>
     <View style=lineNumberStyle>
@@ -110,7 +112,7 @@ let tokensToElement =
         )}
       />
     </View>
-    <View style=lineContentsStyle> ...tokens </View>
+    <View style=lineContentsStyle > ..._tokens </View>
   </View>;
 };
 
