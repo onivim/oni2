@@ -1,0 +1,1 @@
+OniBench.BenchFramework.cli();

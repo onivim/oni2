@@ -3,7 +3,21 @@ open Oni_Neovim;
 open Rench;
 open TestFramework;
 
-open Helpers;
+let withNeovimApi = f => {
+  let {neovimPath, _}: Setup.t = Setup.init();
+  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
+  let msgpackTransport =
+    MsgpackTransport.make(
+      ~onData=nvim.stdout.onData,
+      ~write=nvim.stdin.write,
+      (),
+    );
+  let nvimApi = NeovimApi.make(msgpackTransport);
+
+  f(nvimApi);
+
+  msgpackTransport.close();
+};
 
 describe("NeovimApi", ({describe, test, _}) => {
   test("nvim__id", ({expect}) =>
@@ -47,6 +61,36 @@ describe("NeovimApi", ({describe, test, _}) => {
       })
     );
   });
+
+  test("nvim_call_atomic", ({expect}) =>
+    withNeovimApi(api => {
+      let result =
+        api.requestSync(
+          "nvim_call_atomic",
+          Msgpck.List([
+            Msgpck.List([
+              Msgpck.List([
+                Msgpck.String("nvim_command_output"),
+                Msgpck.List([Msgpck.String(":echo 'a'")]),
+              ]),
+              Msgpck.List([
+                Msgpck.String("nvim_command_output"),
+                Msgpck.List([Msgpck.String(":echo 'b'")]),
+              ]),
+            ]),
+          ]),
+        );
+
+      switch (result) {
+      | Msgpck.List([
+          Msgpck.List([Msgpck.String("a"), Msgpck.String("b")]),
+          _,
+        ]) =>
+        expect.bool(true).toBe(true)
+      | _ => expect.string("FAIL").toEqual(Msgpck.show(result))
+      };
+    })
+  );
 
   describe("ui_attach", ({test, _}) =>
     test("basic ui_attach / ui_detach", ({expect}) =>

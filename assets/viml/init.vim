@@ -40,11 +40,30 @@ augroup OniEventListeners
 augroup END
 
 function OniGetContext()
-let bufferNumber = bufnr("%")
-let line = line(".")
-let column = col(".")
+    let bufferNumber = bufnr("%")
+    let line = line(".")
+    let column = col(".")
 
-let context = [bufferNumber, line, column]
+    let context = [bufferNumber, line, column]
 
-return context
+    return context
+endfunction
+
+
+function OniGetBufferContext(bufnum)
+    let l:context = {}
+    let l:bufpath = bufname(a:bufnum)
+
+    if strlen(l:bufpath)
+        let l:context.bufferNumber = a:bufnum
+        let l:context.bufferFullPath = expand("#".a:bufnum.":p")
+        let l:context.filetype = getbufvar(a:bufnum, "&filetype")
+        let l:context.buftype = getbufvar(a:bufnum, "&buftype")
+        let l:context.modified = getbufvar(a:bufnum, "&mod")
+        let l:context.hidden = getbufvar(a:bufnum, "&hidden")
+
+        return l:context
+    elseif -1 < index(['nofile','acwrite'], getbufvar(a:bufnum, '&buftype')) " scratch buffer
+        return
+    endif
 endfunction

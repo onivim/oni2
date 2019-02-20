@@ -58,6 +58,44 @@ module BufferPosition = {
   };
 };
 
+type buftype =
+  | Empty
+  | Help
+  | NoFile
+  | QuickFix
+  | Terminal
+  | NoWrite
+  | ACWrite
+  | Unknown;
+
+let getBufType = bt =>
+  switch (bt) {
+  | "help" => Help
+  | "nofile" => NoFile
+  | "quickfix" => QuickFix
+  | "terminal" => Terminal
+  | "nowrite" => NoWrite
+  | "acwrite" => ACWrite
+  | "" => Empty
+  | _ => Unknown
+  };
+
+type buffer = {
+  filepath: string,
+  filetype: string,
+  buftype,
+  modified: bool,
+  hidden: bool,
+  id: int,
+};
+
+module BufferEnter = {
+  type t = {
+    bufferId: int,
+    buffers: list(buffer),
+  };
+};
+
 module BufferUpdate = {
   type t = {
     startLine: int,
@@ -72,6 +110,15 @@ module BufferUpdate = {
     lines,
     version,
   };
+};
+
+module Tabline = {
+  type t = {
+    tab: int,
+    name: string,
+  };
+
+  type tabs = list(t);
 };
 
 module EditorFont = {

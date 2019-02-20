@@ -5,6 +5,39 @@
  */
 
 open Actions;
+open Types;
+
+let truncateFilepath = path => {
+  Filename.basename(path);
+};
+
+let showTablineTabs = (state: State.t, tabs) => {
+  switch (state.configuration.tablineMode) {
+  | Tabs =>
+    List.map(
+      ({tab, name}: Tabline.t) =>
+        State.Tab.{id: tab, title: name, active: false},
+      tabs,
+    )
+  | _ => state.tabs
+  };
+};
+
+let showTablineBuffers = (state: State.t, buffers: list(buffer)) => {
+  switch (state.configuration.tablineMode) {
+  | Buffers =>
+    List.map(
+      ({id, filepath, _}) =>
+        State.Tab.{
+          id,
+          title: filepath |> truncateFilepath,
+          active: state.activeBufferId == id,
+        },
+      buffers,
+    )
+  | _ => state.tabs
+  };
+};
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
@@ -13,7 +46,17 @@ let reduce: (State.t, Actions.t) => State.t =
       let ret: State.t = {...s, mode: m};
       ret;
     | CursorMove(b) => {...s, cursorPosition: b}
-    | BufferUpdate(bu) => {...s, buffer: Buffer.update(s.buffer, bu)}
+    | BufferEnter(bs) => {
+        ...s,
+        activeBufferId: bs.bufferId,
+        buffers: BufferMap.update(s.buffers, bs.buffers),
+        tabs: showTablineBuffers(s, bs.buffers),
+      }
+    | BufferUpdate(bu) => {
+        ...s,
+        activeBuffer: Buffer.update(s.activeBuffer, bu),
+      }
+    | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | SetEditorSize(size) => {...s, size}
     | CommandlineShow(commandline) => {...s, commandline}

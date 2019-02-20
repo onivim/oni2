@@ -31,7 +31,7 @@ let init = app => {
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
-      notifySizeChanged: (~width, ~height, ()) => {
+      notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,
           Core.Actions.SetEditorSize(
@@ -41,8 +41,7 @@ let init = app => {
               (),
             ),
           ),
-        );
-      },
+        ),
     });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
@@ -61,7 +60,10 @@ let init = app => {
     Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let nvim = NeovimProcess.start(~args=[|"-u", initVimPath, "--embed"|]);
+  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+
+  let nvim =
+    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
@@ -74,13 +76,19 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  /* let buf = nvimApi.requestSync( */
-  /*   "nvim_get_current_buf", */
-  /*   Msgpck.List([]), */
-  /* ); */
-  /* prerr_endline ("BUF: " ++ Msgpck.show(buf)); */
+  let bufferAttach = bufferId =>
+    ignore(
+      nvimApi.requestSync(
+        "nvim_buf_attach",
+        Msgpck.List([
+          Msgpck.Int(bufferId),
+          Msgpck.Bool(true),
+          Msgpck.Map([]),
+        ]),
+      ),
+    );
 
-  let setFont = (fontFamily, fontSize) => {
+  let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
       Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
@@ -117,15 +125,8 @@ let init = app => {
       },
       _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
     );
-  };
 
   setFont("FiraCode-Regular.ttf", 14);
-
-  let _ =
-    nvimApi.requestSync(
-      "nvim_buf_attach",
-      Msgpck.List([Msgpck.Int(0), Msgpck.Bool(true), Msgpck.Map([])]),
-    );
 
   let _ =
     Event.subscribe(
@@ -184,11 +185,18 @@ let init = app => {
           | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
             Core.Actions.ChangeMode(Commandline)
+          | TablineUpdate(tabs) => Core.Actions.TablineUpdate(tabs)
           | ModeChanged(_) => Core.Actions.ChangeMode(Other)
           | CursorMoved(c) =>
             Core.Actions.CursorMove(
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
+          | BufferEnter(b) =>
+            bufferAttach(b.bufferId);
+            Core.Actions.BufferEnter({
+              bufferId: b.bufferId,
+              buffers: NeovimBuffer.getBufferList(nvimApi),
+            });
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(

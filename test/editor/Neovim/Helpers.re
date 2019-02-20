@@ -1,6 +1,12 @@
+open Oni_Core;
 open Oni_Neovim;
 
-let repeat = (~iterations=3, f) => {
+let getNeovimPath = () => {
+  let { neovimPath, _}: Setup.t = Setup.init();
+  neovimPath;
+}
+
+let repeat = (times: int, f) => {
   let count = ref(0);
 
   while (count^ < iterations) {

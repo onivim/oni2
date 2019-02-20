@@ -9,6 +9,8 @@
 
 open Types;
 
+module Core = Oni_Core;
+
 module BufferLinesNotification = {
   type t = {
     changedTick: int,
@@ -18,12 +20,11 @@ module BufferLinesNotification = {
   };
 
   let make = (changedTick, firstLine, lastLine, lineData) => {
-    let f = s => {
+    let f = s =>
       switch (s) {
       | Msgpck.String(v) => v
       | _ => ""
       };
-    };
 
     let lines = List.map(f, lineData);
 
@@ -32,23 +33,29 @@ module BufferLinesNotification = {
   };
 };
 
+module BufferEnterNotification = {
+  type t = {bufferId: int};
+};
+
 type t =
   | Redraw
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
+  | BufferEnter(BufferEnterNotification.t)
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
+  | TablineUpdate(Tabline.tabs)
   | Ignored;
 
 type commandlineInput = {input: string};
 
 module M = Msgpck;
 
-let showCommandline = args => {
+let showCommandline = args =>
   /*
      Structure of a cmdline_show response
      [cmdline_show, [[[attr, inputStr]], position, firstCharacter, prompt, indentAmount, level]]
@@ -87,9 +94,8 @@ let showCommandline = args => {
     });
   | _ => Ignored
   };
-};
 
-let hideCommandline = _msgs => {
+let hideCommandline = _msgs =>
   CommandlineHide({
     content: "",
     firstC: "",
@@ -99,9 +105,8 @@ let hideCommandline = _msgs => {
     level: 0,
     show: false,
   });
-};
 
-let showWildmenu = (args: list(M.t)) => {
+let showWildmenu = (args: list(M.t)) =>
   /* [[wildmenu_show, [[list items]]] */
   switch (args) {
   | [M.List(i)] =>
@@ -120,22 +125,19 @@ let showWildmenu = (args: list(M.t)) => {
     WildmenuShow({items, selected: 0, show: true});
   | _ => Ignored
   };
-};
 
-let hideWildmenu = _msgs => {
+let hideWildmenu = _msgs =>
   WildmenuHide({items: [], show: false, selected: 0});
-};
 
-let updateWildmenu = selected => {
+let updateWildmenu = selected =>
   /* [wildmenu_select, [0]] */
   switch (selected) {
   | M.Int(s) => WildmenuSelected(s)
   | _ => Ignored
   };
-};
 
 let parseRedraw = (msgs: list(Msgpck.t)) => {
-  let p = (msg: Msgpck.t) => {
+  let p = (msg: Msgpck.t) =>
     switch (msg) {
     | M.List([M.String("cmdline_show"), M.List(msgs)]) =>
       showCommandline(msgs)
@@ -147,6 +149,9 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       updateWildmenu(selected)
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
+    | M.List([M.String("tabline_update"), M.List(msgs)]) =>
+      let tabs = NeovimTab.parseTablineUpdate(msgs);
+      TablineUpdate(tabs);
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),
@@ -154,7 +159,6 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       ModeChanged(mode)
     | _ => Ignored
     };
-  };
 
   msgs |> List.map(p);
 };
@@ -175,6 +179,11 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
     };
 
   switch (autocmd) {
+  | "BufEnter" =>
+    switch (args) {
+    | [M.Int(bufferId), _, _] => BufferEnter({bufferId: bufferId})
+    | _ => Ignored
+    }
   | "CursorMoved" => CursorMoved(context)
   | "CursorMovedI" => CursorMoved(context)
   | _ => Ignored
@@ -219,7 +228,7 @@ let parse = (t: string, msg: Msgpck.t) => {
   msgs |> List.filter(m => m !== Ignored);
 };
 
-let show = (n: t) => {
+let show = (n: t) =>
   switch (n) {
   | Redraw => "redraw"
   | ModeChanged(s) => "mode changed: " ++ s
@@ -227,4 +236,3 @@ let show = (n: t) => {
   | BufferLines(_) => "buffer lines"
   | _ => "unknown"
   };
-};

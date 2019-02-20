@@ -33,3 +33,12 @@ let getFileContents = (path, ~handler) => {
 
   contents^;
 };
+
+let convertUTF8string = str =>
+  CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
+
+let convertNeovimExtType = (buffer: Msgpck.t) =>
+  switch (buffer) {
+  | Msgpck.Ext(kind, id) => Some((kind, convertUTF8string(id)))
+  | _ => None
+  };
