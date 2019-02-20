@@ -12,8 +12,8 @@ type t = {
 };
 
 let ofLines = (lines: array(string)) => {
-  let ret: t = {metadata: BufferMetadata.create(), lines};
-  ret;
+  metadata: BufferMetadata.create(), 
+  lines,
 };
 
 let show = (b: t) => {
@@ -24,8 +24,8 @@ let show = (b: t) => {
 };
 
 let ofMetadata = (metadata: BufferMetadata.t) => {
-  let ret: t = {metadata, lines: [||]};
-  ret;
+  metadata, 
+  lines: [||],
 };
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {

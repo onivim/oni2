@@ -45,14 +45,8 @@ let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) => {
 let applyBufferUpdate =
     (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) => {
   switch (buffer) {
-  | None =>
-    print_endline("applyBufferUpdate: NO BUFFER FOUND!");
-    None;
-  | Some(b) =>
-    print_endline(
-      "applyBufferUpdate: Buffer update! " ++ string_of_int(bufferUpdate.id),
-    );
-    Some(Buffer.update(b, bufferUpdate));
+  | None => None
+  | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 };
 
