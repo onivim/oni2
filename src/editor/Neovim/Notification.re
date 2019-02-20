@@ -10,16 +10,18 @@
 open Types;
 
 module Core = Oni_Core;
+module Utility = Oni_Core.Utility;
 
 module BufferLinesNotification = {
   type t = {
+    id: int,
     changedTick: int,
     firstLine: int,
     lastLine: int,
     lines: list(string),
   };
 
-  let make = (changedTick, firstLine, lastLine, lineData) => {
+  let make = (id, changedTick, firstLine, lastLine, lineData) => {
     let f = s =>
       switch (s) {
       | Msgpck.String(v) => v
@@ -28,7 +30,7 @@ module BufferLinesNotification = {
 
     let lines = List.map(f, lineData);
 
-    let ret: t = {changedTick, firstLine, lastLine, lines};
+    let ret: t = {id, changedTick, firstLine, lastLine, lines};
     ret;
   };
 };
@@ -205,7 +207,7 @@ let parse = (t: string, msg: Msgpck.t) => {
     | (
         "nvim_buf_lines_event",
         M.List([
-          _,
+          M.Ext(_, id), 
           M.Int(changedTick),
           M.Int(firstLine),
           M.Int(lastLine),
@@ -215,6 +217,7 @@ let parse = (t: string, msg: Msgpck.t) => {
       ) => [
         BufferLines(
           BufferLinesNotification.make(
+            Utility.convertUTF8string(id),
             changedTick,
             firstLine,
             lastLine,

@@ -130,6 +130,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let activeBuffer = Oni_Core.BufferMap.getBuffer(state.activeBufferId, state.buffers);
     let lineCount = Array.length(activeBuffer.lines);
+    print_endline ("EditorSurface::createElement - buffer id: " ++ Buffer.show(activeBuffer));
 
     let lineNumberWidth =
       LineNumber.getLineNumberPixelWidth(

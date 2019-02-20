@@ -19,6 +19,10 @@ let ofLines = (lines: array(string)) => {
   ret;
 };
 
+let show = (b: t) => {
+    "Buffer [" ++ string_of_int(b.metadata.id) ++ "]: " ++ String.concat("\n", Array.to_list(b.lines));
+}
+
 let ofMetadata = (metadata: BufferMetadata.t) => {
     let ret: t = {
         metadata,
