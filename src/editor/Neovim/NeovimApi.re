@@ -127,16 +127,7 @@ let make = (msgpack: MsgpackTransport.t) => {
       clearQueuedResponses();
       msgpack.write(request);
 
-      let startTime = Unix.gettimeofday();
-      prerr_endline("starting request: " ++ string_of_float(startTime));
       Utility.waitForCondition(() => List.length(getQueuedResponses()) >= 1);
-      let endTime = Unix.gettimeofday();
-      prerr_endline(
-        "ending request: "
-        ++ string_of_float(endTime)
-        ++ "|"
-        ++ string_of_float(endTime -. startTime),
-      );
 
       let matchingResponse =
         List.filter(m => m.responseId == requestId, queuedResponses^)

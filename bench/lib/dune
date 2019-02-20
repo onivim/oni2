@@ -1,0 +1,6 @@
+(library
+    (name OniBench)
+    (public_name OniBench.lib)
+    (ocamlopt_flags -linkall)
+    (libraries Oni_Core Oni_Neovim Oni_UI reperf.lib)
+)

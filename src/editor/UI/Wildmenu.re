@@ -5,8 +5,6 @@ open Oni_Core;
 
 let component = React.component("wildmenu");
 
-let menuFontSize = 20;
-
 let containerStyles = (theme: Theme.t) =>
   Style.[
     width(400),
@@ -24,20 +22,22 @@ let containerStyles = (theme: Theme.t) =>
   ];
 
 let createElement =
-    (~children as _, ~wildmenu: Types.Wildmenu.t, ~theme: Theme.t, ()) => {
+    (~children as _, ~wildmenu: Types.Wildmenu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let element =
       wildmenu.show
         ? <ScrollView style={containerStyles(theme)}>
             ...{List.mapi(
-              (index, item) => {
-                let selected = index == wildmenu.selected;
-                <MenuItem selected theme label=item />;
-              },
+              (index, item) =>
+                <MenuItem
+                  theme
+                  label=item
+                  selected={index == wildmenu.selected}
+                  style=Style.[fontSize(16)]
+                />,
               wildmenu.items,
             )}
           </ScrollView>
         : React.listToElement([]);
     (hooks, element);
   });
-};

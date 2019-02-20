@@ -6,6 +6,7 @@
 
 module Actions = Actions;
 module Buffer = Buffer;
+module BufferMap = BufferMap;
 module Constants = Constants;
 module LineNumber = LineNumber;
 module Log = Log;

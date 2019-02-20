@@ -5,6 +5,7 @@
  */
 
 open Types;
+
 module Tab = {
   type t = {
     id: int,
@@ -18,7 +19,8 @@ module Tab = {
 type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
-  buffer: Buffer.t,
+  buffers: BufferMap.t,
+  activeBufferId: int,
   editorFont: EditorFont.t,
   cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
@@ -46,14 +48,15 @@ let create: unit => t =
       selected: 0,
       show: false,
     },
-    buffer: Buffer.ofLines([||]),
+    activeBufferId: 0,
+    buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
         ~fontSize=14,
-        ~measuredWidth=0,
-        ~measuredHeight=0,
+        ~measuredWidth=1,
+        ~measuredHeight=1,
         (),
       ),
     tabs: [Tab.create(0, "[No Name]")],
