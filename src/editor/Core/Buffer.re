@@ -64,8 +64,14 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
 };
 
 let update = (buf: t, update: BufferUpdate.t) =>
-  if (update.version > buf.version) {
-    {...buf, lines: applyUpdate(buf.lines, update), version: update.version};
+  if (update.version > buf.metadata.version) {
+
+      let metadata = {
+        ...buf.metadata,
+        version: update.version,
+      };
+
+    { metadata, lines: applyUpdate(buf.lines, update)};
   } else {
     buf;
   };

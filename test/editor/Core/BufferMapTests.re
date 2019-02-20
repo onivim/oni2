@@ -16,23 +16,9 @@ describe("Buffer List Tests", ({test, _}) => {
     "Bufferlist should take a list of buffers and add them to the map",
     ({expect}) => {
     let bufferlist = BufferMap.empty;
-    let testBuffers: list(BufferMetadata.t) = [
-      {
-        filePath: Some("/test.re"),
-        id: 0,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
-      {
-        filePath: Some("/test2.re"),
-        id: 1,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
+    let testBuffers: list(BufferMetadata.t) =  [
+      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"),()),
+      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"),())
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
     expect.int(BufferMap.Buffers.cardinal(added)).toBe(2);
@@ -47,22 +33,8 @@ describe("Buffer List Tests", ({test, _}) => {
   test("Bufferlist should override duplicate buffer Ids", ({expect}) => {
     let bufferlist = BufferMap.empty;
     let testBuffers: list(BufferMetadata.t) = [
-      {
-        filePath: Some("/test.re"),
-        id: 1,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
-      {
-        filePath: Some("/test2.re"),
-        id: 0,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
+      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"),()),
+      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"),())
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
 
@@ -83,6 +55,7 @@ describe("Buffer List Tests", ({test, _}) => {
           hidden: false,
           bufType: Empty,
           fileType: None,
+          version: 0,
         }),
         bufferlist,
       );

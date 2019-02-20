@@ -128,7 +128,7 @@ module BufferUpdate = {
     version: int,
   };
 
-  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version ()) => {
+  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
     id,
     startLine,
     endLine,
