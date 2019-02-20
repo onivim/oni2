@@ -207,7 +207,7 @@ let parse = (t: string, msg: Msgpck.t) => {
     | (
         "nvim_buf_lines_event",
         M.List([
-          M.Ext(_, id), 
+          M.Ext(_, id),
           M.Int(changedTick),
           M.Int(firstLine),
           M.Int(lastLine),

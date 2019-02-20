@@ -49,12 +49,7 @@ let create: unit => t =
       show: false,
     },
     activeBufferId: 0,
-    buffers:
-      BufferMap.Buffers.add(
-        0,
-        Buffer.ofLines([||]),
-        BufferMap.empty,
-      ),
+    buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(

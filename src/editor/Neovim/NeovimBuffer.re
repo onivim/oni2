@@ -109,13 +109,13 @@ let getBufferList = (api: NeovimApi.t) => {
             let newBuffers =
               [
                 BufferMetadata.create(
-                    ~id,
-                    ~modified=false,
-                    ~hidden=false,
-                    ~bufType=Empty,
-                    ~fileType=None,
-                    ~filePath=Some("[No Name]"),
-                    (),
+                  ~id,
+                  ~modified=false,
+                  ~hidden=false,
+                  ~bufType=Empty,
+                  ~fileType=None,
+                  ~filePath=Some("[No Name]"),
+                  (),
                 ),
                 ...bufs,
               ]

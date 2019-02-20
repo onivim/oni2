@@ -22,20 +22,18 @@ let update = Buffers.update;
 
 let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) =>
   List.fold_left(
-    (m: t, metadata: BufferMetadata.t) => {
-        Buffers.update(metadata.id, (original) => {
-            switch (original) {
-            | None => Some(Buffer.ofMetadata(metadata))
-            | Some(v) => Some({
-                ...v,
-                metadata,
-            }: Buffer.t)
-            }
-        }, m);
-    },
+    (m: t, metadata: BufferMetadata.t) =>
+      Buffers.update(
+        metadata.id,
+        original =>
+          switch (original) {
+          | None => Some(Buffer.ofMetadata(metadata))
+          | Some(v) => Some({...v, metadata}: Buffer.t)
+          },
+        m,
+      ),
     buffersMap,
     newBuffers,
   );
 
-let getBuffer = (id, map) =>
-  Buffers.find(id, map);
+let getBuffer = (id, map) => Buffers.find(id, map);

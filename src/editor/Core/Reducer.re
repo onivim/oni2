@@ -8,10 +8,10 @@ open Actions;
 open Types;
 
 let truncateFilepath = path => {
-    switch (path) {
-    | Some(p) => Filename.basename(p);
-    | None => ""
-    }
+  switch (path) {
+  | Some(p) => Filename.basename(p)
+  | None => ""
+  };
 };
 
 let showTablineTabs = (state: State.t, tabs) => {
@@ -42,17 +42,18 @@ let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) => {
   };
 };
 
-let applyBufferUpdate = (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) => {
-    switch (buffer) {
-    | None => {
-       print_endline ("applyBufferUpdate: NO BUFFER FOUND!"); 
-       None;
-    }
-    | Some(b) => {
-       print_endline ("applyBufferUpdate: Buffer update! " ++ string_of_int(bufferUpdate.id)); 
-        Some(Buffer.update(b, bufferUpdate))
-    }
-    }
+let applyBufferUpdate =
+    (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) => {
+  switch (buffer) {
+  | None =>
+    print_endline("applyBufferUpdate: NO BUFFER FOUND!");
+    None;
+  | Some(b) =>
+    print_endline(
+      "applyBufferUpdate: Buffer update! " ++ string_of_int(bufferUpdate.id),
+    );
+    Some(Buffer.update(b, bufferUpdate));
+  };
 };
 
 let reduce: (State.t, Actions.t) => State.t =

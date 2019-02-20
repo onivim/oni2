@@ -12,24 +12,21 @@ type t = {
 };
 
 let ofLines = (lines: array(string)) => {
-  let ret: t = {
-      metadata: BufferMetadata.create(),
-      lines
-  };
+  let ret: t = {metadata: BufferMetadata.create(), lines};
   ret;
 };
 
 let show = (b: t) => {
-    "Buffer [" ++ string_of_int(b.metadata.id) ++ "]: " ++ String.concat("\n", Array.to_list(b.lines));
-}
+  "Buffer ["
+  ++ string_of_int(b.metadata.id)
+  ++ "]: "
+  ++ String.concat("\n", Array.to_list(b.lines));
+};
 
 let ofMetadata = (metadata: BufferMetadata.t) => {
-    let ret: t = {
-        metadata,
-        lines: [||],
-    };
-    ret;
-}
+  let ret: t = {metadata, lines: [||]};
+  ret;
+};
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {
   let len = Array.length(lines);

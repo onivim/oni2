@@ -81,25 +81,25 @@ let getBufType = bt =>
   };
 
 module BufferMetadata = {
-
   type t = {
-  filePath: option(string),
-  fileType: option(string),
-  bufType: buftype,
-  modified: bool,
-  hidden: bool,
-  id: int,
-  }
+    filePath: option(string),
+    fileType: option(string),
+    bufType: buftype,
+    modified: bool,
+    hidden: bool,
+    id: int,
+  };
 
-  let create = (
-    ~filePath=None,
-    ~fileType=None,
-    ~bufType=Empty,
-    ~id=0,
-    ~hidden=false,
-    ~modified=false,
-    (),
-  ) => {
+  let create =
+      (
+        ~filePath=None,
+        ~fileType=None,
+        ~bufType=Empty,
+        ~id=0,
+        ~hidden=false,
+        ~modified=false,
+        (),
+      ) => {
     filePath,
     fileType,
     bufType,
