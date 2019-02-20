@@ -4,7 +4,7 @@ open Oni_Core;
 
 let component = React.component("commandline");
 
-let cmdFontSize = 20;
+let cmdFontSize = 15;
 let cmdFontColor = Colors.white;
 
 let cmdTextStyles =
@@ -13,14 +13,13 @@ let cmdTextStyles =
     fontSize(cmdFontSize),
     color(cmdFontColor),
     textWrap(TextWrapping.WhitespaceWrap),
-    marginVertical(8),
   ];
 
 /*
    TODO: Flow text around a "cursor"
  */
 
-let getStringParts = (index, str) => {
+let getStringParts = (index, str) =>
   switch (index) {
   | 0 => ("", str)
   | _ =>
@@ -28,15 +27,14 @@ let getStringParts = (index, str) => {
     let strEnd = Str.string_after(str, index);
     (strBeginning, strEnd);
   };
-};
 
 let createElement =
-    (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) => {
+    (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
-    command.show
-      ? (
+    command.show ?
+      (
         hooks,
         <View
           style=Style.[
@@ -46,6 +44,7 @@ let createElement =
             flexDirection(`Row),
             alignItems(`Center),
             marginBottom(20),
+            paddingVertical(8),
             boxShadow(
               ~xOffset=-15.,
               ~yOffset=5.,
@@ -61,15 +60,12 @@ let createElement =
           <View
             style=Style.[
               width(2),
-              alignSelf(`FlexEnd),
               height(cmdFontSize),
               backgroundColor(cmdFontColor),
-              marginVertical(8),
             ]
           />
           <Text style=cmdTextStyles text=endStr />
         </View>,
-      )
-      : (hooks, React.listToElement([]));
+      ) :
+      (hooks, React.listToElement([]));
   });
-};
