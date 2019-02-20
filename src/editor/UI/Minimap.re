@@ -12,7 +12,7 @@ open Oni_Core.TokenizedBufferView;
 open Types;
 
 let tokensToElement =
-    (virtualLineNumber: int, tokens: list(Tokenizer.t), theme: Theme.t) => {
+    (tokens: list(Tokenizer.t), theme: Theme.t) => {
   let f = (token: Tokenizer.t) => {
     let tokenWidth =
       Index.toZeroBasedInt(token.endPosition)
@@ -37,11 +37,7 @@ let tokensToElement =
     Style.[
       position(`Absolute),
       top(
-        (
-          Constants.default.minimapCharacterHeight
-          + Constants.default.minimapLineSpacing
-        )
-        * virtualLineNumber,
+            0
       ),
     ];
 
@@ -52,7 +48,6 @@ let tokensToElement =
 
 let renderLine = (theme, b: BufferViewLine.t) => {
   tokensToElement(
-    Index.toZeroBasedInt(b.virtualLineNumber),
     b.tokens,
     theme,
   );

@@ -66,7 +66,6 @@ let createElement =
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-        print_endline ("delta: " ++ string_of_float(wheelEvent.deltaY));
         setV(max(v - (int_of_float(wheelEvent.deltaY) * 25), 0));
     };
 
