@@ -33,8 +33,8 @@ let createElement =
   component(hooks => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
-    command.show ?
-      (
+    command.show
+      ? (
         hooks,
         <View
           style=Style.[
@@ -66,6 +66,6 @@ let createElement =
           />
           <Text style=cmdTextStyles text=endStr />
         </View>,
-      ) :
-      (hooks, React.listToElement([]));
+      )
+      : (hooks, React.listToElement([]));
   });

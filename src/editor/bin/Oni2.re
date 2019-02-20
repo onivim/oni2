@@ -200,6 +200,7 @@ let init = app => {
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(
+                ~id=bc.id,
                 ~startLine=bc.firstLine,
                 ~endLine=bc.lastLine,
                 ~lines=bc.lines,
