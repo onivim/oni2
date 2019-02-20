@@ -63,7 +63,12 @@ let tokensToElement =
   };
 
   let lineStyle =
-    Style.[position(`Absolute), top(fontHeight * virtualLineNumber), left(0), right(0)];
+    Style.[
+      position(`Absolute),
+      top(fontHeight * virtualLineNumber),
+      left(0),
+      right(0),
+    ];
 
   let lineNumberStyle =
     Style.[
@@ -112,7 +117,7 @@ let tokensToElement =
         )}
       />
     </View>
-    <View style=lineContentsStyle > ...tokens </View>
+    <View style=lineContentsStyle> ...tokens </View>
   </View>;
 };
 
