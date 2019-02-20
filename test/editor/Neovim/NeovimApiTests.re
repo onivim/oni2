@@ -2,22 +2,7 @@ open Oni_Core;
 open Oni_Neovim;
 open Rench;
 open TestFramework;
-
-let withNeovimApi = f => {
-  let {neovimPath, _}: Setup.t = Setup.init();
-  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
-  let msgpackTransport =
-    MsgpackTransport.make(
-      ~onData=nvim.stdout.onData,
-      ~write=nvim.stdin.write,
-      (),
-    );
-  let nvimApi = NeovimApi.make(msgpackTransport);
-
-  f(nvimApi);
-
-  msgpackTransport.close();
-};
+open Helpers;
 
 describe("NeovimApi", ({describe, test, _}) => {
   test("nvim__id", ({expect}) =>
@@ -39,29 +24,26 @@ describe("NeovimApi", ({describe, test, _}) => {
     let count = ref(0);
 
     withNeovimApi(api =>
-      Helpers.repeat(
-        10,
-        () => {
-          let result =
-            api.requestSync(
-              "nvim__id",
+      repeat(() => {
+        let result =
+          api.requestSync(
+            "nvim__id",
+            Msgpck.List([
               Msgpck.List([
-                Msgpck.List([
-                  Msgpck.String("hey, neovim!"),
-                  Msgpck.String("hey again, neovim!"),
-                ]),
+                Msgpck.String("hey, neovim!"),
+                Msgpck.String("hey again, neovim!"),
               ]),
-            );
+            ]),
+          );
 
-          switch (result) {
-          | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>
-            expect.string(msg1).toEqual("hey, neovim!");
-            expect.string(msg2).toEqual("hey again, neovim!");
-          | _ => expect.string("FAIL").toEqual("")
-          };
-          count := count^ + 1;
-        },
-      )
+        switch (result) {
+        | Msgpck.List([Msgpck.String(msg1), Msgpck.String(msg2)]) =>
+          expect.string(msg1).toEqual("hey, neovim!");
+          expect.string(msg2).toEqual("hey again, neovim!");
+        | _ => expect.string("FAIL").toEqual("")
+        };
+        count := count^ + 1;
+      })
     );
   });
 
@@ -97,7 +79,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("ui_attach", ({test, _}) =>
     test("basic ui_attach / ui_detach", ({expect}) =>
-      Helpers.repeat(10, () =>
+      repeat(() =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 
@@ -106,7 +88,7 @@ describe("NeovimApi", ({describe, test, _}) => {
               notifications := List.append([n], notifications^)
             );
 
-          let _result = Helpers.uiAttach(api);
+          let _result = uiAttach(api);
 
           let f = () => {
             api.pump();
@@ -129,7 +111,7 @@ describe("NeovimApi", ({describe, test, _}) => {
 
   describe("basic buffer edit", ({test, _}) =>
     test("modify lines in buffer", ({expect}) =>
-      Helpers.repeat(10, () =>
+      repeat(() =>
         withNeovimApi(api => {
           let notifications: ref(list(NeovimApi.notification)) = ref([]);
 
@@ -138,7 +120,7 @@ describe("NeovimApi", ({describe, test, _}) => {
               notifications := List.append([n], notifications^)
             );
 
-          let _result = Helpers.uiAttach(api);
+          let _result = uiAttach(api);
 
           let _response =
             api.requestSync(

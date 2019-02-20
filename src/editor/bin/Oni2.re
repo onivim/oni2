@@ -76,18 +76,6 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  let bufferAttach = bufferId =>
-    ignore(
-      nvimApi.requestSync(
-        "nvim_buf_attach",
-        Msgpck.List([
-          Msgpck.Int(bufferId),
-          Msgpck.Bool(true),
-          Msgpck.Map([]),
-        ]),
-      ),
-    );
-
   let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
       Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
@@ -192,7 +180,7 @@ let init = app => {
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
           | BufferEnter(b) =>
-            bufferAttach(b.bufferId);
+            neovimProtocol.bufAttach(b.bufferId);
             Core.Actions.BufferEnter({
               bufferId: b.bufferId,
               buffers: NeovimBuffer.getBufferList(nvimApi),
@@ -204,6 +192,7 @@ let init = app => {
                 ~startLine=bc.firstLine,
                 ~endLine=bc.lastLine,
                 ~lines=bc.lines,
+                ~version=bc.changedTick,
                 (),
               ),
             )

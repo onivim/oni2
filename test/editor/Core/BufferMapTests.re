@@ -6,10 +6,11 @@ open Oni_Core.Types;
 module BufferMap = Oni_Core.BufferMap;
 module Buffer = Oni_Core.Buffer;
 
-let getOrFail = (v: option(string)) => switch(v) {
-| Some(v) => v
-| None => "failed - no buffer was specified"
-};
+let getOrFail = (v: option(string)) =>
+  switch (v) {
+  | Some(v) => v
+  | None => "failed - no buffer was specified"
+  };
 
 describe("Buffer List Tests", ({test, _}) => {
   test(
@@ -17,22 +18,8 @@ describe("Buffer List Tests", ({test, _}) => {
     ({expect}) => {
     let bufferlist = BufferMap.empty;
     let testBuffers: list(BufferMetadata.t) = [
-      {
-        filePath: Some("/test.re"),
-        id: 0,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
-      {
-        filePath: Some("/test2.re"),
-        id: 1,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
+      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"), ()),
+      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
     expect.int(BufferMap.Buffers.cardinal(added)).toBe(2);
@@ -47,26 +34,15 @@ describe("Buffer List Tests", ({test, _}) => {
   test("Bufferlist should override duplicate buffer Ids", ({expect}) => {
     let bufferlist = BufferMap.empty;
     let testBuffers: list(BufferMetadata.t) = [
-      {
-        filePath: Some("/test.re"),
-        id: 1,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
-      {
-        filePath: Some("/test2.re"),
-        id: 0,
-        modified: false,
-        hidden: false,
-        bufType: Empty,
-        fileType: None,
-      },
+      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"), ()),
+      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
 
-    expect.string(BufferMap.Buffers.find(0, added).metadata.filePath |> getOrFail).toMatch(
+    expect.string(
+      BufferMap.Buffers.find(0, added).metadata.filePath |> getOrFail,
+    ).
+      toMatch(
       "/test2.re",
     );
   });
@@ -83,10 +59,13 @@ describe("Buffer List Tests", ({test, _}) => {
           hidden: false,
           bufType: Empty,
           fileType: None,
+          version: 0,
         }),
         bufferlist,
       );
     let activeBuffer = BufferMap.getBuffer(4, updated);
-    expect.string(activeBuffer.metadata.filePath |> getOrFail).toMatch("/myfile.js");
+    expect.string(activeBuffer.metadata.filePath |> getOrFail).toMatch(
+      "/myfile.js",
+    );
   });
 });

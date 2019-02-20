@@ -88,6 +88,7 @@ module BufferMetadata = {
     modified: bool,
     hidden: bool,
     id: int,
+    version: int,
   };
 
   let create =
@@ -98,6 +99,7 @@ module BufferMetadata = {
         ~id=0,
         ~hidden=false,
         ~modified=false,
+        ~version=0,
         (),
       ) => {
     filePath,
@@ -106,6 +108,7 @@ module BufferMetadata = {
     id,
     hidden,
     modified,
+    version,
   };
 };
 
@@ -122,13 +125,15 @@ module BufferUpdate = {
     startLine: int,
     endLine: int,
     lines: list(string),
+    version: int,
   };
 
-  let create = (~id=0, ~startLine, ~endLine, ~lines, ()) => {
+  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
     id,
     startLine,
     endLine,
     lines,
+    version,
   };
 };
 

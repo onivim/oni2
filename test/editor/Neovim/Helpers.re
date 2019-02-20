@@ -2,14 +2,14 @@ open Oni_Core;
 open Oni_Neovim;
 
 let getNeovimPath = () => {
-  let { neovimPath, _}: Setup.t = Setup.init();
+  let {neovimPath, _}: Setup.t = Setup.init();
   neovimPath;
-}
+};
 
-let repeat = (times: int, f) => {
+let repeat = (~iterations: int=5, f) => {
   let count = ref(0);
 
-  while (count^ < times) {
+  while (count^ < iterations) {
     f();
     count := count^ + 1;
   };
@@ -33,4 +33,28 @@ let uiAttach = (api: NeovimApi.t) => {
       ]),
     ]),
   );
+};
+
+let withNeovimApi = f => {
+  let {neovimPath, _}: Setup.t = Setup.init();
+  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
+  let msgpackTransport =
+    MsgpackTransport.make(
+      ~onData=nvim.stdout.onData,
+      ~write=nvim.stdin.write,
+      (),
+    );
+  let nvimApi = NeovimApi.make(msgpackTransport);
+
+  f(nvimApi);
+
+  msgpackTransport.close();
+};
+
+let withNeovimProtocol = f => {
+  withNeovimApi(nvimApi => {
+    let neovimProtocol = NeovimProtocol.make(nvimApi);
+    let _ = uiAttach(nvimApi);
+    f((nvimApi, neovimProtocol));
+  });
 };

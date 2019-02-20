@@ -4,7 +4,6 @@ open TestFramework;
 describe("NeovimProcess", ({test, _}) =>
   test("version", ({expect}) => {
     let neovimPath = Helpers.getNeovimPath();
-
     let version = NeovimProcess.version(~neovimPath);
 
     let expectedVersionString = "NVIM v0.3.3";
