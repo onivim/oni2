@@ -6,7 +6,7 @@ let getNeovimPath = () => {
   neovimPath;
 }
 
-let repeat = (times: int, f) => {
+let repeat = (~iterations:int=5, f) => {
   let count = ref(0);
 
   while (count^ < iterations) {
@@ -36,7 +36,8 @@ let uiAttach = (api: NeovimApi.t) => {
 };
 
 let withNeovimApi = f => {
-  let nvim = NeovimProcess.start(~args=[|"--embed"|]);
+  let {neovimPath, _}: Setup.t = Setup.init();
+  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,

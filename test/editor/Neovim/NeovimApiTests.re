@@ -2,22 +2,7 @@ open Oni_Core;
 open Oni_Neovim;
 open Rench;
 open TestFramework;
-
-let withNeovimApi = f => {
-  let {neovimPath, _}: Setup.t = Setup.init();
-  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"--embed"|]);
-  let msgpackTransport =
-    MsgpackTransport.make(
-      ~onData=nvim.stdout.onData,
-      ~write=nvim.stdin.write,
-      (),
-    );
-  let nvimApi = NeovimApi.make(msgpackTransport);
-
-  f(nvimApi);
-
-  msgpackTransport.close();
-};
+open Helpers;
 
 describe("NeovimApi", ({describe, test, _}) => {
   test("nvim__id", ({expect}) =>
