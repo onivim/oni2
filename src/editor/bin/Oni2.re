@@ -165,15 +165,15 @@ let init = app => {
 
   let _ = Tick.interval(_ => nvimApi.pump(), Seconds(0.));
 
-  /* let _ = */
-  /*   Event.subscribe(nvimApi.onNotification, n => */
-  /*     prerr_endline( */
-  /*       "Raw Notification: " */
-  /*       ++ n.notificationType */
-  /*       ++ " | " */
-  /*       ++ Msgpck.show(n.payload), */
-  /*     ) */
-  /*   ); */
+  let _ =
+    Event.subscribe(nvimApi.onNotification, n =>
+      prerr_endline(
+        "Raw Notification: "
+        ++ n.notificationType
+        ++ " | "
+        ++ Msgpck.show(n.payload),
+      )
+    );
 
   let _ =
     Event.subscribe(
