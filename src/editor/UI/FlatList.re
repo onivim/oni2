@@ -4,7 +4,6 @@
  * Virtualized list helper
  */
 
-/* open Oni_Core; */
 open Revery.UI;
 
 type renderFunction('a) = 'a => React.syntheticElement;
