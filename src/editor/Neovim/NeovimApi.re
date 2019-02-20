@@ -109,11 +109,10 @@ let make = (msgpack: MsgpackTransport.t) => {
 
     let f = n => Event.dispatch(onNotification, n);
 
-    /* Because of the way we queue notifications in `handleMessage`, 
-     * they come in reverse order - therefore, we need to reverse it 
+    /* Because of the way we queue notifications in `handleMessage`,
+     * they come in reverse order - therefore, we need to reverse it
      * to get the correct ordering */
-    List.rev(notifications)
-    |> List.iter(f);
+    List.rev(notifications) |> List.iter(f);
   };
 
   let requestSync: requestSyncFunction =
