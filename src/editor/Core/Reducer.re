@@ -7,48 +7,45 @@
 open Actions;
 open Types;
 
-let truncateFilepath = path => {
+let truncateFilepath = path =>
   switch (path) {
   | Some(p) => Filename.basename(p)
   | None => ""
   };
-};
 
-let showTablineTabs = (state: State.t, tabs) => {
+let showTablineTabs = (state: State.t, tabs) =>
   switch (state.configuration.tablineMode) {
   | Tabs =>
     List.map(
       ({tab, name}: Tabline.t) =>
-        State.Tab.{id: tab, title: name, active: false},
+        State.Tab.{id: tab, title: name, active: false, modified: false},
       tabs,
     )
   | _ => state.tabs
   };
-};
 
-let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) => {
+let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) =>
   switch (state.configuration.tablineMode) {
   | Buffers =>
     List.map(
-      ({id, filePath, _}: BufferMetadata.t) =>
+      ({id, filePath, modified, _}: BufferMetadata.t) =>
         State.Tab.{
           id,
           title: filePath |> truncateFilepath,
           active: state.activeBufferId == id,
+          modified,
         },
       buffers,
     )
   | _ => state.tabs
   };
-};
 
 let applyBufferUpdate =
-    (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) => {
+    (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) =>
   switch (buffer) {
   | None => None
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
-};
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
@@ -67,6 +64,12 @@ let reduce: (State.t, Actions.t) => State.t =
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
+    | BufferWritePost(bs) => {
+        ...s,
+        activeBufferId: bs.bufferId,
+        buffers: BufferMap.update(s.buffers, bs.buffers),
+        tabs: showTablineBuffers(s, bs.buffers),
+      }
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,

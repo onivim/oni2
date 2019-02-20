@@ -11,9 +11,10 @@ module Tab = {
     id: int,
     title: string,
     active: bool,
+    modified: bool,
   };
 
-  let create = (id, title) => {id, title, active: false};
+  let create = (id, title) => {id, title, active: false, modified: false};
 };
 
 type t = {

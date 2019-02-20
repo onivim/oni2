@@ -185,6 +185,11 @@ let init = app => {
             CursorMove(
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
+          | BufferWritePost(b) =>
+            Core.Actions.BufferWritePost({
+              bufferId: b.bufferId,
+              buffers: NeovimBuffer.getBufferList(nvimApi),
+            })
           | BufferEnter(b) =>
             neovimProtocol.bufAttach(b.bufferId);
             BufferEnter({

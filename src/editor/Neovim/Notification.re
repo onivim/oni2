@@ -35,7 +35,7 @@ module BufferLinesNotification = {
   };
 };
 
-module BufferEnterNotification = {
+module BufferNotifications = {
   type t = {bufferId: int};
 };
 
@@ -44,7 +44,8 @@ type t =
   | OniCommand(string)
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
-  | BufferEnter(BufferEnterNotification.t)
+  | BufferEnter(BufferNotifications.t)
+  | BufferWritePost(BufferNotifications.t)
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
@@ -191,6 +192,11 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
     };
 
   switch (autocmd) {
+  | "BufWritePost" =>
+    switch (args) {
+    | [M.Int(bufferId), _, _] => BufferWritePost({bufferId: bufferId})
+    | _ => Ignored
+    }
   | "BufEnter" =>
     switch (args) {
     | [M.Int(bufferId), _, _] => BufferEnter({bufferId: bufferId})
