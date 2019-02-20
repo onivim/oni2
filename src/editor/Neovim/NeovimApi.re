@@ -6,8 +6,6 @@
  * - requests
  */
 
-open Revery;
-open Revery.Core;
 open Oni_Core;
 open Rench;
 
