@@ -61,6 +61,14 @@ let reduce: (State.t, Actions.t) => State.t =
     | SetEditorSize(size) => {...s, size}
     | CommandlineShow(commandline) => {...s, commandline}
     | CommandlineHide(commandline) => {...s, commandline}
+    | CommandlineUpdate((position, level)) => {
+        ...s,
+        commandline: {
+          ...s.commandline,
+          position,
+          level,
+        },
+      }
     | WildmenuShow(wildmenu) => {...s, wildmenu}
     | WildmenuHide(wildmenu) => {...s, wildmenu}
     | WildmenuSelected(selected) => {

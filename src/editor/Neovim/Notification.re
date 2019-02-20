@@ -45,6 +45,7 @@ type t =
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | CommandlineUpdate((int, int))
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
@@ -92,6 +93,12 @@ let showCommandline = args =>
       level,
       show: true,
     });
+  | _ => Ignored
+  };
+
+let updateCommandline = msgs =>
+  switch (msgs) {
+  | [M.Int(position), M.Int(level)] => CommandlineUpdate((position, level))
   | _ => Ignored
   };
 
@@ -143,6 +150,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       showCommandline(msgs)
     | M.List([M.String("cmdline_hide"), M.List(msgs)]) =>
       hideCommandline(msgs)
+    | M.List([M.String("cmdline_pos"), M.List(msgs)]) =>
+      updateCommandline(msgs)
     | M.List([M.String("wildmenu_show"), M.List(msgs)]) =>
       showWildmenu(msgs)
     | M.List([M.String("wildmenu_select"), M.List([selected])]) =>
