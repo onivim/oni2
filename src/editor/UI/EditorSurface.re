@@ -96,7 +96,7 @@ let tokensToElement =
       textWrap(Revery.Core.TextWrapping.NoWrap),
     ];
 
-  let _tokens = List.map(f, tokens);
+  let tokens = List.map(f, tokens);
 
   <View style=lineStyle>
     <View style=lineNumberStyle>
@@ -112,7 +112,7 @@ let tokensToElement =
         )}
       />
     </View>
-    <View style=lineContentsStyle > ..._tokens </View>
+    <View style=lineContentsStyle > ...tokens </View>
   </View>;
 };
 
