@@ -109,7 +109,8 @@ let make = (msgpack: MsgpackTransport.t) => {
 
     let f = n => Event.dispatch(onNotification, n);
 
-    List.iter(f, notifications);
+    List.rev(notifications)
+    |> List.iter(f);
   };
 
   let requestSync: requestSyncFunction =
