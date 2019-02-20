@@ -13,14 +13,29 @@ module Buffers =
   });
 
 let empty = Buffers.empty;
-type t = Buffers.t(buffer);
+type t = Buffers.t(Buffer.t);
 
-let update = (buffersMap, newBuffers) =>
+type mapFunction = Buffer.t => Buffer.t;
+
+let map = Buffers.map;
+let update = Buffers.update;
+
+let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) =>
   List.fold_left(
-    (m, buffer) => Buffers.add(buffer.id, buffer, m),
+    (m: t, metadata: BufferMetadata.t) => {
+        Buffers.update(metadata.id, (original) => {
+            switch (original) {
+            | None => Some(Buffer.ofMetadata(metadata))
+            | Some(v) => Some({
+                ...v,
+                metadata,
+            }: Buffer.t)
+            }
+        }, m);
+    },
     buffersMap,
     newBuffers,
   );
 
-let getActiveBuffer = (activeBufferId, map) =>
-  Buffers.find(activeBufferId, map);
+let getBuffer = (id, map) =>
+  Buffers.find(id, map);

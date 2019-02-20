@@ -13,11 +13,11 @@ let constructMetadataCalls = id => [
 
 let parseBufferContext = map =>
   List.fold_left(
-    (accum, item) =>
+    (accum: BufferMetadata.t, item) =>
       switch (item) {
       | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
           ...accum,
-          filepath: value,
+          filePath: Some(value),
         }
       | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
           ...accum,
@@ -29,11 +29,11 @@ let parseBufferContext = map =>
         }
       | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
           ...accum,
-          buftype: getBufType(buftype),
+          bufType: getBufType(buftype),
         }
-      | (Msgpck.String("filetype"), Msgpck.String(filetype)) => {
+      | (Msgpck.String("filetype"), Msgpck.String(fileType)) => {
           ...accum,
-          filetype,
+          fileType: Some(fileType),
         }
       | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
           ...accum,
@@ -41,14 +41,7 @@ let parseBufferContext = map =>
         }
       | _ => accum
       },
-    {
-      filepath: "",
-      id: 0,
-      buftype: Empty,
-      filetype: "",
-      modified: false,
-      hidden: false,
-    },
+    BufferMetadata.create(),
     map,
   );
 
@@ -115,14 +108,15 @@ let getBufferList = (api: NeovimApi.t) => {
 
             let newBuffers =
               [
-                {
-                  id,
-                  modified: false,
-                  hidden: false,
-                  buftype: Empty,
-                  filetype: "",
-                  filepath: "[No Name]",
-                },
+                BufferMetadata.create(
+                    ~id,
+                    ~modified=false,
+                    ~hidden=false,
+                    ~bufType=Empty,
+                    ~fileType=None,
+                    ~filePath=Some("[No Name]"),
+                    (),
+                ),
                 ...bufs,
               ]
               |> List.rev;

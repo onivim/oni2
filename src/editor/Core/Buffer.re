@@ -7,14 +7,25 @@
 open Types;
 
 type t = {
-  file: option(string),
+  metadata: BufferMetadata.t,
   lines: array(string),
 };
 
 let ofLines = (lines: array(string)) => {
-  let ret: t = {file: None, lines};
+  let ret: t = {
+      metadata: BufferMetadata.create(),
+      lines
+  };
   ret;
 };
+
+let ofMetadata = (metadata: BufferMetadata.t) => {
+    let ret: t = {
+        metadata,
+        lines: [||],
+    };
+    ret;
+}
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {
   let len = Array.length(lines);

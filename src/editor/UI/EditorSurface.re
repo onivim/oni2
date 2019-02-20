@@ -128,7 +128,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 
-    let lineCount = Array.length(state.activeBuffer.lines);
+    let activeBuffer = Oni_Core.BufferMap.getBuffer(state.activeBufferId, state.buffers);
+    let lineCount = Array.length(activeBuffer.lines);
 
     let lineNumberWidth =
       LineNumber.getLineNumberPixelWidth(
@@ -138,7 +139,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       );
 
     let bufferView =
-      state.activeBuffer
+      activeBuffer
       |> TokenizedBuffer.ofBuffer
       |> TokenizedBufferView.ofTokenizedBuffer;
 

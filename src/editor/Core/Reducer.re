@@ -8,7 +8,10 @@ open Actions;
 open Types;
 
 let truncateFilepath = path => {
-  Filename.basename(path);
+    switch (path) {
+    | Some(p) => Filename.basename(p);
+    | None => ""
+    }
 };
 
 let showTablineTabs = (state: State.t, tabs) => {
@@ -23,20 +26,27 @@ let showTablineTabs = (state: State.t, tabs) => {
   };
 };
 
-let showTablineBuffers = (state: State.t, buffers: list(buffer)) => {
+let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) => {
   switch (state.configuration.tablineMode) {
   | Buffers =>
     List.map(
-      ({id, filepath, _}) =>
+      ({id, filePath, _}: BufferMetadata.t) =>
         State.Tab.{
           id,
-          title: filepath |> truncateFilepath,
+          title: filePath |> truncateFilepath,
           active: state.activeBufferId == id,
         },
       buffers,
     )
   | _ => state.tabs
   };
+};
+
+let applyBufferUpdate = (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) => {
+    switch (buffer) {
+    | None => None
+    | Some(b) => Some(Buffer.update(b, bufferUpdate))
+    }
 };
 
 let reduce: (State.t, Actions.t) => State.t =
@@ -49,12 +59,12 @@ let reduce: (State.t, Actions.t) => State.t =
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
-        buffers: BufferMap.update(s.buffers, bs.buffers),
+        buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers),
       }
     | BufferUpdate(bu) => {
         ...s,
-        activeBuffer: Buffer.update(s.activeBuffer, bu),
+        buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
       }
     | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}

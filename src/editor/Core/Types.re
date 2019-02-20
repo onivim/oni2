@@ -80,30 +80,52 @@ let getBufType = bt =>
   | _ => Unknown
   };
 
-type buffer = {
-  filepath: string,
-  filetype: string,
-  buftype,
+module BufferMetadata = {
+
+  type t = {
+  filePath: option(string),
+  fileType: option(string),
+  bufType: buftype,
   modified: bool,
   hidden: bool,
   id: int,
+  }
+
+  let create = (
+    ~filePath=None,
+    ~fileType=None,
+    ~bufType=Empty,
+    ~id=0,
+    ~hidden=false,
+    ~modified=false,
+    (),
+  ) => {
+    filePath,
+    fileType,
+    bufType,
+    id,
+    hidden,
+    modified,
+  };
 };
 
 module BufferEnter = {
   type t = {
     bufferId: int,
-    buffers: list(buffer),
+    buffers: list(BufferMetadata.t),
   };
 };
 
 module BufferUpdate = {
   type t = {
+    id: int,
     startLine: int,
     endLine: int,
     lines: list(string),
   };
 
-  let create = (~startLine, ~endLine, ~lines, ()) => {
+  let create = (~id=0, ~startLine, ~endLine, ~lines, ()) => {
+    id,
     startLine,
     endLine,
     lines,
