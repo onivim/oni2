@@ -30,7 +30,7 @@ let tokensToElement =
       fontWidth: int,
       fontHeight: int,
       lineNumber: int,
-      virtualLineNumber: int,
+      _virtualLineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
@@ -65,7 +65,7 @@ let tokensToElement =
   let lineStyle =
     Style.[
       position(`Absolute),
-      top(fontHeight * virtualLineNumber),
+      top(0),
       left(0),
       right(0),
     ];
