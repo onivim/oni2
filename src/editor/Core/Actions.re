@@ -16,6 +16,7 @@ type t =
   | SetEditorSize(EditorSize.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | CommandlineUpdate((int, int))
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
