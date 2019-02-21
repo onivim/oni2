@@ -200,6 +200,7 @@ let init = app => {
           | BufferLines(bc) =>
             Core.Actions.BufferUpdate(
               Core.Types.BufferUpdate.create(
+                ~id=bc.id,
                 ~startLine=bc.firstLine,
                 ~endLine=bc.lastLine,
                 ~lines=bc.lines,
@@ -209,6 +210,7 @@ let init = app => {
           | WildmenuShow(w) => Core.Actions.WildmenuShow(w)
           | WildmenuHide(w) => Core.Actions.WildmenuHide(w)
           | WildmenuSelected(s) => Core.Actions.WildmenuSelected(s)
+          | CommandlineUpdate(u) => Core.Actions.CommandlineUpdate(u)
           | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
           | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
           | _ => Noop

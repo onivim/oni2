@@ -10,16 +10,18 @@
 open Types;
 
 module Core = Oni_Core;
+module Utility = Oni_Core.Utility;
 
 module BufferLinesNotification = {
   type t = {
+    id: int,
     changedTick: int,
     firstLine: int,
     lastLine: int,
     lines: list(string),
   };
 
-  let make = (changedTick, firstLine, lastLine, lineData) => {
+  let make = (id, changedTick, firstLine, lastLine, lineData) => {
     let f = s =>
       switch (s) {
       | Msgpck.String(v) => v
@@ -28,7 +30,7 @@ module BufferLinesNotification = {
 
     let lines = List.map(f, lineData);
 
-    let ret: t = {changedTick, firstLine, lastLine, lines};
+    let ret: t = {id, changedTick, firstLine, lastLine, lines};
     ret;
   };
 };
@@ -45,6 +47,7 @@ type t =
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
+  | CommandlineUpdate((int, int))
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
@@ -92,6 +95,12 @@ let showCommandline = args =>
       level,
       show: true,
     });
+  | _ => Ignored
+  };
+
+let updateCommandline = msgs =>
+  switch (msgs) {
+  | [M.Int(position), M.Int(level)] => CommandlineUpdate((position, level))
   | _ => Ignored
   };
 
@@ -143,6 +152,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       showCommandline(msgs)
     | M.List([M.String("cmdline_hide"), M.List(msgs)]) =>
       hideCommandline(msgs)
+    | M.List([M.String("cmdline_pos"), M.List(msgs)]) =>
+      updateCommandline(msgs)
     | M.List([M.String("wildmenu_show"), M.List(msgs)]) =>
       showWildmenu(msgs)
     | M.List([M.String("wildmenu_select"), M.List([selected])]) =>
@@ -196,7 +207,7 @@ let parse = (t: string, msg: Msgpck.t) => {
     | (
         "nvim_buf_lines_event",
         M.List([
-          _,
+          M.Ext(_, id),
           M.Int(changedTick),
           M.Int(firstLine),
           M.Int(lastLine),
@@ -206,6 +217,7 @@ let parse = (t: string, msg: Msgpck.t) => {
       ) => [
         BufferLines(
           BufferLinesNotification.make(
+            Utility.convertUTF8string(id),
             changedTick,
             firstLine,
             lastLine,

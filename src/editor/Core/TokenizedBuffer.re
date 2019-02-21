@@ -7,7 +7,7 @@
  */
 
 type t = {
-  file: option(string),
+  metadata: Types.BufferMetadata.t,
   tokenizedLines: array(list(Tokenizer.t)),
 };
 
@@ -15,6 +15,6 @@ let ofBuffer = (buffer: Buffer.t) => {
   let f: string => list(Tokenizer.t) = Tokenizer.tokenize;
   let tokenizedLines = Array.map(f, buffer.lines);
 
-  let ret: t = {tokenizedLines, file: buffer.file};
+  let ret: t = {tokenizedLines, metadata: buffer.metadata};
   ret;
 };
