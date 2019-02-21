@@ -80,7 +80,6 @@ let reduce: (State.t, Actions.t) => State.t =
       }
     | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
-    | SetEditorSize(size) => {...s, size}
     | CommandlineShow(commandline) => {...s, commandline}
     | CommandlineHide(commandline) => {...s, commandline}
     | CommandlineUpdate((position, level)) => {

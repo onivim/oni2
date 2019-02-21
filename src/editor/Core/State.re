@@ -27,7 +27,6 @@ type t = {
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
   theme: Theme.t,
-  size: EditorSize.t,
   editorView: EditorView.t,
 };
 
@@ -62,6 +61,5 @@ let create: unit => t =
       ),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
-    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
     editorView: EditorView.create(~scrollY=0, ()),
   };
