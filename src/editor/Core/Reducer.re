@@ -40,12 +40,13 @@ let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) =>
   | _ => state.tabs
   };
 
-let updateTabs = (bufId, tabs: list(State.Tab.t)) =>
-  List.fold_left(
-    (acc, tab: State.Tab.t) =>
-      tab.id === bufId ? [State.Tab.{...tab, modified: true}, ...acc] : acc,
-    [],
-    tabs,
+let updateTabs = (bufId, modified, tabs) =>
+  State.Tab.(
+    List.fold_left(
+      (acc, tab) => tab.id === bufId ? [{...tab, modified}, ...acc] : acc,
+      [],
+      tabs,
+    )
   );
 
 let applyBufferUpdate =
@@ -84,9 +85,10 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers),
       }
-    | BufferUpdate(bu) =>
-      let map = BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers);
-      {...s, buffers: map, tabs: updateTabs(bu.id, s.tabs)};
+    | BufferUpdate(bu) => {
+        ...s,
+        buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
+      }
     | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | CommandlineShow(commandline) => {...s, commandline}
@@ -107,6 +109,11 @@ let reduce: (State.t, Actions.t) => State.t =
           ...s.wildmenu,
           selected,
         },
+      }
+    | TextChanged({activeBufferId, modified})
+    | TextChangedI({activeBufferId, modified}) => {
+        ...s,
+        tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | _ => s
     };

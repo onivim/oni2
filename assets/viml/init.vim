@@ -41,14 +41,18 @@ augroup OniEventListeners
     autocmd! BufWipeout * :call OniNotifyAutocmd("BufWipeout")
     autocmd! CursorMoved * :call OniNotifyAutocmd("CursorMoved")
     autocmd! CursorMovedI * :call OniNotifyAutocmd("CursorMovedI")
+    autocmd! TextChanged * :call OniNotifyAutocmd("TextChanged")
+    autocmd! TextChangedI * :call OniNotifyAutocmd("TextChangedI")
+    autocmd! TextChangedP * :call OniNotifyAutocmd("TextChangedP")
 augroup END
 
 function OniGetContext()
     let bufferNumber = bufnr("%")
     let line = line(".")
     let column = col(".")
+    let modified = getbufvar(bufferNumber, "&modified")
 
-    let context = [bufferNumber, line, column]
+    let context = [bufferNumber, line, column, modified]
 
     return context
 endfunction

@@ -35,17 +35,15 @@ module BufferLinesNotification = {
   };
 };
 
-module BufferNotifications = {
-  type t = {bufferId: int};
-};
-
 type t =
   | Redraw
   | OniCommand(string)
   | ModeChanged(string)
+  | TextChanged(AutoCommandContext.t)
+  | TextChangedI(AutoCommandContext.t)
   | BufferLines(BufferLinesNotification.t)
-  | BufferEnter(BufferNotifications.t)
-  | BufferWritePost(BufferNotifications.t)
+  | BufferEnter(AutoCommandContext.t)
+  | BufferWritePost(AutoCommandContext.t)
   | CursorMoved(AutoCommandContext.t)
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
@@ -181,27 +179,26 @@ exception InvalidAutoCommandContext;
 let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   let context =
     switch (args) {
-    | [M.Int(activeBufferId), M.Int(cursorLine), M.Int(cursorColumn)] =>
+    | [
+        M.Int(activeBufferId),
+        M.Int(cursorLine),
+        M.Int(cursorColumn),
+        M.Int(modified),
+      ] =>
       Types.AutoCommandContext.create(
         ~activeBufferId,
         ~cursorLine=OneBasedIndex(cursorLine),
         ~cursorColumn=OneBasedIndex(cursorColumn),
-        (),
+        ~modified=modified == 1,
       )
     | _ => raise(InvalidAutoCommandContext)
     };
 
   switch (autocmd) {
-  | "BufWritePost" =>
-    switch (args) {
-    | [M.Int(bufferId), _, _] => BufferWritePost({bufferId: bufferId})
-    | _ => Ignored
-    }
-  | "BufEnter" =>
-    switch (args) {
-    | [M.Int(bufferId), _, _] => BufferEnter({bufferId: bufferId})
-    | _ => Ignored
-    }
+  | "BufWritePost" => BufferWritePost(context)
+  | "BufEnter" => BufferEnter(context)
+  | "TextChanged" => TextChanged(context)
+  | "TextChangedI" => TextChangedI(context)
   | "CursorMoved" => CursorMoved(context)
   | "CursorMovedI" => CursorMoved(context)
   | _ => Ignored
