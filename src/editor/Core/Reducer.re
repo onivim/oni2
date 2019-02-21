@@ -52,6 +52,17 @@ let applyBufferUpdate =
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
+    let s = {
+      ...s,
+      editorView:
+        EditorView.reduce(
+          s.editorView,
+          a,
+          BufferMap.getBuffer(s.activeBufferId, s.buffers),
+          s.editorFont,
+        ),
+    };
+
     switch (a) {
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
@@ -80,10 +91,6 @@ let reduce: (State.t, Actions.t) => State.t =
           level,
         },
       }
-    | EditorScroll(scrollY) => {
-        ...s,
-        editor: Editor.scroll(s.editor, scrollY),
-      }
     | WildmenuShow(wildmenu) => {...s, wildmenu}
     | WildmenuHide(wildmenu) => {...s, wildmenu}
     | WildmenuSelected(selected) => {
@@ -93,6 +100,6 @@ let reduce: (State.t, Actions.t) => State.t =
           selected,
         },
       }
-    | Noop => s
+    | _ => s
     };
   };

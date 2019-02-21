@@ -14,6 +14,7 @@ type t =
   | CursorMove(BufferPosition.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
+  | RecalculateEditorView
   | CommandlineShow(Commandline.t)
   | CommandlineHide(Commandline.t)
   | CommandlineUpdate((int, int))
