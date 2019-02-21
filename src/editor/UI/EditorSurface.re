@@ -134,7 +134,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let cursorLine = state.cursorPosition.line;
+    let cursorLine = state.editorView.cursorPosition.line;
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
@@ -146,13 +146,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         position(`Absolute),
         top(
           fontHeight
-          * Index.toZeroBasedInt(state.cursorPosition.line)
+          * Index.toZeroBasedInt(state.editorView.cursorPosition.line)
           - state.editorView.scrollY,
         ),
         left(
           lineNumberWidth
           + fontWidth
-          * Index.toZeroBasedInt(state.cursorPosition.character),
+          * Index.toZeroBasedInt(state.editorView.cursorPosition.character),
         ),
         height(fontHeight),
         width(cursorWidth),

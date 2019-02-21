@@ -39,7 +39,7 @@ let createElement =
       ];
 
     let cursorPixelY =
-      Index.toZeroBasedInt(state.cursorPosition.line)
+      Index.toZeroBasedInt(state.editorView.cursorPosition.line)
       * state.editorFont.measuredHeight
       |> float_of_int;
     let totalPixel =

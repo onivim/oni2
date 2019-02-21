@@ -6,6 +6,7 @@ type t = {
   scrollY: int,
   viewLines: int,
   size: EditorSize.t,
+  cursorPosition: BufferPosition.t,
 };
 
 let create = (~scrollY=0, ()) => {
@@ -14,6 +15,7 @@ let create = (~scrollY=0, ()) => {
     scrollY,
     viewLines: 0,
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
+    cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
   };
   ret;
 };
@@ -61,6 +63,7 @@ let recalculate = (view: t, buffer: Buffer.t) => {
 
 let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
   switch (action) {
+  | CursorMove(b) => {...view, cursorPosition: b}
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) =>

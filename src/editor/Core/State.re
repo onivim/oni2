@@ -22,7 +22,6 @@ type t = {
   buffers: BufferMap.t,
   activeBufferId: int,
   editorFont: EditorFont.t,
-  cursorPosition: BufferPosition.t,
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
@@ -50,7 +49,6 @@ let create: unit => t =
     },
     activeBufferId: 0,
     buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
-    cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
