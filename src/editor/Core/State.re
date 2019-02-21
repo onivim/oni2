@@ -28,6 +28,7 @@ type t = {
   configuration: Configuration.t,
   theme: Theme.t,
   size: EditorSize.t,
+  editor: Editor.t,
 };
 
 let create: unit => t =
@@ -62,4 +63,5 @@ let create: unit => t =
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
+    editor: Editor.create(~scrollY=0, ()),
   };

@@ -8,11 +8,18 @@
  * Hopefully, once there is a context API, this can be wholly replaced with it!
  */
 
-type notifySizeChangedFunction = (~width: int, ~height: int, unit) => unit;
+type notifySizeChanged= (~width: int, ~height: int, unit) => unit;
+type editorScroll = (~deltaY: int, unit) => unit;
 
-type t = {notifySizeChanged: notifySizeChangedFunction};
+type t = {
+    notifySizeChanged,
+    editorScroll,
+};
 
-let default = {notifySizeChanged: (~width as _, ~height as _, ()) => ()};
+let default = {
+    notifySizeChanged: (~width as _, ~height as _, ()) => (),
+    editorScroll: (~deltaY as _, ()) => (),
+};
 
 let _current: ref(t) = ref(default);
 

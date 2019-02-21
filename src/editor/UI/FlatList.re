@@ -14,6 +14,7 @@ let additionalRowsToRender = 1;
 
 let createElement =
     (
+      ~scrollY=0,
       ~height as height_,
       ~width as width_,
       ~rowHeight: int,
@@ -23,8 +24,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let (v, setV, hooks) = React.Hooks.state(0, hooks);
-    let scrollY = v;
+    /* let (v, setV, hooks) = React.Hooks.state(0, hooks); */
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
     let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
     let pixelOffset = scrollY mod rowHeight;
@@ -57,7 +57,6 @@ let createElement =
     let style =
       Style.[
         position(`Absolute),
-        overflow(LayoutTypes.Hidden),
         top(0),
         left(0),
         width(width_),
@@ -65,7 +64,7 @@ let createElement =
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-        setV(max(v - (int_of_float(wheelEvent.deltaY) * 25), 0));
+        GlobalContext.current().editorScroll(~deltaY=int_of_float(wheelEvent.deltaY) * 25, ());
     };
 
     (hooks, <View style onMouseWheel={scroll}> ...items^ </View>);
