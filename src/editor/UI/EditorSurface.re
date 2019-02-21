@@ -11,7 +11,6 @@ open Revery.UI;
 open CamomileLibraryDefault.Camomile;
 
 open Oni_Core;
-open Oni_Core.TokenizedBufferView;
 
 open Types;
 
@@ -32,13 +31,11 @@ let tokensToElement =
       fontWidth: int,
       fontHeight: int,
       lineNumber: int,
-      _virtualLineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
-      bufferViewLine: BufferViewLine.t,
+      tokens,
     ) => {
-  let tokens = bufferViewLine.tokens;
   let fontLineHeight = fontHeight;
 
   let isActiveLine = lineNumber == cursorLine;
@@ -134,11 +131,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         (),
       );
 
-    let bufferView =
-      activeBuffer
-      |> TokenizedBuffer.ofBuffer
-      |> TokenizedBufferView.ofTokenizedBuffer;
-
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
@@ -168,17 +160,24 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         backgroundColor(Colors.white),
       ];
 
-    let render = (b: BufferViewLine.t) =>
+    let getTokensForLine = (i) => {
+        let line = activeBuffer.lines[i];
+        Tokenizer.tokenize(line)
+    }
+
+    let render = (i) => {
+        let tokens = getTokensForLine(i);
+
       tokensToElement(
         fontWidth,
         fontHeight,
-        Index.toZeroBasedInt(b.lineNumber),
-        Index.toZeroBasedInt(b.virtualLineNumber),
+        i,
         lineNumberWidth,
         theme,
         Index.toZeroBasedInt(cursorLine),
-        b,
+        tokens,
       );
+    };
 
     let style =
       Style.[
@@ -243,7 +242,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=bufferViewStyle>
           <FlatList
             render
-            data={bufferView.viewLines}
+            count={lineCount}
             width=bufferPixelWidth
             height={state.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
@@ -256,7 +255,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             state
             width={layout.minimapWidthInPixels}
             height={state.size.pixelHeight}
-            tokenizedBufferView=bufferView
+            count={lineCount}
+            getTokensForLine
           />
         </View>
         <View style=verticalScrollBarStyle />

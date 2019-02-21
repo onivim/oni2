@@ -7,7 +7,6 @@
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Core.TokenizedBufferView;
 
 open Types;
 
@@ -39,8 +38,8 @@ let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
   <View style=lineStyle> ...tokens </View>;
 };
 
-let renderLine = (theme, b: BufferViewLine.t) => {
-  tokensToElement(b.tokens, theme);
+let renderLine = (theme, tokens) => {
+  tokensToElement(tokens, theme);
 };
 
 let component = React.component("Minimap");
@@ -53,7 +52,8 @@ let createElement =
       ~state: State.t,
       ~width: int,
       ~height: int,
-      ~tokenizedBufferView: TokenizedBufferView.t,
+      ~count,
+      ~getTokensForLine: (int) => list(Tokenizer.t),
       ~children as _,
       (),
     ) =>
@@ -61,7 +61,10 @@ let createElement =
     let rowHeight =
       Constants.default.minimapCharacterHeight
       + Constants.default.minimapLineSpacing;
-    let render = renderLine(state.theme);
+    let render = (i) => {
+     let tokens = getTokensForLine(i);
+     renderLine(state.theme, tokens);   
+    };
 
     (
       hooks,
@@ -71,7 +74,7 @@ let createElement =
           height
           rowHeight
           render
-          data={tokenizedBufferView.viewLines}
+  count
         />
       </View>,
     );

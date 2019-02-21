@@ -6,7 +6,7 @@
 
 open Revery.UI;
 
-type renderFunction('a) = 'a => React.syntheticElement;
+type renderFunction = int => React.syntheticElement;
 
 let component = React.component("FlatList");
 
@@ -18,8 +18,8 @@ let createElement =
       ~height as height_,
       ~width as width_,
       ~rowHeight: int,
-      ~render: renderFunction('a),
-      ~data: array('a),
+      ~render: renderFunction,
+      ~count: int,
       ~children as _,
       (),
     ) =>
@@ -33,9 +33,9 @@ let createElement =
 
     let items: ref(list(React.syntheticElement)) = ref([]);
 
-    let len = Array.length(data);
+    let len = count;
 
-    while (i^ < rowsToRender + additionalRowsToRender && i^ < len) {
+    while (i^ < rowsToRender + additionalRowsToRender + startRowOffset && i^ < len) {
       let rowOffset = (i^ - startRowOffset) * rowHeight;
       let rowContainerStyle =
         Style.[
@@ -46,7 +46,7 @@ let createElement =
           height(rowHeight),
         ];
 
-      let item = data[i^];
+      let item = i^;
       let v = <View style=rowContainerStyle> {render(item)} </View>;
 
       items := List.append([v], items^);
