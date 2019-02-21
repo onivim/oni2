@@ -6,7 +6,6 @@
 
 open Revery.UI;
 open Revery.UI.Components;
-open Revery_Core;
 
 open Oni_Core;
 
@@ -62,7 +61,7 @@ let createElement =
 
     let modifiedStyles =
       Style.[
-        color(Colors.green),
+        color(theme.tabModifiedIconColor),
         marginHorizontal(5),
         fontSize(fontPixelSize),
         fontFamily("FontAwesome5FreeRegular.otf"),
