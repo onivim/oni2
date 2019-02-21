@@ -8,6 +8,7 @@ module Actions = Actions;
 module Buffer = Buffer;
 module BufferMap = BufferMap;
 module Constants = Constants;
+module EditorView = EditorView;
 module LineNumber = LineNumber;
 module Log = Log;
 module Node = Node;

@@ -259,7 +259,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             getTokensForLine
           />
         </View>
-        <View style=verticalScrollBarStyle />
+        <View style=verticalScrollBarStyle>
+            <EditorVerticalScrollbar
+                state
+                height={state.editorView.size.pixelHeight}
+                width={Constants.default.scrollBarThickness}
+                />
+        </View>
       </View>,
     );
   });

@@ -18,13 +18,13 @@ type scrollbarMetrics = {
     thumbOffset: int,
 }
 
-let getSizeOfViewInLines = (view: t, lineHeight: int) => {
+let getVisibleLines = (view: t, lineHeight: int) => {
     view.size.pixelWidth / lineHeight 
 };
 
 let getTotalSizeInPixels = (view: t, lineHeight: int) => {
-    let viewLines = getSizeOfViewInLines(view, lineHeight);
-    viewLines  * lineHeight + (viewLines - 1) * lineHeight;
+    /* let visibleLines = getVisibleLines(view, lineHeight); */
+    view.viewLines  * lineHeight;
 };
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
@@ -34,7 +34,7 @@ let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
     let thumbPercentage = float_of_int(view.size.pixelHeight) /. totalViewSizeInPixels;
     let thumbSize = int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
 
-    let topF = float_of_int(view.scrollY) /. totalViewSizeInPixels;
+    let topF = float_of_int(view.scrollY) /. (totalViewSizeInPixels);
     let thumbOffset = int_of_float(topF *. float_of_int(scrollBarHeight));
 
     { thumbSize, thumbOffset }
