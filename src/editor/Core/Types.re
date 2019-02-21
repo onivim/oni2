@@ -29,23 +29,20 @@ module EditorSize = {
 };
 
 module Editor = {
-    type t = {
-        id: int,
-        scrollY: int,
-    };
+  type t = {
+    id: int,
+    scrollY: int,
+  };
 
-    let create = (~scrollY=0, ()) => {
-        let ret: t = {
-            id: 0,
-            scrollY: scrollY,
-        };
-        ret;
-    };
+  let create = (~scrollY=0, ()) => {
+    let ret: t = {id: 0, scrollY};
+    ret;
+  };
 
-    let scroll = (view: t, scrollDeltaY) => {
-       ...view,
-        scrollY: view.scrollY + scrollDeltaY,
-    };
+  let scroll = (view: t, scrollDeltaY) => {
+    ...view,
+    scrollY: view.scrollY + scrollDeltaY,
+  };
 };
 
 module Mode = {

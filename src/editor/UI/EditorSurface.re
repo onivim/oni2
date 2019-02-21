@@ -64,13 +64,7 @@ let tokensToElement =
     <Text style text={token.text} />;
   };
 
-  let lineStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-    ];
+  let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
 
   let lineNumberStyle =
     Style.[
@@ -158,7 +152,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let cursorStyle =
       Style.[
         position(`Absolute),
-        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line) - state.editor.scrollY),
+        top(
+          fontHeight
+          * Index.toZeroBasedInt(state.cursorPosition.line)
+          - state.editor.scrollY,
+        ),
         left(
           lineNumberWidth
           + fontWidth

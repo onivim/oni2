@@ -11,15 +11,9 @@ open Oni_Core.TokenizedBufferView;
 
 open Types;
 
-let lineStyle = Style.[
-    position(`Absolute),
-    top(
-        0
-    )
-];
+let lineStyle = Style.[position(`Absolute), top(0)];
 
-let tokensToElement =
-    (tokens: list(Tokenizer.t), theme: Theme.t) => {
+let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
   let f = (token: Tokenizer.t) => {
     let tokenWidth =
       Index.toZeroBasedInt(token.endPosition)
@@ -46,21 +40,13 @@ let tokensToElement =
 };
 
 let renderLine = (theme, b: BufferViewLine.t) => {
-  tokensToElement(
-    b.tokens,
-    theme,
-  );
+  tokensToElement(b.tokens, theme);
 };
 
 let component = React.component("Minimap");
 
-let absoluteStyle = Style.[
-    position(`Absolute),
-    top(0),
-    bottom(0),
-    left(0),
-    right(0),
-];
+let absoluteStyle =
+  Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
 let createElement =
     (
@@ -72,7 +58,6 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-
     let rowHeight =
       Constants.default.minimapCharacterHeight
       + Constants.default.minimapLineSpacing;
@@ -80,7 +65,7 @@ let createElement =
 
     (
       hooks,
-      <View style={absoluteStyle}>
+      <View style=absoluteStyle>
         <FlatList
           width
           height

@@ -37,16 +37,17 @@ let createElement =
 
     while (i^ < rowsToRender + additionalRowsToRender && i^ < len) {
       let rowOffset = (i^ - startRowOffset) * rowHeight;
-      let rowContainerStyle = Style.[
-        position(`Absolute),
-            top(rowOffset - pixelOffset),
-            left(0),
-            right(0),
-            height(rowHeight),
-      ];
+      let rowContainerStyle =
+        Style.[
+          position(`Absolute),
+          top(rowOffset - pixelOffset),
+          left(0),
+          right(0),
+          height(rowHeight),
+        ];
 
       let item = data[i^];
-      let v = <View style={rowContainerStyle}>{render(item)}</View>;
+      let v = <View style=rowContainerStyle> {render(item)} </View>;
 
       items := List.append([v], items^);
       i := i^ + 1;
@@ -64,8 +65,11 @@ let createElement =
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-        GlobalContext.current().editorScroll(~deltaY=int_of_float(wheelEvent.deltaY) * 25, ());
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * 25,
+        (),
+      );
     };
 
-    (hooks, <View style onMouseWheel={scroll}> ...items^ </View>);
+    (hooks, <View style onMouseWheel=scroll> ...items^ </View>);
   });

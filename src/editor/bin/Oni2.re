@@ -42,7 +42,8 @@ let init = app => {
             ),
           ),
         ),
-      editorScroll: (~deltaY, ()) => App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
+      editorScroll: (~deltaY, ()) =>
+        App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
     });
     prerr_endline(
       "[DEBUG - STATE] Mode: "

@@ -80,7 +80,10 @@ let reduce: (State.t, Actions.t) => State.t =
           level,
         },
       }
-    | EditorScroll(scrollY) => {...s, editor: Editor.scroll(s.editor, scrollY) }
+    | EditorScroll(scrollY) => {
+        ...s,
+        editor: Editor.scroll(s.editor, scrollY),
+      }
     | WildmenuShow(wildmenu) => {...s, wildmenu}
     | WildmenuHide(wildmenu) => {...s, wildmenu}
     | WildmenuSelected(selected) => {
