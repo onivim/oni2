@@ -20,4 +20,5 @@ type t =
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
+  | EditorScroll(int)
   | Noop;

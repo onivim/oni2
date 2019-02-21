@@ -15,6 +15,8 @@ open Oni_Core.TokenizedBufferView;
 
 open Types;
 
+let empty = React.listToElement([]);
+
 /* Set up some styles */
 let textHeaderStyle =
   Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];
@@ -30,7 +32,7 @@ let tokensToElement =
       fontWidth: int,
       fontHeight: int,
       lineNumber: int,
-      virtualLineNumber: int,
+      _virtualLineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
@@ -62,13 +64,7 @@ let tokensToElement =
     <Text style text={token.text} />;
   };
 
-  let lineStyle =
-    Style.[
-      position(`Absolute),
-      top(fontHeight * virtualLineNumber),
-      left(0),
-      right(0),
-    ];
+  let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
 
   let lineNumberStyle =
     Style.[
@@ -156,7 +152,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let cursorStyle =
       Style.[
         position(`Absolute),
-        top(fontHeight * Index.toZeroBasedInt(state.cursorPosition.line)),
+        top(
+          fontHeight
+          * Index.toZeroBasedInt(state.cursorPosition.line)
+          - state.editor.scrollY,
+        ),
         left(
           lineNumberWidth
           + fontWidth
@@ -212,6 +212,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         left(0),
         width(bufferPixelWidth),
         bottom(0),
+        overflow(LayoutTypes.Hidden),
       ];
 
     let minimapPixelWidth =
@@ -219,6 +220,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let minimapViewStyle =
       Style.[
         position(`Absolute),
+        overflow(LayoutTypes.Hidden),
         top(0),
         left(bufferPixelWidth),
         width(minimapPixelWidth),
@@ -245,6 +247,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             width=bufferPixelWidth
             height={state.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
+            scrollY={state.editor.scrollY}
           />
           <View style=cursorStyle />
         </View>

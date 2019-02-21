@@ -4,15 +4,17 @@
  * Virtualized list helper
  */
 
-/* open Oni_Core; */
 open Revery.UI;
 
 type renderFunction('a) = 'a => React.syntheticElement;
 
 let component = React.component("FlatList");
 
+let additionalRowsToRender = 1;
+
 let createElement =
     (
+      ~scrollY=0,
       ~height as height_,
       ~width as width_,
       ~rowHeight: int,
@@ -22,22 +24,32 @@ let createElement =
       (),
     ) =>
   component(hooks => {
+    /* let (v, setV, hooks) = React.Hooks.state(0, hooks); */
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
+    let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
+    let pixelOffset = scrollY mod rowHeight;
 
-    let i = ref(0);
+    let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
     let items: ref(list(React.syntheticElement)) = ref([]);
 
     let len = Array.length(data);
 
-    while (i^ < rowsToRender && i^ < len) {
-      /* print_endline ("rendering row: " ++ string_of_int(i^)); */
+    while (i^ < rowsToRender + additionalRowsToRender && i^ < len) {
+      let rowOffset = (i^ - startRowOffset) * rowHeight;
+      let rowContainerStyle =
+        Style.[
+          position(`Absolute),
+          top(rowOffset - pixelOffset),
+          left(0),
+          right(0),
+          height(rowHeight),
+        ];
 
       let item = data[i^];
-      let v = render(item);
+      let v = <View style=rowContainerStyle> {render(item)} </View>;
 
       items := List.append([v], items^);
-
       i := i^ + 1;
     };
 
@@ -52,5 +64,12 @@ let createElement =
         height(height_),
       ];
 
-    (hooks, <View style> ...items^ </View>);
+    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * 25,
+        (),
+      );
+    };
+
+    (hooks, <View style onMouseWheel=scroll> ...items^ </View>);
   });
