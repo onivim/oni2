@@ -9,35 +9,43 @@ type t = {
 };
 
 let create = (~scrollY=0, ()) => {
-  let ret: t = {id: 0, scrollY, viewLines: 0, size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ())};
+  let ret: t = {
+    id: 0,
+    scrollY,
+    viewLines: 0,
+    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
+  };
   ret;
 };
 
 type scrollbarMetrics = {
-    thumbSize: int,
-    thumbOffset: int,
-}
+  thumbSize: int,
+  thumbOffset: int,
+};
 
 let getVisibleLines = (view: t, lineHeight: int) => {
-    view.size.pixelWidth / lineHeight 
+  view.size.pixelWidth / lineHeight;
 };
 
 let getTotalSizeInPixels = (view: t, lineHeight: int) => {
-    /* let visibleLines = getVisibleLines(view, lineHeight); */
-    view.viewLines  * lineHeight;
+  /* let visibleLines = getVisibleLines(view, lineHeight); */
+  view.viewLines * lineHeight;
 };
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
-    /* let lineHeight = 1; */
-    /* let linesInView = getSizeOfViewInLines(view, lineHeight); */
-    let totalViewSizeInPixels = float_of_int(getTotalSizeInPixels(view, lineHeight));
-    let thumbPercentage = float_of_int(view.size.pixelHeight) /. totalViewSizeInPixels;
-    let thumbSize = int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
+  /* let lineHeight = 1; */
+  /* let linesInView = getSizeOfViewInLines(view, lineHeight); */
+  let totalViewSizeInPixels =
+    float_of_int(getTotalSizeInPixels(view, lineHeight));
+  let thumbPercentage =
+    float_of_int(view.size.pixelHeight) /. totalViewSizeInPixels;
+  let thumbSize =
+    int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
 
-    let topF = float_of_int(view.scrollY) /. (totalViewSizeInPixels);
-    let thumbOffset = int_of_float(topF *. float_of_int(scrollBarHeight));
+  let topF = float_of_int(view.scrollY) /. totalViewSizeInPixels;
+  let thumbOffset = int_of_float(topF *. float_of_int(scrollBarHeight));
 
-    { thumbSize, thumbOffset }
+  {thumbSize, thumbOffset};
 };
 
 let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {

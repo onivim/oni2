@@ -260,11 +260,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           />
         </View>
         <View style=verticalScrollBarStyle>
-            <EditorVerticalScrollbar
-                state
-                height={state.editorView.size.pixelHeight}
-                width={Constants.default.scrollBarThickness}
-                />
+          <EditorVerticalScrollbar
+            state
+            height={state.editorView.size.pixelHeight}
+            width={Constants.default.scrollBarThickness}
+          />
         </View>
       </View>,
     );
