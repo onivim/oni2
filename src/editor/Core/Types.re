@@ -112,6 +112,13 @@ module BufferMetadata = {
   };
 };
 
+module BufferWritePost = {
+  type t = {
+    bufferId: int,
+    buffers: list(BufferMetadata.t),
+  };
+};
+
 module BufferEnter = {
   type t = {
     bufferId: int,

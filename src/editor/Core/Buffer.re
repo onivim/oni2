@@ -16,12 +16,11 @@ let ofLines = (lines: array(string)) => {
   lines,
 };
 
-let show = (b: t) => {
+let show = (b: t) =>
   "Buffer ["
   ++ string_of_int(b.metadata.id)
   ++ "]: "
   ++ String.concat("\n", Array.to_list(b.lines));
-};
 
 let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
 
@@ -63,11 +62,13 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
+let update = (buf: t, update: BufferUpdate.t) => {
+  print_endline("Updating!!!");
   if (update.version > buf.metadata.version) {
-    let metadata = {...buf.metadata, version: update.version};
+    let metadata = {...buf.metadata, modified: true, version: update.version};
 
     {metadata, lines: applyUpdate(buf.lines, update)};
   } else {
     buf;
   };
+};

@@ -9,6 +9,7 @@ open Types;
 type t =
   | BufferEnter(BufferEnter.t)
   | BufferUpdate(BufferUpdate.t)
+  | BufferWritePost(BufferWritePost.t)
   | TablineUpdate(Tabline.tabs)
   | ChangeMode(Mode.t)
   | CursorMove(BufferPosition.t)
