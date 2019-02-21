@@ -53,7 +53,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
-      ~getTokensForLine: (int) => list(Tokenizer.t),
+      ~getTokensForLine: int => list(Tokenizer.t),
       ~children as _,
       (),
     ) =>
@@ -61,21 +61,15 @@ let createElement =
     let rowHeight =
       Constants.default.minimapCharacterHeight
       + Constants.default.minimapLineSpacing;
-    let render = (i) => {
-     let tokens = getTokensForLine(i);
-     renderLine(state.theme, tokens);   
+    let render = i => {
+      let tokens = getTokensForLine(i);
+      renderLine(state.theme, tokens);
     };
 
     (
       hooks,
       <View style=absoluteStyle>
-        <FlatList
-          width
-          height
-          rowHeight
-          render
-  count
-        />
+        <FlatList width height rowHeight render count />
       </View>,
     );
   });

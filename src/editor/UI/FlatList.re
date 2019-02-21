@@ -35,7 +35,10 @@ let createElement =
 
     let len = count;
 
-    while (i^ < rowsToRender + additionalRowsToRender + startRowOffset && i^ < len) {
+    while (i^ < rowsToRender
+           + additionalRowsToRender
+           + startRowOffset
+           && i^ < len) {
       let rowOffset = (i^ - startRowOffset) * rowHeight;
       let rowContainerStyle =
         Style.[

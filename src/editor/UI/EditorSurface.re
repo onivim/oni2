@@ -160,13 +160,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         backgroundColor(Colors.white),
       ];
 
-    let getTokensForLine = (i) => {
-        let line = activeBuffer.lines[i];
-        Tokenizer.tokenize(line)
-    }
+    let getTokensForLine = i => {
+      let line = activeBuffer.lines[i];
+      Tokenizer.tokenize(line);
+    };
 
-    let render = (i) => {
-        let tokens = getTokensForLine(i);
+    let render = i => {
+      let tokens = getTokensForLine(i);
 
       tokensToElement(
         fontWidth,
@@ -242,7 +242,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=bufferViewStyle>
           <FlatList
             render
-            count={lineCount}
+            count=lineCount
             width=bufferPixelWidth
             height={state.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
@@ -255,7 +255,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             state
             width={layout.minimapWidthInPixels}
             height={state.size.pixelHeight}
-            count={lineCount}
+            count=lineCount
             getTokensForLine
           />
         </View>
