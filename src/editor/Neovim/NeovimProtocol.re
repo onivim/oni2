@@ -45,6 +45,7 @@ let make = (nvimApi: NeovimApi.t) => {
   };
 
   let input = (key: string) => {
+      print_endline ("INPUT: " ++ key);
     let _ =
       nvimApi.requestSync("nvim_input", Msgpck.List([Msgpck.String(key)]));
     ();

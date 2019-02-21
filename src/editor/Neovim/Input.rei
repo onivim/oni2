@@ -4,10 +4,13 @@
 
 open Revery_Core;
 
-type t = string;
+type t;
 
-let keyPressToString: (~altKey: bool, ~shiftKey: bool, ~ctrlKey: bool, ~superKey: bool, string) => t;
+let create: (unit) => t;
+let show: t => string;
 
-let ofKeyEvent: Events.keyEvent => option(t);
+let keyPressToString: (~altKey: bool, ~shiftKey: bool, ~ctrlKey: bool, ~superKey: bool, string) => string;
 
-let ofKeyPressEvent: Events.keyPressEvent => t;
+let keyDown: (t, Events.keyEvent) => (option(string), t);
+let keyUp: (t, Events.keyEvent) => (option(string), t);
+let keyPress: (t, Events.keyPressEvent) => (option(string), t);

@@ -6,7 +6,23 @@
 
 open Revery_Core;
 
-type t = string;
+type t = {
+    ctrlKey: bool,
+    altKey: bool,
+    shiftKey: bool,
+    superKey: bool
+};
+
+let create = () => {
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    superKey: false,
+}
+
+let show = (state: t) => {
+   "ctrlKey: " ++ string_of_bool(state.ctrlKey); 
+}
 
 let keyToCharacter = (key: Key.t) => switch(key) {
       | Key.KEY_TAB => Some("TAB")
@@ -25,26 +41,37 @@ let keyToCharacter = (key: Key.t) => switch(key) {
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
     let s = s == "<" ? "lt" : s;
     
-    let s = ctrlKey ? "c-" ++ s : s;
-    let s = shiftKey ? "s-" ++ s : s;
-    let s = altKey ? "a-" ++ s : s;
-    let s = superKey ? "m-" ++ s : s;
+    let s = ctrlKey ? "C-" ++ s : s;
+    let s = shiftKey ? "S-" ++ s : s;
+    let s = altKey ? "A-" ++ s : s;
+    let s = superKey ? "D-" ++ s : s;
 
     String.length(s) > 1 ? "<" ++ s ++ ">" : s
 }
 
-let ofKeyEvent = (evt: Events.keyEvent) => {
+let keyDown = (_state: t, evt: Events.keyEvent) => {
    let {altKey, shiftKey, ctrlKey, superKey, key, _ }: Events.keyEvent = evt;
-   switch(keyToCharacter(key)) {
-   | Some(k) => Some(keyPressToString(~altKey, ~shiftKey, ~ctrlKey, ~superKey, k))
-   | None => None
-   }
+
+   let c = switch(keyToCharacter(key)) {
+   | Some(k) => Some(keyPressToString(~altKey, ~shiftKey, ~ctrlKey, ~superKey, k));
+   | None => None;
+   };
+
+   (c, {altKey, shiftKey, ctrlKey, superKey})
 };
 
-let ofKeyPressEvent = (evt: Events.keyPressEvent) => {
-   /* TODO: Track this */
-   let (altKey, shiftKey, ctrlKey, superKey) = (false, false, false, false);
+let keyPress = (state: t, evt: Events.keyPressEvent) => {
+   let {altKey, shiftKey, ctrlKey, superKey}: t = state;
+
 
    let { character, _ }: Events.keyPressEvent = evt;
-   keyPressToString(~altKey, ~shiftKey, ~ctrlKey, ~superKey, character);
+   let c = keyPressToString(~altKey, ~shiftKey, ~ctrlKey, ~superKey, character);
+   print_endline ("KEYPRESS: " ++ c);
+
+   (Some(c), state)
+}
+
+let keyUp = (_state: t, evt: Events.keyEvent) => {
+   let {altKey, shiftKey, ctrlKey, superKey, /*key,*/ _ }: Events.keyEvent = evt;
+   (None,{altKey, shiftKey, ctrlKey, superKey}: t)
 };

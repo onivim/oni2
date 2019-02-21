@@ -128,12 +128,19 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
+  let inputState = ref(Input.create());
+
   let _ =
     Event.subscribe(
       w.onKeyPress,
       event => {
-        let c = Input.ofKeyPressEvent(event);
-        neovimProtocol.input(c);
+        let (c, newState) = Input.keyPress(inputState^, event);
+        inputState := newState;
+        print_endline ("new state: " ++ Input.show(newState));
+        switch (c) {
+        | Some(v) => ignore(neovimProtocol.input(v))
+        | None => ();
+        }
       },
     );
 
@@ -141,7 +148,24 @@ let init = app => {
     Event.subscribe(
       w.onKeyDown,
       event => {
-        switch (Input.ofKeyEvent(event)) {
+        let (c, newState) = Input.keyDown(inputState^, event);
+        inputState := newState;
+        print_endline ("new state: " ++ Input.show(newState));
+        switch (c) {
+        | Some(v) => ignore(neovimProtocol.input(v))
+        | None => ();
+        }
+      },
+    );
+
+  let _ =
+    Event.subscribe(
+      w.onKeyUp,
+      event => {
+        let (c, newState) = Input.keyUp(inputState^, event);
+        inputState := newState;
+        print_endline ("new state: " ++ Input.show(newState));
+        switch (c) {
         | Some(v) => ignore(neovimProtocol.input(v))
         | None => ();
         }
