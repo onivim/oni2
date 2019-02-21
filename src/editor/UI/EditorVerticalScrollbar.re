@@ -2,7 +2,6 @@
  * EditorVerticalScrollbar.re
  */
 
-/* open Revery.Core; */
 open Revery.UI;
 
 open Oni_Core;
