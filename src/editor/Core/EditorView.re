@@ -28,13 +28,10 @@ let getVisibleLines = (view: t, lineHeight: int) => {
 };
 
 let getTotalSizeInPixels = (view: t, lineHeight: int) => {
-  /* let visibleLines = getVisibleLines(view, lineHeight); */
   view.viewLines * lineHeight;
 };
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
-  /* let lineHeight = 1; */
-  /* let linesInView = getSizeOfViewInLines(view, lineHeight); */
   let totalViewSizeInPixels =
     float_of_int(getTotalSizeInPixels(view, lineHeight));
   let thumbPercentage =
