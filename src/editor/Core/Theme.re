@@ -35,7 +35,7 @@ let default: t = {
   editorMenuBackground: Color.hex("#2F3440"),
   editorMenuForeground: Color.hex("#FFFFFF"),
   editorMenuItemSelected: Color.hex("#495162"),
-  tabModifiedIconColor: Colors.green,
+  tabModifiedIconColor: Color.hex("#737984"),
 };
 
 let create: unit => t = () => default;
