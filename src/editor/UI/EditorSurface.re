@@ -192,8 +192,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let layout =
       EditorLayout.getLayout(
-        ~pixelWidth=state.size.pixelWidth,
-        ~pixelHeight=state.size.pixelHeight,
+        ~pixelWidth=state.editorView.size.pixelWidth,
+        ~pixelHeight=state.editorView.size.pixelHeight,
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -244,7 +244,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             render
             count=lineCount
             width=bufferPixelWidth
-            height={state.size.pixelHeight}
+            height={state.editorView.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
             scrollY={state.editorView.scrollY}
           />
@@ -254,12 +254,18 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
-            height={state.size.pixelHeight}
+            height={state.editorView.size.pixelHeight}
             count=lineCount
             getTokensForLine
           />
         </View>
-        <View style=verticalScrollBarStyle />
+        <View style=verticalScrollBarStyle>
+          <EditorVerticalScrollbar
+            state
+            height={state.editorView.size.pixelHeight}
+            width={Constants.default.scrollBarThickness}
+          />
+        </View>
       </View>,
     );
   });
