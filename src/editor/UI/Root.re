@@ -32,7 +32,7 @@ let surfaceStyle =
     top(0),
     left(0),
     right(0),
-    bottom(statusBarHeight),
+    bottom(statusBarHeight + 20),
   ];
 
 let statusBarStyle =

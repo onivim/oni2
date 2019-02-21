@@ -67,7 +67,6 @@ let reduce: (State.t, Actions.t) => State.t =
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
-    | CursorMove(b) => {...s, cursorPosition: b}
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
