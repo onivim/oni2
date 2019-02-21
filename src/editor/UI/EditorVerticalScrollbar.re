@@ -2,10 +2,11 @@
  * EditorVerticalScrollbar.re
  */
 
-open Revery.Core;
+/* open Revery.Core; */
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Core.Types;
 
 let component = React.component("EditorVerticalScrollbar");
 
@@ -29,13 +30,31 @@ let createElement =
         left(0),
         width(totalWidth),
         height(scrollMetrics.thumbSize),
-        backgroundColor(Colors.red),
+        backgroundColor(state.theme.scrollbarSliderActiveBackground),
+    ];
+
+
+    let cursorPixelY = Index.toZeroBasedInt(state.cursorPosition.line) * state.editorFont.measuredHeight |> float_of_int;
+    let totalPixel = EditorView.getTotalSizeInPixels(state.editorView, state.editorFont.measuredHeight) |> float_of_int;
+
+
+    let cursorPosition = int_of_float((cursorPixelY /. totalPixel) *. float_of_int(totalHeight));
+    let cursorSize = 2;
+
+    let scrollCursorStyle = Style.[
+        position(`Absolute),
+        top(cursorPosition),
+        left(0),
+        width(totalWidth),
+        height(cursorSize),
+        backgroundColor(state.theme.foreground),
     ];
 
     (
       hooks,
       <View style=absoluteStyle>
         <View style={scrollThumbStyle} />
+        <View style={scrollCursorStyle} />
       </View>,
     );
   });
