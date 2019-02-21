@@ -207,7 +207,17 @@ let init = app => {
           | _ => Noop
           };
 
+
         App.dispatch(app, msg);
+
+        /* TODO:
+         * Refactor this into a middleware concept, like Redux */
+        switch(msg) {
+        | Core.Actions.BufferUpdate(_)
+        | Core.Actions.BufferEnter(_) => App.dispatch(app, RecalculateEditorView)
+        | _ => ();
+        };
+
         prerr_endline("Protocol Notification: " ++ Notification.show(n));
       },
     );

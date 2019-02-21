@@ -147,7 +147,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(
           fontHeight
           * Index.toZeroBasedInt(state.cursorPosition.line)
-          - state.editor.scrollY,
+          - state.editorView.scrollY,
         ),
         left(
           lineNumberWidth
@@ -246,7 +246,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             width=bufferPixelWidth
             height={state.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
-            scrollY={state.editor.scrollY}
+            scrollY={state.editorView.scrollY}
           />
           <View style=cursorStyle />
         </View>
