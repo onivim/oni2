@@ -62,8 +62,7 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) => {
-  print_endline("Updating!!!");
+let update = (buf: t, update: BufferUpdate.t) =>
   if (update.version > buf.metadata.version) {
     let metadata = {...buf.metadata, modified: true, version: update.version};
 
@@ -71,4 +70,3 @@ let update = (buf: t, update: BufferUpdate.t) => {
   } else {
     buf;
   };
-};
