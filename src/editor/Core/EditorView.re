@@ -17,7 +17,6 @@ let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {
   let newScrollY = max(0, newScrollY);
 
   let availableScroll = max(view.viewLines - 1, 0) * measuredFontHeight;
-  print_endline ("AVAILABLE SCROLL: " ++ string_of_int(availableScroll));
   let newScrollY = min(newScrollY, availableScroll);
 
   {
@@ -27,7 +26,6 @@ let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {
 }
 
 let recalculate = (view: t, buffer: Buffer.t) => {
-    print_endline(" LINES: " ++ string_of_int(Array.length(buffer.lines)));
   {
     ...view,
     viewLines: Array.length(buffer.lines)
