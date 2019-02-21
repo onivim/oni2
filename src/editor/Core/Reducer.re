@@ -52,10 +52,15 @@ let applyBufferUpdate =
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
- 
     let s = {
-       ...s,
-        editorView: EditorView.reduce(s.editorView, a, BufferMap.getBuffer(s.activeBufferId, s.buffers), s.editorFont),
+      ...s,
+      editorView:
+        EditorView.reduce(
+          s.editorView,
+          a,
+          BufferMap.getBuffer(s.activeBufferId, s.buffers),
+          s.editorFont,
+        ),
     };
 
     switch (a) {
