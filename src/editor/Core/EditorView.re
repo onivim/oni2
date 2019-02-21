@@ -26,11 +26,11 @@ type scrollbarMetrics = {
 };
 
 type viewport = {
-    pixelX: int,
-    pixelY: int,
-    pixelWidth: int,
-    pixelHeight: int,
-}
+  pixelX: int,
+  pixelY: int,
+  pixelWidth: int,
+  pixelHeight: int,
+};
 
 let getVisibleLines = (view: t, lineHeight: int) => {
   view.size.pixelWidth / lineHeight;
@@ -41,22 +41,20 @@ let getTotalSizeInPixels = (view: t, lineHeight: int) => {
 };
 
 let snapToCursorPosition = (view: t, lineHeight: int) => {
-    let cursorPixelPosition = Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
-    let scrollY = view.scrollY;
+  let cursorPixelPosition =
+    Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
+  let scrollY = view.scrollY;
 
-    if (cursorPixelPosition < scrollY) {
-        {
-            ...view,
-            scrollY: cursorPixelPosition,
-        }
-    } else if (cursorPixelPosition > (scrollY + view.size.pixelHeight - lineHeight)) {
-        {
-            ...view,
-            scrollY: cursorPixelPosition - (view.size.pixelHeight - lineHeight * 1),
-        };
-    } else {
-        view
-    }
+  if (cursorPixelPosition < scrollY) {
+    {...view, scrollY: cursorPixelPosition};
+  } else if (cursorPixelPosition > scrollY + view.size.pixelHeight - lineHeight) {
+    {
+      ...view,
+      scrollY: cursorPixelPosition - (view.size.pixelHeight - lineHeight * 1),
+    };
+  } else {
+    view;
+  };
 };
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
@@ -89,7 +87,11 @@ let recalculate = (view: t, buffer: Buffer.t) => {
 
 let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
   switch (action) {
-  | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b}, fontMetrics.measuredHeight)
+  | CursorMove(b) =>
+    snapToCursorPosition(
+      {...view, cursorPosition: b},
+      fontMetrics.measuredHeight,
+    )
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) =>
