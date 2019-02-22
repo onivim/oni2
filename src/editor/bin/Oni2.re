@@ -169,26 +169,30 @@ let init = app => {
     Event.subscribe(
       neovimProtocol.onNotification,
       n => {
-        let msg =
+        open Core.Actions;
+        let msg = 
           switch (n) {
-          | ModeChanged("normal") => Core.Actions.ChangeMode(Normal)
-          | ModeChanged("insert") => Core.Actions.ChangeMode(Insert)
+          | OniCommand("oni.editorView.scrollToCursor") => EditorScrollToCursorCentered
+          | OniCommand("oni.editorView.scrollToCursorTop") => EditorScrollToCursorTop
+          | OniCommand("oni.editorView.scrollToCursorBottom") => EditorScrollToCursorBottom
+          | ModeChanged("normal") => ChangeMode(Normal)
+          | ModeChanged("insert") => ChangeMode(Insert)
           | ModeChanged("cmdline_normal") =>
-            Core.Actions.ChangeMode(Commandline)
-          | TablineUpdate(tabs) => Core.Actions.TablineUpdate(tabs)
-          | ModeChanged(_) => Core.Actions.ChangeMode(Other)
+            ChangeMode(Commandline)
+          | TablineUpdate(tabs) => TablineUpdate(tabs)
+          | ModeChanged(_) => ChangeMode(Other)
           | CursorMoved(c) =>
-            Core.Actions.CursorMove(
+            CursorMove(
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
           | BufferEnter(b) =>
             neovimProtocol.bufAttach(b.bufferId);
-            Core.Actions.BufferEnter({
+            BufferEnter({
               bufferId: b.bufferId,
               buffers: NeovimBuffer.getBufferList(nvimApi),
             });
           | BufferLines(bc) =>
-            Core.Actions.BufferUpdate(
+            BufferUpdate(
               Core.Types.BufferUpdate.create(
                 ~id=bc.id,
                 ~startLine=bc.firstLine,
@@ -198,15 +202,14 @@ let init = app => {
                 (),
               ),
             )
-          | WildmenuShow(w) => Core.Actions.WildmenuShow(w)
-          | WildmenuHide(w) => Core.Actions.WildmenuHide(w)
-          | WildmenuSelected(s) => Core.Actions.WildmenuSelected(s)
-          | CommandlineUpdate(u) => Core.Actions.CommandlineUpdate(u)
-          | CommandlineShow(c) => Core.Actions.CommandlineShow(c)
-          | CommandlineHide(c) => Core.Actions.CommandlineHide(c)
+          | WildmenuShow(w) => WildmenuShow(w)
+          | WildmenuHide(w) => WildmenuHide(w)
+          | WildmenuSelected(s) => WildmenuSelected(s)
+          | CommandlineUpdate(u) => CommandlineUpdate(u)
+          | CommandlineShow(c) => CommandlineShow(c)
+          | CommandlineHide(c) => CommandlineHide(c)
           | _ => Noop
           };
-
 
         App.dispatch(app, msg);
 

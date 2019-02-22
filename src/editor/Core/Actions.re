@@ -22,4 +22,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | EditorScroll(int)
+  | EditorScrollToCursorCentered
+  | EditorScrollToCursorTop
+  | EditorScrollToCursorBottom
   | Noop;
