@@ -41,6 +41,7 @@ module BufferEnterNotification = {
 
 type t =
   | Redraw
+  | OniCommand(string)
   | ModeChanged(string)
   | BufferLines(BufferLinesNotification.t)
   | BufferEnter(BufferEnterNotification.t)
@@ -232,6 +233,14 @@ let parse = (t: string, msg: Msgpck.t) => {
         ]),
       ) =>
       let result = parseAutoCommand(autocmd, args);
+      [result];
+    | (
+        "oni_plugin_notify",
+        M.List([
+          M.List([M.String("command"), M.String(commandName)]),
+        ]),
+      ) =>
+      let result = OniCommand(commandName);
       [result];
     | ("redraw", M.List(msgs)) => parseRedraw(msgs)
     | _ => [Ignored]

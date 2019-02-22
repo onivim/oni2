@@ -40,9 +40,12 @@ let getTotalSizeInPixels = (view: t, lineHeight: int) => {
   view.viewLines * lineHeight;
 };
 
-let snapToCursorPosition = (view: t, lineHeight: int) => {
-  let cursorPixelPosition =
+let getCursorPixelLine = (view: t, lineHeight: int) => {
     Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
+}
+
+let snapToCursorPosition = (view: t, lineHeight: int) => {
+  let cursorPixelPosition = getCursorPixelLine(view, lineHeight);
   let scrollY = view.scrollY;
 
   if (cursorPixelPosition < scrollY) {
@@ -71,14 +74,28 @@ let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
   {thumbSize, thumbOffset};
 };
 
-let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {
-  let newScrollY = view.scrollY + scrollDeltaY;
+let scrollTo = (view: t, newScrollY, measuredFontHeight) => {
   let newScrollY = max(0, newScrollY);
-
   let availableScroll = max(view.viewLines - 1, 0) * measuredFontHeight;
   let newScrollY = min(newScrollY, availableScroll);
+  {...view, scrollY: newScrollY };
+}
 
-  {...view, scrollY: newScrollY};
+let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {
+  let newScrollY = view.scrollY + scrollDeltaY;
+  scrollTo(view, newScrollY, measuredFontHeight);
+};
+
+let scrollToCursorTop = (view: t, lineHeight) => {
+    let scrollPosition = getCursorPixelLine(view, lineHeight);
+    scrollTo(view, scrollPosition, lineHeight);
+};
+
+let scrollToCursor = (view: t, lineHeight) => {
+    let scrollPosition = 
+        getCursorPixelLine(view, lineHeight) - view.size.pixelHeight / 2 + lineHeight / 2;
+        
+    scrollTo(view, scrollPosition, lineHeight);
 };
 
 let recalculate = (view: t, buffer: Buffer.t) => {
@@ -96,6 +113,10 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) =>
     scroll(view, scrollY, fontMetrics.measuredHeight)
+  | EditorScrollToCursorTop =>
+    scrollToCursorTop(view, fontMetrics.measuredHeight);
+  | EditorScrollToCursorCentered =>
+    scrollToCursor(view, fontMetrics.measuredHeight);
   | _ => view
   };
 };
