@@ -10,7 +10,6 @@
         lwt
         lwt.unix
         Oni_Core
-        Oni_Neovim
         Rench
         Revery
     ))
