@@ -45,6 +45,26 @@ let parseBufferContext = map =>
     map,
   );
 
+let getAtomicCallsResponse = response =>
+  switch (response) {
+  | Msgpck.List(result) =>
+    /**
+      The last argument in an atomic call is either NIL or an
+      array of three items  a three-element array with the zero-based
+      index of the call which resulted in an error, the error type
+      and the error message. If an error occurred,
+      the values from all preceding calls will still be returned.
+     */
+    (
+      switch (List.rev(result)) {
+      | [] => (None, None)
+      | [Msgpck.Nil, ...responseItems] => (None, Some(responseItems))
+      | [errors, ...responseItems] => (Some(errors), Some(responseItems))
+      }
+    )
+  | _ => (None, None)
+  };
+
 /**
     Enrich Buffers
 
@@ -57,78 +77,100 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
     api.requestSync(
       "nvim_call_atomic",
       Msgpck.List([Msgpck.List(atomicCalls)]),
-    );
+    )
+    |> getAtomicCallsResponse;
+
   switch (rsp) {
-  | Msgpck.List(result) =>
-    /**
-        The last argument in an atomic call is either NIL or an
-        array of three items  a three-element array with the zero-based
-        index of the call which resulted in an error, the error type
-        and the error message. If an error occurred,
-        the values from all preceding calls will still be returned.
-       */
-    (
-      switch (List.rev(result)) {
-      | [] => []
-      | [_errors, ...responseItems] =>
-        switch (responseItems) {
-        | [Msgpck.List(items)] =>
-          List.fold_left2(
-            (accum, buf, bufferContext) =>
-              switch (bufferContext) {
-              | Msgpck.Map(context) => [
-                  parseBufferContext(context),
-                  ...accum,
-                ]
-              | _ => [buf, ...accum]
-              },
-            [],
-            buffers,
-            items,
-          )
-        | _ => []
-        }
-      }
+  | (_, Some([Msgpck.List(items)])) =>
+    List.fold_left2(
+      (accum, buf, bufferContext) =>
+        switch (bufferContext) {
+        | Msgpck.Map(context) => [parseBufferContext(context), ...accum]
+        | _ => [buf, ...accum]
+        },
+      [],
+      buffers,
+      items,
     )
   | _ => []
   };
 };
 
+let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
+  let calls =
+    List.map(
+      ((_, id)) =>
+        Msgpck.List([
+          Msgpck.String("nvim_buf_is_valid"),
+          Msgpck.List([Msgpck.Int(id)]),
+        ]),
+      buffers,
+    );
+  let (_errors, listOfBooleans) =
+    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
+    |> getAtomicCallsResponse;
+
+  switch (listOfBooleans) {
+  | Some(booleans) =>
+    List.fold_left2(
+      (accum, buf, isValid) =>
+        switch (isValid) {
+        | Msgpck.Bool(true) => [buf, ...accum]
+        | Msgpck.Bool(false)
+        | _ => accum
+        },
+      [],
+      buffers,
+      booleans,
+    )
+  | None => []
+  };
+};
+
+let unwrapBufferList = msgs =>
+  switch (msgs) {
+  | Msgpck.List(handles) =>
+    List.fold_left(
+      (accum, buf) =>
+        switch (Utility.convertNeovimExtType(buf)) {
+        | Some(bf) => [bf, ...accum]
+        | None => accum
+        },
+      [],
+      handles,
+    )
+    |> List.rev
+  | _ => []
+  };
+
 let getBufferList = (api: NeovimApi.t) => {
-  let bufs = api.requestSync("nvim_list_bufs", Msgpck.List([]));
-  (
-    switch (bufs) {
-    | Msgpck.List(handles) =>
-      List.fold_left(
-        ((calls, bufs), buffer) =>
-          switch (Utility.convertNeovimExtType(buffer)) {
-          | Some((_, id)) =>
-            let newCalls =
-              constructMetadataCalls(id) |> List.append(calls) |> List.rev;
+  let bufs =
+    api.requestSync("nvim_list_bufs", Msgpck.List([])) |> unwrapBufferList;
+  let filtered = filterInvalidBuffers(api, bufs);
+  List.fold_left(
+    ((calls, bufs), (_, id)) => {
+      let newCalls =
+        constructMetadataCalls(id) |> List.append(calls) |> List.rev;
 
-            let newBuffers =
-              [
-                BufferMetadata.create(
-                  ~id,
-                  ~modified=false,
-                  ~hidden=false,
-                  ~bufType=Empty,
-                  ~fileType=None,
-                  ~filePath=Some("[No Name]"),
-                  (),
-                ),
-                ...bufs,
-              ]
-              |> List.rev;
+      let newBuffers =
+        [
+          BufferMetadata.create(
+            ~id,
+            ~modified=false,
+            ~hidden=false,
+            ~bufType=Empty,
+            ~fileType=None,
+            ~filePath=Some("[No Name]"),
+            (),
+          ),
+          ...bufs,
+        ]
+        |> List.rev;
 
-            (newCalls, newBuffers);
-          | None => (calls, bufs)
-          },
-        ([], []),
-        handles,
-      )
-    | _ => ([], [])
-    }
+      (newCalls, newBuffers);
+    },
+    ([], []),
+    filtered,
   )
   |> enrichBuffers(api);
 };
