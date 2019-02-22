@@ -64,7 +64,7 @@ let createElement =
         color(theme.tabModifiedIconColor),
         marginHorizontal(5),
         fontSize(fontPixelSize),
-        fontFamily("FontAwesome5FreeRegular.otf"),
+        fontFamily("FontAwesome5FreeSolid.otf"),
       ];
 
     (

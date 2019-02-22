@@ -7,6 +7,9 @@
 open Actions;
 open Types;
 
+let sortTabsById = tabs =>
+  State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs));
+
 let truncateFilepath = path =>
   switch (path) {
   | Some(p) => Filename.basename(p)
@@ -21,10 +24,11 @@ let showTablineTabs = (state: State.t, tabs) =>
         State.Tab.{id: tab, title: name, active: false, modified: false},
       tabs,
     )
+    |> sortTabsById
   | _ => state.tabs
   };
 
-let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) =>
+let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
   switch (state.configuration.tablineMode) {
   | Buffers =>
     List.map(
@@ -32,21 +36,19 @@ let showTablineBuffers = (state: State.t, buffers: list(BufferMetadata.t)) =>
         State.Tab.{
           id,
           title: filePath |> truncateFilepath,
-          active: state.activeBufferId == id,
+          active: activeBufferId == id,
           modified,
         },
       buffers,
     )
+    |> sortTabsById
   | _ => state.tabs
   };
 
 let updateTabs = (bufId, modified, tabs) =>
   State.Tab.(
-    List.fold_left(
-      (acc, tab) => tab.id === bufId ? [{...tab, modified}, ...acc] : acc,
-      [],
-      tabs,
-    )
+    List.map(tab => tab.id === bufId ? {...tab, modified} : tab, tabs)
+    |> sortTabsById
   );
 
 let applyBufferUpdate =
@@ -77,13 +79,13 @@ let reduce: (State.t, Actions.t) => State.t =
         ...s,
         activeBufferId: bs.bufferId,
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers),
+        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
       }
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers),
+        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
       }
     | BufferUpdate(bu) => {
         ...s,
