@@ -7,6 +7,7 @@
 open Types;
 
 type t =
+  | BufferDelete(BufferDelete.t)
   | BufferEnter(BufferEnter.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferWritePost(BufferWritePost.t)

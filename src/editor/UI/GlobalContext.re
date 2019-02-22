@@ -10,7 +10,7 @@
 
 type notifySizeChanged = (~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: int, unit) => unit;
-type openFile =
+type viewOperation =
   (
     ~path: string=?,
     ~bufferId: int=?,
@@ -22,14 +22,18 @@ type openFile =
 type t = {
   notifySizeChanged,
   editorScroll,
-  openFile,
+  openFile: viewOperation,
+  closeFile: viewOperation,
 };
+
+let viewNoop: viewOperation =
+  (~path as _="", ~bufferId as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
-  openFile: (~path as _="", ~bufferId as _=0, ~openMethod as _=Buffer, ()) =>
-    (),
+  openFile: viewNoop,
+  closeFile: viewNoop,
 };
 
 let _current: ref(t) = ref(default);

@@ -31,7 +31,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
       modified: t.modified,
       active: t.active,
       onClick: GlobalContext.current().openFile(~bufferId=t.id),
-      onClose: noop,
+      onClose: GlobalContext.current().closeFile(~bufferId=t.id),
     };
     ret;
   };

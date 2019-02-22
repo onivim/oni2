@@ -41,6 +41,8 @@ type t =
   | ModeChanged(string)
   | TextChanged(AutoCommandContext.t)
   | TextChangedI(AutoCommandContext.t)
+  | BufferDetach((int, int))
+  | BufferDelete(AutoCommandContext.t)
   | BufferLines(BufferLinesNotification.t)
   | BufferEnter(AutoCommandContext.t)
   | BufferWritePost(AutoCommandContext.t)
@@ -199,9 +201,19 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   | "BufEnter" => BufferEnter(context)
   | "TextChanged" => TextChanged(context)
   | "TextChangedI" => TextChangedI(context)
+  // Unload is here as a remider that some actions might need to be dealt with here
+  | "BufUnload" => Ignored
+  | "BufDelete" => BufferDelete(context)
   | "CursorMoved" => CursorMoved(context)
   | "CursorMovedI" => CursorMoved(context)
   | _ => Ignored
+  };
+};
+
+let parseDetach = msgs => {
+  switch (Utility.convertNeovimExtType(msgs)) {
+  | Some(buffer) => [BufferDetach(buffer)]
+  | None => [Ignored]
   };
 };
 
@@ -245,6 +257,7 @@ let parse = (t: string, msg: Msgpck.t) => {
       ) =>
       let result = OniCommand(commandName);
       [result];
+    | ("nvim_buf_detach_event", M.List([msgs])) => parseDetach(msgs)
     | ("redraw", M.List(msgs)) => parseRedraw(msgs)
     | _ => [Ignored]
     };

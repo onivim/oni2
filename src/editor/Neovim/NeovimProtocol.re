@@ -13,16 +13,24 @@ open Rench;
  */
 module M = Msgpck;
 
+type viewOperation =
+  (~path: string=?, ~bufferId: int=?, ~openMethod: openMethod=?, unit) => unit;
+
 type t = {
   uiAttach: unit => unit,
   input: string => unit,
   bufAttach: int => unit,
-  openFile:
-    (~path: string=?, ~bufferId: int=?, ~openMethod: openMethod=?, unit) =>
-    unit,
+  openFile: viewOperation,
+  closeFile: viewOperation,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
+};
+
+type commands = {
+  bufferPath: string => M.t,
+  bufferId: int => M.t,
+  tabId: int => M.t,
 };
 
 let make = (nvimApi: NeovimApi.t) => {
@@ -74,15 +82,22 @@ let make = (nvimApi: NeovimApi.t) => {
   )
   |> ignore;
 
-  let openFile = (~path=?, ~bufferId=?, ~openMethod=Buffer, ()) => {
+  /**
+     An abstraction/helper function that deals with the various
+     ways that you can interact with nvim views either buffers or tabs
+     each takes their own commands.
+
+     This way you can create a function that can be used to interact
+     with either depending on what a user passes in, not it one OR the
+     other depending on the open mode that the caller decides on
+   */
+  let viewOperationCommand =
+      (commands, ~path=?, ~bufferId=?, ~openMethod=Buffer, ()) => {
     let args =
       switch (path, bufferId, openMethod) {
-      | (Some(p), None, Buffer) => M.List([M.String("edit" ++ " " ++ p)])
-      | (None, Some(id), Buffer) =>
-        /*
-         The # is required to open a buffer by id using the `edit` command
-         */
-        M.List([M.String("edit #" ++ string_of_int(id))])
+      | (Some(p), None, Buffer) => commands.bufferPath(p)
+      | (None, Some(id), Buffer) => commands.bufferId(id)
+      | (None, Some(id), Tab) => commands.tabId(id)
       | _ => M.List([])
       };
 
@@ -90,6 +105,32 @@ let make = (nvimApi: NeovimApi.t) => {
     ();
   };
 
-  let ret: t = {uiAttach, input, onNotification, bufAttach, openFile};
+  let openFile =
+    viewOperationCommand({
+      bufferPath: p => M.List([M.String("edit " ++ p)]),
+      bufferId: id =>
+        /*
+         The # is required to open a buffer by id using the `edit` command
+         */
+        M.List([M.String("edit #" ++ string_of_int(id))])
+
+      tabId: id => M.List([M.String("tabedit " ++ string_of_int(id))]),
+    });
+
+  let closeFile =
+    viewOperationCommand({
+      bufferId: id => M.List([M.String("bd! " ++ string_of_int(id))]),
+      bufferPath: _p => M.Nil,
+      tabId: id => M.List([M.String("tabdelete! " ++ string_of_int(id))]),
+    });
+
+  let ret: t = {
+    uiAttach,
+    input,
+    onNotification,
+    bufAttach,
+    openFile,
+    closeFile,
+  };
   ret;
 };

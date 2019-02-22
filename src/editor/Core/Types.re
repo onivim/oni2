@@ -123,6 +123,10 @@ module BufferWritePost = {
   };
 };
 
+module BufferDelete = {
+  type t = {buffers: list(BufferMetadata.t)};
+};
+
 module BufferEnter = {
   type t = {
     bufferId: int,

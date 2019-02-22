@@ -58,6 +58,12 @@ let applyBufferUpdate =
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
+let deleteBuffer = buffer =>
+  switch (buffer) {
+  | None => None
+  | Some(_) => None
+  };
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     let s = {
@@ -81,6 +87,7 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
       }
+    | BufferDelete(bd) => {...s, tabs: showTablineBuffers(s, bd.buffers)}
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
