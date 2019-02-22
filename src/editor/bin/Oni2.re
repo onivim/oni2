@@ -204,6 +204,8 @@ let init = app => {
               bufferId: activeBufferId,
               buffers: NeovimBuffer.getBufferList(nvimApi),
             });
+          | BufferDelete(_bd) =>
+            BufferDelete({buffers: NeovimBuffer.getBufferList(nvimApi)})
           | BufferLines(bc) =>
             BufferUpdate(
               Core.Types.BufferUpdate.create(
