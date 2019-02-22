@@ -28,6 +28,24 @@ let init = app => {
       "Oni2",
     );
 
+  let initVimPath =
+    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
+  Core.Log.debug("initVimPath: " ++ initVimPath);
+
+  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+
+  let nvim =
+    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
+  let msgpackTransport =
+    MsgpackTransport.make(
+      ~onData=nvim.stdout.onData,
+      ~write=nvim.stdin.write,
+      (),
+    );
+
+  let nvimApi = NeovimApi.make(msgpackTransport);
+  let neovimProtocol = NeovimProtocol.make(nvimApi);
+
   let render = () => {
     let state: Core.State.t = App.getState(app);
     GlobalContext.set({
@@ -44,6 +62,7 @@ let init = app => {
         ),
       editorScroll: (~deltaY, ()) =>
         App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
+      openFile: neovimProtocol.openFile,
     });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
@@ -57,24 +76,6 @@ let init = app => {
   };
 
   UI.start(w, render);
-
-  let initVimPath =
-    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
-  Core.Log.debug("initVimPath: " ++ initVimPath);
-
-  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
-
-  let nvim =
-    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
-  let msgpackTransport =
-    MsgpackTransport.make(
-      ~onData=nvim.stdout.onData,
-      ~write=nvim.stdin.write,
-      (),
-    );
-
-  let nvimApi: NeovimApi.t = NeovimApi.make(msgpackTransport);
-  let neovimProtocol: NeovimProtocol.t = NeovimProtocol.make(nvimApi);
 
   neovimProtocol.uiAttach();
 
