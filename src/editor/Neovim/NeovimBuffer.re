@@ -58,8 +58,15 @@ let getAtomicCallsResponse = response =>
     (
       switch (List.rev(result)) {
       | [] => (None, None)
-      | [Msgpck.Nil, ...responseItems] => (None, Some(responseItems))
-      | [errors, ...responseItems] => (Some(errors), Some(responseItems))
+      | [Msgpck.Nil, Msgpck.List(responseItems)] => (
+          None,
+          Some(responseItems),
+        )
+      | [errors, Msgpck.List(responseItems)] => (
+          Some(errors),
+          Some(responseItems),
+        )
+      | _ => (None, None)
       }
     )
   | _ => (None, None)
@@ -81,7 +88,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
     |> getAtomicCallsResponse;
 
   switch (rsp) {
-  | (_, Some([Msgpck.List(items)])) =>
+  | (_, Some(items)) =>
     List.fold_left2(
       (accum, buf, bufferContext) =>
         switch (bufferContext) {
@@ -101,14 +108,15 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
     List.map(
       ((_, id)) =>
         Msgpck.List([
-          Msgpck.String("nvim_buf_is_valid"),
+          Msgpck.String("nvim_buf_is_loaded"),
           Msgpck.List([Msgpck.Int(id)]),
         ]),
       buffers,
     );
-  let (_errors, listOfBooleans) =
-    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
-    |> getAtomicCallsResponse;
+
+  let response =
+    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]));
+  let (_errors, listOfBooleans) = getAtomicCallsResponse(response);
 
   switch (listOfBooleans) {
   | Some(booleans) =>
@@ -143,34 +151,32 @@ let unwrapBufferList = msgs =>
   | _ => []
   };
 
-let getBufferList = (api: NeovimApi.t) => {
-  let bufs =
-    api.requestSync("nvim_list_bufs", Msgpck.List([])) |> unwrapBufferList;
-  let filtered = filterInvalidBuffers(api, bufs);
-  List.fold_left(
-    ((calls, bufs), (_, id)) => {
-      let newCalls =
-        constructMetadataCalls(id) |> List.append(calls) |> List.rev;
+let getBufferList = (api: NeovimApi.t) =>
+  api.requestSync("nvim_list_bufs", Msgpck.List([]))
+  |> unwrapBufferList
+  |> filterInvalidBuffers(api)
+  |> List.fold_left(
+       ((calls, bufs), (_, id)) => {
+         let newCalls =
+           constructMetadataCalls(id) |> List.append(calls) |> List.rev;
 
-      let newBuffers =
-        [
-          BufferMetadata.create(
-            ~id,
-            ~modified=false,
-            ~hidden=false,
-            ~bufType=Empty,
-            ~fileType=None,
-            ~filePath=Some("[No Name]"),
-            (),
-          ),
-          ...bufs,
-        ]
-        |> List.rev;
+         let newBuffers =
+           [
+             BufferMetadata.create(
+               ~id,
+               ~modified=false,
+               ~hidden=false,
+               ~bufType=Empty,
+               ~fileType=None,
+               ~filePath=Some("[No Name]"),
+               (),
+             ),
+             ...bufs,
+           ]
+           |> List.rev;
 
-      (newCalls, newBuffers);
-    },
-    ([], []),
-    filtered,
-  )
+         (newCalls, newBuffers);
+       },
+       ([], []),
+     )
   |> enrichBuffers(api);
-};
