@@ -13,6 +13,7 @@ module Buffers =
   });
 
 let empty = Buffers.empty;
+[@deriving show]
 type t = Buffers.t(Buffer.t);
 
 type mapFunction = Buffer.t => Buffer.t;
