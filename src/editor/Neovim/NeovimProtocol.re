@@ -53,12 +53,14 @@ let make = (nvimApi: NeovimApi.t) => {
   let input = (key: string) =>
     nvimApi.requestSync("nvim_input", M.List([M.String(key)])) |> ignore;
 
-  let bufAttach = id =>
-    nvimApi.requestSync(
-      "nvim_buf_attach",
-      M.List([M.Int(id), M.Bool(true), M.Map([])]),
-    )
-    |> ignore;
+  let bufAttach = id => {
+    let _error =
+      nvimApi.requestSync(
+        "nvim_buf_attach",
+        M.List([M.Int(id), M.Bool(true), M.Map([])]),
+      );
+    ();
+  };
 
   Event.subscribe(
     nvimApi.onNotification,
