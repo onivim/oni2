@@ -85,8 +85,9 @@ let make = (nvimApi: NeovimApi.t) => {
      each takes their own commands.
 
      This way you can create a function that can be used to interact
-     with either depending on what a user passes in, not it one OR the
-     other depending on the open mode that the caller decides on
+     with either depending on what a user passes in, NOTE: you can only
+     interact with one type at a time depending
+     on the open mode that the caller decides on
    */
   let viewOperationCommand =
       (commands, ~path=?, ~id=?, ~openMethod: Views.openMethod=Buffer, ()) => {
