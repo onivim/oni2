@@ -25,6 +25,10 @@ function OniNotifyAutocmd(eventName)
     call OniNotify(["autocmd", a:eventName, context])
 endfunction
 
+function OniCommand(commandName)
+    call OniNotify(["command", a:commandName])
+endfunction
+
 augroup OniEventListeners
     autocmd!
     autocmd! BufWritePre * :call OniNotifyAutocmd("BufWritePre")
@@ -49,7 +53,6 @@ function OniGetContext()
     return context
 endfunction
 
-
 function OniGetBufferContext(bufnum)
     let l:context = {}
     let l:bufpath = bufname(a:bufnum)
@@ -67,3 +70,7 @@ function OniGetBufferContext(bufnum)
         return
     endif
 endfunction
+
+nnoremap <silent> zz :<C-u>call OniCommand('oni.editorView.scrollToCursor')<CR>
+nnoremap <silent> zb :<C-u>call OniCommand('oni.editorView.scrollToCursorBottom')<CR>
+nnoremap <silent> zt :<C-u>call OniCommand('oni.editorView.scrollToCursorTop')<CR>
