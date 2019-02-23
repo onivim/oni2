@@ -4,15 +4,17 @@ open Types;
 type t = {
   id: int,
   scrollY: int,
+  minimapScrollY: int,
   viewLines: int,
   size: EditorSize.t,
   cursorPosition: BufferPosition.t,
 };
 
-let create = (~scrollY=0, ()) => {
+let create = () => {
   let ret: t = {
     id: 0,
-    scrollY,
+    scrollY: 0,
+    minimapScrollY: 0,
     viewLines: 0,
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
