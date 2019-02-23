@@ -62,7 +62,7 @@ let log = (m: t) =>
   Buffers.iter(
     (_, b) =>
       Buffer.show(b)
-      |> (++)("Buffer ======================: \n")
+      |> (++)("Buffer =======================: \n")
       |> print_endline,
     m,
   );
