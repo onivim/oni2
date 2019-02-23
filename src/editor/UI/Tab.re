@@ -69,7 +69,7 @@ let createElement =
 
     (
       hooks,
-      <Clickable>
+      <Clickable onClick>
         <View style=containerStyle>
           <Text style=textStyle text=title />
           {
