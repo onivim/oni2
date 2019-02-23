@@ -56,12 +56,12 @@ let createElement =
       Style.[
         fontFamily(fontName),
         fontSize(fontPixelSize),
-        color(theme.editorForeground),
+        color(theme.tabActiveForeground),
       ];
 
     let modifiedStyles =
       Style.[
-        color(theme.tabModifiedIconColor),
+        color(theme.tabActiveForeground),
         marginHorizontal(5),
         fontSize(fontPixelSize),
         fontFamily("FontAwesome5FreeSolid.otf"),
