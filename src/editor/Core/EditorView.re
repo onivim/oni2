@@ -64,7 +64,18 @@ let scrollTo = (view: t, newScrollY, measuredFontHeight) => {
   let newScrollY = max(0, newScrollY);
   let availableScroll = max(view.viewLines - 1, 0) * measuredFontHeight;
   let newScrollY = min(newScrollY, availableScroll);
-  {...view, scrollY: newScrollY};
+
+  let scrollPercentage = float_of_int(newScrollY) /. float_of_int(availableScroll - view.size.pixelHeight);
+  let minimapLineSize = Constants.default.minimapCharacterWidth + Constants.default.minimapCharacterHeight;
+  let linesInMinimap = view.size.pixelHeight / minimapLineSize;
+  let availableMinimapScroll = max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
+  let newMinimapScroll = int_of_float((scrollPercentage) *. float_of_int(availableMinimapScroll));
+
+  print_endline ("scroll percentage" ++ string_of_float(scrollPercentage));
+  print_endline ("available minimap scroll: " ++ string_of_int(availableMinimapScroll));
+  print_endline ("new minimap scroll" ++ string_of_int(newMinimapScroll));
+
+  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
 let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {

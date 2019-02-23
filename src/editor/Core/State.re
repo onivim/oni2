@@ -59,5 +59,5 @@ let create: unit => t =
       ),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
-    editorView: EditorView.create(~scrollY=0, ()),
+    editorView: EditorView.create(),
   };
