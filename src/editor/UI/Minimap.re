@@ -69,7 +69,14 @@ let createElement =
     (
       hooks,
       <View style=absoluteStyle>
-        <FlatList width height rowHeight render count scrollY={state.editorView.minimapScrollY} />
+        <FlatList
+          width
+          height
+          rowHeight
+          render
+          count
+          scrollY={state.editorView.minimapScrollY}
+        />
       </View>,
     );
   });

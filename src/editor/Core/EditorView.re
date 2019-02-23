@@ -48,7 +48,9 @@ let getCursorPixelLine = (view: t, lineHeight: int) => {
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
   let totalViewSizeInPixels =
-    float_of_int(getTotalSizeInPixels(view, lineHeight) + view.size.pixelHeight);
+    float_of_int(
+      getTotalSizeInPixels(view, lineHeight) + view.size.pixelHeight,
+    );
   let thumbPercentage =
     float_of_int(view.size.pixelHeight) /. totalViewSizeInPixels;
   let thumbSize =
@@ -65,11 +67,17 @@ let scrollTo = (view: t, newScrollY, measuredFontHeight) => {
   let availableScroll = max(view.viewLines - 1, 0) * measuredFontHeight;
   let newScrollY = min(newScrollY, availableScroll);
 
-  let scrollPercentage = float_of_int(newScrollY) /. float_of_int(availableScroll - view.size.pixelHeight);
-  let minimapLineSize = Constants.default.minimapCharacterWidth + Constants.default.minimapCharacterHeight;
+  let scrollPercentage =
+    float_of_int(newScrollY)
+    /. float_of_int(availableScroll - view.size.pixelHeight);
+  let minimapLineSize =
+    Constants.default.minimapCharacterWidth
+    + Constants.default.minimapCharacterHeight;
   let linesInMinimap = view.size.pixelHeight / minimapLineSize;
-  let availableMinimapScroll = max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
-  let newMinimapScroll = int_of_float((scrollPercentage) *. float_of_int(availableMinimapScroll));
+  let availableMinimapScroll =
+    max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
+  let newMinimapScroll =
+    int_of_float(scrollPercentage *. float_of_int(availableMinimapScroll));
 
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
