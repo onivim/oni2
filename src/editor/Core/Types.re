@@ -116,18 +116,7 @@ module BufferMetadata = {
   };
 };
 
-module BufferWritePost = {
-  type t = {
-    bufferId: int,
-    buffers: list(BufferMetadata.t),
-  };
-};
-
-module BufferDelete = {
-  type t = {buffers: list(BufferMetadata.t)};
-};
-
-module BufferEnter = {
+module BufferNotification = {
   type t = {
     bufferId: int,
     buffers: list(BufferMetadata.t),

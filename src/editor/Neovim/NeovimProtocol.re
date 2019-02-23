@@ -112,8 +112,7 @@ let make = (nvimApi: NeovimApi.t) => {
         /*
          The # is required to open a buffer by id using the `edit` command
          */
-        M.List([M.String("edit #" ++ string_of_int(id))])
-
+        M.List([M.String("edit #" ++ string_of_int(id))]),
       tabId: id => M.List([M.String("tabedit " ++ string_of_int(id))]),
     });
 

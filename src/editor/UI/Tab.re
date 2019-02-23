@@ -66,7 +66,12 @@ let createElement =
       <View style=containerStyle>
         <Clickable
           onClick
-          style=Style.[width(proportion(0.80)), alignItems(`Center)]>
+          style=Style.[
+            width(proportion(0.80)),
+            flexDirection(`Row),
+            alignItems(`Center),
+            justifyContent(`Center),
+          ]>
           <Text style=textStyle text=title />
           {
             modified ?
