@@ -50,7 +50,7 @@ let createElement =
       |> float_of_int;
 
     let cursorPosition =
-      int_of_float(cursorPixelY /. totalPixel *. float_of_int(totalHeight));
+      int_of_float(cursorPixelY /. (totalPixel +. float_of_int(state.editorView.size.pixelHeight)) *. float_of_int(totalHeight));
     let cursorSize = 2;
 
     let scrollCursorStyle =
