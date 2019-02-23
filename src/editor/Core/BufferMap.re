@@ -59,6 +59,12 @@ let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
 };
 
 let log = (m: t) =>
-  Buffers.iter((_, b) => Buffer.show(b) |> print_endline, m);
+  Buffers.iter(
+    (_, b) =>
+      Buffer.show(b)
+      |> (++)("Buffer =======================: \n")
+      |> print_endline,
+    m,
+  );
 
 let getBuffer = (id, map) => Buffers.find(id, map);

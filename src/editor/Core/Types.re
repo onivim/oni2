@@ -146,6 +146,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
+  [@deriving show]
   type t = {
     id: int,
     startLine: int,
