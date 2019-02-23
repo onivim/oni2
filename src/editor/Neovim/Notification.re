@@ -252,9 +252,7 @@ let parse = (t: string, msg: Msgpck.t) => {
       [result];
     | (
         "oni_plugin_notify",
-        M.List([
-          M.List([M.String("command"), M.String(commandName)]),
-        ]),
+        M.List([M.List([M.String("command"), M.String(commandName)])]),
       ) =>
       let result = OniCommand(commandName);
       [result];

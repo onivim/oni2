@@ -1,4 +1,5 @@
 module Index = {
+  [@deriving show]
   type t =
     | ZeroBasedIndex(int)
     | OneBasedIndex(int);
@@ -29,19 +30,16 @@ module EditorSize = {
 };
 
 module Mode = {
+  /**
+     hide path for this printer as the value is shown
+     to the end user
+   */
+  [@deriving show({with_path: false})]
   type t =
     | Insert
     | Normal
     | Commandline
     | Other;
-
-  let show = v =>
-    switch (v) {
-    | Insert => "insert"
-    | Normal => "normal"
-    | Commandline => "commandline"
-    | Other => "unknown"
-    };
 };
 
 /**
@@ -84,6 +82,7 @@ module BufferPosition = {
   };
 };
 
+[@deriving show]
 type buftype =
   | Empty
   | Help
@@ -107,6 +106,7 @@ let getBufType = bt =>
   };
 
 module BufferMetadata = {
+  [@deriving show]
   type t = {
     filePath: option(string),
     fileType: option(string),
