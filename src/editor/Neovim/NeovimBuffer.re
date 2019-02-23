@@ -45,33 +45,6 @@ let parseBufferContext = map =>
     map,
   );
 
-let getAtomicCallsResponse = response =>
-  switch (response) {
-  | Msgpck.List(result) =>
-    /**
-      The last argument in an atomic call is either NIL or an
-      array of three items  a three-element array with the zero-based
-      index of the call which resulted in an error, the error type
-      and the error message. If an error occurred,
-      the values from all preceding calls will still be returned.
-     */
-    (
-      switch (List.rev(result)) {
-      | [] => (None, None)
-      | [Msgpck.Nil, Msgpck.List(responseItems)] => (
-          None,
-          Some(responseItems),
-        )
-      | [errors, Msgpck.List(responseItems)] => (
-          Some(errors),
-          Some(responseItems),
-        )
-      | _ => (None, None)
-      }
-    )
-  | _ => (None, None)
-  };
-
 /**
     Enrich Buffers
 
@@ -85,7 +58,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
       "nvim_call_atomic",
       Msgpck.List([Msgpck.List(atomicCalls)]),
     )
-    |> getAtomicCallsResponse;
+    |> Utility.getAtomicCallsResponse;
 
   switch (rsp) {
   | (_, Some(items)) =>
@@ -116,7 +89,7 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
 
   let (_errors, listOfBooleans) =
     api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
-    |> getAtomicCallsResponse;
+    |> Utility.getAtomicCallsResponse;
 
   switch (listOfBooleans) {
   | Some(booleans) =>
