@@ -13,15 +13,12 @@ open Rench;
  */
 module M = Msgpck;
 
-type viewOperation =
-  (~path: string=?, ~bufferId: int=?, ~openMethod: openMethod=?, unit) => unit;
-
 type t = {
   uiAttach: unit => unit,
   input: string => unit,
   bufAttach: int => unit,
-  openFile: viewOperation,
-  closeFile: viewOperation,
+  openFile: Views.viewOperation,
+  closeFile: Views.viewOperation,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -92,9 +89,9 @@ let make = (nvimApi: NeovimApi.t) => {
      other depending on the open mode that the caller decides on
    */
   let viewOperationCommand =
-      (commands, ~path=?, ~bufferId=?, ~openMethod=Buffer, ()) => {
+      (commands, ~path=?, ~id=?, ~openMethod: Views.openMethod=Buffer, ()) => {
     let args =
-      switch (path, bufferId, openMethod) {
+      switch (path, id, openMethod) {
       | (Some(p), None, Buffer) => commands.bufferPath(p)
       | (None, Some(id), Buffer) => commands.bufferId(id)
       | (None, Some(id), Tab) => commands.tabId(id)
