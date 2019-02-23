@@ -53,7 +53,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
 
   switch (rsp) {
   | (_, Some(items)) =>
-    List.fold_left2(
+    Utility.safe_fold_left2(
       (accum, buf, bufferContext) =>
         switch (bufferContext) {
         | M.Map(context) => [parseBufferContext(context), ...accum]
@@ -62,6 +62,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
       [],
       buffers,
       items,
+      ~default=buffers,
     )
   | _ => []
   };
@@ -81,7 +82,7 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
 
   switch (listOfBooleans) {
   | Some(booleans) =>
-    List.fold_left2(
+    Utility.safe_fold_left2(
       (accum, buf, isValid) =>
         switch (isValid) {
         | M.Bool(true) => [buf, ...accum]
@@ -91,6 +92,7 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
       [],
       buffers,
       booleans,
+      ~default=buffers,
     )
   | None => []
   };
