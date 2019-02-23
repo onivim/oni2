@@ -7,29 +7,26 @@
  *
  * Hopefully, once there is a context API, this can be wholly replaced with it!
  */
+open Oni_Core.Types;
 
 type notifySizeChanged = (~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: int, unit) => unit;
-type openFile =
-  (
-    ~path: string=?,
-    ~bufferId: int=?,
-    ~openMethod: Oni_Core.Types.openMethod=?,
-    unit
-  ) =>
-  unit;
 
 type t = {
   notifySizeChanged,
   editorScroll,
-  openFile,
+  openFile: Views.viewOperation,
+  closeFile: Views.viewOperation,
 };
+
+let viewNoop: Views.viewOperation =
+  (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
-  openFile: (~path as _="", ~bufferId as _=0, ~openMethod as _=Buffer, ()) =>
-    (),
+  openFile: viewNoop,
+  closeFile: viewNoop,
 };
 
 let _current: ref(t) = ref(default);

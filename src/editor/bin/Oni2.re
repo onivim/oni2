@@ -63,6 +63,7 @@ let init = app => {
       editorScroll: (~deltaY, ()) =>
         App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
+      closeFile: neovimProtocol.closeFile,
     });
     prerr_endline(
       "[DEBUG - STATE] Mode: "
@@ -203,6 +204,11 @@ let init = app => {
               bufferId: activeBufferId,
               buffers: NeovimBuffer.getBufferList(nvimApi),
             });
+          | BufferDelete(bd) =>
+            BufferDelete({
+              buffers: NeovimBuffer.getBufferList(nvimApi),
+              bufferId: bd.activeBufferId,
+            })
           | BufferLines(bc) =>
             BufferUpdate(
               Core.Types.BufferUpdate.create(

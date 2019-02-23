@@ -44,6 +44,28 @@ module Mode = {
     };
 };
 
+/**
+   This type module represents the various "views" of vim
+   each of which can be interacted in their own ways
+
+   * A Tab: contains windows
+   * A Window: contains buffers
+   * A buffer: represents a file
+ */
+module Views = {
+  type t =
+    | Window
+    | Tab
+    | Buffer;
+
+  type openMethod =
+    | Buffer
+    | Tab;
+
+  type viewOperation =
+    (~path: string=?, ~id: int=?, ~openMethod: openMethod=?, unit) => unit;
+};
+
 type openMethod =
   | Tab
   | Buffer;
@@ -116,14 +138,7 @@ module BufferMetadata = {
   };
 };
 
-module BufferWritePost = {
-  type t = {
-    bufferId: int,
-    buffers: list(BufferMetadata.t),
-  };
-};
-
-module BufferEnter = {
+module BufferNotification = {
   type t = {
     bufferId: int,
     buffers: list(BufferMetadata.t),

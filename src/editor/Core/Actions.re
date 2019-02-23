@@ -7,9 +7,10 @@
 open Types;
 
 type t =
-  | BufferEnter(BufferEnter.t)
+  | BufferDelete(BufferNotification.t)
+  | BufferEnter(BufferNotification.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferWritePost(BufferWritePost.t)
+  | BufferWritePost(BufferNotification.t)
   | TablineUpdate(Tabline.tabs)
   | TextChanged(TextChanged.t)
   | TextChangedI(TextChanged.t)

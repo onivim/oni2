@@ -12,9 +12,10 @@ open Oni_Core;
 type tabAction = unit => unit;
 
 let tabHeight = 35;
-let maxWidth = 145;
+let maxWidth = 165;
 let fontName = "Inter-UI-SemiBold.ttf";
 let fontPixelSize = 12;
+let proportion = p => float_of_int(maxWidth) *. p |> int_of_float;
 
 let component = React.component("Tab");
 
@@ -30,13 +31,6 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    /* ~title, */
-    /* ~active: bool, */
-    /* ~onClick: tabAction, */
-    /* ~onClose: tabAction, */
-    /* ~children, */
-    let _ = onClose;
-
     let opacityValue = active ? 1.0 : 0.6;
 
     let containerStyle =
@@ -69,15 +63,40 @@ let createElement =
 
     (
       hooks,
-      <Clickable onClick>
-        <View style=containerStyle>
+      <View style=containerStyle>
+        <Clickable
+          onClick
+          style=Style.[
+            width(proportion(0.80)),
+            flexDirection(`Row),
+            alignItems(`Center),
+            justifyContent(`Center),
+          ]>
           <Text style=textStyle text=title />
           {
             modified ?
               <Text text={||} style=modifiedStyles /> :
               React.listToElement([])
           }
-        </View>
-      </Clickable>,
+        </Clickable>
+        <Clickable
+          onClick=onClose
+          style=Style.[
+            height(tabHeight),
+            alignSelf(`FlexEnd),
+            alignItems(`Center),
+            justifyContent(`Center),
+            width(proportion(0.20)),
+          ]>
+          <Text
+            text={||}
+            style=Style.[
+              color(theme.tabActiveForeground),
+              fontFamily("FontAwesome5FreeSolid.otf"),
+              fontSize(15),
+            ]
+          />
+        </Clickable>
+      </View>,
     );
   });

@@ -1,13 +1,13 @@
 open Oni_Core;
 open Types;
+open NeovimHelpers;
+
+module M = Msgpck;
 
 let constructMetadataCalls = id => [
-  Msgpck.List([
-    Msgpck.String("nvim_call_function"),
-    Msgpck.List([
-      Msgpck.String("OniGetBufferContext"),
-      Msgpck.List([Msgpck.Int(id)]),
-    ]),
+  M.List([
+    M.String("nvim_call_function"),
+    M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]),
   ]),
 ];
 
@@ -15,30 +15,24 @@ let parseBufferContext = map =>
   List.fold_left(
     (accum: BufferMetadata.t, item) =>
       switch (item) {
-      | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
+      | (M.String("bufferFullPath"), M.String(value)) => {
           ...accum,
           filePath: Some(value),
         }
-      | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
-          ...accum,
-          id: bufNum,
-        }
-      | (Msgpck.String("modified"), Msgpck.Int(modified)) => {
+      | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
+      | (M.String("modified"), M.Int(modified)) => {
           ...accum,
           modified: modified == 1,
         }
-      | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
+      | (M.String("buftype"), M.String(buftype)) => {
           ...accum,
           bufType: getBufType(buftype),
         }
-      | (Msgpck.String("filetype"), Msgpck.String(fileType)) => {
+      | (M.String("filetype"), M.String(fileType)) => {
           ...accum,
           fileType: Some(fileType),
         }
-      | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
-          ...accum,
-          hidden,
-        }
+      | (M.String("hidden"), M.Bool(hidden)) => {...accum, hidden}
       | _ => accum
       },
     BufferMetadata.create(),
@@ -54,81 +48,98 @@ let parseBufferContext = map =>
    */
 let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
   let rsp =
-    api.requestSync(
-      "nvim_call_atomic",
-      Msgpck.List([Msgpck.List(atomicCalls)]),
-    );
+    api.requestSync("nvim_call_atomic", M.List([M.List(atomicCalls)]))
+    |> getAtomicCallsResponse;
+
   switch (rsp) {
-  | Msgpck.List(result) =>
-    /**
-        The last argument in an atomic call is either NIL or an
-        array of three items  a three-element array with the zero-based
-        index of the call which resulted in an error, the error type
-        and the error message. If an error occurred,
-        the values from all preceding calls will still be returned.
-       */
-    (
-      switch (List.rev(result)) {
-      | [] => []
-      | [_errors, ...responseItems] =>
-        switch (responseItems) {
-        | [Msgpck.List(items)] =>
-          List.fold_left2(
-            (accum, buf, bufferContext) =>
-              switch (bufferContext) {
-              | Msgpck.Map(context) => [
-                  parseBufferContext(context),
-                  ...accum,
-                ]
-              | _ => [buf, ...accum]
-              },
-            [],
-            buffers,
-            items,
-          )
-        | _ => []
-        }
-      }
+  | (_, Some(items)) =>
+    Utility.safe_fold_left2(
+      (accum, buf, bufferContext) =>
+        switch (bufferContext) {
+        | M.Map(context) => [parseBufferContext(context), ...accum]
+        | _ => [buf, ...accum]
+        },
+      [],
+      buffers,
+      items,
+      ~default=buffers,
     )
   | _ => []
   };
 };
 
-let getBufferList = (api: NeovimApi.t) => {
-  let bufs = api.requestSync("nvim_list_bufs", Msgpck.List([]));
-  (
-    switch (bufs) {
-    | Msgpck.List(handles) =>
-      List.fold_left(
-        ((calls, bufs), buffer) =>
-          switch (Utility.convertNeovimExtType(buffer)) {
-          | Some((_, id)) =>
-            let newCalls =
-              constructMetadataCalls(id) |> List.append(calls) |> List.rev;
+let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
+  let calls =
+    List.map(
+      ((_, id)) =>
+        M.List([M.String("nvim_buf_is_loaded"), M.List([M.Int(id)])]),
+      buffers,
+    );
 
-            let newBuffers =
-              [
-                BufferMetadata.create(
-                  ~id,
-                  ~modified=false,
-                  ~hidden=false,
-                  ~bufType=Empty,
-                  ~fileType=None,
-                  ~filePath=Some("[No Name]"),
-                  (),
-                ),
-                ...bufs,
-              ]
-              |> List.rev;
+  let (_errors, listOfBooleans) =
+    api.requestSync("nvim_call_atomic", M.List([M.List(calls)]))
+    |> getAtomicCallsResponse;
 
-            (newCalls, newBuffers);
-          | None => (calls, bufs)
-          },
-        ([], []),
-        handles,
-      )
-    | _ => ([], [])
-    }
-  )
-  |> enrichBuffers(api);
+  switch (listOfBooleans) {
+  | Some(booleans) =>
+    Utility.safe_fold_left2(
+      (accum, buf, isValid) =>
+        switch (isValid) {
+        | M.Bool(true) => [buf, ...accum]
+        | M.Bool(false)
+        | _ => accum
+        },
+      [],
+      buffers,
+      booleans,
+      ~default=buffers,
+    )
+  | None => []
+  };
 };
+
+let unwrapBufferList = msgs =>
+  switch (msgs) {
+  | M.List(handles) =>
+    List.fold_left(
+      (accum, buf) =>
+        switch (convertNeovimExtType(buf)) {
+        | Some(bf) => [bf, ...accum]
+        | None => accum
+        },
+      [],
+      handles,
+    )
+    |> List.rev
+  | _ => []
+  };
+
+let getBufferList = (api: NeovimApi.t) =>
+  api.requestSync("nvim_list_bufs", M.List([]))
+  |> unwrapBufferList
+  |> filterInvalidBuffers(api)
+  |> List.fold_left(
+       ((calls, bufs), (_, id)) => {
+         let newCalls =
+           constructMetadataCalls(id) |> List.append(calls) |> List.rev;
+
+         let newBuffers =
+           [
+             BufferMetadata.create(
+               ~id,
+               ~modified=false,
+               ~hidden=false,
+               ~bufType=Empty,
+               ~fileType=None,
+               ~filePath=Some("[No Name]"),
+               (),
+             ),
+             ...bufs,
+           ]
+           |> List.rev;
+
+         (newCalls, newBuffers);
+       },
+       ([], []),
+     )
+  |> enrichBuffers(api);

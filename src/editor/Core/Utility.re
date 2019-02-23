@@ -37,8 +37,9 @@ let getFileContents = (path, ~handler) => {
 let convertUTF8string = str =>
   CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
 
-let convertNeovimExtType = (buffer: Msgpck.t) =>
-  switch (buffer) {
-  | Msgpck.Ext(kind, id) => Some((kind, convertUTF8string(id)))
-  | _ => None
+let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
+  try (List.fold_left2(fn, accum, list1, list2)) {
+  | Invalid_argument(reason) =>
+    print_endline("fold_left2 failing because: " ++ reason);
+    default;
   };

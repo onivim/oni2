@@ -81,6 +81,10 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
       }
+    | BufferDelete(bd) => {
+        ...s,
+        tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
+      }
     | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
