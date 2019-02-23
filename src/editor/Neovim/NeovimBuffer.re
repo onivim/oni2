@@ -114,9 +114,9 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
       buffers,
     );
 
-  let response =
-    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]));
-  let (_errors, listOfBooleans) = getAtomicCallsResponse(response);
+  let (_errors, listOfBooleans) =
+    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
+    |> getAtomicCallsResponse;
 
   switch (listOfBooleans) {
   | Some(booleans) =>
