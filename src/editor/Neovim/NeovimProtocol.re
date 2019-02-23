@@ -79,7 +79,10 @@ let make = (nvimApi: NeovimApi.t) => {
       switch (path, bufferId, openMethod) {
       | (Some(p), None, Buffer) => M.List([M.String("edit" ++ " " ++ p)])
       | (None, Some(id), Buffer) =>
-        M.List([M.String("edit" ++ " " ++ "#" ++ string_of_int(id))])
+        /*
+         The # is required to open a buffer by id using the `edit` command
+         */
+        M.List([M.String("edit #" ++ string_of_int(id))])
       | _ => M.List([])
       };
 
