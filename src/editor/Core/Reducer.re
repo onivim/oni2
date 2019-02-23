@@ -58,12 +58,6 @@ let applyBufferUpdate =
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
-let deleteBuffer = buffer =>
-  switch (buffer) {
-  | None => None
-  | Some(_) => None
-  };
-
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     let s = {

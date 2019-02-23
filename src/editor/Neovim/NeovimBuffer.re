@@ -2,13 +2,12 @@ open Oni_Core;
 open Types;
 open NeovimHelpers;
 
+module M = Msgpck;
+
 let constructMetadataCalls = id => [
-  Msgpck.List([
-    Msgpck.String("nvim_call_function"),
-    Msgpck.List([
-      Msgpck.String("OniGetBufferContext"),
-      Msgpck.List([Msgpck.Int(id)]),
-    ]),
+  M.List([
+    M.String("nvim_call_function"),
+    M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]),
   ]),
 ];
 
@@ -16,30 +15,24 @@ let parseBufferContext = map =>
   List.fold_left(
     (accum: BufferMetadata.t, item) =>
       switch (item) {
-      | (Msgpck.String("bufferFullPath"), Msgpck.String(value)) => {
+      | (M.String("bufferFullPath"), M.String(value)) => {
           ...accum,
           filePath: Some(value),
         }
-      | (Msgpck.String("bufferNumber"), Msgpck.Int(bufNum)) => {
-          ...accum,
-          id: bufNum,
-        }
-      | (Msgpck.String("modified"), Msgpck.Int(modified)) => {
+      | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
+      | (M.String("modified"), M.Int(modified)) => {
           ...accum,
           modified: modified == 1,
         }
-      | (Msgpck.String("buftype"), Msgpck.String(buftype)) => {
+      | (M.String("buftype"), M.String(buftype)) => {
           ...accum,
           bufType: getBufType(buftype),
         }
-      | (Msgpck.String("filetype"), Msgpck.String(fileType)) => {
+      | (M.String("filetype"), M.String(fileType)) => {
           ...accum,
           fileType: Some(fileType),
         }
-      | (Msgpck.String("hidden"), Msgpck.Bool(hidden)) => {
-          ...accum,
-          hidden,
-        }
+      | (M.String("hidden"), M.Bool(hidden)) => {...accum, hidden}
       | _ => accum
       },
     BufferMetadata.create(),
@@ -55,10 +48,7 @@ let parseBufferContext = map =>
    */
 let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
   let rsp =
-    api.requestSync(
-      "nvim_call_atomic",
-      Msgpck.List([Msgpck.List(atomicCalls)]),
-    )
+    api.requestSync("nvim_call_atomic", M.List([M.List(atomicCalls)]))
     |> getAtomicCallsResponse;
 
   switch (rsp) {
@@ -66,7 +56,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
     List.fold_left2(
       (accum, buf, bufferContext) =>
         switch (bufferContext) {
-        | Msgpck.Map(context) => [parseBufferContext(context), ...accum]
+        | M.Map(context) => [parseBufferContext(context), ...accum]
         | _ => [buf, ...accum]
         },
       [],
@@ -81,15 +71,12 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
   let calls =
     List.map(
       ((_, id)) =>
-        Msgpck.List([
-          Msgpck.String("nvim_buf_is_loaded"),
-          Msgpck.List([Msgpck.Int(id)]),
-        ]),
+        M.List([M.String("nvim_buf_is_loaded"), M.List([M.Int(id)])]),
       buffers,
     );
 
   let (_errors, listOfBooleans) =
-    api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
+    api.requestSync("nvim_call_atomic", M.List([M.List(calls)]))
     |> getAtomicCallsResponse;
 
   switch (listOfBooleans) {
@@ -97,8 +84,8 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
     List.fold_left2(
       (accum, buf, isValid) =>
         switch (isValid) {
-        | Msgpck.Bool(true) => [buf, ...accum]
-        | Msgpck.Bool(false)
+        | M.Bool(true) => [buf, ...accum]
+        | M.Bool(false)
         | _ => accum
         },
       [],
@@ -111,7 +98,7 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
 
 let unwrapBufferList = msgs =>
   switch (msgs) {
-  | Msgpck.List(handles) =>
+  | M.List(handles) =>
     List.fold_left(
       (accum, buf) =>
         switch (convertNeovimExtType(buf)) {
@@ -126,7 +113,7 @@ let unwrapBufferList = msgs =>
   };
 
 let getBufferList = (api: NeovimApi.t) =>
-  api.requestSync("nvim_list_bufs", Msgpck.List([]))
+  api.requestSync("nvim_list_bufs", M.List([]))
   |> unwrapBufferList
   |> filterInvalidBuffers(api)
   |> List.fold_left(
