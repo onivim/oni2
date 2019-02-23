@@ -90,13 +90,10 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
       }
-    | BufferUpdate(bu) =>
-      let r = {
+    | BufferUpdate(bu) => {
         ...s,
         buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
-      };
-      BufferMap.log(r.buffers);
-      r;
+      }
     | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
     | CommandlineShow(commandline) => {...s, commandline}
