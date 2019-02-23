@@ -44,6 +44,10 @@ module Mode = {
     };
 };
 
+type openMethod =
+  | Tab
+  | Buffer;
+
 module BufferPosition = {
   type t = {
     line: Index.t,

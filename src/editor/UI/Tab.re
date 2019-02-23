@@ -35,7 +35,7 @@ let createElement =
     /* ~onClick: tabAction, */
     /* ~onClose: tabAction, */
     /* ~children, */
-    let _ = (onClick, onClose);
+    let _ = onClose;
 
     let opacityValue = active ? 1.0 : 0.6;
 
@@ -69,7 +69,7 @@ let createElement =
 
     (
       hooks,
-      <Clickable>
+      <Clickable onClick>
         <View style=containerStyle>
           <Text style=textStyle text=title />
           {

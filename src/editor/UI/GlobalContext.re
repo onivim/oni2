@@ -10,15 +10,26 @@
 
 type notifySizeChanged = (~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: int, unit) => unit;
+type openFile =
+  (
+    ~path: string=?,
+    ~bufferId: int=?,
+    ~openMethod: Oni_Core.Types.openMethod=?,
+    unit
+  ) =>
+  unit;
 
 type t = {
   notifySizeChanged,
   editorScroll,
+  openFile,
 };
 
 let default = {
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
+  openFile: (~path as _="", ~bufferId as _=0, ~openMethod as _=Buffer, ()) =>
+    (),
 };
 
 let _current: ref(t) = ref(default);
