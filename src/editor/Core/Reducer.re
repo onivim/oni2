@@ -84,22 +84,12 @@ let reduce: (State.t, Actions.t) => State.t =
         ...s,
         tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
       }
-    | BufferEnter(bs) =>
-      List.iter(
-        b =>
-          BufferMetadata.show(b)
-          |> (++)("Neovim Buffer:  ----> \n")
-          |> print_endline,
-        bs.buffers,
-      );
-      let r = {
+    | BufferEnter(bs) => {
         ...s,
         activeBufferId: bs.bufferId,
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
         tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
-      };
-      BufferMap.log(r.buffers);
-      r;
+      }
     | BufferUpdate(bu) => {
         ...s,
         buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
