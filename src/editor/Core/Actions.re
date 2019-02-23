@@ -9,7 +9,10 @@ open Types;
 type t =
   | BufferEnter(BufferEnter.t)
   | BufferUpdate(BufferUpdate.t)
+  | BufferWritePost(BufferWritePost.t)
   | TablineUpdate(Tabline.tabs)
+  | TextChanged(TextChanged.t)
+  | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
   | CursorMove(BufferPosition.t)
   | SetEditorFont(EditorFont.t)

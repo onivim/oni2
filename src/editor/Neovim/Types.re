@@ -24,20 +24,21 @@ module AutoCommandContext = {
     activeBufferId: int,
     cursorLine: Index.t,
     cursorColumn: Index.t,
+    modified: bool,
   };
 
-  let create = (~activeBufferId, ~cursorLine, ~cursorColumn, ()) => {
+  let create = (~activeBufferId, ~cursorLine, ~cursorColumn, ~modified) => {
     activeBufferId,
     cursorLine,
     cursorColumn,
+    modified,
   };
 
-  let show = (v: t) => {
+  let show = (v: t) =>
     "activeBufferId: "
     ++ string_of_int(v.activeBufferId)
     ++ " line: "
     ++ string_of_int(Index.toZeroBasedInt(v.cursorLine))
     ++ " column: "
     ++ string_of_int(Index.toZeroBasedInt(v.cursorColumn));
-  };
 };

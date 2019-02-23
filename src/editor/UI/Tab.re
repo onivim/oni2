@@ -19,7 +19,16 @@ let fontPixelSize = 12;
 let component = React.component("Tab");
 
 let createElement =
-    (~title, ~active, ~onClick, ~onClose, ~theme: Theme.t, ~children as _, ()) =>
+    (
+      ~title,
+      ~active,
+      ~modified,
+      ~onClick,
+      ~onClose,
+      ~theme: Theme.t,
+      ~children as _,
+      (),
+    ) =>
   component(hooks => {
     /* ~title, */
     /* ~active: bool, */
@@ -47,13 +56,28 @@ let createElement =
       Style.[
         fontFamily(fontName),
         fontSize(fontPixelSize),
-        color(theme.editorForeground),
+        color(theme.tabActiveForeground),
+      ];
+
+    let modifiedStyles =
+      Style.[
+        color(theme.tabActiveForeground),
+        marginHorizontal(5),
+        fontSize(fontPixelSize),
+        fontFamily("FontAwesome5FreeSolid.otf"),
       ];
 
     (
       hooks,
       <Clickable>
-        <View style=containerStyle> <Text style=textStyle text=title /> </View>
+        <View style=containerStyle>
+          <Text style=textStyle text=title />
+          {
+            modified ?
+              <Text text={||} style=modifiedStyles /> :
+              React.listToElement([])
+          }
+        </View>
       </Clickable>,
     );
   });

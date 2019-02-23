@@ -28,6 +28,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
   let f = (t: Oni_Core.State.Tab.t) => {
     let ret: Tabs.tabInfo = {
       title: t.title,
+      modified: t.modified,
       active: t.active,
       onClick: noop,
       onClose: noop,

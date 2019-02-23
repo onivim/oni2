@@ -170,25 +170,36 @@ let init = app => {
       neovimProtocol.onNotification,
       n => {
         open Core.Actions;
-        let msg = 
+        let msg =
           switch (n) {
-          | OniCommand("oni.editorView.scrollToCursor") => EditorScrollToCursorCentered
-          | OniCommand("oni.editorView.scrollToCursorTop") => EditorScrollToCursorTop
-          | OniCommand("oni.editorView.scrollToCursorBottom") => EditorScrollToCursorBottom
+          | OniCommand("oni.editorView.scrollToCursor") =>
+            EditorScrollToCursorCentered
+          | OniCommand("oni.editorView.scrollToCursorTop") =>
+            EditorScrollToCursorTop
+          | OniCommand("oni.editorView.scrollToCursorBottom") =>
+            EditorScrollToCursorBottom
           | ModeChanged("normal") => ChangeMode(Normal)
           | ModeChanged("insert") => ChangeMode(Insert)
-          | ModeChanged("cmdline_normal") =>
-            ChangeMode(Commandline)
+          | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
           | TablineUpdate(tabs) => TablineUpdate(tabs)
           | ModeChanged(_) => ChangeMode(Other)
           | CursorMoved(c) =>
             CursorMove(
               Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
             )
-          | BufferEnter(b) =>
-            neovimProtocol.bufAttach(b.bufferId);
+          | BufferWritePost({activeBufferId, _}) =>
+            BufferWritePost({
+              bufferId: activeBufferId,
+              buffers: NeovimBuffer.getBufferList(nvimApi),
+            })
+          | TextChangedI({activeBufferId, modified, _}) =>
+            TextChangedI({activeBufferId, modified})
+          | TextChanged({activeBufferId, modified, _}) =>
+            TextChanged({activeBufferId, modified})
+          | BufferEnter({activeBufferId, _}) =>
+            neovimProtocol.bufAttach(activeBufferId);
             BufferEnter({
-              bufferId: b.bufferId,
+              bufferId: activeBufferId,
               buffers: NeovimBuffer.getBufferList(nvimApi),
             });
           | BufferLines(bc) =>
@@ -215,10 +226,11 @@ let init = app => {
 
         /* TODO:
          * Refactor this into a middleware concept, like Redux */
-        switch(msg) {
+        switch (msg) {
         | Core.Actions.BufferUpdate(_)
-        | Core.Actions.BufferEnter(_) => App.dispatch(app, RecalculateEditorView)
-        | _ => ();
+        | Core.Actions.BufferEnter(_) =>
+          App.dispatch(app, RecalculateEditorView)
+        | _ => ()
         };
 
         prerr_endline("Protocol Notification: " ++ Notification.show(n));

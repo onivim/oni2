@@ -19,6 +19,7 @@ type t = {
   editorMenuBackground: Color.t,
   editorMenuForeground: Color.t,
   editorMenuItemSelected: Color.t,
+  tabActiveForeground: Color.t,
 };
 
 let default: t = {
@@ -34,9 +35,7 @@ let default: t = {
   editorMenuBackground: Color.hex("#2F3440"),
   editorMenuForeground: Color.hex("#FFFFFF"),
   editorMenuItemSelected: Color.hex("#495162"),
+  tabActiveForeground: Color.hex("#DCDCDC"),
 };
 
-let create: unit => t =
-  () => {
-    default;
-  };
+let create: unit => t = () => default;

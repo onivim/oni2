@@ -11,21 +11,22 @@ let noop = () => ();
 type tabInfo = {
   title: string,
   active: bool,
+  modified: bool,
   onClick: Tab.tabAction,
   onClose: Tab.tabAction,
 };
 
 let component = React.component("Tabs");
 
-let toTab = (theme, t: tabInfo) => {
+let toTab = (theme, t: tabInfo) =>
   <Tab
     theme
     title={t.title}
     active={t.active}
+    modified={t.modified}
     onClick={t.onClick}
     onClose={t.onClose}
   />;
-};
 
 let viewStyle = Style.[flexDirection(`Row)];
 
