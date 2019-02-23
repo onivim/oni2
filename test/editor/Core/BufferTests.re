@@ -22,6 +22,20 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a"|]);
     });
 
+    test("BufEnter update does not duplicate content", ({expect}) => {
+      let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
+      let update =
+        BufferUpdate.create(
+          ~startLine=0,
+          ~endLine=-1,
+          ~lines=["a", "d", "e", "f", "c"],
+          ~version=2,
+          (),
+        );
+      let updatedBuffer = Buffer.update(buffer, update);
+      validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
+    });
+
     test("update single line", ({expect}) => {
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
