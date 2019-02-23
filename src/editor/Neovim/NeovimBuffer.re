@@ -1,5 +1,6 @@
 open Oni_Core;
 open Types;
+open NeovimHelpers;
 
 let constructMetadataCalls = id => [
   Msgpck.List([
@@ -58,7 +59,7 @@ let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
       "nvim_call_atomic",
       Msgpck.List([Msgpck.List(atomicCalls)]),
     )
-    |> Utility.getAtomicCallsResponse;
+    |> getAtomicCallsResponse;
 
   switch (rsp) {
   | (_, Some(items)) =>
@@ -89,7 +90,7 @@ let filterInvalidBuffers = (api: NeovimApi.t, buffers) => {
 
   let (_errors, listOfBooleans) =
     api.requestSync("nvim_call_atomic", Msgpck.List([Msgpck.List(calls)]))
-    |> Utility.getAtomicCallsResponse;
+    |> getAtomicCallsResponse;
 
   switch (listOfBooleans) {
   | Some(booleans) =>
@@ -113,7 +114,7 @@ let unwrapBufferList = msgs =>
   | Msgpck.List(handles) =>
     List.fold_left(
       (accum, buf) =>
-        switch (Utility.convertNeovimExtType(buf)) {
+        switch (convertNeovimExtType(buf)) {
         | Some(bf) => [bf, ...accum]
         | None => accum
         },

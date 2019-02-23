@@ -19,3 +19,4 @@ module NeovimProtocol = NeovimProtocol;
 module Notification = Notification;
 module NeovimBuffer = NeovimBuffer;
 module NeovimTab = NeovimTab;
+module NeovimHelpers = NeovimHelpers;

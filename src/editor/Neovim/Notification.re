@@ -8,6 +8,7 @@
 /* open Rench; */
 
 open Types;
+open NeovimHelpers;
 
 module Core = Oni_Core;
 module Utility = Oni_Core.Utility;
@@ -211,7 +212,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
 };
 
 let parseDetach = msgs => {
-  switch (Utility.convertNeovimExtType(msgs)) {
+  switch (convertNeovimExtType(msgs)) {
   | Some(buffer) => [BufferDetach(buffer)]
   | None => [Ignored]
   };

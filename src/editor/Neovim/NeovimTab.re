@@ -16,7 +16,7 @@ let parseTabMap = map =>
         | (M.String("name"), M.String(value)) => {...accum, name: value}
         | (M.String("tab"), value) =>
           let tab =
-            switch (Utility.convertNeovimExtType(value)) {
+            switch (NeovimHelpers.convertNeovimExtType(value)) {
             | Some((_, id)) => id
             | None => 0
             };
