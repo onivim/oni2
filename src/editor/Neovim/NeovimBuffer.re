@@ -6,7 +6,7 @@ module M = Msgpck;
 
 type partialBuffer = {id: int};
 
-let constructMetadataCalls = id => [
+let constructMetadataCalls = ((_, id)) => [
   M.List([
     M.String("nvim_call_function"),
     M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]),
@@ -118,6 +118,6 @@ let getBufferList = (api: NeovimApi.t) =>
   api.requestSync("nvim_list_bufs", M.List([]))
   |> unwrapBufferList
   |> filterInvalidBuffers(api)
-  |> List.map(((_, id)) => constructMetadataCalls(id))
+  |> List.map(constructMetadataCalls)
   |> List.flatten
   |> enrichBuffers(api);

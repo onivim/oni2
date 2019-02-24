@@ -202,7 +202,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   | "BufEnter" => BufferEnter(context)
   | "TextChanged" => TextChanged(context)
   | "TextChangedI" => TextChangedI(context)
-  // Unload is here as a remider that some actions might need to be dealt with here
+  // Unload is here as a reminder that some actions might need to be dealt with here
   | "BufUnload" => Ignored
   | "BufDelete" => BufferDelete(context)
   | "CursorMoved" => CursorMoved(context)
