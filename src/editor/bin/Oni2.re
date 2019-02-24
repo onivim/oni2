@@ -182,7 +182,11 @@ let init = app => {
             EditorScrollToCursorBottom
           | ModeChanged("normal") => ChangeMode(Normal)
           | ModeChanged("insert") => ChangeMode(Insert)
-          | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
+          | ModeChanged("replace") => ChangeMode(Replace)
+          | ModeChanged("visual") => ChangeMode(Visual)
+          | ModeChanged("operator") => ChangeMode(Operator)
+          | ModeChanged("cmdline_normal") =>
+            ChangeMode(Commandline)
           | TablineUpdate(tabs) => TablineUpdate(tabs)
           | ModeChanged(_) => ChangeMode(Other)
           | CursorMoved(c) =>

@@ -32,15 +32,21 @@ module Mode = {
   type t =
     | Insert
     | Normal
+    | Replace
+    | Visual
+    | Operator
     | Commandline
     | Other;
 
   let show = v =>
     switch (v) {
-    | Insert => "insert"
-    | Normal => "normal"
-    | Commandline => "commandline"
-    | Other => "unknown"
+    | Insert => "Insert"
+    | Normal => "Normal"
+    | Replace => "Replace"
+    | Visual => "Visual"
+    | Operator => "Operator"
+    | Commandline => "Commandline"
+    | Other => "Unknown"
     };
 };
 
