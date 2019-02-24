@@ -37,7 +37,7 @@ module BufferLinesNotification = {
   };
 };
 
-[@deriving show]
+[@deriving show({ with_path: false })]
 type t =
   | Redraw
   | OniCommand(string)
@@ -265,14 +265,3 @@ let parse = (t: string, msg: Msgpck.t) => {
 
   msgs |> List.filter(m => m !== Ignored);
 };
-
-/* let show = (n) => */
-/*   switch (n) { */
-/*   | Ignored(event, value) => */
-/*     "Event: " ++ event ++ ", Value: " ++ M.show(value) */
-/*   | Redraw => "redraw" */
-/*   | ModeChanged(s) => "mode changed: " ++ s */
-/*   | CursorMoved(c) => "cursor moved: " ++ AutoCommandContext.show(c) */
-/*   | BufferLines(_) => "buffer lines" */
-/*   | i => "unknown" ++ Notification.show(i) */
-/*   }; */
