@@ -20,7 +20,7 @@ module EditorState = {
 };
 
 module AutoCommandContext = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     activeBufferId: int,
     cursorLine: Index.t,
