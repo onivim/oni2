@@ -17,7 +17,7 @@ let truncateFilepath = path =>
   };
 
 let showTablineTabs = (state: State.t, tabs) =>
-  switch (state.configuration.tablineMode) {
+  switch (state.configuration.editorTablineMode) {
   | Tabs =>
     List.map(
       ({tab, name}: Tabline.t) =>
@@ -29,7 +29,7 @@ let showTablineTabs = (state: State.t, tabs) =>
   };
 
 let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
-  switch (state.configuration.tablineMode) {
+  switch (state.configuration.editorTablineMode) {
   | Buffers =>
     List.map(
       ({id, filePath, modified, _}: BufferMetadata.t) =>

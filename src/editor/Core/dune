@@ -2,6 +2,7 @@
     (name Oni_Core)
     (public_name Oni_Core)
     (libraries 
+        str
         bigarray
         zed
         reglfw

@@ -4,20 +4,25 @@
  * Configuration settings for the editor
  */
 
-type tablineMode =
-  | Buffers
-  | Tabs
-  | Hybrid;
+[@deriving yojson]
+type editorTablineMode =
+  | [@name "buffers"] Buffers
+  | [@name "tabs"] Tabs
+  | [@name "hybrid"] Hybrid;
 
+[@deriving yojson({strict: false, exn: true})]
 type t = {
   editorLineNumbers: LineNumber.setting,
   editorMinimapEnabled: bool,
-  tablineMode,
+  editorTablineMode,
 };
 
-let create: unit => t =
-  () => {
-    editorLineNumbers: On,
-    editorMinimapEnabled: true,
-    tablineMode: Buffers,
-  };
+let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
+
+let create = () => {
+  let config =
+    Revery_Core.Environment.getWorkingDirectory()
+    ++ "/assets/configuration/configuration.json"
+    |> ofFile;
+  config;
+};
