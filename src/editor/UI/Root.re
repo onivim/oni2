@@ -60,7 +60,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <Commandline theme command={state.commandline} />
           <Wildmenu theme wildmenu={state.wildmenu} />
         </Overlay>
-        <View style=statusBarStyle> <StatusBar mode={state.mode} /> </View>
+        <View style=statusBarStyle>
+          <StatusBar
+            mode={state.mode}
+            position={state.editorView.cursorPosition}
+          />
+        </View>
       </View>,
     );
   });
