@@ -57,7 +57,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | TablineUpdate(Tabline.tabs)
-  | Ignored(string, M.t);
+  | Ignored;
 
 type commandlineInput = {input: string};
 
@@ -100,15 +100,13 @@ let showCommandline = args =>
       level,
       show: true,
     });
-  | [value] => Ignored("commandline_show_unknown", value)
-  | _ => Ignored("commandline_show_unknown", M.Nil)
+  | _ => Ignored
   };
 
 let updateCommandline = msgs =>
   switch (msgs) {
   | [M.Int(position), M.Int(level)] => CommandlineUpdate((position, level))
-  | [value, _] => Ignored("update_commanline_unknown", value)
-  | _ => Ignored("update_commanline_unknown", M.Nil)
+  | _ => Ignored
   };
 
 let hideCommandline = _msgs =>
@@ -139,8 +137,7 @@ let showWildmenu = (args: list(M.t)) =>
       /* reorder the list due to the spreading above adding items the wrong way round */
       |> List.rev;
     WildmenuShow({items, selected: 0, show: true});
-  | [value] => Ignored("show_wildmenu_unknown", value)
-  | _ => Ignored("show_wildmenu_unknown", M.Nil)
+  | _ => Ignored
   };
 
 let hideWildmenu = _msgs =>
@@ -150,7 +147,7 @@ let updateWildmenu = selected =>
   /* [wildmenu_select, [0]] */
   switch (selected) {
   | M.Int(s) => WildmenuSelected(s)
-  | value => Ignored("wildmenu_select_unknown", value)
+  | _ => Ignored
   };
 
 let parseRedraw = (msgs: list(Msgpck.t)) => {
@@ -176,7 +173,7 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
         M.List([M.String(mode), M.Int(_style)]),
       ]) =>
       ModeChanged(mode)
-    | value => Ignored("parse_redraw_unknown", value)
+    | _ => Ignored
     };
 
   msgs |> List.map(p);
@@ -212,14 +209,14 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   | "BufDelete" => BufferDelete(context)
   | "CursorMoved" => CursorMoved(context)
   | "CursorMovedI" => CursorMoved(context)
-  | value => Ignored("Autocommand_unknown", M.String(value))
+  | _ => Ignored
   };
 };
 
 let parseDetach = msgs => {
   switch (convertNeovimExtType(msgs)) {
   | Some(buffer) => [BufferDetach(buffer)]
-  | None => [Ignored("buffer_detach_unknown", msgs)]
+  | None => [Ignored]
   };
 };
 
@@ -263,16 +260,10 @@ let parse = (t: string, msg: Msgpck.t) => {
       [result];
     | ("nvim_buf_detach_event", M.List([msgs])) => parseDetach(msgs)
     | ("redraw", M.List(msgs)) => parseRedraw(msgs)
-    | (event, v) => [Ignored(event, v)]
+    | _ => [Ignored]
     };
 
-  msgs
-  |> List.filter(m =>
-       switch (m) {
-       | Ignored(_) => false
-       | _ => true
-       }
-     );
+  msgs |> List.filter(m => m !== Ignored);
 };
 
 /* let show = (n) => */

@@ -176,6 +176,7 @@ module Tabline = {
     name: string,
   };
 
+  [@deriving show]
   type tabs = list(t);
 };
 
