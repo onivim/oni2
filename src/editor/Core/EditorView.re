@@ -128,6 +128,29 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
   | None => view
   };
 
+type cursorLocation =
+  | Top
+  | Middle
+  | Bottom;
+
+let moveCursorToPosition = (~moveCursor, view, position) =>
+  switch (position) {
+  | Top =>
+    moveCursor(~col=0, ~line=1);
+    view;
+  | Middle =>
+    moveCursor(~col=0, ~line=20);
+    view;
+  | Bottom =>
+    moveCursor(~col=0, ~line=1);
+    view;
+  };
+
+let recalculate = (view: t, buffer: Buffer.t) => {
+  ...view,
+  viewLines: Array.length(buffer.lines),
+};
+
 let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
   switch (action) {
   | CursorMove(b) =>
@@ -145,5 +168,11 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
     scrollToCursorBottom(view, fontMetrics.measuredHeight)
   | EditorScrollToCursorCentered =>
     scrollToCursor(view, fontMetrics.measuredHeight)
+  | EditorMoveCursorToTop(moveCursor) =>
+    moveCursorToPosition(~moveCursor, view, Top)
+  | EditorMoveCursorToMiddle(moveCursor) =>
+    moveCursorToPosition(~moveCursor, view, Middle)
+  | EditorMoveCursorToBottom(moveCursor) =>
+    moveCursorToPosition(~moveCursor, view, Bottom)
   | _ => view
   };

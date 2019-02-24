@@ -29,4 +29,7 @@ type t =
   | EditorScrollToCursorCentered
   | EditorScrollToCursorTop
   | EditorScrollToCursorBottom
+  | EditorMoveCursorToTop(Cursor.move)
+  | EditorMoveCursorToMiddle(Cursor.move)
+  | EditorMoveCursorToBottom(Cursor.move)
   | Noop;

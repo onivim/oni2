@@ -29,6 +29,10 @@ module EditorSize = {
   };
 };
 
+module Cursor = {
+  type move = (~col: int, ~line: int) => unit;
+};
+
 module Mode = {
   /**
      hide path for this printer as the value is shown
@@ -139,6 +143,7 @@ module BufferMetadata = {
 };
 
 module BufferNotification = {
+  [@deriving show]
   type t = {
     bufferId: int,
     buffers: list(BufferMetadata.t),
@@ -165,6 +170,7 @@ module BufferUpdate = {
 };
 
 module Tabline = {
+  [@deriving show]
   type t = {
     tab: int,
     name: string,
@@ -197,6 +203,7 @@ module EditorFont = {
 };
 
 module Wildmenu = {
+  [@deriving show]
   type t = {
     items: list(string),
     show: bool,
@@ -205,6 +212,7 @@ module Wildmenu = {
 };
 
 module Commandline = {
+  [@deriving show]
   type t = {
     content: string,
     firstC: string,

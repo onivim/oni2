@@ -19,6 +19,7 @@ type t = {
   bufAttach: int => unit,
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
+  moveCursor: Cursor.move,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -121,13 +122,29 @@ let make = (nvimApi: NeovimApi.t) => {
       tabId: id => M.List([M.String("tabdelete! " ++ string_of_int(id))]),
     });
 
-  let ret: t = {
+  let moveCursor: Cursor.move =
+    (~col, ~line) => {
+      let win = nvimApi.requestSync("nvim_get_current_win", M.List([]));
+      let id =
+        switch (NeovimHelpers.convertNeovimExtType(win)) {
+        | Some((_, id)) => id
+        | None => 0
+        };
+
+      nvimApi.requestSync(
+        "nvim_win_set_cursor",
+        M.List([M.Int(id), M.List([M.Int(line), M.Int(col)])]),
+      )
+      |> ignore;
+    };
+
+  {
     uiAttach,
     input,
     onNotification,
     bufAttach,
     openFile,
     closeFile,
+    moveCursor,
   };
-  ret;
 };
