@@ -16,7 +16,7 @@ let textStyle =
     color(Color.hex("#9da5b4")),
     fontFamily("Inter-UI-Regular.ttf"),
     fontSize(14),
-    paddingHorizontal(5)
+    paddingHorizontal(5),
   ];
 
 let viewStyle =
@@ -25,7 +25,6 @@ let viewStyle =
     justifyContent(`Center),
     alignItems(`Center),
   ];
-
 
 let convertPositionToString = (position: Types.BufferPosition.t) => {
   string_of_int(Types.Index.toOneBasedInt(position.line))
