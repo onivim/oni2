@@ -133,18 +133,28 @@ type cursorLocation =
   | Middle
   | Bottom;
 
-let moveCursorToPosition = (~moveCursor, view, position) =>
+let moveCursorToPosition = (~moveCursor, view, lineHeight, position) => {
+  let visibleLines = getVisibleLines(view, lineHeight);
+  /**
+     Check if there are fewer buffer lines than visibleLines, if so
+     H,M,L should only relate to the bufferlines. If the opposite is
+     true then the commands should only relate to the visible lines
+     of the buffer.
+   */
+  let lines = visibleLines > view.viewLines ? view.viewLines : visibleLines;
+
   switch (position) {
   | Top =>
     moveCursor(~col=0, ~line=1);
     view;
   | Middle =>
-    moveCursor(~col=0, ~line=20);
+    moveCursor(~col=0, ~line=lines / 2);
     view;
   | Bottom =>
-    moveCursor(~col=0, ~line=1);
+    moveCursor(~col=0, ~line=lines);
     view;
   };
+};
 
 let recalculate = (view: t, buffer: Buffer.t) => {
   ...view,
@@ -169,10 +179,20 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
   | EditorScrollToCursorCentered =>
     scrollToCursor(view, fontMetrics.measuredHeight)
   | EditorMoveCursorToTop(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Top)
+    moveCursorToPosition(~moveCursor, view, fontMetrics.measuredHeight, Top)
   | EditorMoveCursorToMiddle(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Middle)
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Middle,
+    )
   | EditorMoveCursorToBottom(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Bottom)
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Bottom,
+    )
   | _ => view
   };
