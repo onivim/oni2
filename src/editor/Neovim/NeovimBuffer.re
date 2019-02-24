@@ -19,7 +19,7 @@ let parseBufferContext = map =>
       switch (item) {
       | (M.String("bufferFullPath"), M.String(value)) => {
           ...accum,
-          filePath: Some(value),
+          filePath: value == "" ? None : Some(value),
         }
       | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
       | (M.String("modified"), M.Int(modified)) => {

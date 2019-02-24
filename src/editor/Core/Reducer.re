@@ -13,7 +13,7 @@ let sortTabsById = tabs =>
 let truncateFilepath = path =>
   switch (path) {
   | Some(p) => Filename.basename(p)
-  | None => ""
+  | None => "[No Name]"
   };
 
 let showTablineTabs = (state: State.t, tabs) =>
