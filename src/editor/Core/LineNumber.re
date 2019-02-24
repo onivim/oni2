@@ -4,7 +4,7 @@
  * Settings and utilities for managing Linumbers
  */
 
-[@deriving yojson]
+[@deriving (yojson, show)]
 type setting =
   | [@name "on"] On
   | [@name "off"] Off
