@@ -19,12 +19,6 @@ type t = {
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
-let default = {
-  editorTablineMode: Buffers,
-  editorMinimapEnabled: true,
-  editorLineNumbers: Relative,
-};
-
 let getConfigPath = () => {
   let sep = Filename.dir_sep;
   Revery_Core.Environment.getWorkingDirectory()
