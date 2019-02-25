@@ -17,9 +17,11 @@ module Core = Oni_Core;
 
 /**
    This allows a stack trace to be printed when exceptions occur
-   TODO: trigger this only if oni is in DEBUG mode
  */
-Printexc.record_backtrace(true) |> ignore;
+switch (Sys.getenv_opt("REVERY_DEBUG")) {
+| Some(_) => Printexc.record_backtrace(true) |> ignore
+| None => ()
+};
 
 /* The 'main' function for our app */
 let init = app => {
