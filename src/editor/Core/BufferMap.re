@@ -67,7 +67,4 @@ let log = (m: t) =>
     m,
   );
 
-let getBuffer = (id, map) =>
-  try (Buffers.find(id, map)) {
-  | Not_found => Buffer.ofLines([||])
-  };
+let getBuffer = (id, map) => Buffers.find_opt(id, map);

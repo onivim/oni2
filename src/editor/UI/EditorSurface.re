@@ -40,9 +40,8 @@ let tokensToElement =
 
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
-    isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
+    isActiveLine ?
+      theme.editorActiveLineNumberForeground : theme.editorLineNumberForeground;
   let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
 
   let f = (token: Tokenizer.t) => {
@@ -100,14 +99,16 @@ let tokensToElement =
     <View style=lineNumberStyle>
       <Text
         style=lineNumberTextStyle
-        text={string_of_int(
-          LineNumber.getLineNumber(
-            ~bufferLine=lineNumber + 1,
-            ~cursorLine=cursorLine + 1,
-            ~setting=Relative,
-            (),
-          ),
-        )}
+        text={
+          string_of_int(
+            LineNumber.getLineNumber(
+              ~bufferLine=lineNumber + 1,
+              ~cursorLine=cursorLine + 1,
+              ~setting=Relative,
+              (),
+            ),
+          )
+        }
       />
     </View>
     <View style=lineContentsStyle> ...tokens </View>
@@ -122,7 +123,14 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let activeBuffer =
       Oni_Core.BufferMap.getBuffer(state.activeBufferId, state.buffers);
-    let lineCount = Array.length(activeBuffer.lines);
+
+    let lines =
+      switch (activeBuffer) {
+      | Some(buffer) => buffer.lines
+      | None => [||]
+      };
+
+    let lineCount = Array.length(lines);
 
     let lineNumberWidth =
       LineNumber.getLineNumberPixelWidth(
@@ -161,7 +169,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let getTokensForLine = i => {
-      let line = activeBuffer.lines[i];
+      let line = lines[i];
       Tokenizer.tokenize(line);
     };
 
