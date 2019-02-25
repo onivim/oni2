@@ -39,7 +39,8 @@ let init = app => {
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+  let {neovimPath, configPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+  let configuration = Oni_Core.Configuration.create(configPath);
 
   let nvim =
     NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
@@ -259,4 +260,8 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-App.startWithState(Core.State.create(), Core.Reducer.reduce, init);
+App.startWithState(
+  Core.State.create(~configuration, ()),
+  Core.Reducer.reduce,
+  init,
+);

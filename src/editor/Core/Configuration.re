@@ -19,11 +19,14 @@ type t = {
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
-let create = () => {
-  let config =
-    Revery_Core.Environment.getWorkingDirectory()
-    ++ "/assets/configuration/configuration.json"
-    |> ofFile;
+let default = {
+  editorTablineMode: Buffers,
+  editorMinimapEnabled: true,
+  editorLineNumbers: Relative,
+};
+
+let create = configPath => {
+  let config = ofFile(configPath);
 
   print_endline(show(config));
   config;

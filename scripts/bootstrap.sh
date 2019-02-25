@@ -35,11 +35,11 @@ case "${machine}" in
   Linux)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/linux-x64/node"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim"
-      CONFIG_PATH="$(pwd)/assets/configuration.json";;
+      CONFIG_PATH="$(pwd)/assets/configuration/configuration.json";;
   Mac)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim"
-      CONFIG_PATH="$(pwd)/assets/configuration.json";;
+      CONFIG_PATH="$(pwd)/assets/configuration/configuration.json";;
   *)
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
       NEOVIM_PATH="$(cygpath -m "$NEOVIM_PATH")"
@@ -49,7 +49,7 @@ case "${machine}" in
       TEXTMATE_SERVICE_PATH="$(cygpath -m "$TEXTMATE_SERVICE_PATH")"
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/win-x64/node.exe"
       NODE_PATH="$(cygpath -m "$NODE_PATH")"
-      CONFIG_PATH="$(pwd)/assets/configuration.json"
+      CONFIG_PATH="$(pwd)/assets/configuration/configuration.json"
       CONFIG_PATH="$(cygpath -m "$CONFIGURATION_PATH")";;
 esac
 
