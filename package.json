@@ -14,7 +14,7 @@
     ]
   },
   "scripts": {
-    "bootstrap": "sh ./scripts/bootstrap.sh"
+    "bootstrap": "bash ./scripts/bootstrap.sh"
   },
   "dependencies": {
     "ocaml": "~4.7.0",

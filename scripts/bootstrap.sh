@@ -53,7 +53,7 @@ if [ ! -d "$config_path" ]; then
   check_command_succeded "creating parent directory: $config_path"
 fi
 # create the output file, if it exists remove it first so it is recreated
-if [[ -e $OUTPUT ]]; then
+if [[ -e "$OUTPUT" ]]; then
   rm -f "$OUTPUT"
   check_command_succeded "removing old setup $OUTPUT"
 fi
