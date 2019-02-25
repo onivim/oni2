@@ -25,7 +25,18 @@ let default = {
   editorLineNumbers: Relative,
 };
 
-let create = configPath => {
+let getConfigPath = () => {
+  let sep = Filename.dir_sep;
+  Revery_Core.Environment.getWorkingDirectory()
+  ++ sep
+  ++ "assets"
+  ++ sep
+  ++ "configuration"
+  ++ sep
+  ++ "configuration.json";
+};
+
+let create = (~configPath=getConfigPath(), ()) => {
   let config = ofFile(configPath);
 
   print_endline(show(config));
