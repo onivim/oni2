@@ -6,6 +6,8 @@ open Revery.UI;
 
 let rootNode = (new node)();
 
+let setup = () => ();
+
 /* Create a state with some editor size */
 let simpleState =
   Reducer.reduce(
@@ -94,18 +96,21 @@ let options = Reperf.Options.create(~iterations=10, ());
 bench(
   ~name="EditorSurface: Minimal state",
   ~options,
+  ~setup,
   ~f=editorSurfaceMinimalState,
   (),
 );
 bench(
   ~name="EditorSurface: 1000 Lines state",
   ~options,
+  ~setup,
   ~f=editorSurfaceThousandLineState,
   (),
 );
 bench(
   ~name="EditorSurface: 100000 Lines state",
   ~options,
+  ~setup,
   ~f=editorSurfaceHundredThousandLineState,
   (),
 );
