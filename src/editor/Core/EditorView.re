@@ -122,12 +122,6 @@ let snapToCursorPosition = (view: t, lineHeight: int) => {
   };
 };
 
-let recalculate = (view: t, buffer: option(Buffer.t)) =>
-  switch (buffer) {
-  | Some(b) => {...view, viewLines: Array.length(b.lines)}
-  | None => view
-  };
-
 type cursorLocation =
   | Top
   | Middle
@@ -156,10 +150,11 @@ let moveCursorToPosition = (~moveCursor, view, lineHeight, position) => {
   };
 };
 
-let recalculate = (view: t, buffer: Buffer.t) => {
-  ...view,
-  viewLines: Array.length(buffer.lines),
-};
+let recalculate = (view: t, buffer: option(Buffer.t)) =>
+  switch (buffer) {
+  | Some(b) => {...view, viewLines: Array.length(b.lines)}
+  | None => view
+  };
 
 let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
   switch (action) {
