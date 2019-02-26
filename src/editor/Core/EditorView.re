@@ -127,28 +127,29 @@ type cursorLocation =
   | Middle
   | Bottom;
 
-let moveCursorToPosition = (~moveCursor, view, lineHeight, position) => {
-  let visibleLines = getVisibleLines(view, lineHeight);
-  /**
-     Check if there are fewer buffer lines than visibleLines, if so
-     H,M,L should only relate to the bufferlines. If the opposite is
-     true then the commands should only relate to the visible lines
-     of the buffer.
-   */
-  let lines = visibleLines > view.viewLines ? view.viewLines : visibleLines;
+let getTopVisibleLine = (view, lineHeight) => view.scrollY / lineHeight + 1;
 
+let getBottomVisibleLine = (view, lineheight) => {
+  let absoluteBottomLine = (view.scrollY + view.size.pixelHeight) / lineheight;
+  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
+};
+
+let moveCursorToPosition = (~moveCursor, view, lineHeight, position) =>
   switch (position) {
   | Top =>
-    moveCursor(~col=0, ~line=1);
+    let line = getTopVisibleLine(view, lineHeight);
+    moveCursor(~col=0, ~line);
     view;
   | Middle =>
-    moveCursor(~col=0, ~line=lines / 2);
+    let topLine = getTopVisibleLine(view, lineHeight);
+    let bottomLine = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~col=0, ~line=(bottomLine + topLine) / 2);
     view;
   | Bottom =>
-    moveCursor(~col=0, ~line=lines);
+    let line = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~col=0, ~line);
     view;
   };
-};
 
 let recalculate = (view: t, buffer: option(Buffer.t)) =>
   switch (buffer) {
