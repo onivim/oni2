@@ -138,16 +138,16 @@ let moveCursorToPosition = (~moveCursor, view, lineHeight, position) =>
   switch (position) {
   | Top =>
     let line = getTopVisibleLine(view, lineHeight);
-    moveCursor(~col=0, ~line);
+    moveCursor(~column=0, ~line);
     view;
   | Middle =>
     let topLine = getTopVisibleLine(view, lineHeight);
     let bottomLine = getBottomVisibleLine(view, lineHeight);
-    moveCursor(~col=0, ~line=(bottomLine + topLine) / 2);
+    moveCursor(~column=0, ~line=(bottomLine + topLine) / 2);
     view;
   | Bottom =>
     let line = getBottomVisibleLine(view, lineHeight);
-    moveCursor(~col=0, ~line);
+    moveCursor(~column=0, ~line);
     view;
   };
 

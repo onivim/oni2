@@ -123,11 +123,11 @@ let make = (nvimApi: NeovimApi.t) => {
     });
 
   let moveCursor: Cursor.move =
-    (~col, ~line) => {
+    (~column, ~line) => {
       let win = nvimApi.requestSync("nvim_get_current_win", M.List([]));
       nvimApi.requestSync(
         "nvim_win_set_cursor",
-        M.List([win, M.List([M.Int(line), M.Int(col)])]),
+        M.List([win, M.List([M.Int(line), M.Int(column)])]),
       )
       |> ignore;
     };

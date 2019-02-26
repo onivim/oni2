@@ -30,7 +30,7 @@ module EditorSize = {
 };
 
 module Cursor = {
-  type move = (~col: int, ~line: int) => unit;
+  type move = (~column: int, ~line: int) => unit;
 };
 
 module Mode = {
