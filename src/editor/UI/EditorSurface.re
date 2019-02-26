@@ -49,7 +49,6 @@ let tokensToElement =
     let style =
       Style.[
         position(`Absolute),
-        layoutMode(`Minimal),
         top(0),
         left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
@@ -67,7 +66,6 @@ let tokensToElement =
   let lineNumberStyle =
     Style.[
       position(`Absolute),
-      layoutMode(`Minimal),
       top(0),
       height(fontLineHeight),
       left(0),
