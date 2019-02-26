@@ -18,10 +18,9 @@ type t = {
   configPath: string,
 };
 
-let ofString = s => Yojson.Safe.from_string(s) |> of_yojson_exn;
+let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 
-let ofFile = filePath =>
-  Pervasives.open_in(filePath) |> Pervasives.input_line |> ofString;
+let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let init = () =>
   Revery.Environment.getExecutingDirectory() ++ "setup.json" |> ofFile;

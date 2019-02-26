@@ -23,14 +23,8 @@ type t = {
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let getConfigPath = () => {
-  let sep = Filename.dir_sep;
-  Revery_Core.Environment.getWorkingDirectory()
-  ++ sep
-  ++ "assets"
-  ++ sep
-  ++ "configuration"
-  ++ sep
-  ++ "configuration.json";
+  let {configPath, _}: Setup.t = Setup.init();
+  configPath;
 };
 
 let create = (~configPath=getConfigPath(), ()) => {
