@@ -49,6 +49,7 @@ let tokensToElement =
     let style =
       Style.[
         position(`Absolute),
+        layoutMode(`Minimal),
         top(0),
         left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
@@ -58,7 +59,7 @@ let tokensToElement =
         textWrap(Revery.Core.TextWrapping.NoWrap),
       ];
 
-    <Text style text={token.text} />;
+     <Text style text={token.text} />;
   };
 
   let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
@@ -66,6 +67,7 @@ let tokensToElement =
   let lineNumberStyle =
     Style.[
       position(`Absolute),
+      layoutMode(`Minimal),
       top(0),
       height(fontLineHeight),
       left(0),
@@ -187,8 +189,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let onDimensionsChanged =
-        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) =>
-      GlobalContext.current().notifySizeChanged(~width, ~height, ());
+        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+          GlobalContext.current().notifySizeChanged(~width, ~height, ());
+        }
 
     let layout =
       EditorLayout.getLayout(
@@ -236,7 +239,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
-    (
+    let ret = (
       hooks,
       <View style onDimensionsChanged>
         <View style=bufferViewStyle>
@@ -268,4 +271,5 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         </View>
       </View>,
     );
+    ret;
   });
