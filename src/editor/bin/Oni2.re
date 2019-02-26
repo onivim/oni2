@@ -15,6 +15,14 @@ open Oni_Neovim;
 
 module Core = Oni_Core;
 
+/**
+   This allows a stack trace to be printed when exceptions occur
+ */
+switch (Sys.getenv_opt("REVERY_DEBUG")) {
+| Some(_) => Printexc.record_backtrace(true) |> ignore
+| None => ()
+};
+
 /* The 'main' function for our app */
 let init = app => {
   let w =

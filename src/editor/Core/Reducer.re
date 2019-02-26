@@ -13,7 +13,7 @@ let sortTabsById = tabs =>
 let truncateFilepath = path =>
   switch (path) {
   | Some(p) => Filename.basename(p)
-  | None => ""
+  | None => "[No Name]"
   };
 
 let showTablineTabs = (state: State.t, tabs) =>
@@ -51,8 +51,7 @@ let updateTabs = (bufId, modified, tabs) =>
     |> sortTabsById
   );
 
-let applyBufferUpdate =
-    (bufferUpdate: BufferUpdate.t, buffer: option(Buffer.t)) =>
+let applyBufferUpdate = (bufferUpdate, buffer) =>
   switch (buffer) {
   | None => None
   | Some(b) => Some(Buffer.update(b, bufferUpdate))

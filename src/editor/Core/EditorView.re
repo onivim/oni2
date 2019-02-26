@@ -34,17 +34,14 @@ type viewport = {
   pixelHeight: int,
 };
 
-let getVisibleLines = (view: t, lineHeight: int) => {
+let getVisibleLines = (view: t, lineHeight: int) =>
   view.size.pixelWidth / lineHeight;
-};
 
-let getTotalSizeInPixels = (view: t, lineHeight: int) => {
+let getTotalSizeInPixels = (view: t, lineHeight: int) =>
   view.viewLines * lineHeight;
-};
 
-let getCursorPixelLine = (view: t, lineHeight: int) => {
+let getCursorPixelLine = (view: t, lineHeight: int) =>
   Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
-};
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
   let totalViewSizeInPixels =
@@ -125,11 +122,13 @@ let snapToCursorPosition = (view: t, lineHeight: int) => {
   };
 };
 
-let recalculate = (view: t, buffer: Buffer.t) => {
-  {...view, viewLines: Array.length(buffer.lines)};
-};
+let recalculate = (view: t, buffer: option(Buffer.t)) =>
+  switch (buffer) {
+  | Some(b) => {...view, viewLines: Array.length(b.lines)}
+  | None => view
+  };
 
-let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
+let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
   switch (action) {
   | CursorMove(b) =>
     snapToCursorPosition(
@@ -148,4 +147,3 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
     scrollToCursor(view, fontMetrics.measuredHeight)
   | _ => view
   };
-};
