@@ -12,8 +12,11 @@ type editorTablineMode =
 
 [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
+  [@key "editor.lineNumbers"]
   editorLineNumbers: LineNumber.setting,
+  [@key "editor.minimapEnabled"]
   editorMinimapEnabled: bool,
+  [@key "editor.tablineMode"]
   editorTablineMode,
 };
 

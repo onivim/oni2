@@ -1,5 +1,5 @@
 {
-  "editorLineNumbers": ["relative"],
-  "editorMinimapEnabled": true,
-  "editorTablineMode": ["tabs"]
+  "editor.lineNumbers": ["relative"],
+  "editor.minimapEnabled": true,
+  "editor.tablineMode": ["tabs"]
 }
