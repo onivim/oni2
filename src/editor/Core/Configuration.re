@@ -14,7 +14,7 @@ type editorTablineMode =
 type t = {
   [@key "editor.lineNumbers"]
   editorLineNumbers: LineNumber.setting,
-  [@key "editor.minimapEnabled"]
+  [@key "editor.minimap.enabled"]
   editorMinimapEnabled: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
@@ -27,9 +27,4 @@ let getConfigPath = () => {
   configPath;
 };
 
-let create = (~configPath=getConfigPath(), ()) => {
-  let config = ofFile(configPath);
-
-  print_endline(show(config));
-  config;
-};
+let create = (~configPath=getConfigPath(), ()) => ofFile(configPath);
