@@ -61,33 +61,29 @@ let editorSurfaceThousandLineLayout = (rootNode) => {
     Layout.layout(rootNode, 1.0, 1);
 };
 
-/* 
-   REmove buffer view - does it work?
-   */
-
 let options = Reperf.Options.create(~iterations=10, ());
 
-/* bench( */
-/*   ~name="EditorSurface - Rendering: Minimal state", */
-/*   ~options, */
-/*   ~setup, */
-/*   ~f=editorSurfaceMinimalState, */
-/*   (), */
-/* ); */
-/* bench( */
-/*   ~name="EditorSurface - Rendering: 1000 Lines state", */
-/*   ~options, */
-/*   ~setup, */
-/*   ~f=editorSurfaceThousandLineState, */
-/*   (), */
-/* ); */
-/* bench( */
-/*   ~name="EditorSurface - Rendering: 100000 Lines state", */
-/*   ~options, */
-/*   ~setup, */
-/*   ~f=editorSurfaceHundredThousandLineState, */
-/*   (), */
-/* ); */
+bench(
+  ~name="EditorSurface - Rendering: Minimal state",
+  ~options,
+  ~setup,
+  ~f=editorSurfaceMinimalState,
+  (),
+);
+bench(
+  ~name="EditorSurface - Rendering: 1000 Lines state",
+  ~options,
+  ~setup,
+  ~f=editorSurfaceThousandLineState,
+  (),
+);
+bench(
+  ~name="EditorSurface - Rendering: 100000 Lines state",
+  ~options,
+  ~setup,
+  ~f=editorSurfaceHundredThousandLineState,
+  (),
+);
 bench(
   ~name="EditorSurface - Layout: 1000 Lines state",
   ~options,
