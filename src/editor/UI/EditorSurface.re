@@ -216,7 +216,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let minimapPixelWidth =
       layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
-    let _minimapViewStyle =
+    let minimapViewStyle =
       Style.[
         position(`Absolute),
         overflow(`Hidden),
@@ -249,6 +249,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             scrollY={state.editorView.scrollY}
           />
           <View style=cursorStyle />
+        </View>
+        <View style=minimapViewStyle>
+          <Minimap
+            state
+            width={layout.minimapWidthInPixels}
+            height={state.editorView.size.pixelHeight}
+            count=lineCount
+            getTokensForLine
+          />
         </View>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar

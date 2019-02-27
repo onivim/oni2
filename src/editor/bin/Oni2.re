@@ -5,6 +5,7 @@
  */
 
 open Revery;
+open Revery.Core;
 open Revery.UI;
 
 open Rench;
@@ -14,13 +15,21 @@ open Oni_Neovim;
 
 module Core = Oni_Core;
 
+/**
+   This allows a stack trace to be printed when exceptions occur
+ */
+switch (Sys.getenv_opt("REVERY_DEBUG")) {
+| Some(_) => Printexc.record_backtrace(true) |> ignore
+| None => ()
+};
+
 /* The 'main' function for our app */
 let init = app => {
   let w =
     App.createWindow(
       ~createOptions={
         ...Window.defaultCreateOptions,
-        vsync: true,
+        vsync: false,
         maximized: false,
       },
       app,
@@ -28,7 +37,7 @@ let init = app => {
     );
 
   let initVimPath =
-    Revery.Environment.getExecutingDirectory() ++ "init.vim";
+    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
@@ -64,14 +73,14 @@ let init = app => {
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    /* prerr_endline( */
-    /*   "[DEBUG - STATE] Mode: " */
-    /*   ++ Core.Types.Mode.show(state.mode) */
-    /*   ++ " editor font measured width: " */
-    /*   ++ string_of_int(state.editorFont.measuredWidth) */
-    /*   ++ " editor font measured height: " */
-    /*   ++ string_of_int(state.editorFont.measuredHeight), */
-    /* ); */
+    prerr_endline(
+      "[DEBUG - STATE] Mode: "
+      ++ Core.Types.Mode.show(state.mode)
+      ++ " editor font measured width: "
+      ++ string_of_int(state.editorFont.measuredWidth)
+      ++ " editor font measured height: "
+      ++ string_of_int(state.editorFont.measuredHeight),
+    );
     <Root state />;
   };
 
@@ -81,7 +90,7 @@ let init = app => {
 
   let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
-      Revery.Environment.getExecutingDirectory() ++ fontFamily,
+      Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
       font => {
         open Oni_Core.Actions;
@@ -156,15 +165,15 @@ let init = app => {
 
   let _ = Tick.interval(_ => nvimApi.pump(), Seconds(0.));
 
-  /* let _ = */
-  /*   Event.subscribe(nvimApi.onNotification, n => */
-  /*     prerr_endline( */
-  /*       "Raw Notification: " */
-  /*       ++ n.notificationType */
-  /*       ++ " | " */
-  /*       ++ Msgpck.show(n.payload), */
-  /*     ) */
-  /*   ); */
+  let _ =
+    Event.subscribe(nvimApi.onNotification, n =>
+      prerr_endline(
+        "Raw Notification: "
+        ++ n.notificationType
+        ++ " | "
+        ++ Msgpck.show(n.payload),
+      )
+    );
 
   let _ =
     Event.subscribe(
@@ -239,7 +248,7 @@ let init = app => {
         | _ => ()
         };
 
-        /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
+        prerr_endline("Protocol Notification: " ++ Notification.show(n));
       },
     );
   ();
