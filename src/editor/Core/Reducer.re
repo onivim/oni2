@@ -66,7 +66,6 @@ let reduce: (State.t, Actions.t) => State.t =
           s.editor,
           a,
           BufferMap.getBuffer(s.activeBufferId, s.buffers),
-          s.editorFont,
         ),
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),

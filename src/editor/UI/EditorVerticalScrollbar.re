@@ -24,8 +24,7 @@ let createElement =
     let scrollMetrics =
       Editor.getScrollbarMetrics(
         state.editor,
-        totalHeight,
-        state.editorFont.measuredHeight,
+        totalHeight
       );
 
     let scrollThumbStyle =
@@ -44,8 +43,7 @@ let createElement =
       |> float_of_int;
     let totalPixel =
       Editor.getTotalSizeInPixels(
-        state.editor,
-        state.editorFont.measuredHeight,
+        state.editor
       )
       |> float_of_int;
 
