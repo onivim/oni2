@@ -76,7 +76,7 @@ let createElement =
           rowHeight
           render
           count
-          scrollY={state.editorView.minimapScrollY}
+          scrollY={state.editor.minimapScrollY}
         />
       </View>,
     );

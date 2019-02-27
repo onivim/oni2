@@ -61,13 +61,15 @@ let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     let s = {
       ...s,
-      editorView:
-        EditorView.reduce(
-          s.editorView,
+      editor:
+        Editor.reduce(
+          s.editor,
           a,
           BufferMap.getBuffer(s.activeBufferId, s.buffers),
           s.editorFont,
         ),
+      wildmenu: Wildmenu.reduce(s.wildmenu, a),
+      commandline: Commandline.reduce(s.commandline, a),
     };
 
     switch (a) {
@@ -96,25 +98,6 @@ let reduce: (State.t, Actions.t) => State.t =
       }
     | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
     | SetEditorFont(font) => {...s, editorFont: font}
-    | CommandlineShow(commandline) => {...s, commandline}
-    | CommandlineHide(commandline) => {...s, commandline}
-    | CommandlineUpdate((position, level)) => {
-        ...s,
-        commandline: {
-          ...s.commandline,
-          position,
-          level,
-        },
-      }
-    | WildmenuShow(wildmenu) => {...s, wildmenu}
-    | WildmenuHide(wildmenu) => {...s, wildmenu}
-    | WildmenuSelected(selected) => {
-        ...s,
-        wildmenu: {
-          ...s.wildmenu,
-          selected,
-        },
-      }
     | TextChanged({activeBufferId, modified})
     | TextChangedI({activeBufferId, modified}) => {
         ...s,

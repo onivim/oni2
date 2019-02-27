@@ -23,7 +23,7 @@ let containerStyles = (theme: Theme.t) =>
   ];
 
 let createElement =
-    (~children as _, ~wildmenu: Types.Wildmenu.t, ~theme: Theme.t, ()) =>
+    (~children as _, ~wildmenu: Wildmenu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let element =
       wildmenu.show

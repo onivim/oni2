@@ -27,27 +27,15 @@ type t = {
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
   theme: Theme.t,
-  editorView: EditorView.t,
+  editor: Editor.t,
 };
 
 let create: unit => t =
   () => {
     configuration: Configuration.create(),
     mode: Insert,
-    commandline: {
-      content: "",
-      firstC: "",
-      prompt: "",
-      position: 0,
-      indent: 0,
-      level: 0,
-      show: false,
-    },
-    wildmenu: {
-      items: [],
-      selected: 0,
-      show: false,
-    },
+    commandline: Commandline.create(),
+    wildmenu: Wildmenu.create(),
     activeBufferId: 0,
     buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
     editorFont:
@@ -60,5 +48,5 @@ let create: unit => t =
       ),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
-    editorView: EditorView.create(),
+    editor: Editor.create(),
   };
