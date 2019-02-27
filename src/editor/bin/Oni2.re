@@ -35,8 +35,7 @@ let init = app => {
       "Oni2",
     );
 
-  let initVimPath =
-    Revery.Environment.getExecutingDirectory() ++ "init.vim";
+  let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
@@ -72,14 +71,14 @@ let init = app => {
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    prerr_endline(
-      "[DEBUG - STATE] Mode: "
-      ++ Core.Types.Mode.show(state.mode)
-      ++ " editor font measured width: "
-      ++ string_of_int(state.editorFont.measuredWidth)
-      ++ " editor font measured height: "
-      ++ string_of_int(state.editorFont.measuredHeight),
-    );
+    /* prerr_endline( */
+    /*   "[DEBUG - STATE] Mode: " */
+    /*   ++ Core.Types.Mode.show(state.mode) */
+    /*   ++ " editor font measured width: " */
+    /*   ++ string_of_int(state.editorFont.measuredWidth) */
+    /*   ++ " editor font measured height: " */
+    /*   ++ string_of_int(state.editorFont.measuredHeight), */
+    /* ); */
     <Root state />;
   };
 
@@ -164,15 +163,15 @@ let init = app => {
 
   let _ = Tick.interval(_ => nvimApi.pump(), Seconds(0.));
 
-  let _ =
-    Event.subscribe(nvimApi.onNotification, n =>
-      prerr_endline(
-        "Raw Notification: "
-        ++ n.notificationType
-        ++ " | "
-        ++ Msgpck.show(n.payload),
-      )
-    );
+  /* let _ = */
+  /*   Event.subscribe(nvimApi.onNotification, n => */
+  /*     prerr_endline( */
+  /*       "Raw Notification: " */
+  /*       ++ n.notificationType */
+  /*       ++ " | " */
+  /*       ++ Msgpck.show(n.payload), */
+  /*     ) */
+  /*   ); */
 
   let _ =
     Event.subscribe(
@@ -246,8 +245,7 @@ let init = app => {
           App.dispatch(app, RecalculateEditorView)
         | _ => ()
         };
-
-        prerr_endline("Protocol Notification: " ++ Notification.show(n));
+        /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
       },
     );
   ();

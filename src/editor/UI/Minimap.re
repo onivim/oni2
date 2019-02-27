@@ -20,6 +20,7 @@ let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
     let style =
       Style.[
         position(`Absolute),
+        layoutMode(`Minimal),
         top(0),
         left(
           Constants.default.minimapCharacterWidth

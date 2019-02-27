@@ -6,6 +6,7 @@
         "reperf": "^1.3.0"
       },
       "install": [
+          "esy-installer Oni2.install",
           "esy-installer OniBench.install"
       ]
   }

@@ -194,8 +194,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let onDimensionsChanged =
-        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) =>
+        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
       GlobalContext.current().notifySizeChanged(~width, ~height, ());
+    };
 
     let layout =
       EditorLayout.getLayout(
@@ -243,7 +244,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
-    (
+    let ret = (
       hooks,
       <View style onDimensionsChanged>
         <View style=bufferViewStyle>
@@ -275,4 +276,5 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         </View>
       </View>,
     );
+    ret;
   });
