@@ -1,4 +1,3 @@
-/* open Oni_Core; */
 open Oni_UI;
 open BenchFramework;
 
@@ -47,12 +46,8 @@ let setupSurfaceThousandLineLayout = () => {
         (),
     ));
 
-
     let container = React.Container.create(rootNode);
-    /* let updates = React.RenderedElement.render(rootNode, <EditorSurface state={thousandLineState} />); */
-    /* React.RenderedElement.executeHostViewUpdates(updates) |> ignore; */
     React.Container.update(container, <EditorSurface state={thousandLineState} />) |> ignore;
-    print_endline ("done updating");
 
     rootNode
 };
@@ -61,7 +56,7 @@ let editorSurfaceThousandLineLayout = (rootNode) => {
     Layout.layout(rootNode, 1.0, 1);
 };
 
-let options = Reperf.Options.create(~iterations=10, ());
+let options = Reperf.Options.create(~iterations=100, ());
 
 bench(
   ~name="EditorSurface - Rendering: Minimal state",
