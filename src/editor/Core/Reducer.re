@@ -61,9 +61,9 @@ let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     let s = {
       ...s,
-      editorView:
-        EditorView.reduce(
-          s.editorView,
+      editor:
+        Editor.reduce(
+          s.editor,
           a,
           BufferMap.getBuffer(s.activeBufferId, s.buffers),
           s.editorFont,
