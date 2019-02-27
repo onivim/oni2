@@ -5,7 +5,6 @@
  */
 
 open Revery;
-open Revery.Core;
 open Revery.UI;
 
 open Rench;
@@ -21,7 +20,7 @@ let init = app => {
     App.createWindow(
       ~createOptions={
         ...Window.defaultCreateOptions,
-        vsync: false,
+        vsync: true,
         maximized: false,
       },
       app,
@@ -29,7 +28,7 @@ let init = app => {
     );
 
   let initVimPath =
-    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
+    Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
@@ -65,14 +64,14 @@ let init = app => {
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    prerr_endline(
-      "[DEBUG - STATE] Mode: "
-      ++ Core.Types.Mode.show(state.mode)
-      ++ " editor font measured width: "
-      ++ string_of_int(state.editorFont.measuredWidth)
-      ++ " editor font measured height: "
-      ++ string_of_int(state.editorFont.measuredHeight),
-    );
+    /* prerr_endline( */
+    /*   "[DEBUG - STATE] Mode: " */
+    /*   ++ Core.Types.Mode.show(state.mode) */
+    /*   ++ " editor font measured width: " */
+    /*   ++ string_of_int(state.editorFont.measuredWidth) */
+    /*   ++ " editor font measured height: " */
+    /*   ++ string_of_int(state.editorFont.measuredHeight), */
+    /* ); */
     <Root state />;
   };
 
@@ -82,7 +81,7 @@ let init = app => {
 
   let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
-      Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
+      Revery.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
       font => {
         open Oni_Core.Actions;
@@ -157,15 +156,15 @@ let init = app => {
 
   let _ = Tick.interval(_ => nvimApi.pump(), Seconds(0.));
 
-  let _ =
-    Event.subscribe(nvimApi.onNotification, n =>
-      prerr_endline(
-        "Raw Notification: "
-        ++ n.notificationType
-        ++ " | "
-        ++ Msgpck.show(n.payload),
-      )
-    );
+  /* let _ = */
+  /*   Event.subscribe(nvimApi.onNotification, n => */
+  /*     prerr_endline( */
+  /*       "Raw Notification: " */
+  /*       ++ n.notificationType */
+  /*       ++ " | " */
+  /*       ++ Msgpck.show(n.payload), */
+  /*     ) */
+  /*   ); */
 
   let _ =
     Event.subscribe(
@@ -240,7 +239,7 @@ let init = app => {
         | _ => ()
         };
 
-        prerr_endline("Protocol Notification: " ++ Notification.show(n));
+        /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
       },
     );
   ();

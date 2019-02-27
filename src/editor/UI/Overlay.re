@@ -14,7 +14,7 @@ let createElement = (~children, ()) =>
           bottom(0),
           paddingTop(20),
           alignItems(`Center),
-          overflow(LayoutTypes.Hidden),
+          overflow(`Hidden),
           flexDirection(`Column),
         ]>
         ...children

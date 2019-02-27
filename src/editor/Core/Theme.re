@@ -4,7 +4,7 @@
  * Theming color / info
  */
 
-open Revery.Core;
+open Revery;
 
 type t = {
   background: Color.t,

@@ -39,6 +39,7 @@ let createElement =
            + additionalRowsToRender
            + startRowOffset
            && i^ < len) {
+
       let rowOffset = (i^ - startRowOffset) * rowHeight;
       let rowContainerStyle =
         Style.[
@@ -53,7 +54,7 @@ let createElement =
       let v = <View style=rowContainerStyle> {render(item)} </View>;
 
       items := List.append([v], items^);
-      i := i^ + 1;
+incr(i);
     };
 
     items := List.rev(items^);
