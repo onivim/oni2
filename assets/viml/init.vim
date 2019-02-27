@@ -72,3 +72,6 @@ endfunction
 nnoremap <silent> zz :<C-u>call OniCommand('oni.editorView.scrollToCursor')<CR>
 nnoremap <silent> zb :<C-u>call OniCommand('oni.editorView.scrollToCursorBottom')<CR>
 nnoremap <silent> zt :<C-u>call OniCommand('oni.editorView.scrollToCursorTop')<CR>
+nnoremap <silent> H  :<C-u>call OniCommand('oni.editorView.moveCursorToTop')<CR>
+nnoremap <silent> M  :<C-u>call OniCommand('oni.editorView.moveCursorToMiddle')<CR>
+nnoremap <silent> L  :<C-u>call OniCommand('oni.editorView.moveCursorToBottom')<CR>

@@ -122,6 +122,35 @@ let snapToCursorPosition = (view: t, lineHeight: int) => {
   };
 };
 
+type cursorLocation =
+  | Top
+  | Middle
+  | Bottom;
+
+let getTopVisibleLine = (view, lineHeight) => view.scrollY / lineHeight + 1;
+
+let getBottomVisibleLine = (view, lineheight) => {
+  let absoluteBottomLine = (view.scrollY + view.size.pixelHeight) / lineheight;
+  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
+};
+
+let moveCursorToPosition = (~moveCursor, view, lineHeight, position) =>
+  switch (position) {
+  | Top =>
+    let line = getTopVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line);
+    view;
+  | Middle =>
+    let topLine = getTopVisibleLine(view, lineHeight);
+    let bottomLine = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line=(bottomLine + topLine) / 2);
+    view;
+  | Bottom =>
+    let line = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line);
+    view;
+  };
+
 let recalculate = (view: t, buffer: option(Buffer.t)) =>
   switch (buffer) {
   | Some(b) => {...view, viewLines: Array.length(b.lines)}
@@ -145,5 +174,21 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
     scrollToCursorBottom(view, fontMetrics.measuredHeight)
   | EditorScrollToCursorCentered =>
     scrollToCursor(view, fontMetrics.measuredHeight)
+  | EditorMoveCursorToTop(moveCursor) =>
+    moveCursorToPosition(~moveCursor, view, fontMetrics.measuredHeight, Top)
+  | EditorMoveCursorToMiddle(moveCursor) =>
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Middle,
+    )
+  | EditorMoveCursorToBottom(moveCursor) =>
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Bottom,
+    )
   | _ => view
   };

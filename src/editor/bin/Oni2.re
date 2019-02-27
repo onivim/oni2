@@ -186,6 +186,12 @@ let init = app => {
             EditorScrollToCursorTop
           | OniCommand("oni.editorView.scrollToCursorBottom") =>
             EditorScrollToCursorBottom
+          | OniCommand("oni.editorView.moveCursorToTop") =>
+            EditorMoveCursorToTop(neovimProtocol.moveCursor)
+          | OniCommand("oni.editorView.moveCursorToMiddle") =>
+            EditorMoveCursorToMiddle(neovimProtocol.moveCursor)
+          | OniCommand("oni.editorView.moveCursorToBottom") =>
+            EditorMoveCursorToBottom(neovimProtocol.moveCursor)
           | ModeChanged("normal") => ChangeMode(Normal)
           | ModeChanged("insert") => ChangeMode(Insert)
           | ModeChanged("cmdline_normal") => ChangeMode(Commandline)

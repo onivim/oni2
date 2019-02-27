@@ -14,6 +14,7 @@ module Core = Oni_Core;
 module Utility = Oni_Core.Utility;
 
 module BufferLinesNotification = {
+  [@deriving show]
   type t = {
     id: int,
     changedTick: int,
@@ -36,6 +37,7 @@ module BufferLinesNotification = {
   };
 };
 
+[@deriving show({ with_path: false })]
 type t =
   | Redraw
   | OniCommand(string)
@@ -263,12 +265,3 @@ let parse = (t: string, msg: Msgpck.t) => {
 
   msgs |> List.filter(m => m !== Ignored);
 };
-
-let show = (n: t) =>
-  switch (n) {
-  | Redraw => "redraw"
-  | ModeChanged(s) => "mode changed: " ++ s
-  | CursorMoved(c) => "cursor moved: " ++ AutoCommandContext.show(c)
-  | BufferLines(_) => "buffer lines"
-  | _ => "unknown"
-  };
