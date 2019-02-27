@@ -2,5 +2,6 @@
     (name bench)
     (public_name oni-bench)
     (libraries OniBench.lib)
+    (flags (-ccopt -static))
     (package OniBench)
 )
