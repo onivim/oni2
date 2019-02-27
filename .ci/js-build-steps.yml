@@ -4,6 +4,6 @@ steps:
   - script: npm install
     displayName: 'textmate: npm install'
     workingDirectory: src/textmate_service
-  - script: npm build
+  - script: npm run-script build
     displayName: 'textmate: npm build'
     workingDirectory: src/textmate_service
