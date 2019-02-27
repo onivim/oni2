@@ -40,8 +40,9 @@ let tokensToElement =
 
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
-    isActiveLine ?
-      theme.editorActiveLineNumberForeground : theme.editorLineNumberForeground;
+    isActiveLine
+      ? theme.editorActiveLineNumberForeground
+      : theme.editorLineNumberForeground;
   let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
 
   let f = (token: Tokenizer.t) => {
@@ -99,16 +100,14 @@ let tokensToElement =
     <View style=lineNumberStyle>
       <Text
         style=lineNumberTextStyle
-        text={
-          string_of_int(
-            LineNumber.getLineNumber(
-              ~bufferLine=lineNumber + 1,
-              ~cursorLine=cursorLine + 1,
-              ~setting=Relative,
-              (),
-            ),
-          )
-        }
+        text={string_of_int(
+          LineNumber.getLineNumber(
+            ~bufferLine=lineNumber + 1,
+            ~cursorLine=cursorLine + 1,
+            ~setting=Relative,
+            (),
+          ),
+        )}
       />
     </View>
     <View style=lineContentsStyle> ...tokens </View>

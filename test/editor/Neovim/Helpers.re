@@ -37,7 +37,8 @@ let uiAttach = (api: NeovimApi.t) => {
 
 let withNeovimApi = f => {
   let {neovimPath, _}: Setup.t = Setup.init();
-  let nvim = NeovimProcess.start(~neovimPath, ~args=[|"-u", "NORC", "--embed"|]);
+  let nvim =
+    NeovimProcess.start(~neovimPath, ~args=[|"-u", "NORC", "--embed"|]);
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,

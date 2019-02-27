@@ -73,11 +73,9 @@ let createElement =
             justifyContent(`Center),
           ]>
           <Text style=textStyle text=title />
-          {
-            modified ?
-              <Text text={||} style=modifiedStyles /> :
-              React.listToElement([])
-          }
+          {modified
+             ? <Text text={||} style=modifiedStyles />
+             : React.listToElement([])}
         </Clickable>
         <Clickable
           onClick=onClose
