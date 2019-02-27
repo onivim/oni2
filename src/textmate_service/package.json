@@ -15,7 +15,6 @@
   "devDependencies": {
     "@types/node": "^11.9.5",
     "typescript": "^3.3.3333",
-    "vscode-jsonrpc": "^4.0.0",
-    "windows-build-tools": "^5.1.0"
+    "vscode-jsonrpc": "^4.0.0"
   }
 }
