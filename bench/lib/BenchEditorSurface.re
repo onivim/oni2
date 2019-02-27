@@ -71,7 +71,6 @@ bench(
   (),
 );
 
-
 bench(
   ~name="EditorSurface - Rendering: 100000 Lines state",
   ~options,
@@ -84,11 +83,11 @@ bench(
  * Bug: This benchmark fails on Linux CI currently
  */
 if (Revery.Environment.os == Windows || Revery.Environment.os === Mac) {
-    bench(
-      ~name="EditorSurface - Layout: 1000 Lines state",
-      ~options,
-      ~setup=setupSurfaceThousandLineLayout,
-      ~f=editorSurfaceThousandLineLayout,
-      (),
-    );
+  bench(
+    ~name="EditorSurface - Layout: 1000 Lines state",
+    ~options,
+    ~setup=setupSurfaceThousandLineLayout,
+    ~f=editorSurfaceThousandLineLayout,
+    (),
+  );
 };
