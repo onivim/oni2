@@ -34,17 +34,14 @@ type viewport = {
   pixelHeight: int,
 };
 
-let getVisibleLines = (view: t, lineHeight: int) => {
+let getVisibleLines = (view: t, lineHeight: int) =>
   view.size.pixelWidth / lineHeight;
-};
 
-let getTotalSizeInPixels = (view: t, lineHeight: int) => {
+let getTotalSizeInPixels = (view: t, lineHeight: int) =>
   view.viewLines * lineHeight;
-};
 
-let getCursorPixelLine = (view: t, lineHeight: int) => {
+let getCursorPixelLine = (view: t, lineHeight: int) =>
   Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
-};
 
 let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
   let totalViewSizeInPixels =
@@ -125,11 +122,42 @@ let snapToCursorPosition = (view: t, lineHeight: int) => {
   };
 };
 
-let recalculate = (view: t, buffer: Buffer.t) => {
-  {...view, viewLines: Array.length(buffer.lines)};
+type cursorLocation =
+  | Top
+  | Middle
+  | Bottom;
+
+let getTopVisibleLine = (view, lineHeight) => view.scrollY / lineHeight + 1;
+
+let getBottomVisibleLine = (view, lineheight) => {
+  let absoluteBottomLine = (view.scrollY + view.size.pixelHeight) / lineheight;
+  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
-let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
+let moveCursorToPosition = (~moveCursor, view, lineHeight, position) =>
+  switch (position) {
+  | Top =>
+    let line = getTopVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line);
+    view;
+  | Middle =>
+    let topLine = getTopVisibleLine(view, lineHeight);
+    let bottomLine = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line=(bottomLine + topLine) / 2);
+    view;
+  | Bottom =>
+    let line = getBottomVisibleLine(view, lineHeight);
+    moveCursor(~column=0, ~line);
+    view;
+  };
+
+let recalculate = (view: t, buffer: option(Buffer.t)) =>
+  switch (buffer) {
+  | Some(b) => {...view, viewLines: Array.length(b.lines)}
+  | None => view
+  };
+
+let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
   switch (action) {
   | CursorMove(b) =>
     snapToCursorPosition(
@@ -146,6 +174,21 @@ let reduce = (view, action, buffer, fontMetrics: EditorFont.t) => {
     scrollToCursorBottom(view, fontMetrics.measuredHeight)
   | EditorScrollToCursorCentered =>
     scrollToCursor(view, fontMetrics.measuredHeight)
+  | EditorMoveCursorToTop(moveCursor) =>
+    moveCursorToPosition(~moveCursor, view, fontMetrics.measuredHeight, Top)
+  | EditorMoveCursorToMiddle(moveCursor) =>
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Middle,
+    )
+  | EditorMoveCursorToBottom(moveCursor) =>
+    moveCursorToPosition(
+      ~moveCursor,
+      view,
+      fontMetrics.measuredHeight,
+      Bottom,
+    )
   | _ => view
   };
-};

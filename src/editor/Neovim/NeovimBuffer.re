@@ -4,7 +4,9 @@ open NeovimHelpers;
 
 module M = Msgpck;
 
-let constructMetadataCalls = id => [
+type partialBuffer = {id: int};
+
+let constructMetadataCalls = ((_, id)) => [
   M.List([
     M.String("nvim_call_function"),
     M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]),
@@ -17,7 +19,7 @@ let parseBufferContext = map =>
       switch (item) {
       | (M.String("bufferFullPath"), M.String(value)) => {
           ...accum,
-          filePath: Some(value),
+          filePath: value == "" ? None : Some(value),
         }
       | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
       | (M.String("modified"), M.Int(modified)) => {
@@ -46,23 +48,21 @@ let parseBufferContext = map =>
     we then use the IDs of the buffers to request more
     metadata about each buffer using "atomic calls"
    */
-let enrichBuffers = (api: NeovimApi.t, (atomicCalls, buffers)) => {
+let enrichBuffers = (api: NeovimApi.t, atomicCalls) => {
   let rsp =
     api.requestSync("nvim_call_atomic", M.List([M.List(atomicCalls)]))
     |> getAtomicCallsResponse;
 
   switch (rsp) {
   | (_, Some(items)) =>
-    Utility.safe_fold_left2(
-      (accum, buf, bufferContext) =>
+    List.fold_left(
+      (accum, bufferContext) =>
         switch (bufferContext) {
         | M.Map(context) => [parseBufferContext(context), ...accum]
-        | _ => [buf, ...accum]
+        | _ => accum
         },
       [],
-      buffers,
       items,
-      ~default=buffers,
     )
   | _ => []
   };
@@ -118,28 +118,6 @@ let getBufferList = (api: NeovimApi.t) =>
   api.requestSync("nvim_list_bufs", M.List([]))
   |> unwrapBufferList
   |> filterInvalidBuffers(api)
-  |> List.fold_left(
-       ((calls, bufs), (_, id)) => {
-         let newCalls =
-           constructMetadataCalls(id) |> List.append(calls) |> List.rev;
-
-         let newBuffers =
-           [
-             BufferMetadata.create(
-               ~id,
-               ~modified=false,
-               ~hidden=false,
-               ~bufType=Empty,
-               ~fileType=None,
-               ~filePath=Some("[No Name]"),
-               (),
-             ),
-             ...bufs,
-           ]
-           |> List.rev;
-
-         (newCalls, newBuffers);
-       },
-       ([], []),
-     )
+  |> List.map(constructMetadataCalls)
+  |> List.flatten
   |> enrichBuffers(api);

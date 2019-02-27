@@ -1,4 +1,5 @@
 module Index = {
+  [@deriving show]
   type t =
     | ZeroBasedIndex(int)
     | OneBasedIndex(int);
@@ -28,7 +29,16 @@ module EditorSize = {
   };
 };
 
+module Cursor = {
+  type move = (~column: int, ~line: int) => unit;
+};
+
 module Mode = {
+  /**
+     hide path for this printer as the value is shown
+     to the end user
+   */
+  [@deriving show({with_path: false})]
   type t =
     | Insert
     | Normal
@@ -37,17 +47,6 @@ module Mode = {
     | Operator
     | Commandline
     | Other;
-
-  let show = v =>
-    switch (v) {
-    | Insert => "Insert"
-    | Normal => "Normal"
-    | Replace => "Replace"
-    | Visual => "Visual"
-    | Operator => "Operator"
-    | Commandline => "Commandline"
-    | Other => "Unknown"
-    };
 };
 
 /**
@@ -90,6 +89,7 @@ module BufferPosition = {
   };
 };
 
+[@deriving show]
 type buftype =
   | Empty
   | Help
@@ -113,6 +113,7 @@ let getBufType = bt =>
   };
 
 module BufferMetadata = {
+  [@deriving show]
   type t = {
     filePath: option(string),
     fileType: option(string),
@@ -145,6 +146,7 @@ module BufferMetadata = {
 };
 
 module BufferNotification = {
+  [@deriving show]
   type t = {
     bufferId: int,
     buffers: list(BufferMetadata.t),
@@ -152,6 +154,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
+  [@deriving show]
   type t = {
     id: int,
     startLine: int,
@@ -170,11 +173,13 @@ module BufferUpdate = {
 };
 
 module Tabline = {
+  [@deriving show]
   type t = {
     tab: int,
     name: string,
   };
 
+  [@deriving show]
   type tabs = list(t);
 };
 
@@ -202,6 +207,7 @@ module EditorFont = {
 };
 
 module Wildmenu = {
+  [@deriving show]
   type t = {
     items: list(string),
     show: bool,
@@ -210,6 +216,7 @@ module Wildmenu = {
 };
 
 module Commandline = {
+  [@deriving show]
   type t = {
     content: string,
     firstC: string,

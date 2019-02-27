@@ -14,6 +14,7 @@ module Core = Oni_Core;
 module Utility = Oni_Core.Utility;
 
 module BufferLinesNotification = {
+  [@deriving show]
   type t = {
     id: int,
     changedTick: int,
@@ -36,6 +37,7 @@ module BufferLinesNotification = {
   };
 };
 
+[@deriving show({ with_path: false })]
 type t =
   | Redraw
   | OniCommand(string)
@@ -202,7 +204,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
   | "BufEnter" => BufferEnter(context)
   | "TextChanged" => TextChanged(context)
   | "TextChangedI" => TextChangedI(context)
-  // Unload is here as a remider that some actions might need to be dealt with here
+  // Unload is here as a reminder that some actions might need to be dealt with here
   | "BufUnload" => Ignored
   | "BufDelete" => BufferDelete(context)
   | "CursorMoved" => CursorMoved(context)
@@ -252,9 +254,7 @@ let parse = (t: string, msg: Msgpck.t) => {
       [result];
     | (
         "oni_plugin_notify",
-        M.List([
-          M.List([M.String("command"), M.String(commandName)]),
-        ]),
+        M.List([M.List([M.String("command"), M.String(commandName)])]),
       ) =>
       let result = OniCommand(commandName);
       [result];
@@ -265,12 +265,3 @@ let parse = (t: string, msg: Msgpck.t) => {
 
   msgs |> List.filter(m => m !== Ignored);
 };
-
-let show = (n: t) =>
-  switch (n) {
-  | Redraw => "redraw"
-  | ModeChanged(s) => "mode changed: " ++ s
-  | CursorMoved(c) => "cursor moved: " ++ AutoCommandContext.show(c)
-  | BufferLines(_) => "buffer lines"
-  | _ => "unknown"
-  };

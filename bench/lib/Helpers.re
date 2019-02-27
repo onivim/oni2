@@ -1,10 +1,4 @@
 open Oni_Core;
-open Oni_UI;
-open BenchFramework;
-
-open Revery.UI;
-
-let rootNode = (new node)();
 
 /* Create a state with some editor size */
 let simpleState =
@@ -61,51 +55,3 @@ let hundredThousandLineState =
       ),
     ),
   );
-
-let editorSurfaceMinimalState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface state=simpleState />,
-    );
-  ();
-};
-
-let editorSurfaceThousandLineState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface state=thousandLineState />,
-    );
-  ();
-};
-
-let editorSurfaceHundredThousandLineState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface state=hundredThousandLineState />,
-    );
-  ();
-};
-
-let options = Reperf.Options.create(~iterations=10, ());
-
-bench(
-  ~name="EditorSurface: Minimal state",
-  ~options,
-  ~f=editorSurfaceMinimalState,
-  (),
-);
-bench(
-  ~name="EditorSurface: 1000 Lines state",
-  ~options,
-  ~f=editorSurfaceThousandLineState,
-  (),
-);
-bench(
-  ~name="EditorSurface: 100000 Lines state",
-  ~options,
-  ~f=editorSurfaceHundredThousandLineState,
-  (),
-);

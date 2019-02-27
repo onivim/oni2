@@ -4,7 +4,7 @@
  * Container for StatusBar
  */
 
-open Revery.Core;
+open Revery;
 open Revery.UI;
 
 open Oni_Core;

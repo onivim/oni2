@@ -20,6 +20,7 @@ module EditorState = {
 };
 
 module AutoCommandContext = {
+  [@deriving show({with_path: false})]
   type t = {
     activeBufferId: int,
     cursorLine: Index.t,
@@ -33,12 +34,4 @@ module AutoCommandContext = {
     cursorColumn,
     modified,
   };
-
-  let show = (v: t) =>
-    "activeBufferId: "
-    ++ string_of_int(v.activeBufferId)
-    ++ " line: "
-    ++ string_of_int(Index.toZeroBasedInt(v.cursorLine))
-    ++ " column: "
-    ++ string_of_int(Index.toZeroBasedInt(v.cursorColumn));
 };

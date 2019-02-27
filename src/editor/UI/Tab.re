@@ -35,7 +35,7 @@ let createElement =
 
     let containerStyle =
       Style.[
-        overflow(LayoutTypes.Hidden),
+        overflow(`Hidden),
         paddingHorizontal(5),
         backgroundColor(theme.editorBackground),
         opacity(opacityValue),
@@ -73,11 +73,9 @@ let createElement =
             justifyContent(`Center),
           ]>
           <Text style=textStyle text=title />
-          {
-            modified ?
-              <Text text={||} style=modifiedStyles /> :
-              React.listToElement([])
-          }
+          {modified
+             ? <Text text={||} style=modifiedStyles />
+             : React.listToElement([])}
         </Clickable>
         <Clickable
           onClick=onClose
