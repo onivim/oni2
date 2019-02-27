@@ -8,6 +8,7 @@ type t = {
   viewLines: int,
   size: EditorSize.t,
   cursorPosition: BufferPosition.t,
+  lineHeight: int,
 };
 
 let create = () => {
@@ -18,6 +19,7 @@ let create = () => {
     viewLines: 0,
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
+    lineHeight: 1,
   };
   ret;
 };
@@ -34,20 +36,16 @@ type viewport = {
   pixelHeight: int,
 };
 
-let getVisibleLines = (view: t, lineHeight: int) =>
-  view.size.pixelWidth / lineHeight;
+let getVisibleLines = (view: t) => view.size.pixelWidth / view.lineHeight;
 
-let getTotalSizeInPixels = (view: t, lineHeight: int) =>
-  view.viewLines * lineHeight;
+let getTotalSizeInPixels = (view: t) => view.viewLines * view.lineHeight;
 
-let getCursorPixelLine = (view: t, lineHeight: int) =>
-  Index.toZeroBasedInt(view.cursorPosition.line) * lineHeight;
+let getCursorPixelLine = (view: t) =>
+  Index.toZeroBasedInt(view.cursorPosition.line) * view.lineHeight;
 
-let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
+let getScrollbarMetrics = (view: t, scrollBarHeight: int) => {
   let totalViewSizeInPixels =
-    float_of_int(
-      getTotalSizeInPixels(view, lineHeight) + view.size.pixelHeight,
-    );
+    float_of_int(getTotalSizeInPixels(view) + view.size.pixelHeight);
   let thumbPercentage =
     float_of_int(view.size.pixelHeight) /. totalViewSizeInPixels;
   let thumbSize =
@@ -59,9 +57,9 @@ let getScrollbarMetrics = (view: t, scrollBarHeight: int, lineHeight: int) => {
   {thumbSize, thumbOffset};
 };
 
-let scrollTo = (view: t, newScrollY, measuredFontHeight) => {
+let scrollTo = (view: t, newScrollY) => {
   let newScrollY = max(0, newScrollY);
-  let availableScroll = max(view.viewLines - 1, 0) * measuredFontHeight;
+  let availableScroll = max(view.viewLines - 1, 0) * view.lineHeight;
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -79,44 +77,42 @@ let scrollTo = (view: t, newScrollY, measuredFontHeight) => {
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
-let scroll = (view: t, scrollDeltaY, measuredFontHeight) => {
+let scroll = (view: t, scrollDeltaY) => {
   let newScrollY = view.scrollY + scrollDeltaY;
-  scrollTo(view, newScrollY, measuredFontHeight);
+  scrollTo(view, newScrollY);
 };
 
 /* Scroll so that the cursor is at the TOP of the view */
-let scrollToCursorTop = (view: t, lineHeight) => {
-  let scrollPosition = getCursorPixelLine(view, lineHeight);
-  scrollTo(view, scrollPosition, lineHeight);
+let scrollToCursorTop = (view: t) => {
+  let scrollPosition = getCursorPixelLine(view);
+  scrollTo(view, scrollPosition);
 };
 
 /* Scroll so that the cursor is at the BOTTOM of the view */
-let scrollToCursorBottom = (view: t, lineHeight) => {
-  let cursorPixelPosition = getCursorPixelLine(view, lineHeight);
+let scrollToCursorBottom = (view: t) => {
+  let cursorPixelPosition = getCursorPixelLine(view);
   let scrollPosition =
-    cursorPixelPosition - (view.size.pixelHeight - lineHeight * 1);
-  scrollTo(view, scrollPosition, lineHeight);
+    cursorPixelPosition - (view.size.pixelHeight - view.lineHeight * 1);
+  scrollTo(view, scrollPosition);
 };
 
-let scrollToCursor = (view: t, lineHeight) => {
+let scrollToCursor = (view: t) => {
   let scrollPosition =
-    getCursorPixelLine(view, lineHeight)
-    - view.size.pixelHeight
-    / 2
-    + lineHeight
-    / 2;
+    getCursorPixelLine(view) - view.size.pixelHeight / 2 + view.lineHeight / 2;
 
-  scrollTo(view, scrollPosition, lineHeight);
+  scrollTo(view, scrollPosition);
 };
 
-let snapToCursorPosition = (view: t, lineHeight: int) => {
-  let cursorPixelPosition = getCursorPixelLine(view, lineHeight);
+let snapToCursorPosition = (view: t) => {
+  let cursorPixelPosition = getCursorPixelLine(view);
   let scrollY = view.scrollY;
 
   if (cursorPixelPosition < scrollY) {
-    scrollToCursorTop(view, lineHeight);
-  } else if (cursorPixelPosition > scrollY + view.size.pixelHeight - lineHeight) {
-    scrollToCursorBottom(view, lineHeight);
+    scrollToCursorTop(view);
+  } else if (cursorPixelPosition > scrollY
+             + view.size.pixelHeight
+             - view.lineHeight) {
+    scrollToCursorBottom(view);
   } else {
     view;
   };
@@ -127,26 +123,27 @@ type cursorLocation =
   | Middle
   | Bottom;
 
-let getTopVisibleLine = (view, lineHeight) => view.scrollY / lineHeight + 1;
+let getTopVisibleLine = view => view.scrollY / view.lineHeight + 1;
 
-let getBottomVisibleLine = (view, lineheight) => {
-  let absoluteBottomLine = (view.scrollY + view.size.pixelHeight) / lineheight;
+let getBottomVisibleLine = view => {
+  let absoluteBottomLine =
+    (view.scrollY + view.size.pixelHeight) / view.lineHeight;
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
-let moveCursorToPosition = (~moveCursor, view, lineHeight, position) =>
+let moveCursorToPosition = (~moveCursor, view, position) =>
   switch (position) {
   | Top =>
-    let line = getTopVisibleLine(view, lineHeight);
+    let line = getTopVisibleLine(view);
     moveCursor(~column=0, ~line);
     view;
   | Middle =>
-    let topLine = getTopVisibleLine(view, lineHeight);
-    let bottomLine = getBottomVisibleLine(view, lineHeight);
+    let topLine = getTopVisibleLine(view);
+    let bottomLine = getBottomVisibleLine(view);
     moveCursor(~column=0, ~line=(bottomLine + topLine) / 2);
     view;
   | Bottom =>
-    let line = getBottomVisibleLine(view, lineHeight);
+    let line = getBottomVisibleLine(view);
     moveCursor(~column=0, ~line);
     view;
   };
@@ -157,38 +154,24 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
   | None => view
   };
 
-let reduce = (view, action, buffer, fontMetrics: EditorFont.t) =>
+let reduce = (view, action, buffer) =>
   switch (action) {
-  | CursorMove(b) =>
-    snapToCursorPosition(
-      {...view, cursorPosition: b},
-      fontMetrics.measuredHeight,
-    )
+  | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
-  | EditorScroll(scrollY) =>
-    scroll(view, scrollY, fontMetrics.measuredHeight)
-  | EditorScrollToCursorTop =>
-    scrollToCursorTop(view, fontMetrics.measuredHeight)
-  | EditorScrollToCursorBottom =>
-    scrollToCursorBottom(view, fontMetrics.measuredHeight)
-  | EditorScrollToCursorCentered =>
-    scrollToCursor(view, fontMetrics.measuredHeight)
+  | EditorScroll(scrollY) => scroll(view, scrollY)
+  | EditorScrollToCursorTop => scrollToCursorTop(view)
+  | EditorScrollToCursorBottom => scrollToCursorBottom(view)
+  | EditorScrollToCursorCentered => scrollToCursor(view)
   | EditorMoveCursorToTop(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, fontMetrics.measuredHeight, Top)
+    moveCursorToPosition(~moveCursor, view, Top)
   | EditorMoveCursorToMiddle(moveCursor) =>
-    moveCursorToPosition(
-      ~moveCursor,
-      view,
-      fontMetrics.measuredHeight,
-      Middle,
-    )
+    moveCursorToPosition(~moveCursor, view, Middle)
+  | SetEditorFont({measuredHeight, _}) => {
+      ...view,
+      lineHeight: measuredHeight,
+    }
   | EditorMoveCursorToBottom(moveCursor) =>
-    moveCursorToPosition(
-      ~moveCursor,
-      view,
-      fontMetrics.measuredHeight,
-      Bottom,
-    )
+    moveCursorToPosition(~moveCursor, view, Bottom)
   | _ => view
   };
