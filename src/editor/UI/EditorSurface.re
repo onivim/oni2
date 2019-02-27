@@ -141,7 +141,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let cursorLine = state.editorView.cursorPosition.line;
+    let cursorLine = state.editor.cursorPosition.line;
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
@@ -153,13 +153,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         position(`Absolute),
         top(
           fontHeight
-          * Index.toZeroBasedInt(state.editorView.cursorPosition.line)
-          - state.editorView.scrollY,
+          * Index.toZeroBasedInt(state.editor.cursorPosition.line)
+          - state.editor.scrollY,
         ),
         left(
           lineNumberWidth
           + fontWidth
-          * Index.toZeroBasedInt(state.editorView.cursorPosition.character),
+          * Index.toZeroBasedInt(state.editor.cursorPosition.character),
         ),
         height(fontHeight),
         width(cursorWidth),
@@ -200,8 +200,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let layout =
       EditorLayout.getLayout(
-        ~pixelWidth=state.editorView.size.pixelWidth,
-        ~pixelHeight=state.editorView.size.pixelHeight,
+        ~pixelWidth=state.editor.size.pixelWidth,
+        ~pixelHeight=state.editor.size.pixelHeight,
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -252,9 +252,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             render
             count=lineCount
             width=bufferPixelWidth
-            height={state.editorView.size.pixelHeight}
+            height={state.editor.size.pixelHeight}
             rowHeight={state.editorFont.measuredHeight}
-            scrollY={state.editorView.scrollY}
+            scrollY={state.editor.scrollY}
           />
           <View style=cursorStyle />
         </View>
@@ -262,7 +262,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
-            height={state.editorView.size.pixelHeight}
+            height={state.editor.size.pixelHeight}
             count=lineCount
             getTokensForLine
           />
@@ -270,7 +270,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
-            height={state.editorView.size.pixelHeight}
+            height={state.editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
           />
         </View>

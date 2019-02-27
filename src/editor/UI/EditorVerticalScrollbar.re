@@ -22,8 +22,8 @@ let createElement =
     ) =>
   component(hooks => {
     let scrollMetrics =
-      Oni_Core.EditorView.getScrollbarMetrics(
-        state.editorView,
+      Editor.getScrollbarMetrics(
+        state.editor,
         totalHeight,
         state.editorFont.measuredHeight,
       );
@@ -39,12 +39,12 @@ let createElement =
       ];
 
     let cursorPixelY =
-      Index.toZeroBasedInt(state.editorView.cursorPosition.line)
+      Index.toZeroBasedInt(state.editor.cursorPosition.line)
       * state.editorFont.measuredHeight
       |> float_of_int;
     let totalPixel =
-      EditorView.getTotalSizeInPixels(
-        state.editorView,
+      Editor.getTotalSizeInPixels(
+        state.editor,
         state.editorFont.measuredHeight,
       )
       |> float_of_int;
@@ -52,7 +52,7 @@ let createElement =
     let cursorPosition =
       int_of_float(
         cursorPixelY
-        /. (totalPixel +. float_of_int(state.editorView.size.pixelHeight))
+        /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
         *. float_of_int(totalHeight),
       );
     let cursorSize = 2;
