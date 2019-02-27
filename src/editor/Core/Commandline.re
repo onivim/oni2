@@ -2,17 +2,10 @@
  * Commandline.re
  */
 open Actions;
+open Types;
 
-  [@deriving show]
-  type t = {
-    content: string,
-    firstC: string,
-    position: int,
-    level: int,
-    indent: int,
-    prompt: string,
-    show: bool,
-  };
+[@deriving show]
+type t = commandline;
 
   let create = () => {
       content: "",
@@ -26,13 +19,13 @@ open Actions;
 
 let reduce = (s: t, action) => {
     switch (action) {
-    | CommandlineShow(commandline) => commandline,
-    | CommandlineHide(commandline) => commandline,
+    | CommandlineShow(commandline) => commandline
+    | CommandlineHide(commandline) => commandline
     | CommandlineUpdate((position, level)) => {
           ...s,
           position,
           level,
       }
     | _ => s
-    }
+    };
 };

@@ -7,6 +7,7 @@
 module Actions = Actions;
 module Buffer = Buffer;
 module BufferMap = BufferMap;
+module Commandline = Commandline;
 module Constants = Constants;
 module EditorView = EditorView;
 module LineNumber = LineNumber;
@@ -19,3 +20,4 @@ module Theme = Theme;
 module Tokenizer = Tokenizer;
 module Types = Types;
 module Utility = Utility;
+module Wildmenu = Wildmenu;

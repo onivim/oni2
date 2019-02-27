@@ -29,7 +29,7 @@ let getStringParts = (index, str) =>
   };
 
 let createElement =
-    (~children as _, ~command: Types.Commandline.t, ~theme: Theme.t, ()) =>
+    (~children as _, ~command: Commandline.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
