@@ -34,20 +34,8 @@ let create: unit => t =
   () => {
     configuration: Configuration.create(),
     mode: Insert,
-    commandline: {
-      content: "",
-      firstC: "",
-      prompt: "",
-      position: 0,
-      indent: 0,
-      level: 0,
-      show: false,
-    },
-    wildmenu: {
-      items: [],
-      selected: 0,
-      show: false,
-    },
+    commandline: Commandline.create(),
+    wildmenu: Wildmenu.create(),
     activeBufferId: 0,
     buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
     editorFont:
