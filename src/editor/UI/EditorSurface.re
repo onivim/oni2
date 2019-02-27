@@ -5,7 +5,7 @@
  * the view of the buffer in the window.
  */
 
-open Revery.Core;
+open Revery;
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -54,8 +54,8 @@ let tokensToElement =
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
         lineHeight(1.0),
-        color(Revery.Core.Colors.white),
-        textWrap(Revery.Core.TextWrapping.NoWrap),
+        color(Revery.Colors.white),
+        textWrap(Revery.TextWrapping.NoWrap),
       ];
 
     <Text style text={token.text} />;
@@ -91,7 +91,7 @@ let tokensToElement =
       height(fontHeight),
       color(lineNumberTextColor),
       lineHeight(1.0),
-      textWrap(Revery.Core.TextWrapping.NoWrap),
+      textWrap(Revery.TextWrapping.NoWrap),
     ];
 
   let tokens = List.map(f, tokens);
@@ -218,7 +218,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         left(0),
         width(bufferPixelWidth),
         bottom(0),
-        overflow(LayoutTypes.Hidden),
+        overflow(`Hidden),
       ];
 
     let minimapPixelWidth =
@@ -226,7 +226,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let minimapViewStyle =
       Style.[
         position(`Absolute),
-        overflow(LayoutTypes.Hidden),
+        overflow(`Hidden),
         top(0),
         left(bufferPixelWidth),
         width(minimapPixelWidth),

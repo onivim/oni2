@@ -5,7 +5,6 @@
  */
 
 open Revery;
-open Revery.Core;
 open Revery.UI;
 
 open Rench;
@@ -37,7 +36,7 @@ let init = app => {
     );
 
   let initVimPath =
-    Revery_Core.Environment.getExecutingDirectory() ++ "init.vim";
+    Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
@@ -90,7 +89,7 @@ let init = app => {
 
   let setFont = (fontFamily, fontSize) =>
     Fontkit.fk_new_face(
-      Revery.Core.Environment.getExecutingDirectory() ++ fontFamily,
+      Revery.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
       font => {
         open Oni_Core.Actions;

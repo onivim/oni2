@@ -21,5 +21,5 @@ let ofFile = filePath => {
 };
 
 let init = () => {
-  Revery_Core.Environment.getExecutingDirectory() ++ "setup.json" |> ofFile;
+  Revery.Environment.getExecutingDirectory() ++ "setup.json" |> ofFile;
 };

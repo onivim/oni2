@@ -1,5 +1,5 @@
+open Revery;
 open Revery.UI;
-open Revery.Core;
 open Oni_Core;
 
 let component = React.component("commandline");
@@ -39,7 +39,7 @@ let createElement =
         <View
           style=Style.[
             width(400),
-            overflow(LayoutTypes.Hidden),
+            overflow(`Hidden),
             backgroundColor(theme.editorBackground),
             flexDirection(`Row),
             alignItems(`Center),

@@ -1,6 +1,7 @@
+open Revery;
 open Revery.UI;
 open Revery.UI.Components;
-open Revery.Core;
+
 open Oni_Core;
 
 let component = React.component("wildmenu");
@@ -11,7 +12,7 @@ let containerStyles = (theme: Theme.t) =>
     height(300),
     backgroundColor(theme.editorMenuBackground),
     paddingVertical(20),
-    overflow(LayoutTypes.Hidden),
+    overflow(`Hidden),
     boxShadow(
       ~xOffset=-15.,
       ~yOffset=5.,
