@@ -9,7 +9,7 @@ import * as rpc from "vscode-jsonrpc";
 
 let connection = rpc.createMessageConnection(new rpc.StreamMessageReader(process.stdin), new rpc.StreamMessageWriter(process.stdout));
 
-let notification = new rpc.NotificationType<string, void>('textmateServer/init');
+let notification = new rpc.NotificationType<string, void>('started');
 
 connection.listen();
 
