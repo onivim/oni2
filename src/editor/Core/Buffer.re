@@ -6,6 +6,7 @@
 
 open Types;
 
+[@deriving show]
 type t = {
   metadata: BufferMetadata.t,
   lines: array(string),
@@ -15,12 +16,6 @@ let ofLines = (lines: array(string)) => {
   metadata: BufferMetadata.create(),
   lines,
 };
-
-let show = (b: t) =>
-  "Buffer ["
-  ++ string_of_int(b.metadata.id)
-  ++ "]: "
-  ++ String.concat("\n", Array.to_list(b.lines));
 
 let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
 
@@ -63,10 +58,22 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
 };
 
 let update = (buf: t, update: BufferUpdate.t) =>
-  if (update.version > buf.metadata.version) {
+  switch (update) {
+  /***
+     When a buffer is first attached it emits an update with
+     a startLine of 0 and endLine of -1 in this case we should
+     update the buffer's version but set the content of the buffer
+     rather than update it, which would result in duplication
+   */
+  | {startLine: 0, endLine: (-1), version, _} => {
+      metadata: {
+        ...buf.metadata,
+        version,
+      },
+      lines: Array.of_list(update.lines),
+    }
+  | {version, _} when version > buf.metadata.version =>
     let metadata = {...buf.metadata, version: update.version};
-
     {metadata, lines: applyUpdate(buf.lines, update)};
-  } else {
-    buf;
+  | _ => buf
   };

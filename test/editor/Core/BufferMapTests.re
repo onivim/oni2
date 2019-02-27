@@ -6,11 +6,17 @@ open Oni_Core.Types;
 module BufferMap = Oni_Core.BufferMap;
 module Buffer = Oni_Core.Buffer;
 
-let getOrFail = (v: option(string)) =>
+let getOrFail = (v: option(Buffer.t)) => {
+  let failedMsg = "failed - no buffer was specified";
   switch (v) {
-  | Some(v) => v
-  | None => "failed - no buffer was specified"
+  | Some(v) =>
+    switch (v.metadata.filePath) {
+    | Some(path) => path
+    | None => failedMsg
+    }
+  | None => failedMsg
   };
+};
 
 describe("Buffer List Tests", ({test, _}) => {
   test(
@@ -39,10 +45,7 @@ describe("Buffer List Tests", ({test, _}) => {
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
 
-    expect.string(
-      BufferMap.Buffers.find(0, added).metadata.filePath |> getOrFail,
-    ).
-      toMatch(
+    expect.string(BufferMap.getBuffer(0, added) |> getOrFail).toMatch(
       "/test2.re",
     );
   });
@@ -64,8 +67,7 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferlist,
       );
     let activeBuffer = BufferMap.getBuffer(4, updated);
-    expect.string(activeBuffer.metadata.filePath |> getOrFail).toMatch(
-      "/myfile.js",
-    );
+    let path = getOrFail(activeBuffer);
+    expect.string(path).toMatch("/myfile.js");
   });
 });

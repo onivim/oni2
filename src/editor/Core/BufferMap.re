@@ -6,14 +6,16 @@ open Types;
    with a type that satisfies the interface
    i.e. specifies a compare function and a type
  */
+
 module Buffers =
   Map.Make({
     type t = int;
     let compare = compare;
   });
 
-let empty = Buffers.empty;
 type t = Buffers.t(Buffer.t);
+
+let empty = Buffers.empty;
 
 type mapFunction = Buffer.t => Buffer.t;
 
@@ -40,7 +42,6 @@ let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
         ),
       buffersMap,
     );
-
   List.fold_left(
     (m: t, metadata: BufferMetadata.t) =>
       Buffers.update(
@@ -57,4 +58,13 @@ let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
   );
 };
 
-let getBuffer = (id, map) => Buffers.find(id, map);
+let log = (m: t) =>
+  Buffers.iter(
+    (_, b) =>
+      Buffer.show(b)
+      |> (++)("Buffer ======================: \n")
+      |> print_endline,
+    m,
+  );
+
+let getBuffer = (id, map) => Buffers.find_opt(id, map);

@@ -1,5 +1,5 @@
+open Revery;
 open Revery.UI;
-open Revery.Core;
 open Oni_Core;
 
 let component = React.component("MenuItem");
