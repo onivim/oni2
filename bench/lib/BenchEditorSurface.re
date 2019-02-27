@@ -37,23 +37,21 @@ let editorSurfaceHundredThousandLineState = () => {
 };
 
 let setupSurfaceThousandLineLayout = () => {
-    let rootNode = (new viewNode)();
+  let rootNode = (new viewNode)();
 
-    rootNode#setStyle(Style.make(
-        ~position=LayoutTypes.Relative,
-        ~width=1600,
-        ~height=1200,
-        (),
-    ));
+  rootNode#setStyle(
+    Style.make(~position=LayoutTypes.Relative, ~width=1600, ~height=1200, ()),
+  );
 
-    let container = React.Container.create(rootNode);
-    React.Container.update(container, <EditorSurface state={thousandLineState} />) |> ignore;
+  let container = React.Container.create(rootNode);
+  React.Container.update(container, <EditorSurface state=thousandLineState />)
+  |> ignore;
 
-    rootNode
+  rootNode;
 };
 
-let editorSurfaceThousandLineLayout = (rootNode) => {
-    Layout.layout(rootNode, 1.0, 1);
+let editorSurfaceThousandLineLayout = rootNode => {
+  Layout.layout(rootNode, 1.0, 1);
 };
 
 let options = Reperf.Options.create(~iterations=100, ());

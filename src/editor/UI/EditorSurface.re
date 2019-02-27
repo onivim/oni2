@@ -58,7 +58,7 @@ let tokensToElement =
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
-     <Text style text={token.text} />;
+    <Text style text={token.text} />;
   };
 
   let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
@@ -195,8 +195,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let onDimensionsChanged =
         ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-          GlobalContext.current().notifySizeChanged(~width, ~height, ());
-        }
+      GlobalContext.current().notifySizeChanged(~width, ~height, ());
+    };
 
     let layout =
       EditorLayout.getLayout(

@@ -35,8 +35,7 @@ let init = app => {
       "Oni2",
     );
 
-  let initVimPath =
-    Revery.Environment.getExecutingDirectory() ++ "init.vim";
+  let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
@@ -246,7 +245,6 @@ let init = app => {
           App.dispatch(app, RecalculateEditorView)
         | _ => ()
         };
-
         /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
       },
     );
