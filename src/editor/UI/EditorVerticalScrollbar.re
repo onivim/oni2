@@ -21,11 +21,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let scrollMetrics =
-      Editor.getScrollbarMetrics(
-        state.editor,
-        totalHeight
-      );
+    let scrollMetrics = Editor.getScrollbarMetrics(state.editor, totalHeight);
 
     let scrollThumbStyle =
       Style.[
@@ -42,10 +38,7 @@ let createElement =
       * state.editorFont.measuredHeight
       |> float_of_int;
     let totalPixel =
-      Editor.getTotalSizeInPixels(
-        state.editor
-      )
-      |> float_of_int;
+      Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
 
     let cursorPosition =
       int_of_float(
