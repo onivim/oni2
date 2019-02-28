@@ -23,5 +23,5 @@ connection.onNotification(initializeNotification, () => {
 });
 
 connection.onNotification(exitNotification, () => {
-    process.exit(1);
+    process.exit(0);
 });
