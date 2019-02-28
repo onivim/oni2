@@ -90,7 +90,10 @@ describe("Textmate Service", ({test, _}) => {
       `Assoc([
         (
           "source.reason",
-          `String(setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json"),
+          `String(
+            setup.bundledExtensionsPath
+            ++ "/vscode-reasonml/syntaxes/reason.json",
+          ),
         ),
       ]),
     );
