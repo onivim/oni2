@@ -24,20 +24,26 @@ describe("Textmate Service", ({test, _}) =>
       let onClose = () => gotCloseNotification := true;
 
       let rpc =
-        Rpc.start(~onNotification, ~onRequest, ~onClose, proc.stdout, proc.stdin);
+        Rpc.start(
+          ~onNotification,
+          ~onRequest,
+          ~onClose,
+          proc.stdout,
+          proc.stdin,
+        );
       Rpc.sendNotification(rpc, "initialize", Yojson.Safe.from_string("{}"));
 
       Oni_Core.Utility.waitForCondition(() => {
-          Rpc.pump(rpc);
-          gotInitNotification^
+        Rpc.pump(rpc);
+        gotInitNotification^;
       });
       expect.bool(gotInitNotification^).toBe(true);
 
       Rpc.sendNotification(rpc, "exit", Yojson.Safe.from_string("{}"));
 
       Oni_Core.Utility.waitForCondition(() => {
-          Rpc.pump(rpc);
-          gotCloseNotification^
+        Rpc.pump(rpc);
+        gotCloseNotification^;
       });
       expect.bool(gotCloseNotification^).toBe(true);
 
