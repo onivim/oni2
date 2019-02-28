@@ -10,6 +10,8 @@ type t = {
   neovimPath: string,
   [@key "node"]
   nodePath: string,
+  [@key "textmateService"]
+  textmateServicePath: string,
 };
 
 let ofString = s => {

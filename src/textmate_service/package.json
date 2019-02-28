@@ -1,0 +1,20 @@
+{
+  "name": "textmate_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "depenencies": {
+    "vscode-textmate": "^4.0.1"
+  },
+  "author": "",
+  "license": "SEE LICENSE IN README.md",
+  "devDependencies": {
+    "@types/node": "^11.9.5",
+    "typescript": "^3.3.3333",
+    "vscode-jsonrpc": "^4.0.0"
+  }
+}
