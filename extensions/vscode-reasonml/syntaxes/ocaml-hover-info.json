@@ -1,0 +1,22 @@
+{
+  "scopeName": "source.ocaml.hover.info",
+  "patterns": [
+    {
+      "begin": "\\b(position)\\b(:)",
+      "end": "$",
+      "beginCaptures": {
+        "2": { "name": "keyword.other" }
+      },
+      "patterns": [
+        {
+          "match": "\\bnormal\\b",
+          "name": "comment.line"
+        },
+        {
+          "match": "\\btail\\b",
+          "name": "entity.name.function"
+        }
+      ]
+    }
+  ]
+}

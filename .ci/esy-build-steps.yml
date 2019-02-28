@@ -11,10 +11,11 @@ steps:
     displayName: 'Build: esy build'
   - script: esy x OniUnitTestRunner
     displayName: 'Unit Tests: esy x OniUnitTestRunner (round 1)'
-  - script: esy x OniUnitTestRunner
-    displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
-  - script: esy x OniUnitTestRunner
-    displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
+  # TODO: Stabilize and bring back!
+  # - script: esy x OniUnitTestRunner
+  #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
+  # - script: esy x OniUnitTestRunner
+  #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
   - script: esy @bench install
     displayName: "Bench: install"
   - script: esy @bench build

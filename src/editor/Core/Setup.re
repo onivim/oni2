@@ -12,6 +12,8 @@ type t = {
   nodePath: string,
   [@key "textmateService"]
   textmateServicePath: string,
+  [@key "bundledExtensions"]
+  bundledExtensionsPath: string,
 };
 
 let ofString = s => {
