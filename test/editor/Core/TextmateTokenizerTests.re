@@ -8,7 +8,7 @@ describe("Textmate Service", ({test, _}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
 
-      let proc = NodeProcess.start(setup.textmateServicePath);
+      let proc = NodeProcess.start(setup, setup.textmateServicePath);
 
       let gotInitNotification = ref(false);
       let gotCloseNotification = ref(false);

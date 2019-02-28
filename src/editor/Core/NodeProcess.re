@@ -10,14 +10,14 @@ type t = {
   stdin: out_channel,
 };
 
-let start = (scriptPath: string) => {
+let start = (setup: Setup.t, scriptPath: string) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
 
   let pid =
     Unix.create_process_env(
-      "node",
-      [|"node", scriptPath|],
+      setup.nodePath,
+      [|setup.nodePath, scriptPath|],
       Unix.environment(),
       pstdin,
       pstdout,
