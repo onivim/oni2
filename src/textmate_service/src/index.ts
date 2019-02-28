@@ -21,6 +21,15 @@ let exitNotification = new rpc.NotificationType<string, void>('exit');
 let textmateGrammarPreloadNotification = new rpc.NotificationType<string, string>('textmate/preloadScope');
 let textmateGrammarLoadedNotification = new rpc.NotificationType<string, void>('textmate/scopeLoaded');
 
+type tokenResult = [number, number, string[]];
+
+interface ITokenizeLineRequestParams {
+    scopeName: string;
+    line: string;
+}
+
+let textmateTokenizeLineRequest = new rpc.RequestType<ITokenizeLineRequestParams, tokenResult[], string, {}>('textmate/tokenizeLine');
+
 let grammarPaths: ITextmateInitData = {};
 
 const registry = new vsctm.Registry({
@@ -60,3 +69,16 @@ connection.onNotification(initializeNotification, (paths: ITextmateInitData) => 
 connection.onNotification(exitNotification, () => {
     process.exit(0);
 });
+
+connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(textmateTokenizeLineRequest, (params) => {
+    return registry.loadGrammar(params.scopeName).then((grammar) => {
+
+        console.error("Got scope: " + params.scopeName);
+
+        const tokens = grammar.tokenizeLine(params.line, <any>null);
+        console.error("Tokenized successfully!");
+        console.error(JSON.stringify(tokens));
+
+       return [];
+    });
+})

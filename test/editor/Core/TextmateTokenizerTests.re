@@ -94,6 +94,11 @@ describe("Textmate Service", ({test, _}) => {
         Rpc.pump(rpc);
         gotScopeLoadedMessage^
       });
+
+      Rpc.sendRequest(rpc, "textmate/tokenizeLine", `Assoc([("scopeName", `String("source.reason")), ("line", `String("let abc = 1;"))]), (_v, _) => {
+        
+          prerr_endline("got here");
+      });
       expect.bool(gotScopeLoadedMessage^).toBe(true);
   });
 });
