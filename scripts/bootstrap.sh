@@ -49,7 +49,6 @@ case "${machine}" in
       NODE_PATH="$(cygpath -m "$NODE_PATH")";;
 esac
 
-TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
 oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\",textmateService:\"$TEXTMATE_SERVICE_PATH\"}"
 
 # create the current bin path as this might not exist yet
