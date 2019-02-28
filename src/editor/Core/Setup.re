@@ -13,7 +13,7 @@ type t = {
   [@key "textmateService"]
   textmateServicePath: string,
   [@key "bundledExtensions"]
-  bundledExtensionsPath: string
+  bundledExtensionsPath: string,
 };
 
 let ofString = s => {
