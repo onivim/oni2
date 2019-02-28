@@ -15,10 +15,7 @@ let exitNotification = new rpc.NotificationType<string, void>('exit');
 
 connection.listen();
 
-console.error("HELLO");
-
 connection.onNotification(initializeNotification, () => {
-    console.error("GOT INITIALIZE");
     connection.sendNotification(initializedNotification, {});  
 });
 

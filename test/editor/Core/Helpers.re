@@ -3,6 +3,15 @@ open Oni_Core.Types;
 
 module Buffer = Oni_Core.Buffer;
 
+let repeat = (~iterations: int=5, f) => {
+  let count = ref(0);
+
+  while (count^ < iterations) {
+    f();
+    count := count^ + 1;
+  };
+};
+
 let validateToken =
     (
       expect: Rely__DefaultMatchers.matchers(unit),
