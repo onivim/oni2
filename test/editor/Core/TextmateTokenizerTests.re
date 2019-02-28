@@ -11,8 +11,9 @@ describe("Textmate Service", ({test, _}) =>
       let proc = NodeProcess.start(setup.textmateServicePath);
 
       let gotInitNotification = ref(false);
+      let gotCloseNotification = ref(false);
 
-      let onNotification = (n: Types.Notification.t, _) =>
+      let onNotification = (n: Notification.t, _) =>
         switch (n.method) {
         | "initialized" => gotInitNotification := true
         | m => prerr_endline("Unrecognized message: " ++ m)
@@ -20,13 +21,25 @@ describe("Textmate Service", ({test, _}) =>
 
       let onRequest = (_, _) => Ok(Yojson.Safe.from_string("{}"));
 
+      let onClose = () => gotCloseNotification := true;
+
       let rpc =
-        Rpc.start(~onNotification, ~onRequest, proc.stdout, proc.stdin);
+        Rpc.start(~onNotification, ~onRequest, ~onClose, proc.stdout, proc.stdin);
       Rpc.sendNotification(rpc, "initialize", Yojson.Safe.from_string("{}"));
 
-      Oni_Core.Utility.waitForCondition(() => gotInitNotification^);
+      Oni_Core.Utility.waitForCondition(() => {
+          Rpc.pump(rpc);
+          gotInitNotification^
+      });
+      expect.bool(gotInitNotification^).toBe(true);
 
       Rpc.sendNotification(rpc, "exit", Yojson.Safe.from_string("{}"));
+
+      Oni_Core.Utility.waitForCondition(() => {
+          Rpc.pump(rpc);
+          gotCloseNotification^
+      });
+      expect.bool(gotCloseNotification^).toBe(true);
 
       let result = Unix.waitpid([], proc.pid);
 
