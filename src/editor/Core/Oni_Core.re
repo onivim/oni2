@@ -13,6 +13,7 @@ module Editor = Editor;
 module LineNumber = LineNumber;
 module Log = Log;
 module Node = Node;
+module NodeProcess = NodeProcess;
 module Reducer = Reducer;
 module Setup = Setup;
 module State = State;
