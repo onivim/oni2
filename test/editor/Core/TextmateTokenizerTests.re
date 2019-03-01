@@ -113,10 +113,8 @@ describe("Textmate Service", ({test, _}) => {
         ("scopeName", `String("source.reason")),
         ("line", `String("let abc = 1;")),
       ]),
-      (_v, _) => {
-        gotResponse := true;
-      }
-
+      (_v, _) =>
+      gotResponse := true
     );
     Oni_Core.Utility.waitForCondition(() => {
       Rpc.pump(rpc);
