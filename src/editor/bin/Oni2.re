@@ -42,7 +42,10 @@ let init = app => {
   let setup: Oni_Core.Setup.t = Oni_Core.Setup.init();
 
   let nvim =
-    NeovimProcess.start(~neovimPath = setup.neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
+    NeovimProcess.start(
+      ~neovimPath=setup.neovimPath,
+      ~args=[|"-u", initVimPath, "--embed"|],
+    );
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
@@ -53,18 +56,22 @@ let init = app => {
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
 
-  let defaultThemePath = setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
-  let reasonSyntaxPath = setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
+  let defaultThemePath =
+    setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+  let reasonSyntaxPath =
+    setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
-  let onScopeLoaded = (s) => prerr_endline ("SCOPE LOADED: " ++ s);
-  let onColorMap = (cm) => App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
+  let onScopeLoaded = s => prerr_endline("SCOPE LOADED: " ++ s);
+  let onColorMap = cm =>
+    App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
-  let tmClient = Oni_Core.TextmateClient.start(
+  let tmClient =
+    Oni_Core.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
-      setup, 
+      setup,
       [{scopeName: "source.reason", path: reasonSyntaxPath}],
-  );
+    );
 
   Oni_Core.TextmateClient.setTheme(tmClient, defaultThemePath);
 
@@ -177,10 +184,14 @@ let init = app => {
       },
     );
 
-  let _ = Tick.interval(_ => {
-      nvimApi.pump()
-      Oni_Core.TextmateClient.pump(tmClient);
-  }, Seconds(0.));
+  let _ =
+    Tick.interval(
+      _ => {
+        nvimApi.pump();
+        Oni_Core.TextmateClient.pump(tmClient);
+      },
+      Seconds(0.),
+    );
 
   /* let _ = */
   /*   Event.subscribe(nvimApi.onNotification, n => */
