@@ -32,22 +32,27 @@ let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   };
 };
 
-type t = {
-  process: NodeProcess.t,
-  rpc: Rpc.t,
-};
-
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type onScopeLoaded = string => unit;
 let defaultScopeLoaded: onScopeLoaded = _ => ();
 
+type onColorMap = ColorMap.t => unit;
+let defaultColorMap: onColorMap = _ => ();
+
+type t = {
+  process: NodeProcess.t,
+  rpc: Rpc.t,
+  onColorMap: onColorMap,
+};
+
 let emptyJsonValue = `Assoc([]);
 
 let start =
     (
       ~onClosed=defaultCallback,
+      ~onColorMap=defaultColorMap,
       ~onInitialized=defaultCallback,
       ~onScopeLoaded=defaultScopeLoaded,
       setup: Setup.t,
@@ -81,7 +86,7 @@ let start =
   let initInfo = initializationInfo |> List.map(mapScopeInfoToJson);
   Rpc.sendNotification(rpc, "initialize", `Assoc(initInfo));
 
-  {process, rpc};
+  {process, rpc, onColorMap};
 };
 
 let getpid = (v: t) => v.process.pid;
@@ -91,6 +96,21 @@ let preloadScope = (v: t, scopeName: string) => {
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);
+
+let setTheme = (v: t, themePath: string) => {
+    Rpc.sendRequest(
+        v.rpc,
+        "textmate/setTheme",
+        `Assoc([
+            ("path", `String(themePath)),
+        ]),
+        (response, _) => {
+            switch (response)  {
+            | Ok(json) => v.onColorMap(ColorMap.ofJson(json));
+            | _ => prerr_endline ("Unable to load theme");
+            }
+        });
+};
 
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
   let gotResponse = ref(false);
