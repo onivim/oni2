@@ -26,6 +26,7 @@ type t = {
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
+  syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
   editor: Editor.t,
 };
@@ -46,6 +47,7 @@ let create: unit => t =
         ~measuredHeight=1,
         (),
       ),
+    syntaxHighlighting: SyntaxHighlighting.create(),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
     editor: Editor.create(),

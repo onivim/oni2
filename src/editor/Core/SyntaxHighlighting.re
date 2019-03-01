@@ -29,3 +29,9 @@ type t = {
 let create: unit => t = () => {
     idToBufferSyntaxHighlights: IntMap.empty,
 }
+
+let reduce: (t, Actions.t) => t = (state, action) => {
+    switch (action) {
+    | _ => state
+    }
+};

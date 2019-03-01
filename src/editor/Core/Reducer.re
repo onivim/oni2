@@ -67,6 +67,7 @@ let reduce: (State.t, Actions.t) => State.t =
           a,
           BufferMap.getBuffer(s.activeBufferId, s.buffers),
         ),
+      syntaxHighlighting: SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),
     };
