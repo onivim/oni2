@@ -34,10 +34,14 @@ append_line() {
 case "${machine}" in
   Linux)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/linux-x64/node"
+      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
+      EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim"
       CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
   Mac)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
+      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
+      EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim"
       CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
   *)
@@ -53,7 +57,7 @@ case "${machine}" in
       CONFIGURATION_PATH="$(cygpath -m "$CONFIGURATION_PATH")";;
 esac
 
-oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\",textmateService:\"$TEXTMATE_SERVICE_PATH\",bundledExtensions:\"$EXTENSIONS_PATH\",configuration:\"$CONFIGURATION_PATH\"}}"
+oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\",configuration:\"$CONFIGURATION_PATH\",textmateService:\"$TEXTMATE_SERVICE_PATH\",bundledExtensions:\"$EXTENSIONS_PATH\"}"
 
 # create the current bin path as this might not exist yet
 if [ ! -d "$config_path" ]; then
