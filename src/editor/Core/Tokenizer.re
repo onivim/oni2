@@ -2,12 +2,15 @@
  * Tokenizer.re
  */
 
+open Revery;
+
 open Types;
 
 type t = {
   text: string,
   startPosition: Index.t,
   endPosition: Index.t,
+  color: Color.t,
 };
 
 let _isWhitespace = c => {
@@ -54,6 +57,7 @@ let tokenize: string => list(t) =
           text: tokenText,
           startPosition: ZeroBasedIndex(startToken),
           endPosition: ZeroBasedIndex(endToken),
+          color: Colors.white,
         };
 
         tokens := List.append([token], tokens^);

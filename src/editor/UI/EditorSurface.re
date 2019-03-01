@@ -54,7 +54,7 @@ let tokensToElement =
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
         lineHeight(1.0),
-        color(Revery.Colors.white),
+        color(token.color),
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
