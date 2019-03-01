@@ -44,7 +44,7 @@ let defaultColorMap: onColorMap = _ => ();
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
-  onColorMap: onColorMap,
+  onColorMap,
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -98,18 +98,16 @@ let preloadScope = (v: t, scopeName: string) => {
 let pump = (v: t) => Rpc.pump(v.rpc);
 
 let setTheme = (v: t, themePath: string) => {
-    Rpc.sendRequest(
-        v.rpc,
-        "textmate/setTheme",
-        `Assoc([
-            ("path", `String(themePath)),
-        ]),
-        (response, _) => {
-            switch (response)  {
-            | Ok(json) => v.onColorMap(ColorMap.ofJson(json));
-            | _ => prerr_endline ("Unable to load theme");
-            }
-        });
+  Rpc.sendRequest(
+    v.rpc,
+    "textmate/setTheme",
+    `Assoc([("path", `String(themePath))]),
+    (response, _) =>
+    switch (response) {
+    | Ok(json) => v.onColorMap(ColorMap.ofJson(json))
+    | _ => prerr_endline("Unable to load theme")
+    }
+  );
 };
 
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {

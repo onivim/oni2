@@ -41,20 +41,15 @@ describe("Textmate Service", ({test, _}) => {
 
   let withTextmateClient = (~onScopeLoaded, initData, f) => {
     let setup = Setup.init();
-    let tmClient =
-      TextmateClient.start(
-        ~onScopeLoaded,
-        setup,
-        initData
-      );
-    
+    let tmClient = TextmateClient.start(~onScopeLoaded, setup, initData);
+
     f(tmClient);
 
     let result = TextmateClient.close(tmClient);
     switch (result) {
-    | (_, Unix.WEXITED(_)) => ();
+    | (_, Unix.WEXITED(_)) => ()
     | _ =>
-      raise(TextmateServiceCloseException("Error closing textmate service"));
+      raise(TextmateServiceCloseException("Error closing textmate service"))
     };
   };
 
@@ -69,40 +64,38 @@ describe("Textmate Service", ({test, _}) => {
       | _ => prerr_endline("Unknown scope: " ++ s)
       };
 
-    withTextmateClient(~onScopeLoaded,
+    withTextmateClient(
+      ~onScopeLoaded,
+      [
+        {
+          scopeName: "source.reason",
+          path:
+            setup.bundledExtensionsPath
+            ++ "/vscode-reasonml/syntaxes/reason.json",
+        },
+      ],
+      tmClient => {
+        TextmateClient.preloadScope(tmClient, "source.reason");
 
-        [
-          {
-            scopeName: "source.reason",
-            path:
-              setup.bundledExtensionsPath
-              ++ "/vscode-reasonml/syntaxes/reason.json",
-          },
-        ],
-        (tmClient) => {
-            
-
-    TextmateClient.preloadScope(tmClient, "source.reason");
-
-    Oni_Core.Utility.waitForCondition(() => {
-      TextmateClient.pump(tmClient);
-      gotScopeLoadedMessage^;
-    });
-    expect.bool(gotScopeLoadedMessage^).toBe(true);
-
-    let tokenizeResult =
-      TextmateClient.tokenizeLineSync(
-        tmClient,
-        "source.reason",
-        "let abc = 100;",
-      );
-
-    expect.int(List.length(tokenizeResult)).toBe(5);
-
-    let firstResult = List.hd(tokenizeResult);
-    expect.int(firstResult.startIndex).toBe(0);
-    expect.int(firstResult.endIndex).toBe(3);
+        Oni_Core.Utility.waitForCondition(() => {
+          TextmateClient.pump(tmClient);
+          gotScopeLoadedMessage^;
         });
+        expect.bool(gotScopeLoadedMessage^).toBe(true);
 
+        let tokenizeResult =
+          TextmateClient.tokenizeLineSync(
+            tmClient,
+            "source.reason",
+            "let abc = 100;",
+          );
+
+        expect.int(List.length(tokenizeResult)).toBe(5);
+
+        let firstResult = List.hd(tokenizeResult);
+        expect.int(firstResult.startIndex).toBe(0);
+        expect.int(firstResult.endIndex).toBe(3);
+      },
+    );
   });
 });
