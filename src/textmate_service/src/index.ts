@@ -71,7 +71,16 @@ connection.onNotification(exitNotification, () => {
 connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(textmateTokenizeLineRequest, (params) => {
     return registry.loadGrammar(params.scopeName).then((grammar) => {
        const tokens = grammar.tokenizeLine(params.line, <any>null);
-        const result: tokenResult[] = tokens.tokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
-        return result;
+
+        if (!tokens || !tokens.tokens) {
+            return [];
+        } else {
+            const parsedTokens = tokens.tokens;
+            const filteredTokens = parsedTokens.filter((t) => t.scopes.length > 1);
+            const result: tokenResult[] = filteredTokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
+            console.error(JSON.stringify(result));
+            return result;
+        }
+
     });
 })

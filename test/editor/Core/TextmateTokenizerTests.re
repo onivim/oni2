@@ -62,6 +62,7 @@ describe("Textmate Service", ({test, _}) => {
     let proc = NodeProcess.start(setup, setup.textmateServicePath);
 
     let gotScopeLoadedMessage = ref(false);
+    let gotResponse = ref(false);
 
     let onNotification = (n: Notification.t, _) =>
       switch (n.method, n.params) {
@@ -112,9 +113,17 @@ describe("Textmate Service", ({test, _}) => {
         ("scopeName", `String("source.reason")),
         ("line", `String("let abc = 1;")),
       ]),
-      (_v, _) =>
-      prerr_endline("got here")
+      (_v, _) => {
+        gotResponse := true;
+      }
+
     );
+    Oni_Core.Utility.waitForCondition(() => {
+      Rpc.pump(rpc);
+      gotResponse^;
+    });
+
     expect.bool(gotScopeLoadedMessage^).toBe(true);
+    expect.bool(gotResponse^).toBe(true);
   });
 });
