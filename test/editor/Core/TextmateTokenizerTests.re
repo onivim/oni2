@@ -37,6 +37,27 @@ describe("Textmate Service", ({test, _}) => {
     })
   );
 
+  exception TextmateServiceCloseException(string);
+
+  let withTextmateClient = (~onScopeLoaded, initData, f) => {
+    let setup = Setup.init();
+    let tmClient =
+      TextmateClient.start(
+        ~onScopeLoaded,
+        setup,
+        initData
+      );
+    
+    f(tmClient);
+
+    let result = TextmateClient.close(tmClient);
+    switch (result) {
+    | (_, Unix.WEXITED(_)) => ();
+    | _ =>
+      raise(TextmateServiceCloseException("Error closing textmate service"));
+    };
+  };
+
   test("load grammar / scope", ({expect}) => {
     let setup = Setup.init();
 
@@ -48,10 +69,8 @@ describe("Textmate Service", ({test, _}) => {
       | _ => prerr_endline("Unknown scope: " ++ s)
       };
 
-    let tmClient =
-      TextmateClient.start(
-        ~onScopeLoaded,
-        setup,
+    withTextmateClient(~onScopeLoaded,
+
         [
           {
             scopeName: "source.reason",
@@ -60,7 +79,8 @@ describe("Textmate Service", ({test, _}) => {
               ++ "/vscode-reasonml/syntaxes/reason.json",
           },
         ],
-      );
+        (tmClient) => {
+            
 
     TextmateClient.preloadScope(tmClient, "source.reason");
 
@@ -82,12 +102,7 @@ describe("Textmate Service", ({test, _}) => {
     let firstResult = List.hd(tokenizeResult);
     expect.int(firstResult.startIndex).toBe(0);
     expect.int(firstResult.endIndex).toBe(3);
+        });
 
-    let result = TextmateClient.close(tmClient);
-    switch (result) {
-    | (_, Unix.WEXITED(v)) => expect.int(v).toBe(0)
-    | _ =>
-      expect.string("Expected WEXITED").toEqual("Got different exit state")
-    };
   });
 });
