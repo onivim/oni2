@@ -24,7 +24,7 @@ module EditorColors = {
   };
 
   let default: t = {
-    background: Color.hex("#212733"),
+    background: Color.hex("#282C35"),
     foreground: Color.hex("#ECEFF4"),
     editorBackground: Color.hex("#2F3440"),
     editorForeground: Color.hex("#DCDCDC"),

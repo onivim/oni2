@@ -28,11 +28,15 @@ interface ITokenizeLineRequestParams {
     line: string;
 }
 
+interface ITokenizeLineResponse {
+    tokens: tokenResult[],
+}
+
 interface ISetThemeRequestParams {
     path: string;
 }
 
-let textmateTokenizeLineRequest = new rpc.RequestType<ITokenizeLineRequestParams, tokenResult[], string, {}>('textmate/tokenizeLine');
+let textmateTokenizeLineRequest = new rpc.RequestType<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>('textmate/tokenizeLine');
 let textmateSetThemeRequest = new rpc.RequestType<ISetThemeRequestParams, string[], string, {}>('textmate/setTheme');
 
 let grammarPaths: ITextmateInitData = {};
@@ -73,27 +77,31 @@ connection.onNotification(exitNotification, () => {
     process.exit(0);
 });
 
-connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(textmateTokenizeLineRequest, (params) => {
+connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(textmateTokenizeLineRequest, (params) => {
     return registry.loadGrammar(params.scopeName).then((grammar) => {
        const tokens = grammar.tokenizeLine(params.line, <any>null);
 
         if (!tokens || !tokens.tokens) {
-            return [];
+            return {
+                tokens: [],
+            }
         } else {
+            const colors = grammar.tokenizeLine2(params.line, <any>null);
             const parsedTokens = tokens.tokens;
             const filteredTokens = parsedTokens.filter((t) => t.scopes.length > 1);
             const result: tokenResult[] = filteredTokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
-            console.error(JSON.stringify(result));
-            return result;
+
+            const colorTokens = Array.prototype.slice.call(colors.tokens);
+            return {
+                tokens: result,
+                colors: colorTokens,
+            };
         }
 
     });
 });
 
 connection.onRequest<ISetThemeRequestParams, string[], string, {}>(textmateSetThemeRequest, (params) => {
-
-    console.error("setTheme - loading from: " + JSON.stringify(params));
-
     let themeFile = fs.readFileSync(params.path);
     let parsedTheme = JSON.parse(themeFile.toString("utf8"));
 
@@ -104,10 +112,6 @@ connection.onRequest<ISetThemeRequestParams, string[], string, {}>(textmateSetTh
 
     registry.setTheme(rawTheme);
     const precolors = registry.getColorMap();
-    console.error("Before filter: " + JSON.stringify(precolors));
-
     const colors = precolors.filter((c) => !!c);
-
-    console.error("Returned colors: " + JSON.stringify(colors));
     return colors;
 })
