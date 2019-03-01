@@ -7,6 +7,7 @@
 module Actions = Actions;
 module Buffer = Buffer;
 module BufferMap = BufferMap;
+module ColorMap = ColorMap;
 module Commandline = Commandline;
 module Constants = Constants;
 module Editor = Editor;

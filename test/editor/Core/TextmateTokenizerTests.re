@@ -1,6 +1,9 @@
 open Oni_Core;
 open TestFramework;
 
+let reasonSyntaxPath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
+let testThemePath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/oni-test/theme1.json";
+
 describe("Textmate Service", ({test, _}) => {
   test("receive init message", ({expect}) =>
     Helpers.repeat(() => {
@@ -39,9 +42,9 @@ describe("Textmate Service", ({test, _}) => {
 
   exception TextmateServiceCloseException(string);
 
-  let withTextmateClient = (~onScopeLoaded, initData, f) => {
+  let withTextmateClient = (~onColorMap, ~onScopeLoaded, initData, f) => {
     let setup = Setup.init();
-    let tmClient = TextmateClient.start(~onScopeLoaded, setup, initData);
+    let tmClient = TextmateClient.start(~onColorMap, ~onScopeLoaded, setup, initData);
 
     f(tmClient);
 
@@ -56,6 +59,7 @@ describe("Textmate Service", ({test, _}) => {
   test("load grammar / scope", ({expect}) => {
     let setup = Setup.init();
 
+    let onColorMap = (_) => ();
     let gotScopeLoadedMessage = ref(false);
 
     let onScopeLoaded = (s: string) =>
@@ -65,13 +69,12 @@ describe("Textmate Service", ({test, _}) => {
       };
 
     withTextmateClient(
+      ~onColorMap,
       ~onScopeLoaded,
       [
         {
           scopeName: "source.reason",
-          path:
-            setup.bundledExtensionsPath
-            ++ "/vscode-reasonml/syntaxes/reason.json",
+          path: reasonSyntaxPath(setup),
         },
       ],
       tmClient => {
@@ -97,5 +100,45 @@ describe("Textmate Service", ({test, _}) => {
         expect.int(firstResult.endIndex).toBe(3);
       },
     );
+  });
+
+  test("load theme and get colormap", ({expect}) => {
+    let setup = Setup.init();
+
+    let colorMap: ref(option(ColorMap.t)) = ref(None);
+
+    let onColorMap = (c) => colorMap := Some(c);
+
+    let onScopeLoaded = (_) => ();
+
+    withTextmateClient(
+      ~onColorMap,
+      ~onScopeLoaded,
+      [
+        {
+          scopeName: "source.reason",
+          path: reasonSyntaxPath(setup),
+        },
+      ],
+      tmClient => {
+
+        TextmateClient.setTheme(tmClient, testThemePath(setup));
+
+        Oni_Core.Utility.waitForCondition(() => {
+          TextmateClient.pump(tmClient);
+          switch (colorMap^) {
+          | Some(_) => true
+          | None => false
+          }
+        });
+
+        switch (colorMap^) {
+        | Some(c) => {
+            let firstColor = ColorMap.get(c, 0);
+            expect.float(firstColor.r).toBeCloseTo(1.0);
+        }
+        | None => expect.string("Failed").toEqual("get color map");
+        }
+      })
   });
 });
