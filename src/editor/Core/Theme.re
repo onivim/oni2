@@ -66,9 +66,8 @@ type t = {
 };
 
 let getTokenColor = (_theme: t, _scopes: list(string)) => {
-    Colors.red
+    Colors.white
 }
-
 
 let create: unit => t = () => {
     colors: EditorColors.default,
