@@ -54,51 +54,67 @@ describe("Textmate Service", ({test, _}) => {
       | _ =>
         expect.string("Expected WEXITED").toEqual("Got different exit state")
       };
-    }));
+    })
+  );
 
   test("load grammar / scope", ({expect}) => {
-       let setup = Setup.init(); 
+    let setup = Setup.init();
     let proc = NodeProcess.start(setup, setup.textmateServicePath);
-
 
     let gotScopeLoadedMessage = ref(false);
 
-      let onNotification = (n: Notification.t, _) =>
-        switch ((n.method, n.params)) {
-        | ("textmate/scopeLoaded", `String("source.reason")) => {
-           gotScopeLoadedMessage := true; 
-        }
-        | _ => prerr_endline("Unrecognized message!")
-        };
+    let onNotification = (n: Notification.t, _) =>
+      switch (n.method, n.params) {
+      | ("textmate/scopeLoaded", `String("source.reason")) =>
+        gotScopeLoadedMessage := true
+      | _ => prerr_endline("Unrecognized message!")
+      };
 
-      let onRequest = (_, _) => Ok(Yojson.Safe.from_string("{}"));
+    let onRequest = (_, _) => Ok(Yojson.Safe.from_string("{}"));
 
-      let onClose = () => ();
+    let onClose = () => ();
 
-      let rpc =
-        Rpc.start(
-          ~onNotification,
-          ~onRequest,
-          ~onClose,
-          proc.stdout,
-          proc.stdin,
-        );
+    let rpc =
+      Rpc.start(
+        ~onNotification,
+        ~onRequest,
+        ~onClose,
+        proc.stdout,
+        proc.stdin,
+      );
 
-      Rpc.sendNotification(rpc, "initialize", `Assoc([
-        ("source.reason", `String("D:/oni2/extensions/vscode-reasonml/syntaxes/reason.json"))
-      ]));
+    Rpc.sendNotification(
+      rpc,
+      "initialize",
+      `Assoc([
+        (
+          "source.reason",
+          `String("D:/oni2/extensions/vscode-reasonml/syntaxes/reason.json"),
+        ),
+      ]),
+    );
 
-      Rpc.sendNotification(rpc, "textmate/preloadScope", `String("source.reason"));
+    Rpc.sendNotification(
+      rpc,
+      "textmate/preloadScope",
+      `String("source.reason"),
+    );
 
-      Oni_Core.Utility.waitForCondition(() => {
-        Rpc.pump(rpc);
-        gotScopeLoadedMessage^
-      });
+    Oni_Core.Utility.waitForCondition(() => {
+      Rpc.pump(rpc);
+      gotScopeLoadedMessage^;
+    });
 
-      Rpc.sendRequest(rpc, "textmate/tokenizeLine", `Assoc([("scopeName", `String("source.reason")), ("line", `String("let abc = 1;"))]), (_v, _) => {
-        
-          prerr_endline("got here");
-      });
-      expect.bool(gotScopeLoadedMessage^).toBe(true);
+    Rpc.sendRequest(
+      rpc,
+      "textmate/tokenizeLine",
+      `Assoc([
+        ("scopeName", `String("source.reason")),
+        ("line", `String("let abc = 1;")),
+      ]),
+      (_v, _) =>
+      prerr_endline("got here")
+    );
+    expect.bool(gotScopeLoadedMessage^).toBe(true);
   });
 });
