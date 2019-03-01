@@ -4,10 +4,11 @@
  * Settings and utilities for managing Linumbers
  */
 
+[@deriving (yojson, show)]
 type setting =
-  | On
-  | Off
-  | Relative;
+  | [@name "on"] On
+  | [@name "off"] Off
+  | [@name "relative"] Relative;
 
 /*
  * Given a number of lines, gives the number of digits
@@ -30,7 +31,7 @@ let getLineNumberPixelWidth = (~lines: int, ~fontPixelWidth: int, ()) => {
 };
 
 let getLineNumber =
-    (~bufferLine: int, ~cursorLine: int, ~setting: setting, ()) => {
+    (~bufferLine: int, ~cursorLine: int, ~setting: setting, ()) =>
   switch (setting) {
   | Relative =>
     if (bufferLine === cursorLine) {
@@ -40,4 +41,3 @@ let getLineNumber =
     }
   | _ => bufferLine
   };
-};

@@ -24,3 +24,4 @@ module Tokenizer = Tokenizer;
 module Types = Types;
 module Utility = Utility;
 module Wildmenu = Wildmenu;
+module Configuration = Configuration;
