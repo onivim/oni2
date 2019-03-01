@@ -25,7 +25,7 @@ describe("tokenize", ({test, _}) => {
         text: "testWord",
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(8),
-        color: Colors.red
+        color: Colors.red,
       },
     ];
 
@@ -40,7 +40,7 @@ describe("tokenize", ({test, _}) => {
         text: "testWord",
         startPosition: ZeroBasedIndex(2),
         endPosition: ZeroBasedIndex(10),
-        color: Colors.red
+        color: Colors.red,
       },
     ];
 
@@ -55,7 +55,7 @@ describe("tokenize", ({test, _}) => {
         text: "a",
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
-        color: Colors.red
+        color: Colors.red,
       },
     ];
 
@@ -70,13 +70,13 @@ describe("tokenize", ({test, _}) => {
         text: "a",
         startPosition: ZeroBasedIndex(1),
         endPosition: ZeroBasedIndex(2),
-        color: Colors.red
+        color: Colors.red,
       },
       {
         text: "btest",
         startPosition: ZeroBasedIndex(3),
         endPosition: ZeroBasedIndex(8),
-        color: Colors.red
+        color: Colors.red,
       },
     ];
 
