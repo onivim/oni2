@@ -28,7 +28,12 @@ interface ITokenizeLineRequestParams {
     line: string;
 }
 
+interface ISetThemeRequestParams {
+    path: string;
+}
+
 let textmateTokenizeLineRequest = new rpc.RequestType<ITokenizeLineRequestParams, tokenResult[], string, {}>('textmate/tokenizeLine');
+let textmateSetThemeRequest = new rpc.RequestType<ISetThemeRequestParams, string[], string, {}>('textmate/setTheme');
 
 let grammarPaths: ITextmateInitData = {};
 
@@ -83,4 +88,26 @@ connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(text
         }
 
     });
+});
+
+connection.onRequest<ISetThemeRequestParams, string[], string, {}>(textmateSetThemeRequest, (params) => {
+
+    console.error("setTheme - loading from: " + JSON.stringify(params));
+
+    let themeFile = fs.readFileSync(params.path);
+    let parsedTheme = JSON.parse(themeFile.toString("utf8"));
+
+    let rawTheme: vsctm.IRawTheme = {
+        name: parsedTheme.name,
+        settings: parsedTheme.tokenColors || [],
+    };
+
+    registry.setTheme(rawTheme);
+    const precolors = registry.getColorMap();
+    console.error("Before filter: " + JSON.stringify(precolors));
+
+    const colors = precolors.filter((c) => !!c);
+
+    console.error("Returned colors: " + JSON.stringify(colors));
+    return colors;
 })
