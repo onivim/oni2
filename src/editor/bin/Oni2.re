@@ -57,7 +57,7 @@ let init = app => {
   let reasonSyntaxPath = setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
   let onScopeLoaded = (s) => prerr_endline ("SCOPE LOADED: " ++ s);
-  let onColorMap = (_) => prerr_endline ("COLOR MAP LOADED" );
+  let onColorMap = (cm) => App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
   let tmClient = Oni_Core.TextmateClient.start(
       ~onScopeLoaded,
