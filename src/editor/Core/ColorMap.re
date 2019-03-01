@@ -18,8 +18,5 @@ let ofJson = (v: Yojson.Safe.json) => {
 };
 
 let get = (v: t, i) => {
-  switch(i >= 0 && i < Array.length(v)) {
-  | true => Some(v[i])
-  | false => None
-  }
+  i >= 0 && i < Array.length(v) ? Some(v[i]) : None;
 };

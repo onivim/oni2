@@ -21,14 +21,15 @@ module BufferSyntaxHighlights = {
 };
 
 type t = {
-    colorMap: ColorMap.t,
-    idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t)
+  colorMap: ColorMap.t,
+  idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t),
 };
 
-let create: unit => t = () => {
+let create: unit => t =
+  () => {
     colorMap: ColorMap.create(),
-    idToBufferSyntaxHighlights: IntMap.empty
-};
+    idToBufferSyntaxHighlights: IntMap.empty,
+  };
 
 let reduce: (t, Actions.t) => t =
   (state, action) => {
