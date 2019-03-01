@@ -77,7 +77,7 @@ describe("Textmate Service", ({test, _}) => {
         "let abc = 100;",
       );
 
-    expect.int(List.length(tokenizeResult)).toBe(8);
+    expect.int(List.length(tokenizeResult)).toBe(5);
 
     let firstResult = List.hd(tokenizeResult);
     expect.int(firstResult.startIndex).toBe(0);
