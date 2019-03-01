@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Language="en-US" Id="Material-theme" Version="2.13.4" Publisher="zhuangtongfa"/>
+    <DisplayName>One Dark Pro</DisplayName>
+    <Description xml:space="preserve">Atom's iconic One Dark theme for Visual Studio Code</Description>
+    <Tags>vscode</Tags>
+    <Categories>Themes</Categories>
+    <GalleryFlags>Public</GalleryFlags>
+    <Properties>
+    </Properties>
+    <Icon>extension/icon.svg</Icon>
+  </Metadata>
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Code"/>
+  </Installation>
+  <Dependencies/>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true" />
+    <Asset Type="Microsoft.VisualStudio.Services.Icons.Default" Path="extension/icon.svg" Addressable="true" />
+  </Assets>
+</PackageManifest>
