@@ -92,8 +92,6 @@ connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, 
             const result: tokenResult[] = filteredTokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
 
             const colorTokens = Array.prototype.slice.call(colors.tokens);
-            console.error(JSON.stringify(result));
-            console.error(JSON.stringify(colors));
             return {
                 tokens: result,
                 colors: colorTokens,
