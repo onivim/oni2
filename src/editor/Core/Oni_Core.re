@@ -17,6 +17,7 @@ module NodeProcess = NodeProcess;
 module Reducer = Reducer;
 module Setup = Setup;
 module State = State;
+module TextmateClient = TextmateClient;
 module Theme = Theme;
 module Tokenizer = Tokenizer;
 module Types = Types;
