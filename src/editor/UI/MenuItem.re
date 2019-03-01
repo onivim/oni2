@@ -10,7 +10,7 @@ let textStyles = (~theme: Theme.t) =>
   Style.[
     fontFamily("FiraCode-Regular.ttf"),
     fontSize(menuItemFontSize),
-    color(theme.editorMenuForeground),
+    color(theme.colors.editorMenuForeground),
   ];
 
 let containerStyles = (~selected, ~theme: Theme.t) =>
@@ -18,7 +18,7 @@ let containerStyles = (~selected, ~theme: Theme.t) =>
     padding(10),
     flexDirection(`Row),
     backgroundColor(
-      selected ? theme.editorMenuItemSelected : Colors.transparentWhite,
+      selected ? theme.colors.editorMenuItemSelected : Colors.transparentWhite,
     ),
   ];
 

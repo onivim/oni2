@@ -39,8 +39,8 @@ let _moveToNextMatchingToken = (f, str, startIdx) => {
 let _moveToNextWhitespace = _moveToNextMatchingToken(_isWhitespace);
 let _moveToNextNonWhitespace = _moveToNextMatchingToken(_isNonWhitespace);
 
-let tokenize: string => list(t) =
-  s => {
+let tokenize: (string, Theme.t) => list(t) =
+  (s, theme) => {
     let idx = ref(0);
     let length = String.length(s);
     let tokens: ref(list(t)) = ref([]);
@@ -57,7 +57,7 @@ let tokenize: string => list(t) =
           text: tokenText,
           startPosition: ZeroBasedIndex(startToken),
           endPosition: ZeroBasedIndex(endToken),
-          color: Colors.white,
+          color: Theme.getTokenColor(theme, []),
         };
 
         tokens := List.append([token], tokens^);
