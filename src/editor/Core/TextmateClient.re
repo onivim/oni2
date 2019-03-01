@@ -39,7 +39,7 @@ let start = (
 
    let onNotification = (n: Notification.t, _) => {
        switch (n.method, n.params) {
-       | ("textmate/initialized", _) => onInitialized()
+       | ("initialized", _) => onInitialized()
        | ("textmate/scopeLoaded", `String(s)) => onScopeLoaded(s)
        | _ => ();
        }
