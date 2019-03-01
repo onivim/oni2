@@ -121,7 +121,7 @@ let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
     (response, _) => {
       let tokens =
         switch (response) {
-        | Ok(`List(items)) => List.map(parseTokenizeResultItem, items)
+        | Ok(`Assoc([("tokens", `List(items))])) => List.map(parseTokenizeResultItem, items)
         | _ => []
         };
 
