@@ -20,7 +20,9 @@ module BufferSyntaxHighlights = {
   type t = {lineToHighlights: IntMap.t(BufferLineSyntaxHighlights.t)};
 };
 
-type t = {idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t)};
+type t = {
+    idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t)
+};
 
 let create: unit => t = () => {idToBufferSyntaxHighlights: IntMap.empty};
 
