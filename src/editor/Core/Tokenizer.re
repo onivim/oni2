@@ -2,12 +2,15 @@
  * Tokenizer.re
  */
 
+open Revery;
+
 open Types;
 
 type t = {
   text: string,
   startPosition: Index.t,
   endPosition: Index.t,
+  color: Color.t,
 };
 
 let _isWhitespace = c => {
@@ -36,8 +39,8 @@ let _moveToNextMatchingToken = (f, str, startIdx) => {
 let _moveToNextWhitespace = _moveToNextMatchingToken(_isWhitespace);
 let _moveToNextNonWhitespace = _moveToNextMatchingToken(_isNonWhitespace);
 
-let tokenize: string => list(t) =
-  s => {
+let tokenize: (string, Theme.t) => list(t) =
+  (s, theme) => {
     let idx = ref(0);
     let length = String.length(s);
     let tokens: ref(list(t)) = ref([]);
@@ -54,6 +57,7 @@ let tokenize: string => list(t) =
           text: tokenText,
           startPosition: ZeroBasedIndex(startToken),
           endPosition: ZeroBasedIndex(endToken),
+          color: Theme.getTokenColor(theme, []),
         };
 
         tokens := List.append([token], tokens^);

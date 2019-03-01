@@ -12,7 +12,7 @@ open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
-let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
+let tokensToElement = (tokens: list(Tokenizer.t)) => {
   let f = (token: Tokenizer.t) => {
     let tokenWidth =
       Index.toZeroBasedInt(token.endPosition)
@@ -28,7 +28,7 @@ let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
         ),
         height(Constants.default.minimapCharacterHeight),
         width(tokenWidth * Constants.default.minimapCharacterWidth),
-        backgroundColor(theme.editorForeground),
+        backgroundColor(token.color),
       ];
 
     <View style />;
@@ -39,8 +39,8 @@ let tokensToElement = (tokens: list(Tokenizer.t), theme: Theme.t) => {
   <View style=lineStyle> ...tokens </View>;
 };
 
-let renderLine = (theme, tokens) => {
-  tokensToElement(tokens, theme);
+let renderLine = (_theme, tokens) => {
+  tokensToElement(tokens);
 };
 
 let component = React.component("Minimap");

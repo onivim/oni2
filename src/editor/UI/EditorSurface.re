@@ -41,8 +41,8 @@ let tokensToElement =
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
     isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
+      ? theme.colors.editorActiveLineNumberForeground
+      : theme.colors.editorLineNumberForeground;
   let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
 
   let f = (token: Tokenizer.t) => {
@@ -54,7 +54,7 @@ let tokensToElement =
         fontFamily("FiraCode-Regular.ttf"),
         fontSize(14),
         lineHeight(1.0),
-        color(Revery.Colors.white),
+        color(token.color),
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
@@ -70,7 +70,7 @@ let tokensToElement =
       height(fontLineHeight),
       left(0),
       width(lineNumberWidth),
-      backgroundColor(theme.editorLineNumberBackground),
+      backgroundColor(theme.colors.editorLineNumberBackground),
       justifyContent(`Center),
       alignItems(lineNumberAlignment),
     ];
@@ -169,7 +169,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let getTokensForLine = i => {
       let line = lines[i];
-      Tokenizer.tokenize(line);
+      Tokenizer.tokenize(line, state.theme);
     };
 
     let render = i => {
@@ -188,8 +188,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let style =
       Style.[
-        backgroundColor(theme.background),
-        color(theme.foreground),
+        backgroundColor(theme.colors.background),
+        color(theme.colors.foreground),
         flexGrow(1),
       ];
 
@@ -240,7 +240,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(0),
         left(bufferPixelWidth + minimapPixelWidth),
         width(Constants.default.scrollBarThickness),
-        backgroundColor(theme.scrollbarSliderBackground),
+        backgroundColor(theme.colors.scrollbarSliderBackground),
         bottom(0),
       ];
 

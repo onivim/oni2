@@ -50,7 +50,7 @@ let statusBarStyle =
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let style = rootStyle(theme.background, theme.foreground);
+    let style = rootStyle(theme.colors.background, theme.colors.foreground);
 
     (
       hooks,
