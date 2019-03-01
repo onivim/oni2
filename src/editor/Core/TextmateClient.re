@@ -23,6 +23,43 @@ type tokenizeResult = {
   scopes: list(string),
 };
 
+module ColorizedToken {
+    /* From:
+     * https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts
+     */
+    let languageId_mask = 0b00000000000000000000000011111111;
+	let token_type_mask = 0b00000000000000000000011100000000;
+	let font_style_mask= 0b00000000000000000011100000000000;
+	let foreground_mask = 0b00000000011111111100000000000000;
+	let background_mask = 0b11111111100000000000000000000000;
+
+    let languageid_offset = 0;
+	let token_type_offset = 8;
+	let font_style_offset = 11;
+	let foreground_offset = 14;
+	let background_offset = 23;
+
+    type t = {
+        index: int,
+        foregroundColor: int,
+        backgroundColor: int,
+    };
+
+    let getForegroundColor: int => int = (v) => {
+        (v land foreground_mask) lsr foreground_offset;
+    }
+
+    let getBackgroundColor: int => int = (v) => {
+        (v land background_mask) lsr background_offset;
+    }
+
+    let create: (int, int) => t = (idx, v) => {
+        index: idx,
+        foregroundColor: getForegroundColor(v) - 1,
+        backgroundColor: getBackgroundColor(v) - 1,
+    };
+}
+
 let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   switch (json) {
   | `List([`Int(startIndex), `Int(endIndex), `List(jsonScopes)]) =>
@@ -32,12 +69,12 @@ let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   };
 };
 
-let parseColorResultItem = (json: Yojson.Safe.json) => {
+let rec parseColorResult = (json: list(Yojson.Safe.json)) => {
   switch (json) {
-  | `Int(x) =>
-    prerr_endline("parseColorResultItem: " ++ string_of_int(x));
-    x;
-  | _ => (-1)
+  | [`Int(v1), `Int(v2), ...tail] => {
+    [ColorizedToken.create(v1, v2), ...parseColorResult(tail)] 
+  }
+  | _ => []
   };
 };
 
@@ -121,7 +158,7 @@ let setTheme = (v: t, themePath: string) => {
 
 type tokenizeLineResult = {
   tokens: list(tokenizeResult),
-  colors: list(int),
+  colors: list(ColorizedToken.t),
 };
 
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
@@ -139,7 +176,7 @@ let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
             `Assoc([("tokens", `List(items)), ("colors", `List(colors))]),
           ) =>
           let tokens = List.map(parseTokenizeResultItem, items);
-          let colors = List.map(parseColorResultItem, colors);
+          let colors = parseColorResult(colors);
 
           Some({tokens, colors});
         | _ => None

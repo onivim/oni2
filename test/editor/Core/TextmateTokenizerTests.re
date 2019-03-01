@@ -97,7 +97,12 @@ describe("Textmate Service", ({test, _}) => {
           expect.int(List.length(v.tokens)).toBe(5);
 
           /* Only a single color since no theme set */
-          expect.int(List.length(v.colors)).toBe(2);
+          expect.int(List.length(v.colors)).toBe(1);
+
+          let onlyColor = List.hd(v.colors);
+          expect.int(onlyColor.index).toBe(0);
+          expect.int(onlyColor.foregroundColor).toBe(0);
+          expect.int(onlyColor.backgroundColor).toBe(1);
 
           let firstResult = List.hd(v.tokens);
           expect.int(firstResult.startIndex).toBe(0);
