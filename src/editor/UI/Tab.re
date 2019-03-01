@@ -37,7 +37,7 @@ let createElement =
       Style.[
         overflow(`Hidden),
         paddingHorizontal(5),
-        backgroundColor(theme.editorBackground),
+        backgroundColor(theme.colors.editorBackground),
         opacity(opacityValue),
         height(tabHeight),
         width(maxWidth),
@@ -50,12 +50,12 @@ let createElement =
       Style.[
         fontFamily(fontName),
         fontSize(fontPixelSize),
-        color(theme.tabActiveForeground),
+        color(theme.colors.tabActiveForeground),
       ];
 
     let modifiedStyles =
       Style.[
-        color(theme.tabActiveForeground),
+        color(theme.colors.tabActiveForeground),
         marginHorizontal(5),
         fontSize(fontPixelSize),
         fontFamily("FontAwesome5FreeSolid.otf"),
@@ -89,7 +89,7 @@ let createElement =
           <Text
             text={||}
             style=Style.[
-              color(theme.tabActiveForeground),
+              color(theme.colors.tabActiveForeground),
               fontFamily("FontAwesome5FreeSolid.otf"),
               fontSize(15),
             ]

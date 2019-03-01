@@ -44,7 +44,8 @@ let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
     let theme = state.theme;
 
     let tabs = toUiTabs(state.tabs);
-    let style = editorViewStyle(theme.background, theme.foreground);
+    let style =
+      editorViewStyle(theme.colors.background, theme.colors.foreground);
 
     (hooks, <View style> <Tabs theme tabs /> <EditorSurface state /> </View>);
   });

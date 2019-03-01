@@ -40,7 +40,7 @@ let createElement =
           style=Style.[
             width(400),
             overflow(`Hidden),
-            backgroundColor(theme.editorBackground),
+            backgroundColor(theme.colors.editorBackground),
             flexDirection(`Row),
             alignItems(`Center),
             marginBottom(20),

@@ -30,7 +30,7 @@ let createElement =
         left(0),
         width(totalWidth),
         height(scrollMetrics.thumbSize),
-        backgroundColor(state.theme.scrollbarSliderActiveBackground),
+        backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
     let cursorPixelY =
@@ -55,7 +55,7 @@ let createElement =
         left(0),
         width(totalWidth),
         height(cursorSize),
-        backgroundColor(state.theme.foreground),
+        backgroundColor(state.theme.colors.foreground),
       ];
 
     (

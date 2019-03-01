@@ -61,7 +61,7 @@ connection.onNotification(textmateGrammarPreloadNotification, (scope) => {
 
 connection.onNotification(initializeNotification, (paths: ITextmateInitData) => {
     grammarPaths = paths;
-    connection.sendNotification(initializedNotification, {});  
+    connection.sendNotification(initializedNotification, {});
 });
 
 connection.onNotification(exitNotification, () => {
