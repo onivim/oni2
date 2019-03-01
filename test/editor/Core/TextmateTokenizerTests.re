@@ -1,6 +1,12 @@
 open Oni_Core;
 open TestFramework;
 
+let reasonSyntaxPath = (setup: Setup.t) =>
+  setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
+/* let testThemePath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/oni-test/theme1.json"; */
+let testThemePath = (setup: Setup.t) =>
+  setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+
 describe("Textmate Service", ({test, _}) => {
   test("receive init message", ({expect}) =>
     Helpers.repeat(() => {
@@ -37,9 +43,27 @@ describe("Textmate Service", ({test, _}) => {
     })
   );
 
+  exception TextmateServiceCloseException(string);
+
+  let withTextmateClient = (~onColorMap, ~onScopeLoaded, initData, f) => {
+    let setup = Setup.init();
+    let tmClient =
+      TextmateClient.start(~onColorMap, ~onScopeLoaded, setup, initData);
+
+    f(tmClient);
+
+    let result = TextmateClient.close(tmClient);
+    switch (result) {
+    | (_, Unix.WEXITED(_)) => ()
+    | _ =>
+      raise(TextmateServiceCloseException("Error closing textmate service"))
+    };
+  };
+
   test("load grammar / scope", ({expect}) => {
     let setup = Setup.init();
 
+    let onColorMap = _ => ();
     let gotScopeLoadedMessage = ref(false);
 
     let onScopeLoaded = (s: string) =>
@@ -48,46 +72,73 @@ describe("Textmate Service", ({test, _}) => {
       | _ => prerr_endline("Unknown scope: " ++ s)
       };
 
-    let tmClient =
-      TextmateClient.start(
-        ~onScopeLoaded,
-        setup,
-        [
-          {
-            scopeName: "source.reason",
-            path:
-              setup.bundledExtensionsPath
-              ++ "/vscode-reasonml/syntaxes/reason.json",
-          },
-        ],
-      );
+    withTextmateClient(
+      ~onColorMap,
+      ~onScopeLoaded,
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      tmClient => {
+        TextmateClient.preloadScope(tmClient, "source.reason");
 
-    TextmateClient.preloadScope(tmClient, "source.reason");
+        Oni_Core.Utility.waitForCondition(() => {
+          TextmateClient.pump(tmClient);
+          gotScopeLoadedMessage^;
+        });
+        expect.bool(gotScopeLoadedMessage^).toBe(true);
 
-    Oni_Core.Utility.waitForCondition(() => {
-      TextmateClient.pump(tmClient);
-      gotScopeLoadedMessage^;
-    });
-    expect.bool(gotScopeLoadedMessage^).toBe(true);
+        let tokenizeResult =
+          TextmateClient.tokenizeLineSync(
+            tmClient,
+            "source.reason",
+            "let abc = 100;",
+          );
 
-    let tokenizeResult =
-      TextmateClient.tokenizeLineSync(
-        tmClient,
-        "source.reason",
-        "let abc = 100;",
-      );
+        expect.int(List.length(tokenizeResult)).toBe(5);
 
-    expect.int(List.length(tokenizeResult)).toBe(5);
+        let firstResult = List.hd(tokenizeResult);
+        expect.int(firstResult.startIndex).toBe(0);
+        expect.int(firstResult.endIndex).toBe(3);
+      },
+    );
+  });
 
-    let firstResult = List.hd(tokenizeResult);
-    expect.int(firstResult.startIndex).toBe(0);
-    expect.int(firstResult.endIndex).toBe(3);
+  test("load theme and get colormap", ({expect}) => {
+    let setup = Setup.init();
 
-    let result = TextmateClient.close(tmClient);
-    switch (result) {
-    | (_, Unix.WEXITED(v)) => expect.int(v).toBe(0)
-    | _ =>
-      expect.string("Expected WEXITED").toEqual("Got different exit state")
-    };
+    let colorMap: ref(option(ColorMap.t)) = ref(None);
+
+    let onColorMap = c => colorMap := Some(c);
+
+    let onScopeLoaded = _ => ();
+
+    withTextmateClient(
+      ~onColorMap,
+      ~onScopeLoaded,
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      tmClient => {
+        TextmateClient.setTheme(tmClient, testThemePath(setup));
+
+        Oni_Core.Utility.waitForCondition(() => {
+          TextmateClient.pump(tmClient);
+          switch (colorMap^) {
+          | Some(_) => true
+          | None => false
+          };
+        });
+
+        switch (colorMap^) {
+        | Some(c) =>
+          let firstColor = ColorMap.get(c, 0);
+          expect.float(firstColor.r).toBeCloseTo(0.0);
+          expect.float(firstColor.g).toBeCloseTo(0.0);
+          expect.float(firstColor.b).toBeCloseTo(0.0);
+
+          let secondColor = ColorMap.get(c, 1);
+          expect.float(secondColor.r).toBeCloseTo(1.0);
+          expect.float(secondColor.g).toBeCloseTo(1.0);
+          expect.float(secondColor.b).toBeCloseTo(1.0);
+        | None => expect.string("Failed").toEqual("get color map")
+        };
+      },
+    );
   });
 });
