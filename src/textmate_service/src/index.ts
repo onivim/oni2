@@ -104,9 +104,6 @@ connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, 
 });
 
 connection.onRequest<ISetThemeRequestParams, string[], string, {}>(textmateSetThemeRequest, (params) => {
-
-    console.error("setTheme - loading from: " + JSON.stringify(params));
-
     let themeFile = fs.readFileSync(params.path);
     let parsedTheme = JSON.parse(themeFile.toString("utf8"));
 
@@ -117,10 +114,6 @@ connection.onRequest<ISetThemeRequestParams, string[], string, {}>(textmateSetTh
 
     registry.setTheme(rawTheme);
     const precolors = registry.getColorMap();
-    console.error("Before filter: " + JSON.stringify(precolors));
-
     const colors = precolors.filter((c) => !!c);
-
-    console.error("Returned colors: " + JSON.stringify(colors));
     return colors;
 })
