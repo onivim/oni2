@@ -62,6 +62,7 @@ describe("Textmate Service", ({test, _}) => {
     let proc = NodeProcess.start(setup, setup.textmateServicePath);
 
     let gotScopeLoadedMessage = ref(false);
+    let gotResponse = ref(false);
     let gotCloseNotification = ref(false);
 
     let onNotification = (n: Notification.t, _) =>
@@ -108,7 +109,24 @@ describe("Textmate Service", ({test, _}) => {
       Rpc.pump(rpc);
       gotScopeLoadedMessage^;
     });
+
+    Rpc.sendRequest(
+      rpc,
+      "textmate/tokenizeLine",
+      `Assoc([
+        ("scopeName", `String("source.reason")),
+        ("line", `String("let abc = 1;")),
+      ]),
+      (_v, _) =>
+      gotResponse := true
+    );
+    Oni_Core.Utility.waitForCondition(() => {
+      Rpc.pump(rpc);
+      gotResponse^;
+    });
+
     expect.bool(gotScopeLoadedMessage^).toBe(true);
+    expect.bool(gotResponse^).toBe(true);
 
     Rpc.sendNotification(rpc, "exit", Yojson.Safe.from_string("{}"));
 

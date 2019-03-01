@@ -21,6 +21,15 @@ let exitNotification = new rpc.NotificationType<string, void>('exit');
 let textmateGrammarPreloadNotification = new rpc.NotificationType<string, string>('textmate/preloadScope');
 let textmateGrammarLoadedNotification = new rpc.NotificationType<string, void>('textmate/scopeLoaded');
 
+type tokenResult = [number, number, string[]];
+
+interface ITokenizeLineRequestParams {
+    scopeName: string;
+    line: string;
+}
+
+let textmateTokenizeLineRequest = new rpc.RequestType<ITokenizeLineRequestParams, tokenResult[], string, {}>('textmate/tokenizeLine');
+
 let grammarPaths: ITextmateInitData = {};
 
 const registry = new vsctm.Registry({
@@ -50,13 +59,28 @@ connection.onNotification(textmateGrammarPreloadNotification, (scope) => {
     registry.loadGrammar(scope);
 });
 
-
 connection.onNotification(initializeNotification, (paths: ITextmateInitData) => {
-    console.error("LOADING: " + JSON.stringify(paths));
     grammarPaths = paths;
-    connection.sendNotification(initializedNotification, {});  
+    connection.sendNotification(initializedNotification, {});
 });
 
 connection.onNotification(exitNotification, () => {
     process.exit(0);
 });
+
+connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(textmateTokenizeLineRequest, (params) => {
+    return registry.loadGrammar(params.scopeName).then((grammar) => {
+       const tokens = grammar.tokenizeLine(params.line, <any>null);
+
+        if (!tokens || !tokens.tokens) {
+            return [];
+        } else {
+            const parsedTokens = tokens.tokens;
+            const filteredTokens = parsedTokens.filter((t) => t.scopes.length > 1);
+            const result: tokenResult[] = filteredTokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
+            console.error(JSON.stringify(result));
+            return result;
+        }
+
+    });
+})
