@@ -32,6 +32,15 @@ let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   };
 };
 
+let parseColorResultItem = (json: Yojson.Safe.json) => {
+    switch (json) {
+    | `Int(x) => 
+    prerr_endline ("parseColorResultItem: " ++ string_of_int(x));
+                   x;
+    | _ => -1;
+    }
+}
+
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
@@ -110,19 +119,29 @@ let setTheme = (v: t, themePath: string) => {
   );
 };
 
+type tokenizeLineResult = {
+    tokens: list(tokenizeResult),
+    colors: list(int),
+};
+
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
   let gotResponse = ref(false);
-  let result: ref(list(tokenizeResult)) = ref([]);
+  let result: ref(option(tokenizeLineResult)) = ref(None)
 
   Rpc.sendRequest(
     v.rpc,
     "textmate/tokenizeLine",
     `Assoc([("scopeName", `String(scopeName)), ("line", `String(line))]),
     (response, _) => {
-      let tokens =
+      let tokens: option(tokenizeLineResult) =
         switch (response) {
-        | Ok(`Assoc([("tokens", `List(items))])) => List.map(parseTokenizeResultItem, items)
-        | _ => []
+        | Ok(`Assoc([("tokens", `List(items)), ("colors", `List(colors))])) => {
+        let tokens =    List.map(parseTokenizeResultItem, items)
+            let colors = List.map(parseColorResultItem, colors);
+
+        Some({tokens, colors});
+        }
+        | _ => None
         };
 
       gotResponse := true;

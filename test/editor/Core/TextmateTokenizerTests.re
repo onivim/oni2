@@ -92,11 +92,21 @@ describe("Textmate Service", ({test, _}) => {
             "let abc = 100;",
           );
 
-        expect.int(List.length(tokenizeResult)).toBe(5);
+        switch (tokenizeResult) {
+        | Some(v) => {
+            
+        expect.int(List.length(v.tokens)).toBe(5);
 
-        let firstResult = List.hd(tokenizeResult);
+        /* Only a single color since no theme set */
+        expect.int(List.length(v.colors)).toBe(2);
+
+        let firstResult = List.hd(v.tokens);
         expect.int(firstResult.startIndex).toBe(0);
         expect.int(firstResult.endIndex).toBe(3);
+        } 
+        | None => expect.string("fail").toEqual("no token result");
+        };
+
       },
     );
   });

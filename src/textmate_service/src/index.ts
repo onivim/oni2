@@ -86,12 +86,17 @@ connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, 
                 tokens: [],
             }
         } else {
+            const colors = grammar.tokenizeLine2(params.line, <any>null);
             const parsedTokens = tokens.tokens;
             const filteredTokens = parsedTokens.filter((t) => t.scopes.length > 1);
             const result: tokenResult[] = filteredTokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
+
+            const colorTokens = Array.prototype.slice.call(colors.tokens);
             console.error(JSON.stringify(result));
+            console.error(JSON.stringify(colors));
             return {
-                tokens: result
+                tokens: result,
+                colors: colorTokens,
             };
         }
 
