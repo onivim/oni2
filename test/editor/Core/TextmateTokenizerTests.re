@@ -74,11 +74,7 @@ describe("Textmate Service", ({test, _}) => {
 
     let onRequest = (_, _) => Ok(Yojson.Safe.from_string("{}"));
 
-<<<<<<< HEAD
-    let onClose = () => ();
-=======
     let onClose = () => gotCloseNotification := true;
->>>>>>> master
 
     let rpc =
       Rpc.start(
