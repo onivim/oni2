@@ -59,9 +59,7 @@ connection.onNotification(textmateGrammarPreloadNotification, (scope) => {
     registry.loadGrammar(scope);
 });
 
-
 connection.onNotification(initializeNotification, (paths: ITextmateInitData) => {
-    console.error("LOADING: " + JSON.stringify(paths));
     grammarPaths = paths;
     connection.sendNotification(initializedNotification, {});  
 });
@@ -72,13 +70,8 @@ connection.onNotification(exitNotification, () => {
 
 connection.onRequest<ITokenizeLineRequestParams, tokenResult[], string, {}>(textmateTokenizeLineRequest, (params) => {
     return registry.loadGrammar(params.scopeName).then((grammar) => {
-
-        console.error("Got scope: " + params.scopeName);
-
-        const tokens = grammar.tokenizeLine(params.line, <any>null);
-        console.error("Tokenized successfully!");
-        console.error(JSON.stringify(tokens));
-
-       return [];
+       const tokens = grammar.tokenizeLine(params.line, <any>null);
+        const result: tokenResult[] = tokens.tokens.map((t) => [t.startIndex, t.endIndex, t.scopes] as tokenResult);
+        return result;
     });
 })
