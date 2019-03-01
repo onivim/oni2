@@ -3,6 +3,14 @@ open Oni_Core.Types;
 
 module Buffer = Oni_Core.Buffer;
 
+exception OptionInvalidException(string);
+let getOrThrow: option('a) => 'a =
+  v =>
+    switch (v) {
+    | Some(v) => v
+    | None => raise(OptionInvalidException("Excepted 'Some' but got 'None'"))
+    };
+
 let repeat = (~iterations: int=5, f) => {
   let count = ref(0);
 
