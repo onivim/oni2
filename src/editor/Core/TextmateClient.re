@@ -7,6 +7,7 @@
  * for example, if vscode-textmate was ported to native ReasonML
  */
 
+module CoreUtility = Utility;
 open Reason_jsonrpc;
 
 type scopeInfo = {
@@ -15,6 +16,22 @@ type scopeInfo = {
 };
 
 type initializationInfo = list(scopeInfo);
+
+type tokenizeResult = {
+    startIndex: int,
+    endIndex: int,
+    scopes: list(string),
+};
+
+let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
+    switch(json) {
+    | `List([`Int(startIndex), `Int(endIndex), `List(jsonScopes)]) => {
+       let scopes = List.map(s => Yojson.Safe.to_string(s), jsonScopes); 
+       {startIndex, endIndex, scopes}
+    }
+    | _ => {startIndex: -1, endIndex: -1, scopes: []}
+    };
+};
 
 type t = {
   process: NodeProcess.t,  
@@ -76,6 +93,32 @@ let preloadScope = (v: t, scopeName: string) => {
 };
 
 let pump = (v:t) => Rpc.pump(v.rpc);
+
+let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
+
+    let gotResponse = ref(false);
+    let result: ref(list(tokenizeResult)) = ref([]);
+ 
+    Rpc.sendRequest(v.rpc, "textmate/tokenizeLine", `Assoc([
+        ("scopeName", `String(scopeName)),
+        ("line", `String(line))
+    ]), (response, _) => {
+        let tokens = switch (response) {
+        | Ok(`List(items)) => List.map(parseTokenizeResultItem, items);
+        | _ => []
+        };
+
+        gotResponse := true;
+        result := tokens;
+    });
+
+    CoreUtility.waitForCondition(() => {
+      Rpc.pump(v.rpc);
+      gotResponse^;
+    });
+
+    result^;
+};
 
 let close = (v: t) => {
   Rpc.sendNotification(v.rpc, "exit", emptyJsonValue);

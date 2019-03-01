@@ -1,8 +1,6 @@
 open Oni_Core;
 open TestFramework;
 
-open Reason_jsonrpc;
-
 describe("Textmate Service", ({test, _}) => {
   test("receive init message", ({expect}) =>
     Helpers.repeat(() => {
@@ -40,85 +38,38 @@ describe("Textmate Service", ({test, _}) => {
 
   test("load grammar / scope", ({expect}) => {
     let setup = Setup.init();
-    let proc = NodeProcess.start(setup, setup.textmateServicePath);
 
     let gotScopeLoadedMessage = ref(false);
-    let gotResponse = ref(false);
-    let gotCloseNotification = ref(false);
 
-    let onNotification = (n: Notification.t, _) =>
-      switch (n.method, n.params) {
-      | ("textmate/scopeLoaded", `String("source.reason")) =>
-        gotScopeLoadedMessage := true
-      | _ => prerr_endline("Unrecognized message!")
-      };
+    let onScopeLoaded = (s: string) => switch(s) {
+    | "source.reason" => gotScopeLoadedMessage := true;
+    | _ => prerr_endline("Unknown scope: " ++ s);
+    }
 
-    let onRequest = (_, _) => Ok(Yojson.Safe.from_string("{}"));
-
-    let onClose = () => gotCloseNotification := true;
-
-    let rpc =
-      Rpc.start(
-        ~onNotification,
-        ~onRequest,
-        ~onClose,
-        proc.stdout,
-        proc.stdin,
-      );
-
-    Rpc.sendNotification(
-      rpc,
-      "initialize",
-      `Assoc([
-        (
-          "source.reason",
-          `String(
-            setup.bundledExtensionsPath
+    let tmClient = TextmateClient.start(~onScopeLoaded, setup, [{scopeName: "source.reason", path:             setup.bundledExtensionsPath
             ++ "/vscode-reasonml/syntaxes/reason.json",
-          ),
-        ),
-      ]),
-    );
+}]);
 
-    Rpc.sendNotification(
-      rpc,
-      "textmate/preloadScope",
-      `String("source.reason"),
-    );
+
+
+    TextmateClient.preloadScope(tmClient, "source.reason");
+
 
     Oni_Core.Utility.waitForCondition(() => {
-      Rpc.pump(rpc);
+      TextmateClient.pump(tmClient);
       gotScopeLoadedMessage^;
     });
-
-    Rpc.sendRequest(
-      rpc,
-      "textmate/tokenizeLine",
-      `Assoc([
-        ("scopeName", `String("source.reason")),
-        ("line", `String("let abc = 1;")),
-      ]),
-      (_v, _) =>
-      gotResponse := true
-    );
-    Oni_Core.Utility.waitForCondition(() => {
-      Rpc.pump(rpc);
-      gotResponse^;
-    });
-
     expect.bool(gotScopeLoadedMessage^).toBe(true);
-    expect.bool(gotResponse^).toBe(true);
 
-    Rpc.sendNotification(rpc, "exit", Yojson.Safe.from_string("{}"));
+    let tokenizeResult = TextmateClient.tokenizeLineSync(tmClient, "source.reason", "let abc = 100;");
 
-    Oni_Core.Utility.waitForCondition(() => {
-      Rpc.pump(rpc);
-      gotCloseNotification^;
-    });
-    expect.bool(gotCloseNotification^).toBe(true);
+    expect.int(List.length(tokenizeResult)).toBe(8);
+    
+    let firstResult = List.hd(tokenizeResult);
+    expect.int(firstResult.startIndex).toBe(0);
+    expect.int(firstResult.endIndex).toBe(3);
 
-    let result = Unix.waitpid([], proc.pid);
-
+    let result = TextmateClient.close(tmClient);
     switch (result) {
     | (_, Unix.WEXITED(v)) => expect.int(v).toBe(0)
     | _ =>
