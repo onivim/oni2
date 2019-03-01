@@ -12,7 +12,8 @@ describe("Textmate Service", ({test, _}) => {
       let onInitialized = () => gotInitNotification := true;
       let onClosed = () => gotClosedNotification := true;
 
-      let tmClient = TextmateClient.start(~onClosed, ~onInitialized, setup, [])
+      let tmClient =
+        TextmateClient.start(~onClosed, ~onInitialized, setup, []);
 
       Oni_Core.Utility.waitForCondition(() => {
         TextmateClient.pump(tmClient);
@@ -41,19 +42,27 @@ describe("Textmate Service", ({test, _}) => {
 
     let gotScopeLoadedMessage = ref(false);
 
-    let onScopeLoaded = (s: string) => switch(s) {
-    | "source.reason" => gotScopeLoadedMessage := true;
-    | _ => prerr_endline("Unknown scope: " ++ s);
-    }
+    let onScopeLoaded = (s: string) =>
+      switch (s) {
+      | "source.reason" => gotScopeLoadedMessage := true
+      | _ => prerr_endline("Unknown scope: " ++ s)
+      };
 
-    let tmClient = TextmateClient.start(~onScopeLoaded, setup, [{scopeName: "source.reason", path:             setup.bundledExtensionsPath
-            ++ "/vscode-reasonml/syntaxes/reason.json",
-}]);
-
-
+    let tmClient =
+      TextmateClient.start(
+        ~onScopeLoaded,
+        setup,
+        [
+          {
+            scopeName: "source.reason",
+            path:
+              setup.bundledExtensionsPath
+              ++ "/vscode-reasonml/syntaxes/reason.json",
+          },
+        ],
+      );
 
     TextmateClient.preloadScope(tmClient, "source.reason");
-
 
     Oni_Core.Utility.waitForCondition(() => {
       TextmateClient.pump(tmClient);
@@ -61,10 +70,15 @@ describe("Textmate Service", ({test, _}) => {
     });
     expect.bool(gotScopeLoadedMessage^).toBe(true);
 
-    let tokenizeResult = TextmateClient.tokenizeLineSync(tmClient, "source.reason", "let abc = 100;");
+    let tokenizeResult =
+      TextmateClient.tokenizeLineSync(
+        tmClient,
+        "source.reason",
+        "let abc = 100;",
+      );
 
     expect.int(List.length(tokenizeResult)).toBe(8);
-    
+
     let firstResult = List.hd(tokenizeResult);
     expect.int(firstResult.startIndex).toBe(0);
     expect.int(firstResult.endIndex).toBe(3);
