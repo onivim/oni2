@@ -3,9 +3,10 @@ open TestFramework;
 
 let reasonSyntaxPath = (setup: Setup.t) =>
   setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
-/* let testThemePath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/oni-test/theme1.json"; */
 let testThemePath = (setup: Setup.t) =>
-  setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+  setup.bundledExtensionsPath ++ "/oni-test/theme1.json";
+/* let testThemePath = (setup: Setup.t) => */
+/* setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json"; */
 
 describe("Textmate Service", ({test, _}) => {
   test("receive init message", ({expect}) =>
@@ -115,7 +116,6 @@ describe("Textmate Service", ({test, _}) => {
 
   test("load theme and get colormap", ({expect}) => {
     let setup = Setup.init();
-
     let colorMap: ref(option(ColorMap.t)) = ref(None);
 
     let onColorMap = c => colorMap := Some(c);
@@ -149,6 +149,51 @@ describe("Textmate Service", ({test, _}) => {
           expect.float(secondColor.g).toBeCloseTo(1.0);
           expect.float(secondColor.b).toBeCloseTo(1.0);
         | None => expect.string("Failed").toEqual("get color map")
+        };
+      },
+    );
+  });
+
+  test("theme applied to tokenization", ({expect}) => {
+    let setup = Setup.init();
+    let colorMap: ref(option(ColorMap.t)) = ref(None);
+
+    let onColorMap = c => colorMap := Some(c);
+    let onScopeLoaded = _ => ();
+
+    withTextmateClient(
+      ~onColorMap,
+      ~onScopeLoaded,
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      tmClient => {
+        TextmateClient.setTheme(tmClient, testThemePath(setup));
+
+        Oni_Core.Utility.waitForCondition(() => {
+          TextmateClient.pump(tmClient);
+          switch (colorMap^) {
+          | Some(_) => true
+          | None => false
+          };
+        });
+
+        let tokenizeResult =
+          TextmateClient.tokenizeLineSync(
+            tmClient,
+            "source.reason",
+            "let abc = 100;",
+          );
+
+        switch (tokenizeResult, colorMap^) {
+        | (Some(v), Some(cm)) =>
+          Console.error(v.colors);
+          expect.int(List.length(v.colors)).toBe(6);
+          let firstChild = List.hd(v.colors);
+          let firstColor = ColorMap.get(cm, firstChild.foregroundColor);
+          expect.float(firstColor.r).toBeCloseTo(1.0);
+          expect.float(firstColor.g).toBeCloseTo(0.0);
+          expect.float(firstColor.b).toBeCloseTo(0.0);
+
+        | _ => expect.string("fail").toEqual("theme or colormap didn't load")
         };
       },
     );
