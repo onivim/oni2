@@ -4,7 +4,8 @@ open TestFramework;
 let reasonSyntaxPath = (setup: Setup.t) =>
   setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 /* let testThemePath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/oni-test/theme1.json"; */
-let testThemePath = (setup: Setup.t) => setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+let testThemePath = (setup: Setup.t) =>
+  setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
 describe("Textmate Service", ({test, _}) => {
   test("receive init message", ({expect}) =>
