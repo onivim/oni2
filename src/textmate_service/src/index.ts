@@ -122,20 +122,24 @@ connection.onNotification(exitNotification, () => {
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
     console.error(JSON.stringify(params))
+
+    // Just do initial update for now..
+    // TODO: Handle incremental updates
     if (bufferUpdate.startLine === 0 && bufferUpdate.endLine === -1) {
         registry.loadGrammar(scope).then(grammar => {
             const lines = bufferUpdate.lines
             const ret = []
             let ruleStack: any = null
 
+            // TODO:
+            // Do we need to break up / chunk this?
+            // How does it scale up with 10k line buffers?
             for (var i = 0; i < lines.length; i++) {
                 const r = grammar.tokenizeLine2(lines[i], ruleStack)
                 const tokens = Array.prototype.slice.call(r.tokens)
                 ruleStack = r.ruleStack
                 ret[i] = tokens
             }
-
-            console.error("TOKEN RESULT: " + JSON.stringify(ret))
 
             connection.sendNotification(textmateTokenNotification, {
                 id: bufferUpdate.id,
@@ -144,9 +148,6 @@ connection.onNotification(textmateBufferUpdate, params => {
             })
         })
     }
-
-    // Just do initial update for now..
-    // TODO: Handle incremental updates
 })
 
 connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(
