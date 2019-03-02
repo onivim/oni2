@@ -18,6 +18,18 @@ let initializeNotification = new rpc.NotificationType<ITextmateInitData, void>('
 let initializedNotification = new rpc.NotificationType<string, void>('initialized');
 let exitNotification = new rpc.NotificationType<string, void>('exit');
 
+interface IBufferUpdate {
+    id: number,
+    startLine: number,
+    endLine: number,
+    lines: string[],
+    version: number,
+};
+
+type BufferUpdateParams = [string, IBufferUpdate];
+
+let textmateBufferUpdate = new rpc.NotificationType<BufferUpdateParams, void>('textmate/bufferUpdate');
+
 let textmateGrammarPreloadNotification = new rpc.NotificationType<string, string>('textmate/preloadScope');
 let textmateGrammarLoadedNotification = new rpc.NotificationType<string, void>('textmate/scopeLoaded');
 
@@ -75,6 +87,13 @@ connection.onNotification(initializeNotification, (paths: ITextmateInitData) => 
 
 connection.onNotification(exitNotification, () => {
     process.exit(0);
+});
+
+connection.onNotification(textmateBufferUpdate, (params) => {
+
+    let [scope, bufferUpdate] = params;
+    console.error(JSON.stringify(params));
+    
 });
 
 connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(textmateTokenizeLineRequest, (params) => {
