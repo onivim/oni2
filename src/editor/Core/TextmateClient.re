@@ -82,43 +82,45 @@ let rec parseColorResult = (json: list(Yojson.Safe.json)) => {
   };
 };
 
-module TokenizationResult {
+module TokenizationResult = {
+  exception TokenParseException(string);
 
-    exception TokenParseException(string);
+  type tokenizationLineResult = {
+    line: int,
+    tokens: list(ColorizedToken.t),
+  };
 
-    type tokenizationLineResult = {
-        line: int,
-        tokens: list(ColorizedToken.t),
+  type t = {
+    bufferId: int,
+    version: int,
+    lines: list(tokenizationLineResult),
+  };
+
+  let parseTokenizationLineResult = (json: Yojson.Safe.json) => {
+    switch (json) {
+    | `Assoc([("line", `Int(line)), ("tokens", `List(tokensJson))]) => {
+        line,
+        tokens: parseColorResult(tokensJson),
+      }
+    | _ => raise(TokenParseException("Unexpected tokenization line result"))
     };
+  };
 
-    type t = {
-        bufferId: int,
-        version: int,
-        lines: list(tokenizationLineResult), 
+  let of_yojson = (json: Yojson.Safe.json) => {
+    switch (json) {
+    | `Assoc([
+        ("bufferId", `Int(bufferId)),
+        ("version", `Int(version)),
+        ("lines", `List(linesJson)),
+      ]) => {
+        bufferId,
+        version,
+        lines: List.map(parseTokenizationLineResult, linesJson),
+      }
+    | _ => raise(TokenParseException("Unexpected token result"))
     };
-
-    let parseTokenizationLineResult = (json: Yojson.Safe.json) => {
-        switch (json) {
-        | `Assoc([("line", `Int(line)), ("tokens", `List(tokensJson))]) => {
-            line,
-            tokens: parseColorResult(tokensJson),
-        }
-        | _ => raise(TokenParseException("Unexpected tokenization line result"));
-        }
-        
-    }
-
-    let of_yojson = (json: Yojson.Safe.json) => {
-        switch (json) {
-        | `Assoc([("bufferId", `Int(bufferId)), ("version", `Int(version)), ("lines", `List(linesJson))]) => {
-            bufferId,
-            version,
-            lines: List.map(parseTokenizationLineResult, linesJson)
-        }
-        | _ => raise(TokenParseException("Unexpected token result"));
-        }
-    };
-}
+  };
+};
 
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
@@ -156,7 +158,8 @@ let start =
     switch (n.method, n.params) {
     | ("initialized", _) => onInitialized()
     | ("textmate/scopeLoaded", `String(s)) => onScopeLoaded(s)
-    | ("textmate/tokens", json) => onTokens(TokenizationResult.of_yojson(json))
+    | ("textmate/tokens", json) =>
+      onTokens(TokenizationResult.of_yojson(json))
     | _ => ()
     };
   };

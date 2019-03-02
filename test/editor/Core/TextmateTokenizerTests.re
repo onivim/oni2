@@ -19,7 +19,7 @@ describe("Textmate Service", ({test, _}) => {
 
       let onInitialized = () => gotInitNotification := true;
       let onClosed = () => gotClosedNotification := true;
-      let onTokens = (_) => ();
+      let onTokens = _ => ();
 
       let tmClient =
         TextmateClient.start(~onClosed, ~onInitialized, ~onTokens, setup, []);
@@ -48,10 +48,17 @@ describe("Textmate Service", ({test, _}) => {
 
   exception TextmateServiceCloseException(string);
 
-  let withTextmateClient = (~onColorMap, ~onScopeLoaded, ~onTokens, initData, f) => {
+  let withTextmateClient =
+      (~onColorMap, ~onScopeLoaded, ~onTokens, initData, f) => {
     let setup = Setup.init();
     let tmClient =
-      TextmateClient.start(~onColorMap, ~onScopeLoaded, ~onTokens, setup, initData);
+      TextmateClient.start(
+        ~onColorMap,
+        ~onScopeLoaded,
+        ~onTokens,
+        setup,
+        initData,
+      );
 
     f(tmClient);
 
@@ -195,7 +202,8 @@ describe("Textmate Service", ({test, _}) => {
           Console.error(v.colors);
           expect.int(List.length(v.colors)).toBe(6);
           let firstChild = List.hd(v.colors);
-          let firstColor = ColorMap.get(cm, firstChild.foregroundColor) |> Helpers.getOrThrow;
+          let firstColor =
+            ColorMap.get(cm, firstChild.foregroundColor) |> Helpers.getOrThrow;
           expect.float(firstColor.r).toBeCloseTo(1.0);
           expect.float(firstColor.g).toBeCloseTo(0.0);
           expect.float(firstColor.b).toBeCloseTo(0.0);
