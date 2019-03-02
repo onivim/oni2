@@ -64,7 +64,6 @@ typings/
 .merlin
 _build/
 _esy/
-esy.lock/
 
 .DS_Store
 setup.txt
