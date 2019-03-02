@@ -215,7 +215,7 @@ let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
   Rpc.sendNotification(
     v.rpc,
     "textmate/bufferUpdate",
-    /* TODO: Don't hardcoded this */
+    /* TODO: Don't hardcode this */
     `List([
       `String("source.reason"),
       Types.BufferUpdate.to_yojson(bufUpdate),
