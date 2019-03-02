@@ -211,6 +211,14 @@ type tokenizeLineResult = {
   colors: list(ColorizedToken.t),
 };
 
+let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
+    Rpc.sendNotification(
+        v.rpc,
+        "textmate/bufferUpdate",
+        Types.BufferUpdate.to_yojson(bufUpdate)
+    );
+};
+
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
   let gotResponse = ref(false);
   let result: ref(option(tokenizeLineResult)) = ref(None);

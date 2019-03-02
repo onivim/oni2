@@ -282,6 +282,16 @@ let init = app => {
         | _ => ()
         };
         /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
+
+        /* TODO:
+         * Refactor this into _another_ middleware
+         */
+        switch (msg) {
+        | BufferUpdate(bc) => {
+            Core.TextmateClient.notifyBufferUpdate(tmClient, bc);
+        }
+        | _ => ();
+        }
       },
     );
   ();
