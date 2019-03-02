@@ -1,5 +1,5 @@
 {
-  "checksum": "9fd205deb3e37ab6e25fd4052b632c4b",
+  "checksum": "9818af06a726fc7561a5e8028cfd9708",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "revery@0.9.0@d41d8cd9": {
@@ -127,13 +127,13 @@
       ],
       "devDependencies": []
     },
-    "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9": {
-      "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9",
+    "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9": {
+      "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
       "name": "reason-jsonrpc",
-      "version": "github:bryphe/reason-jsonrpc#6defd55",
+      "version": "github:bryphe/reason-jsonrpc#a73f349",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/reason-jsonrpc#6defd55" ]
+        "source": [ "github:bryphe/reason-jsonrpc#a73f349" ]
       },
       "overrides": [],
       "dependencies": [
@@ -323,7 +323,7 @@
       "dependencies": [
         "revery@0.9.0@d41d8cd9", "reperf@1.3.0@d41d8cd9",
         "rench@1.2.0@d41d8cd9",
-        "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9",
+        "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "@reason-native/rely@1.0.1@d41d8cd9",
         "@opam/zed@opam:1.6@004ea65e", "@opam/yojson@opam:1.5.0@890db858",
         "@opam/ppx_deriving_yojson@opam:3.3@80aab5d8",
