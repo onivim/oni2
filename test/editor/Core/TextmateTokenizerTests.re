@@ -1,3 +1,4 @@
+open Revery;
 open Oni_Core;
 open TestFramework;
 
@@ -18,9 +19,10 @@ describe("Textmate Service", ({test, _}) => {
 
       let onInitialized = () => gotInitNotification := true;
       let onClosed = () => gotClosedNotification := true;
+      let onTokens = (_) => ();
 
       let tmClient =
-        TextmateClient.start(~onClosed, ~onInitialized, setup, []);
+        TextmateClient.start(~onClosed, ~onInitialized, ~onTokens, setup, []);
 
       Oni_Core.Utility.waitForCondition(() => {
         TextmateClient.pump(tmClient);
@@ -46,10 +48,10 @@ describe("Textmate Service", ({test, _}) => {
 
   exception TextmateServiceCloseException(string);
 
-  let withTextmateClient = (~onColorMap, ~onScopeLoaded, initData, f) => {
+  let withTextmateClient = (~onColorMap, ~onScopeLoaded, ~onTokens, initData, f) => {
     let setup = Setup.init();
     let tmClient =
-      TextmateClient.start(~onColorMap, ~onScopeLoaded, setup, initData);
+      TextmateClient.start(~onColorMap, ~onScopeLoaded, ~onTokens, setup, initData);
 
     f(tmClient);
 
@@ -65,6 +67,7 @@ describe("Textmate Service", ({test, _}) => {
     let setup = Setup.init();
 
     let onColorMap = _ => ();
+    let onTokens = _ => ();
     let gotScopeLoadedMessage = ref(false);
 
     let onScopeLoaded = (s: string) =>
@@ -76,6 +79,7 @@ describe("Textmate Service", ({test, _}) => {
     withTextmateClient(
       ~onColorMap,
       ~onScopeLoaded,
+      ~onTokens,
       [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
       tmClient => {
         TextmateClient.preloadScope(tmClient, "source.reason");
@@ -119,12 +123,13 @@ describe("Textmate Service", ({test, _}) => {
     let colorMap: ref(option(ColorMap.t)) = ref(None);
 
     let onColorMap = c => colorMap := Some(c);
-
     let onScopeLoaded = _ => ();
+    let onTokens = _ => ();
 
     withTextmateClient(
       ~onColorMap,
       ~onScopeLoaded,
+      ~onTokens,
       [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
@@ -160,10 +165,12 @@ describe("Textmate Service", ({test, _}) => {
 
     let onColorMap = c => colorMap := Some(c);
     let onScopeLoaded = _ => ();
+    let onTokens = _ => ();
 
     withTextmateClient(
       ~onColorMap,
       ~onScopeLoaded,
+      ~onTokens,
       [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
@@ -188,7 +195,7 @@ describe("Textmate Service", ({test, _}) => {
           Console.error(v.colors);
           expect.int(List.length(v.colors)).toBe(6);
           let firstChild = List.hd(v.colors);
-          let firstColor = ColorMap.get(cm, firstChild.foregroundColor);
+          let firstColor = ColorMap.get(cm, firstChild.foregroundColor) |> Helpers.getOrThrow;
           expect.float(firstColor.r).toBeCloseTo(1.0);
           expect.float(firstColor.g).toBeCloseTo(0.0);
           expect.float(firstColor.b).toBeCloseTo(0.0);
