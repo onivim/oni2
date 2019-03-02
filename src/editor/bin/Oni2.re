@@ -287,11 +287,10 @@ let init = app => {
          * Refactor this into _another_ middleware
          */
         switch (msg) {
-        | BufferUpdate(bc) => {
-            Core.TextmateClient.notifyBufferUpdate(tmClient, bc);
-        }
-        | _ => ();
-        }
+        | BufferUpdate(bc) =>
+          Core.TextmateClient.notifyBufferUpdate(tmClient, bc)
+        | _ => ()
+        };
       },
     );
   ();

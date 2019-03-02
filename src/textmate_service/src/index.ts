@@ -30,6 +30,18 @@ type BufferUpdateParams = [string, IBufferUpdate];
 
 let textmateBufferUpdate = new rpc.NotificationType<BufferUpdateParams, void>('textmate/bufferUpdate');
 
+type lineTokenizationResult = number[];
+
+interface IPublishTokenParams {
+    /* Buffer id */
+    id: number;
+    version: number;
+
+    lines: lineTokenizationResult[]
+}
+
+let textmateTokenNotification = new rpc.NotificationType<IPublishTokenParams, void>('textmate/publishTokens');
+
 let textmateGrammarPreloadNotification = new rpc.NotificationType<string, string>('textmate/preloadScope');
 let textmateGrammarLoadedNotification = new rpc.NotificationType<string, void>('textmate/scopeLoaded');
 
@@ -93,6 +105,33 @@ connection.onNotification(textmateBufferUpdate, (params) => {
 
     let [scope, bufferUpdate] = params;
     console.error(JSON.stringify(params));
+    if (bufferUpdate.startLine === 0 && bufferUpdate.endLine === -1) {
+        
+        registry.loadGrammar(scope).then((grammar) => {
+            const lines = bufferUpdate.lines;
+            const ret = [];
+            let ruleStack: any = null;
+
+            for (var i = 0; i < lines.length; i++) {
+                const r = grammar.tokenizeLine2(lines[i], ruleStack);
+                const tokens = Array.prototype.slice.call(r.tokens);
+                ruleStack = r.ruleStack;
+                ret[i] = tokens;
+            }
+
+            console.error("TOKEN RESULT: " + JSON.stringify(ret));
+
+            connection.sendNotification(textmateTokenNotification, {
+                id: bufferUpdate.id,
+                version: bufferUpdate.version,
+                lines: ret,
+            })
+
+        });
+    };
+
+    // Just do initial update for now..
+    // TODO: Handle incremental updates
     
 });
 
