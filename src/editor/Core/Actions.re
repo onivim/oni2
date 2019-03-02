@@ -32,4 +32,5 @@ type t =
   | EditorMoveCursorToTop(Cursor.move)
   | EditorMoveCursorToMiddle(Cursor.move)
   | EditorMoveCursorToBottom(Cursor.move)
+  | SyntaxHighlightColorMap(ColorMap.t)
   | Noop;
