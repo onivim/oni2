@@ -1,0 +1,64 @@
+{
+  "checksum": "886be53110a267bd524255a2f2de4a39",
+  "root": "textmate_service@link-dev:./package.json",
+  "node": {
+    "vscode-jsonrpc@4.0.0@d41d8cd9": {
+      "id": "vscode-jsonrpc@4.0.0@d41d8cd9",
+      "name": "vscode-jsonrpc",
+      "version": "4.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-4.0.0.tgz#sha1:a7bf74ef3254d0a0c272fab15c82128e378b3be9"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "typescript@3.3.3333@d41d8cd9": {
+      "id": "typescript@3.3.3333@d41d8cd9",
+      "name": "typescript",
+      "version": "3.3.3333",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/typescript/-/typescript-3.3.3333.tgz#sha1:171b2c5af66c59e9431199117a3bcadc66fdcfd6"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "textmate_service@link-dev:./package.json": {
+      "id": "textmate_service@link-dev:./package.json",
+      "name": "textmate_service",
+      "version": "link-dev:./package.json",
+      "source": {
+        "type": "link-dev",
+        "path": ".",
+        "manifest": "package.json"
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": [
+        "vscode-jsonrpc@4.0.0@d41d8cd9", "typescript@3.3.3333@d41d8cd9",
+        "@types/node@11.9.5@d41d8cd9"
+      ]
+    },
+    "@types/node@11.9.5@d41d8cd9": {
+      "id": "@types/node@11.9.5@d41d8cd9",
+      "name": "@types/node",
+      "version": "11.9.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/node/-/node-11.9.5.tgz#sha1:011eece9d3f839a806b63973e228f85967b79ed3"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    }
+  }
+}
