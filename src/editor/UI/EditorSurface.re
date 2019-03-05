@@ -44,7 +44,6 @@ let tokensToElement =
     isActiveLine
       ? theme.colors.editorActiveLineNumberForeground
       : theme.colors.editorLineNumberForeground;
-  let _lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
 
   let yF = float_of_int(yOffset);
 
@@ -58,9 +57,14 @@ let tokensToElement =
       ),
     );
 
+  let lineNumberXOffset = switch(isActiveLine) {
+  | true => 0
+  | false => (lineNumberWidth / 2) - (String.length(lineNumber) * fontWidth / 2);
+  }
+
   Revery.Draw.Text.drawString(
     ~transform,
-    ~x=0.,
+    ~x=float_of_int(lineNumberXOffset),
     ~y=yF,
     ~backgroundColor=theme.colors.editorLineNumberBackground,
     ~color=lineNumberTextColor,
