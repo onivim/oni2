@@ -51,7 +51,7 @@ let setupSurfaceThousandLineLayout = () => {
 };
 
 let editorSurfaceThousandLineLayout = rootNode => {
-  Layout.layout(rootNode, 1.0, 1);
+  Layout.layout(~force=true, rootNode);
 };
 
 let options = Reperf.Options.create(~iterations=100, ());
