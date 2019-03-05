@@ -42,8 +42,7 @@
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349",
-    "revery": "link:../revery",
-    "reason-glfw": "link:../reason-glfw"
+    "revery": "github:revery-ui/revery#c8c38fe"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
