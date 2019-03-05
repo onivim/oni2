@@ -30,102 +30,57 @@ let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 let tokensToElement =
     (
       fontWidth: int,
-      fontHeight: int,
+      _fontHeight: int,
       lineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
       tokens,
       yOffset: int,
+      transform,
     ) => {
-  let fontLineHeight = fontHeight;
-
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
     isActiveLine
       ? theme.colors.editorActiveLineNumberForeground
       : theme.colors.editorLineNumberForeground;
-  let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
+  let _lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
+
+  let yF = float_of_int(yOffset);
+
+let lineNumber = string_of_int(
+  LineNumber.getLineNumber(
+    ~bufferLine=lineNumber + 1,
+    ~cursorLine=cursorLine + 1,
+    ~setting=Relative,
+    (),
+  ));
+
+  Revery.Draw.Text.drawString(
+      ~transform,
+      ~x=0.,
+      ~y=yF,
+      ~backgroundColor=theme.colors.editorLineNumberBackground, 
+      ~color=lineNumberTextColor,
+      ~fontFamily="FiraCode-Regular.ttf",
+      ~fontSize=14,
+      lineNumber
+  );
 
   let f = (token: Tokenizer.t) => {
-    let style =
-      Style.[
-        position(`Absolute),
-        top(0),
-        left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
-        fontFamily("FiraCode-Regular.ttf"),
-        fontSize(14),
-        lineHeight(1.0),
-        color(token.color),
-        backgroundColor(theme.colors.background),
-        textWrap(Revery.TextWrapping.NoWrap),
-      ];
-
     Revery.Draw.Text.drawString(
-        ~x=float_of_int(fontWidth * Index.toZeroBasedInt(token.startPosition)),
-        ~y=float_of_int(yOffset),
+        ~transform,
+        ~x=float_of_int(lineNumberWidth + fontWidth * Index.toZeroBasedInt(token.startPosition)),
+        ~y=yF,
         ~backgroundColor=theme.colors.background,
         ~color=token.color,
         ~fontFamily="FiraCode-Regular.ttf",
         ~fontSize=14,
         token.text
     );
-
-    let _ = <Text style text={token.text} />;
   };
 
-  let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
-
-  let lineNumberStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      height(fontLineHeight),
-      left(0),
-      width(lineNumberWidth),
-      backgroundColor(theme.colors.editorLineNumberBackground),
-      justifyContent(`Center),
-      alignItems(lineNumberAlignment),
-    ];
-
-  /* TODO:  Incorporate */
-  /* let lineContentsStyle = */
-  /*   Style.[ */
-  /*     position(`Absolute), */
-  /*     top(0), */
-  /*     left(lineNumberWidth), */
-  /*     right(0), */
-  /*     height(fontLineHeight), */
-  /*   ]; */
-
-  let lineNumberTextStyle =
-    Style.[
-      fontFamily("FiraCode-Regular.ttf"),
-      fontSize(14),
-      height(fontHeight),
-      color(lineNumberTextColor),
-      lineHeight(1.0),
-      backgroundColor(theme.colors.editorLineNumberBackground),
-      textWrap(Revery.TextWrapping.NoWrap),
-    ];
-
   List.iter(f, tokens);
-
-  <View style=lineStyle>
-    <View style=lineNumberStyle>
-      <Text
-        style=lineNumberTextStyle
-        text={string_of_int(
-          LineNumber.getLineNumber(
-            ~bufferLine=lineNumber + 1,
-            ~cursorLine=cursorLine + 1,
-            ~setting=Relative,
-            (),
-          ),
-        )}
-      />
-    </View>
-  </View>;
 };
 
 let component = React.component("EditorSurface");
@@ -186,7 +141,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Tokenizer.tokenize(line, state.theme);
     };
 
-    let render = (i, offset) => {
+    let render = (i, offset, transform) => {
       let tokens = getTokensForLine(i);
 
       tokensToElement(
@@ -198,6 +153,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         Index.toZeroBasedInt(cursorLine),
         tokens,
         offset,
+        transform,
       );
     };
 
@@ -278,7 +234,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~height,
                 ~count,
                 ~render=(item, offset) => {
-                   let _ = render(item, offset);
+                   let _ = render(item, offset, transform);
                 },
                 ()
               );
