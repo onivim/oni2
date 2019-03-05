@@ -48,35 +48,42 @@ let tokensToElement =
 
   let yF = float_of_int(yOffset);
 
-let lineNumber = string_of_int(
-  LineNumber.getLineNumber(
-    ~bufferLine=lineNumber + 1,
-    ~cursorLine=cursorLine + 1,
-    ~setting=Relative,
-    (),
-  ));
+  let lineNumber =
+    string_of_int(
+      LineNumber.getLineNumber(
+        ~bufferLine=lineNumber + 1,
+        ~cursorLine=cursorLine + 1,
+        ~setting=Relative,
+        (),
+      ),
+    );
 
   Revery.Draw.Text.drawString(
-      ~transform,
-      ~x=0.,
-      ~y=yF,
-      ~backgroundColor=theme.colors.editorLineNumberBackground, 
-      ~color=lineNumberTextColor,
-      ~fontFamily="FiraCode-Regular.ttf",
-      ~fontSize=14,
-      lineNumber
+    ~transform,
+    ~x=0.,
+    ~y=yF,
+    ~backgroundColor=theme.colors.editorLineNumberBackground,
+    ~color=lineNumberTextColor,
+    ~fontFamily="FiraCode-Regular.ttf",
+    ~fontSize=14,
+    lineNumber,
   );
 
   let f = (token: Tokenizer.t) => {
     Revery.Draw.Text.drawString(
-        ~transform,
-        ~x=float_of_int(lineNumberWidth + fontWidth * Index.toZeroBasedInt(token.startPosition)),
-        ~y=yF,
-        ~backgroundColor=theme.colors.background,
-        ~color=token.color,
-        ~fontFamily="FiraCode-Regular.ttf",
-        ~fontSize=14,
-        token.text
+      ~transform,
+      ~x=
+        float_of_int(
+          lineNumberWidth
+          + fontWidth
+          * Index.toZeroBasedInt(token.startPosition),
+        ),
+      ~y=yF,
+      ~backgroundColor=theme.colors.background,
+      ~color=token.color,
+      ~fontFamily="FiraCode-Regular.ttf",
+      ~fontSize=14,
+      token.text,
     );
   };
 
@@ -218,28 +225,39 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style onDimensionsChanged>
-        <View style={bufferViewStyle}>
-          <OpenGL style={bufferViewStyle} render={(transform, _ctx) => { 
-
+        <View style=bufferViewStyle>
+          <OpenGL
+            style=bufferViewStyle
+            render={(transform, _ctx) => {
               let count = lineCount;
               let height = state.editor.size.pixelHeight;
               let rowHeight = state.editorFont.measuredHeight;
               let scrollY = state.editor.scrollY;
 
-              Shapes.drawRect(~transform, ~x=0., ~y=0., ~width=float_of_int(lineNumberWidth), ~height=float_of_int(height), ~color=theme.colors.editorLineNumberBackground, ());
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=0.,
+                ~width=float_of_int(lineNumberWidth),
+                ~height=float_of_int(height),
+                ~color=theme.colors.editorLineNumberBackground,
+                (),
+              );
 
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
                 ~height,
                 ~count,
-                ~render=(item, offset) => {
-                   let _ = render(item, offset, transform);
-                },
-                ()
+                ~render=
+                  (item, offset) => {
+                    let _ = render(item, offset, transform);
+                    ();
+                  },
+                (),
               );
-
-          }} />
+            }}
+          />
           <View style=cursorStyle />
         </View>
         <View style=minimapViewStyle>
