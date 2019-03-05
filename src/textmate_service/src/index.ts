@@ -121,7 +121,6 @@ connection.onNotification(exitNotification, () => {
 
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
-    console.error(JSON.stringify(params))
 
     // Just do initial update for now..
     // TODO: Handle incremental updates
