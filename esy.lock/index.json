@@ -1,24 +1,24 @@
 {
-  "checksum": "9fd205deb3e37ab6e25fd4052b632c4b",
+  "checksum": "81584c194e00dbda9fb837d841be4586",
   "root": "Oni2@link-dev:./package.json",
   "node": {
-    "revery@0.9.0@d41d8cd9": {
-      "id": "revery@0.9.0@d41d8cd9",
+    "revery@0.10.1@d41d8cd9": {
+      "id": "revery@0.10.1@d41d8cd9",
       "name": "revery",
-      "version": "0.9.0",
+      "version": "0.10.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.9.0.tgz#sha1:4ebcff9d324c58ed0b391711c9bca732833334db"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.10.1.tgz#sha1:64b91f2ade8f530245c28e7e94ae8e899978e4fb"
         ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.3.0@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-glfw@3.2.1020@d41d8cd9",
+        "reason-glfw@3.2.1021@d41d8cd9",
         "reason-gl-matrix@0.9.9303@d41d8cd9",
-        "reason-fontkit@2.3.1@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "reason-fontkit@2.3.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "flex@1.2.2@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.1@db1172a7", "@opam/lwt@opam:4.1.0@111fc2bf",
         "@opam/js_of_ocaml-lwt@opam:3.3.0@ff746e31",
@@ -127,13 +127,13 @@
       ],
       "devDependencies": []
     },
-    "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9": {
-      "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9",
+    "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9": {
+      "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
       "name": "reason-jsonrpc",
-      "version": "github:bryphe/reason-jsonrpc#6defd55",
+      "version": "github:bryphe/reason-jsonrpc#a73f349",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/reason-jsonrpc#6defd55" ]
+        "source": [ "github:bryphe/reason-jsonrpc#a73f349" ]
       },
       "overrides": [],
       "dependencies": [
@@ -147,14 +147,14 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/merlin@opam:3.2.2@829ee6dd"
       ]
     },
-    "reason-glfw@3.2.1020@d41d8cd9": {
-      "id": "reason-glfw@3.2.1020@d41d8cd9",
+    "reason-glfw@3.2.1021@d41d8cd9": {
+      "id": "reason-glfw@3.2.1021@d41d8cd9",
       "name": "reason-glfw",
-      "version": "3.2.1020",
+      "version": "3.2.1021",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-glfw/-/reason-glfw-3.2.1020.tgz#sha1:6ba2588febf7cfc50222f30bfbaa97f30e60c4bd"
+          "archive:https://registry.npmjs.org/reason-glfw/-/reason-glfw-3.2.1021.tgz#sha1:d6456da5eea1dff239e3576e6da5e2b6d584b052"
         ]
       },
       "overrides": [],
@@ -189,19 +189,19 @@
       ],
       "devDependencies": []
     },
-    "reason-fontkit@2.3.1@d41d8cd9": {
-      "id": "reason-fontkit@2.3.1@d41d8cd9",
+    "reason-fontkit@2.3.2@d41d8cd9": {
+      "id": "reason-fontkit@2.3.2@d41d8cd9",
       "name": "reason-fontkit",
-      "version": "2.3.1",
+      "version": "2.3.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.3.1.tgz#sha1:37ac21fce5c49a1685f189acb8bb71a9b4c1fed9"
+          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.3.2.tgz#sha1:764b98e55e9fa66d919e2b06d3614d72a6a74807"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.1.10@d41d8cd9", "reason-glfw@3.2.1020@d41d8cd9",
+        "refmterr@3.1.10@d41d8cd9", "reason-glfw@3.2.1021@d41d8cd9",
         "reason-gl-matrix@0.9.9303@d41d8cd9",
         "esy-harfbuzz@1.9.1005@d41d8cd9", "esy-freetype2@2.9.1006@d41d8cd9",
         "esy-cmake@0.3.5@d41d8cd9", "@opam/dune@opam:1.7.3@72aad784",
@@ -321,8 +321,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@0.9.0@d41d8cd9", "rench@1.2.0@d41d8cd9",
-        "reason-jsonrpc@github:bryphe/reason-jsonrpc#6defd55@d41d8cd9",
+        "revery@0.10.1@d41d8cd9", "rench@1.2.0@d41d8cd9",
+        "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "@reason-native/rely@1.0.1@d41d8cd9",
         "@opam/zed@opam:1.6@004ea65e", "@opam/yojson@opam:1.5.0@890db858",
         "@opam/ppx_deriving_yojson@opam:3.3@80aab5d8",

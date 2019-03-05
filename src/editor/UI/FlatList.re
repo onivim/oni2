@@ -12,6 +12,33 @@ let component = React.component("FlatList");
 
 let additionalRowsToRender = 1;
 
+type glRenderFunction = (int, int) => unit;
+
+let render =
+    (~scrollY=0, ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
+  let rowsToRender = rowHeight > 0 ? height / rowHeight : 0;
+  let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
+  let pixelOffset = scrollY mod rowHeight;
+
+  let i = ref(max(startRowOffset - additionalRowsToRender, 0));
+
+  let len = count;
+
+  while (i^ < rowsToRender
+         + additionalRowsToRender
+         + startRowOffset
+         && i^ < len) {
+    let rowOffset = (i^ - startRowOffset) * rowHeight;
+
+    let top = rowOffset - pixelOffset;
+
+    let item = i^;
+    render(item, top);
+
+    incr(i);
+  };
+};
+
 let createElement =
     (
       ~scrollY=0,
