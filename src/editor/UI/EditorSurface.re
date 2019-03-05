@@ -55,7 +55,7 @@ let tokensToElement =
         fontSize(12),
         lineHeight(1.0),
         color(token.color),
-      backgroundColor(theme.colors.background),
+        backgroundColor(theme.colors.background),
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
