@@ -39,6 +39,7 @@ module ColorizedToken = {
   let foreground_offset = 14;
   let background_offset = 23;
 
+  [@deriving show]
   type t = {
     index: int,
     foregroundColor: int,
@@ -61,6 +62,8 @@ module ColorizedToken = {
       foregroundColor: getForegroundColor(v) - 1,
       backgroundColor: getBackgroundColor(v) - 1,
     };
+
+  let default: t = {index: 0, foregroundColor: 0, backgroundColor: 1};
 };
 
 let parseTokenizeResultItem = (json: Yojson.Safe.json) => {

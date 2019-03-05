@@ -81,13 +81,6 @@ let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
   };
 };
 
-let getColor = (v: t, i, default) => {
-  switch (ColorMap.get(v.colorMap, i)) {
-  | Some(c) => c
-  | None => default
-  };
-};
-
 let create: unit => t =
   () => {
     colorMap: ColorMap.create(),

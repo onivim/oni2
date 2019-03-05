@@ -151,12 +151,12 @@ describe("Textmate Service", ({test, _}) => {
 
         switch (colorMap^) {
         | Some(c) =>
-          let firstColor = ColorMap.get(c, 0) |> Helpers.getOrThrow;
+          let firstColor = ColorMap.get(c, 0, Colors.black, Colors.white);
           expect.float(firstColor.r).toBeCloseTo(0.0);
           expect.float(firstColor.g).toBeCloseTo(0.0);
           expect.float(firstColor.b).toBeCloseTo(0.0);
 
-          let secondColor = ColorMap.get(c, 1) |> Helpers.getOrThrow;
+          let secondColor = ColorMap.get(c, 1, Colors.black, Colors.white);
           expect.float(secondColor.r).toBeCloseTo(1.0);
           expect.float(secondColor.g).toBeCloseTo(1.0);
           expect.float(secondColor.b).toBeCloseTo(1.0);
@@ -203,7 +203,7 @@ describe("Textmate Service", ({test, _}) => {
           expect.int(List.length(v.colors)).toBe(6);
           let firstChild = List.hd(v.colors);
           let firstColor =
-            ColorMap.get(cm, firstChild.foregroundColor) |> Helpers.getOrThrow;
+            ColorMap.get(cm, firstChild.foregroundColor, Colors.black, Colors.white);
           expect.float(firstColor.r).toBeCloseTo(1.0);
           expect.float(firstColor.g).toBeCloseTo(0.0);
           expect.float(firstColor.b).toBeCloseTo(0.0);
