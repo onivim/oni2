@@ -60,12 +60,11 @@ let init = app => {
   let reasonSyntaxPath =
     setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
-  let onScopeLoaded = s => prerr_endline("SCOPE LOADED: " ++ s);
+  let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
   let onTokens = tr => {
-    prerr_endline("GOT MORE TOKENS");
     App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
   };
 
