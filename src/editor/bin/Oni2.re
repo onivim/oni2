@@ -130,6 +130,9 @@ let init = app => {
             /. float_of_int(metrics.unitsPerEm),
           );
 
+        let derp = float_of_int(glyph.advance) /. 64.;
+        print_endline ("DERP: " ++ string_of_float(derp));
+
         /* Set editor text based on measurements */
         App.dispatch(
           app,
@@ -147,7 +150,7 @@ let init = app => {
       _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
     );
 
-  setFont("FiraCode-Regular.ttf", 14);
+  setFont("FiraCode-Regular.ttf", 12);
 
   let _ =
     Event.subscribe(

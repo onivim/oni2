@@ -52,9 +52,10 @@ let tokensToElement =
         top(0),
         left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
-        fontSize(14),
+        fontSize(12),
         lineHeight(1.0),
         color(token.color),
+      backgroundColor(theme.colors.background),
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
@@ -91,6 +92,7 @@ let tokensToElement =
       height(fontHeight),
       color(lineNumberTextColor),
       lineHeight(1.0),
+      backgroundColor(theme.colors.editorLineNumberBackground),
       textWrap(Revery.TextWrapping.NoWrap),
     ];
 
