@@ -5,8 +5,6 @@
  * the view of the buffer in the window.
  */
 
-open Reglfw.Glfw;
-
 open Revery;
 open Revery.Draw;
 open Revery.UI;
@@ -38,6 +36,7 @@ let tokensToElement =
       theme: Theme.t,
       cursorLine: int,
       tokens,
+      yOffset: int,
     ) => {
   let fontLineHeight = fontHeight;
 
@@ -61,6 +60,16 @@ let tokensToElement =
         backgroundColor(theme.colors.background),
         textWrap(Revery.TextWrapping.NoWrap),
       ];
+
+    Revery.Draw.Text.drawString(
+        ~x=float_of_int(fontWidth * Index.toZeroBasedInt(token.startPosition)),
+        ~y=float_of_int(yOffset),
+        ~backgroundColor=theme.colors.background,
+        ~color=token.color,
+        ~fontFamily="FiraCode-Regular.ttf",
+        ~fontSize=14,
+        token.text
+    );
 
     let _ = <Text style text={token.text} />;
   };
@@ -177,7 +186,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Tokenizer.tokenize(line, state.theme);
     };
 
-    let _render = i => {
+    let render = (i, offset) => {
       let tokens = getTokensForLine(i);
 
       tokensToElement(
@@ -188,6 +197,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         theme,
         Index.toZeroBasedInt(cursorLine),
         tokens,
+        offset,
       );
     };
 
@@ -254,9 +264,25 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       <View style onDimensionsChanged>
         <View style={bufferViewStyle}>
           <OpenGL style={bufferViewStyle} render={(transform, _ctx) => { 
-              glClearColor(1.0, 0.0, 0.0, 1.0);
 
-              Shapes.drawRect(~transform, ~x=0., ~y=0., ~width=float_of_int(lineNumberWidth), ~height=float_of_int(state.editor.size.pixelHeight), ~color=theme.colors.editorLineNumberBackground, ());
+              let count = lineCount;
+              let height = state.editor.size.pixelHeight;
+              let rowHeight = state.editorFont.measuredHeight;
+              let scrollY = state.editor.scrollY;
+
+              Shapes.drawRect(~transform, ~x=0., ~y=0., ~width=float_of_int(lineNumberWidth), ~height=float_of_int(height), ~color=theme.colors.editorLineNumberBackground, ());
+
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height,
+                ~count,
+                ~render=(item, offset) => {
+                   let _ = render(item, offset);
+                },
+                ()
+              );
+
           }} />
           <View style=cursorStyle />
         </View>
