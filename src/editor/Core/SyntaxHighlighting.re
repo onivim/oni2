@@ -26,13 +26,8 @@ module BufferSyntaxHighlights = {
   };
 
   let update = (v: t, version: int, tokens: list(TokenizationResult.tokenizationLineResult)) => {
-      print_endline ("UPDATING!!!!");
     let lineToHighlights = List.fold_left((curr, item: TokenizationResult.tokenizationLineResult) => {
-
         IntMap.update(item.line, (prev) => {
-
-            prerr_endline ("Updating line: " ++ string_of_int(item.line));
-
             switch(prev) {
             | None => Some(BufferLineSyntaxHighlights.create(~version, ~tokens=item.tokens, ()));
             | Some(v) => {
@@ -73,7 +68,6 @@ let reduce: (t, Actions.t) => t =
     | SyntaxHighlightTokens(tokens) => {
         ...state,
         idToBufferSyntaxHighlights: IntMap.update(tokens.bufferId, (buffer) => {
-            print_endline ("GOT TOKEN UPDATE");
            switch (buffer) {
            | None => Some(BufferSyntaxHighlights.update(BufferSyntaxHighlights.create(), tokens.version, tokens.lines)); 
            | Some(v) => Some(BufferSyntaxHighlights.update(v, tokens.version, tokens.lines));

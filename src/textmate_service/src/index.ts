@@ -35,11 +35,13 @@ let textmateBufferUpdate = new rpc.NotificationType<BufferUpdateParams, void>(
     "textmate/bufferUpdate",
 )
 
-type lineTokenizationResult = number[]
+type lineTokenizationResult = {
+    line: number,
+    tokens: number[]
+}
 
 interface IPublishTokenParams {
-    /* Buffer id */
-    id: number
+    bufferId: number
     version: number
 
     lines: lineTokenizationResult[]
@@ -137,11 +139,14 @@ connection.onNotification(textmateBufferUpdate, params => {
                 const r = grammar.tokenizeLine2(lines[i], ruleStack)
                 const tokens = Array.prototype.slice.call(r.tokens)
                 ruleStack = r.ruleStack
-                ret[i] = tokens
+                ret[i] = {
+                    line: i,
+                    tokens: tokens,
+                };
             }
 
             connection.sendNotification(textmateTokenNotification, {
-                id: bufferUpdate.id,
+                bufferId: bufferUpdate.id,
                 version: bufferUpdate.version,
                 lines: ret,
             })
