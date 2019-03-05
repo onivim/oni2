@@ -158,9 +158,8 @@ let start =
     switch (n.method, n.params) {
     | ("initialized", _) => onInitialized()
     | ("textmate/scopeLoaded", `String(s)) => onScopeLoaded(s)
-    | ("textmate/publishTokens", json) => {
+    | ("textmate/publishTokens", json) =>
       onTokens(TokenizationResult.of_yojson(json))
-    }
     | _ => ()
     };
   };

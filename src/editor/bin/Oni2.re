@@ -65,7 +65,7 @@ let init = app => {
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
   let onTokens = tr => {
-      prerr_endline ("GOT MORE TOKENS");
+    prerr_endline("GOT MORE TOKENS");
     App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
   };
 

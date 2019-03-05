@@ -8,44 +8,59 @@ open TextmateClient.TokenizationResult;
 
 module BufferLineSyntaxHighlights = {
   type t = {
-      tokens: list(ColorizedToken.t),
-      version: int,
+    tokens: list(ColorizedToken.t),
+    version: int,
   };
 
-  let create = (~tokens, ~version, ()) => {
-    tokens,
-        version,
-  };
+  let create = (~tokens, ~version, ()) => {tokens, version};
 };
 
 module BufferSyntaxHighlights = {
   type t = {lineToHighlights: IntMap.t(BufferLineSyntaxHighlights.t)};
 
-  let create = () => {
-    lineToHighlights: IntMap.empty,
-  };
+  let create = () => {lineToHighlights: IntMap.empty};
 
-  let update = (v: t, version: int, tokens: list(TokenizationResult.tokenizationLineResult)) => {
-    let lineToHighlights = List.fold_left((curr, item: TokenizationResult.tokenizationLineResult) => {
-        IntMap.update(item.line, (prev) => {
-            switch(prev) {
-            | None => Some(BufferLineSyntaxHighlights.create(~version, ~tokens=item.tokens, ()));
-            | Some(v) => {
+  let update =
+      (
+        v: t,
+        version: int,
+        tokens: list(TokenizationResult.tokenizationLineResult),
+      ) => {
+    let lineToHighlights =
+      List.fold_left(
+        (curr, item: TokenizationResult.tokenizationLineResult) =>
+          IntMap.update(
+            item.line,
+            prev =>
+              switch (prev) {
+              | None =>
+                Some(
+                  BufferLineSyntaxHighlights.create(
+                    ~version,
+                    ~tokens=item.tokens,
+                    (),
+                  ),
+                )
+              | Some(v) =>
                 if (v.version < version) {
-                    Some(BufferLineSyntaxHighlights.create(~version, ~tokens=item.tokens, ())) 
+                  Some(
+                    BufferLineSyntaxHighlights.create(
+                      ~version,
+                      ~tokens=item.tokens,
+                      (),
+                    ),
+                  );
                 } else {
-                    Some(v)
+                  Some(v);
                 }
-            }
-            };
-            
-        }, curr);
-        
-    }, v.lineToHighlights, tokens);
+              },
+            curr,
+          ),
+        v.lineToHighlights,
+        tokens,
+      );
 
-    let ret: t = { 
-        lineToHighlights: lineToHighlights,
-    };
+    let ret: t = {lineToHighlights: lineToHighlights};
     ret;
   };
 };
@@ -67,13 +82,31 @@ let reduce: (t, Actions.t) => t =
     | SyntaxHighlightColorMap(colorMap) => {...state, colorMap}
     | SyntaxHighlightTokens(tokens) => {
         ...state,
-        idToBufferSyntaxHighlights: IntMap.update(tokens.bufferId, (buffer) => {
-           switch (buffer) {
-           | None => Some(BufferSyntaxHighlights.update(BufferSyntaxHighlights.create(), tokens.version, tokens.lines)); 
-           | Some(v) => Some(BufferSyntaxHighlights.update(v, tokens.version, tokens.lines));
-           }
-        }, state.idToBufferSyntaxHighlights)
-    }
+        idToBufferSyntaxHighlights:
+          IntMap.update(
+            tokens.bufferId,
+            buffer =>
+              switch (buffer) {
+              | None =>
+                Some(
+                  BufferSyntaxHighlights.update(
+                    BufferSyntaxHighlights.create(),
+                    tokens.version,
+                    tokens.lines,
+                  ),
+                )
+              | Some(v) =>
+                Some(
+                  BufferSyntaxHighlights.update(
+                    v,
+                    tokens.version,
+                    tokens.lines,
+                  ),
+                )
+              },
+            state.idToBufferSyntaxHighlights,
+          ),
+      }
     | _ => state
     };
   };
