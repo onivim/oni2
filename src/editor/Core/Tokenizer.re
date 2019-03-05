@@ -41,12 +41,12 @@ let _moveToNextNonWhitespace = _moveToNextMatchingToken(_isNonWhitespace);
 
 let rec getCurrentTokenColor =
         (
-          tokens: list(TextmateClient.ColorizedToken.t),
+          tokens: list(ColorizedToken.t),
           startPos: int,
           endPos: int,
         ) => {
   switch (tokens) {
-  | [] => [TextmateClient.ColorizedToken.default]
+  | [] => [ColorizedToken.default]
   | [last] => [last]
   | [v1, v2, ...tail] when v1.index <= startPos && v2.index > startPos => [
       v1,
@@ -58,7 +58,7 @@ let rec getCurrentTokenColor =
 };
 
 let tokenize:
-  (string, Theme.t, list(TextmateClient.ColorizedToken.t), ColorMap.t) =>
+  (string, Theme.t, list(ColorizedToken.t), ColorMap.t) =>
   list(t) =
   (s, theme, tokenColors, colorMap) => {
     let idx = ref(0);
@@ -79,7 +79,7 @@ let tokenize:
 
         tokenColorCursor :=
           getCurrentTokenColor(tokenColorCursor^, startToken, endToken);
-        let color: TextmateClient.ColorizedToken.t =
+        let color: ColorizedToken.t =
           List.hd(tokenColorCursor^);
         let foregroundColor =
           ColorMap.get(
