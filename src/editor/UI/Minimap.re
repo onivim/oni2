@@ -5,7 +5,7 @@
  */
 
 /* open Reglfw.Glfw; */
-open Revery.Draw
+open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
@@ -19,32 +19,28 @@ let tokensToElement = (transform, yOffset, tokens: list(Tokenizer.t)) => {
     let tokenWidth =
       Index.toZeroBasedInt(token.endPosition)
       - Index.toZeroBasedInt(token.startPosition);
-    /* let style = */
-    /*   Style.[ */
-    /*     position(`Absolute), */
-    /*     layoutMode(`Minimal), */
-    /*     top(0), */
-    /*     left( */
-    /*       Constants.default.minimapCharacterWidth */
-    /*       * Index.toZeroBasedInt(token.startPosition), */
-    /*     ), */
-    /*     height(Constants.default.minimapCharacterHeight), */
-    /*     width(tokenWidth * Constants.default.minimapCharacterWidth), */
-    /*     backgroundColor(token.color), */
-    /*   ]; */
 
-    /* <View style />; */
-
-    let x = float_of_int(Constants.default.minimapCharacterWidth * Index.toZeroBasedInt(token.startPosition));
+    let x =
+      float_of_int(
+        Constants.default.minimapCharacterWidth
+        * Index.toZeroBasedInt(token.startPosition),
+      );
     let height = float_of_int(Constants.default.minimapCharacterHeight);
-    let width = float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
+    let width =
+      float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
 
-    Shapes.drawRect(~transform, ~y=float_of_int(yOffset), ~x=x, ~color=token.color, ~width, ~height, ());
+    Shapes.drawRect(
+      ~transform,
+      ~y=float_of_int(yOffset),
+      ~x,
+      ~color=token.color,
+      ~width,
+      ~height,
+      (),
+    );
   };
 
   List.iter(f, tokens);
-
-  /* <View style=lineStyle> ...tokens </View>; */
 };
 
 let renderLine = (_theme, transform, yOffset, tokens) => {
@@ -73,29 +69,28 @@ let createElement =
 
     let scrollY = state.editor.minimapScrollY;
 
-    /* let render = i => { */
-    /*   let tokens = getTokensForLine(i); */
-    /*   renderLine(state.theme, tokens); */
-    /* }; */
-
-    /* ignore((width, height, count, rowHeight, render)); */
     ignore(width);
 
     (
       hooks,
       <View style=absoluteStyle>
-        <OpenGL style=absoluteStyle render={(transform, _) => {
+        <OpenGL
+          style=absoluteStyle
+          render={(transform, _) =>
             FlatList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height,
-                ~count,
-                ~render={(item, offset) => {
-                   let tokens = getTokensForLine(item);
-                   renderLine(state.theme, transform, offset, tokens) 
-                }}, ());
-
-        }} />
+              ~scrollY,
+              ~rowHeight,
+              ~height,
+              ~count,
+              ~render=
+                (item, offset) => {
+                  let tokens = getTokensForLine(item);
+                  renderLine(state.theme, transform, offset, tokens);
+                },
+              (),
+            )
+          }
+        />
       </View>,
     );
   });

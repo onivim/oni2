@@ -14,37 +14,30 @@ let additionalRowsToRender = 1;
 
 type glRenderFunction = (int, int) => unit;
 
-let render = (~scrollY=0, ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
-    let rowsToRender = rowHeight > 0 ? height / rowHeight : 0;
-    let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
-    let pixelOffset = scrollY mod rowHeight;
+let render =
+    (~scrollY=0, ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
+  let rowsToRender = rowHeight > 0 ? height / rowHeight : 0;
+  let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
+  let pixelOffset = scrollY mod rowHeight;
 
-    let i = ref(max(startRowOffset - additionalRowsToRender, 0));
+  let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
-    let len = count;
+  let len = count;
 
-    while (i^ < rowsToRender
-           + additionalRowsToRender
-           + startRowOffset
-           && i^ < len) {
-      let rowOffset = (i^ - startRowOffset) * rowHeight;
-      /* let rowContainerStyle = */
-      /*   Style.[ */
-      /*     position(`Absolute), */
-      /*     top(rowOffset - pixelOffset), */
-      /*     left(0), */
-      /*     right(0), */
-      /*     height(rowHeight), */
-      /*   ]; */
+  while (i^ < rowsToRender
+         + additionalRowsToRender
+         + startRowOffset
+         && i^ < len) {
+    let rowOffset = (i^ - startRowOffset) * rowHeight;
 
-      let top = rowOffset - pixelOffset;
+    let top = rowOffset - pixelOffset;
 
-      let item = i^;
-      render(item, top);
+    let item = i^;
+    render(item, top);
 
-      incr(i);
-    };
-}
+    incr(i);
+  };
+};
 
 let createElement =
     (
