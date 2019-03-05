@@ -36,7 +36,8 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("single word token, surrounded by whitespace", ({expect}) => {
-    let result = Tokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
+    let result =
+      Tokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {
@@ -66,7 +67,8 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("multiple tokens", ({expect}) => {
-    let result = Tokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
+    let result =
+      Tokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {

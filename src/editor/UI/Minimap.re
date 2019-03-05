@@ -23,13 +23,10 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 /* } */
 
 let renderLine = (transform, yOffset, tokens: list(Tokenizer.t)) => {
-
   let f = (token: Tokenizer.t) => {
-      let startPosition = Index.toZeroBasedInt(token.startPosition);
-      let endPosition = Index.toZeroBasedInt(token.endPosition);
-    let tokenWidth =
-        endPosition
-      - startPosition;
+    let startPosition = Index.toZeroBasedInt(token.startPosition);
+    let endPosition = Index.toZeroBasedInt(token.endPosition);
+    let tokenWidth = endPosition - startPosition;
 
     /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
     /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
@@ -40,10 +37,7 @@ let renderLine = (transform, yOffset, tokens: list(Tokenizer.t)) => {
     /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
 
     let x =
-      float_of_int(
-        Constants.default.minimapCharacterWidth
-        * startPosition
-      );
+      float_of_int(Constants.default.minimapCharacterWidth * startPosition);
     let height = float_of_int(Constants.default.minimapCharacterHeight);
     let width =
       float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);

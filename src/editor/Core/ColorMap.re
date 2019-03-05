@@ -21,7 +21,7 @@ let get = (v: t, i, foreground, background) => {
   switch (i) {
   | 0 => foreground
   | 1 => background
-  | c when (i >= 0 && i < Array.length(v)) => v[c]
+  | c when i >= 0 && i < Array.length(v) => v[c]
   | _ => foreground
-  }
+  };
 };

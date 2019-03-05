@@ -203,7 +203,12 @@ describe("Textmate Service", ({test, _}) => {
           expect.int(List.length(v.colors)).toBe(6);
           let firstChild = List.hd(v.colors);
           let firstColor =
-            ColorMap.get(cm, firstChild.foregroundColor, Colors.black, Colors.white);
+            ColorMap.get(
+              cm,
+              firstChild.foregroundColor,
+              Colors.black,
+              Colors.white,
+            );
           expect.float(firstColor.r).toBeCloseTo(1.0);
           expect.float(firstColor.g).toBeCloseTo(0.0);
           expect.float(firstColor.b).toBeCloseTo(0.0);

@@ -145,8 +145,18 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let getTokensForLine = i => {
       let line = lines[i];
-      let tokenColors = SyntaxHighlighting.getTokensForLine(state.syntaxHighlighting, state.activeBufferId, i);
-      Tokenizer.tokenize(line, state.theme, tokenColors, state.syntaxHighlighting.colorMap);
+      let tokenColors =
+        SyntaxHighlighting.getTokensForLine(
+          state.syntaxHighlighting,
+          state.activeBufferId,
+          i,
+        );
+      Tokenizer.tokenize(
+        line,
+        state.theme,
+        tokenColors,
+        state.syntaxHighlighting.colorMap,
+      );
     };
 
     let render = (i, offset, transform) => {
