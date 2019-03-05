@@ -34,10 +34,7 @@ let create: unit => t =
 let reduce: (t, Actions.t) => t =
   (state, action) => {
     switch (action) {
-    | SyntaxHighlightColorMap(colorMap) => {
-        ...state,
-        colorMap,
-    }
+    | SyntaxHighlightColorMap(colorMap) => {...state, colorMap}
     | _ => state
     };
   };
