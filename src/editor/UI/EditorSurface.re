@@ -60,7 +60,7 @@ let tokensToElement =
   let lineNumberXOffset = switch(isActiveLine) {
   | true => 0
   | false => (lineNumberWidth / 2) - (String.length(lineNumber) * fontWidth / 2);
-  }
+  };
 
   Revery.Draw.Text.drawString(
     ~transform,
