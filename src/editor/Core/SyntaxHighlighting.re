@@ -70,6 +70,24 @@ type t = {
   idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t),
 };
 
+let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
+  switch (IntMap.find_opt(bufferId, v.idToBufferSyntaxHighlights)) {
+  | None => []
+  | Some(bufferMap) =>
+    switch (IntMap.find_opt(lineId, bufferMap.lineToHighlights)) {
+    | Some(v) => v.tokens
+    | None => []
+    }
+  };
+};
+
+let getColor = (v: t, i, default) => {
+  switch (ColorMap.get(v.colorMap, i)) {
+  | Some(c) => c
+  | None => default
+  };
+};
+
 let create: unit => t =
   () => {
     colorMap: ColorMap.create(),
