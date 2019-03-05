@@ -28,11 +28,11 @@ let render =
          + additionalRowsToRender
          + startRowOffset
          && i^ < len) {
-    let rowOffset = (i^ - startRowOffset) * rowHeight;
+    let item = i^;
+    let rowOffset = (item - startRowOffset) * rowHeight;
 
     let top = rowOffset - pixelOffset;
 
-    let item = i^;
     render(item, top);
 
     incr(i);
@@ -51,7 +51,6 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    /* let (v, setV, hooks) = React.Hooks.state(0, hooks); */
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
     let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
     let pixelOffset = scrollY mod rowHeight;
