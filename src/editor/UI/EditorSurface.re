@@ -52,7 +52,7 @@ let tokensToElement =
         top(0),
         left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
         fontFamily("FiraCode-Regular.ttf"),
-        fontSize(12),
+        fontSize(14),
         lineHeight(1.0),
         color(token.color),
         backgroundColor(theme.colors.background),
