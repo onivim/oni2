@@ -226,10 +226,24 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
+    let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * -50,
+        (),
+      );
+    };
+
+    let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * -150,
+        (),
+      );
+    };
+
     (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle>
+        <View style=bufferViewStyle onMouseWheel={scrollSurface}>
           <OpenGL
             style=bufferViewStyle
             render={(transform, _ctx) => {
@@ -264,7 +278,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           />
           <View style=cursorStyle />
         </View>
-        <View style=minimapViewStyle>
+        <View style=minimapViewStyle onMouseWheel={scrollMinimap}>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
