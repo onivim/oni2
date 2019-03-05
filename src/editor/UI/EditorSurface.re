@@ -5,7 +5,10 @@
  * the view of the buffer in the window.
  */
 
+open Reglfw.Glfw;
+
 open Revery;
+open Revery.Draw;
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -59,7 +62,7 @@ let tokensToElement =
         textWrap(Revery.TextWrapping.NoWrap),
       ];
 
-    <Text style text={token.text} />;
+    let _ = <Text style text={token.text} />;
   };
 
   let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
@@ -76,14 +79,15 @@ let tokensToElement =
       alignItems(lineNumberAlignment),
     ];
 
-  let lineContentsStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(lineNumberWidth),
-      right(0),
-      height(fontLineHeight),
-    ];
+  /* TODO:  Incorporate */
+  /* let lineContentsStyle = */
+  /*   Style.[ */
+  /*     position(`Absolute), */
+  /*     top(0), */
+  /*     left(lineNumberWidth), */
+  /*     right(0), */
+  /*     height(fontLineHeight), */
+  /*   ]; */
 
   let lineNumberTextStyle =
     Style.[
@@ -96,7 +100,7 @@ let tokensToElement =
       textWrap(Revery.TextWrapping.NoWrap),
     ];
 
-  let tokens = List.map(f, tokens);
+  List.iter(f, tokens);
 
   <View style=lineStyle>
     <View style=lineNumberStyle>
@@ -112,7 +116,6 @@ let tokensToElement =
         )}
       />
     </View>
-    <View style=lineContentsStyle> ...tokens </View>
   </View>;
 };
 
@@ -174,7 +177,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Tokenizer.tokenize(line, state.theme);
     };
 
-    let render = i => {
+    let _render = i => {
       let tokens = getTokensForLine(i);
 
       tokensToElement(
@@ -246,18 +249,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
-    let ret = (
+    (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle>
-          <FlatList
-            render
-            count=lineCount
-            width=bufferPixelWidth
-            height={state.editor.size.pixelHeight}
-            rowHeight={state.editorFont.measuredHeight}
-            scrollY={state.editor.scrollY}
-          />
+        <View style={bufferViewStyle}>
+          <OpenGL style={bufferViewStyle} render={(transform, _ctx) => { 
+              glClearColor(1.0, 0.0, 0.0, 1.0);
+
+              Shapes.drawRect(~transform, ~x=0., ~y=0., ~width=float_of_int(lineNumberWidth), ~height=float_of_int(state.editor.size.pixelHeight), ~color=theme.colors.editorLineNumberBackground, ());
+          }} />
           <View style=cursorStyle />
         </View>
         <View style=minimapViewStyle>
@@ -278,5 +278,4 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         </View>
       </View>,
     );
-    ret;
   });
