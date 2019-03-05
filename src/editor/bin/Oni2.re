@@ -64,8 +64,10 @@ let init = app => {
   let onColorMap = cm =>
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
-  let onTokens = tr =>
+  let onTokens = tr => {
+      prerr_endline ("GOT MORE TOKENS");
     App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+  };
 
   let tmClient =
     Oni_Core.TextmateClient.start(
