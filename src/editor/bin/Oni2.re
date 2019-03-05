@@ -28,7 +28,6 @@ let init = app => {
     App.createWindow(
       ~createOptions={
         ...Window.defaultCreateOptions,
-        vsync: false,
         maximized: false,
         icon: Some("logo.png"),
       },
