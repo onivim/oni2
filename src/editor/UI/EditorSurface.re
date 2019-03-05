@@ -57,10 +57,9 @@ let tokensToElement =
       ),
     );
 
-  let lineNumberXOffset = switch(isActiveLine) {
-  | true => 0
-  | false => (lineNumberWidth / 2) - (String.length(lineNumber) * fontWidth / 2);
-  };
+  let lineNumberXOffset =
+    isActiveLine
+      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
 
   Revery.Draw.Text.drawString(
     ~transform,
@@ -228,14 +227,14 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=int_of_float(wheelEvent.deltaY) * -50,
+        ~deltaY=int_of_float(wheelEvent.deltaY) * (-50),
         (),
       );
     };
 
     let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=int_of_float(wheelEvent.deltaY) * -150,
+        ~deltaY=int_of_float(wheelEvent.deltaY) * (-150),
         (),
       );
     };
@@ -243,7 +242,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle onMouseWheel={scrollSurface}>
+        <View style=bufferViewStyle onMouseWheel=scrollSurface>
           <OpenGL
             style=bufferViewStyle
             render={(transform, _ctx) => {
@@ -278,7 +277,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           />
           <View style=cursorStyle />
         </View>
-        <View style=minimapViewStyle onMouseWheel={scrollMinimap}>
+        <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
