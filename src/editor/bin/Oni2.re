@@ -64,10 +64,14 @@ let init = app => {
   let onColorMap = cm =>
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
+  let onTokens = tr =>
+      App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+
   let tmClient =
     Oni_Core.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
+      ~onTokens,
       setup,
       [{scopeName: "source.reason", path: reasonSyntaxPath}],
     );
