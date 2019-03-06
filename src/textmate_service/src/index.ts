@@ -8,6 +8,9 @@ import * as fs from "fs"
 import * as rpc from "vscode-jsonrpc"
 import * as vsctm from "vscode-textmate"
 import * as Buffer from "./Buffer"
+import * as Job from "./Job"
+import * as Protocol from "./Protocol"
+import * as Tokenization from "./Tokenization"
 
 let connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(process.stdin),
@@ -36,19 +39,7 @@ let textmateBufferUpdate = new rpc.NotificationType<BufferUpdateParams, void>(
     "textmate/bufferUpdate",
 )
 
-type lineTokenizationResult = {
-    line: number,
-    tokens: number[]
-}
-
-interface IPublishTokenParams {
-    bufferId: number
-    version: number
-
-    lines: lineTokenizationResult[]
-}
-
-let textmateTokenNotification = new rpc.NotificationType<IPublishTokenParams, void>(
+let textmateTokenNotification = new rpc.NotificationType<Protocol.PublishTokenParams, void>(
     "textmate/publishTokens",
 )
 
@@ -123,45 +114,13 @@ connection.onNotification(exitNotification, () => {
 });
 
 let idToBuffer: {[id: number]: Buffer.Buffer } = {};
-
-interface Job {
-    priority: number,
-    execute: () => Job[];
-};
-
-class JobManager {
-    private _jobs: Job[] = [];
-    private _doNextJob() {
-        let pendingJob = this._jobs.pop();
-
-        if (pendingJob) {
-            let moreJobs = pendingJob.execute() || [];
-            moreJobs.forEach((j) => this.queueJob(j));
-        }
-
-        this._schedule();
-        
-    };
-    private _schedule() {
-        
-        if (this._jobs.length > 0) {
-            setTimeout(() => this._doNextJob(), 0);
-        }
-    }
-    public queueJob(job: Job) {
-        this._jobs = [job, ...this._jobs].sort((a, b) => b.priority - a.priority);
-
-        this._schedule();
-    }
-}
-
-let jobManager = new JobManager();
+let jobManager = new Job.JobManager();
 
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
 
     // Get current buffer
-    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create([], -1);
+    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create(bufferUpdate.id, [], -1);
     let newBuffer = Buffer.update(buffer, bufferUpdate);
     idToBuffer[bufferUpdate.id] = newBuffer;
 

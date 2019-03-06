@@ -15,6 +15,7 @@ export interface BufferLine {
 export interface Buffer {
     lines: BufferLine[]
     version: number,
+    id: number,
 };
 
 let _toBufferUpdateLine = (version: number) => (l: string) => {
@@ -24,10 +25,11 @@ let _toBufferUpdateLine = (version: number) => (l: string) => {
         };
 };
 
-export let create = (lines: string[], version: number) => {
+export let create = (id: number, lines: string[], version: number) => {
     let bufferLines: BufferLine[] = lines.map(_toBufferUpdateLine(version))
 
     let ret: Buffer = {
+        id,
         lines: bufferLines,
         version,
     }
@@ -37,7 +39,7 @@ export let create = (lines: string[], version: number) => {
 
 export let update = (buf: Buffer, bufferUpdate: Protocol.BufferUpdate) => {
     if (bufferUpdate.startLine == 0 && bufferUpdate.endLine == -1) {
-        return create(bufferUpdate.lines, bufferUpdate.version);
+        return create(buf.id, bufferUpdate.lines, bufferUpdate.version);
     } else {
         let beforeLines = buf.lines.slice(0, bufferUpdate.startLine);
         let afterLines = buf.lines.slice(bufferUpdate.endLine, buf.lines.length);

@@ -6,7 +6,7 @@ import * as Buffer from "./../src/Buffer"
 
 describe("Buffer", () => {
     it("gets created correctly", () => {
-        let buf = Buffer.create(["a", "b"], 1);    
+        let buf = Buffer.create(0, ["a", "b"], 1);    
 
         expect(buf.lines[0].contents).toBe("a");
         expect(buf.lines[1].contents).toBe("b");
@@ -14,7 +14,7 @@ describe("Buffer", () => {
 
     describe("update", () => {
         it("handles a buffer update that clears current buffer", () => {
-            let buf = Buffer.create(["a", "b"], 1);    
+            let buf = Buffer.create(0, ["a", "b"], 1);    
 
             buf = Buffer.update(buf, {
                 id: 0,
@@ -29,7 +29,7 @@ describe("Buffer", () => {
         });
 
         it("handles a buffer update inserts before the buffer", () => {
-            let buf = Buffer.create(["a", "b"], 1);    
+            let buf = Buffer.create(0, ["a", "b"], 1);    
 
             buf = Buffer.update(buf, {
                 id: 0,
@@ -46,7 +46,7 @@ describe("Buffer", () => {
         });
 
         it("handles a buffer update inserts after the buffer", () => {
-            let buf = Buffer.create(["a", "b"], 1);    
+            let buf = Buffer.create(0, ["a", "b"], 1);    
 
             buf = Buffer.update(buf, {
                 id: 0,
@@ -63,7 +63,7 @@ describe("Buffer", () => {
         });
 
         it("handles a buffer update inserts in the middle of the buffer", () => {
-            let buf = Buffer.create(["a", "b"], 1);    
+            let buf = Buffer.create(0, ["a", "b"], 1);    
 
             buf = Buffer.update(buf, {
                 id: 0,

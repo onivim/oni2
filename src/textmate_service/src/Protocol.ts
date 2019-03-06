@@ -15,3 +15,15 @@ export interface BufferUpdate {
 }
 
 export type BufferUpdateParams = [string, BufferUpdate]
+
+export type LineTokenizationResult = {
+    line: number,
+    tokens: number[]
+}
+
+export interface PublishTokenParams {
+    bufferId: number
+    version: number
+
+    lines: Protocol.LineTokenizationResult[]
+}
