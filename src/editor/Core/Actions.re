@@ -33,4 +33,5 @@ type t =
   | EditorMoveCursorToMiddle(Cursor.move)
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
+  | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | Noop;

@@ -151,7 +151,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving show]
+  [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {
     id: int,
     startLine: int,

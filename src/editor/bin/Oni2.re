@@ -60,14 +60,19 @@ let init = app => {
   let reasonSyntaxPath =
     setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
-  let onScopeLoaded = s => prerr_endline("SCOPE LOADED: " ++ s);
+  let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
+
+  let onTokens = tr => {
+    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+  };
 
   let tmClient =
     Oni_Core.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
+      ~onTokens,
       setup,
       [{scopeName: "source.reason", path: reasonSyntaxPath}],
     );
@@ -281,6 +286,15 @@ let init = app => {
         | _ => ()
         };
         /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
+
+        /* TODO:
+         * Refactor this into _another_ middleware
+         */
+        switch (msg) {
+        | BufferUpdate(bc) =>
+          Core.TextmateClient.notifyBufferUpdate(tmClient, bc)
+        | _ => ()
+        };
       },
     );
   ();

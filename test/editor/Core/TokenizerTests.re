@@ -6,19 +6,22 @@ open Helpers;
 
 let theme = Theme.create();
 
+let tokenColors = [];
+let colorMap = ColorMap.create();
+
 describe("tokenize", ({test, _}) => {
   test("empty string", ({expect}) => {
-    let result = Tokenizer.tokenize("", theme);
+    let result = Tokenizer.tokenize("", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string with only whitespace", ({expect}) => {
-    let result = Tokenizer.tokenize("   \t", theme);
+    let result = Tokenizer.tokenize("   \t", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("single word token", ({expect}) => {
-    let result = Tokenizer.tokenize("testWord", theme);
+    let result = Tokenizer.tokenize("testWord", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {
@@ -33,7 +36,8 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("single word token, surrounded by whitespace", ({expect}) => {
-    let result = Tokenizer.tokenize("  testWord  ", theme);
+    let result =
+      Tokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {
@@ -48,7 +52,7 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("single letter token, no spaces", ({expect}) => {
-    let result = Tokenizer.tokenize("a", theme);
+    let result = Tokenizer.tokenize("a", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {
@@ -62,8 +66,34 @@ describe("tokenize", ({test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
+  test("respects tokenColor breaks", ({expect}) => {
+    let tokenColors = [
+      ColorizedToken.create(0, 0),
+      ColorizedToken.create(1, 0),
+    ];
+    let result = Tokenizer.tokenize("ab", theme, tokenColors, colorMap);
+
+    let expectedTokens: list(Tokenizer.t) = [
+      {
+        text: "a",
+        startPosition: ZeroBasedIndex(0),
+        endPosition: ZeroBasedIndex(1),
+        color: Colors.red,
+      },
+      {
+        text: "b",
+        startPosition: ZeroBasedIndex(1),
+        endPosition: ZeroBasedIndex(2),
+        color: Colors.red,
+      },
+    ];
+
+    validateTokens(expect, result, expectedTokens);
+  });
+
   test("multiple tokens", ({expect}) => {
-    let result = Tokenizer.tokenize(" a btest ", theme);
+    let result =
+      Tokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
       {

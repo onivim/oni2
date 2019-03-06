@@ -23,46 +23,6 @@ type tokenizeResult = {
   scopes: list(string),
 };
 
-module ColorizedToken = {
-  /* From:
-   * https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts
-   */
-  let languageId_mask = 0b00000000000000000000000011111111;
-  let token_type_mask = 0b00000000000000000000011100000000;
-  let font_style_mask = 0b00000000000000000011100000000000;
-  let foreground_mask = 0b00000000011111111100000000000000;
-  let background_mask = 0b11111111100000000000000000000000;
-
-  let languageid_offset = 0;
-  let token_type_offset = 8;
-  let font_style_offset = 11;
-  let foreground_offset = 14;
-  let background_offset = 23;
-
-  type t = {
-    index: int,
-    foregroundColor: int,
-    backgroundColor: int,
-  };
-
-  let getForegroundColor: int => int =
-    v => {
-      (v land foreground_mask) lsr foreground_offset;
-    };
-
-  let getBackgroundColor: int => int =
-    v => {
-      (v land background_mask) lsr background_offset;
-    };
-
-  let create: (int, int) => t =
-    (idx, v) => {
-      index: idx,
-      foregroundColor: getForegroundColor(v) - 1,
-      backgroundColor: getBackgroundColor(v) - 1,
-    };
-};
-
 let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   switch (json) {
   | `List([`Int(startIndex), `Int(endIndex), `List(jsonScopes)]) =>
@@ -82,6 +42,46 @@ let rec parseColorResult = (json: list(Yojson.Safe.json)) => {
   };
 };
 
+module TokenizationResult = {
+  exception TokenParseException(string);
+
+  type tokenizationLineResult = {
+    line: int,
+    tokens: list(ColorizedToken.t),
+  };
+
+  type t = {
+    bufferId: int,
+    version: int,
+    lines: list(tokenizationLineResult),
+  };
+
+  let parseTokenizationLineResult = (json: Yojson.Safe.json) => {
+    switch (json) {
+    | `Assoc([("line", `Int(line)), ("tokens", `List(tokensJson))]) => {
+        line,
+        tokens: parseColorResult(tokensJson),
+      }
+    | _ => raise(TokenParseException("Unexpected tokenization line result"))
+    };
+  };
+
+  let of_yojson = (json: Yojson.Safe.json) => {
+    switch (json) {
+    | `Assoc([
+        ("bufferId", `Int(bufferId)),
+        ("version", `Int(version)),
+        ("lines", `List(linesJson)),
+      ]) => {
+        bufferId,
+        version,
+        lines: List.map(parseTokenizationLineResult, linesJson),
+      }
+    | _ => raise(TokenParseException("Unexpected token result"))
+    };
+  };
+};
+
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
@@ -90,6 +90,9 @@ let defaultScopeLoaded: onScopeLoaded = _ => ();
 
 type onColorMap = ColorMap.t => unit;
 let defaultColorMap: onColorMap = _ => ();
+
+type onTokens = TokenizationResult.t => unit;
+let defaultOnTokens: onTokens = _ => ();
 
 type t = {
   process: NodeProcess.t,
@@ -105,6 +108,7 @@ let start =
       ~onColorMap=defaultColorMap,
       ~onInitialized=defaultCallback,
       ~onScopeLoaded=defaultScopeLoaded,
+      ~onTokens=defaultOnTokens,
       setup: Setup.t,
       initializationInfo,
     ) => {
@@ -114,6 +118,8 @@ let start =
     switch (n.method, n.params) {
     | ("initialized", _) => onInitialized()
     | ("textmate/scopeLoaded", `String(s)) => onScopeLoaded(s)
+    | ("textmate/publishTokens", json) =>
+      onTokens(TokenizationResult.of_yojson(json))
     | _ => ()
     };
   };
@@ -163,6 +169,18 @@ let setTheme = (v: t, themePath: string) => {
 type tokenizeLineResult = {
   tokens: list(tokenizeResult),
   colors: list(ColorizedToken.t),
+};
+
+let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
+  Rpc.sendNotification(
+    v.rpc,
+    "textmate/bufferUpdate",
+    /* TODO: Don't hardcode this */
+    `List([
+      `String("source.reason"),
+      Types.BufferUpdate.to_yojson(bufUpdate),
+    ]),
+  );
 };
 
 let tokenizeLineSync = (v: t, scopeName: string, line: string) => {
