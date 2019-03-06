@@ -22,6 +22,20 @@ module EditorColors = {
     editorMenuForeground: Color.t,
     editorMenuItemSelected: Color.t,
     tabActiveForeground: Color.t,
+    statusBarItemVisualModeBackground: Color.t,
+    statusBarItemInsertModeBackground: Color.t,
+    statusBarItemReplaceModeBackground: Color.t,
+    statusBarItemNormalModeBackground: Color.t,
+    statusBarItemOperatorModeBackground: Color.t,
+    statusBarItemCommandlineModeBackground: Color.t,
+    statusBarItemVisualModeForeground: Color.t,
+    statusBarItemInsertModeForeground: Color.t,
+    statusBarItemReplaceModeForeground: Color.t,
+    statusBarItemNormalModeForeground: Color.t,
+    statusBarItemOperatorModeForeground: Color.t,
+    statusBarItemCommandlineModeForeground: Color.t,
+    statusBarItemForeground: Color.t,
+    statusBarItemBackground: Color.t,
   };
 
   let default: t = {
@@ -39,6 +53,20 @@ module EditorColors = {
     editorMenuForeground: Color.hex("#FFFFFF"),
     editorMenuItemSelected: Color.hex("#495162"),
     tabActiveForeground: Color.hex("#DCDCDC"),
+    statusBarItemVisualModeBackground: Color.hex("#56b6c2"),
+    statusBarItemInsertModeBackground: Color.hex("#98c379"),
+    statusBarItemReplaceModeBackground: Color.hex("#d19a66"),
+    statusBarItemNormalModeBackground: Color.hex("#61afef"),
+    statusBarItemOperatorModeBackground: Color.hex("#d19a66"),
+    statusBarItemCommandlineModeBackground: Color.hex("#61afef"),
+    statusBarItemVisualModeForeground: Color.hex("#282c34"),
+    statusBarItemInsertModeForeground: Color.hex("#282c34"),
+    statusBarItemReplaceModeForeground: Color.hex("#282c34"),
+    statusBarItemNormalModeForeground: Color.hex("#282c34"),
+    statusBarItemOperatorModeForeground: Color.hex("#282c34"),
+    statusBarItemCommandlineModeForeground: Color.hex("#282c34"),
+    statusBarItemBackground: Color.hex("#495162"),
+    statusBarItemForeground: Color.hex("#fff"),
   };
 };
 
@@ -65,8 +93,6 @@ type t = {
   tokenColors: list(TokenColor.t),
 };
 
-let getTokenColor = (_theme: t, _scopes: list(string)) => {
-  Colors.white;
-};
+let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
 
 let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
