@@ -85,7 +85,23 @@ let createElement =
       <View style=absoluteStyle>
         <OpenGL
           style=absoluteStyle
-          render={(transform, _) =>
+          render={(transform, _) => {
+            /* Draw cursor line */
+            Shapes.drawRect(
+              ~transform,
+              ~x=0.,
+              ~y=
+                float_of_int(
+                  rowHeight
+                  * Index.toZeroBasedInt(state.editor.cursorPosition.line)
+                  - scrollY,
+                ),
+              ~height=float_of_int(Constants.default.minimapCharacterHeight),
+              ~width=float_of_int(width),
+              ~color=state.theme.colors.editorLineHighlightBackground,
+              (),
+            );
+
             FlatList.render(
               ~scrollY,
               ~rowHeight,
@@ -97,8 +113,8 @@ let createElement =
                   renderLine(transform, offset, tokens);
                 },
               (),
-            )
-          }
+            );
+          }}
         />
       </View>,
     );
