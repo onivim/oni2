@@ -22,6 +22,7 @@ module EditorColors = {
     editorMenuForeground: Color.t,
     editorMenuItemSelected: Color.t,
     tabActiveForeground: Color.t,
+    minimapHighlightBackground: Color.t,
   };
 
   let default: t = {
@@ -29,7 +30,7 @@ module EditorColors = {
     foreground: Color.hex("#ECEFF4"),
     editorBackground: Color.hex("#2F3440"),
     editorForeground: Color.hex("#DCDCDC"),
-    editorLineHighlightBackground: Color.hex("#2C313C"),
+    editorLineHighlightBackground: Color.hex("#495162"),
     editorLineNumberBackground: Color.hex("#2F3440"),
     editorLineNumberForeground: Color.hex("#495162"),
     editorActiveLineNumberForeground: Color.hex("#737984"),
@@ -39,6 +40,7 @@ module EditorColors = {
     editorMenuForeground: Color.hex("#FFFFFF"),
     editorMenuItemSelected: Color.hex("#495162"),
     tabActiveForeground: Color.hex("#DCDCDC"),
+    minimapHighlightBackground: Color.hex("#2C313C"),
   };
 };
 
