@@ -35,7 +35,11 @@ export interface CommitTokenInfo {
     tokens: number[]
 }
 
-export type CommitTokenizationCallback = (bufferId: number, version: number, info: CommitTokenInfo[]) => void
+export type CommitTokenizationCallback = (
+    bufferId: number,
+    version: number,
+    info: CommitTokenInfo[],
+) => void
 
 export class TokenizationStore implements ITokenizationStore {
     private _idToTokenState: { [id: number]: TokenizedBuffer } = {}

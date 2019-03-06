@@ -31,10 +31,7 @@ export class TokenizationJob implements Job.Job {
         let idx = this.startLine
         let done = false
         let resultsToSend: TokenizationStore.TokenizationResult2[] = []
-        while (
-            idx < this.startLine + this.count &&
-            idx < this.buffer.lines.length
-        ) {
+        while (idx < this.startLine + this.count && idx < this.buffer.lines.length) {
             // console.error(`Running job at line: ${idx} - count: ${this.count} - buffer length: ${this.buffer.lines.length}`);
             let currentRuleStack = this.store.getRuleStack(this.buffer.id, idx)
 
@@ -55,7 +52,7 @@ export class TokenizationJob implements Job.Job {
             })
 
             ruleStack2 = r.ruleStack
-            idx = idx + 1;
+            idx = idx + 1
         }
 
         this.store.commitUpdates(this.buffer.id, this.buffer.version, resultsToSend)
@@ -65,7 +62,6 @@ export class TokenizationJob implements Job.Job {
             // console.error(`Queuing new job: ${idx}`);
             ret = [new TokenizationJob(this.buffer, idx, 500, this.grammar, this.store, 1000)]
         } else {
-            
             // console.error(`Finished, no need to queue another job: ${idx}`);
         }
 

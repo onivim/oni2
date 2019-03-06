@@ -27,9 +27,9 @@ export class JobManager {
         }
     }
     public queueJob(job: Job) {
-        let jobsToQueue = [job];
+        let jobsToQueue = [job]
         if (job.priority == 1) {
-            jobsToQueue = job.execute();
+            jobsToQueue = job.execute()
         }
 
         this._jobs = [...jobsToQueue, ...this._jobs].sort((a, b) => b.priority - a.priority)

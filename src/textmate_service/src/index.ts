@@ -118,11 +118,11 @@ let idToBuffer: { [id: number]: Buffer.Buffer } = {}
 let jobManager = new Job.JobManager()
 
 let tokenStore = new TokenizationStore.TokenizationStore((bufId, version, tokens) => {
-        connection.sendNotification(textmateTokenNotification, {
-            bufferId: bufId,
-            version,
-            lines: tokens,
-        });
+    connection.sendNotification(textmateTokenNotification, {
+        bufferId: bufId,
+        version,
+        lines: tokens,
+    })
 })
 
 connection.onNotification(textmateBufferUpdate, params => {
@@ -136,17 +136,16 @@ connection.onNotification(textmateBufferUpdate, params => {
     // Buffer.print(newBuffer)
 
     registry.loadGrammar(scope).then(grammar => {
-
         let job = new Tokenization.TokenizationJob(
             newBuffer,
             bufferUpdate.startLine,
             50,
             grammar,
             tokenStore,
-            1
-        );
-        jobManager.queueJob(job);
-    });
+            1,
+        )
+        jobManager.queueJob(job)
+    })
 })
 
 connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(
