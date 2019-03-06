@@ -153,6 +153,17 @@ let reduce: (t, Actions.t) => t =
             state.idToBufferSyntaxHighlights,
           ),
       }
+    | BufferUpdate(bu) => {
+        ...state,
+        idToBufferSyntaxHighlights:
+            IntMap.update(
+                bu.id,
+                buffer => switch(buffer) {
+                | None => None
+                | Some(v) => Some(BufferSyntaxHighlights.shift(v, bu.startLine, bu.endLine, List.length(bu.lines) - (bu.endLine - bu.startLine)))
+                },
+            state.idToBufferSyntaxHighlights),
+    }
     | _ => state
     };
   };
