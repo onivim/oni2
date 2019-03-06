@@ -14,7 +14,7 @@
     ]
   },
   "scripts": {
-    "bootstrap": "bash ./scripts/bootstrap.sh",
+    "bootstrap": "sh ./scripts/bootstrap.sh",
     "format": "esy dune build @fmt --auto-promote",
     "test": "esy x OniUnitTestRunner"
   },
