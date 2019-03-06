@@ -12,7 +12,7 @@ Oni 2 is a reimagination of the [Oni](https://onivim.io) editor. Oni 2 aims to b
 
 Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
-## Goals
+### Goals
 
 - __Modern UX__ - an experience on par with modern code editors like VSCode and Atom
 - __VSCode Plugin Support__ - use all of the features of VSCode plugins, including language servers and debuggers
@@ -22,6 +22,10 @@ Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](ht
 - __Ease Learning Curve__ - Oni 2 should be comfortable for non-vimmers, too!
 
 The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lighweight editor like VSCode.
+
+### Non-goals
+
+- __VimL compatibility__ - we may not support all features of VimL plugins / configuration.
 
 ## Build
 
