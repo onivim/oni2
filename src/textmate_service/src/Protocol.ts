@@ -17,7 +17,7 @@ export interface BufferUpdate {
 export type BufferUpdateParams = [string, BufferUpdate]
 
 export type LineTokenizationResult = {
-    line: number,
+    line: number
     tokens: number[]
 }
 

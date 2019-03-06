@@ -111,24 +111,24 @@ connection.onNotification(initializeNotification, (paths: ITextmateInitData) => 
 
 connection.onNotification(exitNotification, () => {
     process.exit(0)
-});
+})
 
-let idToBuffer: {[id: number]: Buffer.Buffer } = {};
-let jobManager = new Job.JobManager();
+let idToBuffer: { [id: number]: Buffer.Buffer } = {}
+let jobManager = new Job.JobManager()
 
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
 
     // Get current buffer
-    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create(bufferUpdate.id, [], -1);
-    let newBuffer = Buffer.update(buffer, bufferUpdate);
-    idToBuffer[bufferUpdate.id] = newBuffer;
+    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create(bufferUpdate.id, [], -1)
+    let newBuffer = Buffer.update(buffer, bufferUpdate)
+    idToBuffer[bufferUpdate.id] = newBuffer
 
-    Buffer.print(newBuffer);
+    Buffer.print(newBuffer)
 
     // Create high priority job to do update
     // let newJob = TokenizeJob(newBuffer, bufferUpdate.startLine, 50, tokens, keywords)
-    // get current rule stack 
+    // get current rule stack
     // report at end
     // high-pri constant (50)
     // low-pri constant (250)
@@ -151,7 +151,7 @@ connection.onNotification(textmateBufferUpdate, params => {
                 ret[i] = {
                     line: i,
                     tokens: tokens,
-                };
+                }
             }
 
             connection.sendNotification(textmateTokenNotification, {
