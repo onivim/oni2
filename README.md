@@ -58,7 +58,7 @@ Install the following packages with your package manager of choice:
 
 - `cd src/textmate_service`
 - `node install.js`
-- `npm run build
+- `npm run build`
 
 ### Run
 
