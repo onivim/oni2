@@ -88,18 +88,18 @@ let createElement =
           onMouseOver={_ => Console.log("Entered minimap....")}
           onMouseOut={_ => Console.log("Left minimap....")}
           render={(transform, _) => {
-
             /* Draw current view */
             Shapes.drawRect(
               ~transform,
               ~x=0.,
               ~y=
                 float_of_int(
-                  rowHeight
-                  * Editor.getTopVisibleLine(state.editor)
-                  - scrollY,
+                  rowHeight * Editor.getTopVisibleLine(state.editor) - scrollY,
                 ),
-              ~height=float_of_int(rowHeight * Editor.getVisibleView(state.editor)),
+              ~height=
+                float_of_int(
+                  rowHeight * Editor.getVisibleView(state.editor),
+                ),
               ~width=float_of_int(width),
               ~color=state.theme.colors.minimapHighlightBackground,
               (),
