@@ -11,6 +11,7 @@ import * as Buffer from "./Buffer"
 import * as Job from "./Job"
 import * as Protocol from "./Protocol"
 import * as Tokenization from "./Tokenization"
+import * as TokenizationStore from "./TokenizationStore"
 
 let connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(process.stdin),
@@ -116,6 +117,14 @@ connection.onNotification(exitNotification, () => {
 let idToBuffer: { [id: number]: Buffer.Buffer } = {}
 let jobManager = new Job.JobManager()
 
+let tokenStore = new TokenizationStore.TokenizationStore((bufId, version, tokens) => {
+        connection.sendNotification(textmateTokenNotification, {
+            bufferId: bufId,
+            version,
+            lines: tokens,
+        });
+})
+
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
 
@@ -135,32 +144,18 @@ connection.onNotification(textmateBufferUpdate, params => {
 
     // Just do initial update for now..
     // TODO: Handle incremental updates
-    if (bufferUpdate.startLine === 0 && bufferUpdate.endLine === -1) {
-        registry.loadGrammar(scope).then(grammar => {
-            const lines = bufferUpdate.lines
-            const ret = []
-            let ruleStack: any = null
+    registry.loadGrammar(scope).then(grammar => {
 
-            // TODO:
-            // Do we need to break up / chunk this?
-            // How does it scale up with 10k line buffers?
-            for (var i = 0; i < lines.length; i++) {
-                const r = grammar.tokenizeLine2(lines[i], ruleStack)
-                const tokens = Array.prototype.slice.call(r.tokens)
-                ruleStack = r.ruleStack
-                ret[i] = {
-                    line: i,
-                    tokens: tokens,
-                }
-            }
-
-            connection.sendNotification(textmateTokenNotification, {
-                bufferId: bufferUpdate.id,
-                version: bufferUpdate.version,
-                lines: ret,
-            })
-        })
-    }
+        let job = new Tokenization.TokenizationJob(
+            buffer,
+            bufferUpdate.startLine,
+            100,
+            grammar,
+            tokenStore,
+            1
+        );
+        jobManager.queueJob(job);
+    });
 })
 
 connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(
