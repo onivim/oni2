@@ -3,6 +3,7 @@
     (public_name OniUnitTestRunner)
     (package OniUnitTestRunner)
     (libraries
+        yojson
         Oni_Core_Test
         Oni_Neovim_Test
             ))

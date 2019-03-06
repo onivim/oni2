@@ -154,7 +154,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving show]
+  [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {
     id: int,
     startLine: int,
@@ -206,24 +206,20 @@ module EditorFont = {
   };
 };
 
-module Wildmenu = {
-  [@deriving show]
-  type t = {
-    items: list(string),
-    show: bool,
-    selected: int,
-  };
+[@deriving show]
+type wildmenu = {
+  items: list(string),
+  show: bool,
+  selected: int,
 };
 
-module Commandline = {
-  [@deriving show]
-  type t = {
-    content: string,
-    firstC: string,
-    position: int,
-    level: int,
-    indent: int,
-    prompt: string,
-    show: bool,
-  };
+[@deriving show]
+type commandline = {
+  content: string,
+  firstC: string,
+  position: int,
+  level: int,
+  indent: int,
+  prompt: string,
+  show: bool,
 };

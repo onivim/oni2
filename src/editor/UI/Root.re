@@ -50,15 +50,15 @@ let statusBarStyle =
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let style = rootStyle(theme.background, theme.foreground);
+    let style = rootStyle(theme.colors.background, theme.colors.foreground);
 
     (
       hooks,
       <View style>
-        <View style=surfaceStyle> <Editor state /> </View>
+        <View style=surfaceStyle> <EditorView state /> </View>
         <Overlay>
-          <Commandline theme command={state.commandline} />
-          <Wildmenu theme wildmenu={state.wildmenu} />
+          <CommandlineView theme command={state.commandline} />
+          <WildmenuView theme wildmenu={state.wildmenu} />
         </Overlay>
         <View style=statusBarStyle>
           <StatusBar

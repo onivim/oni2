@@ -2,6 +2,7 @@
     (name Oni_Core)
     (public_name Oni_Core)
     (libraries 
+        str
         bigarray
         zed
         reglfw
@@ -13,5 +14,6 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
+        reason-jsonrpc
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

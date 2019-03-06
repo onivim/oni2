@@ -1,0 +1,5 @@
+{
+  "editor.lineNumbers": ["relative"],
+  "editor.minimap.enabled": true,
+  "editor.tablineMode": ["tabs"]
+}

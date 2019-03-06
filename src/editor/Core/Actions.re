@@ -19,11 +19,11 @@ type t =
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
   | RecalculateEditorView
-  | CommandlineShow(Commandline.t)
-  | CommandlineHide(Commandline.t)
+  | CommandlineShow(commandline)
+  | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))
-  | WildmenuShow(Wildmenu.t)
-  | WildmenuHide(Wildmenu.t)
+  | WildmenuShow(wildmenu)
+  | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
   | EditorScroll(int)
   | EditorScrollToCursorCentered
@@ -32,4 +32,6 @@ type t =
   | EditorMoveCursorToTop(Cursor.move)
   | EditorMoveCursorToMiddle(Cursor.move)
   | EditorMoveCursorToBottom(Cursor.move)
+  | SyntaxHighlightColorMap(ColorMap.t)
+  | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | Noop;

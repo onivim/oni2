@@ -21,12 +21,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let scrollMetrics =
-      Oni_Core.EditorView.getScrollbarMetrics(
-        state.editorView,
-        totalHeight,
-        state.editorFont.measuredHeight,
-      );
+    let scrollMetrics = Editor.getScrollbarMetrics(state.editor, totalHeight);
 
     let scrollThumbStyle =
       Style.[
@@ -35,24 +30,20 @@ let createElement =
         left(0),
         width(totalWidth),
         height(scrollMetrics.thumbSize),
-        backgroundColor(state.theme.scrollbarSliderActiveBackground),
+        backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
     let cursorPixelY =
-      Index.toZeroBasedInt(state.editorView.cursorPosition.line)
+      Index.toZeroBasedInt(state.editor.cursorPosition.line)
       * state.editorFont.measuredHeight
       |> float_of_int;
     let totalPixel =
-      EditorView.getTotalSizeInPixels(
-        state.editorView,
-        state.editorFont.measuredHeight,
-      )
-      |> float_of_int;
+      Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
 
     let cursorPosition =
       int_of_float(
         cursorPixelY
-        /. (totalPixel +. float_of_int(state.editorView.size.pixelHeight))
+        /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
         *. float_of_int(totalHeight),
       );
     let cursorSize = 2;
@@ -64,7 +55,7 @@ let createElement =
         left(0),
         width(totalWidth),
         height(cursorSize),
-        backgroundColor(state.theme.foreground),
+        backgroundColor(state.theme.colors.foreground),
       ];
 
     (

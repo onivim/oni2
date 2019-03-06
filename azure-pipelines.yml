@@ -45,6 +45,7 @@ jobs:
     displayName: 'Check neovim version'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
+  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/publish-build-cache.yml
 
@@ -68,6 +69,7 @@ jobs:
   - script: brew install libpng ragel
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
+  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/publish-build-cache.yml
 
@@ -89,5 +91,6 @@ jobs:
     displayName: 'Check neovim version'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
+  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/publish-build-cache.yml

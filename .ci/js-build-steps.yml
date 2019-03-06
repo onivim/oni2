@@ -1,0 +1,9 @@
+# Cross-platform set of build steps for building esy projects
+
+steps:
+  - script: node install.js
+    displayName: 'textmate: npm install'
+    workingDirectory: src/textmate_service
+  - script: npm run build
+    displayName: 'textmate: npm build'
+    workingDirectory: src/textmate_service

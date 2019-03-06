@@ -15,30 +15,33 @@
   },
   "scripts": {
     "bootstrap": "bash ./scripts/bootstrap.sh",
-    "format": "esy dune build @fmt --auto-promote"
+    "format": "esy dune build @fmt --auto-promote",
+    "test": "esy x OniUnitTestRunner"
   },
   "dependencies": {
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
     "@opam/ocamlbuild": "*",
-    "revery": "0.9.0",
+    "revery": "0.10.1",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
     "@opam/msgpck": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
-    "@opam/yojson": "*",
+    "@opam/yojson": "1.5.0",
     "@opam/zed": "1.6",
     "rench": "^1.2.0",
-    "@reason-native/rely": "1.0.1"
+    "@reason-native/rely": "1.0.1",
+    "reason-jsonrpc": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
-    "rebez": "github:jchavarri/rebez#46cbc183"
+    "rebez": "github:jchavarri/rebez#46cbc183",
+    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

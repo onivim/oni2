@@ -6,14 +6,7 @@ let getNeovimPath = () => {
   neovimPath;
 };
 
-let repeat = (~iterations: int=5, f) => {
-  let count = ref(0);
-
-  while (count^ < iterations) {
-    f();
-    count := count^ + 1;
-  };
-};
+let repeat = Oni_Core_Test.Helpers.repeat;
 
 let uiAttach = (api: NeovimApi.t) => {
   api.requestSync(

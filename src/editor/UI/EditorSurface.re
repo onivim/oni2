@@ -6,6 +6,7 @@
  */
 
 open Revery;
+open Revery.Draw;
 open Revery.UI;
 
 open CamomileLibraryDefault.Camomile;
@@ -29,89 +30,71 @@ let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 let tokensToElement =
     (
       fontWidth: int,
-      fontHeight: int,
+      _fontHeight: int,
       lineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
       tokens,
+      yOffset: int,
+      transform,
     ) => {
-  let fontLineHeight = fontHeight;
-
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
     isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
-  let lineNumberAlignment = isActiveLine ? `FlexStart : `Center;
+      ? theme.colors.editorActiveLineNumberForeground
+      : theme.colors.editorLineNumberForeground;
+
+  let yF = float_of_int(yOffset);
+
+  let lineNumber =
+    string_of_int(
+      LineNumber.getLineNumber(
+        ~bufferLine=lineNumber + 1,
+        ~cursorLine=cursorLine + 1,
+        ~setting=Relative,
+        (),
+      ),
+    );
+
+  let lineNumberXOffset =
+    isActiveLine
+      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
+
+  Revery.Draw.Text.drawString(
+    ~transform,
+    ~x=float_of_int(lineNumberXOffset),
+    ~y=yF,
+    ~backgroundColor=theme.colors.editorLineNumberBackground,
+    ~color=lineNumberTextColor,
+    ~fontFamily="FiraCode-Regular.ttf",
+    ~fontSize=14,
+    lineNumber,
+  );
+
+  let textBackgroundColor =
+    isActiveLine
+      ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
   let f = (token: Tokenizer.t) => {
-    let style =
-      Style.[
-        position(`Absolute),
-        top(0),
-        left(fontWidth * Index.toZeroBasedInt(token.startPosition)),
-        fontFamily("FiraCode-Regular.ttf"),
-        fontSize(14),
-        lineHeight(1.0),
-        color(Revery.Colors.white),
-        textWrap(Revery.TextWrapping.NoWrap),
-      ];
-
-    <Text style text={token.text} />;
+    Revery.Draw.Text.drawString(
+      ~transform,
+      ~x=
+        float_of_int(
+          lineNumberWidth
+          + fontWidth
+          * Index.toZeroBasedInt(token.startPosition),
+        ),
+      ~y=yF,
+      ~backgroundColor=textBackgroundColor,
+      ~color=token.color,
+      ~fontFamily="FiraCode-Regular.ttf",
+      ~fontSize=14,
+      token.text,
+    );
   };
 
-  let lineStyle = Style.[position(`Absolute), top(0), left(0), right(0)];
-
-  let lineNumberStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      height(fontLineHeight),
-      left(0),
-      width(lineNumberWidth),
-      backgroundColor(theme.editorLineNumberBackground),
-      justifyContent(`Center),
-      alignItems(lineNumberAlignment),
-    ];
-
-  let lineContentsStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(lineNumberWidth),
-      right(0),
-      height(fontLineHeight),
-    ];
-
-  let lineNumberTextStyle =
-    Style.[
-      fontFamily("FiraCode-Regular.ttf"),
-      fontSize(14),
-      height(fontHeight),
-      color(lineNumberTextColor),
-      lineHeight(1.0),
-      textWrap(Revery.TextWrapping.NoWrap),
-    ];
-
-  let tokens = List.map(f, tokens);
-
-  <View style=lineStyle>
-    <View style=lineNumberStyle>
-      <Text
-        style=lineNumberTextStyle
-        text={string_of_int(
-          LineNumber.getLineNumber(
-            ~bufferLine=lineNumber + 1,
-            ~cursorLine=cursorLine + 1,
-            ~setting=Relative,
-            (),
-          ),
-        )}
-      />
-    </View>
-    <View style=lineContentsStyle> ...tokens </View>
-  </View>;
+  List.iter(f, tokens);
 };
 
 let component = React.component("EditorSurface");
@@ -141,7 +124,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let cursorLine = state.editorView.cursorPosition.line;
+    let cursorLine = state.editor.cursorPosition.line;
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
@@ -153,13 +136,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         position(`Absolute),
         top(
           fontHeight
-          * Index.toZeroBasedInt(state.editorView.cursorPosition.line)
-          - state.editorView.scrollY,
+          * Index.toZeroBasedInt(state.editor.cursorPosition.line)
+          - state.editor.scrollY,
         ),
         left(
           lineNumberWidth
           + fontWidth
-          * Index.toZeroBasedInt(state.editorView.cursorPosition.character),
+          * Index.toZeroBasedInt(state.editor.cursorPosition.character),
         ),
         height(fontHeight),
         width(cursorWidth),
@@ -169,10 +152,21 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let getTokensForLine = i => {
       let line = lines[i];
-      Tokenizer.tokenize(line);
+      let tokenColors =
+        SyntaxHighlighting.getTokensForLine(
+          state.syntaxHighlighting,
+          state.activeBufferId,
+          i,
+        );
+      Tokenizer.tokenize(
+        line,
+        state.theme,
+        tokenColors,
+        state.syntaxHighlighting.colorMap,
+      );
     };
 
-    let render = i => {
+    let render = (i, offset, transform) => {
       let tokens = getTokensForLine(i);
 
       tokensToElement(
@@ -183,13 +177,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         theme,
         Index.toZeroBasedInt(cursorLine),
         tokens,
+        offset,
+        transform,
       );
     };
 
     let style =
       Style.[
-        backgroundColor(theme.background),
-        color(theme.foreground),
+        backgroundColor(theme.colors.background),
+        color(theme.colors.foreground),
         flexGrow(1),
       ];
 
@@ -200,8 +196,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let layout =
       EditorLayout.getLayout(
-        ~pixelWidth=state.editorView.size.pixelWidth,
-        ~pixelHeight=state.editorView.size.pixelHeight,
+        ~pixelWidth=state.editor.size.pixelWidth,
+        ~pixelHeight=state.editor.size.pixelHeight,
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -240,29 +236,87 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(0),
         left(bufferPixelWidth + minimapPixelWidth),
         width(Constants.default.scrollBarThickness),
-        backgroundColor(theme.scrollbarSliderBackground),
+        backgroundColor(theme.colors.scrollbarSliderBackground),
         bottom(0),
       ];
 
-    let ret = (
+    let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * (-50),
+        (),
+      );
+    };
+
+    let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      GlobalContext.current().editorScroll(
+        ~deltaY=int_of_float(wheelEvent.deltaY) * (-150),
+        (),
+      );
+    };
+
+    (
       hooks,
       <View style onDimensionsChanged>
-        <View style=bufferViewStyle>
-          <FlatList
-            render
-            count=lineCount
-            width=bufferPixelWidth
-            height={state.editorView.size.pixelHeight}
-            rowHeight={state.editorFont.measuredHeight}
-            scrollY={state.editorView.scrollY}
+        <View style=bufferViewStyle onMouseWheel=scrollSurface>
+          <OpenGL
+            style=bufferViewStyle
+            render={(transform, _ctx) => {
+              let count = lineCount;
+              let height = state.editor.size.pixelHeight;
+              let rowHeight = state.editorFont.measuredHeight;
+              let scrollY = state.editor.scrollY;
+
+              /* Draw background for line numbers */
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=0.,
+                ~width=float_of_int(lineNumberWidth),
+                ~height=float_of_int(height),
+                ~color=theme.colors.editorLineNumberBackground,
+                (),
+              );
+
+              /* Draw background for cursor line */
+              Shapes.drawRect(
+                ~transform,
+                ~x=float_of_int(lineNumberWidth),
+                ~y=
+                  float_of_int(
+                    fontHeight
+                    * Index.toZeroBasedInt(state.editor.cursorPosition.line)
+                    - state.editor.scrollY,
+                  ),
+                ~height=float_of_int(fontHeight),
+                ~width=
+                  float_of_int(
+                    state.editor.size.pixelWidth - lineNumberWidth,
+                  ),
+                ~color=theme.colors.editorLineHighlightBackground,
+                (),
+              );
+
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height,
+                ~count,
+                ~render=
+                  (item, offset) => {
+                    let _ = render(item, offset, transform);
+                    ();
+                  },
+                (),
+              );
+            }}
           />
           <View style=cursorStyle />
         </View>
-        <View style=minimapViewStyle>
+        <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
-            height={state.editorView.size.pixelHeight}
+            height={state.editor.size.pixelHeight}
             count=lineCount
             getTokensForLine
           />
@@ -270,11 +324,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
-            height={state.editorView.size.pixelHeight}
+            height={state.editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
           />
         </View>
       </View>,
     );
-    ret;
   });

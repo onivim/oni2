@@ -4,22 +4,23 @@
  * Runtime configuration of dependencies
  */
 
-[@deriving yojson({strict: false, exn: true})]
+[@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
   [@key "neovim"]
   neovimPath: string,
   [@key "node"]
   nodePath: string,
+  [@key "textmateService"]
+  textmateServicePath: string,
+  [@key "bundledExtensions"]
+  bundledExtensionsPath: string,
+  [@key "configuration"]
+  configPath: string,
 };
 
-let ofString = s => {
-  Yojson.Safe.from_string(s) |> of_yojson_exn;
-};
+let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 
-let ofFile = filePath => {
-  Pervasives.open_in(filePath) |> Pervasives.input_line |> ofString;
-};
+let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
-let init = () => {
+let init = () =>
   Revery.Environment.getExecutingDirectory() ++ "setup.json" |> ofFile;
-};

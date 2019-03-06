@@ -28,8 +28,8 @@ let init = app => {
     App.createWindow(
       ~createOptions={
         ...Window.defaultCreateOptions,
-        vsync: false,
         maximized: false,
+        icon: Some("logo.png"),
       },
       app,
       "Oni2",
@@ -38,10 +38,13 @@ let init = app => {
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let {neovimPath, _}: Oni_Core.Setup.t = Oni_Core.Setup.init();
+  let setup: Oni_Core.Setup.t = Oni_Core.Setup.init();
 
   let nvim =
-    NeovimProcess.start(~neovimPath, ~args=[|"-u", initVimPath, "--embed"|]);
+    NeovimProcess.start(
+      ~neovimPath=setup.neovimPath,
+      ~args=[|"-u", initVimPath, "--embed"|],
+    );
   let msgpackTransport =
     MsgpackTransport.make(
       ~onData=nvim.stdout.onData,
@@ -51,6 +54,30 @@ let init = app => {
 
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
+
+  let defaultThemePath =
+    setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+  let reasonSyntaxPath =
+    setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
+
+  let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
+  let onColorMap = cm =>
+    App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
+
+  let onTokens = tr => {
+    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+  };
+
+  let tmClient =
+    Oni_Core.TextmateClient.start(
+      ~onScopeLoaded,
+      ~onColorMap,
+      ~onTokens,
+      setup,
+      [{scopeName: "source.reason", path: reasonSyntaxPath}],
+    );
+
+  Oni_Core.TextmateClient.setTheme(tmClient, defaultThemePath);
 
   let render = () => {
     let state: Core.State.t = App.getState(app);
@@ -161,7 +188,14 @@ let init = app => {
       },
     );
 
-  let _ = Tick.interval(_ => nvimApi.pump(), Seconds(0.));
+  let _ =
+    Tick.interval(
+      _ => {
+        nvimApi.pump();
+        Oni_Core.TextmateClient.pump(tmClient);
+      },
+      Seconds(0.),
+    );
 
   /* let _ = */
   /*   Event.subscribe(nvimApi.onNotification, n => */
@@ -256,6 +290,15 @@ let init = app => {
         | _ => ()
         };
         /* prerr_endline("Protocol Notification: " ++ Notification.show(n)); */
+
+        /* TODO:
+         * Refactor this into _another_ middleware
+         */
+        switch (msg) {
+        | BufferUpdate(bc) =>
+          Core.TextmateClient.notifyBufferUpdate(tmClient, bc)
+        | _ => ()
+        };
       },
     );
   ();
