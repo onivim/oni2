@@ -67,7 +67,10 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("respects tokenColor breaks", ({expect}) => {
-      let tokenColors = [ColorizedToken.create(0, 0), ColorizedToken.create(1, 0)];
+    let tokenColors = [
+      ColorizedToken.create(0, 0),
+      ColorizedToken.create(1, 0),
+    ];
     let result = Tokenizer.tokenize("ab", theme, tokenColors, colorMap);
 
     let expectedTokens: list(Tokenizer.t) = [
@@ -86,8 +89,7 @@ describe("tokenize", ({test, _}) => {
     ];
 
     validateTokens(expect, result, expectedTokens);
-    
-  })
+  });
 
   test("multiple tokens", ({expect}) => {
     let result =
