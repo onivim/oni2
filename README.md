@@ -43,18 +43,32 @@ Install the following packages with your package manager of choice:
 
 ### Build
 
+#### Build the front-end
+
 - `git clone https://github.com/onivim/oni2`
 - `esy install`
 - `esy bootstrap`
 - `esy build`
 
-### Tests
+#### Build the textmate service
 
-- `esy x OniUnitTestRunner`
+- `cd src/textmate_service`
+- `node install.js`
+- `npm run build
 
 ### Run
 
-- `esy x Oni2`
+- `esy run`
+
+### Tests
+
+- `esy test`
+
+### Benchmarks
+
+- `esy '@bench' install`
+- `esy '@bench' build`
+- `esy '@bench' x oni-bench`
 
 ## Documentation
 
