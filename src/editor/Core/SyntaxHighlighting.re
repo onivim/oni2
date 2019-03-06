@@ -25,47 +25,37 @@ module BufferSyntaxHighlights = {
    * This is important when we add or remove a line, and we're waiting on the textmate
    * highlight service - there'll be a jarring flash where previous highlights are applied.
    */
-  let shift = (
-    map: t,
-    startPos: int,
-    endPos: int,
-    delta: int,
-  ) => {
-
-      if (endPos - startPos == delta) {
-        map
-      } else {
-          let result = IntMap.fold((key, v, prev) => {
-
-              if (delta > 0) {
-                  if (key < startPos) {
-                    IntMap.update(key, (_opt) => Some(v), prev);
-                  } else {
-                    IntMap.update(key + delta, (_opt) => Some(v), prev);
-                  }
+  let shift = (map: t, startPos: int, endPos: int, delta: int) =>
+    if (endPos - startPos == delta) {
+      map;
+    } else {
+      let result =
+        IntMap.fold(
+          (key, v, prev) =>
+            if (delta > 0) {
+              if (key < startPos) {
+                IntMap.update(key, _opt => Some(v), prev);
               } else {
-                
-                  if (key <= endPos) {
-                    IntMap.update(key, (_opt) => Some(v), prev);
-                  } else {
-                    IntMap.update(key + delta, (_opt) => Some(v), prev);
-                  }
-              }
+                IntMap.update(key + delta, _opt => Some(v), prev);
+              };
+            } else if (key <= endPos) {
+              IntMap.update(key, _opt => Some(v), prev);
+            } else {
+              IntMap.update(key + delta, _opt => Some(v), prev);
+            },
+          map.lineToHighlights,
+          IntMap.empty,
+        );
 
-          }, map.lineToHighlights, IntMap.empty);
-
-          let ret: t = {
-            lineToHighlights: result,
-          };
-          ret;
-      }
-  };
+      let ret: t = {lineToHighlights: result};
+      ret;
+    };
 
   let getTokensForLine = (v: t, lineId: int) => {
     switch (IntMap.find_opt(lineId, v.lineToHighlights)) {
     | Some(v) => v.tokens
     | None => []
-    }
+    };
   };
 
   let update =
@@ -121,7 +111,8 @@ type t = {
 let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
   switch (IntMap.find_opt(bufferId, v.idToBufferSyntaxHighlights)) {
   | None => []
-  | Some(bufferMap) => BufferSyntaxHighlights.getTokensForLine(bufferMap, lineId);
+  | Some(bufferMap) =>
+    BufferSyntaxHighlights.getTokensForLine(bufferMap, lineId)
   };
 };
 

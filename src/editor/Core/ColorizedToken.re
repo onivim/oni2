@@ -41,10 +41,11 @@ let create: (int, int) => t =
     backgroundColor: getBackgroundColor(v) - 1,
   };
 
-let ofColors: (int, int, int) => t = (idx, foregroundColor, backgroundColor) => {
+let ofColors: (int, int, int) => t =
+  (idx, foregroundColor, backgroundColor) => {
     index: idx,
     foregroundColor,
     backgroundColor,
-};
+  };
 
 let default: t = {index: 0, foregroundColor: 0, backgroundColor: 1};
