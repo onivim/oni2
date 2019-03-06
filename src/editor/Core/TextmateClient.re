@@ -177,7 +177,7 @@ let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
     "textmate/bufferUpdate",
     /* TODO: Don't hardcode this */
     `List([
-      `String("source.reason"),
+      `String("text.html.markdown"),
       Types.BufferUpdate.to_yojson(bufUpdate),
     ]),
   );

@@ -59,6 +59,8 @@ let init = app => {
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
   let reasonSyntaxPath =
     setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
+  let markdownSyntaxPath  =
+    setup.bundledExtensionsPath ++ "/markdown-basics/syntaxes/markdown.tmLanguage.json";
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
@@ -74,7 +76,7 @@ let init = app => {
       ~onColorMap,
       ~onTokens,
       setup,
-      [{scopeName: "source.reason", path: reasonSyntaxPath}],
+      [{scopeName: "source.reason", path: reasonSyntaxPath}, {scopeName: "text.html.markdown", path: markdownSyntaxPath}],
     );
 
   Oni_Core.TextmateClient.setTheme(tmClient, defaultThemePath);
