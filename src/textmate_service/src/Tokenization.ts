@@ -24,10 +24,72 @@ export interface TokenizationResult2 {
     ruleStack2: vsctm.StackElement,
 }
 
-export interface TokenizationStore {
+export interface ITokenizationStore {
     getRuleStack: (bufferId: number, line: number) => vsctm.StackElement;
 
     commitUpdates: (bufferId: number, result: TokenizationResult2[]) => void;
+}
+
+export interface CommitTokenInfo {
+    line: number,
+    tokens: number[],
+};
+
+export type CommitTokenizationCallback = (info: CommitTokenInfo[]) => void;
+
+export class TokenizationStore implements ITokenizationStore {
+    private _idToTokenState : {[id: number]: TokenizedBuffer}  = {};
+
+    constructor(private _commitCallback: CommitTokenizationCallback) {
+        
+    }
+
+    private _getBufferById(id: number): TokenizedBuffer {
+
+        if (!this._idToTokenState[id]) {
+            this._idToTokenState[id] = { };
+        }
+
+        return this._idToTokenState[id]
+    }
+
+    public getRuleStack(bufferId: number, line: number) {
+        let buf = this._getBufferById(bufferId);
+
+        let tokenizedLine = buf[line];
+
+        if (!tokenizedLine) { 
+            return <any>null;
+        } else {
+            return tokenizedLine.ruleStack2;
+        }
+    }
+
+    public commitUpdates(bufferId: number, result: TokenizationResult2[]) {
+        
+        result = result || [];
+
+        let buf = this._getBufferById(bufferId);
+
+        result.forEach((v) => {
+            let curr = buf[v.line];
+            buf[v.line] = {
+                ...curr,
+                ruleStack2: v.ruleStack2,
+            };
+        });
+
+        let callbackResult: CommitTokenInfo[] = result.map((v) => {
+            return {
+                line: v.line,
+                tokens: v.tokens,
+            }
+        });
+
+        if (callbackResult.length > 0) {
+            this._commitCallback(callbackResult);
+        }
+    }
 }
 
 export class TokenizationJob implements Job.Job {
@@ -37,7 +99,7 @@ export class TokenizationJob implements Job.Job {
         private startLine: number, 
         private count: number, 
         private grammar: vsctm.IGrammar,
-        private store: TokenizationStore,
+        private store: ITokenizationStore,
         public  priority: number) {
     }
 
