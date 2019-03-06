@@ -94,7 +94,9 @@ let createElement =
               ~x=0.,
               ~y=
                 float_of_int(
-                  rowHeight * Editor.getTopVisibleLine(state.editor) - scrollY,
+                  rowHeight
+                  * Index.toZeroBasedInt(Index.OneBasedIndex(Editor.getTopVisibleLine(state.editor)))
+                  - scrollY,
                 ),
               ~height=
                 float_of_int(
