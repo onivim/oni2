@@ -27,22 +27,38 @@ module BufferSyntaxHighlights = {
    */
   let shift = (
     map: t,
-    _startPos: int,
-    _endPos: int,
-    _delta: int,
+    startPos: int,
+    endPos: int,
+    delta: int,
   ) => {
 
-      let result = IntMap.fold((key, _v, prev) => {
-              IntMap.update(key, (opt) => switch(opt) {
-              | None => None
-              | Some(v) => Some(v)
-              }, prev);
-      }, map.lineToHighlights, IntMap.empty);
+      if (endPos - startPos == delta) {
+        map
+      } else {
+          let result = IntMap.fold((key, v, prev) => {
 
-      let ret: t = {
-        lineToHighlights: result,
-      };
-      ret;
+              if (delta > 0) {
+                  if (key < startPos) {
+                    IntMap.update(key, (_opt) => Some(v), prev);
+                  } else {
+                    IntMap.update(key + delta, (_opt) => Some(v), prev);
+                  }
+              } else {
+                
+                  if (key <= endPos) {
+                    IntMap.update(key, (_opt) => Some(v), prev);
+                  } else {
+                    IntMap.update(key + delta, (_opt) => Some(v), prev);
+                  }
+              }
+
+          }, map.lineToHighlights, IntMap.empty);
+
+          let ret: t = {
+            lineToHighlights: result,
+          };
+          ret;
+      }
   };
 
   let getTokensForLine = (v: t, lineId: int) => {
