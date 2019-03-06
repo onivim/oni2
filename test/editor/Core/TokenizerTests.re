@@ -66,6 +66,29 @@ describe("tokenize", ({test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
+  test("respects tokenColor breaks", ({expect}) => {
+      let tokenColors = [ColorizedToken.create(0, 0), ColorizedToken.create(1, 0)];
+    let result = Tokenizer.tokenize("ab", theme, tokenColors, colorMap);
+
+    let expectedTokens: list(Tokenizer.t) = [
+      {
+        text: "a",
+        startPosition: ZeroBasedIndex(0),
+        endPosition: ZeroBasedIndex(1),
+        color: Colors.red,
+      },
+      {
+        text: "b",
+        startPosition: ZeroBasedIndex(1),
+        endPosition: ZeroBasedIndex(2),
+        color: Colors.red,
+      },
+    ];
+
+    validateTokens(expect, result, expectedTokens);
+    
+  })
+
   test("multiple tokens", ({expect}) => {
     let result =
       Tokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);

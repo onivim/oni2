@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module BufferMap = BufferMap;
 module ColorMap = ColorMap;
 module Commandline = Commandline;
+module ColorizedToken = ColorizedToken;
 module Constants = Constants;
 module Editor = Editor;
 module LineNumber = LineNumber;

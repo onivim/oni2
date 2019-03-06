@@ -108,8 +108,8 @@ let rec getTokens =
           v2.index,
         );
       List.append(
-        nextBatch,
         getTokens([v2, ...tail], v2.index, s, theme, colorMap),
+        nextBatch,
       );
     };
 
