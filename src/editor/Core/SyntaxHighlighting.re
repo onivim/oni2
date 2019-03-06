@@ -20,6 +20,38 @@ module BufferSyntaxHighlights = {
 
   let create = () => {lineToHighlights: IntMap.empty};
 
+  /*
+   * Shift adjust the locations of the syntax highlight tokens by a specified _delta_
+   * This is important when we add or remove a line, and we're waiting on the textmate
+   * highlight service - there'll be a jarring flash where previous highlights are applied.
+   */
+  let shift = (
+    map: t,
+    _startPos: int,
+    _endPos: int,
+    _delta: int,
+  ) => {
+
+      let result = IntMap.fold((key, _v, prev) => {
+              IntMap.update(key, (opt) => switch(opt) {
+              | None => None
+              | Some(v) => Some(v)
+              }, prev);
+      }, map.lineToHighlights, IntMap.empty);
+
+      let ret: t = {
+        lineToHighlights: result,
+      };
+      ret;
+  };
+
+  let getTokensForLine = (v: t, lineId: int) => {
+    switch (IntMap.find_opt(lineId, v.lineToHighlights)) {
+    | Some(v) => v.tokens
+    | None => []
+    }
+  };
+
   let update =
       (
         v: t,
@@ -73,11 +105,7 @@ type t = {
 let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
   switch (IntMap.find_opt(bufferId, v.idToBufferSyntaxHighlights)) {
   | None => []
-  | Some(bufferMap) =>
-    switch (IntMap.find_opt(lineId, bufferMap.lineToHighlights)) {
-    | Some(v) => v.tokens
-    | None => []
-    }
+  | Some(bufferMap) => BufferSyntaxHighlights.getTokensForLine(bufferMap, lineId);
   };
 };
 
