@@ -7,3 +7,6 @@ steps:
   - script: npm run build
     displayName: 'textmate: npm build'
     workingDirectory: src/textmate_service
+  - script: npm run test
+    displayName: 'textmate: npm test'
+    workingDirectory: src/textmate_service

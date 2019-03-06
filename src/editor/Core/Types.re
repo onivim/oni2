@@ -42,6 +42,9 @@ module Mode = {
   type t =
     | Insert
     | Normal
+    | Replace
+    | Visual
+    | Operator
     | Commandline
     | Other;
 };

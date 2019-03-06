@@ -7,6 +7,11 @@
 import * as fs from "fs"
 import * as rpc from "vscode-jsonrpc"
 import * as vsctm from "vscode-textmate"
+import * as Buffer from "./Buffer"
+import * as Job from "./Job"
+import * as Protocol from "./Protocol"
+import * as Tokenization from "./Tokenization"
+import * as TokenizationStore from "./TokenizationStore"
 
 let connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(process.stdin),
@@ -35,19 +40,7 @@ let textmateBufferUpdate = new rpc.NotificationType<BufferUpdateParams, void>(
     "textmate/bufferUpdate",
 )
 
-type lineTokenizationResult = {
-    line: number,
-    tokens: number[]
-}
-
-interface IPublishTokenParams {
-    bufferId: number
-    version: number
-
-    lines: lineTokenizationResult[]
-}
-
-let textmateTokenNotification = new rpc.NotificationType<IPublishTokenParams, void>(
+let textmateTokenNotification = new rpc.NotificationType<Protocol.PublishTokenParams, void>(
     "textmate/publishTokens",
 )
 
@@ -121,37 +114,38 @@ connection.onNotification(exitNotification, () => {
     process.exit(0)
 })
 
+let idToBuffer: { [id: number]: Buffer.Buffer } = {}
+let jobManager = new Job.JobManager()
+
+let tokenStore = new TokenizationStore.TokenizationStore((bufId, version, tokens) => {
+    connection.sendNotification(textmateTokenNotification, {
+        bufferId: bufId,
+        version,
+        lines: tokens,
+    })
+})
+
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
 
-    // Just do initial update for now..
-    // TODO: Handle incremental updates
-    if (bufferUpdate.startLine === 0 && bufferUpdate.endLine === -1) {
-        registry.loadGrammar(scope).then(grammar => {
-            const lines = bufferUpdate.lines
-            const ret = []
-            let ruleStack: any = null
+    // Get current buffer. Process update synchronously
+    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create(bufferUpdate.id, [], -1)
+    let newBuffer = Buffer.update(buffer, bufferUpdate)
+    idToBuffer[bufferUpdate.id] = newBuffer
 
-            // TODO:
-            // Do we need to break up / chunk this?
-            // How does it scale up with 10k line buffers?
-            for (var i = 0; i < lines.length; i++) {
-                const r = grammar.tokenizeLine2(lines[i], ruleStack)
-                const tokens = Array.prototype.slice.call(r.tokens)
-                ruleStack = r.ruleStack
-                ret[i] = {
-                    line: i,
-                    tokens: tokens,
-                };
-            }
+    // Buffer.print(newBuffer)
 
-            connection.sendNotification(textmateTokenNotification, {
-                bufferId: bufferUpdate.id,
-                version: bufferUpdate.version,
-                lines: ret,
-            })
-        })
-    }
+    registry.loadGrammar(scope).then(grammar => {
+        let job = new Tokenization.TokenizationJob(
+            newBuffer,
+            bufferUpdate.startLine,
+            50,
+            grammar,
+            tokenStore,
+            1,
+        )
+        jobManager.queueJob(job)
+    })
 })
 
 connection.onRequest<ITokenizeLineRequestParams, ITokenizeLineResponse, string, {}>(
