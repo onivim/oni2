@@ -7,6 +7,7 @@
 import * as fs from "fs"
 import * as rpc from "vscode-jsonrpc"
 import * as vsctm from "vscode-textmate"
+import * as Buffer from "./Buffer"
 
 let connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(process.stdin),
@@ -119,10 +120,59 @@ connection.onNotification(initializeNotification, (paths: ITextmateInitData) => 
 
 connection.onNotification(exitNotification, () => {
     process.exit(0)
-})
+});
+
+let idToBuffer: {[id: number]: Buffer.Buffer } = {};
+
+interface Job {
+    priority: number,
+    execute: () => Job[];
+};
+
+class JobManager {
+    private _jobs: Job[] = [];
+    private _doNextJob() {
+        let pendingJob = this._jobs.pop();
+
+        if (pendingJob) {
+            let moreJobs = pendingJob.execute() || [];
+            moreJobs.forEach((j) => this.queueJob(j));
+        }
+
+        this._schedule();
+        
+    };
+    private _schedule() {
+        
+        if (this._jobs.length > 0) {
+            setTimeout(() => this._doNextJob(), 0);
+        }
+    }
+    public queueJob(job: Job) {
+        this._jobs = [job, ...this._jobs].sort((a, b) => b.priority - a.priority);
+
+        this._schedule();
+    }
+}
+
+let jobManager = new JobManager();
 
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
+
+    // Get current buffer
+    let buffer = idToBuffer[bufferUpdate.id] || Buffer.create([], -1);
+    let newBuffer = Buffer.update(buffer, bufferUpdate);
+    idToBuffer[bufferUpdate.id] = newBuffer;
+
+    Buffer.print(newBuffer);
+
+    // Create high priority job to do update
+    // let newJob = TokenizeJob(newBuffer, bufferUpdate.startLine, 50, tokens, keywords)
+    // get current rule stack 
+    // report at end
+    // high-pri constant (50)
+    // low-pri constant (250)
 
     // Just do initial update for now..
     // TODO: Handle incremental updates

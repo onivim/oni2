@@ -34,13 +34,13 @@ append_line() {
 case "${machine}" in
   Linux)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/linux-x64/node"
-      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
+      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/src/index.js"
       EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim"
       CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
   Mac)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
-      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
+      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/src/index.js"
       EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim"
       CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
@@ -49,7 +49,7 @@ case "${machine}" in
       NEOVIM_PATH="$(cygpath -m "$NEOVIM_PATH")"
       EXTENSIONS_PATH="$(pwd)/extensions"
       EXTENSIONS_PATH="$(cygpath -m "$EXTENSIONS_PATH")"
-      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/index.js"
+      TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/src/index.js"
       TEXTMATE_SERVICE_PATH="$(cygpath -m "$TEXTMATE_SERVICE_PATH")"
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/win-x64/node.exe"
       NODE_PATH="$(cygpath -m "$NODE_PATH")"
