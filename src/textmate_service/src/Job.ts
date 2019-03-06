@@ -23,11 +23,16 @@ export class JobManager {
     }
     private _schedule() {
         if (this._jobs.length > 0) {
-            setTimeout(() => this._doNextJob(), 0)
+            setTimeout(() => this._doNextJob(), 16)
         }
     }
     public queueJob(job: Job) {
-        this._jobs = [job, ...this._jobs].sort((a, b) => b.priority - a.priority)
+        let jobsToQueue = [job];
+        if (job.priority == 1) {
+            jobsToQueue = job.execute();
+        }
+
+        this._jobs = [...jobsToQueue, ...this._jobs].sort((a, b) => b.priority - a.priority)
 
         this._schedule()
     }

@@ -128,28 +128,19 @@ let tokenStore = new TokenizationStore.TokenizationStore((bufId, version, tokens
 connection.onNotification(textmateBufferUpdate, params => {
     let [scope, bufferUpdate] = params
 
-    // Get current buffer
+    // Get current buffer. Process update synchronously
     let buffer = idToBuffer[bufferUpdate.id] || Buffer.create(bufferUpdate.id, [], -1)
     let newBuffer = Buffer.update(buffer, bufferUpdate)
     idToBuffer[bufferUpdate.id] = newBuffer
 
-    Buffer.print(newBuffer)
+    // Buffer.print(newBuffer)
 
-    // Create high priority job to do update
-    // let newJob = TokenizeJob(newBuffer, bufferUpdate.startLine, 50, tokens, keywords)
-    // get current rule stack
-    // report at end
-    // high-pri constant (50)
-    // low-pri constant (250)
-
-    // Just do initial update for now..
-    // TODO: Handle incremental updates
     registry.loadGrammar(scope).then(grammar => {
 
         let job = new Tokenization.TokenizationJob(
-            buffer,
+            newBuffer,
             bufferUpdate.startLine,
-            100,
+            50,
             grammar,
             tokenStore,
             1
