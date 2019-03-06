@@ -63,7 +63,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=statusBarStyle>
           <StatusBar
             mode={state.mode}
-            position={state.editorView.cursorPosition}
+            position={state.editor.cursorPosition}
           />
         </View>
       </View>,
