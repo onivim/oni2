@@ -72,7 +72,9 @@ let tokensToElement =
     lineNumber,
   );
 
-  let textBackgroundColor = isActiveLine ? theme.colors.editorLineHighlightBackground : theme.colors.background;
+  let textBackgroundColor =
+    isActiveLine
+      ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
   let f = (token: Tokenizer.t) => {
     Revery.Draw.Text.drawString(
@@ -279,11 +281,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               Shapes.drawRect(
                 ~transform,
                 ~x=float_of_int(lineNumberWidth),
-                ~y=float_of_int(fontHeight
-          * Index.toZeroBasedInt(state.editor.cursorPosition.line)
-          - state.editor.scrollY),
+                ~y=
+                  float_of_int(
+                    fontHeight
+                    * Index.toZeroBasedInt(state.editor.cursorPosition.line)
+                    - state.editor.scrollY,
+                  ),
                 ~height=float_of_int(fontHeight),
-                ~width=float_of_int(state.editor.size.pixelWidth - lineNumberWidth),
+                ~width=
+                  float_of_int(
+                    state.editor.size.pixelWidth - lineNumberWidth,
+                  ),
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
