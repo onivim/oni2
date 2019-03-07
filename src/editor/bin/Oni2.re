@@ -153,40 +153,29 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  let _ =
-    Event.subscribe(
-      w.onKeyPress,
-      event => {
-        let c = event.character;
-        neovimProtocol.input(c);
-      },
-    );
+  /* let _ = */
+  /*   Event.subscribe( */
+  /*     w.onKeyPress, */
+  /*     event => { */
+  /*       let c = event.character; */
+  /*       neovimProtocol.input(c); */
+  /*     }, */
+  /*   ); */
 
-  let _ =
-    Event.subscribe(
-      w.onKeyDown,
-      event => {
-        let _ =
-          switch (event.key, event.shiftKey, event.ctrlKey) {
-          | (Key.KEY_TAB, true, _) =>
-            ignore(neovimProtocol.input("<S-TAB>"))
-          | (Key.KEY_BACKSPACE, _, _) =>
-            ignore(neovimProtocol.input("<BS>"))
-          | (Key.KEY_ENTER, _, _) => ignore(neovimProtocol.input("<CR>"))
-          | (Key.KEY_ESCAPE, _, _) => ignore(neovimProtocol.input("<ESC>"))
-          | (Key.KEY_TAB, _, _) => ignore(neovimProtocol.input("<TAB>"))
-          | (Key.KEY_RIGHT_SHIFT, _, _)
-          | (Key.KEY_LEFT_SHIFT, _, _) =>
-            ignore(neovimProtocol.input("<SHIFT>"))
-          | (Key.KEY_UP, _, _) => ignore(neovimProtocol.input("<UP>"))
-          | (Key.KEY_LEFT, _, _) => ignore(neovimProtocol.input("<LEFT>"))
-          | (Key.KEY_RIGHT, _, _) => ignore(neovimProtocol.input("<RIGHT>"))
-          | (Key.KEY_DOWN, _, _) => ignore(neovimProtocol.input("<DOWN>"))
-          | _ => ()
-          };
-        ();
-      },
-    );
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+    switch (Input.charToCommand(codepoint, mods)) {
+    | None => ()
+    | Some(v) => ignore(neovimProtocol.input(v))
+    }
+  );
+
+  Reglfw.Glfw.glfwSetKeyCallback(
+    w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
+    switch (Input.keyPressToCommand(key, buttonState, mods)) {
+    | None => ()
+    | Some(v) => ignore(neovimProtocol.input(v))
+    }
+  );
 
   let _ =
     Tick.interval(
@@ -197,15 +186,15 @@ let init = app => {
       Seconds(0.),
     );
 
-  let _ =
-    Event.subscribe(nvimApi.onNotification, n =>
-      prerr_endline(
-        "Raw Notification: "
-        ++ n.notificationType
-        ++ " | "
-        ++ Msgpck.show(n.payload),
-      )
-    );
+  /* let _ = */
+  /*   Event.subscribe(nvimApi.onNotification, n => */
+  /*     prerr_endline( */
+  /*       "Raw Notification: " */
+  /*       ++ n.notificationType */
+  /*       ++ " | " */
+  /*       ++ Msgpck.show(n.payload), */
+  /*     ) */
+  /*   ); */
 
   let _ =
     Event.subscribe(
