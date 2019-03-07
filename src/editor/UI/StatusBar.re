@@ -40,29 +40,29 @@ let modeStyle = (mode, theme: Theme.t) => {
   let (background, foreground) =
     switch (mode) {
     | Visual => (
-        theme.colors.statusBarItemVisualModeBackground,
-        theme.colors.statusBarItemVisualModeForeground,
+        theme.colors.oniVisualModeBackground,
+        theme.colors.oniVisualModeForeground,
       )
     | Commandline => (
-        theme.colors.statusBarItemCommandlineModeBackground,
-        theme.colors.statusBarItemCommandlineModeForeground,
+        theme.colors.oniCommandlineModeBackground,
+        theme.colors.oniCommandlineModeForeground,
       )
     | Operator => (
-        theme.colors.statusBarItemOperatorModeBackground,
-        theme.colors.statusBarItemOperatorModeForeground,
+        theme.colors.oniOperatorModeBackground,
+        theme.colors.oniOperatorModeForeground,
       )
     | Insert => (
-        theme.colors.statusBarItemInsertModeBackground,
-        theme.colors.statusBarItemInsertModeForeground,
+        theme.colors.oniInsertModeBackground,
+        theme.colors.oniInsertModeForeground,
       )
     | Replace => (
-        theme.colors.statusBarItemReplaceModeBackground,
-        theme.colors.statusBarItemReplaceModeForeground,
+        theme.colors.oniReplaceModeBackground,
+        theme.colors.oniReplaceModeForeground,
       )
     | Other
     | Normal => (
-        theme.colors.statusBarItemNormalModeBackground,
-        theme.colors.statusBarItemNormalModeForeground,
+        theme.colors.oniNormalModeBackground,
+        theme.colors.oniNormalModeForeground,
       )
     };
   Style.[
