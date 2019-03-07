@@ -162,23 +162,20 @@ let init = app => {
   /*     }, */
   /*   ); */
 
-  Reglfw.Glfw.glfwSetCharModsCallback(
-    w.glfwWindow,
-    (_w, codepoint, mods) => {
-
-      switch (Input.charToCommand(codepoint, mods)) {
-      | None => ()
-      | Some(v) => ignore(neovimProtocol.input(v))
-      }
-    });
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+    switch (Input.charToCommand(codepoint, mods)) {
+    | None => ()
+    | Some(v) => ignore(neovimProtocol.input(v))
+    }
+  );
 
   Reglfw.Glfw.glfwSetKeyCallback(
-    w.glfwWindow, (_w, key, _scancode, buttonState, mods) => {
-        switch (Input.keyPressToCommand(key, buttonState, mods)) {
-        | None => ();
-        | Some(v) => ignore(neovimProtocol.input(v))
-        }
-    });
+    w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
+    switch (Input.keyPressToCommand(key, buttonState, mods)) {
+    | None => ()
+    | Some(v) => ignore(neovimProtocol.input(v))
+    }
+  );
 
   let _ =
     Tick.interval(
