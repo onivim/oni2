@@ -20,6 +20,44 @@ module BufferSyntaxHighlights = {
 
   let create = () => {lineToHighlights: IntMap.empty};
 
+  /*
+   * Shift adjust the locations of the syntax highlight tokens by a specified _delta_
+   * This is important when we add or remove a line, and we're waiting on the textmate
+   * highlight service - there'll be a jarring flash where previous highlights are applied.
+   */
+  let shift = (map: t, startPos: int, endPos: int, delta: int) =>
+    if (endPos - startPos == delta) {
+      map;
+    } else {
+      let result =
+        IntMap.fold(
+          (key, v, prev) =>
+            if (delta > 0) {
+              if (key < startPos) {
+                IntMap.update(key, _opt => Some(v), prev);
+              } else {
+                IntMap.update(key + delta, _opt => Some(v), prev);
+              };
+            } else if (key <= endPos) {
+              IntMap.update(key, _opt => Some(v), prev);
+            } else {
+              IntMap.update(key + delta, _opt => Some(v), prev);
+            },
+          map.lineToHighlights,
+          IntMap.empty,
+        );
+
+      let ret: t = {lineToHighlights: result};
+      ret;
+    };
+
+  let getTokensForLine = (v: t, lineId: int) => {
+    switch (IntMap.find_opt(lineId, v.lineToHighlights)) {
+    | Some(v) => v.tokens
+    | None => []
+    };
+  };
+
   let update =
       (
         v: t,
@@ -74,10 +112,7 @@ let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
   switch (IntMap.find_opt(bufferId, v.idToBufferSyntaxHighlights)) {
   | None => []
   | Some(bufferMap) =>
-    switch (IntMap.find_opt(lineId, bufferMap.lineToHighlights)) {
-    | Some(v) => v.tokens
-    | None => []
-    }
+    BufferSyntaxHighlights.getTokensForLine(bufferMap, lineId)
   };
 };
 
@@ -112,6 +147,27 @@ let reduce: (t, Actions.t) => t =
                     v,
                     tokens.version,
                     tokens.lines,
+                  ),
+                )
+              },
+            state.idToBufferSyntaxHighlights,
+          ),
+      }
+    | BufferUpdate(bu) => {
+        ...state,
+        idToBufferSyntaxHighlights:
+          IntMap.update(
+            bu.id,
+            buffer =>
+              switch (buffer) {
+              | None => None
+              | Some(v) =>
+                Some(
+                  BufferSyntaxHighlights.shift(
+                    v,
+                    bu.startLine,
+                    bu.endLine,
+                    List.length(bu.lines) - (bu.endLine - bu.startLine),
                   ),
                 )
               },

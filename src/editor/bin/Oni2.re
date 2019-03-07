@@ -197,15 +197,15 @@ let init = app => {
       Seconds(0.),
     );
 
-  /* let _ = */
-  /*   Event.subscribe(nvimApi.onNotification, n => */
-  /*     prerr_endline( */
-  /*       "Raw Notification: " */
-  /*       ++ n.notificationType */
-  /*       ++ " | " */
-  /*       ++ Msgpck.show(n.payload), */
-  /*     ) */
-  /*   ); */
+  let _ =
+    Event.subscribe(nvimApi.onNotification, n =>
+      prerr_endline(
+        "Raw Notification: "
+        ++ n.notificationType
+        ++ " | "
+        ++ Msgpck.show(n.payload),
+      )
+    );
 
   let _ =
     Event.subscribe(
