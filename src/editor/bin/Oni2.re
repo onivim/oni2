@@ -153,40 +153,88 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  let _ =
-    Event.subscribe(
-      w.onKeyPress,
-      event => {
-        let c = event.character;
-        neovimProtocol.input(c);
-      },
-    );
+  /* let _ = */
+  /*   Event.subscribe( */
+  /*     w.onKeyPress, */
+  /*     event => { */
+  /*       let c = event.character; */
+  /*       neovimProtocol.input(c); */
+  /*     }, */
+  /*   ); */
 
-  let _ =
-    Event.subscribe(
-      w.onKeyDown,
-      event => {
-        let _ =
-          switch (event.key, event.shiftKey, event.ctrlKey) {
-          | (Key.KEY_TAB, true, _) =>
-            ignore(neovimProtocol.input("<S-TAB>"))
-          | (Key.KEY_BACKSPACE, _, _) =>
-            ignore(neovimProtocol.input("<BS>"))
-          | (Key.KEY_ENTER, _, _) => ignore(neovimProtocol.input("<CR>"))
-          | (Key.KEY_ESCAPE, _, _) => ignore(neovimProtocol.input("<ESC>"))
-          | (Key.KEY_TAB, _, _) => ignore(neovimProtocol.input("<TAB>"))
-          | (Key.KEY_RIGHT_SHIFT, _, _)
-          | (Key.KEY_LEFT_SHIFT, _, _) =>
-            ignore(neovimProtocol.input("<SHIFT>"))
-          | (Key.KEY_UP, _, _) => ignore(neovimProtocol.input("<UP>"))
-          | (Key.KEY_LEFT, _, _) => ignore(neovimProtocol.input("<LEFT>"))
-          | (Key.KEY_RIGHT, _, _) => ignore(neovimProtocol.input("<RIGHT>"))
-          | (Key.KEY_DOWN, _, _) => ignore(neovimProtocol.input("<DOWN>"))
-          | _ => ()
-          };
-        ();
-      },
-    );
+ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
+    let s = s == "<" ? "lt" : s;
+
+     let s = ctrlKey ? "C-" ++ s : s;
+    let s = shiftKey ? "S-" ++ s : s;
+    let s = altKey ? "A-" ++ s : s;
+    let s = superKey ? "D-" ++ s : s;
+
+     String.length(s) > 1 ? "<" ++ s ++ ">" : s
+}
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) => {
+      open Reglfw.Glfw;
+      let char = String.make(1, Uchar.to_char(Uchar.of_int(codepoint)));
+           print_endline(
+      "CHAR MODS: "
+      ++ string_of_int(codepoint)
+      ++ " | "
+      ++ String.make(1, Uchar.to_char(Uchar.of_int(codepoint)))
+      ++ " | " 
+      ++ Reglfw.Glfw.Modifier.show(mods)
+      );
+
+      let altKey = Modifier.isAltPressed(mods); 
+      let ctrlKey = Modifier.isControlPressed(mods);
+      let superKey = Modifier.isSuperPressed(mods);
+
+      let key = keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
+      ignore(neovimProtocol.input(key));
+      print_endline ("INPUT (charmods)): " ++ key);
+  });
+
+  Reglfw.Glfw.glfwSetKeyCallback(w.glfwWindow, (_w, key, _scancode, buttonState, mods) => {
+      open Reglfw.Glfw;
+      open Reglfw.Glfw.Key;
+
+      if (buttonState == GLFW_PRESS || buttonState == GLFW_REPEAT) {
+
+      /* If ctrl is pressed, it's a non printable character, not handled by charMods - so we handle any character */
+      let key = if (Modifier.isControlPressed(mods)) {
+            switch (key) {
+            | _ => Some(Key.show(key))
+            } 
+      } else {
+            switch (key) {
+            | GLFW_KEY_ESCAPE => Some("ESC")
+            | GLFW_KEY_TAB => Some("TAB")
+            | GLFW_KEY_ENTER => Some("CR")
+            | GLFW_KEY_BACKSPACE => Some("BS")
+            | GLFW_KEY_LEFT => Some("LEFT")
+            | GLFW_KEY_RIGHT => Some("RIGHT")
+            | GLFW_KEY_DOWN => Some("DOWN")
+            | GLFW_KEY_UP => Some("UP")
+            | GLFW_KEY_LEFT_SHIFT
+            | GLFW_KEY_RIGHT_SHIFT => Some("SHIFT")
+            | _ => None 
+            }
+      }
+
+      switch (key) {
+      | None => ()
+      | Some(v) => {
+      let altKey = Modifier.isAltPressed(mods); 
+      let ctrlKey = Modifier.isControlPressed(mods);
+      let superKey = Modifier.isSuperPressed(mods);
+      let shiftKey = Modifier.isShiftPressed(mods)
+      let keyToSend = keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, v);
+      ignore(neovimProtocol.input(keyToSend));
+      print_endline ("INPUT (key): " ++ keyToSend);
+      }
+      }
+    
+      }
+  });
 
   let _ =
     Tick.interval(
