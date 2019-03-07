@@ -162,79 +162,23 @@ let init = app => {
   /*     }, */
   /*   ); */
 
- let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
-    let s = s == "<" ? "lt" : s;
+  Reglfw.Glfw.glfwSetCharModsCallback(
+    w.glfwWindow,
+    (_w, codepoint, mods) => {
 
-     let s = ctrlKey ? "C-" ++ s : s;
-    let s = shiftKey ? "S-" ++ s : s;
-    let s = altKey ? "A-" ++ s : s;
-    let s = superKey ? "D-" ++ s : s;
-
-     String.length(s) > 1 ? "<" ++ s ++ ">" : s
-}
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) => {
-      open Reglfw.Glfw;
-      let char = String.make(1, Uchar.to_char(Uchar.of_int(codepoint)));
-           print_endline(
-      "CHAR MODS: "
-      ++ string_of_int(codepoint)
-      ++ " | "
-      ++ String.make(1, Uchar.to_char(Uchar.of_int(codepoint)))
-      ++ " | " 
-      ++ Reglfw.Glfw.Modifier.show(mods)
-      );
-
-      let altKey = Modifier.isAltPressed(mods); 
-      let ctrlKey = Modifier.isControlPressed(mods);
-      let superKey = Modifier.isSuperPressed(mods);
-
-      let key = keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
-      ignore(neovimProtocol.input(key));
-      print_endline ("INPUT (charmods)): " ++ key);
-  });
-
-  Reglfw.Glfw.glfwSetKeyCallback(w.glfwWindow, (_w, key, _scancode, buttonState, mods) => {
-      open Reglfw.Glfw;
-      open Reglfw.Glfw.Key;
-
-      if (buttonState == GLFW_PRESS || buttonState == GLFW_REPEAT) {
-
-      /* If ctrl is pressed, it's a non printable character, not handled by charMods - so we handle any character */
-      let key = if (Modifier.isControlPressed(mods)) {
-            switch (key) {
-            | _ => Some(Key.show(key))
-            } 
-      } else {
-            switch (key) {
-            | GLFW_KEY_ESCAPE => Some("ESC")
-            | GLFW_KEY_TAB => Some("TAB")
-            | GLFW_KEY_ENTER => Some("CR")
-            | GLFW_KEY_BACKSPACE => Some("BS")
-            | GLFW_KEY_LEFT => Some("LEFT")
-            | GLFW_KEY_RIGHT => Some("RIGHT")
-            | GLFW_KEY_DOWN => Some("DOWN")
-            | GLFW_KEY_UP => Some("UP")
-            | GLFW_KEY_LEFT_SHIFT
-            | GLFW_KEY_RIGHT_SHIFT => Some("SHIFT")
-            | _ => None 
-            }
-      }
-
-      switch (key) {
+      switch (Input.charToCommand(codepoint, mods)) {
       | None => ()
-      | Some(v) => {
-      let altKey = Modifier.isAltPressed(mods); 
-      let ctrlKey = Modifier.isControlPressed(mods);
-      let superKey = Modifier.isSuperPressed(mods);
-      let shiftKey = Modifier.isShiftPressed(mods)
-      let keyToSend = keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, v);
-      ignore(neovimProtocol.input(keyToSend));
-      print_endline ("INPUT (key): " ++ keyToSend);
+      | Some(v) => ignore(neovimProtocol.input(v))
       }
-      }
-    
-      }
-  });
+    });
+
+  Reglfw.Glfw.glfwSetKeyCallback(
+    w.glfwWindow, (_w, key, _scancode, buttonState, mods) => {
+        switch (Input.keyPressToCommand(key, buttonState, mods)) {
+        | None => ();
+        | Some(v) => ignore(neovimProtocol.input(v))
+        }
+    });
 
   let _ =
     Tick.interval(
@@ -245,15 +189,15 @@ let init = app => {
       Seconds(0.),
     );
 
-  let _ =
-    Event.subscribe(nvimApi.onNotification, n =>
-      prerr_endline(
-        "Raw Notification: "
-        ++ n.notificationType
-        ++ " | "
-        ++ Msgpck.show(n.payload),
-      )
-    );
+  /* let _ = */
+  /*   Event.subscribe(nvimApi.onNotification, n => */
+  /*     prerr_endline( */
+  /*       "Raw Notification: " */
+  /*       ++ n.notificationType */
+  /*       ++ " | " */
+  /*       ++ Msgpck.show(n.payload), */
+  /*     ) */
+  /*   ); */
 
   let _ =
     Event.subscribe(
