@@ -34,7 +34,8 @@
     "@opam/zed": "1.6",
     "rench": "^1.2.0",
     "@reason-native/rely": "1.0.1",
-    "reason-jsonrpc": "*"
+    "reason-jsonrpc": "*",
+    "reason-glfw": "^3.2.1022"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
