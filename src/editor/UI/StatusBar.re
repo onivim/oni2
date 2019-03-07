@@ -88,14 +88,10 @@ let createElement =
         <View style={modeStyle(mode, theme)}>
           <Text style=textStyle text={Types.Mode.show(mode)} />
         </View>
-        <View
-          style=Style.[
-            backgroundColor(theme.colors.statusBarItemBackground),
-            paddingHorizontal(5),
-          ]>
+        <View style=Style.[paddingHorizontal(5)]>
           <Text
             style=Style.[
-              color(theme.colors.statusBarItemForeground),
+              color(theme.colors.statusBarForeground),
               ...textStyle,
             ]
             text={convertPositionToString(position)}

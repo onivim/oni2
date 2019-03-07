@@ -34,8 +34,8 @@ module EditorColors = {
     oniNormalModeForeground: Color.t,
     oniOperatorModeForeground: Color.t,
     oniCommandlineModeForeground: Color.t,
-    statusBarItemForeground: Color.t,
-    statusBarItemBackground: Color.t,
+    statusBarForeground: Color.t,
+    statusBarBackground: Color.t,
   };
 
   let default: t = {
@@ -65,8 +65,8 @@ module EditorColors = {
     oniNormalModeForeground: Color.hex("#282c34"),
     oniOperatorModeForeground: Color.hex("#282c34"),
     oniCommandlineModeForeground: Color.hex("#282c34"),
-    statusBarItemBackground: Color.hex("#495162"),
-    statusBarItemForeground: Color.hex("#fff"),
+    statusBarBackground: Color.hex("#495162"),
+    statusBarForeground: Color.hex("#fff"),
   };
 };
 
