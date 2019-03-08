@@ -36,6 +36,7 @@ let tokensToElement =
       theme: Theme.t,
       cursorLine: int,
       tokens,
+      xOffset: int,
       yOffset: int,
       transform,
     ) => {
@@ -46,6 +47,7 @@ let tokensToElement =
       : theme.colors.editorLineNumberForeground;
 
   let yF = float_of_int(yOffset);
+  let xF = float_of_int(xOffset);
 
   let lineNumber =
     string_of_int(
@@ -84,7 +86,7 @@ let tokensToElement =
           lineNumberWidth
           + fontWidth
           * Index.toZeroBasedInt(token.startPosition),
-        ),
+        ) -. xF,
       ~y=yF,
       ~backgroundColor=textBackgroundColor,
       ~color=token.color,
@@ -142,7 +144,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         left(
           lineNumberWidth
           + fontWidth
-          * Index.toZeroBasedInt(state.editor.cursorPosition.character),
+          * Index.toZeroBasedInt(state.editor.cursorPosition.character)
+          - state.editor.scrollX
         ),
         height(fontHeight),
         width(cursorWidth),
@@ -166,7 +169,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       );
     };
 
-    let render = (i, offset, transform) => {
+    let render = (i, offsetX, offsetY, transform) => {
       let tokens = getTokensForLine(i);
 
       tokensToElement(
@@ -177,7 +180,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         theme,
         Index.toZeroBasedInt(cursorLine),
         tokens,
-        offset,
+        offsetX,
+        offsetY,
         transform,
       );
     };
@@ -312,7 +316,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let _ = render(item, offset, transform);
+                    let _ = render(item, state.editor.scrollX, offset, transform);
                     ();
                   },
                 (),

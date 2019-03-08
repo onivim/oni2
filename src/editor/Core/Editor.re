@@ -54,6 +54,9 @@ let getTotalSizeInPixels = (view: t) => view.viewLines * view.lineHeight;
 let getCursorPixelLine = (view: t) =>
   Index.toZeroBasedInt(view.cursorPosition.line) * view.lineHeight;
 
+let getCursorPixelColumn = (view: t) =>
+    Index.toZeroBasedInt(view.cursorPosition.character) * view.characterWidth;
+
 let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int) => {
   let totalViewSizeInPixels =
     float_of_int(getTotalSizeInPixels(view) + view.size.pixelHeight);
@@ -106,6 +109,24 @@ let scrollTo = (view: t, newScrollY) => {
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
+let scrollToHorizontal = (view: t, newScrollX) => {
+  let newScrollX = max(0, newScrollX);
+
+  let layout = EditorLayout.getLayout(
+    ~pixelWidth= view.size.pixelWidth,
+    ~pixelHeight= view.size.pixelHeight,
+    ~isMinimapShown= true,
+    ~characterWidth= view.characterWidth,
+    ~characterHeight= view.lineHeight,
+    ~bufferLineCount= view.viewLines,
+    (),
+  );
+
+    let availableScroll = max(0, (view.maxLineLength * view.characterWidth) - layout.bufferWidthInPixels);
+    let scrollX = min(newScrollX, availableScroll);
+    {...view, scrollX };
+};
+
 let scroll = (view: t, scrollDeltaY) => {
   let newScrollY = view.scrollY + scrollDeltaY;
   scrollTo(view, newScrollY);
@@ -125,6 +146,22 @@ let scrollToCursorBottom = (view: t) => {
   scrollTo(view, scrollPosition);
 };
 
+/* Scroll so that the cursor is at the LEFT of the view */
+let scrollToCursorLeft = (view: t) => {
+    let cursorPixelColumn = getCursorPixelColumn(view);
+
+    let scrollPosition = cursorPixelColumn;
+    scrollToHorizontal(view, scrollPosition);
+};
+
+/* Scroll so that the cursor is at the RIGHT of the view */
+let scrollToCursorRight = (view: t, availableWidth: int) => {
+    let cursorPixelColumn = getCursorPixelColumn(view);
+
+    let scrollPosition = cursorPixelColumn  - availableWidth + view.characterWidth;
+    scrollToHorizontal(view, scrollPosition);
+};
+
 let scrollToCursor = (view: t) => {
   let scrollPosition =
     getCursorPixelLine(view) - view.size.pixelHeight / 2 + view.lineHeight / 2;
@@ -133,18 +170,43 @@ let scrollToCursor = (view: t) => {
 };
 
 let snapToCursorPosition = (view: t) => {
-  let cursorPixelPosition = getCursorPixelLine(view);
+  let cursorPixelPositionY = getCursorPixelLine(view);
   let scrollY = view.scrollY;
 
-  if (cursorPixelPosition < scrollY) {
+  let view = if (cursorPixelPositionY < scrollY) {
     scrollToCursorTop(view);
-  } else if (cursorPixelPosition > scrollY
+  } else if (cursorPixelPositionY > scrollY
              + view.size.pixelHeight
              - view.lineHeight) {
     scrollToCursorBottom(view);
   } else {
     view;
   };
+
+  let layout = EditorLayout.getLayout(
+    ~pixelWidth= view.size.pixelWidth,
+    ~pixelHeight= view.size.pixelHeight,
+    ~isMinimapShown= true,
+    ~characterWidth= view.characterWidth,
+    ~characterHeight= view.lineHeight,
+    ~bufferLineCount= view.viewLines,
+    (),
+  );
+
+  let cursorPixelPositionX = getCursorPixelColumn(view);
+  let scrollX = view.scrollX;
+
+  let availableWidth = layout.bufferWidthInPixels;
+
+  let view = if(cursorPixelPositionX < scrollX) {
+    scrollToCursorLeft(view);
+  } else if(cursorPixelPositionX >= scrollX + layout.bufferWidthInPixels - view.characterWidth) {
+    scrollToCursorRight(view, availableWidth);
+  } else {
+    view;
+  }
+  
+  view;
 };
 
 type cursorLocation =
