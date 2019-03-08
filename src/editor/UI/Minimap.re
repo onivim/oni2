@@ -102,7 +102,7 @@ let createElement =
                 ),
               ~height=float_of_int(rowHeight * getMinimapSize(state.editor)),
               ~width=float_of_int(width),
-              ~color=state.theme.colors.minimapHighlightBackground,
+              ~color=state.theme.colors.scrollbarSliderHoverBackground,
               (),
             );
 
