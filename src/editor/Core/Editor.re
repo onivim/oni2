@@ -150,7 +150,7 @@ let moveCursorToPosition = (~moveCursor, view, position) =>
 
 let recalculate = (view: t, buffer: option(Buffer.t)) =>
   switch (buffer) {
-  | Some(b) => {...view, viewLines: Array.length(b.lines)}
+  | Some(b) => {...view, viewLines: Buffer.getNumberOfLines(b)}
   | None => view
   };
 

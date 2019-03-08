@@ -17,7 +17,15 @@ let ofLines = (lines: array(string)) => {
   lines,
 };
 
+let empty = ofLines([||]);
+
 let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
+
+let getMetadata = (buffer: t) => buffer.metadata;
+
+let getLine = (buffer: t, line: int) => buffer.lines[line];
+
+let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {
   let len = Array.length(lines);
@@ -77,3 +85,8 @@ let update = (buf: t, update: BufferUpdate.t) =>
     {metadata, lines: applyUpdate(buf.lines, update)};
   | _ => buf
   };
+
+let updateMetadata = (buf: t, metadata: BufferMetadata.t) => {
+  ...buf,
+  metadata,
+};
