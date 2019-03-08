@@ -13,9 +13,9 @@ let ofLines: array(string) => t;
 let ofMetadata: BufferMetadata.t => t;
 
 let getLine: (t, int) => string;
-let getMetadata: (t) => BufferMetadata.t;
+let getMetadata: t => BufferMetadata.t;
 
-let getNumberOfLines: (t) => int;
+let getNumberOfLines: t => int;
 
 let update: (t, BufferUpdate.t) => t;
 

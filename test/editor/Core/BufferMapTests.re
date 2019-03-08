@@ -14,7 +14,7 @@ let getOrFail = (v: option(Buffer.t)) => {
     switch (metadata.filePath) {
     | Some(path) => path
     | None => failedMsg
-    }
+    };
   | None => failedMsg
   };
 };

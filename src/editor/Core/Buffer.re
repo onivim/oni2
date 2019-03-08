@@ -87,6 +87,6 @@ let update = (buf: t, update: BufferUpdate.t) =>
   };
 
 let updateMetadata = (buf: t, metadata: BufferMetadata.t) => {
-    ...buf,
-    metadata,
+  ...buf,
+  metadata,
 };
