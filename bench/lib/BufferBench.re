@@ -8,11 +8,15 @@ let rootNode = (new node)();
 let setup = () => ();
 
 let emptyBuffer = Buffer.ofLines([||]);
+let emptyBufferId = Buffer.getMetadata(emptyBuffer).id;
 
 let hundredThousandLineBuffer =
   Buffer.ofLines(Array.make(100000, "This buffer is pretty big"));
+let hundredThousandLineBufferId = Buffer.getMetadata(hundredThousandLineBuffer).id;
+
 let smallBuffer =
   Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
+let smallBufferId = Buffer.getMetadata(smallBuffer).id;
 
 let hundredThousandLines =
   Array.make(100000, "Another big buffer update") |> Array.to_list;
@@ -20,7 +24,7 @@ let hundredThousandLines =
 let addLinesToEmptyBuffer = () => {
   let _ =
     Types.BufferUpdate.create(
-      ~id=emptyBuffer.metadata.id,
+      ~id=emptyBufferId,
       ~startLine=0,
       ~endLine=-1,
       ~lines=hundredThousandLines,
@@ -34,7 +38,7 @@ let addLinesToEmptyBuffer = () => {
 let clearLargeBuffer = () => {
   let _ =
     Types.BufferUpdate.create(
-      ~id=hundredThousandLineBuffer.metadata.id,
+      ~id=hundredThousandLineBufferId,
       ~startLine=0,
       ~endLine=-1,
       ~lines=[],
@@ -48,7 +52,7 @@ let clearLargeBuffer = () => {
 let insertInMiddleOfSmallBuffer = () => {
   let _ =
     Types.BufferUpdate.create(
-      ~id=smallBuffer.metadata.id,
+      ~id=smallBufferId,
       ~startLine=50,
       ~endLine=51,
       ~lines=["this is a new line"],
@@ -62,7 +66,7 @@ let insertInMiddleOfSmallBuffer = () => {
 let insertInMiddleOfLargeBuffer = () => {
   let _ =
     Types.BufferUpdate.create(
-      ~id=hundredThousandLineBuffer.metadata.id,
+      ~id=hundredThousandLineBufferId,
       ~startLine=5000,
       ~endLine=50001,
       ~lines=["this is a new line"],

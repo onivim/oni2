@@ -10,7 +10,8 @@ let getOrFail = (v: option(Buffer.t)) => {
   let failedMsg = "failed - no buffer was specified";
   switch (v) {
   | Some(v) =>
-    switch (v.metadata.filePath) {
+    let metadata = Buffer.getMetadata(v);
+    switch (metadata.filePath) {
     | Some(path) => path
     | None => failedMsg
     }
