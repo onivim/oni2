@@ -6,7 +6,6 @@ type t = {
   scrollX: int,
   scrollY: int,
   minimapScrollY: int,
-
   /*
    * The maximum line visible in the view.
    * TODO: This will be dependent on line-wrap settings.
@@ -41,7 +40,6 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-
 /* type viewport = { */
 /*   pixelX: int, */
 /*   pixelY: int, */
@@ -71,23 +69,22 @@ let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int) => {
 };
 
 let getHorizontalScrollbarMetrics = (view: t, availableWidth: int) => {
-    let totalViewWidthInPixels = float_of_int(view.maxLineLength * view.characterWidth);
-    let availableWidthF = float_of_int(availableWidth);
+  let totalViewWidthInPixels =
+    float_of_int(view.maxLineLength * view.characterWidth);
+  let availableWidthF = float_of_int(availableWidth);
 
-    switch (totalViewWidthInPixels <= availableWidthF) {
-    | true => {visible: false, thumbSize: 0, thumbOffset: 0}
-    | false => {
-        
-        let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
-        let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
+  totalViewWidthInPixels <= availableWidthF
+    ? {visible: false, thumbSize: 0, thumbOffset: 0}
+    : {
+      let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
+      let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
 
-        let topF = float_of_int(view.scrollX) /. totalViewWidthInPixels;
-        let thumbOffset = int_of_float(topF *. availableWidthF);
+      let topF = float_of_int(view.scrollX) /. totalViewWidthInPixels;
+      let thumbOffset = int_of_float(topF *. availableWidthF);
 
-        {thumbSize, thumbOffset, visible: true};
-    }
+      {thumbSize, thumbOffset, visible: true};
     };
-}
+};
 
 let scrollTo = (view: t, newScrollY) => {
   let newScrollY = max(0, newScrollY);
@@ -181,32 +178,32 @@ let moveCursorToPosition = (~moveCursor, view, position) =>
   };
 
 let _getMaxLineLength = (buffer: Buffer.t) => {
-    let i = ref(0);
-    let lines = Buffer.getNumberOfLines(buffer);
+  let i = ref(0);
+  let lines = Buffer.getNumberOfLines(buffer);
 
-    let max = ref(0);
+  let max = ref(0);
 
-    while (i^ < lines) {
-        let line = i^;
-        let length = Buffer.getLineLength(buffer, line);
+  while (i^ < lines) {
+    let line = i^;
+    let length = Buffer.getLineLength(buffer, line);
 
-        if (length > max^) {
-            max := length;
-        }
-        
-        incr(i);
-    }
+    if (length > max^) {
+      max := length;
+    };
 
-    max^;
-}
+    incr(i);
+  };
+
+  max^;
+};
 
 let recalculate = (view: t, buffer: option(Buffer.t)) =>
   switch (buffer) {
   | Some(b) => {
       ...view,
       viewLines: Buffer.getNumberOfLines(b),
-      maxLineLength: _getMaxLineLength(b)
-  }
+      maxLineLength: _getMaxLineLength(b),
+    }
   | None => view
   };
 

@@ -21,7 +21,8 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let scrollMetrics = Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
+    let scrollMetrics =
+      Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
 
     let scrollThumbStyle =
       Style.[

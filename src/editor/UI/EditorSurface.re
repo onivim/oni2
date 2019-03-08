@@ -322,9 +322,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <View style=cursorStyle />
           <View style=horizontalScrollBarStyle>
             <EditorHorizontalScrollbar
-                state
-                width={layout.bufferWidthInPixels}
-                />
+              state
+              width={layout.bufferWidthInPixels}
+            />
           </View>
         </View>
         <View style=minimapViewStyle onMouseWheel=scrollMinimap>

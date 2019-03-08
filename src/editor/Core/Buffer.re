@@ -31,9 +31,9 @@ let getLine = (buffer: t, line: int) => buffer.lines[line];
  * - Handle multibyte characters
  */
 let getLineLength = (buffer: t, line: int) => {
-  let line = getLine(buffer, line);  
+  let line = getLine(buffer, line);
   String.length(line);
-}
+};
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 

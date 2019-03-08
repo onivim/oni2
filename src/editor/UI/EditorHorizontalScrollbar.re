@@ -14,14 +14,10 @@ let absoluteStyle =
 let emptyElement = React.listToElement([]);
 
 let createElement =
-    (
-      ~state: State.t,
-      ~width as totalWidth,
-      ~children as _,
-      (),
-    ) =>
+    (~state: State.t, ~width as totalWidth, ~children as _, ()) =>
   component(hooks => {
-    let scrollMetrics = Editor.getHorizontalScrollbarMetrics(state.editor, totalWidth);
+    let scrollMetrics =
+      Editor.getHorizontalScrollbarMetrics(state.editor, totalWidth);
 
     let scrollThumbStyle =
       Style.[
@@ -34,15 +30,12 @@ let createElement =
         backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
-    
-   let elm = switch (scrollMetrics.visible) {
-    | false => emptyElement
-    | true => <View style=absoluteStyle>
-        <View style=scrollThumbStyle />
-      </View>
-    };
+    let elm =
+      switch (scrollMetrics.visible) {
+      | false => emptyElement
+      | true =>
+        <View style=absoluteStyle> <View style=scrollThumbStyle /> </View>
+      };
 
-    (
-      hooks, elm
-    );
+    (hooks, elm);
   });
