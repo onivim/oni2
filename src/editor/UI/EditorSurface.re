@@ -86,7 +86,8 @@ let tokensToElement =
           lineNumberWidth
           + fontWidth
           * Index.toZeroBasedInt(token.startPosition),
-        ) -. xF,
+        )
+        -. xF,
       ~y=yF,
       ~backgroundColor=textBackgroundColor,
       ~color=token.color,
@@ -145,7 +146,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           lineNumberWidth
           + fontWidth
           * Index.toZeroBasedInt(state.editor.cursorPosition.character)
-          - state.editor.scrollX
+          - state.editor.scrollX,
         ),
         height(fontHeight),
         width(cursorWidth),
@@ -316,7 +317,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let _ = render(item, state.editor.scrollX, offset, transform);
+                    let _ =
+                      render(item, state.editor.scrollX, offset, transform);
                     ();
                   },
                 (),
