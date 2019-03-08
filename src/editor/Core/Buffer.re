@@ -25,6 +25,16 @@ let getMetadata = (buffer: t) => buffer.metadata;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
+/*
+ * TODO:
+ * - Handle variable tab sizes, based on indentation settings
+ * - Handle multibyte characters
+ */
+let getLineLength = (buffer: t, line: int) => {
+  let line = getLine(buffer, line);
+  String.length(line);
+};
+
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {

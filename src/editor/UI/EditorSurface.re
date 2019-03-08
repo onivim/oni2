@@ -27,15 +27,13 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let tokensToElement =
+let renderLineNumber =
     (
       fontWidth: int,
-      _fontHeight: int,
       lineNumber: int,
       lineNumberWidth: int,
       theme: Theme.t,
       cursorLine: int,
-      tokens,
       yOffset: int,
       transform,
     ) => {
@@ -46,6 +44,54 @@ let tokensToElement =
       : theme.colors.editorLineNumberForeground;
 
   let yF = float_of_int(yOffset);
+
+  let lineNumber =
+    string_of_int(
+      LineNumber.getLineNumber(
+        ~bufferLine=lineNumber + 1,
+        ~cursorLine=cursorLine + 1,
+        ~setting=Relative,
+        (),
+      ),
+    );
+
+  let lineNumberXOffset =
+    isActiveLine
+      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
+
+  Revery.Draw.Text.drawString(
+    ~transform,
+    ~x=float_of_int(lineNumberXOffset),
+    ~y=yF,
+    ~backgroundColor=theme.colors.editorLineNumberBackground,
+    ~color=lineNumberTextColor,
+    ~fontFamily="FiraCode-Regular.ttf",
+    ~fontSize=14,
+    lineNumber,
+  );
+};
+
+let renderTokens =
+    (
+      fontWidth: int,
+      _fontHeight: int,
+      lineNumber: int,
+      lineNumberWidth: int,
+      theme: Theme.t,
+      cursorLine: int,
+      tokens,
+      xOffset: int,
+      yOffset: int,
+      transform,
+    ) => {
+  let isActiveLine = lineNumber == cursorLine;
+  let lineNumberTextColor =
+    isActiveLine
+      ? theme.colors.editorActiveLineNumberForeground
+      : theme.colors.editorLineNumberForeground;
+
+  let yF = float_of_int(yOffset);
+  let xF = float_of_int(xOffset);
 
   let lineNumber =
     string_of_int(
@@ -84,7 +130,8 @@ let tokensToElement =
           lineNumberWidth
           + fontWidth
           * Index.toZeroBasedInt(token.startPosition),
-        ),
+        )
+        -. xF,
       ~y=yF,
       ~backgroundColor=textBackgroundColor,
       ~color=token.color,
@@ -142,7 +189,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         left(
           lineNumberWidth
           + fontWidth
-          * Index.toZeroBasedInt(state.editor.cursorPosition.character),
+          * Index.toZeroBasedInt(state.editor.cursorPosition.character)
+          - state.editor.scrollX,
         ),
         height(fontHeight),
         width(cursorWidth),
@@ -163,22 +211,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         state.theme,
         tokenColors,
         state.syntaxHighlighting.colorMap,
-      );
-    };
-
-    let render = (i, offset, transform) => {
-      let tokens = getTokensForLine(i);
-
-      tokensToElement(
-        fontWidth,
-        fontHeight,
-        i,
-        lineNumberWidth,
-        theme,
-        Index.toZeroBasedInt(cursorLine),
-        tokens,
-        offset,
-        transform,
       );
     };
 
@@ -240,6 +272,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
+    let horizontalScrollBarStyle =
+      Style.[
+        position(`Absolute),
+        bottom(0),
+        left(layout.lineNumberWidthInPixels),
+        height(Constants.default.scrollBarThickness),
+        width(layout.bufferWidthInPixels),
+      ];
+
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
         ~deltaY=int_of_float(wheelEvent.deltaY) * (-50),
@@ -265,17 +306,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               let height = state.editor.size.pixelHeight;
               let rowHeight = state.editorFont.measuredHeight;
               let scrollY = state.editor.scrollY;
-
-              /* Draw background for line numbers */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=0.,
-                ~width=float_of_int(lineNumberWidth),
-                ~height=float_of_int(height),
-                ~color=theme.colors.editorLineNumberBackground,
-                (),
-              );
 
               /* Draw background for cursor line */
               Shapes.drawRect(
@@ -303,7 +333,54 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let _ = render(item, offset, transform);
+                    let tokens = getTokensForLine(item);
+
+                    let _ =
+                      renderTokens(
+                        fontWidth,
+                        fontHeight,
+                        item,
+                        lineNumberWidth,
+                        theme,
+                        Index.toZeroBasedInt(cursorLine),
+                        tokens,
+                        state.editor.scrollX,
+                        offset,
+                        transform,
+                      );
+                    ();
+                  },
+                (),
+              );
+
+              /* Draw background for line numbers */
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=0.,
+                ~width=float_of_int(lineNumberWidth),
+                ~height=float_of_int(height),
+                ~color=theme.colors.editorLineNumberBackground,
+                (),
+              );
+
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height,
+                ~count,
+                ~render=
+                  (item, offset) => {
+                    let _ =
+                      renderLineNumber(
+                        fontWidth,
+                        item,
+                        lineNumberWidth,
+                        theme,
+                        Index.toZeroBasedInt(cursorLine),
+                        offset,
+                        transform,
+                      );
                     ();
                   },
                 (),
@@ -311,6 +388,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             }}
           />
           <View style=cursorStyle />
+          <View style=horizontalScrollBarStyle>
+            <EditorHorizontalScrollbar
+              state
+              width={layout.bufferWidthInPixels}
+            />
+          </View>
         </View>
         <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap

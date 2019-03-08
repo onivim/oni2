@@ -272,6 +272,8 @@ let init = app => {
         /* TODO:
          * Refactor this into a middleware concept, like Redux */
         switch (msg) {
+        | SetEditorFont(_)
+        | SetEditorSize(_)
         | Core.Actions.BufferUpdate(_)
         | Core.Actions.BufferEnter(_) =>
           App.dispatch(app, RecalculateEditorView)
