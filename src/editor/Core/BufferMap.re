@@ -37,7 +37,8 @@ let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
     Buffers.filter(
       (_, b: Buffer.t) =>
         List.exists(
-          (newBuf: BufferMetadata.t) => newBuf.id == b.metadata.id,
+          (newBuf: BufferMetadata.t) =>
+            newBuf.id == Buffer.getMetadata(b).id,
           newBuffers,
         ),
       buffersMap,
@@ -49,7 +50,7 @@ let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
         original =>
           switch (original) {
           | None => Some(Buffer.ofMetadata(metadata))
-          | Some(v) => Some({...v, metadata}: Buffer.t)
+          | Some(v) => Some(Buffer.updateMetadata(v, metadata))
           },
         m,
       ),

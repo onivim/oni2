@@ -17,7 +17,25 @@ let ofLines = (lines: array(string)) => {
   lines,
 };
 
+let empty = ofLines([||]);
+
 let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
+
+let getMetadata = (buffer: t) => buffer.metadata;
+
+let getLine = (buffer: t, line: int) => buffer.lines[line];
+
+/*
+ * TODO:
+ * - Handle variable tab sizes, based on indentation settings
+ * - Handle multibyte characters
+ */
+let getLineLength = (buffer: t, line: int) => {
+  let line = getLine(buffer, line);
+  String.length(line);
+};
+
+let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
 let slice = (~lines: array(string), ~start, ~length, ()) => {
   let len = Array.length(lines);
@@ -77,3 +95,8 @@ let update = (buf: t, update: BufferUpdate.t) =>
     {metadata, lines: applyUpdate(buf.lines, update)};
   | _ => buf
   };
+
+let updateMetadata = (buf: t, metadata: BufferMetadata.t) => {
+  ...buf,
+  metadata,
+};
