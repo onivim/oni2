@@ -17,6 +17,8 @@ let ofLines = (lines: array(string)) => {
   lines,
 };
 
+let empty = ofLines([||]);
+
 let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
 
 let getMetadata = (buffer: t) => buffer.metadata;

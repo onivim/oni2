@@ -106,13 +106,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let activeBuffer =
       Oni_Core.BufferMap.getBuffer(state.activeBufferId, state.buffers);
 
-    let lines =
+    let buffer =
       switch (activeBuffer) {
-      | Some(buffer) => buffer.lines
-      | None => [||]
+      | Some(buffer) => buffer
+      | None => Buffer.empty
       };
 
-    let lineCount = Array.length(lines);
+    let lineCount = Buffer.getNumberOfLines(buffer);
 
     let lineNumberWidth =
       LineNumber.getLineNumberPixelWidth(
@@ -151,7 +151,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let getTokensForLine = i => {
-      let line = lines[i];
+      let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
           state.syntaxHighlighting,

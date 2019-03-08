@@ -20,3 +20,5 @@ let getNumberOfLines: (t) => int;
 let update: (t, BufferUpdate.t) => t;
 
 let updateMetadata: (t, BufferMetadata.t) => t;
+
+let empty: t;
