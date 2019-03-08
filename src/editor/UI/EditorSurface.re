@@ -27,7 +27,51 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
-let tokensToElement =
+let renderLineNumber =
+    (
+      fontWidth: int,
+      lineNumber: int,
+      lineNumberWidth: int,
+      theme: Theme.t,
+      cursorLine: int,
+      yOffset: int,
+      transform,
+    ) => {
+  let isActiveLine = lineNumber == cursorLine;
+  let lineNumberTextColor =
+    isActiveLine
+      ? theme.colors.editorActiveLineNumberForeground
+      : theme.colors.editorLineNumberForeground;
+
+  let yF = float_of_int(yOffset);
+
+  let lineNumber =
+    string_of_int(
+      LineNumber.getLineNumber(
+        ~bufferLine=lineNumber + 1,
+        ~cursorLine=cursorLine + 1,
+        ~setting=Relative,
+        (),
+      ),
+    );
+
+  let lineNumberXOffset =
+    isActiveLine
+      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
+
+  Revery.Draw.Text.drawString(
+    ~transform,
+    ~x=float_of_int(lineNumberXOffset),
+    ~y=yF,
+    ~backgroundColor=theme.colors.editorLineNumberBackground,
+    ~color=lineNumberTextColor,
+    ~fontFamily="FiraCode-Regular.ttf",
+    ~fontSize=14,
+    lineNumber,
+  );
+};
+
+let renderTokens =
     (
       fontWidth: int,
       _fontHeight: int,
@@ -170,23 +214,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       );
     };
 
-    let render = (i, offsetX, offsetY, transform) => {
-      let tokens = getTokensForLine(i);
-
-      tokensToElement(
-        fontWidth,
-        fontHeight,
-        i,
-        lineNumberWidth,
-        theme,
-        Index.toZeroBasedInt(cursorLine),
-        tokens,
-        offsetX,
-        offsetY,
-        transform,
-      );
-    };
-
     let style =
       Style.[
         backgroundColor(theme.colors.background),
@@ -280,17 +307,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               let rowHeight = state.editorFont.measuredHeight;
               let scrollY = state.editor.scrollY;
 
-              /* Draw background for line numbers */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=0.,
-                ~width=float_of_int(lineNumberWidth),
-                ~height=float_of_int(height),
-                ~color=theme.colors.editorLineNumberBackground,
-                (),
-              );
-
               /* Draw background for cursor line */
               Shapes.drawRect(
                 ~transform,
@@ -317,9 +333,44 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
+                          let tokens = getTokensForLine(item);
+
+                          let _ = renderTokens(
+                            fontWidth,
+                            fontHeight,
+                            item,
+                            lineNumberWidth,
+                            theme,
+                            Index.toZeroBasedInt(cursorLine),
+                            tokens,
+                            state.editor.scrollX,
+                            offset,
+                            transform,
+                          );
+                  },
+                (),
+              );
+
+              /* Draw background for line numbers */
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=0.,
+                ~width=float_of_int(lineNumberWidth),
+                ~height=float_of_int(height),
+                ~color=theme.colors.editorLineNumberBackground,
+                (),
+              );
+
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height,
+                ~count,
+                ~render=
+                  (item, offset) => {
                     let _ =
-                      render(item, state.editor.scrollX, offset, transform);
-                    ();
+                      renderLineNumber(fontWidth, item, lineNumberWidth, theme, Index.toZeroBasedInt(cursorLine), offset, transform);
                   },
                 (),
               );
