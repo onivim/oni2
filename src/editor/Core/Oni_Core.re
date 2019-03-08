@@ -12,6 +12,7 @@ module Commandline = Commandline;
 module ColorizedToken = ColorizedToken;
 module Constants = Constants;
 module Editor = Editor;
+module EditorLayout = EditorLayout;
 module LineNumber = LineNumber;
 module Log = Log;
 module Node = Node;
