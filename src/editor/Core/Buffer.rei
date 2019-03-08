@@ -13,6 +13,8 @@ let ofLines: array(string) => t;
 let ofMetadata: BufferMetadata.t => t;
 
 let getLine: (t, int) => string;
+let getLineLength: (t, int) => int;
+
 let getMetadata: t => BufferMetadata.t;
 
 let getNumberOfLines: t => int;

@@ -3,8 +3,15 @@ open Types;
 
 type t = {
   id: int,
+  scrollX: int,
   scrollY: int,
   minimapScrollY: int,
+
+  /*
+   * The maximum line visible in the view.
+   * TODO: This will be dependent on line-wrap settings.
+   */
+  maxLineLength: int,
   viewLines: int,
   size: EditorSize.t,
   cursorPosition: BufferPosition.t,
@@ -14,8 +21,10 @@ type t = {
 let create = () => {
   let ret: t = {
     id: 0,
+    scrollX: 0,
     scrollY: 0,
     minimapScrollY: 0,
+    maxLineLength: 0,
     viewLines: 0,
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
@@ -148,9 +157,33 @@ let moveCursorToPosition = (~moveCursor, view, position) =>
     view;
   };
 
+let _getMaxLineLength = (buffer: Buffer.t) => {
+    let i = ref(0);
+    let lines = Buffer.getNumberOfLines(buffer);
+
+    let max = ref(0);
+
+    while (i^ < lines) {
+        let line = i^;
+        let length = Buffer.getLineLength(buffer, line);
+
+        if (length > max^) {
+            max := length;
+        }
+        
+        incr(i);
+    }
+
+    max^;
+}
+
 let recalculate = (view: t, buffer: option(Buffer.t)) =>
   switch (buffer) {
-  | Some(b) => {...view, viewLines: Buffer.getNumberOfLines(b)}
+  | Some(b) => {
+      ...view,
+      viewLines: Buffer.getNumberOfLines(b),
+      maxLineLength: _getMaxLineLength(b)
+  }
   | None => view
   };
 
