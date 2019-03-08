@@ -7,7 +7,7 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Core.Types;
 
-let component = React.component("EditorVerticalScrollbar");
+let component = React.component("EditorHorizontalScrollBar");
 
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];

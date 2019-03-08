@@ -16,6 +16,7 @@ type t = {
   size: EditorSize.t,
   cursorPosition: BufferPosition.t,
   lineHeight: int,
+  characterWidth: int,
 };
 
 let create = () => {
@@ -29,21 +30,24 @@ let create = () => {
     size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     lineHeight: 1,
+    characterWidth: 1,
   };
   ret;
 };
 
 type scrollbarMetrics = {
+  visible: bool,
   thumbSize: int,
   thumbOffset: int,
 };
 
-type viewport = {
-  pixelX: int,
-  pixelY: int,
-  pixelWidth: int,
-  pixelHeight: int,
-};
+
+/* type viewport = { */
+/*   pixelX: int, */
+/*   pixelY: int, */
+/*   pixelWidth: int, */
+/*   pixelHeight: int, */
+/* }; */
 
 let getVisibleLines = (view: t) => view.size.pixelWidth / view.lineHeight;
 
@@ -52,7 +56,7 @@ let getTotalSizeInPixels = (view: t) => view.viewLines * view.lineHeight;
 let getCursorPixelLine = (view: t) =>
   Index.toZeroBasedInt(view.cursorPosition.line) * view.lineHeight;
 
-let getScrollbarMetrics = (view: t, scrollBarHeight: int) => {
+let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int) => {
   let totalViewSizeInPixels =
     float_of_int(getTotalSizeInPixels(view) + view.size.pixelHeight);
   let thumbPercentage =
@@ -63,8 +67,27 @@ let getScrollbarMetrics = (view: t, scrollBarHeight: int) => {
   let topF = float_of_int(view.scrollY) /. totalViewSizeInPixels;
   let thumbOffset = int_of_float(topF *. float_of_int(scrollBarHeight));
 
-  {thumbSize, thumbOffset};
+  {thumbSize, thumbOffset, visible: true};
 };
+
+let getHorizontalScrollbarMetrics = (view: t, availableWidth: int) => {
+    let totalViewWidthInPixels = float_of_int(view.maxLineLength * view.characterWidth);
+    let availableWidthF = float_of_int(availableWidth);
+
+    switch (totalViewWidthInPixels <= availableWidthF) {
+    | false => {visible: false, thumbSize: 0, thumbOffset: 0}
+    | true => {
+        
+        let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
+        let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
+
+        let topF = float_of_int(view.scrollX) /. totalViewWidthInPixels;
+        let thumbOffset = int_of_float(topF *. availableWidthF);
+
+        {thumbSize, thumbOffset, visible: true};
+    }
+    };
+}
 
 let scrollTo = (view: t, newScrollY) => {
   let newScrollY = max(0, newScrollY);
@@ -200,9 +223,10 @@ let reduce = (view, action, buffer) =>
     moveCursorToPosition(~moveCursor, view, Top)
   | EditorMoveCursorToMiddle(moveCursor) =>
     moveCursorToPosition(~moveCursor, view, Middle)
-  | SetEditorFont({measuredHeight, _}) => {
+  | SetEditorFont({measuredHeight, measuredWidth, _}) => {
       ...view,
       lineHeight: measuredHeight,
+      characterWidth: measuredWidth,
     }
   | EditorMoveCursorToBottom(moveCursor) =>
     moveCursorToPosition(~moveCursor, view, Bottom)
