@@ -61,6 +61,10 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
+let getMinimapSize = (view: Editor.t) =>
+  view.viewLines < Editor.getVisibleView(view)
+    ? 0 : Editor.getVisibleView(view);
+
 let createElement =
     (
       ~state: State.t,
@@ -94,14 +98,9 @@ let createElement =
               ~x=0.,
               ~y=
                 float_of_int(
-                  rowHeight
-                  * Index.toZeroBasedInt(Index.OneBasedIndex(Editor.getTopVisibleLine(state.editor)))
-                  - scrollY,
+                  rowHeight * Editor.getTopVisibleLine(state.editor) - scrollY,
                 ),
-              ~height=
-                float_of_int(
-                  rowHeight * Editor.getVisibleView(state.editor),
-                ),
+              ~height=float_of_int(rowHeight * getMinimapSize(state.editor)),
               ~width=float_of_int(width),
               ~color=state.theme.colors.minimapHighlightBackground,
               (),
