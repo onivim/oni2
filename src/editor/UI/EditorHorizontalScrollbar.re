@@ -11,6 +11,8 @@ let component = React.component("EditorHorizontalScrollBar");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
+let emptyElement = React.listToElement([]);
+
 let createElement =
     (
       ~state: State.t,
@@ -28,14 +30,19 @@ let createElement =
         left(scrollMetrics.thumbOffset),
         width(scrollMetrics.thumbSize),
         top(0),
-        opacity(0.4),
+        opacity(0.5),
         backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
-    (
-      hooks,
-      <View style=absoluteStyle>
+    
+   let elm = switch (scrollMetrics.visible) {
+    | false => emptyElement
+    | true => <View style=absoluteStyle>
         <View style=scrollThumbStyle />
-      </View>,
+      </View>
+    };
+
+    (
+      hooks, elm
     );
   });
