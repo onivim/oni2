@@ -43,7 +43,7 @@ let init = app => {
   let nvim =
     NeovimProcess.start(
       ~neovimPath=setup.neovimPath,
-      ~args=[|"-u", initVimPath, "--embed"|],
+      ~args=[|"-u", initVimPath, "--noplugin", "--embed"|],
     );
   let msgpackTransport =
     MsgpackTransport.make(
