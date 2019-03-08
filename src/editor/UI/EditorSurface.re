@@ -333,20 +333,22 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                          let tokens = getTokensForLine(item);
+                    let tokens = getTokensForLine(item);
 
-                          let _ = renderTokens(
-                            fontWidth,
-                            fontHeight,
-                            item,
-                            lineNumberWidth,
-                            theme,
-                            Index.toZeroBasedInt(cursorLine),
-                            tokens,
-                            state.editor.scrollX,
-                            offset,
-                            transform,
-                          );
+                    let _ =
+                      renderTokens(
+                        fontWidth,
+                        fontHeight,
+                        item,
+                        lineNumberWidth,
+                        theme,
+                        Index.toZeroBasedInt(cursorLine),
+                        tokens,
+                        state.editor.scrollX,
+                        offset,
+                        transform,
+                      );
+                    ();
                   },
                 (),
               );
@@ -370,7 +372,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~render=
                   (item, offset) => {
                     let _ =
-                      renderLineNumber(fontWidth, item, lineNumberWidth, theme, Index.toZeroBasedInt(cursorLine), offset, transform);
+                      renderLineNumber(
+                        fontWidth,
+                        item,
+                        lineNumberWidth,
+                        theme,
+                        Index.toZeroBasedInt(cursorLine),
+                        offset,
+                        transform,
+                      );
+                    ();
                   },
                 (),
               );
