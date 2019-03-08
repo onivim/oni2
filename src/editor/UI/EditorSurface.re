@@ -240,6 +240,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         bottom(0),
       ];
 
+    let horizontalScrollBarStyle =
+      Style.[
+        position(`Absolute),
+        bottom(0),
+        left(layout.lineNumberWidthInPixels),
+        height(Constants.default.scrollBarThickness),
+        width(layout.bufferWidthInPixels),
+      ];
+
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
         ~deltaY=int_of_float(wheelEvent.deltaY) * (-50),
@@ -311,6 +320,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             }}
           />
           <View style=cursorStyle />
+          <View style=horizontalScrollBarStyle>
+            <EditorHorizontalScrollbar
+                state
+                width={layout.bufferWidthInPixels}
+                />
+          </View>
         </View>
         <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap

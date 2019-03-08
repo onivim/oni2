@@ -75,8 +75,8 @@ let getHorizontalScrollbarMetrics = (view: t, availableWidth: int) => {
     let availableWidthF = float_of_int(availableWidth);
 
     switch (totalViewWidthInPixels <= availableWidthF) {
-    | false => {visible: false, thumbSize: 0, thumbOffset: 0}
-    | true => {
+    | true => {visible: false, thumbSize: 0, thumbOffset: 0}
+    | false => {
         
         let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
         let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
