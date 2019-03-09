@@ -28,3 +28,4 @@ module Types = Types;
 module Utility = Utility;
 module Wildmenu = Wildmenu;
 module Configuration = Configuration;
+module CommandPalette = CommandPalette;

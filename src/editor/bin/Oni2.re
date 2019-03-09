@@ -22,6 +22,7 @@ switch (Sys.getenv_opt("REVERY_DEBUG")) {
 | None => ()
 };
 
+let state = Core.State.create();
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -38,7 +39,7 @@ let init = app => {
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let setup: Oni_Core.Setup.t = Oni_Core.Setup.init();
+  let setup = Oni_Core.Setup.init();
 
   let nvim =
     NeovimProcess.start(
@@ -64,9 +65,8 @@ let init = app => {
   let onColorMap = cm =>
     App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
 
-  let onTokens = tr => {
+  let onTokens = tr =>
     App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
-  };
 
   let tmClient =
     Oni_Core.TextmateClient.start(
@@ -153,19 +153,13 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  /* let _ = */
-  /*   Event.subscribe( */
-  /*     w.onKeyPress, */
-  /*     event => { */
-  /*       let c = event.character; */
-  /*       neovimProtocol.input(c); */
-  /*     }, */
-  /*   ); */
+  let inputHandler =
+    Input.handle(~neovimHandler=neovimProtocol.input, Input.defaultCommands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) => inputHandler(v) |> App.dispatch(app)
     }
   );
 
@@ -173,7 +167,7 @@ let init = app => {
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
     switch (Input.keyPressToCommand(key, buttonState, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) => inputHandler(v) |> App.dispatch(app)
     }
   );
 
@@ -295,4 +289,4 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-App.startWithState(Core.State.create(), Core.Reducer.reduce, init);
+App.startWithState(state, Core.Reducer.reduce, init);

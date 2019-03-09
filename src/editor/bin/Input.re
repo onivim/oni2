@@ -69,3 +69,28 @@ let keyPressToCommand =
   } else {
     None;
   };
+
+type keyBindings = {
+  key: string,
+  command: string,
+};
+
+type bindings = list(keyBindings);
+
+let defaultCommands = [{key: "<C-P>", command: "open.commandPalette"}];
+
+/**
+  Handle Input from Oni or Neovim
+ */
+let handle = (~neovimHandler, commands: bindings, inputKey) =>
+  List.fold_left(
+    (defaultAction, {key, command}) =>
+      if (inputKey == key) {
+        Oni_Core.Actions.OniCommand(command);
+      } else {
+        ignore(neovimHandler(inputKey));
+        defaultAction;
+      },
+    Noop,
+    commands,
+  );

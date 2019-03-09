@@ -103,6 +103,13 @@ let reduce: (State.t, Actions.t) => State.t =
         ...s,
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
+    | OniCommand("open.commandPalette") => {
+        ...s,
+        commandPalette: {
+          isOpen: true,
+          commands: s.commandPalette.commands,
+        },
+      }
     | _ => s
     };
   };
