@@ -8,6 +8,8 @@
 
 open Revery.UI;
 
+open Oni_Model;
+
 let noop = () => ();
 
 let component = React.component("Editor");
@@ -24,8 +26,8 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
-  let f = (t: Oni_Core.State.Tab.t) => {
+let toUiTabs = (tabs: list(State.Tab.t)) => {
+  let f = (t: State.Tab.t) => {
     let ret: Tabs.tabInfo = {
       title: t.title,
       modified: t.modified,
@@ -39,7 +41,7 @@ let toUiTabs = (tabs: list(Oni_Core.State.Tab.t)) => {
   List.map(f, tabs);
 };
 
-let createElement = (~state: Oni_Core.State.t, ~children as _, ()) =>
+let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 

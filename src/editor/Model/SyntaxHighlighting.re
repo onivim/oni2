@@ -3,8 +3,10 @@
  *
  * State kept for syntax highlighting (via TextMate today)
  */
-open TextmateClient;
-open TextmateClient.TokenizationResult;
+open Oni_Core;
+open Oni_Extensions;
+open Oni_Extensions.TextmateClient;
+open Oni_Extensions.TextmateClient.TokenizationResult;
 
 module BufferLineSyntaxHighlights = {
   type t = {

@@ -7,8 +7,10 @@
  * for example, if vscode-textmate was ported to native ReasonML
  */
 
-module CoreUtility = Utility;
+module CoreUtility = Oni_Core.Utility;
 open Reason_jsonrpc;
+
+open Oni_Core;
 
 type scopeInfo = {
   scopeName: string,

@@ -1,7 +1,7 @@
 (library
-    (name Oni_Extensions)
-    (public_name Oni_Extensions)
-    (libraries
+    (name Oni_Model)
+    (public_name Oni_Model)
+    (libraries 
         str
         bigarray
         zed
@@ -16,5 +16,6 @@
         ppx_deriving_yojson.runtime
         reason-jsonrpc
         Oni_Core
+        Oni_Extensions
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

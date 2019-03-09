@@ -8,6 +8,7 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Model;
 
 open Types;
 

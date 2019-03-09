@@ -4,7 +4,8 @@
  * Encapsulates actions that can impact the editor state
  */
 
-open Types;
+open Oni_Core.Types;
+open Oni_Extensions;
 
 type t =
   | BufferDelete(BufferNotification.t)

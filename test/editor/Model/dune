@@ -1,0 +1,5 @@
+(library
+    (name Oni_Model_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries msgpck Oni_Model Oni_Core_Test rely.lib))
