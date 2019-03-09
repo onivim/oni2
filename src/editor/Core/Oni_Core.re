@@ -30,4 +30,7 @@ module Wildmenu = Wildmenu;
 module Configuration = Configuration;
 module CommandPalette = CommandPalette;
 module Commands = Commands;
+<<<<<<< HEAD
 module Keybindings = Keybindings;
+=======
+>>>>>>> Add input control mode to state
