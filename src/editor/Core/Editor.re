@@ -1,6 +1,7 @@
 open Actions;
 open Types;
 
+[@deriving show]
 type t = {
   id: int,
   scrollX: int,

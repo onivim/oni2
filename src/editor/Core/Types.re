@@ -18,6 +18,7 @@ module Index = {
 };
 
 module EditorSize = {
+  [@deriving show]
   type t = {
     pixelWidth: int,
     pixelHeight: int,
@@ -76,6 +77,7 @@ type openMethod =
   | Buffer;
 
 module BufferPosition = {
+  [@deriving show]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -222,4 +224,17 @@ type commandline = {
   indent: int,
   prompt: string,
   show: bool,
+};
+
+module Input = {
+  [@deriving show]
+  type keyBindings = {
+    key: string,
+    command: string,
+  };
+
+  [@deriving show]
+  type controlMode =
+    | Oni
+    | Neovim;
 };

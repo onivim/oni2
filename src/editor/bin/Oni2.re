@@ -154,12 +154,17 @@ let init = app => {
   setFont("FiraCode-Regular.ttf", 14);
 
   let inputHandler =
-    Input.handle(~neovimHandler=neovimProtocol.input, Input.defaultCommands);
+    Input.handle(
+      ~neovimHandler=neovimProtocol.input,
+      ~commands=Input.defaultCommands,
+    );
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
     | None => ()
-    | Some(v) => inputHandler(v) |> App.dispatch(app)
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 
@@ -167,7 +172,9 @@ let init = app => {
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
     switch (Input.keyPressToCommand(key, buttonState, mods)) {
     | None => ()
-    | Some(v) => inputHandler(v) |> App.dispatch(app)
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 

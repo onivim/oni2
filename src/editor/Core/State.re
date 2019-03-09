@@ -30,6 +30,7 @@ type t = {
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
   editor: Editor.t,
+  inputControlMode: Input.controlMode,
 };
 
 let create: unit => t =
@@ -53,4 +54,5 @@ let create: unit => t =
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
     editor: Editor.create(),
+    inputControlMode: Neovim,
   };

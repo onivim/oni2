@@ -34,5 +34,7 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
-  | OniCommand(string)
+  | CommandPaletteOpen
+  | CommandPaletteClose
+  | SetInputControlMode(Input.controlMode)
   | Noop;

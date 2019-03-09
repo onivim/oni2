@@ -4,9 +4,9 @@
  * Basic input handling for Oni
  */
 
+open Oni_Core;
 open Reglfw.Glfw;
 open Reglfw.Glfw.Key;
-open Oni_Core.Actions;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
@@ -71,14 +71,12 @@ let keyPressToCommand =
     None;
   };
 
-type keyBindings = {
-  key: string,
-  command: string,
-};
+type bindings = list(Types.Input.keyBindings);
 
-type bindings = list(keyBindings);
-
-let defaultCommands = [{key: "<C-P>", command: "open.commandPalette"}];
+let defaultCommands: bindings = [
+  {key: "<C-P>", command: "open.commandPalette"},
+  {key: "<ESC>", command: "close.commandPalette"},
+];
 
 /**
   Handle Input from Oni or Neovim
@@ -92,15 +90,24 @@ let defaultCommands = [{key: "<C-P>", command: "open.commandPalette"}];
   * Derive default commands from keyBindings.json like vscode
 
  */
-let handle = (~neovimHandler, commands: bindings, inputKey) =>
-  List.fold_left(
-    (defaultAction, {key, command}) =>
-      if (inputKey == key) {
-        OniCommand(command);
-      } else {
-        ignore(neovimHandler(inputKey));
-        defaultAction;
-      },
-    Noop,
-    commands,
+let handle = (~neovimHandler, ~state: State.t, ~commands: bindings, inputKey) =>
+  Types.Input.(
+    List.fold_left(
+      (defaultAction, {key, command}) =>
+        if (inputKey == key) {
+          [
+            Actions.SetInputControlMode(Oni),
+            Commands.handleCommand(command),
+          ];
+        } else {
+          switch (state.inputControlMode) {
+          | Oni => defaultAction
+          | Neovim =>
+            ignore(neovimHandler(inputKey));
+            [Actions.SetInputControlMode(Neovim), ...defaultAction];
+          };
+        },
+      [Actions.Noop],
+      commands,
+    )
   );
