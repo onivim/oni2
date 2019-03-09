@@ -1,6 +1,6 @@
 type command = {
   name: string,
-  action: unit => Oni_Core.Actions.t,
+  action: unit => Actions.t,
 };
 
 type t = {

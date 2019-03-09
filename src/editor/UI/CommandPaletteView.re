@@ -5,11 +5,13 @@ open Revery.UI.Components;
 
 let component = React.component("commandPalette");
 
+let paletteWidth = 400;
+
 let containerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.editorMenuBackground),
     color(theme.colors.editorMenuForeground),
-    width(400),
+    width(paletteWidth),
     height(300),
     boxShadow(
       ~xOffset=-15.,
@@ -27,6 +29,7 @@ let createElement =
       hooks,
       commandPalette.isOpen ?
         <ScrollView style={containerStyles(theme)}>
+          <Input style=Style.[width(paletteWidth)] />
           <MenuItem label="CommandPalette" selected=true theme />
         </ScrollView> :
         React.listToElement([]),

@@ -6,6 +6,7 @@
 
 open Reglfw.Glfw;
 open Reglfw.Glfw.Key;
+open Oni_Core.Actions;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
@@ -81,12 +82,21 @@ let defaultCommands = [{key: "<C-P>", command: "open.commandPalette"}];
 
 /**
   Handle Input from Oni or Neovim
+
+  TODO:
+  * use value in state to determine whether or not input should be handled
+  by Oni or by Neovim e.g. when the command palette is open
+
+  * Determine if certain should be responded to by both Oni and neovim. Use case?
+
+  * Derive default commands from keyBindings.json like vscode
+
  */
 let handle = (~neovimHandler, commands: bindings, inputKey) =>
   List.fold_left(
     (defaultAction, {key, command}) =>
       if (inputKey == key) {
-        Oni_Core.Actions.OniCommand(command);
+        OniCommand(command);
       } else {
         ignore(neovimHandler(inputKey));
         defaultAction;
