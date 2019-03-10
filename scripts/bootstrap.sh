@@ -37,13 +37,15 @@ case "${machine}" in
       TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/src/index.js"
       EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-linux64/bin/nvim"
-      CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
+      CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json"
+      KEYBINDINGS_PATH="$(pwd)/assets/configuration/keybindings.json";;
   Mac)
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/osx/node"
       TEXTMATE_SERVICE_PATH="$(pwd)/src/textmate_service/lib/src/index.js"
       EXTENSIONS_PATH="$(pwd)/extensions"
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-osx64/bin/nvim"
-      CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json";;
+      CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json"
+      KEYBINDINGS_PATH="$(pwd)/assets/configuration/keybindings.json";;
   *)
       NEOVIM_PATH="$(pwd)/vendor/neovim-0.3.3/nvim-win64/bin/nvim.exe"
       NEOVIM_PATH="$(cygpath -m "$NEOVIM_PATH")"
@@ -54,10 +56,12 @@ case "${machine}" in
       NODE_PATH="$(pwd)/vendor/node-v10.15.1/win-x64/node.exe"
       NODE_PATH="$(cygpath -m "$NODE_PATH")"
       CONFIGURATION_PATH="$(pwd)/assets/configuration/configuration.json"
-      CONFIGURATION_PATH="$(cygpath -m "$CONFIGURATION_PATH")";;
+      CONFIGURATION_PATH="$(cygpath -m "$CONFIGURATION_PATH")"
+      KEYBINDINGS_PATH="$(pwd)/assets/configuration/keybindings.json"
+      KEYBINDINGS_PATH="$(cygpath -m "$KEYBINDINGS_PATH")";;
 esac
 
-oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\",configuration:\"$CONFIGURATION_PATH\",textmateService:\"$TEXTMATE_SERVICE_PATH\",bundledExtensions:\"$EXTENSIONS_PATH\"}"
+oni_bin_path="{neovim:\"$NEOVIM_PATH\",node:\"$NODE_PATH\",configuration:\"$CONFIGURATION_PATH\",textmateService:\"$TEXTMATE_SERVICE_PATH\",bundledExtensions:\"$EXTENSIONS_PATH\",keybindings:\"$KEYBINDINGS_PATH\"}"
 
 # create the current bin path as this might not exist yet
 if [ ! -d "$config_path" ]; then

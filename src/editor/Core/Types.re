@@ -227,15 +227,8 @@ type commandline = {
 };
 
 module Input = {
-  [@deriving show]
+  [@deriving (show, yojson({strict: false, exn: false}))]
   type controlMode =
-    | Oni
-    | Neovim;
-
-  [@deriving show]
-  type keyBindings = {
-    key: string,
-    command: string,
-    condition: controlMode,
-  };
+    | [@name "oni"] Oni
+    | [@name "neovim"] Neovim;
 };

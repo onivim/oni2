@@ -72,7 +72,7 @@ let keyPressToCommand =
   };
 
 let getActionsForBinding = (inputKey, commands, state: State.t) =>
-  Types.Input.(
+  Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
         if (inputKey == key && condition == state.inputControlMode) {

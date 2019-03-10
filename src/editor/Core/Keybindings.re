@@ -1,10 +1,27 @@
 open Types.Input;
 
+[@deriving (show, yojson({strict: false, exn: false}))]
+type keyBindings = {
+  key: string,
+  command: string,
+  condition: controlMode,
+};
+
+[@deriving (show, yojson({strict: false, exn: false}))]
 type t = list(keyBindings);
 
-let defaultCommands = [
-  {key: "<C-P>", command: "commandPalette.open", condition: Neovim},
-  {key: "<ESC>", command: "commandPalette.close", condition: Oni},
-  {key: "<C-N>", command: "commandPalette.next", condition: Oni},
-  {key: "<C-P>", command: "commandPalette.previous", condition: Oni},
-];
+[@deriving (show, yojson({strict: false, exn: false}))]
+type json_keybindings = {bindings: t};
+
+let ofFile = filePath =>
+  Yojson.Safe.from_file(filePath) |> json_keybindings_of_yojson;
+
+let get = () => {
+  let {keybindingsPath, _}: Setup.t = Setup.init();
+  switch (ofFile(keybindingsPath)) {
+  | Ok(b) => b.bindings
+  | Error(e) =>
+    print_endline("Error parsing keybindings file ------- " ++ e);
+    [];
+  };
+};

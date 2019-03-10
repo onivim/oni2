@@ -153,11 +153,10 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
+  let commands = Core.Keybindings.get();
+
   let inputHandler =
-    Input.handle(
-      ~neovimHandler=neovimProtocol.input,
-      ~commands=Core.Keybindings.defaultCommands,
-    );
+    Input.handle(~neovimHandler=neovimProtocol.input, ~commands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
