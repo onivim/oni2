@@ -228,13 +228,14 @@ type commandline = {
 
 module Input = {
   [@deriving show]
-  type keyBindings = {
-    key: string,
-    command: string,
-  };
-
-  [@deriving show]
   type controlMode =
     | Oni
     | Neovim;
+
+  [@deriving show]
+  type keyBindings = {
+    key: string,
+    command: string,
+    condition: controlMode,
+  };
 };

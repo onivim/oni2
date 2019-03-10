@@ -104,18 +104,24 @@ let reduce: (State.t, Actions.t) => State.t =
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | SetInputControlMode(m) => {...s, inputControlMode: m}
-    | CommandPaletteClose => {
+    | CommandPalettePosition(pos) => {
         ...s,
         commandPalette: {
-          isOpen: false,
-          commands: s.commandPalette.commands,
+          ...s.commandPalette,
+          selectedItem:
+            CommandPalette.position(
+              s.commandPalette.selectedItem,
+              pos,
+              s.commandPalette.commands,
+            ),
         },
       }
-    | CommandPaletteOpen => {
+    | CommandPaletteToggle(isOpen) => {
         ...s,
+        inputControlMode: CommandPalette.setInputControl(isOpen),
         commandPalette: {
-          isOpen: true,
-          commands: s.commandPalette.commands,
+          ...s.commandPalette,
+          isOpen,
         },
       }
     | _ => s

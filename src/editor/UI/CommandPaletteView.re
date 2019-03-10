@@ -28,10 +28,23 @@ let createElement =
     (
       hooks,
       commandPalette.isOpen ?
-        <ScrollView style={containerStyles(theme)}>
+        <View style={containerStyles(theme)}>
           <Input style=Style.[width(paletteWidth)] />
-          <MenuItem label="CommandPalette" selected=true theme />
-        </ScrollView> :
+          <ScrollView style=Style.[height(350)]>
+            ...{
+                 List.mapi(
+                   (index, cmd: CommandPalette.command) =>
+                     <MenuItem
+                       icon=""
+                       label={cmd.name}
+                       selected={index == commandPalette.selectedItem}
+                       theme
+                     />,
+                   commandPalette.commands,
+                 )
+               }
+          </ScrollView>
+        </View> :
         React.listToElement([]),
     )
   );

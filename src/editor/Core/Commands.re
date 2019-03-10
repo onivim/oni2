@@ -6,8 +6,13 @@ type oniCommand = {
 type t = list(oniCommand);
 
 let oniCommands = [
-  {name: "open.commandPalette", command: () => CommandPaletteOpen},
-  {name: "close.commandPalette", command: () => CommandPaletteClose},
+  {name: "commandPalette.open", command: () => CommandPaletteToggle(true)},
+  {name: "commandPalette.close", command: () => CommandPaletteToggle(false)},
+  {name: "commandPalette.next", command: () => CommandPalettePosition(1)},
+  {
+    name: "commandPalette.previous",
+    command: () => CommandPalettePosition(-1),
+  },
 ];
 
 let handleCommand = (~commands=oniCommands, name) => {

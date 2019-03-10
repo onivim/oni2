@@ -74,9 +74,25 @@ let keyPressToCommand =
 type bindings = list(Types.Input.keyBindings);
 
 let defaultCommands: bindings = [
-  {key: "<C-P>", command: "open.commandPalette"},
-  {key: "<ESC>", command: "close.commandPalette"},
+  {key: "<C-P>", command: "commandPalette.open", condition: Neovim},
+  {key: "<ESC>", command: "commandPalette.close", condition: Oni},
+  {key: "<C-N>", command: "commandPalette.next", condition: Oni},
+  {key: "<C-P>", command: "commandPalette.previous", condition: Oni},
 ];
+
+let getActionsForBinding = (inputKey, commands, state: State.t) =>
+  Types.Input.(
+    List.fold_left(
+      (defaultAction, {key, command, condition}) =>
+        if (inputKey == key && condition == state.inputControlMode) {
+          [Commands.handleCommand(command)];
+        } else {
+          defaultAction;
+        },
+      [],
+      commands,
+    )
+  );
 
 /**
   Handle Input from Oni or Neovim
@@ -91,23 +107,13 @@ let defaultCommands: bindings = [
 
  */
 let handle = (~neovimHandler, ~state: State.t, ~commands: bindings, inputKey) =>
-  Types.Input.(
-    List.fold_left(
-      (defaultAction, {key, command}) =>
-        if (inputKey == key) {
-          [
-            Actions.SetInputControlMode(Oni),
-            Commands.handleCommand(command),
-          ];
-        } else {
-          switch (state.inputControlMode) {
-          | Oni => defaultAction
-          | Neovim =>
-            ignore(neovimHandler(inputKey));
-            [Actions.SetInputControlMode(Neovim), ...defaultAction];
-          };
-        },
-      [Actions.Noop],
-      commands,
-    )
-  );
+  switch (state.inputControlMode) {
+  | Oni => getActionsForBinding(inputKey, commands, state)
+  | Neovim =>
+    switch (getActionsForBinding(inputKey, commands, state)) {
+    | [] =>
+      ignore(neovimHandler(inputKey));
+      [Actions.Noop];
+    | actions => actions
+    }
+  };
