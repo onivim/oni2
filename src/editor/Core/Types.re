@@ -249,5 +249,5 @@ module Input = {
 };
 
 module Effects = {
-  type t = {openFile: unit => unit};
+  type t = {openFile: Views.viewOperation};
 };

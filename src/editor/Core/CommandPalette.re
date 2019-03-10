@@ -3,27 +3,45 @@ open Types;
 type t = Palette.t;
 open Palette;
 
-let openConfigurationFile = _effects => {
-  let sep = Rench.Path.pathSeparator;
-  let _path =
-    Revery.Environment.getExecutingDirectory()
-    ++ sep
-    ++ "configuration"
-    ++ sep
-    ++ "configuration.json";
-  /* Core.Gl */
-  ();
+let join = paths => {
+  let sep = Filename.dir_sep;
+  List.fold_left((accum, p) => accum ++ sep ++ p, "", paths);
 };
 
-let commandPaletteCommands = effects => [
-  {name: "Open configuration file", command: () => ()},
+let openConfigurationFile = (effects: Effects.t) => {
+  let path =
+    join([
+      Revery.Environment.getWorkingDirectory(),
+      "assets",
+      "configuration",
+      "configuration.json",
+    ]);
+  effects.openFile(~path, ());
+};
+
+let openKeybindingsFile = (effects: Effects.t) => {
+  let path =
+    join([
+      Revery.Environment.getWorkingDirectory(),
+      "assets",
+      "configuration",
+      "keybindings.json",
+    ]);
+  effects.openFile(~path, ());
+};
+
+let commandPaletteCommands = (effects: Effects.t) => [
+  {
+    name: "Open configuration file",
+    command: () => openConfigurationFile(effects),
+  },
   {
     name: "Open keybindings file",
-    command: () => openConfigurationFile(effects),
+    command: () => openKeybindingsFile(effects),
   },
 ];
 
-let create = (~effects=?, ()) =>
+let create = (~effects: option(Effects.t)=?, ()) =>
   switch (effects) {
   | Some(e) => {
       isOpen: false,
@@ -49,8 +67,12 @@ let reduce = (state: t, action: Actions.t) =>
   | CommandPaletteOpen => {...state, isOpen: true}
   | CommandPaletteClose => {...state, isOpen: false}
   | CommandPaletteSelect =>
+    /**
+       TODO: Refactor this to middleware so this action is handled like a redux side-effect
+       as this makes the reducer impure
+     */
     let selected = List.nth(state.commands, state.selectedItem);
     selected.command();
-    state;
+    {...state, isOpen: false};
   | _ => state
   };

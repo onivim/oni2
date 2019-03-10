@@ -19,7 +19,10 @@ let oniCommands = [
     name: "commandPalette.previous",
     command: _ => [CommandPalettePosition(-1)],
   },
-  {name: "commandPalette.select", command: _ => [CommandPaletteSelect]},
+  {
+    name: "commandPalette.select",
+    command: _ => [CommandPaletteSelect, SetInputControlMode(Neovim)],
+  },
 ];
 
 let handleCommand = (~commands=oniCommands, name) => {
