@@ -1,9 +1,9 @@
 {
     "bindings": [
-        { "key": "<C-P>", "command": "commandPalette.open", "condition": ["neovim"] },
-        { "key": "<ESC>", "command": "commandPalette.close", "condition": ["commandPalette"] },
-        { "key": "<C-N>", "command": "commandPalette.next", "condition": ["commandPalette"] },
-        { "key": "<C-P>", "command": "commandPalette.previous", "condition": ["commandPalette"] },
-        { "key": "<CR>", "command": "commandPalette.select", "condition": ["commandPalette"] }
+        { "key": "<C-P>", "command": "commandPalette.open", "when": ["neovim"] },
+        { "key": "<ESC>", "command": "commandPalette.close", "when": ["commandPalette"] },
+        { "key": "<C-N>", "command": "commandPalette.next", "when": ["commandPalette"] },
+        { "key": "<C-P>", "command": "commandPalette.previous", "when": ["commandPalette"] },
+        { "key": "<CR>", "command": "commandPalette.select", "when": ["commandPalette"] }
     ]
 }

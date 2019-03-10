@@ -4,6 +4,7 @@ open Types.Input;
 type keyBindings = {
   key: string,
   command: string,
+  [@key "when"]
   condition: controlMode,
 };
 
