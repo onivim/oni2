@@ -156,7 +156,7 @@ let init = app => {
   let inputHandler =
     Input.handle(
       ~neovimHandler=neovimProtocol.input,
-      ~commands=Input.defaultCommands,
+      ~commands=Core.Keybindings.defaultCommands,
     );
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>

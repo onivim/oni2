@@ -30,3 +30,4 @@ module Wildmenu = Wildmenu;
 module Configuration = Configuration;
 module CommandPalette = CommandPalette;
 module Commands = Commands;
+module Keybindings = Keybindings;

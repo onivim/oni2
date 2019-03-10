@@ -71,15 +71,6 @@ let keyPressToCommand =
     None;
   };
 
-type bindings = list(Types.Input.keyBindings);
-
-let defaultCommands: bindings = [
-  {key: "<C-P>", command: "commandPalette.open", condition: Neovim},
-  {key: "<ESC>", command: "commandPalette.close", condition: Oni},
-  {key: "<C-N>", command: "commandPalette.next", condition: Oni},
-  {key: "<C-P>", command: "commandPalette.previous", condition: Oni},
-];
-
 let getActionsForBinding = (inputKey, commands, state: State.t) =>
   Types.Input.(
     List.fold_left(
@@ -100,7 +91,8 @@ let getActionsForBinding = (inputKey, commands, state: State.t) =>
   TODO: Derive default commands from keyBindings.json like vscode
 
  */
-let handle = (~neovimHandler, ~state: State.t, ~commands: bindings, inputKey) =>
+let handle =
+    (~neovimHandler, ~state: State.t, ~commands: Keybindings.t, inputKey) =>
   switch (state.inputControlMode) {
   | Oni => getActionsForBinding(inputKey, commands, state)
   | Neovim =>
