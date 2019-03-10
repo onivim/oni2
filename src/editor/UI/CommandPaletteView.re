@@ -29,26 +29,24 @@ let createElement =
   component(hooks =>
     (
       hooks,
-      commandPalette.isOpen ?
-        <View style={containerStyles(theme)}>
-          /* <Input style=Style.[width(paletteWidth)] /> */
+      commandPalette.isOpen
+        ? <View style={containerStyles(theme)}>
+            /* <Input style=Style.[width(paletteWidth)] /> */
 
-            <ScrollView style=Style.[height(350)]>
-              ...{
-                   List.mapi(
-                     (index, cmd: Types.Palette.command) =>
-                       <MenuItem
-                         icon=""
-                         style=paletteItemStyle
-                         label={cmd.name}
-                         selected={index == commandPalette.selectedItem}
-                         theme
-                       />,
-                     commandPalette.commands,
-                   )
-                 }
-            </ScrollView>
-          </View> :
-        React.listToElement([]),
+              <ScrollView style=Style.[height(350)]>
+                ...{List.mapi(
+                  (index, cmd: Types.Palette.command) =>
+                    <MenuItem
+                      icon=""
+                      style=paletteItemStyle
+                      label={cmd.name}
+                      selected={index == commandPalette.selectedItem}
+                      theme
+                    />,
+                  commandPalette.commands,
+                )}
+              </ScrollView>
+            </View>
+        : React.listToElement([]),
     )
   );
