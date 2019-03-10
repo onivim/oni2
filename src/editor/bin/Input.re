@@ -85,7 +85,7 @@ let getActionsForBinding = (inputKey, commands, state: State.t) =>
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
         if (inputKey == key && condition == state.inputControlMode) {
-          [Commands.handleCommand(command)];
+          Commands.handleCommand(command);
         } else {
           defaultAction;
         },
@@ -111,9 +111,9 @@ let handle = (~neovimHandler, ~state: State.t, ~commands: bindings, inputKey) =>
   | Oni => getActionsForBinding(inputKey, commands, state)
   | Neovim =>
     switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] =>
+    | [] as default =>
       ignore(neovimHandler(inputKey));
-      [Actions.Noop];
+      default;
     | actions => actions
     }
   };

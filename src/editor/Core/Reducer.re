@@ -70,6 +70,7 @@ let reduce: (State.t, Actions.t) => State.t =
       syntaxHighlighting: SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),
+      commandPalette: CommandPalette.reduce(s.commandPalette, a),
     };
 
     switch (a) {
@@ -104,26 +105,6 @@ let reduce: (State.t, Actions.t) => State.t =
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | SetInputControlMode(m) => {...s, inputControlMode: m}
-    | CommandPalettePosition(pos) => {
-        ...s,
-        commandPalette: {
-          ...s.commandPalette,
-          selectedItem:
-            CommandPalette.position(
-              s.commandPalette.selectedItem,
-              pos,
-              s.commandPalette.commands,
-            ),
-        },
-      }
-    | CommandPaletteToggle(isOpen) => {
-        ...s,
-        inputControlMode: CommandPalette.setInputControl(isOpen),
-        commandPalette: {
-          ...s.commandPalette,
-          isOpen,
-        },
-      }
     | _ => s
     };
   };

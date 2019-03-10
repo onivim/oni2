@@ -25,3 +25,14 @@ let create = () => {
 
 let position = (selectedItem, change, commands: list(command)) =>
   selectedItem + change >= List.length(commands) ? 0 : selectedItem + change;
+
+let reduce = (state: t, action: Actions.t) =>
+  switch (action) {
+  | CommandPalettePosition(pos) => {
+      ...state,
+      selectedItem: position(state.selectedItem, pos, state.commands),
+    }
+  | CommandPaletteOpen => {...state, isOpen: true}
+  | CommandPaletteClose => {...state, isOpen: false}
+  | _ => state
+  };
