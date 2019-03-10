@@ -226,9 +226,28 @@ type commandline = {
   show: bool,
 };
 
+module Palette = {
+  [@deriving show]
+  type command = {
+    name: string,
+    command: unit => unit,
+  };
+
+  [@deriving show]
+  type t = {
+    isOpen: bool,
+    commands: list(command),
+    selectedItem: int,
+  };
+};
+
 module Input = {
   [@deriving (show, yojson({strict: false, exn: false}))]
   type controlMode =
-    | [@name "oni"] Oni
+    | [@name "commandPalette"] Palette
     | [@name "neovim"] Neovim;
+};
+
+module Effects = {
+  type t = {openFile: unit => unit};
 };

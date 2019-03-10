@@ -88,18 +88,21 @@ let getActionsForBinding = (inputKey, commands, state: State.t) =>
 /**
   Handle Input from Oni or Neovim
 
-  TODO: Derive default commands from keyBindings.json like vscode
-
  */
 let handle =
-    (~neovimHandler, ~state: State.t, ~commands: Keybindings.t, inputKey) =>
+    (
+      ~api: Oni_Neovim.NeovimProtocol.t,
+      ~state: State.t,
+      ~commands: Keybindings.t,
+      inputKey,
+    ) =>
   switch (state.inputControlMode) {
-  | Oni => getActionsForBinding(inputKey, commands, state)
   | Neovim =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] as default =>
-      ignore(neovimHandler(inputKey));
+      api.input(inputKey) |> ignore;
       default;
     | actions => actions
     }
+  | _ => getActionsForBinding(inputKey, commands, state)
   };

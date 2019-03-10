@@ -1,38 +1,56 @@
-type command = {
-  name: string,
-  command: unit => Actions.t,
+open Types;
+
+type t = Palette.t;
+open Palette;
+
+let openConfigurationFile = _effects => {
+  let sep = Rench.Path.pathSeparator;
+  let _path =
+    Revery.Environment.getExecutingDirectory()
+    ++ sep
+    ++ "configuration"
+    ++ sep
+    ++ "configuration.json";
+  /* Core.Gl */
+  ();
 };
 
-type t = {
-  isOpen: bool,
-  commands: list(command),
-  selectedItem: int,
-};
-
-let commandPaletteCommands = [
-  {name: "testing1", command: () => Noop},
-  {name: "testing2", command: () => Noop},
-  {name: "testing3", command: () => Noop},
+let commandPaletteCommands = effects => [
+  {name: "Open configuration file", command: () => ()},
+  {
+    name: "Open keybindings file",
+    command: () => openConfigurationFile(effects),
+  },
 ];
 
-let setInputControl = isOpen => Types.Input.(isOpen ? Oni : Neovim);
+let create = (~effects=?, ()) =>
+  switch (effects) {
+  | Some(e) => {
+      isOpen: false,
+      commands: commandPaletteCommands(e),
+      selectedItem: 0,
+    }
+  | None => {isOpen: false, commands: [], selectedItem: 0}
+  };
 
-let create = () => {
-  isOpen: false,
-  commands: commandPaletteCommands,
-  selectedItem: 0,
-};
+let make = (~effects: Effects.t) =>
+  create(~effects, ()) |> (c => Actions.CommandPaletteStart(c.commands));
 
 let position = (selectedItem, change, commands: list(command)) =>
   selectedItem + change >= List.length(commands) ? 0 : selectedItem + change;
 
 let reduce = (state: t, action: Actions.t) =>
   switch (action) {
+  | CommandPaletteStart(commands) => {...state, commands}
   | CommandPalettePosition(pos) => {
       ...state,
       selectedItem: position(state.selectedItem, pos, state.commands),
     }
   | CommandPaletteOpen => {...state, isOpen: true}
   | CommandPaletteClose => {...state, isOpen: false}
+  | CommandPaletteSelect =>
+    let selected = List.nth(state.commands, state.selectedItem);
+    selected.command();
+    state;
   | _ => state
   };

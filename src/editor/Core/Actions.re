@@ -34,8 +34,10 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
+  | CommandPaletteStart(list(Palette.command))
   | CommandPaletteOpen
   | CommandPaletteClose
+  | CommandPaletteSelect
   | CommandPalettePosition(int)
   | SetInputControlMode(Input.controlMode)
   | Noop;

@@ -33,7 +33,7 @@ let createElement =
           <ScrollView style=Style.[height(350)]>
             ...{
                  List.mapi(
-                   (index, cmd: CommandPalette.command) =>
+                   (index, cmd: Types.Palette.command) =>
                      <MenuItem
                        icon=""
                        label={cmd.name}

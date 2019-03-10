@@ -155,8 +155,11 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  let inputHandler =
-    Input.handle(~neovimHandler=neovimProtocol.input, ~commands);
+  Core.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  |> App.dispatch(app)
+  |> ignore;
+
+  let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
