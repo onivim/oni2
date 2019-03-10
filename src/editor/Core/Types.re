@@ -244,8 +244,8 @@ module Palette = {
 module Input = {
   [@deriving (show, yojson({strict: false, exn: false}))]
   type controlMode =
-    | [@name "commandPalette"] Palette
-    | [@name "neovim"] Neovim;
+    | [@name "commandPaletteFocus"] CommandPaletteFocus
+    | [@name "editorTextFocus"] EditorTextFocus;
 };
 
 module Effects = {

@@ -8,11 +8,17 @@ type t = list(oniCommand);
 let oniCommands = [
   {
     name: "commandPalette.open",
-    command: _ => [CommandPaletteOpen, SetInputControlMode(Palette)],
+    command: _ => [
+      CommandPaletteOpen,
+      SetInputControlMode(CommandPaletteFocus),
+    ],
   },
   {
     name: "commandPalette.close",
-    command: _ => [CommandPaletteClose, SetInputControlMode(Neovim)],
+    command: _ => [
+      CommandPaletteClose,
+      SetInputControlMode(EditorTextFocus),
+    ],
   },
   {name: "commandPalette.next", command: _ => [CommandPalettePosition(1)]},
   {
@@ -21,7 +27,10 @@ let oniCommands = [
   },
   {
     name: "commandPalette.select",
-    command: _ => [CommandPaletteSelect, SetInputControlMode(Neovim)],
+    command: _ => [
+      CommandPaletteSelect,
+      SetInputControlMode(EditorTextFocus),
+    ],
   },
 ];
 

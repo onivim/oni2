@@ -97,7 +97,7 @@ let handle =
       inputKey,
     ) =>
   switch (state.inputControlMode) {
-  | Neovim =>
+  | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] as default =>
       api.input(inputKey) |> ignore;

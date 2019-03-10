@@ -54,5 +54,5 @@ let create: unit => t =
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
     editor: Editor.create(),
-    inputControlMode: Neovim,
+    inputControlMode: EditorTextFocus,
   };
