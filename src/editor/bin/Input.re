@@ -97,13 +97,7 @@ let getActionsForBinding = (inputKey, commands, state: State.t) =>
 /**
   Handle Input from Oni or Neovim
 
-  TODO:
-  * use value in state to determine whether or not input should be handled
-  by Oni or by Neovim e.g. when the command palette is open
-
-  * Determine if certain should be responded to by both Oni and neovim. Use case?
-
-  * Derive default commands from keyBindings.json like vscode
+  TODO: Derive default commands from keyBindings.json like vscode
 
  */
 let handle = (~neovimHandler, ~state: State.t, ~commands: bindings, inputKey) =>
