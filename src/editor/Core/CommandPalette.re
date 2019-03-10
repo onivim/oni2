@@ -3,25 +3,23 @@ open Types;
 type t = Palette.t;
 open Palette;
 
-let join = paths => {
-  let sep = Filename.dir_sep;
-  List.fold_left((accum, p) => accum ++ sep ++ p, "", paths);
-};
-
 let openConfigurationFile = (effects: Effects.t) => {
   let path =
-    join([
+    Utility.join([
       Revery.Environment.getWorkingDirectory(),
       "assets",
       "configuration",
       "configuration.json",
     ]);
-  effects.openFile(~path, ());
+  switch (Filesystem.createOniDirectory()) {
+  | Ok(_) => effects.openFile(~path, ())
+  | Error(e) => print_endline(e)
+  };
 };
 
 let openKeybindingsFile = (effects: Effects.t) => {
   let path =
-    join([
+    Utility.join([
       Revery.Environment.getWorkingDirectory(),
       "assets",
       "configuration",
