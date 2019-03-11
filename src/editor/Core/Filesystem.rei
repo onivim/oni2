@@ -4,8 +4,8 @@ type t('a) =
 
 let copy: (string, string) => t(unit);
 
-let isDir: string => t(unit);
+let isDir: Unix.stats => t(unit);
 
-let getOniHomeDir: unit => t(unit);
+let getHomeDir: unit => t(string);
 
 let createOniDirectory: unit => t(unit);

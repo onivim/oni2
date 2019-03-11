@@ -164,7 +164,17 @@ let copyFile = (source, dest) => {
   Unix.close(destFileDescriptor);
 };
 
-let copy = (source, dest) => Unix.handle_unix_error(copyFile, source, dest);
+let copy = (source, dest) =>
+  Unix.handle_unix_error(copyFile, source, dest) |> return;
+
+let createOniConfiguration = configDir => {
+  let defaultConfigDir = Revery.Environment.getWorkingDirectory();
+  let configurationPath =
+    defaultConfigDir
+    ++ Utility.join(["assets", "configuration", "configuration.json"]);
+  let userConfigPath = configDir ++ "configuration.json";
+  copy(configurationPath, userConfigPath);
+};
 
 let createOniDirectory = () =>
   getHomeDir()
@@ -177,15 +187,6 @@ let createOniDirectory = () =>
         | Some(st) =>
           /* path already exists */
           isDir(st) >>= (() => error("Directory already exists"))
-        | None => mkdir(path, ())
+        | None => mkdir(path, ()) >>= (_ => createOniConfiguration(path))
       )
   );
-
-let createOniConfiguration = configDir => {
-  let defaultConfigDir = Revery.Environment.getWorkingDirectory();
-  let configurationPath =
-    defaultConfigDir
-    ++ Utility.join(["assets", "configuration", "configuration.json"]);
-  let userConfigPath = configDir ++ "configuration.json";
-  copy(configurationPath, userConfigPath);
-};
