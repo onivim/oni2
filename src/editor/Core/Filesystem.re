@@ -37,7 +37,7 @@ let error = fmt => Printf.kprintf(msg => Error(msg), fmt);
 
 let return = x => Ok(x);
 
-let fail = msg => Error(msg);
+let _fail = msg => Error(msg);
 
 let (>>=) = on_success;
 let (/\/=) = on_error;
@@ -73,17 +73,17 @@ let hasPerm = (perm, st) =>
     error("expected permissions 0o%o, found 0o%o", perm, st.Unix.st_perm);
   };
 
-let getgid = group =>
+let getGroupId = () =>
   Unix.(
-    try (getgrnam(group).gr_gid |> return) {
-    | Not_found => error("no such group: '%s'", group)
+    try (getgid() |> return) {
+    | Not_found => error("No Group ID found")
     }
   );
 
-let getuid = user =>
+let getUserId = () =>
   Unix.(
-    try (getpwnam(user).pw_uid |> return) {
-    | Not_found => error("no such user: '%s'", user)
+    try (getuid() |> return) {
+    | Not_found => error("Cannot find user")
     }
   );
 
@@ -94,7 +94,7 @@ let stat = path =>
     }
   );
 
-let chmod = (path, perm) =>
+let chmod = (path, ~perm=0o640, ()) =>
   Unix.(
     try (chmod(path, perm) |> return) {
     | Unix_error(_, _, _) => error("can't set permissions for '%s'", path)
@@ -108,6 +108,9 @@ let chown = (path, uid, gid) =>
     }
   );
 
+/**
+  Permissions default to read/write permissions
+*/
 let mkdir = (path, ~perm=0o640, ()) =>
   Unix.(
     try (mkdir(path, perm) |> return) {
@@ -122,10 +125,10 @@ let rmdir = path =>
     }
   );
 
-let getOniDirFromHome = home =>
+let getOniDirectory = home =>
   home ++ Utility.join([".config", "oni2"]) |> return;
 
-let getHomeDir = () =>
+let getHomeDirectory = () =>
   Unix.(
     try (getenv("HOME") |> return) {
     | Unix_error(_, _, _) => error("Cannot find home")
@@ -177,8 +180,8 @@ let createOniConfiguration = configDir => {
 };
 
 let createOniDirectory = () =>
-  getHomeDir()
-  >>= getOniDirFromHome
+  getHomeDirectory()
+  >>= getOniDirectory
   >>= (
     path =>
       stat(path)

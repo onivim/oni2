@@ -6,6 +6,28 @@ let copy: (string, string) => t(unit);
 
 let isDir: Unix.stats => t(unit);
 
-let getHomeDir: unit => t(string);
+let hasOwner: (int, Unix.stats) => t(unit);
+
+let hasGroup: (int, Unix.stats) => t(unit);
+
+let hasPerm: (int, Unix.stats) => t(unit);
+
+let getHomeDirectory: unit => t(string);
+
+let getGroupId: unit => t(int);
+
+let getUserId: unit => t(int);
+
+let stat: string => t(option(Unix.stats));
+
+let chown: (string, int, int) => t(unit);
+
+let chmod: (string, ~perm: int=?, unit) => t(unit);
+
+let mkdir: (string, ~perm: int=?, unit) => t(unit);
+
+let rmdir: string => t(unit);
+
+let getOniDirectory: string => t(string);
 
 let createOniDirectory: unit => t(unit);
