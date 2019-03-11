@@ -46,5 +46,10 @@ let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
 
 let join = paths => {
   let sep = Filename.dir_sep;
-  List.fold_left((accum, p) => accum ++ sep ++ p, "", paths);
+  let (head, rest) =
+    switch (paths) {
+    | [] => ("", [])
+    | [head, ...rest] => (head, rest)
+    };
+  List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
 };

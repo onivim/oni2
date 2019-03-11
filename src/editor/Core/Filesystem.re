@@ -33,7 +33,10 @@ let always = (_t, f) => f();
 
 let ( *> ) = always;
 
-let error = fmt => Printf.kprintf(msg => Error(msg), fmt);
+/* This informs of an error and passes the error string wrapped in an Error to the next function*/
+let error = fmt => Printf.ksprintf(msg => Error(msg), fmt);
+
+let inform = fmt => Printf.ksprintf(msg => Ok(msg), fmt);
 
 let return = x => Ok(x);
 
@@ -94,7 +97,7 @@ let stat = path =>
     }
   );
 
-let chmod = (path, ~perm=0o640, ()) =>
+let chmod = (path, ~perm=0o666, ()) =>
   Unix.(
     try (chmod(path, perm) |> return) {
     | Unix_error(_, _, _) => error("can't set permissions for '%s'", path)
@@ -111,7 +114,7 @@ let chown = (path, uid, gid) =>
 /**
   Permissions default to read/write permissions
 */
-let mkdir = (path, ~perm=0o640, ()) =>
+let mkdir = (path, ~perm=0o666, ()) =>
   Unix.(
     try (mkdir(path, perm) |> return) {
     | Unix_error(_, _, _) => error("can't create directory '%s'", path)
@@ -126,7 +129,7 @@ let rmdir = path =>
   );
 
 let getOniDirectory = home =>
-  home ++ Utility.join([".config", "oni2"]) |> return;
+  Utility.join([home, ".config", "oni2"]) |> return;
 
 let getHomeDirectory = () =>
   Unix.(
@@ -139,16 +142,18 @@ let getHomeDirectory = () =>
    CopyFile:
 
    There is no native function to copy files (suprisingly)
+   The reference below explains how this function works
+   and why the seemingly arbitrary buffer size
+   TLDR: efficiency
 
    reference: https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33
  */
 let copyFile = (source, dest) => {
-  let buffer_size = 8192;
-  let buffer = Bytes.create(buffer_size);
+  let bufferSize = 8192;
+  let buffer = Bytes.create(bufferSize);
 
-  let sourceFileDescriptor = Unix.openfile(source, [O_RDONLY], 0);
-  let destFileDescriptor =
-    Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], 438);
+  let sourceFile = Unix.openfile(source, [O_RDONLY], 0);
+  let destFile = Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], 0o666);
   /**
     In the copy_loop function we do the copy by blocks of buffer_size bytes.
     We request buffer_size bytes to read. If read returns zero,
@@ -156,26 +161,44 @@ let copyFile = (source, dest) => {
     Otherwise we write the bytes we have read in the output file and start again.
    */
   let rec copy_loop = () =>
-    switch (Unix.read(sourceFileDescriptor, buffer, 0, buffer_size)) {
+    switch (Unix.read(sourceFile, buffer, 0, bufferSize)) {
     | 0 => ()
     | bytes =>
-      Unix.write(destFileDescriptor, buffer, 0, bytes) |> ignore;
+      Unix.write(destFile, buffer, 0, bytes) |> ignore;
       copy_loop();
     };
   copy_loop();
-  Unix.close(sourceFileDescriptor);
-  Unix.close(destFileDescriptor);
+  Unix.close(sourceFile);
+  Unix.close(destFile);
 };
 
 let copy = (source, dest) =>
-  Unix.handle_unix_error(copyFile, source, dest) |> return;
+  Unix.(
+    try (copyFile(source, dest) |> return) {
+    | Unix_error(err, funcName, argument) =>
+      error(
+        "Failed to copy from %s to %s, encountered %s, whilst calling %s with %s",
+        source,
+        dest,
+        error_message(err),
+        funcName,
+        argument,
+      )
+    }
+  );
 
 let createOniConfiguration = configDir => {
   let defaultConfigDir = Revery.Environment.getWorkingDirectory();
   let configurationPath =
-    defaultConfigDir
-    ++ Utility.join(["assets", "configuration", "configuration.json"]);
-  let userConfigPath = configDir ++ "configuration.json";
+    Utility.join([
+      defaultConfigDir,
+      "assets",
+      "configuration",
+      "configuration.json",
+    ]);
+
+  let userConfigPath = Utility.join([configDir, "configuration.json"]);
+
   copy(configurationPath, userConfigPath);
 };
 
@@ -190,11 +213,13 @@ let createOniDirectory = () =>
         | Some(st) =>
           /* path already exists */
           isDir(st)
-          *> (_ => error("Path already exists"))
+          *> (_ => inform("Path already exists"))
           >>= (
-            () =>
+            _ =>
               createOniConfiguration(path)
-              /\/= (_ => error("Unable to create oni configuration files"))
+              /\/= error(
+                     "Unable to create oni configuration files because: %s",
+                   )
           )
         | None => mkdir(path, ()) >>= (_ => createOniConfiguration(path))
       )

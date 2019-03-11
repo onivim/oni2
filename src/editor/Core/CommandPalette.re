@@ -5,12 +5,13 @@ open Palette;
 
 let openConfigurationFile = (effects: Effects.t) => {
   let path =
-    Utility.join([
-      Revery.Environment.getWorkingDirectory(),
-      "assets",
-      "configuration",
-      "configuration.json",
-    ]);
+    Filename.dir_sep
+    ++ Utility.join([
+         Revery.Environment.getWorkingDirectory(),
+         "assets",
+         "configuration",
+         "configuration.json",
+       ]);
   switch (Filesystem.createOniDirectory()) {
   | Ok(_) => effects.openFile(~path, ())
   | Error(e) => print_endline(e)
@@ -19,12 +20,13 @@ let openConfigurationFile = (effects: Effects.t) => {
 
 let openKeybindingsFile = (effects: Effects.t) => {
   let path =
-    Utility.join([
-      Revery.Environment.getWorkingDirectory(),
-      "assets",
-      "configuration",
-      "keybindings.json",
-    ]);
+    Filename.dir_sep
+    ++ Utility.join([
+         Revery.Environment.getWorkingDirectory(),
+         "assets",
+         "configuration",
+         "keybindings.json",
+       ]);
   effects.openFile(~path, ());
 };
 
