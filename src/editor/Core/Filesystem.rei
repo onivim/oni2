@@ -30,4 +30,4 @@ let rmdir: string => t(unit);
 
 let getOniDirectory: string => t(string);
 
-let createOniDirectory: unit => t(unit);
+let createOniConfigFile: string => t(string);

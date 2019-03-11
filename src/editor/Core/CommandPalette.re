@@ -3,41 +3,20 @@ open Types;
 type t = Palette.t;
 open Palette;
 
-let openConfigurationFile = (effects: Effects.t) => {
-  let path =
-    Filename.dir_sep
-    ++ Utility.join([
-         Revery.Environment.getWorkingDirectory(),
-         "assets",
-         "configuration",
-         "configuration.json",
-       ]);
-  switch (Filesystem.createOniDirectory()) {
-  | Ok(_) => effects.openFile(~path, ())
+let openConfigurationFile = (effects: Effects.t, name) =>
+  switch (Filesystem.createOniConfigFile(name)) {
+  | Ok(path) => effects.openFile(~path, ())
   | Error(e) => print_endline(e)
   };
-};
-
-let openKeybindingsFile = (effects: Effects.t) => {
-  let path =
-    Filename.dir_sep
-    ++ Utility.join([
-         Revery.Environment.getWorkingDirectory(),
-         "assets",
-         "configuration",
-         "keybindings.json",
-       ]);
-  effects.openFile(~path, ());
-};
 
 let commandPaletteCommands = (effects: Effects.t) => [
   {
     name: "Open configuration file",
-    command: () => openConfigurationFile(effects),
+    command: () => openConfigurationFile(effects, "configuration.json"),
   },
   {
     name: "Open keybindings file",
-    command: () => openKeybindingsFile(effects),
+    command: () => openConfigurationFile(effects, "keybindings.json"),
   },
 ];
 

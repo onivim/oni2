@@ -46,6 +46,12 @@ let (>>=) = on_success;
 let (/\/=) = on_error;
 
 /**
+   Permissions ==================================================
+ */
+
+let userReadWriteExecute = 0o777;
+
+/**
    Safe Unix functions ==========================================
  */
 
@@ -97,7 +103,7 @@ let stat = path =>
     }
   );
 
-let chmod = (path, ~perm=0o666, ()) =>
+let chmod = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
     try (chmod(path, perm) |> return) {
     | Unix_error(_, _, _) => error("can't set permissions for '%s'", path)
@@ -107,24 +113,45 @@ let chmod = (path, ~perm=0o666, ()) =>
 let chown = (path, uid, gid) =>
   Unix.(
     try (chown(path, uid, gid) |> return) {
-    | Unix_error(_, _, _) => error("can't set uid/gid for '%s'", path)
+    | Unix_error(err, _, _) =>
+      error(
+        "can't set uid/gid for '%s' because '%s",
+        path,
+        error_message(err),
+      )
     }
   );
 
 /**
   Permissions default to read/write permissions
+
+  The permissions of the directory should ideally be
+  drwxr-xr-x -> this means the user can read, write and execute
+  but group and others can only read and execute. Without
+  the correct permission creating the subfolders or files
+  will not work correctly
 */
-let mkdir = (path, ~perm=0o666, ()) =>
+let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
     try (mkdir(path, perm) |> return) {
-    | Unix_error(_, _, _) => error("can't create directory '%s'", path)
+    | Unix_error(err, _, _) =>
+      error(
+        "can't create directory '%s' because '%s",
+        path,
+        error_message(err),
+      )
     }
   );
 
 let rmdir = path =>
   Unix.(
     try (rmdir(path) |> return) {
-    | Unix_error(_, _, _) => error("can't remove directory '%s'", path)
+    | Unix_error(err, _, _) =>
+      error(
+        "can't remove directory '%s' because: '%s'",
+        path,
+        error_message(err),
+      )
     }
   );
 
@@ -134,7 +161,8 @@ let getOniDirectory = home =>
 let getHomeDirectory = () =>
   Unix.(
     try (getenv("HOME") |> return) {
-    | Unix_error(_, _, _) => error("Cannot find home")
+    | Unix_error(err, _, _) =>
+      error("Cannot find home because: '%s'", error_message(err))
     }
   );
 
@@ -146,6 +174,10 @@ let getHomeDirectory = () =>
    and why the seemingly arbitrary buffer size
    TLDR: efficiency
 
+   NOTE: copyFile itself is not safe, copy (below, is safe)
+   wraps the call with an exception handler that returns a wrapped
+   value of Error or Ok
+
    reference: https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33
  */
 let copyFile = (source, dest) => {
@@ -153,7 +185,8 @@ let copyFile = (source, dest) => {
   let buffer = Bytes.create(bufferSize);
 
   let sourceFile = Unix.openfile(source, [O_RDONLY], 0);
-  let destFile = Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], 0o666);
+  let destFile =
+    Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], userReadWriteExecute);
   /**
     In the copy_loop function we do the copy by blocks of buffer_size bytes.
     We request buffer_size bytes to read. If read returns zero,
@@ -187,22 +220,17 @@ let copy = (source, dest) =>
     }
   );
 
-let createOniConfiguration = configDir => {
-  let defaultConfigDir = Revery.Environment.getWorkingDirectory();
-  let configurationPath =
-    Utility.join([
-      defaultConfigDir,
-      "assets",
-      "configuration",
-      "configuration.json",
-    ]);
+let createOniConfiguration = (configDir, file) => {
+  open Utility;
 
-  let userConfigPath = Utility.join([configDir, "configuration.json"]);
+  let assetDir = Revery.Environment.getWorkingDirectory();
+  let configurationPath = join([assetDir, "assets", "configuration", file]);
+  let userConfigPath = join([configDir, file]);
 
   copy(configurationPath, userConfigPath);
 };
 
-let createOniDirectory = () =>
+let createOniConfigFile = file =>
   getHomeDirectory()
   >>= getOniDirectory
   >>= (
@@ -211,16 +239,26 @@ let createOniDirectory = () =>
       >>= (
         fun
         | Some(st) =>
+          /**
+           TODO:
+           we should check if the config file we want to make exists
+           if it does we should do nothing else
+         */
           /* path already exists */
           isDir(st)
-          *> (_ => inform("Path already exists"))
+          *> (_ => inform("path already exists"))
           >>= (
             _ =>
-              createOniConfiguration(path)
-              /\/= error(
-                     "Unable to create oni configuration files because: %s",
-                   )
+              createOniConfiguration(path, file)
+              /\/= error("Error creating configuration files because: %s")
+              >>= (_ => return(Utility.join([path, file])))
           )
-        | None => mkdir(path, ()) >>= (_ => createOniConfiguration(path))
+        | None =>
+          mkdir(path, ())
+          >>= (
+            _ =>
+              createOniConfiguration(path, file)
+              >>= (_ => return(Utility.join([path, file])))
+          )
       )
   );
