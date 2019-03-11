@@ -26,6 +26,9 @@ let on_error = (t, f) =>
   | Ok(x) => Ok(x)
   };
 
+/**
+   Helper functions ============================================
+ */
 let always = (_t, f) => f();
 
 let ( *> ) = always;
@@ -38,6 +41,10 @@ let fail = msg => Error(msg);
 
 let (>>=) = on_success;
 let (/\/=) = on_error;
+
+/**
+   Safe Unix functions ==========================================
+ */
 
 let isDir = st =>
   switch (st.Unix.st_kind) {
@@ -116,7 +123,7 @@ let rmdir = path =>
   );
 
 let getOniDirFromHome = home =>
-  home ++ Utility.join([".config", "onitest"]) |> return;
+  home ++ Utility.join([".config", "oni2"]) |> return;
 
 let getHomeDir = () =>
   Unix.(
@@ -124,6 +131,40 @@ let getHomeDir = () =>
     | Unix_error(_, _, _) => error("Cannot find home")
     }
   );
+
+/**
+   CopyFile:
+
+   There is no native function to copy files (suprisingly)
+
+   reference: https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33
+ */
+let copyFile = (source, dest) => {
+  let buffer_size = 8192;
+  let buffer = Bytes.create(buffer_size);
+
+  let sourceFileDescriptor = Unix.openfile(source, [O_RDONLY], 0);
+  let destFileDescriptor =
+    Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], 438);
+  /**
+    In the copy_loop function we do the copy by blocks of buffer_size bytes.
+    We request buffer_size bytes to read. If read returns zero,
+    we have reached the end of file and the copy is over.
+    Otherwise we write the bytes we have read in the output file and start again.
+   */
+  let rec copy_loop = () =>
+    switch (Unix.read(sourceFileDescriptor, buffer, 0, buffer_size)) {
+    | 0 => ()
+    | bytes =>
+      Unix.write(destFileDescriptor, buffer, 0, bytes) |> ignore;
+      copy_loop();
+    };
+  copy_loop();
+  Unix.close(sourceFileDescriptor);
+  Unix.close(destFileDescriptor);
+};
+
+let copy = (source, dest) => Unix.handle_unix_error(copyFile, source, dest);
 
 let createOniDirectory = () =>
   getHomeDir()
@@ -139,3 +180,12 @@ let createOniDirectory = () =>
         | None => mkdir(path, ())
       )
   );
+
+let createOniConfiguration = configDir => {
+  let defaultConfigDir = Revery.Environment.getWorkingDirectory();
+  let configurationPath =
+    defaultConfigDir
+    ++ Utility.join(["assets", "configuration", "configuration.json"]);
+  let userConfigPath = configDir ++ "configuration.json";
+  copy(configurationPath, userConfigPath);
+};
