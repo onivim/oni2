@@ -186,7 +186,11 @@ let createOniDirectory = () =>
         fun
         | Some(st) =>
           /* path already exists */
-          isDir(st) >>= (() => error("Directory already exists"))
+          isDir(st)
+          >>= (
+            () =>
+              error("Path %s already exists", path) >>= createOniConfiguration
+          )
         | None => mkdir(path, ()) >>= (_ => createOniConfiguration(path))
       )
   );
