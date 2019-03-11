@@ -190,9 +190,11 @@ let createOniDirectory = () =>
         | Some(st) =>
           /* path already exists */
           isDir(st)
+          *> (_ => error("Path already exists"))
           >>= (
             () =>
-              error("Path %s already exists", path) >>= createOniConfiguration
+              createOniConfiguration(path)
+              /\/= (_ => error("Unable to create oni configuration files"))
           )
         | None => mkdir(path, ()) >>= (_ => createOniConfiguration(path))
       )
