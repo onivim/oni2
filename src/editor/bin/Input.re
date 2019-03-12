@@ -4,6 +4,7 @@
  * Basic input handling for Oni
  */
 
+open Oni_Core;
 open Reglfw.Glfw;
 open Reglfw.Glfw.Key;
 
@@ -68,4 +69,40 @@ let keyPressToCommand =
     };
   } else {
     None;
+  };
+
+let getActionsForBinding = (inputKey, commands, state: State.t) =>
+  Keybindings.(
+    List.fold_left(
+      (defaultAction, {key, command, condition}) =>
+        if (inputKey == key && condition == state.inputControlMode) {
+          Commands.handleCommand(command);
+        } else {
+          defaultAction;
+        },
+      [],
+      commands,
+    )
+  );
+
+/**
+  Handle Input from Oni or Neovim
+
+ */
+let handle =
+    (
+      ~api: Oni_Neovim.NeovimProtocol.t,
+      ~state: State.t,
+      ~commands: Keybindings.t,
+      inputKey,
+    ) =>
+  switch (state.inputControlMode) {
+  | EditorTextFocus =>
+    switch (getActionsForBinding(inputKey, commands, state)) {
+    | [] as default =>
+      api.input(inputKey) |> ignore;
+      default;
+    | actions => actions
+    }
+  | _ => getActionsForBinding(inputKey, commands, state)
   };
