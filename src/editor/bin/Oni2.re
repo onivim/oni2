@@ -153,7 +153,6 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-<<<<<<< HEAD
   let commands = Core.Keybindings.get();
 
   Core.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
@@ -161,13 +160,6 @@ let init = app => {
   |> ignore;
 
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
-=======
-  let inputHandler =
-    Input.handle(
-      ~neovimHandler=neovimProtocol.input,
-      ~commands=Input.defaultCommands,
-    );
->>>>>>> Add input control mode to state
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {

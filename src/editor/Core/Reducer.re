@@ -105,23 +105,6 @@ let reduce: (State.t, Actions.t) => State.t =
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | SetInputControlMode(m) => {...s, inputControlMode: m}
-<<<<<<< HEAD
-=======
-    | CommandPaletteClose => {
-        ...s,
-        commandPalette: {
-          isOpen: false,
-          commands: s.commandPalette.commands,
-        },
-      }
-    | CommandPaletteOpen => {
-        ...s,
-        commandPalette: {
-          isOpen: true,
-          commands: s.commandPalette.commands,
-        },
-      }
->>>>>>> Add input control mode to state
     | _ => s
     };
   };

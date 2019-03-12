@@ -1,16 +1,23 @@
 type oniCommand = {
   name: string,
 <<<<<<< HEAD
+<<<<<<< HEAD
   command: unit => list(Actions.t),
 =======
   command: unit => Actions.t,
 >>>>>>> Add input control mode to state
+=======
+  command: unit => list(Actions.t),
+>>>>>>> master
 };
 
 type t = list(oniCommand);
 
 let oniCommands = [
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
   {
     name: "commandPalette.open",
     command: _ => [
@@ -37,10 +44,13 @@ let oniCommands = [
       SetInputControlMode(EditorTextFocus),
     ],
   },
+<<<<<<< HEAD
 =======
   {name: "open.commandPalette", command: () => CommandPaletteOpen},
   {name: "close.commandPalette", command: () => CommandPaletteClose},
 >>>>>>> Add input control mode to state
+=======
+>>>>>>> master
 ];
 
 let handleCommand = (~commands=oniCommands, name) => {
@@ -48,9 +58,13 @@ let handleCommand = (~commands=oniCommands, name) => {
   switch (matchingCmd) {
   | Some(c) => c.command()
 <<<<<<< HEAD
+<<<<<<< HEAD
   | None => [Noop]
 =======
   | None => Noop
 >>>>>>> Add input control mode to state
+=======
+  | None => [Noop]
+>>>>>>> master
   };
 };

@@ -226,7 +226,6 @@ type commandline = {
   show: bool,
 };
 
-<<<<<<< HEAD
 module Palette = {
   [@deriving show]
   type command = {
@@ -247,21 +246,14 @@ module Input = {
   type controlMode =
     | [@name "commandPaletteFocus"] CommandPaletteFocus
     | [@name "editorTextFocus"] EditorTextFocus;
-};
 
-module Effects = {
-  type t = {openFile: Views.viewOperation};
-=======
-module Input = {
   [@deriving show]
   type keyBindings = {
     key: string,
     command: string,
   };
+};
 
-  [@deriving show]
-  type controlMode =
-    | Oni
-    | Neovim;
->>>>>>> Add input control mode to state
+module Effects = {
+  type t = {openFile: Views.viewOperation};
 };
