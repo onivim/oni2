@@ -31,7 +31,4 @@ module Configuration = Configuration;
 module CommandPalette = CommandPalette;
 module Commands = Commands;
 module Keybindings = Keybindings;
-<<<<<<< HEAD
 module Filesystem = Filesystem;
-=======
->>>>>>> master
