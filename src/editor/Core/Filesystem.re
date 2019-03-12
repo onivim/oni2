@@ -22,7 +22,7 @@ let onError = (t, f) =>
 /**
    Helper functions ============================================
  */
-/* let always = (_t, f) => f(); */
+let _always = (_t, f) => f();
 
 /* let ( *> ) = always; */
 
@@ -35,6 +35,23 @@ let return = x => Ok(x);
 
 let _fail = msg => Error(msg);
 
+/**
+   Infix Operators: These are essentially aliases to the
+   onError and onSuccess functions meaning that both of these can
+   this syntax allows us to use the monadic FS operators like
+   mkdir in a chainable fashion
+
+   in this example mkdir returns either an Ok(value) or an Error(value)
+   the result is passed to both functions sequentially if it is an error
+   the error handler is called if it is an OK this is ignored an the Ok
+   value is passed to the success handler
+   mkdir
+      //= error("something went wrong")
+      >>= (_ => return())
+
+  The advantage is that it allows for a concise way to describe a whole
+  range of error and OK scenarios
+ */
 let (>>=) = onSuccess;
 let (/\/=) = onError;
 
@@ -231,13 +248,7 @@ let createOniConfiguration = (~configDir, ~file) => {
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));
 
-/**
-  TODO:
-  we should check if the config file we want to make exists
-  if it does we should do nothing else
- */
 let createConfigIfNecessary = (configDir, file) =>
-  /* path already exists */
   Utility.join([configDir, file])
   |> (
     configPath =>
@@ -251,6 +262,7 @@ let createConfigIfNecessary = (configDir, file) =>
               mkdir(configDir, ())
               >>= (() => createOniConfiguration(~file, ~configDir))
           )
+          /* config directory already exists */
           >>= (
             _ =>
               createOniConfiguration(~configDir, ~file)
@@ -265,21 +277,26 @@ let createConfigIfNecessary = (configDir, file) =>
   );
 
 let createOniConfigFile = filename =>
+  /* Get Oni Directory */
   getHomeDirectory()
   >>= getOniDirectory
   >>= (
     configDir =>
       getPath(configDir, filename)
+      /* Check whether the config file already exists */
       >>= stat
       >>= (
         fun
         | Some(existingFileStats) =>
+          /* is the the thing that exists a file */
           isFile(existingFileStats)
           >>= (
             _ =>
               getPath(configDir, filename)
+              /* if it exists but is not a file attempt to create a file */
               /\/= (_ => createConfigIfNecessary(configDir, filename))
           )
+        /* if the file does not exist try and create it */
         | None => createConfigIfNecessary(configDir, filename)
       )
   );
