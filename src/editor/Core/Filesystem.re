@@ -24,8 +24,6 @@ let onError = (t, f) =>
  */
 let _always = (_t, f) => f();
 
-/* let ( *> ) = always; */
-
 /* This informs of an error and passes the error string wrapped in an Error to the next function*/
 let error = fmt => Printf.ksprintf(msg => Error(msg), fmt);
 
@@ -54,6 +52,7 @@ let _fail = msg => Error(msg);
  */
 let (>>=) = onSuccess;
 let (/\/=) = onError;
+/* let ( *> ) = always; */
 
 /**
    Permissions ==================================================
