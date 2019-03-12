@@ -14,6 +14,4 @@ module Types = Types;
 module Utility = Utility;
 module Configuration = Configuration;
 module Theme = Theme;
-module CommandPalette = CommandPalette;
-module Commands = Commands;
 module Keybindings = Keybindings;

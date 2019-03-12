@@ -24,7 +24,7 @@ switch (Sys.getenv_opt("REVERY_DEBUG")) {
 | None => ()
 };
 
-let state = Core.State.create();
+let state = Model.State.create();
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -68,7 +68,7 @@ let init = app => {
     App.dispatch(app, Model.Actions.SyntaxHighlightColorMap(cm));
 
   let onTokens = tr =>
-    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+    App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
   let tmClient =
     Extensions.TextmateClient.start(
@@ -157,7 +157,7 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Core.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
   |> App.dispatch(app)
   |> ignore;
 
@@ -300,4 +300,4 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-App.startWithState(state, Core.Reducer.reduce, init);
+App.startWithState(state, Model.Reducer.reduce, init);
