@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Model;
 open Reglfw.Glfw;
 open Reglfw.Glfw.Key;
 
