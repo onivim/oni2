@@ -4,10 +4,7 @@ type t('a) =
 
 /** [on_success] executes [f] unless we already hit an error. In
   that case the error is passed on. */
-
-/** [on_success] executes [f] unless we already hit an error. In
-  that case the error is passed on. */
-let on_success = (t: t('a), f: 'a => t('b)) =>
+let onSuccess = (t: t('a), f: 'a => t('b)) =>
   switch (t) {
   | Ok(x) => f(x)
   | Error(str) => Error(str)
@@ -15,12 +12,8 @@ let on_success = (t: t('a), f: 'a => t('b)) =>
 
 /** [on_error] ignores the current error and executes [f]. If
   there is no error, [f] is not executed and the result is
-  passed on. */;
-
-/** [on_error] ignores the current error and executes [f]. If
-  there is no error, [f] is not executed and the result is
   passed on. */
-let on_error = (t, f) =>
+let onError = (t, f) =>
   switch (t) {
   | Error(str) => f(str)
   | Ok(x) => Ok(x)
@@ -29,21 +22,21 @@ let on_error = (t, f) =>
 /**
    Helper functions ============================================
  */
-let always = (_t, f) => f();
+/* let always = (_t, f) => f(); */
 
-let ( *> ) = always;
+/* let ( *> ) = always; */
 
 /* This informs of an error and passes the error string wrapped in an Error to the next function*/
 let error = fmt => Printf.ksprintf(msg => Error(msg), fmt);
 
-let inform = fmt => Printf.ksprintf(msg => Ok(msg), fmt);
+let _inform = fmt => Printf.ksprintf(msg => Ok(msg), fmt);
 
 let return = x => Ok(x);
 
 let _fail = msg => Error(msg);
 
-let (>>=) = on_success;
-let (/\/=) = on_error;
+let (>>=) = onSuccess;
+let (/\/=) = onError;
 
 /**
    Permissions ==================================================
@@ -54,6 +47,12 @@ let userReadWriteExecute = 0o777;
 /**
    Safe Unix functions ==========================================
  */
+
+let isFile = st =>
+  switch (st.Unix.st_kind) {
+  | Unix.S_REG => return()
+  | _ => error("not a file")
+  };
 
 let isDir = st =>
   switch (st.Unix.st_kind) {
@@ -220,7 +219,7 @@ let copy = (source, dest) =>
     }
   );
 
-let createOniConfiguration = (configDir, file) => {
+let createOniConfiguration = (~configDir, ~file) => {
   open Utility;
 
   let assetDir = Revery.Environment.getWorkingDirectory();
@@ -230,35 +229,57 @@ let createOniConfiguration = (configDir, file) => {
   copy(configurationPath, userConfigPath);
 };
 
-let createOniConfigFile = file =>
+let getPath = (dir, file) => return(Utility.join([dir, file]));
+
+/**
+  TODO:
+  we should check if the config file we want to make exists
+  if it does we should do nothing else
+ */
+let createConfigIfNecessary = (configDir, file) =>
+  /* path already exists */
+  Utility.join([configDir, file])
+  |> (
+    configPath =>
+      stat(configDir)
+      >>= (
+        fun
+        | Some(dirStats) =>
+          isDir(dirStats)
+          /\/= (
+            _ =>
+              mkdir(configDir, ())
+              >>= (() => createOniConfiguration(~file, ~configDir))
+          )
+          >>= (
+            _ =>
+              createOniConfiguration(~configDir, ~file)
+              /\/= error("Error creating configuration files because: %s")
+              >>= (_ => return(configPath))
+          )
+        | None =>
+          mkdir(configDir, ())
+          >>= (_ => createOniConfiguration(~configDir, ~file))
+          >>= (_ => return(configPath))
+      )
+  );
+
+let createOniConfigFile = filename =>
   getHomeDirectory()
   >>= getOniDirectory
   >>= (
-    path =>
-      stat(path)
+    configDir =>
+      getPath(configDir, filename)
+      >>= stat
       >>= (
         fun
-        | Some(st) =>
-          /**
-           TODO:
-           we should check if the config file we want to make exists
-           if it does we should do nothing else
-         */
-          /* path already exists */
-          isDir(st)
-          *> (_ => inform("path already exists"))
+        | Some(existingFileStats) =>
+          isFile(existingFileStats)
           >>= (
             _ =>
-              createOniConfiguration(path, file)
-              /\/= error("Error creating configuration files because: %s")
-              >>= (_ => return(Utility.join([path, file])))
+              getPath(configDir, filename)
+              /\/= (_ => createConfigIfNecessary(configDir, filename))
           )
-        | None =>
-          mkdir(path, ())
-          >>= (
-            _ =>
-              createOniConfiguration(path, file)
-              >>= (_ => return(Utility.join([path, file])))
-          )
+        | None => createConfigIfNecessary(configDir, filename)
       )
   );
