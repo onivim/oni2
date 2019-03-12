@@ -24,6 +24,7 @@ switch (Sys.getenv_opt("REVERY_DEBUG")) {
 | None => ()
 };
 
+let state = Core.State.create();
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -66,9 +67,8 @@ let init = app => {
   let onColorMap = cm =>
     App.dispatch(app, Model.Actions.SyntaxHighlightColorMap(cm));
 
-  let onTokens = tr => {
-    App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
-  };
+  let onTokens = tr =>
+    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
 
   let tmClient =
     Extensions.TextmateClient.start(
@@ -155,19 +155,20 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  /* let _ = */
-  /*   Event.subscribe( */
-  /*     w.onKeyPress, */
-  /*     event => { */
-  /*       let c = event.character; */
-  /*       neovimProtocol.input(c); */
-  /*     }, */
-  /*   ); */
+  let commands = Core.Keybindings.get();
+
+  Core.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  |> App.dispatch(app)
+  |> ignore;
+
+  let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 
@@ -175,7 +176,9 @@ let init = app => {
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
     switch (Input.keyPressToCommand(key, buttonState, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 
@@ -297,4 +300,4 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-App.startWithState(Model.State.create(), Model.Reducer.reduce, init);
+App.startWithState(state, Core.Reducer.reduce, init);

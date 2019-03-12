@@ -3,6 +3,7 @@ open Oni_Core.Types;
 
 open Actions;
 
+[@deriving show]
 type t = {
   id: int,
   scrollX: int,

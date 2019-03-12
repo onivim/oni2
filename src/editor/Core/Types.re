@@ -18,6 +18,7 @@ module Index = {
 };
 
 module EditorSize = {
+  [@deriving show]
   type t = {
     pixelWidth: int,
     pixelHeight: int,
@@ -76,6 +77,7 @@ type openMethod =
   | Buffer;
 
 module BufferPosition = {
+  [@deriving show]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -222,4 +224,30 @@ type commandline = {
   indent: int,
   prompt: string,
   show: bool,
+};
+
+module Palette = {
+  [@deriving show]
+  type command = {
+    name: string,
+    command: unit => unit,
+  };
+
+  [@deriving show]
+  type t = {
+    isOpen: bool,
+    commands: list(command),
+    selectedItem: int,
+  };
+};
+
+module Input = {
+  [@deriving (show, yojson({strict: false, exn: false}))]
+  type controlMode =
+    | [@name "commandPaletteFocus"] CommandPaletteFocus
+    | [@name "editorTextFocus"] EditorTextFocus;
+};
+
+module Effects = {
+  type t = {openFile: Views.viewOperation};
 };

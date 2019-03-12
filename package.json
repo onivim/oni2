@@ -25,7 +25,7 @@
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
     "@opam/ocamlbuild": "*",
-    "revery": "0.10.1",
+    "revery": "0.11.0",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
@@ -41,6 +41,7 @@
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
+    "@opam/dune": "1.7.3",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
