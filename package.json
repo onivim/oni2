@@ -32,7 +32,7 @@
     "@opam/ppx_deriving_yojson": "*",
     "@opam/yojson": "1.5.0",
     "@opam/zed": "1.6",
-    "rench": "^1.2.0",
+    "rench": "^1.3.0",
     "@reason-native/rely": "1.0.1",
     "reason-jsonrpc": "*",
     "reason-glfw": "^3.2.1022"
