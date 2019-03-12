@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Model;
 
 /* Create a state with some editor size */
 let simpleState =

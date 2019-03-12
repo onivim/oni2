@@ -3,6 +3,7 @@ open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
+open Oni_Model;
 
 let component = React.component("wildmenu");
 

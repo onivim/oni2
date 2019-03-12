@@ -13,6 +13,8 @@ open Oni_UI;
 open Oni_Neovim;
 
 module Core = Oni_Core;
+module Extensions = Oni_Extensions;
+module Model = Oni_Model;
 
 /**
    This allows a stack trace to be printed when exceptions occur
@@ -22,7 +24,7 @@ switch (Sys.getenv_opt("REVERY_DEBUG")) {
 | None => ()
 };
 
-let state = Core.State.create();
+let state = Model.State.create();
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -39,7 +41,7 @@ let init = app => {
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let setup = Oni_Core.Setup.init();
+  let setup = Core.Setup.init();
 
   let nvim =
     NeovimProcess.start(
@@ -63,13 +65,13 @@ let init = app => {
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
-    App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
+    App.dispatch(app, Model.Actions.SyntaxHighlightColorMap(cm));
 
   let onTokens = tr =>
-    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
+    App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
   let tmClient =
-    Oni_Core.TextmateClient.start(
+    Extensions.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
       ~onTokens,
@@ -77,15 +79,15 @@ let init = app => {
       [{scopeName: "source.reason", path: reasonSyntaxPath}],
     );
 
-  Oni_Core.TextmateClient.setTheme(tmClient, defaultThemePath);
+  Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
   let render = () => {
-    let state: Core.State.t = App.getState(app);
+    let state: Model.State.t = App.getState(app);
     GlobalContext.set({
       notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,
-          Core.Actions.SetEditorSize(
+          Model.Actions.SetEditorSize(
             Core.Types.EditorSize.create(
               ~pixelWidth=width,
               ~pixelHeight=height,
@@ -94,7 +96,7 @@ let init = app => {
           ),
         ),
       editorScroll: (~deltaY, ()) =>
-        App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
+        App.dispatch(app, Model.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
@@ -118,7 +120,7 @@ let init = app => {
       Revery.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
       font => {
-        open Oni_Core.Actions;
+        open Oni_Model.Actions;
         open Oni_Core.Types;
 
         /* Measure text */
@@ -155,7 +157,7 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Core.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
   |> App.dispatch(app)
   |> ignore;
 
@@ -184,7 +186,7 @@ let init = app => {
     Tick.interval(
       _ => {
         nvimApi.pump();
-        Oni_Core.TextmateClient.pump(tmClient);
+        Extensions.TextmateClient.pump(tmClient);
       },
       Seconds(0.),
     );
@@ -203,7 +205,7 @@ let init = app => {
     Event.subscribe(
       neovimProtocol.onNotification,
       n => {
-        open Core.Actions;
+        open Model.Actions;
         let msg =
           switch (n) {
           | OniCommand("oni.editorView.scrollToCursor") =>
@@ -277,8 +279,8 @@ let init = app => {
         switch (msg) {
         | SetEditorFont(_)
         | SetEditorSize(_)
-        | Core.Actions.BufferUpdate(_)
-        | Core.Actions.BufferEnter(_) =>
+        | Model.Actions.BufferUpdate(_)
+        | Model.Actions.BufferEnter(_) =>
           App.dispatch(app, RecalculateEditorView)
         | _ => ()
         };
@@ -289,7 +291,7 @@ let init = app => {
          */
         switch (msg) {
         | BufferUpdate(bc) =>
-          Core.TextmateClient.notifyBufferUpdate(tmClient, bc)
+          Extensions.TextmateClient.notifyBufferUpdate(tmClient, bc)
         | _ => ()
         };
       },
@@ -298,4 +300,4 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-App.startWithState(state, Core.Reducer.reduce, init);
+App.startWithState(state, Model.Reducer.reduce, init);

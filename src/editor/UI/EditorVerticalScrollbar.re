@@ -4,8 +4,8 @@
 
 open Revery.UI;
 
-open Oni_Core;
 open Oni_Core.Types;
+open Oni_Model;
 
 let component = React.component("EditorVerticalScrollbar");
 

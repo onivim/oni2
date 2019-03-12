@@ -4,6 +4,8 @@
  * Helper utilities for laying out the editor, based on measurements
  */
 
+open Oni_Core;
+
 type t = {
   lineNumberWidthInPixels: int,
   minimapWidthInPixels: int,

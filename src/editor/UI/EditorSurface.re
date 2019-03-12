@@ -12,6 +12,7 @@ open Revery.UI;
 open CamomileLibraryDefault.Camomile;
 
 open Oni_Core;
+open Oni_Model;
 
 open Types;
 
@@ -151,7 +152,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
 
     let activeBuffer =
-      Oni_Core.BufferMap.getBuffer(state.activeBufferId, state.buffers);
+      BufferMap.getBuffer(state.activeBufferId, state.buffers);
 
     let buffer =
       switch (activeBuffer) {

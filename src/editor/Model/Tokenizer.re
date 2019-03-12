@@ -4,7 +4,9 @@
 
 open Revery;
 
-open Types;
+open Oni_Core;
+open Oni_Core.Types;
+open Oni_Extensions;
 
 type t = {
   text: string,

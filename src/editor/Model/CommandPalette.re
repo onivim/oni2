@@ -1,4 +1,4 @@
-open Types;
+open Oni_Core.Types;
 
 type t = Palette.t;
 open Palette;

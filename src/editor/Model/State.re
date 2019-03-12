@@ -4,7 +4,8 @@
  * Top-level state of the editor
  */
 
-open Types;
+open Oni_Core;
+open Oni_Core.Types;
 
 module Tab = {
   type t = {
