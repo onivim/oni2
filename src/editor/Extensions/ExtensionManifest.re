@@ -4,26 +4,25 @@
  * Module to describing metadata about an extension
  */
 
-module ExtensionKind {
-    [@deriving (show, yojson({strict: false, exn: true}))]
-    type t = 
-    | Ui [@name "ui"]
-    | Workspace [@name "workspace"];
-}
+module ExtensionKind = {
+  [@deriving (show, yojson({strict: false, exn: true}))]
+  type t =
+    | [@name "ui"] Ui
+    | [@name "workspace"] Workspace;
+};
 
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
-    
-    name: string,
-    displayName: option(string),
-    description: option(string),
-    main: option(string),
-    icon: option(string),
-    categories: list(string),
-    keywords: list(string),
-    activationEvents: list(string),
-    extensionDependencies: list(string),
-    extensionPack: list(string),
-    extensionKind: ExtensionKind.t,
+  name: string,
+  displayName: [@default None] option(string),
+  description: [@default None] option(string),
+  main: [@default None] option(string),
+  icon: [@default None] option(string),
+  categories: [@default []] list(string),
+  keywords: [@default []] list(string),
+  activationEvents: [@default []] list(string),
+  extensionDependencies: [@default []] list(string),
+  extensionPack: [@default []] list(string),
+  extensionKind: [@default Ui] ExtensionKind.t,
+  contributes: ExtensionContributions.t,
 };
-

@@ -50,9 +50,16 @@ let init = app => {
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
 
-  print_endline ("-- Discovered: " ++ string_of_int(List.length(extensions)) ++ " extensions");
+  print_endline(
+    "-- Discovered: "
+    ++ string_of_int(List.length(extensions))
+    ++ " extensions",
+  );
 
-  List.iter((ext) => print_endline(ExtensionManifest.show(ext) ++ "\n"), extensions);
+  List.iter(
+    ext => print_endline(ExtensionManifest.show(ext) ++ "\n"),
+    extensions,
+  );
 
   let nvim =
     NeovimProcess.start(
