@@ -25,7 +25,7 @@ let show = (v: t) => {
     let files = List.fold_left((curr, p) => curr ++ newline ++ p, "", v.filesToOpen);
 
     "Folder: " ++ v.folder ++ newline
-    ++ "Files: " ++  newline ++ files;
+    ++ "Files: " ++  files;
 }
 
 let parse = (setup: Setup.t) => {
@@ -48,14 +48,14 @@ let parse = (setup: Setup.t) => {
         }
   }
 
-  let firstCharacterIsTilde = (s) => switch(String.get(s, 0) && !Sys.win32) {
-  | '~' => true
+  let isAbsolutePathWithTilde = (s) => switch(String.get(s, 0)) {
+  | '~' => !Sys.win32
   | _ => false
   | exception Invalid_argument(_) => false
   };
 
   let resolvePath = p => {
-    let p = if (Path.isAbsolute(p) || firstCharacterIsTilde(p)) {
+    let p = if (Path.isAbsolute(p) || isAbsolutePathWithTilde(p)) {
         p
     } else {
         Path.join(workingDirectory, p);
