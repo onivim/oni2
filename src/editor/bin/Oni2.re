@@ -73,8 +73,6 @@ let init = app => {
 
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
-  let reasonSyntaxPath =
-    setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
@@ -83,13 +81,15 @@ let init = app => {
   let onTokens = tr =>
     App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
+  let grammars = Extensions.ExtensionScanner.getGrammars(extensions);
+
   let tmClient =
     Extensions.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
       ~onTokens,
       setup,
-      [{scopeName: "source.reason", path: reasonSyntaxPath}],
+      grammars,
     );
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
