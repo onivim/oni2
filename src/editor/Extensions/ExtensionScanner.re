@@ -53,15 +53,14 @@ let scan = (directory: string) => {
 };
 
 let _remapGrammarsForExtension = (extension: t) => {
-    open ExtensionContributions.Grammar;
-    List.map((grammar) => {
-        ...grammar,
-        path: Path.join(extension.path, grammar.path),
-    }, extension.manifest.contributes.grammars);
-}
+  ExtensionContributions.Grammar.(
+    List.map(
+      grammar => {...grammar, path: Path.join(extension.path, grammar.path)},
+      extension.manifest.contributes.grammars,
+    )
+  );
+};
 
 let getGrammars = extensions => {
-    extensions
-  |> List.map((v) => _remapGrammarsForExtension(v))
-  |> List.flatten;
+  extensions |> List.map(v => _remapGrammarsForExtension(v)) |> List.flatten;
 };
