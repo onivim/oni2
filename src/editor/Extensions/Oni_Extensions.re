@@ -6,4 +6,7 @@
 
 module ColorMap = ColorMap;
 module ColorizedToken = ColorizedToken;
+module ExtensionContributions = ExtensionContributions;
+module ExtensionManifest = ExtensionManifest;
+module ExtensionScanner = ExtensionScanner;
 module TextmateClient = TextmateClient;
