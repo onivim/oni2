@@ -61,7 +61,6 @@ function OniGetBufferContext(bufnum)
     let l:context = {}
     let l:context.bufferNumber = a:bufnum
     let l:context.bufferFullPath = expand("#".a:bufnum.":p")
-    let l:context.filetype = getbufvar(a:bufnum, "&filetype")
     let l:context.buftype = getbufvar(a:bufnum, "&buftype")
     let l:context.modified = getbufvar(a:bufnum, "&mod")
     let l:context.hidden = getbufvar(a:bufnum, "&hidden")
