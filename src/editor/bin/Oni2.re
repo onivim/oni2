@@ -38,6 +38,14 @@ let init = app => {
       "Oni2",
     );
 
+  let items: ref(list(string)) = ref([]);
+
+  Arg.parse([], (item) => {
+      items := [item, ...items^];
+  }, "Welcome to Onivim 2.");
+
+  items := List.rev(items^);
+
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
@@ -100,14 +108,7 @@ let init = app => {
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    /* prerr_endline( */
-    /*   "[DEBUG - STATE] Mode: " */
-    /*   ++ Core.Types.Mode.show(state.mode) */
-    /*   ++ " editor font measured width: " */
-    /*   ++ string_of_int(state.editorFont.measuredWidth) */
-    /*   ++ " editor font measured height: " */
-    /*   ++ string_of_int(state.editorFont.measuredHeight), */
-    /* ); */
+
     <Root state />;
   };
 
