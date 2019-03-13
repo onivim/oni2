@@ -4,6 +4,8 @@
  * Simple convenience wrapper around a node process
  */
 
+open Oni_Core;
+
 type t = {
   pid: int,
   stdout: in_channel,

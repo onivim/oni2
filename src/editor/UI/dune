@@ -10,6 +10,7 @@
         lwt
         lwt.unix
         Oni_Core
+        Oni_Model
         Rench
         Revery
     ))

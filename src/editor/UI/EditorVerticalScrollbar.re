@@ -4,8 +4,8 @@
 
 open Revery.UI;
 
-open Oni_Core;
 open Oni_Core.Types;
+open Oni_Model;
 
 let component = React.component("EditorVerticalScrollbar");
 
@@ -21,7 +21,8 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let scrollMetrics = Editor.getScrollbarMetrics(state.editor, totalHeight);
+    let scrollMetrics =
+      Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
 
     let scrollThumbStyle =
       Style.[

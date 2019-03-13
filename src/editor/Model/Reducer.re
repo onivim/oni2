@@ -5,7 +5,7 @@
  */
 
 open Actions;
-open Types;
+open Oni_Core.Types;
 
 let sortTabsById = tabs =>
   State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs));
@@ -70,6 +70,7 @@ let reduce: (State.t, Actions.t) => State.t =
       syntaxHighlighting: SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),
+      commandPalette: CommandPalette.reduce(s.commandPalette, a),
     };
 
     switch (a) {
@@ -103,6 +104,7 @@ let reduce: (State.t, Actions.t) => State.t =
         ...s,
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
+    | SetInputControlMode(m) => {...s, inputControlMode: m}
     | _ => s
     };
   };

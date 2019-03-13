@@ -1,0 +1,5 @@
+(library
+    (name Oni_Extensions_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries msgpck Oni_Extensions Oni_Core_Test rely.lib))

@@ -7,7 +7,7 @@
 open Revery;
 open Revery.UI;
 
-open Oni_Core;
+open Oni_Model;
 
 let component = React.component("Root");
 
@@ -59,9 +59,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <Overlay>
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />
+          <CommandPaletteView theme commandPalette={state.commandPalette} />
         </Overlay>
         <View style=statusBarStyle>
           <StatusBar
+            theme
             mode={state.mode}
             position={state.editor.cursorPosition}
           />

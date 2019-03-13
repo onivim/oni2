@@ -6,9 +6,14 @@
 
 :warning: Pre-alpha - not yet usable! :warning: 
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/13532591/53999860-e8e70780-40f9-11e9-8428-295adb18c4dd.gif" alt="Onivim 2" />
+ </p>
+
+
 ## Introduction
 
-Oni 2 is a reimagination of the [Oni](https://onivim.io) editor. Oni 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of (neo)vim together, in a single package.
+Oni 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Oni 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of (neo)vim together, in a single package.
 
 Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
@@ -84,9 +89,22 @@ We'd :heart: help building Oni 2 - more info soon.
 
 ## License
 
-Oni 2 is licensed under the [CC-BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode) license.
+Onivim 2 is currently licensed under the [CC-BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode) license.
 
-This means that Oni 2 is __free to use__ for __non-commercial__ or __educational__ uses. You are free to distribute and modify Oni 2 for personal use, as long as this README and License are included unmodified.
+This means that Onivim 2 is __free to use__ for __non-commercial__ or __educational__ uses. 
+
+> __NOTE:__ We're reviewing our license terms with a lawyer, so they may change slightly (it turns out the CC-BY-NC-4.0 isn't the perfect fit for software - we might need a more official EULA).
+
+For __commercial use licenses__, we're still working through the details - but once Onivim 2 has reached "MVP" (target - end of May), we'll transition from crowdfunding to selling commercial licenses. Our current planned price point is $10/month.
+
+However, until that time, __we're offering anyone who donates to the project - any dollar amount__ - an individual, perpetual-use commercial license. We don't want early adopters to have to pay again, ever, as we launch Onivim 2 - we truly appreciate the support as we transition to a commercial offering, and we know it's a leap of faith to back an early-stage project!
+
+More information about this decision in this [Reddit Thread: Question About Oni 2 License](https://www.reddit.com/r/neovim/comments/ae7ef6/question_about_oni_2_license/).
+
+You can donate to the project through one of these avenues:
+- [Patreon](https://www.patreon.com/onivim)
+- [Open Collective](https://opencollective.com/oni)
+- Or, if you don't want to get stuck with a recurring payment, [PayPal](https://www.paypal.me/bryphe/10). 
 
 Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
 

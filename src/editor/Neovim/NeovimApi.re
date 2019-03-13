@@ -9,16 +9,18 @@
 open Oni_Core;
 open Rench;
 
-type requestSyncFunction = (string, Msgpck.t) => Msgpck.t;
+module M = Msgpck;
+
+type requestSyncFunction = (string, M.t) => M.t;
 
 type response = {
   responseId: int,
-  payload: Msgpck.t,
+  payload: M.t,
 };
 
 type notification = {
   notificationType: string,
-  payload: Msgpck.t,
+  payload: M.t,
 };
 
 type t = {
@@ -29,6 +31,8 @@ type t = {
   pump: unit => unit,
   onNotification: Event.t(notification),
 };
+
+exception RequestFailed;
 
 let currentId = ref(0);
 
@@ -54,15 +58,13 @@ let make = (msgpack: MsgpackTransport.t) => {
 
   let onNotification: Event.t(notification) = Event.create();
 
-  let clearQueuedResponses = () => {
+  let clearQueuedResponses = () =>
     withMutex(queuedResponseMutex, () => queuedResponses := []);
-  };
 
-  let getQueuedResponses = () => {
+  let getQueuedResponses = () =>
     withMutex(queuedResponseMutex, () => queuedResponses^);
-  };
 
-  let getAndClearNotifications = () => {
+  let getAndClearNotifications = () =>
     withMutex(
       queuedNotificationsMutex,
       () => {
@@ -71,7 +73,6 @@ let make = (msgpack: MsgpackTransport.t) => {
         r;
       },
     );
-  };
 
   /**
    * NOTE:
@@ -80,15 +81,15 @@ let make = (msgpack: MsgpackTransport.t) => {
    * Use caution when adding logic here, especially
    * anything that touches shared memory
    */
-  let handleMessage = (m: Msgpck.t) => {
-    /* prerr_endline ("Got message: |" ++ Msgpck.show(m) ++ "|"); */
+  let handleMessage = (m: M.t) =>
+    /* prerr_endline ("Got message: |" ++ M.show(m) ++ "|"); */
     switch (m) {
-    | Msgpck.List([Msgpck.Int(1), Msgpck.Int(id), _, v]) =>
+    | M.List([M.Int(1), M.Int(id), _, v]) =>
       withMutex(queuedResponseMutex, () =>
         queuedResponses :=
           List.append([{responseId: id, payload: v}], queuedResponses^)
       )
-    | Msgpck.List([Msgpck.Int(2), Msgpck.String(msg), v]) =>
+    | M.List([M.Int(2), M.String(msg), v]) =>
       withMutex(queuedNotificationsMutex, () =>
         queuedNotifications :=
           List.append(
@@ -97,9 +98,8 @@ let make = (msgpack: MsgpackTransport.t) => {
           )
       )
     /* prerr_endline ("Got notification: " ++ msg); */
-    | _ => prerr_endline("Unknown message: " ++ Msgpck.show(m))
+    | _ => prerr_endline("Unknown message: " ++ M.show(m))
     };
-  };
 
   let _ = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
   /** END NOTE */
@@ -116,28 +116,36 @@ let make = (msgpack: MsgpackTransport.t) => {
   };
 
   let requestSync: requestSyncFunction =
-    (methodName: string, args: Msgpck.t) => {
+    (methodName: string, args: M.t) => {
       let requestId = getNextId();
 
       let request =
-        Msgpck.List([
-          Msgpck.Int(0),
-          Msgpck.Int(requestId),
-          Msgpck.String(methodName),
-          args,
-        ]);
+        M.List([M.Int(0), M.Int(requestId), M.String(methodName), args]);
 
       clearQueuedResponses();
       msgpack.write(request);
 
-      Utility.waitForCondition(() => List.length(getQueuedResponses()) >= 1);
+      Utility.waitForCondition(~timeout=10.0, () =>
+        List.length(getQueuedResponses()) >= 1
+      );
+
+      if (List.length(getQueuedResponses()) == 0) {
+        prerr_endline(
+          "Request timed out: "
+          ++ methodName
+          ++ " ("
+          ++ string_of_int(requestId)
+          ++ ")",
+        );
+        raise(RequestFailed);
+      };
 
       let matchingResponse =
         List.filter(m => m.responseId == requestId, queuedResponses^)
         |> List.hd;
 
       /* prerr_endline("Got response!"); */
-      let ret: Msgpck.t = matchingResponse.payload;
+      let ret: M.t = matchingResponse.payload;
       ret;
     };
 
