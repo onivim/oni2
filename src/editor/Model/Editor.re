@@ -29,7 +29,7 @@ let create = () => {
     minimapScrollY: 0,
     maxLineLength: 0,
     viewLines: 0,
-    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
+    size: EditorSize.create(~pixelWidth=1000, ~pixelHeight=1000, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     lineHeight: 1,
     characterWidth: 1,

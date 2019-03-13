@@ -40,9 +40,9 @@ let init = app => {
 
   let setup = Core.Setup.init();
   let cliOptions = Cli.parse(setup);
-  print_endline (Cli.show(cliOptions));
+  Sys.chdir(cliOptions.folder);
 
-  let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
+  let initVimPath = Path.join(Revery.Environment.getExecutingDirectory(), "init.vim");
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let nvim =
@@ -291,6 +291,9 @@ let init = app => {
         };
       },
     );
+
+    List.iter((p) => neovimProtocol.openFile(~path=p, ()), cliOptions.filesToOpen);
+
   ();
 };
 
