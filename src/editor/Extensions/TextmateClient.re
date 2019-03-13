@@ -12,12 +12,9 @@ open Reason_jsonrpc;
 
 open Oni_Core;
 
-type scopeInfo = {
-  scopeName: string,
-  path: string,
-};
+open ExtensionContributions;
 
-type initializationInfo = list(scopeInfo);
+type initializationInfo = list(Grammar.t);
 
 type tokenizeResult = {
   startIndex: int,
@@ -137,7 +134,7 @@ let start =
       process.stdin,
     );
 
-  let mapScopeInfoToJson = (v: scopeInfo) => {
+  let mapScopeInfoToJson = (v: Grammar.t) => {
     (v.scopeName, `String(v.path));
   };
 

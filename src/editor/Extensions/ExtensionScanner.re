@@ -6,6 +6,11 @@
 
 open Rench;
 
+type t = {
+  manifest: ExtensionManifest.t,
+  path: string,
+};
+
 let readFileSync = path => {
   let chan = open_in_bin(path);
   let data = ref("");
@@ -32,10 +37,11 @@ let scan = (directory: string) => {
   let packageManifestPath = d => Path.join(d, "package.json");
 
   let loadPackageJson = pkg => {
-    print_endline("Reading : " ++ pkg);
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
-
-    ExtensionManifest.of_yojson_exn(json);
+    {
+      manifest: ExtensionManifest.of_yojson_exn(json),
+      path: Path.dirname(pkg),
+    };
   };
 
   items
@@ -44,4 +50,16 @@ let scan = (directory: string) => {
   |> List.map(packageManifestPath)
   |> List.filter(Sys.file_exists)
   |> List.map(loadPackageJson);
+};
+
+let getGrammars = extensions => {
+  List.fold_left(
+    (prev, ext) =>
+      List.append((ext.path, ext.manifest.contributes.grammars), prev),
+    [],
+    extensions,
+  )
+  |> List.map(((path, grammar)) =>
+       {...grammar, path: Path.join(path, grammar.path)}
+     );
 };
