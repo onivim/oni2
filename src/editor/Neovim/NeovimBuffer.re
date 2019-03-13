@@ -30,10 +30,6 @@ let parseBufferContext = map =>
           ...accum,
           bufType: getBufType(buftype),
         }
-      | (M.String("filetype"), M.String(fileType)) => {
-          ...accum,
-          fileType: Some(fileType),
-        }
       | (M.String("hidden"), M.Bool(hidden)) => {...accum, hidden}
       | _ => accum
       },
