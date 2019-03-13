@@ -58,7 +58,6 @@ let (/\/=) = onError;
 /**
    Permissions ==================================================
  */
-
 let userReadWriteExecute = 0o777;
 
 /**
