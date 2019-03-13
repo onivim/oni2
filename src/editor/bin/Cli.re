@@ -37,21 +37,40 @@ let parse = (setup: Setup.t) => {
 
 
   let paths = args^ |> List.rev;
-  let workingDirectory = Rench.Environment.getWorkingDirectory();
+  let workingDirectory = Environment.getWorkingDirectory();
+
+  let stripTrailingPathCharacter = s => {
+      let len = String.length(s);
+        if (len >= 1 && String.get(s, len - 1) == '/') {
+            String.sub(s, 0, len - 1);
+        } else {
+            s
+        }
+  }
+
+  let firstCharacterIsTilde = (s) => switch(String.get(s, 0) && !Sys.win32) {
+  | '~' => true
+  | _ => false
+  | exception Invalid_argument(_) => false
+  };
 
   let resolvePath = p => {
-    if (Rench.Path.isAbsolute(p)) {
+    let p = if (Path.isAbsolute(p) || firstCharacterIsTilde(p)) {
         p
     } else {
-        Rench.Path.join(workingDirectory, p);
+        Path.join(workingDirectory, p);
     }
+
+    p
+    |> Path.normalize
+    |> stripTrailingPathCharacter;
   };
 
   let absolutePaths = List.map(resolvePath, paths);
 
   let isDirectory = p => switch(Sys.is_directory(p)) {
   | v => v
-  | Sys_error(x) => false
+  | exception Sys_error(_) => false
   };
 
   let directories = List.filter(isDirectory, absolutePaths);
