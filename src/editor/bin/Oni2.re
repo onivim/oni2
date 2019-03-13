@@ -21,7 +21,7 @@ open Oni_Extensions;
 /**
    This allows a stack trace to be printed when exceptions occur
  */
-switch (Sys.getenv_opt("REVERY_DEBUG")) {
+switch (Sys.getenv_opt("ONI2_DEBUG")) {
 | Some(_) => Printexc.record_backtrace(true) |> ignore
 | None => ()
 };
@@ -50,15 +50,10 @@ let init = app => {
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
 
-  print_endline(
+  Core.Log.debug(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
     ++ " extensions",
-  );
-
-  List.iter(
-    ext => print_endline(ExtensionManifest.show(ext) ++ "\n"),
-    extensions,
   );
 
   let nvim =
