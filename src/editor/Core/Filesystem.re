@@ -35,8 +35,8 @@ let _fail = msg => Error(msg);
 
 /**
    Infix Operators: These are essentially aliases to the
-   onError and onSuccess functions meaning that both of these can
-   this syntax allows us to use the monadic FS operators like
+   onError and onSuccess functions.
+   This syntax allows us to use the monadic FS operators like
    mkdir in a chainable fashion
 
    mkdir
@@ -170,14 +170,24 @@ let rmdir = path =>
     }
   );
 
+let unsafeFindHome = () =>
+  Revery.(
+    switch (Sys.getenv_opt("HOME"), Environment.os) {
+    | (Some(dir), _) => dir
+    | (None, Environment.Windows) => Sys.getenv("USERPROFILE")
+    | (None, _) => failwith("Could not find HOME dir")
+    }
+  );
+
 let getOniDirectory = home =>
   Utility.join([home, ".config", "oni2"]) |> return;
 
 let getHomeDirectory = () =>
   Unix.(
-    try (getenv("HOME") |> return) {
+    try (unsafeFindHome() |> return) {
     | Unix_error(err, _, _) =>
       error("Cannot find home because: '%s'", error_message(err))
+    | Failure(reason) => error("The OS could not be identified %s", reason)
     }
   );
 
@@ -211,9 +221,7 @@ let copyFile = (source, dest) => {
   let rec copy_loop = () =>
     switch (Unix.read(sourceFile, buffer, 0, bufferSize)) {
     | 0 => ()
-    | bytes =>
-      Unix.write(destFile, buffer, 0, bytes) |> ignore;
-      copy_loop();
+    | bytes => Unix.write(destFile, buffer, 0, bytes) |> ignore |> copy_loop
     };
   copy_loop();
   Unix.close(sourceFile);
