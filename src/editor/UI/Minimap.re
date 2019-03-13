@@ -64,7 +64,7 @@ let absoluteStyle =
 
 let getMinimapSize = (view: Editor.t) =>
   view.viewLines < Editor.getVisibleView(view)
-    ? 0 : Editor.getVisibleView(view);
+    ? 0 : Editor.getVisibleView(view) + 1;
 
 let createElement =
     (
@@ -90,8 +90,6 @@ let createElement =
       <View style=absoluteStyle>
         <OpenGL
           style=absoluteStyle
-          onMouseOver={_ => Console.log("Entered minimap....")}
-          onMouseOut={_ => Console.log("Left minimap....")}
           render={(transform, _) => {
             /* Draw current view */
             Shapes.drawRect(
@@ -99,7 +97,9 @@ let createElement =
               ~x=0.,
               ~y=
                 float_of_int(
-                  rowHeight * Editor.getTopVisibleLine(state.editor) - scrollY,
+                  rowHeight
+                  * (Editor.getTopVisibleLine(state.editor) - 1)
+                  - scrollY,
                 ),
               ~height=float_of_int(rowHeight * getMinimapSize(state.editor)),
               ~width=float_of_int(width),
