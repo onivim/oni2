@@ -28,16 +28,20 @@ let scan = (directory: string) => {
 
     let isDirectory = Sys.is_directory;
 
+    let fullDirectory = (d) => Path.join(directory, d);
     let packageManifestPath = (d) => Path.join(d, "package.json");
 
     let loadPackageJson = (pkg) => {
+        print_endline ("Reading : " ++ pkg);
         let json = readFileSync(pkg)
             |> Yojson.Safe.from_string;
 
         ExtensionManifest.of_yojson_exn(json);
     };
 
-        List.filter(isDirectory, items)
+        items
+        |> List.map(fullDirectory) 
+        |> List.filter(isDirectory)
         |> List.map(packageManifestPath)
         |> List.filter(Sys.file_exists)
         |> List.map(loadPackageJson);

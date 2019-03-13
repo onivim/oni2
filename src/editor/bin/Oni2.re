@@ -16,6 +16,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+open Oni_Extensions;
+
 /**
    This allows a stack trace to be printed when exceptions occur
  */
@@ -45,6 +47,12 @@ let init = app => {
   let initVimPath =
     Path.join(Revery.Environment.getExecutingDirectory(), "init.vim");
   Core.Log.debug("initVimPath: " ++ initVimPath);
+
+  let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+
+  print_endline ("-- Discovered: " ++ string_of_int(List.length(extensions)) ++ " extensions");
+
+  List.iter((ext) => print_endline(ExtensionManifest.show(ext) ++ "\n"), extensions);
 
   let nvim =
     NeovimProcess.start(
