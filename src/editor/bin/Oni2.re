@@ -38,10 +38,13 @@ let init = app => {
       "Oni2",
     );
 
-  let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
-  Core.Log.debug("initVimPath: " ++ initVimPath);
-
   let setup = Core.Setup.init();
+  let cliOptions = Cli.parse(setup);
+  Sys.chdir(cliOptions.folder);
+
+  let initVimPath =
+    Path.join(Revery.Environment.getExecutingDirectory(), "init.vim");
+  Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let nvim =
     NeovimProcess.start(
@@ -100,14 +103,7 @@ let init = app => {
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    /* prerr_endline( */
-    /*   "[DEBUG - STATE] Mode: " */
-    /*   ++ Core.Types.Mode.show(state.mode) */
-    /*   ++ " editor font measured width: " */
-    /*   ++ string_of_int(state.editorFont.measuredWidth) */
-    /*   ++ " editor font measured height: " */
-    /*   ++ string_of_int(state.editorFont.measuredHeight), */
-    /* ); */
+
     <Root state />;
   };
 
@@ -296,6 +292,12 @@ let init = app => {
         };
       },
     );
+
+  List.iter(
+    p => neovimProtocol.openFile(~path=p, ()),
+    cliOptions.filesToOpen,
+  );
+
   ();
 };
 
