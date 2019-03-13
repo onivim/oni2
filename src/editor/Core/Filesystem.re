@@ -1,3 +1,11 @@
+/**
+   Filesystem
+
+   module for handling various Oni2 filesystem interactions in a
+   safe way using monadic operators
+
+   reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
+ */
 type t('a) =
   | Ok('a)
   | Error(string);
