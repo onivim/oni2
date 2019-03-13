@@ -4,7 +4,8 @@
  * Top-level state of the editor
  */
 
-open Types;
+open Oni_Core;
+open Oni_Core.Types;
 
 module Tab = {
   type t = {
@@ -23,18 +24,21 @@ type t = {
   buffers: BufferMap.t,
   activeBufferId: int,
   editorFont: EditorFont.t,
+  commandPalette: CommandPalette.t,
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
   editor: Editor.t,
+  inputControlMode: Input.controlMode,
 };
 
 let create: unit => t =
   () => {
     configuration: Configuration.create(),
     mode: Insert,
+    commandPalette: CommandPalette.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
     activeBufferId: 0,
@@ -51,4 +55,5 @@ let create: unit => t =
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),
     editor: Editor.create(),
+    inputControlMode: EditorTextFocus,
   };

@@ -1,0 +1,337 @@
+{
+  "private": true,
+  "name": "reasonml",
+  "displayName": "OCaml and Reason IDE",
+  "description": "OCaml and Reason language support",
+  "version": "1.0.38",
+  "publisher": "freebroccolo",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/freebroccolo/vscode-reasonml/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freebroccolo/vscode-reasonml.git"
+  },
+  "engines": {
+    "vscode": "^1.21.0"
+  },
+  "categories": ["Formatters", "Programming Languages", "Linters", "Snippets"],
+  "keywords": ["ocaml", "reason", "bucklescript", "reasonml", "merlin"],
+  "icon": "assets/logo.png",
+  "activationEvents": ["onLanguage:ocaml", "onLanguage:reason"],
+  "main": "./out/src/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "reason.caseSplit",
+        "title": "Reason: Case Split"
+      },
+      {
+        "command": "reason.showMerlinFiles",
+        "title": "Reason: Show Merlin Files"
+      },
+      {
+        "command": "reason.showAvailableLibraries",
+        "title": "Reason: Show Libraries Available via Dependencies"
+      },
+      {
+        "command": "reason.showProjectEnv",
+        "title": "Reason: Show Environment"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Reason configuration",
+      "properties": {
+        "reason.codelens.unicode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the use of unicode symbols in codelens."
+        },
+        "reason.codelens.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether the code lens is shown."
+        },
+        "reason.debounce.linter": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "enum": ["Infinity"]
+            }
+          ],
+          "default": 500,
+          "description":
+            "How long to idle (in milliseconds) after keypresses before refreshing linter diagnostics. Smaller values refresh diagnostics more quickly."
+        },
+        "reason.diagnostics.tools": {
+          "type": "array",
+          "items": {
+            "enum": ["merlin", "bsb"]
+          },
+          "default": ["merlin"],
+          "maxItems": 2,
+          "uniqueItems": true,
+          "description":
+            "Specifies which tool or tools will be used to get diagnostics. If you choose both \"merlin\" and \"bsb\", merlin will be used while editing and bsb when saving."
+        },
+        "reason.format.width": {
+          "type": ["number", null],
+          "default": null,
+          "description": "Set the width of lines when formatting code with refmt"
+        },
+        "reason.path.bsb": {
+          "type": "string",
+          "default": "./node_modules/bs-platform/lib/bsb.exe",
+          "description": "The path to the `bsb` binary."
+        },
+        "reason.path.ocamlfind": {
+          "type": "string",
+          "default": "ocamlfind",
+          "description": "The path to the `ocamlfind` binary."
+        },
+        "reason.path.esy": {
+          "type": "string",
+          "default": "esy",
+          "description": "The path to the `esy` binary."
+        },
+        "reason.path.env": {
+          "type": "string",
+          "default": "env",
+          "description":
+            "The path to the `env` command which prints the language server environment for debugging editor issues."
+        },
+        "reason.path.ocamlmerlin": {
+          "type": "string",
+          "default": "ocamlmerlin",
+          "description": "The path to the `ocamlmerlin` binary."
+        },
+        "reason.path.ocpindent": {
+          "type": "string",
+          "default": "ocp-indent",
+          "description": "The path to the `ocp-indent` binary."
+        },
+        "reason.path.opam": {
+          "type": "string",
+          "default": "opam",
+          "description": "The path to the `opam` binary."
+        },
+        "reason.path.rebuild": {
+          "type": "string",
+          "default": "rebuild",
+          "description": "The path to the `rebuild` binary."
+        },
+        "reason.path.refmt": {
+          "type": "string",
+          "default": "refmt",
+          "description": "The path to the `refmt` binary."
+        },
+        "reason.path.refmterr": {
+          "type": "string",
+          "default": "refmterr",
+          "description": "The path to the `refmterr` binary."
+        },
+        "reason.path.rtop": {
+          "type": "string",
+          "default": "rtop",
+          "description": "The path to the `rtop` binary."
+        },
+        "reason.server.languages": {
+          "type": "array",
+          "items": {
+            "enum": ["ocaml", "reason"]
+          },
+          "default": ["ocaml", "reason"],
+          "maxItems": 2,
+          "uniqueItems": true,
+          "description": "The list of languages enable support for in the language server."
+        }
+      }
+    },
+    "grammars": [
+      {
+        "language": "ocaml",
+        "scopeName": "source.ocaml",
+        "path": "./syntaxes/ocaml.json"
+      },
+      {
+        "language": "ocaml.hover.info",
+        "scopeName": "source.ocaml.hover.info",
+        "path": "./syntaxes/ocaml-hover-info.json"
+      },
+      {
+        "language": "ocaml.hover.type",
+        "scopeName": "source.ocaml.hover.type",
+        "path": "./syntaxes/ocaml-hover-type.json"
+      },
+      {
+        "language": "ocaml.merlin",
+        "scopeName": "source.ocaml.merlin",
+        "path": "./syntaxes/merlin.json"
+      },
+      {
+        "language": "ocaml.ocamlbuild",
+        "scopeName": "source.ocaml.ocamlbuild",
+        "path": "./syntaxes/ocamlbuild.json"
+      },
+      {
+        "language": "ocaml.opam",
+        "scopeName": "source.ocaml.opam",
+        "path": "./syntaxes/opam.json"
+      },
+      {
+        "language": "reason",
+        "scopeName": "source.reason",
+        "path": "./syntaxes/reason.json"
+      },
+      {
+        "language": "reason.hover.info",
+        "scopeName": "source.reason.hover.info",
+        "path": "./syntaxes/reason-hover-info.json"
+      },
+      {
+        "language": "reason.hover.signature",
+        "scopeName": "source.reason.hover.signature",
+        "path": "./syntaxes/reason-hover-signature.json"
+      },
+      {
+        "language": "reason.hover.type",
+        "scopeName": "source.reason.hover.type",
+        "path": "./syntaxes/reason-hover-type.json"
+      },
+      {
+        "scopeName": "markdown.reason.codeblock",
+        "path": "./syntaxes/reason-markdown-codeblock.json",
+        "injectTo": ["text.html.markdown"],
+        "embeddedLanguages": {
+          "meta.embedded.block.reason": "reason"
+        }
+      },
+      {
+        "scopeName": "markdown.ocaml.codeblock",
+        "path": "./syntaxes/ocaml-markdown-codeblock.json",
+        "injectTo": ["text.html.markdown"],
+        "embeddedLanguages": {
+          "meta.embedded.block.ocaml": "ocaml"
+        }
+      }
+    ],
+    "languages": [
+      {
+        "id": "ocaml",
+        "aliases": ["OCaml"],
+        "extensions": [".ml", ".mli"],
+        "configuration": "./ocaml.configuration.json"
+      },
+      {
+        "id": "ocaml.hover.info"
+      },
+      {
+        "id": "ocaml.hover.type"
+      },
+      {
+        "id": "ocaml.merlin",
+        "aliases": ["Merlin"],
+        "extensions": ["merlin"]
+      },
+      {
+        "id": "ocaml.ocamlbuild",
+        "aliases": ["OCamlbuild"],
+        "extensions": ["_tags"]
+      },
+      {
+        "id": "ocaml.opam",
+        "aliases": ["OPAM"],
+        "extensions": ["opam"]
+      },
+      {
+        "id": "reason",
+        "aliases": ["Reason"],
+        "extensions": [".re", ".rei"],
+        "configuration": "./reason.configuration.json"
+      },
+      {
+        "id": "reason.hover.info"
+      },
+      {
+        "id": "reason.hover.signature"
+      },
+      {
+        "id": "reason.hover.type"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "reason.caseSplit",
+          "group": "reason",
+          "when": "editorTextFocus && resourceLangId == reason"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "reason",
+        "path": "./snippets/reason.json"
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "ocamlc",
+
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp":
+              "^\\s*\\bFile\\b\\s*\"(.*)\",\\s*\\bline\\b\\s*(\\d+),\\s*\\bcharacters\\b\\s*(\\d+)-(\\d+)\\s*:\\s*$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "endColumn": 4
+          },
+          {
+            "regexp":
+              "^(?:\\s*\\bParse\\b\\s*)?\\s*\\b([Ee]rror|Warning)\\b\\s*(?:\\(\\s*\\bwarning\\b\\s*(\\d+)\\))?\\s*:\\s*(.*)$",
+            "severity": 1,
+            "code": 2,
+            "message": 3
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p ./ && node script/syntax.js",
+    "format": "./node_modules/.bin/prettier --write \"src/**/*.ts\"",
+    "lint": "tslint --project tsconfig.json",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "prebuild": "npm run format && npm run lint",
+    "vscode:prepublish": "node script/syntax.js"
+  },
+  "devDependencies": {
+    "@types/lodash.flatmap": "^4.5.3",
+    "@types/node": "9.6.2",
+    "@types/pegjs": "0.10.0",
+    "prettier": "1.11.1",
+    "tslint": "5.9.1",
+    "typescript": "2.8.1",
+    "vscode": "1.1.14"
+  },
+  "dependencies": {
+    "lodash.flatmap": "^4.5.0",
+    "ocaml-language-server": "1.0.35",
+    "pegjs": "0.10.0",
+    "vscode-jsonrpc": "3.6.0",
+    "vscode-languageclient": "4.0.1",
+    "vscode-languageserver": "4.0.0",
+    "vscode-languageserver-protocol": "3.6.0"
+  },
+  "__metadata": {
+    "id": "c7ccccce-e272-43df-883f-91f3de932890",
+    "publisherDisplayName": "Darin Morrison",
+    "publisherId": "d7d46b7f-d6a6-4bc5-8e41-f35d145c81de"
+  }
+}

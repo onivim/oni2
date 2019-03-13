@@ -4,7 +4,7 @@
  * In-memory text buffer representation
  */
 
-open Types;
+open Oni_Core.Types;
 
 [@deriving show]
 type t = {

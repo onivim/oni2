@@ -13,15 +13,20 @@ open Oni_UI;
 open Oni_Neovim;
 
 module Core = Oni_Core;
+module Extensions = Oni_Extensions;
+module Model = Oni_Model;
+
+open Oni_Extensions;
 
 /**
    This allows a stack trace to be printed when exceptions occur
  */
-switch (Sys.getenv_opt("REVERY_DEBUG")) {
+switch (Sys.getenv_opt("ONI2_DEBUG")) {
 | Some(_) => Printexc.record_backtrace(true) |> ignore
 | None => ()
 };
 
+let state = Model.State.create();
 /* The 'main' function for our app */
 let init = app => {
   let w =
@@ -35,10 +40,21 @@ let init = app => {
       "Oni2",
     );
 
-  let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
+  let setup = Core.Setup.init();
+  let cliOptions = Cli.parse(setup);
+  Sys.chdir(cliOptions.folder);
+
+  let initVimPath =
+    Path.join(Revery.Environment.getExecutingDirectory(), "init.vim");
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  let setup: Oni_Core.Setup.t = Oni_Core.Setup.init();
+  let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+
+  Core.Log.debug(
+    "-- Discovered: "
+    ++ string_of_int(List.length(extensions))
+    ++ " extensions",
+  );
 
   let nvim =
     NeovimProcess.start(
@@ -62,14 +78,13 @@ let init = app => {
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
-    App.dispatch(app, Core.Actions.SyntaxHighlightColorMap(cm));
+    App.dispatch(app, Model.Actions.SyntaxHighlightColorMap(cm));
 
-  let onTokens = tr => {
-    App.dispatch(app, Core.Actions.SyntaxHighlightTokens(tr));
-  };
+  let onTokens = tr =>
+    App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
   let tmClient =
-    Oni_Core.TextmateClient.start(
+    Extensions.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
       ~onTokens,
@@ -77,15 +92,15 @@ let init = app => {
       [{scopeName: "source.reason", path: reasonSyntaxPath}],
     );
 
-  Oni_Core.TextmateClient.setTheme(tmClient, defaultThemePath);
+  Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
   let render = () => {
-    let state: Core.State.t = App.getState(app);
+    let state: Model.State.t = App.getState(app);
     GlobalContext.set({
       notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,
-          Core.Actions.SetEditorSize(
+          Model.Actions.SetEditorSize(
             Core.Types.EditorSize.create(
               ~pixelWidth=width,
               ~pixelHeight=height,
@@ -94,18 +109,11 @@ let init = app => {
           ),
         ),
       editorScroll: (~deltaY, ()) =>
-        App.dispatch(app, Core.Actions.EditorScroll(deltaY)),
+        App.dispatch(app, Model.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
     });
-    /* prerr_endline( */
-    /*   "[DEBUG - STATE] Mode: " */
-    /*   ++ Core.Types.Mode.show(state.mode) */
-    /*   ++ " editor font measured width: " */
-    /*   ++ string_of_int(state.editorFont.measuredWidth) */
-    /*   ++ " editor font measured height: " */
-    /*   ++ string_of_int(state.editorFont.measuredHeight), */
-    /* ); */
+
     <Root state />;
   };
 
@@ -118,7 +126,7 @@ let init = app => {
       Revery.Environment.getExecutingDirectory() ++ fontFamily,
       fontSize,
       font => {
-        open Oni_Core.Actions;
+        open Oni_Model.Actions;
         open Oni_Core.Types;
 
         /* Measure text */
@@ -153,19 +161,20 @@ let init = app => {
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  /* let _ = */
-  /*   Event.subscribe( */
-  /*     w.onKeyPress, */
-  /*     event => { */
-  /*       let c = event.character; */
-  /*       neovimProtocol.input(c); */
-  /*     }, */
-  /*   ); */
+  let commands = Core.Keybindings.get();
+
+  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  |> App.dispatch(app)
+  |> ignore;
+
+  let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     switch (Input.charToCommand(codepoint, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 
@@ -173,7 +182,9 @@ let init = app => {
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
     switch (Input.keyPressToCommand(key, buttonState, mods)) {
     | None => ()
-    | Some(v) => ignore(neovimProtocol.input(v))
+    | Some(v) =>
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app))
     }
   );
 
@@ -181,7 +192,7 @@ let init = app => {
     Tick.interval(
       _ => {
         nvimApi.pump();
-        Oni_Core.TextmateClient.pump(tmClient);
+        Extensions.TextmateClient.pump(tmClient);
       },
       Seconds(0.),
     );
@@ -200,7 +211,7 @@ let init = app => {
     Event.subscribe(
       neovimProtocol.onNotification,
       n => {
-        open Core.Actions;
+        open Model.Actions;
         let msg =
           switch (n) {
           | OniCommand("oni.editorView.scrollToCursor") =>
@@ -274,8 +285,8 @@ let init = app => {
         switch (msg) {
         | SetEditorFont(_)
         | SetEditorSize(_)
-        | Core.Actions.BufferUpdate(_)
-        | Core.Actions.BufferEnter(_) =>
+        | Model.Actions.BufferUpdate(_)
+        | Model.Actions.BufferEnter(_) =>
           App.dispatch(app, RecalculateEditorView)
         | _ => ()
         };
@@ -286,13 +297,19 @@ let init = app => {
          */
         switch (msg) {
         | BufferUpdate(bc) =>
-          Core.TextmateClient.notifyBufferUpdate(tmClient, bc)
+          Extensions.TextmateClient.notifyBufferUpdate(tmClient, bc)
         | _ => ()
         };
       },
     );
+
+  List.iter(
+    p => neovimProtocol.openFile(~path=p, ()),
+    cliOptions.filesToOpen,
+  );
+
   ();
 };
 
 /* Let's get this party started! */
-App.startWithState(Core.State.create(), Core.Reducer.reduce, init);
+App.startWithState(state, Model.Reducer.reduce, init);

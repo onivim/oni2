@@ -2,8 +2,8 @@
  * Wildmenu.re
  *
  */
+open Oni_Core.Types;
 open Actions;
-open Types;
 
 [@deriving show]
 type t = wildmenu;

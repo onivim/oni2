@@ -1,6 +1,9 @@
-open Actions;
-open Types;
+open Oni_Core;
+open Oni_Core.Types;
 
+open Actions;
+
+[@deriving show]
 type t = {
   id: int,
   scrollX: int,
@@ -26,7 +29,11 @@ let create = () => {
     minimapScrollY: 0,
     maxLineLength: 0,
     viewLines: 0,
-    size: EditorSize.create(~pixelWidth=0, ~pixelHeight=0, ()),
+    /*
+     * We need an initial editor size, otherwise we'll immediately scroll the view
+     * if a buffer loads prior to our first render.
+     */
+    size: EditorSize.create(~pixelWidth=1000, ~pixelHeight=1000, ()),
     cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
     lineHeight: 1,
     characterWidth: 1,

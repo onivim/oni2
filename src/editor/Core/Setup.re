@@ -16,6 +16,9 @@ type t = {
   bundledExtensionsPath: string,
   [@key "configuration"]
   configPath: string,
+  [@key "keybindings"]
+  keybindingsPath: string,
+  version: [@default "Unknown"] string,
 };
 
 let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;

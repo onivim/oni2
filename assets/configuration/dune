@@ -1,4 +1,4 @@
 (install
  (section bin)
  (package Oni2)
- (files setup.json))
+ (files setup.json configuration.json))

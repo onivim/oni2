@@ -1,4 +1,4 @@
-open Types;
+open Oni_Core.Types;
 /*
    This creates a Map with uses an integer
    as the key, this is not offered by default.

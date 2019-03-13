@@ -1,6 +1,7 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
+open Oni_Model;
 
 let component = React.component("commandline");
 

@@ -1,6 +1,6 @@
-open Oni_Core;
-open Oni_Core.SyntaxHighlighting;
-open Oni_Core.TextmateClient.TokenizationResult;
+open Oni_Model.SyntaxHighlighting;
+open Oni_Extensions;
+open Oni_Extensions.TextmateClient.TokenizationResult;
 open TestFramework;
 
 /* open Helpers; */
