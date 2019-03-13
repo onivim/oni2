@@ -52,14 +52,16 @@ let scan = (directory: string) => {
   |> List.map(loadPackageJson);
 };
 
+let _remapGrammarsForExtension = (extension: t) => {
+    open ExtensionContributions.Grammar;
+    List.map((grammar) => {
+        ...grammar,
+        path: Path.join(extension.path, grammar.path),
+    }, extension.manifest.contributes.grammars);
+}
+
 let getGrammars = extensions => {
-  List.fold_left(
-    (prev, ext) =>
-      List.append((ext.path, ext.manifest.contributes.grammars), prev),
-    [],
-    extensions,
-  )
-  |> List.map(((path, grammar)) =>
-       {...grammar, path: Path.join(path, grammar.path)}
-     );
+    extensions
+  |> List.map((v) => _remapGrammarsForExtension(v))
+  |> List.flatten;
 };

@@ -80,20 +80,8 @@ let init = app => {
 
   let onTokens = tr =>
     App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
-  open Extensions.ExtensionManifest;
-  open Extensions.ExtensionScanner;
-  open Extensions.ExtensionContributions;
-  /* open Extensions.ExtensionContributions.Grammar; */
-  let grammars =
-    List.fold_left(
-      (prev, ext) =>
-        List.append(
-          Path.join(ext.path, ext.manifest.contributes.grammars),
-          prev,
-        ),
-      [],
-      extensions,
-    );
+
+  let grammars = Extensions.ExtensionScanner.getGrammars(extensions);
 
   let tmClient =
     Extensions.TextmateClient.start(

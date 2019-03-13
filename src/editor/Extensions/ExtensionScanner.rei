@@ -11,4 +11,4 @@ type t = {
 
 let scan: string => list(t);
 
-let getGrammars: t => list(ExtensionContributions.Grammar.t);
+let getGrammars: list(t) => list(ExtensionContributions.Grammar.t);
