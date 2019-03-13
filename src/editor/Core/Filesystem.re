@@ -39,16 +39,17 @@ let _fail = msg => Error(msg);
    this syntax allows us to use the monadic FS operators like
    mkdir in a chainable fashion
 
+   mkdir
+    //= error("something went wrong")
+    >>= (_ => return())
+
    in this example mkdir returns either an Ok(value) or an Error(value)
    the result is passed to both functions sequentially if it is an error
    the error handler is called if it is an OK this is ignored an the Ok
    value is passed to the success handler
-   mkdir
-      //= error("something went wrong")
-      >>= (_ => return())
 
-  The advantage is that it allows for a concise way to describe a whole
-  range of error and OK scenarios
+   The advantage is that it allows for a concise way to describe a whole
+   range of error and OK scenarios
  */
 let (>>=) = onSuccess;
 let (/\/=) = onError;
@@ -263,15 +264,15 @@ let createConfigIfNecessary = (configDir, file) =>
           )
           /* config directory already exists */
           >>= (
-            _ =>
+            () =>
               createOniConfiguration(~configDir, ~file)
               /\/= error("Error creating configuration files because: %s")
-              >>= (_ => return(configPath))
+              >>= (() => return(configPath))
           )
         | None =>
           mkdir(configDir, ())
-          >>= (_ => createOniConfiguration(~configDir, ~file))
-          >>= (_ => return(configPath))
+          >>= (() => createOniConfiguration(~configDir, ~file))
+          >>= (() => return(configPath))
       )
   );
 
@@ -290,7 +291,7 @@ let createOniConfigFile = filename =>
           /* is the the thing that exists a file */
           isFile(existingFileStats)
           >>= (
-            _ =>
+            () =>
               getPath(configDir, filename)
               /* if it exists but is not a file attempt to create a file */
               /\/= (_ => createConfigIfNecessary(configDir, filename))
