@@ -38,18 +38,12 @@ let init = app => {
       "Oni2",
     );
 
-  let items: ref(list(string)) = ref([]);
-
-  Arg.parse([], (item) => {
-      items := [item, ...items^];
-  }, "Welcome to Onivim 2.");
-
-  items := List.rev(items^);
+  let setup = Core.Setup.init();
+  let cliOptions = Cli.parse(setup);
+  print_endline (Cli.show(cliOptions));
 
   let initVimPath = Revery.Environment.getExecutingDirectory() ++ "init.vim";
   Core.Log.debug("initVimPath: " ++ initVimPath);
-
-  let setup = Core.Setup.init();
 
   let nvim =
     NeovimProcess.start(
