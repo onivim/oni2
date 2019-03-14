@@ -91,14 +91,6 @@ let init = app => {
     | Some(v) => v
     };
 
-  /* let re = Model.LanguageInfo.getLanguageFromExtension(languageInfo, ".json") |> getOrNull; */
-  /* print_endline (".json: " ++ re); */
-
-  let re =
-    Model.LanguageInfo.getScopeFromLanguage(languageInfo, "reason")
-    |> getOrNull;
-  print_endline("reason: " ++ re);
-
   let tmClient =
     Extensions.TextmateClient.start(
       ~onScopeLoaded,
