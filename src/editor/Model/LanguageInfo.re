@@ -8,36 +8,34 @@ open Oni_Extensions;
 open Rench;
 
 type t = {
-    grammars: list(ExtensionContributions.Grammar.t),
-    languages: list(ExtensionContributions.Language.t),
-    extToLanguage: StringMap.t(string),
-    languageToScope: StringMap.t(string),
+  grammars: list(ExtensionContributions.Grammar.t),
+  languages: list(ExtensionContributions.Language.t),
+  extToLanguage: StringMap.t(string),
+  languageToScope: StringMap.t(string),
 };
 
 let getGrammars = (li: t) => {
-    li.grammars
-}
+  li.grammars;
+};
 
 let getLanguageFromExtension = (li: t, ext: string) => {
-    StringMap.find_opt(ext, li.extToLanguage);   
+  StringMap.find_opt(ext, li.extToLanguage);
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {
-    StringMap.find_opt(languageId, li.languageToScope);
+  StringMap.find_opt(languageId, li.languageToScope);
 };
 
 let getScopeFromExtension = (li: t, ext: string) => {
-    switch(getLanguageFromExtension(li, ext)) {
-    | None => None
-    | Some(v) => getScopeFromLanguage(li, v);
-    };
-}
+  switch (getLanguageFromExtension(li, ext)) {
+  | None => None
+  | Some(v) => getScopeFromLanguage(li, v)
+  };
+};
 
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
-   List.map((extension) => {
-    (extension, lang.id) 
-   }, lang.extensions);
-}
+  List.map(extension => (extension, lang.id), lang.extensions);
+};
 
 let _remapGrammarsForExtension = (extension: ExtensionScanner.t) => {
   ExtensionContributions.Grammar.(
@@ -49,19 +47,20 @@ let _remapGrammarsForExtension = (extension: ExtensionScanner.t) => {
 };
 
 let _remapLanguagesForExtension = (extension: ExtensionScanner.t) => {
-    ExtensionContributions.Language.(
-      List.map(
-        language => switch(language.configuration) {
+  ExtensionContributions.Language.(
+    List.map(
+      language =>
+        switch (language.configuration) {
         | None => language
         | Some(v) => {
             ...language,
             configuration: Some(Path.join(extension.path, v)),
-        }
+          }
         },
-        extension.manifest.contributes.languages,
-      )   
-    );
-}
+      extension.manifest.contributes.languages,
+    )
+  );
+};
 
 let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => _remapGrammarsForExtension(v)) |> List.flatten;
@@ -69,35 +68,34 @@ let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
 
 let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => _remapLanguagesForExtension(v)) |> List.flatten;
-}
+};
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
-   let grammars = _getGrammars(extensions); 
-   let languages = _getLanguages(extensions);
+  let grammars = _getGrammars(extensions);
+  let languages = _getLanguages(extensions);
 
-   let extToLanguage = languages
-   |> List.map(_getLanguageTuples)
-   |> List.flatten
-   |> List.fold_left((prev, v) => {
-      let (extension, language) = v;
-      StringMap.add(extension, language, prev); 
-   }, StringMap.empty);
-   
+  let extToLanguage =
+    languages
+    |> List.map(_getLanguageTuples)
+    |> List.flatten
+    |> List.fold_left(
+         (prev, v) => {
+           let (extension, language) = v;
+           StringMap.add(extension, language, prev);
+         },
+         StringMap.empty,
+       );
+  open ExtensionContributions.Grammar;
+  let languageToScope =
+    grammars
+    |> List.fold_left(
+         (prev, curr) =>
+           switch (curr.language) {
+           | None => prev
+           | Some(v) => StringMap.add(v, curr.scopeName, prev)
+           },
+         StringMap.empty,
+       );
 
-   open ExtensionContributions.Grammar;
-   let languageToScope = grammars
-   |> List.fold_left((prev, curr) => {
-       switch (curr.language) {
-       | None => prev
-       | Some(v) => StringMap.add(v, curr.scopeName, prev);
-       };
-   }, StringMap.empty);
-
-   {
-    grammars,
-    languages,
-    extToLanguage,
-    languageToScope,
-   }
-
+  {grammars, languages, extToLanguage, languageToScope};
 };
