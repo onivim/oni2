@@ -51,16 +51,3 @@ let scan = (directory: string) => {
   |> List.filter(Sys.file_exists)
   |> List.map(loadPackageJson);
 };
-
-let _remapGrammarsForExtension = (extension: t) => {
-  ExtensionContributions.Grammar.(
-    List.map(
-      grammar => {...grammar, path: Path.join(extension.path, grammar.path)},
-      extension.manifest.contributes.grammars,
-    )
-  );
-};
-
-let getGrammars = extensions => {
-  extensions |> List.map(v => _remapGrammarsForExtension(v)) |> List.flatten;
-};

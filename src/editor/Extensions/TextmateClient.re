@@ -170,15 +170,13 @@ type tokenizeLineResult = {
   colors: list(ColorizedToken.t),
 };
 
-let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
+let notifyBufferUpdate =
+    (v: t, scope: string, bufUpdate: Types.BufferUpdate.t) => {
   Rpc.sendNotification(
     v.rpc,
     "textmate/bufferUpdate",
     /* TODO: Don't hardcode this */
-    `List([
-      `String("source.reason"),
-      Types.BufferUpdate.to_yojson(bufUpdate),
-    ]),
+    `List([`String(scope), Types.BufferUpdate.to_yojson(bufUpdate)]),
   );
 };
 

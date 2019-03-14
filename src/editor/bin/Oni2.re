@@ -50,6 +50,8 @@ let init = app => {
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
 
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+
   Core.Log.debug(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
@@ -81,7 +83,7 @@ let init = app => {
   let onTokens = tr =>
     App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
-  let grammars = Extensions.ExtensionScanner.getGrammars(extensions);
+  let grammars = Model.LanguageInfo.getGrammars(languageInfo);
 
   let tmClient =
     Extensions.TextmateClient.start(
@@ -297,7 +299,34 @@ let init = app => {
          */
         switch (msg) {
         | BufferUpdate(bc) =>
-          Extensions.TextmateClient.notifyBufferUpdate(tmClient, bc)
+          let bufferId = bc.id;
+          let state = App.getState(app);
+          let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
+
+          switch (buffer) {
+          | None => ()
+          | Some(buffer) =>
+            switch (Model.Buffer.getMetadata(buffer).filePath) {
+            | None => ()
+            | Some(v) =>
+              let extension = Path.extname(v);
+              switch (
+                Model.LanguageInfo.getScopeFromExtension(
+                  languageInfo,
+                  extension,
+                )
+              ) {
+              | None => ()
+              | Some(scope) =>
+                Extensions.TextmateClient.notifyBufferUpdate(
+                  tmClient,
+                  scope,
+                  bc,
+                )
+              };
+            }
+          };
+
         | _ => ()
         };
       },
