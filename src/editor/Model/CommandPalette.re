@@ -1,43 +1,23 @@
-open Oni_Core.Types;
+open Oni_Core;
+open Types;
 
 type t = Palette.t;
 open Palette;
 
-let join = paths => {
-  let sep = Filename.dir_sep;
-  List.fold_left((accum, p) => accum ++ sep ++ p, "", paths);
-};
-
-let openConfigurationFile = (effects: Effects.t) => {
-  let path =
-    join([
-      Revery.Environment.getWorkingDirectory(),
-      "assets",
-      "configuration",
-      "configuration.json",
-    ]);
-  effects.openFile(~path, ());
-};
-
-let openKeybindingsFile = (effects: Effects.t) => {
-  let path =
-    join([
-      Revery.Environment.getWorkingDirectory(),
-      "assets",
-      "configuration",
-      "keybindings.json",
-    ]);
-  effects.openFile(~path, ());
-};
+let openConfigurationFile = (effects: Effects.t, name) =>
+  switch (Filesystem.createOniConfigFile(name)) {
+  | Ok(path) => effects.openFile(~path, ())
+  | Error(e) => print_endline(e)
+  };
 
 let commandPaletteCommands = (effects: Effects.t) => [
   {
     name: "Open configuration file",
-    command: () => openConfigurationFile(effects),
+    command: () => openConfigurationFile(effects, "configuration.json"),
   },
   {
     name: "Open keybindings file",
-    command: () => openKeybindingsFile(effects),
+    command: () => openConfigurationFile(effects, "keybindings.json"),
   },
 ];
 

@@ -43,3 +43,13 @@ let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
     print_endline("fold_left2 failing because: " ++ reason);
     default;
   };
+
+let join = paths => {
+  let sep = Filename.dir_sep;
+  let (head, rest) =
+    switch (paths) {
+    | [] => ("", [])
+    | [head, ...rest] => (head, rest)
+    };
+  List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
+};

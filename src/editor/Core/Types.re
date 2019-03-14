@@ -246,6 +246,12 @@ module Input = {
   type controlMode =
     | [@name "commandPaletteFocus"] CommandPaletteFocus
     | [@name "editorTextFocus"] EditorTextFocus;
+
+  [@deriving show]
+  type keyBindings = {
+    key: string,
+    command: string,
+  };
 };
 
 module Effects = {
