@@ -85,12 +85,6 @@ let init = app => {
 
   let grammars = Model.LanguageInfo.getGrammars(languageInfo);
 
-  let getOrNull = v =>
-    switch (v) {
-    | None => ""
-    | Some(v) => v
-    };
-
   let tmClient =
     Extensions.TextmateClient.start(
       ~onScopeLoaded,
