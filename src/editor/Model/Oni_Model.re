@@ -14,6 +14,7 @@ module CommandPalette = CommandPalette;
 module Commands = Commands;
 module Editor = Editor;
 module EditorLayout = EditorLayout;
+module LanguageInfo = LanguageInfo;
 module Reducer = Reducer;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;

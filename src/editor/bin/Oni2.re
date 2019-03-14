@@ -50,6 +50,8 @@ let init = app => {
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
 
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+
   Core.Log.debug(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
@@ -81,7 +83,15 @@ let init = app => {
   let onTokens = tr =>
     App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
-  let grammars = Extensions.ExtensionScanner.getGrammars(extensions);
+  let grammars = Model.LanguageInfo.getGrammars(languageInfo);
+
+  let getOrNull = (v) => switch(v) {
+  | None => ""
+  | Some(v) => v;
+  };
+
+  /* let re = Model.LanguageInfo.getLanguageFromExtension(languageInfo, ".json") |> getOrNull; */
+  /* print_endline (".json: " ++ re); */
 
   let tmClient =
     Extensions.TextmateClient.start(

@@ -10,6 +10,7 @@ module LineNumber = LineNumber;
 module Log = Log;
 module Node = Node;
 module Setup = Setup;
+module StringMap = StringMap;
 module Types = Types;
 module Utility = Utility;
 module Configuration = Configuration;
