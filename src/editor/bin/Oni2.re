@@ -93,6 +93,9 @@ let init = app => {
   /* let re = Model.LanguageInfo.getLanguageFromExtension(languageInfo, ".json") |> getOrNull; */
   /* print_endline (".json: " ++ re); */
 
+  let re = Model.LanguageInfo.getScopeFromLanguage(languageInfo, "reason") |> getOrNull;
+  print_endline ("reason: " ++ re);
+
   let tmClient =
     Extensions.TextmateClient.start(
       ~onScopeLoaded,
@@ -307,7 +310,28 @@ let init = app => {
          */
         switch (msg) {
         | BufferUpdate(bc) =>
-          Extensions.TextmateClient.notifyBufferUpdate(tmClient, bc)
+
+          let bufferId =  bc.id;
+          let state = App.getState(app);
+          let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
+
+          switch (buffer) {
+          | None => ()
+          | Some(buffer) => switch(Model.Buffer.getMetadata(buffer).filePath) {
+            | None => ();
+            | Some(v) => {
+                
+                let extension = Path.extname(v); 
+                switch(Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)) {
+                | None => ();
+                | Some(scope) => Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc);
+                }
+
+            }
+            
+          }
+          }
+
         | _ => ()
         };
       },
