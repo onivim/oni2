@@ -18,6 +18,7 @@ let getTextStyle = (uiFont) => {
   Style.[
     fontFamily(uiFont.fontFile),
     fontSize(11),
+    textWrap(TextWrapping.NoWrap),
   ];
 };
 
@@ -47,9 +48,9 @@ module StatusBarItem = {
         justifyContent(`Center),
         alignItems(`Center),
         height(h),
-        width(75),
         backgroundColor(bg),
         paddingHorizontal(5),
+        minWidth(75),
     ];
 
     let createElement = (~children, ~height, ~backgroundColor, ()) => component(hooks => {
