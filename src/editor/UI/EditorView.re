@@ -46,8 +46,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
 
     let tabs = toUiTabs(state.tabs);
+    let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (hooks, <View style> <Tabs theme tabs /> <EditorSurface state /> </View>);
+    (hooks, <View style> <Tabs theme tabs uiFont /> <EditorSurface state /> </View>);
   });

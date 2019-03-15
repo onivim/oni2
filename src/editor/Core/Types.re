@@ -208,6 +208,18 @@ module EditorFont = {
   };
 };
 
+module UiFont = {
+    type t = {
+        fontFile: string,
+        fontSize: int,
+    };
+
+    let create = (~fontFile, ~fontSize, ()) => {
+        fontFile,
+        fontSize,
+    };
+}
+
 [@deriving show]
 type wildmenu = {
   items: list(string),

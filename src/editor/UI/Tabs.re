@@ -18,20 +18,21 @@ type tabInfo = {
 
 let component = React.component("Tabs");
 
-let toTab = (theme, t: tabInfo) =>
+let toTab = (theme, uiFont, t: tabInfo) =>
   <Tab
     theme
     title={t.title}
     active={t.active}
     modified={t.modified}
+    uiFont
     onClick={t.onClick}
     onClose={t.onClose}
   />;
 
 let viewStyle = Style.[flexDirection(`Row)];
 
-let createElement = (~children as _, ~theme, ~tabs: list(tabInfo), ()) =>
+let createElement = (~children as _, ~theme, ~tabs: list(tabInfo), ~uiFont, ()) =>
   component(hooks => {
-    let tabComponents = List.map(toTab(theme), tabs);
+    let tabComponents = List.map(toTab(theme, uiFont), tabs);
     (hooks, <View style=viewStyle> ...tabComponents </View>);
   });

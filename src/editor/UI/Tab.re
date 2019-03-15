@@ -13,8 +13,6 @@ type tabAction = unit => unit;
 
 let tabHeight = 35;
 let maxWidth = 165;
-let fontName = "Inter-UI-SemiBold.ttf";
-let fontPixelSize = 12;
 let proportion = p => float_of_int(maxWidth) *. p |> int_of_float;
 
 let component = React.component("Tab");
@@ -27,6 +25,7 @@ let createElement =
       ~onClick,
       ~onClose,
       ~theme: Theme.t,
+      ~uiFont: Types.UiFont.t,
       ~children as _,
       (),
     ) =>
@@ -48,8 +47,8 @@ let createElement =
 
     let textStyle =
       Style.[
-        fontFamily(fontName),
-        fontSize(fontPixelSize),
+        fontFamily(uiFont.fontFile),
+        fontSize(uiFont.fontSize),
         color(theme.colors.tabActiveForeground),
       ];
 

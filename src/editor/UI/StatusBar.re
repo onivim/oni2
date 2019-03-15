@@ -7,20 +7,22 @@
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Model;
 
 let component = React.component("StatusBar");
 
-let textStyle =
+let getTextStyle = (uiFont) => {
+  open Oni_Core.Types.UiFont;
+
   Style.[
-    fontFamily("Inter-UI-Regular.ttf"),
-    fontSize(14),
-    paddingHorizontal(5),
+    fontFamily(uiFont.fontFile),
+    fontSize(11),
   ];
+};
 
 let viewStyle =
   Style.[
     flexDirection(`Row),
-    justifyContent(`SpaceBetween),
     alignItems(`Center),
     position(`Absolute),
     top(0),
@@ -33,6 +35,46 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   string_of_int(Types.Index.toOneBasedInt(position.line))
   ++ ","
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
+
+module StatusBarSection = {
+    let component = React.component("StatusBarSection");
+
+    let style = Style.[
+        flexDirection(`Row),
+        justifyContent(`Center),
+        alignItems(`Center),
+        /* paddingHorizontal(5), */
+    ];
+
+    let createElement = (~children, ()) => component(hooks => {
+        (hooks, 
+        <View style>
+            ...children
+        </View>
+        );
+    });
+    
+}
+
+module StatusBarItem = {
+    let component = React.component("StatusBarItem");
+
+    let style = Style.[
+        flexDirection(`Column),
+        justifyContent(`Center),
+        alignItems(`Center),
+        width(75),
+        /* paddingHorizontal(5), */
+    ];
+
+    let createElement = (~children, ()) => component(hooks => {
+        (hooks, 
+        <View style>
+            ...children
+        </View>
+        );
+    });
+}
 
 let modeStyle = (mode, theme: Theme.t) => {
   open Types.Mode;
@@ -68,35 +110,45 @@ let modeStyle = (mode, theme: Theme.t) => {
   Style.[
     backgroundColor(background),
     color(foreground),
-    alignSelf(`FlexStart),
-    paddingHorizontal(5),
   ];
 };
 
 let createElement =
     (
       ~children as _,
-      ~mode: Types.Mode.t,
-      ~theme: Theme.t,
-      ~position: Types.BufferPosition.t,
+      ~state: State.t,
       (),
     ) =>
-  component(hooks =>
+  component(hooks => {
+    let mode = state.mode;
+    let theme = state.theme;
+    let position = state.editor.cursorPosition;
+
+    let textStyle = getTextStyle(state.uiFont);
+
     (
       hooks,
       <View style=viewStyle>
-        <View style={modeStyle(mode, theme)}>
-          <Text style=textStyle text={Types.Mode.show(mode)} />
-        </View>
-        <View style=Style.[paddingHorizontal(5)]>
-          <Text
-            style=Style.[
-              color(theme.colors.statusBarForeground),
-              ...textStyle,
-            ]
-            text={convertPositionToString(position)}
-          />
-        </View>
+        <StatusBarSection />
+        <StatusBarSection />
+
+        <StatusBarSection>
+            <StatusBarItem>
+                  <Text
+                    style=Style.[
+                      backgroundColor(theme.colors.background),
+                      color(theme.colors.statusBarForeground),
+                      ...textStyle,
+                    ]
+                    text={convertPositionToString(position)}
+                  />
+            </StatusBarItem>
+            <StatusBarItem>
+                <View style={modeStyle(mode, theme)}>
+                  <Text style=textStyle text={Types.Mode.show(mode)} />
+                </View>
+            </StatusBarItem>
+        </StatusBarSection>
       </View>,
-    )
+    )}
   );

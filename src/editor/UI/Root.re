@@ -63,9 +63,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         </Overlay>
         <View style=statusBarStyle>
           <StatusBar
-            theme
-            mode={state.mode}
-            position={state.editor.cursorPosition}
+            state
           />
         </View>
       </View>,

@@ -24,6 +24,7 @@ type t = {
   buffers: BufferMap.t,
   activeBufferId: int,
   editorFont: EditorFont.t,
+  uiFont: UiFont.t,
   commandPalette: CommandPalette.t,
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
@@ -49,6 +50,12 @@ let create: unit => t =
         ~fontSize=14,
         ~measuredWidth=1,
         ~measuredHeight=1,
+        (),
+      ),
+    uiFont:
+      UiFont.create(
+        ~fontFile="Inter-UI-SemiBold.ttf",
+        ~fontSize=12,
         (),
       ),
     syntaxHighlighting: SyntaxHighlighting.create(),
