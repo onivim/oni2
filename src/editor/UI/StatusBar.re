@@ -12,14 +12,14 @@ open Oni_Model;
 
 let component = React.component("StatusBar");
 
-let getTextStyle = (uiFont) => {
-  open Oni_Core.Types.UiFont;
-
-  Style.[
-    fontFamily(uiFont.fontFile),
-    fontSize(11),
-    textWrap(TextWrapping.NoWrap),
-  ];
+let getTextStyle = uiFont => {
+  Oni_Core.Types.UiFont.(
+    Style.[
+      fontFamily(uiFont.fontFile),
+      fontSize(11),
+      textWrap(TextWrapping.NoWrap),
+    ]
+  );
 };
 
 let viewStyle =
@@ -40,53 +40,49 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   ++ ","
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
 
-  module StatusBarSection = {
-    let component = React.component("StatusBarSection");
+module StatusBarSection = {
+  let component = React.component("StatusBarSection");
 
-    let createElement = (~children, ~direction, ()) => component(hooks => {
-
-        (hooks,
-         <View style=Style.[
+  let createElement = (~children, ~direction, ()) =>
+    component(hooks =>
+      (
+        hooks,
+        <View
+          style=Style.[
             flexDirection(`Row),
             justifyContent(direction),
             flexGrow(1),
-         ]>
-            ...children
-            </View>
-            );
-    });
-  }
+          ]>
+          ...children
+        </View>,
+      )
+    );
+};
 
 module StatusBarItem = {
-    let component = React.component("StatusBarItem");
+  let component = React.component("StatusBarItem");
 
-    let getStyle = (h, bg: Color.t) => Style.[
-        flexDirection(`Column),
-        justifyContent(`Center),
-        alignItems(`Center),
-        height(h),
-        backgroundColor(bg),
-        paddingHorizontal(5),
-        minWidth(75),
+  let getStyle = (h, bg: Color.t) =>
+    Style.[
+      flexDirection(`Column),
+      justifyContent(`Center),
+      alignItems(`Center),
+      height(h),
+      backgroundColor(bg),
+      paddingHorizontal(5),
+      minWidth(75),
     ];
 
-    let createElement = (~children, ~height, ~backgroundColor, ()) => component(hooks => {
-        
-        (hooks, 
-        <View style=getStyle(height, backgroundColor)>
-            ...children
-        </View>
-        );
-    });
-}
+  let createElement = (~children, ~height, ~backgroundColor, ()) =>
+    component(hooks =>
+      (
+        hooks,
+        <View style={getStyle(height, backgroundColor)}> ...children </View>,
+      )
+    );
+};
 
-let createElement =
-    (
-      ~children as _,
-      ~height,
-      ~state: State.t,
-      (),
-    ) =>
+let createElement = (~children as _, ~height, ~state: State.t, ()) =>
   component(hooks => {
     let mode = state.mode;
     let theme = state.theme;
@@ -94,32 +90,35 @@ let createElement =
 
     let textStyle = getTextStyle(state.uiFont);
 
-  let (background, foreground) = Theme.getColorsForMode(theme, mode);
+    let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
     (
       hooks,
       <View style=viewStyle>
-      <StatusBarSection direction={`FlexStart} />
-      <StatusBarSection direction={`Center} />
-      <StatusBarSection direction={`FlexEnd} >
-            <StatusBarItem height backgroundColor={theme.colors.background}>
-                  <Text
-                    style=Style.[
-                      backgroundColor(theme.colors.background),
-                      color(theme.colors.statusBarForeground),
-                      ...textStyle,
-                    ]
-                    text={convertPositionToString(position)}
-                  />
-            </StatusBarItem>
-            <StatusBarItem height backgroundColor=background>
-                  <Text style=Style.[
-                    backgroundColor(background),
-                    color(foreground),
-                    ...textStyle,
-                  ] text={Types.Mode.show(mode)} />
-            </StatusBarItem>
+        <StatusBarSection direction=`FlexStart />
+        <StatusBarSection direction=`Center />
+        <StatusBarSection direction=`FlexEnd>
+          <StatusBarItem height backgroundColor={theme.colors.background}>
+            <Text
+              style=Style.[
+                backgroundColor(theme.colors.background),
+                color(theme.colors.statusBarForeground),
+                ...textStyle,
+              ]
+              text={convertPositionToString(position)}
+            />
+          </StatusBarItem>
+          <StatusBarItem height backgroundColor=background>
+            <Text
+              style=Style.[
+                backgroundColor(background),
+                color(foreground),
+                ...textStyle,
+              ]
+              text={Types.Mode.show(mode)}
+            />
+          </StatusBarItem>
         </StatusBarSection>
       </View>,
-    )}
-  );
+    );
+  });
