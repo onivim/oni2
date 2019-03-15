@@ -43,7 +43,7 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   module StatusBarSection = {
     let component = React.component("StatusBarSection");
 
-    let createElement = (~children, ~height, ~direction, ()) => component(hooks => {
+    let createElement = (~children, ~direction, ()) => component(hooks => {
 
         (hooks,
          <View style=Style.[
@@ -99,9 +99,9 @@ let createElement =
     (
       hooks,
       <View style=viewStyle>
-      <StatusBarSection height alignment=`FlexStart />
-      <StatusBarSection height alignment=`Center />
-      <StatusBarSection height alignment=`FlexEnd>
+      <StatusBarSection direction={`FlexStart} />
+      <StatusBarSection direction={`Center} />
+      <StatusBarSection direction={`FlexEnd} >
             <StatusBarItem height backgroundColor={theme.colors.background}>
                   <Text
                     style=Style.[
