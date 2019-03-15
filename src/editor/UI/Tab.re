@@ -53,9 +53,7 @@ let createElement =
         color(theme.colors.tabActiveForeground),
       ];
 
-    let icon = modified ?
-        FontAwesome.circle :
-        FontAwesome.times;
+    let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
     (
       hooks,

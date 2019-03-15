@@ -9,7 +9,7 @@ open CamomileLibraryDefault.Camomile;
 
 let component = React.component("FontIcon");
 
-let codeToIcon = (icon) => Zed_utf8.singleton(UChar.of_int(icon));
+let codeToIcon = icon => Zed_utf8.singleton(UChar.of_int(icon));
 
 let createElement =
     (
@@ -22,18 +22,23 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-
-      let (fontFamily_, fontSize_, backgroundColor_, color_) = (fontFamily, fontSize, backgroundColor, color);
+    let (fontFamily_, fontSize_, backgroundColor_, color_) = (
+      fontFamily,
+      fontSize,
+      backgroundColor,
+      color,
+    );
 
     (
       hooks,
       <Text
-          text={codeToIcon(icon)}
-          style=Style.[
-            fontFamily(fontFamily_),
-            fontSize(fontSize_),
-            color(color_),
-            backgroundColor(backgroundColor_),
-          ] />
+        text={codeToIcon(icon)}
+        style=Style.[
+          fontFamily(fontFamily_),
+          fontSize(fontSize_),
+          color(color_),
+          backgroundColor(backgroundColor_),
+        ]
+      />,
     );
   });
