@@ -12,10 +12,10 @@ open Oni_Core;
 type tabAction = unit => unit;
 
 let tabHeight = 35;
-let maxWidth = 165;
+let minWidth_ = 125;
 let fontName = "Inter-UI-SemiBold.ttf";
 let fontPixelSize = 12;
-let proportion = p => float_of_int(maxWidth) *. p |> int_of_float;
+let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
 let component = React.component("Tab");
 
@@ -50,7 +50,7 @@ let createElement =
         borderBottom(~color=theme.colors.editorBackground, ~width=2),
         opacity(opacityValue),
         height(tabHeight),
-        width(maxWidth),
+        minWidth(minWidth_),
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
