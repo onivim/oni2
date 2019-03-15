@@ -98,7 +98,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         <StatusBarSection direction=`FlexStart />
         <StatusBarSection direction=`Center />
         <StatusBarSection direction=`FlexEnd>
-          <StatusBarItem height backgroundColor={theme.colors.statusBarBackground}>
+          <StatusBarItem
+            height backgroundColor={theme.colors.statusBarBackground}>
             <Text
               style=Style.[
                 backgroundColor(theme.colors.statusBarBackground),
