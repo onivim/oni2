@@ -30,7 +30,7 @@ let createElement =
     let fontSize_ = 14;
     
     let textStyles = Style.[
-marginLeft(10), fontFamily(fontFile), fontSize(fontSize_),  color(cmdFontColor), backgroundColor(theme.colors.editorBackground), textWrap(TextWrapping.WhitespaceWrap),
+ fontFamily(fontFile), fontSize(fontSize_),  color(cmdFontColor), textWrap(TextWrapping.WhitespaceWrap),
     ];
 
     let (startStr, endStr) =
@@ -56,7 +56,7 @@ marginLeft(10), fontFamily(fontFile), fontSize(fontSize_),  color(cmdFontColor),
             ),
           ]>
           <Text
-            style=textStyles
+            style=Style.[marginLeft(10), ...textStyles]
             text={command.firstC ++ startStr}
           />
           <View
