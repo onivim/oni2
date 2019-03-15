@@ -6,6 +6,8 @@
 
 open Revery.UI;
 
+open Rench;
+
 let noop = () => ();
 
 type tabInfo = {
@@ -21,7 +23,7 @@ let component = React.component("Tabs");
 let toTab = (theme, t: tabInfo) =>
   <Tab
     theme
-    title={t.title}
+    title={Path.filename(t.title)}
     active={t.active}
     modified={t.modified}
     onClick={t.onClick}
