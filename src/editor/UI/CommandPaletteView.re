@@ -27,7 +27,8 @@ let paletteItemStyle = Style.[fontSize(14)];
 
 let createElement =
     (~children as _, ~commandPalette: CommandPalette.t, ~theme: Theme.t, ()) =>
-  component(hooks =>
+  component(hooks => {
+
     (
       hooks,
       commandPalette.isOpen
@@ -50,4 +51,5 @@ let createElement =
             </View>
         : React.listToElement([]),
     )
-  );
+  });
+

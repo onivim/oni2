@@ -54,7 +54,7 @@ let create: unit => t =
       ),
     uiFont:
       UiFont.create(
-        ~fontFile="Inter-UI-SemiBold.ttf",
+        ~fontFile="selawk.ttf",
         ~fontSize=12,
         (),
       ),
