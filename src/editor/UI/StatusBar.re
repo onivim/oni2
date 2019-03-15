@@ -46,7 +46,7 @@ module StatusBarItem = {
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
-        height(h)
+        height(h),
         width(75),
         backgroundColor(bg),
         paddingHorizontal(5),
@@ -62,15 +62,6 @@ module StatusBarItem = {
     });
 }
 
-let modeStyle = (mode, theme: Theme.t) => {
-  let (background, foreground) = Theme.getColorsForMode(theme, mode);
-
-  Style.[
-    backgroundColor(background),
-    color(foreground),
-  ];
-};
-
 let createElement =
     (
       ~children as _,
@@ -85,14 +76,12 @@ let createElement =
 
     let textStyle = getTextStyle(state.uiFont);
 
-    let height_ = height;
-
   let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
     (
       hooks,
       <View style=viewStyle>
-            <StatusBarItem height backgroundColor={theme.colors.background}}>
+            <StatusBarItem height backgroundColor={theme.colors.background}>
                   <Text
                     style=Style.[
                       backgroundColor(theme.colors.background),
