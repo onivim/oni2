@@ -26,7 +26,7 @@
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
     "@opam/ocamlbuild": "*",
-    "revery": "0.11.0",
+    "revery": "0.12.0",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
@@ -47,8 +47,7 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349",
-    "revery": "link:../revery"
+    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
