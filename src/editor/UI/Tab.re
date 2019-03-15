@@ -63,14 +63,7 @@ let createElement =
         backgroundColor(theme.colors.editorBackground),
       ];
 
-    /*     let modifiedStyles = */
-    /*       Style.[ */
-    /*         color(theme.colors.tabActiveForeground), */
-    /*         marginHorizontal(5), */
-    /*         fontSize(fontPixelSize), */
-    /*         fontFamily("FontAwesome5FreeSolid.otf"), */
-    /*         backgroundColor(theme.colors.editorBackground), */
-    /*       ]; */
+    let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
     (
       hooks,
@@ -84,12 +77,10 @@ let createElement =
             justifyContent(`Center),
             overflow(`Hidden),
           ]>
-           <Text style=textStyle text={Path.filename(title)} /> </View>
-          /* {modified */
-          /*    ? <Text text={||} style=modifiedStyles /> */
-          /*    : React.listToElement([])} */
-        /* onMouseUp={(_) => onClose()}, */
-        <View
+          <Text style=textStyle text=title />
+        </Clickable>
+        <Clickable
+          onClick=onClose
           style=Style.[
             height(tabHeight),
             /* alignSelf(`FlexEnd), */
@@ -97,14 +88,11 @@ let createElement =
             justifyContent(`Center),
             width(proportion(0.20)),
           ]>
-          <Text
-            text="x"
-            style=Style.[
-              color(theme.colors.tabActiveForeground),
-              fontFamily("FontAwesome5FreeSolid.otf"),
-              backgroundColor(theme.colors.editorBackground),
-              fontSize(15),
-            ]
+          <FontIcon
+            icon
+            backgroundColor={theme.colors.editorBackground}
+            color={theme.colors.tabActiveForeground}
+            fontSize={modified ? 10 : 12}
           />
         </View>
       </View>,
