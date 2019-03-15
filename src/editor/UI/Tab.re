@@ -13,7 +13,7 @@ type tabAction = unit => unit;
 
 let tabHeight = 35;
 let maxWidth = 165;
-let fontName = "selawk.ttf";
+let fontName = "Inter-UI-SemiBold.ttf";
 let fontPixelSize = 12;
 let proportion = p => float_of_int(maxWidth) *. p |> int_of_float;
 
@@ -33,16 +33,21 @@ let createElement =
     ) =>
   component(hooks => {
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
-    let borderColor = active ? modeColor : Colors.transparentBlack;
+
+    /* TODO: Active flag doesn't seem to be working? */
+    let _borderColor = active ? modeColor : Colors.transparentBlack;
+
+    let borderColor = modeColor;
+
     let opacityValue = 1.0;
 
     let containerStyle =
       Style.[
+        overflow(`Hidden),
         paddingHorizontal(5),
         backgroundColor(theme.colors.editorBackground),
         borderTop(~color=borderColor, ~width=2),
         borderBottom(~color=theme.colors.editorBackground, ~width=2),
-        /* backgroundColor(Colors.red), */
         opacity(opacityValue),
         height(tabHeight),
         width(maxWidth),
@@ -71,7 +76,6 @@ let createElement =
             flexDirection(`Row),
             alignItems(`Center),
             justifyContent(`Center),
-            overflow(`Hidden),
           ]>
           <Text style=textStyle text=title />
         </Clickable>
@@ -79,7 +83,6 @@ let createElement =
           onClick=onClose
           style=Style.[
             height(tabHeight),
-            /* alignSelf(`FlexEnd), */
             alignItems(`Center),
             justifyContent(`Center),
             width(proportion(0.20)),
