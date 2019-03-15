@@ -53,13 +53,7 @@ let createElement =
         color(theme.colors.tabActiveForeground),
       ];
 
-    let modifiedStyles =
-      Style.[
-        color(theme.colors.tabActiveForeground),
-        marginHorizontal(5),
-        fontSize(fontPixelSize),
-        fontFamily("FontAwesome5FreeSolid.otf"),
-      ];
+    let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
     (
       hooks,
@@ -73,9 +67,6 @@ let createElement =
             justifyContent(`Center),
           ]>
           <Text style=textStyle text=title />
-          {modified
-             ? <Text text={||} style=modifiedStyles />
-             : React.listToElement([])}
         </Clickable>
         <Clickable
           onClick=onClose
@@ -86,13 +77,11 @@ let createElement =
             justifyContent(`Center),
             width(proportion(0.20)),
           ]>
-          <Text
-            text={||}
-            style=Style.[
-              color(theme.colors.tabActiveForeground),
-              fontFamily("FontAwesome5FreeSolid.otf"),
-              fontSize(15),
-            ]
+          <FontIcon
+            icon
+            backgroundColor={theme.colors.editorBackground}
+            color={theme.colors.tabActiveForeground}
+            fontSize={modified ? 10 : 12}
           />
         </Clickable>
       </View>,
