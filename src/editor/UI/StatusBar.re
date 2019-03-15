@@ -35,36 +35,8 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
 
 let modeStyle = (mode, theme: Theme.t) => {
-  open Types.Mode;
-  open Theme;
-  let (background, foreground) =
-    switch (mode) {
-    | Visual => (
-        theme.colors.oniVisualModeBackground,
-        theme.colors.oniVisualModeForeground,
-      )
-    | Commandline => (
-        theme.colors.oniCommandlineModeBackground,
-        theme.colors.oniCommandlineModeForeground,
-      )
-    | Operator => (
-        theme.colors.oniOperatorModeBackground,
-        theme.colors.oniOperatorModeForeground,
-      )
-    | Insert => (
-        theme.colors.oniInsertModeBackground,
-        theme.colors.oniInsertModeForeground,
-      )
-    | Replace => (
-        theme.colors.oniReplaceModeBackground,
-        theme.colors.oniReplaceModeForeground,
-      )
-    | Other
-    | Normal => (
-        theme.colors.oniNormalModeBackground,
-        theme.colors.oniNormalModeForeground,
-      )
-    };
+  let (background, foreground) = Theme.getColorsForMode(theme, mode);
+
   Style.[
     backgroundColor(background),
     color(foreground),
