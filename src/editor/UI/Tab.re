@@ -36,9 +36,9 @@ let createElement =
   component(hooks => {
     /* let opacityValue = active ? 1.0 : 0.6; */
 
-      let (modeColor, _) = Theme.getColorsForMode(theme, mode);
-      let borderColor = modeColor;
-      let opacityValue = 1.0;
+    let (modeColor, _) = Theme.getColorsForMode(theme, mode);
+    let borderColor = modeColor;
+    let opacityValue = 1.0;
 
     let containerStyle =
       Style.[
@@ -63,20 +63,20 @@ let createElement =
         backgroundColor(theme.colors.editorBackground),
       ];
 
-/*     let modifiedStyles = */
-/*       Style.[ */
-/*         color(theme.colors.tabActiveForeground), */
-/*         marginHorizontal(5), */
-/*         fontSize(fontPixelSize), */
-/*         fontFamily("FontAwesome5FreeSolid.otf"), */
-/*         backgroundColor(theme.colors.editorBackground), */
-/*       ]; */
+    /*     let modifiedStyles = */
+    /*       Style.[ */
+    /*         color(theme.colors.tabActiveForeground), */
+    /*         marginHorizontal(5), */
+    /*         fontSize(fontPixelSize), */
+    /*         fontFamily("FontAwesome5FreeSolid.otf"), */
+    /*         backgroundColor(theme.colors.editorBackground), */
+    /*       ]; */
 
     (
       hooks,
       <View style=containerStyle>
+        /* onMouseUp={(_) => onClick()}, */
         <View
-          /* onMouseUp={(_) => onClick()}, */
           style=Style.[
             width(proportion(0.80)),
             flexDirection(`Row),
@@ -84,13 +84,12 @@ let createElement =
             justifyContent(`Center),
             overflow(`Hidden),
           ]>
-          <Text style=textStyle text={Path.filename(title)} />
+           <Text style=textStyle text={Path.filename(title)} /> </View>
           /* {modified */
           /*    ? <Text text={||} style=modifiedStyles /> */
           /*    : React.listToElement([])} */
-        </View>
+        /* onMouseUp={(_) => onClose()}, */
         <View
-          /* onMouseUp={(_) => onClose()}, */
           style=Style.[
             height(tabHeight),
             /* alignSelf(`FlexEnd), */
@@ -99,11 +98,11 @@ let createElement =
             width(proportion(0.20)),
           ]>
           <Text
-            text={"x"}
+            text="x"
             style=Style.[
               color(theme.colors.tabActiveForeground),
               fontFamily("FontAwesome5FreeSolid.otf"),
-               backgroundColor(theme.colors.editorBackground),
+              backgroundColor(theme.colors.editorBackground),
               fontSize(15),
             ]
           />

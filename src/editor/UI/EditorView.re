@@ -50,5 +50,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (hooks, <View style> <Tabs theme tabs mode/> <EditorSurface state /> </View>);
+    (
+      hooks,
+      <View style> <Tabs theme tabs mode /> <EditorSurface state /> </View>,
+    );
   });

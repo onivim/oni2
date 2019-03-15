@@ -35,8 +35,7 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
 
 let modeStyle = (mode, theme: Theme.t) => {
-  let (background, foreground) =
-      Theme.getColorsForMode(theme, mode);
+  let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
   Style.[
     backgroundColor(background),

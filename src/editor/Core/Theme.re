@@ -127,5 +127,5 @@ let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
       )
     };
 
-   (background, foreground)
+  (background, foreground);
 };
