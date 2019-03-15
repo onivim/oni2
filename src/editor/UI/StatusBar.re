@@ -40,6 +40,23 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   ++ ","
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
 
+  module StatusBarSection = {
+    let component = React.component("StatusBarSection");
+
+    let createElement = (~children, ~height, ~direction, ()) => component(hooks => {
+
+        (hooks,
+         <View style=Style.[
+            flexDirection(`Row),
+            justifyContent(direction),
+            flexGrow(1),
+         ]>
+            ...children
+            </View>
+            );
+    });
+  }
+
 module StatusBarItem = {
     let component = React.component("StatusBarItem");
 
@@ -82,6 +99,9 @@ let createElement =
     (
       hooks,
       <View style=viewStyle>
+      <StatusBarSection height alignment=`FlexStart />
+      <StatusBarSection height alignment=`Center />
+      <StatusBarSection height alignment=`FlexEnd>
             <StatusBarItem height backgroundColor={theme.colors.background}>
                   <Text
                     style=Style.[
@@ -99,6 +119,7 @@ let createElement =
                     ...textStyle,
                   ] text={Types.Mode.show(mode)} />
             </StatusBarItem>
+        </StatusBarSection>
       </View>,
     )}
   );
