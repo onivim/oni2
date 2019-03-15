@@ -1,5 +1,5 @@
 {
-  "checksum": "acf40e50dbec7a18e507c992dc5296e0",
+  "checksum": "037e6217cf0057574382c4e69a0fc232",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -16,14 +16,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "revery@0.11.0@d41d8cd9": {
-      "id": "revery@0.11.0@d41d8cd9",
+    "revery@0.12.0@d41d8cd9": {
+      "id": "revery@0.12.0@d41d8cd9",
       "name": "revery",
-      "version": "0.11.0",
+      "version": "0.12.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.11.0.tgz#sha1:d059cbb72a4b5272a752289dc5b9b5078b64f332"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.12.0.tgz#sha1:a610796979ffd9cacaa233788f815dfe37ed5d7d"
         ]
       },
       "overrides": [],
@@ -380,7 +380,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@0.11.0@d41d8cd9", "rench@1.4.0@d41d8cd9",
+        "revery@0.12.0@d41d8cd9", "rench@1.4.0@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "reason-glfw@3.2.1023@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/rely@1.0.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
