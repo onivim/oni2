@@ -4,6 +4,7 @@
  * Container for StatusBar
  */
 
+open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -24,6 +25,8 @@ let viewStyle =
   Style.[
     flexDirection(`Row),
     alignItems(`Center),
+    flexGrow(1),
+    justifyContent(`FlexEnd),
     position(`Absolute),
     top(0),
     bottom(0),
@@ -36,40 +39,23 @@ let convertPositionToString = (position: Types.BufferPosition.t) =>
   ++ ","
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));
 
-module StatusBarSection = {
-    let component = React.component("StatusBarSection");
-
-    let style = Style.[
-        flexDirection(`Row),
-        justifyContent(`Center),
-        alignItems(`Center),
-        /* paddingHorizontal(5), */
-    ];
-
-    let createElement = (~children, ()) => component(hooks => {
-        (hooks, 
-        <View style>
-            ...children
-        </View>
-        );
-    });
-    
-}
-
 module StatusBarItem = {
     let component = React.component("StatusBarItem");
 
-    let style = Style.[
+    let getStyle = (h, bg: Color.t) => Style.[
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
+        height(h)
         width(75),
-        /* paddingHorizontal(5), */
+        backgroundColor(bg),
+        paddingHorizontal(5),
     ];
 
-    let createElement = (~children, ()) => component(hooks => {
+    let createElement = (~children, ~height, ~backgroundColor, ()) => component(hooks => {
+        
         (hooks, 
-        <View style>
+        <View style=getStyle(height, backgroundColor)>
             ...children
         </View>
         );
@@ -88,6 +74,7 @@ let modeStyle = (mode, theme: Theme.t) => {
 let createElement =
     (
       ~children as _,
+      ~height,
       ~state: State.t,
       (),
     ) =>
@@ -98,14 +85,14 @@ let createElement =
 
     let textStyle = getTextStyle(state.uiFont);
 
+    let height_ = height;
+
+  let (background, foreground) = Theme.getColorsForMode(theme, mode);
+
     (
       hooks,
       <View style=viewStyle>
-        <StatusBarSection />
-        <StatusBarSection />
-
-        <StatusBarSection>
-            <StatusBarItem>
+            <StatusBarItem height backgroundColor={theme.colors.background}}>
                   <Text
                     style=Style.[
                       backgroundColor(theme.colors.background),
@@ -115,12 +102,13 @@ let createElement =
                     text={convertPositionToString(position)}
                   />
             </StatusBarItem>
-            <StatusBarItem>
-                <View style={modeStyle(mode, theme)}>
-                  <Text style=textStyle text={Types.Mode.show(mode)} />
-                </View>
+            <StatusBarItem height backgroundColor=background>
+                  <Text style=Style.[
+                    backgroundColor(background),
+                    color(foreground),
+                    ...textStyle,
+                  ] text={Types.Mode.show(mode)} />
             </StatusBarItem>
-        </StatusBarSection>
       </View>,
     )}
   );

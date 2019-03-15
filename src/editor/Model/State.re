@@ -52,12 +52,7 @@ let create: unit => t =
         ~measuredHeight=1,
         (),
       ),
-    uiFont:
-      UiFont.create(
-        ~fontFile="selawk.ttf",
-        ~fontSize=12,
-        (),
-      ),
+    uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
     tabs: [Tab.create(0, "[No Name]")],
     theme: Theme.create(),

@@ -35,7 +35,14 @@ let toTab = (theme, mode, uiFont, t: tabInfo) =>
 let viewStyle = Style.[flexDirection(`Row)];
 
 let createElement =
-    (~children as _, ~theme, ~tabs: list(tabInfo), ~mode: Types.Mode.t, ~uiFont, ()) =>
+    (
+      ~children as _,
+      ~theme,
+      ~tabs: list(tabInfo),
+      ~mode: Types.Mode.t,
+      ~uiFont,
+      (),
+    ) =>
   component(hooks => {
     let tabComponents = List.map(toTab(theme, mode, uiFont), tabs);
     (hooks, <View style=viewStyle> ...tabComponents </View>);

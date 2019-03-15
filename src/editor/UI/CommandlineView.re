@@ -26,12 +26,16 @@ let createElement =
     (~children as _, ~command: Commandline.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let uiFont = State.(GlobalContext.current().state.uiFont);
-    let {fontFile, _ } = uiFont;
+    let {fontFile, _} = uiFont;
     let fontSize_ = 14;
-    
-    let textStyles = Style.[
- fontFamily(fontFile), fontSize(fontSize_),  color(cmdFontColor), textWrap(TextWrapping.WhitespaceWrap),
-    ];
+
+    let textStyles =
+      Style.[
+        fontFamily(fontFile),
+        fontSize(fontSize_),
+        color(cmdFontColor),
+        textWrap(TextWrapping.WhitespaceWrap),
+      ];
 
     let (startStr, endStr) =
       getStringParts(command.position, command.content);

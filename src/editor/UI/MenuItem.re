@@ -17,11 +17,7 @@ let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
   ];
 
 let containerStyles = (~bg, ()) =>
-  Style.[
-    padding(10),
-    flexDirection(`Row),
-    backgroundColor(bg),
-  ];
+  Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
 
 let iconStyles =
   Style.[
@@ -36,15 +32,26 @@ let createElement =
     let state = GlobalContext.current().state;
     let uiFont = State.(state.uiFont);
 
-    let bg: Color.t = Theme.(selected ? theme.colors.editorMenuItemSelected : theme.colors.editorMenuBackground);
+    let bg: Color.t =
+      Theme.(
+        selected
+          ? theme.colors.editorMenuItemSelected
+          : theme.colors.editorMenuBackground
+      );
 
     let labelStyles =
-      Style.(merge(~source=Style.[
-    fontFamily(uiFont.fontFile),
-    fontSize(uiFont.fontSize),
-    color(theme.colors.editorMenuForeground),
-    backgroundColor(bg),
-      ], ~target=style));
+      Style.(
+        merge(
+          ~source=
+            Style.[
+              fontFamily(uiFont.fontFile),
+              fontSize(uiFont.fontSize),
+              color(theme.colors.editorMenuForeground),
+              backgroundColor(bg),
+            ],
+          ~target=style,
+        )
+      );
     (
       hooks,
       <View style={containerStyles(~bg, ())}>

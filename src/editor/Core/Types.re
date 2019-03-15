@@ -209,16 +209,13 @@ module EditorFont = {
 };
 
 module UiFont = {
-    type t = {
-        fontFile: string,
-        fontSize: int,
-    };
+  type t = {
+    fontFile: string,
+    fontSize: int,
+  };
 
-    let create = (~fontFile, ~fontSize, ()) => {
-        fontFile,
-        fontSize,
-    };
-}
+  let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
+};
 
 [@deriving show]
 type wildmenu = {
