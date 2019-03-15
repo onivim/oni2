@@ -96,3 +96,36 @@ type t = {
 let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
 
 let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
+
+let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
+  let (background, foreground) =
+    switch (mode) {
+    | Visual => (
+        theme.colors.oniVisualModeBackground,
+        theme.colors.oniVisualModeForeground,
+      )
+    | Commandline => (
+        theme.colors.oniCommandlineModeBackground,
+        theme.colors.oniCommandlineModeForeground,
+      )
+    | Operator => (
+        theme.colors.oniOperatorModeBackground,
+        theme.colors.oniOperatorModeForeground,
+      )
+    | Insert => (
+        theme.colors.oniInsertModeBackground,
+        theme.colors.oniInsertModeForeground,
+      )
+    | Replace => (
+        theme.colors.oniReplaceModeBackground,
+        theme.colors.oniReplaceModeForeground,
+      )
+    | Other
+    | Normal => (
+        theme.colors.oniNormalModeBackground,
+        theme.colors.oniNormalModeForeground,
+      )
+    };
+
+   (background, foreground)
+};

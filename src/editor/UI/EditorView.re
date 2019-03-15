@@ -44,10 +44,11 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
+    let mode = state.mode;
 
     let tabs = toUiTabs(state.tabs);
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (hooks, <View style> <Tabs theme tabs /> <EditorSurface state /> </View>);
+    (hooks, <View style> <Tabs theme tabs mode/> <EditorSurface state /> </View>);
   });
