@@ -1,15 +1,13 @@
 /*
- * Root.re
+ * Tab.re
  *
- * Root editor component - contains all UI elements
  */
 
-/* open Revery; */
+open Revery;
 open Revery.UI;
-/* open Revery.UI.Components; */
+open Revery.UI.Components;
 
 open Oni_Core;
-open Rench;
 
 type tabAction = unit => unit;
 
@@ -24,20 +22,18 @@ let component = React.component("Tab");
 let createElement =
     (
       ~title,
-      ~active as _, /* Where is this being set? */
-      ~modified as _,
-      ~onClick as _,
-      ~onClose as _,
+      ~active, /* Where is this being set? */
+      ~modified,
+      ~onClick,
+      ~onClose,
       ~theme: Theme.t,
       ~mode: Types.Mode.t,
       ~children as _,
       (),
     ) =>
   component(hooks => {
-    /* let opacityValue = active ? 1.0 : 0.6; */
-
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
-    let borderColor = modeColor;
+    let borderColor = active ? modeColor : Colors.transparentBlack;
     let opacityValue = 1.0;
 
     let containerStyle =
@@ -68,8 +64,8 @@ let createElement =
     (
       hooks,
       <View style=containerStyle>
-        /* onMouseUp={(_) => onClick()}, */
-        <View
+        <Clickable
+          onClick
           style=Style.[
             width(proportion(0.80)),
             flexDirection(`Row),
@@ -94,7 +90,7 @@ let createElement =
             color={theme.colors.tabActiveForeground}
             fontSize={modified ? 10 : 12}
           />
-        </View>
+        </Clickable>
       </View>,
     );
   });
