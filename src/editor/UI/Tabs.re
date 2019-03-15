@@ -5,6 +5,7 @@
  */
 
 open Revery.UI;
+open Rench;
 
 open Oni_Core;
 
@@ -23,7 +24,7 @@ let component = React.component("Tabs");
 let toTab = (theme, mode, uiFont, t: tabInfo) =>
   <Tab
     theme
-    title={t.title}
+    title={Path.filename(t.title)}
     active={t.active}
     modified={t.modified}
     uiFont
