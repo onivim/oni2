@@ -58,7 +58,12 @@ let renderLineNumber =
 
   let lineNumberXOffset =
     isActiveLine
-      ? 0. : (lineNumberWidth /. 2.) -. float_of_int(String.length(lineNumber)) *. fontWidth /. 2.;
+      ? 0.
+      : lineNumberWidth
+        /. 2.
+        -. float_of_int(String.length(lineNumber))
+        *. fontWidth
+        /. 2.;
 
   Revery.Draw.Text.drawString(
     ~transform,
@@ -104,20 +109,20 @@ let renderTokens =
   /*     ), */
   /*   ); */
 
-/*   let lineNumberXOffset = */
-/*     isActiveLine */
-/*       ? 0. : (lineNumberWidth /. 2) -. (float_of_int(String.length(lineNumber)) *. fontWidth /. 2.); */
+  /*   let lineNumberXOffset = */
+  /*     isActiveLine */
+  /*       ? 0. : (lineNumberWidth /. 2) -. (float_of_int(String.length(lineNumber)) *. fontWidth /. 2.); */
 
-/*   Revery.Draw.Text.drawString( */
-/*     ~transform, */
-/*     ~x=lineNumberXOffset, */
-/*     ~y=yF, */
-/*     ~backgroundColor=theme.colors.editorLineNumberBackground, */
-/*     ~color=lineNumberTextColor, */
-/*     ~fontFamily="FiraCode-Regular.ttf", */
-/*     ~fontSize=14, */
-/*     lineNumber, */
-/*   ); */
+  /*   Revery.Draw.Text.drawString( */
+  /*     ~transform, */
+  /*     ~x=lineNumberXOffset, */
+  /*     ~y=yF, */
+  /*     ~backgroundColor=theme.colors.editorLineNumberBackground, */
+  /*     ~color=lineNumberTextColor, */
+  /*     ~fontFamily="FiraCode-Regular.ttf", */
+  /*     ~fontSize=14, */
+  /*     lineNumber, */
+  /*   ); */
 
   let textBackgroundColor =
     isActiveLine
@@ -126,9 +131,11 @@ let renderTokens =
   let f = (token: Tokenizer.t) => {
     Revery.Draw.Text.drawString(
       ~transform,
-      ~x= lineNumberWidth
-          +. (fontWidth *. float_of_int(Index.toZeroBasedInt(token.startPosition)))
-          -. xF,
+      ~x=
+        lineNumberWidth
+        +. fontWidth
+        *. float_of_int(Index.toZeroBasedInt(token.startPosition))
+        -. xF,
       ~y=yF,
       ~backgroundColor=textBackgroundColor,
       ~color=token.color,
@@ -175,22 +182,32 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
-      | _ => iFontWidth;
+      | _ => iFontWidth
       };
 
     let cursorStyle =
       Style.[
         position(`Absolute),
-        top(int_of_float(
-          fontHeight
-          *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-          -. state.editor.scrollY +. 0.5)
+        top(
+          int_of_float(
+            fontHeight
+            *. float_of_int(
+                 Index.toZeroBasedInt(state.editor.cursorPosition.line),
+               )
+            -. state.editor.scrollY
+            +. 0.5,
+          ),
         ),
-        left(int_of_float(
-          lineNumberWidth
-          +. fontWidth
-          *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.character))
-          -. state.editor.scrollX +. 0.5)
+        left(
+          int_of_float(
+            lineNumberWidth
+            +. fontWidth
+            *. float_of_int(
+                 Index.toZeroBasedInt(state.editor.cursorPosition.character),
+               )
+            -. state.editor.scrollX
+            +. 0.5,
+          ),
         ),
         height(iFontHeight),
         width(cursorWidth),
@@ -266,7 +283,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Style.[
         position(`Absolute),
         top(0),
-        left(int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth))),
+        left(
+          int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
+        ),
         width(Constants.default.scrollBarThickness),
         backgroundColor(theme.colors.scrollbarSliderBackground),
         bottom(0),
@@ -283,14 +302,14 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=wheelEvent.deltaY *. -50.,
+        ~deltaY=wheelEvent.deltaY *. (-50.),
         (),
       );
     };
 
     let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=wheelEvent.deltaY *. -150.,
+        ~deltaY=wheelEvent.deltaY *. (-150.),
         (),
       );
     };
@@ -312,13 +331,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~transform,
                 ~x=lineNumberWidth,
                 ~y=
-                    fontHeight
-                    *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-                    -. state.editor.scrollY,
+                  fontHeight
+                  *. float_of_int(
+                       Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                     )
+                  -. state.editor.scrollY,
                 ~height=fontHeight,
                 ~width=
-                  float_of_int(
-                    state.editor.size.pixelWidth) -. lineNumberWidth,
+                  float_of_int(state.editor.size.pixelWidth)
+                  -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );

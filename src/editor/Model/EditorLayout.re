@@ -48,8 +48,13 @@ let getLayout =
        * (c * characterWidth) + (c * minimapCharacterWidth) = availableWidthInPixels
        * c * (characterWidth + minimapCharacterWidth) = availableWidthInPixels
        */
-      int_of_float(availableWidthInPixels
-      /. (characterWidth +. float_of_int(Constants.default.minimapCharacterWidth)));
+      int_of_float(
+        availableWidthInPixels
+        /. (
+          characterWidth
+          +. float_of_int(Constants.default.minimapCharacterWidth)
+        ),
+      );
     } else {
       int_of_float(availableWidthInPixels /. characterWidth);
     };
@@ -60,11 +65,13 @@ let getLayout =
 
   let bufferHeightInCharacters = int_of_float(pixelHeight /. characterHeight);
   let minimapHeightInCharacters =
-    int_of_float(pixelHeight
-    /. float_of_int(
-      Constants.default.minimapCharacterHeight
-      + Constants.default.minimapLineSpacing
-    ));
+    int_of_float(
+      pixelHeight
+      /. float_of_int(
+           Constants.default.minimapCharacterHeight
+           + Constants.default.minimapLineSpacing,
+         ),
+    );
 
   let leftOverWidth =
     pixelWidth

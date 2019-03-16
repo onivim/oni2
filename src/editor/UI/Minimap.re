@@ -73,9 +73,11 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let rowHeight = float_of_int(
-      Constants.default.minimapCharacterHeight
-      + Constants.default.minimapLineSpacing);
+    let rowHeight =
+      float_of_int(
+        Constants.default.minimapCharacterHeight
+        + Constants.default.minimapLineSpacing,
+      );
 
     let scrollY = state.editor.minimapScrollY;
 
@@ -92,11 +94,11 @@ let createElement =
               ~transform,
               ~x=0.,
               ~y=
-                (
-                  rowHeight
-                  *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-                  -. scrollY
-                ),
+                rowHeight
+                *. float_of_int(
+                     Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                   )
+                -. scrollY,
               ~height=float_of_int(Constants.default.minimapCharacterHeight),
               ~width=float_of_int(width),
               ~color=state.theme.colors.editorLineHighlightBackground,

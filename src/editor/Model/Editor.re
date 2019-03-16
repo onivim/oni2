@@ -54,15 +54,19 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
-let getVisibleLines = (view: t) => int_of_float(float_of_int(view.size.pixelWidth) /. view.lineHeight);
+let getVisibleLines = (view: t) =>
+  int_of_float(float_of_int(view.size.pixelWidth) /. view.lineHeight);
 
-let getTotalSizeInPixels = (view: t) => int_of_float(float_of_int(view.viewLines) *. view.lineHeight);
+let getTotalSizeInPixels = (view: t) =>
+  int_of_float(float_of_int(view.viewLines) *. view.lineHeight);
 
 let getCursorPixelLine = (view: t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.line)) *. view.lineHeight;
+  float_of_int(Index.toZeroBasedInt(view.cursorPosition.line))
+  *. view.lineHeight;
 
 let getCursorPixelColumn = (view: t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.character)) *. view.characterWidth;
+  float_of_int(Index.toZeroBasedInt(view.cursorPosition.character))
+  *. view.characterWidth;
 
 let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int) => {
   let totalViewSizeInPixels =
@@ -98,12 +102,12 @@ let getHorizontalScrollbarMetrics = (view: t, availableWidth: int) => {
 
 let scrollTo = (view: t, newScrollY) => {
   let newScrollY = max(0., newScrollY);
-  let availableScroll = max(float_of_int(view.viewLines - 1), 0.) *. view.lineHeight;
+  let availableScroll =
+    max(float_of_int(view.viewLines - 1), 0.) *. view.lineHeight;
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
-    newScrollY
-    /. (availableScroll -. float_of_int(view.size.pixelHeight));
+    newScrollY /. (availableScroll -. float_of_int(view.size.pixelHeight));
   let minimapLineSize =
     Constants.default.minimapCharacterWidth
     + Constants.default.minimapCharacterHeight;
@@ -133,7 +137,9 @@ let scrollToHorizontal = (view: t, newScrollX) => {
   let availableScroll =
     max(
       0.,
-      float_of_int(view.maxLineLength) *. view.characterWidth -. layout.bufferWidthInPixels,
+      float_of_int(view.maxLineLength)
+      *. view.characterWidth
+      -. layout.bufferWidthInPixels,
     );
   let scrollX = min(newScrollX, availableScroll);
   {...view, scrollX};
@@ -154,7 +160,8 @@ let scrollToCursorTop = (view: t) => {
 let scrollToCursorBottom = (view: t) => {
   let cursorPixelPosition = getCursorPixelLine(view);
   let scrollPosition =
-    cursorPixelPosition -. (float_of_int(view.size.pixelHeight) -. view.lineHeight);
+    cursorPixelPosition
+    -. (float_of_int(view.size.pixelHeight) -. view.lineHeight);
   scrollTo(view, scrollPosition);
 };
 
@@ -177,7 +184,10 @@ let scrollToCursorRight = (view: t, availableWidth) => {
 
 let scrollToCursor = (view: t) => {
   let scrollPosition =
-    getCursorPixelLine(view) -. float_of_int(view.size.pixelHeight / 2) +. (view.lineHeight /. 2.);
+    getCursorPixelLine(view)
+    -. float_of_int(view.size.pixelHeight / 2)
+    +. view.lineHeight
+    /. 2.;
 
   scrollTo(view, scrollPosition);
 };
@@ -232,11 +242,14 @@ type cursorLocation =
   | Middle
   | Bottom;
 
-let getTopVisibleLine = view => int_of_float(view.scrollY /. view.lineHeight) + 1;
+let getTopVisibleLine = view =>
+  int_of_float(view.scrollY /. view.lineHeight) + 1;
 
 let getBottomVisibleLine = view => {
   let absoluteBottomLine =
-    int_of_float((view.scrollY +. float_of_int(view.size.pixelHeight)) /. view.lineHeight);
+    int_of_float(
+      (view.scrollY +. float_of_int(view.size.pixelHeight)) /. view.lineHeight,
+    );
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 

@@ -123,10 +123,14 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  let setFont = (fontFamily, fontSize) => { 
+  let setFont = (fontFamily, fontSize) => {
     /* let scaleFactor = Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w)); */
-    print_endline ("PIXEL RATIO: " ++ string_of_float(Window.getDevicePixelRatio(w)));
-    print_endline ("SCALE FACTOR: " ++ string_of_int(Window.getScaleFactor(w)));
+    print_endline(
+      "PIXEL RATIO: " ++ string_of_float(Window.getDevicePixelRatio(w)),
+    );
+    print_endline(
+      "SCALE FACTOR: " ++ string_of_int(Window.getScaleFactor(w)),
+    );
     let scaleFactor = 10.;
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
@@ -137,7 +141,6 @@ let init = app => {
         open Oni_Model.Actions;
         open Oni_Core.Types;
 
-
         /* Measure text */
         let shapedText = Fontkit.fk_shape(font, "H");
         let firstShape = shapedText[0];
@@ -145,9 +148,9 @@ let init = app => {
 
         let metrics = Fontkit.fk_get_metrics(font);
         let actualHeight =
-            float_of_int(fontSize)
-            *. float_of_int(metrics.height)
-            /. float_of_int(metrics.unitsPerEm);
+          float_of_int(fontSize)
+          *. float_of_int(metrics.height)
+          /. float_of_int(metrics.unitsPerEm);
 
         /* Set editor text based on measurements */
         App.dispatch(
@@ -156,7 +159,8 @@ let init = app => {
             EditorFont.create(
               ~fontFile=fontFamily,
               ~fontSize,
-              ~measuredWidth=float_of_int(glyph.advance) /. (64. *. scaleFactor),
+              ~measuredWidth=
+                float_of_int(glyph.advance) /. (64. *. scaleFactor),
               ~measuredHeight=actualHeight,
               (),
             ),
@@ -164,17 +168,21 @@ let init = app => {
         );
       },
       _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
-  );
+    );
   };
 
   setFont("FiraCode-Regular.ttf", 14);
 
-  let _ = Tick.interval(_ => {
-    let scaleFactor = Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
-    print_endline ("SCALEFACTOR: " ++ string_of_float(scaleFactor));
-  },
-  Seconds(1.),
-  );
+  let _ =
+    Tick.interval(
+      _ => {
+        let scaleFactor =
+          Window.getDevicePixelRatio(w)
+          *. float_of_int(Window.getScaleFactor(w));
+        print_endline("SCALEFACTOR: " ++ string_of_float(scaleFactor));
+      },
+      Seconds(1.),
+    );
 
   let commands = Core.Keybindings.get();
 
