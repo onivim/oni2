@@ -91,22 +91,24 @@ let createElement =
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
-            /* Draw current view */
-            Shapes.drawRect(
-              ~transform,
-              ~x=0.,
-              ~y=
-                float_of_int(
-                  rowHeight
-                  * (Editor.getTopVisibleLine(state.editor) - 1)
-                  - scrollY,
-                ),
-              ~height=float_of_int(rowHeight * getMinimapSize(state.editor)),
-              ~width=float_of_int(width),
-              ~color=state.theme.colors.scrollbarSliderHoverBackground,
-              (),
-            );
-
+            if (state.configuration.editorMinimapShowSlider) {
+              /* Draw current view */
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=
+                  float_of_int(
+                    rowHeight
+                    * (Editor.getTopVisibleLine(state.editor) - 1)
+                    - scrollY,
+                  ),
+                ~height=
+                  float_of_int(rowHeight * getMinimapSize(state.editor)),
+                ~width=float_of_int(width),
+                ~color=state.theme.colors.scrollbarSliderHoverBackground,
+                (),
+              );
+            };
             /* Draw cursor line */
             Shapes.drawRect(
               ~transform,

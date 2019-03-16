@@ -68,7 +68,7 @@ module EditorColors = {
     oniCommandlineModeForeground: Color.hex("#282c34"),
     statusBarBackground: Color.hex("#495162"),
     statusBarForeground: Color.hex("#fff"),
-    scrollbarSliderHoverBackground: Color.hex("#2C313C"),
+    scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1)
   };
 };
 
