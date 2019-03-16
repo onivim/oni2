@@ -99,6 +99,7 @@ let init = app => {
   let render = () => {
     let state: Model.State.t = App.getState(app);
     GlobalContext.set({
+      state,
       notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,

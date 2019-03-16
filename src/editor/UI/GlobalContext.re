@@ -8,6 +8,7 @@
  * Hopefully, once there is a context API, this can be wholly replaced with it!
  */
 open Oni_Core.Types;
+open Oni_Model;
 
 type notifySizeChanged = (~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: float, unit) => unit;
@@ -17,12 +18,14 @@ type t = {
   editorScroll,
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
+  state: State.t,
 };
 
 let viewNoop: Views.viewOperation =
   (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
+  state: State.create(),
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
   openFile: viewNoop,
