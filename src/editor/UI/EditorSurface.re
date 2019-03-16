@@ -190,7 +190,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           lineNumberWidth
           +. fontWidth
           *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.character))
-          -. state.editor.scrollX)
+          -. state.editor.scrollX +. 0.5)
         ),
         height(iFontHeight),
         width(cursorWidth),
