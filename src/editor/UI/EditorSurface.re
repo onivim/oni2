@@ -184,7 +184,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         top(int_of_float(
           fontHeight
           *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-          -. state.editor.scrollY)
+          -. state.editor.scrollY +. 0.5)
         ),
         left(int_of_float(
           lineNumberWidth
