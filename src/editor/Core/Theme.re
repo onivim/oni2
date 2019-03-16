@@ -66,8 +66,8 @@ module EditorColors = {
     oniNormalModeForeground: Color.hex("#282c34"),
     oniOperatorModeForeground: Color.hex("#282c34"),
     oniCommandlineModeForeground: Color.hex("#282c34"),
-    statusBarBackground: Color.hex("#495162"),
-    statusBarForeground: Color.hex("#fff"),
+    statusBarBackground: Color.hex("#21252b"),
+    statusBarForeground: Color.hex("#9da5b4"),
     scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1)
   };
 };
@@ -98,3 +98,36 @@ type t = {
 let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
 
 let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
+
+let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
+  let (background, foreground) =
+    switch (mode) {
+    | Visual => (
+        theme.colors.oniVisualModeBackground,
+        theme.colors.oniVisualModeForeground,
+      )
+    | Commandline => (
+        theme.colors.oniCommandlineModeBackground,
+        theme.colors.oniCommandlineModeForeground,
+      )
+    | Operator => (
+        theme.colors.oniOperatorModeBackground,
+        theme.colors.oniOperatorModeForeground,
+      )
+    | Insert => (
+        theme.colors.oniInsertModeBackground,
+        theme.colors.oniInsertModeForeground,
+      )
+    | Replace => (
+        theme.colors.oniReplaceModeBackground,
+        theme.colors.oniReplaceModeForeground,
+      )
+    | Other
+    | Normal => (
+        theme.colors.oniNormalModeBackground,
+        theme.colors.oniNormalModeForeground,
+      )
+    };
+
+  (background, foreground);
+};

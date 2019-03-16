@@ -50,6 +50,8 @@ let init = app => {
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
 
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+
   Core.Log.debug(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
@@ -73,8 +75,6 @@ let init = app => {
 
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
-  let reasonSyntaxPath =
-    setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
@@ -83,13 +83,15 @@ let init = app => {
   let onTokens = tr =>
     App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
 
+  let grammars = Model.LanguageInfo.getGrammars(languageInfo);
+
   let tmClient =
     Extensions.TextmateClient.start(
       ~onScopeLoaded,
       ~onColorMap,
       ~onTokens,
       setup,
-      [{scopeName: "source.reason", path: reasonSyntaxPath}],
+      grammars,
     );
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
@@ -97,6 +99,7 @@ let init = app => {
   let render = () => {
     let state: Model.State.t = App.getState(app);
     GlobalContext.set({
+      state,
       notifySizeChanged: (~width, ~height, ()) =>
         App.dispatch(
           app,
@@ -297,7 +300,34 @@ let init = app => {
          */
         switch (msg) {
         | BufferUpdate(bc) =>
-          Extensions.TextmateClient.notifyBufferUpdate(tmClient, bc)
+          let bufferId = bc.id;
+          let state = App.getState(app);
+          let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
+
+          switch (buffer) {
+          | None => ()
+          | Some(buffer) =>
+            switch (Model.Buffer.getMetadata(buffer).filePath) {
+            | None => ()
+            | Some(v) =>
+              let extension = Path.extname(v);
+              switch (
+                Model.LanguageInfo.getScopeFromExtension(
+                  languageInfo,
+                  extension,
+                )
+              ) {
+              | None => ()
+              | Some(scope) =>
+                Extensions.TextmateClient.notifyBufferUpdate(
+                  tmClient,
+                  scope,
+                  bc,
+                )
+              };
+            }
+          };
+
         | _ => ()
         };
       },

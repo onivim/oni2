@@ -26,7 +26,7 @@
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
     "@opam/ocamlbuild": "*",
-    "revery": "0.11.0",
+    "revery": "0.13.1",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",

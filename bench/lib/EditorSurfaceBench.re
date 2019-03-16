@@ -43,8 +43,8 @@ let setupSurfaceThousandLineLayout = () => {
     Style.make(~position=LayoutTypes.Relative, ~width=1600, ~height=1200, ()),
   );
 
-  let container = React.Container.create(rootNode);
-  React.Container.update(container, <EditorSurface state=thousandLineState />)
+  let container = Container.create(rootNode);
+  Container.update(container, <EditorSurface state=thousandLineState />)
   |> ignore;
 
   rootNode;

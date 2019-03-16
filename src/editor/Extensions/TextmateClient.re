@@ -12,12 +12,9 @@ open Reason_jsonrpc;
 
 open Oni_Core;
 
-type scopeInfo = {
-  scopeName: string,
-  path: string,
-};
+open ExtensionContributions;
 
-type initializationInfo = list(scopeInfo);
+type initializationInfo = list(Grammar.t);
 
 type tokenizeResult = {
   startIndex: int,
@@ -137,7 +134,7 @@ let start =
       process.stdin,
     );
 
-  let mapScopeInfoToJson = (v: scopeInfo) => {
+  let mapScopeInfoToJson = (v: Grammar.t) => {
     (v.scopeName, `String(v.path));
   };
 
@@ -173,15 +170,13 @@ type tokenizeLineResult = {
   colors: list(ColorizedToken.t),
 };
 
-let notifyBufferUpdate = (v: t, bufUpdate: Types.BufferUpdate.t) => {
+let notifyBufferUpdate =
+    (v: t, scope: string, bufUpdate: Types.BufferUpdate.t) => {
   Rpc.sendNotification(
     v.rpc,
     "textmate/bufferUpdate",
     /* TODO: Don't hardcode this */
-    `List([
-      `String("source.reason"),
-      Types.BufferUpdate.to_yojson(bufUpdate),
-    ]),
+    `List([`String(scope), Types.BufferUpdate.to_yojson(bufUpdate)]),
   );
 };
 

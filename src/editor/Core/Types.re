@@ -208,6 +208,15 @@ module EditorFont = {
   };
 };
 
+module UiFont = {
+  type t = {
+    fontFile: string,
+    fontSize: int,
+  };
+
+  let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
+};
+
 [@deriving show]
 type wildmenu = {
   items: list(string),
@@ -246,6 +255,12 @@ module Input = {
   type controlMode =
     | [@name "commandPaletteFocus"] CommandPaletteFocus
     | [@name "editorTextFocus"] EditorTextFocus;
+
+  [@deriving show]
+  type keyBindings = {
+    key: string,
+    command: string,
+  };
 };
 
 module Effects = {
