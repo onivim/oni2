@@ -47,8 +47,8 @@ let create: unit => t =
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
         ~fontSize=14,
-        ~measuredWidth=1,
-        ~measuredHeight=1,
+        ~measuredWidth=1.,
+        ~measuredHeight=1.,
         (),
       ),
     syntaxHighlighting: SyntaxHighlighting.create(),

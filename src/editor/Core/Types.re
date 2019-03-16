@@ -196,8 +196,8 @@ module EditorFont = {
   type t = {
     fontFile: string,
     fontSize: int,
-    measuredWidth: int,
-    measuredHeight: int,
+    measuredWidth: float,
+    measuredHeight: float,
   };
 
   let create = (~fontFile, ~fontSize, ~measuredWidth, ~measuredHeight, ()) => {

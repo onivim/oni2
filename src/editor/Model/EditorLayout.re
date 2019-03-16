@@ -7,9 +7,9 @@
 open Oni_Core;
 
 type t = {
-  lineNumberWidthInPixels: int,
+  lineNumberWidthInPixels: float,
   minimapWidthInPixels: int,
-  bufferWidthInPixels: int,
+  bufferWidthInPixels: float,
   widthInCharacters: int,
   bufferHeightInCharacters: int,
   minimapHeightInCharacters: int,
@@ -17,11 +17,11 @@ type t = {
 
 let getLayout =
     (
-      ~pixelWidth: int,
-      ~pixelHeight: int,
+      ~pixelWidth: float,
+      ~pixelHeight: float,
       ~isMinimapShown: bool,
-      ~characterWidth: int,
-      ~characterHeight: int,
+      ~characterWidth: float,
+      ~characterHeight: float,
       ~bufferLineCount: int,
       (),
     ) => {
@@ -34,10 +34,10 @@ let getLayout =
 
   let availableWidthInPixels =
     pixelWidth
-    - lineNumberWidthInPixels
-    - Constants.default.scrollBarThickness
-    - Constants.default.minimapPadding
-    * 2;
+    -. lineNumberWidthInPixels
+    -. float_of_int(Constants.default.scrollBarThickness)
+    -. float_of_int(Constants.default.minimapPadding)
+    *. 2.;
 
   let widthInCharacters =
     if (isMinimapShown) {
@@ -48,37 +48,37 @@ let getLayout =
        * (c * characterWidth) + (c * minimapCharacterWidth) = availableWidthInPixels
        * c * (characterWidth + minimapCharacterWidth) = availableWidthInPixels
        */
-      availableWidthInPixels
-      / (characterWidth + Constants.default.minimapCharacterWidth);
+      int_of_float(availableWidthInPixels
+      /. (characterWidth +. float_of_int(Constants.default.minimapCharacterWidth)));
     } else {
-      availableWidthInPixels / characterWidth;
+      int_of_float(availableWidthInPixels /. characterWidth);
     };
 
-  let bufferWidthInPixels = characterWidth * widthInCharacters;
+  let bufferWidthInPixels = characterWidth *. float_of_int(widthInCharacters);
   let minimapWidthInPixels =
     Constants.default.minimapCharacterWidth * widthInCharacters;
 
-  let bufferHeightInCharacters = pixelHeight / characterHeight;
+  let bufferHeightInCharacters = int_of_float(pixelHeight /. characterHeight);
   let minimapHeightInCharacters =
-    pixelHeight
-    / (
+    int_of_float(pixelHeight
+    /. float_of_int(
       Constants.default.minimapCharacterHeight
       + Constants.default.minimapLineSpacing
-    );
+    ));
 
   let leftOverWidth =
     pixelWidth
-    - bufferWidthInPixels
-    - minimapWidthInPixels
-    - lineNumberWidthInPixels
-    - Constants.default.scrollBarThickness
-    - Constants.default.minimapPadding
-    * 2;
+    -. bufferWidthInPixels
+    -. float_of_int(minimapWidthInPixels)
+    -. lineNumberWidthInPixels
+    -. float_of_int(Constants.default.scrollBarThickness)
+    -. float_of_int(Constants.default.minimapPadding)
+    *. 2.;
 
   {
     lineNumberWidthInPixels,
     minimapWidthInPixels,
-    bufferWidthInPixels: bufferWidthInPixels + leftOverWidth,
+    bufferWidthInPixels: bufferWidthInPixels +. leftOverWidth,
     widthInCharacters,
     bufferHeightInCharacters,
     minimapHeightInCharacters,

@@ -10,7 +10,7 @@
 open Oni_Core.Types;
 
 type notifySizeChanged = (~width: int, ~height: int, unit) => unit;
-type editorScroll = (~deltaY: int, unit) => unit;
+type editorScroll = (~deltaY: float, unit) => unit;
 
 type t = {
   notifySizeChanged,

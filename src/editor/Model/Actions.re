@@ -26,7 +26,7 @@ type t =
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
-  | EditorScroll(int)
+  | EditorScroll(float)
   | EditorScrollToCursorCentered
   | EditorScrollToCursorTop
   | EditorScrollToCursorBottom

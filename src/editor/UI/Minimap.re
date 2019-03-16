@@ -45,7 +45,7 @@ let renderLine = (transform, yOffset, tokens: list(Tokenizer.t)) => {
 
     Shapes.drawRect(
       ~transform,
-      ~y=float_of_int(yOffset),
+      ~y=yOffset,
       ~x,
       ~color=token.color,
       ~width,
@@ -73,9 +73,9 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let rowHeight =
+    let rowHeight = float_of_int(
       Constants.default.minimapCharacterHeight
-      + Constants.default.minimapLineSpacing;
+      + Constants.default.minimapLineSpacing);
 
     let scrollY = state.editor.minimapScrollY;
 
@@ -92,10 +92,10 @@ let createElement =
               ~transform,
               ~x=0.,
               ~y=
-                float_of_int(
+                (
                   rowHeight
-                  * Index.toZeroBasedInt(state.editor.cursorPosition.line)
-                  - scrollY,
+                  *. float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
+                  -. scrollY
                 ),
               ~height=float_of_int(Constants.default.minimapCharacterHeight),
               ~width=float_of_int(width),
@@ -106,7 +106,7 @@ let createElement =
             FlatList.render(
               ~scrollY,
               ~rowHeight,
-              ~height,
+              ~height=float_of_int(height),
               ~count,
               ~render=
                 (item, offset) => {
