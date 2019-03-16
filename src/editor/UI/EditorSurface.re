@@ -168,8 +168,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
-    let iFontHeight = int_of_float(fontHeight);
-    let iFontWidth = int_of_float(fontWidth);
+    let iFontHeight = int_of_float(fontHeight +. 0.5);
+    let iFontWidth = int_of_float(fontWidth +. 0.5);
 
     let cursorLine = state.editor.cursorPosition.line;
     let cursorWidth =
