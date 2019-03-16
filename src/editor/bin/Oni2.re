@@ -125,14 +125,13 @@ let init = app => {
   neovimProtocol.uiAttach();
 
   let setFont = (fontFamily, fontSize) => {
-    /* let scaleFactor = Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w)); */
+    let scaleFactor = Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
     print_endline(
       "PIXEL RATIO: " ++ string_of_float(Window.getDevicePixelRatio(w)),
     );
     print_endline(
       "SCALE FACTOR: " ++ string_of_int(Window.getScaleFactor(w)),
     );
-    let scaleFactor = 2.;
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
     Fontkit.fk_new_face(
