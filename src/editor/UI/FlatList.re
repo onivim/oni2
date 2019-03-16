@@ -18,7 +18,7 @@ let render =
     (~scrollY=0., ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
   let rowsToRender = rowHeight > 0. ? int_of_float(height /. rowHeight) : 0;
   let startRowOffset = rowHeight > 0. ? int_of_float(scrollY /. rowHeight) : 0;
-  let pixelOffset = int_of_float(scrollY) mod int_of_float(rowHeight);
+  let pixelOffset = mod_float(scrollY, rowHeight);
 
   let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
@@ -31,7 +31,7 @@ let render =
     let item = i^;
     let rowOffset = float_of_int((item - startRowOffset)) *. rowHeight;
 
-    let top = rowOffset -. float_of_int(pixelOffset);
+    let top = rowOffset -. pixelOffset;
 
     render(item, top);
 
