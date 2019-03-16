@@ -131,7 +131,7 @@ let init = app => {
     print_endline(
       "SCALE FACTOR: " ++ string_of_int(Window.getScaleFactor(w)),
     );
-    let scaleFactor = 10.;
+    let scaleFactor = 2.;
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
     Fontkit.fk_new_face(
