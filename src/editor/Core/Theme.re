@@ -65,8 +65,8 @@ module EditorColors = {
     oniNormalModeForeground: Color.hex("#282c34"),
     oniOperatorModeForeground: Color.hex("#282c34"),
     oniCommandlineModeForeground: Color.hex("#282c34"),
-    statusBarBackground: Color.hex("#495162"),
-    statusBarForeground: Color.hex("#fff"),
+    statusBarBackground: Color.hex("#21252b"),
+    statusBarForeground: Color.hex("#9da5b4"),
   };
 };
 

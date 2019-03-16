@@ -62,11 +62,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <CommandPaletteView theme commandPalette={state.commandPalette} />
         </Overlay>
         <View style=statusBarStyle>
-          <StatusBar
-            theme
-            mode={state.mode}
-            position={state.editor.cursorPosition}
-          />
+          <StatusBar height=statusBarHeight state />
         </View>
       </View>,
     );

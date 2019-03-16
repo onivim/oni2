@@ -2,19 +2,12 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Core.Types.UiFont;
 
 let component = React.component("commandline");
 
-let cmdFontSize = 15;
+/* let cmdFontSize = 15; */
 let cmdFontColor = Colors.white;
-
-let cmdTextStyles =
-  Style.[
-    fontFamily("FiraCode-Regular.ttf"),
-    fontSize(cmdFontSize),
-    color(cmdFontColor),
-    textWrap(TextWrapping.WhitespaceWrap),
-  ];
 
 /*
    TODO: Flow text around a "cursor"
@@ -32,6 +25,18 @@ let getStringParts = (index, str) =>
 let createElement =
     (~children as _, ~command: Commandline.t, ~theme: Theme.t, ()) =>
   component(hooks => {
+    let uiFont = State.(GlobalContext.current().state.uiFont);
+    let {fontFile, _} = uiFont;
+    let fontSize_ = 14;
+
+    let textStyles =
+      Style.[
+        fontFamily(fontFile),
+        fontSize(fontSize_),
+        color(cmdFontColor),
+        textWrap(TextWrapping.WhitespaceWrap),
+      ];
+
     let (startStr, endStr) =
       getStringParts(command.position, command.content);
     command.show
@@ -55,17 +60,17 @@ let createElement =
             ),
           ]>
           <Text
-            style=Style.[marginLeft(10), ...cmdTextStyles]
+            style=Style.[marginLeft(10), ...textStyles]
             text={command.firstC ++ startStr}
           />
           <View
             style=Style.[
               width(2),
-              height(cmdFontSize),
+              height(fontSize_),
               backgroundColor(cmdFontColor),
             ]
           />
-          <Text style=cmdTextStyles text=endStr />
+          <Text style=textStyles text=endStr />
         </View>,
       )
       : (hooks, React.listToElement([]));
