@@ -54,7 +54,7 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
-let getVisibleLines = (view: t) => view.size.pixelWidth / view.lineHeight;
+let getVisibleView = (view: t) => view.size.pixelHeight / view.lineHeight;
 
 let getTotalSizeInPixels = (view: t) => view.viewLines * view.lineHeight;
 

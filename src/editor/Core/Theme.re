@@ -36,6 +36,7 @@ module EditorColors = {
     oniCommandlineModeForeground: Color.t,
     statusBarForeground: Color.t,
     statusBarBackground: Color.t,
+    scrollbarSliderHoverBackground: Color.t,
   };
 
   let default: t = {
@@ -43,7 +44,7 @@ module EditorColors = {
     foreground: Color.hex("#ECEFF4"),
     editorBackground: Color.hex("#2F3440"),
     editorForeground: Color.hex("#DCDCDC"),
-    editorLineHighlightBackground: Color.hex("#2C313C"),
+    editorLineHighlightBackground: Color.hex("#495162"),
     editorLineNumberBackground: Color.hex("#2F3440"),
     editorLineNumberForeground: Color.hex("#495162"),
     editorActiveLineNumberForeground: Color.hex("#737984"),
@@ -67,6 +68,7 @@ module EditorColors = {
     oniCommandlineModeForeground: Color.hex("#282c34"),
     statusBarBackground: Color.hex("#21252b"),
     statusBarForeground: Color.hex("#9da5b4"),
+    scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1),
   };
 };
 

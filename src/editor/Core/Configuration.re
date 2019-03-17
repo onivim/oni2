@@ -16,12 +16,15 @@ type t = {
   editorLineNumbers: LineNumber.setting,
   [@key "editor.minimap.enabled"]
   editorMinimapEnabled: bool,
+  [@key "editor.minimap.showSlider"]
+  editorMinimapShowSlider: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
 };
 
 let default = {
   editorMinimapEnabled: true,
+  editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
 };

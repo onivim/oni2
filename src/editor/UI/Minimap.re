@@ -62,6 +62,12 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
+let getMinimapSize = (view: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(view);
+
+  view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
+};
+
 let createElement =
     (
       ~state: State.t,
@@ -87,6 +93,24 @@ let createElement =
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
+            if (state.configuration.editorMinimapShowSlider) {
+              /* Draw current view */
+              Shapes.drawRect(
+                ~transform,
+                ~x=0.,
+                ~y=
+                  float_of_int(
+                    rowHeight
+                    * (Editor.getTopVisibleLine(state.editor) - 1)
+                    - scrollY,
+                  ),
+                ~height=
+                  float_of_int(rowHeight * getMinimapSize(state.editor)),
+                ~width=float_of_int(width),
+                ~color=state.theme.colors.scrollbarSliderHoverBackground,
+                (),
+              );
+            };
             /* Draw cursor line */
             Shapes.drawRect(
               ~transform,
