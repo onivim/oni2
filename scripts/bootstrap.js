@@ -38,14 +38,15 @@ if (isWindows) {
     return;
 }
 
-const oniConfig = `{` +
-    `neovim:"${neovimPath}",` +
-    `node:"${nodePath}",` +
-    `configuration:"${configurationPath}",` +
-    `textmateService:"${textMateServicePath}",` +
-    `bundledExtensions:"${extensionsPath}",` +
-    `keybindings:"${keybindingsPath}"` +
-    `}\n`;
+const config = {
+    neovim: neovimPath,
+    node: nodePath,
+    configuration: configurationPath,
+    textmateService: textMateServicePath,
+    bundledExtensions: extensionsPath,
+    keybindings: keybindingsPath,
+}
+const oniConfig = JSON.stringify(config)
 
 if (!fs.existsSync(configPath)) {
     fs.mkdirSync(configPath);
