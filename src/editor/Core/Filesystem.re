@@ -75,7 +75,7 @@ let (/\/=) = onError;
 
   Re. deciding which to use i.e. infix or let ppx, let% is recommended
   when a meaningfulVariable is returned from an operation as there
-  is no syntactic sugart for unit bindings
+  is no syntactic sugar for unit bindings
 
   reference: https://blog.janestreet.com/let-syntax-and-why-you-should-use-it/
  */
@@ -90,7 +90,7 @@ module Let_syntax = {
 
   let map = (t, ~f) => f(t);
 
-  let both = (a: t('a), b: t('b)): t(('a, 'b)) =>
+  let _both = (a: t('a), b: t('b)): t(('a, 'b)) =>
     switch (a, b) {
     | (Ok(first), Ok(second)) => return((first, second))
     | (Error(err), Ok(result)) => return((err, result))
@@ -299,9 +299,8 @@ let createOniConfiguration = (~configDir, ~file) => {
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));
 
-open Let_syntax;
-
 let createConfigIfNecessary = (configDir, file) => {
+  open Let_syntax;
   let filepath = Utility.join([configDir, file]);
   let%map dirStats = stat(filepath);
   switch%bind (dirStats) {
@@ -327,6 +326,7 @@ let createConfigIfNecessary = (configDir, file) => {
 };
 
 let createOniConfigFile = filename => {
+  open Let_syntax;
   let%bind home = getHomeDirectory();
   let%bind configDir = getOniDirectory(home);
   let%bind configFilePath = getPath(configDir, filename);
