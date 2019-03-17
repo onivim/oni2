@@ -301,11 +301,13 @@ let getPath = (dir, file) => return(Utility.join([dir, file]));
 
 let createConfigIfNecessary = (configDir, file) => {
   open Let_syntax;
+
   let filepath = Utility.join([configDir, file]);
-  let%map dirStats = stat(filepath);
+
+  let%map dirStats = stat(configDir);
   switch%bind (dirStats) {
-  | Some(dirStats) =>
-    isDir(dirStats)
+  | Some(stats) =>
+    isDir(stats)
     /\/= (
       _msg =>
         mkdir(configDir, ())
@@ -327,6 +329,7 @@ let createConfigIfNecessary = (configDir, file) => {
 
 let createOniConfigFile = filename => {
   open Let_syntax;
+
   let%bind home = getHomeDirectory();
   let%bind configDir = getOniDirectory(home);
   let%bind configFilePath = getPath(configDir, filename);
