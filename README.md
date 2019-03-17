@@ -38,17 +38,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 - Install [Git](https://git-scm.com/)
 - Install [Esy](https://esy.sh) (__0.5.6__ is required)
-
-##### `macOS`
-
-- `brew install cmake`
-- `brew install libpng ragel`
-
-##### `Linux`
-
-Install the following packages with your package manager of choice:
-- `cmake`
-- `ragel`
+- [Check and install any system packages for Revery](https://github.com/revery-ui/revery#building)
 
 ### Build
 
