@@ -41,6 +41,22 @@ let return = x => Ok(x);
 
 let _fail = msg => Error(msg);
 
+module Let_syntax = {
+  let return = return;
+  let bind = (t: t('a), ~f: 'a => t('b)) =>
+    fun
+    | Ok(x) => f(x)
+    | Error(str) => Error(str);
+  let map = (t, ~f) => f(t);
+  let both = (a: t('a), b: t('b)): t(('a, 'b)) =>
+    switch (a, b) {
+    | (Ok(first), Ok(second)) => return((first, second))
+    | (Error(err), Ok(result)) => return((err, result))
+    | (Ok(result), Error(err)) => return((result, err))
+    | (Error(e1), Error(e2)) => return((e1, e2))
+    };
+};
+
 /**
    Infix Operators: These are essentially aliases to the
    onError and onSuccess functions.
@@ -263,6 +279,8 @@ let createOniConfiguration = (~configDir, ~file) => {
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));
 
+open Let_syntax;
+
 let createConfigIfNecessary = (configDir, file) =>
   Utility.join([configDir, file])
   |> (
@@ -290,6 +308,14 @@ let createConfigIfNecessary = (configDir, file) =>
           >>= (() => return(configPath))
       )
   );
+
+let ppxGetConfigFile = filename => {
+  let%bind dir = getHomeDirectory();
+  let%map oniDir = getOniDirectory(dir);
+  let configFilePath = getPath(oniDir, filename);
+  let%bind fsStats = stat(configFilePath);
+  ();
+};
 
 let createOniConfigFile = filename =>
   /* Get Oni Directory */

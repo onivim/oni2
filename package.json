@@ -31,6 +31,7 @@
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
     "@opam/msgpck": "*",
+    "@opam/ppx_let": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/yojson": "1.5.0",
