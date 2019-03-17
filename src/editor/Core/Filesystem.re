@@ -43,11 +43,15 @@ let _fail = msg => Error(msg);
 
 module Let_syntax = {
   let return = return;
+
   let bind = (t: t('a), ~f: 'a => t('b)) =>
-    fun
+    switch (t) {
     | Ok(x) => f(x)
-    | Error(str) => Error(str);
+    | Error(str) => Error(str)
+    };
+
   let map = (t, ~f) => f(t);
+
   let both = (a: t('a), b: t('b)): t(('a, 'b)) =>
     switch (a, b) {
     | (Ok(first), Ok(second)) => return((first, second))
@@ -281,63 +285,44 @@ let getPath = (dir, file) => return(Utility.join([dir, file]));
 
 open Let_syntax;
 
-let createConfigIfNecessary = (configDir, file) =>
-  Utility.join([configDir, file])
-  |> (
-    configPath =>
-      stat(configDir)
-      >>= (
-        fun
-        | Some(dirStats) =>
-          isDir(dirStats)
-          /\/= (
-            _ =>
-              mkdir(configDir, ())
-              >>= (() => createOniConfiguration(~file, ~configDir))
-          )
-          /* config directory already exists */
-          >>= (
-            () =>
-              createOniConfiguration(~configDir, ~file)
-              /\/= error("Error creating configuration files because: %s")
-              >>= (() => return(configPath))
-          )
-        | None =>
-          mkdir(configDir, ())
-          >>= (() => createOniConfiguration(~configDir, ~file))
-          >>= (() => return(configPath))
-      )
-  );
-
-let ppxGetConfigFile = filename => {
-  let%bind dir = getHomeDirectory();
-  let%map oniDir = getOniDirectory(dir);
-  let configFilePath = getPath(oniDir, filename);
-  let%bind fsStats = stat(configFilePath);
-  ();
+let createConfigIfNecessary = (configDir, file) => {
+  let configFilePath = Utility.join([configDir, file]);
+  let%map dirStats = stat(configFilePath);
+  switch%bind (dirStats) {
+  | Some(dirStats) =>
+    isDir(dirStats)
+    /\/= (
+      _ =>
+        mkdir(configDir, ())
+        >>= (() => createOniConfiguration(~file, ~configDir))
+    )
+    /* config directory already exists */
+    >>= (
+      () =>
+        createOniConfiguration(~configDir, ~file)
+        /\/= error("Error creating configuration files because: %s")
+        >>= (() => return(configFilePath))
+    )
+  | None =>
+    mkdir(configDir, ())
+    >>= (() => createOniConfiguration(~configDir, ~file))
+    >>= (() => return(configFilePath))
+  };
 };
 
-let createOniConfigFile = filename =>
-  /* Get Oni Directory */
-  getHomeDirectory()
-  >>= getOniDirectory
-  >>= (
-    configDir =>
-      getPath(configDir, filename)
-      /* Check whether the config file already exists */
-      >>= stat
-      >>= (
-        fun
-        | Some(existingFileStats) =>
-          /* is the the thing that exists a file */
-          isFile(existingFileStats)
-          >>= (
-            () =>
-              getPath(configDir, filename)
-              /* if it exists but is not a file attempt to create a file */
-              /\/= (_ => createConfigIfNecessary(configDir, filename))
-          )
-        /* if the file does not exist try and create it */
-        | None => createConfigIfNecessary(configDir, filename)
-      )
-  );
+let createOniConfigFile = filename => {
+  let%bind home = getHomeDirectory();
+  let%bind configDir = getOniDirectory(home);
+  let%bind configFilePath = getPath(configDir, filename);
+  let%bind fileStats = stat(configFilePath);
+
+  switch%map (fileStats) {
+  | Some(stats) =>
+    let fileExists = isFile(stats);
+    switch%map (fileExists) {
+    | Ok(_) => return(configFilePath)
+    | Error(_) => createConfigIfNecessary(configDir, filename)
+    };
+  | None => createConfigIfNecessary(configDir, filename)
+  };
+};
