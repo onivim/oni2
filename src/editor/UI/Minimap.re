@@ -62,9 +62,11 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let getMinimapSize = (view: Editor.t) =>
-  view.viewLines < Editor.getVisibleView(view)
-    ? 0 : Editor.getVisibleView(view) + 1;
+let getMinimapSize = (view: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(view);
+
+  view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
+};
 
 let createElement =
     (
