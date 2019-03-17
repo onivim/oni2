@@ -72,6 +72,12 @@ let (/\/=) = onError;
 
   a few caveats are that there is no way to bind the [onError] handler
   as only bind,return,map,switch are supported
+
+  Re. deciding which to use i.e. infix or let ppx, let% is recommended
+  when a meaningfulVariable is returned from an operation as there
+  is no syntactic sugart for unit bindings
+
+  reference: https://blog.janestreet.com/let-syntax-and-why-you-should-use-it/
  */
 module Let_syntax = {
   let return = return;
@@ -296,8 +302,8 @@ let getPath = (dir, file) => return(Utility.join([dir, file]));
 open Let_syntax;
 
 let createConfigIfNecessary = (configDir, file) => {
-  let configFilePath = Utility.join([configDir, file]);
-  let%map dirStats = stat(configFilePath);
+  let filepath = Utility.join([configDir, file]);
+  let%map dirStats = stat(filepath);
   switch%bind (dirStats) {
   | Some(dirStats) =>
     isDir(dirStats)
@@ -311,12 +317,12 @@ let createConfigIfNecessary = (configDir, file) => {
       () =>
         createOniConfiguration(~configDir, ~file)
         /\/= error("Error creating configuration files because: %s")
-        >>= (() => return(configFilePath))
+        >>= (() => return(filepath))
     )
   | None =>
     mkdir(configDir, ())
     >>= (() => createOniConfiguration(~configDir, ~file))
-    >>= (() => return(configFilePath))
+    >>= (() => return(filepath))
   };
 };
 
