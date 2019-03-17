@@ -17,10 +17,24 @@ let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
 let component = React.component("Tab");
 
+let horizontalBorderStyles = (tabPosition, numberOfTabs) =>
+  Style.(
+    switch (tabPosition, numberOfTabs) {
+    /* A single tab should have no borders */
+    | (1, 1) => []
+    /* The last tab should also have no borders */
+    | (i, l) when i == l => []
+    /* every other tab should have a right border */
+    | (_, _) => [borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1))]
+    }
+  );
+
 let createElement =
     (
       ~title,
-      ~active, /* Where is this being set? */
+      ~tabPosition,
+      ~numberOfTabs,
+      ~active,
       ~modified,
       ~onClick,
       ~onClose,
@@ -33,10 +47,7 @@ let createElement =
   component(hooks => {
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
 
-    /* TODO: Active flag doesn't seem to be working? */
-    let _borderColor = active ? modeColor : Colors.transparentBlack;
-
-    let borderColor = modeColor;
+    let borderColor = active ? modeColor : Colors.transparentBlack;
 
     let opacityValue = 1.0;
 
@@ -53,6 +64,7 @@ let createElement =
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
+        ...horizontalBorderStyles(tabPosition, numberOfTabs),
       ];
 
     let textStyle =
@@ -63,6 +75,7 @@ let createElement =
         fontSize(uiFont.fontSize),
         color(theme.colors.tabActiveForeground),
         backgroundColor(theme.colors.editorBackground),
+        marginLeft(5),
       ];
 
     let icon = modified ? FontAwesome.circle : FontAwesome.times;
@@ -77,7 +90,6 @@ let createElement =
             flexDirection(`Row),
             alignItems(`Center),
             justifyContent(`Center),
-            paddingHorizontal(5),
           ]>
           <Text style=textStyle text=title />
         </Clickable>
