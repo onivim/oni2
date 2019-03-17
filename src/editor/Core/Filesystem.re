@@ -41,26 +41,6 @@ let return = x => Ok(x);
 
 let _fail = msg => Error(msg);
 
-module Let_syntax = {
-  let return = return;
-
-  let bind = (t: t('a), ~f: 'a => t('b)) =>
-    switch (t) {
-    | Ok(x) => f(x)
-    | Error(str) => Error(str)
-    };
-
-  let map = (t, ~f) => f(t);
-
-  let both = (a: t('a), b: t('b)): t(('a, 'b)) =>
-    switch (a, b) {
-    | (Ok(first), Ok(second)) => return((first, second))
-    | (Error(err), Ok(result)) => return((err, result))
-    | (Ok(result), Error(err)) => return((result, err))
-    | (Error(e1), Error(e2)) => return((e1, e2))
-    };
-};
-
 /**
    Infix Operators: These are essentially aliases to the
    onError and onSuccess functions.
@@ -82,6 +62,36 @@ module Let_syntax = {
 let (>>=) = onSuccess;
 let (/\/=) = onError;
 /* let ( *> ) = always; */
+
+/**
+  [Let_syntax] uses JaneStreets let ppx to allow writing
+  monadic operations in a more linear way i.e.
+  let%bind meaningfulVariable = monadicOperaction(a)
+
+  rather than op1(var) >>= op2(var)
+
+  a few caveats are that there is no way to bind the [onError] handler
+  as only bind,return,map,switch are supported
+ */
+module Let_syntax = {
+  let return = return;
+
+  let bind = (t: t('a), ~f: 'a => t('b)) =>
+    switch (t) {
+    | Ok(x) => f(x)
+    | Error(str) => Error(str)
+    };
+
+  let map = (t, ~f) => f(t);
+
+  let both = (a: t('a), b: t('b)): t(('a, 'b)) =>
+    switch (a, b) {
+    | (Ok(first), Ok(second)) => return((first, second))
+    | (Error(err), Ok(result)) => return((err, result))
+    | (Ok(result), Error(err)) => return((result, err))
+    | (Error(e1), Error(e2)) => return((e1, e2))
+    };
+};
 
 /**
    Permissions ==================================================
@@ -292,7 +302,7 @@ let createConfigIfNecessary = (configDir, file) => {
   | Some(dirStats) =>
     isDir(dirStats)
     /\/= (
-      _ =>
+      _msg =>
         mkdir(configDir, ())
         >>= (() => createOniConfiguration(~file, ~configDir))
     )
@@ -319,6 +329,7 @@ let createOniConfigFile = filename => {
   switch%map (fileStats) {
   | Some(stats) =>
     let fileExists = isFile(stats);
+
     switch%map (fileExists) {
     | Ok(_) => return(configFilePath)
     | Error(_) => createConfigIfNecessary(configDir, filename)
