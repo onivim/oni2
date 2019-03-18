@@ -20,6 +20,8 @@ type t = {
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
   moveCursor: Cursor.move,
+  getCurrentDir: unit => option(string),
+  setCurrentDir: string => unit,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -132,6 +134,21 @@ let make = (nvimApi: NeovimApi.t) => {
       |> ignore;
     };
 
+  let getCurrentDir = () =>
+    nvimApi.requestSync(
+      "nvim_call_function",
+      M.List([M.String("getcwd"), M.List([])]),
+    )
+    |> (
+      fun
+      | M.String(dir) => Some(dir)
+      | _ => None
+    );
+
+  let setCurrentDir = dir =>
+    nvimApi.requestSync("nvim_get_current_dir", M.List([M.String(dir)]))
+    |> ignore;
+
   {
     uiAttach,
     input,
@@ -139,6 +156,8 @@ let make = (nvimApi: NeovimApi.t) => {
     bufAttach,
     openFile,
     closeFile,
+    setCurrentDir,
+    getCurrentDir,
     moveCursor,
   };
 };

@@ -252,7 +252,10 @@ module Input = {
 
 module Effects = {
   [@deriving show]
-  type t = {openFile: Views.viewOperation};
+  type t = {
+    openFile: Views.viewOperation,
+    getCurrentDir: unit => option(string),
+  };
 };
 
 module UiMenu = {

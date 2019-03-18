@@ -182,7 +182,10 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Model.Menu.addEffects({openFile: neovimProtocol.openFile})
+  Model.Menu.addEffects({
+    openFile: neovimProtocol.openFile,
+    getCurrentDir: neovimProtocol.getCurrentDir,
+  })
   |> App.dispatch(app)
   |> ignore;
 

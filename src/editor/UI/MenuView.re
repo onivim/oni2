@@ -4,7 +4,7 @@ open Revery.UI;
 open Revery.UI.Components;
 open Types;
 
-let component = React.component("commandPalette");
+let component = React.component("Menu");
 
 let paletteWidth = 400;
 
