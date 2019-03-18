@@ -6,14 +6,15 @@ open Types;
 
 let component = React.component("Menu");
 
-let paletteWidth = 400;
+let menuWidth = 400;
+let menuHeight = 300;
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.editorMenuBackground),
     color(theme.colors.editorMenuForeground),
-    width(paletteWidth),
-    height(300),
+    width(menuWidth),
+    height(menuHeight),
     boxShadow(
       ~xOffset=-15.,
       ~yOffset=5.,
@@ -39,7 +40,7 @@ let createElement = (~children as _, ~menu: UiMenu.t, ~theme: Theme.t, ()) =>
         <View style={containerStyles(theme)}>
           /* <Input style=Style.[width(paletteWidth)] /> */
 
-            <ScrollView style=Style.[height(350)]>
+            <ScrollView style=Style.[height(menuHeight)]>
               ...{
                    List.mapi(
                      (index, cmd: UiMenu.command) =>
