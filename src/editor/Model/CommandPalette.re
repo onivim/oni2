@@ -9,7 +9,7 @@ let openConfigurationFile = (effects: Effects.t, name) =>
   | Error(e) => print_endline(e)
   };
 
-let commandPaletteCommands = (effects: Effects.t) => [
+let commands = (effects: Effects.t) => [
   {
     name: "Open configuration file",
     command: () => openConfigurationFile(effects, "configuration.json"),
