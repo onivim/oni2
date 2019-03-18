@@ -14,8 +14,7 @@ let addEffects = (effects: Effects.t) =>
 
 let position = (selectedItem, change, commands: list(command)) => {
   let nextIndex = selectedItem + change;
-  nextIndex >= List.length(commands) || nextIndex < 0 ?
-    0 : selectedItem + change;
+  nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
 };
 
 let addCommands = (factory: commandFactory, effects: option(Effects.t)) =>

@@ -59,7 +59,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <Overlay>
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />
-          <CommandPaletteView theme menu={state.menu} />
+          <MenuView theme menu={state.menu} />
         </Overlay>
         <View style=statusBarStyle>
           <StatusBar height=statusBarHeight state />
