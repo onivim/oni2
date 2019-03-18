@@ -269,6 +269,7 @@ module UiMenu = {
   type command = {
     name: string,
     command: unit => unit,
+    icon: option(string),
   };
 
   type commandFactory = Effects.t => list(command);

@@ -13,9 +13,11 @@ let commands = (effects: Effects.t) => [
   {
     name: "Open configuration file",
     command: () => openConfigurationFile(effects, "configuration.json"),
+    icon: None,
   },
   {
     name: "Open keybindings file",
     command: () => openConfigurationFile(effects, "keybindings.json"),
+    icon: None,
   },
 ];

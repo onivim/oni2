@@ -25,6 +25,12 @@ let containerStyles = (theme: Theme.t) =>
 
 let paletteItemStyle = Style.[fontSize(14)];
 
+let getIcon = icon =>
+  switch (icon) {
+  | Some(i) => i
+  | None => ""
+  };
+
 let createElement = (~children as _, ~menu: UiMenu.t, ~theme: Theme.t, ()) =>
   component(hooks =>
     (
@@ -38,7 +44,7 @@ let createElement = (~children as _, ~menu: UiMenu.t, ~theme: Theme.t, ()) =>
                    List.mapi(
                      (index, cmd: UiMenu.command) =>
                        <MenuItem
-                         icon=""
+                         icon={getIcon(cmd.icon)}
                          style=paletteItemStyle
                          label={cmd.name}
                          selected={index == menu.selectedItem}
