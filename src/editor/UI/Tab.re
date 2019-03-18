@@ -24,7 +24,7 @@ let horizontalBorderStyles = (tabPosition, numberOfTabs) =>
     | (1, 1) => []
     /* The last tab should also have no borders */
     | (i, l) when i == l => []
-    /* every other tab should have a right border */
+    /* Every other tab should have a right border */
     | (_, _) => [borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1))]
     }
   );
