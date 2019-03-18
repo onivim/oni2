@@ -240,7 +240,7 @@ type commandline = {
 module Input = {
   [@deriving (show, yojson({strict: false, exn: false}))]
   type controlMode =
-    | [@name "commandPaletteFocus"] CommandPaletteFocus
+    | [@name "menuFocus"] MenuFocus
     | [@name "editorTextFocus"] EditorTextFocus;
 
   [@deriving show]

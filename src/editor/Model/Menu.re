@@ -12,8 +12,11 @@ let create = (~effects: option(Effects.t)=?, ()) => {
 let addEffects = (effects: Effects.t) =>
   Actions.MenuRegisterEffects(effects);
 
-let position = (selectedItem, change, commands: list(command)) =>
-  selectedItem + change >= List.length(commands) ? 0 : selectedItem + change;
+let position = (selectedItem, change, commands: list(command)) => {
+  let nextIndex = selectedItem + change;
+  nextIndex >= List.length(commands) || nextIndex < 0 ?
+    0 : selectedItem + change;
+};
 
 let addCommands = (factory: commandFactory, effects: option(Effects.t)) =>
   switch (effects) {

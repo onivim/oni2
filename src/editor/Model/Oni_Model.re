@@ -21,3 +21,4 @@ module SyntaxHighlighting = SyntaxHighlighting;
 module Tokenizer = Tokenizer;
 module Wildmenu = Wildmenu;
 module Menu = Menu;
+module QuickOpen = QuickOpen;
