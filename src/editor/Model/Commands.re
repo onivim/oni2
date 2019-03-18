@@ -9,7 +9,7 @@ let oniCommands = [
   {
     name: "commandPalette.open",
     command: _ => [
-      MenuOpen((CommandPalette, CommandPalette.commandPaletteCommands)),
+      MenuOpen((CommandPalette, CommandPalette.commands)),
       SetInputControlMode(CommandPaletteFocus),
     ],
   },
