@@ -9,7 +9,12 @@ let content = (effects: Effects.t) =>
     | None => [||]
   )
   |> Array.to_list
+  /* In the future we might want to allow functionality like switching to a directory on select */
   |> List.filter(item => !Sys.is_directory(item))
   |> List.map(file =>
-       {name: file, command: () => effects.openFile(~path=file, ())}
+       {
+         name: file,
+         command: () => effects.openFile(~path=file, ()),
+         icon: Some({||}),
+       }
      );
