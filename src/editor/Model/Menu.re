@@ -37,14 +37,14 @@ let reduce = (state, action: Actions.t) =>
       menuType: menu,
       commands: addCommands(commands, state.effects),
     }
-  | MenuClose => {...state, isOpen: false, menuType: Closed}
+  | MenuClose => {...state, isOpen: false, menuType: Closed, selectedItem: 0}
   | MenuSelect =>
     /**
-    TODO: Refactor this to middleware so this action is handled like a redux side-effect
-    as this makes the reducer impure
-   */
-    let selected = List.nth(state.commands, state.selectedItem);
-    selected.command();
-    {...state, isOpen: false};
+      TODO: Refactor this to middleware so this action is handled like a redux side-effect
+      as this makes the reducer impure
+     */
+    List.nth(state.commands, state.selectedItem)
+    |> (selected => selected.command());
+    {...state, isOpen: false, menuType: Closed};
   | _ => state
   };
