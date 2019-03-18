@@ -1,8 +1,8 @@
 open Revery;
 open Oni_Core;
-open Oni_Model;
 open Revery.UI;
 open Revery.UI.Components;
+open Types;
 
 let component = React.component("commandPalette");
 
@@ -25,29 +25,30 @@ let containerStyles = (theme: Theme.t) =>
 
 let paletteItemStyle = Style.[fontSize(14)];
 
-let createElement =
-    (~children as _, ~commandPalette: CommandPalette.t, ~theme: Theme.t, ()) =>
+let createElement = (~children as _, ~menu: UiMenu.t, ~theme: Theme.t, ()) =>
   component(hooks =>
     (
       hooks,
-      commandPalette.isOpen
-        ? <View style={containerStyles(theme)}>
-            /* <Input style=Style.[width(paletteWidth)] /> */
+      menu.isOpen ?
+        <View style={containerStyles(theme)}>
+          /* <Input style=Style.[width(paletteWidth)] /> */
 
-              <ScrollView style=Style.[height(350)]>
-                ...{List.mapi(
-                  (index, cmd: Types.Palette.command) =>
-                    <MenuItem
-                      icon=""
-                      style=paletteItemStyle
-                      label={cmd.name}
-                      selected={index == commandPalette.selectedItem}
-                      theme
-                    />,
-                  commandPalette.commands,
-                )}
-              </ScrollView>
-            </View>
-        : React.listToElement([]),
+            <ScrollView style=Style.[height(350)]>
+              ...{
+                   List.mapi(
+                     (index, cmd: UiMenu.command) =>
+                       <MenuItem
+                         icon=""
+                         style=paletteItemStyle
+                         label={cmd.name}
+                         selected={index == menu.selectedItem}
+                         theme
+                       />,
+                     menu.commands,
+                   )
+                 }
+            </ScrollView>
+          </View> :
+        React.listToElement([]),
     )
   );

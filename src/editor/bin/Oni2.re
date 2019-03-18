@@ -182,7 +182,7 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  Model.Menu.addEffects({openFile: neovimProtocol.openFile})
   |> App.dispatch(app)
   |> ignore;
 
