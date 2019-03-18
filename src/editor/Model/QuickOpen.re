@@ -12,6 +12,7 @@ let content = (effects: Effects.t) =>
   /*
      In the future we might want to allow
      functionality like switching to a directory on select
+     ...for now we filter out all directories
    */
   |> List.filter(item => !Sys.is_directory(item))
   |> List.map(file =>
