@@ -146,7 +146,7 @@ let make = (nvimApi: NeovimApi.t) => {
     );
 
   let setCurrentDir = dir =>
-    nvimApi.requestSync("nvim_get_current_dir", M.List([M.String(dir)]))
+    nvimApi.requestSync("nvim_set_current_dir", M.List([M.String(dir)]))
     |> ignore;
 
   {
