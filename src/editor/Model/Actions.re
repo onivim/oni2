@@ -35,10 +35,10 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
-  | CommandPaletteStart(list(Palette.command))
-  | CommandPaletteOpen
-  | CommandPaletteClose
-  | CommandPaletteSelect
-  | CommandPalettePosition(int)
+  | MenuRegisterEffects(Effects.t)
+  | MenuOpen((UiMenu.menuType, UiMenu.commandFactory))
+  | MenuClose
+  | MenuSelect
+  | MenuPosition(int)
   | SetInputControlMode(Input.controlMode)
   | Noop;
