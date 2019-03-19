@@ -21,9 +21,11 @@ type tabInfo = {
 
 let component = React.component("Tabs");
 
-let toTab = (theme, mode, uiFont, t: tabInfo) =>
+let toTab = (theme, mode, uiFont, numberOfTabs, index, t: tabInfo) =>
   <Tab
     theme
+    tabPosition={index + 1}
+    numberOfTabs
     title={Path.filename(t.title)}
     active={t.active}
     modified={t.modified}
@@ -45,6 +47,8 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let tabComponents = List.map(toTab(theme, mode, uiFont), tabs);
+    let tabCount = List.length(tabs);
+    let tabComponents =
+      List.mapi(toTab(theme, mode, uiFont, tabCount), tabs);
     (hooks, <View style=viewStyle> ...tabComponents </View>);
   });
