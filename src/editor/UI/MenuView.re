@@ -23,7 +23,16 @@ let containerStyles = (theme: Theme.t) =>
     ),
   ];
 
-let paletteItemStyle = Style.[fontSize(14)];
+let menuItemStyle = Style.[fontSize(14)];
+
+let inputStyles = font =>
+  Style.[
+    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+    width(menuWidth - 10),
+    color(Colors.white),
+    fontFamily(font),
+  ];
 
 let getIcon = icon =>
   switch (icon) {
@@ -51,13 +60,7 @@ let createElement =
             <Input
               placeholder="type here to search the menu"
               cursorColor=Colors.white
-              style=Style.[
-                border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-                backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-                width(menuWidth - 10),
-                color(Colors.white),
-                fontFamily(font.fontFile),
-              ]
+              style={inputStyles(font.fontFile)}
               onChange=handleChange
             />
           </View>
@@ -67,7 +70,7 @@ let createElement =
                    (index, cmd: Types.UiMenu.command) =>
                      <MenuItem
                        icon={getIcon(cmd.icon)}
-                       style=paletteItemStyle
+                       style=menuItemStyle
                        label={cmd.name}
                        selected={index == menu.selectedItem}
                        theme
