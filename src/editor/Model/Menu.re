@@ -30,12 +30,18 @@ let reduce = (state, action: Actions.t) =>
       ...state,
       selectedItem: position(state.selectedItem, pos, state.commands),
     }
-  | MenuOpen((menu, commands)) => {
-      ...state,
-      isOpen: true,
-      menuType: menu,
-      commands: addCommands(commands, state.effects),
-    }
+  | MenuOpen((menu, commands)) =>
+    /**
+     If the command factory for a module trying to open a menu returns
+     0 options/commands for the menu do not open an empty menu.
+     this is a safeguard *IF* a command factory function fails
+   */
+    addCommands(commands, state.effects)
+    |> (
+      cmds =>
+        List.length(cmds) > 0 ?
+          {...state, isOpen: true, menuType: menu, commands: cmds} : state
+    )
   | MenuClose => {...state, isOpen: false, menuType: Closed, selectedItem: 0}
   | MenuSelect =>
     /**
