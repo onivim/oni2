@@ -125,6 +125,7 @@ let init = app => {
         App.dispatch(app, Model.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
+      dispatch: App.dispatch(app),
     });
 
     <Root state />;
@@ -192,9 +193,10 @@ let init = app => {
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    switch (Input.charToCommand(codepoint, mods)) {
-    | None => ()
-    | Some(v) =>
+    switch (Input.charToCommand(codepoint, mods), Focus.focused) {
+    | (None, _) => ()
+    | (Some(_), {contents: Some(_)}) => ()
+    | (Some(v), {contents: None}) =>
       inputHandler(~state=App.getState(app), v)
       |> List.iter(App.dispatch(app))
     }
@@ -202,9 +204,10 @@ let init = app => {
 
   Reglfw.Glfw.glfwSetKeyCallback(
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
-    switch (Input.keyPressToCommand(key, buttonState, mods)) {
-    | None => ()
-    | Some(v) =>
+    switch (Input.keyPressToCommand(key, buttonState, mods), Focus.focused) {
+    | (None, _) => ()
+    | (Some(_), {contents: Some(_)}) => ()
+    | (Some(v), {contents: None}) =>
       inputHandler(~state=App.getState(app), v)
       |> List.iter(App.dispatch(app))
     }

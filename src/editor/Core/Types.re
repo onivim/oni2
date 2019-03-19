@@ -277,6 +277,7 @@ module UiMenu = {
   [@deriving show]
   type t = {
     effects: option(Effects.t),
+    searchQuery: string,
     menuType,
     isOpen: bool,
     commands: list(command),

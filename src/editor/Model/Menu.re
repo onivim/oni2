@@ -3,6 +3,7 @@ open UiMenu;
 
 let create = (~effects: option(Effects.t)=?, ()) => {
   menuType: Closed,
+  searchQuery: "",
   isOpen: false,
   commands: [],
   selectedItem: 0,
@@ -29,6 +30,11 @@ let reduce = (state, action: Actions.t) =>
   | MenuPosition(pos) => {
       ...state,
       selectedItem: position(state.selectedItem, pos, state.commands),
+    }
+  | MenuSearch(query) => {
+      ...state,
+      searchQuery: query,
+      commands: Filter.menu(query, state.commands),
     }
   | MenuOpen((menu, commands)) =>
     /**
