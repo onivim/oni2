@@ -57,6 +57,8 @@ let createElement =
 
     let textStyle =
       Style.[
+        width(proportion(0.80) - 10),
+        textOverflow(`Ellipsis),
         fontFamily(uiFont.fontFile),
         fontSize(uiFont.fontSize),
         color(theme.colors.tabActiveForeground),
@@ -75,6 +77,7 @@ let createElement =
             flexDirection(`Row),
             alignItems(`Center),
             justifyContent(`Center),
+            paddingHorizontal(5),
           ]>
           <Text style=textStyle text=title />
         </Clickable>
