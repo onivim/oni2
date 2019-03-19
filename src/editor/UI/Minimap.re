@@ -100,9 +100,12 @@ let createElement =
               Shapes.drawRect(
                 ~transform,
                 ~x=0.,
-                ~y= rowHeight
-                    *. float_of_int((Editor.getTopVisibleLine(state.editor) - 1))
-                    -. scrollY,
+                ~y=
+                  rowHeight
+                  *. float_of_int(
+                       Editor.getTopVisibleLine(state.editor) - 1,
+                     )
+                  -. scrollY,
                 ~height=
                   rowHeight *. float_of_int(getMinimapSize(state.editor)),
                 ~width=float_of_int(width),
