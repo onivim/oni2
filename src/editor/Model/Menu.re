@@ -3,7 +3,7 @@ open Types;
 open UiMenu;
 
 let create = (~effects: option(Effects.t)=?, ()) => {
-  menuType: Closed,
+  menu: Closed,
   searchQuery: "",
   isOpen: false,
   commands: [],
@@ -47,9 +47,9 @@ let reduce = (state, action: Actions.t) =>
     |> (
       cmds =>
         List.length(cmds) > 0
-          ? {...state, isOpen: true, menuType: menu, commands: cmds} : state
+          ? {...state, isOpen: true, menu, commands: cmds} : state
     )
-  | MenuClose => {...state, isOpen: false, menuType: Closed, selectedItem: 0}
+  | MenuClose => {...state, isOpen: false, menu: Closed, selectedItem: 0}
   | MenuSelect =>
     /**
       TODO: Refactor this to middleware so this action is handled like a redux side-effect
@@ -57,6 +57,6 @@ let reduce = (state, action: Actions.t) =>
      */
     List.nth(state.commands, state.selectedItem)
     |> (selected => selected.command());
-    {...state, isOpen: false, menuType: Closed};
+    {...state, isOpen: false, menu: Closed};
   | _ => state
   };
