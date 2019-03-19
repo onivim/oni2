@@ -260,7 +260,7 @@ module Effects = {
 
 module UiMenu = {
   [@deriving show]
-  type menuType =
+  type menu =
     | QuickOpen
     | CommandPalette
     | Closed;
@@ -278,7 +278,7 @@ module UiMenu = {
   type t = {
     effects: option(Effects.t),
     searchQuery: string,
-    menuType,
+    menu,
     isOpen: bool,
     commands: list(command),
     selectedItem: int,
