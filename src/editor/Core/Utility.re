@@ -55,8 +55,8 @@ let join = paths => {
 };
 
 /**
-  This is a very rudimentary search case insensitvely checks to see if a substring
-  is contained in a larger string.
+  This is a very rudimentary search, which works case insensitvely
+  to see if a substring is contained in a larger string.
  */
 let stringContains = (word, substring) => {
   let re = Str.regexp_string_case_fold(substring);
