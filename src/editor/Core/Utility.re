@@ -53,3 +53,14 @@ let join = paths => {
     };
   List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
 };
+
+/**
+  This is a very rudimentary search case insensitvely checks to see if a substring
+  is contained in a larger string.
+ */
+let contains = (word, substring) => {
+  let re = Str.regexp_string_case_fold(substring);
+  try (Str.search_forward(re, word, 0) |> ignore |> (_ => true)) {
+  | Not_found => false
+  };
+};

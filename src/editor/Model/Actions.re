@@ -36,6 +36,7 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuRegisterEffects(Effects.t)
+  | MenuSearch(string)
   | MenuOpen((UiMenu.menuType, UiMenu.commandFactory))
   | MenuClose
   | MenuSelect

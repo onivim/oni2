@@ -1,13 +1,12 @@
 open Revery;
-open Oni_Core;
 open Revery.UI;
 open Revery.UI.Components;
-open Types;
+open Oni_Core;
 
 let component = React.component("Menu");
 
 let menuWidth = 400;
-let menuHeight = 300;
+let menuHeight = 350;
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
@@ -32,30 +31,43 @@ let getIcon = icon =>
   | None => ""
   };
 
-let createElement = (~children as _, ~menu: UiMenu.t, ~theme: Theme.t, ()) =>
+let handleChange = (~value) =>
+  GlobalContext.current().dispatch(MenuSearch(value));
+
+let createElement =
+    (
+      ~children as _,
+      ~font: Types.UiFont.t,
+      ~menu: Types.UiMenu.t,
+      ~theme: Theme.t,
+      (),
+    ) =>
   component(hooks =>
     (
       hooks,
       menu.isOpen ?
         <View style={containerStyles(theme)}>
-          /* <Input style=Style.[width(paletteWidth)] /> */
-
-            <ScrollView style=Style.[height(menuHeight)]>
-              ...{
-                   List.mapi(
-                     (index, cmd: UiMenu.command) =>
-                       <MenuItem
-                         icon={getIcon(cmd.icon)}
-                         style=paletteItemStyle
-                         label={cmd.name}
-                         selected={index == menu.selectedItem}
-                         theme
-                       />,
-                     menu.commands,
-                   )
-                 }
-            </ScrollView>
-          </View> :
+          <Input
+            placeholder="type here to search the menu"
+            style=Style.[width(menuWidth), fontFamily(font.fontFile)]
+            onChange=handleChange
+          />
+          <ScrollView style=Style.[height(menuHeight - 50)]>
+            ...{
+                 List.mapi(
+                   (index, cmd: Types.UiMenu.command) =>
+                     <MenuItem
+                       icon={getIcon(cmd.icon)}
+                       style=paletteItemStyle
+                       label={cmd.name}
+                       selected={index == menu.selectedItem}
+                       theme
+                     />,
+                   menu.commands,
+                 )
+               }
+          </ScrollView>
+        </View> :
         React.listToElement([]),
     )
   );
