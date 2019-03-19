@@ -16,7 +16,7 @@
     ]
   },
   "scripts": {
-    "bootstrap": "sh ./scripts/bootstrap.sh",
+    "bootstrap": "esy node ./scripts/bootstrap.js",
     "format": "esy dune build @fmt --auto-promote",
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js",
