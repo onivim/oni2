@@ -47,11 +47,20 @@ let createElement =
       hooks,
       menu.isOpen ?
         <View style={containerStyles(theme)}>
-          <Input
-            placeholder="type here to search the menu"
-            style=Style.[width(menuWidth), fontFamily(font.fontFile)]
-            onChange=handleChange
-          />
+          <View style=Style.[width(menuWidth), padding(5)]>
+            <Input
+              placeholder="type here to search the menu"
+              cursorColor=Colors.white
+              style=Style.[
+                border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+                backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+                width(menuWidth - 10),
+                color(Colors.white),
+                fontFamily(font.fontFile),
+              ]
+              onChange=handleChange
+            />
+          </View>
           <ScrollView style=Style.[height(menuHeight - 50)]>
             ...{
                  List.mapi(

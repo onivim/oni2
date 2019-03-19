@@ -1,4 +1,5 @@
-open Oni_Core.Types;
+open Oni_Core;
+open Types;
 open UiMenu;
 
 let create = (~effects: option(Effects.t)=?, ()) => {
