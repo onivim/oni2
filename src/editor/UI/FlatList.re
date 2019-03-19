@@ -12,13 +12,14 @@ let component = React.component("FlatList");
 
 let additionalRowsToRender = 1;
 
-type glRenderFunction = (int, int) => unit;
+type glRenderFunction = (int, float) => unit;
 
 let render =
-    (~scrollY=0, ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
-  let rowsToRender = rowHeight > 0 ? height / rowHeight : 0;
-  let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
-  let pixelOffset = scrollY mod rowHeight;
+    (~scrollY=0., ~rowHeight, ~height, ~count, ~render: glRenderFunction, ()) => {
+  let rowsToRender = rowHeight > 0. ? int_of_float(height /. rowHeight) : 0;
+  let startRowOffset =
+    rowHeight > 0. ? int_of_float(scrollY /. rowHeight) : 0;
+  let pixelOffset = mod_float(scrollY, rowHeight);
 
   let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
@@ -29,9 +30,9 @@ let render =
          + startRowOffset
          && i^ < len) {
     let item = i^;
-    let rowOffset = (item - startRowOffset) * rowHeight;
+    let rowOffset = float_of_int(item - startRowOffset) *. rowHeight;
 
-    let top = rowOffset - pixelOffset;
+    let top = rowOffset -. pixelOffset;
 
     render(item, top);
 
@@ -41,7 +42,7 @@ let render =
 
 let createElement =
     (
-      ~scrollY=0,
+      ~scrollY=0.,
       ~height as height_,
       ~width as width_,
       ~rowHeight: int,
@@ -52,8 +53,9 @@ let createElement =
     ) =>
   component(hooks => {
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
-    let startRowOffset = rowHeight > 0 ? scrollY / rowHeight : 0;
-    let pixelOffset = scrollY mod rowHeight;
+    let startRowOffset =
+      rowHeight > 0 ? int_of_float(scrollY) / rowHeight : 0;
+    let pixelOffset = int_of_float(scrollY) mod rowHeight;
 
     let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
@@ -95,7 +97,7 @@ let createElement =
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=int_of_float(wheelEvent.deltaY) * 25,
+        ~deltaY=wheelEvent.deltaY *. 25.,
         (),
       );
     };

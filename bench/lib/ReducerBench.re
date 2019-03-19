@@ -33,8 +33,8 @@ let changeEditorFont = () => {
         Types.EditorFont.create(
           ~fontFile="dummy",
           ~fontSize=10,
-          ~measuredWidth=10,
-          ~measuredHeight=10,
+          ~measuredWidth=10.,
+          ~measuredHeight=10.,
           (),
         ),
       ),

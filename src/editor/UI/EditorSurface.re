@@ -30,12 +30,12 @@ let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 let renderLineNumber =
     (
-      fontWidth: int,
+      fontWidth: float,
       lineNumber: int,
-      lineNumberWidth: int,
+      lineNumberWidth: float,
       theme: Theme.t,
       cursorLine: int,
-      yOffset: int,
+      yOffset: float,
       transform,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
@@ -44,7 +44,7 @@ let renderLineNumber =
       ? theme.colors.editorActiveLineNumberForeground
       : theme.colors.editorLineNumberForeground;
 
-  let yF = float_of_int(yOffset);
+  let yF = yOffset;
 
   let lineNumber =
     string_of_int(
@@ -58,11 +58,16 @@ let renderLineNumber =
 
   let lineNumberXOffset =
     isActiveLine
-      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
+      ? 0.
+      : lineNumberWidth
+        /. 2.
+        -. float_of_int(String.length(lineNumber))
+        *. fontWidth
+        /. 2.;
 
   Revery.Draw.Text.drawString(
     ~transform,
-    ~x=float_of_int(lineNumberXOffset),
+    ~x=lineNumberXOffset,
     ~y=yF,
     ~backgroundColor=theme.colors.editorLineNumberBackground,
     ~color=lineNumberTextColor,
@@ -74,50 +79,50 @@ let renderLineNumber =
 
 let renderTokens =
     (
-      fontWidth: int,
-      _fontHeight: int,
+      fontWidth: float,
+      _fontHeight: float,
       lineNumber: int,
-      lineNumberWidth: int,
+      lineNumberWidth: float,
       theme: Theme.t,
       cursorLine: int,
       tokens,
-      xOffset: int,
-      yOffset: int,
+      xOffset: float,
+      yOffset: float,
       transform,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
-  let lineNumberTextColor =
-    isActiveLine
-      ? theme.colors.editorActiveLineNumberForeground
-      : theme.colors.editorLineNumberForeground;
+  /* let lineNumberTextColor = */
+  /*   isActiveLine */
+  /*     ? theme.colors.editorActiveLineNumberForeground */
+  /*     : theme.colors.editorLineNumberForeground; */
 
-  let yF = float_of_int(yOffset);
-  let xF = float_of_int(xOffset);
+  let yF = yOffset;
+  let xF = xOffset;
 
-  let lineNumber =
-    string_of_int(
-      LineNumber.getLineNumber(
-        ~bufferLine=lineNumber + 1,
-        ~cursorLine=cursorLine + 1,
-        ~setting=Relative,
-        (),
-      ),
-    );
+  /* let lineNumber = */
+  /*   string_of_int( */
+  /*     LineNumber.getLineNumber( */
+  /*       ~bufferLine=lineNumber + 1, */
+  /*       ~cursorLine=cursorLine + 1, */
+  /*       ~setting=Relative, */
+  /*       (), */
+  /*     ), */
+  /*   ); */
 
-  let lineNumberXOffset =
-    isActiveLine
-      ? 0 : lineNumberWidth / 2 - String.length(lineNumber) * fontWidth / 2;
+  /*   let lineNumberXOffset = */
+  /*     isActiveLine */
+  /*       ? 0. : (lineNumberWidth /. 2) -. (float_of_int(String.length(lineNumber)) *. fontWidth /. 2.); */
 
-  Revery.Draw.Text.drawString(
-    ~transform,
-    ~x=float_of_int(lineNumberXOffset),
-    ~y=yF,
-    ~backgroundColor=theme.colors.editorLineNumberBackground,
-    ~color=lineNumberTextColor,
-    ~fontFamily="FiraCode-Regular.ttf",
-    ~fontSize=14,
-    lineNumber,
-  );
+  /*   Revery.Draw.Text.drawString( */
+  /*     ~transform, */
+  /*     ~x=lineNumberXOffset, */
+  /*     ~y=yF, */
+  /*     ~backgroundColor=theme.colors.editorLineNumberBackground, */
+  /*     ~color=lineNumberTextColor, */
+  /*     ~fontFamily="FiraCode-Regular.ttf", */
+  /*     ~fontSize=14, */
+  /*     lineNumber, */
+  /*   ); */
 
   let textBackgroundColor =
     isActiveLine
@@ -127,11 +132,9 @@ let renderTokens =
     Revery.Draw.Text.drawString(
       ~transform,
       ~x=
-        float_of_int(
-          lineNumberWidth
-          + fontWidth
-          * Index.toZeroBasedInt(token.startPosition),
-        )
+        lineNumberWidth
+        +. fontWidth
+        *. float_of_int(Index.toZeroBasedInt(token.startPosition))
         -. xF,
       ~y=yF,
       ~backgroundColor=textBackgroundColor,
@@ -172,28 +175,41 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
+    let iFontHeight = int_of_float(fontHeight +. 0.5);
+    let iFontWidth = int_of_float(fontWidth +. 0.5);
+
     let cursorLine = state.editor.cursorPosition.line;
     let cursorWidth =
       switch (state.mode) {
       | Insert => 2
-      | _ => fontWidth
+      | _ => iFontWidth
       };
 
     let cursorStyle =
       Style.[
         position(`Absolute),
         top(
-          fontHeight
-          * Index.toZeroBasedInt(state.editor.cursorPosition.line)
-          - state.editor.scrollY,
+          int_of_float(
+            fontHeight
+            *. float_of_int(
+                 Index.toZeroBasedInt(state.editor.cursorPosition.line),
+               )
+            -. state.editor.scrollY
+            +. 0.5,
+          ),
         ),
         left(
-          lineNumberWidth
-          + fontWidth
-          * Index.toZeroBasedInt(state.editor.cursorPosition.character)
-          - state.editor.scrollX,
+          int_of_float(
+            lineNumberWidth
+            +. fontWidth
+            *. float_of_int(
+                 Index.toZeroBasedInt(state.editor.cursorPosition.character),
+               )
+            -. state.editor.scrollX
+            +. 0.5,
+          ),
         ),
-        height(fontHeight),
+        height(iFontHeight),
         width(cursorWidth),
         opacity(0.8),
         backgroundColor(Colors.white),
@@ -229,8 +245,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let layout =
       EditorLayout.getLayout(
-        ~pixelWidth=state.editor.size.pixelWidth,
-        ~pixelHeight=state.editor.size.pixelHeight,
+        ~pixelWidth=float_of_int(state.editor.size.pixelWidth),
+        ~pixelHeight=float_of_int(state.editor.size.pixelHeight),
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -239,14 +255,14 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       );
 
     let bufferPixelWidth =
-      layout.lineNumberWidthInPixels + layout.bufferWidthInPixels;
+      layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
     let bufferViewStyle =
       Style.[
         position(`Absolute),
         top(0),
         left(0),
-        width(bufferPixelWidth),
+        width(int_of_float(bufferPixelWidth)),
         bottom(0),
         overflow(`Hidden),
       ];
@@ -258,7 +274,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         position(`Absolute),
         overflow(`Hidden),
         top(0),
-        left(bufferPixelWidth),
+        left(int_of_float(bufferPixelWidth)),
         width(minimapPixelWidth),
         bottom(0),
       ];
@@ -267,7 +283,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Style.[
         position(`Absolute),
         top(0),
-        left(bufferPixelWidth + minimapPixelWidth),
+        left(
+          int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
+        ),
         width(Constants.default.scrollBarThickness),
         backgroundColor(theme.colors.scrollbarSliderBackground),
         bottom(0),
@@ -277,21 +295,21 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       Style.[
         position(`Absolute),
         bottom(0),
-        left(layout.lineNumberWidthInPixels),
+        left(int_of_float(layout.lineNumberWidthInPixels)),
         height(Constants.default.scrollBarThickness),
-        width(layout.bufferWidthInPixels),
+        width(int_of_float(layout.bufferWidthInPixels)),
       ];
 
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=int_of_float(wheelEvent.deltaY) * (-50),
+        ~deltaY=wheelEvent.deltaY *. (-50.),
         (),
       );
     };
 
     let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       GlobalContext.current().editorScroll(
-        ~deltaY=int_of_float(wheelEvent.deltaY) * (-150),
+        ~deltaY=wheelEvent.deltaY *. (-150.),
         (),
       );
     };
@@ -311,18 +329,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               /* Draw background for cursor line */
               Shapes.drawRect(
                 ~transform,
-                ~x=float_of_int(lineNumberWidth),
+                ~x=lineNumberWidth,
                 ~y=
-                  float_of_int(
-                    fontHeight
-                    * Index.toZeroBasedInt(state.editor.cursorPosition.line)
-                    - state.editor.scrollY,
-                  ),
-                ~height=float_of_int(fontHeight),
+                  fontHeight
+                  *. float_of_int(
+                       Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                     )
+                  -. state.editor.scrollY,
+                ~height=fontHeight,
                 ~width=
-                  float_of_int(
-                    state.editor.size.pixelWidth - lineNumberWidth,
-                  ),
+                  float_of_int(state.editor.size.pixelWidth)
+                  -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
@@ -330,7 +347,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
-                ~height,
+                ~height=float_of_int(height),
                 ~count,
                 ~render=
                   (item, offset) => {
@@ -359,7 +376,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~transform,
                 ~x=0.,
                 ~y=0.,
-                ~width=float_of_int(lineNumberWidth),
+                ~width=lineNumberWidth,
                 ~height=float_of_int(height),
                 ~color=theme.colors.editorLineNumberBackground,
                 (),
@@ -368,7 +385,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
-                ~height,
+                ~height=float_of_int(height),
                 ~count,
                 ~render=
                   (item, offset) => {
@@ -392,7 +409,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <View style=horizontalScrollBarStyle>
             <EditorHorizontalScrollbar
               state
-              width={layout.bufferWidthInPixels}
+              width={int_of_float(layout.bufferWidthInPixels)}
             />
           </View>
         </View>

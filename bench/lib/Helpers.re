@@ -16,8 +16,8 @@ let simpleState =
       Types.EditorFont.create(
         ~fontFile="dummy",
         ~fontSize=14,
-        ~measuredWidth=14,
-        ~measuredHeight=14,
+        ~measuredWidth=14.,
+        ~measuredHeight=14.,
         (),
       ),
     ),

@@ -124,10 +124,16 @@ let init = app => {
 
   neovimProtocol.uiAttach();
 
-  let setFont = (fontFamily, fontSize) =>
+  let setFont = (fontFamily, fontSize) => {
+    let scaleFactor =
+      Window.getDevicePixelRatio(w)
+      *. float_of_int(Window.getScaleFactor(w));
+
+    let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
+
     Fontkit.fk_new_face(
       Revery.Environment.getExecutingDirectory() ++ fontFamily,
-      fontSize,
+      adjSize,
       font => {
         open Oni_Model.Actions;
         open Oni_Core.Types;
@@ -139,11 +145,9 @@ let init = app => {
 
         let metrics = Fontkit.fk_get_metrics(font);
         let actualHeight =
-          int_of_float(
-            float_of_int(fontSize)
-            *. float_of_int(metrics.height)
-            /. float_of_int(metrics.unitsPerEm),
-          );
+          float_of_int(fontSize)
+          *. float_of_int(metrics.height)
+          /. float_of_int(metrics.unitsPerEm);
 
         /* Set editor text based on measurements */
         App.dispatch(
@@ -152,7 +156,8 @@ let init = app => {
             EditorFont.create(
               ~fontFile=fontFamily,
               ~fontSize,
-              ~measuredWidth=glyph.advance / 64,
+              ~measuredWidth=
+                float_of_int(glyph.advance) /. (64. *. scaleFactor),
               ~measuredHeight=actualHeight,
               (),
             ),
@@ -161,6 +166,7 @@ let init = app => {
       },
       _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
     );
+  };
 
   setFont("FiraCode-Regular.ttf", 14);
 
