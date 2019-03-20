@@ -74,7 +74,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
-      ~getTokensForLine: int => list(Tokenizer.t),
+      ~getTokensForLine as _,
       ~children as _,
       (),
     ) =>
@@ -88,59 +88,64 @@ let createElement =
     let scrollY = state.editor.minimapScrollY;
 
     ignore(width);
+    ignore(scrollY);
+    ignore(rowHeight);
+    ignore(height);
+    ignore(count);
 
     (
       hooks,
       <View style=absoluteStyle>
         <OpenGL
           style=absoluteStyle
-          render={(transform, _) => {
-            if (state.configuration.editorMinimapShowSlider) {
-              /* Draw current view */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=
-                  rowHeight
-                  *. float_of_int(
-                       Editor.getTopVisibleLine(state.editor) - 1,
-                     )
-                  -. scrollY,
-                ~height=
-                  rowHeight *. float_of_int(getMinimapSize(state.editor)),
-                ~width=float_of_int(width),
-                ~color=state.theme.colors.scrollbarSliderHoverBackground,
-                (),
-              );
-            };
-            /* Draw cursor line */
-            Shapes.drawRect(
-              ~transform,
-              ~x=0.,
-              ~y=
-                rowHeight
-                *. float_of_int(
-                     Index.toZeroBasedInt(state.editor.cursorPosition.line),
-                   )
-                -. scrollY,
-              ~height=float_of_int(Constants.default.minimapCharacterHeight),
-              ~width=float_of_int(width),
-              ~color=state.theme.colors.editorLineHighlightBackground,
-              (),
-            );
+          render={(_transform, _) => {
+            /* if (state.configuration.editorMinimapShowSlider) { */
+            /*   /1* Draw current view *1/ */
+            /*   Shapes.drawRect( */
+            /*     ~transform, */
+            /*     ~x=0., */
+            /*     ~y= */
+            /*       rowHeight */
+            /*       *. float_of_int( */
+            /*            Editor.getTopVisibleLine(state.editor) - 1, */
+            /*          ) */
+            /*       -. scrollY, */
+            /*     ~height= */
+            /*       rowHeight *. float_of_int(getMinimapSize(state.editor)), */
+            /*     ~width=float_of_int(width), */
+            /*     ~color=state.theme.colors.scrollbarSliderHoverBackground, */
+            /*     (), */
+            /*   ); */
+            /* }; */
+            /* /1* Draw cursor line *1/ */
+            /* Shapes.drawRect( */
+            /*   ~transform, */
+            /*   ~x=0., */
+            /*   ~y= */
+            /*     rowHeight */
+            /*     *. float_of_int( */
+            /*          Index.toZeroBasedInt(state.editor.cursorPosition.line), */
+            /*        ) */
+            /*     -. scrollY, */
+            /*   ~height=float_of_int(Constants.default.minimapCharacterHeight), */
+            /*   ~width=float_of_int(width), */
+            /*   ~color=state.theme.colors.editorLineHighlightBackground, */
+            /*   (), */
+            /* ); */
 
-            FlatList.render(
-              ~scrollY,
-              ~rowHeight,
-              ~height=float_of_int(height),
-              ~count,
-              ~render=
-                (item, offset) => {
-                  let tokens = getTokensForLine(item);
-                  renderLine(transform, offset, tokens);
-                },
-              (),
-            );
+            /* FlatList.render( */
+            /*   ~scrollY, */
+            /*   ~rowHeight, */
+            /*   ~height=float_of_int(height), */
+            /*   ~count, */
+            /*   ~render= */
+            /*     (item, offset) => { */
+            /*       let tokens = getTokensForLine(item); */
+            /*       renderLine(transform, offset, tokens); */
+            /*     }, */
+            /*   (), */
+            /* ); */
+              ();
           }}
         />
       </View>,
