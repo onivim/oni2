@@ -20,7 +20,7 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = superKey ? "D-" ++ s : s;
 
   let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
-  print_endline ("keyPressToString: " ++ ret);
+  print_endline("keyPressToString: " ++ ret);
   ret;
 };
 
@@ -105,7 +105,7 @@ let handle =
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] as default =>
-      print_endline ("inputting key");
+      print_endline("inputting key");
       api.input(inputKey) |> ignore;
       default;
     | actions => actions
