@@ -9,6 +9,8 @@ open Oni_Model;
 open Reglfw.Glfw;
 open Reglfw.Glfw.Key;
 
+open CamomileLibraryDefault.Camomile;
+
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
 
@@ -17,11 +19,12 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = altKey ? "A-" ++ s : s;
   let s = superKey ? "D-" ++ s : s;
 
-  String.length(s) > 1 ? "<" ++ s ++ ">" : s;
+  let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
+  ret;
 };
 
 let charToCommand = (codepoint: int, mods: Modifier.t) => {
-  let char = String.make(1, Uchar.to_char(Uchar.of_int(codepoint)));
+  let char = Zed_utf8.singleton(UChar.of_int(codepoint));
 
   let altKey = Modifier.isAltPressed(mods);
   let ctrlKey = Modifier.isControlPressed(mods);
