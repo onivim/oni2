@@ -20,7 +20,6 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = superKey ? "D-" ++ s : s;
 
   let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
-  print_endline("keyPressToString: " ++ ret);
   ret;
 };
 
