@@ -23,7 +23,7 @@ let _isNonWhitespace = c => !_isWhitespace(c);
 
 let _moveToNextMatchingToken = (f, str, startIdx) => {
   let idx = ref(startIdx);
-  let length = String.length(str);
+  let length = Zed_utf8.length(str);
   let found = ref(false);
 
   while (idx^ < length && ! found^) {
@@ -45,7 +45,7 @@ let _getAllTokens = (s: string, color: Color.t, startPos, endPos) => {
   let idx = ref(startPos);
   let tokens: ref(list(t)) = ref([]);
 
-  let endPos = min(endPos, String.length(s));
+  let endPos = min(endPos, Zed_utf8.length(s));
 
   while (idx^ < endPos) {
     let startToken = _moveToNextNonWhitespace(s, idx^);
@@ -53,7 +53,7 @@ let _getAllTokens = (s: string, color: Color.t, startPos, endPos) => {
 
     if (startToken < endPos) {
       let length = endToken - startToken;
-      let text = String.sub(s, startToken, length);
+      let text = Zed_utf8.sub(s, startToken, length);
 
       let token: t = {
         text,
@@ -83,7 +83,7 @@ let rec getTokens =
 
   let ret: list(t) =
     switch (tokens) {
-    | [] => _getAllTokens(s, defaultForegroundColor, pos, String.length(s))
+    | [] => _getAllTokens(s, defaultForegroundColor, pos, Zed_utf8.length(s))
     | [last] =>
       _getAllTokens(
         s,
@@ -94,7 +94,7 @@ let rec getTokens =
           defaultBackgroundColor,
         ),
         last.index,
-        String.length(s),
+        Zed_utf8.length(s),
       )
     | [v1, v2, ...tail] =>
       let nextBatch =
