@@ -105,7 +105,6 @@ let handle =
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] as default =>
-      print_endline("inputting key");
       api.input(inputKey) |> ignore;
       default;
     | actions => actions
