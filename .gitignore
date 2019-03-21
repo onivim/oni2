@@ -69,3 +69,6 @@ _release/
 .DS_Store
 setup.txt
 setup.json
+
+# JUnit test output for CI
+*junit\.xml
