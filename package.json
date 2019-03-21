@@ -21,7 +21,7 @@
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js",
     "test": "esy x OniUnitTestRunner",
-    "testci": "esy x OniUnitTestRunnerCI"
+    "test-ci": "esy x OniUnitTestRunnerCI"
   },
   "dependencies": {
     "ocaml": "~4.7.0",
