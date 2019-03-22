@@ -182,13 +182,18 @@ let unsafeFindHome = () =>
   Revery.(
     switch (Sys.getenv_opt("HOME"), Environment.os) {
     | (Some(dir), _) => dir
-    | (None, Environment.Windows) => Sys.getenv("LOCALAPPDATA")
+    | (None, Environment.Windows) => Sys.getenv("APPDATA")
     | (None, _) => failwith("Could not find HOME dir")
     }
   );
 
 let getOniDirectory = home =>
-  Utility.join([home, ".config", "oni2"]) |> return;
+  Revery.(
+    switch (Environment.os) {
+    | Environment.Windows => Utility.join([home, "Oni2"]) |> return
+    | _ => Utility.join([home, ".config", "oni2"]) |> return
+    }
+  );
 
 let getHomeDirectory = () =>
   Unix.(
