@@ -35,7 +35,6 @@ let init = app => {
         ...Window.defaultCreateOptions,
         maximized: false,
         icon: Some("logo.png"),
-        vsync: false,
       },
       app,
       "Oni2",
