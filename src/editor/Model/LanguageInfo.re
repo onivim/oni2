@@ -5,7 +5,7 @@
 open Oni_Core;
 open Oni_Extensions;
 
-open Rench;
+open Oni_Extensions.ExtensionScanner;
 
 type t = {
   grammars: list(ExtensionContributions.Grammar.t),
@@ -37,37 +37,12 @@ let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
 
-let _remapGrammarsForExtension = (extension: ExtensionScanner.t) => {
-  ExtensionContributions.Grammar.(
-    List.map(
-      grammar => {...grammar, path: Path.join(extension.path, grammar.path)},
-      extension.manifest.contributes.grammars,
-    )
-  );
-};
-
-let _remapLanguagesForExtension = (extension: ExtensionScanner.t) => {
-  ExtensionContributions.Language.(
-    List.map(
-      language =>
-        switch (language.configuration) {
-        | None => language
-        | Some(v) => {
-            ...language,
-            configuration: Some(Path.join(extension.path, v)),
-          }
-        },
-      extension.manifest.contributes.languages,
-    )
-  );
-};
-
 let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
-  extensions |> List.map(v => _remapGrammarsForExtension(v)) |> List.flatten;
+  extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
 
 let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
-  extensions |> List.map(v => _remapLanguagesForExtension(v)) |> List.flatten;
+  extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
