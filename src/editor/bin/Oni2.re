@@ -70,6 +70,16 @@ let init = app => {
       (),
     );
 
+  let _ =
+    Event.subscribe(nvim.onClose, code =>
+      if (code === 0) {
+        App.quit(0);
+      } else {
+        ();
+          /* TODO: What to do in case Neovim crashes? */
+      }
+    );
+
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
 
