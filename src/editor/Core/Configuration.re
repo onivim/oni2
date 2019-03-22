@@ -20,6 +20,8 @@ type t = {
   editorMinimapShowSlider: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
+  [@key "workbench.iconTheme"]
+  workbenchIconTheme: string,
 };
 
 let default = {
@@ -27,6 +29,7 @@ let default = {
   editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
+  workbenchIconTheme: "vs-seti",
 };
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;
