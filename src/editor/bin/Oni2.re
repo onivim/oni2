@@ -70,6 +70,8 @@ let init = app => {
       (),
     );
 
+  let _ = Event.subscribe(nvim.onClose, (_) => { App.quit(0); });
+
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
 
