@@ -182,7 +182,7 @@ let unsafeFindHome = () =>
   Revery.(
     switch (Sys.getenv_opt("HOME"), Environment.os) {
     | (Some(dir), _) => dir
-    | (None, Environment.Windows) => Sys.getenv("APPDATA")
+    | (None, Environment.Windows) => Sys.getenv("LOCALAPPDATA")
     | (None, _) => failwith("Could not find HOME dir")
     }
   );
