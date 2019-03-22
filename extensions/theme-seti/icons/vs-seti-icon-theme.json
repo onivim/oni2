@@ -12,8 +12,8 @@
 			"id": "seti",
 			"src": [
 				{
-					"path": "./seti.woff",
-					"format": "woff"
+					"path": "./seti.ttf",
+					"format": "ttf"
 				}
 			],
 			"weight": "normal",
