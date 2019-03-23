@@ -40,7 +40,7 @@ let getIcon = icon =>
   | None => ""
   };
 
-let handleChange = (~value) =>
+let handleChange = ({value, _}: Input.changeEvent) =>
   GlobalContext.current().dispatch(MenuSearch(value));
 
 let createElement =
