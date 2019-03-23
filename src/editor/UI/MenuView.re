@@ -40,8 +40,16 @@ let getIcon = icon =>
   | None => ""
   };
 
-let handleChange = (~value) =>
-  GlobalContext.current().dispatch(MenuSearch(value));
+let handleChange = (event: Input.changeEvent) =>
+  GlobalContext.current().dispatch(MenuSearch(event.value));
+
+let handleKeyPress = (event: Revery.UI.NodeEvents.keyEventParams) =>
+  switch (event) {
+  | {key: Revery.Key.KEY_ESCAPE, _} =>
+    print_endline("Responding to key event");
+    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus));
+  | _ => ()
+  };
 
 let createElement =
     (
