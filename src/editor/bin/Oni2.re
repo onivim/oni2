@@ -199,7 +199,7 @@ let init = app => {
       /**
        If a Revery UI element is focused but <ESC> is hit this should
        unfocus the element, this should probably eventually live in
-       Revery itself as default behaviour?
+       Revery itself as default behaviour
      */
       Focus.loseFocus();
       inputHandler(~state=App.getState(app), v)
