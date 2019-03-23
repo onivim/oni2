@@ -197,9 +197,8 @@ let init = app => {
     | (None, _) => ()
     | (Some(_), {contents: Some(_)}) => ()
     | (Some(v), {contents: None}) =>
-      print_endline("Key to press =====> " ++ v);
       inputHandler(~state=App.getState(app), v)
-      |> List.iter(App.dispatch(app));
+      |> List.iter(App.dispatch(app))
     };
 
   Event.subscribe(w.onKeyDown, keyEvent =>
@@ -210,11 +209,6 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-
-  /* Reglfw.Glfw.glfwSetKeyCallback( */
-  /*   w.glfwWindow, (_w, key, _scancode, buttonState, mods) => */
-  /*   Input.keyPressToCommand(key, buttonState, mods) |> keyEventListener */
-  /* ); */
 
   let _ =
     Tick.interval(
