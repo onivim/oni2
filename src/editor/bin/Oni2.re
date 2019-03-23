@@ -202,14 +202,14 @@ let init = app => {
       |> List.iter(App.dispatch(app));
     };
 
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    Input.charToCommand(codepoint, mods) |> keyEventListener
-  );
-
-  Event.subscribe(w.onKeyPress, keyEvent =>
+  Event.subscribe(w.onKeyDown, keyEvent =>
     Input.keyPressToCommand(keyEvent) |> keyEventListener
   )
   |> ignore;
+
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+    Input.charToCommand(codepoint, mods) |> keyEventListener
+  );
 
   /* Reglfw.Glfw.glfwSetKeyCallback( */
   /*   w.glfwWindow, (_w, key, _scancode, buttonState, mods) => */
