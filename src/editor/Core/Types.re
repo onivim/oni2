@@ -59,6 +59,7 @@ module Mode = {
    * A buffer: represents a file
  */
 module Views = {
+  [@deriving show]
   type t =
     | Window
     | Tab
@@ -68,6 +69,7 @@ module Views = {
     | Buffer
     | Tab;
 
+  [@deriving show]
   type viewOperation =
     (~path: string=?, ~id: int=?, ~openMethod: openMethod=?, unit) => unit;
 };
@@ -235,25 +237,10 @@ type commandline = {
   show: bool,
 };
 
-module Palette = {
-  [@deriving show]
-  type command = {
-    name: string,
-    command: unit => unit,
-  };
-
-  [@deriving show]
-  type t = {
-    isOpen: bool,
-    commands: list(command),
-    selectedItem: int,
-  };
-};
-
 module Input = {
   [@deriving (show, yojson({strict: false, exn: false}))]
   type controlMode =
-    | [@name "commandPaletteFocus"] CommandPaletteFocus
+    | [@name "menuFocus"] MenuFocus
     | [@name "editorTextFocus"] EditorTextFocus;
 
   [@deriving show]
@@ -264,5 +251,36 @@ module Input = {
 };
 
 module Effects = {
-  type t = {openFile: Views.viewOperation};
+  [@deriving show]
+  type t = {
+    openFile: Views.viewOperation,
+    getCurrentDir: unit => option(string),
+  };
+};
+
+module UiMenu = {
+  [@deriving show]
+  type menu =
+    | QuickOpen
+    | CommandPalette
+    | Closed;
+
+  [@deriving show]
+  type command = {
+    name: string,
+    command: unit => unit,
+    icon: option(string),
+  };
+
+  type commandFactory = Effects.t => list(command);
+
+  [@deriving show]
+  type t = {
+    effects: option(Effects.t),
+    searchQuery: string,
+    menu,
+    isOpen: bool,
+    commands: list(command),
+    selectedItem: int,
+  };
 };

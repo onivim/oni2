@@ -18,6 +18,7 @@ type t = {
   editorScroll,
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
+  dispatch: Actions.t => unit,
   state: State.t,
 };
 
@@ -29,6 +30,7 @@ let default = {
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
   openFile: viewNoop,
+  dispatch: _ => (),
   closeFile: viewNoop,
 };
 

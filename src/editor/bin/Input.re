@@ -108,5 +108,5 @@ let handle =
       default;
     | actions => actions
     }
-  | _ => getActionsForBinding(inputKey, commands, state)
+  | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };

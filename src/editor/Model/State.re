@@ -25,7 +25,7 @@ type t = {
   activeBufferId: int,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  commandPalette: CommandPalette.t,
+  menu: UiMenu.t,
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
@@ -39,7 +39,7 @@ let create: unit => t =
   () => {
     configuration: Configuration.create(),
     mode: Insert,
-    commandPalette: CommandPalette.create(),
+    menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
     activeBufferId: 0,

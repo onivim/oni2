@@ -17,3 +17,4 @@ module Configuration = Configuration;
 module Theme = Theme;
 module Keybindings = Keybindings;
 module Filesystem = Filesystem;
+module Filter = Filter;
