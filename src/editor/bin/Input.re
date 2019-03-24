@@ -32,7 +32,8 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 
   let key =
     keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
-  Some(key);
+  let shortcutModPressed = ctrlKey || altKey || superKey;
+  Some((key, shortcutModPressed));
 };
 
 let keyPressToCommand =
@@ -65,19 +66,30 @@ let keyPressToCommand =
   | None => None
   | Some(k) =>
     let res = keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, k);
-    Some(res);
+    let shortcutModPressed = ctrlKey || altKey || superKey;
+    Some((res, shortcutModPressed));
   };
 };
 
-let getActionsForBinding = (inputKey, commands, state: State.t) =>
+/**
+   Search if any of the matching "when" conditions in the Keybindings.json
+   match the current condition in state
+ */
+let matchesCondition = (conditions, currentMode, input, key) =>
+  List.fold_left(
+    (prevMatch, condition) => prevMatch || condition == currentMode,
+    false,
+    conditions,
+  )
+  |> (&&)(input == key);
+
+let getActionsForBinding =
+    (inputKey, commands, {inputControlMode, _}: State.t) =>
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        if (inputKey == key && condition == state.inputControlMode) {
-          Commands.handleCommand(command);
-        } else {
-          defaultAction;
-        },
+        matchesCondition(condition, inputControlMode, inputKey, key) ?
+          Commands.handleCommand(command) : defaultAction,
       [],
       commands,
     )
@@ -102,5 +114,6 @@ let handle =
       default;
     | actions => actions
     }
+  | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };

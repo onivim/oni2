@@ -192,13 +192,21 @@ let init = app => {
 
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
+  /**
+     The key handlers return (keyPressedString, shortcutModifierKey)
+     i.e. if ctrl or alt or cmd where pressed then Oni2 should listen
+     /respond to commands otherwise if alphabetical input AND
+     a revery element is focused oni2 should defer to revery
+   */
   let keyEventListener = key =>
     switch (key, Focus.focused) {
     | (None, _) => ()
-    | (Some(_), {contents: Some(_)}) => ()
-    | (Some(v), {contents: None}) =>
-      inputHandler(~state=App.getState(app), v)
+    | (Some(("<CR>" as k, _)), {contents: Some(_)})
+    | (Some((k, true)), {contents: Some(_)})
+    | (Some((k, _)), {contents: None}) =>
+      inputHandler(~state=App.getState(app), k)
       |> List.iter(App.dispatch(app))
+    | (Some((_, false)), {contents: Some(_)}) => ()
     };
 
   Event.subscribe(w.onKeyDown, keyEvent =>

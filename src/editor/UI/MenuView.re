@@ -43,11 +43,10 @@ let getIcon = icon =>
 let handleChange = (event: Input.changeEvent) =>
   GlobalContext.current().dispatch(MenuSearch(event.value));
 
-let handleKeyPress = (event: Revery.UI.NodeEvents.keyEventParams) =>
+let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
   | {key: Revery.Key.KEY_ESCAPE, _} =>
-    print_endline("Responding to key event");
-    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus));
+    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
   | _ => ()
   };
 
@@ -71,6 +70,7 @@ let createElement =
               cursorColor=Colors.white
               style={inputStyles(font.fontFile)}
               onChange=handleChange
+              onKeyDown=handleKeyDown
             />
           </View>
           <ScrollView style=Style.[height(menuHeight - 50)]>
