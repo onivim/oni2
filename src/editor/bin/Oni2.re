@@ -193,9 +193,9 @@ let init = app => {
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
   /**
-     The key handlers return (keyPressedString, shortcutModifierKey)
-     i.e. if ctrl or alt or cmd where pressed then Oni2 should listen
-     /respond to commands otherwise if alphabetical input AND
+     The key handlers return (keyPressedString, shouldOniListen)
+     i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
+     /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
   let keyEventListener = key =>
