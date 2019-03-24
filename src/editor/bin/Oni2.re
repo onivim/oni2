@@ -201,7 +201,6 @@ let init = app => {
   let keyEventListener = key =>
     switch (key, Focus.focused) {
     | (None, _) => ()
-    | (Some(("<CR>" as k, _)), {contents: Some(_)})
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
       inputHandler(~state=App.getState(app), k)

@@ -23,6 +23,16 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   ret;
 };
 
+/**
+   This function checks for keys pressed that relate to oni key bindings
+   if a user enters a key/modifier that might relate to Oni2 we allow the
+   input to be received by Oni *and* Revery
+ */
+let isOniModifier = (~altKey, ~ctrlKey, ~superKey, ~key) => {
+  let enterPressed = "<CR>" == key;
+  ctrlKey || altKey || superKey || enterPressed;
+};
+
 let charToCommand = (codepoint: int, mods: Modifier.t) => {
   let char = Zed_utf8.singleton(UChar.of_int(codepoint));
 
@@ -32,22 +42,22 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 
   let key =
     keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
-  let shortcutModPressed = ctrlKey || altKey || superKey;
-  Some((key, shortcutModPressed));
+  let shouldOniListen = isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key);
+  Some((key, shouldOniListen));
 };
 
 let keyPressToCommand =
     ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent) => {
   let keyString =
-    ctrlKey
-      ? /**
+    ctrlKey ?
+      /**
         TODO: currently Revery's toString method returns lower case
         characters which need to be capitalized. Instead we
         should use ?derving show (we will need to format out the KEY_ prefix)
         or convert the return values to uppercase
        */
-        Some(Revery.Key.toString(key) |> String.capitalize_ascii)
-      : (
+      Some(Revery.Key.toString(key) |> String.capitalize_ascii) :
+      (
         switch (key) {
         | KEY_ESCAPE => Some("ESC")
         | KEY_TAB => Some("TAB")
@@ -65,9 +75,12 @@ let keyPressToCommand =
   switch (keyString) {
   | None => None
   | Some(k) =>
-    let res = keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, k);
-    let shortcutModPressed = ctrlKey || altKey || superKey;
-    Some((res, shortcutModPressed));
+    let keyPressString =
+      keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, k);
+    let shouldOniListen =
+      isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key=keyPressString);
+
+    Some((keyPressString, shouldOniListen));
   };
 };
 
@@ -88,8 +101,8 @@ let getActionsForBinding =
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, inputControlMode, inputKey, key)
-          ? Commands.handleCommand(command) : defaultAction,
+        matchesCondition(condition, inputControlMode, inputKey, key) ?
+          Commands.handleCommand(command) : defaultAction,
       [],
       commands,
     )

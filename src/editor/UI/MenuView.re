@@ -52,7 +52,7 @@ let handleKeyDown = (event: NodeEvents.keyEventParams) =>
 
 let loseFocusOnClose = isOpen =>
   /**
-   TODO: if the menu is hidden abruptly the element is not automatically unfocused
+   TODO: revery-ui/revery#412 if the menu is hidden abruptly the element is not automatically unfocused
    as revery is unaware the element is no longer in focus
  */
   (
