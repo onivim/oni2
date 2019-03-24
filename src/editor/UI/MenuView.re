@@ -50,6 +50,18 @@ let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   | _ => ()
   };
 
+let loseFocusOnClose = isOpen =>
+  /**
+   TODO: if the menu is hidden abruptly the element is not automatically unfocused
+   as revery is unaware the element is no longer in focus
+ */
+  (
+    switch (Focus.focused, isOpen) {
+    | ({contents: Some(_)}, false) => Focus.loseFocus()
+    | (_, _) => ()
+    }
+  );
+
 let createElement =
     (
       ~children as _,
@@ -58,8 +70,14 @@ let createElement =
       ~theme: Theme.t,
       (),
     ) =>
-  component(hooks =>
-    (
+  component(hooks => {
+    let hooks =
+      React.Hooks.effect(
+        Always,
+        () => Some(() => loseFocusOnClose(menu.isOpen)),
+        hooks,
+      );
+    React.(
       hooks,
       menu.isOpen
         ? <View style={containerStyles(theme)}>
@@ -88,5 +106,5 @@ let createElement =
             </ScrollView>
           </View>
         : React.listToElement([]),
-    )
-  );
+    );
+  });
