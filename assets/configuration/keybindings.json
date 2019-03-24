@@ -5,6 +5,6 @@
         { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
         { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"]] }
+        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] }
     ]
 }
