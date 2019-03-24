@@ -46,7 +46,8 @@ let keyPressToCommand =
   let keyString =
     ctrlKey
       ? /**
-        TODO: currently Revery's toString method returns lower case
+        TODO:
+        Revery's toString method returns lower case
         characters which need to be capitalized. Instead we
         should use ?derving show (we will need to format out the KEY_ prefix)
         or convert the return values to uppercase
