@@ -26,6 +26,8 @@ let oniCommands = [
     name: "menu.close",
     command: _ => [MenuClose, SetInputControlMode(EditorTextFocus)],
   },
+  {name: "menu.next", command: _ => [MenuPosition(1)]},
+  {name: "menu.previous", command: _ => [MenuPosition(-1)]},
   {
     name: "menu.next",
     command: _ => [SetInputControlMode(MenuFocus), MenuPosition(1)],
