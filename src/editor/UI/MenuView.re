@@ -61,34 +61,32 @@ let createElement =
   component(hooks =>
     (
       hooks,
-      menu.isOpen ?
-        <View style={containerStyles(theme)}>
-          <View style=Style.[width(menuWidth), padding(5)]>
-            <Input
-              autofocus=true
-              placeholder="type here to search the menu"
-              cursorColor=Colors.white
-              style={inputStyles(font.fontFile)}
-              onChange=handleChange
-              onKeyDown=handleKeyDown
-            />
+      menu.isOpen
+        ? <View style={containerStyles(theme)}>
+            <View style=Style.[width(menuWidth), padding(5)]>
+              <Input
+                autofocus=true
+                placeholder="type here to search the menu"
+                cursorColor=Colors.white
+                style={inputStyles(font.fontFile)}
+                onChange=handleChange
+                onKeyDown=handleKeyDown
+              />
+            </View>
+            <ScrollView style=Style.[height(menuHeight - 50)]>
+              ...{List.mapi(
+                (index, cmd: Types.UiMenu.command) =>
+                  <MenuItem
+                    icon={getIcon(cmd.icon)}
+                    style=menuItemStyle
+                    label={cmd.name}
+                    selected={index == menu.selectedItem}
+                    theme
+                  />,
+                menu.commands,
+              )}
+            </ScrollView>
           </View>
-          <ScrollView style=Style.[height(menuHeight - 50)]>
-            ...{
-                 List.mapi(
-                   (index, cmd: Types.UiMenu.command) =>
-                     <MenuItem
-                       icon={getIcon(cmd.icon)}
-                       style=menuItemStyle
-                       label={cmd.name}
-                       selected={index == menu.selectedItem}
-                       theme
-                     />,
-                   menu.commands,
-                 )
-               }
-          </ScrollView>
-        </View> :
-        React.listToElement([]),
+        : React.listToElement([]),
     )
   );
