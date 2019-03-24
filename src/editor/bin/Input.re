@@ -44,15 +44,15 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 let keyPressToCommand =
     ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent) => {
   let keyString =
-    ctrlKey ?
-      /**
+    ctrlKey
+      ? /**
         TODO: currently Revery's toString method returns lower case
         characters which need to be capitalized. Instead we
         should use ?derving show (we will need to format out the KEY_ prefix)
         or convert the return values to uppercase
        */
-      Some(Revery.Key.toString(key) |> String.capitalize_ascii) :
-      (
+        Some(Revery.Key.toString(key) |> String.capitalize_ascii)
+      : (
         switch (key) {
         | KEY_ESCAPE => Some("ESC")
         | KEY_TAB => Some("TAB")
@@ -96,8 +96,8 @@ let getActionsForBinding =
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, inputControlMode, inputKey, key) ?
-          Commands.handleCommand(command) : defaultAction,
+        matchesCondition(condition, inputControlMode, inputKey, key)
+          ? Commands.handleCommand(command) : defaultAction,
       [],
       commands,
     )
