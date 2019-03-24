@@ -1,7 +1,7 @@
 {
     "bindings": [
-        { "key": "<S-C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
-        { "key": "<C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
         { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
