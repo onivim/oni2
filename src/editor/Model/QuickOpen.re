@@ -1,14 +1,14 @@
-open Oni_Core.Types;
+open Oni_Core;
+open Types;
 open UiMenu;
 
 let content = (effects: Effects.t) =>
   effects.getCurrentDir()
   |> (
     fun
-    | Some(dir) => Sys.readdir(dir)
-    | None => [||]
+    | Some(dir) => Ripgrep.search(dir)
+    | None => []
   )
-  |> Array.to_list
   /*
      In the future we might want to allow
      functionality like switching to a directory on select
