@@ -34,9 +34,9 @@ let createElement =
 
     let bg: Color.t =
       Theme.(
-        selected ?
-          theme.colors.editorMenuItemSelected :
-          theme.colors.editorMenuBackground
+        selected
+          ? theme.colors.editorMenuItemSelected
+          : theme.colors.editorMenuBackground
       );
 
     let labelStyles =
