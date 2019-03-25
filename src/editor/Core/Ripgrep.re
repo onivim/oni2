@@ -1,8 +1,6 @@
 let mergeOptions = options =>
   List.fold_left((accum, opt) => accum ++ " " ++ opt, "", options);
 
-let iterateStream = stream => {};
-
 let getPath = () =>
   Revery.Environment.(
     switch (os) {
