@@ -27,9 +27,7 @@ let process = args => {
   Stream.from(_ =>
     switch (input_line(inChannel)) {
     | line => Some(line)
-    | exception End_of_file =>
-      close_in(inChannel);
-      None;
+    | exception End_of_file => None
     }
   )
   |> (
@@ -38,6 +36,7 @@ let process = args => {
       | _error => close_in(inChannel)
       }
   );
+  close_in(inChannel);
   lines^;
 };
 
