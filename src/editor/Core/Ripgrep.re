@@ -37,7 +37,7 @@ let process = args => {
       }
   );
   close_in(inChannel);
-  lines^;
+  Utility.sublist(0, 100, lines^);
 };
 
 let search = query => process(["--files", "--", query]);

@@ -64,3 +64,20 @@ let stringContains = (word, substring) => {
   | Not_found => false
   };
 };
+
+let rec sublist = (beginning, terminus, l) =>
+  switch (l) {
+  | [] => failwith("sublist")
+  | [h, ...t] =>
+    let tail =
+      if (terminus == 0) {
+        [];
+      } else {
+        sublist(beginning - 1, terminus - 1, t);
+      };
+    if (beginning > 0) {
+      tail;
+    } else {
+      [h, ...tail];
+    };
+  };

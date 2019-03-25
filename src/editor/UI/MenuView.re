@@ -23,7 +23,7 @@ let containerStyles = (theme: Theme.t) =>
     ),
   ];
 
-let menuItemStyle = Style.[fontSize(14), width(menuWidth - 20)];
+let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50)];
 
 let inputStyles = font =>
   Style.[
