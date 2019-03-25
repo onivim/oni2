@@ -91,19 +91,22 @@ let createElement =
                 onKeyDown=handleKeyDown
               />
             </View>
-            <ScrollView style=Style.[height(menuHeight - 50)]>
-              ...{List.mapi(
-                (index, cmd: Types.UiMenu.command) =>
-                  <MenuItem
-                    icon={getIcon(cmd.icon)}
-                    style=menuItemStyle
-                    label={cmd.name}
-                    selected={index == menu.selectedItem}
-                    theme
-                  />,
-                menu.commands,
-              )}
-            </ScrollView>
+            <FlatList
+              rowHeight=40
+              height={menuHeight - 100}
+              width=menuWidth
+              count={List.length(menu.commands)}
+              render={index => {
+                let cmd = List.nth(menu.commands, index);
+                <MenuItem
+                  icon={getIcon(cmd.icon)}
+                  style=menuItemStyle
+                  label={cmd.name}
+                  selected={index == menu.selectedItem}
+                  theme
+                />;
+              }}
+            />
           </View>
         : React.listToElement([]),
     );
