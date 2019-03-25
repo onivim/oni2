@@ -91,22 +91,24 @@ let createElement =
                 onKeyDown=handleKeyDown
               />
             </View>
-            <FlatList
-              rowHeight=40
-              height={menuHeight - 100}
-              width=menuWidth
-              count={List.length(menu.commands)}
-              render={index => {
-                let cmd = List.nth(menu.commands, index);
-                <MenuItem
-                  icon={getIcon(cmd.icon)}
-                  style=menuItemStyle
-                  label={cmd.name}
-                  selected={index == menu.selectedItem}
-                  theme
-                />;
-              }}
-            />
+            <View>
+              <FlatList
+                rowHeight=40
+                height={menuHeight - 50}
+                width=menuWidth
+                count={List.length(menu.commands)}
+                render={index => {
+                  let cmd = List.nth(menu.commands, index);
+                  <MenuItem
+                    icon={getIcon(cmd.icon)}
+                    style=menuItemStyle
+                    label={cmd.name}
+                    selected={index == menu.selectedItem}
+                    theme
+                  />;
+                }}
+              />
+            </View>
           </View>
         : React.listToElement([]),
     );
