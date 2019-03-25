@@ -2,27 +2,29 @@ let mergeOptions = options =>
   List.fold_left((accum, opt) => accum ++ " " ++ opt, "", options);
 
 let getPath = () =>
-  Revery.Environment.(
-    switch (os) {
-    | Mac
-    | Linux =>
-      Utility.join([
-        getWorkingDirectory(),
-        "assets",
-        "ripgrep",
-        "linux",
-        "rg",
-      ])
-    | Browser
-    | Unknown
-    | Windows => failwith("not implemented")
-    }
+  Utility.(
+    Revery.Environment.(
+      join([getWorkingDirectory(), "assets", "ripgrep"])
+      |> (
+        grepDir =>
+          switch (os) {
+          | Mac => join([grepDir, "mac", "rg"])
+          | Linux => join([grepDir, "linux", "rg"])
+          | Windows => join([grepDir, "windows", "rg.exe"])
+          | Browser
+          | Unknown => failwith("not implemented")
+          }
+      )
+    )
   );
 
 let process = args => {
   let lines = ref([]);
   let rgPath = getPath();
-  let inChannel = Unix.open_process_in(mergeOptions([rgPath, ...args]));
+  /**
+     NOTE: this is run in parallel to the main program
+   */
+  let inChannel = mergeOptions([rgPath, ...args]) |> Unix.open_process_in;
 
   Stream.from(_ =>
     switch (input_line(inChannel)) {
@@ -40,4 +42,9 @@ let process = args => {
   lines^;
 };
 
-let search = query => process(["--files", "--", query]);
+/**
+   Search through files of the directory passed in and sort the results in
+   order of the last time they were accessed, alternative sort order includes
+   path, modified, created
+ */
+let search = query => process(["--files", "--sort", "accessed", "--", query]);
