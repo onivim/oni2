@@ -4,7 +4,7 @@
  * Runtime configuration of dependencies
  */
 
-[@deriving (show, yojson({strict: false, exn: true}))]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
   [@key "neovim"]
   neovimPath: string,
@@ -22,6 +22,8 @@ type t = {
   configPath: string,
   [@key "keybindings"]
   keybindingsPath: string,
+  [@key "rg"]
+  rgPath: string,
   version: [@default "Unknown"] string,
 };
 

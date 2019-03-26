@@ -245,9 +245,12 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
+  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+
   Model.Menu.addEffects({
     openFile: neovimProtocol.openFile,
     getCurrentDir: neovimProtocol.getCurrentDir,
+    ripgrep,
   })
   |> App.dispatch(app)
   |> ignore;

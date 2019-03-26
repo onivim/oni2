@@ -1,27 +1,11 @@
+[@deriving show]
+type t = {search: string => list(string)};
+
 let mergeOptions = options =>
   List.fold_left((accum, opt) => accum ++ " " ++ opt, "", options);
 
-let getPath = () =>
-  Utility.(
-    Revery.Environment.(
-      join([getWorkingDirectory(), "assets", "ripgrep"])
-      |> escapeSpaces
-      |> (
-        grepDir =>
-          switch (os) {
-          | Mac => join([grepDir, "mac", "rg"])
-          | Linux => join([grepDir, "linux", "rg"])
-          | Windows => join([grepDir, "windows", "rg.exe"])
-          | Browser
-          | Unknown => failwith("not implemented")
-          }
-      )
-    )
-  );
-
-let process = args => {
+let process = (rgPath, args) => {
   let lines = ref([]);
-  let rgPath = getPath();
   /**
      NOTE: this is run in parallel to the main program
    */
@@ -48,4 +32,7 @@ let process = args => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = query => process(["--files", "--sort", "accessed", "--", query]);
+let search = (path, query) =>
+  process(path, ["--files", "--sort", "accessed", "--", query]);
+
+let make = path => {search: search(path)};

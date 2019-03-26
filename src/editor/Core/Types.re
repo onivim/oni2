@@ -258,6 +258,7 @@ module Effects = {
   type t = {
     openFile: Views.viewOperation,
     getCurrentDir: unit => option(string),
+    ripgrep: Ripgrep.t,
   };
 };
 

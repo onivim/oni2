@@ -6,7 +6,7 @@ let content = (effects: Effects.t) =>
   effects.getCurrentDir()
   |> (
     fun
-    | Some(dir) => Ripgrep.search(dir)
+    | Some(dir) => effects.ripgrep.search(dir)
     | None => []
   )
   /*
