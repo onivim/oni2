@@ -1,6 +1,10 @@
 open Revery;
 open Oni_Core;
+open Oni_Core_Test;
+open Oni_Extensions;
 open TestFramework;
+open Oni_Extensions.TextmateClient;
+open Oni_Extensions.ExtensionContributions.Grammar;
 
 let reasonSyntaxPath = (setup: Setup.t) =>
   setup.bundledExtensionsPath ++ "/vscode-reasonml/syntaxes/reason.json";
@@ -87,7 +91,7 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
       tmClient => {
         TextmateClient.preloadScope(tmClient, "source.reason");
 
@@ -137,7 +141,7 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
 
@@ -178,7 +182,7 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup)}],
+      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
 

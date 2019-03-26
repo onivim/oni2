@@ -21,7 +21,7 @@ let defaultCallback: simpleCallback = () => ();
 
 module Protocol {
 
-    module MessageTypes {
+    module MessageType {
         let initialized = 0;
         let ready = 1;
         let initData = 2;
@@ -135,6 +135,8 @@ let start =
   };
 
   let onRequest = (_, _) => Ok(emptyJsonValue);
+
+  /* let send = */ 
 
   let rpc =
     Rpc.start(
