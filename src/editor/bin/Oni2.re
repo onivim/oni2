@@ -94,10 +94,7 @@ let init = app => {
       grammars,
     );
 
-  let extHostClient = 
-      Extensions.ExtensionHostClient.start(
-        setup 
-      );
+  let extHostClient = Extensions.ExtensionHostClient.start(setup);
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 

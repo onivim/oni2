@@ -91,7 +91,13 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
+      [
+        {
+          scopeName: "source.reason",
+          path: reasonSyntaxPath(setup),
+          language: None,
+        },
+      ],
       tmClient => {
         TextmateClient.preloadScope(tmClient, "source.reason");
 
@@ -141,7 +147,13 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
+      [
+        {
+          scopeName: "source.reason",
+          path: reasonSyntaxPath(setup),
+          language: None,
+        },
+      ],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
 
@@ -182,7 +194,13 @@ describe("Textmate Service", ({test, _}) => {
       ~onColorMap,
       ~onScopeLoaded,
       ~onTokens,
-      [{scopeName: "source.reason", path: reasonSyntaxPath(setup), language: None}],
+      [
+        {
+          scopeName: "source.reason",
+          path: reasonSyntaxPath(setup),
+          language: None,
+        },
+      ],
       tmClient => {
         TextmateClient.setTheme(tmClient, testThemePath(setup));
 
