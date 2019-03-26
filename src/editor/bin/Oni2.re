@@ -207,6 +207,7 @@ let init = app => {
       _ => {
         nvimApi.pump();
         Extensions.TextmateClient.pump(tmClient);
+        Extensions.ExtensionHostClient.pump(extHostClient);
       },
       Seconds(0.),
     );

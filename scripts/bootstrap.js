@@ -13,6 +13,7 @@ const isLinux = !isMac && !isWindows;
 
 let nodePath;
 let textMateServicePath = path.join(rootDir, "src", "textmate_service", "lib", "src", "index.js");
+let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
 let extensionsPath = path.join(rootDir, "extensions");
 let neovimPath;
 let configurationPath = path.join(configPath, "configuration.json");
@@ -23,6 +24,7 @@ const getCygwinPath = (inputPath) => { return inputPath.replace(/\\/g, "/") }
 if (isWindows) {
     nodePath = getCygwinPath(path.join(vendorPath, "node-v10.15.1", "win-x64", "node.exe"));
     textMateServicePath = getCygwinPath(textMateServicePath);
+    extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath);
     neovimPath = getCygwinPath(path.join(vendorPath, "neovim-0.3.3", "nvim-win64", "bin", "nvim.exe"));
     configurationPath = getCygwinPath(configurationPath);
@@ -44,6 +46,7 @@ const config = {
     configuration: configurationPath,
     textmateService: textMateServicePath,
     bundledExtensions: extensionsPath,
+    extensionHost: extensionHostPath,
     keybindings: keybindingsPath,
 }
 const oniConfig = JSON.stringify(config)

@@ -7,16 +7,11 @@
 
 open Oni_Core;
 open Reason_jsonrpc;
-open Rench;
 
 type t = {
    process: NodeProcess.t,
    rpc: Rpc.t,
 }
-
-let getPathToExtensionHostScript = (setup: Setup.t) => {
-    Path.join(Setup.getExtensionHostPath(setup), "out/bootstrap-fork.js");
-};
 
 let emptyJsonValue = `Assoc([]);
 
@@ -30,8 +25,8 @@ let start =
     ) => {
 
   let args = ["--type=extensionHost"];
-  let process = NodeProcess.start(~args, setup, getPathToExtensionHostScript(setup));
-
+  let env = ["AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess"];
+  let process = NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
 
   let onNotification = (n: Notification.t, _) => {
     switch (n.method, n.params) {
@@ -52,3 +47,5 @@ let start =
 
   {process, rpc}
 };
+
+let pump = (v: t) => Rpc.pump(v.rpc);
