@@ -14,6 +14,8 @@ type t = {
   textmateServicePath: string,
   [@key "bundledExtensions"]
   bundledExtensionsPath: string,
+  [@key "extensionHost"]
+  extensionHostPath: string,
   [@key "configuration"]
   configPath: string,
   [@key "keybindings"]
