@@ -70,6 +70,16 @@ let init = app => {
       (),
     );
 
+  let _ =
+    Event.subscribe(nvim.onClose, code =>
+      if (code === 0) {
+        App.quit(0);
+      } else {
+        ();
+          /* TODO: What to do in case Neovim crashes? */
+      }
+    );
+
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
 
@@ -117,6 +127,7 @@ let init = app => {
         App.dispatch(app, Model.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
+      dispatch: App.dispatch(app),
     });
 
     <Root state />;
@@ -174,29 +185,40 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  Model.Menu.addEffects({
+    openFile: neovimProtocol.openFile,
+    getCurrentDir: neovimProtocol.getCurrentDir,
+  })
   |> App.dispatch(app)
   |> ignore;
 
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    switch (Input.charToCommand(codepoint, mods)) {
-    | None => ()
-    | Some(v) =>
+  let keyEventListener = key =>
+    switch (key, Focus.focused) {
+    | (None, _) => ()
+    | (Some("<ESC>" as v), {contents: Some(_)}) =>
+      /**
+       If a Revery UI element is focused but <ESC> is hit this should
+       unfocus the element, this should probably eventually live in
+       Revery itself as default behaviour
+     */
+      Focus.loseFocus();
+      inputHandler(~state=App.getState(app), v)
+      |> List.iter(App.dispatch(app));
+    | (Some(_), {contents: Some(_)}) => ()
+    | (Some(v), {contents: None}) =>
       inputHandler(~state=App.getState(app), v)
       |> List.iter(App.dispatch(app))
-    }
+    };
+
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+    Input.charToCommand(codepoint, mods) |> keyEventListener
   );
 
   Reglfw.Glfw.glfwSetKeyCallback(
     w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
-    switch (Input.keyPressToCommand(key, buttonState, mods)) {
-    | None => ()
-    | Some(v) =>
-      inputHandler(~state=App.getState(app), v)
-      |> List.iter(App.dispatch(app))
-    }
+    Input.keyPressToCommand(key, buttonState, mods) |> keyEventListener
   );
 
   let _ =

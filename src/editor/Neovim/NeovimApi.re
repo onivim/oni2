@@ -32,7 +32,7 @@ type t = {
   onNotification: Event.t(notification),
 };
 
-exception RequestFailed;
+exception RequestFailed(string);
 
 let currentId = ref(0);
 
@@ -130,14 +130,14 @@ let make = (msgpack: MsgpackTransport.t) => {
       );
 
       if (List.length(getQueuedResponses()) == 0) {
-        prerr_endline(
+        let errorMessage =
           "Request timed out: "
           ++ methodName
           ++ " ("
           ++ string_of_int(requestId)
-          ++ ")",
-        );
-        raise(RequestFailed);
+          ++ ")";
+        prerr_endline(errorMessage);
+        raise(RequestFailed(errorMessage));
       };
 
       let matchingResponse =
