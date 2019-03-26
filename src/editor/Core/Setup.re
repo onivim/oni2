@@ -3,6 +3,7 @@
  *
  * Runtime configuration of dependencies
  */
+open Rench;
 
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
@@ -27,3 +28,7 @@ let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let init = () =>
   Revery.Environment.getExecutingDirectory() ++ "setup.json" |> ofFile;
+
+let getExtensionHostPath = (setup: t) => {
+    Path.join(setup.textmateServicePath, "node_modules/vscode-exthost/out/bootstrap-fork.js");
+};
