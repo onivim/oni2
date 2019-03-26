@@ -65,6 +65,9 @@ let stringContains = (word, substring) => {
   };
 };
 
+/**
+   Get a slice from a list between two indices
+ */
 let rec sublist = (beginning, terminus, l) =>
   switch (l) {
   | [] => failwith("sublist")
@@ -81,3 +84,8 @@ let rec sublist = (beginning, terminus, l) =>
       [h, ...tail];
     };
   };
+
+let escapeSpaces = str => {
+  let whitespace = Str.regexp(" ");
+  Str.global_replace(whitespace, "\\ ", str);
+};

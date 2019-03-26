@@ -5,6 +5,7 @@ let getPath = () =>
   Utility.(
     Revery.Environment.(
       join([getWorkingDirectory(), "assets", "ripgrep"])
+      |> escapeSpaces
       |> (
         grepDir =>
           switch (os) {
