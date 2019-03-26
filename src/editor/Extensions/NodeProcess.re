@@ -16,8 +16,8 @@ let start = (~args=[], setup: Setup.t, scriptPath: string) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
 
-  let args = [setup.nodePath, scriptPath, ...args])
-        | Array.of_list;
+  let args = [setup.nodePath, scriptPath, ...args]
+        |> Array.of_list;
 
   let pid =
     Unix.create_process_env(

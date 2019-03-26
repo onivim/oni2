@@ -5,26 +5,32 @@
  * 
  */
 
-module StartupInfo {
-    type t;
-}
-
 open Oni_Core;
+open Reason_jsonrpc;
 open Rench;
 
+type t = {
+   process: NodeProcess.t,
+   rpc: Rpc.t,
+}
+
 let getPathToExtensionHostScript = (setup: Setup.t) => {
-    Path.join(Setup.getExtensionHostPath(setup), "out/)
+    Path.join(Setup.getExtensionHostPath(setup), "out/bootstrap-fork.js");
 };
 
 let emptyJsonValue = `Assoc([]);
 
+type simpleCallback = unit => unit;
+let defaultCallback: simpleCallback = () => ();
+
 let start =
     (
+      ~onClosed=defaultCallback,
       setup: Setup.t,
     ) => {
 
-  let args = "[--type=extensionHost"];
-  let process = NodeProcess.start(~args, setup, getPathToExtensionHostScript(setup));;
+  let args = ["--type=extensionHost"];
+  let process = NodeProcess.start(~args, setup, getPathToExtensionHostScript(setup));
 
 
   let onNotification = (n: Notification.t, _) => {
@@ -43,4 +49,6 @@ let start =
       process.stdout,
       process.stdin,
     );
+
+  {process, rpc}
 };
