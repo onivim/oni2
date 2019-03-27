@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 open Reglfw.Glfw;
-open Reglfw.Glfw.Key;
+open Revery_Core;
 
 open CamomileLibraryDefault.Camomile;
 
@@ -23,6 +23,11 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   ret;
 };
 
+let isOniModifier = (~altKey, ~ctrlKey, ~superKey, ~key) => {
+  let enterPressed = "<CR>" == key;
+  ctrlKey || altKey || superKey || enterPressed;
+};
+
 let charToCommand = (codepoint: int, mods: Modifier.t) => {
   let char = Zed_utf8.singleton(UChar.of_int(codepoint));
 
@@ -32,58 +37,68 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 
   let key =
     keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
-  Some(key);
+  let shouldOniListen = isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key);
+  Some((key, shouldOniListen));
 };
 
 let keyPressToCommand =
-    (key: Key.t, buttonState: ButtonState.t, mods: Modifier.t) =>
-  if (buttonState == GLFW_PRESS || buttonState == GLFW_REPEAT) {
-    /* If ctrl is pressed, it's a non printable character, not handled by charMods - so we handle any character */
-    let key =
-      if (Modifier.isControlPressed(mods)) {
+    ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent) => {
+  let keyString =
+    ctrlKey
+      ? /**
+        TODO:
+        Revery's toString method returns lower case
+        characters which need to be capitalized. Instead we
+        should use ?derving show (we will need to format out the KEY_ prefix)
+        or convert the return values to uppercase
+       */
+        Some(Revery.Key.toString(key) |> String.capitalize_ascii)
+      : (
         switch (key) {
-        | _ => Some(Key.show(key))
-        };
-      } else {
-        switch (key) {
-        | GLFW_KEY_ESCAPE => Some("ESC")
-        | GLFW_KEY_TAB => Some("TAB")
-        | GLFW_KEY_ENTER => Some("CR")
-        | GLFW_KEY_BACKSPACE => Some("BS")
-        | GLFW_KEY_LEFT => Some("LEFT")
-        | GLFW_KEY_RIGHT => Some("RIGHT")
-        | GLFW_KEY_DOWN => Some("DOWN")
-        | GLFW_KEY_UP => Some("UP")
-        | GLFW_KEY_LEFT_SHIFT
-        | GLFW_KEY_RIGHT_SHIFT => Some("SHIFT")
+        | KEY_ESCAPE => Some("ESC")
+        | KEY_TAB => Some("TAB")
+        | KEY_ENTER => Some("CR")
+        | KEY_BACKSPACE => Some("BS")
+        | KEY_LEFT => Some("LEFT")
+        | KEY_RIGHT => Some("RIGHT")
+        | KEY_DOWN => Some("DOWN")
+        | KEY_UP => Some("UP")
+        | KEY_LEFT_SHIFT
+        | KEY_RIGHT_SHIFT => Some("SHIFT")
         | _ => None
-        };
-      };
+        }
+      );
+  switch (keyString) {
+  | None => None
+  | Some(k) =>
+    let keyPressString =
+      keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, k);
+    let shouldOniListen =
+      isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key=keyPressString);
 
-    switch (key) {
-    | None => None
-    | Some(v) =>
-      let altKey = Modifier.isAltPressed(mods);
-      let ctrlKey = Modifier.isControlPressed(mods);
-      let superKey = Modifier.isSuperPressed(mods);
-      let shiftKey = Modifier.isShiftPressed(mods);
-      let keyToSend =
-        keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, v);
-      Some(keyToSend);
-    };
-  } else {
-    None;
+    Some((keyPressString, shouldOniListen));
   };
+};
 
-let getActionsForBinding = (inputKey, commands, state: State.t) =>
+/**
+   Search if any of the matching "when" conditions in the Keybindings.json
+   match the current condition in state
+ */
+let matchesCondition = (conditions, currentMode, input, key) =>
+  List.fold_left(
+    (prevMatch, condition) => prevMatch || condition == currentMode,
+    false,
+    conditions,
+  )
+  |> (&&)(input == key);
+
+let getActionsForBinding =
+    (inputKey, commands, {inputControlMode, _}: State.t) =>
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        if (inputKey == key && condition == state.inputControlMode) {
-          Commands.handleCommand(command);
-        } else {
-          defaultAction;
-        },
+        matchesCondition(condition, inputControlMode, inputKey, key)
+          ? Commands.handleCommand(command) : defaultAction,
       [],
       commands,
     )
@@ -108,5 +123,6 @@ let handle =
       default;
     | actions => actions
     }
-  | _ => getActionsForBinding(inputKey, commands, state)
+  | TextInputFocus
+  | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };

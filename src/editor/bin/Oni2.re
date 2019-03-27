@@ -70,6 +70,16 @@ let init = app => {
       (),
     );
 
+  let _ =
+    Event.subscribe(nvim.onClose, code =>
+      if (code === 0) {
+        App.quit(0);
+      } else {
+        ();
+          /* TODO: What to do in case Neovim crashes? */
+      }
+    );
+
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
 
@@ -117,6 +127,7 @@ let init = app => {
         App.dispatch(app, Model.Actions.EditorScroll(deltaY)),
       openFile: neovimProtocol.openFile,
       closeFile: neovimProtocol.closeFile,
+      dispatch: App.dispatch(app),
     });
 
     <Root state />;
@@ -174,29 +185,38 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Model.CommandPalette.make(~effects={openFile: neovimProtocol.openFile})
+  Model.Menu.addEffects({
+    openFile: neovimProtocol.openFile,
+    getCurrentDir: neovimProtocol.getCurrentDir,
+  })
   |> App.dispatch(app)
   |> ignore;
 
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
 
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    switch (Input.charToCommand(codepoint, mods)) {
-    | None => ()
-    | Some(v) =>
-      inputHandler(~state=App.getState(app), v)
+  /**
+     The key handlers return (keyPressedString, shouldOniListen)
+     i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
+     /respond to commands otherwise if input is alphabetical AND
+     a revery element is focused oni2 should defer to revery
+   */
+  let keyEventListener = key =>
+    switch (key, Focus.focused) {
+    | (None, _) => ()
+    | (Some((k, true)), {contents: Some(_)})
+    | (Some((k, _)), {contents: None}) =>
+      inputHandler(~state=App.getState(app), k)
       |> List.iter(App.dispatch(app))
-    }
-  );
+    | (Some((_, false)), {contents: Some(_)}) => ()
+    };
 
-  Reglfw.Glfw.glfwSetKeyCallback(
-    w.glfwWindow, (_w, key, _scancode, buttonState, mods) =>
-    switch (Input.keyPressToCommand(key, buttonState, mods)) {
-    | None => ()
-    | Some(v) =>
-      inputHandler(~state=App.getState(app), v)
-      |> List.iter(App.dispatch(app))
-    }
+  Event.subscribe(w.onKeyDown, keyEvent =>
+    Input.keyPressToCommand(keyEvent) |> keyEventListener
+  )
+  |> ignore;
+
+  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+    Input.charToCommand(codepoint, mods) |> keyEventListener
   );
 
   let _ =

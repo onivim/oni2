@@ -21,7 +21,7 @@ let containerStyles = (~bg, ()) =>
 
 let iconStyles =
   Style.[
-    fontFamily("FontAwesome5FreeRegular.otf"),
+    fontFamily("FontAwesome5FreeSolid.otf"),
     fontSize(menuItemFontSize),
     marginRight(10),
   ];
