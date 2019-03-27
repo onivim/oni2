@@ -27,10 +27,12 @@ let defaultMessageHandler = (_, _) => Ok(None);
 
 let start =
     (
+      ~initData=ExtensionHostInitData.create(),
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
       setup: Setup.t,
     ) => {
+        print_endline ("got here");
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
@@ -38,16 +40,43 @@ let start =
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
 
+  let lastReqId = ref(0);
+  let rpcRef = ref(None);
+
+  let send = (msgType: int, msg: Yojson.Safe.json) => {
+      switch (rpcRef^) {
+      | None => prerr_endline ("RPC not initialized.");
+      | Some(v) => {
+          incr(lastReqId);
+          let reqId = lastReqId^;
+
+          let request = `Assoc([
+            ("type", `Int(msgType)),
+            ("reqId", `Int(reqId)),
+            ("payload", msg),
+          ]);
+
+          print_endline ("Sending request");
+          Rpc.sendNotification(v, "ext/msg", request);
+      }
+      };
+  };
+
   let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) => {
-    switch (onMessage(id, payload)) {
-    | Ok(None) => ()
-    | Ok(Some(_)) =>
-      /* TODO: Send response */
-      ()
-    | Error(_) =>
-      /* TODO: Send error */
-      ()
-    };
+    if (id == Protocol.MessageType.initialized) {
+        print_endline ("HANDLE MESSAGE");
+        send(Protocol.MessageType.initData, ExtensionHostInitData.to_yojson(initData));
+    } else {
+        switch (onMessage(id, payload)) {
+        | Ok(None) => ()
+        | Ok(Some(_)) =>
+          /* TODO: Send response */
+          ()
+        | Error(_) =>
+          /* TODO: Send error */
+          ()
+        };
+    }
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -69,8 +98,6 @@ let start =
 
   let onRequest = (_, _) => Ok(emptyJsonValue);
 
-  /* let send = */
-
   let rpc =
     Rpc.start(
       ~onNotification,
@@ -80,7 +107,9 @@ let start =
       process.stdin,
     );
 
-  {process, rpc};
+  rpcRef := Some(rpc);
+
+  {process, rpc };
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);

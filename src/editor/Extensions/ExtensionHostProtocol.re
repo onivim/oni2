@@ -10,6 +10,7 @@ module MessageType = {
   let ready = 1;
   let initData = 2;
   let terminate = 3;
+  let requestJsonArgs = 4;
 };
 
 module LogLevel = {
@@ -21,6 +22,7 @@ module LogLevel = {
   let critical = 5;
   let off = 6;
 };
+
 
 module Environment = {
   type t = {
