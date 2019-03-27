@@ -1,5 +1,5 @@
 module Index = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t =
     | ZeroBasedIndex(int)
     | OneBasedIndex(int);
@@ -18,7 +18,7 @@ module Index = {
 };
 
 module EditorSize = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     pixelWidth: int,
     pixelHeight: int,
@@ -59,7 +59,7 @@ module Mode = {
    * A buffer: represents a file
  */
 module Views = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t =
     | Window
     | Tab
@@ -69,7 +69,7 @@ module Views = {
     | Buffer
     | Tab;
 
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type viewOperation =
     (~path: string=?, ~id: int=?, ~openMethod: openMethod=?, unit) => unit;
 };
@@ -79,7 +79,7 @@ type openMethod =
   | Buffer;
 
 module BufferPosition = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -93,7 +93,7 @@ module BufferPosition = {
   };
 };
 
-[@deriving show]
+[@deriving show({with_path: false})]
 type buftype =
   | Empty
   | Help
@@ -117,7 +117,7 @@ let getBufType = bt =>
   };
 
 module BufferMetadata = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     filePath: option(string),
     fileType: option(string),
@@ -150,7 +150,7 @@ module BufferMetadata = {
 };
 
 module BufferNotification = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     bufferId: int,
     buffers: list(BufferMetadata.t),
@@ -158,7 +158,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type t = {
     id: int,
     startLine: int,
@@ -177,13 +177,13 @@ module BufferUpdate = {
 };
 
 module Tabline = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     tab: int,
     name: string,
   };
 
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type tabs = list(t);
 };
 
@@ -219,14 +219,14 @@ module UiFont = {
   let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
 };
 
-[@deriving show]
+[@deriving show({with_path: false})]
 type wildmenu = {
   items: list(string),
   show: bool,
   selected: int,
 };
 
-[@deriving show]
+[@deriving show({with_path: false})]
 type commandline = {
   content: string,
   firstC: string,
@@ -238,12 +238,15 @@ type commandline = {
 };
 
 module Input = {
-  [@deriving (show, yojson({strict: false, exn: false}))]
+  [@deriving
+    (show({with_path: false}), yojson({strict: false, exn: false}))
+  ]
   type controlMode =
     | [@name "menuFocus"] MenuFocus
+    | [@name "textInputFocus"] TextInputFocus
     | [@name "editorTextFocus"] EditorTextFocus;
 
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type keyBindings = {
     key: string,
     command: string,
@@ -251,7 +254,7 @@ module Input = {
 };
 
 module Effects = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     openFile: Views.viewOperation,
     getCurrentDir: unit => option(string),
@@ -259,13 +262,13 @@ module Effects = {
 };
 
 module UiMenu = {
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type menu =
     | QuickOpen
     | CommandPalette
     | Closed;
 
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type command = {
     name: string,
     command: unit => unit,
@@ -274,7 +277,7 @@ module UiMenu = {
 
   type commandFactory = Effects.t => list(command);
 
-  [@deriving show]
+  [@deriving show({with_path: false})]
   type t = {
     effects: option(Effects.t),
     searchQuery: string,

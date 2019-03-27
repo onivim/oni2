@@ -1,17 +1,17 @@
 open Types.Input;
 
-[@deriving (show, yojson({strict: false, exn: false}))]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type keyBindings = {
   key: string,
   command: string,
   [@key "when"]
-  condition: controlMode,
+  condition: list(controlMode),
 };
 
-[@deriving (show, yojson({strict: false, exn: false}))]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type t = list(keyBindings);
 
-[@deriving (show, yojson({strict: false, exn: false}))]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type json_keybindings = {bindings: t};
 
 let ofFile = filePath =>

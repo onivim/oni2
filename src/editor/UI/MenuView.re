@@ -40,8 +40,27 @@ let getIcon = icon =>
   | None => ""
   };
 
-let handleChange = ({value, _}: Input.changeEvent) =>
-  GlobalContext.current().dispatch(MenuSearch(value));
+let handleChange = (event: Input.changeEvent) =>
+  GlobalContext.current().dispatch(MenuSearch(event.value));
+
+let handleKeyDown = (event: NodeEvents.keyEventParams) =>
+  switch (event) {
+  | {key: Revery.Key.KEY_ESCAPE, _} =>
+    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
+  | _ => ()
+  };
+
+let loseFocusOnClose = isOpen =>
+  /**
+   TODO: revery-ui/revery#412 if the menu is hidden abruptly the element is not automatically unfocused
+   as revery is unaware the element is no longer in focus
+ */
+  (
+    switch (Focus.focused, isOpen) {
+    | ({contents: Some(_)}, false) => Focus.loseFocus()
+    | (_, _) => ()
+    }
+  );
 
 let createElement =
     (
@@ -51,8 +70,14 @@ let createElement =
       ~theme: Theme.t,
       (),
     ) =>
-  component(hooks =>
-    (
+  component(hooks => {
+    let hooks =
+      React.Hooks.effect(
+        Always,
+        () => Some(() => loseFocusOnClose(menu.isOpen)),
+        hooks,
+      );
+    React.(
       hooks,
       menu.isOpen
         ? <View style={containerStyles(theme)}>
@@ -63,6 +88,7 @@ let createElement =
                 cursorColor=Colors.white
                 style={inputStyles(font.fontFile)}
                 onChange=handleChange
+                onKeyDown=handleKeyDown
               />
             </View>
             <ScrollView style=Style.[height(menuHeight - 50)]>
@@ -80,5 +106,5 @@ let createElement =
             </ScrollView>
           </View>
         : React.listToElement([]),
-    )
-  );
+    );
+  });
