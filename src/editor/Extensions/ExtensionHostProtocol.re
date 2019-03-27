@@ -23,7 +23,6 @@ module LogLevel = {
   let off = 6;
 };
 
-
 module Environment = {
   type t = {
     /* isExtensionDevelopmentDebug: bool, */

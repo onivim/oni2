@@ -33,7 +33,7 @@ let start =
       ~onClosed=defaultCallback,
       setup: Setup.t,
     ) => {
-        print_endline ("got here");
+  print_endline("got here");
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
@@ -46,42 +46,44 @@ let start =
   let rpcRef = ref(None);
 
   let send = (msgType: int, msg: Yojson.Safe.json) => {
-      switch (rpcRef^) {
-      | None => prerr_endline ("RPC not initialized.");
-      | Some(v) => {
-          incr(lastReqId);
-          let reqId = lastReqId^;
+    switch (rpcRef^) {
+    | None => prerr_endline("RPC not initialized.")
+    | Some(v) =>
+      incr(lastReqId);
+      let reqId = lastReqId^;
 
-          let request = `Assoc([
-            ("type", `Int(msgType)),
-            ("reqId", `Int(reqId)),
-            ("payload", msg),
-          ]);
+      let request =
+        `Assoc([
+          ("type", `Int(msgType)),
+          ("reqId", `Int(reqId)),
+          ("payload", msg),
+        ]);
 
-          print_endline ("Sending request");
-          Rpc.sendNotification(v, "ext/msg", request);
-      }
-      };
+      print_endline("Sending request");
+      Rpc.sendNotification(v, "ext/msg", request);
+    };
   };
 
-  let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) => {
+  let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) =>
     if (id == Protocol.MessageType.ready) {
-        print_endline ("HANDLE MESSAGE");
-        send(Protocol.MessageType.initData, ExtensionHostInitData.to_yojson(initData));
-    } else if(id == Protocol.MessageType.initialized) {
-        onInitialized();
+      print_endline("HANDLE MESSAGE");
+      send(
+        Protocol.MessageType.initData,
+        ExtensionHostInitData.to_yojson(initData),
+      );
+    } else if (id == Protocol.MessageType.initialized) {
+      onInitialized();
     } else {
-        switch (onMessage(id, payload)) {
-        | Ok(None) => ()
-        | Ok(Some(_)) =>
-          /* TODO: Send response */
-          ()
-        | Error(_) =>
-          /* TODO: Send error */
-          ()
-        };
-    }
-  };
+      switch (onMessage(id, payload)) {
+      | Ok(None) => ()
+      | Ok(Some(_)) =>
+        /* TODO: Send response */
+        ()
+      | Error(_) =>
+        /* TODO: Send error */
+        ()
+      };
+    };
 
   let onNotification = (n: Notification.t, _) => {
     switch (n.method, n.params) {
@@ -112,7 +114,7 @@ let start =
 
   rpcRef := Some(rpc);
 
-  {process, rpc };
+  {process, rpc};
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);

@@ -4,7 +4,7 @@ open Oni_Extensions;
 
 open TestFramework;
 
-describe("Extension Client", ({test, _}) => {
+describe("Extension Client", ({test, _}) =>
   test("gets initialized message", ({expect}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
@@ -21,4 +21,4 @@ describe("Extension Client", ({test, _}) => {
       expect.bool(initialized^).toBe(true);
     })
   )
-});
+);
