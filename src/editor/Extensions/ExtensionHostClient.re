@@ -33,7 +33,6 @@ let start =
       ~onClosed=defaultCallback,
       setup: Setup.t,
     ) => {
-  print_endline("got here");
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
@@ -59,14 +58,12 @@ let start =
           ("payload", msg),
         ]);
 
-      print_endline("Sending request");
       Rpc.sendNotification(v, "ext/msg", request);
     };
   };
 
   let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) =>
     if (id == Protocol.MessageType.ready) {
-      print_endline("HANDLE MESSAGE");
       send(
         Protocol.MessageType.initData,
         ExtensionHostInitData.to_yojson(initData),
