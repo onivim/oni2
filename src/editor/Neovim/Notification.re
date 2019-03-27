@@ -194,23 +194,29 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
         M.Int(endLine),
         M.Int(endColumn),
         M.String(selectionMode),
-      ] => {
-
-        print_endline ("Selection: " ++ selectionMode 
-        ++ " start line: " ++ string_of_int(startLine)
-        ++ " start column: " ++ string_of_int(startColumn)
-        ++ " end line: " ++ string_of_int(endLine)
-        ++ " end column: " ++ string_of_int(endColumn)
-        );
-
-      let visualRange = VisualRange.create(
-        ~startLine,
-        ~startColumn,
-        ~endLine,
-        ~endColumn,
-        ~mode=selectionMode,
-        (),
+      ] =>
+      print_endline(
+        "Selection: "
+        ++ selectionMode
+        ++ " start line: "
+        ++ string_of_int(startLine)
+        ++ " start column: "
+        ++ string_of_int(startColumn)
+        ++ " end line: "
+        ++ string_of_int(endLine)
+        ++ " end column: "
+        ++ string_of_int(endColumn),
       );
+
+      let visualRange =
+        VisualRange.create(
+          ~startLine,
+          ~startColumn,
+          ~endLine,
+          ~endColumn,
+          ~mode=selectionMode,
+          (),
+        );
 
       Types.AutoCommandContext.create(
         ~activeBufferId,
@@ -218,12 +224,10 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
         ~cursorColumn=OneBasedIndex(cursorColumn),
         ~modified=modified == 1,
         ~visualRange,
-        ()
-      )
-    }
+        (),
+      );
     | _ => raise(InvalidAutoCommandContext)
     };
-
 
   switch (autocmd) {
   | "BufWritePost" => BufferWritePost(context)
