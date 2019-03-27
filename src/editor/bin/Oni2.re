@@ -104,8 +104,12 @@ let init = app => {
       grammars,
     );
 
-  /* print_endline ("starting exthost client"); */
-  /* let extHostClient = Extensions.ExtensionHostClient.start(setup); */
+  let onExtHostClosed = () => print_endline ("ext host closed");
+
+  let extHostClient = Extensions.ExtensionHostClient.start(
+      ~onClosed=onExtHostClosed,
+      setup
+      );
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
@@ -225,7 +229,7 @@ let init = app => {
       _ => {
         nvimApi.pump();
         Extensions.TextmateClient.pump(tmClient);
-        /* Extensions.ExtensionHostClient.pump(extHostClient); */
+        Extensions.ExtensionHostClient.pump(extHostClient);
       },
       Seconds(0.),
     );

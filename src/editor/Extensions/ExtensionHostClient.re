@@ -28,6 +28,7 @@ let defaultMessageHandler = (_, _) => Ok(None);
 let start =
     (
       ~initData=ExtensionHostInitData.create(),
+      ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
       setup: Setup.t,
@@ -36,6 +37,7 @@ let start =
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
+    "VSCODE_PARENT_PID=" ++ string_of_int(Unix.getpid()),
   ];
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
@@ -63,9 +65,11 @@ let start =
   };
 
   let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) => {
-    if (id == Protocol.MessageType.initialized) {
+    if (id == Protocol.MessageType.ready) {
         print_endline ("HANDLE MESSAGE");
         send(Protocol.MessageType.initData, ExtensionHostInitData.to_yojson(initData));
+    } else if(id == Protocol.MessageType.initialized) {
+        onInitialized();
     } else {
         switch (onMessage(id, payload)) {
         | Ok(None) => ()
@@ -83,7 +87,6 @@ let start =
     switch (n.method, n.params) {
     | ("host/msg", json) =>
       open Protocol.Notification;
-      print_endline("[Extension Host Client] Unknown message: " ++ n.method);
       print_endline("JSON: " ++ Yojson.Safe.to_string(json));
       let parsedMessage = Protocol.Notification.of_yojson(json);
       handleMessage(
