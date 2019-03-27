@@ -16,7 +16,6 @@ build: [
     "-config"
     "%{lib}%/findlib.conf"
     "-no-custom"
-    "-no-camlp4" {!ocaml:preinstalled & ocaml:version >= "4.02.0"}
     "-no-topfind" {ocaml:preinstalled}
   ]
   [make "all"]
@@ -38,7 +37,6 @@ remove: [
     man
     "-config"
     "%{lib}%/findlib.conf"
-    "-no-camlp4" {!ocaml:preinstalled & ocaml:version >= "4.02.0"}
     "-no-topfind" {ocaml:preinstalled}
   ]
   [make "uninstall"]
