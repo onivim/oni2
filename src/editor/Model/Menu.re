@@ -2,7 +2,9 @@ open Oni_Core;
 open Types;
 open UiMenu;
 
-let create = (~effects: option(Effects.t)=?, ()) => {
+type effectsT = Effects.t(Actions.t);
+
+let create = (~effects: option(effectsT)=?, ()) => {
   menu: Closed,
   searchQuery: "",
   isOpen: false,
@@ -11,15 +13,15 @@ let create = (~effects: option(Effects.t)=?, ()) => {
   effects,
 };
 
-let addEffects = (effects: Effects.t) =>
-  Actions.MenuRegisterEffects(effects);
+let addEffects = (effects: effectsT) => Actions.MenuRegisterEffects(effects);
 
 let position = (selectedItem, change, commands: list(command)) => {
   let nextIndex = selectedItem + change;
   nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
 };
 
-let addCommands = (factory: commandFactory, effects: option(Effects.t)) =>
+let addCommands =
+    (factory: commandFactory(Actions.t), effects: option(effectsT)) =>
   switch (effects) {
   | Some(e) => factory(e)
   | None => []
@@ -49,6 +51,11 @@ let reduce = (state, action: Actions.t) =>
         List.length(cmds) > 0
           ? {...state, isOpen: true, menu, commands: cmds} : state
     )
+  | MenuUpdate(cmds) => {
+      ...state,
+      isOpen: true,
+      commands: List.append(state.commands, cmds),
+    }
   | MenuClose => {...state, isOpen: false, menu: Closed, selectedItem: 0}
   | MenuSelect =>
     /**

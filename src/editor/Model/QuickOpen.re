@@ -2,23 +2,24 @@ open Oni_Core;
 open Types;
 open UiMenu;
 
-let content = (effects: Effects.t) =>
+let stringToCommand = (effects: Effects.t(Actions.t), str) => {
+  name: str,
+  command: () => effects.openFile(~path=str, ()),
+  icon: Some({||}),
+};
+
+let content = (effects: Effects.t(Actions.t)) =>
   effects.getCurrentDir()
   |> (
     fun
-    | Some(dir) => effects.ripgrep.search(dir)
+    | Some(dir) => {
+        effects.ripgrep.search(dir, items =>
+          items
+          |> List.filter(item => !Sys.is_directory(item))
+          |> List.map(stringToCommand(effects))
+          |> (content => effects.dispatch(MenuUpdate(content)) |> ignore)
+        );
+        [];
+      }
     | None => []
-  )
-  /*
-     In the future we might want to allow
-     functionality like switching to a directory on select
-     ...for now we filter out all directories
-   */
-  |> List.filter(item => !Sys.is_directory(item))
-  |> List.map(file =>
-       {
-         name: file,
-         command: () => effects.openFile(~path=file, ()),
-         icon: Some({||}),
-       }
-     );
+  );

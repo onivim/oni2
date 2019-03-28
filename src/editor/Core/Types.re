@@ -254,10 +254,16 @@ module Input = {
 };
 
 module Effects = {
+  /**
+     dispatch: takes an 'a as the Action type is not known within
+     this module so can only be specified at the point where this is
+     used
+   */
   [@deriving show({with_path: false})]
-  type t = {
+  type t('a) = {
     openFile: Views.viewOperation,
     getCurrentDir: unit => option(string),
+    dispatch: 'a => unit,
     ripgrep: Ripgrep.t,
   };
 };
@@ -276,11 +282,10 @@ module UiMenu = {
     icon: option(string),
   };
 
-  type commandFactory = Effects.t => list(command);
+  type commandFactory('a) = Effects.t('a) => list(command);
 
-  [@deriving show({with_path: false})]
-  type t = {
-    effects: option(Effects.t),
+  type t('a) = {
+    effects: option(Effects.t('a)),
     searchQuery: string,
     menu,
     isOpen: bool,
