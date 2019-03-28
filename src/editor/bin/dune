@@ -17,6 +17,7 @@
         Oni_Extensions
         Oni_Neovim
         Oni_UI
+        isolinear
             )
   (preprocess (
                pps
