@@ -40,41 +40,41 @@ module Environment = {
   };
 };
 
-
 module OutgoingNotifications = {
+  let _buildNotification = (scopeName, methodName, payload) => {
+    `List([`String(scopeName), `String(methodName), payload]);
+  };
 
-    let _buildNotification = (scopeName, methodName, payload) => {
-        `List([`String(scopeName), `String(methodName), payload]);
-    }
-   
-    module Configuration = {
+  module Configuration = {
+    let initializeConfiguration = () => {
+      _buildNotification(
+        "ExtHostConfiguration",
+        "$initializeConfiguration",
+        `List([`Assoc([])]),
+      );
+    };
+  };
 
-        let initializeConfiguration = () => {
-            _buildNotification("ExtHostConfiguration", "$initializeConfiguration", `List([`Assoc([])]));
-        };
+  module Workspace = {
+    [@deriving
+      (show({with_path: false}), yojson({strict: false, exn: true}))
+    ]
+    type workspaceInfo = {
+      id: string,
+      name: string,
+      folders: list(string),
     };
 
-    module  Workspace = {
+    let initializeWorkspace = (id: string, name: string) => {
+      let wsinfo = {id, name, folders: []};
 
-        [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
-        type workspaceInfo = {
-            id: string,
-            name: string,
-            folders: list(string),
-        };
-
-        let initializeWorkspace = (id: string, name: string) => {
-            let wsinfo = {
-                id,
-                name,
-                folders: [],
-            }; 
-
-            _buildNotification("ExtHostWorkspace", "$initializeWorkspace", `List([
-                workspaceInfo_to_yojson(wsinfo)
-            ]));
-        }
-    }
+      _buildNotification(
+        "ExtHostWorkspace",
+        "$initializeWorkspace",
+        `List([workspaceInfo_to_yojson(wsinfo)]),
+      );
+    };
+  };
 };
 
 module Notification = {
@@ -88,17 +88,17 @@ module Notification = {
 
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type ack = {
-      [@key "type"]
-      msgType: int,
-      reqId: int,
+    [@key "type"]
+    msgType: int,
+    reqId: int,
   };
 
-  type t = 
-  | Initialized
-  | Ready
-  | Request(requestOrReply)
-  | Reply(requestOrReply)
-  | Ack(ack);
+  type t =
+    | Initialized
+    | Ready
+    | Request(requestOrReply)
+    | Reply(requestOrReply)
+    | Ack(ack);
 
   let of_yojson = (json: Yojson.Safe.json) => {
     switch (json) {
@@ -111,10 +111,7 @@ module Notification = {
         reqId,
         payload,
       }
-    | `Assoc([
-        ("type", `Int(t)),
-        ("reqId", `Int(reqId)),
-      ]) => {
+    | `Assoc([("type", `Int(t)), ("reqId", `Int(reqId))]) => {
         msgType: t,
         reqId,
         payload: `Assoc([]),
@@ -129,25 +126,18 @@ module Notification = {
   };
 
   let parse = (json: Yojson.Safe.json) => {
-    switch(json) {
-    | `Assoc([("type", `Int(0)), ..._,]) => {
-        Initialized
-    }
-    | `Assoc([("type", `Int(1)), ..._,]) => {
-        Ready
-    }
-    | `Assoc([
-        ("type", `Int(4)), 
-        ..._, 
-    ]) => Request(of_yojson(json))
-    | `Assoc([
-        ("type", `Int(8)), 
-        ..._, 
-    ]) => Ack(ack_of_yojson_exn(json))
-    | `Assoc([("type", `Int(12)), ..._]) => {
-       Reply(of_yojson(json))
-    }
-    | _ => raise(NotificationParseException("Unknown message: "  ++ Yojson.Safe.to_string(json)))
+    switch (json) {
+    | `Assoc([("type", `Int(0)), ..._]) => Initialized
+    | `Assoc([("type", `Int(1)), ..._]) => Ready
+    | `Assoc([("type", `Int(4)), ..._]) => Request(of_yojson(json))
+    | `Assoc([("type", `Int(8)), ..._]) => Ack(ack_of_yojson_exn(json))
+    | `Assoc([("type", `Int(12)), ..._]) => Reply(of_yojson(json))
+    | _ =>
+      raise(
+        NotificationParseException(
+          "Unknown message: " ++ Yojson.Safe.to_string(json),
+        ),
+      )
     };
   };
 };

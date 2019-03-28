@@ -39,10 +39,12 @@ describe("Extension Client", ({test, _}) => {
     let gotDidActivateMessage = ref(false);
 
     let onMessage = (a, b, _c) => {
-      switch ((a, b)) {
-      | ("MainThreadExtensionService", "$onWillActivateExtension") => gotWillActivateMessage := true
-      | ("MainThreadExtensionService", "$onDidActivateExtension") => gotDidActivateMessage := true
-      | _ => ();
+      switch (a, b) {
+      | ("MainThreadExtensionService", "$onWillActivateExtension") =>
+        gotWillActivateMessage := true
+      | ("MainThreadExtensionService", "$onDidActivateExtension") =>
+        gotDidActivateMessage := true
+      | _ => ()
       };
 
       Ok(None);

@@ -68,38 +68,38 @@ let start =
   };
 
   let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
-      switch (payload) {
-      | `List([`String(scopeName), `String(methodName), args]) =>
-        let _ = onMessage(scopeName, methodName, args);
-        ();
-      | _ =>
-        print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
-      /* switch (onMessage(id, payload)) { */
-      /* | Ok(None) => () */
-      /* | Ok(Some(_)) => */
-      /*   /1* TODO: Send response *1/ */
-      /*   () */
-      /* | Error(_) => */
-      /*   /1* TODO: Send error *1/ */
-      /*   () */
-      /* }; */
+    switch (payload) {
+    | `List([`String(scopeName), `String(methodName), args]) =>
+      let _ = onMessage(scopeName, methodName, args);
+      ();
+    | _ =>
+      print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
+    /* switch (onMessage(id, payload)) { */
+    /* | Ok(None) => () */
+    /* | Ok(Some(_)) => */
+    /*   /1* TODO: Send response *1/ */
+    /*   () */
+    /* | Error(_) => */
+    /*   /1* TODO: Send error *1/ */
+    /*   () */
+    /* }; */
     };
 
   let _sendInitData = () => {
-      send(
-        ~msgType=Protocol.MessageType.initData,
-        ExtensionHostInitData.to_yojson(initData),
-      );
+    send(
+      ~msgType=Protocol.MessageType.initData,
+      ExtensionHostInitData.to_yojson(initData),
+    );
   };
 
   let _handleInitialization = () => {
-      onInitialized();
-      /* Send workspace and configuration info to get the extensions started */
-      open ExtensionHostProtocol.OutgoingNotifications;
+    onInitialized();
+    /* Send workspace and configuration info to get the extensions started */
+    open ExtensionHostProtocol.OutgoingNotifications;
 
-      Configuration.initializeConfiguration() |> send;
-      Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-      |> send;
+    Configuration.initializeConfiguration() |> send;
+    Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
+    |> send;
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -111,8 +111,8 @@ let start =
       | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
       | Ack(_) => ()
-      | Ready => _sendInitData();
-      | Initialized => _handleInitialization();
+      | Ready => _sendInitData()
+      | Initialized => _handleInitialization()
       };
 
     | _ =>
