@@ -11,6 +11,13 @@ module ExtensionKind = {
     | [@name "workspace"] Workspace;
 };
 
+module Engine = {
+   [@deriving (show, yojson({strict: false, exn: true}))]
+   type t = {
+        vscode: string,
+   }
+}
+
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
   name: string,
@@ -20,6 +27,7 @@ type t = {
   icon: [@default None] option(string),
   categories: [@default []] list(string),
   keywords: [@default []] list(string),
+  engines: Engine.t,
   activationEvents: [@default []] list(string),
   extensionDependencies: [@default []] list(string),
   extensionPack: [@default []] list(string),
