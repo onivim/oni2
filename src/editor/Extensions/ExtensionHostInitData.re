@@ -52,7 +52,7 @@ module ExtensionInfo = {
            extensionDependencies: manifest.extensionDependencies,
            extensionKind: manifest.extensionKind,
            contributes: manifest.contributes,
-       }
+       };
   };
 };
 
