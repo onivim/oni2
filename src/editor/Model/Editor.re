@@ -19,7 +19,6 @@ type t = {
   cursorPosition: Position.t,
   lineHeight: float,
   characterWidth: float,
-
   selection: VisualRange.t,
 };
 

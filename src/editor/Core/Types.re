@@ -177,18 +177,25 @@ module BufferUpdate = {
 };
 
 module Range = {
-    [@deriving show({with_path: false})]
-    type t = {
-       startPos: Position.t,
-       endPos: Position.t,
-    };
+  [@deriving show({with_path: false})]
+  type t = {
+    startPos: Position.t,
+    endPos: Position.t,
+  };
 
-    let create = (~startLine: Index.t, ~startColumn: Index.t, ~endLine: Index.t, ~endColumn: Index.t, ()) => {
-        let startPos = Position.create(startLine, startColumn);    
-        let endPos = Position.create(endLine, endColumn);
+  let create =
+      (
+        ~startLine: Index.t,
+        ~startColumn: Index.t,
+        ~endLine: Index.t,
+        ~endColumn: Index.t,
+        (),
+      ) => {
+    let startPos = Position.create(startLine, startColumn);
+    let endPos = Position.create(endLine, endColumn);
 
-        { startPos, endPos };
-    };
+    {startPos, endPos};
+  };
 };
 
 module Tabline = {
@@ -340,24 +347,22 @@ module VisualRange = {
       (startLine, startColumn, endLine, endColumn);
     };
 
-  let create = (~startLine=1, ~startColumn=1, ~endLine=1, ~endColumn=1, ~mode="", ()) => {
+  let create =
+      (~startLine=1, ~startColumn=1, ~endLine=1, ~endColumn=1, ~mode="", ()) => {
     let (startLine, startColumn, endLine, endColumn) =
       _normalizeRange(startLine, startColumn, endLine, endColumn);
 
-    let range = Range.create(
-       ~startLine=OneBasedIndex(startLine),
-       ~startColumn=OneBasedIndex(startColumn),
-       ~endLine=OneBasedIndex(endLine),
-       ~endColumn=OneBasedIndex(endColumn),
-       (),
-    );
+    let range =
+      Range.create(
+        ~startLine=OneBasedIndex(startLine),
+        ~startColumn=OneBasedIndex(startColumn),
+        ~endLine=OneBasedIndex(endLine),
+        ~endColumn=OneBasedIndex(endColumn),
+        (),
+      );
 
     let mode = _modeFromString(mode);
 
-    {
-      range,
-      mode,
-    };
+    {range, mode};
   };
 };
-

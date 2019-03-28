@@ -346,29 +346,39 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
               /* Draw selection ranges */
               switch (activeBuffer) {
-              | Some(b) =>   {let ranges = Selection.getRangesForBuffer(state.editor.selection, b);
-
-                open Oni_Core.Types.Range;
-
-                  List.iter((r: Range.t) => {
-                  Shapes.drawRect(
-                    ~transform,
-                    ~x=lineNumberWidth +. float_of_int(Index.toZeroBasedInt(r.startPos.character)) *. fontWidth,
-                    ~y=
-                      fontHeight
-                      *. float_of_int(
-                           Index.toZeroBasedInt(r.startPos.line),
-                         )
-                      -. state.editor.scrollY,
-                    ~height=fontHeight,
-                    ~width= float_of_int(Index.toZeroBasedInt(r.endPos.character) - Index.toZeroBasedInt(r.startPos.character)) *. fontWidth,
-                    ~color=theme.colors.editorLineHighlightBackground,
-                    (),
-                  );
-                    
-                  }, ranges);
-              }
-              | None => ();
+              | Some(b) =>
+                let ranges = Selection.getRanges(state.editor.selection, b);
+                Oni_Core.Types.Range.(
+                  List.iter(
+                    (r: Range.t) =>
+                      Shapes.drawRect(
+                        ~transform,
+                        ~x=
+                          lineNumberWidth
+                          +. float_of_int(
+                               Index.toZeroBasedInt(r.startPos.character),
+                             )
+                          *. fontWidth,
+                        ~y=
+                          fontHeight
+                          *. float_of_int(
+                               Index.toZeroBasedInt(r.startPos.line),
+                             )
+                          -. state.editor.scrollY,
+                        ~height=fontHeight,
+                        ~width=
+                          float_of_int(
+                            Index.toZeroBasedInt(r.endPos.character)
+                            - Index.toZeroBasedInt(r.startPos.character),
+                          )
+                          *. fontWidth,
+                        ~color=theme.colors.editorLineHighlightBackground,
+                        (),
+                      ),
+                    ranges,
+                  )
+                );
+              | None => ()
               };
 
               FlatList.render(
