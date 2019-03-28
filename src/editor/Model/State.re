@@ -33,7 +33,6 @@ type t = {
   theme: Theme.t,
   editor: Editor.t,
   inputControlMode: Input.controlMode,
-  selection: VisualRange.t,
 };
 
 let create: unit => t =
@@ -59,5 +58,4 @@ let create: unit => t =
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,
-    selection: VisualRange.create(),
   };

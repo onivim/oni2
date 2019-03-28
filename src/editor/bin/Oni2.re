@@ -268,7 +268,7 @@ let init = app => {
           | ModeChanged(_) => ChangeMode(Other)
           | CursorMoved(c) =>
             CursorMove(
-              Core.Types.BufferPosition.create(c.cursorLine, c.cursorColumn),
+              Core.Types.Position.create(c.cursorLine, c.cursorColumn),
             )
           | BufferWritePost({activeBufferId, _}) =>
             BufferWritePost({

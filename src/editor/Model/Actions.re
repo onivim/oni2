@@ -16,7 +16,7 @@ type t =
   | TextChanged(TextChanged.t)
   | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
-  | CursorMove(BufferPosition.t)
+  | CursorMove(Position.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
   | RecalculateEditorView
