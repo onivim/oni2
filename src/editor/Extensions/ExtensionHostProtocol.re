@@ -86,12 +86,16 @@ module Notification = {
     payload: Yojson.Safe.json,
   };
 
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type ack = {
+      [@key "type"]
       msgType: int,
       reqId: int,
   };
 
   type t = 
+  | Initialized
+  | Ready
   | Request(requestOrReply)
   | Reply(requestOrReply)
   | Ack(ack);
@@ -107,6 +111,14 @@ module Notification = {
         reqId,
         payload,
       }
+    | `Assoc([
+        ("type", `Int(t)),
+        ("reqId", `Int(reqId)),
+      ]) => {
+        msgType: t,
+        reqId,
+        payload: `Assoc([]),
+      }
     | _ =>
       raise(
         NotificationParseException(
@@ -118,14 +130,24 @@ module Notification = {
 
   let parse = (json: Yojson.Safe.json) => {
     switch(json) {
-    | `Assoc([("type", MessageType.replyOkJson), ..._]) => {
+    | `Assoc([("type", `Int(0)), ..._,]) => {
+        Initialized
+    }
+    | `Assoc([("type", `Int(1)), ..._,]) => {
+        Ready
+    }
+    | `Assoc([
+        ("type", `Int(4)), 
+        ..._, 
+    ]) => Request(of_yojson(json))
+    | `Assoc([
+        ("type", `Int(8)), 
+        ..._, 
+    ]) => Ack(ack_of_yojson_exn(json))
+    | `Assoc([("type", `Int(12)), ..._]) => {
        Reply(of_yojson(json))
     }
-    | `Assoc([("type", MessageType.requestJsonArgs), ..._]) => {
-       Request(of_yojson(json))
-    }
-    | `Assoc([("type", MessageType.ack), ..._]) => Ack(ack_of_yojson(json));
-    | _ => raise(NotificationParseException("Unknown message: " ++ Yojson.Safe.to_string(json)))
+    | _ => raise(NotificationParseException("Unknown message: "  ++ Yojson.Safe.to_string(json)))
     };
   };
 };

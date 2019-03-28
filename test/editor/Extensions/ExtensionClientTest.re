@@ -35,12 +35,17 @@ describe("Extension Client", ({test, _}) => {
            ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext)
          );
 
-    let gotMessage = ref(false);
+    let gotWillActivateMessage = ref(false);
+    let gotDidActivateMessage = ref(false);
 
     let onMessage = (a, b, _c) => {
-      gotMessage := true;
-      print_endline("ONMESSAGE: " ++ a ++ b);
-      Error("derp");
+      switch ((a, b)) {
+      | ("MainThreadExtensionService", "$onWillActivateExtension") => gotWillActivateMessage := true
+      | ("MainThreadExtensionService", "$onDidActivateExtension") => gotDidActivateMessage := true
+      | _ => ();
+      };
+
+      Ok(None);
     };
 
     let initData = ExtensionHostInitData.create(~extensions, ());
@@ -49,9 +54,12 @@ describe("Extension Client", ({test, _}) => {
 
     Oni_Core.Utility.waitForCondition(() => {
       ExtensionHostClient.pump(extClient);
-      gotMessage^;
+      gotWillActivateMessage^;
     });
 
-    failwith("derp");
+    Oni_Core.Utility.waitForCondition(() => {
+      ExtensionHostClient.pump(extClient);
+      gotDidActivateMessage^;
+    });
   });
 });

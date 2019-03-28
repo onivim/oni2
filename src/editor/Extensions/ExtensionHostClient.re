@@ -67,21 +67,7 @@ let start =
     };
   };
 
-  let handleMessage = (msgType: int, _reqId: int, payload: Yojson.Safe.json) =>
-    if (msgType == Protocol.MessageType.ready) {
-      send(
-        ~msgType=Protocol.MessageType.initData,
-        ExtensionHostInitData.to_yojson(initData),
-      );
-    } else if (msgType == Protocol.MessageType.initialized) {
-      onInitialized();
-      /* Send workspace and configuration info to get the extensions started */
-      open ExtensionHostProtocol.OutgoingNotifications;
-
-      Configuration.initializeConfiguration() |> send;
-      Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-      |> send;
-    } else {
+  let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
       switch (payload) {
       | `List([`String(scopeName), `String(methodName), args]) =>
         let _ = onMessage(scopeName, methodName, args);
@@ -97,8 +83,24 @@ let start =
       /*   /1* TODO: Send error *1/ */
       /*   () */
       /* }; */
-      };
     };
+
+  let _sendInitData = () => {
+      send(
+        ~msgType=Protocol.MessageType.initData,
+        ExtensionHostInitData.to_yojson(initData),
+      );
+  };
+
+  let _handleInitialization = () => {
+      onInitialized();
+      /* Send workspace and configuration info to get the extensions started */
+      open ExtensionHostProtocol.OutgoingNotifications;
+
+      Configuration.initializeConfiguration() |> send;
+      Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
+      |> send;
+  };
 
   let onNotification = (n: Notification.t, _) => {
     switch (n.method, n.params) {
@@ -106,10 +108,11 @@ let start =
       open Protocol.Notification;
       print_endline("JSON: " ++ Yojson.Safe.to_string(json));
       switch (parse(json)) {
-      | Request(req) => handleMessage(req.msgType, req.reqId, req.payload)
+      | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
       | Ack(_) => ()
-      | _ => ()
+      | Ready => _sendInitData();
+      | Initialized => _handleInitialization();
       };
 
     | _ =>
