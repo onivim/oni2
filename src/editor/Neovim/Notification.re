@@ -209,7 +209,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
       );
 
       let visualRange =
-        VisualRange.create(
+        Core.Types.VisualRange.create(
           ~startLine,
           ~startColumn,
           ~endLine,
