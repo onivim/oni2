@@ -46,7 +46,7 @@ module ExtensionInfo = {
            extensionLocationPath: path,
            name: manifest.name,
            /* publisher: manifest.publisher, */
-           /* version: manifest.version, */
+           version: manifest.version,
            engines: manifest.engines,
            activationEvents: manifest.activationEvents,
            extensionDependencies: manifest.extensionDependencies,
@@ -82,7 +82,7 @@ type t = {
 
 let create =
     (
-      ~parentPid=Unix.getpid(),
+      ~parentPid=Rench.Process.pid(),
       ~extensions=[],
       ~environment=Environment.create(),
       ~logsLocationPath=Filesystem.unsafeFindHome(),

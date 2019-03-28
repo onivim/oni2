@@ -21,6 +21,7 @@ module Engine = {
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
   name: string,
+  version: string,
   displayName: [@default None] option(string),
   description: [@default None] option(string),
   main: [@default None] option(string),
