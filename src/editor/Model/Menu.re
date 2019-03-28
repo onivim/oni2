@@ -51,8 +51,8 @@ let reduce = (state, action: Actions.t) =>
     addCommands(commands, state.effects)
     |> (
       cmds =>
-        List.length(cmds) > 0 ?
-          {...state, isOpen: true, menuType, commands: cmds} : state
+        List.length(cmds) > 0
+          ? {...state, isOpen: true, menuType, commands: cmds} : state
     )
   | MenuUpdate(update) => {
       ...state,
