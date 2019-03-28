@@ -5,6 +5,8 @@
  * and activating the extension host
  */
 
+open Rench;
+
 open Oni_Core;
 open ExtensionManifest;
 open ExtensionScanner;
@@ -80,7 +82,7 @@ type t = {
 
 let create =
     (
-      ~parentPid=Rench.Process.pid(),
+      ~parentPid=Process.pid(),
       ~extensions=[],
       ~environment=Environment.create(),
       ~logsLocationPath=Filesystem.unsafeFindHome(),

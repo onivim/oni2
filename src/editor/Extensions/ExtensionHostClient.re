@@ -7,6 +7,7 @@
 
 open Oni_Core;
 open Reason_jsonrpc;
+open Rench;
 /* open Revery; */
 
 module Protocol = ExtensionHostProtocol;
@@ -37,7 +38,7 @@ let start =
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
-    "VSCODE_PARENT_PID=" ++ string_of_int(Unix.getpid()),
+    "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
