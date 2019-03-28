@@ -104,7 +104,10 @@ let init = app => {
       grammars,
     );
 
-  let extHostClient = Extensions.ExtensionHostClient.start(setup);
+  let onExtHostClosed = () => print_endline("ext host closed");
+
+  let extHostClient =
+    Extensions.ExtensionHostClient.start(~onClosed=onExtHostClosed, setup);
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 

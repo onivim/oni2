@@ -28,6 +28,8 @@ let mkdir: (string, ~perm: int=?, unit) => t(unit);
 
 let rmdir: string => t(unit);
 
+let unsafeFindHome: unit => string;
+
 let getOniDirectory: string => t(string);
 
 let createOniConfigFile: string => t(string);

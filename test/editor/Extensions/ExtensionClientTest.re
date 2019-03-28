@@ -5,28 +5,20 @@ open Oni_Extensions;
 open TestFramework;
 
 describe("Extension Client", ({test, _}) =>
-  test("receive init message", ({expect}) =>
+  test("gets initialized message", ({expect}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
 
-      let gotReadyMessage = ref(false);
+      let initialized = ref(false);
 
-      let onClosed = () => ();
-      let onMessage = (id, _) => {
-        if (id === ExtensionHostClient.Protocol.MessageType.ready) {
-          gotReadyMessage := true;
-        };
-
-        Ok(None);
-      };
-
-      let extClient = ExtensionHostClient.start(~onClosed, ~onMessage, setup);
+      let onInitialized = () => initialized := true;
+      let extClient = ExtensionHostClient.start(~onInitialized, setup);
 
       Oni_Core.Utility.waitForCondition(() => {
         ExtensionHostClient.pump(extClient);
-        gotReadyMessage^;
+        initialized^;
       });
-      expect.bool(gotReadyMessage^).toBe(true);
+      expect.bool(initialized^).toBe(true);
     })
   )
 );

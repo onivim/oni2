@@ -9,6 +9,8 @@ open Oni_Core;
 open Reason_jsonrpc;
 /* open Revery; */
 
+module Protocol = ExtensionHostProtocol;
+
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
@@ -19,90 +21,14 @@ let emptyJsonValue = `Assoc([]);
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
-module Protocol = {
-  module MessageType = {
-    let initialized = 0;
-    let ready = 1;
-    let initData = 2;
-    let terminate = 3;
-  };
-
-  module LogLevel = {
-    let trace = 0;
-    let debug = 1;
-    let info = 2;
-    let warning = 3;
-    let error = 4;
-    let critical = 5;
-    let off = 6;
-  };
-
-  module Environment = {
-    type t = {
-      /* isExtensionDevelopmentDebug: bool, */
-      appRootPath: string,
-      appSettingsHomePath: string,
-      /* extensionDevelopmentLocationPath: string, */
-      /* extensionTestsLocationPath: string, */
-      globalStorageHomePath: string,
-    };
-
-    let create =
-        (~appRootPath, ~appSettingsHomePath, ~globalStorageHomePath, ()) => {
-      appRootPath,
-      appSettingsHomePath,
-      globalStorageHomePath,
-    };
-  };
-
-  /*     module InitData { */
-  /*         [@deriving (show, yojson({strict: false, exn: true}))] */
-  /*         type t = { */
-  /*             parentPid: int, */
-  /*             environment: Environment.t, */
-  /*             logLevel: int, */
-  /*             logsLocationPath: string, */
-  /*             autoStart: bool, */
-  /*         }; */
-  /*     }; */
-
-  module Notification = {
-    exception NotificationParseException(string);
-
-    type t = {
-      msgType: int,
-      reqId: int,
-      payload: Yojson.Safe.json,
-    };
-
-    let of_yojson = (json: Yojson.Safe.json) => {
-      switch (json) {
-      | `Assoc([
-          ("type", `Int(t)),
-          ("reqId", `Int(reqId)),
-          ("payload", payload),
-        ]) => {
-          msgType: t,
-          reqId,
-          payload,
-        }
-      | _ =>
-        raise(
-          NotificationParseException(
-            "Unable to parse: " ++ Yojson.Safe.to_string(json),
-          ),
-        )
-      };
-    };
-  };
-};
-
 type messageHandler =
   (int, Yojson.Safe.json) => result(option(Yojson.Safe.json), string);
 let defaultMessageHandler = (_, _) => Ok(None);
 
 let start =
     (
+      ~initData=ExtensionHostInitData.create(),
+      ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
       setup: Setup.t,
@@ -110,27 +36,56 @@ let start =
   let args = ["--type=extensionHost"];
   let env = [
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
+    "VSCODE_PARENT_PID=" ++ string_of_int(Unix.getpid()),
   ];
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
 
-  let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) => {
-    switch (onMessage(id, payload)) {
-    | Ok(None) => ()
-    | Ok(Some(_)) =>
-      /* TODO: Send response */
-      ()
-    | Error(_) =>
-      /* TODO: Send error */
-      ()
+  let lastReqId = ref(0);
+  let rpcRef = ref(None);
+
+  let send = (msgType: int, msg: Yojson.Safe.json) => {
+    switch (rpcRef^) {
+    | None => prerr_endline("RPC not initialized.")
+    | Some(v) =>
+      incr(lastReqId);
+      let reqId = lastReqId^;
+
+      let request =
+        `Assoc([
+          ("type", `Int(msgType)),
+          ("reqId", `Int(reqId)),
+          ("payload", msg),
+        ]);
+
+      Rpc.sendNotification(v, "ext/msg", request);
     };
   };
+
+  let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) =>
+    if (id == Protocol.MessageType.ready) {
+      send(
+        Protocol.MessageType.initData,
+        ExtensionHostInitData.to_yojson(initData),
+      );
+    } else if (id == Protocol.MessageType.initialized) {
+      onInitialized();
+    } else {
+      switch (onMessage(id, payload)) {
+      | Ok(None) => ()
+      | Ok(Some(_)) =>
+        /* TODO: Send response */
+        ()
+      | Error(_) =>
+        /* TODO: Send error */
+        ()
+      };
+    };
 
   let onNotification = (n: Notification.t, _) => {
     switch (n.method, n.params) {
     | ("host/msg", json) =>
       open Protocol.Notification;
-      print_endline("[Extension Host Client] Unknown message: " ++ n.method);
       print_endline("JSON: " ++ Yojson.Safe.to_string(json));
       let parsedMessage = Protocol.Notification.of_yojson(json);
       handleMessage(
@@ -145,8 +100,6 @@ let start =
 
   let onRequest = (_, _) => Ok(emptyJsonValue);
 
-  /* let send = */
-
   let rpc =
     Rpc.start(
       ~onNotification,
@@ -155,6 +108,8 @@ let start =
       process.stdout,
       process.stdin,
     );
+
+  rpcRef := Some(rpc);
 
   {process, rpc};
 };
