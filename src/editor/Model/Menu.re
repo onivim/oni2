@@ -5,7 +5,7 @@ open UiMenu;
 type effectsT = Effects.t(Actions.t);
 
 let create = (~effects: option(effectsT)=?, ()) => {
-  menu: Closed,
+  menuType: Closed,
   searchQuery: "",
   isOpen: false,
   commands: [],
@@ -27,6 +27,9 @@ let addCommands =
   | None => []
   };
 
+let updateMenuCommands = ((mType, commands), state: UiMenu.t(Actions.t)) =>
+  mType == state.menuType ? List.append(state.commands, commands) : commands;
+
 let reduce = (state, action: Actions.t) =>
   switch (action) {
   | MenuRegisterEffects(effects) => {...state, effects: Some(effects)}
@@ -39,7 +42,7 @@ let reduce = (state, action: Actions.t) =>
       searchQuery: query,
       commands: Filter.menu(query, state.commands),
     }
-  | MenuOpen((menu, commands)) =>
+  | MenuOpen((menuType, commands)) =>
     /**
      If the command factory for a module trying to open a menu returns
      0 options/commands for the menu do not open an empty menu.
@@ -48,15 +51,15 @@ let reduce = (state, action: Actions.t) =>
     addCommands(commands, state.effects)
     |> (
       cmds =>
-        List.length(cmds) > 0
-          ? {...state, isOpen: true, menu, commands: cmds} : state
+        List.length(cmds) > 0 ?
+          {...state, isOpen: true, menuType, commands: cmds} : state
     )
-  | MenuUpdate(cmds) => {
+  | MenuUpdate(update) => {
       ...state,
       isOpen: true,
-      commands: List.append(state.commands, cmds),
+      commands: updateMenuCommands(update, state),
     }
-  | MenuClose => {...state, isOpen: false, menu: Closed, selectedItem: 0}
+  | MenuClose => {...state, isOpen: false, menuType: Closed, selectedItem: 0}
   | MenuSelect =>
     /**
       TODO: Refactor this to middleware so this action is handled like a redux side-effect
@@ -64,6 +67,6 @@ let reduce = (state, action: Actions.t) =>
      */
     List.nth(state.commands, state.selectedItem)
     |> (selected => selected.command());
-    {...state, isOpen: false, menu: Closed};
+    {...state, isOpen: false, menuType: Closed};
   | _ => state
   };

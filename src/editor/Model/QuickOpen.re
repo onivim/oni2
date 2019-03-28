@@ -17,7 +17,8 @@ let content = (effects: Effects.t(Actions.t)) =>
           items
           |> List.filter(item => !Sys.is_directory(item))
           |> List.map(stringToCommand(effects))
-          |> (content => effects.dispatch(MenuUpdate(content)) |> ignore)
+          |> (content => effects.dispatch(MenuUpdate((QuickOpen, content))))
+          |> ignore
         );
         [];
       }

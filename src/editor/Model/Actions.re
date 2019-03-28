@@ -37,11 +37,11 @@ type t =
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuRegisterEffects(Effects.t(t))
   | MenuSearch(string)
-  | MenuOpen((UiMenu.menu, UiMenu.commandFactory(t)))
+  | MenuOpen((UiMenu.menuType, UiMenu.commandFactory(t)))
   | MenuClose
   | MenuSelect
   | MenuPosition(int)
-  | MenuUpdate(list(UiMenu.command))
+  | MenuUpdate((UiMenu.menuType, list(UiMenu.command)))
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
