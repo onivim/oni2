@@ -4,7 +4,7 @@ open Oni_Extensions;
 
 open TestFramework;
 
-describe("Extension Client", ({test, _}) =>
+describe("Extension Client", ({test, _}) => {
   test("gets initialized message", ({expect}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
@@ -20,5 +20,38 @@ describe("Extension Client", ({test, _}) =>
       });
       expect.bool(initialized^).toBe(true);
     })
-  )
-);
+  );
+
+  test("basic extension activation", _ => {
+    let setup = Setup.init();
+
+    let rootPath = Rench.Environment.getWorkingDirectory();
+    let testExtensionsPath =
+      Rench.Path.join(rootPath, "test/test_extensions");
+
+    let extensions =
+      ExtensionScanner.scan(testExtensionsPath)
+      |> List.map(ext =>
+           ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext)
+         );
+
+    let gotMessage = ref(false);
+
+    let onMessage = (a, b, _c) => {
+      gotMessage := true;
+      print_endline("ONMESSAGE: " ++ a ++ b);
+      Error("derp");
+    };
+
+    let initData = ExtensionHostInitData.create(~extensions, ());
+
+    let extClient = ExtensionHostClient.start(~initData, ~onMessage, setup);
+
+    Oni_Core.Utility.waitForCondition(() => {
+      ExtensionHostClient.pump(extClient);
+      gotMessage^;
+    });
+
+    failwith("derp");
+  });
+});

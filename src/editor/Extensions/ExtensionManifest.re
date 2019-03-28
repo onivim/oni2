@@ -12,11 +12,9 @@ module ExtensionKind = {
 };
 
 module Engine = {
-   [@deriving (show, yojson({strict: false, exn: true}))]
-   type t = {
-        vscode: string,
-   }
-}
+  [@deriving (show, yojson({strict: false, exn: true}))]
+  type t = {vscode: string};
+};
 
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {

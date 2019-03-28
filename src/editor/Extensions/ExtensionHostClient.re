@@ -22,8 +22,9 @@ type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type messageHandler =
-  (int, Yojson.Safe.json) => result(option(Yojson.Safe.json), string);
-let defaultMessageHandler = (_, _) => Ok(None);
+  (string, string, Yojson.Safe.json) =>
+  result(option(Yojson.Safe.json), string);
+let defaultMessageHandler = (_, _, _) => Ok(None);
 
 let start =
     (
@@ -44,7 +45,11 @@ let start =
   let lastReqId = ref(0);
   let rpcRef = ref(None);
 
-  let send = (msgType: int, msg: Yojson.Safe.json) => {
+  let send =
+      (
+        ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
+        msg: Yojson.Safe.json,
+      ) => {
     switch (rpcRef^) {
     | None => prerr_endline("RPC not initialized.")
     | Some(v) =>
@@ -62,23 +67,36 @@ let start =
     };
   };
 
-  let handleMessage = (id: int, _reqId: int, payload: Yojson.Safe.json) =>
-    if (id == Protocol.MessageType.ready) {
+  let handleMessage = (msgType: int, _reqId: int, payload: Yojson.Safe.json) =>
+    if (msgType == Protocol.MessageType.ready) {
       send(
-        Protocol.MessageType.initData,
+        ~msgType=Protocol.MessageType.initData,
         ExtensionHostInitData.to_yojson(initData),
       );
-    } else if (id == Protocol.MessageType.initialized) {
+    } else if (msgType == Protocol.MessageType.initialized) {
       onInitialized();
+      /* Send workspace and configuration info to get the extensions started */
+      open ExtensionHostProtocol.OutgoingNotifications;
+
+      Configuration.initializeConfiguration() |> send;
+      Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
+      |> send;
     } else {
-      switch (onMessage(id, payload)) {
-      | Ok(None) => ()
-      | Ok(Some(_)) =>
-        /* TODO: Send response */
-        ()
-      | Error(_) =>
-        /* TODO: Send error */
-        ()
+      switch (payload) {
+      | `List([`String(scopeName), `String(methodName), args]) =>
+        let _ = onMessage(scopeName, methodName, args);
+        ();
+      | _ =>
+        print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
+      /* switch (onMessage(id, payload)) { */
+      /* | Ok(None) => () */
+      /* | Ok(Some(_)) => */
+      /*   /1* TODO: Send response *1/ */
+      /*   () */
+      /* | Error(_) => */
+      /*   /1* TODO: Send error *1/ */
+      /*   () */
+      /* }; */
       };
     };
 
@@ -87,12 +105,13 @@ let start =
     | ("host/msg", json) =>
       open Protocol.Notification;
       print_endline("JSON: " ++ Yojson.Safe.to_string(json));
-      let parsedMessage = Protocol.Notification.of_yojson(json);
-      handleMessage(
-        parsedMessage.msgType,
-        parsedMessage.reqId,
-        parsedMessage.payload,
-      );
+      switch (parse(json)) {
+      | Request(req) => handleMessage(req.msgType, req.reqId, req.payload)
+      | Reply(_) => ()
+      | Ack(_) => ()
+      | _ => ()
+      };
+
     | _ =>
       print_endline("[Extension Host Client] Unknown message: " ++ n.method)
     };
