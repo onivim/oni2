@@ -15,6 +15,7 @@ module Protocol = ExtensionHostProtocol;
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
+  send: (int, Yojson.Safe.json) => unit,
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -46,11 +47,7 @@ let start =
   let lastReqId = ref(0);
   let rpcRef = ref(None);
 
-  let send =
-      (
-        ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
-        msg: Yojson.Safe.json,
-      ) => {
+  let send = (msgType, msg: Yojson.Safe.json) => {
     switch (rpcRef^) {
     | None => prerr_endline("RPC not initialized.")
     | Some(v) =>
@@ -66,6 +63,10 @@ let start =
 
       Rpc.sendNotification(v, "ext/msg", request);
     };
+  };
+
+  let sendRequest = (msg: Yojson.Safe.json) => {
+    send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
   };
 
   let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
@@ -88,7 +89,7 @@ let start =
 
   let _sendInitData = () => {
     send(
-      ~msgType=Protocol.MessageType.initData,
+      Protocol.MessageType.initData,
       ExtensionHostInitData.to_yojson(initData),
     );
   };
@@ -98,9 +99,9 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtensionHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration() |> send;
+    Configuration.initializeConfiguration() |> sendRequest;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-    |> send;
+    |> sendRequest;
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -134,7 +135,20 @@ let start =
 
   rpcRef := Some(rpc);
 
-  {process, rpc};
+  {process, rpc, send};
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);
+
+let send =
+    (
+      v: t,
+      ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
+      msg: Yojson.Safe.json,
+    ) => {
+  v.send(msgType, msg);
+};
+
+let close = (v: t) => {
+  v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
+};
