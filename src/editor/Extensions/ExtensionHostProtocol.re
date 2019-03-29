@@ -45,6 +45,16 @@ module OutgoingNotifications = {
     `List([`String(scopeName), `String(methodName), payload]);
   };
 
+  module Commands = {
+    let executeContributedCommand = cmd => {
+      _buildNotification(
+        "ExtHostCommands",
+        "$executeContributedCommand",
+        `List([`String(cmd)]),
+      );
+    };
+  };
+
   module Configuration = {
     let initializeConfiguration = () => {
       _buildNotification(
