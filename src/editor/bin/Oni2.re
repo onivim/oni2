@@ -49,14 +49,11 @@ let init = app => {
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-  prerr_endline(" -- BCOUNT: " ++ string_of_int(List.length(extensions)));
 
   let developmentExtensions =
     switch (setup.developmentExtensionsPath) {
     | Some(p) =>
-      prerr_endline("FOUND EXTENSION HERE: " ++ p);
       let ret = ExtensionScanner.scan(p);
-      prerr_endline(" -- COUNT: " ++ string_of_int(List.length(ret)));
       ret;
     | None => []
     };
