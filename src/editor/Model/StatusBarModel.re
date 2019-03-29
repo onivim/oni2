@@ -35,7 +35,4 @@ module Item = {
 type t = list(Item.t);
 
 let create: unit => t =
-  () => {
-    let item = Item.create(~id=1, ~priority=1000, ~text="HELLO WORLD", ());
-    [item];
-  };
+  () => [];

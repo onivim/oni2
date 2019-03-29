@@ -33,7 +33,7 @@ type t = {
   theme: Theme.t,
   editor: Editor.t,
   inputControlMode: Input.controlMode,
-  statusBar: StatusBar.t,
+  statusBar: StatusBarModel.t,
 };
 
 let create: unit => t =
@@ -59,5 +59,5 @@ let create: unit => t =
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,
-    statusBar: StatusBar.create(),
+    statusBar: StatusBarModel.create(),
   };
