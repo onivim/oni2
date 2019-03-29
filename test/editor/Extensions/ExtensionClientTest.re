@@ -102,7 +102,6 @@ describe("Extension Client", ({test, _}) => {
     expect.bool(closed^).toBe(false);
   });
 
-
   test("basic extension activation", _ => {
     let setup = Setup.init();
 

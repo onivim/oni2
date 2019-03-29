@@ -47,11 +47,7 @@ let start =
   let lastReqId = ref(0);
   let rpcRef = ref(None);
 
-  let send =
-      (
-        msgType,
-        msg: Yojson.Safe.json,
-      ) => {
+  let send = (msgType, msg: Yojson.Safe.json) => {
     switch (rpcRef^) {
     | None => prerr_endline("RPC not initialized.")
     | Some(v) =>
@@ -69,12 +65,9 @@ let start =
     };
   };
 
-  let sendRequest =
-      (
-        msg: Yojson.Safe.json
-      ) => {
-            send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);      
-      };
+  let sendRequest = (msg: Yojson.Safe.json) => {
+    send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
+  };
 
   let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
     switch (payload) {
@@ -147,13 +140,15 @@ let start =
 
 let pump = (v: t) => Rpc.pump(v.rpc);
 
+let send =
+    (
+      v: t,
+      ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
+      msg: Yojson.Safe.json,
+    ) => {
+  v.send(msgType, msg);
+};
 
-  let send =
-      ( v: t,
-        ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
-        msg: Yojson.Safe.json,
-      ) => { v.send(msgType, msg); };
-
-let close = (v:t) => {
-    v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
+let close = (v: t) => {
+  v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
 };
