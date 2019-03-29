@@ -34,5 +34,4 @@ module Item = {
 
 type t = list(Item.t);
 
-let create: unit => t =
-  () => [];
+let create: unit => t = () => [];

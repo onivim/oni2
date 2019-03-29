@@ -125,14 +125,37 @@ let init = app => {
        );
 
   let onMessage = (scope, method, args) => {
-    switch ((scope, method, args)) {
-    | ("MainThreadStatusBar", "$setEntry", [`Int(id), _, `String(text), _, _, _, `Int(alignment), `Int(priority)]) => {
-        App.dispatch(app, Model.Actions.StatusBarAddItem(Model.StatusBarModel.Item.create(~id, ~text, ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment), ~priority, ())));
-        Ok(None)
-    }
+    switch (scope, method, args) {
+    | (
+        "MainThreadStatusBar",
+        "$setEntry",
+        [
+          `Int(id),
+          _,
+          `String(text),
+          _,
+          _,
+          _,
+          `Int(alignment),
+          `Int(priority),
+        ],
+      ) =>
+      App.dispatch(
+        app,
+        Model.Actions.StatusBarAddItem(
+          Model.StatusBarModel.Item.create(
+            ~id,
+            ~text,
+            ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+            ~priority,
+            (),
+          ),
+        ),
+      );
+      Ok(None);
     | _ => Ok(None)
-    }
-  }
+    };
+  };
 
   let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
