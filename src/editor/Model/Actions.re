@@ -8,6 +8,8 @@ open Oni_Core.Types;
 open Oni_Extensions;
 
 type t =
+  | Init
+  | Tick
   | BufferDelete(BufferNotification.t)
   | BufferEnter(BufferNotification.t)
   | BufferUpdate(BufferUpdate.t)
@@ -23,6 +25,7 @@ type t =
   | CommandlineShow(commandline)
   | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))
+  | KeyboardInput(string)
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)

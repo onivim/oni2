@@ -9,51 +9,22 @@
  */
 
 open Rench;
+open Revery;
+
 open Oni_Neovim;
 
 module Core = Oni_Core;
 module Extensions = Oni_Extensions;
-module Model = Oni_model;
+module Model = Oni_Model;
 
 open Oni_Extensions;
 
-
-let start = (
-   ~setup: Core.Setup.t,
-   ~executingDirectory,
-   ~onStateChanged,
-   (),
-) => {
-
-    let state = Model.State.create();
-
-  let (dispatch) = Isolinear.Store.create(
-      ~initialState=state,
-      ~reducer=Model.Reducer.reduce,
-  );
+let startNeovim = (executingDirectory, setup: Core.Setup.t) => {
     
   let initVimPath =
     Path.join(executingDirectory, "init.vim");
   Core.Log.debug("initVimPath: " ++ initVimPath);
-
-  let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-  let developmentExtensions =
-    switch (setup.developmentExtensionsPath) {
-    | Some(p) =>
-      let ret = ExtensionScanner.scan(p);
-      ret;
-    | None => []
-    };
-
-  let extensions = [extensions, developmentExtensions] |> List.flatten;
-
-  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
-
-  Core.Log.debug(
-    "-- Discovered: "
-    ++ string_of_int(List.length(extensions))
-    ++ " extensions",
-  );
+    
 
   let nvim =
     NeovimProcess.start(
@@ -76,19 +47,87 @@ let start = (
           /* TODO: What to do in case Neovim crashes? */
       }
     );
-
   let nvimApi = NeovimApi.make(msgpackTransport);
   let neovimProtocol = NeovimProtocol.make(nvimApi);
+
+    let pumpEffect = Isolinear.Effect.create(~name="neovim.pump", () => nvimApi.pump());
+    let inputEffect = (key) => Isolinear.Effect.create(~name="neovim.input", () => neovimProtocol.input(key));
+
+    let neovimUpdater = (state, action) => {
+        switch(action) {
+        | Model.Actions.Tick => (state, pumpEffect) 
+        | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+        | _ => (state, Isolinear.Effect.none)
+        }
+    };
+
+  (neovimProtocol, nvimApi, neovimUpdater);
+}
+
+let start = (
+   ~setup: Core.Setup.t,
+   ~executingDirectory,
+   ~onStateChanged,
+   (),
+) => {
+
+    let state = Model.State.create();
+
+    let accumulatedEffects: ref(list(Isolinear.Effect.t)) = ref([]);
+    let latestState: ref(Model.State.t) = ref(state);
+
+    let (neovimProtocol, nvimApi, neovimUpdater) = startNeovim(executingDirectory, setup);
+
+  let (storeDispatch, _getState) = Isolinear.Store.create(
+      ~initialState=state,
+      ~updater=Isolinear.Updater.combine([
+                               Isolinear.Updater.ofReducer(Model.Reducer.reduce),
+                               neovimUpdater,
+      ]),
+      (),
+  );
+
+  let dispatch = (action: Model.Actions.t) => {
+
+      switch (action) {
+      | KeyboardInput(s) => print_endline ("KEYBOARD MADE IT " ++ s);  
+      | _ => ()
+      };
+
+        let (newState, effect) = storeDispatch(action);
+        accumulatedEffects := [effect, ...accumulatedEffects^];
+        latestState := newState;
+        onStateChanged(newState);
+  };
+
+  let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+  let developmentExtensions =
+    switch (setup.developmentExtensionsPath) {
+    | Some(p) =>
+      let ret = ExtensionScanner.scan(p);
+      ret;
+    | None => []
+    };
+
+  let extensions = [extensions, developmentExtensions] |> List.flatten;
+
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+
+  Core.Log.debug(
+    "-- Discovered: "
+    ++ string_of_int(List.length(extensions))
+    ++ " extensions",
+  );
 
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm =>
-    App.dispatch(app, Model.Actions.SyntaxHighlightColorMap(cm));
+    dispatch(Model.Actions.SyntaxHighlightColorMap(cm));
 
   let onTokens = tr =>
-    App.dispatch(app, Model.Actions.SyntaxHighlightTokens(tr));
+    dispatch(Model.Actions.SyntaxHighlightTokens(tr));
 
   let grammars = Model.LanguageInfo.getGrammars(languageInfo);
 
@@ -101,71 +140,73 @@ let start = (
       grammars,
     );
 
-  let onExtHostClosed = () => print_endline("ext host closed");
+  /* let onExtHostClosed = () => print_endline("ext host closed"); */
 
-  let extensionInfo =
-    extensions
-    |> List.map(ext =>
-         Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension(
-           ext,
-         )
-       );
+  /* let extensionInfo = */
+  /*   extensions */
+  /*   |> List.map(ext => */
+  /*        Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension( */
+  /*          ext, */
+  /*        ) */
+  /*      ); */
 
-  let onMessage = (scope, method, args) => {
-    switch (scope, method, args) {
-    | (
-        "MainThreadStatusBar",
-        "$setEntry",
-        [
-          `Int(id),
-          _,
-          `String(text),
-          _,
-          _,
-          _,
-          `Int(alignment),
-          `Int(priority),
-        ],
-      ) =>
-      App.dispatch(
-        app,
-        Model.Actions.StatusBarAddItem(
-          Model.StatusBarModel.Item.create(
-            ~id,
-            ~text,
-            ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
-            ~priority,
-            (),
-          ),
-        ),
-      );
-      Ok(None);
-    | _ => Ok(None)
-    };
-  };
+  /* let onMessage = (scope, method, args) => { */
+  /*   switch (scope, method, args) { */
+  /*   | ( */
+  /*       "MainThreadStatusBar", */
+  /*       "$setEntry", */
+  /*       [ */
+  /*         `Int(id), */
+  /*         _, */
+  /*         `String(text), */
+  /*         _, */
+  /*         _, */
+  /*         _, */
+  /*         `Int(alignment), */
+  /*         `Int(priority), */
+  /*       ], */
+  /*     ) => */
+  /*     dispatch( */
+  /*       Model.Actions.StatusBarAddItem( */
+  /*         Model.StatusBarModel.Item.create( */
+  /*           ~id, */
+  /*           ~text, */
+  /*           ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment), */
+  /*           ~priority, */
+  /*           (), */
+  /*         ), */
+  /*       ), */
+  /*     ); */
+  /*     Ok(None); */
+  /*   | _ => Ok(None) */
+  /*   }; */
+  /* }; */
 
-  let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
-  let extHostClient =
-    Extensions.ExtensionHostClient.start(
-      ~initData,
-      ~onClosed=onExtHostClosed,
-      ~onMessage,
-      setup,
-    );
+  /* let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ()); */
+  /* let extHostClient = */
+  /*   Extensions.ExtensionHostClient.start( */
+  /*     ~initData, */
+  /*     ~onClosed=onExtHostClosed, */
+  /*     ~onMessage, */
+  /*     setup, */
+  /*   ); */
 
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
   neovimProtocol.uiAttach();
 
-
-
   let _ =
     Tick.interval(
       _ => {
-        nvimApi.pump();
+        dispatch(Model.Actions.Tick);
+
+        let effects = accumulatedEffects^;
+        accumulatedEffects := [];
+
+        List.iter((e) => Isolinear.Effect.run(e), effects);
         Extensions.TextmateClient.pump(tmClient);
-        Extensions.ExtensionHostClient.pump(extHostClient);
+        /* Extensions.ExtensionHostClient.pump(extHostClient); */
       },
       Seconds(0.),
     );
@@ -176,6 +217,7 @@ let start = (
       neovimProtocol.onNotification,
       n => {
         open Model.Actions;
+        print_endline ("GOT NEOVIM MESSAGE");
         let msg =
           switch (n) {
           | OniCommand("oni.editorView.scrollToCursor") =>
@@ -262,7 +304,7 @@ let start = (
         switch (msg) {
         | BufferUpdate(bc) =>
           let bufferId = bc.id;
-          let state = App.getState(app);
+          let state = latestState^;
           let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
 
           switch (buffer) {
@@ -291,4 +333,7 @@ let start = (
 
         | _ => ()
         };
+      });
+
+  dispatch
 }

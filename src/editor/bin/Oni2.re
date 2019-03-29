@@ -10,13 +10,9 @@ open Revery.UI;
 open Rench;
 
 open Oni_UI;
-open Oni_Neovim;
 
 module Core = Oni_Core;
-module Extensions = Oni_Extensions;
 module Model = Oni_Model;
-
-open Oni_Extensions;
 
 /**
    This allows a stack trace to be printed when exceptions occur
@@ -49,10 +45,11 @@ let init = app => {
       currentState := v;
   }
 
-  let (dispatch) = StoreThread.create(
+  let (dispatch) = StoreThread.start(
     ~setup,
     ~executingDirectory=Revery.Environment.getExecutingDirectory(),
-    ~onStateChanged
+    ~onStateChanged,
+    (),
   );
 
   let render = () => {
@@ -70,12 +67,12 @@ let init = app => {
           ),
         ),
       editorScroll: (~deltaY, ()) =>
-        dispatch(app, Model.Actions.EditorScroll(deltaY)),
+        dispatch(Model.Actions.EditorScroll(deltaY)),
       /* FIXFIX */
       /* openFile: neovimProtocol.openFile, */
       /* closeFile: neovimProtocol.closeFile, */
-      openFile: (_) => (),
-      closeFile: (_) => (),
+      openFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) => ignore((path, id, openMethod)),
+      closeFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) => ignore((path, id, openMethod)),
       dispatch: dispatch,
     });
 
@@ -83,6 +80,10 @@ let init = app => {
   };
 
   UI.start(w, render);
+
+  Window.setShouldRenderCallback(w, (_) => true);
+
+  dispatch(Model.Actions.Init);
 
   let setFont = (fontFamily, fontSize) => {
     let scaleFactor =
@@ -131,15 +132,19 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  Model.Menu.addEffects({
-    openFile: neovimProtocol.openFile,
-    getCurrentDir: neovimProtocol.getCurrentDir,
-  })
-  |> App.dispatch(app)
-  |> ignore;
+  /* FIXFIX */
+  /* Model.Menu.addEffects({ */
+  /*   openFile: neovimProtocol.openFile, */
+  /*   getCurrentDir: neovimProtocol.getCurrentDir, */
+  /* }) */
+  /* |> App.dispatch(app) */
+  /* |> ignore; */
 
   /* REFACTOR to effect */
-  let inputHandler = Input.handle(~api=neovimProtocol, ~commands);
+  /* FIXFIX */
+
+  /* Add an updater to handle a KeyboardInput action */
+  let inputHandler = Input.handle(~commands);
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -153,7 +158,7 @@ let init = app => {
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
       inputHandler(~state=currentState^, k)
-      |> List.iter(dispatch(app))
+      |> List.iter(dispatch)
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
 
@@ -175,13 +180,16 @@ let init = app => {
   /*       ++ Msgpck.show(n.payload), */
   /*     ) */
   /*   ); */
-      },
-    );
+      /* }, */
+    /* ); */
 
-  List.iter(
-    p => neovimProtocol.openFile(~path=p, ()),
-    cliOptions.filesToOpen,
-  );
+  /* FIXFIX */
+  /* Refactor to OpenFile action */
+
+  /* List.iter( */
+  /*   p => neovimProtocol.openFile(~path=p, ()), */
+  /*   cliOptions.filesToOpen, */
+  /* ); */
 
   ();
 };
