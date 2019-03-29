@@ -110,15 +110,29 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         
     }
 
-    let statusBarItems = List.map(toStatusBarElement, state.statusBar);
+    let filterFunction = (alignment: Alignment.t, item: Item.t) => {
+        item.alignment === alignment
+    };
+
+    let statusBarItems = state.statusBar;
+    let leftItems = statusBarItems
+        |> List.filter(filterFunction(Alignment.Left))
+        |> List.map(toStatusBarElement);
+
+    let rightItems = statusBarItems
+        |> List.filter(filterFunction(Alignment.Right))
+        |> List.map(toStatusBarElement);
 
     (
       hooks,
       <View style=viewStyle>
         <StatusBarSection direction=`FlexStart >
-        ...statusBarItems
+        ...leftItems
           </StatusBarSection>
         <StatusBarSection direction=`Center />
+        <StatusBarSection direction=`FlexEnd>
+        ...rightItems
+        </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
           <StatusBarItem
             height backgroundColor={theme.colors.statusBarBackground}>
