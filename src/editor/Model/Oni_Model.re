@@ -16,6 +16,7 @@ module Editor = Editor;
 module EditorLayout = EditorLayout;
 module LanguageInfo = LanguageInfo;
 module Reducer = Reducer;
+module StatusBarModel = StatusBar;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
 module Tokenizer = Tokenizer;
