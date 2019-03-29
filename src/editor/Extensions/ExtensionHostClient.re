@@ -15,6 +15,7 @@ module Protocol = ExtensionHostProtocol;
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
+  send: (int, Yojson.Safe.json) => unit,
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -23,7 +24,7 @@ type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type messageHandler =
-  (string, string, Yojson.Safe.json) =>
+  (string, string, list(Yojson.Safe.json)) =>
   result(option(Yojson.Safe.json), string);
 let defaultMessageHandler = (_, _, _) => Ok(None);
 
@@ -46,11 +47,7 @@ let start =
   let lastReqId = ref(0);
   let rpcRef = ref(None);
 
-  let send =
-      (
-        ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
-        msg: Yojson.Safe.json,
-      ) => {
+  let send = (msgType, msg: Yojson.Safe.json) => {
     switch (rpcRef^) {
     | None => prerr_endline("RPC not initialized.")
     | Some(v) =>
@@ -68,11 +65,35 @@ let start =
     };
   };
 
-  let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
+  let sendRequest = (msg: Yojson.Safe.json) => {
+    send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
+  };
+
+  let sendResponse = (msgType, reqId, msg) => {
+    switch (rpcRef^) {
+    | None => prerr_endline("RPC not initialized.")
+    | Some(v) =>
+      let response =
+        `Assoc([
+          ("type", `Int(msgType)),
+          ("reqId", `Int(reqId)),
+          ("payload", msg),
+        ]);
+      Rpc.sendNotification(v, "ext/msg", response);
+    };
+  };
+
+  let handleMessage = (reqId: int, payload: Yojson.Safe.json) =>
     switch (payload) {
-    | `List([`String(scopeName), `String(methodName), args]) =>
-      let _ = onMessage(scopeName, methodName, args);
-      ();
+    | `Assoc([
+        ("rpcName", `String(scopeName)),
+        ("methodName", `String(methodName)),
+        ("args", `List(args)),
+      ]) =>
+      switch (onMessage(scopeName, methodName, args)) {
+      | Ok(None) => sendResponse(12, reqId, `Assoc([]))
+      | _ => sendResponse(12, reqId, `Assoc([]))
+      }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
     /* switch (onMessage(id, payload)) { */
@@ -88,7 +109,7 @@ let start =
 
   let _sendInitData = () => {
     send(
-      ~msgType=Protocol.MessageType.initData,
+      Protocol.MessageType.initData,
       ExtensionHostInitData.to_yojson(initData),
     );
   };
@@ -98,9 +119,9 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtensionHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration() |> send;
+    Configuration.initializeConfiguration() |> sendRequest;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-    |> send;
+    |> sendRequest;
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -112,6 +133,7 @@ let start =
       | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
       | Ack(_) => ()
+      | Error => ()
       | Ready => _sendInitData()
       | Initialized => _handleInitialization()
       };
@@ -134,7 +156,20 @@ let start =
 
   rpcRef := Some(rpc);
 
-  {process, rpc};
+  {process, rpc, send};
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);
+
+let send =
+    (
+      v: t,
+      ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
+      msg: Yojson.Safe.json,
+    ) => {
+  v.send(msgType, msg);
+};
+
+let close = (v: t) => {
+  v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
+};

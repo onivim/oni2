@@ -51,7 +51,7 @@ let init = app => {
 
   let (dispatch) = StoreThread.create(
     ~setup,
-    ~executingDirectory: Revery.Environment.getExecutingDirectory(),
+    ~executingDirectory=Revery.Environment.getExecutingDirectory(),
     ~onStateChanged
   );
 

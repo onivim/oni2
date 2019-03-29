@@ -42,4 +42,6 @@ type t =
   | MenuSelect
   | MenuPosition(int)
   | SetInputControlMode(Input.controlMode)
+  | StatusBarAddItem(StatusBarModel.Item.t)
+  | StatusBarDisposeItem(int)
   | Noop;

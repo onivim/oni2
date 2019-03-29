@@ -37,6 +37,15 @@ let start = (
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+  let developmentExtensions =
+    switch (setup.developmentExtensionsPath) {
+    | Some(p) =>
+      let ret = ExtensionScanner.scan(p);
+      ret;
+    | None => []
+    };
+
+  let extensions = [extensions, developmentExtensions] |> List.flatten;
 
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
@@ -94,8 +103,56 @@ let start = (
 
   let onExtHostClosed = () => print_endline("ext host closed");
 
+  let extensionInfo =
+    extensions
+    |> List.map(ext =>
+         Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension(
+           ext,
+         )
+       );
+
+  let onMessage = (scope, method, args) => {
+    switch (scope, method, args) {
+    | (
+        "MainThreadStatusBar",
+        "$setEntry",
+        [
+          `Int(id),
+          _,
+          `String(text),
+          _,
+          _,
+          _,
+          `Int(alignment),
+          `Int(priority),
+        ],
+      ) =>
+      App.dispatch(
+        app,
+        Model.Actions.StatusBarAddItem(
+          Model.StatusBarModel.Item.create(
+            ~id,
+            ~text,
+            ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+            ~priority,
+            (),
+          ),
+        ),
+      );
+      Ok(None);
+    | _ => Ok(None)
+    };
+  };
+
+  let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
-    Extensions.ExtensionHostClient.start(~onClosed=onExtHostClosed, setup);
+    Extensions.ExtensionHostClient.start(
+      ~initData,
+      ~onClosed=onExtHostClosed,
+      ~onMessage,
+      setup,
+    );
+
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
