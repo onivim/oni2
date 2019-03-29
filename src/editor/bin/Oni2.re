@@ -49,6 +49,13 @@ let init = app => {
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+  
+  let developmentExtensions = switch(setup.developmentExtensionsPath) {
+  | Some(p) => ExtensionScanner.scan(p)
+  | None => []
+  };
+
+  let extensions = [extensions, developmentExtensions] |> List.flatten;
 
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
