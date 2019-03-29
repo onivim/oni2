@@ -1,4 +1,4 @@
-/* open Oni_Core; */
+open Oni_Core;
 open Oni_Core_Test;
 open Oni_Extensions;
 
@@ -7,7 +7,7 @@ open TestFramework;
 open ExtensionClientHelper;
 open ExtensionHostProtocol.OutgoingNotifications;
 
-describe("Extension Client", ({describe, _}) =>
+describe("Extension Client", ({describe, _}) => {
   describe("commands", ({test, _})
     =>
       test("executes simple command", _ =>
@@ -126,4 +126,4 @@ describe("Extension Client", ({describe, _}) =>
         ExtensionHostClient.close(extClient);
       });
     });
-);
+});
