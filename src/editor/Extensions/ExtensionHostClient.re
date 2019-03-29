@@ -69,15 +69,39 @@ let start =
     send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
   };
 
-  let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
+  let sendResponse = (msgType, reqId, msg) => {
+    switch (rpcRef^) {
+    | None => prerr_endline("RPC not initialized.")
+    | Some(v) => {
+        let response =
+            `Assoc([
+                ("type", `Int(msgType)),
+                ("reqId", `Int(reqId)),
+                ("payload", msg),
+            ]);
+        Rpc.sendNotification(v, "ext/msg", response);
+        
+    }
+    };
+  };
+
+  let handleMessage = (reqId: int, payload: Yojson.Safe.json) =>
     switch (payload) {
     | `Assoc([
         ("rpcName", `String(scopeName)),
         ("methodName", `String(methodName)),
         ("args", `List(args))
     ]) =>
-      let _ = onMessage(scopeName, methodName, args);
-      ();
+      switch(onMessage(scopeName, methodName, args)) {
+      | Ok(None) => {
+          prerr_endline ("sending response for reqid: " ++ string_of_int(reqId));
+        sendResponse(12, reqId, `Assoc([]));
+      }
+      | _ => {
+          prerr_endline ("sending response for reqid: " ++ string_of_int(reqId));
+        sendResponse(12, reqId, `Assoc([]));
+      }
+      }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
     /* switch (onMessage(id, payload)) { */

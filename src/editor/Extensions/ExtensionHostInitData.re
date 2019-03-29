@@ -30,6 +30,7 @@ module ExtensionInfo = {
     name: string,
     /* displayName: string, */
     /* publisher: string, */
+    main: option(string),
     version: string,
     engines: Engine.t,
     activationEvents: list(string),
@@ -46,6 +47,7 @@ module ExtensionInfo = {
       extensionLocationPath: path,
       name: manifest.name,
       /* publisher: manifest.publisher, */
+      main: manifest.main,
       version: manifest.version,
       engines: manifest.engines,
       activationEvents: manifest.activationEvents,
@@ -78,6 +80,7 @@ type t = {
   environment: Environment.t,
   logsLocationPath: string,
   autoStart: bool,
+  workspace: Workspace.t,
 };
 
 let create =
@@ -94,4 +97,5 @@ let create =
   environment,
   logsLocationPath,
   autoStart,
+  workspace: { __test: "" },
 };

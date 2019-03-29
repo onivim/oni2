@@ -25,6 +25,18 @@ type extHostApi = {
 let withExtensionClient = (f: extHostApi => unit) => {
   let setup = Setup.init();
 
+  let rootPath = Rench.Environment.getWorkingDirectory();
+  let testExtensionsPath =
+    Rench.Path.join(rootPath, "test/test_extensions");
+
+  let extensions =
+    ExtensionScanner.scan(testExtensionsPath)
+    |> List.map(ext =>
+         ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext)
+       );
+
+  let initData = ExtensionHostInitData.create(~extensions, ());
+
   let initialized = ref(false);
   let closed = ref(false);
 
@@ -40,7 +52,6 @@ let withExtensionClient = (f: extHostApi => unit) => {
     let isActive = ref(false);
 
     let filter = (inScope, inMethod, payload) => {
-        prerr_endline ("FILTER: " ++ inScope ++ " | " ++ inMethod ++ " | " ++ Yojson.Safe.to_string(`List(payload)));
         isActive^ && String.equal(scope, inScope) && String.equal(method, inMethod) && filterFunction(payload)
     };
 
@@ -54,7 +65,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
     () => {
         isActive := true;
 
-        Oni_Core.Utility.waitForCondition(() => {
+        Oni_Core.Utility.waitForCondition(~timeout=10.0, () => {
           switch (extClient^) {
           | Some(v) => ExtensionHostClient.pump(v);
           | None => failwith("extension client must be initialized prior to waiting");
@@ -77,7 +88,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
   };
 
   let start = () => {
-    let v = ExtensionHostClient.start(~onInitialized, ~onMessage, ~onClosed, setup);
+    let v = ExtensionHostClient.start(~initData, ~onInitialized, ~onMessage, ~onClosed, setup);
 
     Oni_Core.Utility.waitForCondition(() => {
       ExtensionHostClient.pump(v);
