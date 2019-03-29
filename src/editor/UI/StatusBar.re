@@ -96,43 +96,41 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
     let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
     let toStatusBarElement = (statusBarItem: Item.t) => {
-          <StatusBarItem
-            height backgroundColor={theme.colors.statusBarBackground}>
-            <Text
-              style=Style.[
-                backgroundColor(theme.colors.statusBarBackground),
-                color(theme.colors.statusBarForeground),
-                ...textStyle,
-              ]
-              text={statusBarItem.text}
-            />
-          </StatusBarItem>
-        
-    }
+      <StatusBarItem height backgroundColor={theme.colors.statusBarBackground}>
+        <Text
+          style=Style.[
+            backgroundColor(theme.colors.statusBarBackground),
+            color(theme.colors.statusBarForeground),
+            ...textStyle,
+          ]
+          text={statusBarItem.text}
+        />
+      </StatusBarItem>;
+    };
 
     let filterFunction = (alignment: Alignment.t, item: Item.t) => {
-        item.alignment === alignment
+      item.alignment === alignment;
     };
 
     let statusBarItems = state.statusBar;
-    let leftItems = statusBarItems
-        |> List.filter(filterFunction(Alignment.Left))
-        |> List.map(toStatusBarElement);
+    let leftItems =
+      statusBarItems
+      |> List.filter(filterFunction(Alignment.Left))
+      |> List.map(toStatusBarElement);
 
-    let rightItems = statusBarItems
-        |> List.filter(filterFunction(Alignment.Right))
-        |> List.map(toStatusBarElement);
+    let rightItems =
+      statusBarItems
+      |> List.filter(filterFunction(Alignment.Right))
+      |> List.map(toStatusBarElement);
 
     (
       hooks,
       <View style=viewStyle>
-        <StatusBarSection direction=`FlexStart >
-        ...leftItems
-          </StatusBarSection>
-        <StatusBarSection direction=`Center />
-        <StatusBarSection direction=`FlexEnd>
-        ...rightItems
+        <StatusBarSection direction=`FlexStart>
+          ...leftItems
         </StatusBarSection>
+        <StatusBarSection direction=`Center />
+        <StatusBarSection direction=`FlexEnd> ...rightItems </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
           <StatusBarItem
             height backgroundColor={theme.colors.statusBarBackground}>

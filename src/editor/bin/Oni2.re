@@ -49,17 +49,17 @@ let init = app => {
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-      prerr_endline (" -- BCOUNT: " ++ string_of_int(List.length(extensions)));
-  
-  let developmentExtensions = switch(setup.developmentExtensionsPath) {
-  | Some(p) => {
-      prerr_endline ("FOUND EXTENSION HERE: " ++ p);
-     let ret = ExtensionScanner.scan(p)
-      prerr_endline (" -- COUNT: " ++ string_of_int(List.length(ret)));
-         ret;
-  }
-  | None => []
-  };
+  prerr_endline(" -- BCOUNT: " ++ string_of_int(List.length(extensions)));
+
+  let developmentExtensions =
+    switch (setup.developmentExtensionsPath) {
+    | Some(p) =>
+      prerr_endline("FOUND EXTENSION HERE: " ++ p);
+      let ret = ExtensionScanner.scan(p);
+      prerr_endline(" -- COUNT: " ++ string_of_int(List.length(ret)));
+      ret;
+    | None => []
+    };
 
   let extensions = [extensions, developmentExtensions] |> List.flatten;
 
@@ -119,12 +119,21 @@ let init = app => {
 
   let onExtHostClosed = () => print_endline("ext host closed");
 
-
-  let extensionInfo= extensions |> List.map(ext => Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext));
+  let extensionInfo =
+    extensions
+    |> List.map(ext =>
+         Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension(
+           ext,
+         )
+       );
 
   let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
-    Extensions.ExtensionHostClient.start(~initData,~onClosed=onExtHostClosed, setup);
+    Extensions.ExtensionHostClient.start(
+      ~initData,
+      ~onClosed=onExtHostClosed,
+      setup,
+    );
 
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
