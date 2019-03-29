@@ -29,13 +29,10 @@ let readFileSync = path => {
 };
 
 let remapManifest = (directory: string, manifest: ExtensionManifest.t) => {
-    switch (manifest.main) {
-    | None => manifest
-    | Some(v) => {
-        ...manifest,
-        main: Some(Path.join(directory, v))
-    }
-    }
+  switch (manifest.main) {
+  | None => manifest
+  | Some(v) => {...manifest, main: Some(Path.join(directory, v))}
+  };
 };
 
 let scan = (directory: string) => {

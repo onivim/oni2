@@ -97,5 +97,7 @@ let create =
   environment,
   logsLocationPath,
   autoStart,
-  workspace: { __test: "" },
+  workspace: {
+    __test: "",
+  },
 };

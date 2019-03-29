@@ -72,16 +72,14 @@ let start =
   let sendResponse = (msgType, reqId, msg) => {
     switch (rpcRef^) {
     | None => prerr_endline("RPC not initialized.")
-    | Some(v) => {
-        let response =
-            `Assoc([
-                ("type", `Int(msgType)),
-                ("reqId", `Int(reqId)),
-                ("payload", msg),
-            ]);
-        Rpc.sendNotification(v, "ext/msg", response);
-        
-    }
+    | Some(v) =>
+      let response =
+        `Assoc([
+          ("type", `Int(msgType)),
+          ("reqId", `Int(reqId)),
+          ("payload", msg),
+        ]);
+      Rpc.sendNotification(v, "ext/msg", response);
     };
   };
 
@@ -90,17 +88,11 @@ let start =
     | `Assoc([
         ("rpcName", `String(scopeName)),
         ("methodName", `String(methodName)),
-        ("args", `List(args))
-    ]) =>
-      switch(onMessage(scopeName, methodName, args)) {
-      | Ok(None) => {
-          prerr_endline ("sending response for reqid: " ++ string_of_int(reqId));
-        sendResponse(12, reqId, `Assoc([]));
-      }
-      | _ => {
-          prerr_endline ("sending response for reqid: " ++ string_of_int(reqId));
-        sendResponse(12, reqId, `Assoc([]));
-      }
+        ("args", `List(args)),
+      ]) =>
+      switch (onMessage(scopeName, methodName, args)) {
+      | Ok(None) => sendResponse(12, reqId, `Assoc([]))
+      | _ => sendResponse(12, reqId, `Assoc([]))
       }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))

@@ -26,8 +26,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
   let setup = Setup.init();
 
   let rootPath = Rench.Environment.getWorkingDirectory();
-  let testExtensionsPath =
-    Rench.Path.join(rootPath, "test/test_extensions");
+  let testExtensionsPath = Rench.Path.join(rootPath, "test/test_extensions");
 
   let extensions =
     ExtensionScanner.scan(testExtensionsPath)
@@ -48,54 +47,65 @@ let withExtensionClient = (f: extHostApi => unit) => {
   let _waiters: ref(list(internalWaiter)) = ref([]);
 
   let createWaiterForMessage = (scope, method, filterFunction) => {
-
     let isActive = ref(false);
 
     let filter = (inScope, inMethod, payload) => {
-        isActive^ && String.equal(scope, inScope) && String.equal(method, inMethod) && filterFunction(payload)
+      isActive^
+      && String.equal(scope, inScope)
+      && String.equal(method, inMethod)
+      && filterFunction(payload);
     };
 
-    let internalWaiter = {
-        filter,
-        isCompleted: ref(false),
-    };
+    let internalWaiter = {filter, isCompleted: ref(false)};
 
     _waiters := [internalWaiter, ..._waiters^];
 
     () => {
-        isActive := true;
+      isActive := true;
 
-        Oni_Core.Utility.waitForCondition(~timeout=10.0, () => {
+      Oni_Core.Utility.waitForCondition(
+        ~timeout=10.0,
+        () => {
           switch (extClient^) {
-          | Some(v) => ExtensionHostClient.pump(v);
-          | None => failwith("extension client must be initialized prior to waiting");
+          | Some(v) => ExtensionHostClient.pump(v)
+          | None =>
+            failwith("extension client must be initialized prior to waiting")
           };
           internalWaiter.isCompleted^;
-        });
+        },
+      );
 
-
-        if (!internalWaiter.isCompleted^) {
-            failwith("waiter failed for scope|method: " ++ scope ++ " | " ++ method);
-        }
-
+      if (! internalWaiter.isCompleted^) {
+        failwith(
+          "waiter failed for scope|method: " ++ scope ++ " | " ++ method,
+        );
+      };
     };
   };
 
   let onMessage = (scope, method, payload) => {
-    let waitersToComplete = List.filter((f) => f.filter(scope, method, payload), _waiters^);
-    List.iter((w) => w.isCompleted := true, waitersToComplete);
-    Ok(None)
+    let waitersToComplete =
+      List.filter(f => f.filter(scope, method, payload), _waiters^);
+    List.iter(w => w.isCompleted := true, waitersToComplete);
+    Ok(None);
   };
 
   let start = () => {
-    let v = ExtensionHostClient.start(~initData, ~onInitialized, ~onMessage, ~onClosed, setup);
+    let v =
+      ExtensionHostClient.start(
+        ~initData,
+        ~onInitialized,
+        ~onMessage,
+        ~onClosed,
+        setup,
+      );
 
     Oni_Core.Utility.waitForCondition(() => {
       ExtensionHostClient.pump(v);
       initialized^;
     });
 
-    if (!initialized^) {
+    if (! initialized^) {
       failwith("extension host client did not initialize successfully");
     };
 
