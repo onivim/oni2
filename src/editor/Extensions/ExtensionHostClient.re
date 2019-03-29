@@ -24,7 +24,7 @@ type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type messageHandler =
-  (string, string, Yojson.Safe.json) =>
+  (string, string, list(Yojson.Safe.json)) =>
   result(option(Yojson.Safe.json), string);
 let defaultMessageHandler = (_, _, _) => Ok(None);
 
@@ -71,7 +71,11 @@ let start =
 
   let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
     switch (payload) {
-    | `List([`String(scopeName), `String(methodName), args]) =>
+    | `Assoc([
+        ("rpcName", `String(scopeName)),
+        ("methodName", `String(methodName)),
+        ("args", `List(args))
+    ]) =>
       let _ = onMessage(scopeName, methodName, args);
       ();
     | _ =>
@@ -113,6 +117,7 @@ let start =
       | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
       | Ack(_) => ()
+      | Error => ()
       | Ready => _sendInitData()
       | Initialized => _handleInitialization()
       };

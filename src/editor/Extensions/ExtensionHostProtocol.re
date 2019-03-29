@@ -13,6 +13,7 @@ module MessageType = {
   let requestJsonArgs = 4;
   let acknowledged = 8;
   let replyOkJson = 12;
+  let replyErrError = 13;
 };
 
 module LogLevel = {
@@ -108,6 +109,7 @@ module Notification = {
     | Ready
     | Request(requestOrReply)
     | Reply(requestOrReply)
+    | Error
     | Ack(ack);
 
   let of_yojson = (json: Yojson.Safe.json) => {
@@ -142,6 +144,7 @@ module Notification = {
     | `Assoc([("type", `Int(4)), ..._]) => Request(of_yojson(json))
     | `Assoc([("type", `Int(8)), ..._]) => Ack(ack_of_yojson_exn(json))
     | `Assoc([("type", `Int(12)), ..._]) => Reply(of_yojson(json))
+    | `Assoc([("type", `Int(13)), ..._]) => Error;
     | _ =>
       raise(
         NotificationParseException(

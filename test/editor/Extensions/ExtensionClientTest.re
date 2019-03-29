@@ -4,17 +4,20 @@ open Oni_Extensions;
 
 open TestFramework;
 
-open ExtensionClientTestHelper;
+open ExtensionClientHelper;
 open ExtensionHostProtocol.OutgoingNotifications;
 
-describe("Extension Client", ({test, _}) => {
+describe("Extension Client", ({describe, _}) => {
   describe("commands", ({test, _}) =>
-    test("executes simple command", ({expect}) =>
+    test("executes simple command", (_) =>
       withExtensionClient(api => {
         let waitForCommandRegistration =
           api.createWaiterForMessage(
-            "MainThreadCommands", "$registerCommand", _ =>
-            true
+            "MainThreadCommands", "$registerCommand", args =>
+            switch(args) {
+            | [`String("extension.helloWorld"), ..._] => true
+            | _ => false
+            }
           );
         let waitForShowMessage =
           api.createWaiterForMessage(
@@ -22,9 +25,14 @@ describe("Extension Client", ({test, _}) => {
             true
           );
 
+        prerr_endline ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        prerr_endline ("[STARTING]");
         api.start();
+        prerr_endline ("[STARTING DONE]");
 
+        prerr_endline ("[WAITING FOR COMMAND REGISTRATION]");
         waitForCommandRegistration();
+        prerr_endline ("[GOT COMMAND REGISTRATION]");
 
         api.send(Commands.executeContributedCommand("extension.helloWorld"));
 

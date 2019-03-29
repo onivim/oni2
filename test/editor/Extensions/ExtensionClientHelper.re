@@ -8,19 +8,18 @@
 open Oni_Core;
 open Oni_Extensions;
 
-type filterFunction = Yojson.Safe.json => bool;
+type filterFunction = list(Yojson.Safe.json) => bool;
 type waiterFunction = unit => unit;
 
 type internalWaiter = {
-  isActive: ref(bool),
-  scope: string,
-  method: string,
-  filterFunction,
+  filter: (string, string, list(Yojson.Safe.json)) => bool,
+  isCompleted: ref(bool),
 };
 
 type extHostApi = {
   createWaiterForMessage: (string, string, filterFunction) => waiterFunction,
   send: Yojson.Safe.json => unit,
+  start: unit => unit,
 };
 
 let withExtensionClient = (f: extHostApi => unit) => {
@@ -34,25 +33,66 @@ let withExtensionClient = (f: extHostApi => unit) => {
 
   let extClient = ref(None);
 
+  let _waiters: ref(list(internalWaiter)) = ref([]);
+
+  let createWaiterForMessage = (scope, method, filterFunction) => {
+
+    let isActive = ref(false);
+
+    let filter = (inScope, inMethod, payload) => {
+        prerr_endline ("FILTER: " ++ inScope ++ " | " ++ inMethod ++ " | " ++ Yojson.Safe.to_string(`List(payload)));
+        isActive^ && String.equal(scope, inScope) && String.equal(method, inMethod) && filterFunction(payload)
+    };
+
+    let internalWaiter = {
+        filter,
+        isCompleted: ref(false),
+    };
+
+    _waiters := [internalWaiter, ..._waiters^];
+
+    () => {
+        isActive := true;
+
+        Oni_Core.Utility.waitForCondition(() => {
+          switch (extClient^) {
+          | Some(v) => ExtensionHostClient.pump(v);
+          | None => failwith("extension client must be initialized prior to waiting");
+          };
+          internalWaiter.isCompleted^;
+        });
+
+
+        if (!internalWaiter.isCompleted^) {
+            failwith("waiter failed for scope|method: " ++ scope ++ " | " ++ method);
+        }
+
+    };
+  };
+
+  let onMessage = (scope, method, payload) => {
+    let waitersToComplete = List.filter((f) => f.filter(scope, method, payload), _waiters^);
+    List.iter((w) => w.isCompleted := true, waitersToComplete);
+    Ok(None)
+  };
+
   let start = () => {
-    let v = ExtensionHostClient.start(~onInitialized, ~onClosed, setup);
+    let v = ExtensionHostClient.start(~onInitialized, ~onMessage, ~onClosed, setup);
 
     Oni_Core.Utility.waitForCondition(() => {
       ExtensionHostClient.pump(v);
       initialized^;
     });
 
-    if (! initialized^) {
+    if (!initialized^) {
       failwith("extension host client did not initialize successfully");
     };
 
-    extClient := v;
+    extClient := Some(v);
   };
 
-  let createWaiterForMessage = (_scope, _method, _filterFunction, ()) => ();
-
   let send = json => {
-    switch (extClient) {
+    switch (extClient^) {
     | None =>
       failwith("Extension client not started - call start() before send()")
     | Some(extClient) => ExtensionHostClient.send(extClient, json)
@@ -63,7 +103,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
 
   f(api);
 
-  switch (extClient) {
+  switch (extClient^) {
   | None => ()
   | Some(extClient) =>
     ExtensionHostClient.close(extClient);
