@@ -41,16 +41,17 @@ let init = app => {
 
   let currentState = ref(Model.State.create());
 
-  let onStateChanged = (v) => {
-      currentState := v;
-  }
+  let onStateChanged = v => {
+    currentState := v;
+  };
 
-  let (dispatch) = StoreThread.start(
-    ~setup,
-    ~executingDirectory=Revery.Environment.getExecutingDirectory(),
-    ~onStateChanged,
-    (),
-  );
+  let dispatch =
+    StoreThread.start(
+      ~setup,
+      ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~onStateChanged,
+      (),
+    );
 
   let render = () => {
     let state = currentState^;
@@ -71,9 +72,11 @@ let init = app => {
       /* FIXFIX */
       /* openFile: neovimProtocol.openFile, */
       /* closeFile: neovimProtocol.closeFile, */
-      openFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) => ignore((path, id, openMethod)),
-      closeFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) => ignore((path, id, openMethod)),
-      dispatch: dispatch,
+      openFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) =>
+        ignore((path, id, openMethod)),
+      closeFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) =>
+        ignore((path, id, openMethod)),
+      dispatch,
     });
 
     <Root state />;
@@ -81,7 +84,7 @@ let init = app => {
 
   UI.start(w, render);
 
-  Window.setShouldRenderCallback(w, (_) => true);
+  Window.setShouldRenderCallback(w, _ => true);
 
   dispatch(Model.Actions.Init);
 
@@ -157,8 +160,7 @@ let init = app => {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, k)
-      |> List.iter(dispatch)
+      inputHandler(~state=currentState^, k) |> List.iter(dispatch)
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
 
@@ -180,8 +182,8 @@ let init = app => {
   /*       ++ Msgpck.show(n.payload), */
   /*     ) */
   /*   ); */
-      /* }, */
-    /* ); */
+  /* }, */
+  /* ); */
 
   /* FIXFIX */
   /* Refactor to OpenFile action */
