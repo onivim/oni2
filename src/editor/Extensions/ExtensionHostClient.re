@@ -24,7 +24,7 @@ type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type messageHandler =
-  (string, string, Yojson.Safe.json) =>
+  (string, string, list(Yojson.Safe.json)) =>
   result(option(Yojson.Safe.json), string);
 let defaultMessageHandler = (_, _, _) => Ok(None);
 
@@ -69,11 +69,31 @@ let start =
     send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
   };
 
-  let handleMessage = (_reqId: int, payload: Yojson.Safe.json) =>
+  let sendResponse = (msgType, reqId, msg) => {
+    switch (rpcRef^) {
+    | None => prerr_endline("RPC not initialized.")
+    | Some(v) =>
+      let response =
+        `Assoc([
+          ("type", `Int(msgType)),
+          ("reqId", `Int(reqId)),
+          ("payload", msg),
+        ]);
+      Rpc.sendNotification(v, "ext/msg", response);
+    };
+  };
+
+  let handleMessage = (reqId: int, payload: Yojson.Safe.json) =>
     switch (payload) {
-    | `List([`String(scopeName), `String(methodName), args]) =>
-      let _ = onMessage(scopeName, methodName, args);
-      ();
+    | `Assoc([
+        ("rpcName", `String(scopeName)),
+        ("methodName", `String(methodName)),
+        ("args", `List(args)),
+      ]) =>
+      switch (onMessage(scopeName, methodName, args)) {
+      | Ok(None) => sendResponse(12, reqId, `Assoc([]))
+      | _ => sendResponse(12, reqId, `Assoc([]))
+      }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
     /* switch (onMessage(id, payload)) { */
@@ -113,6 +133,7 @@ let start =
       | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
       | Ack(_) => ()
+      | Error => ()
       | Ready => _sendInitData()
       | Initialized => _handleInitialization()
       };
