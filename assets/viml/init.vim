@@ -7,7 +7,9 @@ if exists("g:loaded_oni_interop_plugin")
 endif
 
 set hidden
+set lazyredraw
 set nocursorline
+set nocursorcolumn
 set nobackup
 set nowritebackup
 set noswapfile
