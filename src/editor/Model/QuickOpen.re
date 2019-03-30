@@ -8,7 +8,7 @@ open UiMenu;
    is too long otherwise
  */
 let getDisplayPath = (fullPath, dir) => {
-  let re = Str.regexp_string(dir);
+  let re = Str.regexp_string(dir ++ Filename.dir_sep);
   Str.replace_first(re, "", fullPath);
 };
 
