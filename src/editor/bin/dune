@@ -16,6 +16,8 @@
         Oni_Core
         Oni_Extensions
         Oni_Neovim
+        Oni_Model
+        Oni_Store
         Oni_UI
         isolinear
             )

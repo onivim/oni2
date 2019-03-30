@@ -10,6 +10,7 @@
       "esy-installer Oni_Core.install",
       "esy-installer Oni_Extensions.install",
       "esy-installer Oni_Model.install",
+      "esy-installer Oni_Store.install",
       "esy-installer Oni_UI.install",
       "esy-installer Oni_Neovim.install",
       "esy-installer OniUnitTestRunner.install"
