@@ -8,5 +8,4 @@
  * Any change that impacts the state of the editor should be modelled as an Action
  * and funneled through the appropriate reducers / updaters.
  */
-
 module StoreThread = StoreThread;

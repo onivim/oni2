@@ -14,7 +14,6 @@ module Model = Oni_Model;
 module Extensions = Oni_Extensions;
 
 let start = (extensions, setup: Core.Setup.t) => {
-
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   Core.Log.debug(
@@ -27,16 +26,15 @@ let start = (extensions, setup: Core.Setup.t) => {
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
   let _dispatch = ref(None);
-  let dispatch = (action) => {
-      switch (_dispatch^) {
-      | None => ()
-      | Some(v) => v(action);
-      }
+  let dispatch = action => {
+    switch (_dispatch^) {
+    | None => ()
+    | Some(v) => v(action)
+    };
   };
 
-  let stream = Isolinear.Stream.create((dispatch) => {
-      _dispatch := Some(dispatch);
-  });
+  let stream =
+    Isolinear.Stream.create(dispatch => _dispatch := Some(dispatch));
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm => dispatch(Model.Actions.SyntaxHighlightColorMap(cm));
@@ -56,10 +54,15 @@ let start = (extensions, setup: Core.Setup.t) => {
   Extensions.TextmateClient.setTheme(tmClient, defaultThemePath);
 
   let pumpEffect =
-    Isolinear.Effect.create(~name="textmateClient.pump", () => Extensions.TextmateClient.pump(tmClient));
+    Isolinear.Effect.create(~name="textmateClient.pump", () =>
+      Extensions.TextmateClient.pump(tmClient)
+    );
 
-  let notifyBufferUpdateEffect = (scope, bc) => Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () => Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc));
-          
+  let notifyBufferUpdateEffect = (scope, bc) =>
+    Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
+      Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
+    );
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
@@ -76,13 +79,10 @@ let start = (extensions, setup: Core.Setup.t) => {
         | Some(v) =>
           let extension = Path.extname(v);
           switch (
-            Model.LanguageInfo.getScopeFromExtension(
-              languageInfo,
-              extension,
-            )
+            Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
           ) {
           | None => default
-          | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc));
+          | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
           };
         }
       };
