@@ -19,7 +19,6 @@
         Oni_Model
         Oni_Store
         Oni_UI
-        isolinear
             )
   (preprocess (
                pps

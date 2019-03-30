@@ -13,6 +13,7 @@ open Oni_UI;
 
 module Core = Oni_Core;
 module Model = Oni_Model;
+module Store = Oni_Store;
 
 /**
    This allows a stack trace to be printed when exceptions occur
@@ -46,7 +47,7 @@ let init = app => {
   };
 
   let dispatch =
-    StoreThread.start(
+    Store.StoreThread.start(
       ~setup,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
