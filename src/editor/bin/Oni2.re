@@ -245,11 +245,16 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
+  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+  let dispatch = App.dispatch(app);
+
   Model.Menu.addEffects({
     openFile: neovimProtocol.openFile,
     getCurrentDir: neovimProtocol.getCurrentDir,
+    dispatch,
+    ripgrep,
   })
-  |> App.dispatch(app)
+  |> dispatch
   |> ignore;
 
   let inputHandler = Input.handle(~api=neovimProtocol, ~commands);

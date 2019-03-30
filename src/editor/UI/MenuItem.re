@@ -45,6 +45,7 @@ let createElement =
           ~source=
             Style.[
               fontFamily(uiFont.fontFile),
+              textOverflow(`Ellipsis),
               fontSize(uiFont.fontSize),
               color(theme.colors.editorMenuForeground),
               backgroundColor(bg),

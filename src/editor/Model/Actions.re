@@ -35,12 +35,13 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
-  | MenuRegisterEffects(Effects.t)
+  | MenuRegisterEffects(Effects.t(t))
   | MenuSearch(string)
-  | MenuOpen((UiMenu.menu, UiMenu.commandFactory))
+  | MenuOpen((UiMenu.menuType, UiMenu.commandFactory(t)))
   | MenuClose
   | MenuSelect
   | MenuPosition(int)
+  | MenuUpdate((UiMenu.menuType, list(UiMenu.command)))
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)

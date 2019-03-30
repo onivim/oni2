@@ -64,3 +64,28 @@ let stringContains = (word, substring) => {
   | Not_found => false
   };
 };
+
+/**
+   Get a slice from a list between two indices
+ */
+let rec sublist = (beginning, terminus, l) =>
+  switch (l) {
+  | [] => failwith("sublist")
+  | [h, ...t] =>
+    let tail =
+      if (terminus == 0) {
+        [];
+      } else {
+        sublist(beginning - 1, terminus - 1, t);
+      };
+    if (beginning > 0) {
+      tail;
+    } else {
+      [h, ...tail];
+    };
+  };
+
+let escapeSpaces = str => {
+  let whitespace = Str.regexp(" ");
+  Str.global_replace(whitespace, "\\ ", str);
+};
