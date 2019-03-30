@@ -109,12 +109,10 @@ let getActionsForBinding =
 
  */
 let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
-  prerr_endline("INPUT HANDLE");
   switch (state.inputControlMode) {
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] =>
-      prerr_endline("SENDING");
       [Actions.KeyboardInput(inputKey)];
     | actions => actions
     }
