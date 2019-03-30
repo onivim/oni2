@@ -263,25 +263,16 @@ module Effects = {
 
 module UiMenu = {
   [@deriving show({with_path: false})]
-  type menu =
-    | QuickOpen
-    | CommandPalette
-    | Closed;
-
-  [@deriving show({with_path: false})]
   type command = {
+    category: option(string),
     name: string,
     command: unit => unit,
     icon: option(string),
   };
 
-  type commandFactory = Effects.t => list(command);
-
   [@deriving show({with_path: false})]
   type t = {
-    effects: option(Effects.t),
     searchQuery: string,
-    menu,
     isOpen: bool,
     commands: list(command),
     selectedItem: int,

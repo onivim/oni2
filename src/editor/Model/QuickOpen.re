@@ -17,6 +17,7 @@ let content = (effects: Effects.t) =>
   |> List.filter(item => !Sys.is_directory(item))
   |> List.map(file =>
        {
+         category: None,
          name: file,
          command: () => effects.openFile(~path=file, ()),
          icon: Some({||}),

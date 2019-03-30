@@ -40,7 +40,7 @@ type t =
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuRegisterEffects(Effects.t)
   | MenuSearch(string)
-  | MenuOpen((UiMenu.menu, UiMenu.commandFactory))
+  | MenuOpen(UiMenu.commandFactory)
   | MenuClose
   | MenuSelect
   | MenuPosition(int)
