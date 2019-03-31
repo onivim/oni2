@@ -23,14 +23,13 @@ let content = (effects: Effects.t(Actions.t)) =>
   |> (
     fun
     | Some(dir) => {
-        effects.ripgrep.search(dir, items => {
-          Console.log("List len in QuickOpen is " ++ string_of_int(List.length(items)))
+        effects.ripgrep.search(dir, items =>
           items
           |> List.filter(item => !Sys.is_directory(item))
           |> List.map(stringToCommand(effects, dir))
           |> (content => effects.dispatch(MenuUpdate((QuickOpen, content))))
           |> ignore
-        });
+        );
         [];
       }
     | None => []

@@ -27,12 +27,8 @@ let addCommands =
   | None => []
   };
 
-let updateMenuCommands = ((mType, commands), state: UiMenu.t(Actions.t)) => {
-  Console.log(mType);
-  Console.log(state.menuType);
-  Console.log(mType == state.menuType);
+let updateMenuCommands = ((mType, commands), state: UiMenu.t(Actions.t)) =>
   mType == state.menuType ? List.append(state.commands, commands) : commands;
-}
 
 let reduce = (state, action: Actions.t) =>
   switch (action) {
@@ -53,7 +49,13 @@ let reduce = (state, action: Actions.t) =>
       ...state,
       commands: updateMenuCommands(update, state),
     }
-  | MenuClose => {...state, commands: [], isOpen: false, menuType: Closed, selectedItem: 0}
+  | MenuClose => {
+      ...state,
+      commands: [],
+      isOpen: false,
+      menuType: Closed,
+      selectedItem: 0,
+    }
   | MenuSelect =>
     /**
       TODO: Refactor this to middleware so this action is handled like a redux side-effect
