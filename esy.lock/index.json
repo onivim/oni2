@@ -1,5 +1,5 @@
 {
-  "checksum": "06a2860ea58db07f05a2e8233cd8f6a7",
+  "checksum": "7cd3b2ab895c418202191d9635014caf",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -138,6 +138,23 @@
         "refmterr@3.1.10@d41d8cd9", "pesy@0.4.1@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "@opam/dune@opam:1.7.3@72aad784",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "reasonFuzz@github:CrossR/reasonFuzz#e454461@d41d8cd9": {
+      "id": "reasonFuzz@github:CrossR/reasonFuzz#e454461@d41d8cd9",
+      "name": "reasonFuzz",
+      "version": "github:CrossR/reasonFuzz#e454461",
+      "source": {
+        "type": "install",
+        "source": [ "github:CrossR/reasonFuzz#e454461" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "reperf@1.4.0@d41d8cd9", "refmterr@3.1.10@d41d8cd9",
+        "pesy@0.4.1@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
+        "@reason-native/console@0.0.3@d41d8cd9",
+        "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -381,6 +398,7 @@
       "overrides": [],
       "dependencies": [
         "revery@0.15.3@d41d8cd9", "rench@1.5.0@d41d8cd9",
+        "reasonFuzz@github:CrossR/reasonFuzz#e454461@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "reason-glfw@3.2.1023@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
