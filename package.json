@@ -50,7 +50,7 @@
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349",
-    "reasonFuzz": "github:CrossR/reasonFuzz#e454461"
+    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
