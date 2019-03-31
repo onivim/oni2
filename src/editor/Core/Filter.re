@@ -24,7 +24,7 @@ let menu = (query, items) => {
           | _ => ((-9999999999), (-9999999999))
           };
 
-        compare(firstScore, secondScore) * (-1);
+        compare(secondScore, firstScore)
       },
       items,
     )
