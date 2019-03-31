@@ -27,8 +27,12 @@ let addCommands =
   | None => []
   };
 
-let updateMenuCommands = ((mType, commands), state: UiMenu.t(Actions.t)) =>
+let updateMenuCommands = ((mType, commands), state: UiMenu.t(Actions.t)) => {
+  Console.log(mType);
+  Console.log(state.menuType);
+  Console.log(mType == state.menuType);
   mType == state.menuType ? List.append(state.commands, commands) : commands;
+}
 
 let reduce = (state, action: Actions.t) =>
   switch (action) {
