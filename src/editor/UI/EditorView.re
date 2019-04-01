@@ -26,17 +26,17 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toEditorTabs = (state: State.t) =>
+let toEditorTabs = (tabs: list(State.Tab.t)) =>
   List.map(
     (t: State.Tab.t) =>
       Tabs.{
         title: t.title,
         modified: t.modified,
-        active: t.active && !state.home.isOpen,
+        active: t.active,
         onClick: GlobalContext.current().openFile(~id=t.id),
         onClose: GlobalContext.current().closeFile(~id=t.id),
       },
-    state.tabs,
+    tabs,
   );
 
 let toMessageTabs = (home: Home.t) =>
@@ -56,9 +56,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let {mode, theme, uiFont, _}: State.t = state;
 
-    let editorTabs = toEditorTabs(state);
+    let editorTabs = toEditorTabs(state.tabs);
     let messageTabs = toMessageTabs(state.home);
-    let tabs = List.append(messageTabs, editorTabs);
+    let tabs = state.home.isOpen ? messageTabs : editorTabs;
 
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
