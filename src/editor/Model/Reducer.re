@@ -72,6 +72,7 @@ let reduce: (State.t, Actions.t) => State.t =
       commandline: Commandline.reduce(s.commandline, a),
       menu: Menu.reduce(s.menu, a),
       statusBar: StatusBarReducer.reduce(s.statusBar, a),
+      home: Home.reduce(s.home, a),
     };
 
     switch (a) {

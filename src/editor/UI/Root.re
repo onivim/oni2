@@ -55,7 +55,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style>
-        <View style=surfaceStyle> <EditorView state /> </View>
+        <View style=surfaceStyle>
+          {state.home.isOpen ? <HomeView theme state /> : <EditorView state />}
+        </View>
         <Overlay>
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />

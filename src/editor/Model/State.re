@@ -19,6 +19,7 @@ module Tab = {
 };
 
 type t = {
+  home: Home.t,
   mode: Mode.t,
   tabs: list(Tab.t),
   buffers: BufferMap.t,
@@ -38,6 +39,7 @@ type t = {
 
 let create: unit => t =
   () => {
+    home: Home.create(),
     configuration: Configuration.create(),
     mode: Insert,
     menu: Menu.create(),
