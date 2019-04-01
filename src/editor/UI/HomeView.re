@@ -19,27 +19,56 @@ let containerStyles = (theme: Theme.t) =>
     justifyContent(`Center),
   ];
 
-let buttonStyles = (theme: Theme.t) =>
-  Style.[color(theme.colors.foreground)];
+/* let buttonStyles = (theme: Theme.t) => */
+/*   Style.[ */
+/*     color(theme.colors.foreground), */
+/*     backgroundColor(theme.colors.background), */
+/*   ]; */
 
-let startEditor = () => GlobalContext.current().dispatch(ShowHome);
+let startEditor = () => GlobalContext.current().dispatch(ShowEditor);
 
 let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
   component(hooks => {
+    let (animatedOpacity, hooks) =
+      Hooks.animation(
+        Animated.floatValue(0.),
+        {
+          toValue: 1.0,
+          duration: Seconds(0.5),
+          delay: Seconds(2.),
+          repeat: false,
+          easing: Animated.linear,
+        },
+        hooks,
+      );
     let oniFontFamily = state.uiFont.fontFile;
     (
       hooks,
       <View style={containerStyles(theme)}>
-        <Image src="logo.png" style=Style.[width(30), height(30)] />
-        <Text
-          text="Start Screen"
-          style=Style.[fontFamily(oniFontFamily), fontSize(20)]
-        />
-        <Button
-          title="Open Editor"
-          fontFamily=oniFontFamily
-          onClick=startEditor
-        />
+        <View
+          style=Style.[
+            opacity(animatedOpacity),
+            alignItems(`Center),
+            justifyContent(`Center),
+          ]>
+          <Text
+            text="Welcome to Oni2"
+            style=Style.[fontFamily(oniFontFamily), fontSize(20)]
+          />
+          <Image
+            src="logo.png"
+            style=Style.[width(30), height(30), marginBottom(20)]
+          />
+          <Button
+            title="Open Editor"
+            fontFamily=oniFontFamily
+            color={theme.colors.background}
+            fontSize=20
+            width=120
+            height=40
+            onClick=startEditor
+          />
+        </View>
       </View>,
     );
   });
