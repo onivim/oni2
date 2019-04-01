@@ -1,25 +1,36 @@
-open Oni_Core.Types;
+open Oni_Core;
+open Types;
 open UiMenu;
 
-let content = (effects: Effects.t) =>
+/**
+   remove the parent directory from the path rendered since searches
+   are relative to the directory passed in and the displayed string
+   is too long otherwise
+ */
+let getDisplayPath = (fullPath, dir) => {
+  let re = Str.regexp_string(dir ++ Filename.dir_sep);
+  Str.replace_first(re, "", fullPath);
+};
+
+let stringToCommand = (effects: Effects.t(Actions.t), parentDir, fullPath) => {
+  name: getDisplayPath(fullPath, parentDir),
+  command: () => effects.openFile(~path=fullPath, ()),
+  icon: Some({||}),
+};
+
+let content = (effects: Effects.t(Actions.t)) =>
   effects.getCurrentDir()
   |> (
     fun
-    | Some(dir) => Sys.readdir(dir)
-    | None => [||]
-  )
-  |> Array.to_list
-  /*
-     In the future we might want to allow
-     functionality like switching to a directory on select
-     ...for now we filter out all directories
-   */
-  |> List.filter(item => !Sys.is_directory(item))
-  |> List.map(file =>
-       {
-         category: None,
-         name: file,
-         command: () => effects.openFile(~path=file, ()),
-         icon: Some({||}),
-       }
-     );
+    | Some(dir) => {
+        effects.ripgrep.search(dir, items =>
+          items
+          |> List.filter(item => !Sys.is_directory(item))
+          |> List.map(stringToCommand(effects, dir))
+          |> (content => effects.dispatch(MenuUpdate((QuickOpen, content))))
+          |> ignore
+        );
+        [];
+      }
+    | None => []
+  );

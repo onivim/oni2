@@ -23,7 +23,7 @@ let containerStyles = (theme: Theme.t) =>
     ),
   ];
 
-let menuItemStyle = Style.[fontSize(14)];
+let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50)];
 
 let inputStyles = font =>
   Style.[
@@ -62,14 +62,11 @@ let loseFocusOnClose = isOpen =>
     }
   );
 
+type fontT = Types.UiFont.t;
+type menuT = Types.UiMenu.t(Oni_Model.Actions.t);
+
 let createElement =
-    (
-      ~children as _,
-      ~font: Types.UiFont.t,
-      ~menu: Types.UiMenu.t,
-      ~theme: Theme.t,
-      (),
-    ) =>
+    (~children as _, ~font: fontT, ~menu: menuT, ~theme: Theme.t, ()) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(
@@ -77,6 +74,7 @@ let createElement =
         () => Some(() => loseFocusOnClose(menu.isOpen)),
         hooks,
       );
+
     React.(
       hooks,
       menu.isOpen
@@ -91,19 +89,24 @@ let createElement =
                 onKeyDown=handleKeyDown
               />
             </View>
-            <ScrollView style=Style.[height(menuHeight - 50)]>
-              ...{List.mapi(
-                (index, cmd: Types.UiMenu.command) =>
+            <View>
+              <FlatList
+                rowHeight=40
+                height={menuHeight - 50}
+                width=menuWidth
+                count={List.length(menu.commands)}
+                render={index => {
+                  let cmd = List.nth(menu.commands, index);
                   <MenuItem
                     icon={getIcon(cmd.icon)}
                     style=menuItemStyle
                     label={cmd.name}
                     selected={index == menu.selectedItem}
                     theme
-                  />,
-                menu.commands,
-              )}
-            </ScrollView>
+                  />;
+                }}
+              />
+            </View>
           </View>
         : React.listToElement([]),
     );

@@ -18,3 +18,4 @@ module Theme = Theme;
 module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Filter = Filter;
+module Ripgrep = Ripgrep;

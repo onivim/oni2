@@ -25,7 +25,7 @@ type t = {
   activeBufferId: int,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  menu: UiMenu.t,
+  menu: UiMenu.t(Actions.t),
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,

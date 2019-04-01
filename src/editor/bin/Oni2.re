@@ -136,6 +136,7 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
+<<<<<<< HEAD
   /* FIXFIX */
   /* Model.Menu.addEffects({ */
   /*   openFile: neovimProtocol.openFile, */
@@ -146,6 +147,19 @@ let init = app => {
 
   /* REFACTOR to effect */
   /* FIXFIX */
+=======
+  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+  let dispatch = App.dispatch(app);
+
+  Model.Menu.addEffects({
+    openFile: neovimProtocol.openFile,
+    getCurrentDir: neovimProtocol.getCurrentDir,
+    dispatch,
+    ripgrep,
+  })
+  |> dispatch
+  |> ignore;
+>>>>>>> master
 
   /* Add an updater to handle a KeyboardInput action */
   let inputHandler = Input.handle(~commands);
