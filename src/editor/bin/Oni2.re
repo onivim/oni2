@@ -124,7 +124,7 @@ let init = app => {
          )
        );
 
-  let onMessage = (scope, method, args) => {
+  let onMessage = (scope, method, args) =>
     switch (scope, method, args) {
     | (
         "MainThreadStatusBar",
@@ -155,7 +155,6 @@ let init = app => {
       Ok(None);
     | _ => Ok(None)
     };
-  };
 
   let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
@@ -293,16 +292,6 @@ let init = app => {
       },
       Seconds(0.),
     );
-
-  /* let _ = */
-  /*   Event.subscribe(nvimApi.onNotification, n => */
-  /*     prerr_endline( */
-  /*       "Raw Notification: " */
-  /*       ++ n.notificationType */
-  /*       ++ " | " */
-  /*       ++ Msgpck.show(n.payload), */
-  /*     ) */
-  /*   ); */
 
   let _ =
     Event.subscribe(

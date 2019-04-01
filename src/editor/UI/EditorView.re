@@ -26,20 +26,18 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toEditorTabs = (tabs: list(State.Tab.t)) => {
-  let f = (t: State.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: GlobalContext.current().openFile(~id=t.id),
-      onClose: GlobalContext.current().closeFile(~id=t.id),
-    };
-    ret;
-  };
-
-  List.map(f, tabs);
-};
+let toEditorTabs = (state: State.t) =>
+  List.map(
+    (t: State.Tab.t) =>
+      Tabs.{
+        title: t.title,
+        modified: t.modified,
+        active: t.active && !state.home.isOpen,
+        onClick: GlobalContext.current().openFile(~id=t.id),
+        onClose: GlobalContext.current().closeFile(~id=t.id),
+      },
+    state.tabs,
+  );
 
 let toMessageTabs = (home: Home.t) =>
   List.map(
@@ -56,18 +54,19 @@ let toMessageTabs = (home: Home.t) =>
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
-    let {mode, theme, _}: State.t = state;
+    let {mode, theme, uiFont, _}: State.t = state;
 
-    let tabs = toEditorTabs(state.tabs);
-    let guiTabs = toMessageTabs(state.home);
-    let uiFont = state.uiFont;
+    let editorTabs = toEditorTabs(state);
+    let messageTabs = toMessageTabs(state.home);
+    let tabs = List.append(messageTabs, editorTabs);
+
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
     (
       hooks,
       <View style>
-        <Tabs theme tabs={List.append(guiTabs, tabs)} mode uiFont />
+        <Tabs theme tabs mode uiFont />
         {
           state.home.isOpen ? <HomeView theme state /> : <EditorSurface state />
         }
