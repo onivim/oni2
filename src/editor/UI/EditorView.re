@@ -41,12 +41,26 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
   List.map(f, tabs);
 };
 
+let toGuiTab = (tabs: list(Home.guiTab)) =>
+  List.map(
+    (t: Home.guiTab) =>
+      Tabs.{
+        title: t.title,
+        modified: false,
+        active: true,
+        onClose: () => t.onClose() |> GlobalContext.current().dispatch,
+        onClick: () => t.onClick() |> GlobalContext.current().dispatch,
+      },
+    tabs,
+  );
+
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
 
     let tabs = toUiTabs(state.tabs);
+    let guiTabs = toGuiTab(state.home.tabs);
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
@@ -54,8 +68,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style>
-        <Tabs theme tabs mode uiFont />
-        <EditorSurface state />
+        <Tabs theme tabs={List.append(guiTabs, tabs)} mode uiFont />
+        {
+          state.home.isOpen ? <HomeView theme state /> : <EditorSurface state />
+        }
       </View>,
     );
   });

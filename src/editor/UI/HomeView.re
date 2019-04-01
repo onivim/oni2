@@ -5,7 +5,9 @@ open Oni_Core;
 
 let component = React.component("Home");
 
-let containerStyles = (theme: Theme.t) =>
+let containerStyles = Style.[flexGrow(1)];
+
+let homeContainerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.background),
     color(theme.colors.foreground),
@@ -20,6 +22,15 @@ let containerStyles = (theme: Theme.t) =>
   ];
 
 let startEditor = () => GlobalContext.current().dispatch(ShowEditor);
+let homeMenuContainer = (theme: Theme.t) =>
+  Style.[
+    width(500),
+    height(300),
+    backgroundColor(theme.colors.statusBarBackground),
+    flexDirection(`Column),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 
 let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
   component(hooks => {
@@ -28,7 +39,7 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
         Animated.floatValue(0.),
         {
           toValue: 1.0,
-          duration: Seconds(0.5),
+          duration: Seconds(0.3),
           delay: Seconds(2.),
           repeat: false,
           easing: Animated.linear,
@@ -38,12 +49,11 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
     let oniFontFamily = state.uiFont.fontFile;
     (
       hooks,
-      <View style={containerStyles(theme)}>
+      <View style=containerStyles>
         <View
           style=Style.[
             opacity(animatedOpacity),
-            alignItems(`Center),
-            justifyContent(`Center),
+            ...homeContainerStyles(theme),
           ]>
           <Text
             text="Welcome to Oni2"
@@ -53,15 +63,17 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
             src="logo.png"
             style=Style.[width(50), height(50), marginBottom(20)]
           />
-          <Button
-            title="Open Editor"
-            fontFamily=oniFontFamily
-            color={theme.colors.background}
-            fontSize=20
-            width=120
-            height=40
-            onClick=startEditor
-          />
+          <View style={homeMenuContainer(theme)}>
+            <Button
+              title="Open Editor"
+              fontFamily=oniFontFamily
+              color={theme.colors.background}
+              fontSize=20
+              width=120
+              height=40
+              onClick=startEditor
+            />
+          </View>
         </View>
       </View>,
     );
