@@ -26,7 +26,7 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(State.Tab.t)) => {
+let toEditorTabs = (tabs: list(State.Tab.t)) => {
   let f = (t: State.Tab.t) => {
     let ret: Tabs.tabInfo = {
       title: t.title,
@@ -41,26 +41,25 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
   List.map(f, tabs);
 };
 
-let toGuiTab = (tabs: list(Home.guiTab)) =>
+let toMessageTabs = (home: Home.t) =>
   List.map(
     (t: Home.guiTab) =>
       Tabs.{
         title: t.title,
         modified: false,
-        active: true,
+        active: home.isOpen,
         onClose: () => t.onClose() |> GlobalContext.current().dispatch,
         onClick: () => t.onClick() |> GlobalContext.current().dispatch,
       },
-    tabs,
+    home.tabs,
   );
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
-    let theme = state.theme;
-    let mode = state.mode;
+    let {mode, theme, _}: State.t = state;
 
-    let tabs = toUiTabs(state.tabs);
-    let guiTabs = toGuiTab(state.home.tabs);
+    let tabs = toEditorTabs(state.tabs);
+    let guiTabs = toMessageTabs(state.home);
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
