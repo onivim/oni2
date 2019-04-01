@@ -19,12 +19,6 @@ let containerStyles = (theme: Theme.t) =>
     justifyContent(`Center),
   ];
 
-/* let buttonStyles = (theme: Theme.t) => */
-/*   Style.[ */
-/*     color(theme.colors.foreground), */
-/*     backgroundColor(theme.colors.background), */
-/*   ]; */
-
 let startEditor = () => GlobalContext.current().dispatch(ShowEditor);
 
 let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
@@ -57,7 +51,7 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
           />
           <Image
             src="logo.png"
-            style=Style.[width(30), height(30), marginBottom(20)]
+            style=Style.[width(50), height(50), marginBottom(20)]
           />
           <Button
             title="Open Editor"
