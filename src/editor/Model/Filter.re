@@ -3,7 +3,6 @@
 
    Module to handle filtering of items using various strategies
  */
-
 open Actions;
 
 let _compareScore =
@@ -34,17 +33,17 @@ let menu = (query, items) => {
     };
 
   let scoreList =
-      List.map(
-        item1 =>
-          (
-            ReasonFuzz.pathFuzzyMatch(
-              ~line=formatName(item1.name, shouldLower),
-              ~pattern=query,
-            ),
-            item1,
+    List.map(
+      item1 =>
+        (
+          ReasonFuzz.pathFuzzyMatch(
+            ~line=formatName(item1.name, shouldLower),
+            ~pattern=query,
           ),
-        items,
-      );
+          item1,
+        ),
+      items,
+    );
 
   let sortedList =
     List.sort((item1, item2) => _compareScore(item1, item2), scoreList);
