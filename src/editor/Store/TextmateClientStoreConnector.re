@@ -25,8 +25,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
-  let (stream, dispatch) =
-    Isolinear.Stream.create();
+  let (stream, dispatch) = Isolinear.Stream.create();
 
   let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
   let onColorMap = cm => dispatch(Model.Actions.SyntaxHighlightColorMap(cm));

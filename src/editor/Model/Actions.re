@@ -52,12 +52,12 @@ type t =
   | StatusBarDisposeItem(int)
   | Noop
 and menuCommand = {
-   category: option(string),
-   name: string,
-   command: unit => t,
-   icon: option(string),
+  category: option(string),
+  name: string,
+  command: unit => t,
+  icon: option(string),
 }
 and menuSetItems = list(menuCommand) => unit
-and menuCreationFunction = (menuSetItems) => unit
+and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
-and menuCreator = (menuSetItems) => menuDisposeFunction;
+and menuCreator = menuSetItems => menuDisposeFunction;

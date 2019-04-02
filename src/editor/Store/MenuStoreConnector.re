@@ -14,35 +14,33 @@ module Extensions = Oni_Extensions;
 let start = (setup: Core.Setup.t) => {
   ignore(setup);
 
-  let (stream, dispatch) =
-    Isolinear.Stream.create();
+  let (stream, dispatch) = Isolinear.Stream.create();
 
-  let position = (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
+  let position =
+      (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
     let nextIndex = selectedItem + change;
     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
   };
 
-
   let menuOpenEffect = menuConstructor =>
-      Isolinear.Effect.create(~name="menu.construct", () => {
-         let setItems = (items) => dispatch(Model.Actions.MenuUpdate(items));
+    Isolinear.Effect.create(~name="menu.construct", () => {
+      let setItems = items => dispatch(Model.Actions.MenuUpdate(items));
 
-         let disposeFunction = (menuConstructor(setItems));
-         dispatch(Model.Actions.MenuSetDispose(disposeFunction));
-      })
+      let disposeFunction = menuConstructor(setItems);
+      dispatch(Model.Actions.MenuSetDispose(disposeFunction));
+    });
 
   let selectItemEffect = command =>
-    Isolinear.Effect.createWithDispatch(~name="menu.selectItem", (dispatch) => {
-        let action = command();
-        dispatch(action);
+    Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
+      let action = command();
+      dispatch(action);
     });
 
   let updateMenuCommands = (commands, state: Model.Menu.t) =>
     List.append(state.commands, commands);
 
-
-  let disposeMenuEffect = dispose => Isolinear.Effect.create(~name="menu.dispose", dispose);
-  /* let updater = (_state, _action) => (_state, Isolinear.Effect.none); */
+  let disposeMenuEffect = dispose =>
+    Isolinear.Effect.create(~name="menu.dispose", dispose);
 
   let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
     switch (action) {
@@ -61,25 +59,24 @@ let start = (setup: Core.Setup.t) => {
         },
         Isolinear.Effect.none,
       )
-    | MenuOpen(menuConstructor) => ({
-        ...state,
-        isOpen: true,
-        commands: [],
-    }, menuOpenEffect(menuConstructor))
+    | MenuOpen(menuConstructor) => (
+        {...state, isOpen: true, commands: []},
+        menuOpenEffect(menuConstructor),
+      )
     | MenuUpdate(update) => (
         {...state, commands: updateMenuCommands(update, state)},
         Isolinear.Effect.none,
       )
     | MenuSetDispose(dispose) => (
-        {...state, dispose}, Isolinear.Effect.none
-    )
-    | MenuClose => {
-        let disposeFunction = state.dispose;
+        {...state, dispose},
+        Isolinear.Effect.none,
+      )
+    | MenuClose =>
+      let disposeFunction = state.dispose;
       (
         {...state, isOpen: false, selectedItem: 0},
         disposeMenuEffect(disposeFunction),
-      )
-    }
+      );
     | MenuSelect =>
       let effect =
         List.nth(state.commands, state.selectedItem)

@@ -38,7 +38,8 @@ let discoverExtensions = (setup: Core.Setup.t) => {
 let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
   let state = Model.State.create();
 
-  let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) = ref([]);
+  let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
+    ref([]);
   let latestState: ref(Model.State.t) = ref(state);
 
   let extensions = discoverExtensions(setup);

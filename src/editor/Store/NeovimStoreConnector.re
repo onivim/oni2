@@ -68,7 +68,10 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
   let updater = (state, action) => {
     switch (action) {
     | Model.Actions.OpenFile(path) => (state, openFileEffect(path))
-    | Model.Actions.OpenConfigFile(path) => (state, openConfigFileEffect(path))
+    | Model.Actions.OpenConfigFile(path) => (
+        state,
+        openConfigFileEffect(path),
+      )
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)

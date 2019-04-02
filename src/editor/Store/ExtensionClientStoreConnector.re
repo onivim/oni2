@@ -14,8 +14,7 @@ module Extensions = Oni_Extensions;
 open Oni_Extensions;
 
 let start = (extensions, setup: Core.Setup.t) => {
-  let (stream, dispatch) =
-    Isolinear.Stream.create();
+  let (stream, dispatch) = Isolinear.Stream.create();
 
   let onExtHostClosed = () => print_endline("ext host closed");
 
