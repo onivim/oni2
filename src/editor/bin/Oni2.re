@@ -118,7 +118,7 @@ let init = app => {
               ~fontSize,
               ~measuredWidth=
                 float_of_int(glyph.advance) /. (64. *. scaleFactor),
-              ~measuredHeight=actualHeight,
+              ~measuredHeight=floor(actualHeight +. 0.5),
               (),
             ),
           ),
