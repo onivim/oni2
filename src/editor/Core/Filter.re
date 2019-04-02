@@ -15,22 +15,21 @@ let _compareScore =
   ReasonFuzz.compareScores(scoreObj1, scoreObj2);
 };
 
-let formatName = (itemName, shouldLower) => {
+let formatName = (itemName, shouldLower) =>
   if (shouldLower) {
-    String.lowercase_ascii(itemName)
+    String.lowercase_ascii(itemName);
   } else {
-    itemName
+    itemName;
   };
-};
 
 let menu = (query, items) => {
-
-  /* Hard-coded to true for testing if it feels better. */
-  let shouldLower = if (true) {
-    true
-  } else {
-    false
-  };
+  /* Use smart search for now, add config option though. */
+  let shouldLower =
+    if (query == String.lowercase_ascii(query)) {
+      true;
+    } else {
+      false;
+    };
 
   let scoreList =
     Types.UiMenu.(
