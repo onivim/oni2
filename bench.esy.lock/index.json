@@ -1,5 +1,5 @@
 {
-  "checksum": "a7821bb1685aa3bdfd3ff5f117850677",
+  "checksum": "b56b5160e89684efae7496703a0c899a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -265,6 +265,23 @@
       "dependencies": [ "graceful-fs@4.1.15@d41d8cd9" ],
       "devDependencies": []
     },
+    "isolinear@2.0.0@d41d8cd9": {
+      "id": "isolinear@2.0.0@d41d8cd9",
+      "name": "isolinear",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.0.0.tgz#sha1:b2825008a358f5ffdf76089aa0416b894ab6404c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.1.10@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/reason@3.4.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
     "graceful-fs@4.1.15@d41d8cd9": {
       "id": "graceful-fs@4.1.15@d41d8cd9",
       "name": "graceful-fs",
@@ -384,8 +401,8 @@
         "rench@1.5.0@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "reason-glfw@3.2.1024@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "@reason-native/rely@1.3.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
-        "@opam/yojson@opam:1.5.0@890db858",
+        "isolinear@2.0.0@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
+        "@opam/zed@opam:1.6@004ea65e", "@opam/yojson@opam:1.5.0@890db858",
         "@opam/ppx_deriving_yojson@opam:3.3@80aab5d8",
         "@opam/ppx_deriving@opam:4.2.1@7927b93a",
         "@opam/ocamlbuild@opam:0.14.0@427a2331",
