@@ -108,21 +108,14 @@ let getActionsForBinding =
   Handle Input from Oni or Neovim
 
  */
-let handle =
-    (
-      ~api: Oni_Neovim.NeovimProtocol.t,
-      ~state: State.t,
-      ~commands: Keybindings.t,
-      inputKey,
-    ) =>
+let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] as default =>
-      api.input(inputKey) |> ignore;
-      default;
+    | [] => [Actions.KeyboardInput(inputKey)]
     | actions => actions
     }
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };
+};
