@@ -33,8 +33,8 @@ let toEditorTabs = (tabs: list(State.Tab.t)) =>
         title: t.title,
         modified: t.modified,
         active: t.active,
-      onClick: () => GlobalContext.current().openFileById(t.id),
-      onClose: () => GlobalContext.current().closeFileById(t.id),
+        onClick: () => GlobalContext.current().openFileById(t.id),
+        onClose: () => GlobalContext.current().closeFileById(t.id),
       },
     tabs,
   );
@@ -67,9 +67,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        {
-          state.home.isOpen ? <HomeView theme state /> : <EditorSurface state />
-        }
+        {state.home.isOpen ? <HomeView theme state /> : <EditorSurface state />}
       </View>,
     );
   });
