@@ -23,4 +23,3 @@ module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
 module Tokenizer = Tokenizer;
 module Wildmenu = Wildmenu;
-module QuickOpen = QuickOpen;
