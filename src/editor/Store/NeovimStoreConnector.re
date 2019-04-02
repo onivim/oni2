@@ -42,6 +42,19 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
       }
     );
   let nvimApi = NeovimApi.make(msgpackTransport);
+
+  /* let _ = */
+  /*   Event.subscribe(nvimApi.onNotification, n => */
+  /*     prerr_endline( */
+  /*       "Raw Notification: " */
+  /*       ++ n.notificationType */
+  /*       ++ " | " */
+  /*       ++ Msgpck.show(n.payload), */
+  /*     ) */
+  /*   ); */
+  /* }, */
+  /* ); */
+
   let neovimProtocol = NeovimProtocol.make(nvimApi);
   neovimProtocol.uiAttach();
 

@@ -68,15 +68,10 @@ let init = app => {
             ),
           ),
         ),
+      openFileById: (id) => dispatch(Model.Actions.OpenFileById(id)),
+      closeFileById: (id) => dispatch(Model.Actions.CloseFileById(id)),
       editorScroll: (~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(deltaY)),
-      /* FIXFIX */
-      /* openFile: neovimProtocol.openFile, */
-      /* closeFile: neovimProtocol.closeFile, */
-      openFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) =>
-        ignore((path, id, openMethod)),
-      closeFile: (~path="", ~id=1, ~openMethod=Core.Types.Views.Buffer, ()) =>
-        ignore((path, id, openMethod)),
       dispatch,
     });
 
@@ -136,31 +131,6 @@ let init = app => {
 
   let commands = Core.Keybindings.get();
 
-  /* <<<<<<< HEAD */
-  /* FIXFIX */
-  /* Model.Menu.addEffects({ */
-  /*   openFile: neovimProtocol.openFile, */
-  /*   getCurrentDir: neovimProtocol.getCurrentDir, */
-  /* }) */
-  /* |> App.dispatch(app) */
-  /* |> ignore; */
-
-  /* REFACTOR to effect */
-  /* FIXFIX */
-  /* ======= */
-  /*   let ripgrep = Core.Ripgrep.make(setup.rgPath); */
-  /*   let dispatch = App.dispatch(app); */
-
-  /*   Model.Menu.addEffects({ */
-  /*     openFile: neovimProtocol.openFile, */
-  /*     getCurrentDir: neovimProtocol.getCurrentDir, */
-  /*     dispatch, */
-  /*     ripgrep, */
-  /*   }) */
-  /*   |> dispatch */
-  /*   |> ignore; */
-  /* >>>>>>> master */
-
   /* Add an updater to handle a KeyboardInput action */
   let inputHandler = Input.handle(~commands);
 
@@ -187,21 +157,6 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-
-  /* let _ = */
-  /*   Event.subscribe(nvimApi.onNotification, n => */
-  /*     prerr_endline( */
-  /*       "Raw Notification: " */
-  /*       ++ n.notificationType */
-  /*       ++ " | " */
-  /*       ++ Msgpck.show(n.payload), */
-  /*     ) */
-  /*   ); */
-  /* }, */
-  /* ); */
-
-  /* FIXFIX */
-  /* Refactor to OpenFile action */
 
   /* List.iter( */
   /*   p => neovimProtocol.openFile(~path=p, ()), */
