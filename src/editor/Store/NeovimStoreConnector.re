@@ -90,12 +90,17 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let updater = (state, action) => {
     switch (action) {
-    | Model.Actions.Init => {
-        let filesToOpen = cli.filesToOpen;
-        let openFileEffects = filesToOpen |> List.map(openFileByPathEffect) |> Isolinear.Effect.batch;
-        (state, openFileEffects)
-    }
-    | Model.Actions.OpenFileByPath(path) => (state, openFileByPathEffect(path))
+    | Model.Actions.Init =>
+      let filesToOpen = cli.filesToOpen;
+      let openFileEffects =
+        filesToOpen
+        |> List.map(openFileByPathEffect)
+        |> Isolinear.Effect.batch;
+      (state, openFileEffects);
+    | Model.Actions.OpenFileByPath(path) => (
+        state,
+        openFileByPathEffect(path),
+      )
     | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
     | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.OpenConfigFile(path) => (

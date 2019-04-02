@@ -69,8 +69,8 @@ let init = app => {
             ),
           ),
         ),
-      openFileById: (id) => dispatch(Model.Actions.OpenFileById(id)),
-      closeFileById: (id) => dispatch(Model.Actions.CloseFileById(id)),
+      openFileById: id => dispatch(Model.Actions.OpenFileById(id)),
+      closeFileById: id => dispatch(Model.Actions.CloseFileById(id)),
       editorScroll: (~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(deltaY)),
       dispatch,

@@ -16,8 +16,8 @@ type editorScroll = (~deltaY: float, unit) => unit;
 type t = {
   notifySizeChanged,
   editorScroll,
-  openFileById: (int) => unit,
-  closeFileById: (int) => unit,
+  openFileById: int => unit,
+  closeFileById: int => unit,
   dispatch: Actions.t => unit,
   state: State.t,
 };

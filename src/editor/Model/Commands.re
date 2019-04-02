@@ -13,12 +13,7 @@ let oniCommands = [
       SetInputControlMode(TextInputFocus),
     ],
   },
-  {
-    name: "quickOpen.open",
-    command: _ => [
-      QuickOpen,
-    ],
-  },
+  {name: "quickOpen.open", command: _ => [QuickOpen]},
   {
     name: "menu.close",
     command: _ => [MenuClose, SetInputControlMode(EditorTextFocus)],

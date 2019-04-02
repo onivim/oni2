@@ -35,7 +35,14 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~cliOptions: Core.Cli.t, ~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+let start =
+    (
+      ~cliOptions: Core.Cli.t,
+      ~setup: Core.Setup.t,
+      ~executingDirectory,
+      ~onStateChanged,
+      (),
+    ) => {
   let state = Model.State.create();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
