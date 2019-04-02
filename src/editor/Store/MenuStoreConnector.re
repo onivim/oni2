@@ -4,7 +4,7 @@
  * This implements an updater (reducer + side effects) for the Menu
  */
 
-open Rench;
+/* open Rench; */
 
 module Core = Oni_Core;
 module Model = Oni_Model;
@@ -13,58 +13,65 @@ module Extensions = Oni_Extensions;
 
 let start = (setup: Core.Setup.t) => {
 
-  let _dispatch = ref(None);
-  let dispatch = action => {
-    switch (_dispatch^) {
-    | None => ()
-    | Some(v) => v(action)
+    ignore(setup);
+
+    let _dispatch = ref(None);
+    let dispatch = action => {
+        switch (_dispatch^) {
+            | None => ()
+            | Some(v) => v(action)
+            };
     };
-  };
 
-  let stream =
-    Isolinear.Stream.create(dispatch => _dispatch := Some(dispatch));
+    let stream =
+        Isolinear.Stream.create(dispatch => _dispatch := Some(dispatch));
 
-let position = (selectedItem, change, commands: list(command)) => {
-  let nextIndex = selectedItem + change;
-  nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
-};
+    ignore(_dispatch);
+    let _ = dispatch;
 
-    let selectItemEffect = (command) => Isolinear.Effect.create("menu.selectItem", () => command());
+    /* let position = (selectedItem, change, commands: list(Model.MenuCommand.t)) => { */
+    /*     let nextIndex = selectedItem + change; */
+    /*     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex; */
+    /*     }; */
 
-let updateMenuCommands = (commands, state: Menu.t) =>
-  List.append(state.commands, commands);
+    /* let selectItemEffect = (command) => Isolinear.Effect.create("menu.selectItem", () => command()); */
+
+    /* let updateMenuCommands = (commands, state: Model.Menu.t) => */
+    /*     List.append(state.commands, commands); */
 
 
-  let updater = (state, action: Actions.t) =>
-  switch (action) {
-  | MenuPosition(pos) => ({
-      ...state,
-      selectedItem: position(state.selectedItem, pos, state.commands),
-    }, Isolinear.Effect.none)
-  | MenuSearch(query) => ({
-      ...state,
-      searchQuery: query,
-      commands: Filter.menu(query, state.commands),
-    }, Isolinear.Effect.none)
-  /* | MenuOpen((menuType, commands)) => */
-  /*   addCommands(commands, state.effects) */
-  /*   |> (cmds => {...state, isOpen: true, menuType, commands: cmds}) */
-  | MenuUpdate(update) => ({
-      ...state,
-      commands: updateMenuCommands(update, state),
-    }, Isolinear.Effect.none),
-  | MenuClose => ({...state, isOpen: false, menuType: Closed, selectedItem: 0}, Isolinear.Effect.none),
-  | MenuSelect =>
+    let updater = (_state, _action) => (_state, Isolinear.Effect.none);
 
-    let effect = (List.nth(state.commands, state.selectedItem)
-    |> (selected => selectItemEffect(selected.command));
+    /* let updater = (state, action: Actions.t) => */
+    /*     switch (action) { */
+    /*         | MenuPosition(pos) => ({ */
+    /*             ...state, */
+    /*             selectedItem: position(state.selectedItem, pos, state.commands), */
+    /*         }, Isolinear.Effect.none) */
+    /*         | MenuSearch(query) => ({ */
+    /*             ...state, */
+    /*             searchQuery: query, */
+    /*             commands: Filter.menu(query, state.commands), */
+    /*         }, Isolinear.Effect.none); */
+    /*         /1* | MenuOpen((menuType, commands)) => *1/ */
+    /*         /1*   addCommands(commands, state.effects) *1/ */
+    /*         /1*   |> (cmds => {...state, isOpen: true, menuType, commands: cmds}) *1/ */
+    /*         | MenuUpdate(update) => ({ */
+    /*             ...state, */
+    /*             commands: updateMenuCommands(update, state), */
+    /*         }, Isolinear.Effect.none); */
+    /*         | MenuClose => ({...state, isOpen: false, menuType: Closed, selectedItem: 0}, Isolinear.Effect.none), */
+    /*         | MenuSelect => */
 
-    /* Also close menu */
-    let (closeState, closeEffect) = updater(state, MenuClose);
+    /*         let effect = (List.nth(state.commands, state.selectedItem) */
+    /*                       |> (selected => selectItemEffect(selected.command))); */
 
-    {closeState, Isolinear.Efffect.batch([effect, closeEffect])},
-  | _ => (state, Isolinear.Effect.none),
-  };
+    /*                       /1* Also close menu *1/ */
+    /*                       let (closeState, closeEffect) = updater(state, MenuClose); */
 
-  (updater, stream);
-};
+    /*                       {closeState, Isolinear.Efffect.batch([effect, closeEffect])}, */
+    /*                       | _ => (state, Isolinear.Effect.none), */
+    /*                       }; */
+
+          (updater, stream);
+          };

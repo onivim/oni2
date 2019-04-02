@@ -63,6 +63,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
           neovimUpdater,
           textmateUpdater,
           extHostUpdater,
+          menuHostUpdater,
         ]),
       (),
     );
@@ -94,6 +95,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
+  Isolinear.Stream.connect(dispatch, menuStream);
 
   let _ =
     Tick.interval(

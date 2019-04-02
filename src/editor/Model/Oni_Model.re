@@ -17,6 +17,7 @@ module EditorLayout = EditorLayout;
 module Filter = Filter;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
+module MenuCommand = MenuCommand;
 module Reducer = Reducer;
 module StatusBarModel = StatusBarModel;
 module State = State;
