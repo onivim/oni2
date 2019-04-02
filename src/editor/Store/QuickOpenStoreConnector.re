@@ -40,6 +40,7 @@ let start = (rg: Core.Ripgrep.t) => {
 
   let openQuickOpenEffect = Isolinear.Effect.createWithDispatch(~name="quickOpen.show", (dispatch) => {
     dispatch(Model.Actions.MenuOpen(createQuickOpen)); 
+    dispatch(Model.Actions.SetInputControlMode(TextInputFocus));
   });
 
   let updater = (state, action) => {
