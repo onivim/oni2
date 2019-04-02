@@ -112,8 +112,7 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] =>
-      [Actions.KeyboardInput(inputKey)];
+    | [] => [Actions.KeyboardInput(inputKey)]
     | actions => actions
     }
   | TextInputFocus

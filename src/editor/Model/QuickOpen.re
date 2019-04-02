@@ -1,6 +1,6 @@
-open Oni_Core;
-open Types;
-open UiMenu;
+/* open Oni_Core; */
+/* open Types; */
+/* open Menu; */
 
 /**
    remove the parent directory from the path rendered since searches
@@ -12,25 +12,31 @@ let getDisplayPath = (fullPath, dir) => {
   Str.replace_first(re, "", fullPath);
 };
 
-let stringToCommand = (effects: Effects.t(Actions.t), parentDir, fullPath) => {
-  name: getDisplayPath(fullPath, parentDir),
-  command: () => effects.openFile(~path=fullPath, ()),
-  icon: Some({||}),
-};
+/* let stringToCommand = (effects: Effects.t(Actions.t), parentDir, fullPath) => { */
+/*   name: getDisplayPath(fullPath, parentDir), */
+/*   command: () => effects.openFile(~path=fullPath, ()), */
+/*   icon: Some({||}), */
+/* }; */
 
-let content = (effects: Effects.t(Actions.t)) =>
-  effects.getCurrentDir()
-  |> (
-    fun
-    | Some(dir) => {
-        effects.ripgrep.search(dir, items =>
-          items
-          |> List.filter(item => !Sys.is_directory(item))
-          |> List.map(stringToCommand(effects, dir))
-          |> (content => effects.dispatch(MenuUpdate((QuickOpen, content))))
-          |> ignore
-        );
-        [];
-      }
-    | None => []
-  );
+/* let stringToCommand = (effects: Effects.t(Actions.t), parentDir, fullPath) => { */
+/*   name: getDisplayPath(fullPath, parentDir), */
+/*   command: () => effects.openFile(~path=fullPath, ()), */
+/*   icon: Some({||}), */
+/* }; */
+
+let content = () => [];
+/* effects.getCurrentDir() */
+/* |> ( */
+/*   fun */
+/*   | Some(dir) => { */
+/*       effects.ripgrep.search(dir, items => */
+/*         items */
+/*         |> List.filter(item => !Sys.is_directory(item)) */
+/*         |> List.map(stringToCommand(effects, dir)) */
+/*         |> (content => effects.dispatch(MenuUpdate((QuickOpen, content)))) */
+/*         |> ignore */
+/*       ); */
+/*       []; */
+/*     } */
+/*   | None => [] */
+/* ); */

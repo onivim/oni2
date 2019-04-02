@@ -39,11 +39,12 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuSearch(string)
-  | MenuOpen(UiMenu.t)
-  | MenuUpdate(list(UiMenu.command))
+  | MenuOpen(MenuCreationInfo.t)
+  | MenuUpdate(list(MenuCommand.t))
   | MenuClose
   | MenuSelect
   | MenuPosition(int)
+  | OpenFile(string)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)

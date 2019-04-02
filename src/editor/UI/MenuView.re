@@ -63,10 +63,15 @@ let loseFocusOnClose = isOpen =>
   );
 
 type fontT = Types.UiFont.t;
-type menuT = Types.UiMenu.t(Oni_Model.Actions.t);
 
 let createElement =
-    (~children as _, ~font: fontT, ~menu: menuT, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~font: fontT,
+      ~menu: Oni_Model.Menu.t,
+      ~theme: Theme.t,
+      (),
+    ) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(

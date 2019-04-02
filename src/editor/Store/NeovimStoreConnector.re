@@ -52,8 +52,14 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
       neovimProtocol.input(key)
     );
 
+  let openFileEffect = filePath =>
+    Isolinear.Effect.create(~name="neovim.openFile", () =>
+      neovimProtocol.openFile(~path=filePath, ())
+    );
+
   let updater = (state, action) => {
     switch (action) {
+    | Model.Actions.OpenFile(path) => (state, openFileEffect(path))
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)

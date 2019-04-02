@@ -9,24 +9,22 @@ let oniCommands = [
   {
     name: "commandPalette.open",
     command: _ => [
-      MenuOpen((CommandPalette, CommandPalette.commands)),
-      SetInputControlMode(MenuFocus),
+      MenuOpen(CommandPalette.create),
       SetInputControlMode(TextInputFocus),
     ],
   },
-  {
-    name: "quickOpen.open",
-    command: _ => [
-      MenuOpen((QuickOpen, QuickOpen.content)),
-      SetInputControlMode(MenuFocus),
-      SetInputControlMode(TextInputFocus),
-    ],
-  },
+  /* { */
+  /*   name: "quickOpen.open", */
+  /*   command: _ => [ */
+  /*     MenuOpen((QuickOpen, QuickOpen.content)), */
+  /*     SetInputControlMode(TextInputFocus), */
+  /*   ], */
+  /* }, */
   {
     name: "menu.close",
     command: _ => [MenuClose, SetInputControlMode(EditorTextFocus)],
   },
-  { name: "menu.next", command: _ => [MenuPosition(1)]},
+  {name: "menu.next", command: _ => [MenuPosition(1)]},
   {name: "menu.previous", command: _ => [MenuPosition(-1)]},
   {
     name: "menu.next",

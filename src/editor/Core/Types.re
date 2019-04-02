@@ -252,35 +252,3 @@ module Input = {
     command: string,
   };
 };
-
-/*module Effects = {*/
-/*  /***/
-/*     dispatch: takes an 'a as the Action type is not known within*/
-/*     this module so can only be specified at the point where this is*/
-/*     used*/
-/*   */*/
-/*  [@deriving show({with_path: false})]*/
-/*  type t('a) = {*/
-/*    openFile: Views.viewOperation,*/
-/*    getCurrentDir: unit => option(string),*/
-/*    dispatch: 'a => unit,*/
-/*    ripgrep: Ripgrep.t,*/
-/*  };*/
-/*};*/
-
-module UiMenu = {
-  [@deriving show({with_path: false})]
-  type command = {
-    category: option(string),
-    name: string,
-    command: unit => unit,
-    icon: option(string),
-  };
-
-  type t = {
-    searchQuery: string,
-    isOpen: bool,
-    commands: list(command),
-    selectedItem: int,
-  };
-};
