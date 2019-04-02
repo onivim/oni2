@@ -35,7 +35,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+let start = (~cliOptions: Core.Cli.t, ~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
   let state = Model.State.create();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
@@ -45,7 +45,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let extensions = discoverExtensions(setup);
 
   let (neovimUpdater, neovimStream) =
-    NeovimStoreConnector.start(executingDirectory, setup);
+    NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(extensions, setup);

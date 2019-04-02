@@ -3,8 +3,6 @@
  *
  * Module for handling command-line arguments for Oni2
  */
-open Oni_Core;
-
 open Rench;
 
 type t = {

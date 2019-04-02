@@ -37,7 +37,7 @@ let init = app => {
     );
 
   let setup = Core.Setup.init();
-  let cliOptions = Cli.parse(setup);
+  let cliOptions = Core.Cli.parse(setup);
   Sys.chdir(cliOptions.folder);
 
   let currentState = ref(Model.State.create());
@@ -48,6 +48,7 @@ let init = app => {
 
   let dispatch =
     Store.StoreThread.start(
+      ~cliOptions,
       ~setup,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
