@@ -15,13 +15,32 @@ let _compareScore =
   ReasonFuzz.compareScores(scoreObj1, scoreObj2);
 };
 
+let formatName = (itemName, shouldLower) => {
+  if (shouldLower) {
+    String.lowercase_ascii(itemName)
+  } else {
+    itemName
+  };
+};
+
 let menu = (query, items) => {
+
+  /* Hard-coded to true for testing if it feels better. */
+  let shouldLower = if (true) {
+    true
+  } else {
+    false
+  };
+
   let scoreList =
     Types.UiMenu.(
       List.map(
         item1 =>
           (
-            ReasonFuzz.pathFuzzyMatch(~line=item1.name, ~pattern=query),
+            ReasonFuzz.pathFuzzyMatch(
+              ~line=formatName(item1.name, shouldLower),
+              ~pattern=query,
+            ),
             item1,
           ),
         items,
