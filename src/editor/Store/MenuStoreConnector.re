@@ -29,10 +29,10 @@ let start = (setup: Core.Setup.t) => {
     ignore(_dispatch);
     let _ = dispatch;
 
-    /* let position = (selectedItem, change, commands: list(Model.MenuCommand.t)) => { */
-    /*     let nextIndex = selectedItem + change; */
-    /*     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex; */
-    /*     }; */
+    let position = (selectedItem, change, commands: list(Model.MenuCommand.t)) => {
+        let nextIndex = selectedItem + change;
+        nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
+        };
 
     /* let selectItemEffect = (command) => Isolinear.Effect.create("menu.selectItem", () => command()); */
 
@@ -40,14 +40,16 @@ let start = (setup: Core.Setup.t) => {
     /*     List.append(state.commands, commands); */
 
 
-    let updater = (_state, _action) => (_state, Isolinear.Effect.none);
+    /* let updater = (_state, _action) => (_state, Isolinear.Effect.none); */
 
-    /* let updater = (state, action: Actions.t) => */
-    /*     switch (action) { */
-    /*         | MenuPosition(pos) => ({ */
-    /*             ...state, */
-    /*             selectedItem: position(state.selectedItem, pos, state.commands), */
-    /*         }, Isolinear.Effect.none) */
+    let menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
+        switch (action) {
+            | MenuPosition(pos) => ({
+                ...state,
+                selectedItem: position(state.selectedItem, pos, state.commands),
+            }, Isolinear.Effect.none)
+            | _ => (state, Isolinear.Effect.none)
+            };
     /*         | MenuSearch(query) => ({ */
     /*             ...state, */
     /*             searchQuery: query, */
@@ -72,6 +74,17 @@ let start = (setup: Core.Setup.t) => {
     /*                       {closeState, Isolinear.Efffect.batch([effect, closeEffect])}, */
     /*                       | _ => (state, Isolinear.Effect.none), */
     /*                       }; */
+
+    let updater = (state: Model.State.t, action: Model.Actions.t) => {
+        let (menuState, menuEffect) = menuUpdater(state.menu, action);
+
+        let state = {
+            ...state,
+            menu: menuState,
+        };
+
+        (state, menuEffect);
+    };
 
           (updater, stream);
           };
