@@ -1,5 +1,4 @@
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Model;
 open Oni_Core;
 
@@ -22,6 +21,12 @@ let homeContainerStyles = (theme: Theme.t) =>
   ];
 
 let startEditor = () => GlobalContext.current().dispatch(ShowEditor);
+let openFolder = () => ();
+
+/**
+   TODO: BoxShadow doesn't animate correctly so cannot be included here yet
+   also inset would be preferable?
+ */
 let homeMenuContainer = (theme: Theme.t) =>
   Style.[
     width(500),
@@ -64,14 +69,17 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
             style=Style.[width(50), height(50), marginBottom(20)]
           />
           <View style={homeMenuContainer(theme)}>
-            <Button
-              title="Open Editor"
-              fontFamily=oniFontFamily
-              color={theme.colors.background}
-              fontSize=20
-              width=120
-              height=40
+            <TextLink
+              theme
+              text="Open new file"
+              font={state.uiFont}
               onClick=startEditor
+            />
+            <TextLink
+              font={state.uiFont}
+              theme
+              text="Open folder"
+              onClick=openFolder
             />
           </View>
         </View>
