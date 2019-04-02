@@ -27,17 +27,18 @@ let start = (rg: Core.Ripgrep.t) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
-    let dispose = rg.search(
-      currentDirectory,
-      items => {
-        let result =
-          items
-          |> List.filter(item => !Sys.is_directory(item))
-          |> List.map(stringToCommand(currentDirectory));
+    let dispose =
+      rg.search(
+        currentDirectory,
+        items => {
+          let result =
+            items
+            |> List.filter(item => !Sys.is_directory(item))
+            |> List.map(stringToCommand(currentDirectory));
 
-        setItems(result);
-      },
-    );
+          setItems(result);
+        },
+      );
 
     dispose;
   };
