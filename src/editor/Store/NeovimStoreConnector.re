@@ -57,9 +57,18 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
       neovimProtocol.openFile(~path=filePath, ())
     );
 
+  let openConfigFileEffect = filePath =>
+    Isolinear.Effect.create(~name="neovim.openConfigFile", () =>
+      switch (Core.Filesystem.createOniConfigFile(filePath)) {
+      | Ok(path) => neovimProtocol.openFile(~path, ())
+      | Error(e) => print_endline(e)
+      }
+    );
+
   let updater = (state, action) => {
     switch (action) {
     | Model.Actions.OpenFile(path) => (state, openFileEffect(path))
+    | Model.Actions.OpenConfigFile(path) => (state, openConfigFileEffect(path))
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
@@ -67,7 +76,7 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
   };
 
   let stream =
-    Isolinear.Stream.create(send => {
+    Isolinear.Stream.ofDispatch(send => {
       let _ =
         Event.subscribe(
           neovimProtocol.onNotification,

@@ -14,19 +14,8 @@ module Extensions = Oni_Extensions;
 let start = (setup: Core.Setup.t) => {
   ignore(setup);
 
-  let _dispatch = ref(None);
-  let dispatch = action => {
-    switch (_dispatch^) {
-    | None => ()
-    | Some(v) => v(action)
-    };
-  };
-
-  let stream =
-    Isolinear.Stream.create(dispatch => _dispatch := Some(dispatch));
-
-  ignore(_dispatch);
-  let _ = dispatch;
+  let (stream, dispatch) =
+    Isolinear.Stream.create();
 
   let position = (selectedItem, change, commands: list(Model.MenuCommand.t)) => {
     let nextIndex = selectedItem + change;
@@ -69,10 +58,11 @@ let start = (setup: Core.Setup.t) => {
         },
         Isolinear.Effect.none,
       )
-    /* | MenuOpen((menuType, commands)) => */
-    /*   addCommands(commands, state.effects) */
-    /*   |> (cmds => {...state, isOpen: true, menuType, commands: cmds}) */
-    /*   |> (state => (state, Isolinear.Effect.none); */
+    | MenuOpen(menuConstructor) => ({
+        ...state,
+        isOpen: true,
+        commands: [],
+    }, menuOpenEffect(menuConstructor))
     | MenuUpdate(update) => (
         {...state, commands: updateMenuCommands(update, state)},
         Isolinear.Effect.none,
@@ -81,7 +71,7 @@ let start = (setup: Core.Setup.t) => {
         {...state, dispose}, Isolinear.Effect.none
     )
     | MenuClose => {
-        let disposeFunction = state.dispose,
+        let disposeFunction = state.dispose;
       (
         {...state, isOpen: false, selectedItem: 0},
         disposeMenuEffect(disposeFunction),

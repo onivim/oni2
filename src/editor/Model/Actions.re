@@ -46,6 +46,7 @@ type t =
   | MenuSelect
   | MenuPosition(int)
   | OpenFile(string)
+  | OpenConfigFile(string)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
