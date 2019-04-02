@@ -45,7 +45,9 @@ type t =
   | MenuClose
   | MenuSelect
   | MenuPosition(int)
-  | OpenFile(string)
+  | CloseFileById(int)
+  | OpenFileByPath(string)
+  | OpenFileById(int)
   | OpenConfigFile(string)
   | QuickOpen
   | SetInputControlMode(Input.controlMode)

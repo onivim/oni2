@@ -52,9 +52,19 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
       neovimProtocol.input(key)
     );
 
-  let openFileEffect = filePath =>
-    Isolinear.Effect.create(~name="neovim.openFile", () =>
+  let openFileByPathEffect = filePath =>
+    Isolinear.Effect.create(~name="neovim.openFileByPath", () =>
       neovimProtocol.openFile(~path=filePath, ())
+    );
+
+  let openFileByIdEffect = id =>
+    Isolinear.Effect.create(~name="neovim.openFileById", () =>
+      neovimProtocol.openFile(~id, ())
+    );
+
+  let closeFileByIdEffect = id =>
+    Isolinear.Effect.create(~name="neovim.closeFileByIdEffect", () =>
+      neovimProtocol.closeFile(~id, ())
     );
 
   let openConfigFileEffect = filePath =>
@@ -67,7 +77,9 @@ let start = (executingDirectory, setup: Core.Setup.t) => {
 
   let updater = (state, action) => {
     switch (action) {
-    | Model.Actions.OpenFile(path) => (state, openFileEffect(path))
+    | Model.Actions.OpenFileByPath(path) => (state, openFileByPathEffect(path))
+    | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
+    | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.OpenConfigFile(path) => (
         state,
         openConfigFileEffect(path),

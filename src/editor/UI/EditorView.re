@@ -32,8 +32,8 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
       title: t.title,
       modified: t.modified,
       active: t.active,
-      onClick: GlobalContext.current().openFile(~id=t.id),
-      onClose: GlobalContext.current().closeFile(~id=t.id),
+      onClick: () => GlobalContext.current().dispatch(Actions.OpenFileById(t.id)),
+      onClose: () => GlobalContext.current().dispatch(Actions.CloseFileById(t.id)),
     };
     ret;
   };

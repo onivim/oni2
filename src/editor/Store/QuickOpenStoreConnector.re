@@ -18,7 +18,7 @@ let start = (rg: Core.Ripgrep.t) => {
     let stringToCommand: (string, string) => Model.Actions.menuCommand = (parentDir, fullPath) => {
       category: None,
       name: getDisplayPath(fullPath, parentDir),
-      command: () => Model.Actions.OpenFile(fullPath),
+      command: () => Model.Actions.OpenFileByPath(fullPath),
       icon: Some({||}),
     };
 
@@ -33,7 +33,6 @@ let start = (rg: Core.Ripgrep.t) => {
 
         setItems(result)
     });
-
 
     () => ();
   };
