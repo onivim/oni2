@@ -4,10 +4,12 @@
    Module to handle filtering of items using various strategies
  */
 
+open Actions;
+
 let _compareScore =
     (
-      item1: (option(ReasonFuzz.MatchResult.t), Types.UiMenu.command),
-      item2: (option(ReasonFuzz.MatchResult.t), Types.UiMenu.command),
+      item1: (option(ReasonFuzz.MatchResult.t), Actions.menuCommand),
+      item2: (option(ReasonFuzz.MatchResult.t), Actions.menuCommand),
     ) => {
   let scoreObj1 = (fst(item1), snd(item1).name);
   let scoreObj2 = (fst(item2), snd(item2).name);
@@ -32,7 +34,6 @@ let menu = (query, items) => {
     };
 
   let scoreList =
-    Types.UiMenu.(
       List.map(
         item1 =>
           (
@@ -43,8 +44,7 @@ let menu = (query, items) => {
             item1,
           ),
         items,
-      )
-    );
+      );
 
   let sortedList =
     List.sort((item1, item2) => _compareScore(item1, item2), scoreList);
