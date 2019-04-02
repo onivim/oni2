@@ -33,12 +33,23 @@ let start = (setup: Core.Setup.t) => {
     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
   };
 
+
+  let menuOpenEffect = menuConstructor =>
+      Isolinear.Effect.create(~name="menu.construct", () => {
+         let setItems = (items) => dispatch(Model.Actions.MenuUpdate(items));
+
+         let disposeFunction = (menuConstructor(setItems));
+         dispatch(Model.Actions.MenuSetDispose(disposeFunction));
+      })
+
   let selectItemEffect = command =>
     Isolinear.Effect.create(~name="menu.selectItem", command);
 
   let updateMenuCommands = (commands, state: Model.Menu.t) =>
     List.append(state.commands, commands);
 
+
+  let disposeMenuEffect = dispose => Isolinear.Effect.create(~name="menu.dispose", dispose);
   /* let updater = (_state, _action) => (_state, Isolinear.Effect.none); */
 
   let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
@@ -66,10 +77,16 @@ let start = (setup: Core.Setup.t) => {
         {...state, commands: updateMenuCommands(update, state)},
         Isolinear.Effect.none,
       )
-    | MenuClose => (
+    | MenuSetDispose(dispose) => (
+        {...state, dispose}, Isolinear.Effect.none
+    )
+    | MenuClose => {
+        let disposeFunction = state.dispose,
+      (
         {...state, isOpen: false, selectedItem: 0},
-        Isolinear.Effect.none,
+        disposeMenuEffect(disposeFunction),
       )
+    }
     | MenuSelect =>
       let effect =
         List.nth(state.commands, state.selectedItem)

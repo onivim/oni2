@@ -41,6 +41,7 @@ type t =
   | MenuSearch(string)
   | MenuOpen(MenuCreationInfo.t)
   | MenuUpdate(list(MenuCommand.t))
+  | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
   | MenuPosition(int)

@@ -3,6 +3,7 @@ type t = {
   isOpen: bool,
   commands: list(MenuCommand.t),
   selectedItem: int,
+  dispose: unit => unit,
 };
 
 let create = () => {
@@ -10,4 +11,5 @@ let create = () => {
   isOpen: false,
   commands: [],
   selectedItem: 0,
+  dispose: () => (),
 };
