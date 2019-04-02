@@ -39,8 +39,8 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuSearch(string)
-  | MenuOpen(MenuCreationInfo.t)
-  | MenuUpdate(list(MenuCommand.t))
+  | MenuOpen(menuCreator)
+  | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
@@ -50,4 +50,14 @@ type t =
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
-  | Noop;
+  | Noop
+and menuCommand = {
+   category: option(string),
+   name: string,
+   command: unit => t,
+   icon: option(string),
+}
+and menuSetItems = list(menuCommand) => unit
+and menuCreationFunction = (menuSetItems) => unit
+and menuDisposeFunction = unit => unit
+and menuCreator = (menuSetItems) => menuDisposeFunction;

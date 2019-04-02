@@ -15,6 +15,7 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         reason-jsonrpc
+        isolinear
         Oni_Core
         Oni_Extensions
     )

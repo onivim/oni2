@@ -17,7 +17,7 @@ let start = (setup: Core.Setup.t) => {
   let (stream, dispatch) =
     Isolinear.Stream.create();
 
-  let position = (selectedItem, change, commands: list(Model.MenuCommand.t)) => {
+  let position = (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
     let nextIndex = selectedItem + change;
     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
   };
@@ -32,7 +32,10 @@ let start = (setup: Core.Setup.t) => {
       })
 
   let selectItemEffect = command =>
-    Isolinear.Effect.create(~name="menu.selectItem", command);
+    Isolinear.Effect.createWithDispatch(~name="menu.selectItem", (dispatch) => {
+        let action = command();
+        dispatch(action);
+    });
 
   let updateMenuCommands = (commands, state: Model.Menu.t) =>
     List.append(state.commands, commands);

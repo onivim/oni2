@@ -1,4 +1,4 @@
-type setMenuItems = list(MenuCommand.t) => unit;
+type setMenuItems = list(Actions.menuCommand) => unit;
 
 type menuDisposeFunction = unit => unit;
 
