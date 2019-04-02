@@ -27,7 +27,7 @@ let start = (rg: Core.Ripgrep.t) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
-    rg.search(
+    let dispose = rg.search(
       currentDirectory,
       items => {
         let result =
@@ -39,7 +39,7 @@ let start = (rg: Core.Ripgrep.t) => {
       },
     );
 
-    () => ();
+    dispose;
   };
 
   let openQuickOpenEffect =
