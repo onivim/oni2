@@ -4,16 +4,12 @@
  * This implements an updater (reducer + side effects) for the Menu
  */
 
-/* open Rench; */
-
 module Core = Oni_Core;
 module Model = Oni_Model;
 
 module Extensions = Oni_Extensions;
 
-let start = (setup: Core.Setup.t) => {
-  ignore(setup);
-
+let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let position =

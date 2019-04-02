@@ -53,7 +53,10 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let (extHostUpdater, extHostStream) =
     ExtensionClientStoreConnector.start(extensions, setup);
 
-  let (menuHostUpdater, menuStream) = MenuStoreConnector.start(setup);
+  let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
+
+  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+  let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -65,6 +68,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
           textmateUpdater,
           extHostUpdater,
           menuHostUpdater,
+          quickOpenUpdater,
         ]),
       (),
     );
