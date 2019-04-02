@@ -10,6 +10,7 @@
       "esy-installer Oni_Core.install",
       "esy-installer Oni_Extensions.install",
       "esy-installer Oni_Model.install",
+      "esy-installer Oni_Store.install",
       "esy-installer Oni_UI.install",
       "esy-installer Oni_Neovim.install",
       "esy-installer OniUnitTestRunner.install"
@@ -26,6 +27,7 @@
   "dependencies": {
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
+    "isolinear": "*",
     "@opam/ocamlbuild": "*",
     "revery": "0.16.0",
     "@opam/dune": "*",
@@ -39,7 +41,8 @@
     "rench": "^1.5.0",
     "@reason-native/rely": "1.3.1",
     "reason-jsonrpc": "*",
-    "reason-glfw": "^3.2.1022"
+    "reason-glfw": "^3.2.1022",
+    "isolinear": "^2.0.0"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",

@@ -1,23 +1,20 @@
-open Oni_Core;
-open Types;
+let create = setItems => {
+  let commands: list(Actions.menuCommand) = [
+    {
+      category: None,
+      name: "Open configuration file",
+      command: () => Actions.OpenConfigFile("configuration.json"),
+      icon: None,
+    },
+    {
+      category: None,
+      name: "Open keybindings file",
+      command: () => Actions.OpenConfigFile("keybindings.json"),
+      icon: None,
+    },
+  ];
 
-open UiMenu;
+  setItems(commands);
 
-let openConfigurationFile = (effects: Effects.t(Actions.t), name) =>
-  switch (Filesystem.createOniConfigFile(name)) {
-  | Ok(path) => effects.openFile(~path, ())
-  | Error(e) => print_endline(e)
-  };
-
-let commands = (effects: Effects.t(Actions.t)) => [
-  {
-    name: "Open configuration file",
-    command: () => openConfigurationFile(effects, "configuration.json"),
-    icon: None,
-  },
-  {
-    name: "Open keybindings file",
-    command: () => openConfigurationFile(effects, "keybindings.json"),
-    icon: None,
-  },
-];
+  () => ();
+};
