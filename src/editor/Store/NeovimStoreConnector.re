@@ -173,8 +173,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 BufferUpdate(
                   Core.Types.BufferUpdate.create(
                     ~id=bc.id,
-                    ~startLine=bc.firstLine,
-                    ~endLine=bc.lastLine,
+                    ~startLine=OneBasedIndex(bc.firstLine),
+                    ~endLine=OneBasedIndex(bc.lastLine),
                     ~lines=bc.lines,
                     ~version=bc.changedTick,
                     (),
