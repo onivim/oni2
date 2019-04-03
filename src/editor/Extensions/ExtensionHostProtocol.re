@@ -5,6 +5,8 @@
  *
  */
 
+open Oni_Core.Types;
+
 module MessageType = {
   let initialized = 0;
   let ready = 1;
@@ -100,6 +102,38 @@ module ModelAddedDelta = {
     modeId,
     isDirty,
   };
+};
+
+module OneBasedRange = {
+    type t = {
+        startLineNumber: int,
+        endLineNumber: int,
+        startColumn: int,
+        endColumn: int,
+    };
+
+    let ofRange = (r: Range.t) => {
+        ()
+    }
+}
+
+module ModelContentChange = {
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
+    type t = {
+        range: OneBasedRange.t,
+        text: string,
+    }
+}
+
+module ModelChangedEvent = {
+
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
+    type t = {
+        changes: list(ModelContentChange.t),
+        eol: Eol.t,
+        versionId: int,
+    };
+    
 };
 
 module OutgoingNotifications = {
