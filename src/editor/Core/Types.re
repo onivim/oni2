@@ -78,8 +78,8 @@ type openMethod =
   | Tab
   | Buffer;
 
-module BufferPosition = {
-  [@deriving show({with_path: false})]
+module Position = {
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -92,6 +92,36 @@ module BufferPosition = {
     character: ZeroBasedIndex(character),
   };
 };
+
+module Range = {
+  type t = {
+    startPosition: Position.t,
+    endPosition: Position.t,
+  };
+
+  let createFromPositions = {
+    ~startPosition,
+    ~endPosition,
+    (),
+  } => {
+    startPosition,
+    endPosition,
+  };
+
+  let create = (
+    ~startLine,
+    ~startCharacter,
+    ~endLine,
+    ~endCharacter,
+    ()
+  ) => {
+    createFromPositions(
+        ~startPosition=Position.create(startLine, startCharacter),
+        ~endPosition=Position.create(endLine, endCharacter),
+        (),
+    );
+  };
+}
 
 [@deriving show({with_path: false})]
 type buftype =
