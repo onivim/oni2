@@ -84,7 +84,15 @@ module ModelAddedDelta = {
   };
 
   let create =
-      (~uri, ~versionId=0, ~lines=[], ~eol, ~modeId, ~isDirty=false, ()) => {
+      (
+        ~uri,
+        ~versionId=0,
+        ~lines=[],
+        ~eol=Eol.default,
+        ~modeId,
+        ~isDirty=false,
+        (),
+      ) => {
     uri,
     versionId,
     lines,
@@ -125,18 +133,23 @@ module OutgoingNotifications = {
       type t = {
         removedDocuments: list(Uri.t),
         addedDocuments: list(ModelAddedDelta.t),
+        removedEditors: list(string),
+        addedEditors: list(string),
       };
 
       let create = (~removedDocuments, ~addedDocuments, ()) => {
         removedDocuments,
         addedDocuments,
+        removedEditors: [],
+        addedEditors: [],
       };
     };
 
     let acceptDocumentsAndEditorsDelta =
         (
-          removedDocuments: list(Uri.t),
-          addedDocuments: list(ModelAddedDelta.t),
+          ~removedDocuments: list(Uri.t),
+          ~addedDocuments: list(ModelAddedDelta.t),
+          (),
         ) => {
       let delta =
         DocumentsAndEditorsDelta.create(
