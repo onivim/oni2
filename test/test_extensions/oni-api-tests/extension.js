@@ -39,7 +39,7 @@ function activate(context) {
     let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
         showData({
             type: "workspace.onDidChangeTextDocument",
-            filename: e.fileName,
+            filename: e.document.fileName,
             contentChanges: e.contentChanges,
             fullText: e.document.getText(),
         });
@@ -54,6 +54,7 @@ function activate(context) {
 
 	context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
 }
 

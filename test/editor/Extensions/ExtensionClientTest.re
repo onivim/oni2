@@ -41,7 +41,7 @@ describe("Extension Client", ({describe, _}) => {
   describe("DocumentsAndEditors", ({test, _}) => {
     let createInitialDocumentModel = (~lines, ~path, ()) => {
       ModelAddedDelta.create(
-        ~uri=Uri.createFromFilePath(path),
+        ~uri=Uri.fromPath(path),
         ~lines,
         ~modeId="test_language",
         ~isDirty=false,
@@ -117,11 +117,18 @@ describe("Extension Client", ({describe, _}) => {
                open JsonInformationMessageFormat;
                let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-               String.equal(info.filename, "test.txt")
+               let ret = String.equal(info.filename, "test.txt")
                && String.equal(
                     info.messageType,
                     "workspace.onDidChangeTextDocument",
-                  );
+                  )
+               && String.equal(
+                   info.fullText,
+                   "Greetings" ++ Eol.toString(Eol.default) ++ "world"
+               );
+               prerr_endline(" FULL TEXT    : " ++ info.fullText);
+               prerr_endline(" EXPECTED TEXT: " ++ "Greetings" ++ Eol.show(Eol.default) ++ "world");
+               ret;
              });
 
         api.start();
@@ -131,7 +138,7 @@ describe("Extension Client", ({describe, _}) => {
             ~removedDocuments=[],
             ~addedDocuments=[
               createInitialDocumentModel(
-                ~lines=["Hello World"],
+                ~lines=["hello", "world"],
                 ~path="test.txt",
                 (),
               ),
@@ -141,6 +148,16 @@ describe("Extension Client", ({describe, _}) => {
         );
 
         waitForOpenMessage();
+
+          let contentChange = ModelContentChange.create(
+            ~range=Types.Range.create(~startLine=ZeroBasedIndex(0), ~endLine=ZeroBasedIndex(0), ~startCharacter=ZeroBasedIndex(0), ~endCharacter=ZeroBasedIndex(5), ()),
+            ~text="Greetings",
+            (),
+          );
+
+          let modelChangedEvent = ModelChangedEvent.create(~changes=[contentChange], ~eol=Eol.default, ~versionId=1, ());
+
+          api.send(Documents.acceptModelChanged(Uri.fromPath("test.txt"), modelChangedEvent, true));
 
         waitForUpdateMessage();
       })

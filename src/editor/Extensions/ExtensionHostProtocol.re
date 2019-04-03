@@ -61,7 +61,7 @@ module Uri = {
     path: string,
   };
 
-  let createFromFilePath = (path: string) => {scheme: Scheme.File, path};
+  let fromPath = (path: string) => {scheme: Scheme.File, path};
 };
 
 module Eol = {
@@ -71,6 +71,11 @@ module Eol = {
     | [@name "\r\n"] CRLF;
 
   let default = Sys.win32 ? CRLF : LF;
+
+  let toString = (v: t) => switch(v) {
+  | CRLF => "\r\n"
+  | LF => "\n"
+  };
 };
 
 module ModelAddedDelta = {
@@ -148,6 +153,17 @@ module ModelChangedEvent = {
     changes: list(ModelContentChange.t),
     eol: Eol.t,
     versionId: int,
+  };
+
+  let create = (
+    ~changes,
+    ~eol,
+    ~versionId,
+    ()
+  ) => {
+    changes,
+    eol, 
+    versionId,
   };
 };
 
