@@ -117,7 +117,6 @@ describe("Extension Client", ({describe, _}) => {
                open JsonInformationMessageFormat;
                let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-               let ret =
                  String.equal(info.filename, "test.txt")
                  && String.equal(
                       info.messageType,
@@ -127,14 +126,6 @@ describe("Extension Client", ({describe, _}) => {
                       info.fullText,
                       "Greetings" ++ Eol.toString(Eol.default) ++ "world",
                     );
-               prerr_endline(" FULL TEXT    : " ++ info.fullText);
-               prerr_endline(
-                 " EXPECTED TEXT: "
-                 ++ "Greetings"
-                 ++ Eol.show(Eol.default)
-                 ++ "world",
-               );
-               ret;
              });
 
         api.start();
