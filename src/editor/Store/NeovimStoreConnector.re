@@ -123,54 +123,55 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
             let msg =
               switch (n) {
               | OniCommand("oni.editorView.scrollToCursor") =>
-                EditorScrollToCursorCentered
+              [EditorScrollToCursorCentered]
               | OniCommand("oni.editorView.scrollToCursorTop") =>
-                EditorScrollToCursorTop
+              [EditorScrollToCursorTop]
               | OniCommand("oni.editorView.scrollToCursorBottom") =>
-                EditorScrollToCursorBottom
+              [EditorScrollToCursorBottom]
               | OniCommand("oni.editorView.moveCursorToTop") =>
-                EditorMoveCursorToTop(neovimProtocol.moveCursor)
+              [EditorMoveCursorToTop(neovimProtocol.moveCursor)]
               | OniCommand("oni.editorView.moveCursorToMiddle") =>
-                EditorMoveCursorToMiddle(neovimProtocol.moveCursor)
+              [EditorMoveCursorToMiddle(neovimProtocol.moveCursor)]
               | OniCommand("oni.editorView.moveCursorToBottom") =>
-                EditorMoveCursorToBottom(neovimProtocol.moveCursor)
-              | ModeChanged("normal") => ChangeMode(Normal)
-              | ModeChanged("insert") => ChangeMode(Insert)
-              | ModeChanged("replace") => ChangeMode(Replace)
-              | ModeChanged("visual") => ChangeMode(Visual)
-              | ModeChanged("operator") => ChangeMode(Operator)
-              | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
-              | TablineUpdate(tabs) => TablineUpdate(tabs)
-              | ModeChanged(_) => ChangeMode(Other)
+              [EditorMoveCursorToBottom(neovimProtocol.moveCursor)]
+              | ModeChanged("normal") => [ChangeMode(Normal)]
+              | ModeChanged("insert") => [ChangeMode(Insert)]
+              | ModeChanged("replace") => [ChangeMode(Replace)]
+              | ModeChanged("visual") => [ChangeMode(Visual)]
+              | ModeChanged("operator") => [ChangeMode(Operator)]
+              | ModeChanged("cmdline_normal") => [ChangeMode(Commandline)]
+              | TablineUpdate(tabs) => [TablineUpdate(tabs)]
+              | ModeChanged(_) => [ChangeMode(Other)]
               | CursorMoved(c) =>
-                CursorMove(
+              [CursorMove(
                   Core.Types.Position.create(
                     c.cursorLine,
                     c.cursorColumn,
                   ),
-                )
+                ),
+                SelectionChanged(c.visualRange)]
               | BufferWritePost({activeBufferId, _}) =>
-                BufferWritePost({
+              [BufferWritePost({
                   bufferId: activeBufferId,
                   buffers: NeovimBuffer.getBufferList(nvimApi),
-                })
+                })]
               | TextChangedI({activeBufferId, modified, _}) =>
-                TextChangedI({activeBufferId, modified})
+              [TextChangedI({activeBufferId, modified})]
               | TextChanged({activeBufferId, modified, _}) =>
-                TextChanged({activeBufferId, modified})
+              [TextChanged({activeBufferId, modified})]
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
-                BufferEnter({
+              [BufferEnter({
                   bufferId: activeBufferId,
                   buffers: NeovimBuffer.getBufferList(nvimApi),
-                });
+                })]
               | BufferDelete(bd) =>
-                BufferDelete({
+              [BufferDelete({
                   buffers: NeovimBuffer.getBufferList(nvimApi),
                   bufferId: bd.activeBufferId,
-                })
+                })]
               | BufferLines(bc) =>
-                BufferUpdate(
+              [BufferUpdate(
                   Core.Types.BufferUpdate.create(
                     ~id=bc.id,
                     ~startLine=bc.firstLine,
@@ -179,17 +180,18 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                     ~version=bc.changedTick,
                     (),
                   ),
-                )
-              | WildmenuShow(w) => WildmenuShow(w)
-              | WildmenuHide(w) => WildmenuHide(w)
-              | WildmenuSelected(s) => WildmenuSelected(s)
-              | CommandlineUpdate(u) => CommandlineUpdate(u)
-              | CommandlineShow(c) => CommandlineShow(c)
-              | CommandlineHide(c) => CommandlineHide(c)
-              | _ => Noop
+                )]
+              | WildmenuShow(w) => [WildmenuShow(w)]
+              | WildmenuHide(w) => [WildmenuHide(w)]
+              | WildmenuSelected(s) => [WildmenuSelected(s)]
+              | CommandlineUpdate(u) => [CommandlineUpdate(u)]
+              | CommandlineShow(c) => [CommandlineShow(c)]
+              | CommandlineHide(c) => [CommandlineHide(c)]
+              | _ => [Noop]
               };
 
-            send(msg);
+            msg |>
+            List.iter(send)
           },
         );
       ();
