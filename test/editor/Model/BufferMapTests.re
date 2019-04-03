@@ -46,7 +46,7 @@ describe("Buffer List Tests", ({test, _}) => {
     ];
     let added = BufferMap.updateMetadata(bufferlist, testBuffers);
 
-    expect.string(BufferMap.getBuffer(0, added) |> getOrFail).toMatch(
+    expect.string(BufferMap.getBuffer(Some(0), added) |> getOrFail).toMatch(
       "/test2.re",
     );
   });
@@ -67,7 +67,7 @@ describe("Buffer List Tests", ({test, _}) => {
         }),
         bufferlist,
       );
-    let activeBuffer = BufferMap.getBuffer(4, updated);
+    let activeBuffer = BufferMap.getBuffer(Some(4), updated);
     let path = getOrFail(activeBuffer);
     expect.string(path).toMatch("/myfile.js");
   });

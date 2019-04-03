@@ -42,9 +42,7 @@ let init = app => {
 
   let currentState = ref(Model.State.create());
 
-  let onStateChanged = v => {
-    currentState := v;
-  };
+  let onStateChanged = v => currentState := v;
 
   let dispatch =
     Store.StoreThread.start(
@@ -84,6 +82,7 @@ let init = app => {
   Window.setShouldRenderCallback(w, _ => true);
 
   dispatch(Model.Actions.Init);
+  dispatch(Model.Actions.OpenHome);
 
   let setFont = (fontFamily, fontSize) => {
     let scaleFactor =

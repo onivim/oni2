@@ -16,7 +16,7 @@ let createTabs = () => [
   },
 ];
 
-let create = () => {tabs: createTabs()};
+let create = () => {tabs: []};
 
 let reduce = (state: t, action: Actions.t) =>
   switch (action) {

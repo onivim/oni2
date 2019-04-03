@@ -60,7 +60,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.BufferUpdate(bc) =>
       let bufferId = bc.id;
-      let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
+      let buffer = Model.BufferMap.getBuffer(Some(bufferId), state.buffers);
 
       switch (buffer) {
       | None => default

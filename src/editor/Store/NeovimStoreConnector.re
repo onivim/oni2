@@ -56,7 +56,9 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   /* ); */
 
   let neovimProtocol = NeovimProtocol.make(nvimApi);
-  neovimProtocol.uiAttach();
+
+  let attachUIEffect =
+    Isolinear.Effect.create(~name="neovim.attach", neovimProtocol.uiAttach);
 
   let pumpEffect =
     Isolinear.Effect.create(~name="neovim.pump", () => nvimApi.pump());
@@ -88,8 +90,17 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       }
     );
 
-  let updater = (state, action) => {
+  let detachBufferEffect = id =>
+    Isolinear.Effect.create(~name="neovim.detachBuffer", () =>
+      neovimProtocol.bufDetach(id)
+    );
+
+  let updater = (state: Model.State.t, action) =>
     switch (action) {
+    | Model.Actions.OpenHome =>
+      let id = state.activeBufferId;
+      (state, detachBufferEffect(id));
+    | Model.Actions.StartEditor => (state, attachUIEffect)
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
       let openFileEffects =
@@ -111,7 +122,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
     };
-  };
 
   let stream =
     Isolinear.Stream.ofDispatch(send => {

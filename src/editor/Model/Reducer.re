@@ -29,20 +29,32 @@ let showTablineTabs = (state: State.t, tabs) =>
   };
 
 let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
-  switch (state.configuration.editorTablineMode) {
-  | Buffers =>
+  switch (state.configuration.editorTablineMode, activeBufferId) {
+  | (Buffers, Some(activeId)) =>
     List.map(
       ({id, filePath, modified, _}: BufferMetadata.t) =>
         State.Tab.{
           id,
           title: filePath |> truncateFilepath,
-          active: activeBufferId == id,
+          active: activeId == id,
+          modified,
+        },
+      buffers,
+    )
+  | (Buffers, None) =>
+    List.map(
+      ({id, filePath, modified, _}: BufferMetadata.t) =>
+        State.Tab.{
+          id,
+          title: filePath |> truncateFilepath,
+          active: false,
           modified,
         },
       buffers,
     )
     |> sortTabsById
-  | _ => state.tabs
+  | (Tabs, _) => state.tabs
+  | (Hybrid, _) => state.tabs
   };
 
 let updateTabs = (bufId, modified, tabs) =>
@@ -75,25 +87,27 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
-    | OpenHome => {...s, activeBufferId: (-1)}
-    | ChangeMode(m) =>
-      let ret: State.t = {...s, mode: m};
-      ret;
+    | OpenHome => {
+        ...s,
+        activeBufferId: None,
+        tabs: showTablineBuffers(s, BufferMap.getBuffers(s.buffers), None),
+      }
+    | ChangeMode(m) => {...s, mode: m}
     | BufferWritePost(bs) => {
         ...s,
-        activeBufferId: bs.bufferId,
+        activeBufferId: Some(bs.bufferId),
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+        tabs: showTablineBuffers(s, bs.buffers, Some(bs.bufferId)),
       }
     | BufferDelete(bd) => {
         ...s,
-        tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
+        tabs: showTablineBuffers(s, bd.buffers, Some(bd.bufferId)),
       }
     | BufferEnter(bs) => {
         ...s,
-        activeBufferId: bs.bufferId,
+        activeBufferId: Some(bs.bufferId),
         buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+        tabs: showTablineBuffers(s, bs.buffers, Some(bs.bufferId)),
       }
     | BufferUpdate(bu) => {
         ...s,

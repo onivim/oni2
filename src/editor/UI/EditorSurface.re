@@ -128,7 +128,7 @@ let renderTokens =
     isActiveLine
       ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
-  let f = (token: Tokenizer.t) => {
+  let f = (token: Tokenizer.t) =>
     Revery.Draw.Text.drawString(
       ~transform,
       ~x=
@@ -143,7 +143,6 @@ let renderTokens =
       ~fontSize=14,
       token.text,
     );
-  };
 
   List.iter(f, tokens);
 };
@@ -218,11 +217,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let getTokensForLine = i => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
-        SyntaxHighlighting.getTokensForLine(
-          state.syntaxHighlighting,
-          state.activeBufferId,
-          i,
-        );
+        switch (state.activeBufferId) {
+        | Some(id) =>
+          SyntaxHighlighting.getTokensForLine(state.syntaxHighlighting, id, i)
+        | None => []
+        };
       Tokenizer.tokenize(
         line,
         state.theme,
@@ -239,9 +238,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       ];
 
     let onDimensionsChanged =
-        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) =>
       GlobalContext.current().notifySizeChanged(~width, ~height, ());
-    };
 
     let layout =
       EditorLayout.getLayout(
@@ -300,19 +298,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         width(int_of_float(layout.bufferWidthInPixels)),
       ];
 
-    let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
       GlobalContext.current().editorScroll(
         ~deltaY=wheelEvent.deltaY *. (-50.),
         (),
       );
-    };
 
-    let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
       GlobalContext.current().editorScroll(
         ~deltaY=wheelEvent.deltaY *. (-150.),
         (),
       );
-    };
 
     (
       hooks,

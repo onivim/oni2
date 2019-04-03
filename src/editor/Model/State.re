@@ -23,7 +23,7 @@ type t = {
   mode: Mode.t,
   tabs: list(Tab.t),
   buffers: BufferMap.t,
-  activeBufferId: int,
+  activeBufferId: option(int),
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   menu: Menu.t,
@@ -41,12 +41,12 @@ let create: unit => t =
   () => {
     home: Home.create(),
     configuration: Configuration.create(),
-    mode: Insert,
+    mode: Normal,
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
-    activeBufferId: 0,
-    buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
+    activeBufferId: Some(0),
+    buffers: BufferMap.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
@@ -57,7 +57,7 @@ let create: unit => t =
       ),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
-    tabs: [Tab.create(0, "[No Name]")],
+    tabs: [],
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,

@@ -64,10 +64,10 @@ let getActiveTabType = tabs =>
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
-    let {mode, theme, uiFont, _}: State.t = state;
+    let {mode, theme, uiFont, tabs, home, _}: State.t = state;
 
-    let editorTabs = toEditorTabs(state.tabs);
-    let messageTabs = toMessageTabs(state.home);
+    let editorTabs = toEditorTabs(tabs);
+    let messageTabs = toMessageTabs(home);
     let tabs = List.append(messageTabs, editorTabs);
 
     let style =
@@ -77,12 +77,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        {
-          switch (getActiveTabType(tabs)) {
-          | EditorTab => <EditorSurface state />
-          | MessageTab => <HomeView theme state />
-          }
-        }
+        {switch (getActiveTabType(tabs)) {
+         | EditorTab => <EditorSurface state />
+         | MessageTab => <HomeView theme state />
+         }}
       </View>,
     );
   });

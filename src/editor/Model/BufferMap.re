@@ -23,6 +23,13 @@ let map = Buffers.map;
 let update = Buffers.update;
 let remove = Buffers.remove;
 
+let getBuffers = (buffers: t) =>
+  Buffers.fold(
+    (_, data, accum) => [Buffer.getMetadata(data), ...accum],
+    buffers,
+    [],
+  );
+
 let updateMetadata = (buffersMap: t, newBuffers: list(BufferMetadata.t)) => {
   /**
      The update function does not remove old buffers from the BufferMap so
@@ -68,4 +75,8 @@ let log = (m: t) =>
     m,
   );
 
-let getBuffer = (id, map) => Buffers.find_opt(id, map);
+let getBuffer = (id, map) =>
+  switch (id) {
+  | Some(id) => Buffers.find_opt(id, map)
+  | None => None
+  };

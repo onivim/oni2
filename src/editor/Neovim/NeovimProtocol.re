@@ -17,6 +17,7 @@ type t = {
   uiAttach: unit => unit,
   input: string => unit,
   bufAttach: int => unit,
+  bufDetach: option(int) => unit,
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
   moveCursor: Cursor.move,
@@ -67,6 +68,17 @@ let make = (nvimApi: NeovimApi.t) => {
         "nvim_buf_attach",
         M.List([M.Int(id), M.Bool(true), M.Map([])]),
       );
+    ();
+  };
+
+  let bufDetach = id => {
+    let bufId =
+      switch (id) {
+      | Some(id) => id
+      | None => 0
+      };
+    let _error =
+      nvimApi.requestSync("nvim_buf_detach", M.List([M.Int(bufId)]));
     ();
   };
 
@@ -160,6 +172,7 @@ let make = (nvimApi: NeovimApi.t) => {
     input,
     onNotification,
     bufAttach,
+    bufDetach,
     openFile,
     closeFile,
     setCurrentDir,
