@@ -75,6 +75,7 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
+    | OpenHome => {...s, activeBufferId: (-1)}
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;

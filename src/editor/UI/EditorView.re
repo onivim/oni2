@@ -47,7 +47,7 @@ let toMessageTabs = (home: Home.t) =>
         tabType: MessageTab,
         title: t.title,
         modified: false,
-        active: home.isOpen,
+        active: t.selected,
         onClose: () => t.onClose() |> GlobalContext.current().dispatch,
         onClick: () => t.onClick() |> GlobalContext.current().dispatch,
       },
