@@ -157,7 +157,8 @@ module BufferNotification = {
   };
 
   let getBufferMetadata = (id, v: t) => {
-    let result = v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
+    let result =
+      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
     List.nth_opt(result, 0);
   };
 };
