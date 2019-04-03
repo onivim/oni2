@@ -43,27 +43,6 @@ module Environment = {
   };
 };
 
-module Uri = {
-  module Scheme = {
-    [@deriving (show({with_path: false}), yojson({strict: false}))]
-    type t =
-      | [@name "file"] File;
-
-    let toString = (v: t) =>
-      switch (v) {
-      | File => "file"
-      };
-  };
-
-  [@deriving (show({with_path: false}), yojson({strict: false}))]
-  type t = {
-    scheme: Scheme.t,
-    path: string,
-  };
-
-  let fromPath = (path: string) => {scheme: Scheme.File, path};
-};
-
 module Eol = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t =
@@ -145,6 +124,26 @@ module ModelContentChange = {
   let create = (~range: Range.t, ~text: string, ()) => {
     range: OneBasedRange.ofRange(range),
     text,
+  };
+
+  let joinLines = (separator: string, lines: list(string)) => {
+    List.fold_left((prev, cur) => {
+            switch (prev) {
+            | "" => cur
+            | s => s ++ separator ++ cur
+            }
+        }, "", lines);
+  };
+
+  let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
+    range: OneBasedRange.ofRange(Range.create(
+        ~startLine=bu.startLine,
+        ~startCharacter=ZeroBasedIndex(0),
+        ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine) + 1),
+        ~endCharacter=ZeroBasedIndex(0),
+        (),
+    )),
+    text: joinLines(Eol.toString(eol), bu.lines)
   };
 };
 
