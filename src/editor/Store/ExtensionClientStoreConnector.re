@@ -9,9 +9,10 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-module Extensions = Oni_Extensions;
-
 open Oni_Extensions;
+module Extensions = Oni_Extensions;
+module Protocol = Extensions.ExtensionHostProtocol;
+
 
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -67,13 +68,53 @@ let start = (extensions, setup: Core.Setup.t) => {
       setup,
     );
 
-  let pumpEffect =
-    Isolinear.Effect.create(~name="exthost.pump", () =>
-      Extensions.ExtensionHostClient.pump(extHostClient)
-    );
+  let _bufferMetadataToModelAddedDelta = (bm: Core.Types.BufferMetadata.t) => switch((bm.filePath, bm.fileType)) {
+  | (Some(fp), Some(ft)) => {
+    Some(Protocol.ModelAddedDelta.create(
+        ~uri=Protocol.Uri.createFromFilePath(fp),
+        ~versionId=bm.version,
+        ~lines=[],
+        ~modeId=ft,
+        ~isDirty=bm.modified,
+        (),
+    ));
+  }
+  /* TODO: filetype detection */
+  | (Some(fp), _) => {
+    Some(Protocol.ModelAddedDelta.create(
+        ~uri=Protocol.Uri.createFromFilePath(fp),
+        ~versionId=bm.version,
+        ~lines=[],
+        ~modeId="unknown",
+        ~isDirty=bm.modified,
+        (),
+    ));
+  }
+  | _ => None
+  };
 
-  let updater = (state, action) =>
+  let pumpEffect = Isolinear.Effect.create(~name="exthost.pump", () => ExtensionHostClient.pump(extHostClient));
+
+  let sendBufferEnterEffect = (bm) =>
+      Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
+          switch (_bufferMetadataToModelAddedDelta(bm)) {
+          | None => {
+            print_endline ("couldnt find buffer");
+          }
+          | Some(v) => {
+              print_endline ("sending: " ++ Protocol.Uri.show(v.uri));
+            ExtensionHostClient.send(extHostClient, Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+                ~removedDocuments=[],
+                ~addedDocuments=[v],
+                (),
+            )) ;
+          }
+          };
+      });
+
+  let updater = (state: Model.State.t, action) =>
     switch (action) {
+    | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(Core.Types.BufferNotification.getBufferMetadata(bm.bufferId, bm)))
     | Model.Actions.Tick => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
