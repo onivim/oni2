@@ -164,7 +164,7 @@ let reduce: (t, Actions.t) => t =
             buffer =>
               switch (buffer) {
               | None => None
-              | Some(v) => {
+              | Some(v) =>
                 let startLine = bu.startLine |> Index.toZeroBasedInt;
                 let endLine = bu.endLine |> Index.toZeroBasedInt;
                 Some(
@@ -174,8 +174,7 @@ let reduce: (t, Actions.t) => t =
                     endLine,
                     List.length(bu.lines) - (endLine - startLine),
                   ),
-                )
-              };
+                );
               },
             state.idToBufferSyntaxHighlights,
           ),

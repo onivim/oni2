@@ -79,7 +79,7 @@ type openMethod =
   | Buffer;
 
 module Position = {
-  [@deriving (show({with_path: false}))]
+  [@deriving show({with_path: false})]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -99,29 +99,19 @@ module Range = {
     endPosition: Position.t,
   };
 
-  let createFromPositions = (
-    ~startPosition,
-    ~endPosition,
-    (),
-  ) => {
+  let createFromPositions = (~startPosition, ~endPosition, ()) => {
     startPosition,
     endPosition,
   };
 
-  let create = (
-    ~startLine,
-    ~startCharacter,
-    ~endLine,
-    ~endCharacter,
-    ()
-  ) => {
+  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) => {
     createFromPositions(
-        ~startPosition=Position.create(startLine, startCharacter),
-        ~endPosition=Position.create(endLine, endCharacter),
-        (),
+      ~startPosition=Position.create(startLine, startCharacter),
+      ~endPosition=Position.create(endLine, endCharacter),
+      (),
     );
   };
-}
+};
 
 [@deriving show({with_path: false})]
 type buftype =
@@ -207,7 +197,7 @@ module BufferUpdate = {
   ]
   type jsont = {
     id: int,
-    startLine: int, 
+    startLine: int,
     endLine: int,
     lines: list(string),
     version: int,
@@ -215,13 +205,13 @@ module BufferUpdate = {
 
   let to_yojson = (v: t) => {
     let jsonr: jsont = {
-        id: v.id,
-        startLine: v.startLine |> Index.toZeroBasedInt,
-        endLine: v.endLine |> Index.toZeroBasedInt,
-        lines: v.lines,
-        version: v.version,
+      id: v.id,
+      startLine: v.startLine |> Index.toZeroBasedInt,
+      endLine: v.endLine |> Index.toZeroBasedInt,
+      lines: v.lines,
+      version: v.version,
     };
-    jsont_to_yojson(jsonr)
+    jsont_to_yojson(jsonr);
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
@@ -232,15 +222,16 @@ module BufferUpdate = {
     version,
   };
 
-  let createFromZeroBasedIndices = (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
-      let ret: t = {
-    id,
-    startLine: Index.ZeroBasedIndex(startLine),
-    endLine: Index.ZeroBasedIndex(endLine),
-    lines,
-    version,
-      };
-      ret;
+  let createFromZeroBasedIndices =
+      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+    let ret: t = {
+      id,
+      startLine: Index.ZeroBasedIndex(startLine),
+      endLine: Index.ZeroBasedIndex(endLine),
+      lines,
+      version,
+    };
+    ret;
   };
 };
 

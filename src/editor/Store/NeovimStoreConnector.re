@@ -144,10 +144,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | ModeChanged(_) => ChangeMode(Other)
               | CursorMoved(c) =>
                 CursorMove(
-                  Core.Types.Position.create(
-                    c.cursorLine,
-                    c.cursorColumn,
-                  ),
+                  Core.Types.Position.create(c.cursorLine, c.cursorColumn),
                 )
               | BufferWritePost({activeBufferId, _}) =>
                 BufferWritePost({

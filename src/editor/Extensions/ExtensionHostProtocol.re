@@ -105,39 +105,37 @@ module ModelAddedDelta = {
 };
 
 module OneBasedRange = {
-    [@deriving (show({with_path: false}), yojson({strict: false}))]
-    type t = {
-        startLineNumber: int,
-        endLineNumber: int,
-        startColumn: int,
-        endColumn: int,
-    };
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
 
-    let ofRange = (r: Range.t) => {
-      startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
-      endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
-      startColumn: r.startPosition.character |> Index.toOneBasedInt,
-      endColumn: r.endPosition.character |> Index.toOneBasedInt,
-    };
-}
+  let ofRange = (r: Range.t) => {
+    startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
+    endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
+    startColumn: r.startPosition.character |> Index.toOneBasedInt,
+    endColumn: r.endPosition.character |> Index.toOneBasedInt,
+  };
+};
 
 module ModelContentChange = {
-    [@deriving (show({with_path: false}), yojson({strict: false}))]
-    type t = {
-        range: OneBasedRange.t,
-        text: string,
-    }
-}
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+};
 
 module ModelChangedEvent = {
-
-    [@deriving (show({with_path: false}), yojson({strict: false}))]
-    type t = {
-        changes: list(ModelContentChange.t),
-        eol: Eol.t,
-        versionId: int,
-    };
-    
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    changes: list(ModelContentChange.t),
+    eol: Eol.t,
+    versionId: int,
+  };
 };
 
 module OutgoingNotifications = {

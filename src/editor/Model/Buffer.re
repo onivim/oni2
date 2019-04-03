@@ -85,7 +85,7 @@ let update = (buf: t, update: BufferUpdate.t) =>
      update the buffer's version but set the content of the buffer
      rather than update it, which would result in duplication
    */
-  | {startLine: ZeroBasedIndex(0), endLine: ZeroBasedIndex(-1), version, _} => {
+  | {startLine: ZeroBasedIndex(0), endLine: ZeroBasedIndex((-1)), version, _} => {
       metadata: {
         ...buf.metadata,
         version,
