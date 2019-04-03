@@ -6,10 +6,10 @@
  */
 
 let checkHomeDirectoryOrThrow = () => {
-    let home = Filesystem.unsafeFindHome();
+  let home = Filesystem.unsafeFindHome();
+  ();
 };
 
-
 let run = () => {
-    checkHomeDirectoryorThrow();
+  checkHomeDirectoryorThrow();
 };
