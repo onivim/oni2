@@ -155,6 +155,12 @@ module BufferNotification = {
     bufferId: int,
     buffers: list(BufferMetadata.t),
   };
+
+  let getBufferMetadataOpt = (id, v: t) => {
+    let result =
+      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
+    List.nth_opt(result, 0);
+  };
 };
 
 module BufferUpdate = {
