@@ -163,6 +163,20 @@ module OutgoingNotifications = {
     };
   };
 
+  module Documents = {
+    let acceptModelChanged = (uri: Uri.t, modelChangedEvent: ModelChangedEvent.t, isDirty: bool) => {
+       _buildNotification(
+        "ExtHostDocuments",
+        "$acceptModelChanged",
+        `List([
+           Uri.to_yojson(uri),
+           ModelChangedEvent.to_yojson(modelChangedEvent),
+           `Bool(isDirty),
+        ]),
+       );
+    };
+  }
+
   module DocumentsAndEditors = {
     module DocumentsAndEditorsDelta = {
       [@deriving (show({with_path: false}), yojson({strict: false}))]
