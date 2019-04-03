@@ -64,8 +64,6 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
     let endLine = Index.toZeroBasedInt(selection.range.endPos.line);
     let endCharacter = Index.toZeroBasedInt(selection.range.endPos.character);
 
-    print_endline ("MODE: " ++ VisualRange.show(selection));
-
     switch (selection.mode) {
     | LinewiseVisual => getRangesForLinewiseSelection(startLine, endLine, buffer)
     | Visual => getRangesForVisualSelection(startLine, startCharacter, endLine, endCharacter, buffer)
