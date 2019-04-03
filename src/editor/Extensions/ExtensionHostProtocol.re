@@ -113,11 +113,11 @@ module OneBasedRange = {
     };
 
     let ofRange = (r: Range.t) => {
-      ~startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
-      ~endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
-      ~startColumn: r.startPosition.character |> Index.toOneBasedInt,
-      ~endColumn: r.endPosition.character |> Index.toOneBasedInt,
-    }
+      startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
+      endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
+      startColumn: r.startPosition.character |> Index.toOneBasedInt,
+      endColumn: r.endPosition.character |> Index.toOneBasedInt,
+    };
 }
 
 module ModelContentChange = {

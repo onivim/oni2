@@ -194,11 +194,11 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving (show({with_path: false}))]
   type t = {
     id: int,
-    startLine: int,
-    endLine: int,
+    startLine: Index.t,
+    endLine: Index.t,
     lines: list(string),
     version: int,
   };
