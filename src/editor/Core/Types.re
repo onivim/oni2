@@ -275,41 +275,6 @@ module Input = {
   };
 };
 
-module Effects = {
-  [@deriving show({with_path: false})]
-  type t = {
-    openFile: Views.viewOperation,
-    getCurrentDir: unit => option(string),
-  };
-};
-
-module UiMenu = {
-  [@deriving show({with_path: false})]
-  type menu =
-    | QuickOpen
-    | CommandPalette
-    | Closed;
-
-  [@deriving show({with_path: false})]
-  type command = {
-    name: string,
-    command: unit => unit,
-    icon: option(string),
-  };
-
-  type commandFactory = Effects.t => list(command);
-
-  [@deriving show({with_path: false})]
-  type t = {
-    effects: option(Effects.t),
-    searchQuery: string,
-    menu,
-    isOpen: bool,
-    commands: list(command),
-    selectedItem: int,
-  };
-};
-
 module VisualRange = {
   [@deriving show({with_path: false})]
   type mode =

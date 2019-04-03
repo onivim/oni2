@@ -4,7 +4,7 @@
  * Runtime configuration of dependencies
  */
 
-[@deriving (show, yojson({strict: false, exn: true}))]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
   [@key "neovim"]
   neovimPath: string,
@@ -14,12 +14,16 @@ type t = {
   textmateServicePath: string,
   [@key "bundledExtensions"]
   bundledExtensionsPath: string,
+  [@key "developmentExtensions"]
+  developmentExtensionsPath: [@default None] option(string),
   [@key "extensionHost"]
   extensionHostPath: string,
   [@key "configuration"]
   configPath: string,
   [@key "keybindings"]
   keybindingsPath: string,
+  [@key "rg"]
+  rgPath: string,
   version: [@default "Unknown"] string,
 };
 

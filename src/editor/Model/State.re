@@ -25,7 +25,7 @@ type t = {
   activeBufferId: int,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  menu: UiMenu.t,
+  menu: Menu.t,
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
@@ -33,6 +33,7 @@ type t = {
   theme: Theme.t,
   editor: Editor.t,
   inputControlMode: Input.controlMode,
+  statusBar: StatusBarModel.t,
 };
 
 let create: unit => t =
@@ -58,4 +59,5 @@ let create: unit => t =
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,
+    statusBar: StatusBarModel.create(),
   };
