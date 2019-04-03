@@ -72,10 +72,11 @@ module Eol = {
 
   let default = Sys.win32 ? CRLF : LF;
 
-  let toString = (v: t) => switch(v) {
-  | CRLF => "\r\n"
-  | LF => "\n"
-  };
+  let toString = (v: t) =>
+    switch (v) {
+    | CRLF => "\r\n"
+    | LF => "\n"
+    };
 };
 
 module ModelAddedDelta = {
@@ -155,16 +156,7 @@ module ModelChangedEvent = {
     versionId: int,
   };
 
-  let create = (
-    ~changes,
-    ~eol,
-    ~versionId,
-    ()
-  ) => {
-    changes,
-    eol, 
-    versionId,
-  };
+  let create = (~changes, ~eol, ~versionId, ()) => {changes, eol, versionId};
 };
 
 module OutgoingNotifications = {

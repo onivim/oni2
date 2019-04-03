@@ -117,17 +117,23 @@ describe("Extension Client", ({describe, _}) => {
                open JsonInformationMessageFormat;
                let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-               let ret = String.equal(info.filename, "test.txt")
-               && String.equal(
-                    info.messageType,
-                    "workspace.onDidChangeTextDocument",
-                  )
-               && String.equal(
-                   info.fullText,
-                   "Greetings" ++ Eol.toString(Eol.default) ++ "world"
-               );
+               let ret =
+                 String.equal(info.filename, "test.txt")
+                 && String.equal(
+                      info.messageType,
+                      "workspace.onDidChangeTextDocument",
+                    )
+                 && String.equal(
+                      info.fullText,
+                      "Greetings" ++ Eol.toString(Eol.default) ++ "world",
+                    );
                prerr_endline(" FULL TEXT    : " ++ info.fullText);
-               prerr_endline(" EXPECTED TEXT: " ++ "Greetings" ++ Eol.show(Eol.default) ++ "world");
+               prerr_endline(
+                 " EXPECTED TEXT: "
+                 ++ "Greetings"
+                 ++ Eol.show(Eol.default)
+                 ++ "world",
+               );
                ret;
              });
 
@@ -149,15 +155,35 @@ describe("Extension Client", ({describe, _}) => {
 
         waitForOpenMessage();
 
-          let contentChange = ModelContentChange.create(
-            ~range=Types.Range.create(~startLine=ZeroBasedIndex(0), ~endLine=ZeroBasedIndex(0), ~startCharacter=ZeroBasedIndex(0), ~endCharacter=ZeroBasedIndex(5), ()),
+        let contentChange =
+          ModelContentChange.create(
+            ~range=
+              Types.Range.create(
+                ~startLine=ZeroBasedIndex(0),
+                ~endLine=ZeroBasedIndex(0),
+                ~startCharacter=ZeroBasedIndex(0),
+                ~endCharacter=ZeroBasedIndex(5),
+                (),
+              ),
             ~text="Greetings",
             (),
           );
 
-          let modelChangedEvent = ModelChangedEvent.create(~changes=[contentChange], ~eol=Eol.default, ~versionId=1, ());
+        let modelChangedEvent =
+          ModelChangedEvent.create(
+            ~changes=[contentChange],
+            ~eol=Eol.default,
+            ~versionId=1,
+            (),
+          );
 
-          api.send(Documents.acceptModelChanged(Uri.fromPath("test.txt"), modelChangedEvent, true));
+        api.send(
+          Documents.acceptModelChanged(
+            Uri.fromPath("test.txt"),
+            modelChangedEvent,
+            true,
+          ),
+        );
 
         waitForUpdateMessage();
       })
