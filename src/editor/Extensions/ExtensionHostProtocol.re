@@ -113,7 +113,8 @@ module OneBasedRange = {
     endColumn: int,
   };
 
-  let create = (~startLineNumber, ~endLineNumber, ~startColumn, ~endColumn, ()) => {
+  let create =
+      (~startLineNumber, ~endLineNumber, ~startColumn, ~endColumn, ()) => {
     startLineNumber,
     endLineNumber,
     startColumn,
@@ -135,11 +136,7 @@ module ModelContentChange = {
     text: string,
   };
 
-  let create = (
-    ~range: Range.t,
-    ~text: string,
-    (),
-  ) => {
+  let create = (~range: Range.t, ~text: string, ()) => {
     range: OneBasedRange.ofRange(range),
     text,
   };

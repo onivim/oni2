@@ -39,15 +39,14 @@ describe("Extension Client", ({describe, _}) => {
   );
 
   describe("DocumentsAndEditors", ({test, _}) => {
-
     let createInitialDocumentModel = (~lines, ~path, ()) => {
-                ModelAddedDelta.create(
-                  ~uri=Uri.createFromFilePath(path),
-                  ~lines,
-                  ~modeId="test_language",
-                  ~isDirty=false,
-                  (),
-                );
+      ModelAddedDelta.create(
+        ~uri=Uri.createFromFilePath(path),
+        ~lines,
+        ~modeId="test_language",
+        ~isDirty=false,
+        (),
+      );
     };
     test("document added successfully", _
       /*({expect}) =>*/
@@ -76,7 +75,13 @@ describe("Extension Client", ({describe, _}) => {
           api.send(
             DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
               ~removedDocuments=[],
-              ~addedDocuments=[createInitialDocumentModel(~lines=["Hello world"], ~path="test.txt", ())],
+              ~addedDocuments=[
+                createInitialDocumentModel(
+                  ~lines=["Hello world"],
+                  ~path="test.txt",
+                  (),
+                ),
+              ],
               (),
             ),
           );
@@ -85,56 +90,61 @@ describe("Extension Client", ({describe, _}) => {
         })
       );
 
-    test("document updated successfully", _ => {
-        
-        withExtensionClient(api => {
-          let waitForCommandRegistration =
-            api
-            |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+    test("document updated successfully", _ =>
+      withExtensionClient(api => {
+        let waitForCommandRegistration =
+          api
+          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
 
-          let waitForOpenMessage =
-            api
-            |> Waiters.createMessageWaiter(s => {
-                 let json = Yojson.Safe.from_string(s);
-                 open JsonInformationMessageFormat;
-                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
+        let waitForOpenMessage =
+          api
+          |> Waiters.createMessageWaiter(s => {
+               let json = Yojson.Safe.from_string(s);
+               open JsonInformationMessageFormat;
+               let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-                 String.equal(info.filename, "test.txt")
-                 && String.equal(
-                      info.messageType,
-                      "workspace.onDidOpenTextDocument",
-                    );
-               });
+               String.equal(info.filename, "test.txt")
+               && String.equal(
+                    info.messageType,
+                    "workspace.onDidOpenTextDocument",
+                  );
+             });
 
-          let waitForUpdateMessage =
-              api |>
-              Waiters.createMessageWaiter(s => {
-                 let json = Yojson.Safe.from_string(s);
-                 open JsonInformationMessageFormat;
-                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
+        let waitForUpdateMessage =
+          api
+          |> Waiters.createMessageWaiter(s => {
+               let json = Yojson.Safe.from_string(s);
+               open JsonInformationMessageFormat;
+               let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-                 String.equal(info.filename, "test.txt")
-                 && String.equal(
-                      info.messageType,
-                      "workspace.onDidChangeTextDocument",
-                    );
-              });
+               String.equal(info.filename, "test.txt")
+               && String.equal(
+                    info.messageType,
+                    "workspace.onDidChangeTextDocument",
+                  );
+             });
 
-          api.start();
-          waitForCommandRegistration();
-          api.send(
-            DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-              ~removedDocuments=[],
-              ~addedDocuments=[createInitialDocumentModel(~lines=["Hello World"], ~path="test.txt", ())],
-              (),
-            ),
-          );
+        api.start();
+        waitForCommandRegistration();
+        api.send(
+          DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~removedDocuments=[],
+            ~addedDocuments=[
+              createInitialDocumentModel(
+                ~lines=["Hello World"],
+                ~path="test.txt",
+                (),
+              ),
+            ],
+            (),
+          ),
+        );
 
-          waitForOpenMessage();
+        waitForOpenMessage();
 
-          waitForUpdateMessage();
-    });
-  });
+        waitForUpdateMessage();
+      })
+    );
   });
 
   describe("lifecycle", ({test, _}) => {
