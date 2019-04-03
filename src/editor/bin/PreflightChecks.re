@@ -5,11 +5,13 @@
  * is set up correctly for the application to run.
  */
 
+open Oni_Core;
+
 let checkHomeDirectoryOrThrow = () => {
-  let home = Filesystem.unsafeFindHome();
+  let _ = Filesystem.unsafeFindHome();
   ();
 };
 
 let run = () => {
-  checkHomeDirectoryorThrow();
+  checkHomeDirectoryOrThrow();
 };
