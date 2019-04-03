@@ -21,7 +21,9 @@ describe("Extension Client", ({describe, _}) => {
   describe("commands", ({test, _}) =>
     test("executes simple command", _ =>
       withExtensionClient(api => {
-        let waitForCommandRegistration = api |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+        let waitForCommandRegistration =
+          api
+          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
         let waitForShowMessage = api |> Waiters.createMessageWaiter(_ => true);
 
         api.start();
@@ -40,20 +42,23 @@ describe("Extension Client", ({describe, _}) => {
       /*({expect}) =>*/
       =>
         withExtensionClient(api => {
-        let waitForCommandRegistration = api |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+          let waitForCommandRegistration =
+            api
+            |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
 
           let waitForShowMessage =
-            api |> Waiters.createMessageWaiter((s) => {
-                let json = Yojson.Safe.from_string(s);
-                open JsonInformationMessageFormat;
-                let info = JsonInformationMessageFormat.of_yojson_exn(json);
+            api
+            |> Waiters.createMessageWaiter(s => {
+                 let json = Yojson.Safe.from_string(s);
+                 open JsonInformationMessageFormat;
+                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-                String.equal(info.filename, "test.txt")
-                && String.equal(
-                     info.messageType,
-                     "workspace.onDidOpenTextDocument",
-                   );
-              });
+                 String.equal(info.filename, "test.txt")
+                 && String.equal(
+                      info.messageType,
+                      "workspace.onDidOpenTextDocument",
+                    );
+               });
 
           api.start();
           waitForCommandRegistration();
