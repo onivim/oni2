@@ -20,7 +20,7 @@ let homeContainerStyles = (theme: Theme.t) =>
     justifyContent(`Center),
   ];
 
-let startEditor = () => GlobalContext.current().dispatch(ShowEditor);
+let startEditor = () => GlobalContext.current().dispatch(CloseHome);
 let openFolder = () => ();
 
 /**

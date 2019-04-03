@@ -12,8 +12,8 @@ type t = {
 let createTabs = () => [
   {
     title: "Welcome to Oni2",
-    onClose: () => ShowEditor,
-    onClick: () => ShowHome,
+    onClose: () => CloseHome,
+    onClick: () => OpenHome,
   },
 ];
 
@@ -21,7 +21,7 @@ let create = () => {isOpen: true, tabs: createTabs()};
 
 let reduce = (state: t, action: Actions.t) =>
   switch (action) {
-  | ShowHome => {isOpen: true, tabs: createTabs()}
-  | ShowEditor => {isOpen: false, tabs: []}
+  | OpenHome => {isOpen: true, tabs: createTabs()}
+  | CloseHome => {isOpen: false, tabs: []}
   | _ => state
   };
