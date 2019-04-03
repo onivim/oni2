@@ -32,10 +32,20 @@ function activate(context) {
         showData({
             type: "workspace.onDidOpenTextDocument",
             filename: e.fileName,
+            fullText: e.getText(),
         });
     });
 
-    let disposable3 = vscode.workspace.onDidCloseTextDocument((e) => {
+    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+        showData({
+            type: "workspace.onDidChangeTextDocument",
+            filename: e.fileName,
+            contentChanges: e.contentChanges,
+            fullText: e.document.getText(),
+        });
+    });
+
+    let disposable4 = vscode.workspace.onDidCloseTextDocument((e) => {
         showData({
             type: "workspace.onDidCloseTextDocument",
             filename: e.fileName,
@@ -44,7 +54,7 @@ function activate(context) {
 
 	context.subscriptions.push(disposable);
     context.subscriptions.push(disposable2);
-    context.subscriptions.push(disposable3);
+    context.subscriptions.push(disposable4);
 }
 
 // this method is called when your extension is deactivated
