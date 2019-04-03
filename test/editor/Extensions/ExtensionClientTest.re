@@ -106,6 +106,20 @@ describe("Extension Client", ({describe, _}) => {
                     );
                });
 
+          let waitForUpdateMessage =
+              api |>
+              Waiters.createMessageWaiter(s => {
+                 let json = Yojson.Safe.from_string(s);
+                 open JsonInformationMessageFormat;
+                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
+
+                 String.equal(info.filename, "test.txt")
+                 && String.equal(
+                      info.messageType,
+                      "workspace.onDidChangeTextDocument",
+                    );
+              });
+
           api.start();
           waitForCommandRegistration();
           api.send(
@@ -117,6 +131,8 @@ describe("Extension Client", ({describe, _}) => {
           );
 
           waitForOpenMessage();
+
+          waitForUpdateMessage();
     });
   });
   });
