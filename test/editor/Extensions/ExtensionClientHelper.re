@@ -22,6 +22,28 @@ type extHostApi = {
   start: unit => unit,
 };
 
+module Waiters = {
+    let createCommandRegistrationWaiter = (command: string, api: extHostApi) => {
+          api.createWaiterForMessage(
+            "MainThreadCommands", "$registerCommand", args =>
+            switch (args) {
+            | [`String(v), ..._] => String.equal(command, v)
+            | _ => false
+            }
+          );
+    };
+
+    let createMessageWaiter = (f: string => bool, api: extHostApi) => {
+            api.createWaiterForMessage(
+              "MainThreadMessageService", "$showMessage", args =>
+              switch (args) {
+              | [_, `String(s), ..._] => f(s)
+              | _ => failwith("Unknown message")
+              }
+            );
+    }
+}
+
 let withExtensionClient = (f: extHostApi => unit) => {
   let setup = Setup.init();
 

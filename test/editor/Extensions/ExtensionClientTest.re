@@ -21,19 +21,8 @@ describe("Extension Client", ({describe, _}) => {
   describe("commands", ({test, _}) =>
     test("executes simple command", _ =>
       withExtensionClient(api => {
-        let waitForCommandRegistration =
-          api.createWaiterForMessage(
-            "MainThreadCommands", "$registerCommand", args =>
-            switch (args) {
-            | [`String("extension.helloWorld"), ..._] => true
-            | _ => false
-            }
-          );
-        let waitForShowMessage =
-          api.createWaiterForMessage(
-            "MainThreadMessageService", "$showMessage", _ =>
-            true
-          );
+        let waitForCommandRegistration = api |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+        let waitForShowMessage = api |> Waiters.createMessageWaiter(_ => true);
 
         api.start();
 
@@ -51,20 +40,10 @@ describe("Extension Client", ({describe, _}) => {
       /*({expect}) =>*/
       =>
         withExtensionClient(api => {
-          let waitForCommandRegistration =
-            api.createWaiterForMessage(
-              "MainThreadCommands", "$registerCommand", args =>
-              switch (args) {
-              | [`String("extension.helloWorld"), ..._] => true
-              | _ => false
-              }
-            );
+        let waitForCommandRegistration = api |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
 
           let waitForShowMessage =
-            api.createWaiterForMessage(
-              "MainThreadMessageService", "$showMessage", args =>
-              switch (args) {
-              | [_, `String(s), ..._] =>
+            api |> Waiters.createMessageWaiter((s) => {
                 let json = Yojson.Safe.from_string(s);
                 open JsonInformationMessageFormat;
                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
@@ -74,9 +53,7 @@ describe("Extension Client", ({describe, _}) => {
                      info.messageType,
                      "workspace.onDidOpenTextDocument",
                    );
-              | _ => failwith("Unknown message")
-              }
-            );
+              });
 
           api.start();
           waitForCommandRegistration();
