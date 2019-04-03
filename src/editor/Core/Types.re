@@ -194,13 +194,34 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving (show({with_path: false}))]
   type t = {
     id: int,
     startLine: Index.t,
     endLine: Index.t,
     lines: list(string),
     version: int,
+  };
+
+  [@deriving
+    (show({with_path: false}), yojson({strict: false, exn: false}))
+  ]
+  type jsont = {
+    id: int,
+    startLine: int, 
+    endLine: int,
+    lines: list(string),
+    version: int,
+  };
+
+  let to_yojson = (v: t) => {
+    let jsonr: jsont = {
+        id: v.id,
+        startLine: v.startLine |> Index.toZeroBasedInt,
+        endLine: v.endLine |> Index.toZeroBasedInt,
+        lines: v.lines,
+        version: v.version,
+    };
+    jsont_to_yojson(jsonr)
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {

@@ -105,6 +105,7 @@ module ModelAddedDelta = {
 };
 
 module OneBasedRange = {
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
     type t = {
         startLineNumber: int,
         endLineNumber: int,

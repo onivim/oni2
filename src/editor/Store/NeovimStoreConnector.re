@@ -10,6 +10,7 @@ open Rench;
 open Revery;
 
 open Oni_Neovim;
+open Oni_Core.Types;
 
 module Core = Oni_Core;
 module Extensions = Oni_Extensions;
@@ -173,8 +174,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 BufferUpdate(
                   Core.Types.BufferUpdate.create(
                     ~id=bc.id,
-                    ~startLine=OneBasedIndex(bc.firstLine),
-                    ~endLine=OneBasedIndex(bc.lastLine),
+                    ~startLine=ZeroBasedIndex(bc.firstLine),
+                    ~endLine=ZeroBasedIndex(bc.lastLine),
                     ~lines=bc.lines,
                     ~version=bc.changedTick,
                     (),

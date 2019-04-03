@@ -54,18 +54,20 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   let updateLines = Array.of_list(update.lines);
+  let startLine = update.startLine |> Index.toZeroBasedInt;
+  let endLine = update.endLine |> Index.toZeroBasedInt;
   if (Array.length(lines) == 0) {
     updateLines;
-  } else if (update.startLine >= Array.length(lines)) {
+  } else if (startLine >= Array.length(lines)) {
     let ret = Array.concat([lines, updateLines]);
     ret;
   } else {
-    let prev = slice(~lines, ~start=0, ~length=update.startLine, ());
+    let prev = slice(~lines, ~start=0, ~length=startLine, ());
     let post =
       slice(
         ~lines,
-        ~start=update.endLine,
-        ~length=Array.length(lines) - update.endLine,
+        ~start=endLine,
+        ~length=Array.length(lines) - endLine,
         (),
       );
 
@@ -83,7 +85,7 @@ let update = (buf: t, update: BufferUpdate.t) =>
      update the buffer's version but set the content of the buffer
      rather than update it, which would result in duplication
    */
-  | {startLine: 0, endLine: (-1), version, _} => {
+  | {startLine: ZeroBasedIndex(0), endLine: ZeroBasedIndex(-1), version, _} => {
       metadata: {
         ...buf.metadata,
         version,
