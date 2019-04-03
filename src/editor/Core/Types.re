@@ -292,7 +292,7 @@ module VisualRange = {
   let _modeFromString = s => {
     switch (s) {
     | "V" => LinewiseVisual
-    | "bv" => BlockwiseVisual
+    | "vb" => BlockwiseVisual
     | "v" => Visual
     | _ => None
     };

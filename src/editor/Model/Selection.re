@@ -11,8 +11,6 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
   let pos = ref(startLine);
   let ranges = ref([]);
 
-  print_endline("GET RANGES FOR LINEWISE SELECTION");
-
   while (pos^ <= endLine) {
     let currentPos = pos^;
     ranges :=
@@ -70,6 +68,53 @@ let getRangesForVisualSelection =
   ranges^;
 };
 
+let getRangesForBlockSelection =
+    (startLine, startC, endLine, endColumn, buffer) => {
+  let pos = ref(startLine);
+  let ranges = ref([]);
+
+  print_endline ("GET RANGES FOR BLOCK SELECTION: " ++ string_of_int(startC) ++ "|" ++ string_of_int(endColumn));
+
+  while (pos^ <= endLine) {
+    let currentPos = pos^;
+
+
+    let bufferLength = Buffer.getLineLength(buffer, currentPos);
+
+    let newRange = if(startC < bufferLength) {
+        Some(Range.create(
+          ~startLine=ZeroBasedIndex(currentPos),
+          ~startColumn=ZeroBasedIndex(startC),
+          ~endLine=ZeroBasedIndex(currentPos),
+          ~endColumn=
+            ZeroBasedIndex(min(endColumn + 1, bufferLength)),
+          (),
+        ));
+        
+    } else {
+        None
+    }
+
+    ranges := [newRange, ...ranges^]
+
+    incr(pos);
+  };
+
+  let hasValue = v => switch(v) {
+  | Some(_) => true
+  | None => false
+  };
+
+  let getValue = v => switch(v) {
+  | Some(v) => v
+  | None => failwith("Should've been filtered out");
+  }
+
+  ranges^
+  |> List.filter(hasValue)
+  |> List.map(getValue);
+};
+
 /*
  * getRanges returns a list of Range.t in Buffer Space,
  * where selection highlights should be displayed
@@ -84,6 +129,7 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
     let endCharacter = Index.toZeroBasedInt(selection.range.endPos.character);
 
     switch (selection.mode) {
+    | BlockwiseVisual => getRangesForBlockSelection(startLine, startCharacter, endLine, endCharacter, buffer)
     | LinewiseVisual =>
       getRangesForLinewiseSelection(startLine, endLine, buffer)
     | Visual =>
