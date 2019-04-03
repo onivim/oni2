@@ -122,38 +122,44 @@ let start = (extensions, setup: Core.Setup.t) => {
       };
     });
 
-  let modelChangedEffect = (buffers: Model.BufferMap.t, bu: Core.Types.BufferUpdate.t) => Isolinear.Effect.create(
-      ~name="exthost.bufferUpdate", () => {
-   
-        switch (Model.BufferMap.getBuffer(bu.id, buffers)) {
-        | None => ()
-        | Some(v) => {
-
-          let modelContentChange = Protocol.ModelContentChange.ofBufferUpdate(bu, Protocol.Eol.default);
-          let modelChangedEvent = Protocol.ModelChangedEvent.create(
-              ~changes=[modelContentChange],
-              ~eol=Protocol.Eol.default,
-              ~versionId=bu.version,
-              (),
+  let modelChangedEffect =
+      (buffers: Model.BufferMap.t, bu: Core.Types.BufferUpdate.t) =>
+    Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
+      switch (Model.BufferMap.getBuffer(bu.id, buffers)) {
+      | None => ()
+      | Some(v) =>
+        let modelContentChange =
+          Protocol.ModelContentChange.ofBufferUpdate(
+            bu,
+            Protocol.Eol.default,
+          );
+        let modelChangedEvent =
+          Protocol.ModelChangedEvent.create(
+            ~changes=[modelContentChange],
+            ~eol=Protocol.Eol.default,
+            ~versionId=bu.version,
+            (),
           );
 
-          let uri = Model.Buffer.getUri(v);
+        let uri = Model.Buffer.getUri(v);
 
-           ExtensionHostClient.send(
-               extHostClient,
-               Protocol.OutgoingNotifications.Documents.acceptModelChanged(
-                uri,
-                modelChangedEvent,
-                true,
-               ),
-           );
-        };
-    };
-  });
+        ExtensionHostClient.send(
+          extHostClient,
+          Protocol.OutgoingNotifications.Documents.acceptModelChanged(
+            uri,
+            modelChangedEvent,
+            true,
+          ),
+        );
+      }
+    );
 
   let updater = (state: Model.State.t, action) =>
     switch (action) {
-    | Model.Actions.BufferUpdate(bu) => (state, modelChangedEffect(state.buffers, bu))
+    | Model.Actions.BufferUpdate(bu) => (
+        state,
+        modelChangedEffect(state.buffers, bu),
+      )
     | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(bm))
     | Model.Actions.Tick => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)

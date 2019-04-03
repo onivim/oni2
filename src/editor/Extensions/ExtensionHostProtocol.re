@@ -127,23 +127,29 @@ module ModelContentChange = {
   };
 
   let joinLines = (separator: string, lines: list(string)) => {
-    List.fold_left((prev, cur) => {
-            switch (prev) {
-            | "" => cur
-            | s => s ++ separator ++ cur
-            }
-        }, "", lines);
+    List.fold_left(
+      (prev, cur) =>
+        switch (prev) {
+        | "" => cur
+        | s => s ++ separator ++ cur
+        },
+      "",
+      lines,
+    );
   };
 
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
-    range: OneBasedRange.ofRange(Range.create(
-        ~startLine=bu.startLine,
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine) + 1),
-        ~endCharacter=ZeroBasedIndex(0),
-        (),
-    )),
-    text: joinLines(Eol.toString(eol), bu.lines)
+    range:
+      OneBasedRange.ofRange(
+        Range.create(
+          ~startLine=bu.startLine,
+          ~startCharacter=ZeroBasedIndex(0),
+          ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine) + 1),
+          ~endCharacter=ZeroBasedIndex(0),
+          (),
+        ),
+      ),
+    text: joinLines(Eol.toString(eol), bu.lines),
   };
 };
 

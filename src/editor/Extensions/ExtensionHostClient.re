@@ -96,18 +96,10 @@ let start =
       }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
-    /* switch (onMessage(id, payload)) { */
-    /* | Ok(None) => () */
-    /* | Ok(Some(_)) => */
-    /*   /1* TODO: Send response *1/ */
-    /*   () */
-    /* | Error(_) => */
-    /*   /1* TODO: Send error *1/ */
-    /*   () */
-    /* }; */
     };
 
   let _sendInitData = () => {
+      prerr_endline ("INIT: " ++ ExtensionHostInitData.show(initData));
     send(
       Protocol.MessageType.initData,
       ExtensionHostInitData.to_yojson(initData),

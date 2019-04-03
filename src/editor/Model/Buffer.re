@@ -26,16 +26,14 @@ let getMetadata = (buffer: t) => buffer.metadata;
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getUri = (buffer: t) => {
-    let getUriFromMetadata = (metadata: BufferMetadata.t) => {
-    switch(metadata.filePath) {
+  let getUriFromMetadata = (metadata: BufferMetadata.t) => {
+    switch (metadata.filePath) {
     | None => Uri.fromMemory(string_of_int(metadata.id))
     | Some(v) => Uri.fromPath(v)
-    }   
     };
+  };
 
-    buffer
-    |> getMetadata
-    |> getUriFromMetadata;
+  buffer |> getMetadata |> getUriFromMetadata;
 };
 
 /*

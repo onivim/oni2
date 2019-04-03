@@ -335,4 +335,3 @@ module Uri = {
   let fromMemory = (path: string) => {scheme: Scheme.Memory, path};
   let fromPath = (path: string) => {scheme: Scheme.File, path};
 };
-
