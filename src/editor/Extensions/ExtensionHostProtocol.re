@@ -41,6 +41,67 @@ module Environment = {
   };
 };
 
+module Uri = {
+  module Scheme = {
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
+    type t =
+      | [@name "file"] File;
+
+    let toString = (v: t) =>
+      switch (v) {
+      | File => "file"
+      };
+  };
+
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    scheme: Scheme.t,
+    path: string,
+  };
+
+  let createFromFilePath = (path: string) => {scheme: Scheme.File, path};
+};
+
+module Eol = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t =
+    | [@name "\n"] LF
+    | [@name "\r\n"] CRLF;
+
+  let default = Sys.win32 ? CRLF : LF;
+};
+
+module ModelAddedDelta = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    uri: Uri.t,
+    versionId: int,
+    lines: list(string),
+    [@key "EOL"]
+    eol: Eol.t,
+    modeId: string,
+    isDirty: bool,
+  };
+
+  let create =
+      (
+        ~uri,
+        ~versionId=0,
+        ~lines=[],
+        ~eol=Eol.default,
+        ~modeId,
+        ~isDirty=false,
+        (),
+      ) => {
+    uri,
+    versionId,
+    lines,
+    eol,
+    modeId,
+    isDirty,
+  };
+};
+
 module OutgoingNotifications = {
   let _buildNotification = (scopeName, methodName, payload) => {
     `List([`String(scopeName), `String(methodName), payload]);
@@ -62,6 +123,45 @@ module OutgoingNotifications = {
         "ExtHostConfiguration",
         "$initializeConfiguration",
         `List([`Assoc([])]),
+      );
+    };
+  };
+
+  module DocumentsAndEditors = {
+    module DocumentsAndEditorsDelta = {
+      [@deriving (show({with_path: false}), yojson({strict: false}))]
+      type t = {
+        removedDocuments: list(Uri.t),
+        addedDocuments: list(ModelAddedDelta.t),
+        removedEditors: list(string),
+        addedEditors: list(string),
+      };
+
+      let create = (~removedDocuments, ~addedDocuments, ()) => {
+        removedDocuments,
+        addedDocuments,
+        removedEditors: [],
+        addedEditors: [],
+      };
+    };
+
+    let acceptDocumentsAndEditorsDelta =
+        (
+          ~removedDocuments: list(Uri.t),
+          ~addedDocuments: list(ModelAddedDelta.t),
+          (),
+        ) => {
+      let delta =
+        DocumentsAndEditorsDelta.create(
+          ~removedDocuments,
+          ~addedDocuments,
+          (),
+        );
+
+      _buildNotification(
+        "ExtHostDocumentsAndEditors",
+        "$acceptDocumentsAndEditorsDelta",
+        `List([DocumentsAndEditorsDelta.to_yojson(delta)]),
       );
     };
   };
