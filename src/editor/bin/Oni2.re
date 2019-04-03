@@ -40,6 +40,8 @@ let init = app => {
   let cliOptions = Core.Cli.parse(setup);
   Sys.chdir(cliOptions.folder);
 
+  PreflightChecks.run();
+
   let currentState = ref(Model.State.create());
 
   let onStateChanged = v => {
