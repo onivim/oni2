@@ -37,7 +37,7 @@ let viewStyle =
     right(0),
   ];
 
-let convertPositionToString = (position: Types.BufferPosition.t) =>
+let convertPositionToString = (position: Types.Position.t) =>
   string_of_int(Types.Index.toOneBasedInt(position.line))
   ++ ","
   ++ string_of_int(Types.Index.toOneBasedInt(position.character));

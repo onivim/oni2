@@ -79,7 +79,7 @@ type openMethod =
   | Buffer;
 
 module Position = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving (show({with_path: false}))]
   type t = {
     line: Index.t,
     character: Index.t,
@@ -99,11 +99,11 @@ module Range = {
     endPosition: Position.t,
   };
 
-  let createFromPositions = {
+  let createFromPositions = (
     ~startPosition,
     ~endPosition,
     (),
-  } => {
+  ) => {
     startPosition,
     endPosition,
   };
