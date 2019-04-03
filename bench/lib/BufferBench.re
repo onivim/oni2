@@ -25,7 +25,7 @@ let hundredThousandLines =
 
 let addLinesToEmptyBuffer = () => {
   let _ =
-    Types.BufferUpdate.create(
+    Types.BufferUpdate.createFromZeroBasedIndices(
       ~id=emptyBufferId,
       ~startLine=0,
       ~endLine=-1,
@@ -39,7 +39,7 @@ let addLinesToEmptyBuffer = () => {
 
 let clearLargeBuffer = () => {
   let _ =
-    Types.BufferUpdate.create(
+    Types.BufferUpdate.createFromZeroBasedIndices(
       ~id=hundredThousandLineBufferId,
       ~startLine=0,
       ~endLine=-1,
@@ -53,7 +53,7 @@ let clearLargeBuffer = () => {
 
 let insertInMiddleOfSmallBuffer = () => {
   let _ =
-    Types.BufferUpdate.create(
+    Types.BufferUpdate.createFromZeroBasedIndices(
       ~id=smallBufferId,
       ~startLine=50,
       ~endLine=51,
@@ -67,7 +67,7 @@ let insertInMiddleOfSmallBuffer = () => {
 
 let insertInMiddleOfLargeBuffer = () => {
   let _ =
-    Types.BufferUpdate.create(
+    Types.BufferUpdate.createFromZeroBasedIndices(
       ~id=hundredThousandLineBufferId,
       ~startLine=5000,
       ~endLine=50001,

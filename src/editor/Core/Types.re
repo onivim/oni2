@@ -231,6 +231,17 @@ module BufferUpdate = {
     lines,
     version,
   };
+
+  let createFromZeroBasedIndices = (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+      let ret: t = {
+    id,
+    startLine: Index.ZeroBasedIndex(startLine),
+    endLine: Index.ZeroBasedIndex(endLine),
+    lines,
+    version,
+      };
+      ret;
+  };
 };
 
 module Tabline = {
