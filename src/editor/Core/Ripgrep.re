@@ -1,7 +1,9 @@
 open Rench;
 
+type disposeFunction = unit => unit;
+
 [@deriving show]
-type t = {search: (string, list(string) => unit) => unit};
+type t = {search: (string, list(string) => unit) => disposeFunction};
 
 let process = (rgPath, args, callback) => {
   let cp = ChildProcess.spawn(rgPath, args);
@@ -13,6 +15,8 @@ let process = (rgPath, args, callback) => {
     |> callback
   )
   |> ignore;
+
+  () => cp.kill(Sys.sigkill);
 };
 
 /**
