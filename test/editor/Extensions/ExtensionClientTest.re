@@ -117,15 +117,15 @@ describe("Extension Client", ({describe, _}) => {
                open JsonInformationMessageFormat;
                let info = JsonInformationMessageFormat.of_yojson_exn(json);
 
-                 String.equal(info.filename, "test.txt")
-                 && String.equal(
-                      info.messageType,
-                      "workspace.onDidChangeTextDocument",
-                    )
-                 && String.equal(
-                      info.fullText,
-                      "Greetings" ++ Eol.toString(Eol.default) ++ "world",
-                    );
+               String.equal(info.filename, "test.txt")
+               && String.equal(
+                    info.messageType,
+                    "workspace.onDidChangeTextDocument",
+                  )
+               && String.equal(
+                    info.fullText,
+                    "Greetings" ++ Eol.toString(Eol.default) ++ "world",
+                  );
              });
 
         api.start();
