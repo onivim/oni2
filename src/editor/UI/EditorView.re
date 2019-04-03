@@ -30,6 +30,7 @@ let toEditorTabs = (tabs: list(State.Tab.t)) =>
   List.map(
     (t: State.Tab.t) =>
       Tabs.{
+        tabType: EditorTab,
         title: t.title,
         modified: t.modified,
         active: t.active,
@@ -43,6 +44,7 @@ let toMessageTabs = (home: Home.t) =>
   List.map(
     (t: Home.guiTab) =>
       Tabs.{
+        tabType: MessageTab,
         title: t.title,
         modified: false,
         active: home.isOpen,
@@ -52,13 +54,21 @@ let toMessageTabs = (home: Home.t) =>
     home.tabs,
   );
 
+let getActiveTabType = tabs =>
+  List.find_opt((tab: Tabs.tabInfo) => tab.active, tabs)
+  |> (
+    fun
+    | Some(t) => t.tabType
+    | None => EditorTab
+  );
+
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let {mode, theme, uiFont, _}: State.t = state;
 
     let editorTabs = toEditorTabs(state.tabs);
     let messageTabs = toMessageTabs(state.home);
-    let tabs = state.home.isOpen ? messageTabs : editorTabs;
+    let tabs = List.append(messageTabs, editorTabs);
 
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
@@ -67,7 +77,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        {state.home.isOpen ? <HomeView theme state /> : <EditorSurface state />}
+        {
+          switch (getActiveTabType(tabs)) {
+          | EditorTab => <EditorSurface state />
+          | MessageTab => <HomeView theme state />
+          }
+        }
       </View>,
     );
   });

@@ -11,7 +11,12 @@ open Oni_Core;
 
 let noop = () => ();
 
+type tabType =
+  | MessageTab
+  | EditorTab;
+
 type tabInfo = {
+  tabType,
   title: string,
   active: bool,
   modified: bool,
