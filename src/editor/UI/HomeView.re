@@ -46,7 +46,7 @@ let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
         {
           toValue: 1.0,
           duration: Seconds(0.3),
-          delay: Seconds(2.),
+          delay: Seconds(0.),
           repeat: false,
           easing: Animated.linear,
         },
