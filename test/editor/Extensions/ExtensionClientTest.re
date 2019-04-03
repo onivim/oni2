@@ -9,12 +9,12 @@ open ExtensionHostProtocol;
 open ExtensionHostProtocol.OutgoingNotifications;
 
 module JsonInformationMessageFormat = {
-    [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
-    type t = {
-       [@key "type"]
-       messageType: string,
-       filename: string,
-    }
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  type t = {
+    [@key "type"]
+    messageType: string,
+    filename: string,
+  };
 };
 
 describe("Extension Client", ({describe, _}) => {
@@ -47,52 +47,58 @@ describe("Extension Client", ({describe, _}) => {
   );
 
   describe("DocumentsAndEditors", ({test, _}) =>
-    test("document added successfully", _ => /*({expect}) =>*/
-      withExtensionClient(api => {
-        let waitForCommandRegistration =
-          api.createWaiterForMessage(
-            "MainThreadCommands", "$registerCommand", args =>
-            switch (args) {
-            | [`String("extension.helloWorld"), ..._] => true
-            | _ => false
-            }
+    test("document added successfully", _
+      /*({expect}) =>*/
+      =>
+        withExtensionClient(api => {
+          let waitForCommandRegistration =
+            api.createWaiterForMessage(
+              "MainThreadCommands", "$registerCommand", args =>
+              switch (args) {
+              | [`String("extension.helloWorld"), ..._] => true
+              | _ => false
+              }
+            );
+
+          let waitForShowMessage =
+            api.createWaiterForMessage(
+              "MainThreadMessageService", "$showMessage", args =>
+              switch (args) {
+              | [_, `String(s), ..._] =>
+                let json = Yojson.Safe.from_string(s);
+                open JsonInformationMessageFormat;
+                let info = JsonInformationMessageFormat.of_yojson_exn(json);
+
+                String.equal(info.filename, "test.txt")
+                && String.equal(
+                     info.messageType,
+                     "workspace.onDidOpenTextDocument",
+                   );
+              | _ => failwith("Unknown message")
+              }
+            );
+
+          api.start();
+          waitForCommandRegistration();
+          api.send(
+            DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+              ~removedDocuments=[],
+              ~addedDocuments=[
+                ModelAddedDelta.create(
+                  ~uri=Uri.createFromFilePath("test.txt"),
+                  ~lines=["hello world"],
+                  ~modeId="test_language",
+                  ~isDirty=false,
+                  (),
+                ),
+              ],
+              (),
+            ),
           );
 
-        let waitForShowMessage =
-          api.createWaiterForMessage(
-            "MainThreadMessageService", "$showMessage", args =>
-            switch (args) {
-            | [_, `String(s), ..._] =>
-              let json = Yojson.Safe.from_string(s);
-            open JsonInformationMessageFormat;
-              let info = JsonInformationMessageFormat.of_yojson_exn(json);
-
-              String.equal(info.filename, "test.txt") && String.equal(info.messageType, "workspace.onDidOpenTextDocument");
-            | _ => failwith("Unknown message");
-            }
-          );
-
-        api.start();
-        waitForCommandRegistration();
-        api.send(
-          DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-            ~removedDocuments=[],
-            ~addedDocuments=[
-              ModelAddedDelta.create(
-                ~uri=Uri.createFromFilePath("test.txt"),
-                ~lines=["hello world"],
-                ~modeId="test_language",
-                ~isDirty=false,
-                (),
-              ),
-            ],
-            (),
-          ),
-        );
-
-        waitForShowMessage();
-      })
-    )
+          waitForShowMessage();
+        })
+      )
   );
 
   describe("lifecycle", ({test, _}) => {
