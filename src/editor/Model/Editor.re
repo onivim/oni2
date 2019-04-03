@@ -305,7 +305,7 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 let reduce = (view, action, buffer) =>
   switch (action) {
   | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
-  | SelectionChanged(selection) => { ...view, selection }
+  | SelectionChanged(selection) => {...view, selection}
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY)

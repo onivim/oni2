@@ -8,48 +8,66 @@
 open Oni_Core.Types;
 
 let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
+  let pos = ref(startLine);
+  let ranges = ref([]);
 
-    let pos = ref(startLine);
-    let ranges = ref([]);
+  print_endline("GET RANGES FOR LINEWISE SELECTION");
 
-    print_endline ("GET RANGES FOR LINEWISE SELECTION");
+  while (pos^ <= endLine) {
+    let currentPos = pos^;
+    ranges :=
+      [
+        Range.create(
+          ~startLine=ZeroBasedIndex(currentPos),
+          ~startColumn=ZeroBasedIndex(0),
+          ~endLine=ZeroBasedIndex(currentPos),
+          ~endColumn=
+            ZeroBasedIndex(Buffer.getLineLength(buffer, currentPos)),
+          (),
+        ),
+        ...ranges^,
+      ];
 
-    while (pos^ <= endLine) {
+    incr(pos);
+  };
 
-        let currentPos = pos^;
-        ranges := [Range.create(
-            ~startLine=ZeroBasedIndex(currentPos),
-            ~startColumn=ZeroBasedIndex(0),
-            ~endLine=ZeroBasedIndex(currentPos),
-            ~endColumn=ZeroBasedIndex(Buffer.getLineLength(buffer, currentPos)),
-            (),
-        ), ...ranges^]
-
-        incr(pos);
-    }
-    
-    ranges^
+  ranges^;
 };
 
-let getRangesForVisualSelection = (startLine, startColumn, endLine, endColumn, buffer) => {
-    let pos = ref(startLine);
-    let ranges = ref([]);
+let getRangesForVisualSelection =
+    (startLine, startColumn, endLine, endColumn, buffer) => {
+  let pos = ref(startLine);
+  let ranges = ref([]);
 
-    while (pos^ <= endLine) {
+  while (pos^ <= endLine) {
+    let currentPos = pos^;
+    ranges :=
+      [
+        Range.create(
+          ~startLine=ZeroBasedIndex(currentPos),
+          ~startColumn=
+            ZeroBasedIndex(
+              {
+                startLine == pos^ ? startColumn : 0;
+              },
+            ),
+          ~endLine=ZeroBasedIndex(currentPos),
+          ~endColumn=
+            ZeroBasedIndex(
+              {
+                endLine == currentPos
+                  ? endColumn + 1 : Buffer.getLineLength(buffer, currentPos);
+              },
+            ),
+          (),
+        ),
+        ...ranges^,
+      ];
 
-        let currentPos = pos^;
-        ranges := [Range.create(
-            ~startLine=ZeroBasedIndex(currentPos),
-            ~startColumn=ZeroBasedIndex({startLine == pos^ ? startColumn : 0}),
-            ~endLine=ZeroBasedIndex(currentPos),
-            ~endColumn=ZeroBasedIndex({endLine == currentPos ? endColumn + 1 : Buffer.getLineLength(buffer, currentPos)}),
-            (),
-        ), ...ranges^]
+    incr(pos);
+  };
 
-        incr(pos);
-    }
-    
-    ranges^
+  ranges^;
 };
 
 /*
@@ -59,30 +77,23 @@ let getRangesForVisualSelection = (startLine, startColumn, endLine, endColumn, b
 let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
   (selection, buffer) => {
     let startLine = Index.toZeroBasedInt(selection.range.startPos.line);
-    let startCharacter = Index.toZeroBasedInt(selection.range.startPos.character);
+    let startCharacter =
+      Index.toZeroBasedInt(selection.range.startPos.character);
 
     let endLine = Index.toZeroBasedInt(selection.range.endPos.line);
     let endCharacter = Index.toZeroBasedInt(selection.range.endPos.character);
 
     switch (selection.mode) {
-    | LinewiseVisual => getRangesForLinewiseSelection(startLine, endLine, buffer)
-    | Visual => getRangesForVisualSelection(startLine, startCharacter, endLine, endCharacter, buffer)
-    | _ => {
-    if (startLine == endLine) {
-      [
-        Range.create(
-          ~startLine=ZeroBasedIndex(startLine),
-          ~startColumn=ZeroBasedIndex(1),
-          /* ~startColumn=ZeroBasedIndex(startCharacter), */
-          ~endLine=ZeroBasedIndex(endLine),
-          ~endColumn=ZeroBasedIndex(5),
-          (),
-        ),
-      ];
-    } else {
-      [];
+    | LinewiseVisual =>
+      getRangesForLinewiseSelection(startLine, endLine, buffer)
+    | Visual =>
+      getRangesForVisualSelection(
+        startLine,
+        startCharacter,
+        endLine,
+        endCharacter,
+        buffer,
+      )
+    | _ => []
     };
-    }
-    };
-
   };
