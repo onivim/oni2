@@ -102,7 +102,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let sendBufferEnterEffect = (bu: Core.Types.BufferNotification.t) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
-      let metadata = Core.Types.BufferNotification.getBufferMetadata(bu.bufferId, bu);
+      let metadata = Core.Types.BufferNotification.getBufferMetadataOpt(bu.bufferId, bu);
       switch (metadata) {
           | None => ()
           | Some(bm) => {
