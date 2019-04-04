@@ -19,6 +19,7 @@ module Tab = {
 };
 
 type t = {
+  neovimActive: bool,
   home: Home.t,
   mode: Mode.t,
   tabs: list(Tab.t),
@@ -39,6 +40,7 @@ type t = {
 
 let create: unit => t =
   () => {
+    neovimActive: false,
     home: Home.create(),
     configuration: Configuration.create(),
     mode: Normal,

@@ -87,6 +87,7 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
+    | StartEditor => {...s, neovimActive: true}
     | OpenHome => {
         ...s,
         activeBufferId: None,

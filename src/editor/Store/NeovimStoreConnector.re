@@ -100,6 +100,13 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     | Model.Actions.OpenHome =>
       let id = state.activeBufferId;
       (state, detachBufferEffect(id));
+    /**
+       We attach to neovim as a separate action rather than immediately
+       because once attached neovim steals "focus" from informational screens
+       like the welcome screen so we delay attaching it till a user has
+       interacted with the Welcome page or chosen to open a file via the
+       quick open
+     */
     | Model.Actions.StartEditor => (state, attachUIEffect)
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
@@ -120,6 +127,14 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       )
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Model.Actions.MenuSelect =>
+      /**
+       If the editor has started an the welcome screen was launched but
+       neovim has not yet been attached, then call UI attach, so that opening
+       the quick open will allow a file to be opened and edited.
+     */
+      let effect = state.neovimActive ? Isolinear.Effect.none : attachUIEffect;
+      (state, effect);
     | _ => (state, Isolinear.Effect.none)
     };
 
