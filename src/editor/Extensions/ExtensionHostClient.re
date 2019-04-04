@@ -48,8 +48,8 @@ let start =
   let rpcRef = ref(None);
   let initialized = ref(false);
   let queuedCallbacks = ref([]);
-  
-  let queue = (f) => {
+
+  let queue = f => {
     queuedCallbacks := [f, ...queuedCallbacks^];
   };
 
@@ -119,12 +119,10 @@ let start =
     Configuration.initializeConfiguration() |> sendRequest;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
     |> sendRequest;
-    
+
     initialized := true;
 
-    queuedCallbacks^
-    |> List.rev
-    |> List.iter((f) => f())
+    queuedCallbacks^ |> List.rev |> List.iter(f => f());
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -160,11 +158,8 @@ let start =
   rpcRef := Some(rpc);
 
   let wrappedSend = (msgType, msg) => {
-      let f = () => send(msgType, msg);
-   switch (initialized^) {
-   | true => f()
-   | false => queue(f)
-   }  
+    let f = () => send(msgType, msg);
+    initialized^ ? f() : queue(f);
   };
 
   {process, rpc, send: wrappedSend};

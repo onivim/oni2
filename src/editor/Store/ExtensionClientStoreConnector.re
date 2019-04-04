@@ -144,7 +144,12 @@ let start = (extensions, setup: Core.Setup.t) => {
         let uri = Model.Buffer.getUri(v);
 
         print_endline("TRYING TO SEND CHANGE: " ++ Core.Types.Uri.show(uri));
-        print_endline(" -- " ++ Yojson.Safe.to_string(Protocol.ModelChangedEvent.to_yojson(modelChangedEvent)));
+        print_endline(
+          " -- "
+          ++ Yojson.Safe.to_string(
+               Protocol.ModelChangedEvent.to_yojson(modelChangedEvent),
+             ),
+        );
 
         ExtensionHostClient.send(
           extHostClient,
