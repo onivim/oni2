@@ -27,13 +27,14 @@ function activate(context) {
         });
     });
 
-    // let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
-    //     showData({
-    //         type: "workspace.onDidChangeTextDocument",
-    //         fullText: e.document.getText(),
-    //         filename: e.fileName,
-    //     });
-    // });
+    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+        showData({
+            type: "workspace.onDidChangeTextDocument",
+            filename: e.document.fileName,
+            contentChanges: e.contentChanges,
+            fullText: e.document.getText(),
+        });
+    });
 
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
@@ -42,7 +43,7 @@ function activate(context) {
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
-	// context.subscriptions.push(disposable3);
+	context.subscriptions.push(disposable3);
 }
 
 // this method is called when your extension is deactivated

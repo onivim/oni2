@@ -144,7 +144,7 @@ module ModelContentChange = {
         Range.create(
           ~startLine=bu.startLine,
           ~startCharacter=ZeroBasedIndex(0),
-          ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine) + 1),
+          ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine)),
           ~endCharacter=ZeroBasedIndex(0),
           (),
         ),
