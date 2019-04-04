@@ -109,6 +109,26 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       quick open
      */
       (state, attachUIEffect)
+    | Model.Actions.CloseHome =>
+      /**
+       When we close the home screen we check to see if there are other
+       buffers open if so we open the next buffer. These are sorted by ID
+       so in the tab line so we sort them before picking one to open
+     */
+      let effect =
+        Core.Types.BufferMetadata.(
+          Model.BufferMap.getBuffers(state.buffers)
+          |> List.sort((prevBuffer, nextBuffer) =>
+               compare(prevBuffer.id, nextBuffer.id)
+             )
+          |> (bufs => List.nth_opt(bufs, 0))
+        )
+        |> (
+          fun
+          | Some(buffer) => openFileByIdEffect(buffer.id)
+          | None => Isolinear.Effect.none
+        );
+      (state, effect);
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
       let openFileEffects =
