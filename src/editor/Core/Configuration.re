@@ -20,6 +20,14 @@ type t = {
   editorMinimapShowSlider: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
+  [@key "editor.insertSpaces"]
+  editorInsertSpaces: bool,
+  /* TODO:
+   * Break this up into editorTabSize and editorIndentSize like:
+   * https://github.com/Microsoft/vscode/pull/62079 
+   */
+  [@key "editor.tabSize"]
+  editorTabSize: int,
 };
 
 let default = {
@@ -27,6 +35,8 @@ let default = {
   editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
+  editorInsertSpaces: true,
+  editorTabSize: 4,
 };
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;
