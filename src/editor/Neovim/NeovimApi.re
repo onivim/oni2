@@ -26,14 +26,11 @@ type notification = {
 
 type t = {
   requestSync: requestSyncFunction,
-
   /*
-   * request is a 'fire-and-forget' method - 
+   * request is a 'fire-and-forget' method -
    * does not block on response.
    */
   request: requestFunction,
-
-
   /*
    * Pump should be called periodically to dispatch any queued notifications.
    */
@@ -125,12 +122,12 @@ let make = (msgpack: MsgpackTransport.t) => {
   };
 
   let request = (methodName: string, args: M.t) => {
-      let requestId = getNextId();
+    let requestId = getNextId();
 
-      let request =
-        M.List([M.Int(0), M.Int(requestId), M.String(methodName), args]);
+    let request =
+      M.List([M.Int(0), M.Int(requestId), M.String(methodName), args]);
 
-      msgpack.write(request);
+    msgpack.write(request);
   };
 
   let requestSync: requestSyncFunction =
