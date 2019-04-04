@@ -126,7 +126,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         |> (
           fun
           | Some(buffer) => openFileByIdEffect(buffer.id)
-          | None => Isolinear.Effect.none
+          | None => attachUIEffect
         );
       (state, effect);
     | Model.Actions.Init =>
