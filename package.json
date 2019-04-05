@@ -36,6 +36,7 @@
     "@opam/msgpck": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
+    "@opam/ppx_let": "*",
     "@opam/yojson": "1.5.0",
     "@opam/zed": "1.6",
     "rench": "^1.6.1",
