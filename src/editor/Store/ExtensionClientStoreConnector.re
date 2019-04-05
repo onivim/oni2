@@ -69,14 +69,14 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let _bufferMetadataToModelAddedDelta = (bm: Core.Types.BufferMetadata.t) =>
     switch (bm.filePath, bm.fileType) {
-    | (Some(fp), Some(ft)) =>
+    | (Some(fp), Some(_)) =>
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Types.Uri.fromPath(fp),
           ~versionId=bm.version,
-          ~lines=[],
-          ~modeId=ft,
-          ~isDirty=bm.modified,
+          ~lines=[""],
+          ~modeId="plaintext",
+          ~isDirty=true,
           (),
         ),
       )
@@ -86,9 +86,9 @@ let start = (extensions, setup: Core.Setup.t) => {
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Types.Uri.fromPath(fp),
           ~versionId=bm.version,
-          ~lines=[],
-          ~modeId="unknown",
-          ~isDirty=bm.modified,
+          ~lines=[""],
+          ~modeId="plaintext",
+          ~isDirty=true,
           (),
         ),
       )

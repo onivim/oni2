@@ -130,14 +130,22 @@ module ModelContentChange = {
     String.concat(separator, lines);
   };
 
+  let getEndLine = (bu: BufferUpdate.t) => {
+    let startLine = Index.toZeroBasedInt(bu.startLine);
+    let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
+
+    /* endLine should never be less than startLine! */
+    max(endLine, startLine)
+  }
+
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
     range:
       OneBasedRange.ofRange(
         Range.create(
           ~startLine=bu.startLine,
           ~startCharacter=ZeroBasedIndex(0),
-          ~endLine=ZeroBasedIndex(Index.toZeroBasedInt(bu.endLine)),
-          ~endCharacter=ZeroBasedIndex(0),
+          ~endLine=ZeroBasedIndex(getEndLine(bu)),
+          ~endCharacter=ZeroBasedIndex(2147483647),
           (),
         ),
       ),

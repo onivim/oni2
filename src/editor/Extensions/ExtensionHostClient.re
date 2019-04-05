@@ -41,8 +41,11 @@ let start =
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
     "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
+  /* TODO */
   let process =
-    NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
+    NodeProcess.start(~args, ~env, setup, "D:/oni-vscode/out/bootstrap-fork.js");
+  /* let process = */
+  /*   NodeProcess.start(~args, ~env, setup, setup.extensionHostPath); */
 
   let lastReqId = ref(0);
   let rpcRef = ref(None);
