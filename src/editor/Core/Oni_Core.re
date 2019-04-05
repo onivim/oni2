@@ -6,6 +6,7 @@
 
 module Cli = Cli;
 module Constants = Constants;
+module IconTheme = IconTheme;
 module IntMap = IntMap;
 module LineNumber = LineNumber;
 module Log = Log;

@@ -44,7 +44,24 @@ module IconDefinition {
         fontCharacter: int,
         fontColor: Color.t,
     }
+
+    let parseId: string => int = (v) => {
+       let len = String.length(v); 
+       let sub = String.sub(v, 1, len - 1);
+       "0x" ++ sub |> int_of_string;
+    };
+
+    let of_raw: raw => t = (raw) => {
+        {
+            id: raw.id,
+            fontCharacter: parseId(raw.fontCharacter),
+            fontColor: Color.hex(raw.fontColor),
+        }
+    }
 };
+
+[@deriving (show({with_path: false}), yojson({strict: false}))]
+type iconDefinitions = list(IconDefinition.raw);
 
 type t = {
     fonts: list(Font.t),
@@ -57,12 +74,103 @@ type t = {
     /* TODO: Light mode */
 };
 
-type characterInfo = {
-    fontPath: string,
-    fontCharacter: int,
-    color: Color.t,
+let getIconForFile: (t, string, string) => option(IconDefinition.t) = (iconTheme: t, fileName: string, languageId: string) => {
+
+    let id = switch (StringMap.find_opt(fileName,iconTheme.fileNames)) {
+    | Some(v) => v
+    | None => switch (StringMap.find_opt(Rench.Path.extname(fileName),iconTheme.fileExtensions)) {
+      | Some(v) => v
+      | None => switch (StringMap.find_opt(languageId,iconTheme.languageIds)) {
+          | Some(v) => v
+          | None => iconTheme.file
+          }
+      }
+    }
+
+    StringMap.find_opt(id, iconTheme.iconDefinitions);
 };
 
-let ofJson = (_json: Yojson.Safe.json) => {
-   (); 
+let create = () => {
+    fonts: [],
+    iconDefinitions: StringMap.empty,
+    file: "",
+    fileExtensions: StringMap.empty,
+    fileNames: StringMap.empty,
+    languageIds: StringMap.empty,
+};
+
+let assocToStringMap = (json) => {
+   switch (json) {
+   | `Assoc(v) => {
+       List.fold_left((prev, curr) => {
+           switch (curr) {
+           | (s, `String(v)) => StringMap.add(s, v, prev);
+           | _ => prev
+           };
+       }, StringMap.empty, v);
+   }
+   | _ => StringMap.empty;
+   };
+};
+
+let getOrEmpty = (v: result(list('a), 'b)) => {
+    switch (v) {
+    | Ok(v) => v
+    | Error(_) => [];
+    }
+}
+
+let ofJson = (json: Yojson.Safe.json) => {
+  switch (json) {
+  | `Assoc([
+    ("fonts", fontsJson),
+    ("iconDefinitions", iconsJson),
+    ("file", `String(file)),
+    ("fileExtensions", extensionsJson),
+    ("fileNames", fileNamesJson),
+    ("languageIds", languageIdsJson),
+    ..._
+  ]) => {
+   
+      let fonts = fonts_of_yojson(fontsJson) |> getOrEmpty;
+
+      let toIconMap: list(IconDefinition.t) => StringMap.t(IconDefinition.t) =  (icons) => {
+        List.fold_left((prev, curr: IconDefinition.t) => {
+           StringMap.add(curr.id, curr, prev); 
+        }, StringMap.empty, icons);
+      };
+
+      let iconDefinitions = iconDefinitions_of_yojson(iconsJson) 
+          |> getOrEmpty
+          |> List.map((v) => IconDefinition.of_raw(v))
+          |> toIconMap;
+
+        /* let icons2 = icons */
+
+        /* let icons3 = icons */
+        /*   |> List.filter((v) => switch(v) { */
+        /*   | Ok(_) => true */
+        /*   | Error(_) => false */
+        /*   }) */
+        /*   |> List.map((v) => switch(v) { */
+        /*   | Ok(v) => v */
+        /*   | Error(_) => failwith("filter failed") */
+        /*   }) */
+        /*   |> toIconMap; */
+
+      let fileExtensions = assocToStringMap(extensionsJson);
+      let fileNames = assocToStringMap(fileNamesJson);
+      let languageIds = assocToStringMap(languageIdsJson);
+
+      Some({
+        fonts,
+        iconDefinitions,
+        file,
+        fileExtensions,
+        fileNames,
+        languageIds,
+      });
+  }
+  | _ => None
+  }
 };

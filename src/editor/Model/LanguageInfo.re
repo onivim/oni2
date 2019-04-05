@@ -4,6 +4,7 @@
 
 open Oni_Core;
 open Oni_Extensions;
+open Rench;
 
 open Oni_Extensions.ExtensionScanner;
 
