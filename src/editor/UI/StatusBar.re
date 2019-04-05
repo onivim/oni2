@@ -112,16 +112,22 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       item.alignment === alignment;
     };
 
-    let fileType = "Plain Text";
+    /* let fileType = "Plain Text"; */
 
-    /* let fileType = Model.BufferMap.getBuffer(state.activeBufferId, state.buffers); */
-    /* switch (buffer) { */
-    /* | Some(v) => switch(Buffer.getMetadata(v).filePath) { */
-    /*   | Some(fp) => Model.LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp) */
-    /*   | None => "Plain Text" */
-    /* } */ 
-    /* | None => "Plain Text" */
-    /* } */
+    let buffer = BufferMap.getBuffer(state.activeBufferId, state.buffers);
+    let fileType = switch (buffer) {
+    | Some(v) => switch(Buffer.getMetadata(v).filePath) {
+      | Some(fp) => 
+      switch(LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)) {
+      | Some(li) => li
+      | None => "Plain Text"
+      }
+      /* print_endline ("FILE PATH: " ++ fp); */
+      /* "FOUND PATH" */
+      | None => "Plain Text"
+    } 
+    | None => "Plain Text"
+    }
 
     let statusBarItems = state.statusBar;
     let leftItems =

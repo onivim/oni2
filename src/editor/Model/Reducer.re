@@ -57,6 +57,7 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) => {
     let s = {
@@ -74,6 +75,7 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
+    | SetLanguageInfo(languageInfo) => { ...s, languageInfo };
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
