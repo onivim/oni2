@@ -4,7 +4,6 @@
  * Helper component for using icon fonts, like FontAwesome
  */
 
-open Revery;
 open Revery.UI;
 open CamomileLibraryDefault.Camomile;
 
