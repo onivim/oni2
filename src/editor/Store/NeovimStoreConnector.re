@@ -141,8 +141,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       (state, openFileEffects);
     | Model.Actions.OpenFileByPath(path) =>
       /**
-        We check to see if neovim has been attached before we attempt to open
-        a file
+        We check to see if neovim has been attached before we attempt to open a file
      */
       let effects =
         Isolinear.Effect.batch([
