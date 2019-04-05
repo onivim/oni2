@@ -35,6 +35,7 @@ type t = {
 };
 
 let remapPaths = (rootPath: string, manifest: t) => {
-    ...manifest,
-    contributes: ExtensionContributions.remapPaths(rootPath, manifest.contributes),
+  ...manifest,
+  contributes:
+    ExtensionContributions.remapPaths(rootPath, manifest.contributes),
 };
