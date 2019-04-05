@@ -30,26 +30,15 @@ let createElement =
       color,
     );
 
-    ignore(fontFamily_);
-    ignore(fontSize_);
-    ignore(icon);
-    ignore(backgroundColor_);
-    ignore(color_);
-
-    let fontFamily_ = "seti.ttf";
-    /* let _icon = 0x001; */
-
-    print_endline(string_of_int(int_of_string("0xE001")));
-
     (
       hooks,
       <Text
-        text={codeToIcon(0xE001)}
+        text={codeToIcon(icon)}
         style=Style.[
           fontFamily(fontFamily_),
-          fontSize(30),
-          color(Colors.white),
-          backgroundColor(Colors.red),
+          fontSize(fontSize_),
+          color(color_),
+          backgroundColor(backgroundColor_),
           width(50),
           height(50),
         ]
