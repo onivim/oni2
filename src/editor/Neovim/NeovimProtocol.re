@@ -59,7 +59,7 @@ let make = (nvimApi: NeovimApi.t) => {
   };
 
   let input = (key: string) =>
-    nvimApi.requestSync("nvim_input", M.List([M.String(key)])) |> ignore;
+    nvimApi.request("nvim_input", M.List([M.String(key)]));
 
   let bufAttach = id => {
     let _error =

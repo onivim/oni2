@@ -5,6 +5,8 @@
  *
  */
 
+open Oni_Core.Types;
+
 module MessageType = {
   let initialized = 0;
   let ready = 1;
@@ -41,6 +43,136 @@ module Environment = {
   };
 };
 
+module Eol = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t =
+    | [@name "\n"] LF
+    | [@name "\r\n"] CRLF;
+
+  let default = Sys.win32 ? CRLF : LF;
+
+  let toString = (v: t) =>
+    switch (v) {
+    | CRLF => "\r\n"
+    | LF => "\n"
+    };
+};
+
+module ModelAddedDelta = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    uri: Uri.t,
+    versionId: int,
+    lines: list(string),
+    [@key "EOL"]
+    eol: Eol.t,
+    modeId: string,
+    isDirty: bool,
+  };
+
+  let create =
+      (
+        ~uri,
+        ~versionId=0,
+        ~lines=[],
+        ~eol=Eol.default,
+        ~modeId,
+        ~isDirty=false,
+        (),
+      ) => {
+    uri,
+    versionId,
+    lines,
+    eol,
+    modeId,
+    isDirty,
+  };
+};
+
+module OneBasedRange = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let create =
+      (~startLineNumber, ~endLineNumber, ~startColumn, ~endColumn, ()) => {
+    startLineNumber,
+    endLineNumber,
+    startColumn,
+    endColumn,
+  };
+
+  let ofRange = (r: Range.t) => {
+    startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
+    endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
+    startColumn: r.startPosition.character |> Index.toOneBasedInt,
+    endColumn: r.endPosition.character |> Index.toOneBasedInt,
+  };
+};
+
+module ModelContentChange = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+
+  let create = (~range: Range.t, ~text: string, ()) => {
+    range: OneBasedRange.ofRange(range),
+    text,
+  };
+
+  let joinLines = (separator: string, lines: list(string)) => {
+    String.concat(separator, lines);
+  };
+
+  let getRangeFromEdit = (bu: BufferUpdate.t) => {
+    let isInsert =
+      Index.toZeroBasedInt(bu.endLine) == Index.toZeroBasedInt(bu.startLine);
+
+    let startLine = Index.toZeroBasedInt(bu.startLine);
+    let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
+
+    let endLine = max(endLine, startLine);
+    let endCharacter = isInsert ? 0 : 2147483647;
+
+    let range =
+      Range.create(
+        ~startLine=ZeroBasedIndex(startLine),
+        ~endLine=ZeroBasedIndex(endLine),
+        ~startCharacter=ZeroBasedIndex(0),
+        ~endCharacter=ZeroBasedIndex(endCharacter),
+        (),
+      );
+
+    (isInsert, range);
+  };
+
+  let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
+    let (isInsert, range) = getRangeFromEdit(bu);
+    let text = joinLines(Eol.toString(eol), bu.lines);
+
+    let text = isInsert ? text ++ Eol.toString(eol) : text;
+
+    {range: OneBasedRange.ofRange(range), text};
+  };
+};
+
+module ModelChangedEvent = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    changes: list(ModelContentChange.t),
+    eol: Eol.t,
+    versionId: int,
+  };
+
+  let create = (~changes, ~eol, ~versionId, ()) => {changes, eol, versionId};
+};
+
 module OutgoingNotifications = {
   let _buildNotification = (scopeName, methodName, payload) => {
     `List([`String(scopeName), `String(methodName), payload]);
@@ -62,6 +194,60 @@ module OutgoingNotifications = {
         "ExtHostConfiguration",
         "$initializeConfiguration",
         `List([`Assoc([])]),
+      );
+    };
+  };
+
+  module Documents = {
+    let acceptModelChanged =
+        (uri: Uri.t, modelChangedEvent: ModelChangedEvent.t, isDirty: bool) => {
+      _buildNotification(
+        "ExtHostDocuments",
+        "$acceptModelChanged",
+        `List([
+          Uri.to_yojson(uri),
+          ModelChangedEvent.to_yojson(modelChangedEvent),
+          `Bool(isDirty),
+        ]),
+      );
+    };
+  };
+
+  module DocumentsAndEditors = {
+    module DocumentsAndEditorsDelta = {
+      [@deriving (show({with_path: false}), yojson({strict: false}))]
+      type t = {
+        removedDocuments: list(Uri.t),
+        addedDocuments: list(ModelAddedDelta.t),
+        removedEditors: list(string),
+        addedEditors: list(string),
+      };
+
+      let create = (~removedDocuments, ~addedDocuments, ()) => {
+        removedDocuments,
+        addedDocuments,
+        removedEditors: [],
+        addedEditors: [],
+      };
+    };
+
+    let acceptDocumentsAndEditorsDelta =
+        (
+          ~removedDocuments: list(Uri.t),
+          ~addedDocuments: list(ModelAddedDelta.t),
+          (),
+        ) => {
+      let delta =
+        DocumentsAndEditorsDelta.create(
+          ~removedDocuments,
+          ~addedDocuments,
+          (),
+        );
+
+      _buildNotification(
+        "ExtHostDocumentsAndEditors",
+        "$acceptDocumentsAndEditorsDelta",
+        `List([DocumentsAndEditorsDelta.to_yojson(delta)]),
       );
     };
   };

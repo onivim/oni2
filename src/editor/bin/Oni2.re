@@ -40,6 +40,8 @@ let init = app => {
   let cliOptions = Core.Cli.parse(setup);
   Sys.chdir(cliOptions.folder);
 
+  PreflightChecks.run();
+
   let currentState = ref(Model.State.create());
 
   let onStateChanged = v => {
@@ -118,7 +120,7 @@ let init = app => {
               ~fontSize,
               ~measuredWidth=
                 float_of_int(glyph.advance) /. (64. *. scaleFactor),
-              ~measuredHeight=actualHeight,
+              ~measuredHeight=floor(actualHeight +. 0.5),
               (),
             ),
           ),

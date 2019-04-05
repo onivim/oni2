@@ -4,6 +4,7 @@
  * State kept for syntax highlighting (via TextMate today)
  */
 open Oni_Core;
+open Oni_Core.Types;
 open Oni_Extensions;
 open Oni_Extensions.TextmateClient;
 open Oni_Extensions.TextmateClient.TokenizationResult;
@@ -164,14 +165,16 @@ let reduce: (t, Actions.t) => t =
               switch (buffer) {
               | None => None
               | Some(v) =>
+                let startLine = bu.startLine |> Index.toZeroBasedInt;
+                let endLine = bu.endLine |> Index.toZeroBasedInt;
                 Some(
                   BufferSyntaxHighlights.shift(
                     v,
-                    bu.startLine,
-                    bu.endLine,
-                    List.length(bu.lines) - (bu.endLine - bu.startLine),
+                    startLine,
+                    endLine,
+                    List.length(bu.lines) - (endLine - startLine),
                   ),
-                )
+                );
               },
             state.idToBufferSyntaxHighlights,
           ),

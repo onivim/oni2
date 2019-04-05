@@ -30,7 +30,7 @@ let thousandLineState =
   Reducer.reduce(
     simpleState,
     Actions.BufferUpdate(
-      Types.BufferUpdate.create(
+      Types.BufferUpdate.createFromZeroBasedIndices(
         ~startLine=0,
         ~endLine=1,
         ~lines=thousandLines,
@@ -47,7 +47,7 @@ let hundredThousandLineState =
   Reducer.reduce(
     simpleState,
     Actions.BufferUpdate(
-      Types.BufferUpdate.create(
+      Types.BufferUpdate.createFromZeroBasedIndices(
         ~startLine=0,
         ~endLine=1,
         ~lines=hundredThousandLines,

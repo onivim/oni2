@@ -74,6 +74,7 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
+    | SetLanguageInfo(languageInfo) => {...s, languageInfo}
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;

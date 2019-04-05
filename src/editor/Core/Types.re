@@ -78,7 +78,7 @@ type openMethod =
   | Tab
   | Buffer;
 
-module BufferPosition = {
+module Position = {
   [@deriving show({with_path: false})]
   type t = {
     line: Index.t,
@@ -90,6 +90,26 @@ module BufferPosition = {
   let createFromZeroBasedIndices = (line: int, character: int) => {
     line: ZeroBasedIndex(line),
     character: ZeroBasedIndex(character),
+  };
+};
+
+module Range = {
+  type t = {
+    startPosition: Position.t,
+    endPosition: Position.t,
+  };
+
+  let createFromPositions = (~startPosition, ~endPosition, ()) => {
+    startPosition,
+    endPosition,
+  };
+
+  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) => {
+    createFromPositions(
+      ~startPosition=Position.create(startLine, startCharacter),
+      ~endPosition=Position.create(endLine, endCharacter),
+      (),
+    );
   };
 };
 
@@ -155,16 +175,44 @@ module BufferNotification = {
     bufferId: int,
     buffers: list(BufferMetadata.t),
   };
+
+  let getBufferMetadataOpt = (id, v: t) => {
+    let result =
+      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
+    List.nth_opt(result, 0);
+  };
 };
 
 module BufferUpdate = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving show({with_path: false})]
   type t = {
+    id: int,
+    startLine: Index.t,
+    endLine: Index.t,
+    lines: list(string),
+    version: int,
+  };
+
+  [@deriving
+    (show({with_path: false}), yojson({strict: false, exn: false}))
+  ]
+  type jsont = {
     id: int,
     startLine: int,
     endLine: int,
     lines: list(string),
     version: int,
+  };
+
+  let to_yojson = (v: t) => {
+    let jsonr: jsont = {
+      id: v.id,
+      startLine: v.startLine |> Index.toZeroBasedInt,
+      endLine: v.endLine |> Index.toZeroBasedInt,
+      lines: v.lines,
+      version: v.version,
+    };
+    jsont_to_yojson(jsonr);
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
@@ -173,6 +221,18 @@ module BufferUpdate = {
     endLine,
     lines,
     version,
+  };
+
+  let createFromZeroBasedIndices =
+      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+    let ret: t = {
+      id,
+      startLine: Index.ZeroBasedIndex(startLine),
+      endLine: Index.ZeroBasedIndex(endLine),
+      lines,
+      version,
+    };
+    ret;
   };
 };
 
@@ -251,4 +311,28 @@ module Input = {
     key: string,
     command: string,
   };
+};
+
+module Uri = {
+  module Scheme = {
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
+    type t =
+      | [@name "file"] File
+      | [@name "memory"] Memory;
+
+    let toString = (v: t) =>
+      switch (v) {
+      | File => "file"
+      | Memory => "memory"
+      };
+  };
+
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    scheme: Scheme.t,
+    path: string,
+  };
+
+  let fromMemory = (path: string) => {scheme: Scheme.Memory, path};
+  let fromPath = (path: string) => {scheme: Scheme.File, path};
 };
