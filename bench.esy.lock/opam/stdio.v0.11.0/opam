@@ -4,24 +4,23 @@ authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
 homepage: "https://github.com/janestreet/stdio"
 bug-reports: "https://github.com/janestreet/stdio/issues"
 dev-repo: "git+https://github.com/janestreet/stdio.git"
-doc: "https://ocaml.janestreet.com/ocaml-core/latest/doc/stdio/index.html"
-license: "MIT"
+license: "Apache-2.0"
 build: [
-  ["dune" "build" "-p" name "-j" jobs]
+  ["jbuilder" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "ocaml" {>= "4.04.2"}
-  "base"  {>= "v0.12" & < "v0.13"}
-  "dune"  {build & >= "1.5.1"}
+  "ocaml" {>= "4.04.1"}
+  "base" {>= "v0.11" & < "v0.12"}
+  "jbuilder" {build & >= "1.0+beta18.1"}
 ]
 synopsis: "Standard IO library for OCaml"
-description: "
+description: """
 Stdio implements simple input/output functionalities for OCaml.
 
 It re-exports the input/output functions of the OCaml standard
-libraries using a more consistent API.
-"
+libraries using a more consistent API."""
 url {
-  src: "https://ocaml.janestreet.com/ocaml-core/v0.12/files/stdio-v0.12.0.tar.gz"
-  checksum: "md5=b261ff2d5667fde960c95e50cff668da"
+  src:
+    "https://ocaml.janestreet.com/ocaml-core/v0.11/files/stdio-v0.11.0.tar.gz"
+  checksum: "md5=2db42ee38c91b3ff7126c2634c407b99"
 }
