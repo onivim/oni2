@@ -34,8 +34,9 @@ let homeMenuContainer = (theme: Theme.t) =>
     height(300),
     backgroundColor(theme.colors.statusBarBackground),
     flexDirection(`Column),
-    justifyContent(`Center),
-    alignItems(`Center),
+    alignItems(`FlexStart),
+    justifyContent(`FlexStart),
+    padding(10),
   ];
 
 let createElement = (~children as _, ~theme: Theme.t, ~state: State.t, ()) =>
