@@ -112,22 +112,22 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       item.alignment === alignment;
     };
 
-    /* let fileType = "Plain Text"; */
-
     let buffer = BufferMap.getBuffer(state.activeBufferId, state.buffers);
-    let fileType = switch (buffer) {
-    | Some(v) => switch(Buffer.getMetadata(v).filePath) {
-      | Some(fp) => 
-      switch(LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)) {
-      | Some(li) => li
+    let fileType =
+      switch (buffer) {
+      | Some(v) =>
+        switch (Buffer.getMetadata(v).filePath) {
+        | Some(fp) =>
+          switch (
+            LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)
+          ) {
+          | Some(li) => li
+          | None => "Plain Text"
+          }
+        | None => "Plain Text"
+        }
       | None => "Plain Text"
-      }
-      /* print_endline ("FILE PATH: " ++ fp); */
-      /* "FOUND PATH" */
-      | None => "Plain Text"
-    } 
-    | None => "Plain Text"
-    }
+      };
 
     let statusBarItems = state.statusBar;
     let leftItems =
@@ -157,7 +157,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
                 color(theme.colors.statusBarForeground),
                 ...textStyle,
               ]
-              text={fileType}
+              text=fileType
             />
           </StatusBarItem>
           <StatusBarItem

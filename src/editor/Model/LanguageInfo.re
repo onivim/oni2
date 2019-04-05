@@ -23,7 +23,7 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 };
 
 let getLanguageFromFilePath = (li: t, ext: string) => {
-   Path.extname(ext) |> getLanguageFromExtension(li);
+  Path.extname(ext) |> getLanguageFromExtension(li);
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {
@@ -75,10 +75,10 @@ let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
 };
 
 let create = () => {
-    grammars: [],
-    languages: [],
-    extToLanguage: StringMap.empty,
-    languageToScope: StringMap.empty,
+  grammars: [],
+  languages: [],
+  extToLanguage: StringMap.empty,
+  languageToScope: StringMap.empty,
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
