@@ -127,15 +127,7 @@ module ModelContentChange = {
   };
 
   let joinLines = (separator: string, lines: list(string)) => {
-    List.fold_left(
-      (prev, cur) =>
-        switch (prev) {
-        | "" => cur
-        | s => s ++ separator ++ cur
-        },
-      "",
-      lines,
-    );
+    String.concat(separator, lines);
   };
 
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
