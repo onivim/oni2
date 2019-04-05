@@ -95,6 +95,9 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.bufDetach(id)
     );
 
+  let shouldAttachUIEffect = ({neovimActive, _}: Model.State.t) =>
+    neovimActive ? Isolinear.Effect.none : attachUIEffect;
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
     | Model.Actions.OpenHome =>
@@ -113,7 +116,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       /**
        When we close the home screen we check to see if there are other
        buffers open if so we open the next buffer. These are sorted by ID
-       so in the tab line so we sort them before picking one to open
+       in the tab line so we sort them before picking one to open
      */
       let effect =
         Core.Types.BufferMetadata.(
@@ -137,11 +140,24 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         |> List.map(openFileByPathEffect)
         |> Isolinear.Effect.batch;
       (state, openFileEffects);
-    | Model.Actions.OpenFileByPath(path) => (
-        state,
-        openFileByPathEffect(path),
-      )
-    | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
+    | Model.Actions.OpenFileByPath(path) =>
+      /**
+        We check to see if neovim has been attached before we attempt to open
+        a file
+     */
+      let effects =
+        Isolinear.Effect.batch([
+          shouldAttachUIEffect(state),
+          openFileByPathEffect(path),
+        ]);
+      (state, effects);
+    | Model.Actions.OpenFileById(id) =>
+      let effects =
+        Isolinear.Effect.batch([
+          shouldAttachUIEffect(state),
+          openFileByIdEffect(id),
+        ]);
+      (state, effects);
     | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.OpenConfigFile(path) => (
         state,
@@ -149,14 +165,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       )
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
-    | Model.Actions.MenuSelect =>
-      /**
-       If the editor has started an the welcome screen was launched but
-       neovim has not yet been attached, then call UI attach, so that opening
-       the quick open will allow a file to be opened and edited.
-     */
-      let effect = state.neovimActive ? Isolinear.Effect.none : attachUIEffect;
-      (state, effect);
+    | Model.Actions.MenuSelect => (state, Isolinear.Effect.none)
     | _ => (state, Isolinear.Effect.none)
     };
 
