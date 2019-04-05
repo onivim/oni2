@@ -143,7 +143,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
         let uri = Model.Buffer.getUri(v);
 
-        print_endline ("BUFFER UPDATE: " ++ Core.Types.BufferUpdate.show(bu));
+        print_endline("BUFFER UPDATE: " ++ Core.Types.BufferUpdate.show(bu));
         ExtensionHostClient.send(
           extHostClient,
           Protocol.OutgoingNotifications.Documents.acceptModelChanged(

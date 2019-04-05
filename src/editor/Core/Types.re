@@ -184,9 +184,7 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving
-    show({with_path: false})
-  ]
+  [@deriving show({with_path: false})]
   type t = {
     id: int,
     startLine: Index.t,

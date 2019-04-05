@@ -43,7 +43,12 @@ let start =
   ];
   /* TODO */
   let process =
-    NodeProcess.start(~args, ~env, setup, "D:/oni-vscode/out/bootstrap-fork.js");
+    NodeProcess.start(
+      ~args,
+      ~env,
+      setup,
+      "D:/oni-vscode/out/bootstrap-fork.js",
+    );
   /* let process = */
   /*   NodeProcess.start(~args, ~env, setup, setup.extensionHostPath); */
 
