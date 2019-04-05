@@ -16,7 +16,7 @@ type t = {
   maxLineLength: int,
   viewLines: int,
   size: EditorSize.t,
-  cursorPosition: BufferPosition.t,
+  cursorPosition: Position.t,
   lineHeight: float,
   characterWidth: float,
 };
@@ -34,7 +34,7 @@ let create = () => {
      * if a buffer loads prior to our first render.
      */
     size: EditorSize.create(~pixelWidth=1000, ~pixelHeight=1000, ()),
-    cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
+    cursorPosition: Position.createFromZeroBasedIndices(0, 0),
     lineHeight: 1.,
     characterWidth: 1.,
   };

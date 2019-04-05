@@ -11,7 +11,7 @@ describe("Buffer", ({describe, _}) =>
     test("empty buffer w/ update", ({expect}) => {
       let buffer = Buffer.ofLines([||]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
           ~lines=["a"],
@@ -25,7 +25,7 @@ describe("Buffer", ({describe, _}) =>
     test("BufEnter update does not duplicate content", ({expect}) => {
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=-1,
           ~lines=["a", "d", "e", "f", "c"],
@@ -39,7 +39,7 @@ describe("Buffer", ({describe, _}) =>
     test("update single line", ({expect}) => {
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
           ~lines=["abc"],
@@ -53,7 +53,7 @@ describe("Buffer", ({describe, _}) =>
     test("delete line", ({expect}) => {
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
           ~lines=[],
@@ -67,7 +67,7 @@ describe("Buffer", ({describe, _}) =>
     test("update single line", ({expect}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=1,
           ~endLine=2,
           ~lines=["d", "e", "f"],
@@ -81,7 +81,7 @@ describe("Buffer", ({describe, _}) =>
     test("add new line after buffer", ({expect}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
           ~lines=["d"],
@@ -95,7 +95,7 @@ describe("Buffer", ({describe, _}) =>
     test("version gets updated with buffer update", ({expect}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
           ~lines=["d"],
@@ -111,7 +111,7 @@ describe("Buffer", ({describe, _}) =>
     test("buffer update with lower version gets rejected", ({expect}) => {
       let buffer = Buffer.ofLines([||]);
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
           ~lines=["d"],
@@ -121,7 +121,7 @@ describe("Buffer", ({describe, _}) =>
       let bufferUpdate1 = Buffer.update(buffer, update);
 
       let update =
-        BufferUpdate.create(
+        BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
           ~lines=["e"],
