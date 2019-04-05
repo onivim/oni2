@@ -21,7 +21,7 @@ let containerStyles = (~bg, ()) =>
 
 let iconStyles =
   Style.[
-    fontFamily("FontAwesome5FreeRegular.otf"),
+    fontFamily("FontAwesome5FreeSolid.otf"),
     fontSize(menuItemFontSize),
     marginRight(10),
   ];
@@ -45,6 +45,7 @@ let createElement =
           ~source=
             Style.[
               fontFamily(uiFont.fontFile),
+              textOverflow(`Ellipsis),
               fontSize(uiFont.fontSize),
               color(theme.colors.editorMenuForeground),
               backgroundColor(bg),

@@ -1,9 +1,10 @@
 {
     "bindings": [
-        { "key": "<C-P>", "command": "commandPalette.open", "when": ["editorTextFocus"] },
-        { "key": "<ESC>", "command": "commandPalette.close", "when": ["commandPaletteFocus"] },
-        { "key": "<C-N>", "command": "commandPalette.next", "when": ["commandPaletteFocus"] },
-        { "key": "<C-P>", "command": "commandPalette.previous", "when": ["commandPaletteFocus"] },
-        { "key": "<CR>", "command": "commandPalette.select", "when": ["commandPaletteFocus"] }
+        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
+        { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] }
     ]
 }

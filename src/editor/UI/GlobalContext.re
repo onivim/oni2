@@ -16,8 +16,9 @@ type editorScroll = (~deltaY: float, unit) => unit;
 type t = {
   notifySizeChanged,
   editorScroll,
-  openFile: Views.viewOperation,
-  closeFile: Views.viewOperation,
+  openFileById: int => unit,
+  closeFileById: int => unit,
+  dispatch: Actions.t => unit,
   state: State.t,
 };
 
@@ -28,8 +29,9 @@ let default = {
   state: State.create(),
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
-  openFile: viewNoop,
-  closeFile: viewNoop,
+  openFileById: _ => (),
+  dispatch: _ => (),
+  closeFileById: _ => (),
 };
 
 let _current: ref(t) = ref(default);

@@ -70,7 +70,7 @@ let reduce: (State.t, Actions.t) => State.t =
       syntaxHighlighting: SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),
-      commandPalette: CommandPalette.reduce(s.commandPalette, a),
+      statusBar: StatusBarReducer.reduce(s.statusBar, a),
     };
 
     switch (a) {

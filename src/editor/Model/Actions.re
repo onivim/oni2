@@ -8,6 +8,8 @@ open Oni_Core.Types;
 open Oni_Extensions;
 
 type t =
+  | Init
+  | Tick
   | BufferDelete(BufferNotification.t)
   | BufferEnter(BufferNotification.t)
   | BufferUpdate(BufferUpdate.t)
@@ -23,6 +25,7 @@ type t =
   | CommandlineShow(commandline)
   | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))
+  | KeyboardInput(string)
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
@@ -35,10 +38,29 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
-  | CommandPaletteStart(list(Palette.command))
-  | CommandPaletteOpen
-  | CommandPaletteClose
-  | CommandPaletteSelect
-  | CommandPalettePosition(int)
+  | MenuSearch(string)
+  | MenuOpen(menuCreator)
+  | MenuUpdate(list(menuCommand))
+  | MenuSetDispose(unit => unit)
+  | MenuClose
+  | MenuSelect
+  | MenuPosition(int)
+  | CloseFileById(int)
+  | OpenFileByPath(string)
+  | OpenFileById(int)
+  | OpenConfigFile(string)
+  | QuickOpen
   | SetInputControlMode(Input.controlMode)
-  | Noop;
+  | StatusBarAddItem(StatusBarModel.Item.t)
+  | StatusBarDisposeItem(int)
+  | Noop
+and menuCommand = {
+  category: option(string),
+  name: string,
+  command: unit => t,
+  icon: option(string),
+}
+and menuSetItems = list(menuCommand) => unit
+and menuCreationFunction = menuSetItems => unit
+and menuDisposeFunction = unit => unit
+and menuCreator = menuSetItems => menuDisposeFunction;

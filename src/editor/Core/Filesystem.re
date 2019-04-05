@@ -188,7 +188,12 @@ let unsafeFindHome = () =>
   );
 
 let getOniDirectory = home =>
-  Utility.join([home, ".config", "oni2"]) |> return;
+  Revery.(
+    switch (Environment.os) {
+    | Environment.Windows => Utility.join([home, "Oni2"]) |> return
+    | _ => Utility.join([home, ".config", "oni2"]) |> return
+    }
+  );
 
 let getHomeDirectory = () =>
   Unix.(

@@ -20,6 +20,8 @@ type t = {
   openFile: Views.viewOperation,
   closeFile: Views.viewOperation,
   moveCursor: Cursor.move,
+  getCurrentDir: unit => option(string),
+  setCurrentDir: string => unit,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -57,7 +59,7 @@ let make = (nvimApi: NeovimApi.t) => {
   };
 
   let input = (key: string) =>
-    nvimApi.requestSync("nvim_input", M.List([M.String(key)])) |> ignore;
+    nvimApi.request("nvim_input", M.List([M.String(key)]));
 
   let bufAttach = id => {
     let _error =
@@ -132,6 +134,27 @@ let make = (nvimApi: NeovimApi.t) => {
       |> ignore;
     };
 
+  let getCurrentDir = () =>
+    NeovimApi.(
+      try (
+        nvimApi.requestSync(
+          "nvim_call_function",
+          M.List([M.String("getcwd"), M.List([])]),
+        )
+        |> (
+          fun
+          | M.String(dir) => Some(dir)
+          | _ => None
+        )
+      ) {
+      | RequestFailed(_) => None
+      }
+    );
+
+  let setCurrentDir = dir =>
+    nvimApi.requestSync("nvim_set_current_dir", M.List([M.String(dir)]))
+    |> ignore;
+
   {
     uiAttach,
     input,
@@ -139,6 +162,8 @@ let make = (nvimApi: NeovimApi.t) => {
     bufAttach,
     openFile,
     closeFile,
+    setCurrentDir,
+    getCurrentDir,
     moveCursor,
   };
 };

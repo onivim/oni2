@@ -19,6 +19,7 @@
     "@types/node": "^11.9.5",
     "typescript": "^3.3.3333",
     "vscode-jsonrpc": "^4.0.0",
+    "vscode-exthost": "1.33.3",
     "jest": "*",
     "@types/jest": "*"
   }
