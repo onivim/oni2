@@ -22,6 +22,10 @@ let getLanguageFromExtension = (li: t, ext: string) => {
   StringMap.find_opt(ext, li.extToLanguage);
 };
 
+let getLanguageFromFilePath = (li: t, ext: string) => {
+  Path.extname(ext) |> getLanguageFromExtension(li);
+};
+
 let getScopeFromLanguage = (li: t, languageId: string) => {
   StringMap.find_opt(languageId, li.languageToScope);
 };
@@ -43,6 +47,13 @@ let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
 
 let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
+};
+
+let create = () => {
+  grammars: [],
+  languages: [],
+  extToLanguage: StringMap.empty,
+  languageToScope: StringMap.empty,
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
