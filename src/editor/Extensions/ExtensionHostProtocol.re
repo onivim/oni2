@@ -130,26 +130,45 @@ module ModelContentChange = {
     String.concat(separator, lines);
   };
 
-  let getEndLine = (bu: BufferUpdate.t) => {
+  let getRangeFromEdit = (bu: BufferUpdate.t) => {
+    let isInsert = Index.toZeroBasedInt(bu.endLine) == Index.toZeroBasedInt(bu.startLine);
+
     let startLine = Index.toZeroBasedInt(bu.startLine);
     let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
 
     /* endLine should never be less than startLine! */
-    max(endLine, startLine)
-  }
+    let endLine = max(endLine, startLine)
+
+    /* let lineCount = List.length(bu.lines); */
+    
+    let endCharacter = isInsert ? 0 : 2147483647;
+
+    /* let endCharacter = 2147483647; */
+
+    let range = Range.create(
+        ~startLine=ZeroBasedIndex(startLine),
+        ~endLine=ZeroBasedIndex(endLine),
+        ~startCharacter=ZeroBasedIndex(0),
+        ~endCharacter=ZeroBasedIndex(endCharacter),
+        ()
+    );
+
+    (isInsert, range)
+
+
+  };
 
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
-    range:
-      OneBasedRange.ofRange(
-        Range.create(
-          ~startLine=bu.startLine,
-          ~startCharacter=ZeroBasedIndex(0),
-          ~endLine=ZeroBasedIndex(getEndLine(bu)),
-          ~endCharacter=ZeroBasedIndex(2147483647),
-          (),
-        ),
-      ),
-    text: joinLines(Eol.toString(eol), bu.lines),
+
+    let (isInsert, range) = getRangeFromEdit(bu);
+    let text = joinLines(Eol.toString(eol), bu.lines);
+
+    let text = isInsert ? text ++ Eol.toString(eol) : text;
+
+    {
+        range: OneBasedRange.ofRange(range),
+        text,
+    };
   };
 };
 
