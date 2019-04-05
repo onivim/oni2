@@ -25,10 +25,8 @@ let remove = Buffers.remove;
 
 let getBuffers = (buffers: t) =>
   Buffers.fold(
-    (_, buffer, existingBuffers) => [
-      Buffer.getMetadata(buffer),
-      ...existingBuffers,
-    ],
+    (_, buffer, existingBuffers) =>
+      [Buffer.getMetadata(buffer), ...existingBuffers],
     buffers,
     [],
   );
