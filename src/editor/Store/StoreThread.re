@@ -50,12 +50,13 @@ let start =
   let latestState: ref(Model.State.t) = ref(state);
 
   let extensions = discoverExtensions(setup);
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let (neovimUpdater, neovimStream) =
     NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
 
   let (textmateUpdater, textmateStream) =
-    TextmateClientStoreConnector.start(extensions, setup);
+    TextmateClientStoreConnector.start(languageInfo, setup);
 
   let (extHostUpdater, extHostStream) =
     ExtensionClientStoreConnector.start(extensions, setup);
@@ -108,6 +109,8 @@ let start =
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
   Isolinear.Stream.connect(dispatch, menuStream);
+
+  dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
   let _ =
     Tick.interval(

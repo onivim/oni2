@@ -50,6 +50,7 @@ type t =
   | OpenFileById(int)
   | OpenConfigFile(string)
   | QuickOpen
+  | SetLanguageInfo(LanguageInfo.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
