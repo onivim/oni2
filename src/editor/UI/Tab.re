@@ -82,44 +82,44 @@ let createElement =
         alignItems(`Center),
       ];
 
-    let iconContainerStyle = Style.[
-            width(32),
-                height(tabHeight),
-                alignItems(`Center),
-                justifyContent(`Center),
-    ]
+    let iconContainerStyle =
+      Style.[
+        width(32),
+        height(tabHeight),
+        alignItems(`Center),
+        justifyContent(`Center),
+      ];
 
     let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
     let state = GlobalContext.current().state;
-    let language = Model.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
-    let fileIcon: option(Model.IconTheme.IconDefinition.t) = Model.IconTheme.getIconForFile(state.iconTheme, title, language);
+    let language =
+      Model.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
+    let fileIcon: option(Model.IconTheme.IconDefinition.t) =
+      Model.IconTheme.getIconForFile(state.iconTheme, title, language);
 
-    let fileIconView = switch (fileIcon) {
-    | Some(v) => {
-          <FontIcon
-            fontFamily="seti.ttf"
-            icon={v.fontCharacter}
-            backgroundColor={theme.colors.editorBackground}
-            color={v.fontColor}
-            /* TODO: Use 'weight' value from IconTheme font */
-            fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
-          />
-    } 
-    | None => React.empty
-    };
+    let fileIconView =
+      switch (fileIcon) {
+      | Some(v) =>
+        <FontIcon
+          fontFamily="seti.ttf"
+          icon={v.fontCharacter}
+          backgroundColor={theme.colors.editorBackground}
+          color={v.fontColor}
+          /* TODO: Use 'weight' value from IconTheme font */
+          fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
+        />
+      | None => React.empty
+      };
 
     (
       hooks,
       <View style=containerStyle>
-        <View style=iconContainerStyle>
-        {fileIconView}
-        </View>
+        <View style=iconContainerStyle> fileIconView </View>
         <Clickable
           onClick
           style=Style.[
             width(proportion(0.80)),
-            
             flexGrow(1),
             flexDirection(`Row),
             alignItems(`Center),
@@ -127,9 +127,7 @@ let createElement =
           ]>
           <Text style=textStyle text=title />
         </Clickable>
-        <Clickable
-          onClick=onClose
-          style=iconContainerStyle>
+        <Clickable onClick=onClose style=iconContainerStyle>
           <FontIcon
             icon
             backgroundColor={theme.colors.editorBackground}
