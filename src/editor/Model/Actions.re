@@ -44,6 +44,8 @@ type t =
   | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
+  | MenuNextItem
+  | MenuPreviousItem
   | MenuPosition(int)
   | CloseFileById(int)
   | OpenFileByPath(string)
