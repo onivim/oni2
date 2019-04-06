@@ -20,7 +20,10 @@ let getGrammars = (li: t) => {
 };
 
 let getLanguageFromExtension = (li: t, ext: string) => {
-  StringMap.find_opt(ext, li.extToLanguage);
+  switch(StringMap.find_opt(ext, li.extToLanguage)) {
+  | Some(v) => v
+  | None => "plaintext"
+  }
 };
 
 let getLanguageFromFilePath = (li: t, ext: string) => {
@@ -32,10 +35,8 @@ let getScopeFromLanguage = (li: t, languageId: string) => {
 };
 
 let getScopeFromExtension = (li: t, ext: string) => {
-  switch (getLanguageFromExtension(li, ext)) {
-  | None => None
-  | Some(v) => getScopeFromLanguage(li, v)
-  };
+  getLanguageFromExtension(li, ext)
+  |> getScopeFromLanguage(li);
 };
 
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {

@@ -113,6 +113,19 @@ let start =
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
   /* Set icon theme */
+  let iconThemeInfo = extensions 
+  |> List.map((ext: ExtensionScanner.t) => ext.manifest.contributes.iconThemes)
+  |> List.flatten
+  |> List.hd;
+
+  let iconTheme = Yojson.Safe.from_file(iconThemeInfo.path)
+    |> Model.IconTheme.ofJson;
+
+    switch(iconTheme) {
+        
+  | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme));
+  | None => failwith("No icon theme found")
+    };
 
   let _ =
     Tick.interval(

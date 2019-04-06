@@ -117,16 +117,10 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       switch (buffer) {
       | Some(v) =>
         switch (Buffer.getMetadata(v).filePath) {
-        | Some(fp) =>
-          switch (
-            LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)
-          ) {
-          | Some(li) => li
-          | None => "Plain Text"
-          }
-        | None => "Plain Text"
+        | Some(fp) => LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)
+        | None => "plaintext"
         }
-      | None => "Plain Text"
+      | None => "plaintext"
       };
 
     let statusBarItems = state.statusBar;

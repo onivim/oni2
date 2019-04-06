@@ -8,6 +8,7 @@ open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
+module Model = Oni_Model;
 
 type tabAction = unit => unit;
 
@@ -90,19 +91,30 @@ let createElement =
 
     let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
+    let state = GlobalContext.current().state;
+    let language = Model.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
+    let fileIcon: option(Model.IconTheme.IconDefinition.t) = Model.IconTheme.getIconForFile(state.iconTheme, title, language);
+
+    let fileIconView = switch (fileIcon) {
+    | Some(v) => {
+          <FontIcon
+            fontFamily="seti.ttf"
+            icon={v.fontCharacter}
+            backgroundColor={theme.colors.editorBackground}
+            color={v.fontColor}
+            /* TODO: Use 'weight' value from IconTheme font */
+            fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
+          />
+    } 
+    | None => React.empty
+    };
+
     (
       hooks,
       <View style=containerStyle>
         <View style=iconContainerStyle>
-          <FontIcon
-            fontFamily="seti.ttf"
-            icon={0xE001}
-            backgroundColor={theme.colors.editorBackground}
-            color={theme.colors.tabActiveForeground}
-            /* TODO: Use 'weight' value from IconTheme font */
-            fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
-          />
-          </View>
+        {fileIconView}
+        </View>
         <Clickable
           onClick
           style=Style.[
