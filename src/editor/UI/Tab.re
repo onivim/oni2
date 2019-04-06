@@ -12,7 +12,7 @@ open Oni_Core;
 type tabAction = unit => unit;
 
 let tabHeight = 35;
-let minWidth_ = 75;
+let minWidth_ = 100;
 let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
 let component = React.component("Tab");
@@ -99,7 +99,7 @@ let createElement =
             icon={0xE001}
             backgroundColor={theme.colors.editorBackground}
             color={theme.colors.tabActiveForeground}
-            fontSize={14}
+            fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
           />
           </View>
         <Clickable
