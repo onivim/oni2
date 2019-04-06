@@ -6,6 +6,13 @@ let getOrThrow: option('a) => 'a =
     | None => raise(OptionInvalidException("Excepted 'Some' but got 'None'"))
     };
 
+let getOrThrowResult: result('a, 'b) => 'a =
+  v =>
+    switch (v) {
+    | Ok(v) => v
+    | Error(e) => failwith(e)
+    };
+
 let repeat = (~iterations: int=5, f) => {
   let count = ref(0);
 

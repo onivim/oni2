@@ -112,6 +112,36 @@ let start =
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
+  /* Set icon theme */
+
+  let setIconTheme = s => {
+    let iconThemeInfo =
+      extensions
+      |> List.map((ext: ExtensionScanner.t) =>
+           ext.manifest.contributes.iconThemes
+         )
+      |> List.flatten
+      |> List.filter((iconTheme: ExtensionContributions.IconTheme.t) =>
+           String.equal(iconTheme.id, s)
+         );
+
+    let iconThemeInfo = List.nth_opt(iconThemeInfo, 0);
+
+    switch (iconThemeInfo) {
+    | Some(iconThemeInfo) =>
+      let iconTheme =
+        Yojson.Safe.from_file(iconThemeInfo.path) |> Model.IconTheme.ofJson;
+
+      switch (iconTheme) {
+      | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme))
+      | None => ()
+      };
+    | None => ()
+    };
+  };
+
+  setIconTheme("vs-seti");
+
   let _ =
     Tick.interval(
       _ => {

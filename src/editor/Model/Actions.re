@@ -51,6 +51,7 @@ type t =
   | OpenConfigFile(string)
   | QuickOpen
   | SetLanguageInfo(LanguageInfo.t)
+  | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
