@@ -107,6 +107,8 @@ let reduce: (State.t, Actions.t) => State.t =
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | SetInputControlMode(m) => {...s, inputControlMode: m}
+    | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
+    | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
     | _ => s
     };
   };
