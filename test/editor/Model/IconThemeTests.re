@@ -54,49 +54,58 @@ let testTheme = {|
 }
 |};
 
-
-
 let json: Yojson.Safe.json = Yojson.Safe.from_string(testTheme);
 
-describe("IconTheme", ({test, _}) =>{
-    test("gets icon for matching filename", ({expect}) => {
-        let _iconTheme = IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
-        let icon: option(IconTheme.IconDefinition.t) = IconTheme.getIconForFile(_iconTheme, "file1", "some-random-language");
+describe("IconTheme", ({test, _}) => {
+  test("gets icon for matching filename", ({expect}) => {
+    let _iconTheme =
+      IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
+    let icon: option(IconTheme.IconDefinition.t) =
+      IconTheme.getIconForFile(_iconTheme, "file1", "some-random-language");
 
-        switch(icon) {
-        | Some(v) => expect.int(v.fontCharacter).toBe(0xE090)
-        | None => expect.string("No icon found!").toEqual("")
-        }
-    });
+    switch (icon) {
+    | Some(v) => expect.int(v.fontCharacter).toBe(0xE090)
+    | None => expect.string("No icon found!").toEqual("")
+    };
+  });
 
-    test("gets icon for matching extension", ({expect}) => {
-        let _iconTheme = IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
-        let icon: option(IconTheme.IconDefinition.t) = IconTheme.getIconForFile(_iconTheme, "file1.ext", "some-random-language");
+  test("gets icon for matching extension", ({expect}) => {
+    let _iconTheme =
+      IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
+    let icon: option(IconTheme.IconDefinition.t) =
+      IconTheme.getIconForFile(
+        _iconTheme,
+        "file1.ext",
+        "some-random-language",
+      );
 
-        switch(icon) {
-        | Some(v) => expect.int(v.fontCharacter).toBe(0xE002)
-        | None => expect.string("No icon found!").toEqual("")
-        }
-    });
+    switch (icon) {
+    | Some(v) => expect.int(v.fontCharacter).toBe(0xE002)
+    | None => expect.string("No icon found!").toEqual("")
+    };
+  });
 
-    test("gets icon for matching extension", ({expect}) => {
-        let _iconTheme = IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
-        let icon: option(IconTheme.IconDefinition.t) = IconTheme.getIconForFile(_iconTheme, "file1.rnd", "language1");
+  test("gets icon for matching extension", ({expect}) => {
+    let _iconTheme =
+      IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
+    let icon: option(IconTheme.IconDefinition.t) =
+      IconTheme.getIconForFile(_iconTheme, "file1.rnd", "language1");
 
-        switch(icon) {
-        | Some(v) => expect.int(v.fontCharacter).toBe(0xE091)
-        | None => expect.string("No icon found!").toEqual("")
-        }
-    });
+    switch (icon) {
+    | Some(v) => expect.int(v.fontCharacter).toBe(0xE091)
+    | None => expect.string("No icon found!").toEqual("")
+    };
+  });
 
-    test("falls back to default icon", ({expect}) => {
-        let _iconTheme = IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
-        let icon: option(IconTheme.IconDefinition.t) = IconTheme.getIconForFile(_iconTheme, "file1.rnd", "unknown-language");
+  test("falls back to default icon", ({expect}) => {
+    let _iconTheme =
+      IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
+    let icon: option(IconTheme.IconDefinition.t) =
+      IconTheme.getIconForFile(_iconTheme, "file1.rnd", "unknown-language");
 
-        switch(icon) {
-        | Some(v) => expect.int(v.fontCharacter).toBe(0xE001)
-        | None => expect.string("No icon found!").toEqual("")
-        }
-    });
-
-    });
+    switch (icon) {
+    | Some(v) => expect.int(v.fontCharacter).toBe(0xE001)
+    | None => expect.string("No icon found!").toEqual("")
+    };
+  });
+});
