@@ -99,6 +99,7 @@ let createElement =
             icon={0xE001}
             backgroundColor={theme.colors.editorBackground}
             color={theme.colors.tabActiveForeground}
+            /* TODO: Use 'weight' value from IconTheme font */
             fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
           />
           </View>

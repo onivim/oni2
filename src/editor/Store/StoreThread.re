@@ -112,6 +112,8 @@ let start =
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
+  /* Set icon theme */
+
   let _ =
     Tick.interval(
       _ => {
