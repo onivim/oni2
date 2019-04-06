@@ -12,7 +12,7 @@ open Oni_Core;
 type tabAction = unit => unit;
 
 let tabHeight = 35;
-let minWidth_ = 125;
+let minWidth_ = 75;
 let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
 let component = React.component("Tab");
@@ -61,6 +61,7 @@ let createElement =
         opacity(opacityValue),
         height(tabHeight),
         minWidth(minWidth_),
+        maxWidth(500),
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
@@ -70,23 +71,43 @@ let createElement =
     let textStyle =
       Style.[
         width(proportion(0.80) - 10),
+        flexGrow(1),
         textOverflow(`Ellipsis),
         fontFamily(uiFont.fontFile),
         fontSize(uiFont.fontSize),
         color(theme.colors.tabActiveForeground),
         backgroundColor(theme.colors.editorBackground),
-        marginLeft(5),
+        justifyContent(`Center),
+        alignItems(`Center),
       ];
+
+    let iconContainerStyle = Style.[
+            width(32),
+                height(tabHeight),
+                alignItems(`Center),
+                justifyContent(`Center),
+    ]
 
     let icon = modified ? FontAwesome.circle : FontAwesome.times;
 
     (
       hooks,
       <View style=containerStyle>
+        <View style=iconContainerStyle>
+          <FontIcon
+            fontFamily="seti.ttf"
+            icon={0xE001}
+            backgroundColor={theme.colors.editorBackground}
+            color={theme.colors.tabActiveForeground}
+            fontSize={14}
+          />
+          </View>
         <Clickable
           onClick
           style=Style.[
             width(proportion(0.80)),
+            
+            flexGrow(1),
             flexDirection(`Row),
             alignItems(`Center),
             justifyContent(`Center),
@@ -95,12 +116,7 @@ let createElement =
         </Clickable>
         <Clickable
           onClick=onClose
-          style=Style.[
-            height(tabHeight),
-            alignItems(`Center),
-            justifyContent(`Center),
-            width(proportion(0.20)),
-          ]>
+          style=iconContainerStyle>
           <FontIcon
             icon
             backgroundColor={theme.colors.editorBackground}

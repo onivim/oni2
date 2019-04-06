@@ -15,7 +15,7 @@ let createElement =
     (
       ~icon,
       ~fontFamily="FontAwesome5FreeSolid.otf",
-      ~fontSize=50,
+      ~fontSize=15,
       ~backgroundColor,
       ~color,
       ~children as _,
@@ -38,8 +38,6 @@ let createElement =
           fontSize(fontSize_),
           color(color_),
           backgroundColor(backgroundColor_),
-          width(50),
-          height(50),
         ]
       />,
     );
