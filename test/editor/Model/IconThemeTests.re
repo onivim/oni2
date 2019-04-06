@@ -1,7 +1,4 @@
-/* open Oni_Core; */
 open TestFramework;
-
-/* open Helpers; */
 
 module IconTheme = Oni_Model.IconTheme;
 
