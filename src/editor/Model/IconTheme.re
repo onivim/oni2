@@ -6,6 +6,8 @@
 
 open Revery;
 
+open Oni_Core;
+
 module FontSource = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t = {
@@ -34,13 +36,12 @@ type fonts = list(Font.t);
 module IconDefinition = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type raw = {
-    id: string,
     fontCharacter: string,
     fontColor: string,
   };
 
   type t = {
-    id: string,
+    /* id: string, */
     fontCharacter: int,
     fontColor: Color.t,
   };
@@ -55,15 +56,12 @@ module IconDefinition = {
   let of_raw: raw => t =
     raw => {
       {
-        id: raw.id,
+        /* id: raw.id, */
         fontCharacter: parseId(raw.fontCharacter),
         fontColor: Color.hex(raw.fontColor),
       };
     };
 };
-
-[@deriving (show({with_path: false}), yojson({strict: false}))]
-type iconDefinitions = list(IconDefinition.raw);
 
 type t = {
   fonts: list(Font.t),
@@ -75,6 +73,14 @@ type t = {
   /* TODO: Light mode */
 };
 
+let normalizeExtension = (s) => {
+    if (String.length(s) > 1 && Char.equal(String.get(s, 0), '.')) {
+        String.sub(s, 1, String.length(s) - 1);
+    } else {
+        s
+    }
+}
+
 let getIconForFile: (t, string, string) => option(IconDefinition.t) =
   (iconTheme: t, fileName: string, languageId: string) => {
     let id =
@@ -83,7 +89,7 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
       | None =>
         switch (
           StringMap.find_opt(
-            Rench.Path.extname(fileName),
+            normalizeExtension(Rench.Path.extname(fileName)),
             iconTheme.fileExtensions,
           )
         ) {
@@ -95,6 +101,9 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
           }
         }
       };
+
+    prerr_endline ("FILE EXTENSION IS: " ++ normalizeExtension(Rench.Path.extname(fileName)));
+    prerr_endline ("ID IS: " ++ id);
 
     StringMap.find_opt(id, iconTheme.iconDefinitions);
   };
@@ -132,35 +141,36 @@ let getOrEmpty = (v: result(list('a), 'b)) => {
 };
 
 let ofJson = (json: Yojson.Safe.json) => {
-  switch (json) {
-  | `Assoc([
-      ("fonts", fontsJson),
-      ("iconDefinitions", iconsJson),
-      ("file", `String(file)),
-      ("fileExtensions", extensionsJson),
-      ("fileNames", fileNamesJson),
-      ("languageIds", languageIdsJson),
-      ..._,
-    ]) =>
-    let fonts = fonts_of_yojson(fontsJson) |> getOrEmpty;
+    open Yojson.Safe.Util;
+    let fonts = json |> member("fonts") |> fonts_of_yojson |> getOrEmpty;
+    let icons = json |> member("iconDefinitions") |> to_assoc;
+    let file = json |> member("file") |> to_string;
+    let extensionsJson = json |> member("fileExtensions");
+    let fileNamesJson = json |> member("fileNames");
+    let languageIdsJson = json |> member("languageIds");
 
-    let toIconMap: list(IconDefinition.t) => StringMap.t(IconDefinition.t) = (
+    let toIconMap: list((string, Yojson.Safe.json)) => StringMap.t(IconDefinition.t) = (
       icons => {
         List.fold_left(
-          (prev, curr: IconDefinition.t) =>
-            StringMap.add(curr.id, curr, prev),
+          (prev, curr) => {
+
+            let (id, jsonItem) = curr;
+            switch (IconDefinition.raw_of_yojson(jsonItem)) {
+            | Ok(v) => {
+                let icon = IconDefinition.of_raw(v)
+                StringMap.add(id, icon, prev)
+            }
+            | Error(_) => prev
+            }
+            
+          },
           StringMap.empty,
           icons,
         );
       }
     );
 
-    let iconDefinitions =
-      iconDefinitions_of_yojson(iconsJson)
-      |> getOrEmpty
-      |> List.map(v => IconDefinition.of_raw(v))
-      |> toIconMap;
-
+    let iconDefinitions = icons |> toIconMap;
     let fileExtensions = assocToStringMap(extensionsJson);
     let fileNames = assocToStringMap(fileNamesJson);
     let languageIds = assocToStringMap(languageIdsJson);
@@ -173,6 +183,4 @@ let ofJson = (json: Yojson.Safe.json) => {
       fileNames,
       languageIds,
     });
-  | _ => None
-  };
 };
