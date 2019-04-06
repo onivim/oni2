@@ -101,12 +101,6 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
         }
       };
 
-    prerr_endline(
-      "FILE EXTENSION IS: "
-      ++ normalizeExtension(Rench.Path.extname(fileName)),
-    );
-    prerr_endline("ID IS: " ++ id);
-
     StringMap.find_opt(id, iconTheme.iconDefinitions);
   };
 
