@@ -830,6 +830,10 @@
 			"fontCharacter": "\\E05F",
 			"fontColor": "#e37933"
 		},
+		"_reason": {
+			"fontCharacter": "\\E05F",
+			"fontColor": "#db4d3f"
+		},
 		"_odata_light": {
 			"fontCharacter": "\\E060",
 			"fontColor": "#cc6d2e"
@@ -1514,6 +1518,7 @@
 		"argdown": "_argdown",
 		"elm": "_elm",
 		"ocaml": "_ocaml",
+        "reason": "_reason",
 		"nunjucks": "_nunjucks",
 		"mustache": "_mustache",
 		"erb": "_html_erb",
