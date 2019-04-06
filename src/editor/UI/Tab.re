@@ -13,7 +13,7 @@ module Model = Oni_Model;
 type tabAction = unit => unit;
 
 let tabHeight = 35;
-let minWidth_ = 100;
+let minWidth_ = 125;
 let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
 let component = React.component("Tab");
@@ -62,7 +62,6 @@ let createElement =
         opacity(opacityValue),
         height(tabHeight),
         minWidth(minWidth_),
-        maxWidth(500),
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
@@ -72,7 +71,6 @@ let createElement =
     let textStyle =
       Style.[
         width(proportion(0.80) - 10),
-        flexGrow(1),
         textOverflow(`Ellipsis),
         fontFamily(uiFont.fontFile),
         fontSize(uiFont.fontSize),
