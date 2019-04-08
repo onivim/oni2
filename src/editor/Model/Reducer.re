@@ -71,6 +71,7 @@ let reduce: (State.t, Actions.t) => State.t =
       wildmenu: Wildmenu.reduce(s.wildmenu, a),
       commandline: Commandline.reduce(s.commandline, a),
       statusBar: StatusBarReducer.reduce(s.statusBar, a),
+      windows: WindowManager.reduce(s.windows, a),
     };
 
     switch (a) {

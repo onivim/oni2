@@ -45,6 +45,32 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
+    let hooks =
+      React.Hooks.effect(
+        Always,
+        () => {
+          GlobalContext.current().dispatch(
+            AddSplit({
+              id: 0,
+              layout: Full,
+              width: 100,
+              height: 100,
+              component: () => <EditorSurface state />,
+            }),
+          );
+          GlobalContext.current().dispatch(
+            AddSplit({
+              id: 1,
+              layout: VerticalLeft,
+              width: 10,
+              height: 100,
+              component: () => <Dock state />,
+            }),
+          );
+          None;
+        },
+        hooks,
+      );
 
     let tabs = toUiTabs(state.tabs);
     let uiFont = state.uiFont;
@@ -55,7 +81,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        <EditorSurface state />
+        <EditorSplits state />
       </View>,
     );
   });

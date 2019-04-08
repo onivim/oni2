@@ -50,6 +50,8 @@ type t =
   | CloseFileById(int)
   | OpenFileByPath(string)
   | OpenFileById(int)
+  | AddSplit(EditorSplits.split)
+  | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
   | SetLanguageInfo(LanguageInfo.t)
