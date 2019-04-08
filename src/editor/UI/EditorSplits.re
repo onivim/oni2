@@ -23,8 +23,8 @@ let spacer = (layout: layout) =>
         bottom(0),
         flexGrow(1),
       ]
-    | HorizontalLeft
-    | HorizontalRight => [
+    | HorizontalTop
+    | HorizontalBottom => [
         backgroundColor(Colors.black),
         height(4),
         left(0),
@@ -40,8 +40,8 @@ let verticalStyles = (w, h, layout) =>
     | Full => [top(0), bottom(0), flexGrow(1)]
     | VerticalLeft => [top(0), bottom(0), width(w)]
     | VerticalRight => [top(0), bottom(0), width(w)]
-    | HorizontalLeft => [top(0), bottom(0), height(h)]
-    | HorizontalRight => [top(0), bottom(0), height(h)]
+    | HorizontalTop => [top(0), bottom(0), height(h)]
+    | HorizontalBottom => [top(0), bottom(0), height(h)]
     }
   );
 
