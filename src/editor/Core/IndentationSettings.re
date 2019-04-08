@@ -23,3 +23,9 @@ let ofConfiguration = (configuration: Configuration.t) => {
    size: configuration.editorTabSize,
    tabSize: configuration.editorTabSize,
 };
+
+let create = (~mode, ~size, ~tabSize, ()) => {
+    mode,
+        size,
+        tabSize,
+};

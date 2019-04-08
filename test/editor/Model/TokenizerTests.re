@@ -11,7 +11,27 @@ let theme = Theme.create();
 let tokenColors = [];
 let colorMap = ColorMap.create();
 
-describe("tokenize", ({test, _}) => {
+describe("tokenize", ({test, describe, _}) => {
+
+  describe("indentation settings", ({test, _}) => {
+    test("accounts for tab size", ({expect}) => {
+         let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
+         let result = Tokenizer.tokenize(~indentation, "\tabc", theme, tokenColors, colorMap);
+
+         
+         let expectedTokens: list(Tokenizer.t) = [
+         {
+            text: "abc",
+            startPosition:ZeroBasedIndex(4),
+            endPosition: ZeroBasedIndex(7),
+            color: Colors.red,
+         } 
+         ];
+
+         validateTokens(expect, result, expectedTokens);
+    });
+  });
+
   test("empty string", ({expect}) => {
     let result = Tokenizer.tokenize("", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
