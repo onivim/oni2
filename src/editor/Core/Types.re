@@ -342,8 +342,8 @@ module EditorSplits = {
   type layout =
     | VerticalLeft
     | VerticalRight
-    | HorizontalLeft
-    | HorizontalRight
+    | HorizontalTop
+    | HorizontalBottom
     | Full;
 
   type split = {
