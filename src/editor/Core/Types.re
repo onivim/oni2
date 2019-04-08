@@ -394,3 +394,26 @@ module Uri = {
   let fromMemory = (path: string) => {scheme: Scheme.Memory, path};
   let fromPath = (path: string) => {scheme: Scheme.File, path};
 };
+
+module EditorSplits = {
+  open Revery_UI;
+  type layout =
+    | VerticalLeft
+    | VerticalRight
+    | HorizontalLeft
+    | HorizontalRight
+    | Full;
+
+  type split = {
+    id: int,
+    component: unit => React.syntheticElement,
+    layout,
+    /**
+        These values are proportions of the full screen
+       */
+    width: int,
+    height: int,
+  };
+
+  type splits = IntMap.t(split);
+};
