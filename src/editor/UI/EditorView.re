@@ -62,7 +62,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             AddSplit({
               id: 1,
               layout: VerticalLeft,
-              width: 10,
+              width: 50,
               height: 100,
               component: () => <Dock state />,
             }),
