@@ -49,11 +49,13 @@ let verticalStyles = (w, h, layout) =>
     }
   );
 
+let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks =>
     (
       hooks,
-      <View style=Style.[flexGrow(1), flexDirection(`Row)]>
+      <View style=splitContainer>
         ...{
              WindowManager.toList(state.windows.splits)
              |> (
