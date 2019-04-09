@@ -1,8 +1,8 @@
 {
   "source": "./package.json",
-      "scripts": {
-        "run": "esy '@bench' x oni-bench"
-      },
+  "scripts": {
+    "run": "esy '@bench' x oni-bench"
+  },
   "override": {
       "build": ["dune build --root . -j4"],
       "dependencies": {
