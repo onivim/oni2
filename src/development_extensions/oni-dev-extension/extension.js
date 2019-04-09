@@ -6,9 +6,9 @@ const vscode = require('vscode');
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-    // let showData = (val) => {
-    //     vscode.window.showInformationMessage(JSON.stringify(val));
-    // }
+    let showData = (val) => {
+        vscode.window.showInformationMessage(JSON.stringify(val));
+    }
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -20,12 +20,34 @@ function activate(context) {
 		vscode.window.showInformationMessage('Hello World!');
 	});
 
+    let disposable2 = vscode.workspace.onDidOpenTextDocument((e) => {
+        // TODO:
+        // Add command / option to toggle this
+        // showData({
+        //     type: "workspace.onDidOpenTextDocument",
+        //     filename: e.fileName,
+        // });
+    });
+
+    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+        // TODO:
+        // Add command / option to toggle this
+        // showData({
+        //     type: "workspace.onDidChangeTextDocument",
+        //     filename: e.document.fileName,
+        //     contentChanges: e.contentChanges,
+        //     fullText: e.document.getText(),
+        // });
+    });
+
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
     item.text = "Developer";
     item.show();
 
 	context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
 }
 
 // this method is called when your extension is deactivated

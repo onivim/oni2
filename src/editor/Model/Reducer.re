@@ -74,6 +74,8 @@ let reduce: (State.t, Actions.t) => State.t =
     };
 
     switch (a) {
+    | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+    | SetIconTheme(iconTheme) => {...s, iconTheme}
     | ChangeMode(m) =>
       let ret: State.t = {...s, mode: m};
       ret;
@@ -105,6 +107,8 @@ let reduce: (State.t, Actions.t) => State.t =
         tabs: updateTabs(activeBufferId, modified, s.tabs),
       }
     | SetInputControlMode(m) => {...s, inputControlMode: m}
+    | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
+    | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
     | _ => s
     };
   };

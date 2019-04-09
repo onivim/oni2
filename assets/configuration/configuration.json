@@ -2,5 +2,6 @@
   "editor.lineNumbers": ["relative"],
   "editor.minimap.enabled": true,
   "editor.minimap.showSlider": true,
-  "editor.tablineMode": ["buffers"]
+  "editor.tablineMode": ["buffers"],
+  "workbench.iconTheme": "vs-seti"
 }

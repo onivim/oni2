@@ -72,8 +72,8 @@ module StatusBarItem = {
       alignItems(`Center),
       height(h),
       backgroundColor(bg),
-      paddingHorizontal(5),
-      minWidth(75),
+      paddingHorizontal(10),
+      minWidth(50),
     ];
 
   let createElement = (~children, ~height, ~backgroundColor, ()) =>
@@ -112,6 +112,18 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       item.alignment === alignment;
     };
 
+    let buffer = BufferMap.getBuffer(state.activeBufferId, state.buffers);
+    let fileType =
+      switch (buffer) {
+      | Some(v) =>
+        switch (Buffer.getMetadata(v).filePath) {
+        | Some(fp) =>
+          LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)
+        | None => "plaintext"
+        }
+      | None => "plaintext"
+      };
+
     let statusBarItems = state.statusBar;
     let leftItems =
       statusBarItems
@@ -132,6 +144,17 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         <StatusBarSection direction=`Center />
         <StatusBarSection direction=`FlexEnd> ...rightItems </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
+          <StatusBarItem
+            height backgroundColor={theme.colors.statusBarBackground}>
+            <Text
+              style=Style.[
+                backgroundColor(theme.colors.statusBarBackground),
+                color(theme.colors.statusBarForeground),
+                ...textStyle,
+              ]
+              text=fileType
+            />
+          </StatusBarItem>
           <StatusBarItem
             height backgroundColor={theme.colors.statusBarBackground}>
             <Text

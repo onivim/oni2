@@ -26,7 +26,7 @@ Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](ht
 - __Performance__ - no compromises: native performance, minimal input latency
 - __Ease Learning Curve__ - Oni 2 should be comfortable for non-vimmers, too!
 
-The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lighweight editor like VSCode.
+The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lightweight editor like VSCode.
 
 ### Non-goals
 
@@ -91,10 +91,11 @@ However, until that time, __we're offering anyone who donates to the project - a
 
 More information about this decision in this [Reddit Thread: Question About Oni 2 License](https://www.reddit.com/r/neovim/comments/ae7ef6/question_about_oni_2_license/).
 
-You can donate to the project through one of these avenues:
+You can pre-order a commercial license here: https://v2.onivim.io
+
+Alternatively, you can donate to the project through one of these avenues:
 - [Patreon](https://www.patreon.com/onivim)
 - [Open Collective](https://opencollective.com/oni)
-- Or, if you don't want to get stuck with a recurring payment, [PayPal](https://www.paypal.me/bryphe/10). 
 
 Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
 

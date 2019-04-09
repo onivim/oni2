@@ -11,6 +11,7 @@ open Rench;
 
 module M = Msgpck;
 
+type requestFunction = (string, M.t) => unit;
 type requestSyncFunction = (string, M.t) => M.t;
 
 type response = {
@@ -25,6 +26,11 @@ type notification = {
 
 type t = {
   requestSync: requestSyncFunction,
+  /*
+   * request is a 'fire-and-forget' method -
+   * does not block on response.
+   */
+  request: requestFunction,
   /*
    * Pump should be called periodically to dispatch any queued notifications.
    */
@@ -115,6 +121,15 @@ let make = (msgpack: MsgpackTransport.t) => {
     List.rev(notifications) |> List.iter(f);
   };
 
+  let request = (methodName: string, args: M.t) => {
+    let requestId = getNextId();
+
+    let request =
+      M.List([M.Int(0), M.Int(requestId), M.String(methodName), args]);
+
+    msgpack.write(request);
+  };
+
   let requestSync: requestSyncFunction =
     (methodName: string, args: M.t) => {
       let requestId = getNextId();
@@ -149,6 +164,6 @@ let make = (msgpack: MsgpackTransport.t) => {
       ret;
     };
 
-  let ret: t = {pump, requestSync, onNotification};
+  let ret: t = {pump, request, requestSync, onNotification};
   ret;
 };

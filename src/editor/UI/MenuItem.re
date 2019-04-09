@@ -1,5 +1,6 @@
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
@@ -26,8 +27,20 @@ let iconStyles =
     marginRight(10),
   ];
 
+let noop = () => ();
+
 let createElement =
-    (~children as _, ~style=[], ~icon={||}, ~label, ~selected, ~theme, ()) =>
+    (
+      ~children as _,
+      ~style=[],
+      ~icon={||},
+      ~label,
+      ~selected,
+      ~theme,
+      ~onClick=noop,
+      ~onMouseOver=noop,
+      (),
+    ) =>
   component(hooks => {
     let state = GlobalContext.current().state;
     let uiFont = State.(state.uiFont);
@@ -55,9 +68,12 @@ let createElement =
       );
     (
       hooks,
-      <View style={containerStyles(~bg, ())}>
-        <Text style=iconStyles text=icon />
-        <Text style=labelStyles text=label />
-      </View>,
+      <Clickable onClick>
+        <View
+          onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
+          <Text style=iconStyles text=icon />
+          <Text style=labelStyles text=label />
+        </View>
+      </Clickable>,
     );
   });

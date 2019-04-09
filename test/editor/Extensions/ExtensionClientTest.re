@@ -5,25 +5,27 @@ open Oni_Extensions;
 open TestFramework;
 
 open ExtensionClientHelper;
+open ExtensionHostProtocol;
 open ExtensionHostProtocol.OutgoingNotifications;
+
+module JsonInformationMessageFormat = {
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  type t = {
+    [@key "type"]
+    messageType: string,
+    filename: string,
+    fullText: string,
+  };
+};
 
 describe("Extension Client", ({describe, _}) => {
   describe("commands", ({test, _}) =>
     test("executes simple command", _ =>
       withExtensionClient(api => {
         let waitForCommandRegistration =
-          api.createWaiterForMessage(
-            "MainThreadCommands", "$registerCommand", args =>
-            switch (args) {
-            | [`String("extension.helloWorld"), ..._] => true
-            | _ => false
-            }
-          );
-        let waitForShowMessage =
-          api.createWaiterForMessage(
-            "MainThreadMessageService", "$showMessage", _ =>
-            true
-          );
+          api
+          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+        let waitForShowMessage = api |> Waiters.createMessageWaiter(_ => true);
 
         api.start();
 
@@ -35,6 +37,150 @@ describe("Extension Client", ({describe, _}) => {
       })
     )
   );
+
+  describe("DocumentsAndEditors", ({test, _}) => {
+    let createInitialDocumentModel = (~lines, ~path, ()) => {
+      ModelAddedDelta.create(
+        ~uri=Types.Uri.fromPath(path),
+        ~lines,
+        ~modeId="test_language",
+        ~isDirty=false,
+        (),
+      );
+    };
+    test("document added successfully", _
+      /*({expect}) =>*/
+      =>
+        withExtensionClient(api => {
+          let waitForCommandRegistration =
+            api
+            |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+
+          let waitForOpenMessage =
+            api
+            |> Waiters.createMessageWaiter(s => {
+                 let json = Yojson.Safe.from_string(s);
+                 open JsonInformationMessageFormat;
+                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
+
+                 String.equal(info.filename, "test.txt")
+                 && String.equal(
+                      info.messageType,
+                      "workspace.onDidOpenTextDocument",
+                    );
+               });
+
+          api.start();
+          waitForCommandRegistration();
+          api.send(
+            DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+              ~removedDocuments=[],
+              ~addedDocuments=[
+                createInitialDocumentModel(
+                  ~lines=["Hello world"],
+                  ~path="test.txt",
+                  (),
+                ),
+              ],
+              (),
+            ),
+          );
+
+          waitForOpenMessage();
+        })
+      );
+
+    test("document updated successfully", _ =>
+      withExtensionClient(api => {
+        let waitForCommandRegistration =
+          api
+          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+
+        let waitForOpenMessage =
+          api
+          |> Waiters.createMessageWaiter(s => {
+               let json = Yojson.Safe.from_string(s);
+               open JsonInformationMessageFormat;
+               let info = JsonInformationMessageFormat.of_yojson_exn(json);
+
+               String.equal(info.filename, "test.txt")
+               && String.equal(
+                    info.messageType,
+                    "workspace.onDidOpenTextDocument",
+                  );
+             });
+
+        let waitForUpdateMessage =
+          api
+          |> Waiters.createMessageWaiter(s => {
+               let json = Yojson.Safe.from_string(s);
+               open JsonInformationMessageFormat;
+               let info = JsonInformationMessageFormat.of_yojson_exn(json);
+
+               String.equal(info.filename, "test.txt")
+               && String.equal(
+                    info.messageType,
+                    "workspace.onDidChangeTextDocument",
+                  )
+               && String.equal(
+                    info.fullText,
+                    "Greetings" ++ Eol.toString(Eol.default) ++ "world",
+                  );
+             });
+
+        api.start();
+        waitForCommandRegistration();
+        api.send(
+          DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~removedDocuments=[],
+            ~addedDocuments=[
+              createInitialDocumentModel(
+                ~lines=["hello", "world"],
+                ~path="test.txt",
+                (),
+              ),
+            ],
+            (),
+          ),
+        );
+
+        waitForOpenMessage();
+
+        let contentChange =
+          ModelContentChange.create(
+            ~range=
+              Types.Range.create(
+                ~startLine=ZeroBasedIndex(0),
+                ~endLine=ZeroBasedIndex(0),
+                ~startCharacter=ZeroBasedIndex(0),
+                ~endCharacter=ZeroBasedIndex(5),
+                (),
+              ),
+            ~text="Greetings",
+            (),
+          );
+
+        let modelChangedEvent =
+          ModelChangedEvent.create(
+            ~changes=[contentChange],
+            ~eol=Eol.default,
+            ~versionId=1,
+            (),
+          );
+
+        api.send(
+          Documents.acceptModelChanged(
+            Types.Uri.fromPath("test.txt"),
+            modelChangedEvent,
+            true,
+          ),
+        );
+
+        waitForUpdateMessage();
+      })
+    );
+  });
+
   describe("lifecycle", ({test, _}) => {
     test("gets initialized message", ({expect}) =>
       Helpers.repeat(() => {

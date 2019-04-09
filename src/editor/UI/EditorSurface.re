@@ -128,7 +128,7 @@ let renderTokens =
     isActiveLine
       ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
-  let f = (token: Tokenizer.t) => {
+  let f = (token: BufferViewTokenizer.t) => {
     Revery.Draw.Text.drawString(
       ~transform,
       ~x=
@@ -223,7 +223,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           state.activeBufferId,
           i,
         );
-      Tokenizer.tokenize(
+      BufferViewTokenizer.tokenize(
         line,
         state.theme,
         tokenColors,

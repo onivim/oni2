@@ -50,12 +50,13 @@ let start =
   let latestState: ref(Model.State.t) = ref(state);
 
   let extensions = discoverExtensions(setup);
+  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let (neovimUpdater, neovimStream) =
     NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
 
   let (textmateUpdater, textmateStream) =
-    TextmateClientStoreConnector.start(extensions, setup);
+    TextmateClientStoreConnector.start(languageInfo, setup);
 
   let (extHostUpdater, extHostStream) =
     ExtensionClientStoreConnector.start(extensions, setup);
@@ -108,6 +109,38 @@ let start =
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
   Isolinear.Stream.connect(dispatch, menuStream);
+
+  dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+
+  /* Set icon theme */
+
+  let setIconTheme = s => {
+    let iconThemeInfo =
+      extensions
+      |> List.map((ext: ExtensionScanner.t) =>
+           ext.manifest.contributes.iconThemes
+         )
+      |> List.flatten
+      |> List.filter((iconTheme: ExtensionContributions.IconTheme.t) =>
+           String.equal(iconTheme.id, s)
+         );
+
+    let iconThemeInfo = List.nth_opt(iconThemeInfo, 0);
+
+    switch (iconThemeInfo) {
+    | Some(iconThemeInfo) =>
+      let iconTheme =
+        Yojson.Safe.from_file(iconThemeInfo.path) |> Model.IconTheme.ofJson;
+
+      switch (iconTheme) {
+      | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme))
+      | None => ()
+      };
+    | None => ()
+    };
+  };
+
+  setIconTheme("vs-seti");
 
   let _ =
     Tick.interval(

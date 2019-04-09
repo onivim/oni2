@@ -62,6 +62,13 @@ let loseFocusOnClose = isOpen =>
     }
   );
 
+let onClick = () => {
+  GlobalContext.current().dispatch(MenuSelect);
+  GlobalContext.current().dispatch(SetInputControlMode(EditorTextFocus));
+};
+
+let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
+
 type fontT = Types.UiFont.t;
 
 let createElement =
@@ -103,11 +110,13 @@ let createElement =
                 render={index => {
                   let cmd = List.nth(menu.commands, index);
                   <MenuItem
-                    icon={getIcon(cmd.icon)}
+                    onClick
+                    theme
                     style=menuItemStyle
                     label={cmd.name}
+                    icon={getIcon(cmd.icon)}
+                    onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
-                    theme
                   />;
                 }}
               />

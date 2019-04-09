@@ -29,10 +29,13 @@ let readFileSync = path => {
 };
 
 let remapManifest = (directory: string, manifest: ExtensionManifest.t) => {
-  switch (manifest.main) {
-  | None => manifest
-  | Some(v) => {...manifest, main: Some(Path.join(directory, v))}
-  };
+  let m =
+    switch (manifest.main) {
+    | None => manifest
+    | Some(v) => {...manifest, main: Some(Path.join(directory, v))}
+    };
+
+  ExtensionManifest.remapPaths(directory, m);
 };
 
 let scan = (directory: string) => {
@@ -44,8 +47,9 @@ let scan = (directory: string) => {
   let packageManifestPath = d => Path.join(d, "package.json");
 
   let loadPackageJson = pkg => {
-    let path = Path.dirname(pkg);
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
+    let path = Path.dirname(pkg);
+
     {
       manifest: ExtensionManifest.of_yojson_exn(json) |> remapManifest(path),
       path,
