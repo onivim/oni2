@@ -4,7 +4,7 @@ open TestFramework;
 
 open CamomileLibrary;
 
-module TextRun = Tokenizer2.TextRun;
+module TextRun = Tokenizer.TextRun;
 
 let alwaysSplit = (_, _, _, _) => true;
 let splitOnCharacter = (_, c1, _, c2) => !UChar.eq(c1, c2);
@@ -49,7 +49,7 @@ describe("tokenize", ({test, describe, _}) => {
         | _ => 1
         };
       let result =
-        Tokenizer2.tokenize(~f=splitOnCharacter, ~measure=thickB, str);
+        Tokenizer.tokenize(~f=splitOnCharacter, ~measure=thickB, str);
 
       let runs = [
         TextRun.create(
@@ -91,13 +91,13 @@ describe("tokenize", ({test, describe, _}) => {
   );
 
   test("empty string", ({expect}) => {
-    let result = Tokenizer2.tokenize(~f=alwaysSplit, "");
+    let result = Tokenizer.tokenize(~f=alwaysSplit, "");
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string broken up by characters", ({expect}) => {
     let str = "abab";
-    let result = Tokenizer2.tokenize(~f=splitOnCharacter, str);
+    let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
 
     let runs = [
       TextRun.create(
@@ -139,7 +139,7 @@ describe("tokenize", ({test, describe, _}) => {
 
   test("string broken up by characters", ({expect}) => {
     let str = "aabbbbaa";
-    let result = Tokenizer2.tokenize(~f=splitOnCharacter, str);
+    let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
 
     let runs = [
       TextRun.create(

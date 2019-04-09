@@ -9,6 +9,7 @@
 module Actions = Actions;
 module Buffer = Buffer;
 module BufferMap = BufferMap;
+module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
 module Commands = Commands;
@@ -23,5 +24,4 @@ module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
 module Tokenizer = Tokenizer;
-module Tokenizer2 = Tokenizer2;
 module Wildmenu = Wildmenu;

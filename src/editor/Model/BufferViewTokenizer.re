@@ -1,5 +1,5 @@
 /*
- * Tokenizer.re
+ * BufferViewTokenizer.re
  */
 
 open Revery;
@@ -62,7 +62,7 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2;
     };
 
-    let _filterRuns = (r: Tokenizer2.TextRun.t) => {
+    let _filterRuns = (r: Tokenizer.TextRun.t) => {
       let len = Zed_utf8.length(r.text);
 
       if (len == 0) {
@@ -74,7 +74,7 @@ let tokenize:
       };
     };
 
-    let toToken = (r: Tokenizer2.TextRun.t) => {
+    let toToken = (r: Tokenizer.TextRun.t) => {
       let startIndex = Index.toZeroBasedInt(r.startIndex);
       let colorIndex = tokenColorArray[startIndex];
       let color =
@@ -94,7 +94,7 @@ let tokenize:
       ret;
     };
 
-    Tokenizer2.tokenize(~f=split, ~measure, s)
+    Tokenizer.tokenize(~f=split, ~measure, s)
     |> List.filter(_filterRuns)
     |> List.map(toToken);
   };

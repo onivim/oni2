@@ -27,8 +27,8 @@ let validateBuffer =
 let validateToken =
     (
       expect: Rely__DefaultMatchers.matchers(unit),
-      actualToken: Tokenizer.t,
-      expectedToken: Tokenizer.t,
+      actualToken: BufferViewTokenizer.t,
+      expectedToken: BufferViewTokenizer.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
   expect.int(Index.toZeroBasedInt(actualToken.startPosition)).toBe(
@@ -42,8 +42,8 @@ let validateToken =
 let validateTokens =
     (
       expect: Rely__DefaultMatchers.matchers(unit),
-      actualTokens: list(Tokenizer.t),
-      expectedTokens: list(Tokenizer.t),
+      actualTokens: list(BufferViewTokenizer.t),
+      expectedTokens: list(BufferViewTokenizer.t),
     ) => {
   expect.int(List.length(actualTokens)).toBe(List.length(expectedTokens));
 

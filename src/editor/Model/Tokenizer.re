@@ -1,5 +1,5 @@
 /*
- * Tokenizer2.re
+ * Tokenizer.re
  */
 
 open Oni_Core.Types;

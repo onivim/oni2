@@ -13,19 +13,19 @@ let colorMap = ColorMap.create();
 
 describe("tokenize", ({test, _}) => {
   test("empty string", ({expect}) => {
-    let result = Tokenizer.tokenize("", theme, tokenColors, colorMap);
+    let result = BufferViewTokenizer.tokenize("", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string with only whitespace", ({expect}) => {
-    let result = Tokenizer.tokenize("   \t", theme, tokenColors, colorMap);
+    let result = BufferViewTokenizer.tokenize("   \t", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("single word token", ({expect}) => {
-    let result = Tokenizer.tokenize("testWord", theme, tokenColors, colorMap);
+    let result = BufferViewTokenizer.tokenize("testWord", theme, tokenColors, colorMap);
 
-    let expectedTokens: list(Tokenizer.t) = [
+    let expectedTokens: list(BufferViewTokenizer.t) = [
       {
         text: "testWord",
         startPosition: ZeroBasedIndex(0),
@@ -39,9 +39,9 @@ describe("tokenize", ({test, _}) => {
 
   test("single word token, surrounded by whitespace", ({expect}) => {
     let result =
-      Tokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
 
-    let expectedTokens: list(Tokenizer.t) = [
+    let expectedTokens: list(BufferViewTokenizer.t) = [
       {
         text: "testWord",
         startPosition: ZeroBasedIndex(2),
@@ -54,9 +54,9 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("single letter token, no spaces", ({expect}) => {
-    let result = Tokenizer.tokenize("a", theme, tokenColors, colorMap);
+    let result = BufferViewTokenizer.tokenize("a", theme, tokenColors, colorMap);
 
-    let expectedTokens: list(Tokenizer.t) = [
+    let expectedTokens: list(BufferViewTokenizer.t) = [
       {
         text: "a",
         startPosition: ZeroBasedIndex(0),
@@ -73,9 +73,9 @@ describe("tokenize", ({test, _}) => {
       ColorizedToken.create(0, 0),
       ColorizedToken.create(1, 0),
     ];
-    let result = Tokenizer.tokenize("ab", theme, tokenColors, colorMap);
+    let result = BufferViewTokenizer.tokenize("ab", theme, tokenColors, colorMap);
 
-    let expectedTokens: list(Tokenizer.t) = [
+    let expectedTokens: list(BufferViewTokenizer.t) = [
       {
         text: "a",
         startPosition: ZeroBasedIndex(0),
@@ -95,9 +95,9 @@ describe("tokenize", ({test, _}) => {
 
   test("multiple tokens", ({expect}) => {
     let result =
-      Tokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
 
-    let expectedTokens: list(Tokenizer.t) = [
+    let expectedTokens: list(BufferViewTokenizer.t) = [
       {
         text: "a",
         startPosition: ZeroBasedIndex(1),
