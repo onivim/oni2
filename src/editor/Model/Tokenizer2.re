@@ -2,11 +2,7 @@
  * Tokenizer2.re
  */
 
-/* open Revery; */
-
-/* open Oni_Core; */
 open Oni_Core.Types;
-/* open Oni_Extensions; */
 
 open CamomileLibrary;
 
@@ -47,9 +43,6 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
   let pos = ref(start);
   let found = ref(false);
 
-  prerr_endline(
-    "_getNextBreak: " ++ string_of_int(start) ++ " | " ++ string_of_int(max),
-  );
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
@@ -82,13 +75,6 @@ let tokenize = (~f: splitFunc, ~measure=defaultMeasure, s: string) => {
     let startToken = idx^;
     let startOffset = offset^;
     let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
-
-    prerr_endline(
-      "tokenize - iter - startToken: "
-      ++ string_of_int(startToken)
-      ++ " | "
-      ++ string_of_int(endToken),
-    );
 
     let text = Zed_utf8.sub(s, startToken, endToken - startToken);
     let endOffset =
