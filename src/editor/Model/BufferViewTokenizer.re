@@ -92,7 +92,14 @@ let tokenize:
 
     f(tokenColors, len - 1);
 
-    let measure = _ => 1;
+    let measure = c => {
+        if (UChar.eq(c, tab)) {
+            8;
+        } else {
+            1;
+        }
+    };
+
     let split = (i0, c0, i1, c1) => {
       let colorizedToken1 = tokenColorArray[i0];
       let colorizedToken2 = tokenColorArray[i1];

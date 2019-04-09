@@ -69,7 +69,7 @@ augroup END
 function OniGetContext()
     let bufferNumber = bufnr("%")
     let line = line(".")
-    let column = virtcol(".")
+    let column = col(".")
     let modified = getbufvar(bufferNumber, "&modified")
 
     let context = [bufferNumber, line, column, modified]

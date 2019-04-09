@@ -87,7 +87,7 @@ describe("tokenize", ({test, describe, _}) => {
       ];
 
       validateTokens(expect, result, runs);
-    });
+    })
   );
 
   test("empty string", ({expect}) => {

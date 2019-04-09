@@ -22,10 +22,8 @@ type t = {
   editorTablineMode,
   [@key "editor.insertSpaces"]
   editorInsertSpaces: bool,
-  /* TODO:
-   * Break this up into editorTabSize and editorIndentSize like:
-   * https://github.com/Microsoft/vscode/pull/62079 
-   */
+  [@key "editor.indentSize"]
+  editorIndentSize: int,
   [@key "editor.tabSize"]
   editorTabSize: int,
   [@key "workbench.iconTheme"]
@@ -37,7 +35,8 @@ let default = {
   editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
-  editorInsertSpaces: true,
+  editorInsertSpaces: false,
+  editorIndentSize: 4,
   editorTabSize: 4,
   workbenchIconTheme: "vs-seti",
 };

@@ -61,7 +61,7 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
   pos^;
 };
 
-let defaultMeasure: measureFunc = _ => 2;
+let defaultMeasure: measureFunc = _ => 1;
 
 let tokenize = (~f: splitFunc, ~measure=defaultMeasure, s: string) => {
   let startIndex = 0;
