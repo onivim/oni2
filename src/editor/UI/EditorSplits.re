@@ -11,33 +11,10 @@ open Oni_Core.Types.EditorSplits;
 
 let component = React.component("EditorSplits");
 
-let lastItem = (l, index) => List.length(l) == index + 1;
-
-let spacerColor = Color.rgba(0., 0., 0., 0.1);
-
-let spacer = (layout: layout) =>
-  Style.(
-    switch (layout) {
-    | Full
-    | VerticalRight
-    | VerticalLeft => [
-        backgroundColor(spacerColor),
-        width(1),
-        top(0),
-        bottom(0),
-        flexGrow(0),
-      ]
-    | HorizontalTop
-    | HorizontalBottom => [
-        backgroundColor(spacerColor),
-        height(1),
-        left(0),
-        right(0),
-        flexGrow(0),
-      ]
-    }
-  );
-
+/**
+   TODO: width and height should be used as percentages of the
+   window size not as direct values
+ */
 let verticalStyles = (w, h, layout) =>
   Style.(
     switch (layout) {
@@ -65,8 +42,12 @@ let createElement = (~children as _, ~state: State.t, ()) =>
                      let splitStyles = verticalStyles(width, height, layout);
                      [
                        <View style=splitStyles> {component()} </View>,
-                       lastItem(splits, index) ?
-                         React.empty : <View style={spacer(layout)} />,
+                       <WindowHandle
+                         splits
+                         layout
+                         windowNumber=index
+                         theme={state.theme}
+                       />,
                      ];
                    },
                    splits,
