@@ -356,7 +356,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         ~x=
                           lineNumberWidth
                           +. float_of_int(
-                               Index.toZeroBasedInt(r.startPosition.character),
+                               Index.toZeroBasedInt(
+                                 r.startPosition.character,
+                               ),
                              )
                           *. fontWidth,
                         ~y=

@@ -88,9 +88,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       }
     );
 
-  let requestVisualRangeUpdateEffect = 
+  let requestVisualRangeUpdateEffect =
     Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
-                            neovimProtocol.requestVisualRangeUpdate());
+      neovimProtocol.requestVisualRangeUpdate()
+    );
 
   let updater = (state, action) => {
     switch (action) {
@@ -182,7 +183,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                     ~lines=bc.lines,
                     ~version=bc.changedTick,
                     (),
-                  ));
+                  ),
+                )
               | WildmenuShow(w) => WildmenuShow(w)
               | WildmenuHide(w) => WildmenuHide(w)
               | WildmenuSelected(s) => WildmenuSelected(s)
@@ -192,7 +194,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | _ => Noop
               };
 
-              send(msg);
+            send(msg);
           },
         );
       ();

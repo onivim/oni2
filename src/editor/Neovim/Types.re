@@ -28,14 +28,7 @@ module AutoCommandContext = {
     modified: bool,
   };
 
-  let create =
-      (
-        ~activeBufferId,
-        ~cursorLine,
-        ~cursorColumn,
-        ~modified,
-        (),
-      ) => {
+  let create = (~activeBufferId, ~cursorLine, ~cursorColumn, ~modified, ()) => {
     activeBufferId,
     cursorLine,
     cursorColumn,

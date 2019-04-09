@@ -131,7 +131,8 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
       Index.toZeroBasedInt(selection.range.startPosition.character);
 
     let endLine = Index.toZeroBasedInt(selection.range.endPosition.line);
-    let endCharacter = Index.toZeroBasedInt(selection.range.endPosition.character);
+    let endCharacter =
+      Index.toZeroBasedInt(selection.range.endPosition.character);
 
     switch (selection.mode) {
     | BlockwiseVisual =>

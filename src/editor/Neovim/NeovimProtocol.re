@@ -63,7 +63,10 @@ let make = (nvimApi: NeovimApi.t) => {
     nvimApi.request("nvim_input", M.List([M.String(key)]));
 
   let requestVisualRangeUpdate = () =>
-    nvimApi.request("nvim_command", M.List([M.String("call OniUpdateVisualRange()")]));
+    nvimApi.request(
+      "nvim_command",
+      M.List([M.String("call OniUpdateVisualRange()")]),
+    );
 
   let bufAttach = id => {
     let _error =
