@@ -138,7 +138,7 @@ describe("tokenize", ({test, describe, _}) => {
   });
 
   test("string broken up by characters", ({expect}) => {
-    let str = "aabbaa";
+    let str = "aabbbbaa";
     let result = Tokenizer2.tokenize(~f=splitOnCharacter, str);
 
     let runs = [
@@ -151,19 +151,19 @@ describe("tokenize", ({test, describe, _}) => {
         (),
       ),
       TextRun.create(
-        ~text="bb",
+        ~text="bbbb",
         ~startIndex=ZeroBasedIndex(2),
-        ~endIndex=ZeroBasedIndex(4),
+        ~endIndex=ZeroBasedIndex(6),
         ~startPosition=ZeroBasedIndex(2),
-        ~endPosition=ZeroBasedIndex(4),
+        ~endPosition=ZeroBasedIndex(6),
         (),
       ),
       TextRun.create(
         ~text="aa",
-        ~startIndex=ZeroBasedIndex(4),
-        ~endIndex=ZeroBasedIndex(6),
-        ~startPosition=ZeroBasedIndex(4),
-        ~endPosition=ZeroBasedIndex(6),
+        ~startIndex=ZeroBasedIndex(6),
+        ~endIndex=ZeroBasedIndex(8),
+        ~startPosition=ZeroBasedIndex(6),
+        ~endPosition=ZeroBasedIndex(8),
         (),
       ),
     ];

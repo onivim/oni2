@@ -79,7 +79,7 @@ let tokenize = (~f: splitFunc, ~measure=defaultMeasure, s: string) => {
     let text = Zed_utf8.sub(s, startToken, endToken - startToken);
     let endOffset =
       startOffset
-      + Zed_utf8.fold((char, prev) => prev + measure(char), s, 0);
+      + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
 
     let textRun =
       TextRun.create(
