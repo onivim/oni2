@@ -41,9 +41,19 @@ describe("tokenize", ({test, _}) => {
     let result =
       Tokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
 
-    List.iteri((i, _t: Tokenizer.t) => {
-        prerr_endline ("TOKENS: " ++ string_of_int(i) ++ " | " ++ _t.text ++ string_of_int(Oni_Core.Types.Index.toZeroBasedInt(_t.startPosition)));
-    }, result);
+    List.iteri(
+      (i, _t: Tokenizer.t) =>
+        prerr_endline(
+          "TOKENS: "
+          ++ string_of_int(i)
+          ++ " | "
+          ++ _t.text
+          ++ string_of_int(
+               Oni_Core.Types.Index.toZeroBasedInt(_t.startPosition),
+             ),
+        ),
+      result,
+    );
 
     let expectedTokens: list(Tokenizer.t) = [
       {
