@@ -73,6 +73,8 @@ let getRangesForBlockSelection =
   let pos = ref(startLine);
   let ranges = ref([]);
 
+  let (startC, endColumn) = (min(startC, endColumn), max(startC,endColumn));
+
   while (pos^ <= endLine) {
     let currentPos = pos^;
 
