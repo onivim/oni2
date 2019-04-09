@@ -28,7 +28,6 @@ let spacer = (layout: layout) => {
   ];
 
   switch (layout) {
-  | Full => verticalStyles
   | VerticalRight => [marginLeft(1), ...verticalStyles]
   | VerticalLeft => [marginRight(1), ...verticalStyles]
   | HorizontalTop => [marginBottom(1), ...horizontalStyles]
