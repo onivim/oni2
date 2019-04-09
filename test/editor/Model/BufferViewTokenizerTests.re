@@ -18,8 +18,6 @@ describe("tokenize", ({test, _}) => {
     expect.int(List.length(result)).toBe(0);
   });
 
-  describe("tokenize", ({test, describe, _}) => {
-
 /*   describe("indentation settings", ({test, _}) => { */
 /*     test("accounts for tab size", ({expect}) => { */
 /*          let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ()); */
