@@ -104,13 +104,12 @@ module Range = {
     endPosition,
   };
 
-  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) => {
+  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
     createFromPositions(
       ~startPosition=Position.create(startLine, startCharacter),
       ~endPosition=Position.create(endLine, endCharacter),
       (),
     );
-  };
 };
 
 [@deriving show({with_path: false})]
@@ -304,7 +303,8 @@ module Input = {
   type controlMode =
     | [@name "menuFocus"] MenuFocus
     | [@name "textInputFocus"] TextInputFocus
-    | [@name "editorTextFocus"] EditorTextFocus;
+    | [@name "editorTextFocus"] EditorTextFocus
+    | [@name "neovimMenuFocus"] NeovimMenuFocus;
 
   [@deriving show({with_path: false})]
   type keyBindings = {

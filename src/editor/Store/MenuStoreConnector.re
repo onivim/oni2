@@ -40,10 +40,21 @@ let start = () => {
 
   let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
     switch (action) {
-    | MenuPosition(pos) => (
+    | MenuPosition(index) => (
+        {...state, selectedItem: index},
+        Isolinear.Effect.none,
+      )
+    | MenuPreviousItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, pos, state.commands),
+          selectedItem: position(state.selectedItem, -1, state.commands),
+        },
+        Isolinear.Effect.none,
+      )
+    | MenuNextItem => (
+        {
+          ...state,
+          selectedItem: position(state.selectedItem, 1, state.commands),
         },
         Isolinear.Effect.none,
       )

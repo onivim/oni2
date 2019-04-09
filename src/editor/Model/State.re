@@ -33,6 +33,7 @@ type t = {
   theme: Theme.t,
   editor: Editor.t,
   inputControlMode: Input.controlMode,
+  iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
 };
@@ -60,6 +61,7 @@ let create: unit => t =
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,
+    iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),
     statusBar: StatusBarModel.create(),
   };

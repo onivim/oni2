@@ -44,6 +44,8 @@ type t =
   | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
+  | MenuNextItem
+  | MenuPreviousItem
   | MenuPosition(int)
   | CloseFileById(int)
   | OpenFileByPath(string)
@@ -51,6 +53,7 @@ type t =
   | OpenConfigFile(string)
   | QuickOpen
   | SetLanguageInfo(LanguageInfo.t)
+  | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)

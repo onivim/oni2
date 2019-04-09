@@ -1,5 +1,5 @@
 {
-  "checksum": "a8f677b3e1f26debc9bb69c48fe219fc",
+  "checksum": "3f8f0b39287cec08f4729617da4396da",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -16,14 +16,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "revery@0.16.0@d41d8cd9": {
-      "id": "revery@0.16.0@d41d8cd9",
+    "revery@0.17.0@d41d8cd9": {
+      "id": "revery@0.17.0@d41d8cd9",
       "name": "revery",
-      "version": "0.16.0",
+      "version": "0.17.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.16.0.tgz#sha1:48558dc33ce664cfcf12343c312f120447087fbf"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.17.0.tgz#sha1:d76757ccc9d2590d91ff74bcb38d8c2e9ade20ec"
         ]
       },
       "overrides": [],
@@ -32,7 +32,7 @@
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-glfw@3.2.1024@d41d8cd9",
         "reason-gl-matrix@0.9.9304@d41d8cd9",
-        "reason-fontkit@2.4.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "reason-fontkit@2.4.1@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "flex@1.2.2@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@946c5ba2", "@opam/lwt@opam:4.2.1@c1888ec9",
         "@opam/js_of_ocaml-lwt@opam:3.3.0@ff746e31",
@@ -120,7 +120,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/re@opam:1.8.0@7baac1a7",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/re@opam:1.9.0@7f4a36a5",
         "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -220,14 +220,14 @@
       ],
       "devDependencies": []
     },
-    "reason-fontkit@2.4.0@d41d8cd9": {
-      "id": "reason-fontkit@2.4.0@d41d8cd9",
+    "reason-fontkit@2.4.1@d41d8cd9": {
+      "id": "reason-fontkit@2.4.1@d41d8cd9",
       "name": "reason-fontkit",
-      "version": "2.4.0",
+      "version": "2.4.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.4.0.tgz#sha1:aefa0f0c8f4840293ac39a14e7377f94052b7e5b"
+          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.4.1.tgz#sha1:696911e73dea0ebbd90be4b3207671362794b2c8"
         ]
       },
       "overrides": [],
@@ -414,7 +414,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@0.16.0@d41d8cd9", "rench@1.6.1@d41d8cd9",
+        "revery@0.17.0@d41d8cd9", "rench@1.6.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "reason-glfw@3.2.1024@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
@@ -448,7 +448,7 @@
         "refmterr@3.1.10@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/pastel@0.1.0@d41d8cd9",
         "@reason-native/file-context-printer@0.0.3@d41d8cd9",
-        "@opam/re@opam:1.8.0@7baac1a7", "@opam/junit@opam:2.0.1@c25e35a7",
+        "@opam/re@opam:1.9.0@7f4a36a5", "@opam/junit@opam:2.0.1@c25e35a7",
         "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -483,7 +483,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@reason-native/pastel@0.1.0@d41d8cd9",
-        "@opam/re@opam:1.8.0@7baac1a7", "@opam/dune@opam:1.7.3@72aad784",
+        "@opam/re@opam:1.9.0@7f4a36a5", "@opam/dune@opam:1.7.3@72aad784",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -615,8 +615,8 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "@opam/tyxml@opam:4.3.0@b35a7c40": {
-      "id": "@opam/tyxml@opam:4.3.0@b35a7c40",
+    "@opam/tyxml@opam:4.3.0@15e44054": {
+      "id": "@opam/tyxml@opam:4.3.0@15e44054",
       "name": "@opam/tyxml",
       "version": "opam:4.3.0",
       "source": {
@@ -634,12 +634,12 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
-        "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.8.0@7baac1a7",
+        "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.9.0@7f4a36a5",
         "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
-        "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.8.0@7baac1a7"
+        "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.9.0@7f4a36a5"
       ]
     },
     "@opam/topkg@opam:1.0.0@61f4ccf9": {
@@ -737,27 +737,26 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "@opam/re@opam:1.8.0@7baac1a7": {
-      "id": "@opam/re@opam:1.8.0@7baac1a7",
+    "@opam/re@opam:1.9.0@7f4a36a5": {
+      "id": "@opam/re@opam:1.9.0@7f4a36a5",
       "name": "@opam/re",
-      "version": "opam:1.8.0",
+      "version": "opam:1.9.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/76/765f6f8d3e6ab200866e719ed7e5178d#md5:765f6f8d3e6ab200866e719ed7e5178d",
-          "archive:https://github.com/ocaml/ocaml-re/releases/download/1.8.0/re-1.8.0.tbz#md5:765f6f8d3e6ab200866e719ed7e5178d"
+          "archive:https://opam.ocaml.org/cache/md5/bd/bddaed4f386a22cace7850c9c7dac296#md5:bddaed4f386a22cace7850c9c7dac296",
+          "archive:https://github.com/ocaml/ocaml-re/releases/download/1.9.0/re-1.9.0.tbz#md5:bddaed4f386a22cace7850c9c7dac296"
         ],
         "opam": {
           "name": "re",
-          "version": "1.8.0",
-          "path": "esy.lock/opam/re.1.8.0"
+          "version": "1.9.0",
+          "path": "esy.lock/opam/re.1.9.0"
         }
       },
       "overrides": [],
       "dependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/seq@opam:base@d8d7de1d",
-        "@opam/jbuilder@opam:transition@58bdfe0a",
-        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+        "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/seq@opam:base@d8d7de1d"
@@ -810,7 +809,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/tyxml@opam:4.3.0@b35a7c40",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/tyxml@opam:4.3.0@15e44054",
         "@opam/dune@opam:1.7.3@72aad784",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
@@ -1410,11 +1409,11 @@
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tyxml@opam:4.3.0@b35a7c40", "@opam/ptime@opam:0.8.4@23eca65b",
+        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@23eca65b",
         "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tyxml@opam:4.3.0@b35a7c40", "@opam/ptime@opam:0.8.4@23eca65b"
+        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@23eca65b"
       ]
     },
     "@opam/js_of_ocaml-ppx@opam:3.3.0@6d90d7d2": {
