@@ -46,10 +46,8 @@ let init = app => {
   let isDirty = ref(false);
 
   let onStateChanged = v => {
-    if (v !== currentState^) {
-        currentState := v;
-        isDirty := true;
-    };
+    currentState := v;
+    isDirty := true;
   };
 
   let dispatch =
