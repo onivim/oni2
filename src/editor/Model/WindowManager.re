@@ -5,8 +5,7 @@ type layout =
   | VerticalLeft
   | VerticalRight
   | HorizontalTop
-  | HorizontalBottom
-  | Full;
+  | HorizontalBottom;
 
 module WindowSplitId =
   Revery.UniqueId.Make({});
