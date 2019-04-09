@@ -7,8 +7,9 @@
  */
 
 open Revery.UI;
-
 open Oni_Model;
+
+module Window = WindowManager;
 
 let noop = () => ();
 
@@ -51,7 +52,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         () => {
           GlobalContext.current().dispatch(
             AddSplit(
-              WindowManager.createSplit(
+              Window.createSplit(
                 ~layout=VerticalLeft,
                 ~width=50,
                 ~component=state => <Dock state />,
@@ -61,7 +62,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           );
           GlobalContext.current().dispatch(
             AddSplit(
-              WindowManager.createSplit(
+              Window.createSplit(
                 ~layout=VerticalRight,
                 ~component=state => <EditorSurface state />,
                 (),
