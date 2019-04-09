@@ -125,7 +125,9 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
     let startCharacter =
       Index.toZeroBasedInt(selection.range.startPosition.character);
 
-    let endLine = Index.toZeroBasedInt(selection.range.endPosition.line);
+    let bufferLines = Buffer.getNumberOfLines(buffer);
+
+    let endLine = min(Index.toZeroBasedInt(selection.range.endPosition.line), bufferLines - 1);
     let endCharacter =
       Index.toZeroBasedInt(selection.range.endPosition.character);
 
