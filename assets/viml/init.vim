@@ -29,6 +29,26 @@ function OniCommand(commandName)
     call OniNotify(["command", a:commandName])
 endfunction
 
+
+function OniUpdateVisualRange()
+    let visualMode = mode()
+
+    if visualMode == "\<C-v>"
+        let visualMode = "vb"
+    end
+
+    if visualMode == "v" || visualMode == "V" || visualMode == "vb"
+        let [selectionStartLine, selectionStartColumn] = getpos("v")[1:2]
+        let [selectionEndLine, selectionEndColumn] = getpos(".")[1:2]
+    else
+        let [selectionStartLine, selectionStartColumn, selectionEndLine, selectionEndColumn] = [1, 1, 1, 1]
+    end
+
+    let visualRange = [visualMode, selectionStartLine, selectionStartColumn, selectionEndLine, selectionEndColumn]
+
+    call OniNotify(["oni_visual_range", visualRange])
+endfunction
+
 augroup OniEventListeners
     autocmd!
     autocmd! BufWritePre * :call OniNotifyAutocmd("BufWritePre")
@@ -52,20 +72,7 @@ function OniGetContext()
     let column = virtcol(".")
     let modified = getbufvar(bufferNumber, "&modified")
 
-    let visualMode = mode()
-
-    if visualMode == "\<C-v>"
-        let visualMode = "vb"
-    end
-
-    if visualMode == "v" || visualMode == "V" || visualMode == "vb"
-        let [selectionStartLine, selectionStartColumn] = getpos("v")[1:2]
-        let [selectionEndLine, selectionEndColumn] = getpos(".")[1:2]
-    else
-        let [selectionStartLine, selectionStartColumn, selectionEndLine, selectionEndColumn] = [1, 1, 1, 1]
-    end
-
-    let context = [bufferNumber, line, column, modified, selectionStartLine, selectionStartColumn, selectionEndLine, selectionEndColumn, visualMode]
+    let context = [bufferNumber, line, column, modified]
 
     return context
 endfunction

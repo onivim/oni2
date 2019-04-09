@@ -175,15 +175,14 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                     ~lines=bc.lines,
                     ~version=bc.changedTick,
                     (),
-                  ),
-                ]
+                  ));
               | WildmenuShow(w) => WildmenuShow(w)
               | WildmenuHide(w) => WildmenuHide(w)
               | WildmenuSelected(s) => WildmenuSelected(s)
               | CommandlineUpdate(u) => CommandlineUpdate(u)
               | CommandlineShow(c) => CommandlineShow(c)
               | CommandlineHide(c) => CommandlineHide(c)
-              | _ => [Noop]
+              | _ => Noop
               };
 
               send(msg);

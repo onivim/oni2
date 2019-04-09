@@ -17,9 +17,9 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
       [
         Range.create(
           ~startLine=ZeroBasedIndex(currentPos),
-          ~startColumn=ZeroBasedIndex(0),
+          ~startCharacter=ZeroBasedIndex(0),
           ~endLine=ZeroBasedIndex(currentPos),
-          ~endColumn=
+          ~endCharacter=
             ZeroBasedIndex(Buffer.getLineLength(buffer, currentPos)),
           (),
         ),
@@ -43,14 +43,14 @@ let getRangesForVisualSelection =
       [
         Range.create(
           ~startLine=ZeroBasedIndex(currentPos),
-          ~startColumn=
+          ~startCharacter=
             ZeroBasedIndex(
               {
                 startLine == pos^ ? startColumn : 0;
               },
             ),
           ~endLine=ZeroBasedIndex(currentPos),
-          ~endColumn=
+          ~endCharacter=
             ZeroBasedIndex(
               {
                 endLine == currentPos
@@ -90,9 +90,9 @@ let getRangesForBlockSelection =
         Some(
           Range.create(
             ~startLine=ZeroBasedIndex(currentPos),
-            ~startColumn=ZeroBasedIndex(startC),
+            ~startCharacter=ZeroBasedIndex(startC),
             ~endLine=ZeroBasedIndex(currentPos),
-            ~endColumn=ZeroBasedIndex(min(endColumn + 1, bufferLength)),
+            ~endCharacter=ZeroBasedIndex(min(endColumn + 1, bufferLength)),
             (),
           ),
         );
@@ -126,12 +126,12 @@ let getRangesForBlockSelection =
  */
 let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
   (selection, buffer) => {
-    let startLine = Index.toZeroBasedInt(selection.range.startPos.line);
+    let startLine = Index.toZeroBasedInt(selection.range.startPosition.line);
     let startCharacter =
-      Index.toZeroBasedInt(selection.range.startPos.character);
+      Index.toZeroBasedInt(selection.range.startPosition.character);
 
-    let endLine = Index.toZeroBasedInt(selection.range.endPos.line);
-    let endCharacter = Index.toZeroBasedInt(selection.range.endPos.character);
+    let endLine = Index.toZeroBasedInt(selection.range.endPosition.line);
+    let endCharacter = Index.toZeroBasedInt(selection.range.endPosition.character);
 
     switch (selection.mode) {
     | BlockwiseVisual =>

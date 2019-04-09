@@ -356,20 +356,20 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         ~x=
                           lineNumberWidth
                           +. float_of_int(
-                               Index.toZeroBasedInt(r.startPos.character),
+                               Index.toZeroBasedInt(r.startPosition.character),
                              )
                           *. fontWidth,
                         ~y=
                           fontHeight
                           *. float_of_int(
-                               Index.toZeroBasedInt(r.startPos.line),
+                               Index.toZeroBasedInt(r.startPosition.line),
                              )
                           -. state.editor.scrollY,
                         ~height=fontHeight,
                         ~width=
                           float_of_int(
-                            Index.toZeroBasedInt(r.endPos.character)
-                            - Index.toZeroBasedInt(r.startPos.character),
+                            Index.toZeroBasedInt(r.endPosition.character)
+                            - Index.toZeroBasedInt(r.startPosition.character),
                           )
                           *. fontWidth,
                         ~color=theme.colors.editorLineHighlightBackground,

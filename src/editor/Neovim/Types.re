@@ -26,7 +26,6 @@ module AutoCommandContext = {
     cursorLine: Index.t,
     cursorColumn: Index.t,
     modified: bool,
-    visualRange: VisualRange.t,
   };
 
   let create =
@@ -35,13 +34,11 @@ module AutoCommandContext = {
         ~cursorLine,
         ~cursorColumn,
         ~modified,
-        ~visualRange,
         (),
       ) => {
     activeBufferId,
     cursorLine,
     cursorColumn,
     modified,
-    visualRange,
   };
 };

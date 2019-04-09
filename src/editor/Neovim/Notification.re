@@ -57,6 +57,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | TablineUpdate(Tabline.tabs)
+  | VisualRangeUpdate(Core.Types.VisualRange.t)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -189,41 +190,13 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
         M.Int(cursorLine),
         M.Int(cursorColumn),
         M.Int(modified),
-        M.Int(startLine),
-        M.Int(startColumn),
-        M.Int(endLine),
-        M.Int(endColumn),
-        M.String(selectionMode),
       ] =>
-      print_endline(
-        "Selection: "
-        ++ selectionMode
-        ++ " start line: "
-        ++ string_of_int(startLine)
-        ++ " start column: "
-        ++ string_of_int(startColumn)
-        ++ " end line: "
-        ++ string_of_int(endLine)
-        ++ " end column: "
-        ++ string_of_int(endColumn),
-      );
-
-      let visualRange =
-        Core.Types.VisualRange.create(
-          ~startLine,
-          ~startColumn,
-          ~endLine,
-          ~endColumn,
-          ~mode=selectionMode,
-          (),
-        );
 
       Types.AutoCommandContext.create(
         ~activeBufferId,
         ~cursorLine=OneBasedIndex(cursorLine),
         ~cursorColumn=OneBasedIndex(cursorColumn),
         ~modified=modified == 1,
-        ~visualRange,
         (),
       );
     | _ => raise(InvalidAutoCommandContext)
@@ -274,6 +247,20 @@ let parse = (t: string, msg: Msgpck.t) => {
           ),
         ),
       ]
+    | (
+        "oni_plugin_notify",
+        M.List([
+           M.List([M.String("oni_visual_range"), M.List([
+            M.String(mode),
+            M.Int(startLine),
+            M.Int(startColumn),
+            M.Int(endLine),
+            M.Int(endColumn)
+           ])]) 
+        ])
+    ) => 
+        let visRange = Core.Types.VisualRange.create(~startLine, ~startColumn, ~endLine, ~endColumn, ~mode, ());
+        [VisualRangeUpdate(visRange)];
     | (
         "oni_plugin_notify",
         M.List([

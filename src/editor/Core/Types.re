@@ -94,6 +94,7 @@ module Position = {
 };
 
 module Range = {
+  [@deriving show({with_path: false})]
   type t = {
     startPosition: Position.t,
     endPosition: Position.t,
@@ -235,28 +236,6 @@ module BufferUpdate = {
   };
 };
 
-module Range = {
-  [@deriving show({with_path: false})]
-  type t = {
-    startPos: Position.t,
-    endPos: Position.t,
-  };
-
-  let create =
-      (
-        ~startLine: Index.t,
-        ~startColumn: Index.t,
-        ~endLine: Index.t,
-        ~endColumn: Index.t,
-        (),
-      ) => {
-    let startPos = Position.create(startLine, startColumn);
-    let endPos = Position.create(endLine, endColumn);
-
-    {startPos, endPos};
-  };
-};
-
 module Tabline = {
   [@deriving show({with_path: false})]
   type t = {
@@ -380,9 +359,9 @@ module VisualRange = {
     let range =
       Range.create(
         ~startLine=OneBasedIndex(startLine),
-        ~startColumn=OneBasedIndex(startColumn),
+        ~startCharacter=OneBasedIndex(startColumn),
         ~endLine=OneBasedIndex(endLine),
-        ~endColumn=OneBasedIndex(endColumn),
+        ~endCharacter=OneBasedIndex(endColumn),
         (),
       );
 
