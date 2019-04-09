@@ -45,6 +45,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 #### Build the front-end
 
 - `git clone https://github.com/onivim/oni2`
+- `cd oni2`
 - `esy install`
 - `esy bootstrap`
 - `esy build`
