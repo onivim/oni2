@@ -14,7 +14,7 @@ type split('a) = {
   id: int,
   component: 'a => React.syntheticElement,
   layout,
-  /** These values are proportions of the full screen */
+  /* if omitted the split will grow to occupy whatever space is available */
   width: option(int),
   height: option(int),
 };
@@ -41,8 +41,8 @@ let createSplit = (~id=?, ~width=?, ~height=?, ~component, ~layout, ()) => {
 
 let empty = IntMap.empty;
 let add = IntMap.add;
-
 let remove = IntMap.remove;
+
 let toList = map =>
   IntMap.fold((_key, split, accum) => [split, ...accum], map, [])
   |> List.sort((s1, s2) => compare(s1.id, s2.id));
