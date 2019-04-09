@@ -88,6 +88,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       }
     );
 
+  let requestVisualRangeUpdateEffect = 
+    Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
+                            neovimProtocol.requestVisualRangeUpdate());
+
   let updater = (state, action) => {
     switch (action) {
     | Model.Actions.Init =>
@@ -107,6 +111,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         openConfigFileEffect(path),
       )
+    | Model.Actions.CursorMove(_) => (state, requestVisualRangeUpdateEffect)
+    | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
@@ -142,6 +148,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
               | TablineUpdate(tabs) => TablineUpdate(tabs)
               | ModeChanged(_) => ChangeMode(Other)
+              | VisualRangeUpdate(vr) => SelectionChanged(vr)
               | CursorMoved(c) =>
                 CursorMove(
                   Core.Types.Position.create(c.cursorLine, c.cursorColumn),
