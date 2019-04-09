@@ -93,7 +93,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.requestVisualRangeUpdate()
     );
 
-  let updater = (state, action) => {
+  let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
@@ -112,7 +112,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         openConfigFileEffect(path),
       )
-    | Model.Actions.CursorMove(_) => (state, requestVisualRangeUpdateEffect)
+    | Model.Actions.CursorMove(_) => (state, state.mode === Core.Types.Mode.Visual ? requestVisualRangeUpdateEffect : Isolinear.Effect.none)
     | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
