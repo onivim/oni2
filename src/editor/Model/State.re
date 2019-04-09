@@ -25,7 +25,7 @@ type t = {
   activeBufferId: int,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  menu: Menu.t,
+  menu: Menu.t(t),
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
@@ -36,7 +36,7 @@ type t = {
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
-  windows: WindowManager.t,
+  windows: WindowManager.t(t),
 };
 
 let create: unit => t =

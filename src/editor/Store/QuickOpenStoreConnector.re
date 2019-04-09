@@ -15,8 +15,8 @@ let start = (rg: Core.Ripgrep.t) => {
     Str.replace_first(re, "", fullPath);
   };
 
-  let stringToCommand: (string, string) => Model.Actions.menuCommand =
-    (parentDir, fullPath) => {
+  let stringToCommand = (parentDir: string, fullPath: string) =>
+    Model.Actions.{
       category: None,
       name: getDisplayPath(fullPath, parentDir),
       command: () => Model.Actions.OpenFileByPath(fullPath),
@@ -49,12 +49,11 @@ let start = (rg: Core.Ripgrep.t) => {
       dispatch(Model.Actions.SetInputControlMode(TextInputFocus));
     });
 
-  let updater = (state, action) => {
+  let updater = (state, action) =>
     switch (action) {
     | Model.Actions.QuickOpen => (state, openQuickOpenEffect)
     | _ => (state, Isolinear.Effect.none)
     };
-  };
 
   updater;
 };
