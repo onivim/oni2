@@ -59,7 +59,7 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
-let reduce: (State.t, Actions.t) => State.t =
+let reduce: (State.t, Actions.t(State.t)) => State.t =
   (s, a) => {
     let s = {
       ...s,

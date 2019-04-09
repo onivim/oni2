@@ -1,7 +1,7 @@
-type t = {
+type t('a) = {
   searchQuery: string,
   isOpen: bool,
-  commands: list(Actions.menuCommand),
+  commands: list(Actions.menuCommand('a)),
   selectedItem: int,
   dispose: unit => unit,
 };
