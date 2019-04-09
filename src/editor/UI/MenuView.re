@@ -90,26 +90,25 @@ let createElement =
 
     React.(
       hooks,
-      menu.isOpen ?
-        <View style={containerStyles(theme)}>
-          <View style=Style.[width(menuWidth), padding(5)]>
-            <Input
-              autofocus=true
-              placeholder="type here to search the menu"
-              cursorColor=Colors.white
-              style={inputStyles(font.fontFile)}
-              onChange=handleChange
-              onKeyDown=handleKeyDown
-            />
-          </View>
-          <View>
-            <FlatList
-              rowHeight=40
-              height={menuHeight - 50}
-              width=menuWidth
-              count={List.length(menu.commands)}
-              render={
-                index => {
+      menu.isOpen
+        ? <View style={containerStyles(theme)}>
+            <View style=Style.[width(menuWidth), padding(5)]>
+              <Input
+                autofocus=true
+                placeholder="type here to search the menu"
+                cursorColor=Colors.white
+                style={inputStyles(font.fontFile)}
+                onChange=handleChange
+                onKeyDown=handleKeyDown
+              />
+            </View>
+            <View>
+              <FlatList
+                rowHeight=40
+                height={menuHeight - 50}
+                width=menuWidth
+                count={List.length(menu.commands)}
+                render={index => {
                   let cmd = List.nth(menu.commands, index);
                   <MenuItem
                     onClick
@@ -120,11 +119,10 @@ let createElement =
                     onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
                   />;
-                }
-              }
-            />
+                }}
+              />
+            </View>
           </View>
-        </View> :
-        React.listToElement([]),
+        : React.listToElement([]),
     );
   });

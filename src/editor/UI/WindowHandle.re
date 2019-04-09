@@ -48,7 +48,7 @@ let createElement =
   component(hooks =>
     (
       hooks,
-      isLastItem(splits, windowNumber) ?
-        React.empty : <View style={spacer(layout)} />,
+      isLastItem(splits, windowNumber)
+        ? React.empty : <View style={spacer(layout)} />,
     )
   );
