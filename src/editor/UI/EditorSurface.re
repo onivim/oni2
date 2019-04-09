@@ -374,7 +374,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                             - Index.toZeroBasedInt(r.startPosition.character),
                           )
                           *. fontWidth,
-                        ~color=theme.colors.editorLineHighlightBackground,
+                        ~color=theme.colors.editorSelectionBackground,
                         (),
                       ),
                     ranges,
