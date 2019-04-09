@@ -42,7 +42,8 @@
     "@reason-native/rely": "1.3.1",
     "reason-jsonrpc": "*",
     "reason-glfw": "^3.2.1022",
-    "isolinear": "^2.0.0"
+    "isolinear": "^2.0.0",
+    "reasonFuzz": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
@@ -51,7 +52,8 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#daa00be",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349"
+    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#a73f349",
+    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
