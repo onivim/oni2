@@ -2,124 +2,99 @@
  * Tokenizer.re
  */
 
-open Revery;
-
-open Oni_Core;
 open Oni_Core.Types;
-open Oni_Extensions;
 
-type t = {
-  text: string,
-  startPosition: Index.t,
-  endPosition: Index.t,
-  color: Color.t,
+open CamomileLibrary;
+
+module TextRun = {
+  type t = {
+    text: string,
+    /*
+     * Indices refer to the UTF-8 position in the parent string
+     */
+    startIndex: Index.t,
+    endIndex: Index.t,
+    /*
+     * Positions refer to the 'visual' position of the string
+     *
+     * If there is a character, like `\t`, or characters
+     * with wcwidth > 1, then this would be different
+     * than startIndex / endIndex
+     */
+    startPosition: Index.t,
+    endPosition: Index.t,
+  };
+
+  let create =
+      (~text, ~startIndex, ~endIndex, ~startPosition, ~endPosition, ()) => {
+    text,
+    startIndex,
+    endIndex,
+    startPosition,
+    endPosition,
+  };
 };
 
-let _isWhitespace = c => {
-  c == ' ' || c == '\t' || c == '\r' || c == '\n';
-};
+type splitFunc = (int, UChar.t, int, UChar.t) => bool;
 
-let _isNonWhitespace = c => !_isWhitespace(c);
+type measureFunc = UChar.t => int;
 
-let _moveToNextMatchingToken = (f, str, startIdx) => {
-  let idx = ref(startIdx);
-  let length = Zed_utf8.length(str);
+let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
+  let pos = ref(start);
   let found = ref(false);
 
-  while (idx^ < length && ! found^) {
-    let c = str.[idx^];
-    found := f(c);
+  while (pos^ < max - 1 && ! found^) {
+    let firstPos = pos^;
+    let secondPos = pos^ + 1;
+    let char = Zed_utf8.get(s, firstPos);
+    let nextChar = Zed_utf8.get(s, secondPos);
+
+    if (f(firstPos, char, secondPos, nextChar)) {
+      found := true;
+    };
 
     if (! found^) {
-      idx := idx^ + 1;
+      incr(pos);
     };
   };
 
-  idx^;
+  pos^;
 };
 
-let _moveToNextWhitespace = _moveToNextMatchingToken(_isWhitespace);
-let _moveToNextNonWhitespace = _moveToNextMatchingToken(_isNonWhitespace);
+let defaultMeasure: measureFunc = _ => 1;
 
-let _getAllTokens = (s: string, color: Color.t, startPos, endPos) => {
-  let idx = ref(startPos);
-  let tokens: ref(list(t)) = ref([]);
+let tokenize = (~f: splitFunc, ~measure=defaultMeasure, s: string) => {
+  let startIndex = 0;
+  let maxIndex = Zed_utf8.length(s);
+  let idx = ref(startIndex);
+  let tokens: ref(list(TextRun.t)) = ref([]);
 
-  let endPos = min(endPos, Zed_utf8.length(s));
+  let offset = ref(0);
 
-  while (idx^ < endPos) {
-    let startToken = _moveToNextNonWhitespace(s, idx^);
-    let endToken = min(endPos, _moveToNextWhitespace(s, startToken + 1));
+  while (idx^ < maxIndex) {
+    let startToken = idx^;
+    let startOffset = offset^;
+    let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
 
-    if (startToken < endPos) {
-      let length = endToken - startToken;
-      let text = Zed_utf8.sub(s, startToken, length);
+    let text = Zed_utf8.sub(s, startToken, endToken - startToken);
+    let endOffset =
+      startOffset
+      + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
 
-      let token: t = {
-        text,
-        startPosition: ZeroBasedIndex(startToken),
-        endPosition: ZeroBasedIndex(endToken),
-        color,
-      };
-
-      tokens := List.append([token], tokens^);
-    };
-
-    idx := endToken + 1;
-  };
-  tokens^;
-};
-
-let rec getTokens =
-        (
-          tokens: list(ColorizedToken.t),
-          pos: int,
-          s: string,
-          theme: Theme.t,
-          colorMap: ColorMap.t,
-        ) => {
-  let defaultForegroundColor: Color.t = theme.colors.editorForeground;
-  let defaultBackgroundColor: Color.t = theme.colors.editorBackground;
-
-  let ret: list(t) =
-    switch (tokens) {
-    | [] => _getAllTokens(s, defaultForegroundColor, pos, Zed_utf8.length(s))
-    | [last] =>
-      _getAllTokens(
-        s,
-        ColorMap.get(
-          colorMap,
-          last.foregroundColor,
-          defaultForegroundColor,
-          defaultBackgroundColor,
-        ),
-        last.index,
-        Zed_utf8.length(s),
-      )
-    | [v1, v2, ...tail] =>
-      let nextBatch =
-        _getAllTokens(
-          s,
-          ColorMap.get(
-            colorMap,
-            v1.foregroundColor,
-            defaultForegroundColor,
-            defaultBackgroundColor,
-          ),
-          v1.index,
-          v2.index,
-        );
-      List.append(
-        getTokens([v2, ...tail], v2.index, s, theme, colorMap),
-        nextBatch,
+    let textRun =
+      TextRun.create(
+        ~text,
+        ~startIndex=ZeroBasedIndex(startToken),
+        ~endIndex=ZeroBasedIndex(endToken),
+        ~startPosition=ZeroBasedIndex(startOffset),
+        ~endPosition=ZeroBasedIndex(endOffset),
+        (),
       );
-    };
 
-  ret;
-};
-
-let tokenize:
-  (string, Theme.t, list(ColorizedToken.t), ColorMap.t) => list(t) =
-  (s, theme, tokenColors, colorMap) => {
-    getTokens(tokenColors, 0, s, theme, colorMap) |> List.rev;
+    tokens := [textRun, ...tokens^];
+    idx := endToken;
+    offset := endOffset;
   };
+
+  tokens^ |> List.rev;
+};
