@@ -18,7 +18,6 @@ let component = React.component("EditorSplits");
 let getSplitStyle = split =>
   Style.(
     switch (split) {
-    | {layout: Full, _} => [top(0), bottom(0), flexGrow(1)]
     | {layout: VerticalRight, width: Some(w), _}
     | {layout: VerticalLeft, width: Some(w), _} => [
         top(0),
