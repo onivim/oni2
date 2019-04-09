@@ -96,13 +96,14 @@ let start = () => {
     | _ => (state, Isolinear.Effect.none)
     };
 
-  let updater = (state: Model.State.t, action: Model.Actions.t) => {
-    let (menuState, menuEffect) = menuUpdater(state.menu, action);
-
-    let state = {...state, menu: menuState};
-
-    (state, menuEffect);
-  };
+  let updater = (state: Model.State.t, action: Model.Actions.t) =>
+    if (action === Model.Actions.Tick) {
+      (state, Isolinear.Effect.none);
+    } else {
+      let (menuState, menuEffect) = menuUpdater(state.menu, action);
+      let state = {...state, menu: menuState};
+      (state, menuEffect);
+    };
 
   (updater, stream);
 };

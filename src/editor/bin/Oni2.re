@@ -43,9 +43,11 @@ let init = app => {
   PreflightChecks.run();
 
   let currentState = ref(Model.State.create());
+  let isDirty = ref(false);
 
   let onStateChanged = v => {
     currentState := v;
+    isDirty := true;
   };
 
   let dispatch =
@@ -58,6 +60,7 @@ let init = app => {
     );
 
   let render = () => {
+    isDirty := false;
     let state = currentState^;
     GlobalContext.set({
       state,
@@ -83,7 +86,7 @@ let init = app => {
 
   UI.start(w, render);
 
-  Window.setShouldRenderCallback(w, _ => true);
+  Window.setShouldRenderCallback(w, _ => isDirty^);
 
   dispatch(Model.Actions.Init);
 

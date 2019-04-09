@@ -73,13 +73,6 @@ let getRangesForBlockSelection =
   let pos = ref(startLine);
   let ranges = ref([]);
 
-  print_endline(
-    "GET RANGES FOR BLOCK SELECTION: "
-    ++ string_of_int(startC)
-    ++ "|"
-    ++ string_of_int(endColumn),
-  );
-
   while (pos^ <= endLine) {
     let currentPos = pos^;
 
