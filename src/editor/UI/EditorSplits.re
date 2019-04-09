@@ -15,7 +15,7 @@ let component = React.component("EditorSplits");
    TODO: width and height should be used as percentages of the
    window size not as direct values
  */
-let verticalStyles = (w, h, layout) =>
+let getSplitStyle = ({layout, height: h, width: w, _}) =>
   Style.(
     switch (layout) {
     | Full => [top(0), bottom(0), flexGrow(1)]
@@ -38,18 +38,17 @@ let createElement = (~children as _, ~state: State.t, ()) =>
              |> (
                splits =>
                  List.mapi(
-                   (index, {width, height, component, layout, _}: split) => {
-                     let splitStyles = verticalStyles(width, height, layout);
-                     [
-                       <View style=splitStyles> {component()} </View>,
-                       <WindowHandle
-                         splits
-                         layout
-                         windowNumber=index
-                         theme={state.theme}
-                       />,
-                     ];
-                   },
+                   (index, split) => [
+                     <View style={getSplitStyle(split)}>
+                       {split.component()}
+                     </View>,
+                     <WindowHandle
+                       splits
+                       layout={split.layout}
+                       windowNumber=index
+                       theme={state.theme}
+                     />,
+                   ],
                    splits,
                  )
                  |> List.flatten
