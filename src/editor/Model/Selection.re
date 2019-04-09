@@ -73,7 +73,10 @@ let getRangesForBlockSelection =
   let pos = ref(startLine);
   let ranges = ref([]);
 
-  let (startC, endColumn) = (min(startC, endColumn), max(startC,endColumn));
+  let (startC, endColumn) = (
+    min(startC, endColumn),
+    max(startC, endColumn),
+  );
 
   while (pos^ <= endLine) {
     let currentPos = pos^;
@@ -127,7 +130,11 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
 
     let bufferLines = Buffer.getNumberOfLines(buffer);
 
-    let endLine = min(Index.toZeroBasedInt(selection.range.endPosition.line), bufferLines - 1);
+    let endLine =
+      min(
+        Index.toZeroBasedInt(selection.range.endPosition.line),
+        bufferLines - 1,
+      );
     let endCharacter =
       Index.toZeroBasedInt(selection.range.endPosition.character);
 
