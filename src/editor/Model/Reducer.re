@@ -118,13 +118,13 @@ let reduce: (State.t, Actions.t) => State.t =
       | AddSplit(split) => {
           ...s,
           windows: {
-            splits: Core.IntMap.add(split.id, split, s.windows.splits),
+            splits: WindowManager.add(split.id, split, s.windows.splits),
           },
         }
       | RemoveSplit(id) => {
           ...s,
           windows: {
-            splits: Core.IntMap.remove(id, s.windows.splits),
+            splits: WindowManager.remove(id, s.windows.splits),
           },
         }
       | _ => s
