@@ -84,8 +84,8 @@ let start =
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((_state, action)) =>
       switch (action) {
-      | SetEditorFont(_)
-      | SetEditorSize(_)
+      | Model.Actions.SetEditorFont(_)
+      | Model.Actions.SetEditorSize(_)
       | Model.Actions.BufferUpdate(_)
       | Model.Actions.BufferEnter(_) =>
         Some(Model.Actions.RecalculateEditorView)
