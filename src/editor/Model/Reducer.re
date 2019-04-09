@@ -7,6 +7,8 @@
 open Actions;
 open Oni_Core.Types;
 
+module Core = Oni_Core;
+
 let sortTabsById = tabs =>
   State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs));
 
@@ -113,6 +115,18 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
       | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
+      | AddSplit(split) => {
+          ...s,
+          windows: {
+            splits: Core.IntMap.add(split.id, split, s.windows.splits),
+          },
+        }
+      | RemoveSplit(id) => {
+          ...s,
+          windows: {
+            splits: Core.IntMap.remove(id, s.windows.splits),
+          },
+        }
       | _ => s
       };
     };

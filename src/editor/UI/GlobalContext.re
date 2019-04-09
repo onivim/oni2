@@ -18,7 +18,7 @@ type t = {
   editorScroll,
   openFileById: int => unit,
   closeFileById: int => unit,
-  dispatch: Actions.t => unit,
+  dispatch: Actions.t(State.t) => unit,
   state: State.t,
 };
 
