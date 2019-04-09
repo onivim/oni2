@@ -47,7 +47,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let mode = state.mode;
     let hooks =
       React.Hooks.effect(
-        Always,
+        OnMount,
         () => {
           GlobalContext.current().dispatch(
             AddSplit({
@@ -55,7 +55,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               layout: Full,
               width: 100,
               height: 100,
-              component: () => <EditorSurface state />,
+              component: state => <EditorSurface state />,
             }),
           );
           GlobalContext.current().dispatch(
@@ -64,7 +64,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               layout: VerticalLeft,
               width: 50,
               height: 100,
-              component: () => <Dock state />,
+              component: state => <Dock state />,
             }),
           );
           None;

@@ -7,7 +7,7 @@
 open Revery;
 open UI;
 open Oni_Model;
-open Oni_Core.Types.EditorSplits;
+open WindowManager;
 
 let component = React.component("EditorSplits");
 
@@ -43,7 +43,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
                    (i, split) => {
                      let style = getSplitStyle(split);
                      [
-                       <View style> {split.component()} </View>,
+                       <View style> {split.component(state)} </View>,
                        <WindowHandle
                          splits
                          layout={split.layout}
