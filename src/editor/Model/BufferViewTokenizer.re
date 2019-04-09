@@ -43,7 +43,13 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   };
 };
 
-let textRunToToken = (colorMap, theme: Theme.t, tokenColorArray: array(ColorizedToken.t), r: Tokenizer.TextRun.t) => {
+let textRunToToken =
+    (
+      colorMap,
+      theme: Theme.t,
+      tokenColorArray: array(ColorizedToken.t),
+      r: Tokenizer.TextRun.t,
+    ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let colorIndex = tokenColorArray[startIndex];
   let color =
