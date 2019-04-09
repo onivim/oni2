@@ -1,5 +1,5 @@
 open Oni_Core;
-open Oni_Extensions;    
+open Oni_Extensions;
 open Oni_Model;
 open BenchFramework;
 
@@ -14,7 +14,9 @@ let options = Reperf.Options.create(~iterations=1000, ());
 let setup = () => ();
 
 let tokenizeLine = () => {
-    let _ = BufferViewTokenizer.tokenize(giantString, theme, noTokens, colorMap);
+  let _ =
+    BufferViewTokenizer.tokenize(giantString, theme, noTokens, colorMap);
+  ();
 };
 
 bench(

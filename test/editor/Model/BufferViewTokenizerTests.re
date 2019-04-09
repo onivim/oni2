@@ -13,17 +13,20 @@ let colorMap = ColorMap.create();
 
 describe("tokenize", ({test, _}) => {
   test("empty string", ({expect}) => {
-    let result = BufferViewTokenizer.tokenize("", theme, tokenColors, colorMap);
+    let result =
+      BufferViewTokenizer.tokenize("", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string with only whitespace", ({expect}) => {
-    let result = BufferViewTokenizer.tokenize("   \t", theme, tokenColors, colorMap);
+    let result =
+      BufferViewTokenizer.tokenize("   \t", theme, tokenColors, colorMap);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("single word token", ({expect}) => {
-    let result = BufferViewTokenizer.tokenize("testWord", theme, tokenColors, colorMap);
+    let result =
+      BufferViewTokenizer.tokenize("testWord", theme, tokenColors, colorMap);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -39,7 +42,12 @@ describe("tokenize", ({test, _}) => {
 
   test("single word token, surrounded by whitespace", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("  testWord  ", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "  testWord  ",
+        theme,
+        tokenColors,
+        colorMap,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -54,7 +62,8 @@ describe("tokenize", ({test, _}) => {
   });
 
   test("single letter token, no spaces", ({expect}) => {
-    let result = BufferViewTokenizer.tokenize("a", theme, tokenColors, colorMap);
+    let result =
+      BufferViewTokenizer.tokenize("a", theme, tokenColors, colorMap);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -73,7 +82,8 @@ describe("tokenize", ({test, _}) => {
       ColorizedToken.create(0, 0),
       ColorizedToken.create(1, 0),
     ];
-    let result = BufferViewTokenizer.tokenize("ab", theme, tokenColors, colorMap);
+    let result =
+      BufferViewTokenizer.tokenize("ab", theme, tokenColors, colorMap);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {

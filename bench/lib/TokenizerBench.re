@@ -7,11 +7,13 @@ let splitEverything = (_, _, _, _) => true;
 let splitNothing = (_, _, _, _) => false;
 
 let tokenizeWithSplits = () => {
-    let _ = Tokenizer.tokenize(~f=splitEverything, giantString);
+  let _ = Tokenizer.tokenize(~f=splitEverything, giantString);
+  ();
 };
 
 let tokenizeWithoutSplits = () => {
-    let _ = Tokenizer.tokenize(~f=splitNothing, giantString);
+  let _ = Tokenizer.tokenize(~f=splitNothing, giantString);
+  ();
 };
 
 let options = Reperf.Options.create(~iterations=1000, ());

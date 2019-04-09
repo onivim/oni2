@@ -31,6 +31,38 @@ let _isWhitespace = c => {
 
 let _isNonWhitespace = c => !_isWhitespace(c);
 
+let filterRuns = (r: Tokenizer.TextRun.t) => {
+  let len = Zed_utf8.length(r.text);
+
+  if (len == 0) {
+    false;
+  } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) {
+    false;
+  } else {
+    true;
+  };
+};
+
+let textRunToToken = (colorMap, theme: Theme.t, tokenColorArray: array(ColorizedToken.t), r: Tokenizer.TextRun.t) => {
+  let startIndex = Index.toZeroBasedInt(r.startIndex);
+  let colorIndex = tokenColorArray[startIndex];
+  let color =
+    ColorMap.get(
+      colorMap,
+      colorIndex.foregroundColor,
+      theme.colors.editorForeground,
+      theme.colors.editorBackground,
+    );
+
+  let ret: t = {
+    text: r.text,
+    startPosition: r.startPosition,
+    endPosition: r.endPosition,
+    color,
+  };
+  ret;
+};
+
 let tokenize:
   (string, Theme.t, list(ColorizedToken.t), ColorMap.t) => list(t) =
   (s, theme, tokenColors, colorMap) => {
@@ -62,39 +94,7 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2;
     };
 
-    let _filterRuns = (r: Tokenizer.TextRun.t) => {
-      let len = Zed_utf8.length(r.text);
-
-      if (len == 0) {
-        false;
-      } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) {
-        false;
-      } else {
-        true;
-      };
-    };
-
-    let toToken = (r: Tokenizer.TextRun.t) => {
-      let startIndex = Index.toZeroBasedInt(r.startIndex);
-      let colorIndex = tokenColorArray[startIndex];
-      let color =
-        ColorMap.get(
-          colorMap,
-          colorIndex.foregroundColor,
-          theme.colors.editorForeground,
-          theme.colors.editorBackground,
-        );
-
-      let ret: t = {
-        text: r.text,
-        startPosition: r.startPosition,
-        endPosition: r.endPosition,
-        color,
-      };
-      ret;
-    };
-
     Tokenizer.tokenize(~f=split, ~measure, s)
-    |> List.filter(_filterRuns)
-    |> List.map(toToken);
+    |> List.filter(filterRuns)
+    |> List.map(textRunToToken(colorMap, theme, tokenColorArray));
   };
