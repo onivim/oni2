@@ -50,22 +50,23 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         OnMount,
         () => {
           GlobalContext.current().dispatch(
-            AddSplit({
-              id: 0,
-              layout: Full,
-              width: 100,
-              height: 100,
-              component: state => <EditorSurface state />,
-            }),
+            AddSplit(
+              WindowManager.createSplit(
+                ~layout=VerticalLeft,
+                ~width=50,
+                ~component=state => <Dock state />,
+                (),
+              ),
+            ),
           );
           GlobalContext.current().dispatch(
-            AddSplit({
-              id: 1,
-              layout: VerticalLeft,
-              width: 50,
-              height: 100,
-              component: state => <Dock state />,
-            }),
+            AddSplit(
+              WindowManager.createSplit(
+                ~layout=VerticalRight,
+                ~component=state => <EditorSurface state />,
+                (),
+              ),
+            ),
           );
           None;
         },

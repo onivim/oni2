@@ -13,18 +13,37 @@ let component = React.component("EditorSplits");
 
 /**
    TODO:
-   1.) width and height should be used as percentages of the
-   window size not as direct values
-   2.) This currently only handles halves not quarters of the screen size
+   1.) This currently only handles halves not quarters of the screen size
  */
-let getSplitStyle = ({layout, height: h, width: w, _}) =>
+let getSplitStyle = split =>
   Style.(
-    switch (layout) {
-    | Full => [top(0), bottom(0), flexGrow(1)]
-    | VerticalLeft => [top(0), bottom(0), width(w)]
-    | VerticalRight => [top(0), bottom(0), width(w)]
-    | HorizontalTop => [left(0), right(0), height(h)]
-    | HorizontalBottom => [left(0), right(0), height(h)]
+    switch (split) {
+    | {layout: Full, _} => [top(0), bottom(0), flexGrow(1)]
+    | {layout: VerticalRight, width: Some(w), _}
+    | {layout: VerticalLeft, width: Some(w), _} => [
+        top(0),
+        bottom(0),
+        width(w),
+      ]
+    | {layout: VerticalRight, width: None, _}
+    | {layout: VerticalLeft, width: None, _} => [
+        top(0),
+        bottom(0),
+        flexGrow(1),
+      ]
+    | {layout: HorizontalBottom, height: None, _}
+    | {layout: HorizontalTop, height: None, _} => [
+        left(0),
+        right(0),
+        flexGrow(1),
+      ]
+    | {layout: HorizontalTop, height: Some(h), _}
+    | {layout: HorizontalBottom, height: Some(h), _} => [
+        left(0),
+        right(0),
+        height(h),
+        flexGrow(1),
+      ]
     }
   );
 
