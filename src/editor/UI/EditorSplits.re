@@ -12,8 +12,10 @@ open Oni_Core.Types.EditorSplits;
 let component = React.component("EditorSplits");
 
 /**
-   TODO: width and height should be used as percentages of the
+   TODO:
+   1.) width and height should be used as percentages of the
    window size not as direct values
+   2.) This currently only handles halves not quarters of the screen size
  */
 let getSplitStyle = ({layout, height: h, width: w, _}) =>
   Style.(
@@ -21,8 +23,8 @@ let getSplitStyle = ({layout, height: h, width: w, _}) =>
     | Full => [top(0), bottom(0), flexGrow(1)]
     | VerticalLeft => [top(0), bottom(0), width(w)]
     | VerticalRight => [top(0), bottom(0), width(w)]
-    | HorizontalTop => [top(0), bottom(0), height(h)]
-    | HorizontalBottom => [top(0), bottom(0), height(h)]
+    | HorizontalTop => [left(0), right(0), height(h)]
+    | HorizontalBottom => [left(0), right(0), height(h)]
     }
   );
 
@@ -38,17 +40,18 @@ let createElement = (~children as _, ~state: State.t, ()) =>
              |> (
                splits =>
                  List.mapi(
-                   (index, split) => [
-                     <View style={getSplitStyle(split)}>
-                       {split.component()}
-                     </View>,
-                     <WindowHandle
-                       splits
-                       layout={split.layout}
-                       windowNumber=index
-                       theme={state.theme}
-                     />,
-                   ],
+                   (i, split) => {
+                     let style = getSplitStyle(split);
+                     [
+                       <View style> {split.component()} </View>,
+                       <WindowHandle
+                         splits
+                         layout={split.layout}
+                         windowNumber=i
+                         theme={state.theme}
+                       />,
+                     ];
+                   },
                    splits,
                  )
                  |> List.flatten
