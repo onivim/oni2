@@ -23,4 +23,5 @@ module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
 module Tokenizer = Tokenizer;
+module Tokenizer2 = Tokenizer2;
 module Wildmenu = Wildmenu;
