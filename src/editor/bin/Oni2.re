@@ -163,8 +163,6 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-
-  ();
 };
 
 /* Let's get this party started! */

@@ -344,6 +344,45 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 (),
               );
 
+              /* Draw selection ranges */
+              switch (activeBuffer) {
+              | Some(b) =>
+                let ranges = Selection.getRanges(state.editor.selection, b);
+                Oni_Core.Types.Range.(
+                  List.iter(
+                    (r: Range.t) =>
+                      Shapes.drawRect(
+                        ~transform,
+                        ~x=
+                          lineNumberWidth
+                          +. float_of_int(
+                               Index.toZeroBasedInt(
+                                 r.startPosition.character,
+                               ),
+                             )
+                          *. fontWidth,
+                        ~y=
+                          fontHeight
+                          *. float_of_int(
+                               Index.toZeroBasedInt(r.startPosition.line),
+                             )
+                          -. state.editor.scrollY,
+                        ~height=fontHeight,
+                        ~width=
+                          float_of_int(
+                            Index.toZeroBasedInt(r.endPosition.character)
+                            - Index.toZeroBasedInt(r.startPosition.character),
+                          )
+                          *. fontWidth,
+                        ~color=theme.colors.editorSelectionBackground,
+                        (),
+                      ),
+                    ranges,
+                  )
+                );
+              | None => ()
+              };
+
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,

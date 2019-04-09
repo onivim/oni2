@@ -57,6 +57,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | TablineUpdate(Tabline.tabs)
+  | VisualRangeUpdate(Core.Types.VisualRange.t)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -195,6 +196,7 @@ let parseAutoCommand = (autocmd: string, args: list(Msgpck.t)) => {
         ~cursorLine=OneBasedIndex(cursorLine),
         ~cursorColumn=OneBasedIndex(cursorColumn),
         ~modified=modified == 1,
+        (),
       )
     | _ => raise(InvalidAutoCommandContext)
     };
@@ -244,6 +246,32 @@ let parse = (t: string, msg: Msgpck.t) => {
           ),
         ),
       ]
+    | (
+        "oni_plugin_notify",
+        M.List([
+          M.List([
+            M.String("oni_visual_range"),
+            M.List([
+              M.String(mode),
+              M.Int(startLine),
+              M.Int(startColumn),
+              M.Int(endLine),
+              M.Int(endColumn),
+            ]),
+          ]),
+        ]),
+      ) =>
+      let visRange =
+        Core.Types.VisualRange.create(
+          ~startLine,
+          ~startColumn,
+          ~endLine,
+          ~endColumn,
+          ~mode,
+          (),
+        );
+      print_endline("RANGE: " ++ Core.Types.VisualRange.show(visRange));
+      [VisualRangeUpdate(visRange)];
     | (
         "oni_plugin_notify",
         M.List([

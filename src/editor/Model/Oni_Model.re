@@ -20,6 +20,7 @@ module IconTheme = IconTheme;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module Reducer = Reducer;
+module Selection = Selection;
 module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;

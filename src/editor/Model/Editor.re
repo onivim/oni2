@@ -19,6 +19,7 @@ type t = {
   cursorPosition: Position.t,
   lineHeight: float,
   characterWidth: float,
+  selection: VisualRange.t,
 };
 
 let create = () => {
@@ -37,6 +38,7 @@ let create = () => {
     cursorPosition: Position.createFromZeroBasedIndices(0, 0),
     lineHeight: 1.,
     characterWidth: 1.,
+    selection: VisualRange.create(),
   };
   ret;
 };
@@ -303,6 +305,7 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 let reduce = (view, action, buffer) =>
   switch (action) {
   | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
+  | SelectionChanged(selection) => {...view, selection}
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY)
