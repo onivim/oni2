@@ -28,6 +28,8 @@ type t = {
    */
   [@key "editor.tabSize"]
   editorTabSize: int,
+  [@key "workbench.iconTheme"]
+  workbenchIconTheme: string,
 };
 
 let default = {
@@ -37,6 +39,7 @@ let default = {
   editorLineNumbers: Relative,
   editorInsertSpaces: true,
   editorTabSize: 4,
+  workbenchIconTheme: "vs-seti",
 };
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;

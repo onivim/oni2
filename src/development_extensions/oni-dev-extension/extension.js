@@ -21,10 +21,23 @@ function activate(context) {
 	});
 
     let disposable2 = vscode.workspace.onDidOpenTextDocument((e) => {
-        showData({
-            type: "workspace.onDidOpenTextDocument",
-            filename: e.fileName,
-        });
+        // TODO:
+        // Add command / option to toggle this
+        // showData({
+        //     type: "workspace.onDidOpenTextDocument",
+        //     filename: e.fileName,
+        // });
+    });
+
+    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+        // TODO:
+        // Add command / option to toggle this
+        // showData({
+        //     type: "workspace.onDidChangeTextDocument",
+        //     filename: e.document.fileName,
+        //     contentChanges: e.contentChanges,
+        //     fullText: e.document.getText(),
+        // });
     });
 
     // Create a simple status bar
@@ -34,6 +47,7 @@ function activate(context) {
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
 }
 
 // this method is called when your extension is deactivated

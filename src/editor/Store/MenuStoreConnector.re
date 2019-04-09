@@ -40,10 +40,21 @@ let start = () => {
 
   let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
     switch (action) {
-    | MenuPosition(pos) => (
+    | MenuPosition(index) => (
+        {...state, selectedItem: index},
+        Isolinear.Effect.none,
+      )
+    | MenuPreviousItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, pos, state.commands),
+          selectedItem: position(state.selectedItem, -1, state.commands),
+        },
+        Isolinear.Effect.none,
+      )
+    | MenuNextItem => (
+        {
+          ...state,
+          selectedItem: position(state.selectedItem, 1, state.commands),
         },
         Isolinear.Effect.none,
       )
@@ -70,7 +81,7 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {...state, isOpen: false, selectedItem: 0},
+        {...state, commands: [], isOpen: false, selectedItem: 0},
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>
@@ -85,13 +96,14 @@ let start = () => {
     | _ => (state, Isolinear.Effect.none)
     };
 
-  let updater = (state: Model.State.t, action: Model.Actions.t) => {
-    let (menuState, menuEffect) = menuUpdater(state.menu, action);
-
-    let state = {...state, menu: menuState};
-
-    (state, menuEffect);
-  };
+  let updater = (state: Model.State.t, action: Model.Actions.t) =>
+    if (action === Model.Actions.Tick) {
+      (state, Isolinear.Effect.none);
+    } else {
+      let (menuState, menuEffect) = menuUpdater(state.menu, action);
+      let state = {...state, menu: menuState};
+      (state, menuEffect);
+    };
 
   (updater, stream);
 };

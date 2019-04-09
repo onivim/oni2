@@ -88,7 +88,12 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       }
     );
 
-  let updater = (state, action) => {
+  let requestVisualRangeUpdateEffect =
+    Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
+      neovimProtocol.requestVisualRangeUpdate()
+    );
+
+  let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
@@ -107,6 +112,12 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         openConfigFileEffect(path),
       )
+    | Model.Actions.CursorMove(_) => (
+        state,
+        state.mode === Core.Types.Mode.Visual
+          ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
+      )
+    | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
@@ -142,12 +153,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
               | TablineUpdate(tabs) => TablineUpdate(tabs)
               | ModeChanged(_) => ChangeMode(Other)
+              | VisualRangeUpdate(vr) => SelectionChanged(vr)
               | CursorMoved(c) =>
                 CursorMove(
-                  Core.Types.BufferPosition.create(
-                    c.cursorLine,
-                    c.cursorColumn,
-                  ),
+                  Core.Types.Position.create(c.cursorLine, c.cursorColumn),
                 )
               | BufferWritePost({activeBufferId, _}) =>
                 BufferWritePost({
@@ -171,7 +180,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 })
               | BufferLines(bc) =>
                 BufferUpdate(
-                  Core.Types.BufferUpdate.create(
+                  Core.Types.BufferUpdate.createFromZeroBasedIndices(
                     ~id=bc.id,
                     ~startLine=bc.firstLine,
                     ~endLine=bc.lastLine,

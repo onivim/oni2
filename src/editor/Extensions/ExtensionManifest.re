@@ -33,3 +33,9 @@ type t = {
   extensionKind: [@default Ui] ExtensionKind.t,
   contributes: ExtensionContributions.t,
 };
+
+let remapPaths = (rootPath: string, manifest: t) => {
+  ...manifest,
+  contributes:
+    ExtensionContributions.remapPaths(rootPath, manifest.contributes),
+};

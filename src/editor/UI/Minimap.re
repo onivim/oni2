@@ -23,8 +23,8 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 /*     } */
 /* } */
 
-let renderLine = (transform, yOffset, tokens: list(Tokenizer.t)) => {
-  let f = (token: Tokenizer.t) => {
+let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
+  let f = (token: BufferViewTokenizer.t) => {
     let startPosition = Index.toZeroBasedInt(token.startPosition);
     let endPosition = Index.toZeroBasedInt(token.endPosition);
     let tokenWidth = endPosition - startPosition;
@@ -74,7 +74,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
-      ~getTokensForLine: int => list(Tokenizer.t),
+      ~getTokensForLine: int => list(BufferViewTokenizer.t),
       ~children as _,
       (),
     ) =>

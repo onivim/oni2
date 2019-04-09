@@ -13,15 +13,7 @@ module Model = Oni_Model;
 
 module Extensions = Oni_Extensions;
 
-let start = (extensions, setup: Core.Setup.t) => {
-  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
-
-  Core.Log.debug(
-    "-- Discovered: "
-    ++ string_of_int(List.length(extensions))
-    ++ " extensions",
-  );
-
+let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 

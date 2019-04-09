@@ -22,6 +22,7 @@ type t = {
   moveCursor: Cursor.move,
   getCurrentDir: unit => option(string),
   setCurrentDir: string => unit,
+  requestVisualRangeUpdate: unit => unit,
   /* TODO */
   /* Typed notifications */
   onNotification: Event.t(Notification.t),
@@ -59,7 +60,13 @@ let make = (nvimApi: NeovimApi.t) => {
   };
 
   let input = (key: string) =>
-    nvimApi.requestSync("nvim_input", M.List([M.String(key)])) |> ignore;
+    nvimApi.request("nvim_input", M.List([M.String(key)]));
+
+  let requestVisualRangeUpdate = () =>
+    nvimApi.request(
+      "nvim_command",
+      M.List([M.String("call OniUpdateVisualRange()")]),
+    );
 
   let bufAttach = id => {
     let _error =
@@ -165,5 +172,6 @@ let make = (nvimApi: NeovimApi.t) => {
     setCurrentDir,
     getCurrentDir,
     moveCursor,
+    requestVisualRangeUpdate,
   };
 };

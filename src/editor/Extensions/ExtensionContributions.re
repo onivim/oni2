@@ -3,6 +3,7 @@
  *
  * Types for VSCode Extension contribution points
  */
+open Rench;
 
 module Commands = {
   [@deriving (show, yojson({strict: false, exn: true}))]
@@ -41,10 +42,53 @@ module Theme = {
   };
 };
 
+module IconTheme = {
+  [@deriving (show, yojson({strict: false, exn: true}))]
+  type t = {
+    id: string,
+    label: string,
+    path: string,
+  };
+};
+
 [@deriving (show, yojson({strict: false, exn: true}))]
 type t = {
   commands: [@default []] list(Commands.t),
   languages: [@default []] list(Language.t),
   grammars: [@default []] list(Grammar.t),
   themes: [@default []] list(Theme.t),
+  iconThemes: [@default []] list(IconTheme.t),
+};
+
+let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
+  List.map(g => Grammar.{...g, path: Path.join(path, g.path)}, grammars);
+};
+
+let _remapThemes = (path: string, themes: list(Theme.t)) => {
+  List.map(t => Theme.{...t, path: Path.join(path, t.path)}, themes);
+};
+
+let _remapLanguages = (path: string, languages: list(Language.t)) => {
+  let remapPath = p =>
+    switch (p) {
+    | None => None
+    | Some(v) => Some(Path.join(path, v))
+    };
+
+  List.map(
+    l => Language.{...l, configuration: remapPath(l.configuration)},
+    languages,
+  );
+};
+
+let _remapIconThemes = (path: string, themes: list(IconTheme.t)) => {
+  List.map(t => IconTheme.{...t, path: Path.join(path, t.path)}, themes);
+};
+
+let remapPaths = (path: string, contributions: t) => {
+  ...contributions,
+  grammars: _remapGrammars(path, contributions.grammars),
+  themes: _remapThemes(path, contributions.themes),
+  languages: _remapLanguages(path, contributions.languages),
+  iconThemes: _remapIconThemes(path, contributions.iconThemes),
 };

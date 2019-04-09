@@ -18,7 +18,8 @@ type t =
   | TextChanged(TextChanged.t)
   | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
-  | CursorMove(BufferPosition.t)
+  | CursorMove(Position.t)
+  | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
   | RecalculateEditorView
@@ -44,12 +45,16 @@ type t =
   | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
+  | MenuNextItem
+  | MenuPreviousItem
   | MenuPosition(int)
   | CloseFileById(int)
   | OpenFileByPath(string)
   | OpenFileById(int)
   | OpenConfigFile(string)
   | QuickOpen
+  | SetLanguageInfo(LanguageInfo.t)
+  | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
