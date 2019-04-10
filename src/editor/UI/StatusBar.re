@@ -135,7 +135,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       |> List.filter(filterFunction(Alignment.Right))
       |> List.map(toStatusBarElement);
 
-    let indentation = Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
+    let indentation =
+      Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
     (
       hooks,
