@@ -14,6 +14,9 @@ set noswapfile
 
 syntax off
 
+set shiftwidth=1
+set tabstop=1
+
 let g:loaded_oni_interop_plugin = 1
 
 function OniNotify(args)
