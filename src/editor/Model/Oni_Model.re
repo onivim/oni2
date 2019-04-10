@@ -17,6 +17,7 @@ module Editor = Editor;
 module EditorLayout = EditorLayout;
 module Filter = Filter;
 module IconTheme = IconTheme;
+module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module Reducer = Reducer;
