@@ -20,4 +20,4 @@
         Oni_Extensions
         ReasonFuzz
     )
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
+    (preprocess (staged_pps ppx_import  ppx_deriving.show ppx_deriving_yojson)))

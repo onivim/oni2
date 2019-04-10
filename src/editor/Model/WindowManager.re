@@ -1,5 +1,6 @@
 open Revery_UI;
 
+[@deriving show]
 type layout =
   | VerticalLeft
   | VerticalRight
@@ -9,8 +10,10 @@ type layout =
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
+[@deriving show]
 type componentCreator = unit => React.syntheticElement;
 
+[@deriving show]
 type split = {
   id: int,
   parentId: int,
@@ -21,14 +24,17 @@ type split = {
   height: option(int),
 };
 
+[@deriving show]
 type direction =
   | Horizontal
   | Vertical;
 
+[@deriving show]
 type splitTree =
   | Parent(direction, int, list(splitTree))
   | Leaf(split);
 
+[@deriving show]
 type splits = splitTree;
 
 type t = {splits};

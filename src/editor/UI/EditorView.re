@@ -65,27 +65,26 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       React.Hooks.effect(
         OnMount,
         () => {
-          GlobalContext.current().dispatch(
-            AddSplit(
-              Window.createSplit(
-                ~parentId=0,
-                ~layout=VerticalLeft,
-                ~width=50,
-                ~component=splitFactory(state => <Dock state />),
-                (),
-              ),
-            ),
-          );
-          GlobalContext.current().dispatch(
-            AddSplit(
-              Window.createSplit(
-                ~parentId=0,
-                ~layout=VerticalRight,
-                ~component=splitFactory(state => <EditorSurface state />),
-                (),
-              ),
-            ),
-          );
+          let dispatch = GlobalContext.current().dispatch;
+          let dock =
+            Window.createSplit(
+              ~parentId=0,
+              ~layout=VerticalLeft,
+              ~width=50,
+              ~component=splitFactory(state => <Dock state />),
+              (),
+            );
+
+          let editor =
+            Window.createSplit(
+              ~parentId=0,
+              ~layout=VerticalRight,
+              ~component=splitFactory(state => <EditorSurface state />),
+              (),
+            );
+
+          dispatch(AddSplit(dock));
+          dispatch(AddSplit(editor));
           None;
         },
         hooks,
