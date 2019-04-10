@@ -73,13 +73,7 @@ let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
 type fontT = Types.UiFont.t;
 
 let createElement =
-    (
-      ~children as _,
-      ~font: fontT,
-      ~menu: Menu.t(State.t),
-      ~theme: Theme.t,
-      (),
-    ) =>
+    (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(

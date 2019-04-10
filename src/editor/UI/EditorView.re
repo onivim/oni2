@@ -42,6 +42,11 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
   List.map(f, tabs);
 };
 
+let splitFactory = (fn, ()) => {
+  let state = GlobalContext.current().getState();
+  fn(state);
+};
+
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
@@ -55,7 +60,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               Window.createSplit(
                 ~layout=VerticalLeft,
                 ~width=50,
-                ~component=state => <Dock state />,
+                ~component=splitFactory(state => <Dock state />),
                 (),
               ),
             ),
@@ -64,7 +69,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             AddSplit(
               Window.createSplit(
                 ~layout=VerticalRight,
-                ~component=state => <EditorSurface state />,
+                ~component=splitFactory(state => <EditorSurface state />),
                 (),
               ),
             ),

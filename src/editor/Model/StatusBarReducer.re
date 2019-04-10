@@ -6,10 +6,9 @@
 
 open StatusBarModel.Item;
 
-let reduce = (state: StatusBarModel.t, action: Actions.t(State.t)) => {
-  let removeItemById = (items: StatusBarModel.t, id) => {
+let reduce = (state: StatusBarModel.t, action: Actions.t) => {
+  let removeItemById = (items: StatusBarModel.t, id) =>
     List.filter(si => si.id !== id, items);
-  };
 
   switch (action) {
   | StatusBarAddItem(item) =>

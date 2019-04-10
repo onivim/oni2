@@ -1,6 +1,6 @@
 type oniCommand = {
   name: string,
-  command: unit => list(Actions.t(State.t)),
+  command: unit => list(Actions.t),
 };
 
 type t = list(oniCommand);

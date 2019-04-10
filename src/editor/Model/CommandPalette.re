@@ -1,5 +1,5 @@
 let create = setItems => {
-  let commands: list(Actions.menuCommand('a)) = [
+  let commands: list(Actions.menuCommand) = [
     {
       category: None,
       name: "Open configuration file",

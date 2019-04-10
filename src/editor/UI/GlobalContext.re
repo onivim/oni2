@@ -18,7 +18,8 @@ type t = {
   editorScroll,
   openFileById: int => unit,
   closeFileById: int => unit,
-  dispatch: Actions.t(State.t) => unit,
+  dispatch: Actions.t => unit,
+  getState: unit => State.t,
   state: State.t,
 };
 
@@ -27,6 +28,7 @@ let viewNoop: Views.viewOperation =
 
 let default = {
   state: State.create(),
+  getState: () => State.create(),
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
   openFileById: _ => (),

@@ -15,8 +15,6 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-type actions = Model.Actions.t(Model.State.t);
-
 let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
   let developmentExtensions =
@@ -47,7 +45,8 @@ let start =
     ) => {
   let state = Model.State.create();
 
-  let accumulatedEffects: ref(list(Isolinear.Effect.t(actions))) = ref([]);
+  let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
+    ref([]);
   let latestState: ref(Model.State.t) = ref(state);
 
   let extensions = discoverExtensions(setup);
@@ -94,7 +93,7 @@ let start =
       }
     );
 
-  let dispatch = (action: actions) => {
+  let dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];

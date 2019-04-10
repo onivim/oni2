@@ -7,7 +7,7 @@
 open Oni_Core.Types;
 open Oni_Extensions;
 
-type t('a) =
+type t =
   | Init
   | Tick
   | BufferDelete(BufferNotification.t)
@@ -40,8 +40,8 @@ type t('a) =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | MenuSearch(string)
-  | MenuOpen(menuCreator('a))
-  | MenuUpdate(list(menuCommand('a)))
+  | MenuOpen(menuCreator)
+  | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
   | MenuClose
   | MenuSelect
@@ -51,7 +51,7 @@ type t('a) =
   | CloseFileById(int)
   | OpenFileByPath(string)
   | OpenFileById(int)
-  | AddSplit(WindowManager.split('a))
+  | AddSplit(WindowManager.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
@@ -61,13 +61,13 @@ type t('a) =
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | Noop
-and menuCommand('a) = {
+and menuCommand = {
   category: option(string),
   name: string,
-  command: unit => t('a),
+  command: unit => t,
   icon: option(string),
 }
-and menuSetItems('a) = list(menuCommand('a)) => unit
-and menuCreationFunction('a) = menuSetItems('a) => unit
+and menuSetItems = list(menuCommand) => unit
+and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
-and menuCreator('a) = menuSetItems('a) => menuDisposeFunction;
+and menuCreator = menuSetItems => menuDisposeFunction;

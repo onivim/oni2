@@ -31,13 +31,13 @@ let start = () => {
       dispatch(action);
     });
 
-  let updateMenuCommands = (commands, state: Menu.t(State.t)) =>
+  let updateMenuCommands = (commands, state: Menu.t) =>
     List.append(state.commands, commands);
 
   let disposeMenuEffect = dispose =>
     Isolinear.Effect.create(~name="menu.dispose", dispose);
 
-  let rec menuUpdater = (state: Menu.t(State.t), action: Actions.t(State.t)) =>
+  let rec menuUpdater = (state: Menu.t, action: Actions.t) =>
     switch (action) {
     | MenuPosition(index) => (
         {...state, selectedItem: index},
