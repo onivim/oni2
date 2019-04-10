@@ -87,11 +87,22 @@ let createElement =
 
     let scrollY = state.editor.minimapScrollY;
 
+    let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
+      let visibleHeight: int = state.editor.size.pixelHeight;
+      let offsetMouseY: int = int_of_float(evt.mouseY) - Tab.tabHeight; 
+      let scrollTo: float = (float_of_int(offsetMouseY) /. float_of_int(visibleHeight)) *. float_of_int(totalHeight);
+      GlobalContext.current().editorScroll(
+        ~deltaY=scrollTo -. state.editor.scrollY,
+        (),
+      );
+    };
+
     ignore(width);
 
     (
       hooks,
-      <View style=absoluteStyle>
+      <View style=absoluteStyle onMouseDown>
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
