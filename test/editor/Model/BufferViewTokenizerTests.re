@@ -26,23 +26,23 @@ describe("tokenize", ({test, _}) => {
     expect.int(List.length(result)).toBe(0);
   });
 
-  /*   describe("indentation settings", ({test, _}) => { */
-  /*     test("accounts for tab size", ({expect}) => { */
-  /*          let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ()); */
-  /*          let result = Tokenizer.tokenize(~indentation, "\tabc", theme, tokenColors, colorMap); */
+    describe("indentation settings", ({test, _}) => {
+      test("accounts for tab size", ({expect}) => {
+           let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
+           let result = BufferViewTokenizer.tokenize("\tabc", theme, tokenColors, colorMap, indentation);
 
-  /*          let expectedTokens: list(Tokenizer.t) = [ */
-  /*          { */
-  /*             text: "abc", */
-  /*             startPosition:ZeroBasedIndex(4), */
-  /*             endPosition: ZeroBasedIndex(7), */
-  /*             color: Colors.red, */
-  /*          } */
-  /*          ]; */
+           let expectedTokens: list(BufferViewTokenizer.t) = [
+           {
+              text: "abc",
+              startPosition:ZeroBasedIndex(4),
+              endPosition: ZeroBasedIndex(7),
+              color: Colors.red,
+           }
+           ];
 
-  /*          validateTokens(expect, result, expectedTokens); */
-  /*     }); */
-  /*   }); */
+           validateTokens(expect, result, expectedTokens);
+      });
+    });
 
   test("string with only whitespace", ({expect}) => {
     let result =
