@@ -41,6 +41,7 @@ describe("tokenize", ({test, _}) => {
 
       let expectedTokens: list(BufferViewTokenizer.t) = [
         {
+          tokenType: Text,
           text: "abc",
           startPosition: ZeroBasedIndex(4),
           endPosition: ZeroBasedIndex(7),

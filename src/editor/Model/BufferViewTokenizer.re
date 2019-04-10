@@ -151,7 +151,10 @@ let tokenize:
       let colorizedToken1 = tokenColorArray[i0];
       let colorizedToken2 = tokenColorArray[i1];
       _isWhitespace(c0) != _isWhitespace(c1)
-      || colorizedToken1 !== colorizedToken2;
+      || colorizedToken1 !== colorizedToken2
+      /* Always split on tabs */
+      || UChar.eq(c0, tab)
+      || UChar.eq(c1, tab);
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
