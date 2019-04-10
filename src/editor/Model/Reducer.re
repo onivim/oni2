@@ -7,8 +7,6 @@
 open Actions;
 open Oni_Core.Types;
 
-module Core = Oni_Core;
-
 let sortTabsById = tabs =>
   State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs));
 
