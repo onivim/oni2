@@ -120,23 +120,23 @@ let renderTokens =
     );
     | Tab => Revery.Draw.Text.drawString(
       ~transform,
-      ~x,
-      ~y,
+      ~x=x +. fontWidth /. 4.,
+      ~y=y +. _fontHeight /. 4.,
       ~backgroundColor=textBackgroundColor,
-      ~color=token.color,
-      ~fontFamily="FiraCode-Regular.ttf",
-      ~fontSize=14,
-      "t",
+      ~color=theme.colors.editorWhitespaceForeground,
+      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontSize=10,
+      FontIcon.codeToIcon(0xf30b),
     );
     | Whitespace => Revery.Draw.Text.drawString(
       ~transform,
-      ~x,
-      ~y,
+      ~x=x +. fontWidth /. 3.,
+      ~y=y +. _fontHeight /. 3.,
       ~backgroundColor=textBackgroundColor,
-      ~color=token.color,
-      ~fontFamily="FiraCode-Regular.ttf",
-      ~fontSize=14,
-      "s",
+      ~color=theme.colors.editorWhitespaceForeground,
+      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontSize=5,
+      FontIcon.codeToIcon(0xf111),
     )
         
     };
