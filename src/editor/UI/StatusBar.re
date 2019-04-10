@@ -135,6 +135,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       |> List.filter(filterFunction(Alignment.Right))
       |> List.map(toStatusBarElement);
 
+    let indentation = Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
+
     (
       hooks,
       <View style=viewStyle>
@@ -144,6 +146,17 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         <StatusBarSection direction=`Center />
         <StatusBarSection direction=`FlexEnd> ...rightItems </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
+          <StatusBarItem
+            height backgroundColor={theme.colors.statusBarBackground}>
+            <Text
+              style=Style.[
+                backgroundColor(theme.colors.statusBarBackground),
+                color(theme.colors.statusBarForeground),
+                ...textStyle,
+              ]
+              text=indentation
+            />
+          </StatusBarItem>
           <StatusBarItem
             height backgroundColor={theme.colors.statusBarBackground}>
             <Text
