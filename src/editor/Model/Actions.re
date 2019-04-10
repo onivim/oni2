@@ -4,6 +4,7 @@
  * Encapsulates actions that can impact the editor state
  */
 
+open Oni_Core;
 open Oni_Core.Types;
 open Oni_Extensions;
 
@@ -14,6 +15,8 @@ type t =
   | BufferEnter(BufferNotification.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferWritePost(BufferNotification.t)
+  | ConfigurationReload
+  | ConfigurationSet(Configuration.t)
   | TablineUpdate(Tabline.tabs)
   | TextChanged(TextChanged.t)
   | TextChangedI(TextChanged.t)
