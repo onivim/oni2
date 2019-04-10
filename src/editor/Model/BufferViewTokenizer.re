@@ -69,6 +69,32 @@ let textRunToToken =
   ret;
 };
 
+let measure = c => {
+    if (UChar.eq(c, tab)) {
+        4;
+    } else {
+        1;
+    }
+};
+
+let getCharacterPositionAndWidth = (str, i) => {
+    let x = ref(0);
+    let totalOffset = ref(0);
+    let len = Zed_utf8.length(str);
+
+    while (x^ < len && x^ < i) {
+        let c = Zed_utf8.get(str, x^);
+        let width = measure(c);
+
+        totalOffset := totalOffset^ + width;
+
+        incr(x);
+    }
+
+    let width = measure(Zed_utf8.get(str, i));
+    (totalOffset^, width);
+};
+
 let tokenize:
   (string, Theme.t, list(ColorizedToken.t), ColorMap.t) => list(t) =
   (s, theme, tokenColors, colorMap) => {
@@ -91,14 +117,6 @@ let tokenize:
     let tokenColors = List.rev(tokenColors);
 
     f(tokenColors, len - 1);
-
-    let measure = c => {
-        if (UChar.eq(c, tab)) {
-            1;
-        } else {
-            1;
-        }
-    };
 
     let split = (i0, c0, i1, c1) => {
       let colorizedToken1 = tokenColorArray[i0];
