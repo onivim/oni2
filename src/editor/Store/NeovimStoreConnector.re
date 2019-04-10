@@ -80,14 +80,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.closeFile(~id, ())
     );
 
-  let openConfigFileEffect = filePath =>
-    Isolinear.Effect.create(~name="neovim.openConfigFile", () =>
-      switch (Core.Filesystem.createOniConfigFile(filePath)) {
-      | Ok(path) => neovimProtocol.openFile(~path, ())
-      | Error(e) => print_endline(e)
-      }
-    );
-
   let requestVisualRangeUpdateEffect =
     Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
       neovimProtocol.requestVisualRangeUpdate()
@@ -108,10 +100,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       )
     | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
     | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
-    | Model.Actions.OpenConfigFile(path) => (
-        state,
-        openConfigFileEffect(path),
-      )
     | Model.Actions.CursorMove(_) => (
         state,
         state.mode === Core.Types.Mode.Visual

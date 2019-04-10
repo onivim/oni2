@@ -13,6 +13,13 @@ let start = (setup: Setup.t) => {
     dispatch(Actions.ConfigurationSet(configuration));
   });
 
+  let openConfigurationFileEffect = (filePath) => Isolinear.Effect.createWithDispatch(~name="configuration.openFile", (dispatch) => {
+        switch (Filesystem.createOniConfigFile(filePath)) {        
+        | Ok(path) => dispatch(Actions.OpenFileByPath(path))
+        | Error(e) => prerr_endline(e)
+        };
+        });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.ConfigurationSet(configuration) => ({
@@ -20,6 +27,7 @@ let start = (setup: Setup.t) => {
         configuration,
         }, Isolinear.Effect.none) 
     | Actions.ConfigurationReload => (state, reloadConfigurationEffect) 
+    | Actions.OpenConfigFile(path) => (state, openConfigurationFileEffect(path))
     | _ => (state, Isolinear.Effect.none)
     };
   };
