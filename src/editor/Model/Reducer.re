@@ -116,15 +116,16 @@ let reduce: (State.t, Actions.t) => State.t =
       | AddSplit(split) => {
           ...s,
           windows: {
-            splits: WindowManager.add(split.id, split, s.windows.splits),
+            splits:
+              WindowManager.add(split.parentId, split, s.windows.splits),
           },
         }
-      | RemoveSplit(id) => {
-          ...s,
-          windows: {
-            splits: WindowManager.remove(id, s.windows.splits),
-          },
-        }
+      /* | RemoveSplit(id) => { */
+      /*     ...s, */
+      /*     windows: { */
+      /*       splits: WindowManager.remove(id, s.windows.splits), */
+      /*     }, */
+      /*   } */
       | _ => s
       };
     };

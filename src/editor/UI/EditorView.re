@@ -68,6 +68,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           GlobalContext.current().dispatch(
             AddSplit(
               Window.createSplit(
+                ~parentId=0,
                 ~layout=VerticalLeft,
                 ~width=50,
                 ~component=splitFactory(state => <Dock state />),
@@ -78,6 +79,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           GlobalContext.current().dispatch(
             AddSplit(
               Window.createSplit(
+                ~parentId=0,
                 ~layout=VerticalRight,
                 ~component=splitFactory(state => <EditorSurface state />),
                 (),

@@ -1,5 +1,4 @@
 open Revery_UI;
-open Oni_Core;
 
 type layout =
   | VerticalLeft
@@ -14,6 +13,7 @@ type componentCreator = unit => React.syntheticElement;
 
 type split = {
   id: int,
+  parentId: int,
   component: componentCreator,
   layout,
   /* if omitted the split will grow to occupy whatever space is available */
@@ -26,14 +26,16 @@ type direction =
   | Vertical;
 
 type splitTree =
-  | Parent(direction, list(splitTree))
+  | Parent(direction, int, list(splitTree))
   | Leaf(split);
 
-type splits = IntMap.t(split);
+type splits = splitTree;
 
 type t = {splits};
 
-let create = (): t => {splits: IntMap.empty};
+let empty = Parent(Vertical, 0, []);
+
+let create = (): t => {splits: empty};
 
 let getId = (id: option(int)) =>
   switch (id) {
@@ -41,18 +43,35 @@ let getId = (id: option(int)) =>
   | None => WindowSplitId.getUniqueId()
   };
 
-let createSplit = (~id=?, ~width=?, ~height=?, ~component, ~layout, ()) => {
+type splitAction('a) = split => 'a;
+
+let rec traverseSplitTree = (tree, action: splitAction('a), result) =>
+  switch (tree) {
+  | Parent(_, _, children) =>
+    List.fold_left(
+      (accum, child) => traverseSplitTree(child, action, accum),
+      result,
+      children,
+    )
+  | Leaf(split) => action(split)
+  };
+
+let createSplit =
+    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~layout, ()) => {
   id: getId(id),
+  parentId,
   component,
   width,
   height,
   layout,
 };
 
-let empty = IntMap.empty;
-let add = IntMap.add;
-let remove = IntMap.remove;
-
-let toList = map =>
-  IntMap.fold((_key, split, accum) => [split, ...accum], map, [])
-  |> List.sort((s1, s2) => compare(s1.id, s2.id));
+let rec add = (id, split, tree) =>
+  switch (tree) {
+  | Parent(direction, parentId, children) when id == parentId =>
+    Parent(direction, parentId, [Leaf(split), ...children])
+  | Parent(direction, parentId, children) =>
+    List.map(child => add(id, split, child), children)
+    |> (newChildren => Parent(direction, parentId, newChildren))
+  | Leaf(_) => tree
+  };

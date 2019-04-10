@@ -6,7 +6,7 @@ module Core = Oni_Core;
 
 let component = React.component("Spacer");
 
-let isLastItem = (splits, index) => List.length(splits) == index + 1;
+let _isLastItem = (splits, index) => List.length(splits) == index + 1;
 let spacerColor = Revery.Color.rgba(0., 0., 0., 0.1);
 
 let spacer = (layout: layout) => {
@@ -36,18 +36,5 @@ let spacer = (layout: layout) => {
 };
 
 let createElement =
-    (
-      ~children as _,
-      ~windowNumber: int,
-      ~splits: list(split),
-      ~theme as _: Core.Theme.t,
-      ~layout: layout,
-      (),
-    ) =>
-  component(hooks =>
-    (
-      hooks,
-      isLastItem(splits, windowNumber)
-        ? React.empty : <View style={spacer(layout)} />,
-    )
-  );
+    (~children as _, ~theme as _: Core.Theme.t, ~layout: layout, ()) =>
+  component(hooks => (hooks, <View style={spacer(layout)} />));
