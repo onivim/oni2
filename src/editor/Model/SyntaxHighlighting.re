@@ -123,7 +123,7 @@ let create: unit => t =
     idToBufferSyntaxHighlights: IntMap.empty,
   };
 
-let reduce: (t, Actions.t('a)) => t =
+let reduce: (t, Actions.t) => t =
   (state, action) =>
     switch (action) {
     | SyntaxHighlightColorMap(colorMap) => {...state, colorMap}

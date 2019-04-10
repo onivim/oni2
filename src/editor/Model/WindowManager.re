@@ -10,20 +10,20 @@ type layout =
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
-type split('a) = {
+type split = {
   id: int,
-  component: 'a => React.syntheticElement,
+  component: unit => React.syntheticElement,
   layout,
   /* if omitted the split will grow to occupy whatever space is available */
   width: option(int),
   height: option(int),
 };
 
-type splits('a) = IntMap.t(split('a));
+type splits = IntMap.t(split);
 
-type t('a) = {splits: splits('a)};
+type t = {splits: splits};
 
-let create = (): t('a) => {splits: IntMap.empty};
+let create = (): t => {splits: IntMap.empty};
 
 let getId = (id: option(int)) =>
   switch (id) {

@@ -15,7 +15,7 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-type actions = Model.Actions.t(Model.State.t);
+type actions = Model.Actions.t;
 
 let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);

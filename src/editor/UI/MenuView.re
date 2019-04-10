@@ -76,7 +76,7 @@ let createElement =
     (
       ~children as _,
       ~font: fontT,
-      ~menu: Menu.t(State.t),
+      ~menu: Menu.t,
       ~theme: Theme.t,
       (),
     ) =>

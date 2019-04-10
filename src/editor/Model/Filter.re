@@ -6,7 +6,7 @@
 open Oni_Core;
 open Actions;
 
-let menu = (query, items: list(Actions.menuCommand(State.t))) =>
+let menu = (query, items: list(Actions.menuCommand)) =>
   List.sort(
     (item1, item2) => {
       let firstMatches = Utility.stringContains(item1.name, query);

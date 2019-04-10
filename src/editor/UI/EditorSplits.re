@@ -61,7 +61,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
                    (i, split) => {
                      let style = getSplitStyle(split);
                      [
-                       <View style> {split.component(state)} </View>,
+                       <View style> {split.component()} </View>,
                        <WindowHandle
                          splits
                          layout={split.layout}

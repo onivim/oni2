@@ -76,6 +76,7 @@ let init = app => {
       editorScroll: (~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(deltaY)),
       dispatch,
+      getState: () => currentState^,
     });
 
     <Root state />;

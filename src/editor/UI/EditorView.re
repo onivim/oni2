@@ -50,12 +50,30 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       React.Hooks.effect(
         OnMount,
         () => {
+
+        /* Acquire a 'getState' function */
+        let getState = GlobalContext.current().getState;
+
+        /* This function, given a `getState` function,
+           wraps a function like `State.t => React.syntheticElement`
+           and outputs a function that gives `unit => React.syntheticElement`
+        */
+        let unitFunction = (f) => {
+            () => {
+               let state = getState(); 
+               f(state);
+            }
+        };
+
+        let dock = unitFunction((state) => <Dock state />);
+        let editor = unitFunction((state) => <EditorSurface state />);
+
           GlobalContext.current().dispatch(
             AddSplit(
               Window.createSplit(
                 ~layout=VerticalLeft,
                 ~width=50,
-                ~component=state => <Dock state />,
+                ~component=dock,
                 (),
               ),
             ),
@@ -64,7 +82,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             AddSplit(
               Window.createSplit(
                 ~layout=VerticalRight,
-                ~component=state => <EditorSurface state />,
+                ~component=editor,
                 (),
               ),
             ),

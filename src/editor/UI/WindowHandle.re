@@ -39,7 +39,7 @@ let createElement =
     (
       ~children as _,
       ~windowNumber: int,
-      ~splits: list(split(State.t)),
+      ~splits: list(split),
       ~theme as _: Core.Theme.t,
       ~layout: layout,
       (),

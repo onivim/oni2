@@ -18,12 +18,15 @@ type t = {
   editorScroll,
   openFileById: int => unit,
   closeFileById: int => unit,
-  dispatch: Actions.t(State.t) => unit,
+  dispatch: Actions.t => unit,
   state: State.t,
+  getState: unit => State.t,
 };
 
 let viewNoop: Views.viewOperation =
   (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
+
+let defaultState = State.create();
 
 let default = {
   state: State.create(),
@@ -32,6 +35,7 @@ let default = {
   openFileById: _ => (),
   dispatch: _ => (),
   closeFileById: _ => (),
+  getState: _ => defaultState,
 };
 
 let _current: ref(t) = ref(default);
