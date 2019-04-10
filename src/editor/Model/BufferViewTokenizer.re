@@ -69,15 +69,15 @@ let textRunToToken =
   ret;
 };
 
-let measure = c => {
+let measure = (indentationSettings: IndentationSettings.t, c) => {
     if (UChar.eq(c, tab)) {
-        4;
+        indentationSettings.tabSize;
     } else {
         1;
     }
 };
 
-let getCharacterPositionAndWidth = (str, i) => {
+let getCharacterPositionAndWidth = (~indentation=IndentationSettings.t, str, i) => {
     let x = ref(0);
     let totalOffset = ref(0);
     let len = Zed_utf8.length(str);
@@ -91,12 +91,16 @@ let getCharacterPositionAndWidth = (str, i) => {
         incr(x);
     }
 
-    let width = measure(Zed_utf8.get(str, i));
+    let width = switch (i < len) {
+    | true => measure(Zed_utf8.get(str, i));
+    | false => 1
+    };
+
     (totalOffset^, width);
 };
 
 let tokenize:
-  (string, Theme.t, list(ColorizedToken.t), ColorMap.t) => list(t) =
+  (string, Theme.t, list(ColorizedToken.t), ColorMap.t, indentationSettings) => list(t) =
   (s, theme, tokenColors, colorMap) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
@@ -125,7 +129,7 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2;
     };
 
-    Tokenizer.tokenize(~f=split, ~measure, s)
+    Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
     |> List.map(textRunToToken(colorMap, theme, tokenColorArray));
   };
