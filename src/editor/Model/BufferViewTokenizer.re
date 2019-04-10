@@ -94,7 +94,7 @@ let tokenize:
 
     let measure = c => {
         if (UChar.eq(c, tab)) {
-            8;
+            1;
         } else {
             1;
         }
