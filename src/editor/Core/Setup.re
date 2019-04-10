@@ -18,8 +18,6 @@ type t = {
   developmentExtensionsPath: [@default None] option(string),
   [@key "extensionHost"]
   extensionHostPath: string,
-  [@key "configuration"]
-  configPath: string,
   [@key "keybindings"]
   keybindingsPath: string,
   [@key "rg"]

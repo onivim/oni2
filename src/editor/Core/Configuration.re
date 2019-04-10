@@ -52,6 +52,6 @@ let create = (~configPath=getConfigPath(), ()) =>
   switch (ofFile(configPath)) {
   | Ok(config) => config
   | Error(loc) =>
-    print_endline("Error Loc: " ++ loc);
+    prerr_endline("Error Loc: " ++ loc);
     default;
   };
