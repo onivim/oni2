@@ -30,6 +30,7 @@ describe("tokenize", ({test, _}) => {
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
+        tokenType: Text,
         text: "testWord",
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(8),
@@ -51,6 +52,7 @@ describe("tokenize", ({test, _}) => {
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
+        tokenType: Text,
         text: "testWord",
         startPosition: ZeroBasedIndex(2),
         endPosition: ZeroBasedIndex(10),
@@ -67,6 +69,7 @@ describe("tokenize", ({test, _}) => {
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
+        tokenType: Text,
         text: "a",
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
@@ -87,12 +90,14 @@ describe("tokenize", ({test, _}) => {
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
+        tokenType: Text,
         text: "a",
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
         color: Colors.red,
       },
       {
+        tokenType: Text,
         text: "b",
         startPosition: ZeroBasedIndex(1),
         endPosition: ZeroBasedIndex(2),
@@ -109,12 +114,14 @@ describe("tokenize", ({test, _}) => {
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
+        tokenType: Text,
         text: "a",
         startPosition: ZeroBasedIndex(1),
         endPosition: ZeroBasedIndex(2),
         color: Colors.red,
       },
       {
+        tokenType: Text,
         text: "btest",
         startPosition: ZeroBasedIndex(3),
         endPosition: ZeroBasedIndex(8),

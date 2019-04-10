@@ -91,58 +91,55 @@ let renderTokens =
       transform,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
-  /* let lineNumberTextColor = */
-  /*   isActiveLine */
-  /*     ? theme.colors.editorActiveLineNumberForeground */
-  /*     : theme.colors.editorLineNumberForeground; */
 
   let yF = yOffset;
   let xF = xOffset;
-
-  /* let lineNumber = */
-  /*   string_of_int( */
-  /*     LineNumber.getLineNumber( */
-  /*       ~bufferLine=lineNumber + 1, */
-  /*       ~cursorLine=cursorLine + 1, */
-  /*       ~setting=Relative, */
-  /*       (), */
-  /*     ), */
-  /*   ); */
-
-  /*   let lineNumberXOffset = */
-  /*     isActiveLine */
-  /*       ? 0. : (lineNumberWidth /. 2) -. (float_of_int(String.length(lineNumber)) *. fontWidth /. 2.); */
-
-  /*   Revery.Draw.Text.drawString( */
-  /*     ~transform, */
-  /*     ~x=lineNumberXOffset, */
-  /*     ~y=yF, */
-  /*     ~backgroundColor=theme.colors.editorLineNumberBackground, */
-  /*     ~color=lineNumberTextColor, */
-  /*     ~fontFamily="FiraCode-Regular.ttf", */
-  /*     ~fontSize=14, */
-  /*     lineNumber, */
-  /*   ); */
 
   let textBackgroundColor =
     isActiveLine
       ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
   let f = (token: BufferViewTokenizer.t) => {
-    Revery.Draw.Text.drawString(
-      ~transform,
-      ~x=
-        lineNumberWidth
+
+    let x = lineNumberWidth
         +. fontWidth
         *. float_of_int(Index.toZeroBasedInt(token.startPosition))
-        -. xF,
-      ~y=yF,
+        -. xF;
+    let y = yF;
+
+    switch (token.tokenType) {
+    | Text => Revery.Draw.Text.drawString(
+      ~transform,
+      ~x,
+      ~y,
       ~backgroundColor=textBackgroundColor,
       ~color=token.color,
       ~fontFamily="FiraCode-Regular.ttf",
       ~fontSize=14,
       token.text,
     );
+    | Tab => Revery.Draw.Text.drawString(
+      ~transform,
+      ~x,
+      ~y,
+      ~backgroundColor=textBackgroundColor,
+      ~color=token.color,
+      ~fontFamily="FiraCode-Regular.ttf",
+      ~fontSize=14,
+      "t",
+    );
+    | Whitespace => Revery.Draw.Text.drawString(
+      ~transform,
+      ~x,
+      ~y,
+      ~backgroundColor=textBackgroundColor,
+      ~color=token.color,
+      ~fontFamily="FiraCode-Regular.ttf",
+      ~fontSize=14,
+      "s",
+    )
+        
+    };
   };
 
   List.iter(f, tokens);

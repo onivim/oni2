@@ -10,7 +10,13 @@ open Oni_Extensions;
 
 open CamomileLibrary;
 
+type tokenType =
+| Tab
+| Whitespace
+| Text;
+
 type t = {
+  tokenType: tokenType,
   text: string,
   startPosition: Index.t,
   endPosition: Index.t,
@@ -52,6 +58,18 @@ let textRunToToken =
     ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let colorIndex = tokenColorArray[startIndex];
+
+
+  let firstChar = Zed_utf8.get(r.text, 0);
+
+  let tokenType = if (UChar.eq(firstChar, tab)) {
+    Tab
+  } else if (UChar.eq(firstChar, space)) {
+    Whitespace
+  } else {
+    Text
+  }
+
   let color =
     ColorMap.get(
       colorMap,
@@ -61,6 +79,7 @@ let textRunToToken =
     );
 
   let ret: t = {
+      tokenType,
     text: r.text,
     startPosition: r.startPosition,
     endPosition: r.endPosition,
