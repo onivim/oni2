@@ -42,6 +42,16 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
   List.map(f, tabs);
 };
 
+/**
+   We wrap each split component as we have to have a type signature
+   that matches unit => React.syntheticElement this is because
+   in the WindowManager module we cannot pass a reference of state
+   in the type signature e.g. State.t => React.syntheticElement because
+   this would cause a circular reference.
+
+   Alternatives are type parameters but this invloves a lot of unrelated
+   type params being added everywhere. ?Functors is another route
+ */
 let splitFactory = (fn, ()) => {
   let state = GlobalContext.current().getState();
   fn(state);
