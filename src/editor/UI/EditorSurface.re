@@ -178,7 +178,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let cursorLine = state.editor.cursorPosition.line;
 
-    let (cursorOffset, cursorWidth) =
+    let (cursorOffset, cursorCharacterWidth) =
       if (Buffer.getNumberOfLines(buffer) > 0) {
         let cursorStr =
           Buffer.getLine(
@@ -192,14 +192,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             cursorStr,
             Index.toZeroBasedInt(state.editor.cursorPosition.character),
           );
-        let cursorWidth =
-          switch (state.mode) {
-          | Insert => 2
-          | _ => width * int_of_float(fontWidth)
-          };
-        (cursorOffset, cursorWidth);
+        (cursorOffset, width);
       } else {
         (0, 1);
+      };
+
+    let cursorWidth =
+      switch (state.mode) {
+      | Insert => 2
+      | _ => cursorCharacterWidth * int_of_float(fontWidth)
       };
 
     let cursorStyle =
