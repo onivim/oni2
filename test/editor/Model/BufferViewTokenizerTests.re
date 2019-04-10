@@ -11,41 +11,60 @@ let theme = Theme.create();
 let tokenColors = [];
 let colorMap = ColorMap.create();
 
+let indentation = IndentationSettings.default;
+
 describe("tokenize", ({test, _}) => {
   test("empty string", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
     expect.int(List.length(result)).toBe(0);
   });
 
-/*   describe("indentation settings", ({test, _}) => { */
-/*     test("accounts for tab size", ({expect}) => { */
-/*          let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ()); */
-/*          let result = Tokenizer.tokenize(~indentation, "\tabc", theme, tokenColors, colorMap); */
+  /*   describe("indentation settings", ({test, _}) => { */
+  /*     test("accounts for tab size", ({expect}) => { */
+  /*          let indentation = IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ()); */
+  /*          let result = Tokenizer.tokenize(~indentation, "\tabc", theme, tokenColors, colorMap); */
 
-         
-/*          let expectedTokens: list(Tokenizer.t) = [ */
-/*          { */
-/*             text: "abc", */
-/*             startPosition:ZeroBasedIndex(4), */
-/*             endPosition: ZeroBasedIndex(7), */
-/*             color: Colors.red, */
-/*          } */ 
-/*          ]; */
+  /*          let expectedTokens: list(Tokenizer.t) = [ */
+  /*          { */
+  /*             text: "abc", */
+  /*             startPosition:ZeroBasedIndex(4), */
+  /*             endPosition: ZeroBasedIndex(7), */
+  /*             color: Colors.red, */
+  /*          } */
+  /*          ]; */
 
-/*          validateTokens(expect, result, expectedTokens); */
-/*     }); */
-/*   }); */
+  /*          validateTokens(expect, result, expectedTokens); */
+  /*     }); */
+  /*   }); */
 
   test("string with only whitespace", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("   \t", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "   \t",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
     expect.int(List.length(result)).toBe(0);
   });
 
   test("single word token", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("testWord", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "testWord",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -66,6 +85,7 @@ describe("tokenize", ({test, _}) => {
         theme,
         tokenColors,
         colorMap,
+        indentation,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -82,7 +102,13 @@ describe("tokenize", ({test, _}) => {
 
   test("single letter token, no spaces", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("a", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "a",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -102,7 +128,13 @@ describe("tokenize", ({test, _}) => {
       ColorizedToken.create(1, 0),
     ];
     let result =
-      BufferViewTokenizer.tokenize("ab", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        "ab",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -124,7 +156,13 @@ describe("tokenize", ({test, _}) => {
 
   test("multiple tokens", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(" a btest ", theme, tokenColors, colorMap);
+      BufferViewTokenizer.tokenize(
+        " a btest ",
+        theme,
+        tokenColors,
+        colorMap,
+        indentation,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {

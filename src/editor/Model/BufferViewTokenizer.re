@@ -69,39 +69,45 @@ let textRunToToken =
   ret;
 };
 
-let measure = (indentationSettings: IndentationSettings.t, c) => {
-    if (UChar.eq(c, tab)) {
-        indentationSettings.tabSize;
-    } else {
-        1;
-    }
-};
+let measure = (indentationSettings: IndentationSettings.t, c) =>
+  if (UChar.eq(c, tab)) {
+    indentationSettings.tabSize;
+  } else {
+    1;
+  };
 
-let getCharacterPositionAndWidth = (~indentation=IndentationSettings.t, str, i) => {
-    let x = ref(0);
-    let totalOffset = ref(0);
-    let len = Zed_utf8.length(str);
+let getCharacterPositionAndWidth =
+    (~indentation: IndentationSettings.t, str, i) => {
+  let x = ref(0);
+  let totalOffset = ref(0);
+  let len = Zed_utf8.length(str);
 
-    while (x^ < len && x^ < i) {
-        let c = Zed_utf8.get(str, x^);
-        let width = measure(c);
+  let measure = measure(indentation);
 
-        totalOffset := totalOffset^ + width;
+  while (x^ < len && x^ < i) {
+    let c = Zed_utf8.get(str, x^);
+    let width = measure(c);
 
-        incr(x);
-    }
+    totalOffset := totalOffset^ + width;
 
-    let width = switch (i < len) {
-    | true => measure(Zed_utf8.get(str, i));
-    | false => 1
-    };
+    incr(x);
+  };
 
-    (totalOffset^, width);
+  let width = i < len ? measure(Zed_utf8.get(str, i)) : 1;
+
+  (totalOffset^, width);
 };
 
 let tokenize:
-  (string, Theme.t, list(ColorizedToken.t), ColorMap.t, indentationSettings) => list(t) =
-  (s, theme, tokenColors, colorMap) => {
+  (
+    string,
+    Theme.t,
+    list(ColorizedToken.t),
+    ColorMap.t,
+    IndentationSettings.t
+  ) =>
+  list(t) =
+  (s, theme, tokenColors, colorMap, indentationSettings) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);

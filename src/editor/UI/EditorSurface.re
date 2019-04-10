@@ -177,21 +177,31 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     /* let iFontWidth = int_of_float(fontWidth +. 0.5); */
-        let cursorLine = state.editor.cursorPosition.line;
+    let cursorLine = state.editor.cursorPosition.line;
 
-    let (cursorOffset, cursorWidth) = if(Buffer.getNumberOfLines(buffer) > 0) {
-        let cursorStr = Buffer.getLine(buffer, Index.toZeroBasedInt(state.editor.cursorPosition.line));
+    let (cursorOffset, cursorWidth) =
+      if (Buffer.getNumberOfLines(buffer) > 0) {
+        let cursorStr =
+          Buffer.getLine(
+            buffer,
+            Index.toZeroBasedInt(state.editor.cursorPosition.line),
+          );
 
-        let (cursorOffset, width) = BufferViewTokenizer.getCharacterPositionAndWidth(cursorStr, Index.toZeroBasedInt(state.editor.cursorPosition.character));
+        let (cursorOffset, width) =
+          BufferViewTokenizer.getCharacterPositionAndWidth(
+            ~indentation=IndentationSettings.default,
+            cursorStr,
+            Index.toZeroBasedInt(state.editor.cursorPosition.character),
+          );
         let cursorWidth =
           switch (state.mode) {
           | Insert => 2
           | _ => width * int_of_float(fontWidth)
           };
-        (cursorOffset, cursorWidth)
-    } else {
+        (cursorOffset, cursorWidth);
+      } else {
         (0, 1);
-    }
+      };
 
     let cursorStyle =
       Style.[
@@ -234,6 +244,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         state.theme,
         tokenColors,
         state.syntaxHighlighting.colorMap,
+        IndentationSettings.default,
       );
     };
 
