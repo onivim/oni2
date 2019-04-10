@@ -21,6 +21,14 @@ type split = {
   height: option(int),
 };
 
+type direction =
+  | Horizontal
+  | Vertical;
+
+type splitTree =
+  | Parent(direction, list(splitTree))
+  | Leaf(split);
+
 type splits = IntMap.t(split);
 
 type t = {splits};
