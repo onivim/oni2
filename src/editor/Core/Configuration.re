@@ -20,6 +20,12 @@ type t = {
   editorMinimapShowSlider: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
+  [@key "editor.insertSpaces"]
+  editorInsertSpaces: bool,
+  [@key "editor.indentSize"]
+  editorIndentSize: int,
+  [@key "editor.tabSize"]
+  editorTabSize: int,
   [@key "workbench.iconTheme"]
   workbenchIconTheme: string,
 };
@@ -29,6 +35,9 @@ let default = {
   editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
+  editorInsertSpaces: false,
+  editorIndentSize: 4,
+  editorTabSize: 4,
   workbenchIconTheme: "vs-seti",
 };
 

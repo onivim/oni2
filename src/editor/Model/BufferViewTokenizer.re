@@ -88,9 +88,45 @@ let textRunToToken =
   ret;
 };
 
+let measure = (indentationSettings: IndentationSettings.t, c) =>
+  if (UChar.eq(c, tab)) {
+    indentationSettings.tabSize;
+  } else {
+    1;
+  };
+
+let getCharacterPositionAndWidth =
+    (~indentation: IndentationSettings.t, str, i) => {
+  let x = ref(0);
+  let totalOffset = ref(0);
+  let len = Zed_utf8.length(str);
+
+  let measure = measure(indentation);
+
+  while (x^ < len && x^ < i) {
+    let c = Zed_utf8.get(str, x^);
+    let width = measure(c);
+
+    totalOffset := totalOffset^ + width;
+
+    incr(x);
+  };
+
+  let width = i < len ? measure(Zed_utf8.get(str, i)) : 1;
+
+  (totalOffset^, width);
+};
+
 let tokenize:
-  (string, Theme.t, list(ColorizedToken.t), ColorMap.t) => list(t) =
-  (s, theme, tokenColors, colorMap) => {
+  (
+    string,
+    Theme.t,
+    list(ColorizedToken.t),
+    ColorMap.t,
+    IndentationSettings.t
+  ) =>
+  list(t) =
+  (s, theme, tokenColors, colorMap, indentationSettings) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);
@@ -111,7 +147,6 @@ let tokenize:
 
     f(tokenColors, len - 1);
 
-    let measure = _ => 1;
     let split = (i0, c0, i1, c1) => {
       let colorizedToken1 = tokenColorArray[i0];
       let colorizedToken2 = tokenColorArray[i1];
@@ -119,7 +154,7 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2;
     };
 
-    Tokenizer.tokenize(~f=split, ~measure, s)
+    Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
     |> List.map(textRunToToken(colorMap, theme, tokenColorArray));
   };
