@@ -112,10 +112,15 @@ let createElement =
                     {
                       let scrollTo = getScrollTo(evt.mouseY);
                       if (isCaptured) {
+                        let minimapLineSize =
+                        Constants.default.minimapCharacterWidth
+                        + Constants.default.minimapCharacterHeight;
+                        let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
                         GlobalContext.current().editorScroll(
-                                    ~deltaY=(startPosition -. scrollTo) *. -1.,
-                                    ()
-                                  );
+                          ~deltaY=((startPosition -. scrollTo) *. -1.) -. 
+                            float_of_int(linesInMinimap),
+                          ()
+                        );
                       };
                 },
                 ~onMouseUp= _evt => scrollComplete(),
@@ -136,9 +141,12 @@ let createElement =
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
-
+      let minimapLineSize =
+      Constants.default.minimapCharacterWidth
+      + Constants.default.minimapCharacterHeight;
+      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
-        ~deltaY=scrollTo -. state.editor.scrollY,
+        ~deltaY=(scrollTo -. state.editor.scrollY) -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
