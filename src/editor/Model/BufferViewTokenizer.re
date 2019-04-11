@@ -41,8 +41,7 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   let len = Zed_utf8.length(r.text);
 
   if (len == 0) {
-    false/* } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) { */
-         ;
+    false; /* } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) { */
          /*   false; */
   } else {
     true;
