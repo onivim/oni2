@@ -90,14 +90,17 @@ let createElement =
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
       let visibleHeight: int = state.editor.size.pixelHeight;
-      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight; 
-      (float_of_int(offsetMouseY) /. float_of_int(visibleHeight)) *. 
-        float_of_int(totalHeight);
-    }
+      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
+      float_of_int(offsetMouseY)
+      /. float_of_int(visibleHeight)
+      *. float_of_int(totalHeight);
+    };
+
+    let doScroll = () => {};
 
     let scrollComplete = () => {
       setActive(false);
-    }
+    };
 
     let hooks =
       React.Hooks.effect(
@@ -106,26 +109,27 @@ let createElement =
           let isCaptured = isActive;
           let startPosition = state.editor.scrollY;
 
-              Mouse.setCapture(
-                ~onMouseMove=
-                  evt =>
-                    {
-                      let scrollTo = getScrollTo(evt.mouseY);
-                      if (isCaptured) {
-                        let minimapLineSize =
-                        Constants.default.minimapCharacterWidth
-                        + Constants.default.minimapCharacterHeight;
-                        let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
-                        GlobalContext.current().editorScroll(
-                          ~deltaY=((startPosition -. scrollTo) *. -1.) -. 
-                            float_of_int(linesInMinimap),
-                          ()
-                        );
-                      };
+          Mouse.setCapture(
+            ~onMouseMove=
+              evt =>
+                if (isCaptured) {
+                  let scrollTo = getScrollTo(evt.mouseY);
+                  let minimapLineSize =
+                    Constants.default.minimapCharacterWidth
+                    + Constants.default.minimapCharacterHeight;
+                  let linesInMinimap =
+                    state.editor.size.pixelHeight / minimapLineSize;
+                  GlobalContext.current().editorScroll(
+                    ~deltaY=
+                      (startPosition -. scrollTo)
+                      *. (-1.)
+                      -. float_of_int(linesInMinimap),
+                    (),
+                  );
                 },
-                ~onMouseUp= _evt => scrollComplete(),
-                (),
-              );
+            ~onMouseUp=_evt => scrollComplete(),
+            (),
+          );
 
           Some(
             () =>
@@ -142,11 +146,12 @@ let createElement =
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
-      Constants.default.minimapCharacterWidth
-      + Constants.default.minimapCharacterHeight;
+        Constants.default.minimapCharacterWidth
+        + Constants.default.minimapCharacterHeight;
       let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
-        ~deltaY=(scrollTo -. state.editor.scrollY) -. float_of_int(linesInMinimap),
+        ~deltaY=
+          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
