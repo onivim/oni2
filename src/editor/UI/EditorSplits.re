@@ -49,31 +49,31 @@ let getWidth = width =>
   | None => Style.width(10)
   };
 
-let leftDock = (state: State.t) =>
-  switch (state.editorLayout.leftDock) {
-  | Some(dock) => [
-      <View style=Style.[getWidth(dock.width), top(0), bottom(0)]>
-        {dock.component()}
+let renderDock = (dock: option(dock), state: State.t) =>
+  switch (dock) {
+  | Some(d) => [
+      <View style=Style.[getWidth(d.width), top(0), bottom(0)]>
+        {d.component()}
       </View>,
       <WindowHandle direction=Vertical theme={state.theme} />,
     ]
-
   | None => [React.empty]
   };
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
+    let {editorLayout, theme, _}: State.t = state;
     let splits =
       WindowManager.traverseSplitTree(
         (allSplits, window, direction) => [
           <View style={getSplitStyle(window)}> {window.component()} </View>,
-          <WindowHandle direction theme={state.theme} />,
+          <WindowHandle direction theme />,
           ...allSplits,
         ],
         [],
-        state.editorLayout.windows,
+        editorLayout.windows,
         Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
       )
-      |> List.append(leftDock(state));
+      |> List.append(renderDock(editorLayout.leftDock, state));
     (hooks, <View style=splitContainer> ...splits </View>);
   });
