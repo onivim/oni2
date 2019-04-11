@@ -33,7 +33,7 @@ type t = {
   [@key "editor.tabSize"]
   editorTabSize: int,
   [@key "editor.renderWhitespace"]
-  editorRenderWhitespace: editorRenderWhitespace,
+  editorRenderWhitespace,
   [@key "workbench.iconTheme"]
   workbenchIconTheme: string,
 };
