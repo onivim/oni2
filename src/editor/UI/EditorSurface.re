@@ -261,7 +261,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         ),
         height(iFontHeight),
         width(cursorWidth),
-        opacity(0.8),
+        opacity(0.5),
         backgroundColor(Colors.white),
       ];
 
