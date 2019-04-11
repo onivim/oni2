@@ -1,6 +1,6 @@
 (library
     (name Oni_Core)
-    (public_name Oni_Core)
+    (public_name Oni2.core)
     (libraries 
         str
         bigarray

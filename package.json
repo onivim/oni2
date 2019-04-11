@@ -4,7 +4,7 @@
   "description": "Lightweight code editor",
   "license": "MIT",
   "esy": {
-    "build": "refmterr dune build --root . -j4",
+    "build": "refmterr dune build -p Oni2 -j4",
     "install": [
       "esy-installer Oni2.install",
       "esy-installer Oni_Core.install",
