@@ -2,4 +2,4 @@
     (name Oni_Neovim_Test)
     (library_flags (-linkall -g))
     (modules (:standard))
-    (libraries msgpck Oni_Neovim Oni_Core_Test rely.lib))
+    (libraries msgpck Oni.neovim Oni_Core_Test rely.lib))
