@@ -86,10 +86,10 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     let splits =
       WindowManager.traverseSplitTree(
         ~handleParent,
-        handleChildren,
-        [],
-        editorLayout.windows,
-        Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
+        ~action=handleChildren,
+        ~result=[],
+        ~tree=editorLayout.windows,
+        ~direction=Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
         (),
       )
       |> List.append(renderDock(editorLayout.leftDock, state))

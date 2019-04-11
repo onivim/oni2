@@ -76,14 +76,14 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           let editor =
             Window.createSplit(
               ~parentId=0,
-              ~direction=Vertical,
+              ~direction=Horizontal,
               ~component=splitFactory(state => <EditorSurface state />),
               (),
             );
 
           let editor1 =
             Window.createSplit(
-              ~parentId=0,
+              ~parentId=1,
               ~direction=Horizontal,
               ~component=splitFactory(state => <EditorSurface state />),
               (),

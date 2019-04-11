@@ -76,10 +76,10 @@ let identity: parentHandler('a) = (result: 'a, _direction) => result;
 let rec traverseSplitTree =
         (
           ~handleParent=identity,
-          action,
-          result,
-          tree,
-          direction: direction,
+          ~action,
+          ~result,
+          ~tree,
+          ~direction: direction,
           (),
         ) =>
   switch (tree) {
@@ -89,7 +89,14 @@ let rec traverseSplitTree =
       newResult =>
         List.fold_left(
           (accum, child) =>
-            traverseSplitTree(action, accum, child, direction, ()),
+            traverseSplitTree(
+              ~action,
+              ~result=accum,
+              ~tree=child,
+              ~handleParent,
+              ~direction,
+              (),
+            ),
           newResult,
           children,
         )
