@@ -49,6 +49,16 @@ let getId = (id: option(int)) =>
   | None => WindowSplitId.getUniqueId()
   };
 
+let createSplit =
+    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~layout, ()) => {
+  id: getId(id),
+  parentId,
+  component,
+  width,
+  height,
+  layout,
+};
+
 type splitAction('a) = split => 'a;
 
 let rec traverseSplitTree = (tree, action: splitAction('a), result) =>
@@ -61,16 +71,6 @@ let rec traverseSplitTree = (tree, action: splitAction('a), result) =>
     )
   | Leaf(split) => action(split, result)
   };
-
-let createSplit =
-    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~layout, ()) => {
-  id: getId(id),
-  parentId,
-  component,
-  width,
-  height,
-  layout,
-};
 
 let rec add = (id, split, tree) =>
   switch (tree) {

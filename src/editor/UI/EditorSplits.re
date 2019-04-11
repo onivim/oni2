@@ -13,7 +13,7 @@ let component = React.component("EditorSplits");
 
 /**
    TODO:
-   1.) This currently only handles halves not quarters of the screen size
+   1.) convert this to use new direction, simplifies this greatly
  */
 let getSplitStyle = split =>
   Style.(
