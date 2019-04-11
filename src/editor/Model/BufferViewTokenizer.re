@@ -11,12 +11,12 @@ open Oni_Extensions;
 open CamomileLibrary;
 
 type tokenType =
-| Tab
-| Whitespace
-| Text;
+  | Tab
+  | Whitespace
+  | Text;
 
 type t = {
-  tokenType: tokenType,
+  tokenType,
   text: string,
   startPosition: Index.t,
   endPosition: Index.t,
@@ -41,9 +41,9 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   let len = Zed_utf8.length(r.text);
 
   if (len == 0) {
-    false;
-  /* } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) { */
-  /*   false; */
+    false/* } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) { */
+         ;
+         /*   false; */
   } else {
     true;
   };
@@ -59,16 +59,16 @@ let textRunToToken =
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let colorIndex = tokenColorArray[startIndex];
 
-
   let firstChar = Zed_utf8.get(r.text, 0);
 
-  let tokenType = if (UChar.eq(firstChar, tab)) {
-    Tab
-  } else if (UChar.eq(firstChar, space)) {
-    Whitespace
-  } else {
-    Text
-  }
+  let tokenType =
+    if (UChar.eq(firstChar, tab)) {
+      Tab;
+    } else if (UChar.eq(firstChar, space)) {
+      Whitespace;
+    } else {
+      Text;
+    };
 
   let color =
     ColorMap.get(
@@ -79,7 +79,7 @@ let textRunToToken =
     );
 
   let ret: t = {
-      tokenType,
+    tokenType,
     text: r.text,
     startPosition: r.startPosition,
     endPosition: r.endPosition,
