@@ -96,8 +96,6 @@ let createElement =
       *. float_of_int(totalHeight);
     };
 
-    let doScroll = () => {};
-
     let scrollComplete = () => {
       setActive(false);
     };
