@@ -77,38 +77,39 @@ let renderLineNumber =
   );
 };
 
-let renderSpaces = (
-    ~fontWidth: float,
-    ~fontHeight: float,
-    ~x: float,
-    ~y: float,
-    ~transform,
-    ~count: int,
-    ~theme: Theme.t,
-    (),
-) => {
-   let i = ref(0); 
+let renderSpaces =
+    (
+      ~fontWidth: float,
+      ~fontHeight: float,
+      ~x: float,
+      ~y: float,
+      ~transform,
+      ~count: int,
+      ~theme: Theme.t,
+      (),
+    ) => {
+  let i = ref(0);
 
-   let size = 2.;
-   let xOffset = (fontWidth /. 2.) -. 1.;
-   let yOffset = (fontHeight /. 2.) -. 1.;
+  let size = 2.;
+  let xOffset = fontWidth /. 2. -. 1.;
+  let yOffset = fontHeight /. 2. -. 1.;
 
-   while (i^ < count) {
+  while (i^ < count) {
     let iF = float_of_int(i^);
-    let xPos = x +. (fontWidth *. iF);
+    let xPos = x +. fontWidth *. iF;
 
-      Shapes.drawRect(
-        ~transform,
-        ~x=xPos +. xOffset,
-        ~y=y +. yOffset,
-        ~width=size,
-        ~height=size,
-        ~color=theme.colors.editorWhitespaceForeground,
-        (),
-      );
+    Shapes.drawRect(
+      ~transform,
+      ~x=xPos +. xOffset,
+      ~y=y +. yOffset,
+      ~width=size,
+      ~height=size,
+      ~color=theme.colors.editorWhitespaceForeground,
+      (),
+    );
 
-      incr(i);
-   }
+    incr(i);
+  };
 };
 
 let renderTokens =
@@ -165,7 +166,16 @@ let renderTokens =
         FontIcon.codeToIcon(0xf30b),
       )
     | Whitespace =>
-      renderSpaces(~fontWidth, ~fontHeight, ~x, ~y, ~transform, ~count=String.length(token.text), ~theme, ());
+      renderSpaces(
+        ~fontWidth,
+        ~fontHeight,
+        ~x,
+        ~y,
+        ~transform,
+        ~count=String.length(token.text),
+        ~theme,
+        (),
+      )
     };
   };
 
