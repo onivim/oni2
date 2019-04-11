@@ -69,13 +69,30 @@ let createDock = (~width=?, ~height=?, ~component, ()) => {
   component,
 };
 
-let rec traverseSplitTree = (action, result, tree, direction: direction) =>
+type parentHandler('a) = ('a, direction) => 'a;
+
+let identity: parentHandler('a) = (result: 'a, _direction) => result;
+
+let rec traverseSplitTree =
+        (
+          ~handleParent=identity,
+          action,
+          result,
+          tree,
+          direction: direction,
+          (),
+        ) =>
   switch (tree) {
-  | Parent(_, _, children) =>
-    List.fold_left(
-      (accum, child) => traverseSplitTree(action, accum, child, direction),
-      result,
-      children,
+  | Parent(direction, _, children) =>
+    handleParent(result, direction)
+    |> (
+      newResult =>
+        List.fold_left(
+          (accum, child) =>
+            traverseSplitTree(action, accum, child, direction, ()),
+          newResult,
+          children,
+        )
     )
   | Leaf(split) => action(result, split, direction)
   };

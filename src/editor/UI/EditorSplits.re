@@ -60,20 +60,45 @@ let renderDock = (dock: option(dock), state: State.t) =>
   | None => [React.empty]
   };
 
+let parentStyle = (dir: direction) => {
+  let flexDir =
+    switch (dir) {
+    | Vertical => `Column
+    | Horizontal => `Row
+    };
+  Style.[flexGrow(1), flexDirection(flexDir)];
+};
+
+let handleParent = (children, direction) => [
+  <View style={parentStyle(direction)}> ...children </View>,
+];
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {editorLayout, theme, _}: State.t = state;
+
+    let handleChildren = (allSplits, window, direction) => [
+      <View style={getSplitStyle(window)}> {window.component()} </View>,
+      <WindowHandle direction theme />,
+      ...allSplits,
+    ];
+
     let splits =
       WindowManager.traverseSplitTree(
-        (allSplits, window, direction) => [
-          <View style={getSplitStyle(window)}> {window.component()} </View>,
-          <WindowHandle direction theme />,
-          ...allSplits,
-        ],
+        ~handleParent,
+        handleChildren,
         [],
         editorLayout.windows,
         Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
+        (),
       )
-      |> List.append(renderDock(editorLayout.leftDock, state));
+      |> List.append(renderDock(editorLayout.leftDock, state))
+      |> (
+        components =>
+          List.concat([
+            components,
+            renderDock(editorLayout.rightDock, state),
+          ])
+      );
     (hooks, <View style=splitContainer> ...splits </View>);
   });
