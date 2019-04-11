@@ -23,6 +23,13 @@ type split = {
 };
 
 [@deriving show]
+type dock = {
+  component: componentCreator,
+  width: option(int),
+  height: option(int),
+};
+
+[@deriving show]
 type splitTree =
   | Parent(direction, int, list(splitTree))
   | Leaf(split);
@@ -30,11 +37,15 @@ type splitTree =
 [@deriving show]
 type splits = splitTree;
 
-type t = {splits};
+type t = {
+  windows: splits,
+  leftDock: option(dock),
+  rightDock: option(dock),
+};
 
 let empty = Parent(Vertical, 0, []);
 
-let create = (): t => {splits: empty};
+let create = (): t => {windows: empty, leftDock: None, rightDock: None};
 
 let getId = (id: option(int)) =>
   switch (id) {
@@ -50,6 +61,12 @@ let createSplit =
   width,
   height,
   direction,
+};
+
+let createDock = (~width=?, ~height=?, ~component, ()) => {
+  width,
+  height,
+  component,
 };
 
 let rec traverseSplitTree = (action, result, tree, direction: direction) =>

@@ -67,9 +67,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         () => {
           let dispatch = GlobalContext.current().dispatch;
           let dock =
-            Window.createSplit(
-              ~parentId=0,
-              ~direction=Vertical,
+            Window.createDock(
               ~width=50,
               ~component=splitFactory(state => <Dock state />),
               (),
@@ -83,8 +81,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
-          dispatch(AddSplit(dock));
+          let editor1 =
+            Window.createSplit(
+              ~parentId=0,
+              ~direction=Horizontal,
+              ~component=splitFactory(state => <EditorSurface state />),
+              (),
+            );
+
+          dispatch(AddLeftDock(dock));
           dispatch(AddSplit(editor));
+          dispatch(AddSplit(editor1));
           None;
         },
         hooks,

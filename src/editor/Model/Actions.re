@@ -51,6 +51,8 @@ type t =
   | CloseFileById(int)
   | OpenFileByPath(string)
   | OpenFileById(int)
+  | AddRightDock(WindowManager.dock)
+  | AddLeftDock(WindowManager.dock)
   | AddSplit(WindowManager.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)

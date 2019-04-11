@@ -44,18 +44,25 @@ let getSplitStyle = split =>
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
+let leftDock = (state: State.t) =>
+  switch (state.editorLayout.leftDock) {
+  | Some(dock) => dock.component()
+  | None => React.empty
+  };
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let splits =
       WindowManager.traverseSplitTree(
-        (allSplits, split, direction) => [
-          <View style={getSplitStyle(split)}> {split.component()} </View>,
+        (allSplits, window, direction) => [
+          <View style={getSplitStyle(window)}> {window.component()} </View>,
           <WindowHandle direction theme={state.theme} />,
           ...allSplits,
         ],
         [],
-        state.windows.splits,
-        Vertical,
-      );
+        state.editorLayout.windows,
+        Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
+      )
+      |> List.append([leftDock(state)]);
     (hooks, <View style=splitContainer> ...splits </View>);
   });
