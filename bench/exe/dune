@@ -1,6 +1,7 @@
 (executable
-    (name bench)
-    (public_name oni-bench)
+    (name OniBench)
+    (public_name OniBench)
+    (modules OniBench)
     (libraries OniBench.lib)
     (package OniBench)
 )
