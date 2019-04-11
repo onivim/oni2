@@ -6,14 +6,7 @@ open Oni_Model;
 
 let component = React.component("Dock");
 
-let dockItemSize = 20;
-
-let icon =
-  Style.[fontFamily("FontAwesome5FreeSolid.otf"), fontSize(dockItemSize)];
-
 let button = Style.[marginVertical(8)];
-
-let getIcon = IconTheme.IconDefinition.parseId;
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
@@ -32,14 +25,14 @@ let createElement = (~children as _, ~state: State.t, ()) =>
           <FontIcon
             backgroundColor=bg
             color=Colors.white
-            icon={getIcon("\\f15b")}
+            icon=FontAwesome.file
           />
         </Clickable>
         <Clickable style=button>
           <FontIcon
             backgroundColor=bg
             color=Colors.white
-            icon={getIcon("\\f002")}
+            icon=FontAwesome.search
           />
         </Clickable>
       </View>,

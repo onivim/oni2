@@ -829,6 +829,7 @@ let thumbsUp = 0xf164;
 let thumbtack = 0xf08d;
 let ticketAlt = 0xf3ff;
 let times = 0xf00d;
+<<<<<<< HEAD
 let timesCircle = 0xf057;
 let tint = 0xf043;
 let tintSlash = 0xf5c7;
