@@ -59,7 +59,7 @@ let rec traverseSplitTree = (tree, action: splitAction('a), result) =>
       result,
       children,
     )
-  | Leaf(split) => action(split)
+  | Leaf(split) => action(split, result)
   };
 
 let createSplit =
