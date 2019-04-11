@@ -25,7 +25,9 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 
 let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
   let f = (token: BufferViewTokenizer.t) => {
-    let startPosition = Index.toZeroBasedInt(token.startPosition);
+
+    switch (token.tokenType) {
+    | Text => let startPosition = Index.toZeroBasedInt(token.startPosition);
     let endPosition = Index.toZeroBasedInt(token.endPosition);
     let tokenWidth = endPosition - startPosition;
 
@@ -52,6 +54,8 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       ~height,
       (),
     );
+    | _ => ()
+    };
   };
 
   List.iter(f, tokens);
