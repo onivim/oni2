@@ -49,23 +49,16 @@ let getSplitStyle = split =>
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let createElement = (~children as _, ~state: State.t, ()) =>
-  component(hooks =>
-    (
-      hooks,
-      <View style=splitContainer>
-        ...{
-             WindowManager.traverseSplitTree(
-               state.windows.splits,
-               (split, allSplits) => [
-                 <View style={getSplitStyle(split)}>
-                   {split.component()}
-                 </View>,
-                 <WindowHandle layout={split.layout} theme={state.theme} />,
-                 ...allSplits,
-               ],
-               [],
-             )
-           }
-      </View>,
-    )
-  );
+  component(hooks => {
+    let splits =
+      WindowManager.traverseSplitTree(
+        state.windows.splits,
+        (split, allSplits) => [
+          <View style={getSplitStyle(split)}> {split.component()} </View>,
+          <WindowHandle layout={split.layout} theme={state.theme} />,
+          ...allSplits,
+        ],
+        [],
+      );
+    (hooks, <View style=splitContainer> ...splits </View>);
+  });
