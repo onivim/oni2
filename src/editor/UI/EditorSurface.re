@@ -77,10 +77,44 @@ let renderLineNumber =
   );
 };
 
+let renderSpaces = (
+    ~fontWidth: float,
+    ~fontHeight: float,
+    ~x: float,
+    ~y: float,
+    ~transform,
+    ~count: int,
+    ~theme: Theme.t,
+    (),
+) => {
+   let i = ref(0); 
+
+   let size = 2.;
+   let xOffset = (fontWidth /. 2.) -. 1.;
+   let yOffset = (fontHeight /. 2.) -. 1.;
+
+   while (i^ < count) {
+    let iF = float_of_int(i^);
+    let xPos = x +. (fontWidth *. iF);
+
+      Shapes.drawRect(
+        ~transform,
+        ~x=xPos +. xOffset,
+        ~y=y +. yOffset,
+        ~width=size,
+        ~height=size,
+        ~color=theme.colors.editorWhitespaceForeground,
+        (),
+      );
+
+      incr(i);
+   }
+};
+
 let renderTokens =
     (
       fontWidth: float,
-      _fontHeight: float,
+      fontHeight: float,
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
@@ -123,7 +157,7 @@ let renderTokens =
       Revery.Draw.Text.drawString(
         ~transform,
         ~x=x +. fontWidth /. 4.,
-        ~y=y +. _fontHeight /. 4.,
+        ~y=y +. fontHeight /. 4.,
         ~backgroundColor=textBackgroundColor,
         ~color=theme.colors.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
@@ -131,16 +165,7 @@ let renderTokens =
         FontIcon.codeToIcon(0xf30b),
       )
     | Whitespace =>
-      Revery.Draw.Text.drawString(
-        ~transform,
-        ~x=x +. fontWidth /. 3.,
-        ~y=y +. _fontHeight /. 3.,
-        ~backgroundColor=textBackgroundColor,
-        ~color=theme.colors.editorWhitespaceForeground,
-        ~fontFamily="FontAwesome5FreeSolid.otf",
-        ~fontSize=5,
-        FontIcon.codeToIcon(0xf111),
-      )
+      renderSpaces(~fontWidth, ~fontHeight, ~x, ~y, ~transform, ~count=String.length(token.text), ~theme, ());
     };
   };
 
