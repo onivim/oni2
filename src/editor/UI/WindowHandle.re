@@ -9,7 +9,7 @@ let component = React.component("Spacer");
 let _isLastItem = (splits, index) => List.length(splits) == index + 1;
 let spacerColor = Revery.Color.rgba(0., 0., 0., 0.1);
 
-let spacer = (layout: layout) => {
+let spacer = (direction: direction) => {
   open Style;
   let verticalStyles = [
     backgroundColor(spacerColor),
@@ -27,14 +27,12 @@ let spacer = (layout: layout) => {
     flexGrow(0),
   ];
 
-  switch (layout) {
-  | VerticalRight => [marginLeft(1), ...verticalStyles]
-  | VerticalLeft => [marginRight(1), ...verticalStyles]
-  | HorizontalTop => [marginBottom(1), ...horizontalStyles]
-  | HorizontalBottom => [marginTop(1), ...horizontalStyles]
+  switch (direction) {
+  | Vertical => [marginHorizontal(1), ...verticalStyles]
+  | Horizontal => [marginVertical(1), ...horizontalStyles]
   };
 };
 
 let createElement =
-    (~children as _, ~theme as _: Core.Theme.t, ~layout: layout, ()) =>
-  component(hooks => (hooks, <View style={spacer(layout)} />));
+    (~children as _, ~theme as _: Core.Theme.t, ~direction: direction, ()) =>
+  component(hooks => (hooks, <View style={spacer(direction)} />));

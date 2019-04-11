@@ -1,12 +1,5 @@
 open Revery_UI;
 
-[@deriving show]
-type layout =
-  | VerticalLeft
-  | VerticalRight
-  | HorizontalTop
-  | HorizontalBottom;
-
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
@@ -14,20 +7,20 @@ module WindowSplitId =
 type componentCreator = unit => React.syntheticElement;
 
 [@deriving show]
+type direction =
+  | Horizontal
+  | Vertical;
+
+[@deriving show]
 type split = {
   id: int,
   parentId: int,
   component: componentCreator,
-  layout,
+  direction,
   /* if omitted the split will grow to occupy whatever space is available */
   width: option(int),
   height: option(int),
 };
-
-[@deriving show]
-type direction =
-  | Horizontal
-  | Vertical;
 
 [@deriving show]
 type splitTree =
@@ -50,26 +43,24 @@ let getId = (id: option(int)) =>
   };
 
 let createSplit =
-    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~layout, ()) => {
+    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~direction, ()) => {
   id: getId(id),
   parentId,
   component,
   width,
   height,
-  layout,
+  direction,
 };
 
-type splitAction('a) = split => 'a;
-
-let rec traverseSplitTree = (tree, action: splitAction('a), result) =>
+let rec traverseSplitTree = (action, result, tree, direction: direction) =>
   switch (tree) {
   | Parent(_, _, children) =>
     List.fold_left(
-      (accum, child) => traverseSplitTree(child, action, accum),
+      (accum, child) => traverseSplitTree(action, accum, child, direction),
       result,
       children,
     )
-  | Leaf(split) => action(split, result)
+  | Leaf(split) => action(result, split, direction)
   };
 
 let rec add = (id, split, tree) =>

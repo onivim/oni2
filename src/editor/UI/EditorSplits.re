@@ -18,26 +18,22 @@ let component = React.component("EditorSplits");
 let getSplitStyle = split =>
   Style.(
     switch (split) {
-    | {layout: VerticalRight, width: Some(w), _}
-    | {layout: VerticalLeft, width: Some(w), _} => [
+    | {direction: Vertical, width: Some(w), _} => [
         top(0),
         bottom(0),
         width(w),
       ]
-    | {layout: VerticalRight, width: None, _}
-    | {layout: VerticalLeft, width: None, _} => [
+    | {direction: Vertical, width: None, _} => [
         top(0),
         bottom(0),
         flexGrow(1),
       ]
-    | {layout: HorizontalBottom, height: None, _}
-    | {layout: HorizontalTop, height: None, _} => [
+    | {direction: Horizontal, height: None, _} => [
         left(0),
         right(0),
         flexGrow(1),
       ]
-    | {layout: HorizontalTop, height: Some(h), _}
-    | {layout: HorizontalBottom, height: Some(h), _} => [
+    | {direction: Horizontal, height: Some(h), _} => [
         left(0),
         right(0),
         height(h),
@@ -52,13 +48,14 @@ let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let splits =
       WindowManager.traverseSplitTree(
-        state.windows.splits,
-        (split, allSplits) => [
+        (allSplits, split, direction) => [
           <View style={getSplitStyle(split)}> {split.component()} </View>,
-          <WindowHandle layout={split.layout} theme={state.theme} />,
+          <WindowHandle direction theme={state.theme} />,
           ...allSplits,
         ],
         [],
+        state.windows.splits,
+        Vertical,
       );
     (hooks, <View style=splitContainer> ...splits </View>);
   });
