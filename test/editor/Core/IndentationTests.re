@@ -62,5 +62,12 @@ describe("Indentation", ({describe, _}) =>
       expect.int(a1).toBe(1);
       expect.int(a2).toBe(2);
     });
+    test("if all whitespace, indentation level shoudl be 0", ({expect}) => {
+      let a1 = Indentation.getLevel(space4, "\t    \t\t");
+      let a2 = Indentation.getLevel(tab2, "\t\t       ");
+
+      expect.int(a1).toBe(0);
+      expect.int(a2).toBe(0);
+    });
   })
 );

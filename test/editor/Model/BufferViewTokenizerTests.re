@@ -13,7 +13,7 @@ let colorMap = ColorMap.create();
 
 let indentation = IndentationSettings.default;
 
-describe("tokenize", ({test, _}) => {
+describe("tokenize", ({test, describe, _}) => {
   test("empty string", ({expect}) => {
     let result =
       BufferViewTokenizer.tokenize(

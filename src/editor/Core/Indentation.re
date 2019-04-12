@@ -38,6 +38,5 @@ let getLevel = (settings: IndentationSettings.t, text: string) => {
     incr(i);
   }
 
-  indentLevel^
-
+  allWhitespace^ ? 0 : indentLevel^
 };

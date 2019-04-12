@@ -100,15 +100,17 @@ let render =
       let (x, topY) = bufferPositionToPixel(topLine^, 0);
       let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
-      Shapes.drawRect(
-        ~transform,
-        ~x=x +. indentationWidthInPixels *. float_of_int(activeIndentLevel),
-        ~y=topY +. lineHeight,
-        ~width=1.,
-        ~height=bottomY -. topY -. lineHeight,
-        ~color=theme.colors.editorIndentGuideActiveBackground,
-        (),
-      );
+      if (activeIndentLevel >= 1) {
+          Shapes.drawRect(
+            ~transform,
+            ~x=x +. indentationWidthInPixels *. float_of_int(activeIndentLevel - 1),
+            ~y=topY +. lineHeight,
+            ~width=1.,
+            ~height=bottomY -. topY -. lineHeight,
+            ~color=theme.colors.editorIndentGuideActiveBackground,
+            (),
+          );
+      };
 
   };
 
