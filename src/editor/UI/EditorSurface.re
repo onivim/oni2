@@ -124,6 +124,7 @@ let renderTokens =
       xOffset: float,
       yOffset: float,
       transform,
+      whitespaceSetting: Configuration.editorRenderWhitespace,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
 
@@ -179,7 +180,9 @@ let renderTokens =
     };
   };
 
-  List.iter(f, tokens);
+  tokens
+  |> WhitespaceTokenFilter.filter(whitespaceSetting)
+  |> List.iter(f);
 };
 
 let component = React.component("EditorSurface");
@@ -455,6 +458,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         state.editor.scrollX,
                         offset,
                         transform,
+                        state.configuration.editorRenderWhitespace,
                       );
                     ();
                   },
