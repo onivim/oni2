@@ -20,11 +20,9 @@ let filterBoundaryWhitespace = (token) => switch(token.tokenType) {
 };
 
 let filter = (whitespaceSetting: Configuration.editorRenderWhitespace, tokens: BufferViewTokenizer.t) => {
-
 	switch (whitespaceSetting) {
 	| All => tokens
 	| Boundary => List.filter(filterBoundaryWhitespace, tokens)
 	| None => List.filter(filterAllWhitespace, tokens) 
 	};
-	
 };
