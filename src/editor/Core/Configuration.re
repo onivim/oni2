@@ -33,9 +33,9 @@ type t = {
   [@key "editor.tabSize"]
   editorTabSize: int,
   [@key "editor.highlightActiveIndentGuide"]
-  editorHighlightActiveIndentGuide,
+  editorHighlightActiveIndentGuide: bool,
   [@key "editor.renderIndentGuides"]
-  editorRenderIndentGuides,
+  editorRenderIndentGuides: bool,
   [@key "editor.renderWhitespace"]
   editorRenderWhitespace,
   [@key "workbench.iconTheme"]

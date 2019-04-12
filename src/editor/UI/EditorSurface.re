@@ -215,6 +215,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let indentation = IndentationSettings.default;
 
+    let topVisibleLine = Editor.getTopVisibleLine(state.editor);
+    let bottomVisibleLine = Editor.getBottomVisibleLine(state.editor);
+
     let (cursorOffset, cursorCharacterWidth) =
       if (Buffer.getNumberOfLines(buffer) > 0) {
         let cursorStr =
@@ -233,6 +236,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       } else {
         (0, 1);
       };
+
+    let bufferPositionToPixel = (line, char) => {
+        let x = float_of_int(char) *. fontWidth -. state.editor.scrollX +. lineNumberWidth;
+        let y = float_of_int(line) *. fontHeight -. state.editor.scrollY;   
+        (x, y);
+    };
 
     let cursorWidth =
       switch (state.mode) {
@@ -497,6 +506,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                   },
                 (),
               );
+
+              switch (activeBuffer) {
+                  | None => ()
+     | Some(buffer) => IndentLineRenderer.render(~transform, ~buffer, ~startLine=topVisibleLine-1, ~endLine=bottomVisibleLine+1, ~lineHeight=fontHeight, ~fontWidth, ~cursorLine=Index.toZeroBasedInt(state.editor.cursorPosition.line), ~theme=state.theme, ~indentationSettings=indentation, ~bufferPositionToPixel, ())
+              };
+
             }}
           />
           <View style=cursorStyle />
