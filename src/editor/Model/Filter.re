@@ -34,13 +34,14 @@ let menu = (query, items) => {
 
   let scoreList =
     List.map(
-      item1 => (
-        ReasonFuzz.pathFuzzyMatch(
-          ~line=formatName(item1.name, shouldLower),
-          ~pattern=query,
+      item1 =>
+        (
+          ReasonFuzz.pathFuzzyMatch(
+            ~line=formatName(item1.name, shouldLower),
+            ~pattern=query,
+          ),
+          item1,
         ),
-        item1,
-      ),
       items,
     );
 

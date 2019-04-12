@@ -73,6 +73,11 @@ type parentHandler('a) = (direction, 'a) => 'a;
 
 let identity: parentHandler('a) = (_direction, result) => result;
 
+/**
+   Walk the split tree, for each parent traverse it leaves, and then pass the result
+   which is an abstract type to the specified parent handler which transforms the
+   eventual result. For each leaf call the action function which takes a split
+ */
 let rec traverseSplitTree =
         (
           ~handleParent=identity,
