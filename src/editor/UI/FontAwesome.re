@@ -505,7 +505,7 @@ let lifeRing = 0xf1cd;
 let lightbulb = 0xf0eb;
 let link = 0xf0c1;
 let liraSign = 0xf195;
-let list = 0xf03a;
+let listIcon = 0xf03a;
 let listAlt = 0xf022;
 let listOl = 0xf0cb;
 let listUl = 0xf0ca;
@@ -829,7 +829,6 @@ let thumbsUp = 0xf164;
 let thumbtack = 0xf08d;
 let ticketAlt = 0xf3ff;
 let times = 0xf00d;
-<<<<<<< HEAD
 let timesCircle = 0xf057;
 let tint = 0xf043;
 let tintSlash = 0xf5c7;
