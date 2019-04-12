@@ -20,3 +20,4 @@ module Theme = Theme;
 module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Ripgrep = Ripgrep;
+module Tokenizer = Tokenizer;
