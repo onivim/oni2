@@ -10,58 +10,55 @@ open Revery.Draw;
 open Oni_Core;
 open Oni_Model;
 
+type bufferPositionToPixel = (int, int) => (float, float);
 
-type bufferPositionToPixel = (int, int) => ((float, float));
+let render =
+    (
+      ~transform,
+      ~buffer: Buffer.t,
+      ~startLine: int,
+      ~endLine: int,
+      ~lineHeight: float,
+      ~fontWidth: float,
+      ~bufferPositionToPixel,
+      ~cursorLine as _,
+      ~theme as _,
+      ~indentationSettings: IndentationSettings.t,
+      (),
+    ) => {
+  /* First, render *all* indent guides */
+  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  let startLine = max(0, startLine);
+  let endLine = min(bufferLineCount, endLine);
 
-let render = (
-    ~transform,
-    ~buffer: Buffer.t,
-    ~startLine: int,
-    ~endLine: int,
-    ~lineHeight: float,
-    ~fontWidth: float,
-    ~bufferPositionToPixel,
-    ~cursorLine as _,
-    ~theme as _,
-    ~indentationSettings: IndentationSettings.t,
-    ()
-) => {
+  let l = ref(startLine);
 
-    /* First, render *all* indent guides */
-    let bufferLineCount = Buffer.getNumberOfLines(buffer);
-    let startLine = max(0, startLine);
-    let endLine = min(bufferLineCount, endLine);
+  while (l^ < endLine) {
+    let line = l^;
+    let lineText = Buffer.getLine(buffer, line);
 
-    let l = ref(startLine);
+    let level = Oni_Core.Indentation.getLevel(indentationSettings, lineText);
 
-    while (l^ < endLine) {
+    let (x, y) = bufferPositionToPixel(line, 0);
+    let indentationWidthInPixels =
+      float_of_int(indentationSettings.tabSize) *. fontWidth;
 
-        let line = l^;
-        let lineText = Buffer.getLine(buffer, line);
+    let i = ref(0);
+    while (i^ < level) {
+      Shapes.drawRect(
+        ~transform,
+        ~x=x +. indentationWidthInPixels *. float_of_int(i^),
+        ~y,
+        ~width=1.,
+        ~height=lineHeight,
+        ~color=Colors.white,
+        (),
+      );
 
-        let level = Oni_Core.Indentation.getLevel(indentationSettings, lineText);
-
-        let (x, y) = bufferPositionToPixel(line, 0);
-        let indentationWidthInPixels = float_of_int(indentationSettings.tabSize) *. fontWidth;
-
-        let i = ref(0);
-        while (i^ < level) {
-              Shapes.drawRect(
-                ~transform,
-                ~x=x +. (indentationWidthInPixels *. float_of_int(i^)),
-                ~y=y,
-                ~width=1.,
-                ~height=lineHeight,
-                ~color=Colors.white,
-                (),
-              );
-
-            incr(i);
-        }
-
-        incr(l);
+      incr(i);
     };
 
-    /* Next, render _active_ indent guide */
-
+    incr(l);
+  };
+  /* Next, render _active_ indent guide */
 };
