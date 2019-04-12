@@ -49,10 +49,10 @@ let parentStyle = (dir: direction) => {
     | Vertical => `Row
     | Horizontal => `Column
     };
-  Style.[flexGrow(0), flexDirection(flexDir)];
+  Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let handleParent = (children, direction) => [
+let handleParent = (direction, children) => [
   <View style={parentStyle(direction)}> ...children </View>,
 ];
 
@@ -65,12 +65,6 @@ let renderSplit = (~theme, allSplits, window, direction) => [
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {State.editorLayout, theme, _} = state;
-
-    let renderSplit = (allSplits, window, direction) => [
-      <View style={getSplitStyle(window)}> {window.component()} </View>,
-      <WindowHandle direction theme />,
-      ...allSplits,
-    ];
 
     let splits =
       WindowManager.traverseSplitTree(
