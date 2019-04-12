@@ -4,6 +4,6 @@
  * Helpers for dealing with indentation level
  */
 
-let getLevel = (text: string, settings: IndentationSettings.t) => {
+let getLevel = (_settings: IndentationSettings.t, _text: string) => {
     0;    
 };
