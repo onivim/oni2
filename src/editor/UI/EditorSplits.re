@@ -77,7 +77,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {editorLayout, theme, _}: State.t = state;
 
-    let handleChildren = (allSplits, window, direction) => [
+    let renderSplit = (allSplits, window, direction) => [
       <View style={getSplitStyle(window)}> {window.component()} </View>,
       <WindowHandle direction theme />,
       ...allSplits,
@@ -85,9 +85,9 @@ let createElement = (~children as _, ~state: State.t, ()) =>
 
     let splits =
       WindowManager.traverseSplitTree(
-        ~handleParent,
-        ~action=handleChildren,
         ~result=[],
+        ~handleParent,
+        ~action=renderSplit,
         ~tree=editorLayout.windows,
         ~direction=Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
         (),
