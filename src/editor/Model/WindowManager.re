@@ -106,10 +106,6 @@ let rec traverseSplitTree =
 
 let rec add = (id, split, tree) =>
   switch (tree) {
-  | Parent(direction, parentId, children) when split.direction != direction =>
-    let newParent = Parent(split.direction, parentId + 1, [Leaf(split)]);
-    let newChildren = List.append(children, [newParent]);
-    Parent(direction, parentId, newChildren);
   | Parent(direction, parentId, children) when id == parentId =>
     Parent(direction, parentId, [Leaf(split), ...children])
   | Parent(direction, parentId, children) =>

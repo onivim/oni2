@@ -12,10 +12,7 @@ open WindowManager;
 let component = React.component("EditorSplits");
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
-/**
-   TODO:
-   1.) convert this to use new direction, simplifies this greatly
- */
+
 let getSplitStyle = split =>
   Style.(
     switch (split) {
@@ -57,25 +54,31 @@ let renderDock = (dock: option(dock), state: State.t) =>
       </View>,
       <WindowHandle direction=Vertical theme={state.theme} />,
     ]
-  | None => [React.empty]
+  | None => []
   };
 
 let parentStyle = (dir: direction) => {
   let flexDir =
     switch (dir) {
-    | Vertical => `Column
-    | Horizontal => `Row
+    | Vertical => `Row
+    | Horizontal => `Column
     };
-  Style.[flexGrow(1), flexDirection(flexDir)];
+  Style.[flexGrow(0), flexDirection(flexDir)];
 };
 
 let handleParent = (children, direction) => [
   <View style={parentStyle(direction)}> ...children </View>,
 ];
 
+let renderSplit = (~theme, allSplits, window, direction) => [
+  <View style={getSplitStyle(window)}> {window.component()} </View>,
+  <WindowHandle direction theme />,
+  ...allSplits,
+];
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let {editorLayout, theme, _}: State.t = state;
+    let {State.editorLayout, theme, _} = state;
 
     let renderSplit = (allSplits, window, direction) => [
       <View style={getSplitStyle(window)}> {window.component()} </View>,
@@ -87,7 +90,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
       WindowManager.traverseSplitTree(
         ~result=[],
         ~handleParent,
-        ~action=renderSplit,
+        ~action=renderSplit(~theme),
         ~tree=editorLayout.windows,
         ~direction=Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
         (),
