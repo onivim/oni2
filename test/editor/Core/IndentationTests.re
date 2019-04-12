@@ -55,5 +55,12 @@ describe("Indentation", ({describe, _}) =>
       expect.int(a3).toBe(0);
       expect.int(a4).toBe(0);
     });
+    test("doesn't count tabs after a character", ({expect}) => {
+      let a1 = Indentation.getLevel(space4, "\ta\t");
+      let a2 = Indentation.getLevel(tab2, "\t\tabc\t\t");
+
+      expect.int(a1).toBe(1);
+      expect.int(a2).toBe(2);
+    });
   })
 );

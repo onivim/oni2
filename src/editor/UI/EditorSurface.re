@@ -211,19 +211,19 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let cursorLine = state.editor.cursorPosition.line;
-
     let indentation = IndentationSettings.default;
 
     let topVisibleLine = Editor.getTopVisibleLine(state.editor);
     let bottomVisibleLine = Editor.getBottomVisibleLine(state.editor);
 
+    let cursorLine = Index.toZeroBasedInt(state.editor.cursorPosition.line);
+
     let (cursorOffset, cursorCharacterWidth) =
-      if (Buffer.getNumberOfLines(buffer) > 0) {
+      if (lineCount > 0 && cursorLine < lineCount) {
         let cursorStr =
           Buffer.getLine(
             buffer,
-            Index.toZeroBasedInt(state.editor.cursorPosition.line),
+            cursorLine,
           );
 
         let (cursorOffset, width) =
@@ -466,7 +466,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
+                        cursorLine,
                         tokens,
                         state.editor.scrollX,
                         offset,
@@ -502,7 +502,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
+                        cursorLine,
                         offset,
                         transform,
                       );
