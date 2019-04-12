@@ -32,6 +32,10 @@ type t = {
   editorIndentSize: int,
   [@key "editor.tabSize"]
   editorTabSize: int,
+  [@key "editor.highlightActiveIndentGuide"]
+  editorHighlightActiveIndentGuide,
+  [@key "editor.renderIndentGuides"]
+  editorRenderIndentGuides,
   [@key "editor.renderWhitespace"]
   editorRenderWhitespace,
   [@key "workbench.iconTheme"]
@@ -46,6 +50,8 @@ let default = {
   editorInsertSpaces: false,
   editorIndentSize: 4,
   editorTabSize: 4,
+  editorRenderIndentGuides: true,
+  editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
   workbenchIconTheme: "vs-seti",
 };
