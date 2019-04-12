@@ -25,5 +25,5 @@ module Selection = Selection;
 module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
-module Tokenizer = Tokenizer;
+module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;

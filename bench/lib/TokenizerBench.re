@@ -1,4 +1,4 @@
-open Oni_Model;
+open Oni_Core;
 open BenchFramework;
 
 let giantString = String.make(1000, 'a');
