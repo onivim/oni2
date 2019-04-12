@@ -89,13 +89,81 @@ let createElement =
         + Constants.default.minimapLineSpacing,
       );
 
+    let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
+
+    let getScrollTo = (mouseY: float) => {
+      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
+      let visibleHeight: int = state.editor.size.pixelHeight;
+      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
+      float_of_int(offsetMouseY)
+      /. float_of_int(visibleHeight)
+      *. float_of_int(totalHeight);
+    };
+
+    let scrollComplete = () => {
+      setActive(false);
+    };
+
+    let hooks =
+      React.Hooks.effect(
+        Always,
+        () => {
+          let isCaptured = isActive;
+          let startPosition = state.editor.scrollY;
+
+          Mouse.setCapture(
+            ~onMouseMove=
+              evt =>
+                if (isCaptured) {
+                  let scrollTo = getScrollTo(evt.mouseY);
+                  let minimapLineSize =
+                    Constants.default.minimapCharacterWidth
+                    + Constants.default.minimapCharacterHeight;
+                  let linesInMinimap =
+                    state.editor.size.pixelHeight / minimapLineSize;
+                  GlobalContext.current().editorScroll(
+                    ~deltaY=
+                      (startPosition -. scrollTo)
+                      *. (-1.)
+                      -. float_of_int(linesInMinimap),
+                    (),
+                  );
+                },
+            ~onMouseUp=_evt => scrollComplete(),
+            (),
+          );
+
+          Some(
+            () =>
+              if (isCaptured) {
+                Mouse.releaseCapture();
+              },
+          );
+        },
+        hooks,
+      );
+
     let scrollY = state.editor.minimapScrollY;
+
+    let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+      let scrollTo = getScrollTo(evt.mouseY);
+      let minimapLineSize =
+        Constants.default.minimapCharacterWidth
+        + Constants.default.minimapCharacterHeight;
+      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
+      GlobalContext.current().editorScroll(
+        ~deltaY=
+          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
+        (),
+      );
+      setActive(true);
+    };
 
     ignore(width);
 
     (
       hooks,
-      <View style=absoluteStyle>
+      <View style=absoluteStyle onMouseDown>
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
