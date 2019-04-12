@@ -180,9 +180,7 @@ let renderTokens =
     };
   };
 
-  tokens
-  |> WhitespaceTokenFilter.filter(whitespaceSetting)
-  |> List.iter(f);
+  tokens |> WhitespaceTokenFilter.filter(whitespaceSetting) |> List.iter(f);
 };
 
 let component = React.component("EditorSurface");
