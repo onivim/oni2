@@ -213,6 +213,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let cursorLine = state.editor.cursorPosition.line;
 
+    let indentation = IndentationSettings.default;
+
     let (cursorOffset, cursorCharacterWidth) =
       if (Buffer.getNumberOfLines(buffer) > 0) {
         let cursorStr =
@@ -223,7 +225,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
         let (cursorOffset, width) =
           BufferViewTokenizer.getCharacterPositionAndWidth(
-            ~indentation=IndentationSettings.default,
+            ~indentation,
             cursorStr,
             Index.toZeroBasedInt(state.editor.cursorPosition.character),
           );
