@@ -220,11 +220,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let (cursorOffset, cursorCharacterWidth) =
       if (lineCount > 0 && cursorLine < lineCount) {
-        let cursorStr =
-          Buffer.getLine(
-            buffer,
-            cursorLine,
-          );
+        let cursorStr = Buffer.getLine(buffer, cursorLine);
 
         let (cursorOffset, width) =
           BufferViewTokenizer.getCharacterPositionAndWidth(

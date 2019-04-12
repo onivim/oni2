@@ -31,7 +31,7 @@ let render =
   let endLine = min(bufferLineCount, endLine);
 
   let indentationWidthInPixels =
-      float_of_int(indentationSettings.tabSize) *. fontWidth;
+    float_of_int(indentationSettings.tabSize) *. fontWidth;
 
   let l = ref(startLine);
 
@@ -66,52 +66,53 @@ let render =
   /* Get top line of region to render */
 
   if (cursorLine < bufferLineCount) {
+    let activeIndentLevel =
+      Buffer.getLine(buffer, cursorLine)
+      |> Oni_Core.Indentation.getLevel(indentationSettings);
 
-      let activeIndentLevel = Buffer.getLine(buffer, cursorLine)
-          |> Oni_Core.Indentation.getLevel(indentationSettings);
+    let topFinished = ref(false);
+    let topLine = ref(cursorLine);
+    let bottomLine = ref(cursorLine);
+    let bottomFinished = ref(false);
 
-      let topFinished = ref(false);
-      let topLine = ref(cursorLine);
-      let bottomLine = ref(cursorLine);
-      let bottomFinished = ref(false);
+    while (topLine^ >= 0 && ! topFinished^) {
+      let indentLevel =
+        Buffer.getLine(buffer, topLine^)
+        |> Oni_Core.Indentation.getLevel(indentationSettings);
 
-      while (topLine^ >= 0 && !(topFinished^)) {
-          let indentLevel = Buffer.getLine(buffer, topLine^)
-              |> Oni_Core.Indentation.getLevel(indentationSettings);
-
-          if (indentLevel < activeIndentLevel) {
-            topFinished := true;
-          } else {
-              decr(topLine);
-          }
-      }
-
-      while (bottomLine^ < bufferLineCount && !(bottomFinished^)) {
-          let indentLevel = Buffer.getLine(buffer, bottomLine^)
-              |> Oni_Core.Indentation.getLevel(indentationSettings);
-
-        if (indentLevel < activeIndentLevel) {
-            bottomFinished := true;
-        } else {
-            incr(bottomLine);
-        }
-      }
-
-      let (x, topY) = bufferPositionToPixel(topLine^, 0);
-      let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
-
-      if (activeIndentLevel >= 1) {
-          Shapes.drawRect(
-            ~transform,
-            ~x=x +. indentationWidthInPixels *. float_of_int(activeIndentLevel - 1),
-            ~y=topY +. lineHeight,
-            ~width=1.,
-            ~height=bottomY -. topY -. lineHeight,
-            ~color=theme.colors.editorIndentGuideActiveBackground,
-            (),
-          );
+      if (indentLevel < activeIndentLevel) {
+        topFinished := true;
+      } else {
+        decr(topLine);
       };
+    };
 
+    while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
+      let indentLevel =
+        Buffer.getLine(buffer, bottomLine^)
+        |> Oni_Core.Indentation.getLevel(indentationSettings);
+
+      if (indentLevel < activeIndentLevel) {
+        bottomFinished := true;
+      } else {
+        incr(bottomLine);
+      };
+    };
+
+    let (x, topY) = bufferPositionToPixel(topLine^, 0);
+    let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
+
+    if (activeIndentLevel >= 1) {
+      Shapes.drawRect(
+        ~transform,
+        ~x=
+          x +. indentationWidthInPixels *. float_of_int(activeIndentLevel - 1),
+        ~y=topY +. lineHeight,
+        ~width=1.,
+        ~height=bottomY -. topY -. lineHeight,
+        ~color=theme.colors.editorIndentGuideActiveBackground,
+        (),
+      );
+    };
   };
-
 };

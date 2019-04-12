@@ -7,7 +7,6 @@
 Printexc.record_backtrace(true);
 
 let getLevel = (settings: IndentationSettings.t, text: string) => {
-
   let tabSize = settings.tabSize;
 
   let spaceCount = ref(0);
@@ -17,26 +16,24 @@ let getLevel = (settings: IndentationSettings.t, text: string) => {
   let i = ref(0);
   let len = String.length(text);
 
-  while(i^ < len && allWhitespace^) {
-
-    let c = String.get(text, i^);
+  while (i^ < len && allWhitespace^) {
+    let c = text.[i^];
 
     switch (c) {
     | '\t' =>
+      incr(indentLevel);
+      spaceCount := 0;
+    | ' ' =>
+      incr(spaceCount);
+      if (spaceCount^ == tabSize) {
         incr(indentLevel);
         spaceCount := 0;
-    | ' ' =>
-        incr(spaceCount)
-        if (spaceCount^ == tabSize) {
-            incr(indentLevel)
-            spaceCount := 0;
-        }
+      };
     | _ => allWhitespace := false
     };
 
-
     incr(i);
-  }
+  };
 
-  allWhitespace^ ? 0 : indentLevel^
+  allWhitespace^ ? 0 : indentLevel^;
 };
