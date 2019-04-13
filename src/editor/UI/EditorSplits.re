@@ -13,7 +13,7 @@ let component = React.component("EditorSplits");
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
-let getSplitStyle = split =>
+let getSplitStyle = (split: split) =>
   Style.(
     switch (split) {
     | {direction: Vertical, width: Some(w), _} => [width(w)]
@@ -26,22 +26,25 @@ let getSplitStyle = split =>
     }
   );
 
-let getWidth = width =>
-  switch (width) {
-  | Some(w) => Style.width(w)
-  | None => Style.width(10)
-  };
+let getDockStyle = ({width, _}: dock) => {
+  let w =
+    switch (width) {
+    | Some(w) => w
+    | None => 10
+    };
+  Style.[width(w), top(0), bottom(0)];
+};
 
-let renderDock = (dock: option(dock), state: State.t) =>
-  switch (dock) {
-  | Some(d) => [
-      <View style=Style.[getWidth(d.width), top(0), bottom(0)]>
-        {d.component()}
-      </View>,
+let renderDock = (dockItems: list(dock), state: State.t) =>
+  List.fold_left(
+    (accum, item) => [
+      <View style={getDockStyle(item)}> {item.component()} </View>,
       <WindowHandle direction=Vertical theme={state.theme} />,
-    ]
-  | None => []
-  };
+      ...accum,
+    ],
+    [],
+    dockItems,
+  );
 
 let parentStyle = (dir: direction) => {
   let flexDir =
