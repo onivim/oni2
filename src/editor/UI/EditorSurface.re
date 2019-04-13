@@ -131,10 +131,6 @@ let renderTokens =
   let yF = yOffset;
   let xF = xOffset;
 
-  let textBackgroundColor =
-    isActiveLine
-      ? theme.colors.editorLineHighlightBackground : theme.colors.background;
-
   let f = (token: BufferViewTokenizer.t) => {
     let x =
       lineNumberWidth
@@ -143,13 +139,17 @@ let renderTokens =
       -. xF;
     let y = yF;
 
+  let backgroundColor =
+    isActiveLine
+      ? theme.colors.editorLineHighlightBackground : token.backgroundColor;
+
     switch (token.tokenType) {
     | Text =>
       Revery.Draw.Text.drawString(
         ~transform,
         ~x,
         ~y,
-        ~backgroundColor=textBackgroundColor,
+        ~backgroundColor,
         ~color=token.color,
         ~fontFamily="FiraCode-Regular.ttf",
         ~fontSize=14,
@@ -160,7 +160,7 @@ let renderTokens =
         ~transform,
         ~x=x +. fontWidth /. 4.,
         ~y=y +. fontHeight /. 4.,
-        ~backgroundColor=textBackgroundColor,
+        ~backgroundColor,
         ~color=theme.colors.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10,
