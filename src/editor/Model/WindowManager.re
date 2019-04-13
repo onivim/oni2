@@ -22,11 +22,16 @@ type split = {
   height: option(int),
 };
 
+/**
+   A partial version of split with only the fields
+   a that need to be explicitly set
+ */
 [@deriving show({with_path: false})]
-type dock = {
+type splitMetadata = {
   component: componentCreator,
   width: option(int),
   height: option(int),
+  direction,
 };
 
 [@deriving show({with_path: false})]
@@ -39,35 +44,28 @@ type splits = splitTree;
 
 type t = {
   windows: splits,
-  leftDock: option(dock),
-  rightDock: option(dock),
+  activeWindowId: int,
+  leftDock: option(splitMetadata),
+  rightDock: option(splitMetadata),
 };
 
-let empty = Parent(Horizontal, 0, []);
+let empty = Parent(Vertical, 0, []);
 
-let create = (): t => {windows: empty, leftDock: None, rightDock: None};
+let create = (): t => {
+  activeWindowId: 0,
+  windows: empty,
+  leftDock: None,
+  rightDock: None,
+};
 
-let getId = (id: option(int)) =>
-  switch (id) {
-  | Some(i) => i
-  | None => WindowSplitId.getUniqueId()
-  };
-
-let createSplit =
-    (~id=?, ~parentId, ~width=?, ~height=?, ~component, ~direction, ()) => {
-  id: getId(id),
-  parentId,
+let createSplit = (~width=?, ~height=?, ~component, ~direction, ()) => {
   component,
   width,
   height,
   direction,
 };
 
-let createDock = (~width=?, ~height=?, ~component, ()) => {
-  width,
-  height,
-  component,
-};
+let createDock = createSplit(~direction=Vertical);
 
 type parentHandler('a) = (direction, 'a) => 'a;
 
@@ -106,10 +104,32 @@ let rec traverseSplitTree =
   | Leaf(split) => action(result, split, direction)
   };
 
+let enrichSplit = (s: splitMetadata, parentId): split => {
+  parentId,
+  component: s.component,
+  direction: s.direction,
+  id: WindowSplitId.getUniqueId(),
+  width: s.width,
+  height: s.height,
+};
+
 let rec add = (id, split, tree) =>
   switch (tree) {
+  | Parent(direction, parentId, tree) when direction != split.direction =>
+    let newParentId = parentId + 1;
+    let newParent =
+      Parent(
+        split.direction,
+        newParentId,
+        [Leaf(enrichSplit(split, newParentId))],
+      );
+    Parent(direction, parentId, List.append(tree, [newParent]));
   | Parent(direction, parentId, children) when id == parentId =>
-    Parent(direction, parentId, [Leaf(split), ...children])
+    Parent(
+      direction,
+      parentId,
+      [Leaf(enrichSplit(split, parentId)), ...children],
+    )
   | Parent(direction, parentId, children) =>
     let newChildren = List.map(child => add(id, split, child), children);
     Parent(direction, parentId, newChildren);
