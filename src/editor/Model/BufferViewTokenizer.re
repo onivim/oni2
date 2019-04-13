@@ -80,8 +80,7 @@ let textRunToToken =
       theme.colors.editorBackground,
     );
 
-  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? Colors.white : Colors.red;
-
+  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? theme.colors.editorSelectionBackground: theme.colors.editorBackground ;
   let ret: t = {
     tokenType,
     text: r.text,
