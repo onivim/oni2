@@ -53,9 +53,12 @@ let textRunToToken =
       colorMap,
       theme: Theme.t,
       tokenColorArray: array(ColorizedToken.t),
+      selectionStart: int,
+      selectionEnd: int,
       r: Tokenizer.TextRun.t,
     ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
+  let endIndex = Index.toZeroBasedInt(r.endIndex);
   let colorIndex = tokenColorArray[startIndex];
 
   let firstChar = Zed_utf8.get(r.text, 0);
@@ -77,13 +80,15 @@ let textRunToToken =
       theme.colors.editorBackground,
     );
 
+  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? Colors.white : Colors.red;
+
   let ret: t = {
     tokenType,
     text: r.text,
     startPosition: r.startPosition,
     endPosition: r.endPosition,
     color,
-    backgroundColor: Colors.white,
+    backgroundColor,
   };
   ret;
 };
@@ -171,5 +176,5 @@ let tokenize:
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
-    |> List.map(textRunToToken(colorMap, theme, tokenColorArray));
+    |> List.map(textRunToToken(colorMap, theme, tokenColorArray, selectionStart, selectionEnd));
   };

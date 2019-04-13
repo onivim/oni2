@@ -270,7 +270,6 @@ let parse = (t: string, msg: Msgpck.t) => {
           ~mode,
           (),
         );
-      print_endline("RANGE: " ++ Core.Types.VisualRange.show(visRange));
       [VisualRangeUpdate(visRange)];
     | (
         "oni_plugin_notify",
