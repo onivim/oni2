@@ -3,6 +3,9 @@ open Revery_UI;
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
+module WindowId =
+  Revery.UniqueId.Make({});
+
 [@deriving show({with_path: false})]
 type componentCreator = unit => React.syntheticElement;
 
@@ -59,10 +62,12 @@ type t = {
   rightDock: list(dock),
 };
 
-let empty = Parent(Vertical, 0, []);
+let initialWindowId = WindowId.getUniqueId();
+
+let empty = Parent(Vertical, initialWindowId, []);
 
 let create = (): t => {
-  activeWindowId: 0,
+  activeWindowId: initialWindowId,
   windows: empty,
   leftDock: [],
   rightDock: [],
@@ -130,7 +135,7 @@ let rec traverseSplitTree =
 let rec add = (id, split, tree) =>
   switch (tree) {
   | Parent(direction, parentId, tree) when direction != split.direction =>
-    let newParentId = parentId + 1;
+    let newParentId = WindowId.getUniqueId();
     let newParent =
       Parent(
         split.direction,
