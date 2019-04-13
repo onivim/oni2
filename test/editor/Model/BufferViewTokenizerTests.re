@@ -22,6 +22,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
     expect.int(List.length(result)).toBe(0);
   });
@@ -37,6 +38,7 @@ describe("tokenize", ({test, _}) => {
           tokenColors,
           colorMap,
           indentation,
+          None,
         );
 
       let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -46,6 +48,7 @@ describe("tokenize", ({test, _}) => {
           startPosition: ZeroBasedIndex(4),
           endPosition: ZeroBasedIndex(7),
           color: Colors.red,
+          backgroundColor: Colors.white,
         },
       ];
 
@@ -61,6 +64,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
     expect.int(List.length(result)).toBe(0);
   });
@@ -73,6 +77,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -82,6 +87,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(8),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 
@@ -96,6 +102,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -105,6 +112,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(2),
         endPosition: ZeroBasedIndex(10),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 
@@ -119,6 +127,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -128,6 +137,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 
@@ -146,6 +156,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -155,6 +166,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
       {
         tokenType: Text,
@@ -162,6 +174,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(1),
         endPosition: ZeroBasedIndex(2),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 
@@ -176,6 +189,7 @@ describe("tokenize", ({test, _}) => {
         tokenColors,
         colorMap,
         indentation,
+        None,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -185,6 +199,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(1),
         endPosition: ZeroBasedIndex(2),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
       {
         tokenType: Text,
@@ -192,6 +207,7 @@ describe("tokenize", ({test, _}) => {
         startPosition: ZeroBasedIndex(3),
         endPosition: ZeroBasedIndex(8),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 

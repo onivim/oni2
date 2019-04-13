@@ -266,7 +266,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         backgroundColor(Colors.white),
       ];
 
-    let getTokensForLine = i => {
+    let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
@@ -280,6 +280,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         tokenColors,
         state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
+        selection,
       );
     };
 
@@ -396,13 +397,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 (),
               );
 
+              let selectionRanges: Hashtbl.t(int, Range.t) = Hashtbl.create(100);
+
               /* Draw selection ranges */
               switch (activeBuffer) {
               | Some(b) =>
                 let ranges = Selection.getRanges(state.editor.selection, b);
                 Oni_Core.Types.Range.(
                   List.iter(
-                    (r: Range.t) =>
+                    (r: Range.t) => {
+
+                      Hashtbl.add(selectionRanges, Index.toZeroBasedInt(r.startPosition.line), r);
                       Shapes.drawRect(
                         ~transform,
                         ~x=
@@ -428,7 +433,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                           *. fontWidth,
                         ~color=theme.colors.editorSelectionBackground,
                         (),
-                      ),
+                      )
+              },
                     ranges,
                   )
                 );
@@ -442,7 +448,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let tokens = getTokensForLine(item);
+                    let selectionRange = Hashtbl.find_opt(selectionRanges, item);
+                    let tokens = getTokensForLine(~selection=selectionRange, item);
 
                     let _ =
                       renderTokens(

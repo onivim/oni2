@@ -21,6 +21,7 @@ type t = {
   startPosition: Index.t,
   endPosition: Index.t,
   color: Color.t,
+  backgroundColor: Color.t,
 };
 
 let space = UChar.of_char(' ');
@@ -82,6 +83,7 @@ let textRunToToken =
     startPosition: r.startPosition,
     endPosition: r.endPosition,
     color,
+    backgroundColor: Colors.white,
   };
   ret;
 };
@@ -121,10 +123,11 @@ let tokenize:
     Theme.t,
     list(ColorizedToken.t),
     ColorMap.t,
-    IndentationSettings.t
+    IndentationSettings.t,
+    option(Range.t),
   ) =>
   list(t) =
-  (s, theme, tokenColors, colorMap, indentationSettings) => {
+  (s, theme, tokenColors, colorMap, indentationSettings, selection) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);
@@ -141,6 +144,14 @@ let tokenize:
         f(tail, pos^);
       };
 
+    let (selectionStart, selectionEnd) = switch(selection) {
+    | Some(v) => (
+        Index.toZeroBasedInt(v.startPosition.character),
+        Index.toZeroBasedInt(v.endPosition.character),
+    )
+    | None => (-1, -1)
+    };
+
     let tokenColors = List.rev(tokenColors);
 
     f(tokenColors, len - 1);
@@ -152,7 +163,10 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2
       /* Always split on tabs */
       || UChar.eq(c0, tab)
-      || UChar.eq(c1, tab);
+      || UChar.eq(c1, tab)
+      /* And selection */
+      || i0 == selectionStart
+      || i1 == selectionEnd;
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
