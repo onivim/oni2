@@ -81,6 +81,7 @@ let textRunToToken =
     );
 
   let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? theme.colors.editorSelectionBackground: theme.colors.editorBackground ;
+
   let ret: t = {
     tokenType,
     text: r.text,
@@ -149,12 +150,14 @@ let tokenize:
       };
 
     let (selectionStart, selectionEnd) = switch(selection) {
-    | Some(v) => (
-        Index.toZeroBasedInt(v.startPosition.character),
-        Index.toZeroBasedInt(v.endPosition.character),
-    )
+    | Some(v) => 
+        let s = Index.toZeroBasedInt(v.startPosition.character);
+        let e = Index.toZeroBasedInt(v.endPosition.character);
+        e > s ? (s, e) : (e, s);
     | None => (-1, -1)
     };
+
+
 
     let tokenColors = List.rev(tokenColors);
 
@@ -170,6 +173,8 @@ let tokenize:
       || UChar.eq(c1, tab)
       /* And selection */
       || i0 == selectionStart
+      || i0 == selectionEnd
+      || i1 == selectionStart
       || i1 == selectionEnd;
     };
 
