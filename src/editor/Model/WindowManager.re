@@ -138,8 +138,8 @@ let rec traverseSplitTree =
   | Leaf(split) => action(result, split, direction)
   };
 
-let rec add = (id, split, tree) =>
-  switch (tree) {
+let rec add = (id, split, currentTree) =>
+  switch (currentTree) {
   | Parent(direction, parentId, tree)
       when id == parentId && direction != split.direction =>
     let newParentId = WindowId.next();

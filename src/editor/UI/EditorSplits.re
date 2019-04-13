@@ -80,11 +80,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
       )
       |> List.append(renderDock(editorLayout.leftDock, state))
       |> (
-        components =>
-          List.concat([
-            components,
-            renderDock(editorLayout.rightDock, state),
-          ])
+        components => components @ renderDock(editorLayout.rightDock, state)
       );
     (hooks, <View style=splitContainer> ...splits </View>);
   });
