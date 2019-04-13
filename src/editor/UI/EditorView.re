@@ -94,26 +94,26 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
-          let editor3 =
-            Window.createSplit(
-              ~direction=Vertical,
-              ~component=splitFactory(state => <EditorSurface state />),
-              (),
-            );
+          /* let editor3 = */
+          /*   Window.createSplit( */
+          /*     ~direction=Horizontal, */
+          /*     ~component=splitFactory(state => <EditorSurface state />), */
+          /*     (), */
+          /*   ); */
 
-          let editor4 =
-            Window.createSplit(
-              ~direction=Vertical,
-              ~component=splitFactory(state => <EditorSurface state />),
-              (),
-            );
+          /* let editor4 = */
+          /*   Window.createSplit( */
+          /*     ~direction=Horizontal, */
+          /*     ~component=splitFactory(state => <EditorSurface state />), */
+          /*     (), */
+          /*   ); */
 
           dispatch(AddLeftDock(dock));
           dispatch(AddSplit(editor));
           dispatch(AddSplit(editor1));
           dispatch(AddSplit(editor2));
-          dispatch(AddSplit(editor3));
-          dispatch(AddSplit(editor4));
+          /* dispatch(AddSplit(editor3)); */
+          /* dispatch(AddSplit(editor4)); */
           None;
         },
         hooks,

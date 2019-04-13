@@ -133,7 +133,7 @@ let reduce: (State.t, Actions.t) => State.t =
             ...s.editorLayout,
             windows:
               WindowManager.add(
-                s.editorLayout.activeWindowId,
+                WindowManager.WindowId.current(),
                 split,
                 s.editorLayout.windows,
               ),

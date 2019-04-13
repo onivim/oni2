@@ -3,8 +3,14 @@ open Revery_UI;
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
-module WindowId =
-  Revery.UniqueId.Make({});
+module WindowId = {
+  let _current = ref(0);
+  let current = () => _current^;
+  let next = () => {
+    incr(_current);
+    current();
+  };
+};
 
 [@deriving show({with_path: false})]
 type componentCreator = unit => React.syntheticElement;
@@ -62,7 +68,7 @@ type t = {
   rightDock: list(dock),
 };
 
-let initialWindowId = WindowId.getUniqueId();
+let initialWindowId = WindowId.next();
 
 let empty = Parent(Vertical, initialWindowId, []);
 
@@ -134,16 +140,17 @@ let rec traverseSplitTree =
 
 let rec add = (id, split, tree) =>
   switch (tree) {
-  | Parent(direction, parentId, tree) when direction != split.direction =>
-    let newParentId = WindowId.getUniqueId();
+  | Parent(direction, parentId, tree)
+      when id == parentId && direction != split.direction =>
+    let newParentId = WindowId.next();
     let newParent =
       Parent(
         split.direction,
         newParentId,
         [Leaf(enrichSplit(newParentId, split))],
       );
-    Parent(direction, parentId, List.append(tree, [newParent]));
-  | Parent(direction, parentId, children) when id == parentId =>
+    Parent(direction, parentId, tree @ [newParent]);
+  | Parent(direction, parentId, children) when parentId == id =>
     Parent(
       direction,
       parentId,
@@ -152,5 +159,5 @@ let rec add = (id, split, tree) =>
   | Parent(direction, parentId, children) =>
     let newChildren = List.map(child => add(id, split, child), children);
     Parent(direction, parentId, newChildren);
-  | Leaf(_) => tree
+  | Leaf(s) => Leaf(s)
   };
