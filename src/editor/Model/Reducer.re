@@ -139,12 +139,13 @@ let reduce: (State.t, Actions.t) => State.t =
               ),
           },
         }
-      /* | RemoveSplit(id) => { */
-      /*     ...s, */
-      /*     windows: { */
-      /*       splits: WindowManager.remove(id, s.windows.splits), */
-      /*     }, */
-      /*   } */
+      | RemoveSplit(id) => {
+          ...s,
+          editorLayout: {
+            ...s.editorLayout,
+            windows: WindowManager.remove(id, s.editorLayout.windows),
+          },
+        }
       | _ => s
       };
     };

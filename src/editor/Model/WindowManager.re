@@ -161,3 +161,12 @@ let rec add = (id, split, currentTree) =>
     Parent(direction, parentId, newChildren);
   | Leaf(s) => Leaf(s)
   };
+
+let rec remove = (id, currentTree) =>
+  switch (currentTree) {
+  | Parent(direction, parentId, children) =>
+    let newChildren = List.map(child => remove(id, child), children);
+    Parent(direction, parentId, newChildren);
+  | Leaf(split) when split.id == id => currentTree
+  | Leaf(_) as s => s
+  };
