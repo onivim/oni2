@@ -138,7 +138,7 @@ let rec traverseSplitTree =
   | Leaf(split) => action(result, split, direction)
   };
 
-let rec add = (id, split, currentTree) =>
+let rec addSplit = (id, split, currentTree) =>
   switch (currentTree) {
   | Parent(direction, parentId, tree)
       when id == parentId && direction != split.direction =>
@@ -157,15 +157,16 @@ let rec add = (id, split, currentTree) =>
       [Leaf(enrichSplit(parentId, split)), ...children],
     )
   | Parent(direction, parentId, children) =>
-    let newChildren = List.map(child => add(id, split, child), children);
+    let newChildren =
+      List.map(child => addSplit(id, split, child), children);
     Parent(direction, parentId, newChildren);
   | Leaf(s) => Leaf(s)
   };
 
-let rec remove = (id, currentTree) =>
+let rec removeSplit = (id, currentTree) =>
   switch (currentTree) {
   | Parent(direction, parentId, children) =>
-    let newChildren = List.map(child => remove(id, child), children);
+    let newChildren = List.map(child => removeSplit(id, child), children);
     Parent(direction, parentId, newChildren);
   | Leaf(split) when split.id == id => currentTree
   | Leaf(_) as s => s
