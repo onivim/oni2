@@ -37,11 +37,12 @@ let getDockStyle = ({width, _}: dock) => {
 
 let renderDock = (dockItems: list(dock), state: State.t) =>
   List.fold_left(
-    (accum, item) => [
-      <View style={getDockStyle(item)}> {item.component()} </View>,
-      <WindowHandle direction=Vertical theme={state.theme} />,
-      ...accum,
-    ],
+    (accum, item) =>
+      [
+        <View style={getDockStyle(item)}> {item.component()} </View>,
+        <WindowHandle direction=Vertical theme={state.theme} />,
+        ...accum,
+      ],
     [],
     dockItems,
   );
