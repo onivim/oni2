@@ -13,7 +13,7 @@ let component = React.component("EditorSplits");
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
-let getSplitStyle = (split: split) =>
+let splitStyle = (split: split) =>
   Style.(
     switch (split) {
     | {direction: Vertical, width: Some(w), _} => [width(w)]
@@ -47,38 +47,43 @@ let renderDock = (dockItems: list(dock), state: State.t) =>
     dockItems,
   );
 
+let debugParent = (isDebugMode, direction) => {
+  let debugColor =
+    switch (direction) {
+    | Vertical => Colors.red
+    | Horizontal => Colors.green
+    };
+  isDebugMode ? Style.[border(~width=2, ~color=debugColor)] : [];
+};
+
 let parentStyle = (dir: direction) => {
   let flexDir =
     switch (dir) {
     | Vertical => `Row
     | Horizontal => `Column
     };
-  Style.[flexGrow(1), flexDirection(flexDir)];
+  Style.[flexGrow(1), flexDirection(flexDir), ...debugParent(true, dir)];
 };
 
-let handleParent = (direction, children) => [
-  <View style={parentStyle(direction)}> ...children </View>,
-];
-
-let renderSplit = (~theme, allSplits, window, direction) => [
-  <View style={getSplitStyle(window)}> {window.component()} </View>,
-  <WindowHandle direction theme />,
-  ...allSplits,
-];
+let rec renderTree = (~direction, theme, tree) =>
+  switch (tree) {
+  | Parent(direction, _, children) =>
+    <View style={parentStyle(direction)}>
+      ...{List.map(renderTree(~direction, theme), children)}
+    </View>
+  | Leaf(window) =>
+    <View style={splitStyle(window)}>
+      {window.component()}
+      <WindowHandle direction theme />
+    </View>
+  };
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {State.editorLayout, theme, _} = state;
 
     let splits =
-      WindowManager.traverseSplitTree(
-        ~result=[],
-        ~handleParent,
-        ~action=renderSplit(~theme),
-        ~tree=editorLayout.windows,
-        ~direction=Vertical /* Initial split direction, less relevant as we currently start with one split open*/,
-        (),
-      )
+      [renderTree(~direction=Vertical, theme, editorLayout.windows)]
       |> List.append(renderDock(editorLayout.leftDock, state))
       |> (
         components => components @ renderDock(editorLayout.rightDock, state)

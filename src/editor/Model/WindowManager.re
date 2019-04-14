@@ -149,7 +149,7 @@ let rec addSplit = (id, split, currentTree) =>
         newParentId,
         [Leaf(enrichSplit(newParentId, split))],
       );
-    Parent(direction, parentId, tree @ [newParent]);
+    Parent(split.direction, parentId, tree @ [newParent]);
   | Parent(direction, parentId, children) when parentId == id =>
     Parent(
       direction,
@@ -169,5 +169,5 @@ let rec removeSplit = (id, currentTree) =>
     let newChildren = List.map(child => removeSplit(id, child), children);
     Parent(direction, parentId, newChildren);
   | Leaf(split) when split.id == id => currentTree
-  | Leaf(_) as s => s
+  | Leaf(_) as leaf => leaf
   };
