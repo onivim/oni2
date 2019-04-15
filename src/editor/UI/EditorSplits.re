@@ -47,22 +47,13 @@ let renderDock = (dockItems: list(dock), state: State.t) =>
     dockItems,
   );
 
-let debugParent = (isDebugMode, direction) => {
-  let debugColor =
-    switch (direction) {
-    | Vertical => Colors.red
-    | Horizontal => Colors.green
-    };
-  isDebugMode ? Style.[border(~width=2, ~color=debugColor)] : [];
-};
-
 let parentStyle = (dir: direction) => {
   let flexDir =
     switch (dir) {
     | Vertical => `Row
     | Horizontal => `Column
     };
-  Style.[flexGrow(1), flexDirection(flexDir), ...debugParent(true, dir)];
+  Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
 let rec renderTree = (~direction, theme, tree) =>
