@@ -81,10 +81,11 @@ let rec renderTree = (~direction, theme, tree) =>
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {State.editorLayout, theme, _} = state;
+    let {windows, leftDock, rightDock, _} = editorLayout;
 
     let splits =
-      renderDock(editorLayout.rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, editorLayout.windows)])
-      |> (@)(renderDock(editorLayout.leftDock, state));
+      renderDock(rightDock, state)
+      |> (@)([renderTree(~direction=Vertical, theme, windows)])
+      |> (@)(renderDock(leftDock, state));
     (hooks, <View style=splitContainer> ...splits </View>);
   });
