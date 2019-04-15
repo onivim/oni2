@@ -116,7 +116,7 @@ let rec addSplit = (id, split, currentTree) =>
         [Leaf(enrichSplit(newParentId, split))],
       );
     Parent(split.direction, parentId, tree @ [newParent]);
-  | Parent(direction, parentId, children) when parentId == id =>
+  | Parent(direction, parentId, children) when matchingParent(parentId, id) =>
     Parent(
       direction,
       parentId,
