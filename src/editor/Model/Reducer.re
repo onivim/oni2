@@ -127,18 +127,17 @@ let reduce: (State.t, Actions.t) => State.t =
             rightDock: [dock, ...s.editorLayout.rightDock],
           },
         }
-      | AddSplit(split) => {
+      | AddSplit(split) =>
+        let id = WindowManager.WindowId.current();
+        {
           ...s,
           editorLayout: {
             ...s.editorLayout,
+            activeWindowId: id,
             windows:
-              WindowManager.addSplit(
-                WindowManager.WindowId.current(),
-                split,
-                s.editorLayout.windows,
-              ),
+              WindowManager.addSplit(id, split, s.editorLayout.windows),
           },
-        }
+        };
       | RemoveSplit(id) => {
           ...s,
           editorLayout: {

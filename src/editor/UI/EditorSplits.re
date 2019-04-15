@@ -16,7 +16,7 @@ let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 let splitStyle = (split: split) =>
   Style.(
     switch (split) {
-    | {direction: Vertical, width: Some(w), _} => [width(w)]
+    | {direction: Vertical, width: Some(w), _} => [width(w), flexGrow(1)]
     | {direction: Vertical, width: None, _} => [flexGrow(1)]
     | {direction: Horizontal, height: None, _} => [flexGrow(1)]
     | {direction: Horizontal, height: Some(h), _} => [
@@ -83,10 +83,8 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     let {State.editorLayout, theme, _} = state;
 
     let splits =
-      [renderTree(~direction=Vertical, theme, editorLayout.windows)]
-      |> List.append(renderDock(editorLayout.leftDock, state))
-      |> (
-        components => components @ renderDock(editorLayout.rightDock, state)
-      );
+      renderDock(editorLayout.rightDock, state)
+      |> (@)([renderTree(~direction=Vertical, theme, editorLayout.windows)])
+      |> (@)(renderDock(editorLayout.leftDock, state));
     (hooks, <View style=splitContainer> ...splits </View>);
   });

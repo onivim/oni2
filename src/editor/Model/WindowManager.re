@@ -101,47 +101,13 @@ let createDock = (~component, ~width=?, ()) => {
   width,
 };
 
-type parentHandler('a) = (direction, 'a) => 'a;
-
-let identity: parentHandler('a) = (_direction, result) => result;
-
-/**
-   Walk the split tree, for each parent traverse it leaves, and then pass the result
-   which is an abstract type to the specified parent handler which transforms the
-   eventual result. For each leaf call the action function which takes a split
- */
-let rec traverseSplitTree =
-        (
-          ~handleParent=identity,
-          ~action,
-          ~result,
-          ~tree,
-          ~direction: direction,
-          (),
-        ) =>
-  switch (tree) {
-  | Parent(direction, _, children) =>
-    List.fold_left(
-      (accum, child) =>
-        traverseSplitTree(
-          ~action,
-          ~result=accum,
-          ~tree=child,
-          ~handleParent,
-          ~direction,
-          (),
-        ),
-      result,
-      children,
-    )
-    |> handleParent(direction)
-  | Leaf(split) => action(result, split, direction)
-  };
+let directionChanged = (direction, split) => direction != split.direction;
+let matchingParent = (id, parentId) => id == parentId;
 
 let rec addSplit = (id, split, currentTree) =>
   switch (currentTree) {
   | Parent(direction, parentId, tree)
-      when id == parentId && direction != split.direction =>
+      when matchingParent(id, parentId) && directionChanged(direction, split) =>
     let newParentId = WindowId.next();
     let newParent =
       Parent(
