@@ -1,5 +1,5 @@
 /**
-   Editor Splits
+   EditorLayoutView
 
    This modules interprets the current state of the window
    manager and arranges its children accordingly
