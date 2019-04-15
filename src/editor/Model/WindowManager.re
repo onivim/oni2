@@ -35,6 +35,7 @@ type split = {
    A dock is a sub type of split, it does not require
    a parent ID as docks are list of splits, not a tree
  */
+[@deriving show({with_path: false})]
 type dock = {
   id: int,
   component: componentCreator,
@@ -56,13 +57,12 @@ type splitMetadata = {
 [@deriving show({with_path: false})]
 type splitTree =
   | Parent(direction, int, list(splitTree))
-  | Leaf(split);
+  | Leaf(split)
+  | Empty;
 
 [@deriving show({with_path: false})]
-type splits = splitTree;
-
 type t = {
-  windows: splits,
+  windows: splitTree,
   activeWindowId: int,
   leftDock: list(dock),
   rightDock: list(dock),
@@ -126,7 +126,8 @@ let rec addSplit = (id, split, currentTree) =>
     let newChildren =
       List.map(child => addSplit(id, split, child), children);
     Parent(direction, parentId, newChildren);
-  | Leaf(s) => Leaf(s)
+  | Leaf(split) => Leaf(split)
+  | Empty => Empty
   };
 
 let rec removeSplit = (id, currentTree) =>
@@ -134,6 +135,7 @@ let rec removeSplit = (id, currentTree) =>
   | Parent(direction, parentId, children) =>
     let newChildren = List.map(child => removeSplit(id, child), children);
     Parent(direction, parentId, newChildren);
-  | Leaf(split) when split.id == id => currentTree
+  | Leaf(split) when split.id == id => Empty
   | Leaf(_) as leaf => leaf
+  | Empty => Empty
   };

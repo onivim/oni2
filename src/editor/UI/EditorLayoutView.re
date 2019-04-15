@@ -67,6 +67,7 @@ let rec renderTree = (~direction, theme, tree) =>
       {window.component()}
       <WindowHandle direction theme />
     </View>
+    | Empty => React.empty
   };
 
 let createElement = (~children as _, ~state: State.t, ()) =>
