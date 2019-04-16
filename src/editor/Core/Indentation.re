@@ -22,9 +22,11 @@ let getLevel = (settings: IndentationSettings.t, text: string) => {
       incr(indentLevel);
       spaceCount := 0;
     | ' ' =>
+      if (spaceCount^ == 0) {
+        incr(indentLevel);
+      };
       incr(spaceCount);
       if (spaceCount^ == tabSize) {
-        incr(indentLevel);
         spaceCount := 0;
       };
     | _ => allWhitespace := false

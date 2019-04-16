@@ -44,16 +44,21 @@ describe("Indentation", ({describe, _}) =>
       expect.int(a3).toBe(2);
       expect.int(a4).toBe(1);
     });
-    test("string with single space has zero indentation levej", ({expect}) => {
+    test("extra space bumps up to next indentation level", ({expect}) => {
+      let a1 = Indentation.getLevel(space4, "     test string");
+
+      expect.int(a1).toBe(2);
+    });
+    test("string with single space has one indentation levej", ({expect}) => {
       let a1 = Indentation.getLevel(space4, " test string");
       let a2 = Indentation.getLevel(space2, " test string");
       let a3 = Indentation.getLevel(tab2, " test string");
       let a4 = Indentation.getLevel(tab4, " test string");
 
-      expect.int(a1).toBe(0);
-      expect.int(a2).toBe(0);
-      expect.int(a3).toBe(0);
-      expect.int(a4).toBe(0);
+      expect.int(a1).toBe(1);
+      expect.int(a2).toBe(1);
+      expect.int(a3).toBe(1);
+      expect.int(a4).toBe(1);
     });
     test("doesn't count tabs after a character", ({expect}) => {
       let a1 = Indentation.getLevel(space4, "\ta\t");
@@ -62,7 +67,7 @@ describe("Indentation", ({describe, _}) =>
       expect.int(a1).toBe(1);
       expect.int(a2).toBe(2);
     });
-    test("if all whitespace, indentation level shoudl be 0", ({expect}) => {
+    test("if all whitespace, indentation level should be 0", ({expect}) => {
       let a1 = Indentation.getLevel(space4, "\t    \t\t");
       let a2 = Indentation.getLevel(tab2, "\t\t       ");
 
