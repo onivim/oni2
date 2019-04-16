@@ -21,6 +21,7 @@ type t = {
   startPosition: Index.t,
   endPosition: Index.t,
   color: Color.t,
+  backgroundColor: Color.t,
 };
 
 let space = UChar.of_char(' ');
@@ -49,12 +50,17 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
 
 let textRunToToken =
     (
+      defaultColor,
+      selectionColor,
       colorMap,
       theme: Theme.t,
       tokenColorArray: array(ColorizedToken.t),
+      selectionStart: int,
+      selectionEnd: int,
       r: Tokenizer.TextRun.t,
     ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
+  let endIndex = Index.toZeroBasedInt(r.endIndex);
   let colorIndex = tokenColorArray[startIndex];
 
   let firstChar = Zed_utf8.get(r.text, 0);
@@ -76,12 +82,17 @@ let textRunToToken =
       theme.colors.editorBackground,
     );
 
+  let backgroundColor =
+    startIndex >= selectionStart && endIndex <= selectionEnd
+      ? selectionColor : defaultColor;
+
   let ret: t = {
     tokenType,
     text: r.text,
     startPosition: r.startPosition,
     endPosition: r.endPosition,
     color,
+    backgroundColor,
   };
   ret;
 };
@@ -121,10 +132,22 @@ let tokenize:
     Theme.t,
     list(ColorizedToken.t),
     ColorMap.t,
-    IndentationSettings.t
+    IndentationSettings.t,
+    option(Range.t),
+    Color.t,
+    Color.t
   ) =>
   list(t) =
-  (s, theme, tokenColors, colorMap, indentationSettings) => {
+  (
+    s,
+    theme,
+    tokenColors,
+    colorMap,
+    indentationSettings,
+    selection,
+    defaultBackgroundColor,
+    selectionColor,
+  ) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);
@@ -141,6 +164,15 @@ let tokenize:
         f(tail, pos^);
       };
 
+    let (selectionStart, selectionEnd) =
+      switch (selection) {
+      | Some(v) =>
+        let s = Index.toZeroBasedInt(v.startPosition.character);
+        let e = Index.toZeroBasedInt(v.endPosition.character);
+        e > s ? (s, e) : (e, s);
+      | None => ((-1), (-1))
+      };
+
     let tokenColors = List.rev(tokenColors);
 
     f(tokenColors, len - 1);
@@ -152,10 +184,25 @@ let tokenize:
       || colorizedToken1 !== colorizedToken2
       /* Always split on tabs */
       || UChar.eq(c0, tab)
-      || UChar.eq(c1, tab);
+      || UChar.eq(c1, tab)
+      /* And selection */
+      || i0 == selectionStart
+      || i0 == selectionEnd
+      || i1 == selectionStart
+      || i1 == selectionEnd;
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
-    |> List.map(textRunToToken(colorMap, theme, tokenColorArray));
+    |> List.map(
+         textRunToToken(
+           defaultBackgroundColor,
+           selectionColor,
+           colorMap,
+           theme,
+           tokenColorArray,
+           selectionStart,
+           selectionEnd,
+         ),
+       );
   };

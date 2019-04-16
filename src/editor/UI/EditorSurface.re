@@ -116,24 +116,16 @@ let renderTokens =
     (
       fontWidth: float,
       fontHeight: float,
-      lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
-      cursorLine: int,
       tokens,
       xOffset: float,
       yOffset: float,
       transform,
       whitespaceSetting: Configuration.editorRenderWhitespace,
     ) => {
-  let isActiveLine = lineNumber == cursorLine;
-
   let yF = yOffset;
   let xF = xOffset;
-
-  let textBackgroundColor =
-    isActiveLine
-      ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
   let f = (token: BufferViewTokenizer.t) => {
     let x =
@@ -143,13 +135,15 @@ let renderTokens =
       -. xF;
     let y = yF;
 
+    let backgroundColor = token.backgroundColor;
+
     switch (token.tokenType) {
     | Text =>
       Revery.Draw.Text.drawString(
         ~transform,
         ~x,
         ~y,
-        ~backgroundColor=textBackgroundColor,
+        ~backgroundColor,
         ~color=token.color,
         ~fontFamily="FiraCode-Regular.ttf",
         ~fontSize=14,
@@ -160,7 +154,7 @@ let renderTokens =
         ~transform,
         ~x=x +. fontWidth /. 4.,
         ~y=y +. fontHeight /. 4.,
-        ~backgroundColor=textBackgroundColor,
+        ~backgroundColor,
         ~color=theme.colors.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10,
@@ -277,7 +271,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         backgroundColor(Colors.white),
       ];
 
-    let getTokensForLine = i => {
+    let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
@@ -285,19 +279,29 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           state.activeBufferId,
           i,
         );
+
+      let isActiveLine = i == cursorLine;
+      let defaultBackground =
+        isActiveLine
+          ? theme.colors.editorLineHighlightBackground
+          : theme.colors.editorBackground;
+
       BufferViewTokenizer.tokenize(
         line,
         state.theme,
         tokenColors,
         state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
+        selection,
+        defaultBackground,
+        theme.colors.editorSelectionBackground,
       );
     };
 
     let style =
       Style.[
-        backgroundColor(theme.colors.background),
-        color(theme.colors.foreground),
+        backgroundColor(theme.colors.editorBackground),
+        color(theme.colors.editorForeground),
         flexGrow(1),
       ];
 
@@ -407,22 +411,42 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 (),
               );
 
+              let selectionRanges: Hashtbl.t(int, Range.t) =
+                Hashtbl.create(100);
+
               /* Draw selection ranges */
               switch (activeBuffer) {
               | Some(b) =>
                 let ranges = Selection.getRanges(state.editor.selection, b);
                 Oni_Core.Types.Range.(
                   List.iter(
-                    (r: Range.t) =>
+                    (r: Range.t) => {
+                      let line = Index.toZeroBasedInt(r.startPosition.line);
+                      let start =
+                        Index.toZeroBasedInt(r.startPosition.character);
+                      let endC =
+                        Index.toZeroBasedInt(r.endPosition.character);
+
+                      let text = Buffer.getLine(b, line);
+                      let (startOffset, _) =
+                        BufferViewTokenizer.getCharacterPositionAndWidth(
+                          ~indentation,
+                          text,
+                          start,
+                        );
+                      let (endOffset, _) =
+                        BufferViewTokenizer.getCharacterPositionAndWidth(
+                          ~indentation,
+                          text,
+                          endC,
+                        );
+
+                      Hashtbl.add(selectionRanges, line, r);
                       Shapes.drawRect(
                         ~transform,
                         ~x=
                           lineNumberWidth
-                          +. float_of_int(
-                               Index.toZeroBasedInt(
-                                 r.startPosition.character,
-                               ),
-                             )
+                          +. float_of_int(startOffset)
                           *. fontWidth,
                         ~y=
                           fontHeight
@@ -432,14 +456,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                           -. state.editor.scrollY,
                         ~height=fontHeight,
                         ~width=
-                          float_of_int(
-                            Index.toZeroBasedInt(r.endPosition.character)
-                            - Index.toZeroBasedInt(r.startPosition.character),
-                          )
-                          *. fontWidth,
+                          float_of_int(endOffset - startOffset) *. fontWidth,
                         ~color=theme.colors.editorSelectionBackground,
                         (),
-                      ),
+                      );
+                    },
                     ranges,
                   )
                 );
@@ -453,16 +474,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let tokens = getTokensForLine(item);
+                    let selectionRange =
+                      Hashtbl.find_opt(selectionRanges, item);
+                    let tokens =
+                      getTokensForLine(~selection=selectionRange, item);
 
                     let _ =
                       renderTokens(
                         fontWidth,
                         fontHeight,
-                        item,
                         lineNumberWidth,
                         theme,
-                        cursorLine,
                         tokens,
                         state.editor.scrollX,
                         offset,
