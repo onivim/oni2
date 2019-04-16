@@ -1,0 +1,27 @@
+opam-version: "2.0"
+maintainer: "Vincent Bernardoff <vb@luminar.eu.org>"
+authors: "Vincent Bernardoff <vb@luminar.eu.org>"
+license: "ISC"
+homepage: "https://github.com/vbmithr/ocaml-msgpck"
+bug-reports: "https://github.com/vbmithr/ocaml-msgpck/issues"
+depends: [
+  "ocaml" {>= "4.02.0"}
+  "jbuilder" {build & >= "1.0+beta8"}
+  "ocplib-endian" {>= "1.0"}
+]
+flags: light-uninstall
+build: ["jbuilder" "build" "-p" name "-j" jobs "@install"]
+dev-repo: "git+https://github.com/vbmithr/ocaml-msgpck.git"
+synopsis: "Fast MessagePack (http://msgpack.org) library"
+description: """
+msgpck is written in pure OCaml.
+
+MessagePack is an efficient binary serialization format. It lets you
+exchange data among multiple languages like JSON. But it's faster and
+smaller. Small integers are encoded into a single byte, and typical
+short strings require only one extra byte in addition to the strings
+themselves."""
+url {
+  src: "https://github.com/vbmithr/ocaml-msgpck/archive/1.4.tar.gz"
+  checksum: "md5=13831d57c730b35ab517984d855ec6c0"
+}

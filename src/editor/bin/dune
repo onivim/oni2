@@ -13,12 +13,12 @@
         lwt.unix
         Rench
         Revery
-        Oni_Core
-        Oni_Extensions
-        Oni_Neovim
-        Oni_Model
-        Oni_Store
-        Oni_UI
+        Oni2.core
+        Oni2.extensions
+        Oni2.neovim
+        Oni2.model
+        Oni2.store
+        Oni2.ui
             )
   (preprocess (
                pps

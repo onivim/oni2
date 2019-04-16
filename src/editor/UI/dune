@@ -1,6 +1,6 @@
 (library
     (name Oni_UI)
-    (public_name Oni_UI)
+    (public_name Oni2.ui)
     (libraries 
         str
         bigarray
@@ -9,8 +9,8 @@
         msgpck
         lwt
         lwt.unix
-        Oni_Core
-        Oni_Model
+        Oni2.core
+        Oni2.model
         Rench
         Revery
     ))
