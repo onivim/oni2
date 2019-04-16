@@ -116,10 +116,8 @@ let renderTokens =
     (
       fontWidth: float,
       fontHeight: float,
-      lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
-      cursorLine: int,
       tokens,
       xOffset: float,
       yOffset: float,
@@ -476,10 +474,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                       renderTokens(
                         fontWidth,
                         fontHeight,
-                        item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
                         tokens,
                         state.editor.scrollX,
                         offset,

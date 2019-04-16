@@ -23,6 +23,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
     expect.int(List.length(result)).toBe(0);
   });
@@ -39,6 +41,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
           colorMap,
           indentation,
           None,
+          Colors.white,
+          Colors.black,
         );
 
       let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -73,6 +77,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
     expect.int(List.length(result)).toBe(2);
   });
@@ -86,6 +92,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -111,6 +119,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -152,6 +162,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -181,6 +193,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -214,6 +228,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         colorMap,
         indentation,
         None,
+        Colors.white,
+        Colors.black,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
