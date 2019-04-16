@@ -14,6 +14,10 @@ steps:
     displayName: 'esy @bench install'
   - script: git diff --exit-code
     displayName: 'check that `bench.esy.lock` is up-to-date. If this fails, commit `bench.esy.lock` changes and re-submit PR.'
+  - script: esy @test install
+    displayName: 'esy @test install'
+  - script: git diff --exit-code
+    displayName: 'check that `test.esy.lock` is up-to-date. If this fails, commit `test.esy.lock` changes and re-submit PR.'
   - script: esy bootstrap
     displayName: 'esy bootstrap'
   - script: esy build

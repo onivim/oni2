@@ -62,13 +62,15 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 ### Tests
 
-- `esy test`
+- `esy '@test' install`
+- `esy '@test' build`
+- `esy '@test' run`
 
 ### Benchmarks
 
 - `esy '@bench' install`
 - `esy '@bench' build`
-- `esy '@bench' x oni-bench`
+- `esy '@bench' run`
 
 ## Documentation
 
