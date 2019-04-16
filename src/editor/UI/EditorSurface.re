@@ -205,17 +205,18 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let cursorLine = state.editor.cursorPosition.line;
+    let indentation = IndentationSettings.default;
+
+    let topVisibleLine = Editor.getTopVisibleLine(state.editor);
+    let bottomVisibleLine = Editor.getBottomVisibleLine(state.editor);
+
+    let cursorLine = Index.toZeroBasedInt(state.editor.cursorPosition.line);
 
     let indentation = IndentationSettings.default;
 
     let (cursorOffset, cursorCharacterWidth) =
-      if (Buffer.getNumberOfLines(buffer) > 0) {
-        let cursorStr =
-          Buffer.getLine(
-            buffer,
-            Index.toZeroBasedInt(state.editor.cursorPosition.line),
-          );
+      if (lineCount > 0 && cursorLine < lineCount) {
+        let cursorStr = Buffer.getLine(buffer, cursorLine);
 
         let (cursorOffset, width) =
           BufferViewTokenizer.getCharacterPositionAndWidth(
@@ -227,6 +228,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       } else {
         (0, 1);
       };
+
+    let bufferPositionToPixel = (line, char) => {
+      let x =
+        float_of_int(char)
+        *. fontWidth
+        -. state.editor.scrollX
+        +. lineNumberWidth;
+      let y = float_of_int(line) *. fontHeight -. state.editor.scrollY;
+      (x, y);
+    };
 
     let cursorWidth =
       switch (state.mode) {
@@ -511,7 +522,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
+                        cursorLine,
                         offset,
                         transform,
                       );
@@ -519,6 +530,29 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                   },
                 (),
               );
+
+              if (state.configuration.editorRenderIndentGuides) {
+                switch (activeBuffer) {
+                | None => ()
+                | Some(buffer) =>
+                  IndentLineRenderer.render(
+                    ~transform,
+                    ~buffer,
+                    ~startLine=topVisibleLine - 1,
+                    ~endLine=bottomVisibleLine + 1,
+                    ~lineHeight=fontHeight,
+                    ~fontWidth,
+                    ~cursorLine=
+                      Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                    ~theme=state.theme,
+                    ~indentationSettings=indentation,
+                    ~bufferPositionToPixel,
+                    ~showActive=
+                      state.configuration.editorHighlightActiveIndentGuide,
+                    (),
+                  )
+                };
+              };
             }}
           />
           <View style=cursorStyle />
