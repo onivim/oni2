@@ -12,8 +12,6 @@ describe("Setup", ({test, _}) =>
       "/path/to/extensions",
     );
     expect.string(setup.extensionHostPath).toEqual("/path/to/exthost");
-    expect.string(setup.configPath).toEqual("/path/to/config");
-    expect.string(setup.keybindingsPath).toEqual("/path/to/keybindings");
     expect.string(setup.rgPath).toEqual("/path/to/rg");
   })
 );
