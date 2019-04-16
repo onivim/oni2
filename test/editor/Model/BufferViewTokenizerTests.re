@@ -48,6 +48,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
           startPosition: ZeroBasedIndex(0),
           endPosition: ZeroBasedIndex(4),
           color: Colors.red,
+          backgroundColor: Colors.red,
         },
         {
           tokenType: Text,
@@ -119,6 +120,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(2),
         color: Colors.red,
+        backgroundColor: Colors.red,
       },
       {
         tokenType: Text,
@@ -134,6 +136,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         startPosition: ZeroBasedIndex(10),
         endPosition: ZeroBasedIndex(12),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 
@@ -220,6 +223,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         startPosition: ZeroBasedIndex(0),
         endPosition: ZeroBasedIndex(1),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
       {
         tokenType: Text,
@@ -235,6 +239,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         startPosition: ZeroBasedIndex(2),
         endPosition: ZeroBasedIndex(3),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
       {
         tokenType: Text,
@@ -250,6 +255,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         startPosition: ZeroBasedIndex(8),
         endPosition: ZeroBasedIndex(9),
         color: Colors.red,
+        backgroundColor: Colors.white,
       },
     ];
 

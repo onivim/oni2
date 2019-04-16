@@ -139,9 +139,10 @@ let renderTokens =
       -. xF;
     let y = yF;
 
-  let backgroundColor =
-    isActiveLine
-      ? theme.colors.editorLineHighlightBackground : token.backgroundColor;
+    ignore(isActiveLine);
+  let backgroundColor = token.backgroundColor;
+    /* isActiveLine */
+    /*   ? theme.colors.editorLineHighlightBackground : token.backgroundColor; */
 
     switch (token.tokenType) {
     | Text =>
@@ -288,8 +289,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let style =
       Style.[
-        backgroundColor(theme.colors.background),
-        color(theme.colors.foreground),
+        backgroundColor(theme.colors.editorBackground),
+        color(theme.colors.editorForeground),
         flexGrow(1),
       ];
 
