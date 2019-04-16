@@ -126,8 +126,6 @@ let renderTokens =
       transform,
       whitespaceSetting: Configuration.editorRenderWhitespace,
     ) => {
-  let isActiveLine = lineNumber == cursorLine;
-
   let yF = yOffset;
   let xF = xOffset;
 
@@ -139,10 +137,7 @@ let renderTokens =
       -. xF;
     let y = yF;
 
-    ignore(isActiveLine);
   let backgroundColor = token.backgroundColor;
-    /* isActiveLine */
-    /*   ? theme.colors.editorLineHighlightBackground : token.backgroundColor; */
 
     switch (token.tokenType) {
     | Text =>
@@ -277,6 +272,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           state.activeBufferId,
           i,
         );
+
+         let isActiveLine = i == Index.toZeroBasedInt(cursorLine);
+         let defaultBackground = isActiveLine ? theme.colors.editorLineHighlightBackground :  theme.colors.editorBackground;
+
+
       BufferViewTokenizer.tokenize(
         line,
         state.theme,
@@ -284,6 +284,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
         selection,
+        defaultBackground,
+        theme.colors.editorSelectionBackground,
       );
     };
 

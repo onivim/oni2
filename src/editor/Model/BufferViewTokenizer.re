@@ -50,6 +50,8 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
 
 let textRunToToken =
     (
+      defaultColor,
+      selectionColor,
       colorMap,
       theme: Theme.t,
       tokenColorArray: array(ColorizedToken.t),
@@ -80,7 +82,7 @@ let textRunToToken =
       theme.colors.editorBackground,
     );
 
-  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? theme.colors.editorSelectionBackground: theme.colors.editorBackground ;
+  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? selectionColor : defaultColor;
 
   let ret: t = {
     tokenType,
@@ -130,9 +132,11 @@ let tokenize:
     ColorMap.t,
     IndentationSettings.t,
     option(Range.t),
+    Color.t,
+    Color.t,
   ) =>
   list(t) =
-  (s, theme, tokenColors, colorMap, indentationSettings, selection) => {
+  (s, theme, tokenColors, colorMap, indentationSettings, selection, defaultBackgroundColor, selectionColor) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);
@@ -180,5 +184,5 @@ let tokenize:
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
-    |> List.map(textRunToToken(colorMap, theme, tokenColorArray, selectionStart, selectionEnd));
+    |> List.map(textRunToToken(defaultBackgroundColor, selectionColor, colorMap, theme, tokenColorArray, selectionStart, selectionEnd));
   };
