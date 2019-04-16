@@ -77,10 +77,45 @@ let renderLineNumber =
   );
 };
 
+let renderSpaces =
+    (
+      ~fontWidth: float,
+      ~fontHeight: float,
+      ~x: float,
+      ~y: float,
+      ~transform,
+      ~count: int,
+      ~theme: Theme.t,
+      (),
+    ) => {
+  let i = ref(0);
+
+  let size = 2.;
+  let xOffset = fontWidth /. 2. -. 1.;
+  let yOffset = fontHeight /. 2. -. 1.;
+
+  while (i^ < count) {
+    let iF = float_of_int(i^);
+    let xPos = x +. fontWidth *. iF;
+
+    Shapes.drawRect(
+      ~transform,
+      ~x=xPos +. xOffset,
+      ~y=y +. yOffset,
+      ~width=size,
+      ~height=size,
+      ~color=theme.colors.editorWhitespaceForeground,
+      (),
+    );
+
+    incr(i);
+  };
+};
+
 let renderTokens =
     (
       fontWidth: float,
-      _fontHeight: float,
+      fontHeight: float,
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
@@ -89,63 +124,63 @@ let renderTokens =
       xOffset: float,
       yOffset: float,
       transform,
+      whitespaceSetting: Configuration.editorRenderWhitespace,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
-  /* let lineNumberTextColor = */
-  /*   isActiveLine */
-  /*     ? theme.colors.editorActiveLineNumberForeground */
-  /*     : theme.colors.editorLineNumberForeground; */
 
   let yF = yOffset;
   let xF = xOffset;
-
-  /* let lineNumber = */
-  /*   string_of_int( */
-  /*     LineNumber.getLineNumber( */
-  /*       ~bufferLine=lineNumber + 1, */
-  /*       ~cursorLine=cursorLine + 1, */
-  /*       ~setting=Relative, */
-  /*       (), */
-  /*     ), */
-  /*   ); */
-
-  /*   let lineNumberXOffset = */
-  /*     isActiveLine */
-  /*       ? 0. : (lineNumberWidth /. 2) -. (float_of_int(String.length(lineNumber)) *. fontWidth /. 2.); */
-
-  /*   Revery.Draw.Text.drawString( */
-  /*     ~transform, */
-  /*     ~x=lineNumberXOffset, */
-  /*     ~y=yF, */
-  /*     ~backgroundColor=theme.colors.editorLineNumberBackground, */
-  /*     ~color=lineNumberTextColor, */
-  /*     ~fontFamily="FiraCode-Regular.ttf", */
-  /*     ~fontSize=14, */
-  /*     lineNumber, */
-  /*   ); */
 
   let textBackgroundColor =
     isActiveLine
       ? theme.colors.editorLineHighlightBackground : theme.colors.background;
 
   let f = (token: BufferViewTokenizer.t) => {
-    Revery.Draw.Text.drawString(
-      ~transform,
-      ~x=
-        lineNumberWidth
-        +. fontWidth
-        *. float_of_int(Index.toZeroBasedInt(token.startPosition))
-        -. xF,
-      ~y=yF,
-      ~backgroundColor=textBackgroundColor,
-      ~color=token.color,
-      ~fontFamily="FiraCode-Regular.ttf",
-      ~fontSize=14,
-      token.text,
-    );
+    let x =
+      lineNumberWidth
+      +. fontWidth
+      *. float_of_int(Index.toZeroBasedInt(token.startPosition))
+      -. xF;
+    let y = yF;
+
+    switch (token.tokenType) {
+    | Text =>
+      Revery.Draw.Text.drawString(
+        ~transform,
+        ~x,
+        ~y,
+        ~backgroundColor=textBackgroundColor,
+        ~color=token.color,
+        ~fontFamily="FiraCode-Regular.ttf",
+        ~fontSize=14,
+        token.text,
+      )
+    | Tab =>
+      Revery.Draw.Text.drawString(
+        ~transform,
+        ~x=x +. fontWidth /. 4.,
+        ~y=y +. fontHeight /. 4.,
+        ~backgroundColor=textBackgroundColor,
+        ~color=theme.colors.editorWhitespaceForeground,
+        ~fontFamily="FontAwesome5FreeSolid.otf",
+        ~fontSize=10,
+        FontIcon.codeToIcon(0xf30b),
+      )
+    | Whitespace =>
+      renderSpaces(
+        ~fontWidth,
+        ~fontHeight,
+        ~x,
+        ~y,
+        ~transform,
+        ~count=String.length(token.text),
+        ~theme,
+        (),
+      )
+    };
   };
 
-  List.iter(f, tokens);
+  tokens |> WhitespaceTokenFilter.filter(whitespaceSetting) |> List.iter(f);
 };
 
 let component = React.component("EditorSurface");
@@ -176,19 +211,20 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let cursorLine = state.editor.cursorPosition.line;
+    let indentation = IndentationSettings.default;
+
+    let topVisibleLine = Editor.getTopVisibleLine(state.editor);
+    let bottomVisibleLine = Editor.getBottomVisibleLine(state.editor);
+
+    let cursorLine = Index.toZeroBasedInt(state.editor.cursorPosition.line);
 
     let (cursorOffset, cursorCharacterWidth) =
-      if (Buffer.getNumberOfLines(buffer) > 0) {
-        let cursorStr =
-          Buffer.getLine(
-            buffer,
-            Index.toZeroBasedInt(state.editor.cursorPosition.line),
-          );
+      if (lineCount > 0 && cursorLine < lineCount) {
+        let cursorStr = Buffer.getLine(buffer, cursorLine);
 
         let (cursorOffset, width) =
           BufferViewTokenizer.getCharacterPositionAndWidth(
-            ~indentation=IndentationSettings.default,
+            ~indentation,
             cursorStr,
             Index.toZeroBasedInt(state.editor.cursorPosition.character),
           );
@@ -196,6 +232,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       } else {
         (0, 1);
       };
+
+    let bufferPositionToPixel = (line, char) => {
+      let x =
+        float_of_int(char)
+        *. fontWidth
+        -. state.editor.scrollX
+        +. lineNumberWidth;
+      let y = float_of_int(line) *. fontHeight -. state.editor.scrollY;
+      (x, y);
+    };
 
     let cursorWidth =
       switch (state.mode) {
@@ -227,7 +273,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         ),
         height(iFontHeight),
         width(cursorWidth),
-        opacity(0.8),
+        opacity(0.5),
         backgroundColor(Colors.white),
       ];
 
@@ -416,11 +462,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
+                        cursorLine,
                         tokens,
                         state.editor.scrollX,
                         offset,
                         transform,
+                        state.configuration.editorRenderWhitespace,
                       );
                     ();
                   },
@@ -451,7 +498,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         item,
                         lineNumberWidth,
                         theme,
-                        Index.toZeroBasedInt(cursorLine),
+                        cursorLine,
                         offset,
                         transform,
                       );
@@ -459,6 +506,29 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                   },
                 (),
               );
+
+              if (state.configuration.editorRenderIndentGuides) {
+                switch (activeBuffer) {
+                | None => ()
+                | Some(buffer) =>
+                  IndentLineRenderer.render(
+                    ~transform,
+                    ~buffer,
+                    ~startLine=topVisibleLine - 1,
+                    ~endLine=bottomVisibleLine + 1,
+                    ~lineHeight=fontHeight,
+                    ~fontWidth,
+                    ~cursorLine=
+                      Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                    ~theme=state.theme,
+                    ~indentationSettings=indentation,
+                    ~bufferPositionToPixel,
+                    ~showActive=
+                      state.configuration.editorHighlightActiveIndentGuide,
+                    (),
+                  )
+                };
+              };
             }}
           />
           <View style=cursorStyle />

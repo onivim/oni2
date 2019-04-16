@@ -46,7 +46,7 @@ let create: unit => t =
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
     activeBufferId: 0,
-    buffers: BufferMap.Buffers.add(0, Buffer.ofLines([||]), BufferMap.empty),
+    buffers: BufferMap.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
@@ -57,7 +57,7 @@ let create: unit => t =
       ),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
-    tabs: [Tab.create(0, "[No Name]")],
+    tabs: [],
     theme: Theme.create(),
     editor: Editor.create(),
     inputControlMode: EditorTextFocus,

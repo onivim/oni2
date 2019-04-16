@@ -10,6 +10,12 @@ type editorTablineMode =
   | [@name "tabs"] Tabs
   | [@name "hybrid"] Hybrid;
 
+[@deriving (show({with_path: false}), yojson)]
+type editorRenderWhitespace =
+  | [@name "all"] All
+  | [@name "boundary"] Boundary
+  | [@name "None"] None;
+
 [@deriving (show({with_path: false}), yojson({strict: false}))]
 type t = {
   [@key "editor.lineNumbers"]
@@ -26,6 +32,12 @@ type t = {
   editorIndentSize: int,
   [@key "editor.tabSize"]
   editorTabSize: int,
+  [@key "editor.highlightActiveIndentGuide"]
+  editorHighlightActiveIndentGuide: bool,
+  [@key "editor.renderIndentGuides"]
+  editorRenderIndentGuides: bool,
+  [@key "editor.renderWhitespace"]
+  editorRenderWhitespace,
   [@key "workbench.iconTheme"]
   workbenchIconTheme: string,
 };
@@ -38,6 +50,9 @@ let default = {
   editorInsertSpaces: false,
   editorIndentSize: 4,
   editorTabSize: 4,
+  editorRenderIndentGuides: true,
+  editorHighlightActiveIndentGuide: true,
+  editorRenderWhitespace: All,
   workbenchIconTheme: "vs-seti",
 };
 

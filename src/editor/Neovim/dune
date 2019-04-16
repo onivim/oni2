@@ -1,6 +1,6 @@
 (library
     (name Oni_Neovim)
-    (public_name Oni_Neovim)
+    (public_name Oni2.neovim)
     (libraries
         str
         bigarray
@@ -9,8 +9,8 @@
         msgpck
         lwt
         lwt.unix
-        Oni_Core
-        Oni_Model
+        Oni2.core
+        Oni2.model
         Rench
         Revery
         ppx_deriving.runtime
