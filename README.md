@@ -53,7 +53,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 #### Build the textmate service
 
 - `cd src/textmate_service`
-- `node install.js`
+- `node install`
 - `npm run build`
 
 ### Run
