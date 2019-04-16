@@ -2,7 +2,7 @@
  * Tokenizer.re
  */
 
-open Oni_Core.Types;
+open Types;
 
 open CamomileLibrary;
 

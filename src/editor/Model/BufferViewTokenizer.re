@@ -10,7 +10,13 @@ open Oni_Extensions;
 
 open CamomileLibrary;
 
+type tokenType =
+  | Tab
+  | Whitespace
+  | Text;
+
 type t = {
+  tokenType,
   text: string,
   startPosition: Index.t,
   endPosition: Index.t,
@@ -36,8 +42,6 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
 
   if (len == 0) {
     false;
-  } else if (_isWhitespace(Zed_utf8.get(r.text, 0))) {
-    false;
   } else {
     true;
   };
@@ -52,6 +56,18 @@ let textRunToToken =
     ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let colorIndex = tokenColorArray[startIndex];
+
+  let firstChar = Zed_utf8.get(r.text, 0);
+
+  let tokenType =
+    if (UChar.eq(firstChar, tab)) {
+      Tab;
+    } else if (UChar.eq(firstChar, space)) {
+      Whitespace;
+    } else {
+      Text;
+    };
+
   let color =
     ColorMap.get(
       colorMap,
@@ -61,6 +77,7 @@ let textRunToToken =
     );
 
   let ret: t = {
+    tokenType,
     text: r.text,
     startPosition: r.startPosition,
     endPosition: r.endPosition,
@@ -132,7 +149,10 @@ let tokenize:
       let colorizedToken1 = tokenColorArray[i0];
       let colorizedToken2 = tokenColorArray[i1];
       _isWhitespace(c0) != _isWhitespace(c1)
-      || colorizedToken1 !== colorizedToken2;
+      || colorizedToken1 !== colorizedToken2
+      /* Always split on tabs */
+      || UChar.eq(c0, tab)
+      || UChar.eq(c1, tab);
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
