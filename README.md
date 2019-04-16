@@ -53,7 +53,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 #### Build the textmate service
 
 - `cd src/textmate_service`
-- `node install.js`
+- `node install`
 - `npm run build`
 
 ### Run
@@ -62,13 +62,15 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 ### Tests
 
-- `esy test`
+- `esy '@test' install`
+- `esy '@test' build`
+- `esy '@test' run`
 
 ### Benchmarks
 
 - `esy '@bench' install`
 - `esy '@bench' build`
-- `esy '@bench' x oni-bench`
+- `esy '@bench' run`
 
 ## Documentation
 

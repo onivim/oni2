@@ -3,4 +3,4 @@
     (library_flags (-linkall -g))
     (modules (:standard))
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show))
-    (libraries msgpck Oni_Extensions Oni_Core_Test rely.lib))
+    (libraries msgpck Oni2.extensions Oni_Core_Test rely.lib))

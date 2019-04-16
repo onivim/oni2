@@ -9,7 +9,9 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
-  - script: esy test-ci
+  - script: esy @test install
+    displayName: 'Test: install'
+  - script: esy @test run
     displayName: 'Unit Tests: esy test-ci (round 1)'
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
@@ -28,5 +30,5 @@ steps:
     displayName: "Bench: install"
   - script: esy @bench build
     displayName: "Bench: build"
-  - script: esy @bench x oni-bench
+  - script: esy @bench run
     displayName: "Bench: run"

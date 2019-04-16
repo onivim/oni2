@@ -1,16 +1,16 @@
 (library
     (name Oni_Store)
-    (public_name Oni_Store)
+    (public_name Oni2.store)
     (libraries 
         Rench
         Revery
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        Oni_Core
-        Oni_Model
-        Oni_Neovim
-        Oni_Extensions
+        Oni2.core
+        Oni2.model
+        Oni2.neovim
+        Oni2.extensions
         isolinear
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
