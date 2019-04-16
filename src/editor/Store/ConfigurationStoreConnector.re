@@ -8,29 +8,41 @@ open Oni_Core;
 open Oni_Model;
 
 let start = (setup: Setup.t) => {
-  let reloadConfigurationEffect = Isolinear.Effect.createWithDispatch(~name="configuration.reload", (dispatch) => {
-    let configuration = Configuration.create(~configPath=Configuration.getBundledConfigPath(), ()); 
-    dispatch(Actions.ConfigurationSet(configuration));
-  });
+  let reloadConfigurationEffect =
+    Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
+      let configPath = Filesystem.getOrCreateConfigFile("configuration.json");
+      switch (configPath) {
+      | Ok(v) =>
+        let configuration = Configuration.create(~configPath=v, ());
+        prerr_endline("Reloading from: " ++ v);
+        dispatch(Actions.ConfigurationSet(configuration));
+      | Error(err) => prerr_endline("Error loading configuration file")
+      };
+    });
 
-  let openConfigurationFileEffect = (filePath) => Isolinear.Effect.createWithDispatch(~name="configuration.openFile", (dispatch) => {
-        switch (Filesystem.createOniConfigFile(filePath)) {        
-        | Ok(path) => dispatch(Actions.OpenFileByPath(path))
-        | Error(e) => prerr_endline(e)
-        };
-        });
+  let openConfigurationFileEffect = filePath =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="configuration.openFile", dispatch =>
+      switch (Filesystem.getOrCreateConfigFile(filePath)) {
+      | Ok(path) => dispatch(Actions.OpenFileByPath(path))
+      | Error(e) => prerr_endline(e)
+      }
+    );
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.ConfigurationSet(configuration) => ({
-        ...state,
-        configuration,
-        }, Isolinear.Effect.none) 
-    | Actions.ConfigurationReload => (state, reloadConfigurationEffect) 
-    | Actions.OpenConfigFile(path) => (state, openConfigurationFileEffect(path))
+    | Actions.ConfigurationSet(configuration) => (
+        {...state, configuration},
+        Isolinear.Effect.none,
+      )
+    | Actions.ConfigurationReload => (state, reloadConfigurationEffect)
+    | Actions.OpenConfigFile(path) => (
+        state,
+        openConfigurationFileEffect(path),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
-  updater
+  updater;
 };

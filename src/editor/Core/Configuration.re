@@ -59,8 +59,11 @@ let default = {
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;
 
 let getBundledConfigPath = () => {
-    Rench.Path.join(Rench.Environment.getExecutingDirectory(), "configuration.json");
-}
+  Rench.Path.join(
+    Rench.Environment.getExecutingDirectory(),
+    "configuration.json",
+  );
+};
 
 let create = (~configPath=getBundledConfigPath(), ()) =>
   switch (ofFile(configPath)) {

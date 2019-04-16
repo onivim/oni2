@@ -6,9 +6,7 @@
 
    reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
  */
-type t('a) =
-  | Ok('a)
-  | Error(string);
+type t('a) = result('a, string);
 
 /** [on_success] executes [f] unless we already hit an error. In
   that case the error is passed on. */
@@ -296,7 +294,7 @@ let createConfigIfNecessary = (configDir, file) =>
       )
   );
 
-let createOniConfigFile = filename =>
+let getOrCreateConfigFile = filename =>
   /* Get Oni Directory */
   getHomeDirectory()
   >>= getOniDirectory
