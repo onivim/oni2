@@ -1,5 +1,5 @@
 {
-  "checksum": "3f8f0b39287cec08f4729617da4396da",
+  "checksum": "cbba9446e8d19ef86ecc4ce0dbeb6ca5",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -16,14 +16,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "revery@0.17.0@d41d8cd9": {
-      "id": "revery@0.17.0@d41d8cd9",
+    "revery@0.18.0@d41d8cd9": {
+      "id": "revery@0.18.0@d41d8cd9",
       "name": "revery",
-      "version": "0.17.0",
+      "version": "0.18.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.17.0.tgz#sha1:d76757ccc9d2590d91ff74bcb38d8c2e9ade20ec"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.18.0.tgz#sha1:030182686b1ff8924295d450d77fb9cfd90c3671"
         ]
       },
       "overrides": [],
@@ -414,7 +414,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@0.17.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
+        "revery@0.18.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
         "rench@1.6.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
@@ -763,8 +763,8 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/seq@opam:base@d8d7de1d"
       ]
     },
-    "@opam/ptime@opam:0.8.4@23eca65b": {
-      "id": "@opam/ptime@opam:0.8.4@23eca65b",
+    "@opam/ptime@opam:0.8.4@82555699": {
+      "id": "@opam/ptime@opam:0.8.4@82555699",
       "name": "@opam/ptime",
       "version": "opam:0.8.4",
       "source": {
@@ -1160,8 +1160,8 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "@opam/merlin-extend@opam:0.3@e1fc0d08": {
-      "id": "@opam/merlin-extend@opam:0.3@e1fc0d08",
+    "@opam/merlin-extend@opam:0.3@0af73a50": {
+      "id": "@opam/merlin-extend@opam:0.3@0af73a50",
       "name": "@opam/merlin-extend",
       "version": "opam:0.3",
       "source": {
@@ -1410,11 +1410,11 @@
       },
       "overrides": [],
       "dependencies": [
-        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@23eca65b",
+        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@82555699",
         "@opam/dune@opam:1.7.3@72aad784", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@23eca65b"
+        "@opam/tyxml@opam:4.3.0@15e44054", "@opam/ptime@opam:0.8.4@82555699"
       ]
     },
     "@opam/js_of_ocaml-ppx@opam:3.3.0@6d90d7d2": {
@@ -2010,7 +2010,7 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/result@opam:1.3@bee8bf2e",
         "@opam/ocamlfind@opam:1.8.0@f744a0c5",
         "@opam/ocaml-migrate-parsetree@opam:1.2.0@23e55f71",
-        "@opam/merlin-extend@opam:0.3@e1fc0d08",
+        "@opam/merlin-extend@opam:0.3@0af73a50",
         "@opam/menhir@opam:20181113@0c8257a8",
         "@opam/dune@opam:1.7.3@72aad784"
       ],
