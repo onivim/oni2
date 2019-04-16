@@ -27,11 +27,12 @@ switch (Sys.getenv_opt("ONI2_DEBUG")) {
 let init = app => {
   let w =
     App.createWindow(
-      ~createOptions=WindowCreateOptions.create(
-        ~maximized= false,
-        ~icon= Some("logo.png"),
-        (),
-      ),
+      ~createOptions=
+        WindowCreateOptions.create(
+          ~maximized=false,
+          ~icon=Some("logo.png"),
+          (),
+        ),
       app,
       "Oni2",
     );
@@ -50,10 +51,7 @@ let init = app => {
   let onStateChanged = v => {
     currentState := v;
     let state = currentState^;
-    GlobalContext.set({
-      ...GlobalContext.current(),
-      state,
-    });
+    GlobalContext.set({...GlobalContext.current(), state});
 
     update(<Root state />);
   };
@@ -68,22 +66,22 @@ let init = app => {
     );
 
   GlobalContext.set({
-      notifySizeChanged: (~width, ~height, ()) =>
-        dispatch(
-          Model.Actions.SetEditorSize(
-            Core.Types.EditorSize.create(
-              ~pixelWidth=width,
-              ~pixelHeight=height,
-              (),
-            ),
+    notifySizeChanged: (~width, ~height, ()) =>
+      dispatch(
+        Model.Actions.SetEditorSize(
+          Core.Types.EditorSize.create(
+            ~pixelWidth=width,
+            ~pixelHeight=height,
+            (),
           ),
         ),
-      openFileById: id => dispatch(Model.Actions.OpenFileById(id)),
-      closeFileById: id => dispatch(Model.Actions.CloseFileById(id)),
-      editorScroll: (~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(deltaY)),
-      dispatch,
-      state: initialState,
+      ),
+    openFileById: id => dispatch(Model.Actions.OpenFileById(id)),
+    closeFileById: id => dispatch(Model.Actions.CloseFileById(id)),
+    editorScroll: (~deltaY, ()) =>
+      dispatch(Model.Actions.EditorScroll(deltaY)),
+    dispatch,
+    state: initialState,
   });
 
   dispatch(Model.Actions.Init);
