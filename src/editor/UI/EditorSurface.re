@@ -212,8 +212,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let cursorLine = Index.toZeroBasedInt(state.editor.cursorPosition.line);
 
-    let indentation = IndentationSettings.default;
-
     let (cursorOffset, cursorCharacterWidth) =
       if (lineCount > 0 && cursorLine < lineCount) {
         let cursorStr = Buffer.getLine(buffer, cursorLine);
@@ -282,7 +280,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           i,
         );
 
-      let isActiveLine = i == Index.toZeroBasedInt(cursorLine);
+      let isActiveLine = i == cursorLine;
       let defaultBackground =
         isActiveLine
           ? theme.colors.editorLineHighlightBackground
