@@ -41,11 +41,18 @@ let start =
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
     "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
+
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
 
   let lastReqId = ref(0);
   let rpcRef = ref(None);
+  let initialized = ref(false);
+  let queuedCallbacks = ref([]);
+
+  let queue = f => {
+    queuedCallbacks := [f, ...queuedCallbacks^];
+  };
 
   let send = (msgType, msg: Yojson.Safe.json) => {
     switch (rpcRef^) {
@@ -96,15 +103,6 @@ let start =
       }
     | _ =>
       print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
-    /* switch (onMessage(id, payload)) { */
-    /* | Ok(None) => () */
-    /* | Ok(Some(_)) => */
-    /*   /1* TODO: Send response *1/ */
-    /*   () */
-    /* | Error(_) => */
-    /*   /1* TODO: Send error *1/ */
-    /*   () */
-    /* }; */
     };
 
   let _sendInitData = () => {
@@ -122,6 +120,10 @@ let start =
     Configuration.initializeConfiguration() |> sendRequest;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
     |> sendRequest;
+
+    initialized := true;
+
+    queuedCallbacks^ |> List.rev |> List.iter(f => f());
   };
 
   let onNotification = (n: Notification.t, _) => {
@@ -156,7 +158,12 @@ let start =
 
   rpcRef := Some(rpc);
 
-  {process, rpc, send};
+  let wrappedSend = (msgType, msg) => {
+    let f = () => send(msgType, msg);
+    initialized^ ? f() : queue(f);
+  };
+
+  {process, rpc, send: wrappedSend};
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);

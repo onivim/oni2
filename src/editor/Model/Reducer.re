@@ -13,7 +13,7 @@ let sortTabsById = tabs =>
 let truncateFilepath = path =>
   switch (path) {
   | Some(p) => Filename.basename(p)
-  | None => "[No Name]"
+  | None => "untitled"
   };
 
 let showTablineTabs = (state: State.t, tabs) =>
@@ -58,53 +58,61 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   };
 
 let reduce: (State.t, Actions.t) => State.t =
-  (s, a) => {
-    let s = {
-      ...s,
-      editor:
-        Editor.reduce(
-          s.editor,
-          a,
-          BufferMap.getBuffer(s.activeBufferId, s.buffers),
-        ),
-      syntaxHighlighting: SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
-      wildmenu: Wildmenu.reduce(s.wildmenu, a),
-      commandline: Commandline.reduce(s.commandline, a),
-      statusBar: StatusBarReducer.reduce(s.statusBar, a),
-    };
+  (s, a) =>
+    if (a == Actions.Tick) {
+      s;
+    } else {
+      let s = {
+        ...s,
+        editor:
+          Editor.reduce(
+            s.editor,
+            a,
+            BufferMap.getBuffer(s.activeBufferId, s.buffers),
+          ),
+        syntaxHighlighting:
+          SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
+        wildmenu: Wildmenu.reduce(s.wildmenu, a),
+        commandline: Commandline.reduce(s.commandline, a),
+        statusBar: StatusBarReducer.reduce(s.statusBar, a),
+      };
 
-    switch (a) {
-    | ChangeMode(m) =>
-      let ret: State.t = {...s, mode: m};
-      ret;
-    | BufferWritePost(bs) => {
-        ...s,
-        activeBufferId: bs.bufferId,
-        buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
-      }
-    | BufferDelete(bd) => {
-        ...s,
-        tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
-      }
-    | BufferEnter(bs) => {
-        ...s,
-        activeBufferId: bs.bufferId,
-        buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-        tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
-      }
-    | BufferUpdate(bu) => {
-        ...s,
-        buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
-      }
-    | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
-    | SetEditorFont(font) => {...s, editorFont: font}
-    | TextChanged({activeBufferId, modified})
-    | TextChangedI({activeBufferId, modified}) => {
-        ...s,
-        tabs: updateTabs(activeBufferId, modified, s.tabs),
-      }
-    | SetInputControlMode(m) => {...s, inputControlMode: m}
-    | _ => s
+      switch (a) {
+      | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+      | SetIconTheme(iconTheme) => {...s, iconTheme}
+      | ChangeMode(m) =>
+        let ret: State.t = {...s, mode: m};
+        ret;
+      | BufferWritePost(bs) => {
+          ...s,
+          activeBufferId: bs.bufferId,
+          buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
+          tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+        }
+      | BufferDelete(bd) => {
+          ...s,
+          tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
+        }
+      | BufferEnter(bs) => {
+          ...s,
+          activeBufferId: bs.bufferId,
+          buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
+          tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+        }
+      | BufferUpdate(bu) => {
+          ...s,
+          buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
+        }
+      | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
+      | SetEditorFont(font) => {...s, editorFont: font}
+      | TextChanged({activeBufferId, modified})
+      | TextChangedI({activeBufferId, modified}) => {
+          ...s,
+          tabs: updateTabs(activeBufferId, modified, s.tabs),
+        }
+      | SetInputControlMode(m) => {...s, inputControlMode: m}
+      | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
+      | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
+      | _ => s
+      };
     };
-  };

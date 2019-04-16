@@ -23,35 +23,39 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 /*     } */
 /* } */
 
-let renderLine = (transform, yOffset, tokens: list(Tokenizer.t)) => {
-  let f = (token: Tokenizer.t) => {
-    let startPosition = Index.toZeroBasedInt(token.startPosition);
-    let endPosition = Index.toZeroBasedInt(token.endPosition);
-    let tokenWidth = endPosition - startPosition;
+let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
+  let f = (token: BufferViewTokenizer.t) => {
+    switch (token.tokenType) {
+    | Text =>
+      let startPosition = Index.toZeroBasedInt(token.startPosition);
+      let endPosition = Index.toZeroBasedInt(token.endPosition);
+      let tokenWidth = endPosition - startPosition;
 
-    /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
-    /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
+      /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
+      /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
 
-    /* tokenCursor := getCurrentTokenColor(tokenCursor^, startPosition, endPosition); */
-    /* let color: ColorizedToken.t = List.hd(tokenCursor^); */
+      /* tokenCursor := getCurrentTokenColor(tokenCursor^, startPosition, endPosition); */
+      /* let color: ColorizedToken.t = List.hd(tokenCursor^); */
 
-    /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
+      /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
 
-    let x =
-      float_of_int(Constants.default.minimapCharacterWidth * startPosition);
-    let height = float_of_int(Constants.default.minimapCharacterHeight);
-    let width =
-      float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
+      let x =
+        float_of_int(Constants.default.minimapCharacterWidth * startPosition);
+      let height = float_of_int(Constants.default.minimapCharacterHeight);
+      let width =
+        float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
 
-    Shapes.drawRect(
-      ~transform,
-      ~y=yOffset,
-      ~x,
-      ~color=token.color,
-      ~width,
-      ~height,
-      (),
-    );
+      Shapes.drawRect(
+        ~transform,
+        ~y=yOffset,
+        ~x,
+        ~color=token.color,
+        ~width,
+        ~height,
+        (),
+      );
+    | _ => ()
+    };
   };
 
   List.iter(f, tokens);
@@ -74,7 +78,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
-      ~getTokensForLine: int => list(Tokenizer.t),
+      ~getTokensForLine: int => list(BufferViewTokenizer.t),
       ~children as _,
       (),
     ) =>
@@ -85,13 +89,81 @@ let createElement =
         + Constants.default.minimapLineSpacing,
       );
 
+    let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
+
+    let getScrollTo = (mouseY: float) => {
+      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
+      let visibleHeight: int = state.editor.size.pixelHeight;
+      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
+      float_of_int(offsetMouseY)
+      /. float_of_int(visibleHeight)
+      *. float_of_int(totalHeight);
+    };
+
+    let scrollComplete = () => {
+      setActive(false);
+    };
+
+    let hooks =
+      React.Hooks.effect(
+        Always,
+        () => {
+          let isCaptured = isActive;
+          let startPosition = state.editor.scrollY;
+
+          Mouse.setCapture(
+            ~onMouseMove=
+              evt =>
+                if (isCaptured) {
+                  let scrollTo = getScrollTo(evt.mouseY);
+                  let minimapLineSize =
+                    Constants.default.minimapCharacterWidth
+                    + Constants.default.minimapCharacterHeight;
+                  let linesInMinimap =
+                    state.editor.size.pixelHeight / minimapLineSize;
+                  GlobalContext.current().editorScroll(
+                    ~deltaY=
+                      (startPosition -. scrollTo)
+                      *. (-1.)
+                      -. float_of_int(linesInMinimap),
+                    (),
+                  );
+                },
+            ~onMouseUp=_evt => scrollComplete(),
+            (),
+          );
+
+          Some(
+            () =>
+              if (isCaptured) {
+                Mouse.releaseCapture();
+              },
+          );
+        },
+        hooks,
+      );
+
     let scrollY = state.editor.minimapScrollY;
+
+    let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+      let scrollTo = getScrollTo(evt.mouseY);
+      let minimapLineSize =
+        Constants.default.minimapCharacterWidth
+        + Constants.default.minimapCharacterHeight;
+      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
+      GlobalContext.current().editorScroll(
+        ~deltaY=
+          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
+        (),
+      );
+      setActive(true);
+    };
 
     ignore(width);
 
     (
       hooks,
-      <View style=absoluteStyle>
+      <View style=absoluteStyle onMouseDown>
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {

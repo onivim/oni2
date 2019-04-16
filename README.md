@@ -26,7 +26,7 @@ Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](ht
 - __Performance__ - no compromises: native performance, minimal input latency
 - __Ease Learning Curve__ - Oni 2 should be comfortable for non-vimmers, too!
 
-The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lighweight editor like VSCode.
+The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lightweight editor like VSCode.
 
 ### Non-goals
 
@@ -45,6 +45,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 #### Build the front-end
 
 - `git clone https://github.com/onivim/oni2`
+- `cd oni2`
 - `esy install`
 - `esy bootstrap`
 - `esy build`

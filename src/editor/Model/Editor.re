@@ -16,9 +16,10 @@ type t = {
   maxLineLength: int,
   viewLines: int,
   size: EditorSize.t,
-  cursorPosition: BufferPosition.t,
+  cursorPosition: Position.t,
   lineHeight: float,
   characterWidth: float,
+  selection: VisualRange.t,
 };
 
 let create = () => {
@@ -34,9 +35,10 @@ let create = () => {
      * if a buffer loads prior to our first render.
      */
     size: EditorSize.create(~pixelWidth=1000, ~pixelHeight=1000, ()),
-    cursorPosition: BufferPosition.createFromZeroBasedIndices(0, 0),
+    cursorPosition: Position.createFromZeroBasedIndices(0, 0),
     lineHeight: 1.,
     characterWidth: 1.,
+    selection: VisualRange.create(),
   };
   ret;
 };
@@ -303,6 +305,7 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 let reduce = (view, action, buffer) =>
   switch (action) {
   | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
+  | SelectionChanged(selection) => {...view, selection}
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY)

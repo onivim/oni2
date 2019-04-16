@@ -10,6 +10,12 @@ type editorTablineMode =
   | [@name "tabs"] Tabs
   | [@name "hybrid"] Hybrid;
 
+[@deriving (show({with_path: false}), yojson)]
+type editorRenderWhitespace =
+  | [@name "all"] All
+  | [@name "boundary"] Boundary
+  | [@name "None"] None;
+
 [@deriving (show({with_path: false}), yojson({strict: false}))]
 type t = {
   [@key "editor.lineNumbers"]
@@ -20,6 +26,16 @@ type t = {
   editorMinimapShowSlider: bool,
   [@key "editor.tablineMode"]
   editorTablineMode,
+  [@key "editor.insertSpaces"]
+  editorInsertSpaces: bool,
+  [@key "editor.indentSize"]
+  editorIndentSize: int,
+  [@key "editor.tabSize"]
+  editorTabSize: int,
+  [@key "editor.renderWhitespace"]
+  editorRenderWhitespace,
+  [@key "workbench.iconTheme"]
+  workbenchIconTheme: string,
 };
 
 let default = {
@@ -27,6 +43,11 @@ let default = {
   editorMinimapShowSlider: true,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
+  editorInsertSpaces: false,
+  editorIndentSize: 4,
+  editorTabSize: 4,
+  editorRenderWhitespace: All,
+  workbenchIconTheme: "vs-seti",
 };
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;

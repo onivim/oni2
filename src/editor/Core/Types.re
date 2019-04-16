@@ -78,7 +78,7 @@ type openMethod =
   | Tab
   | Buffer;
 
-module BufferPosition = {
+module Position = {
   [@deriving show({with_path: false})]
   type t = {
     line: Index.t,
@@ -91,6 +91,26 @@ module BufferPosition = {
     line: ZeroBasedIndex(line),
     character: ZeroBasedIndex(character),
   };
+};
+
+module Range = {
+  [@deriving show({with_path: false})]
+  type t = {
+    startPosition: Position.t,
+    endPosition: Position.t,
+  };
+
+  let createFromPositions = (~startPosition, ~endPosition, ()) => {
+    startPosition,
+    endPosition,
+  };
+
+  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
+    createFromPositions(
+      ~startPosition=Position.create(startLine, startCharacter),
+      ~endPosition=Position.create(endLine, endCharacter),
+      (),
+    );
 };
 
 [@deriving show({with_path: false})]
@@ -164,13 +184,35 @@ module BufferNotification = {
 };
 
 module BufferUpdate = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving show({with_path: false})]
   type t = {
+    id: int,
+    startLine: Index.t,
+    endLine: Index.t,
+    lines: list(string),
+    version: int,
+  };
+
+  [@deriving
+    (show({with_path: false}), yojson({strict: false, exn: false}))
+  ]
+  type jsont = {
     id: int,
     startLine: int,
     endLine: int,
     lines: list(string),
     version: int,
+  };
+
+  let to_yojson = (v: t) => {
+    let jsonr: jsont = {
+      id: v.id,
+      startLine: v.startLine |> Index.toZeroBasedInt,
+      endLine: v.endLine |> Index.toZeroBasedInt,
+      lines: v.lines,
+      version: v.version,
+    };
+    jsont_to_yojson(jsonr);
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
@@ -179,6 +221,18 @@ module BufferUpdate = {
     endLine,
     lines,
     version,
+  };
+
+  let createFromZeroBasedIndices =
+      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+    let ret: t = {
+      id,
+      startLine: Index.ZeroBasedIndex(startLine),
+      endLine: Index.ZeroBasedIndex(endLine),
+      lines,
+      version,
+    };
+    ret;
   };
 };
 
@@ -250,11 +304,93 @@ module Input = {
   type controlMode =
     | [@name "menuFocus"] MenuFocus
     | [@name "textInputFocus"] TextInputFocus
-    | [@name "editorTextFocus"] EditorTextFocus;
+    | [@name "editorTextFocus"] EditorTextFocus
+    | [@name "neovimMenuFocus"] NeovimMenuFocus;
 
   [@deriving show({with_path: false})]
   type keyBindings = {
     key: string,
     command: string,
   };
+};
+
+module VisualRange = {
+  [@deriving show({with_path: false})]
+  type mode =
+    | None
+    | Visual /* "v" */
+    | BlockwiseVisual /* "<C-v>" */
+    | LinewiseVisual; /* "V" */
+
+  [@deriving show({with_path: false})]
+  type t = {
+    range: Range.t,
+    mode,
+  };
+
+  let _modeFromString = s => {
+    switch (s) {
+    | "V" => LinewiseVisual
+    | "vb" => BlockwiseVisual
+    | "v" => Visual
+    | _ => None
+    };
+  };
+
+  /*
+   * The range might not always come through in the correct 'order' -
+   * this method normalizes the range so that the (startLine, startColumn) is
+   * before or equal to (endLine, endColumn)
+   */
+  let _normalizeRange = (startLine, startColumn, endLine, endColumn) =>
+    if (startLine > endLine) {
+      (endLine, endColumn, startLine, startColumn);
+    } else if (startLine == endLine && startColumn > endColumn) {
+      (endLine, endColumn, startLine, startColumn);
+    } else {
+      (startLine, startColumn, endLine, endColumn);
+    };
+
+  let create =
+      (~startLine=1, ~startColumn=1, ~endLine=1, ~endColumn=1, ~mode="", ()) => {
+    let (startLine, startColumn, endLine, endColumn) =
+      _normalizeRange(startLine, startColumn, endLine, endColumn);
+
+    let range =
+      Range.create(
+        ~startLine=OneBasedIndex(startLine),
+        ~startCharacter=OneBasedIndex(startColumn),
+        ~endLine=OneBasedIndex(endLine),
+        ~endCharacter=OneBasedIndex(endColumn),
+        (),
+      );
+
+    let mode = _modeFromString(mode);
+
+    {range, mode};
+  };
+};
+
+module Uri = {
+  module Scheme = {
+    [@deriving (show({with_path: false}), yojson({strict: false}))]
+    type t =
+      | [@name "file"] File
+      | [@name "memory"] Memory;
+
+    let toString = (v: t) =>
+      switch (v) {
+      | File => "file"
+      | Memory => "memory"
+      };
+  };
+
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    scheme: Scheme.t,
+    path: string,
+  };
+
+  let fromMemory = (path: string) => {scheme: Scheme.Memory, path};
+  let fromPath = (path: string) => {scheme: Scheme.File, path};
 };

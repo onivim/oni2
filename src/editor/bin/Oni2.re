@@ -27,11 +27,12 @@ switch (Sys.getenv_opt("ONI2_DEBUG")) {
 let init = app => {
   let w =
     App.createWindow(
-      ~createOptions={
-        ...Window.defaultCreateOptions,
-        maximized: false,
-        icon: Some("logo.png"),
-      },
+      ~createOptions=
+        WindowCreateOptions.create(
+          ~maximized=false,
+          ~icon=Some("logo.png"),
+          (),
+        ),
       app,
       "Oni2",
     );
@@ -42,10 +43,17 @@ let init = app => {
 
   PreflightChecks.run();
 
+  let initialState = Model.State.create();
   let currentState = ref(Model.State.create());
+
+  let update = UI.start(w, <Root state=currentState^ />);
 
   let onStateChanged = v => {
     currentState := v;
+    let state = currentState^;
+    GlobalContext.set({...GlobalContext.current(), state});
+
+    update(<Root state />);
   };
 
   let dispatch =
@@ -57,33 +65,24 @@ let init = app => {
       (),
     );
 
-  let render = () => {
-    let state = currentState^;
-    GlobalContext.set({
-      state,
-      notifySizeChanged: (~width, ~height, ()) =>
-        dispatch(
-          Model.Actions.SetEditorSize(
-            Core.Types.EditorSize.create(
-              ~pixelWidth=width,
-              ~pixelHeight=height,
-              (),
-            ),
+  GlobalContext.set({
+    notifySizeChanged: (~width, ~height, ()) =>
+      dispatch(
+        Model.Actions.SetEditorSize(
+          Core.Types.EditorSize.create(
+            ~pixelWidth=width,
+            ~pixelHeight=height,
+            (),
           ),
         ),
-      openFileById: id => dispatch(Model.Actions.OpenFileById(id)),
-      closeFileById: id => dispatch(Model.Actions.CloseFileById(id)),
-      editorScroll: (~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(deltaY)),
-      dispatch,
-    });
-
-    <Root state />;
-  };
-
-  UI.start(w, render);
-
-  Window.setShouldRenderCallback(w, _ => true);
+      ),
+    openFileById: id => dispatch(Model.Actions.OpenFileById(id)),
+    closeFileById: id => dispatch(Model.Actions.CloseFileById(id)),
+    editorScroll: (~deltaY, ()) =>
+      dispatch(Model.Actions.EditorScroll(deltaY)),
+    dispatch,
+    state: initialState,
+  });
 
   dispatch(Model.Actions.Init);
 
@@ -160,13 +159,6 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-
-  /* List.iter( */
-  /*   p => neovimProtocol.openFile(~path=p, ()), */
-  /*   cliOptions.filesToOpen, */
-  /* ); */
-
-  ();
 };
 
 /* Let's get this party started! */
