@@ -12,7 +12,7 @@ type t = {
   tabSize: int,
 };
 
-let default = {mode: Spaces, size: 2, tabSize: 2};
+let default = {mode: Spaces, size: 4, tabSize: 4};
 
 let ofConfiguration = (configuration: Configuration.t) => {
   mode: configuration.editorInsertSpaces ? Spaces : Tabs,
