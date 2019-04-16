@@ -9,7 +9,7 @@ open Oni_Model;
 
 let start = (setup: Setup.t) => {
   let reloadConfigurationEffect = Isolinear.Effect.createWithDispatch(~name="configuration.reload", (dispatch) => {
-    let configuration = Configuration.create(~configPath=setup.configPath, ()); 
+    let configuration = Configuration.create(~configPath=Configuration.getBundledConfigPath(), ()); 
     prerr_endline ("LOADED CONFIGURATION: " ++ Configuration.show(configuration));
     dispatch(Actions.ConfigurationSet(configuration));
   });
