@@ -56,7 +56,7 @@ module EditorColors = {
     scrollbarSliderBackground: Color.rgba(0., 0., 0., 0.2),
     scrollbarSliderActiveBackground: Color.hex("#2F3440"),
     editorIndentGuideBackground: Color.hex("#3b4048"),
-    editorIndentGuideActiveBackground: Color.hex("#c8c8c8"),
+    editorIndentGuideActiveBackground: Color.rgba(0.78, 0.78, 0.78, 0.78),
     editorMenuBackground: Color.hex("#2F3440"),
     editorMenuForeground: Color.hex("#FFFFFF"),
     editorMenuItemSelected: Color.hex("#495162"),
