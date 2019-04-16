@@ -4,8 +4,6 @@
  * Helpers for dealing with indentation level
  */
 
-Printexc.record_backtrace(true);
-
 let getLevel = (settings: IndentationSettings.t, text: string) => {
   let tabSize = settings.tabSize;
 
