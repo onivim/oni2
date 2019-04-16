@@ -82,7 +82,9 @@ let textRunToToken =
       theme.colors.editorBackground,
     );
 
-  let backgroundColor = startIndex >= selectionStart && endIndex <= selectionEnd ? selectionColor : defaultColor;
+  let backgroundColor =
+    startIndex >= selectionStart && endIndex <= selectionEnd
+      ? selectionColor : defaultColor;
 
   let ret: t = {
     tokenType,
@@ -133,10 +135,19 @@ let tokenize:
     IndentationSettings.t,
     option(Range.t),
     Color.t,
-    Color.t,
+    Color.t
   ) =>
   list(t) =
-  (s, theme, tokenColors, colorMap, indentationSettings, selection, defaultBackgroundColor, selectionColor) => {
+  (
+    s,
+    theme,
+    tokenColors,
+    colorMap,
+    indentationSettings,
+    selection,
+    defaultBackgroundColor,
+    selectionColor,
+  ) => {
     let len = Zed_utf8.length(s);
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(len, ColorizedToken.default);
@@ -153,15 +164,14 @@ let tokenize:
         f(tail, pos^);
       };
 
-    let (selectionStart, selectionEnd) = switch(selection) {
-    | Some(v) => 
+    let (selectionStart, selectionEnd) =
+      switch (selection) {
+      | Some(v) =>
         let s = Index.toZeroBasedInt(v.startPosition.character);
         let e = Index.toZeroBasedInt(v.endPosition.character);
         e > s ? (s, e) : (e, s);
-    | None => (-1, -1)
-    };
-
-
+      | None => ((-1), (-1))
+      };
 
     let tokenColors = List.rev(tokenColors);
 
@@ -184,5 +194,15 @@ let tokenize:
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
-    |> List.map(textRunToToken(defaultBackgroundColor, selectionColor, colorMap, theme, tokenColorArray, selectionStart, selectionEnd));
+    |> List.map(
+         textRunToToken(
+           defaultBackgroundColor,
+           selectionColor,
+           colorMap,
+           theme,
+           tokenColorArray,
+           selectionStart,
+           selectionEnd,
+         ),
+       );
   };

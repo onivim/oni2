@@ -137,7 +137,7 @@ let renderTokens =
       -. xF;
     let y = yF;
 
-  let backgroundColor = token.backgroundColor;
+    let backgroundColor = token.backgroundColor;
 
     switch (token.tokenType) {
     | Text =>
@@ -273,9 +273,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           i,
         );
 
-         let isActiveLine = i == Index.toZeroBasedInt(cursorLine);
-         let defaultBackground = isActiveLine ? theme.colors.editorLineHighlightBackground :  theme.colors.editorBackground;
-
+      let isActiveLine = i == Index.toZeroBasedInt(cursorLine);
+      let defaultBackground =
+        isActiveLine
+          ? theme.colors.editorLineHighlightBackground
+          : theme.colors.editorBackground;
 
       BufferViewTokenizer.tokenize(
         line,
@@ -402,7 +404,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 (),
               );
 
-              let selectionRanges: Hashtbl.t(int, Range.t) = Hashtbl.create(100);
+              let selectionRanges: Hashtbl.t(int, Range.t) =
+                Hashtbl.create(100);
 
               /* Draw selection ranges */
               switch (activeBuffer) {
@@ -411,24 +414,25 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 Oni_Core.Types.Range.(
                   List.iter(
                     (r: Range.t) => {
-
                       let line = Index.toZeroBasedInt(r.startPosition.line);
-                      let start = Index.toZeroBasedInt(r.startPosition.character);
-                      let endC = Index.toZeroBasedInt(r.endPosition.character);
+                      let start =
+                        Index.toZeroBasedInt(r.startPosition.character);
+                      let endC =
+                        Index.toZeroBasedInt(r.endPosition.character);
 
                       let text = Buffer.getLine(b, line);
-                        let (startOffset, _) =
-                          BufferViewTokenizer.getCharacterPositionAndWidth(
-                            ~indentation,
-                            text,
-                            start
-                          );
-                        let (endOffset, _) =
-                          BufferViewTokenizer.getCharacterPositionAndWidth(
-                            ~indentation,
-                            text,
-                            endC
-                          );
+                      let (startOffset, _) =
+                        BufferViewTokenizer.getCharacterPositionAndWidth(
+                          ~indentation,
+                          text,
+                          start,
+                        );
+                      let (endOffset, _) =
+                        BufferViewTokenizer.getCharacterPositionAndWidth(
+                          ~indentation,
+                          text,
+                          endC,
+                        );
 
                       Hashtbl.add(selectionRanges, line, r);
                       Shapes.drawRect(
@@ -445,15 +449,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                           -. state.editor.scrollY,
                         ~height=fontHeight,
                         ~width=
-                          float_of_int(
-                            endOffset
-                            - startOffset
-                          )
-                          *. fontWidth,
+                          float_of_int(endOffset - startOffset) *. fontWidth,
                         ~color=theme.colors.editorSelectionBackground,
                         (),
-                      )
-              },
+                      );
+                    },
                     ranges,
                   )
                 );
@@ -467,8 +467,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~count,
                 ~render=
                   (item, offset) => {
-                    let selectionRange = Hashtbl.find_opt(selectionRanges, item);
-                    let tokens = getTokensForLine(~selection=selectionRange, item);
+                    let selectionRange =
+                      Hashtbl.find_opt(selectionRanges, item);
+                    let tokens =
+                      getTokensForLine(~selection=selectionRange, item);
 
                     let _ =
                       renderTokens(
