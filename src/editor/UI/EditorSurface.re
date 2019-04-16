@@ -507,23 +507,26 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 (),
               );
 
-              switch (activeBuffer) {
-              | None => ()
-              | Some(buffer) =>
-                IndentLineRenderer.render(
-                  ~transform,
-                  ~buffer,
-                  ~startLine=topVisibleLine - 1,
-                  ~endLine=bottomVisibleLine + 1,
-                  ~lineHeight=fontHeight,
-                  ~fontWidth,
-                  ~cursorLine=
-                    Index.toZeroBasedInt(state.editor.cursorPosition.line),
-                  ~theme=state.theme,
-                  ~indentationSettings=indentation,
-                  ~bufferPositionToPixel,
-                  (),
-                )
+              if (state.configuration.editorRenderIndentGuides) {
+                  switch (activeBuffer) {
+                  | None => ()
+                  | Some(buffer) =>
+                    IndentLineRenderer.render(
+                      ~transform,
+                      ~buffer,
+                      ~startLine=topVisibleLine - 1,
+                      ~endLine=bottomVisibleLine + 1,
+                      ~lineHeight=fontHeight,
+                      ~fontWidth,
+                      ~cursorLine=
+                        Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                      ~theme=state.theme,
+                      ~indentationSettings=indentation,
+                      ~bufferPositionToPixel,
+                      ~showActive=state.configuration.editorHighlightActiveIndentGuide,
+                      (),
+                    )
+                  };
               };
             }}
           />

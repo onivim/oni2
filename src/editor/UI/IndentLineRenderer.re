@@ -23,6 +23,7 @@ let render =
       ~cursorLine,
       ~theme: Theme.t,
       ~indentationSettings: IndentationSettings.t,
+      ~showActive: bool,
       (),
     ) => {
   /* First, render *all* indent guides */
@@ -62,10 +63,7 @@ let render =
   };
 
   /* Next, render _active_ indent guide */
-
-  /* Get top line of region to render */
-
-  if (cursorLine < bufferLineCount) {
+  if (cursorLine < bufferLineCount && showActive) {
     let activeIndentLevel =
       Buffer.getLine(buffer, cursorLine)
       |> Oni_Core.Indentation.getLevel(indentationSettings);
