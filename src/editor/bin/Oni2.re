@@ -27,11 +27,11 @@ switch (Sys.getenv_opt("ONI2_DEBUG")) {
 let init = app => {
   let w =
     App.createWindow(
-      ~createOptions={
-        ...Window.defaultCreateOptions,
-        maximized: false,
-        icon: Some("logo.png"),
-      },
+      ~createOptions=WindowCreateOptions.create(
+        ~maximized= false,
+        ~icon= Some("logo.png"),
+        (),
+      ),
       app,
       "Oni2",
     );
@@ -42,12 +42,20 @@ let init = app => {
 
   PreflightChecks.run();
 
+  let initialState = Model.State.create();
   let currentState = ref(Model.State.create());
-  let isDirty = ref(false);
+
+  let update = UI.start(w, <Root state=currentState^ />);
 
   let onStateChanged = v => {
     currentState := v;
-    isDirty := true;
+    let state = currentState^;
+    GlobalContext.set({
+      ...GlobalContext.current(),
+      state,
+    });
+
+    update(<Root state />);
   };
 
   let dispatch =
@@ -59,11 +67,7 @@ let init = app => {
       (),
     );
 
-  let render = () => {
-    isDirty := false;
-    let state = currentState^;
-    GlobalContext.set({
-      state,
+  GlobalContext.set({
       notifySizeChanged: (~width, ~height, ()) =>
         dispatch(
           Model.Actions.SetEditorSize(
@@ -79,14 +83,8 @@ let init = app => {
       editorScroll: (~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(deltaY)),
       dispatch,
-    });
-
-    <Root state />;
-  };
-
-  UI.start(w, render);
-
-  Window.setShouldRenderCallback(w, _ => isDirty^);
+      state: initialState,
+  });
 
   dispatch(Model.Actions.Init);
 
