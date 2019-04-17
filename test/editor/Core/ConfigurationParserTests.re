@@ -36,5 +36,18 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       };
   });
 
+  test("bool value", ({expect}) => {
+      let configuration = {|
+      { "editor.minimap.enabled": false }
+      |};
+
+      switch (ConfigurationParser.ofString(configuration)) {
+      | Ok(v) => {
+          expect.bool(v.editorMinimapEnabled).toBe(false);
+      }
+      | Error(_) => expect.bool(false).toBe(true);
+      };
+  });
+
   
 });
