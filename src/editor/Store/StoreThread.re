@@ -63,7 +63,7 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start(setup);
+  let configurationUpdater = ConfigurationStoreConnector.start();
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);

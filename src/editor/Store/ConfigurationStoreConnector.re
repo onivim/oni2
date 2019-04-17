@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = (setup: Setup.t) => {
+let start = () => {
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
       let configPath = Filesystem.getOrCreateConfigFile("configuration.json");
@@ -16,7 +16,8 @@ let start = (setup: Setup.t) => {
         let configuration = Configuration.create(~configPath=v, ());
         prerr_endline("Reloading from: " ++ v);
         dispatch(Actions.ConfigurationSet(configuration));
-      | Error(err) => prerr_endline("Error loading configuration file")
+      | Error(err) =>
+        prerr_endline("Error loading configuration file: " ++ err)
       };
     });
 
