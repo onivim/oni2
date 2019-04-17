@@ -12,6 +12,12 @@ let create = setItems => {
       command: () => Actions.OpenConfigFile("keybindings.json"),
       icon: None,
     },
+    {
+      category: None,
+      name: "Reload configuration",
+      command: () => Actions.ConfigurationReload,
+      icon: None,
+    },
   ];
 
   setItems(commands);
