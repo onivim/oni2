@@ -24,6 +24,8 @@ type t = {
   editorMinimapEnabled: bool,
   [@key "editor.minimap.showSlider"]
   editorMinimapShowSlider: bool,
+  [@key "editor.minimap.maxColumn"]
+  editorMinimapMaxColumn: int,
   [@key "editor.tablineMode"]
   editorTablineMode,
   [@key "editor.insertSpaces"]
@@ -45,6 +47,7 @@ type t = {
 let default = {
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
+  editorMinimapMaxColumn: 12,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
   editorInsertSpaces: false,

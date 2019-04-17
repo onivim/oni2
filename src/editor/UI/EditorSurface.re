@@ -312,6 +312,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let layout =
       EditorLayout.getLayout(
+        ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
         ~pixelWidth=float_of_int(state.editor.size.pixelWidth),
         ~pixelHeight=float_of_int(state.editor.size.pixelHeight),
         ~isMinimapShown=true,

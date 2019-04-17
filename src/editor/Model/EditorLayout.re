@@ -8,15 +8,17 @@ open Oni_Core;
 
 type t = {
   lineNumberWidthInPixels: float,
-  minimapWidthInPixels: int,
   bufferWidthInPixels: float,
-  widthInCharacters: int,
+  bufferWidthInCharacters: int,
   bufferHeightInCharacters: int,
+  minimapWidthInCharacters: int,
   minimapHeightInCharacters: int,
+  minimapWidthInPixels: int,
 };
 
 let getLayout =
     (
+      ~maxMinimapCharacters=120,
       ~pixelWidth: float,
       ~pixelHeight: float,
       ~isMinimapShown: bool,
@@ -59,9 +61,17 @@ let getLayout =
       int_of_float(availableWidthInPixels /. characterWidth);
     };
 
-  let bufferWidthInPixels = characterWidth *. float_of_int(widthInCharacters);
+  let minimapWidthInCharacters = maxMinimapCharacters > widthInCharacters ? widthInCharacters : maxMinimapCharacters;
   let minimapWidthInPixels =
-    Constants.default.minimapCharacterWidth * widthInCharacters;
+    Constants.default.minimapCharacterWidth * minimapWidthInCharacters;
+
+  /* Recalculate available buffer width - might be extra room if minimap is truncated! */
+  let availableBufferWidth = availableWidthInPixels -. float_of_int(minimapWidthInPixels);
+
+  let bufferWidthInCharacters
+      = int_of_float(availableBufferWidth /. characterWidth);
+
+  let bufferWidthInPixels = characterWidth *. float_of_int(bufferWidthInCharacters);
 
   let bufferHeightInCharacters = int_of_float(pixelHeight /. characterHeight);
   let minimapHeightInCharacters =
@@ -86,7 +96,8 @@ let getLayout =
     lineNumberWidthInPixels,
     minimapWidthInPixels,
     bufferWidthInPixels: bufferWidthInPixels +. leftOverWidth,
-    widthInCharacters,
+    bufferWidthInCharacters,
+    minimapWidthInCharacters,
     bufferHeightInCharacters,
     minimapHeightInCharacters,
   };

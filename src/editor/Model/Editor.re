@@ -8,6 +8,7 @@ type t = {
   id: int,
   scrollX: float,
   scrollY: float,
+  minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
    * The maximum line visible in the view.
@@ -27,6 +28,7 @@ let create = () => {
     id: 0,
     scrollX: 0.,
     scrollY: 0.,
+    minimapMaxColumnWidth: 12,
     minimapScrollY: 0.,
     maxLineLength: 0,
     viewLines: 0,
@@ -127,6 +129,7 @@ let scrollToHorizontal = (view: t, newScrollX) => {
 
   let layout =
     EditorLayout.getLayout(
+      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
       ~pixelWidth=float_of_int(view.size.pixelWidth),
       ~pixelHeight=float_of_int(view.size.pixelHeight),
       ~isMinimapShown=true,
