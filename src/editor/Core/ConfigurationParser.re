@@ -61,3 +61,5 @@ let ofString = str => {
     | exception Yojson.Json_error(msg) => Error(msg);
     }
 }
+
+let ofFile = filePath => Yojson.Safe.from_file(filePath) |> ofJson;

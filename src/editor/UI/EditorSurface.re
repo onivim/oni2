@@ -183,6 +183,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 
+    print_endline ("MINIMAP ENABLED: " ++ string_of_bool(state.configuration.editorMinimapEnabled));
     let activeBuffer =
       BufferMap.getBuffer(state.activeBufferId, state.buffers);
 
