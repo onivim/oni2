@@ -13,4 +13,11 @@ let ofJson = json => {
     }
 };
 
-let ofString = str => str |> Yojson.Safe.from_string |> ofJson;
+let ofString = str => {
+    switch(
+    str |> Yojson.Safe.from_string |> ofJson
+    ) {
+    | v => v
+    | exception Yojson.Json_error(msg) => Error(msg);
+    }
+}

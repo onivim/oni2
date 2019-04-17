@@ -1,17 +1,29 @@
 open TestFramework;
 
+open Oni_Core.Configuration;
+
 module ConfigurationParser = Oni_Core.ConfigurationParser;
 
-describe("ConfigurationParser", ({test, _}) => {
-  test("invalid configuration returns error", ({expect}) => {
+describe("ConfigurationParser", ({test, describe, _}) => {
+    describe("error handling", ({test, _}) => {
+      test("invalid json returns error", ({expect}) => {
+          let invalidConfiguration = "{]";
 
-      let invalidConfiguration = "{]";
+          switch (ConfigurationParser.ofString(invalidConfiguration)) {
+          | Ok(_) => expect.string("Not OK").toEqual("");
+          | Error(_) => expect.bool(true).toBe(true);
+          };
+      });
 
-      switch (ConfigurationParser.ofString(invalidConfiguration)) {
-      | Ok(_) => expect.string("Not OK").toEqual("");
-      | Error(_) => failwith("Config should be invalid");
-      };
-  });
+      test("json array returns error", ({expect}) => {
+          let invalidConfiguration = "[]";
+
+          switch (ConfigurationParser.ofString(invalidConfiguration)) {
+          | Ok(_) => expect.string("Not OK").toEqual("");
+          | Error(_) => expect.bool(true).toBe(true);
+          };
+      });
+    });
 
   test("empty configuration", ({expect}) => {
       let emptyConfiguration = "{}";
@@ -20,7 +32,9 @@ describe("ConfigurationParser", ({test, _}) => {
       | Ok(v) => {
           expect.string(v.workbenchIconTheme).toEqual("vs-seti");
       }
-      | Error(_) => failwith("Config should be valid");
+      | Error(_) => expect.bool(false).toBe(true);
       };
   });
+
+  
 });
