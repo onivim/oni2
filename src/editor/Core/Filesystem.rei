@@ -1,6 +1,4 @@
-type t('a) =
-  | Ok('a)
-  | Error(string);
+type t('a) = result('a, string);
 
 let copy: (string, string) => t(unit);
 
@@ -32,4 +30,4 @@ let unsafeFindHome: unit => string;
 
 let getOniDirectory: string => t(string);
 
-let createOniConfigFile: string => t(string);
+let getOrCreateConfigFile: string => t(string);

@@ -17,8 +17,6 @@ let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modu
 let neovimPath
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
-let configurationPath = path.join(configPath, "configuration.json")
-let keybindingsPath = path.join(configPath, "keybindings.json")
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 
 const getCygwinPath = inputPath => {
@@ -33,9 +31,7 @@ if (isWindows) {
     neovimPath = getCygwinPath(
         path.join(vendorPath, "neovim-0.3.3", "nvim-win64", "bin", "nvim.exe"),
     )
-    configurationPath = getCygwinPath(configurationPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
-    keybindingsPath = getCygwinPath(keybindingsPath)
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
 } else if (isMac) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "osx", "node")
@@ -53,12 +49,10 @@ if (isWindows) {
 const config = {
     neovim: neovimPath,
     node: nodePath,
-    configuration: configurationPath,
     textmateService: textMateServicePath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,
     extensionHost: extensionHostPath,
-    keybindings: keybindingsPath,
     rg: rgPath,
 }
 const oniConfig = JSON.stringify(config)
