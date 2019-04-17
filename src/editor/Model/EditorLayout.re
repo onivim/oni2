@@ -61,17 +61,21 @@ let getLayout =
       int_of_float(availableWidthInPixels /. characterWidth);
     };
 
-  let minimapWidthInCharacters = maxMinimapCharacters > widthInCharacters ? widthInCharacters : maxMinimapCharacters;
+  let minimapWidthInCharacters =
+    maxMinimapCharacters > widthInCharacters
+      ? widthInCharacters : maxMinimapCharacters;
   let minimapWidthInPixels =
     Constants.default.minimapCharacterWidth * minimapWidthInCharacters;
 
   /* Recalculate available buffer width - might be extra room if minimap is truncated! */
-  let availableBufferWidth = availableWidthInPixels -. float_of_int(minimapWidthInPixels);
+  let availableBufferWidth =
+    availableWidthInPixels -. float_of_int(minimapWidthInPixels);
 
-  let bufferWidthInCharacters
-      = int_of_float(availableBufferWidth /. characterWidth);
+  let bufferWidthInCharacters =
+    int_of_float(availableBufferWidth /. characterWidth);
 
-  let bufferWidthInPixels = characterWidth *. float_of_int(bufferWidthInCharacters);
+  let bufferWidthInPixels =
+    characterWidth *. float_of_int(bufferWidthInCharacters);
 
   let bufferHeightInCharacters = int_of_float(pixelHeight /. characterHeight);
   let minimapHeightInCharacters =
