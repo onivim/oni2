@@ -12,6 +12,12 @@ let parseBool = json =>
   | _ => false
   };
 
+let parseInt = json =>
+  switch (json) {
+  | `Int(v) => v
+  | _ => 0
+  };
+
 let parseLineNumberSetting = json =>
   switch (json) {
   | `String(v) =>
@@ -23,6 +29,35 @@ let parseLineNumberSetting = json =>
     }
   | _ => On
   };
+
+let parseTablineMode = json =>
+switch (json) {
+| `String(v) =>
+    switch(v) {
+    | "buffers" => Buffers
+    | "tabs" => Tabs
+    | "hybrid" => Hybrid
+    | _ => Buffers
+    }
+| _ => Buffers
+};
+
+let parseRenderWhitespace = json => switch(json) {
+| `String(v) => {
+    switch(v) {
+    | "all" => All
+    | "boundary" => Boundary
+    | "none" => None
+    | _ => All
+    }
+}
+| _ => All
+};
+
+let parseString = json => switch(json) {
+| `String(v) => v
+| _ => ""
+};
 
 type parseFunction = (Configuration.t, Yojson.Safe.json) => Configuration.t;
 
@@ -36,6 +71,42 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.minimap.enabled",
     (s, v) => {...s, editorMinimapEnabled: parseBool(v)},
+  ),
+  (
+    "editor.minimap.showSlider",
+    (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
+  ),
+  (
+    "editor.tablineMode",
+    (s, v) => {...s, editorTablineMode: parseTablineMode(v)},
+  ),
+  (
+    "editor.insertSpaces",
+    (s, v) => {...s, editorInsertSpaces: parseBool(v)},
+  ),
+  (
+    "editor.indentSize",
+    (s, v) => {...s, editorIndentSize: parseInt(v)},
+  ),
+  (
+    "editor.tabSize",
+    (s, v) => {...s, editorTabSize: parseInt(v)},
+  ),
+  (
+    "editor.highlightActiveIndentGuide",
+    (s, v) => {...s, editorHighlightActiveIndentGuide: parseBool(v)},
+  ),
+  (
+    "editor.renderIndentGuides",
+    (s, v) => {...s, editorRenderIndentGuides: parseBool(v)},
+  ),
+  (
+    "editor.renderWhitespace",
+    (s, v) => {...s, editorRenderWhitespace: parseRenderWhitespace(v)},
+  ),
+  (
+    "workbench.iconTheme",
+    (s, v) => {...s, workbenchIconTheme: parseString(v)},
   ),
 ];
 
