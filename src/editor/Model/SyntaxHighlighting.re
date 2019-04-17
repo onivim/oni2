@@ -54,12 +54,11 @@ module BufferSyntaxHighlights = {
       ret;
     };
 
-  let getTokensForLine = (v: t, lineId: int) => {
+  let getTokensForLine = (v: t, lineId: int) =>
     switch (IntMap.find_opt(lineId, v.lineToHighlights)) {
     | Some(v) => v.tokens
     | None => []
     };
-  };
 
   let update =
       (
@@ -111,13 +110,12 @@ type t = {
   idToBufferSyntaxHighlights: IntMap.t(BufferSyntaxHighlights.t),
 };
 
-let getTokensForLine = (v: t, bufferId: int, lineId: int) => {
+let getTokensForLine = (v: t, bufferId: int, lineId: int) =>
   switch (IntMap.find_opt(bufferId, v.idToBufferSyntaxHighlights)) {
   | None => []
   | Some(bufferMap) =>
     BufferSyntaxHighlights.getTokensForLine(bufferMap, lineId)
   };
-};
 
 let create: unit => t =
   () => {
@@ -126,7 +124,7 @@ let create: unit => t =
   };
 
 let reduce: (t, Actions.t) => t =
-  (state, action) => {
+  (state, action) =>
     switch (action) {
     | SyntaxHighlightColorMap(colorMap) => {...state, colorMap}
     | SyntaxHighlightTokens(tokens) => {
@@ -181,4 +179,3 @@ let reduce: (t, Actions.t) => t =
       }
     | _ => state
     };
-  };

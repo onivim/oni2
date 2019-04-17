@@ -113,6 +113,38 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
       | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
+      | AddLeftDock(dock) => {
+          ...s,
+          editorLayout: {
+            ...s.editorLayout,
+            leftDock: [dock, ...s.editorLayout.leftDock],
+          },
+        }
+      | AddRightDock(dock) => {
+          ...s,
+          editorLayout: {
+            ...s.editorLayout,
+            rightDock: [dock, ...s.editorLayout.rightDock],
+          },
+        }
+      | AddSplit(split) =>
+        let id = WindowManager.WindowId.current();
+        {
+          ...s,
+          editorLayout: {
+            ...s.editorLayout,
+            activeWindowId: id,
+            windows:
+              WindowManager.addSplit(id, split, s.editorLayout.windows),
+          },
+        };
+      | RemoveSplit(id) => {
+          ...s,
+          editorLayout: {
+            ...s.editorLayout,
+            windows: WindowManager.removeSplit(id, s.editorLayout.windows),
+          },
+        }
       | _ => s
       };
     };
