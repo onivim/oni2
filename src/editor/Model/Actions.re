@@ -54,6 +54,10 @@ type t =
   | CloseFileById(int)
   | OpenFileByPath(string)
   | OpenFileById(int)
+  | AddRightDock(WindowManager.dock)
+  | AddLeftDock(WindowManager.dock)
+  | AddSplit(WindowManager.splitMetadata)
+  | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
   | SetLanguageInfo(LanguageInfo.t)

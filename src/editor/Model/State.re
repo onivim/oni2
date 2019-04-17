@@ -36,6 +36,7 @@ type t = {
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
+  editorLayout: WindowManager.t,
 };
 
 let create: unit => t =
@@ -64,4 +65,5 @@ let create: unit => t =
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),
     statusBar: StatusBarModel.create(),
+    editorLayout: WindowManager.create(),
   };

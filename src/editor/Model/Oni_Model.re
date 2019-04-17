@@ -27,3 +27,4 @@ module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
+module WindowManager = WindowManager;
