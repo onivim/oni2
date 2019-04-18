@@ -65,17 +65,19 @@ The TL;DR is:
 
 You can pre-order a commercial license here (pay-what-you-want): https://v2.onivim.io
 
-As we get closer to shipping, we'll bump up the minimum required pre-order, until we settle on our full pricing model - $5/mo, $50/yr, or $99 lifetime.
+As we get closer to shipping our MVP, we'll increase the minimum required pre-order, until we settle on our full pricing model - $5/mo, $50/yr, or $99 lifetime.
 
-__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). You're welcome to contribute more, of course, but we're tremendously appreciative of our early adopters.
+__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). 
 
 Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
 
-### 'Time-bombed' dual license
+#### 'Time-Bomb' Dual License
 
-Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), that means it would be dual-licensed with __MIT License__ on __10/18/2020__. We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project end up back in the open!).
+Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
 
-### Third-Party Code
+We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project eventually end up back in the open!)
+
+#### Third-Party Code
 
 Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
 
