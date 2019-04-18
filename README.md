@@ -63,19 +63,17 @@ The TL;DR is:
 - __Commercial use__ requires the purchase of a license.
 - You may not redistribute source code or binaries under a different license.
 
-You can pre-order a commercial license here with a pay-what-you-want model: https://v2.onivim.io
+You can pre-order a commercial license here (pay-what-you-want): https://v2.onivim.io
 
-As we get closer to shipping, we'll start bumping up the minimum required pre-order, until we settle on our full pricing model - $5/mo, $50/yr, or $99 lifetime.
+As we get closer to shipping, we'll bump up the minimum required pre-order, until we settle on our full pricing model - $5/mo, $50/yr, or $99 lifetime.
 
-__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). Early adopters will never have to pay again, unless they wish to contribute more to the project.
+__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). You're welcome to contribute more, of course, but we're tremendously appreciative of our early adopters.
 
-Alternatively, you can contribute to the project through one of these avenues:
-- [Patreon](https://www.patreon.com/onivim)
-- [Open Collective](https://opencollective.com/oni)
+Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
 
-Because of the support we've received from open source communities (both Neovim and Reason), we've decided also to __dual-license the code after 18 months__ - every commit, starting with [017c5131b4bba3006f726a3ef0f5a33028e059b5](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c5131b4bba3006f726a3ef0f5a33028e059b5](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), that means it would be dual-licensed with __MIT License__ on __10/18/2020__. We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities.
+### 'Time-bombed' dual license
 
-If you wish to ship a product based on the Onivim 2 source code, and don't want to wait 18 months for a specific commit, we do offer an SDK license. Contact sales@outrunlabs.com for more info. However, it's possible you just want [Revery](https://github.com/revery-ui/revery), which is totally free and MIT licensed.
+Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), that means it would be dual-licensed with __MIT License__ on __10/18/2020__. We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project end up back in the open!).
 
 ### Third-Party Code
 
