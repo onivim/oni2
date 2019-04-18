@@ -65,7 +65,7 @@ The TL;DR is:
 
 You can pre-order a commercial license here (pay-what-you-want): https://v2.onivim.io
 
-As we get closer to shipping our MVP, we'll increase the minimum required pre-order, until we settle on our full pricing model - $5/mo, $50/yr, or $99 lifetime.
+As we get closer to shipping our MVP, we'll increase the minimum required pre-order, until we settle on our full pricing model.
 
 __Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). 
 
