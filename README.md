@@ -24,7 +24,7 @@ Oni 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](ht
 - __Cross-Platform__ - works on Windows, OSX, and Linux
 - __Batteries Included__ - works out of the box
 - __Performance__ - no compromises: native performance, minimal input latency
-- __Ease Learning Curve__ - Oni 2 should be comfortable for non-vimmers, too!
+- __Easy to Learn__ - Onivim 2 should be comfortable for non-vimmers, too!
 
 The goal of this project is to build an editor that doesn't exist today - the _speed_ of a native code editor like Sublime, the _power_ of modal editing, and the _rich tooling_ that comes with a lightweight editor like VSCode.
 
@@ -32,53 +32,27 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 - __VimL compatibility__ - we may not support all features of VimL plugins / configuration.
 
-## Build
-
-### Prerequisites
-
-- Install [Git](https://git-scm.com/)
-- Install [Esy](https://esy.sh) (__0.5.6__ is required)
-- [Check and install any system packages for Revery](https://github.com/revery-ui/revery#building)
-
-### Build
-
-#### Build the front-end
-
-- `git clone https://github.com/onivim/oni2`
-- `cd oni2`
-- `esy install`
-- `esy bootstrap`
-- `esy build`
-
-#### Build the textmate service
-
-- `cd src/textmate_service`
-- `node install`
-- `npm run build`
-
-### Run
-
-- `esy run`
-
-### Tests
-
-- `esy '@test' install`
-- `esy '@test' build`
-- `esy '@test' run`
-
-### Benchmarks
-
-- `esy '@bench' install`
-- `esy '@bench' build`
-- `esy '@bench' run`
-
 ## Documentation
 
-Coming soon
+Coming soon!
 
 ## Contributing
 
-We'd :heart: help building Oni 2 - more info soon.
+We'd :heart: help building Onivim 2!
+
+If you are interesting in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
+
+- [How to build and run from source](./CONTRIBUTING.md#build-and-run)
+- [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)
+
+Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+## Feedback
+
+- [Tweet us](https://twitter.com/oni_vim) with feedback
+- Come visit us on [Discord](https://discord.gg/7maEAxV)
+- Join the discussion on [Reddit](https://reddit.com/r/onivim)
+- [File an issue](https://github.com/onivim/oni2/issues) on GitHub
 
 ## License
 
