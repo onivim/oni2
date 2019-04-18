@@ -45,7 +45,7 @@ If you are interesting in fixing issues and contributing directly to the code, p
 - [How to build and run from source](./CONTRIBUTING.md#build-and-run)
 - [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)
 
-Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md)
+Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## Feedback
 
