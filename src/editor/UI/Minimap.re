@@ -159,8 +159,6 @@ let createElement =
       setActive(true);
     };
 
-    ignore(width);
-
     (
       hooks,
       <View style=absoluteStyle onMouseDown>
