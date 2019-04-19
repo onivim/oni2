@@ -148,4 +148,7 @@ let ofString = str => {
   };
 };
 
-let ofFile = filePath => Yojson.Safe.from_file(filePath) |> ofJson;
+let ofFile = filePath => switch(Yojson.Safe.from_file(filePath) |> ofJson) {
+    | v => v
+    | exception (Yojson.Json_error(msg)) => Error(msg)
+};
