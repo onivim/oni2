@@ -468,6 +468,28 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               | None => ()
               };
 
+              /* Draw error markers */
+              switch (activeBuffer) {
+              | Some(b) => {
+                let diagnostics = Diagnostics.getDiagnostics(state.diagnostics, b); 
+                List.iter((d: Diagnostics.Diagnostic.t) => {
+
+                   let (x, y) = bufferPositionToPixel(Index.toZeroBasedInt(d.range.startPosition.line), Index.toZeroBasedInt(d.range.startPosition.character));
+
+                   Shapes.drawRect(
+                    ~transform,
+                    ~x,
+                    ~y=y +. fontHeight,
+                    ~height=1.,
+                    ~width=100.,
+                    ~color=Colors.red,
+                    (),
+                   );
+                }, diagnostics);
+              }
+              | None => ()
+              }
+
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
