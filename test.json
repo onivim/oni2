@@ -3,7 +3,8 @@
   "scripts": {
     "run": "esy '@test' x OniUnitTestRunner",
     "run-ci": "esy '@test' x OniUnitTestRunnerCI",
-    "core": "esy '@test' x OniUnitTestRunnerCore"
+    "core": "esy '@test' x OniUnitTestRunnerCore",
+    "model": "esy '@test' x OniUnitTestRunnerModel"
   },
   "override": {
       "build": ["dune build --root . -j4"],

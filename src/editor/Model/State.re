@@ -20,6 +20,7 @@ module Tab = {
 
 type t = {
   mode: Mode.t,
+  diagnostics: Diagnostics.t,
   tabs: list(Tab.t),
   buffers: BufferMap.t,
   activeBufferId: int,
@@ -42,6 +43,7 @@ type t = {
 let create: unit => t =
   () => {
     configuration: Configuration.default,
+    diagnostics: Diagnostics.create(),
     mode: Insert,
     menu: Menu.create(),
     commandline: Commandline.create(),

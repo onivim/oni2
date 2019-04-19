@@ -111,6 +111,15 @@ module Range = {
       ~endPosition=Position.create(endLine, endCharacter),
       (),
     );
+
+  let zero =
+    create(
+      ~startLine=ZeroBasedIndex(0),
+      ~startCharacter=ZeroBasedIndex(0),
+      ~endLine=ZeroBasedIndex(0),
+      ~endCharacter=ZeroBasedIndex(0),
+      (),
+    );
 };
 
 [@deriving show({with_path: false})]

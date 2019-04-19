@@ -21,7 +21,6 @@ type t = {
    */
   minimapLineSpacing: int,
   scrollBarThickness: int,
-
   minimapMaxColumn: int,
 };
 

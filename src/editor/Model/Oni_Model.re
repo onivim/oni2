@@ -13,6 +13,7 @@ module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
 module Commands = Commands;
+module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorLayout = EditorLayout;
 module Filter = Filter;
