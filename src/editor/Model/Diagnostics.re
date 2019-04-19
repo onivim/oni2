@@ -29,8 +29,40 @@ type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 
 let create = () => StringMap.empty;
 
-let change = (instance, _buffer, _diagName, _diagnostics) => {
-  instance;
+let _getKeyForBuffer = (b: Buffer.t) => {
+  b |> Buffer.getUri |> Uri.toString;
 };
 
-let getDiagnostics = (_instance, _buffer) => [];
+let _updateDiagnosticsMap =
+    (
+      diagnosticsKey,
+      diagnostics,
+      diagnosticsMap: StringMap.t(list(Diagnostic.t)),
+    ) => {
+  StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
+};
+
+let change = (instance, buffer, diagKey, diagnostics) => {
+  let bufferKey = _getKeyForBuffer(buffer);
+
+  let updateBufferMap =
+      (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
+    switch (bufferMap) {
+    | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
+    | None =>
+      Some(_updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
+    };
+  };
+
+  StringMap.update(bufferKey, updateBufferMap, instance);
+};
+
+let getDiagnostics = (instance, buffer) => {
+  let f = ((_key, v)) => v;
+
+  let bufferKey = _getKeyForBuffer(buffer);
+  switch (StringMap.find_opt(bufferKey, instance)) {
+  | None => []
+  | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
+  };
+};
