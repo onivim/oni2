@@ -17,17 +17,17 @@ let truncateFilepath = path =>
   };
 
 let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
-    List.map(
-      ({id, filePath, modified, _}: BufferMetadata.t) =>
-        State.Tab.{
-          id,
-          title: filePath |> truncateFilepath,
-          active: activeBufferId == id,
-          modified,
-        },
-      buffers,
-    )
-    |> sortTabsById;
+  List.map(
+    ({id, filePath, modified, _}: BufferMetadata.t) =>
+      State.Tab.{
+        id,
+        title: filePath |> truncateFilepath,
+        active: activeBufferId == id,
+        modified,
+      },
+    buffers,
+  )
+  |> sortTabsById;
 
 let updateTabs = (bufId, modified, tabs) =>
   State.Tab.(
