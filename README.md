@@ -58,23 +58,28 @@ Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
-Onivim 2 is currently licensed under the [CC-BY-NC-4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode) license.
+Onivim 2 is licensed under the [Outrun Labs EULA 1.0](./Outrun-Labs-EULA-v1.0.md).
 
-This means that Onivim 2 is __free to use__ for __non-commercial__ or __educational__ uses. 
+The TL;DR is:
+- __Free__ for __non-commercial__ and __educational use__.
+- __Commercial use__ requires the purchase of a license.
+- You may not redistribute source code or binaries under a different license.
 
-> __NOTE:__ We're reviewing our license terms with a lawyer, so they may change slightly (it turns out the CC-BY-NC-4.0 isn't the perfect fit for software - we might need a more official EULA).
+You can pre-order a commercial license here (pay-what-you-want): https://v2.onivim.io
 
-For __commercial use licenses__, we're still working through the details - but once Onivim 2 has reached "MVP" (target - end of May), we'll transition from crowdfunding to selling commercial licenses. Our current planned price point is $10/month.
+As we get closer to shipping our MVP, we'll increase the minimum required pre-order, until we settle on our full pricing model.
 
-However, until that time, __we're offering anyone who donates to the project - any dollar amount__ - an individual, perpetual-use commercial license. We don't want early adopters to have to pay again, ever, as we launch Onivim 2 - we truly appreciate the support as we transition to a commercial offering, and we know it's a leap of faith to back an early-stage project!
+__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). 
 
-More information about this decision in this [Reddit Thread: Question About Oni 2 License](https://www.reddit.com/r/neovim/comments/ae7ef6/question_about_oni_2_license/).
+Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
 
-You can pre-order a commercial license here: https://v2.onivim.io
+#### 'Time-Bomb' Dual License
 
-Alternatively, you can donate to the project through one of these avenues:
-- [Patreon](https://www.patreon.com/onivim)
-- [Open Collective](https://opencollective.com/oni)
+Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
+
+We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project eventually end up back in the open!)
+
+#### Third-Party Code
 
 Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
 
