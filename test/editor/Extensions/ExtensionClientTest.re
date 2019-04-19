@@ -41,7 +41,7 @@ describe("Extension Client", ({describe, _}) => {
   describe("DocumentsAndEditors", ({test, _}) => {
     let createInitialDocumentModel = (~lines, ~path, ()) => {
       ModelAddedDelta.create(
-        ~uri=Types.Uri.fromPath(path),
+        ~uri=Uri.fromPath(path),
         ~lines,
         ~modeId="test_language",
         ~isDirty=false,
@@ -170,7 +170,7 @@ describe("Extension Client", ({describe, _}) => {
 
         api.send(
           Documents.acceptModelChanged(
-            Types.Uri.fromPath("test.txt"),
+            Uri.fromPath("test.txt"),
             modelChangedEvent,
             true,
           ),
