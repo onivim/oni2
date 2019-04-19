@@ -28,7 +28,7 @@ let create = () => {
     id: 0,
     scrollX: 0.,
     scrollY: 0.,
-    minimapMaxColumnWidth: 12,
+    minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
     viewLines: 0,

@@ -78,6 +78,14 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
   ),
   (
+    "editor.minimap.maxColumn",
+    (s, v) => {...s, editorMinimapMaxColumn: parseInt(v)},
+  ),
+  (
+    "editor.minimap.showSlider",
+    (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
+  ),
+  (
     "editor.tablineMode",
     (s, v) => {...s, editorTablineMode: parseTablineMode(v)},
   ),

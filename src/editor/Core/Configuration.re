@@ -35,7 +35,7 @@ type t = {
 let default = {
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: 12,
+  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
   editorTablineMode: Buffers,
   editorLineNumbers: Relative,
   editorInsertSpaces: false,

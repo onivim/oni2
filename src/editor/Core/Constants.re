@@ -21,6 +21,8 @@ type t = {
    */
   minimapLineSpacing: int,
   scrollBarThickness: int,
+
+  minimapMaxColumn: int,
 };
 
 let default: t = {
@@ -29,4 +31,5 @@ let default: t = {
   minimapCharacterHeight: 2,
   minimapLineSpacing: 1,
   scrollBarThickness: 15,
+  minimapMaxColumn: 120,
 };
