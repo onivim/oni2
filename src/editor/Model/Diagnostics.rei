@@ -12,6 +12,8 @@ module Diagnostic {
     type t = {
         range: Range.t,
     }
+
+    let create: (~range: Range.t, unit) => t;
 };
 
 type t;

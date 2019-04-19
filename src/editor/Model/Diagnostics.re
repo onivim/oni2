@@ -13,6 +13,14 @@ module Diagnostic {
     type t = {
         range: Range.t,
     }
+
+    let create = (
+        ~range: Range.t,
+        ()
+    ) => {
+        let ret: t = { range: range };
+        ret;
+    };
 };
 
 /*
@@ -26,7 +34,7 @@ type t = StringMap.t(StringMap.t(list(Diagnostic.t)))
 
 let create = () => StringMap.empty;
 
-let change = (instance, _buffer, _diagName, diagnostics) => {
+let change = (instance, _buffer, _diagName, _diagnostics) => {
     instance
 };
 
