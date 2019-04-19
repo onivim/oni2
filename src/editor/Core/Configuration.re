@@ -5,12 +5,6 @@
  */
 
 [@deriving show({with_path: false})]
-type editorTablineMode =
-  | Buffers
-  | Tabs
-  | Hybrid;
-
-[@deriving show({with_path: false})]
 type editorRenderWhitespace =
   | All
   | Boundary
@@ -22,7 +16,6 @@ type t = {
   editorMinimapEnabled: bool,
   editorMinimapShowSlider: bool,
   editorMinimapMaxColumn: int,
-  editorTablineMode,
   editorInsertSpaces: bool,
   editorIndentSize: int,
   editorTabSize: int,
@@ -36,7 +29,6 @@ let default = {
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
   editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
-  editorTablineMode: Buffers,
   editorLineNumbers: Relative,
   editorInsertSpaces: false,
   editorIndentSize: 4,

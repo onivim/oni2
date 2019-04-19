@@ -17,7 +17,6 @@ type t =
   | BufferWritePost(BufferNotification.t)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | TablineUpdate(Tabline.tabs)
   | TextChanged(TextChanged.t)
   | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)

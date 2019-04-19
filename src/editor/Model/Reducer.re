@@ -16,21 +16,7 @@ let truncateFilepath = path =>
   | None => "untitled"
   };
 
-let showTablineTabs = (state: State.t, tabs) =>
-  switch (state.configuration.editorTablineMode) {
-  | Tabs =>
-    List.map(
-      ({tab, name}: Tabline.t) =>
-        State.Tab.{id: tab, title: name, active: false, modified: false},
-      tabs,
-    )
-    |> sortTabsById
-  | _ => state.tabs
-  };
-
 let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
-  switch (state.configuration.editorTablineMode) {
-  | Buffers =>
     List.map(
       ({id, filePath, modified, _}: BufferMetadata.t) =>
         State.Tab.{
@@ -41,9 +27,7 @@ let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
         },
       buffers,
     )
-    |> sortTabsById
-  | _ => state.tabs
-  };
+    |> sortTabsById;
 
 let updateTabs = (bufId, modified, tabs) =>
   State.Tab.(
@@ -103,7 +87,6 @@ let reduce: (State.t, Actions.t) => State.t =
           ...s,
           buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
         }
-      | TablineUpdate(tabs) => {...s, tabs: showTablineTabs(s, tabs)}
       | SetEditorFont(font) => {...s, editorFont: font}
       | TextChanged({activeBufferId, modified})
       | TextChangedI({activeBufferId, modified}) => {
