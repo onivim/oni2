@@ -72,7 +72,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     | (Some(fp), Some(_)) =>
       Some(
         Protocol.ModelAddedDelta.create(
-          ~uri=Core.Types.Uri.fromPath(fp),
+          ~uri=Core.Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
           ~modeId="plaintext",
@@ -84,7 +84,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     | (Some(fp), _) =>
       Some(
         Protocol.ModelAddedDelta.create(
-          ~uri=Core.Types.Uri.fromPath(fp),
+          ~uri=Core.Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
           ~modeId="plaintext",
