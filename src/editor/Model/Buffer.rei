@@ -4,6 +4,7 @@
  * In-memory text buffer representation
  */
 
+open Oni_Core;
 open Oni_Core.Types;
 
 [@deriving show]

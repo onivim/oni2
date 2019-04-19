@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
+open Oni_Model;
 
 let component = React.component("Menu");
 
@@ -72,13 +73,7 @@ let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
 type fontT = Types.UiFont.t;
 
 let createElement =
-    (
-      ~children as _,
-      ~font: fontT,
-      ~menu: Oni_Model.Menu.t,
-      ~theme: Theme.t,
-      (),
-    ) =>
+    (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(

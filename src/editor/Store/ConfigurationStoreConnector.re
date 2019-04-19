@@ -13,9 +13,11 @@ let start = () => {
       let configPath = Filesystem.getOrCreateConfigFile("configuration.json");
       switch (configPath) {
       | Ok(v) =>
-        let configuration = Configuration.create(~configPath=v, ());
-        prerr_endline("Reloading from: " ++ v);
-        dispatch(Actions.ConfigurationSet(configuration));
+        switch (ConfigurationParser.ofFile(v)) {
+        | Ok(v) => dispatch(Actions.ConfigurationSet(v))
+        | Error(err) =>
+          prerr_endline("Error loading configuration file: " ++ err)
+        }
       | Error(err) =>
         prerr_endline("Error loading configuration file: " ++ err)
       };
@@ -32,6 +34,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
+    | Actions.Init => (state, reloadConfigurationEffect)
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
         Isolinear.Effect.none,

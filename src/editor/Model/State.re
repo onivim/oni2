@@ -36,11 +36,12 @@ type t = {
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
+  editorLayout: WindowManager.t,
 };
 
 let create: unit => t =
   () => {
-    configuration: Configuration.create(),
+    configuration: Configuration.default,
     mode: Insert,
     menu: Menu.create(),
     commandline: Commandline.create(),
@@ -64,4 +65,5 @@ let create: unit => t =
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),
     statusBar: StatusBarModel.create(),
+    editorLayout: WindowManager.create(),
   };

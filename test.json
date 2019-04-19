@@ -2,7 +2,8 @@
   "source": "./package.json",
   "scripts": {
     "run": "esy '@test' x OniUnitTestRunner",
-    "run-ci": "esy '@test' x OniUnitTestRunnerCI"
+    "run-ci": "esy '@test' x OniUnitTestRunnerCI",
+    "core": "esy '@test' x OniUnitTestRunnerCore"
   },
   "override": {
       "build": ["dune build --root . -j4"],

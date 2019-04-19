@@ -5,6 +5,8 @@
  */
 
 module Cli = Cli;
+module Configuration = Configuration;
+module ConfigurationParser = ConfigurationParser;
 module Constants = Constants;
 module IntMap = IntMap;
 module LineNumber = LineNumber;
@@ -14,7 +16,6 @@ module Setup = Setup;
 module StringMap = StringMap;
 module Types = Types;
 module Utility = Utility;
-module Configuration = Configuration;
 module Indentation = Indentation;
 module IndentationSettings = IndentationSettings;
 module Theme = Theme;
@@ -22,3 +23,4 @@ module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Ripgrep = Ripgrep;
 module Tokenizer = Tokenizer;
+module Uri = Uri;

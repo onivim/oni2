@@ -7,8 +7,9 @@
  */
 
 open Revery.UI;
-
 open Oni_Model;
+
+module Window = WindowManager;
 
 let noop = () => ();
 
@@ -41,10 +42,50 @@ let toUiTabs = (tabs: list(State.Tab.t)) => {
   List.map(f, tabs);
 };
 
+/**
+   We wrap each split component as we have to have a type signature
+   that matches unit => React.syntheticElement this is because
+   in the WindowManager module we cannot pass a reference of state
+   in the type signature e.g. State.t => React.syntheticElement because
+   this would cause a circular reference.
+
+   Alternatives are type parameters but this invloves a lot of unrelated
+   type params being added everywhere. ?Functors is another route
+ */
+let splitFactory = (fn, ()) => {
+  let state = GlobalContext.current().getState();
+  fn(state);
+};
+
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
+    let hooks =
+      React.Hooks.effect(
+        OnMount,
+        () => {
+          let dispatch = GlobalContext.current().dispatch;
+          let dock =
+            Window.createDock(
+              ~width=50,
+              ~component=splitFactory(state => <Dock state />),
+              (),
+            );
+
+          let editor =
+            Window.createSplit(
+              ~direction=Vertical,
+              ~component=splitFactory(state => <EditorSurface state />),
+              (),
+            );
+
+          dispatch(AddLeftDock(dock));
+          dispatch(AddSplit(editor));
+          None;
+        },
+        hooks,
+      );
 
     let tabs = toUiTabs(state.tabs);
     let uiFont = state.uiFont;
@@ -55,7 +96,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        <EditorSurface state />
+        <EditorLayoutView state />
       </View>,
     );
   });

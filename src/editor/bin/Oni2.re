@@ -66,6 +66,7 @@ let init = app => {
     );
 
   GlobalContext.set({
+    getState: () => currentState^,
     notifySizeChanged: (~width, ~height, ()) =>
       dispatch(
         Model.Actions.SetEditorSize(
