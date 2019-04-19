@@ -14,15 +14,6 @@ open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
-/* let rec getCurrentTokenColor = (tokens: list(TextmateClient.ColorizedToken.t), startPos: int, endPos: int) => { */
-/*     switch (tokens) { */
-/*     | [] => [TextmateClient.ColorizedToken.default] */
-/*     | [last] => [last] */
-/*     | [v1, v2, ...tail] when (v1.index <= startPos && v2.index > startPos) => [v1, v2, ...tail] */
-/*     | [_, ...tail] => getCurrentTokenColor(tail, startPos, endPos) */
-/*     } */
-/* } */
-
 let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
@@ -30,14 +21,6 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       let startPosition = Index.toZeroBasedInt(token.startPosition);
       let endPosition = Index.toZeroBasedInt(token.endPosition);
       let tokenWidth = endPosition - startPosition;
-
-      /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
-      /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
-
-      /* tokenCursor := getCurrentTokenColor(tokenCursor^, startPosition, endPosition); */
-      /* let color: ColorizedToken.t = List.hd(tokenCursor^); */
-
-      /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
 
       let x =
         float_of_int(Constants.default.minimapCharacterWidth * startPosition);
