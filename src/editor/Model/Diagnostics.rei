@@ -8,12 +8,10 @@
 
 open Oni_Core.Types;
 
-module Diagnostic {
-    type t = {
-        range: Range.t,
-    }
+module Diagnostic: {
+  type t = {range: Range.t};
 
-    let create: (~range: Range.t, unit) => t;
+  let create: (~range: Range.t, unit) => t;
 };
 
 type t;
