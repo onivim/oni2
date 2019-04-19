@@ -17,7 +17,7 @@ Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2
 
 Onivim 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
-Onivim 2 uses [neovim](https://neovim.io) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning complete support for VSCode extensions and configuration.
+Onivim 2 uses [neovim](https://neovim.io) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning, eventually, complete support for VSCode extensions and configuration.
 
 ### Goals
 
