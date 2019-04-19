@@ -2,8 +2,10 @@
  * EditorVerticalScrollbar.re
  */
 
+open Revery;
 open Revery.UI;
 
+open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
 
@@ -17,7 +19,7 @@ let createElement =
       ~state: State.t,
       ~height as totalHeight,
       ~width as totalWidth,
-      ~diagnostics: list(Diagnostics.Diagnostic.t)),
+      ~diagnostics: list(Diagnostics.Diagnostic.t),
       ~children as _,
       (),
     ) =>
@@ -35,18 +37,22 @@ let createElement =
         backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
-    let cursorPixelY =
-      float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-      *. state.editorFont.measuredHeight;
     let totalPixel =
       Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
 
-    let cursorPosition =
+    let bufferLineToScrollbarPixel = line => {
+      let pixelY =
+        float_of_int(Index.toZeroBasedInt(line))
+        *. state.editorFont.measuredHeight;
       int_of_float(
-        cursorPixelY
+        pixelY
         /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
         *. float_of_int(totalHeight),
       );
+    };
+
+    let cursorPosition =
+      bufferLineToScrollbarPixel(state.editor.cursorPosition.line);
     let cursorSize = 2;
 
     let scrollCursorStyle =
@@ -59,11 +65,32 @@ let createElement =
         backgroundColor(state.theme.colors.foreground),
       ];
 
+    let diagnosticElements =
+      List.map(
+        (d: Diagnostics.Diagnostic.t) => {
+          let diagTop =
+            bufferLineToScrollbarPixel(d.range.startPosition.line);
+
+          let diagnosticStyle =
+            Style.[
+              position(`Absolute),
+              top(diagTop),
+              right(0),
+              width(Constants.default.scrollBarThickness / 3),
+              height(cursorSize),
+              backgroundColor(Colors.red),
+            ];
+          <View style=diagnosticStyle />;
+        },
+        diagnostics,
+      );
+
     (
       hooks,
       <View style=absoluteStyle>
         <View style=scrollThumbStyle />
         <View style=scrollCursorStyle />
+        <View style=absoluteStyle> ...diagnosticElements </View>
       </View>,
     );
   });

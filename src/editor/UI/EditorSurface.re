@@ -381,10 +381,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         (),
       );
     };
-              let diagnostics = switch (activeBuffer) {
-              | Some(b) => Diagnostics.getDiagnostics(state.diagnostics, b); 
-              | None => []
-              };
+    let diagnostics =
+      switch (activeBuffer) {
+      | Some(b) => Diagnostics.getDiagnostics(state.diagnostics, b)
+      | None => []
+      };
 
     (
       hooks,
@@ -473,11 +474,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               };
 
               /* Draw error markers */
-                List.iter((d: Diagnostics.Diagnostic.t) => {
+              List.iter(
+                (d: Diagnostics.Diagnostic.t) => {
+                  let (x, y) =
+                    bufferPositionToPixel(
+                      Index.toZeroBasedInt(d.range.startPosition.line),
+                      Index.toZeroBasedInt(d.range.startPosition.character),
+                    );
 
-                   let (x, y) = bufferPositionToPixel(Index.toZeroBasedInt(d.range.startPosition.line), Index.toZeroBasedInt(d.range.startPosition.character));
-
-                   Shapes.drawRect(
+                  Shapes.drawRect(
                     ~transform,
                     ~x,
                     ~y=y +. fontHeight,
@@ -485,8 +490,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                     ~width=100.,
                     ~color=Colors.red,
                     (),
-                   );
-                }, diagnostics);
+                  );
+                },
+                diagnostics,
+              );
 
               FlatList.render(
                 ~scrollY,
@@ -596,7 +603,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             state
             height={state.editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
-            diagnostics={diagnostics}
+            diagnostics
           />
         </View>
       </View>,

@@ -58,18 +58,14 @@ let change = (instance, buffer, diagKey, diagnostics) => {
 };
 
 let getDiagnostics = (_instance, _buffer) => {
-
-    [
-        Diagnostic.create(~range=Range.zero, ()),
-    ]
-
+  [
+    Diagnostic.create(~range=Range.zero, ()),
     /* []; */
-
-  /* let f = ((_key, v)) => v; */
-
-  /* let bufferKey = _getKeyForBuffer(buffer); */
-  /* switch (StringMap.find_opt(bufferKey, instance)) { */
-  /* | None => [] */
-  /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
-  /* }; */
+    /* let f = ((_key, v)) => v; */
+    /* let bufferKey = _getKeyForBuffer(buffer); */
+    /* switch (StringMap.find_opt(bufferKey, instance)) { */
+    /* | None => [] */
+    /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
+    /* }; */
+  ];
 };
