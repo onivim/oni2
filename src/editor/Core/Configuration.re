@@ -4,41 +4,30 @@
  * Configuration settings for the editor
  */
 
-[@deriving (show({with_path: false}), yojson)]
+[@deriving show({with_path: false})]
 type editorTablineMode =
-  | [@name "buffers"] Buffers
-  | [@name "tabs"] Tabs
-  | [@name "hybrid"] Hybrid;
+  | Buffers
+  | Tabs
+  | Hybrid;
 
-[@deriving (show({with_path: false}), yojson)]
+[@deriving show({with_path: false})]
 type editorRenderWhitespace =
-  | [@name "all"] All
-  | [@name "boundary"] Boundary
-  | [@name "None"] None;
+  | All
+  | Boundary
+  | None;
 
-[@deriving (show({with_path: false}), yojson({strict: false}))]
+[@deriving show({with_path: false})]
 type t = {
-  [@key "editor.lineNumbers"]
   editorLineNumbers: LineNumber.setting,
-  [@key "editor.minimap.enabled"]
   editorMinimapEnabled: bool,
-  [@key "editor.minimap.showSlider"]
   editorMinimapShowSlider: bool,
-  [@key "editor.tablineMode"]
   editorTablineMode,
-  [@key "editor.insertSpaces"]
   editorInsertSpaces: bool,
-  [@key "editor.indentSize"]
   editorIndentSize: int,
-  [@key "editor.tabSize"]
   editorTabSize: int,
-  [@key "editor.highlightActiveIndentGuide"]
   editorHighlightActiveIndentGuide: bool,
-  [@key "editor.renderIndentGuides"]
   editorRenderIndentGuides: bool,
-  [@key "editor.renderWhitespace"]
   editorRenderWhitespace,
-  [@key "workbench.iconTheme"]
   workbenchIconTheme: string,
 };
 
@@ -56,19 +45,9 @@ let default = {
   workbenchIconTheme: "vs-seti",
 };
 
-let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson;
-
 let getBundledConfigPath = () => {
   Rench.Path.join(
     Rench.Environment.getExecutingDirectory(),
     "configuration.json",
   );
 };
-
-let create = (~configPath=getBundledConfigPath(), ()) =>
-  switch (ofFile(configPath)) {
-  | Ok(config) => config
-  | Error(loc) =>
-    prerr_endline("Error Loc: " ++ loc);
-    default;
-  };

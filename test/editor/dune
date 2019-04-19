@@ -12,6 +12,16 @@
             ))
 
 (executable
+    (name OniUnitTestRunnerCore)
+    (public_name OniUnitTestRunnerCore)
+    (modules OniUnitTestRunnerCore)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Oni_Core_Test
+            ))
+
+(executable
     (name OniUnitTestRunnerCI)
     (public_name OniUnitTestRunnerCI)
     (modules OniUnitTestRunnerCI)
