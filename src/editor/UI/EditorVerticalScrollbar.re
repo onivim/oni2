@@ -17,6 +17,7 @@ let createElement =
       ~state: State.t,
       ~height as totalHeight,
       ~width as totalWidth,
+      ~diagnostics: list(Diagnostics.Diagnostic.t)),
       ~children as _,
       (),
     ) =>

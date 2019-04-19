@@ -381,6 +381,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         (),
       );
     };
+              let diagnostics = switch (activeBuffer) {
+              | Some(b) => Diagnostics.getDiagnostics(state.diagnostics, b); 
+              | None => []
+              };
 
     (
       hooks,
@@ -469,9 +473,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               };
 
               /* Draw error markers */
-              switch (activeBuffer) {
-              | Some(b) => {
-                let diagnostics = Diagnostics.getDiagnostics(state.diagnostics, b); 
                 List.iter((d: Diagnostics.Diagnostic.t) => {
 
                    let (x, y) = bufferPositionToPixel(Index.toZeroBasedInt(d.range.startPosition.line), Index.toZeroBasedInt(d.range.startPosition.character));
@@ -486,9 +487,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                     (),
                    );
                 }, diagnostics);
-              }
-              | None => ()
-              }
 
               FlatList.render(
                 ~scrollY,
@@ -598,6 +596,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             state
             height={state.editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
+            diagnostics={diagnostics}
           />
         </View>
       </View>,
