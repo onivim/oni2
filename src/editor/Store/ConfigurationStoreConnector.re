@@ -34,6 +34,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
+    | Actions.Init => (state, reloadConfigurationEffect)
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
         Isolinear.Effect.none,
