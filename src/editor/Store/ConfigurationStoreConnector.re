@@ -14,11 +14,10 @@ let start = () => {
       switch (configPath) {
       | Ok(v) =>
         switch (ConfigurationParser.ofFile(v)) {
-        | Ok(v) =>
-          dispatch(Actions.ConfigurationSet(v));
+        | Ok(v) => dispatch(Actions.ConfigurationSet(v))
         | Error(err) =>
           prerr_endline("Error loading configuration file: " ++ err)
-        };
+        }
       | Error(err) =>
         prerr_endline("Error loading configuration file: " ++ err)
       };
