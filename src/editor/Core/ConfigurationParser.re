@@ -31,33 +31,34 @@ let parseLineNumberSetting = json =>
   };
 
 let parseTablineMode = json =>
-switch (json) {
-| `String(v) =>
-    switch(v) {
+  switch (json) {
+  | `String(v) =>
+    switch (v) {
     | "buffers" => Buffers
     | "tabs" => Tabs
     | "hybrid" => Hybrid
     | _ => Buffers
     }
-| _ => Buffers
-};
+  | _ => Buffers
+  };
 
-let parseRenderWhitespace = json => switch(json) {
-| `String(v) => {
-    switch(v) {
+let parseRenderWhitespace = json =>
+  switch (json) {
+  | `String(v) =>
+    switch (v) {
     | "all" => All
     | "boundary" => Boundary
     | "none" => None
     | _ => All
     }
-}
-| _ => All
-};
+  | _ => All
+  };
 
-let parseString = json => switch(json) {
-| `String(v) => v
-| _ => ""
-};
+let parseString = json =>
+  switch (json) {
+  | `String(v) => v
+  | _ => ""
+  };
 
 type parseFunction = (Configuration.t, Yojson.Safe.json) => Configuration.t;
 
@@ -84,14 +85,8 @@ let configurationParsers: list(configurationTuple) = [
     "editor.insertSpaces",
     (s, v) => {...s, editorInsertSpaces: parseBool(v)},
   ),
-  (
-    "editor.indentSize",
-    (s, v) => {...s, editorIndentSize: parseInt(v)},
-  ),
-  (
-    "editor.tabSize",
-    (s, v) => {...s, editorTabSize: parseInt(v)},
-  ),
+  ("editor.indentSize", (s, v) => {...s, editorIndentSize: parseInt(v)}),
+  ("editor.tabSize", (s, v) => {...s, editorTabSize: parseInt(v)}),
   (
     "editor.highlightActiveIndentGuide",
     (s, v) => {...s, editorHighlightActiveIndentGuide: parseBool(v)},
@@ -148,7 +143,8 @@ let ofString = str => {
   };
 };
 
-let ofFile = filePath => switch(Yojson.Safe.from_file(filePath) |> ofJson) {
-    | v => v
-    | exception (Yojson.Json_error(msg)) => Error(msg)
-};
+let ofFile = filePath =>
+  switch (Yojson.Safe.from_file(filePath) |> ofJson) {
+  | v => v
+  | exception (Yojson.Json_error(msg)) => Error(msg)
+  };
