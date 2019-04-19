@@ -41,7 +41,7 @@ type t = {
 
 let create: unit => t =
   () => {
-    configuration: Configuration.create(),
+    configuration: Configuration.default,
     mode: Insert,
     menu: Menu.create(),
     commandline: Commandline.create(),
