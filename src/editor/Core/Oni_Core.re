@@ -22,3 +22,4 @@ module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Ripgrep = Ripgrep;
 module Tokenizer = Tokenizer;
+module Uri = Uri;
