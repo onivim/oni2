@@ -1,5 +1,5 @@
 {
-	"name": "helloworld-minimal-sample",
+	"name": "oni-activation-events-test",
 	"description": "Minimal HelloWorld example for VS Code",
 	"version": "0.0.1",
 	"publisher": "vscode-samples",
@@ -9,13 +9,13 @@
 	},
 	"activationEvents": [
 		"onLanguage:testlang",
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.activationTest"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
+				"command": "extension.activationTest",
 				"title": "Hello World"
 			}
 		]
