@@ -20,30 +20,37 @@ module JsonInformationMessageFormat = {
 
 describe("Extension Client", ({describe, _}) => {
   describe("activation", ({test, _}) => {
-   test("activates by language", _ => {
+    test("activates by language", _ =>
       withExtensionClient(api => {
-       let waitForActivationMessage = api |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
+        let waitForActivationMessage =
+          api
+          |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
 
         api.start();
 
         api.send(ExtensionService.activateByEvent("onLanguage:testlang"));
 
         waitForActivationMessage();
-      });
-    
-   });
+      })
+    );
 
-   test("activates by command", _ => {
+    test("activates by command", _ =>
       withExtensionClient(api => {
-       let waitForActivationMessage = api |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
+        let waitForActivationMessage =
+          api
+          |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
 
         api.start();
 
-        api.send(ExtensionService.activateByEvent("onCommand:extension.activationTest"));
+        api.send(
+          ExtensionService.activateByEvent(
+            "onCommand:extension.activationTest",
+          ),
+        );
 
         waitForActivationMessage();
-      });
-  });
+      })
+    );
   });
 
   describe("commands", ({test, _}) =>
