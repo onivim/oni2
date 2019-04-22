@@ -145,26 +145,13 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 CursorMove(
                   Core.Types.Position.create(c.cursorLine, c.cursorColumn),
                 )
-              | BufferWritePost({activeBufferId, _}) =>
-                BufferWritePost({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                })
-              | TextChangedI({activeBufferId, modified, _}) =>
-                TextChangedI({activeBufferId, modified})
-              | TextChanged({activeBufferId, modified, _}) =>
-                TextChanged({activeBufferId, modified})
+              | BufferWritePost({activeBufferId, _}) => {
+                BufferSaved(activeBufferId);
+              }
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
-                BufferEnter({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                });
-              | BufferDelete(bd) =>
-                BufferDelete({
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                  bufferId: bd.activeBufferId,
-                })
+                BufferEnter(activeBufferId);
+              | BufferDelete(bd) => BufferDelete(bd.activeBufferId)
               | BufferLines(bc) =>
                 BufferUpdate(
                   Core.Types.BufferUpdate.createFromZeroBasedIndices(

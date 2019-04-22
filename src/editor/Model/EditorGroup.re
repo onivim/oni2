@@ -63,9 +63,9 @@ let reduce = (v: t, action: Actions.t) => {
   let v = {...v, editors};
 
   switch (action) {
-  | BufferEnter(bs) =>
+  | BufferEnter(bufferId) =>
     let (newState, activeEditorId) =
-      getOrCreateEditorForBuffer(v, bs.bufferId);
+      getOrCreateEditorForBuffer(v, bufferId);
     {...newState, activeEditorId: Some(activeEditorId)};
   | _ => v
   };

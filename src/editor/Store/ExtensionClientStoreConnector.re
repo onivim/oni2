@@ -100,10 +100,9 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtensionHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bu: Core.Types.BufferNotification.t) =>
+  let sendBufferEnterEffect = (id: int, buffers: Model.Buffers.t) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
-      let metadata =
-        Core.Types.BufferNotification.getBufferMetadataOpt(bu.bufferId, bu);
+      let metadata = Model.Buffers.getBufferMetadata(id, buffers);
       switch (metadata) {
       | None => ()
       | Some(bm) =>
@@ -123,9 +122,9 @@ let start = (extensions, setup: Core.Setup.t) => {
     });
 
   let modelChangedEffect =
-      (buffers: Model.BufferMap.t, bu: Core.Types.BufferUpdate.t) =>
+      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Model.BufferMap.getBuffer(bu.id, buffers)) {
+      switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
         let modelContentChange =
@@ -160,7 +159,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(bm))
+    | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(bm, state.buffers))
     | Model.Actions.Tick => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };

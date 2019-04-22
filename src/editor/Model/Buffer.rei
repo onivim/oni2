@@ -22,8 +22,9 @@ let getId: t => int;
 
 let getNumberOfLines: t => int;
 
+let markSaved: t => t;
 let update: (t, BufferUpdate.t) => t;
 
-let updateMetadata: (t, BufferMetadata.t) => t;
+/* let updateMetadata: (t, BufferMetadata.t) => t; */
 
 let empty: t;

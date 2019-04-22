@@ -15,7 +15,9 @@ let create = (~id, ~title, ~active=false, ~modified=false, ()) => {id, title, ac
 
 let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
 
-    let { id, filePath, modified, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
+    let { id, filePath, version, lastSaveVersion, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
+
+    let modified = version > lastSaveVersion;
 
     let title = switch (filePath) {
     | Some(v) => v

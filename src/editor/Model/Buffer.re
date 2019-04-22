@@ -112,7 +112,7 @@ let update = (buf: t, update: BufferUpdate.t) =>
   | _ => buf
   };
 
-let updateMetadata = (buf: t, metadata: BufferMetadata.t) => {
-  ...buf,
-  metadata,
+let markSaved = (buf: t) => {
+    { ...buf, metadata: BufferMetadata.markSaved(buf.metadata)}
 };
+

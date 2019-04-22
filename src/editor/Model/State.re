@@ -10,7 +10,7 @@ open Oni_Core.Types;
 type t = {
   mode: Mode.t,
   diagnostics: Diagnostics.t,
-  buffers: BufferMap.t,
+  buffers: Buffers.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   menu: Menu.t,
@@ -35,7 +35,7 @@ let create: unit => t =
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
-    buffers: BufferMap.empty,
+    buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",

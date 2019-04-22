@@ -11,14 +11,12 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferDelete(BufferNotification.t)
-  | BufferEnter(BufferNotification.t)
+  | BufferDelete(int)
+  | BufferEnter(int)
   | BufferUpdate(BufferUpdate.t)
-  | BufferWritePost(BufferNotification.t)
+  | BufferSaved(int)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | TextChanged(TextChanged.t)
-  | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)

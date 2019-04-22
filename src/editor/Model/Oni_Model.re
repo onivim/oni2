@@ -8,7 +8,7 @@
 
 module Actions = Actions;
 module Buffer = Buffer;
-module BufferMap = BufferMap;
+module Buffers = Buffers;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;

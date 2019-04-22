@@ -48,12 +48,7 @@ let reduce: (State.t, Actions.t) => State.t =
     } else {
       let s = {
         ...s,
-        /* editor: */
-        /*   Editor.reduce( */
-        /*     s.editor, */
-        /*     a, */
-        /*     BufferMap.getBuffer(s.activeBufferId, s.buffers), */
-        /*   ), */
+        buffers: Buffers.reduce(s.buffers, a),
         editors: EditorGroup.reduce(s.editors, a),
         syntaxHighlighting:
           SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
@@ -68,29 +63,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | ChangeMode(m) =>
         let ret: State.t = {...s, mode: m};
         ret;
-      | BufferWritePost(bs) => {
-          ...s,
-          /* activeBufferId: bs.bufferId, */
-          buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-          /* tabs: showTablineBuffers(s, bs.buffers, bs.bufferId), */
-        }
-      | BufferDelete(bd) => s
-      | BufferEnter(bs) => {
-          ...s,
-          /* activeBufferId: bs.bufferId, */
-          buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-          /* tabs: showTablineBuffers(s, bs.buffers, bs.bufferId), */
-        }
-      | BufferUpdate(bu) => {
-          ...s,
-          buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
-        }
       | SetEditorFont(font) => {...s, editorFont: font}
-      /* | TextChanged({activeBufferId, modified}) */
-      /* | TextChangedI({activeBufferId, modified}) => { */
-      /*     ...s, */
-      /*     /1* tabs: updateTabs(activeBufferId, modified, s.tabs), *1/ */
-      /*   } */
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
       | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}

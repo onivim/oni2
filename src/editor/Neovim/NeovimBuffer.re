@@ -22,10 +22,8 @@ let parseBufferContext = map =>
           filePath: value == "" ? None : Some(value),
         }
       | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
-      | (M.String("modified"), M.Int(modified)) => {
-          ...accum,
-          modified: modified == 1,
-        }
+      /* TODO */
+      | (M.String("modified"), M.Int(modified)) => accum
       | (M.String("buftype"), M.String(buftype)) => {
           ...accum,
           bufType: getBufType(buftype),

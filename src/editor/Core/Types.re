@@ -151,7 +151,7 @@ module BufferMetadata = {
     filePath: option(string),
     fileType: option(string),
     bufType: buftype,
-    modified: bool,
+    lastSaveVersion: int,
     hidden: bool,
     id: int,
     version: int,
@@ -164,8 +164,8 @@ module BufferMetadata = {
         ~bufType=Empty,
         ~id=0,
         ~hidden=false,
-        ~modified=false,
         ~version=0,
+        ~lastSaveVersion=0,
         (),
       ) => {
     filePath,
@@ -173,8 +173,13 @@ module BufferMetadata = {
     bufType,
     id,
     hidden,
-    modified,
     version,
+    lastSaveVersion,
+  };
+
+  let markSaved = (metadata: t) => {
+    ...metadata,
+    lastSaveVersion: metadata.version,
   };
 };
 
@@ -182,14 +187,13 @@ module BufferNotification = {
   [@deriving show({with_path: false})]
   type t = {
     bufferId: int,
-    buffers: list(BufferMetadata.t),
   };
 
-  let getBufferMetadataOpt = (id, v: t) => {
-    let result =
-      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
-    List.nth_opt(result, 0);
-  };
+  /* let getBufferMetadataOpt = (id, v: t) => { */
+  /*   let result = */
+  /*     v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id); */
+  /*   List.nth_opt(result, 0); */
+  /* }; */
 };
 
 module BufferUpdate = {

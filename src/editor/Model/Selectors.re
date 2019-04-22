@@ -11,11 +11,11 @@ let getActiveEditor = (state: State.t) => {
 };
 
 let getBufferById = (state: State.t, id: int) => {
-  BufferMap.getBuffer(id, state.buffers);
+  Buffers.getBuffer(id, state.buffers);
 };
 
 let getBufferForEditor = (state: State.t, editor: Editor.t) => {
-  BufferMap.getBuffer(editor.bufferId, state.buffers);
+  Buffers.getBuffer(editor.bufferId, state.buffers);
 };
 
 let getActiveBuffer = (state: State.t) => {
