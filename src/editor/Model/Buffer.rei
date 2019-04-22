@@ -18,6 +18,7 @@ let getLineLength: (t, int) => int;
 
 let getMetadata: t => BufferMetadata.t;
 let getUri: t => Uri.t;
+let getId: t => int;
 
 let getNumberOfLines: t => int;
 

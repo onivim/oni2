@@ -113,7 +113,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
       item.alignment === alignment;
     };
 
-    let buffer = BufferMap.getBuffer(state.activeBufferId, state.buffers);
+    let buffer = Selectors.getActiveBuffer(state);
     let fileType =
       switch (buffer) {
       | Some(v) =>

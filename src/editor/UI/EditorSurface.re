@@ -183,8 +183,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 
-    let activeBuffer =
-      BufferMap.getBuffer(state.activeBufferId, state.buffers);
+    let editor = Selectors.getActiveEditor(state);
+    let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
     let buffer =
       switch (activeBuffer) {
@@ -192,6 +192,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       | None => Buffer.empty
       };
 
+    let bufferId = Buffer.getId(buffer);
     let lineCount = Buffer.getNumberOfLines(buffer);
 
     let lineNumberWidth =
@@ -203,8 +204,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
-
-    let editor = Selectors.getActiveEditor(state);
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let indentation = IndentationSettings.default;
@@ -278,7 +277,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
           state.syntaxHighlighting,
-          state.activeBufferId,
+          bufferId,
           i,
         );
 
@@ -393,7 +392,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             render={(transform, _ctx) => {
               let count = lineCount;
               let height = editor.size.pixelHeight;
-              let rowHeight = editorFont.measuredHeight;
+              let rowHeight = state.editorFont.measuredHeight;
               let scrollY = editor.scrollY;
 
               /* Draw background for cursor line */

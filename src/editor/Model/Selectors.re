@@ -7,10 +7,16 @@
 open Oni_Core;
 
 let getActiveEditor = (state: State.t) => {
-    IntMap.find(state.activeEditorId, state.editors)
+    EditorGroup.getActiveEditor(state.editors);
+};
+
+let getBufferForEditor = (state: State.t, editor: Editor.t) => {
+    BufferMap.getBuffer(editor.bufferId, state.buffers);
 };
 
 let getActiveBuffer = (state: State.t) => {
-    let editor = getActiveEditor(state);
-    BufferMap.getBuffer(editor.bufferId, state.buffers);
-}
+    state
+    |> getActiveEditor
+    |> getBufferForEditor(state)
+};
+

@@ -27,20 +27,20 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(State.Tab.t)) => {
-  let f = (t: State.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: () => GlobalContext.current().openFileById(t.id),
-      onClose: () => GlobalContext.current().closeFileById(t.id),
-    };
-    ret;
-  };
+/* let toUiTabs = (tabs: list(State.Tab.t)) => { */
+/*   let f = (t: State.Tab.t) => { */
+/*     let ret: Tabs.tabInfo = { */
+/*       title: t.title, */
+/*       modified: t.modified, */
+/*       active: t.active, */
+/*       onClick: () => GlobalContext.current().openFileById(t.id), */
+/*       onClose: () => GlobalContext.current().closeFileById(t.id), */
+/*     }; */
+/*     ret; */
+/*   }; */
 
-  List.map(f, tabs);
-};
+/*   List.map(f, tabs); */
+/* }; */
 
 /**
    We wrap each split component as we have to have a type signature
@@ -87,7 +87,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         hooks,
       );
 
-    let tabs = toUiTabs(state.tabs);
+    let tabs = [];
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);

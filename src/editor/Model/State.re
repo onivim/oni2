@@ -7,17 +7,6 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-module Tab = {
-  type t = {
-    id: int,
-    title: string,
-    active: bool,
-    modified: bool,
-  };
-
-  let create = (id, title) => {id, title, active: false, modified: false};
-};
-
 type t = {
   mode: Mode.t,
   diagnostics: Diagnostics.t,
@@ -30,17 +19,13 @@ type t = {
   configuration: Configuration.t,
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
-  editors: IntMap.t(Editor.t),
-  activeEditorId: int,
+  editors: EditorGroup.t,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
 };
-
-let defaultEditor = Editor.create();
-let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor);
 
 let create: unit => t =
   () => {
@@ -62,8 +47,7 @@ let create: unit => t =
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
     theme: Theme.create(),
-    activeEditorId: defaultEditor.id,
-    editors,
+    editorGroup: EditorGroup.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),

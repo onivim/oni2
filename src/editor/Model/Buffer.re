@@ -24,6 +24,8 @@ let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
+let getId = (buffer: t) => buffer.metadata.id;
+
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getUri = (buffer: t) => {
