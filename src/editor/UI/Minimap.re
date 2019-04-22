@@ -75,6 +75,7 @@ let getMinimapSize = (view: Editor.t) => {
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~width: int,
       ~height: int,
       ~count,
@@ -92,8 +93,8 @@ let createElement =
     let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
 
     let getScrollTo = (mouseY: float) => {
-      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
-      let visibleHeight: int = state.editor.size.pixelHeight;
+      let totalHeight: int = Editor.getTotalSizeInPixels(editor);
+      let visibleHeight: int = editor.size.pixelHeight;
       let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
@@ -109,7 +110,7 @@ let createElement =
         Always,
         () => {
           let isCaptured = isActive;
-          let startPosition = state.editor.scrollY;
+          let startPosition = editor.scrollY;
 
           Mouse.setCapture(
             ~onMouseMove=
@@ -120,7 +121,7 @@ let createElement =
                     Constants.default.minimapCharacterWidth
                     + Constants.default.minimapCharacterHeight;
                   let linesInMinimap =
-                    state.editor.size.pixelHeight / minimapLineSize;
+                    editor.size.pixelHeight / minimapLineSize;
                   GlobalContext.current().editorScroll(
                     ~deltaY=
                       (startPosition -. scrollTo)
@@ -143,17 +144,17 @@ let createElement =
         hooks,
       );
 
-    let scrollY = state.editor.minimapScrollY;
+    let scrollY = editor.minimapScrollY;
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
-      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
+      let linesInMinimap = editor.size.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
         ~deltaY=
-          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
+          scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
@@ -175,11 +176,11 @@ let createElement =
                 ~y=
                   rowHeight
                   *. float_of_int(
-                       Editor.getTopVisibleLine(state.editor) - 1,
+                       Editor.getTopVisibleLine(editor) - 1,
                      )
                   -. scrollY,
                 ~height=
-                  rowHeight *. float_of_int(getMinimapSize(state.editor)),
+                  rowHeight *. float_of_int(getMinimapSize(editor)),
                 ~width=float_of_int(width),
                 ~color=state.theme.colors.scrollbarSliderHoverBackground,
                 (),
@@ -192,7 +193,7 @@ let createElement =
               ~y=
                 rowHeight
                 *. float_of_int(
-                     Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                     Index.toZeroBasedInt(editor.cursorPosition.line),
                    )
                 -. scrollY,
               ~height=float_of_int(Constants.default.minimapCharacterHeight),

@@ -23,6 +23,7 @@ module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module Reducer = Reducer;
 module Selection = Selection;
+module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;

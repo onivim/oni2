@@ -21,7 +21,6 @@ module Tab = {
 type t = {
   mode: Mode.t,
   diagnostics: Diagnostics.t,
-  tabs: list(Tab.t),
   buffers: BufferMap.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
@@ -31,7 +30,6 @@ type t = {
   configuration: Configuration.t,
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
-  editor: Editor.t,
   editors: IntMap.t(Editor.t),
   activeEditorId: int,
   inputControlMode: Input.controlMode,
@@ -52,7 +50,6 @@ let create: unit => t =
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
-    activeBufferId: 0,
     buffers: BufferMap.empty,
     editorFont:
       EditorFont.create(
@@ -64,7 +61,6 @@ let create: unit => t =
       ),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
-    tabs: [],
     theme: Theme.create(),
     activeEditorId: defaultEditor.id,
     editors,

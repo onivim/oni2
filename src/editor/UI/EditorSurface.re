@@ -204,13 +204,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
 
+    let editor = Selectors.getActiveEditor(state);
+
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let indentation = IndentationSettings.default;
 
-    let topVisibleLine = Editor.getTopVisibleLine(state.editor);
-    let bottomVisibleLine = Editor.getBottomVisibleLine(state.editor);
+    let topVisibleLine = Editor.getTopVisibleLine(editor);
+    let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
-    let cursorLine = Index.toZeroBasedInt(state.editor.cursorPosition.line);
+    let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
 
     let (cursorOffset, cursorCharacterWidth) =
       if (lineCount > 0 && cursorLine < lineCount) {
@@ -220,7 +222,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           BufferViewTokenizer.getCharacterPositionAndWidth(
             ~indentation,
             cursorStr,
-            Index.toZeroBasedInt(state.editor.cursorPosition.character),
+            Index.toZeroBasedInt(editor.cursorPosition.character),
           );
         (cursorOffset, width);
       } else {
@@ -231,9 +233,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       let x =
         float_of_int(char)
         *. fontWidth
-        -. state.editor.scrollX
+        -. editor.scrollX
         +. lineNumberWidth;
-      let y = float_of_int(line) *. fontHeight -. state.editor.scrollY;
+      let y = float_of_int(line) *. fontHeight -. editor.scrollY;
       (x, y);
     };
 
@@ -250,9 +252,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           int_of_float(
             fontHeight
             *. float_of_int(
-                 Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                 Index.toZeroBasedInt(editor.cursorPosition.line),
                )
-            -. state.editor.scrollY
+            -. editor.scrollY
             +. 0.5,
           ),
         ),
@@ -261,7 +263,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             lineNumberWidth
             +. fontWidth
             *. float_of_int(cursorOffset)
-            -. state.editor.scrollX
+            -. editor.scrollX
             +. 0.5,
           ),
         ),
@@ -313,8 +315,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let layout =
       EditorLayout.getLayout(
         ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
-        ~pixelWidth=float_of_int(state.editor.size.pixelWidth),
-        ~pixelHeight=float_of_int(state.editor.size.pixelHeight),
+        ~pixelWidth=float_of_int(editor.size.pixelWidth),
+        ~pixelHeight=float_of_int(editor.size.pixelHeight),
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -390,9 +392,9 @@ let createElement = (~state: State.t, ~children as _, ()) =>
             style=bufferViewStyle
             render={(transform, _ctx) => {
               let count = lineCount;
-              let height = state.editor.size.pixelHeight;
-              let rowHeight = state.editorFont.measuredHeight;
-              let scrollY = state.editor.scrollY;
+              let height = editor.size.pixelHeight;
+              let rowHeight = editorFont.measuredHeight;
+              let scrollY = editor.scrollY;
 
               /* Draw background for cursor line */
               Shapes.drawRect(
@@ -401,12 +403,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                 ~y=
                   fontHeight
                   *. float_of_int(
-                       Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                       Index.toZeroBasedInt(editor.cursorPosition.line),
                      )
-                  -. state.editor.scrollY,
+                  -. editor.scrollY,
                 ~height=fontHeight,
                 ~width=
-                  float_of_int(state.editor.size.pixelWidth)
+                  float_of_int(editor.size.pixelWidth)
                   -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
@@ -418,7 +420,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               /* Draw selection ranges */
               switch (activeBuffer) {
               | Some(b) =>
-                let ranges = Selection.getRanges(state.editor.selection, b);
+                let ranges = Selection.getRanges(editor.selection, b);
                 Oni_Core.Types.Range.(
                   List.iter(
                     (r: Range.t) => {
@@ -454,7 +456,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                           *. float_of_int(
                                Index.toZeroBasedInt(r.startPosition.line),
                              )
-                          -. state.editor.scrollY,
+                          -. editor.scrollY,
                         ~height=fontHeight,
                         ~width=
                           float_of_int(endOffset - startOffset) *. fontWidth,
@@ -487,7 +489,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                         lineNumberWidth,
                         theme,
                         tokens,
-                        state.editor.scrollX,
+                        editor.scrollX,
                         offset,
                         transform,
                         state.configuration.editorRenderWhitespace,
@@ -542,7 +544,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                     ~lineHeight=fontHeight,
                     ~fontWidth,
                     ~cursorLine=
-                      Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                      Index.toZeroBasedInt(editor.cursorPosition.line),
                     ~theme=state.theme,
                     ~indentationSettings=indentation,
                     ~bufferPositionToPixel,
@@ -566,7 +568,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <Minimap
             state
             width={layout.minimapWidthInPixels}
-            height={state.editor.size.pixelHeight}
+            height={editor.size.pixelHeight}
             count=lineCount
             getTokensForLine
           />
@@ -574,7 +576,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
-            height={state.editor.size.pixelHeight}
+            height={editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
           />
         </View>

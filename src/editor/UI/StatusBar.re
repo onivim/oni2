@@ -89,7 +89,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
   component(hooks => {
     let mode = state.mode;
     let theme = state.theme;
-    let position = state.editor.cursorPosition;
+    let editor = Selectors.getActiveEditor(state);
+    let position = editor.cursorPosition;
 
     let textStyle = getTextStyle(state.uiFont);
 

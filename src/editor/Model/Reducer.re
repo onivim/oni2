@@ -7,8 +7,8 @@
 open Actions;
 open Oni_Core.Types;
 
-let sortTabsById = tabs =>
-  State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs));
+/* let sortTabsById = tabs => */
+/*   State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs)); */
 
 let truncateFilepath = path =>
   switch (path) {
@@ -16,24 +16,24 @@ let truncateFilepath = path =>
   | None => "untitled"
   };
 
-let showTablineBuffers = (state: State.t, buffers, activeBufferId) =>
-  List.map(
-    ({id, filePath, modified, _}: BufferMetadata.t) =>
-      State.Tab.{
-        id,
-        title: filePath |> truncateFilepath,
-        active: activeBufferId == id,
-        modified,
-      },
-    buffers,
-  )
-  |> sortTabsById;
+/* let showTablineBuffers = (state: State.t, buffers, activeBufferId) => */
+/*   List.map( */
+/*     ({id, filePath, modified, _}: BufferMetadata.t) => */
+/*       State.Tab.{ */
+/*         id, */
+/*         title: filePath |> truncateFilepath, */
+/*         active: activeBufferId == id, */
+/*         modified, */
+/*       }, */
+/*     buffers, */
+/*   ) */
+/*   |> sortTabsById; */
 
-let updateTabs = (bufId, modified, tabs) =>
-  State.Tab.(
-    List.map(tab => tab.id === bufId ? {...tab, modified} : tab, tabs)
-    |> sortTabsById
-  );
+/* let updateTabs = (bufId, modified, tabs) => */
+/*   State.Tab.( */
+/*     List.map(tab => tab.id === bufId ? {...tab, modified} : tab, tabs) */
+/*     |> sortTabsById */
+/*   ); */
 
 let applyBufferUpdate = (bufferUpdate, buffer) =>
   switch (buffer) {
@@ -48,12 +48,12 @@ let reduce: (State.t, Actions.t) => State.t =
     } else {
       let s = {
         ...s,
-        editor:
-          Editor.reduce(
-            s.editor,
-            a,
-            BufferMap.getBuffer(s.activeBufferId, s.buffers),
-          ),
+        /* editor: */
+        /*   Editor.reduce( */
+        /*     s.editor, */
+        /*     a, */
+        /*     BufferMap.getBuffer(s.activeBufferId, s.buffers), */
+        /*   ), */
         syntaxHighlighting:
           SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
         wildmenu: Wildmenu.reduce(s.wildmenu, a),
@@ -69,30 +69,27 @@ let reduce: (State.t, Actions.t) => State.t =
         ret;
       | BufferWritePost(bs) => {
           ...s,
-          activeBufferId: bs.bufferId,
+          /* activeBufferId: bs.bufferId, */
           buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-          tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+          /* tabs: showTablineBuffers(s, bs.buffers, bs.bufferId), */
         }
-      | BufferDelete(bd) => {
-          ...s,
-          tabs: showTablineBuffers(s, bd.buffers, bd.bufferId),
-        }
+      | BufferDelete(bd) => s
       | BufferEnter(bs) => {
           ...s,
-          activeBufferId: bs.bufferId,
+          /* activeBufferId: bs.bufferId, */
           buffers: BufferMap.updateMetadata(s.buffers, bs.buffers),
-          tabs: showTablineBuffers(s, bs.buffers, bs.bufferId),
+          /* tabs: showTablineBuffers(s, bs.buffers, bs.bufferId), */
         }
       | BufferUpdate(bu) => {
           ...s,
           buffers: BufferMap.update(bu.id, applyBufferUpdate(bu), s.buffers),
         }
       | SetEditorFont(font) => {...s, editorFont: font}
-      | TextChanged({activeBufferId, modified})
-      | TextChangedI({activeBufferId, modified}) => {
-          ...s,
-          tabs: updateTabs(activeBufferId, modified, s.tabs),
-        }
+      /* | TextChanged({activeBufferId, modified}) */
+      /* | TextChangedI({activeBufferId, modified}) => { */
+      /*     ...s, */
+      /*     /1* tabs: updateTabs(activeBufferId, modified, s.tabs), *1/ */
+      /*   } */
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
       | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}

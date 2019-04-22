@@ -15,6 +15,7 @@ let absoluteStyle =
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~height as totalHeight,
       ~width as totalWidth,
       ~children as _,
@@ -22,7 +23,7 @@ let createElement =
     ) =>
   component(hooks => {
     let scrollMetrics =
-      Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
+      Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
     let scrollThumbStyle =
       Style.[
@@ -35,15 +36,15 @@ let createElement =
       ];
 
     let cursorPixelY =
-      float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
+      float_of_int(Index.toZeroBasedInt(editor.cursorPosition.line))
       *. state.editorFont.measuredHeight;
     let totalPixel =
-      Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
+      Editor.getTotalSizeInPixels(editor) |> float_of_int;
 
     let cursorPosition =
       int_of_float(
         cursorPixelY
-        /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
+        /. (totalPixel +. float_of_int(editor.size.pixelHeight))
         *. float_of_int(totalHeight),
       );
     let cursorSize = 2;
