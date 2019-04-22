@@ -7,33 +7,6 @@
 open Actions;
 open Oni_Core.Types;
 
-/* let sortTabsById = tabs => */
-/*   State.Tab.(List.sort((t1, t2) => compare(t1.id, t2.id), tabs)); */
-
-let truncateFilepath = path =>
-  switch (path) {
-  | Some(p) => Filename.basename(p)
-  | None => "untitled"
-  };
-
-/* let showTablineBuffers = (state: State.t, buffers, activeBufferId) => */
-/*   List.map( */
-/*     ({id, filePath, modified, _}: BufferMetadata.t) => */
-/*       State.Tab.{ */
-/*         id, */
-/*         title: filePath |> truncateFilepath, */
-/*         active: activeBufferId == id, */
-/*         modified, */
-/*       }, */
-/*     buffers, */
-/*   ) */
-/*   |> sortTabsById; */
-
-/* let updateTabs = (bufId, modified, tabs) => */
-/*   State.Tab.( */
-/*     List.map(tab => tab.id === bufId ? {...tab, modified} : tab, tabs) */
-/*     |> sortTabsById */
-/*   ); */
 
 let applyBufferUpdate = (bufferUpdate, buffer) =>
   switch (buffer) {

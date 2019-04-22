@@ -18,6 +18,12 @@ let create = (~id, ~title, ~active=false, ~modified=false, ()) => {
   modified,
 };
 
+let truncateFilepath = path =>
+  switch (path) {
+  | Some(p) => Filename.basename(p)
+  | None => "untitled"
+  };
+
 let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
   let {id, filePath, version, lastSaveVersion, _}: BufferMetadata.t =
     Buffer.getMetadata(buffer);
@@ -26,7 +32,7 @@ let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
 
   let title =
     switch (filePath) {
-    | Some(v) => v
+    | Some(v) => v |> truncateFilePath
     | None => "untitled"
     };
 
