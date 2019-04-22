@@ -24,7 +24,7 @@ type t =
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
-  | RecalculateEditorView
+  | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(commandline)
   | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))

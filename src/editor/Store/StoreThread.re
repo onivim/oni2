@@ -85,13 +85,14 @@ let start =
     );
 
   let editorEventStream =
-    Isolinear.Stream.map(storeStream, ((_state, action)) =>
+    Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
-      | Model.Actions.SetEditorFont(_)
-      | Model.Actions.SetEditorSize(_)
-      | Model.Actions.BufferUpdate(_)
-      | Model.Actions.BufferEnter(_) =>
-        Some(Model.Actions.RecalculateEditorView)
+      | Model.Actions.BufferUpdate(bs) =>
+        let buffer = Model.Selectors.getBufferById(state, bs.id);
+        Some(Model.Actions.RecalculateEditorView(buffer));
+      | Model.Actions.BufferEnter(bs) =>
+        let buffer = Model.Selectors.getBufferById(state, bs.bufferId);
+        Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None
       }
     );
