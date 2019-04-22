@@ -559,6 +559,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <View style=cursorStyle />
           <View style=horizontalScrollBarStyle>
             <EditorHorizontalScrollbar
+              editor
               state
               width={int_of_float(layout.bufferWidthInPixels)}
             />
@@ -567,6 +568,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap
             state
+            editor
             width={layout.minimapWidthInPixels}
             height={editor.size.pixelHeight}
             count=lineCount
@@ -576,6 +578,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
+            editor
             height={editor.size.pixelHeight}
             width={Constants.default.scrollBarThickness}
           />

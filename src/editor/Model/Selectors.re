@@ -4,11 +4,13 @@
  * Helpers to map the State.t to more usable values
  */
 
+open Oni_Core;
+
 let getActiveEditor = (state: State.t) => {
-    IntMap.find(state.activeEditor, state.editors)
+    IntMap.find(state.activeEditorId, state.editors)
 };
 
 let getActiveBuffer = (state: State.t) => {
     let editor = getActiveEditor(state);
-    IntMap.find_opt(editor.bufferId, state.buffers);
+    BufferMap.getBuffer(editor.bufferId, state.buffers);
 }
