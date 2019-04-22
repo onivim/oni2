@@ -15,9 +15,6 @@ type t = {
 
 let create = () => {
   {
-    /* let defaultEditor = Editor.create(); */
-    /* let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor); */
-
     editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,

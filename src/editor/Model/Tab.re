@@ -30,11 +30,7 @@ let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
 
   let modified = version > lastSaveVersion;
 
-  let title =
-    switch (filePath) {
-    | Some(v) => v |> truncateFilePath
-    | None => "untitled"
-    };
+  let title = filePath |> truncateFilepath;
 
   {id, title, active, modified};
 };

@@ -47,16 +47,7 @@ let markSaved = buffer => {
   };
 };
 
-/* TODO: Include in updating metadata */
-let truncateFilepath = path =>
-  switch (path) {
-  | Some(p) => Filename.basename(p)
-  | None => "untitled"
-  };
-
-
 let reduce = (state: t, action: Actions.t) => {
-  print_endline("BUFFERS: REDUCE");
   switch (action) {
   | BufferEnter(id) =>
     let f = buffer =>

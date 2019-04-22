@@ -12,8 +12,6 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
-let noop = () => ();
-
 let component = React.component("Editor");
 
 let editorViewStyle = (background, foreground) =>
@@ -46,7 +44,6 @@ let splitFactory = (fn, ()) => {
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let mode = state.mode;
     let hooks =
       React.Hooks.effect(
         OnMount,

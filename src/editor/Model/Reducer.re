@@ -7,13 +7,6 @@
 open Actions;
 open Oni_Core.Types;
 
-
-let applyBufferUpdate = (bufferUpdate, buffer) =>
-  switch (buffer) {
-  | None => None
-  | Some(b) => Some(Buffer.update(b, bufferUpdate))
-  };
-
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
     if (a == Actions.Tick) {
