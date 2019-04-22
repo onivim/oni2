@@ -314,10 +314,7 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action) =>
   switch (action) {
-  | CursorMove(b) => {
-      prerr_endline ("CURSOR MOVE");
-      snapToCursorPosition({...view, cursorPosition: b})
-  }
+  | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
   | SelectionChanged(selection) => {...view, selection}
   | SetEditorSize(size) => {...view, size}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)

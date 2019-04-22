@@ -153,8 +153,7 @@ let createElement =
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = editor.size.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
-        ~deltaY=
-          scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
+        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
@@ -175,12 +174,9 @@ let createElement =
                 ~x=0.,
                 ~y=
                   rowHeight
-                  *. float_of_int(
-                       Editor.getTopVisibleLine(editor) - 1,
-                     )
+                  *. float_of_int(Editor.getTopVisibleLine(editor) - 1)
                   -. scrollY,
-                ~height=
-                  rowHeight *. float_of_int(getMinimapSize(editor)),
+                ~height=rowHeight *. float_of_int(getMinimapSize(editor)),
                 ~width=float_of_int(width),
                 ~color=state.theme.colors.scrollbarSliderHoverBackground,
                 (),

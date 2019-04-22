@@ -230,10 +230,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
     let bufferPositionToPixel = (line, char) => {
       let x =
-        float_of_int(char)
-        *. fontWidth
-        -. editor.scrollX
-        +. lineNumberWidth;
+        float_of_int(char) *. fontWidth -. editor.scrollX +. lineNumberWidth;
       let y = float_of_int(line) *. fontHeight -. editor.scrollY;
       (x, y);
     };
@@ -407,8 +404,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                   -. editor.scrollY,
                 ~height=fontHeight,
                 ~width=
-                  float_of_int(editor.size.pixelWidth)
-                  -. lineNumberWidth,
+                  float_of_int(editor.size.pixelWidth) -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
