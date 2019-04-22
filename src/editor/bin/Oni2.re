@@ -55,8 +55,8 @@ let init = app => {
 
     Model.Buffers.log(state.buffers);
     switch (Model.Selectors.getActiveBuffer(state)) {
-        | Some(v) => print_endline ("active buffer: " ++ Model.Buffer.show(v))
-        | None => print_endline ("active buffer: none");
+    | Some(v) => print_endline("active buffer: " ++ Model.Buffer.show(v))
+    | None => print_endline("active buffer: none")
     };
 
     update(<Root state />);

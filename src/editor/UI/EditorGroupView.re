@@ -49,23 +49,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let mode = state.mode;
 
     let editor = Selectors.getActiveEditor(state);
-    let tabs = Model.Selectors.getTabs(state, state.editors)
-        |> toUiTabs;
+    let tabs = Model.Selectors.getTabs(state, state.editors) |> toUiTabs;
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    let editorView = switch (editor)  {
-    | Some(v) => <EditorSurface editor=v state />
-    | None => React.empty
-    };
+    let editorView =
+      switch (editor) {
+      | Some(v) => <EditorSurface editor=v state />
+      | None => React.empty
+      };
 
-
-    (
-      hooks,
-      <View style>
-        <Tabs theme tabs mode uiFont />
-        editorView
-      </View>,
-    );
+    (hooks, <View style> <Tabs theme tabs mode uiFont /> editorView </View>);
   });

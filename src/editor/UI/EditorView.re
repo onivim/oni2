@@ -88,16 +88,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         hooks,
       );
 
-    let tabs = Model.Selectors.getTabs(state, state.editors)
-        |> toUiTabs;
+    let tabs = Model.Selectors.getTabs(state, state.editors) |> toUiTabs;
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (
-      hooks,
-      <View style>
-        <EditorLayoutView state />
-      </View>,
-    );
+    (hooks, <View style> <EditorLayoutView state /> </View>);
   });

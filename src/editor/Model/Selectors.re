@@ -19,8 +19,8 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
 };
 
 let getActiveBuffer = (state: State.t) => {
-  let editorOpt = state |> getActiveEditor; 
-  
+  let editorOpt = state |> getActiveEditor;
+
   switch (editorOpt) {
   | Some(editor) => getBufferForEditor(state, editor)
   | None => None
@@ -28,23 +28,22 @@ let getActiveBuffer = (state: State.t) => {
 };
 
 let getTabs = (state: State.t, editorGroup: EditorGroup.t) => {
-    let activeEditorId = editorGroup.activeEditorId;
-    let f = (editorId: int) => {
-        let editor = EditorGroup.getEditorById(editorId, editorGroup)
-        let buffer = getBufferById(state, editor.bufferId);
+  let activeEditorId = editorGroup.activeEditorId;
+  let f = (editorId: int) => {
+    let editor = EditorGroup.getEditorById(editorId, editorGroup);
+    let buffer = getBufferById(state, editor.bufferId);
 
-        let active = switch(activeEditorId) {
-        | None => false
-        | Some(v) => v == editorId
-        };
+    let active =
+      switch (activeEditorId) {
+      | None => false
+      | Some(v) => v == editorId
+      };
 
-        switch (buffer) {
-        | Some(v) => Tab.ofBuffer(~buffer=v, ~active, ())
-        | None => Tab.create(~id=-1, ~title="Unknown", ())
-        }
+    switch (buffer) {
+    | Some(v) => Tab.ofBuffer(~buffer=v, ~active, ())
+    | None => Tab.create(~id=-1, ~title="Unknown", ())
     };
+  };
 
-    editorGroup.reverseTabOrder
-    |> List.rev
-    |> List.map(f)
-}
+  editorGroup.reverseTabOrder |> List.rev |> List.map(f);
+};

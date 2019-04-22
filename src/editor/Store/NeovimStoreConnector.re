@@ -145,12 +145,13 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 CursorMove(
                   Core.Types.Position.create(c.cursorLine, c.cursorColumn),
                 )
-              | BufferWritePost({activeBufferId, _}) => {
-                BufferSaved(activeBufferId);
-              }
+              | BufferWritePost({activeBufferId, _}) =>
+                BufferSaved(activeBufferId)
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
-                prerr_endline ("BufferEnter: " ++ string_of_int(activeBufferId));
+                prerr_endline(
+                  "BufferEnter: " ++ string_of_int(activeBufferId),
+                );
                 BufferEnter(activeBufferId);
               | BufferDelete(bd) => BufferDelete(bd.activeBufferId)
               | BufferLines(bc) =>

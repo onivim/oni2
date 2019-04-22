@@ -14,9 +14,10 @@ type t = {
 };
 
 let create = () => {
-  /* let defaultEditor = Editor.create(); */
-  /* let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor); */
   {
+    /* let defaultEditor = Editor.create(); */
+    /* let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor); */
+
     editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
@@ -30,9 +31,9 @@ let getEditorById = (id: int, v: t) => {
 
 let getActiveEditor = (v: t) => {
   switch (v.activeEditorId) {
-  | Some(id) => Some(getEditorById(id, v));
+  | Some(id) => Some(getEditorById(id, v))
   | None => None
-  }
+  };
 };
 
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
@@ -64,8 +65,7 @@ let reduce = (v: t, action: Actions.t) => {
 
   switch (action) {
   | BufferEnter(bufferId) =>
-    let (newState, activeEditorId) =
-      getOrCreateEditorForBuffer(v, bufferId);
+    let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, bufferId);
     {...newState, activeEditorId: Some(activeEditorId)};
   | _ => v
   };

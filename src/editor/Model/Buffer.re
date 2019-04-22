@@ -113,6 +113,5 @@ let update = (buf: t, update: BufferUpdate.t) =>
   };
 
 let markSaved = (buf: t) => {
-    { ...buf, metadata: BufferMetadata.markSaved(buf.metadata)}
+  {...buf, metadata: BufferMetadata.markSaved(buf.metadata)};
 };
-

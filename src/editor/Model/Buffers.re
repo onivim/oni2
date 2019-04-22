@@ -28,10 +28,11 @@ let log = (m: t) =>
 
 let getBuffer = (id, map) => IntMap.find_opt(id, map);
 
-let getBufferMetadata = (id, map) => switch (getBuffer(id, map)) {
-| Some(v) => Some(Buffer.getMetadata(v))
-| None => None
-};
+let getBufferMetadata = (id, map) =>
+  switch (getBuffer(id, map)) {
+  | Some(v) => Some(Buffer.getMetadata(v))
+  | None => None
+  };
 
 let applyBufferUpdate = (bufferUpdate, buffer) =>
   switch (buffer) {
@@ -39,25 +40,25 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
-let markSaved = (buffer) => {
-    switch (buffer) {
-    | None => None
-    | Some(b) => Some(Buffer.markSaved(b))
-    }    
-}
+let markSaved = buffer => {
+  switch (buffer) {
+  | None => None
+  | Some(b) => Some(Buffer.markSaved(b))
+  };
+};
 
 let reduce = (state: t, action: Actions.t) => {
-    print_endline ("BUFFERS: REDUCE");
-    switch (action) {
-    | BufferEnter(id) => {
-        let f = (buffer) => switch(buffer) {
-        | Some(v) => Some(v)
-        | None => Some(Buffer.ofMetadata(BufferMetadata.create(~id, ())))
-        };
-        IntMap.update(id, f, state)
-    }
-    | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-    | BufferSaved(id) => IntMap.update(id, markSaved, state)
-    | _ => state;
-    }
-}
+  print_endline("BUFFERS: REDUCE");
+  switch (action) {
+  | BufferEnter(id) =>
+    let f = buffer =>
+      switch (buffer) {
+      | Some(v) => Some(v)
+      | None => Some(Buffer.ofMetadata(BufferMetadata.create(~id, ())))
+      };
+    IntMap.update(id, f, state);
+  | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
+  | BufferSaved(id) => IntMap.update(id, markSaved, state)
+  | _ => state
+  };
+};

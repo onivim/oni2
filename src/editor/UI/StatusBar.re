@@ -38,11 +38,11 @@ let viewStyle =
   ];
 
 let convertPositionToString = (position: option(Types.Position.t)) =>
-  switch(position) {
+  switch (position) {
   | Some(v) =>
-      string_of_int(Types.Index.toOneBasedInt(v.line))
-      ++ ","
-      ++ string_of_int(Types.Index.toOneBasedInt(v.character));
+    string_of_int(Types.Index.toOneBasedInt(v.line))
+    ++ ","
+    ++ string_of_int(Types.Index.toOneBasedInt(v.character))
   | None => ""
   };
 
@@ -94,10 +94,11 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
     let mode = state.mode;
     let theme = state.theme;
     let editor = Selectors.getActiveEditor(state);
-    let position = switch(editor) {
-    | Some(v) => Some(v.cursorPosition)
-    | None => None
-    };
+    let position =
+      switch (editor) {
+      | Some(v) => Some(v.cursorPosition)
+      | None => None
+      };
 
     let textStyle = getTextStyle(state.uiFont);
 
