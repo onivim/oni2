@@ -87,7 +87,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         hooks,
       );
 
-    let tabs = [];
+    let tab: Tabs.tabInfo = {
+      title: "tab1",
+      modified: false,
+      active: true,
+      onClick: () => GlobalContext.current().openFileById(1),
+      onClose: () => GlobalContext.current().closeFileById(1),
+    };
+
+    let tabs = [tab];
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
