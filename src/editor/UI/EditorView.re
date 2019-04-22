@@ -28,21 +28,6 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(Model.Tab.t)) => {
-  let f = (t: Model.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: () => GlobalContext.current().openFileById(t.id),
-      onClose: () => GlobalContext.current().closeFileById(t.id),
-    };
-    ret;
-  };
-
-  List.map(f, tabs);
-};
-
 /**
    We wrap each split component as we have to have a type signature
    that matches unit => React.syntheticElement this is because
@@ -88,8 +73,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         hooks,
       );
 
-    let tabs = Model.Selectors.getTabs(state, state.editors) |> toUiTabs;
-    let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
