@@ -97,7 +97,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     (
       hooks,
       <View style>
-        <Tabs theme tabs mode uiFont />
         <EditorLayoutView state />
       </View>,
     );
