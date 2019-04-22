@@ -183,19 +183,6 @@ module BufferMetadata = {
   };
 };
 
-module BufferNotification = {
-  [@deriving show({with_path: false})]
-  type t = {
-    bufferId: int,
-  };
-
-  /* let getBufferMetadataOpt = (id, v: t) => { */
-  /*   let result = */
-  /*     v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id); */
-  /*   List.nth_opt(result, 0); */
-  /* }; */
-};
-
 module BufferUpdate = {
   [@deriving show({with_path: false})]
   type t = {
