@@ -14,7 +14,7 @@ module Window = WindowManager;
 
 let noop = () => ();
 
-let component = React.component("Editor");
+let component = React.component("EditorGroupView");
 
 let editorViewStyle = (background, foreground) =>
   Style.[
@@ -62,31 +62,6 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
-    let hooks =
-      React.Hooks.effect(
-        OnMount,
-        () => {
-          let dispatch = GlobalContext.current().dispatch;
-          let dock =
-            Window.createDock(
-              ~width=50,
-              ~component=splitFactory(state => <Dock state />),
-              (),
-            );
-
-          let editor =
-            Window.createSplit(
-              ~direction=Vertical,
-              ~component=splitFactory(state => <EditorGroupView state />),
-              (),
-            );
-
-          dispatch(AddLeftDock(dock));
-          dispatch(AddSplit(editor));
-          None;
-        },
-        hooks,
-      );
 
     let tabs = Model.Selectors.getTabs(state, state.editors)
         |> toUiTabs;
@@ -94,11 +69,18 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
+    let editor = Selectors.getActiveEditor(state);
+    let editorView = switch (editor)  {
+    | Some(v) => <EditorSurface editor=v state />
+    | None => React.empty
+    };
+
+
     (
       hooks,
       <View style>
         <Tabs theme tabs mode uiFont />
-        <EditorLayoutView state />
+        editorView
       </View>,
     );
   });

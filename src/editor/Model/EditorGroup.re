@@ -7,20 +7,20 @@
 open Oni_Core;
 
 type t = {
-  activeEditorId: int,
+  activeEditorId: option(int),
   editors: IntMap.t(Editor.t),
   bufferIdToEditorId: IntMap.t(int),
   reverseTabOrder: list(int),
 };
 
 let create = () => {
-  let defaultEditor = Editor.create();
-  let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor);
+  /* let defaultEditor = Editor.create(); */
+  /* let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor); */
   {
-    editors,
+    editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
-    activeEditorId: defaultEditor.id,
-    reverseTabOrder: [defaultEditor.id],
+    activeEditorId: None,
+    reverseTabOrder: [],
   };
 };
 
@@ -29,7 +29,10 @@ let getEditorById = (id: int, v: t) => {
 };
 
 let getActiveEditor = (v: t) => {
-  getEditorById(v.activeEditorId, v);
+  switch (v.activeEditorId) {
+  | Some(id) => Some(getEditorById(id, v));
+  | None => None
+  }
 };
 
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
@@ -63,7 +66,7 @@ let reduce = (v: t, action: Actions.t) => {
   | BufferEnter(bs) =>
     let (newState, activeEditorId) =
       getOrCreateEditorForBuffer(v, bs.bufferId);
-    {...newState, activeEditorId};
+    {...newState, activeEditorId: Some(activeEditorId)};
   | _ => v
   };
 };

@@ -179,11 +179,10 @@ let renderTokens =
 
 let component = React.component("EditorSurface");
 
-let createElement = (~state: State.t, ~children as _, ()) =>
+let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
 
-    let editor = Selectors.getActiveEditor(state);
     let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
     let buffer =

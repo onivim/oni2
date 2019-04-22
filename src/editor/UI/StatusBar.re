@@ -37,10 +37,14 @@ let viewStyle =
     right(0),
   ];
 
-let convertPositionToString = (position: Types.Position.t) =>
-  string_of_int(Types.Index.toOneBasedInt(position.line))
-  ++ ","
-  ++ string_of_int(Types.Index.toOneBasedInt(position.character));
+let convertPositionToString = (position: option(Types.Position.t)) =>
+  switch(position) {
+  | Some(v) =>
+      string_of_int(Types.Index.toOneBasedInt(v.line))
+      ++ ","
+      ++ string_of_int(Types.Index.toOneBasedInt(v.character));
+  | None => ""
+  };
 
 module StatusBarSection = {
   let component = React.component("StatusBarSection");
@@ -90,7 +94,10 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
     let mode = state.mode;
     let theme = state.theme;
     let editor = Selectors.getActiveEditor(state);
-    let position = editor.cursorPosition;
+    let position = switch(editor) {
+    | Some(v) => Some(v.cursorPosition)
+    | None => None
+    };
 
     let textStyle = getTextStyle(state.uiFont);
 
