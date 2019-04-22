@@ -23,7 +23,6 @@ type t = {
   diagnostics: Diagnostics.t,
   tabs: list(Tab.t),
   buffers: BufferMap.t,
-  activeBufferId: int,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   menu: Menu.t,
@@ -33,12 +32,17 @@ type t = {
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
   editor: Editor.t,
+  editors: IntMap.t(Editor.t),
+  activeEditorId: int,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
 };
+
+let defaultEditor = Editor.create();
+let editors = IntMap.empty |> IntMap.add(defaultEditor.id, defaultEditor);
 
 let create: unit => t =
   () => {
@@ -62,7 +66,8 @@ let create: unit => t =
     syntaxHighlighting: SyntaxHighlighting.create(),
     tabs: [],
     theme: Theme.create(),
-    editor: Editor.create(),
+    activeEditorId: defaultEditor.id,
+    editors,
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),

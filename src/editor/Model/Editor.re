@@ -6,6 +6,7 @@ open Actions;
 [@deriving show]
 type t = {
   id: int,
+  bufferId: int,
   scrollX: float,
   scrollY: float,
   minimapMaxColumnWidth: int,
@@ -26,6 +27,7 @@ type t = {
 let create = () => {
   let ret: t = {
     id: 0,
+    bufferId: 0,
     scrollX: 0.,
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
