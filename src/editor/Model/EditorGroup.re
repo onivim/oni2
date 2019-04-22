@@ -10,6 +10,7 @@ type t = {
   activeEditorId: int,
   editors: IntMap.t(Editor.t),
   bufferIdToEditorId: IntMap.t(int),
+  reverseTabOrder: list(int),
 };
 
 let create = () => {
@@ -19,6 +20,7 @@ let create = () => {
     editors,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: defaultEditor.id,
+    reverseTabOrder: [defaultEditor.id],
   };
 };
 
@@ -40,6 +42,7 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
       editors: IntMap.add(newEditor.id, newEditor, state.editors),
       bufferIdToEditorId:
         IntMap.add(bufferId, newEditor.id, state.bufferIdToEditorId),
+      reverseTabOrder: [newEditor.id, ...state.reverseTabOrder],
     };
     (newState, newEditor.id);
   };
