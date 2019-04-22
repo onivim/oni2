@@ -47,7 +47,7 @@ let create: unit => t =
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
     theme: Theme.create(),
-    editorGroup: EditorGroup.create(),
+    editors: EditorGroup.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),
