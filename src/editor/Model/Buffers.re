@@ -47,7 +47,15 @@ let markSaved = (buffer) => {
 }
 
 let reduce = (state: t, action: Actions.t) => {
+    print_endline ("BUFFERS: REDUCE");
     switch (action) {
+    | BufferEnter(id) => {
+        let f = (buffer) => switch(buffer) {
+        | Some(v) => Some(v)
+        | None => Some(Buffer.ofMetadata(BufferMetadata.create(~id, ())))
+        };
+        IntMap.update(id, f, state)
+    }
     | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
     | BufferSaved(id) => IntMap.update(id, markSaved, state)
     | _ => state;

@@ -150,6 +150,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               }
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
+                prerr_endline ("BufferEnter: " ++ string_of_int(activeBufferId));
                 BufferEnter(activeBufferId);
               | BufferDelete(bd) => BufferDelete(bd.activeBufferId)
               | BufferLines(bc) =>

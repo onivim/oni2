@@ -48,13 +48,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
     let mode = state.mode;
 
+    let editor = Selectors.getActiveEditor(state);
     let tabs = Model.Selectors.getTabs(state, state.editors)
         |> toUiTabs;
     let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    let editor = Selectors.getActiveEditor(state);
     let editorView = switch (editor)  {
     | Some(v) => <EditorSurface editor=v state />
     | None => React.empty

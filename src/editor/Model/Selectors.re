@@ -28,12 +28,18 @@ let getActiveBuffer = (state: State.t) => {
 };
 
 let getTabs = (state: State.t, editorGroup: EditorGroup.t) => {
+    let activeEditorId = editorGroup.activeEditorId;
     let f = (editorId: int) => {
         let editor = EditorGroup.getEditorById(editorId, editorGroup)
         let buffer = getBufferById(state, editor.bufferId);
 
+        let active = switch(activeEditorId) {
+        | None => false
+        | Some(v) => v == editorId
+        };
+
         switch (buffer) {
-        | Some(v) => Tab.ofBuffer(~buffer=v, ~active=false, ())
+        | Some(v) => Tab.ofBuffer(~buffer=v, ~active, ())
         | None => Tab.create(~id=-1, ~title="Unknown", ())
         }
     };
