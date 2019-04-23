@@ -36,7 +36,6 @@ type t = {
    */
   pump: unit => unit,
   onNotification: Event.t(notification),
-
   dispose: unit => unit,
 };
 
@@ -114,18 +113,17 @@ let make = (msgpack: MsgpackTransport.t) => {
   let dispose1 = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
   /** END NOTE */
 
-  let pump = () => {
+  let pump = () =>
     if (isRunning^) {
-        let notifications = getAndClearNotifications();
+      let notifications = getAndClearNotifications();
 
-        let f = n => Event.dispatch(onNotification, n);
+      let f = n => Event.dispatch(onNotification, n);
 
-        /* Because of the way we queue notifications in `handleMessage`,
-         * they come in reverse order - therefore, we need to reverse it
-         * to get the correct ordering */
-        List.rev(notifications) |> List.iter(f);
-    }
-  };
+      /* Because of the way we queue notifications in `handleMessage`,
+       * they come in reverse order - therefore, we need to reverse it
+       * to get the correct ordering */
+      List.rev(notifications) |> List.iter(f);
+    };
 
   let request = (methodName: string, args: M.t) => {
     let requestId = getNextId();
