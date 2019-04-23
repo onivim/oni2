@@ -43,7 +43,7 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
 let markSaved = (metadata, buffer) => {
   switch (buffer) {
   | None => None
-  | Some(b) => Some(b |> Buffer.updateMetadata(metadata) |> Buffer.markSaved);
+  | Some(b) => Some(b |> Buffer.updateMetadata(metadata) |> Buffer.markSaved)
   };
 };
 
@@ -57,7 +57,8 @@ let reduce = (state: t, action: Actions.t) => {
       };
     IntMap.update(metadata.id, f, state);
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-  | BufferSaved(metadata) => IntMap.update(metadata.id, markSaved(metadata), state)
+  | BufferSaved(metadata) =>
+    IntMap.update(metadata.id, markSaved(metadata), state)
   | _ => state
   };
 };

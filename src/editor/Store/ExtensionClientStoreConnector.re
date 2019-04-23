@@ -101,20 +101,20 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
 
   let sendBufferEnterEffect = (bm: Core.Types.BufferMetadata.t) =>
-    Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
-        switch (_bufferMetadataToModelAddedDelta(bm)) {
-        | None => ()
-        | Some(v) =>
-          ExtensionHostClient.send(
-            extHostClient,
-            Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-              ~removedDocuments=[],
-              ~addedDocuments=[v],
-              (),
-            ),
-          )
-        }
-    });
+    Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
+      switch (_bufferMetadataToModelAddedDelta(bm)) {
+      | None => ()
+      | Some(v) =>
+        ExtensionHostClient.send(
+          extHostClient,
+          Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~removedDocuments=[],
+            ~addedDocuments=[v],
+            (),
+          ),
+        )
+      }
+    );
 
   let modelChangedEffect =
       (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
@@ -154,10 +154,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm) => (
-        state,
-        sendBufferEnterEffect(bm),
-      )
+    | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(bm))
     | Model.Actions.Tick => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };

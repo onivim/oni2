@@ -6,7 +6,6 @@ module M = Msgpck;
 
 type partialBuffer = {id: int};
 
-
 let constructMetadataCalls = ((_, id)) => [
   M.List([
     M.String("nvim_call_function"),
@@ -37,12 +36,16 @@ let parseBufferContext = map =>
   );
 
 let getContext = (api: NeovimApi.t, id) => {
-   let v = api.requestSync("nvim_call_function", M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]))
-    switch (v) {
-    | M.Map(context) => parseBufferContext(context)
-    /* TODO: Assert */ 
-    | _ => BufferMetadata.create();
-    }
+  let v =
+    api.requestSync(
+      "nvim_call_function",
+      M.List([M.String("OniGetBufferContext"), M.List([M.Int(id)])]),
+    );
+  switch (v) {
+  | M.Map(context) => parseBufferContext(context)
+  /* TODO: Assert */
+  | _ => BufferMetadata.create()
+  };
 };
 
 /**
