@@ -155,7 +155,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
           | ModeChanged("visual") => ChangeMode(Visual)
           | ModeChanged("operator") => ChangeMode(Operator)
           | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
-          | TablineUpdate(tabs) => TablineUpdate(tabs)
           | ModeChanged(_) => ChangeMode(Other)
           | VisualRangeUpdate(vr) => SelectionChanged(vr)
           | CursorMoved(c) =>
