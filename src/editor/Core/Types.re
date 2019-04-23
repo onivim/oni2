@@ -235,24 +235,6 @@ module BufferUpdate = {
   };
 };
 
-module Tabline = {
-  [@deriving show({with_path: false})]
-  type t = {
-    tab: int,
-    name: string,
-  };
-
-  [@deriving show({with_path: false})]
-  type tabs = list(t);
-};
-
-module TextChanged = {
-  type t = {
-    activeBufferId: int,
-    modified: bool,
-  };
-};
-
 module EditorFont = {
   type t = {
     fontFile: string,

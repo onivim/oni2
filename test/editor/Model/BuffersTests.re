@@ -1,7 +1,7 @@
 open TestFramework;
 
 open Oni_Core.Types;
-module BufferMap = Oni_Model.Buffers;
+module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Model.Buffer;
 
 let getOrFail = (v: option(Buffer.t)) => {
@@ -18,16 +18,15 @@ let getOrFail = (v: option(Buffer.t)) => {
 };
 
 describe("Buffer List Tests", ({test, _}) => {
-  test(
-    "Should update metadata on BufferEnter",
-    ({expect}) => {
-    let bufferlist = BufferMap.empty;
-    let testBuffers: list(BufferMetadata.t) = [
-      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"), ()),
-      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
-    ];
-    let added = BufferMap.updateMetadata(bufferlist, testBuffers);
-    expect.int(BufferMap.Buffers.cardinal(added)).toBe(2);
+  test("Buffer enter should create metadata", ({expect}) => {
+    let bufferList = Buffers.empty;
+
+    let added = Buffers.reduce(bufferList, BufferEnter(
+      BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ())));
+
+    expect.string(Buffers.getBuffer(0, added) |> getOrFail).toMatch(
+      "/test1.re",
+    );
   });
 
   /**
@@ -36,37 +35,30 @@ describe("Buffer List Tests", ({test, _}) => {
 
      NOTE: the cardinality of the map is not updated
    */
-  test("Bufferlist should override duplicate buffer Ids", ({expect}) => {
-    let bufferlist = BufferMap.empty;
+  test("Buffer enter should update metadata, if already there", ({expect}) => {
+    let bufferList = Buffers.empty;
 
-    let testBuffers: list(BufferMetadata.t) = [
-      BufferMetadata.create(~id=1, ~filePath=Some("/test.re"), ()),
-      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
-    ];
-    let added = BufferMap.updateMetadata(bufferlist, testBuffers);
+    let added = Buffers.reduce(bufferList, BufferEnter(
+      BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ())));
+    let addedAgain = Buffers.reduce(added, BufferEnter(
+      BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ())));
 
-    expect.string(BufferMap.getBuffer(0, added) |> getOrFail).toMatch(
+    expect.string(Buffers.getBuffer(0, addedAgain) |> getOrFail).toMatch(
       "/test2.re",
     );
   });
 
   test("Should correctly find the active bufferId", ({expect}) => {
-    let bufferlist = BufferMap.empty;
+    let bufferList = Buffers.empty;
     let updated =
-      BufferMap.Buffers.add(
-        4,
-        Buffer.ofMetadata({
-          filePath: Some("/myfile.js"),
-          id: 4,
-          modified: false,
-          hidden: false,
-          bufType: Empty,
-          fileType: None,
-          version: 0,
-        }),
-        bufferlist,
+      Buffers.reduce(bufferList,
+        BufferEnter(BufferMetadata.create(
+          ~filePath=Some("/myfile.js"),
+          ~id=4,
+          (),
+        ))
       );
-    let activeBuffer = BufferMap.getBuffer(4, updated);
+    let activeBuffer = Buffers.getBuffer(4, updated);
     let path = getOrFail(activeBuffer);
     expect.string(path).toMatch("/myfile.js");
   });
