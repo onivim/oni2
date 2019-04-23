@@ -148,6 +148,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | BufferWritePost({activeBufferId, _}) =>
                 let context =
                   NeovimBuffer.getContext(nvimApi, activeBufferId);
+              print_endline ("!!! BUFFERWRITEPOST: " ++ Core.Types.BufferMetadata.show(context));
                 BufferSaved(context);
               | TextChanged({activeBufferId, _})
               | TextChangedI({activeBufferId, _}) =>
@@ -157,7 +158,9 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 let context =
                   NeovimBuffer.getContext(nvimApi, activeBufferId);
                 BufferEnter(context);
-              | BufferDelete(bd) => BufferDelete(bd.activeBufferId)
+              | BufferDelete(bd) => 
+              print_endline ("!!! BUFFERDELETE: " ++ string_of_int(bd.activeBufferId));
+              BufferDelete(bd.activeBufferId)
               | BufferLines(bc) =>
                 BufferUpdate(
                   Core.Types.BufferUpdate.createFromZeroBasedIndices(

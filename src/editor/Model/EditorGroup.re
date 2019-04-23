@@ -4,7 +4,9 @@
   * Manage a group of editors
  */
 
+/* TEMPORARY */
 Printexc.record_backtrace(true);
+
 open Oni_Core;
 
 type t = {
@@ -22,6 +24,13 @@ let create = () => {
     reverseTabOrder: [],
   };
 };
+
+let show = (v: t) => {
+   IntMap.fold((key, v: Editor.t, prev) => {
+       prev ++ " |Editor: " ++ string_of_int(key) ++ " (buffer: " ++ string_of_int(v.bufferId) ++ ")|";
+
+   }, v.editors, "");
+}
 
 let getEditorById = (id: int, v: t) => {
   IntMap.find_opt(id, v.editors);
@@ -117,7 +126,6 @@ let reduce = (v: t, action: Actions.t) => {
   | BufferEnter({id, _}) =>
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
-  | BufferDelete(id) => removeEditorsForBuffer(v, id)
   | _ => v
   };
 };

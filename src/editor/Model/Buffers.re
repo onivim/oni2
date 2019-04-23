@@ -46,10 +46,10 @@ let markDirty = buffer => {
   };
 };
 
-let markSaved = buffer => {
+let updateMetadata = (metadata, buffer) => {
   switch (buffer) {
   | None => None
-  | Some(b) => Some(b |> Buffer.markSaved)
+  | Some(b) => Some(b |> Buffer.updateMetadata(metadata))
   };
 };
 
@@ -62,10 +62,10 @@ let reduce = (state: t, action: Actions.t) => {
       | None => Some(Buffer.ofMetadata(metadata))
       };
     IntMap.update(metadata.id, f, state);
-  | BufferDelete(bd) => IntMap.remove(bd, state)
+  /* | BufferDelete(bd) => IntMap.remove(bd, state) */
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferMarkDirty(id) => IntMap.update(id, markDirty, state)
-  | BufferSaved(metadata) => IntMap.update(metadata.id, markSaved, state)
+  | BufferSaved(metadata) => IntMap.update(metadata.id, updateMetadata(metadata), state)
   | _ => state
   };
 };
