@@ -11,7 +11,6 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferDelete(int)
   | BufferEnter(BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(BufferMetadata.t)
