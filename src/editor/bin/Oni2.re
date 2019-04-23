@@ -53,11 +53,6 @@ let init = app => {
     let state = currentState^;
     GlobalContext.set({...GlobalContext.current(), state});
 
-    print_endline("============== BUFFERS:");
-    Model.Buffers.log(state.buffers);
-    print_endline("============== EDITORS:");
-    print_endline(Model.EditorGroup.show(state.editors));
-
     update(<Root state />);
   };
 
