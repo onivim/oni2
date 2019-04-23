@@ -11,7 +11,6 @@ let create = () => {onQuitFunctions: []};
 let reduce = (state, action) => {
   switch (action) {
   | Actions.RegisterQuitCleanup(f) => {
-      ...state,
       onQuitFunctions: [f, ...state.onQuitFunctions],
     }
   | _ => state

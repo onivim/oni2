@@ -10,14 +10,10 @@ open Revery;
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-Printexc.record_backtrace(true);
-
 let start = () => {
   let quitEffect = handlers =>
     Isolinear.Effect.create(~name="lifecycle.quit", () => {
-      print_endline("Quitting...");
       List.iter(h => h(), handlers);
-      print_endline("Quit!");
       App.quit(0);
     });
 
