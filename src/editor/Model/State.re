@@ -26,6 +26,7 @@ type t = {
   lifecycle: Lifecycle.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
+  messages: Messages.t,
 };
 
 let create: unit => t =
@@ -55,4 +56,5 @@ let create: unit => t =
     languageInfo: LanguageInfo.create(),
     statusBar: StatusBarModel.create(),
     editorLayout: WindowManager.create(),
+    messages: Messages.create(),
   };

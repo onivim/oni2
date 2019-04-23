@@ -231,6 +231,23 @@ module UiFont = {
   let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
 };
 
+[@deriving show]
+type messageKind =
+  | Emsg /* Internal error message */
+  | Echo /* temporary message from plugin (|:echo|) */
+  | Echomsg /* ordinary message from plugin (|:echomsg|) */
+  | Echoerr /* error message from plugin (|:echoerr|) */
+  | ReturnPrompt /* |press-enter| prompt after a group of messages */
+  | Quickfix
+  | Unknown; /* Quickfix navigation message */
+
+[@deriving show({with_path: false})]
+type message = {
+  kind: messageKind,
+  content: string,
+  replaceLast: bool,
+};
+
 [@deriving show({with_path: false})]
 type wildmenu = {
   items: list(string),

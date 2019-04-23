@@ -31,4 +31,5 @@ module SyntaxHighlighting = SyntaxHighlighting;
 module Tab = Tab;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
+module Messages = Messages;
 module WindowManager = WindowManager;

@@ -11,6 +11,7 @@ open Types;
 open NeovimHelpers;
 
 module Core = Oni_Core;
+module Model = Oni_Model;
 module Utility = Oni_Core.Utility;
 
 module BufferLinesNotification = {
@@ -57,6 +58,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | VisualRangeUpdate(Core.VisualRange.t)
+  | ShowMessage(Core.Types.message)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -150,6 +152,22 @@ let updateWildmenu = selected =>
   | _ => Ignored
   };
 
+let showMessage = msgs => {
+  switch (msgs) {
+  | [
+      M.String(kind),
+      M.List([M.List([M.Int(id), M.String(chunk)])]),
+      M.Bool(replaceLast),
+    ] =>
+    ShowMessage({
+      kind: Model.Messages.getMessageType(kind),
+      content: chunk,
+      replaceLast,
+    })
+  | _ => Ignored
+  };
+};
+
 let parseRedraw = (msgs: list(Msgpck.t)) => {
   let p = (msg: Msgpck.t) =>
     switch (msg) {
@@ -165,6 +183,7 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       updateWildmenu(selected)
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
+    | M.List([M.String("msg_show"), M.List(msgs)]) => showMessage(msgs)
     | M.List([M.String("tabline_update"), M.List(_)]) => Ignored
     | M.List([
         M.String("mode_change"),

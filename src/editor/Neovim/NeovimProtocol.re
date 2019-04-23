@@ -51,6 +51,7 @@ let make = (nvimApi: NeovimApi.t) => {
             (M.String("ext_cmdline"), M.Bool(true)),
             (M.String("ext_wildmenu"), M.Bool(true)),
             (M.String("ext_linegrid"), M.Bool(true)),
+            (M.String("ext_messages"), M.Bool(true)),
             /* (M.String("ext_multigrid"), M.Bool(true)), */
             /* (M.String("ext_hlstate"), M.Bool(true)), */
           ]),
