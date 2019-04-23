@@ -87,6 +87,7 @@ function OniGetBufferContext(bufnum)
     let l:context.buftype = getbufvar(a:bufnum, "&buftype")
     let l:context.modified = getbufvar(a:bufnum, "&mod")
     let l:context.hidden = getbufvar(a:bufnum, "&hidden")
+    let l:context.changedtick = getbufvar(a:bufnum, "&changedtick")
 
     return l:context
 endfunction

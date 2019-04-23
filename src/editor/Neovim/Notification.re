@@ -56,7 +56,6 @@ type t =
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
-  | TablineUpdate(Tabline.tabs)
   | VisualRangeUpdate(Core.Types.VisualRange.t)
   | Ignored;
 
@@ -166,9 +165,7 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       updateWildmenu(selected)
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
-    | M.List([M.String("tabline_update"), M.List(msgs)]) =>
-      let tabs = NeovimTab.parseTablineUpdate(msgs);
-      TablineUpdate(tabs);
+    | M.List([M.String("tabline_update"), M.List(_)]) => Ignored
     | M.List([
         M.String("mode_change"),
         M.List([M.String(mode), M.Int(_style)]),

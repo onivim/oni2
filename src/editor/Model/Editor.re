@@ -3,9 +3,12 @@ open Oni_Core.Types;
 
 open Actions;
 
+let lastId = ref(0);
+
 [@deriving show]
 type t = {
   id: int,
+  bufferId: int,
   scrollX: float,
   scrollY: float,
   minimapMaxColumnWidth: int,
@@ -23,9 +26,13 @@ type t = {
   selection: VisualRange.t,
 };
 
-let create = () => {
+let create = (~bufferId=0, ()) => {
+  let id = lastId^;
+  incr(lastId);
+
   let ret: t = {
-    id: 0,
+    id,
+    bufferId,
     scrollX: 0.,
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
@@ -305,12 +312,12 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
   | None => view
   };
 
-let reduce = (view, action, buffer) =>
+let reduce = (view, action) =>
   switch (action) {
   | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b})
   | SelectionChanged(selection) => {...view, selection}
   | SetEditorSize(size) => {...view, size}
-  | RecalculateEditorView => recalculate(view, buffer)
+  | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY)
   | EditorScrollToCursorTop => scrollToCursorTop(view)
   | EditorScrollToCursorBottom => scrollToCursorBottom(view)
