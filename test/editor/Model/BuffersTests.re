@@ -19,7 +19,7 @@ let getOrFail = (v: option(Buffer.t)) => {
 
 describe("Buffer List Tests", ({test, _}) => {
   test(
-    "Bufferlist should take a list of buffers and add them to the map",
+    "Should update metadata on BufferEnter",
     ({expect}) => {
     let bufferlist = BufferMap.empty;
     let testBuffers: list(BufferMetadata.t) = [
@@ -38,6 +38,7 @@ describe("Buffer List Tests", ({test, _}) => {
    */
   test("Bufferlist should override duplicate buffer Ids", ({expect}) => {
     let bufferlist = BufferMap.empty;
+
     let testBuffers: list(BufferMetadata.t) = [
       BufferMetadata.create(~id=1, ~filePath=Some("/test.re"), ()),
       BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
