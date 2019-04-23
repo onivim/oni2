@@ -8,7 +8,6 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
-/* module Model = Oni_Model; */
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
 module Editor = Oni_Model.Editor;
 module State = Oni_Model.State;
