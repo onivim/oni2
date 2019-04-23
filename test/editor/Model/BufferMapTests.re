@@ -3,7 +3,7 @@ open TestFramework;
 /* open Helpers; */
 
 open Oni_Core.Types;
-module BufferMap = Oni_Model.BufferMap;
+module BufferMap = Oni_Model.Buffers;
 module Buffer = Oni_Model.Buffer;
 
 let getOrFail = (v: option(Buffer.t)) => {

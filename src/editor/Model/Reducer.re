@@ -5,7 +5,6 @@
  */
 
 open Actions;
-open Oni_Core.Types;
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>

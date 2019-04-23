@@ -4,8 +4,6 @@
  * Helpers to map the State.t to more usable values
  */
 
-open Oni_Core;
-
 let getActiveEditor = (state: State.t) => {
   EditorGroup.getActiveEditor(state.editors);
 };

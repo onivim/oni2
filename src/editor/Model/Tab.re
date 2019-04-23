@@ -25,7 +25,7 @@ let truncateFilepath = path =>
   };
 
 let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
-  let {id, filePath, version, modified, _}: BufferMetadata.t =
+  let {id, filePath, modified, _}: BufferMetadata.t =
     Buffer.getMetadata(buffer);
 
   let title = filePath |> truncateFilepath;

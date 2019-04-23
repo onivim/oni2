@@ -1,6 +1,5 @@
 open Oni_Core;
 open Types;
-open NeovimHelpers;
 
 module M = Msgpck;
 
