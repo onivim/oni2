@@ -44,7 +44,10 @@ let setupSurfaceThousandLineLayout = () => {
   );
 
   let container = Container.create(rootNode);
-  Container.update(container, <EditorSurface editor=simpleEditor state=thousandLineState />)
+  Container.update(
+    container,
+    <EditorSurface editor=simpleEditor state=thousandLineState />,
+  )
   |> ignore;
 
   rootNode;
