@@ -53,6 +53,8 @@ let init = app => {
     let state = currentState^;
     GlobalContext.set({...GlobalContext.current(), state});
 
+    Model.Buffers.log(state.buffers);
+
     update(<Root state />);
   };
 

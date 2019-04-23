@@ -151,7 +151,7 @@ module BufferMetadata = {
     filePath: option(string),
     fileType: option(string),
     bufType: buftype,
-    lastSaveVersion: int,
+    modified: bool,
     hidden: bool,
     id: int,
     version: int,
@@ -165,7 +165,7 @@ module BufferMetadata = {
         ~id=0,
         ~hidden=false,
         ~version=0,
-        ~lastSaveVersion=0,
+        ~modified=false,
         (),
       ) => {
     filePath,
@@ -174,12 +174,17 @@ module BufferMetadata = {
     id,
     hidden,
     version,
-    lastSaveVersion,
+    modified,
   };
 
-  let markSaved = (metadata: t) => {
-    ...metadata,
-    lastSaveVersion: metadata.version,
+  let markSaved = (bm: t) => {
+    ...bm,
+    modified: false,
+  };
+
+  let markDirty = (bm: t) => {
+    ...bm,
+    modified: true,
   };
 };
 
@@ -234,6 +239,17 @@ module BufferUpdate = {
     };
     ret;
   };
+};
+
+module Tabline = {
+  [@deriving show({with_path: false})]
+  type t = {
+    tab: int,
+    name: string,
+  };
+
+  [@deriving show({with_path: false})]
+  type tabs = list(t);
 };
 
 module TextChanged = {

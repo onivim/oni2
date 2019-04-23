@@ -119,3 +119,7 @@ let updateMetadata = (metadata: BufferMetadata.t, buf: t) => {
 let markSaved = (buf: t) => {
   {...buf, metadata: BufferMetadata.markSaved(buf.metadata)};
 };
+
+let markDirty = (buf: t) => {
+  {...buf, metadata: BufferMetadata.markDirty(buf.metadata)};
+};

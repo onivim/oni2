@@ -15,6 +15,7 @@ type t =
   | BufferEnter(BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(BufferMetadata.t)
+  | BufferMarkDirty(int)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   | ChangeMode(Mode.t)
