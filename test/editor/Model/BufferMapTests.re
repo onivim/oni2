@@ -1,7 +1,5 @@
 open TestFramework;
 
-/* open Helpers; */
-
 open Oni_Core.Types;
 module BufferMap = Oni_Model.Buffers;
 module Buffer = Oni_Model.Buffer;
