@@ -36,6 +36,7 @@ type t = {
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
+  lifecycle: Lifecycle.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
 };
@@ -58,6 +59,7 @@ let create: unit => t =
         ~measuredHeight=1.,
         (),
       ),
+    lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
     tabs: [],

@@ -70,6 +70,7 @@ let reduce: (State.t, Actions.t) => State.t =
             a,
             BufferMap.getBuffer(s.activeBufferId, s.buffers),
           ),
+        lifecycle: Lifecycle.reduce(s.lifecycle, a),
         syntaxHighlighting:
           SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
         wildmenu: Wildmenu.reduce(s.wildmenu, a),

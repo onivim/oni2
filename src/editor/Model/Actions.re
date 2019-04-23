@@ -60,6 +60,8 @@ type t =
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
+  | Quit
+  | RegisterQuitCleanup(unit => unit)
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)

@@ -36,6 +36,8 @@ type t = {
    */
   pump: unit => unit,
   onNotification: Event.t(notification),
+
+  dispose: unit => unit,
 };
 
 exception RequestFailed(string);
@@ -80,6 +82,8 @@ let make = (msgpack: MsgpackTransport.t) => {
       },
     );
 
+  let isRunning = ref(true);
+
   /**
    * NOTE:
    *
@@ -107,18 +111,20 @@ let make = (msgpack: MsgpackTransport.t) => {
     | _ => prerr_endline("Unknown message: " ++ M.show(m))
     };
 
-  let _ = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
+  let dispose1 = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
   /** END NOTE */
 
   let pump = () => {
-    let notifications = getAndClearNotifications();
+    if (isRunning^) {
+        let notifications = getAndClearNotifications();
 
-    let f = n => Event.dispatch(onNotification, n);
+        let f = n => Event.dispatch(onNotification, n);
 
-    /* Because of the way we queue notifications in `handleMessage`,
-     * they come in reverse order - therefore, we need to reverse it
-     * to get the correct ordering */
-    List.rev(notifications) |> List.iter(f);
+        /* Because of the way we queue notifications in `handleMessage`,
+         * they come in reverse order - therefore, we need to reverse it
+         * to get the correct ordering */
+        List.rev(notifications) |> List.iter(f);
+    }
   };
 
   let request = (methodName: string, args: M.t) => {
@@ -164,6 +170,11 @@ let make = (msgpack: MsgpackTransport.t) => {
       ret;
     };
 
-  let ret: t = {pump, request, requestSync, onNotification};
+  let dispose = () => {
+    isRunning := false;
+    dispose1();
+  };
+
+  let ret: t = {pump, request, requestSync, onNotification, dispose};
   ret;
 };

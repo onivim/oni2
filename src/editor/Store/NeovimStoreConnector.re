@@ -32,16 +32,27 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       (),
     );
 
-  let _ =
+  let (stream, dispatch) = Isolinear.Stream.create();
+
+  let dispose1 =
     Event.subscribe(nvim.onClose, code =>
       if (code === 0) {
-        App.quit(0);
+        dispatch(Model.Actions.Quit);
       } else {
         ();
           /* TODO: What to do in case Neovim crashes? */
       }
     );
   let nvimApi = NeovimApi.make(msgpackTransport);
+
+  let quitCleanup = () => {
+      print_endline("Neovim - cleaning up...");
+    nvimApi.dispose();
+    msgpackTransport.close();
+    dispose1();
+    nvim.kill(0);  
+      print_endline("Neovim - done...");
+  };
 
   /* let _ = */
   /*   Event.subscribe(nvimApi.onNotification, n => */
@@ -85,15 +96,23 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.requestVisualRangeUpdate()
     );
 
+  let registerQuitHandlerEffect =
+    Isolinear.Effect.createWithDispatch(~name="neovim.registerQuitHandler", dispatch => {
+         dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup)); 
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
       let openFileEffects =
         filesToOpen
-        |> List.map(openFileByPathEffect)
-        |> Isolinear.Effect.batch;
-      (state, openFileEffects);
+        |> List.map(openFileByPathEffect);
+
+      
+      let allEffects = [registerQuitHandlerEffect, ...openFileEffects]
+          |> Isolinear.Effect.batch;
+      (state, allEffects);
     | Model.Actions.OpenFileByPath(path) => (
         state,
         openFileByPathEffect(path),
@@ -112,8 +131,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     };
   };
 
-  let stream =
-    Isolinear.Stream.ofDispatch(send => {
       let _ =
         Event.subscribe(
           neovimProtocol.onNotification,
@@ -186,11 +203,9 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | _ => Noop
               };
 
-            send(msg);
+            dispatch(msg);
           },
         );
-      ();
-    });
 
   (updater, stream);
 };
