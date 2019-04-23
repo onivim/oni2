@@ -40,14 +40,14 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
-let markDirty = (buffer) => {
+let markDirty = buffer => {
   switch (buffer) {
   | None => None
   | Some(b) => Some(b |> Buffer.markDirty)
   };
 };
 
-let markSaved = (buffer) => {
+let markSaved = buffer => {
   switch (buffer) {
   | None => None
   | Some(b) => Some(b |> Buffer.markSaved)
@@ -65,8 +65,7 @@ let reduce = (state: t, action: Actions.t) => {
     IntMap.update(metadata.id, f, state);
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferMarkDirty(id) => IntMap.update(id, markDirty, state)
-  | BufferSaved(metadata) =>
-    IntMap.update(metadata.id, markSaved, state)
+  | BufferSaved(metadata) => IntMap.update(metadata.id, markSaved, state)
   | _ => state
   };
 };

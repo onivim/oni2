@@ -177,15 +177,9 @@ module BufferMetadata = {
     modified,
   };
 
-  let markSaved = (bm: t) => {
-    ...bm,
-    modified: false,
-  };
+  let markSaved = (bm: t) => {...bm, modified: false};
 
-  let markDirty = (bm: t) => {
-    ...bm,
-    modified: true,
-  };
+  let markDirty = (bm: t) => {...bm, modified: true};
 };
 
 module BufferUpdate = {

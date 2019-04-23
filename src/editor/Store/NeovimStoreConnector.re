@@ -148,16 +148,16 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | BufferWritePost({activeBufferId, _}) =>
                 let context =
                   NeovimBuffer.getContext(nvimApi, activeBufferId);
-              print_endline("!!!!!!!!!!!!!!")
-              print_endline("SAVED")
-              print_endline("!!!!!!!!!!!!!!")
+                print_endline("!!!!!!!!!!!!!!");
+                print_endline("SAVED");
+                print_endline("!!!!!!!!!!!!!!");
                 BufferSaved(context);
-              | TextChanged({activeBufferId, _}) 
+              | TextChanged({activeBufferId, _})
               | TextChangedI({activeBufferId, _}) =>
-              print_endline("!!!!!!!!!!!!!!")
-              print_endline("DIRTY")
-              print_endline("!!!!!!!!!!!!!!")
-                 BufferMarkDirty(activeBufferId)
+                print_endline("!!!!!!!!!!!!!!");
+                print_endline("DIRTY");
+                print_endline("!!!!!!!!!!!!!!");
+                BufferMarkDirty(activeBufferId);
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
                 prerr_endline(

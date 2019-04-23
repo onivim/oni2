@@ -5,7 +5,6 @@ open NeovimHelpers;
 module M = Msgpck;
 
 let parseBufferContext = map => {
- 
   List.fold_left(
     (accum: BufferMetadata.t, item) =>
       switch (item) {
@@ -15,12 +14,15 @@ let parseBufferContext = map => {
         }
       | (M.String("bufferNumber"), M.Int(bufNum)) => {...accum, id: bufNum}
       /* TODO */
-      | (M.String("modified"), M.Int(modified)) => { ...accum, modified: modified === 1 }
+      | (M.String("modified"), M.Int(modified)) => {
+          ...accum,
+          modified: modified === 1,
+        }
       | (M.String("buftype"), M.String(buftype)) => {
           ...accum,
           bufType: getBufType(buftype),
         }
-      | (M.String("changedtick"), M.Int(version)) => {...accum, version }
+      | (M.String("changedtick"), M.Int(version)) => {...accum, version}
       | (M.String("hidden"), M.Bool(hidden)) => {...accum, hidden}
       | _ => accum
       },
