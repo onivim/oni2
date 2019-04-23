@@ -49,6 +49,54 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   };
 };
 
+let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
+  switch (List.find_opt(v => v === editor, reverseTabOrder)) {
+  | None => None
+  | Some(idx) =>
+    switch (
+      List.nth_opt(reverseTabOrder, idx + 1),
+      List.nth_opt(reverseTabOrder, idx - 1),
+    ) {
+    | (Some(next), _) => Some(next)
+    | (_, Some(prev)) => Some(prev)
+    | _ => None
+    }
+  };
+};
+
+let removeEditorsForBuffer = (state, bufferId) => {
+  switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
+  | None => state
+  | Some(v) =>
+    let filteredTabList = List.filter(t => v != t, state.reverseTabOrder);
+    let bufferIdToEditorId =
+      IntMap.remove(bufferId, state.bufferIdToEditorId);
+    let editors = IntMap.remove(v, state.editors);
+
+    let newActiveEditorId =
+      switch (state.activeEditorId) {
+      | None => None
+      | Some(currentEditorId) =>
+        if (currentEditorId === v) {
+          _getAdjacentEditor(currentEditorId, state.reverseTabOrder);
+        } else {
+          /* We're not removing the current editor, so we can just leave it */
+          Some(
+            currentEditorId,
+          );
+        }
+      };
+
+    let ret: t = {
+      activeEditorId: newActiveEditorId,
+      editors,
+      bufferIdToEditorId,
+      reverseTabOrder: filteredTabList,
+    };
+    ret;
+  };
+};
+
 let reduce = (v: t, action: Actions.t) => {
   let editors =
     IntMap.fold(
@@ -64,6 +112,7 @@ let reduce = (v: t, action: Actions.t) => {
   | BufferEnter({id, _}) =>
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
+  | BufferDelete(id) => removeEditorsForBuffer(v, id)
   | _ => v
   };
 };
