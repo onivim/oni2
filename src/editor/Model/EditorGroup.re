@@ -29,10 +29,11 @@ let getEditorById = (id: int, v: t) => {
 
 let getActiveEditor = (v: t) => {
   switch (v.activeEditorId) {
-  | Some(id) => switch(getEditorById(id, v)) {
+  | Some(id) =>
+    switch (getEditorById(id, v)) {
     | Some(v) => Some(v)
     | None => None
-  }
+    }
   | None => None
   };
 };
