@@ -90,8 +90,8 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter(bufferId) =>
-        let buffer = Model.Selectors.getBufferById(state, bufferId);
+      | Model.Actions.BufferEnter({id, _}) =>
+        let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None
       }

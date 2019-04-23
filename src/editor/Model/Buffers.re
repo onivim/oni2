@@ -40,24 +40,24 @@ let applyBufferUpdate = (bufferUpdate, buffer) =>
   | Some(b) => Some(Buffer.update(b, bufferUpdate))
   };
 
-let markSaved = buffer => {
+let markSaved = (metadata, buffer) => {
   switch (buffer) {
   | None => None
-  | Some(b) => Some(Buffer.markSaved(b))
+  | Some(b) => Some(b |> Buffer.updateMetadata(metadata) |> Buffer.markSaved);
   };
 };
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
-  | BufferEnter(id) =>
+  | BufferEnter(metadata) =>
     let f = buffer =>
       switch (buffer) {
-      | Some(v) => Some(v)
-      | None => Some(Buffer.ofMetadata(BufferMetadata.create(~id, ())))
+      | Some(v) => Some(v |> Buffer.updateMetadata(metadata))
+      | None => Some(Buffer.ofMetadata(metadata))
       };
-    IntMap.update(id, f, state);
+    IntMap.update(metadata.id, f, state);
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-  | BufferSaved(id) => IntMap.update(id, markSaved, state)
+  | BufferSaved(metadata) => IntMap.update(metadata.id, markSaved(metadata), state)
   | _ => state
   };
 };

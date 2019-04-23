@@ -100,12 +100,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtensionHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (id: int, buffers: Model.Buffers.t) =>
+  let sendBufferEnterEffect = (bm: Core.Types.BufferMetadata.t) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
-      let metadata = Model.Buffers.getBufferMetadata(id, buffers);
-      switch (metadata) {
-      | None => ()
-      | Some(bm) =>
         switch (_bufferMetadataToModelAddedDelta(bm)) {
         | None => ()
         | Some(v) =>
@@ -118,7 +114,6 @@ let start = (extensions, setup: Core.Setup.t) => {
             ),
           )
         }
-      };
     });
 
   let modelChangedEffect =
@@ -161,7 +156,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     | Model.Actions.BufferEnter(bm) => (
         state,
-        sendBufferEnterEffect(bm, state.buffers),
+        sendBufferEnterEffect(bm),
       )
     | Model.Actions.Tick => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)

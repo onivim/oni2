@@ -29,7 +29,6 @@ let ofBuffer = (~buffer: Buffer.t, ~active=false, ()) => {
     Buffer.getMetadata(buffer);
 
   let modified = version > lastSaveVersion;
-
   let title = filePath |> truncateFilepath;
 
   {id, title, active, modified};

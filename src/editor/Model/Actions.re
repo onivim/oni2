@@ -12,9 +12,9 @@ type t =
   | Init
   | Tick
   | BufferDelete(int)
-  | BufferEnter(int)
+  | BufferEnter(BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferSaved(int)
+  | BufferSaved(BufferMetadata.t)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   | ChangeMode(Mode.t)
