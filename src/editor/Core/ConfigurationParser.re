@@ -30,18 +30,6 @@ let parseLineNumberSetting = json =>
   | _ => On
   };
 
-let parseTablineMode = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "buffers" => Buffers
-    | "tabs" => Tabs
-    | "hybrid" => Hybrid
-    | _ => Buffers
-    }
-  | _ => Buffers
-  };
-
 let parseRenderWhitespace = json =>
   switch (json) {
   | `String(v) =>
@@ -84,10 +72,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.minimap.showSlider",
     (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
-  ),
-  (
-    "editor.tablineMode",
-    (s, v) => {...s, editorTablineMode: parseTablineMode(v)},
   ),
   (
     "editor.insertSpaces",

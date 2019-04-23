@@ -11,21 +11,18 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferDelete(BufferNotification.t)
-  | BufferEnter(BufferNotification.t)
+  | BufferEnter(BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferWritePost(BufferNotification.t)
+  | BufferSaved(BufferMetadata.t)
+  | BufferMarkDirty(int)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | TablineUpdate(Tabline.tabs)
-  | TextChanged(TextChanged.t)
-  | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
-  | RecalculateEditorView
+  | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(commandline)
   | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))

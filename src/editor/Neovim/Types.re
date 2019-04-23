@@ -3,7 +3,6 @@ open Oni_Model;
 
 module Commandline = Commandline;
 module Wildmenu = Wildmenu;
-module Tabline = Tabline;
 
 module CursorPosition = {
   type t = {

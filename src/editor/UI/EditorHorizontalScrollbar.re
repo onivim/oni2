@@ -14,10 +14,16 @@ let absoluteStyle =
 let emptyElement = React.listToElement([]);
 
 let createElement =
-    (~state: State.t, ~width as totalWidth, ~children as _, ()) =>
+    (
+      ~state: State.t,
+      ~editor: Editor.t,
+      ~width as totalWidth,
+      ~children as _,
+      (),
+    ) =>
   component(hooks => {
     let scrollMetrics =
-      Editor.getHorizontalScrollbarMetrics(state.editor, totalWidth);
+      Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
 
     let scrollThumbStyle =
       Style.[

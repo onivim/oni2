@@ -139,7 +139,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
               | ModeChanged("visual") => ChangeMode(Visual)
               | ModeChanged("operator") => ChangeMode(Operator)
               | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
-              | TablineUpdate(tabs) => TablineUpdate(tabs)
               | ModeChanged(_) => ChangeMode(Other)
               | VisualRangeUpdate(vr) => SelectionChanged(vr)
               | CursorMoved(c) =>
@@ -147,25 +146,18 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                   Core.Types.Position.create(c.cursorLine, c.cursorColumn),
                 )
               | BufferWritePost({activeBufferId, _}) =>
-                BufferWritePost({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                })
-              | TextChangedI({activeBufferId, modified, _}) =>
-                TextChangedI({activeBufferId, modified})
-              | TextChanged({activeBufferId, modified, _}) =>
-                TextChanged({activeBufferId, modified})
+                let context =
+                  NeovimBuffer.getContext(nvimApi, activeBufferId);
+                BufferSaved(context);
+              | TextChanged({activeBufferId, _})
+              | TextChangedI({activeBufferId, _}) =>
+                BufferMarkDirty(activeBufferId)
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
-                BufferEnter({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                });
-              | BufferDelete(bd) =>
-                BufferDelete({
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                  bufferId: bd.activeBufferId,
-                })
+                let context =
+                  NeovimBuffer.getContext(nvimApi, activeBufferId);
+                BufferEnter(context);
+              | BufferDelete(_) => Noop
               | BufferLines(bc) =>
                 BufferUpdate(
                   Core.Types.BufferUpdate.createFromZeroBasedIndices(
