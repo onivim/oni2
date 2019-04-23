@@ -53,12 +53,6 @@ let init = app => {
     let state = currentState^;
     GlobalContext.set({...GlobalContext.current(), state});
 
-    /* Model.Buffers.log(state.buffers); */
-    /* switch (Model.Selectors.getActiveBuffer(state)) { */
-    /* | Some(v) => print_endline("active buffer: " ++ Model.Buffer.show(v)) */
-    /* | None => print_endline("active buffer: none") */
-    /* }; */
-
     update(<Root state />);
   };
 
