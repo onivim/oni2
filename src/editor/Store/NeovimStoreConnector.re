@@ -151,7 +151,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 BufferSaved(context);
               | TextChanged({activeBufferId, _})
               | TextChangedI({activeBufferId, _}) =>
-                BufferMarkDirty(activeBufferId);
+                BufferMarkDirty(activeBufferId)
               | BufferEnter({activeBufferId, _}) =>
                 neovimProtocol.bufAttach(activeBufferId);
                 let context =
