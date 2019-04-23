@@ -164,8 +164,8 @@ module BufferMetadata = {
         ~bufType=Empty,
         ~id=0,
         ~hidden=false,
-        ~modified=false,
         ~version=0,
+        ~modified=false,
         (),
       ) => {
     filePath,
@@ -173,23 +173,13 @@ module BufferMetadata = {
     bufType,
     id,
     hidden,
-    modified,
     version,
-  };
-};
-
-module BufferNotification = {
-  [@deriving show({with_path: false})]
-  type t = {
-    bufferId: int,
-    buffers: list(BufferMetadata.t),
+    modified,
   };
 
-  let getBufferMetadataOpt = (id, v: t) => {
-    let result =
-      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
-    List.nth_opt(result, 0);
-  };
+  let markSaved = (bm: t) => {...bm, modified: false};
+
+  let markDirty = (bm: t) => {...bm, modified: true};
 };
 
 module BufferUpdate = {
@@ -242,24 +232,6 @@ module BufferUpdate = {
       version,
     };
     ret;
-  };
-};
-
-module Tabline = {
-  [@deriving show({with_path: false})]
-  type t = {
-    tab: int,
-    name: string,
-  };
-
-  [@deriving show({with_path: false})]
-  type tabs = list(t);
-};
-
-module TextChanged = {
-  type t = {
-    activeBufferId: int,
-    modified: bool,
   };
 };
 

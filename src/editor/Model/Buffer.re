@@ -24,6 +24,8 @@ let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
+let getId = (buffer: t) => buffer.metadata.id;
+
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getUri = (buffer: t) => {
@@ -110,7 +112,14 @@ let update = (buf: t, update: BufferUpdate.t) =>
   | _ => buf
   };
 
-let updateMetadata = (buf: t, metadata: BufferMetadata.t) => {
-  ...buf,
-  metadata,
+let updateMetadata = (metadata: BufferMetadata.t, buf: t) => {
+  {...buf, metadata};
+};
+
+let markSaved = (buf: t) => {
+  {...buf, metadata: BufferMetadata.markSaved(buf.metadata)};
+};
+
+let markDirty = (buf: t) => {
+  {...buf, metadata: BufferMetadata.markDirty(buf.metadata)};
 };
