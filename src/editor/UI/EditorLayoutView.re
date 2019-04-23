@@ -19,10 +19,7 @@ let splitStyle = (split: split) =>
     | {direction: Vertical, width: Some(w), _} => [width(w), flexGrow(1)]
     | {direction: Vertical, width: None, _} => [flexGrow(1)]
     | {direction: Horizontal, height: None, _} => [flexGrow(1)]
-    | {direction: Horizontal, height: Some(h), _} => [
-        height(h),
-        flexGrow(1),
-      ]
+    | {direction: Horizontal, height: Some(h), _} => [height(h)]
     }
   );
 

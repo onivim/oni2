@@ -66,8 +66,17 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
+          let messages =
+            Window.createSplit(
+              ~direction=Horizontal,
+              ~height=50,
+              ~component=splitFactory(state => <MessagesView state />),
+              (),
+            );
+
           dispatch(AddLeftDock(dock));
           dispatch(AddSplit(editor));
+          dispatch(AddSplit(messages));
           None;
         },
         hooks,
