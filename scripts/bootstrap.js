@@ -29,17 +29,17 @@ if (isWindows) {
     extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath)
     neovimPath = getCygwinPath(
-        path.join(vendorPath, "neovim-0.3.3", "nvim-win64", "bin", "nvim.exe"),
+        path.join(vendorPath, "neovim-0.4.0", "nvim-win64", "bin", "nvim.exe"),
     )
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
 } else if (isMac) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "osx", "node")
-    neovimPath = path.join(vendorPath, "neovim-0.3.3", "nvim-osx64", "bin", "nvim")
+    neovimPath = path.join(vendorPath, "neovim-0.4.0", "nvim-osx64", "bin", "nvim")
     rgPath = path.join(rgPath, "mac", "rg")
 } else if (isLinux) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "linux-x64", "node")
-    neovimPath = path.join(vendorPath, "neovim-0.3.3", "nvim-linux64", "bin", "nvim")
+    neovimPath = path.join(vendorPath, "neovim-0.4.0", "nvim-linux64", "bin", "nvim")
     rgPath = path.join(rgPath, "linux", "rg")
 } else {
     console.error("Unknown OS...aborting.")
