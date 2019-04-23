@@ -26,11 +26,18 @@ let create = () => {
 };
 
 let show = (v: t) => {
-   IntMap.fold((key, v: Editor.t, prev) => {
-       prev ++ " |Editor: " ++ string_of_int(key) ++ " (buffer: " ++ string_of_int(v.bufferId) ++ ")|";
-
-   }, v.editors, "");
-}
+  IntMap.fold(
+    (key, v: Editor.t, prev) =>
+      prev
+      ++ " |Editor: "
+      ++ string_of_int(key)
+      ++ " (buffer: "
+      ++ string_of_int(v.bufferId)
+      ++ ")|",
+    v.editors,
+    "",
+  );
+};
 
 let getEditorById = (id: int, v: t) => {
   IntMap.find_opt(id, v.editors);

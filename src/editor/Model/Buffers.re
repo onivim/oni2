@@ -65,7 +65,8 @@ let reduce = (state: t, action: Actions.t) => {
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferMarkDirty(id) => IntMap.update(id, markDirty, state)
-  | BufferSaved(metadata) => IntMap.update(metadata.id, updateMetadata(metadata), state)
+  | BufferSaved(metadata) =>
+    IntMap.update(metadata.id, updateMetadata(metadata), state)
   | _ => state
   };
 };
