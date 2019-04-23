@@ -157,8 +157,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                 let context =
                   NeovimBuffer.getContext(nvimApi, activeBufferId);
                 BufferEnter(context);
-              | BufferDelete(bd) =>
-                BufferDelete(bd.activeBufferId);
+              | BufferDelete(_) => Noop
               | BufferLines(bc) =>
                 BufferUpdate(
                   Core.Types.BufferUpdate.createFromZeroBasedIndices(
