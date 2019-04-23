@@ -29,7 +29,11 @@ let getTabs = (state: State.t, editorGroup: EditorGroup.t) => {
   let activeEditorId = editorGroup.activeEditorId;
   let f = (editorId: int) => {
     let editor = EditorGroup.getEditorById(editorId, editorGroup);
-    let buffer = getBufferById(state, editor.bufferId);
+
+    let buffer = switch(editor) {
+    | None => None
+    | Some(v) => getBufferById(state, v.bufferId)
+    }
 
     let active =
       switch (activeEditorId) {

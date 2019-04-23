@@ -4,6 +4,7 @@
   * Manage a group of editors
  */
 
+Printexc.record_backtrace(true);
 open Oni_Core;
 
 type t = {
@@ -23,12 +24,15 @@ let create = () => {
 };
 
 let getEditorById = (id: int, v: t) => {
-  IntMap.find(id, v.editors);
+  IntMap.find_opt(id, v.editors);
 };
 
 let getActiveEditor = (v: t) => {
   switch (v.activeEditorId) {
-  | Some(id) => Some(getEditorById(id, v))
+  | Some(id) => switch(getEditorById(id, v)) {
+    | Some(v) => Some(v)
+    | None => None
+  }
   | None => None
   };
 };
@@ -55,7 +59,7 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   | Some(idx) =>
     switch (
       List.nth_opt(reverseTabOrder, idx + 1),
-      List.nth_opt(reverseTabOrder, idx - 1),
+      List.nth_opt(reverseTabOrder, max(idx - 1, 0)),
     ) {
     | (Some(next), _) => Some(next)
     | (_, Some(prev)) => Some(prev)
