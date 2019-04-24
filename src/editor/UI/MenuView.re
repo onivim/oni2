@@ -73,11 +73,11 @@ let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
 type fontT = Types.UiFont.t;
 
 let getLabel = (command: Actions.menuCommand) => {
-    switch (command.category) {
-    | Some(v) => v ++ ": " ++ command.name
-    | None => command.name
-    }
-}
+  switch (command.category) {
+  | Some(v) => v ++ ": " ++ command.name
+  | None => command.name
+  };
+};
 
 let createElement =
     (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
