@@ -74,10 +74,17 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   };
 };
 
+let rec getIndexOfElement = (l, elem) => {
+  switch (l) {
+  | [] => (-1)
+  | [hd, ...tl] => hd === elem ? 0 : getIndexOfElement(tl, elem) + 1
+  };
+};
+
 let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
-  switch (List.find_opt(v => v === editor, reverseTabOrder)) {
-  | None => None
-  | Some(idx) =>
+  switch (getIndexOfElement(reverseTabOrder, editor)) {
+  | (-1) => None
+  | idx =>
     switch (
       List.nth_opt(reverseTabOrder, idx + 1),
       List.nth_opt(reverseTabOrder, max(idx - 1, 0)),
@@ -149,6 +156,7 @@ let reduce = (v: t, action: Actions.t) => {
   | BufferEnter({id, _}) =>
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
+  | ViewCloseEditor(id) => removeEditorById(v, id)
   | _ => v
   };
 };

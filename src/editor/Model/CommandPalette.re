@@ -21,7 +21,7 @@ let create = setItems => {
     {
       category: Some("View"),
       name: "Close Editor",
-      command: () => Actions.ViewCloseEditor,
+      command: () => Actions.Command("view.closeEditor"),
       icon: None,
     },
   ];

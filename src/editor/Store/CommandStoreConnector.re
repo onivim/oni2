@@ -13,6 +13,19 @@ let start = () => {
       List.iter(v => dispatch(v), actions)
     );
 
+  let closeEditorEffect = (state, _) =>
+    Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
+      let editor =
+        Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+
+      switch (editor) {
+      | None => ()
+      | Some(v) =>
+        prerr_endline("CLOSING EDITOR!");
+        dispatch(ViewCloseEditor(v.id));
+      };
+    });
+
   let commands = [
     (
       "commandPalette.open",
@@ -52,6 +65,7 @@ let start = () => {
           SetInputControlMode(EditorTextFocus),
         ]),
     ),
+    ("view.closeEditor", state => closeEditorEffect(state)),
   ];
 
   let commandMap =
