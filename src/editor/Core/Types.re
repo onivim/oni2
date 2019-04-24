@@ -244,7 +244,7 @@ type messageKind =
 [@deriving show({with_path: false})]
 type message = {
   kind: messageKind,
-  content: string,
+  content: list(string),
   replaceLast: bool,
 };
 

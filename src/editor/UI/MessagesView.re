@@ -21,17 +21,24 @@ let createElement = (~children as _, ~state: State.t, ()) =>
       hooks,
       List.length(state.messages) > 0
         ? <ScrollView style=messagesStyles>
-            ...{List.map(
-              (message: Core.Types.message) =>
-                <Text
-                  text={message.content}
-                  style=Style.[
-                    fontFamily(state.uiFont.fontFile),
-                    fontSize(20),
-                  ]
-                />,
-              state.messages,
-            )}
+            ...{
+                 List.map(
+                   (message: Core.Types.message) =>
+                     List.map(
+                       item =>
+                         <Text
+                           text=item
+                           style=Style.[
+                             fontFamily(state.uiFont.fontFile),
+                             fontSize(20),
+                           ]
+                         />,
+                       message.content,
+                     ),
+                   state.messages,
+                 )
+                 |> List.flatten
+               }
           </ScrollView>
         : React.empty,
     )

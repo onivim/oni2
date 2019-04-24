@@ -154,16 +154,24 @@ let updateWildmenu = selected =>
 
 let showMessage = msgs => {
   switch (msgs) {
-  | [
-      M.String(kind),
-      M.List([M.List([M.Int(id), M.String(chunk)])]),
-      M.Bool(replaceLast),
-    ] =>
+  | [M.String(kind), M.List(messages), M.Bool(replaceLast)] =>
+    let content =
+      ListLabels.fold_left(
+        ~f=
+          (accum, message) =>
+            switch (message) {
+            | M.List([M.Int(_), M.String(chunk)]) => accum @ [chunk]
+            | _ => accum
+            },
+        ~init=[],
+        messages,
+      );
+
     ShowMessage({
       kind: Model.Messages.getMessageType(kind),
-      content: chunk,
+      content,
       replaceLast,
-    })
+    });
   | _ => Ignored
   };
 };
