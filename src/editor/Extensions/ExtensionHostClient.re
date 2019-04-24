@@ -16,7 +16,6 @@ type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
   send: (int, Yojson.Safe.json) => unit,
-  isClosed: unit => bool
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -43,8 +42,6 @@ let start =
     "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
 
-  let closed = ref(false);
-  
   let process =
     NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
 
@@ -154,10 +151,7 @@ let start =
     Rpc.start(
       ~onNotification,
       ~onRequest,
-      ~onClose=() => {
-        closed := true; 
-        onClosed();
-      },
+      ~onClose=onClosed,
       process.stdout,
       process.stdin,
     );
@@ -169,9 +163,7 @@ let start =
     initialized^ ? f() : queue(f);
   };
 
-  let isClosed = () => closed^;
-
-  {process, rpc, send: wrappedSend, isClosed};
+  {process, rpc, send: wrappedSend};
 };
 
 let pump = (v: t) => Rpc.pump(v.rpc);
@@ -187,15 +179,4 @@ let send =
 
 let close = (v: t) => {
   v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
-
-  Oni_Core.Utility.waitForCondition(() => {
-      prerr_endline ("EXTENSION HOST CLIENT: PUMP");
-    pump(v);
-    let closed = v.isClosed() 
-        prerr_endline ("IS CLOSED: " ++ string_of_bool(closed));
-    closed;
-  });
-
-  /* Rpc.stop(v.rpc); */
-  /* Unix.kill(v.process.pid, Sys.sigkill); */
 };
