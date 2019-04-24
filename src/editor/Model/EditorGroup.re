@@ -6,7 +6,11 @@
 
 open Oni_Core;
 
+module EditorGroupId =
+  Revery.UniqueId.Make({});
+
 type t = {
+  id: int,
   activeEditorId: option(int),
   editors: IntMap.t(Editor.t),
   bufferIdToEditorId: IntMap.t(int),
@@ -16,6 +20,7 @@ type t = {
 
 let create = () => {
   {
+    id: EditorGroupId.getUniqueId(),
     editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
