@@ -1,5 +1,5 @@
 {
-  "checksum": "7a8ac481c8ca25664a2db5bad6928ce0",
+  "checksum": "f553d52c53f8e0193ffb692054ba45d4",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -63,14 +63,14 @@
       ],
       "devDependencies": []
     },
-    "rench@1.7.0@d41d8cd9": {
-      "id": "rench@1.7.0@d41d8cd9",
+    "rench@1.7.1@d41d8cd9": {
+      "id": "rench@1.7.1@d41d8cd9",
       "name": "rench",
-      "version": "1.7.0",
+      "version": "1.7.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/rench/-/rench-1.7.0.tgz#sha1:7ad521d740f267ec5776a3e72684e549a4e9aefc"
+          "archive:https://registry.npmjs.org/rench/-/rench-1.7.1.tgz#sha1:9efdd958711b338d2af7580eb3069ba843e00e19"
         ]
       },
       "overrides": [],
@@ -415,7 +415,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery@0.18.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
-        "rench@1.7.0@d41d8cd9",
+        "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#a73f349@d41d8cd9",
         "reason-glfw@3.2.1024@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
