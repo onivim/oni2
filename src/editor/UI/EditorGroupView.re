@@ -52,10 +52,12 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    let children = switch(editorGroup) {
-    | None => [React.empty]
-    | Some(v) => 
-        let editor = Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+    let children =
+      switch (editorGroup) {
+      | None => [React.empty]
+      | Some(v) =>
+        let editor =
+          Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
         let tabs = Model.Selectors.getTabs(state, v) |> toUiTabs;
         let uiFont = state.uiFont;
 
@@ -67,8 +69,7 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
           | None => React.empty
           };
         [<Tabs theme tabs mode uiFont />, editorView];
-    };
-
+      };
 
     (hooks, <View style> ...children </View>);
   });

@@ -5,19 +5,18 @@
  */
 
 let getActiveEditorGroup = (state: State.t) => {
-   EditorGroups.getActiveEditorGroup(state.editorGroups); 
-}
+  EditorGroups.getActiveEditorGroup(state.editorGroups);
+};
 
 let getEditorGroupById = (state: State.t, id) => {
-    EditorGroups.getEditorGroupById(state.editorGroups, id);
+  EditorGroups.getEditorGroupById(state.editorGroups, id);
 };
 
 let getActiveEditor = (editorGroup: option(EditorGroup.t)) => {
-    switch (editorGroup) 
-    {
-    | None => None
-    | Some(v) => EditorGroup.getActiveEditor(v)
-    }
+  switch (editorGroup) {
+  | None => None
+  | Some(v) => EditorGroup.getActiveEditor(v)
+  };
 };
 
 let getBufferById = (state: State.t, id: int) => {

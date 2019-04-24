@@ -93,7 +93,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
   component(hooks => {
     let mode = state.mode;
     let theme = state.theme;
-    let editor = Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+    let editor =
+      Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
     let position =
       switch (editor) {
       | Some(v) => Some(v.cursorPosition)
