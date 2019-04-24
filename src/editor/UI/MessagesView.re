@@ -1,9 +1,18 @@
 open Revery_UI;
+open Revery.UI.Components;
 open Oni_Model;
+
+module Core = Oni_Core;
 
 let component = React.component("MessagesView");
 let messagesStyles =
-  Style.[position(`Relative), height(100), left(0), right(0)];
+  Style.[
+    position(`Relative),
+    height(100),
+    left(0),
+    right(0),
+    padding(10),
+  ];
 let messageHeight = 20;
 
 let createElement = (~children as _, ~state: State.t, ()) =>
@@ -11,24 +20,19 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     (
       hooks,
       List.length(state.messages) > 0
-        ? <View style=messagesStyles>
-            <FlatList
-              rowHeight=messageHeight
-              height=100
-              width=500
-              count={List.length(state.messages)}
-              render={index => {
-                let message = List.nth(state.messages, index);
+        ? <ScrollView style=messagesStyles>
+            ...{List.map(
+              (message: Core.Types.message) =>
                 <Text
                   text={message.content}
                   style=Style.[
                     fontFamily(state.uiFont.fontFile),
                     fontSize(20),
                   ]
-                />;
-              }}
-            />
-          </View>
+                />,
+              state.messages,
+            )}
+          </ScrollView>
         : React.empty,
     )
   );
