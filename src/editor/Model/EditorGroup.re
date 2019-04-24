@@ -6,7 +6,10 @@
 
 open Oni_Core;
 
+let _latestId = ref(0);
+
 type t = {
+  id: int,
   activeEditorId: option(int),
   editors: IntMap.t(Editor.t),
   bufferIdToEditorId: IntMap.t(int),
@@ -15,7 +18,9 @@ type t = {
 };
 
 let create = () => {
+  incr(_latestId);
   {
+    id: _latestId^,
     editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
