@@ -120,8 +120,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.CursorMove(_) => (
         state,
-        state.mode === Core.Types.Mode.Visual ?
-          requestVisualRangeUpdateEffect : Isolinear.Effect.none,
+        state.mode === Core.Types.Mode.Visual
+          ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
       )
     | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
