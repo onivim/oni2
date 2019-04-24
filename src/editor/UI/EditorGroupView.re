@@ -43,24 +43,32 @@ let toUiTabs = (tabs: list(Model.Tab.t)) => {
   List.map(f, tabs);
 };
 
-let createElement = (~state: State.t, ~children as _, ()) =>
+let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
 
-    let editor = Selectors.getActiveEditor(state);
-    let tabs = Model.Selectors.getTabs(state, state.editors) |> toUiTabs;
-    let uiFont = state.uiFont;
+    let editorGroup = Selectors.getEditorGroupById(state, editorGroupId);
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    let metrics = state.editors.metrics;
+    let children = switch(editorGroup) {
+    | None => [React.empty]
+    | Some(v) => 
+        let editor = Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+        let tabs = Model.Selectors.getTabs(state, v) |> toUiTabs;
+        let uiFont = state.uiFont;
 
-    let editorView =
-      switch (editor) {
-      | Some(v) => <EditorSurface metrics editor=v state />
-      | None => React.empty
-      };
+        let metrics = v.metrics;
 
-    (hooks, <View style> <Tabs theme tabs mode uiFont /> editorView </View>);
+        let editorView =
+          switch (editor) {
+          | Some(v) => <EditorSurface metrics editor=v state />
+          | None => React.empty
+          };
+        [<Tabs theme tabs mode uiFont />, editorView];
+    };
+
+
+    (hooks, <View style> ...children </View>);
   });

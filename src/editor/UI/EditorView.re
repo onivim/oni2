@@ -56,10 +56,12 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
+          let editorGroupId = state.editorGroups.activeId;
+
           let editor =
             Window.createSplit(
               ~direction=Vertical,
-              ~component=splitFactory(state => <EditorGroupView state />),
+              ~component=splitFactory(state => <EditorGroupView state editorGroupId />),
               (),
             );
 
