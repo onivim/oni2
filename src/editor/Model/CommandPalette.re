@@ -18,6 +18,12 @@ let create = setItems => {
       command: () => Actions.ConfigurationReload,
       icon: None,
     },
+    {
+      category: Some("View"),
+      name: "Close Editor",
+      command: () => Actions.ViewCloseEditor,
+      icon: None,
+    },
   ];
 
   setItems(commands);
