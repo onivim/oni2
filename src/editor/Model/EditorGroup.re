@@ -4,9 +4,10 @@
   * Manage a group of editors
  */
 
+open Revery;
 open Oni_Core;
 
-let _latestId = ref(0);
+module EditorGroupId = Revery.UniqueId.Make({});
 
 type t = {
   id: int,
@@ -18,9 +19,8 @@ type t = {
 };
 
 let create = () => {
-  incr(_latestId);
   {
-    id: _latestId^,
+    id: EditorGroupId.getUniqueId(),
     editors: IntMap.empty,
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
