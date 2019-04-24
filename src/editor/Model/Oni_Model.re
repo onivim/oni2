@@ -17,6 +17,7 @@ module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;
 module EditorLayout = EditorLayout;
+module EditorMetrics = EditorMetrics;
 module Filter = Filter;
 module IconTheme = IconTheme;
 module Indentation = Indentation;

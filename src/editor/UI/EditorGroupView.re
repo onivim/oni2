@@ -54,9 +54,11 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
+    let metrics = state.editors.metrics;
+
     let editorView =
       switch (editor) {
-      | Some(v) => <EditorSurface editor=v state />
+      | Some(v) => <EditorSurface metrics editor=v state />
       | None => React.empty
       };
 

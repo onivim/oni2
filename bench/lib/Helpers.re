@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Model;
 
+let metrics = EditorMetrics.create();
+
 /* Create a state with some editor size */
 let simpleState =
   Reducer.reduce(

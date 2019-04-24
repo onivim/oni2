@@ -179,7 +179,14 @@ let renderTokens =
 
 let component = React.component("EditorSurface");
 
-let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
+let createElement =
+    (
+      ~state: State.t,
+      ~metrics: EditorMetrics.t,
+      ~editor: Editor.t,
+      ~children as _,
+      (),
+    ) =>
   component(hooks => {
     let theme = state.theme;
 
@@ -207,8 +214,8 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let indentation = IndentationSettings.default;
 
-    let topVisibleLine = Editor.getTopVisibleLine(editor);
-    let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
+    let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
+    let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
     let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
 
@@ -310,8 +317,8 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
     let layout =
       EditorLayout.getLayout(
         ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
-        ~pixelWidth=float_of_int(editor.size.pixelWidth),
-        ~pixelHeight=float_of_int(editor.size.pixelHeight),
+        ~pixelWidth=float_of_int(metrics.pixelWidth),
+        ~pixelHeight=float_of_int(metrics.pixelHeight),
         ~isMinimapShown=true,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
@@ -387,8 +394,8 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
             style=bufferViewStyle
             render={(transform, _ctx) => {
               let count = lineCount;
-              let height = editor.size.pixelHeight;
-              let rowHeight = state.editorFont.measuredHeight;
+              let height = metrics.pixelHeight;
+              let rowHeight = metrics.lineHeight;
               let scrollY = editor.scrollY;
 
               /* Draw background for cursor line */
@@ -402,8 +409,7 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
                      )
                   -. editor.scrollY,
                 ~height=fontHeight,
-                ~width=
-                  float_of_int(editor.size.pixelWidth) -. lineNumberWidth,
+                ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
@@ -555,6 +561,7 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
             <EditorHorizontalScrollbar
               editor
               state
+              metrics
               width={int_of_float(layout.bufferWidthInPixels)}
             />
           </View>
@@ -564,8 +571,9 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
             state
             editor
             width={layout.minimapWidthInPixels}
-            height={editor.size.pixelHeight}
+            height={metrics.pixelHeight}
             count=lineCount
+            metrics
             getTokensForLine
           />
         </View>
@@ -573,8 +581,9 @@ let createElement = (~state: State.t, ~editor: Editor.t, ~children as _, ()) =>
           <EditorVerticalScrollbar
             state
             editor
-            height={editor.size.pixelHeight}
+            metrics
             width={Constants.default.scrollBarThickness}
+            height={metrics.pixelHeight}
           />
         </View>
       </View>,
