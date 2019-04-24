@@ -130,7 +130,6 @@ let start =
     switch (n.method, n.params) {
     | ("host/msg", json) =>
       open Protocol.Notification;
-      print_endline("JSON: " ++ Yojson.Safe.to_string(json));
       switch (parse(json)) {
       | Request(req) => handleMessage(req.reqId, req.payload)
       | Reply(_) => ()
