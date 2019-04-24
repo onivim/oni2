@@ -4,7 +4,6 @@
   * Manage a group of editors
  */
 
-open Revery;
 open Oni_Core;
 
 module EditorGroupId =
