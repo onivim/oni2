@@ -187,6 +187,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
                   ),
                 )
               | ShowMessage(message) => ShowMessage(message)
+              | ClearMessages => ClearMessages
               | WildmenuShow(w) => WildmenuShow(w)
               | WildmenuHide(w) => WildmenuHide(w)
               | WildmenuSelected(s) => WildmenuSelected(s)

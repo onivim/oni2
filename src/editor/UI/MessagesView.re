@@ -1,6 +1,7 @@
 open Revery_UI;
-open Revery.UI.Components;
 open Oni_Model;
+open Revery.Colors;
+open Revery.UI.Components;
 
 module Core = Oni_Core;
 
@@ -15,6 +16,19 @@ let messagesStyles =
   ];
 let messageHeight = 20;
 
+let renderMessage =
+    (message, messageKind: Core.Types.messageKind, state: State.t) => {
+  let font = state.uiFont.fontFile;
+  switch (messageKind) {
+  | ReturnPrompt =>
+    <Text
+      text=message
+      style=Style.[fontFamily(font), fontSize(20), backgroundColor(red)]
+    />
+  | _ => <Text text=message style=Style.[fontFamily(font), fontSize(20)] />
+  };
+};
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks =>
     (
@@ -25,14 +39,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
                  List.map(
                    (message: Core.Types.message) =>
                      List.map(
-                       item =>
-                         <Text
-                           text=item
-                           style=Style.[
-                             fontFamily(state.uiFont.fontFile),
-                             fontSize(20),
-                           ]
-                         />,
+                       item => renderMessage(item, message.kind, state),
                        message.content,
                      ),
                    state.messages,

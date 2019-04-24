@@ -29,6 +29,7 @@ type t =
   | CommandlineUpdate((int, int))
   | KeyboardInput(string)
   | ShowMessage(message)
+  | ClearMessages
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)

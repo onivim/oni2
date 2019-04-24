@@ -59,6 +59,7 @@ type t =
   | WildmenuSelected(int)
   | VisualRangeUpdate(Core.VisualRange.t)
   | ShowMessage(Core.Types.message)
+  | ClearMessages
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -192,6 +193,7 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
     | M.List([M.String("wildmenu_hide"), M.List(msgs)]) =>
       hideWildmenu(msgs)
     | M.List([M.String("msg_show"), M.List(msgs)]) => showMessage(msgs)
+    | M.List([M.String("msg_clear"), _]) => ClearMessages
     | M.List([M.String("tabline_update"), M.List(_)]) => Ignored
     | M.List([
         M.String("mode_change"),
