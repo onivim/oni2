@@ -64,7 +64,7 @@ type t =
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
-  | ViewCloseEditor
+  | ViewCloseEditor(int)
   | Noop
 and menuCommand = {
   category: option(string),
