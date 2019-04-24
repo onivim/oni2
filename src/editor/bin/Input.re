@@ -98,7 +98,7 @@ let getActionsForBinding =
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
         matchesCondition(condition, inputControlMode, inputKey, key)
-          ? Commands.handleCommand(command) : defaultAction,
+          ? [Actions.Command(command)] : defaultAction,
       [],
       commands,
     )

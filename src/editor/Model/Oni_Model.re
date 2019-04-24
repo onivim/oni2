@@ -12,7 +12,6 @@ module Buffers = Buffers;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
-module Commands = Commands;
 module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;
