@@ -179,7 +179,14 @@ let renderTokens =
 
 let component = React.component("EditorSurface");
 
-let createElement = (~state: State.t, ~metrics:EditorMetrics.t, ~editor: Editor.t, ~children as _, ()) =>
+let createElement =
+    (
+      ~state: State.t,
+      ~metrics: EditorMetrics.t,
+      ~editor: Editor.t,
+      ~children as _,
+      (),
+    ) =>
   component(hooks => {
     let theme = state.theme;
 
@@ -402,8 +409,7 @@ let createElement = (~state: State.t, ~metrics:EditorMetrics.t, ~editor: Editor.
                      )
                   -. editor.scrollY,
                 ~height=fontHeight,
-                ~width=
-                  float_of_int(metrics.pixelWidth) -. lineNumberWidth,
+                ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );

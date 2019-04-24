@@ -17,22 +17,21 @@ type t = {
 };
 
 let create = () => {
-  {
-    pixelWidth: 1000,
-    pixelHeight: 1000,
-    lineHeight: 1.,
-    characterWidth: 1.,
-  };
+  {pixelWidth: 1000, pixelHeight: 1000, lineHeight: 1., characterWidth: 1.};
 };
 
 let reduce = (v: t, action) => {
-    switch (action) {
-      | SetEditorSize({pixelWidth, pixelHeight}) => {...v, pixelWidth, pixelHeight }
-      | SetEditorFont({measuredHeight, measuredWidth, _}) => {
-        ...v,
-        lineHeight: measuredHeight,
-        characterWidth: measuredWidth,
-      }
-      | _ => v
-    };
+  switch (action) {
+  | SetEditorSize({pixelWidth, pixelHeight}) => {
+      ...v,
+      pixelWidth,
+      pixelHeight,
+    }
+  | SetEditorFont({measuredHeight, measuredWidth, _}) => {
+      ...v,
+      lineHeight: measuredHeight,
+      characterWidth: measuredWidth,
+    }
+  | _ => v
+  };
 };

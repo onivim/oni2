@@ -119,7 +119,6 @@ let removeEditorsForBuffer = (state, bufferId) => {
 };
 
 let reduce = (v: t, action: Actions.t) => {
-
   let metrics = EditorMetrics.reduce(v.metrics, action);
 
   let editors =

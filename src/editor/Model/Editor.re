@@ -73,7 +73,8 @@ let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) =>
   float_of_int(Index.toZeroBasedInt(view.cursorPosition.character))
   *. metrics.characterWidth;
 
-let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int, metrics: EditorMetrics.t) => {
+let getVerticalScrollbarMetrics =
+    (view: t, scrollBarHeight: int, metrics: EditorMetrics.t) => {
   let totalViewSizeInPixels =
     float_of_int(getTotalSizeInPixels(view, metrics) + metrics.pixelHeight);
   let thumbPercentage =
@@ -87,7 +88,8 @@ let getVerticalScrollbarMetrics = (view: t, scrollBarHeight: int, metrics: Edito
   {thumbSize, thumbOffset, visible: true};
 };
 
-let getHorizontalScrollbarMetrics = (view: t, availableWidth: int, metrics: EditorMetrics.t) => {
+let getHorizontalScrollbarMetrics =
+    (view: t, availableWidth: int, metrics: EditorMetrics.t) => {
   let totalViewWidthInPixels =
     float_of_int(view.maxLineLength) *. metrics.characterWidth;
   let availableWidthF = float_of_int(availableWidth);
@@ -254,7 +256,8 @@ let getTopVisibleLine = (view, metrics: EditorMetrics.t) =>
 let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(metrics.pixelHeight)) /. metrics.lineHeight,
+      (view.scrollY +. float_of_int(metrics.pixelHeight))
+      /. metrics.lineHeight,
     );
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
@@ -308,7 +311,8 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) => snapToCursorPosition({...view, cursorPosition: b}, metrics)
+  | CursorMove(b) =>
+    snapToCursorPosition({...view, cursorPosition: b}, metrics)
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY, metrics)
