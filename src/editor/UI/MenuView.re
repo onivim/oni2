@@ -72,6 +72,13 @@ let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
 
 type fontT = Types.UiFont.t;
 
+let getLabel = (command: Actions.menuCommand) => {
+    switch (command.category) {
+    | Some(v) => v ++ ": " ++ command.name
+    | None => command.name
+    }
+}
+
 let createElement =
     (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
@@ -108,7 +115,7 @@ let createElement =
                     onClick
                     theme
                     style=menuItemStyle
-                    label={cmd.name}
+                    label={getLabel(cmd)}
                     icon={getIcon(cmd.icon)}
                     onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
