@@ -7,7 +7,8 @@
 open Revery;
 open Oni_Core;
 
-module EditorGroupId = Revery.UniqueId.Make({});
+module EditorGroupId =
+  Revery.UniqueId.Make({});
 
 type t = {
   id: int,
