@@ -4,7 +4,6 @@
   * Dimensions and measurements relating to an editor
  */
 
-
 open Actions;
 
 type t = {

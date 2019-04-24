@@ -179,5 +179,6 @@ let send =
 
 let close = (v: t) => {
   v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
+  Rpc.stop(v.rpc);
   Unix.kill(v.process.pid, Sys.sigkill);
 };
