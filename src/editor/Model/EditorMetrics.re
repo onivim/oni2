@@ -4,8 +4,6 @@
   * Dimensions and measurements relating to an editor
  */
 
-open Oni_Core;
-open Oni_Core.Types;
 
 open Actions;
 
