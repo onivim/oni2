@@ -68,6 +68,8 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
+  let lifecycleUpdater = LifecycleStoreConnector.start();
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -80,6 +82,7 @@ let start =
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,
+          lifecycleUpdater,
         ]),
       (),
     );

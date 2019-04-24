@@ -148,8 +148,19 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
+  let registerQuitCleanupEffect =
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.registerQuitCleanup", dispatch =>
+      dispatch(
+        Model.Actions.RegisterQuitCleanup(
+          () => ExtensionHostClient.close(extHostClient),
+        ),
+      )
+    );
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
+    | Model.Actions.Init => (state, registerQuitCleanupEffect)
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
