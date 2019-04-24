@@ -14,7 +14,7 @@ let getMessageType = message =>
 [@deriving show]
 type t = list(message);
 
-let create = () : t => [];
+let create = (): t => [];
 
 let reduce = (state: t, action: Actions.t) =>
   switch (action) {

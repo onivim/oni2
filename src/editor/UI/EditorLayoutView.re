@@ -72,9 +72,16 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     let {State.editorLayout, theme, _} = state;
     let {windows, leftDock, rightDock, _} = editorLayout;
 
-    let splits =
+    let splits = [
+      <View style=Style.[flexGrow(1)]>
+        {renderTree(~direction=Vertical, theme, windows)}
+        <MessagesView state />
+      </View>,
+    ];
+
+    let layout =
       renderDock(rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, windows)])
-      |> (@)(renderDock(leftDock, state));
-    (hooks, <View style=splitContainer> ...splits </View>);
+      |> List.append(splits)
+      |> List.append(renderDock(leftDock, state));
+    (hooks, <View style=splitContainer> ...layout </View>);
   });
