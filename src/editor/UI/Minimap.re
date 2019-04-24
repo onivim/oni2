@@ -68,8 +68,8 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let getMinimapSize = (view: Editor.t) => {
-  let currentViewSize = Editor.getVisibleView(view);
+let getMinimapSize = (view: Editor.t, metrics) => {
+  let currentViewSize = Editor.getVisibleView(metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
@@ -82,6 +82,7 @@ let createElement =
       ~height: int,
       ~count,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
+      ~metrics,
       ~children as _,
       (),
     ) =>
@@ -95,8 +96,8 @@ let createElement =
     let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
 
     let getScrollTo = (mouseY: float) => {
-      let totalHeight: int = Editor.getTotalSizeInPixels(editor);
-      let visibleHeight: int = editor.size.pixelHeight;
+      let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
+      let visibleHeight: int = metrics.pixelHeight;
       let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
@@ -123,7 +124,7 @@ let createElement =
                     Constants.default.minimapCharacterWidth
                     + Constants.default.minimapCharacterHeight;
                   let linesInMinimap =
-                    editor.size.pixelHeight / minimapLineSize;
+                    metrics.pixelHeight / minimapLineSize;
                   GlobalContext.current().editorScroll(
                     ~deltaY=
                       (startPosition -. scrollTo)
@@ -153,7 +154,7 @@ let createElement =
       let minimapLineSize =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
-      let linesInMinimap = editor.size.pixelHeight / minimapLineSize;
+      let linesInMinimap = metrics.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
         ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
@@ -176,9 +177,9 @@ let createElement =
                 ~x=0.,
                 ~y=
                   rowHeight
-                  *. float_of_int(Editor.getTopVisibleLine(editor) - 1)
+                  *. float_of_int(Editor.getTopVisibleLine(editor, metrics) - 1)
                   -. scrollY,
-                ~height=rowHeight *. float_of_int(getMinimapSize(editor)),
+                ~height=rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
                 ~width=float_of_int(width),
                 ~color=state.theme.colors.scrollbarSliderHoverBackground,
                 (),

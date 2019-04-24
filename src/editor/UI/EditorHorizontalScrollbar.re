@@ -18,12 +18,13 @@ let createElement =
       ~state: State.t,
       ~editor: Editor.t,
       ~width as totalWidth,
+      ~metrics,
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let scrollMetrics =
-      Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
+      Editor.getHorizontalScrollbarMetrics(editor, totalWidth, metrics);
 
     let scrollThumbStyle =
       Style.[

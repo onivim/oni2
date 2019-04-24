@@ -4,9 +4,6 @@
   * Manage a group of editors
  */
 
-/* TEMPORARY */
-Printexc.record_backtrace(true);
-
 open Oni_Core;
 
 type t = {
@@ -14,6 +11,7 @@ type t = {
   editors: IntMap.t(Editor.t),
   bufferIdToEditorId: IntMap.t(int),
   reverseTabOrder: list(int),
+  metrics: EditorMetrics.t,
 };
 
 let create = () => {
@@ -22,6 +20,7 @@ let create = () => {
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
     reverseTabOrder: [],
+    metrics: EditorMetrics.create(),
   };
 };
 
@@ -109,6 +108,7 @@ let removeEditorsForBuffer = (state, bufferId) => {
       };
 
     let ret: t = {
+      ...state,
       activeEditorId: newActiveEditorId,
       editors,
       bufferIdToEditorId,
@@ -119,15 +119,18 @@ let removeEditorsForBuffer = (state, bufferId) => {
 };
 
 let reduce = (v: t, action: Actions.t) => {
+
+  let metrics = EditorMetrics.reduce(v.metrics, action);
+
   let editors =
     IntMap.fold(
       (key, value, prev) =>
-        IntMap.add(key, Editor.reduce(value, action), prev),
+        IntMap.add(key, Editor.reduce(value, action, metrics), prev),
       v.editors,
       IntMap.empty,
     );
 
-  let v = {...v, editors};
+  let v = {...v, metrics, editors};
 
   switch (action) {
   | BufferEnter({id, _}) =>
