@@ -55,6 +55,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   };
 
   let currentBufferId: ref(option(int)) = ref(None);
+  let currentEditorId: ref(option(int)) = ref(None);
 
   /* let _ = */
   /*   Event.subscribe(nvimApi.onNotification, n => */
@@ -104,23 +105,42 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup))
     );
 
-  let synchronizeEditorEffect = (state) =>
-    Isolinear.Effect.create(
-        ~name="neovim.synchronizeEditor", () => {
-            let editorBuffer = Model.Selectors.getActiveBuffer(state);
-            switch ((editorBuffer, currentBufferId^)) {
-            | (Some(editorBuffer), Some(v)) => 
-                let id = Model.Buffer.getId(editorBuffer);
-                if (id != v) {
-                    neovimProtocol.openFile(~id, ());
-                }
-            | (Some(editorBuffer), _) => 
-                let id = Model.Buffer.getId(editorBuffer);
-                neovimProtocol.openFile(~id, ());
-            | _ => ()
-            };
+  let synchronizeEditorEffect = state =>
+    Isolinear.Effect.create(~name="neovim.synchronizeEditor", () => {
+      let editorBuffer = Model.Selectors.getActiveBuffer(state);
+      switch (editorBuffer, currentBufferId^) {
+      | (Some(editorBuffer), Some(v)) =>
+        let id = Model.Buffer.getId(editorBuffer);
+        if (id != v) {
+          neovimProtocol.openFile(~id, ());
+        };
+      | (Some(editorBuffer), _) =>
+        let id = Model.Buffer.getId(editorBuffer);
+        neovimProtocol.openFile(~id, ());
+      | _ => ()
+      };
+
+      let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+        open Core.Types;
+        neovimProtocol.moveCursor(
+          ~column=Index.toOneBasedInt(editor.cursorPosition.character),
+          ~line=Index.toOneBasedInt(editor.cursorPosition.line),
+        );
+        currentEditorId := Some(editor.id);
+      };
+
+      let editor =
+        Model.Selectors.getActiveEditorGroup(state)
+        |> Model.Selectors.getActiveEditor;
+      switch (editor, currentEditorId^) {
+      | (Some(e), Some(v)) =>
+        if (e.id != v) {
+          synchronizeCursorPosition(e);
         }
-    );
+      | (Some(e), _) => synchronizeCursorPosition(e)
+      | _ => ()
+      };
+    });
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
@@ -143,7 +163,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state.mode === Core.Types.Mode.Visual
           ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
       )
-    | Model.Actions.ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.ViewCloseEditor(_) => (
+        state,
+        synchronizeEditorEffect(state),
+      )
     | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
@@ -190,7 +213,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
             BufferMarkDirty(activeBufferId)
           | BufferEnter({activeBufferId, _}) =>
             neovimProtocol.bufAttach(activeBufferId);
-            
+
             let context = NeovimBuffer.getContext(nvimApi, activeBufferId);
             currentBufferId := Some(activeBufferId);
             BufferEnter(context);
