@@ -68,6 +68,8 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
+  let commandUpdater = CommandStoreConnector.start();
+
   let lifecycleUpdater = LifecycleStoreConnector.start();
 
   let (storeDispatch, storeStream) =
@@ -82,6 +84,7 @@ let start =
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,
+          commandUpdater,
           lifecycleUpdater,
         ]),
       (),
