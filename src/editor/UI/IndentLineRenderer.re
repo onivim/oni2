@@ -31,6 +31,9 @@ let render =
   let startLine = max(0, startLine);
   let endLine = min(bufferLineCount, endLine);
 
+  let cursorLineIndentLevel = ref(0);
+  let previousIndentLevel = ref(0);
+
   let indentationWidthInPixels =
     float_of_int(indentationSettings.tabSize) *. fontWidth;
 
@@ -40,7 +43,10 @@ let render =
     let line = l^;
     let lineText = Buffer.getLine(buffer, line);
 
-    let level = Oni_Core.Indentation.getLevel(indentationSettings, lineText);
+    let level =
+      lineText != ""
+        ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
+        : previousIndentLevel^;
 
     let (x, y) = bufferPositionToPixel(line, 0);
 
@@ -60,51 +66,63 @@ let render =
     };
 
     incr(l);
+    previousIndentLevel := level;
+
+    if (line == cursorLine) {
+      cursorLineIndentLevel := level;
+    };
   };
 
   /* Next, render _active_ indent guide */
   if (cursorLine < bufferLineCount && showActive) {
-    let activeIndentLevel =
-      Buffer.getLine(buffer, cursorLine)
-      |> Oni_Core.Indentation.getLevel(indentationSettings);
-
     let topFinished = ref(false);
-    let topLine = ref(cursorLine);
-    let bottomLine = ref(cursorLine);
+    let topLine = ref(cursorLine - 1);
+    let bottomLine = ref(cursorLine + 1);
     let bottomFinished = ref(false);
+    let previousIndentLevel = ref(cursorLineIndentLevel^);
 
     while (topLine^ >= 0 && ! topFinished^) {
+      let lineText = Buffer.getLine(buffer, topLine^);
       let indentLevel =
-        Buffer.getLine(buffer, topLine^)
-        |> Oni_Core.Indentation.getLevel(indentationSettings);
+        lineText != ""
+          ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
+          : previousIndentLevel^;
 
-      if (indentLevel < activeIndentLevel) {
+      if (indentLevel < cursorLineIndentLevel^) {
         topFinished := true;
       } else {
         decr(topLine);
+        previousIndentLevel := indentLevel;
       };
     };
 
-    while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
-      let indentLevel =
-        Buffer.getLine(buffer, bottomLine^)
-        |> Oni_Core.Indentation.getLevel(indentationSettings);
+    previousIndentLevel := cursorLineIndentLevel^;
 
-      if (indentLevel < activeIndentLevel) {
+    while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
+      let lineText = Buffer.getLine(buffer, bottomLine^);
+      let indentLevel =
+        lineText != ""
+          ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
+          : previousIndentLevel^;
+
+      if (indentLevel < cursorLineIndentLevel^) {
         bottomFinished := true;
       } else {
         incr(bottomLine);
+        previousIndentLevel := indentLevel;
       };
     };
 
     let (x, topY) = bufferPositionToPixel(topLine^, 0);
     let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
-    if (activeIndentLevel >= 1) {
+    if (cursorLineIndentLevel^ >= 1) {
       Shapes.drawRect(
         ~transform,
         ~x=
-          x +. indentationWidthInPixels *. float_of_int(activeIndentLevel - 1),
+          x
+          +. indentationWidthInPixels
+          *. float_of_int(cursorLineIndentLevel^ - 1),
         ~y=topY +. lineHeight,
         ~width=1.,
         ~height=bottomY -. topY -. lineHeight,
