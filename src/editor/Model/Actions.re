@@ -30,6 +30,7 @@ type t =
   | KeyboardInput(string)
   | ShowMessage(message)
   | ShowMessagesHistory(list(message))
+  | GetMessages
   | ClearMessages
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)

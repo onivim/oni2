@@ -95,6 +95,11 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup))
     );
 
+  let getMessagesEffect =
+    Isolinear.Effect.create(~name="neovim.getMessages", () =>
+      neovimProtocol.getMessages()
+    );
+
   /**
    synchronizeEditorEffect checks the current state of the app:
    - open buffer
@@ -172,6 +177,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Model.Actions.GetMessages => (state, getMessagesEffect)
     | _ => (state, Isolinear.Effect.none)
     };
   };

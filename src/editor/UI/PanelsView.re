@@ -8,6 +8,7 @@ type t =
 type panel = {
   title: string,
   panelType: t,
+  command: State.t => unit,
 };
 
 let headerTextSize = 15;
@@ -28,7 +29,13 @@ let heading = Style.[width(80), justifyContent(`Center)];
 
 let component = React.component("Panels");
 
-let panels = [{title: "Messages", panelType: Messages}];
+let panels = [
+  {
+    title: "Messages",
+    panelType: Messages,
+    command: _state => GlobalContext.current().dispatch(GetMessages),
+  },
+];
 
 let createElement = (~children, ~state: State.t, ()) =>
   component(hooks => {
@@ -36,7 +43,13 @@ let createElement = (~children, ~state: State.t, ()) =>
 
     let (activePanel, setActivePanel, hooks) =
       React.Hooks.state(Messages, hooks);
+
     let (hidePanels, setHidePanels, hooks) = React.Hooks.state(false, hooks);
+
+    let onClick = panel => {
+      panel.command(state);
+      setActivePanel(panel.panelType);
+    };
 
     (
       hooks,
@@ -45,9 +58,7 @@ let createElement = (~children, ~state: State.t, ()) =>
             <View style=header>
               ...{List.map(
                 panel =>
-                  <Clickable
-                    style=heading
-                    onClick={() => setActivePanel(panel.panelType)}>
+                  <Clickable style=heading onClick={() => onClick(panel)}>
                     <Text text={panel.title} style={headerText(font)} />
                     <View style=underlineStyles />
                   </Clickable>,
