@@ -12,7 +12,7 @@ open Oni_Model;
 type bufferPositionToPixel = (int, int) => (float, float);
 
 let rec _getIndentLevel =
-    (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
+        (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
   let lineText = Buffer.getLine(buffer, line);
 
   /*
@@ -29,10 +29,16 @@ let rec _getIndentLevel =
       if (line + 1 == endLine) {
         0;
       } else {
-        _getIndentLevel(indentationSettings, buffer, endLine, line + 1, previousIndentLevel)
+        _getIndentLevel(
+          indentationSettings,
+          buffer,
+          endLine,
+          line + 1,
+          previousIndentLevel,
+        );
       };
 
-      min(nextLineLevel, previousIndentLevel);
+    min(nextLineLevel, previousIndentLevel);
   };
 };
 
