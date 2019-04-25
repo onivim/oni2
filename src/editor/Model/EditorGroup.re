@@ -142,13 +142,12 @@ let removeEditorsForBuffer = (state, bufferId) => {
 let reduce = (v: t, action: Actions.t) => {
   let metrics = EditorMetrics.reduce(v.metrics, action);
 
-  let editors =
-    IntMap.fold(
-      (key, value, prev) =>
-        IntMap.add(key, Editor.reduce(value, action, metrics), prev),
-      v.editors,
-      IntMap.empty,
-    );
+  /* Only send updates to _active_ editor */
+  let editors = switch((v.activeEditorId, getActiveEditor(v))) {
+  | (Some(id), Some(e)) => 
+        IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
+  | _ => v.editors
+  };
 
   let v = {...v, metrics, editors};
 

@@ -21,7 +21,6 @@ let start = () => {
       switch (editor) {
       | None => ()
       | Some(v) =>
-        prerr_endline("CLOSING EDITOR!");
         dispatch(ViewCloseEditor(v.id));
       };
     });

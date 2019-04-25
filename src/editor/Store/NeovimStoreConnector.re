@@ -84,16 +84,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.openFile(~path=filePath, ())
     );
 
-  let openFileByIdEffect = id =>
-    Isolinear.Effect.create(~name="neovim.openFileById", () =>
-      neovimProtocol.openFile(~id, ())
-    );
-
-  let closeFileByIdEffect = id =>
-    Isolinear.Effect.create(~name="neovim.closeFileByIdEffect", () =>
-      neovimProtocol.closeFile(~id, ())
-    );
-
   let requestVisualRangeUpdateEffect =
     Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
       neovimProtocol.requestVisualRangeUpdate()
@@ -107,6 +97,16 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="neovim.synchronizeEditor", () => {
+        prerr_endline ("Synchronizing editor");
+      let editor =
+        Model.Selectors.getActiveEditorGroup(state)
+        |> Model.Selectors.getActiveEditor;
+        switch (editor) {
+        | Some(v) =>
+        prerr_endline ("BEFORE: " ++ Model.Editor.show(v));
+        | None => ();
+        }
+
       let editorBuffer = Model.Selectors.getActiveBuffer(state);
       switch (editorBuffer, currentBufferId^) {
       | (Some(editorBuffer), Some(v)) =>
@@ -122,6 +122,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
         open Core.Types;
+        prerr_endline ("Synchronizing cursor position: " ++ Model.Editor.show(editor));
         neovimProtocol.moveCursor(
           ~column=Index.toOneBasedInt(editor.cursorPosition.character),
           ~line=Index.toOneBasedInt(editor.cursorPosition.line),
@@ -129,11 +130,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         currentEditorId := Some(editor.id);
       };
 
-      let editor =
-        Model.Selectors.getActiveEditorGroup(state)
-        |> Model.Selectors.getActiveEditor;
       switch (editor, currentEditorId^) {
       | (Some(e), Some(v)) =>
+        prerr_endline ("CURRENT EDITOR ID: " ++ string_of_int(v));
+        prerr_endline ("EDITOR ID: " ++ string_of_int(e.id));
         if (e.id != v) {
           synchronizeCursorPosition(e);
         }
@@ -156,13 +156,13 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
-    | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.CursorMove(_) => (
         state,
         state.mode === Core.Types.Mode.Visual
           ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
       )
+    | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.ViewCloseEditor(_) => (
         state,
         synchronizeEditorEffect(state),
