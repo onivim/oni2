@@ -18,8 +18,8 @@ let create = (): t => [];
 
 let reduce = (state: t, action: Actions.t) =>
   switch (action) {
-  | ShowMessage(message) => [message, ...state]
   | ClearMessages => []
+  | ShowMessage(message) => [message, ...state]
   | ShowMessagesHistory(messages) => messages
   | _ => state
   };
