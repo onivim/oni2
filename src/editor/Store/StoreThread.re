@@ -68,7 +68,7 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
-  let commandUpdater = CommandStoreConnector.start();
+  let commandUpdater = CommandStoreConnector.start(() => latestState^);
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
 

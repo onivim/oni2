@@ -3,7 +3,7 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-let start = () => {
+let start = getState => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
@@ -22,6 +22,37 @@ let start = () => {
       | None => ()
       | Some(v) => dispatch(ViewCloseEditor(v.id))
       };
+    });
+
+  let splitFactory = (fn, ()) => {
+    let state = getState();
+    fn(state);
+  };
+
+  let splitEditorEffect = (state, _) =>
+    Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
+      let buffer = Selectors.getActiveBuffer(state);
+
+      let newEditorGroup =
+        switch (buffer) {
+        | Some(b) =>
+          let ec = EditorGroup.create();
+          let (g, _) =
+            EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
+          g;
+        | None => EditorGroup.create()
+        };
+
+      dispatch(EditorGroupAdd(newEditorGroup));
+
+      let split =
+        WindowManager.createSplit(
+          ~direction=Vertical,
+          ~editorGroupId=newEditorGroup.id,
+          (),
+        );
+
+      dispatch(AddSplit(split));
     });
 
   let commands = [
@@ -64,6 +95,7 @@ let start = () => {
         ]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
+    ("view.splitVertical", state => splitEditorEffect(state)),
   ];
 
   let commandMap =

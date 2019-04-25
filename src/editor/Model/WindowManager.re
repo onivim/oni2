@@ -24,7 +24,7 @@ type direction =
 type split = {
   id: int,
   parentId: int,
-  component: componentCreator,
+  editorGroupId: int,
   direction,
   /* if omitted the split will grow to occupy whatever space is available */
   width: option(int),
@@ -48,7 +48,7 @@ type dock = {
  */
 [@deriving show({with_path: false})]
 type splitMetadata = {
-  component: componentCreator,
+  editorGroupId: int,
   width: option(int),
   height: option(int),
   direction,
@@ -79,8 +79,8 @@ let create = (): t => {
   rightDock: [],
 };
 
-let createSplit = (~width=?, ~height=?, ~component, ~direction, ()) => {
-  component,
+let createSplit = (~width=?, ~height=?, ~editorGroupId, ~direction, ()) => {
+  editorGroupId,
   width,
   height,
   direction,
@@ -88,7 +88,7 @@ let createSplit = (~width=?, ~height=?, ~component, ~direction, ()) => {
 
 let enrichSplit = (parentId, s: splitMetadata): split => {
   parentId,
-  component: s.component,
+  editorGroupId: s.editorGroupId,
   direction: s.direction,
   id: WindowSplitId.getUniqueId(),
   width: s.width,

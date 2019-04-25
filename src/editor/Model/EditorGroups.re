@@ -30,10 +30,19 @@ let reduce = (v: t, action: Actions.t) => {
   let idToGroup =
     IntMap.fold(
       (key, value, prev) =>
-        IntMap.add(key, EditorGroup.reduce(value, action), prev),
+        IntMap.add(key, EditorGroupReducer.reduce(value, action), prev),
       v.idToGroup,
       IntMap.empty,
     );
 
-  {...v, idToGroup};
+  let v = {...v, idToGroup};
+
+  switch (action) {
+  | EditorGroupAdd(editor) => {
+      ...v,
+      activeId: editor.id,
+      idToGroup: IntMap.add(editor.id, editor, v.idToGroup),
+    }
+  | _ => v
+  };
 };

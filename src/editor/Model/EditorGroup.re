@@ -5,29 +5,24 @@
  */
 
 open Oni_Core;
+open Actions;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});
 
-type t = {
-  id: int,
-  activeEditorId: option(int),
-  editors: IntMap.t(Editor.t),
-  bufferIdToEditorId: IntMap.t(int),
-  reverseTabOrder: list(int),
-  metrics: EditorMetrics.t,
-};
+type t = Actions.editorGroup;
 
-let create = () => {
-  {
-    id: EditorGroupId.getUniqueId(),
-    editors: IntMap.empty,
-    bufferIdToEditorId: IntMap.empty,
-    activeEditorId: None,
-    reverseTabOrder: [],
-    metrics: EditorMetrics.create(),
+let create: unit => t =
+  () => {
+    {
+      id: EditorGroupId.getUniqueId(),
+      editors: IntMap.empty,
+      bufferIdToEditorId: IntMap.empty,
+      activeEditorId: None,
+      reverseTabOrder: [],
+      metrics: EditorMetrics.create(),
+    };
   };
-};
 
 let show = (v: t) => {
   IntMap.fold(
@@ -136,27 +131,5 @@ let removeEditorsForBuffer = (state, bufferId) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | None => state
   | Some(v) => removeEditorById(state, v)
-  };
-};
-
-let reduce = (v: t, action: Actions.t) => {
-  let metrics = EditorMetrics.reduce(v.metrics, action);
-
-  /* Only send updates to _active_ editor */
-  let editors =
-    switch (v.activeEditorId, getActiveEditor(v)) {
-    | (Some(id), Some(e)) =>
-      IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
-    | _ => v.editors
-    };
-
-  let v = {...v, metrics, editors};
-
-  switch (action) {
-  | BufferEnter({id, _}) =>
-    let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
-    {...newState, activeEditorId: Some(activeEditorId)};
-  | ViewCloseEditor(id) => removeEditorById(v, id)
-  | _ => v
   };
 };

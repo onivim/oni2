@@ -31,6 +31,7 @@ type t =
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
+  | EditorGroupAdd(editorGroup)
   | EditorScroll(float)
   | EditorScrollToCursorCentered
   | EditorScrollToCursorTop
@@ -66,6 +67,36 @@ type t =
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | Noop
+and editor = {
+  id: int,
+  bufferId: int,
+  scrollX: float,
+  scrollY: float,
+  minimapMaxColumnWidth: int,
+  minimapScrollY: float,
+  /*
+   * The maximum line visible in the view.
+   * TODO: This will be dependent on line-wrap settings.
+   */
+  maxLineLength: int,
+  viewLines: int,
+  cursorPosition: Position.t,
+  selection: VisualRange.t,
+}
+and editorMetrics = {
+  pixelWidth: int,
+  pixelHeight: int,
+  lineHeight: float,
+  characterWidth: float,
+}
+and editorGroup = {
+  id: int,
+  activeEditorId: option(int),
+  editors: IntMap.t(editor),
+  bufferIdToEditorId: IntMap.t(int),
+  reverseTabOrder: list(int),
+  metrics: editorMetrics,
+}
 and menuCommand = {
   category: option(string),
   name: string,
