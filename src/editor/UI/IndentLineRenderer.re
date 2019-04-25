@@ -32,11 +32,7 @@ let rec _getIndentLevel =
         _getIndentLevel(indentationSettings, buffer, endLine, line + 1, previousIndentLevel)
       };
 
-    if (abs(nextLineLevel - previousIndentLevel) <= 1) {
       min(nextLineLevel, previousIndentLevel);
-    } else {
-      0;
-    };
   };
 };
 
