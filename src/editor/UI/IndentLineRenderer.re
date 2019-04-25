@@ -31,7 +31,7 @@ let rec _getIndentLevel =
    *
    * If we hit the last line, just set the next line indent to 0.
    */
-  if (lineText != "") {
+  if (String.trim(lineText) != "") {
     Oni_Core.Indentation.getLevel(indentationSettings, lineText);
   } else {
     let newLine = reverse ? line - 1 : line + 1;
