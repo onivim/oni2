@@ -144,23 +144,40 @@ let make = (msgpack: MsgpackTransport.t) => {
       clearQueuedResponses();
       msgpack.write(request);
 
-      Utility.waitForCondition(~timeout=10.0, () =>
-        List.length(getQueuedResponses()) >= 1
-      );
+      let hasResponse = v =>
+        List.length(List.filter(m => m.responseId == requestId, v)) >= 1;
 
-      if (List.length(getQueuedResponses()) == 0) {
+      Utility.waitForCondition(~timeout=10.0, () =>
+        hasResponse(getQueuedResponses())
+      );
+      let queuedResponses = getQueuedResponses();
+
+      if (!hasResponse(queuedResponses)) {
         let errorMessage =
           "Request timed out: "
           ++ methodName
           ++ " ("
           ++ string_of_int(requestId)
-          ++ ")";
+          ++ ")"
+          ++ M.show(args);
         prerr_endline(errorMessage);
+        prerr_endline("Queued responses: ");
+        List.iter(
+          m =>
+            prerr_endline(
+              "id: "
+              ++ string_of_int(m.responseId)
+              ++ " payload: "
+              ++ M.show(m.payload),
+            ),
+          queuedResponses,
+        );
         raise(RequestFailed(errorMessage));
       };
 
       let matchingResponse =
-        List.filter(m => m.responseId == requestId, queuedResponses^)
+        queuedResponses
+        |> List.filter(m => m.responseId == requestId)
         |> List.hd;
 
       /* prerr_endline("Got response!"); */
