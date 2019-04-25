@@ -11,24 +11,32 @@ open Oni_Model;
 
 type bufferPositionToPixel = (int, int) => (float, float);
 
-let _getIndentLevel = (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
+let _getIndentLevel =
+    (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
   let lineText = Buffer.getLine(buffer, line);
 
+  /* 
+   * If the line isn't empty, we should use that lines indent settings.
+   * 
+   * If the line is empty, we should check the next line along.
+   *  - If the next and previous lines are within one of each other, take the minimum indent level.
+   *  - If they are not, drop to 0 indentation level.
+   */
   if (lineText != "") {
-    Oni_Core.Indentation.getLevel(indentationSettings, lineText)
+    Oni_Core.Indentation.getLevel(indentationSettings, lineText);
   } else {
-
     let nextLineLevel =
-    if (line + 1 == endLine) {
-      0
-    } else {
-      Buffer.getLine(buffer, line + 1) |> Oni_Core.Indentation.getLevel(indentationSettings);
-    };
+      if (line + 1 == endLine) {
+        0;
+      } else {
+        Buffer.getLine(buffer, line + 1)
+        |> Oni_Core.Indentation.getLevel(indentationSettings);
+      };
 
-    if (nextLineLevel < previousIndentLevel) {
-      0
+    if (abs(nextLineLevel - previousIndentLevel) <= 1) {
+      min(nextLineLevel, previousIndentLevel)
     } else {
-      previousIndentLevel
+      0
     };
   };
 };
@@ -64,7 +72,13 @@ let render =
   while (l^ < endLine) {
     let line = l^;
     let level =
-      _getIndentLevel(indentationSettings, buffer, endLine, line, previousIndentLevel^);
+      _getIndentLevel(
+        indentationSettings,
+        buffer,
+        endLine,
+        line,
+        previousIndentLevel^,
+      );
 
     let (x, y) = bufferPositionToPixel(line, 0);
 
@@ -101,7 +115,13 @@ let render =
 
     while (topLine^ >= 0 && ! topFinished^) {
       let indentLevel =
-        _getIndentLevel(indentationSettings, buffer, endLine, topLine^, previousIndentLevel^);
+        _getIndentLevel(
+          indentationSettings,
+          buffer,
+          endLine,
+          topLine^,
+          previousIndentLevel^,
+        );
 
       if (indentLevel < cursorLineIndentLevel^) {
         topFinished := true;
@@ -115,7 +135,13 @@ let render =
 
     while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
       let indentLevel =
-        _getIndentLevel(indentationSettings, buffer, endLine, bottomLine^, previousIndentLevel^);
+        _getIndentLevel(
+          indentationSettings,
+          buffer,
+          endLine,
+          bottomLine^,
+          previousIndentLevel^,
+        );
 
       if (indentLevel < cursorLineIndentLevel^) {
         bottomFinished := true;
