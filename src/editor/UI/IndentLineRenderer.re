@@ -11,6 +11,28 @@ open Oni_Model;
 
 type bufferPositionToPixel = (int, int) => (float, float);
 
+let _getIndentLevel = (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
+  let lineText = Buffer.getLine(buffer, line);
+
+  if (lineText != "") {
+    Oni_Core.Indentation.getLevel(indentationSettings, lineText)
+  } else {
+
+    let nextLineLevel =
+    if (line + 1 == endLine) {
+      0
+    } else {
+      Buffer.getLine(buffer, line + 1) |> Oni_Core.Indentation.getLevel(indentationSettings);
+    };
+
+    if (nextLineLevel < previousIndentLevel) {
+      0
+    } else {
+      previousIndentLevel
+    };
+  };
+};
+
 let render =
     (
       ~transform,
@@ -41,12 +63,8 @@ let render =
 
   while (l^ < endLine) {
     let line = l^;
-    let lineText = Buffer.getLine(buffer, line);
-
     let level =
-      lineText != ""
-        ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
-        : previousIndentLevel^;
+      _getIndentLevel(indentationSettings, buffer, endLine, line, previousIndentLevel^);
 
     let (x, y) = bufferPositionToPixel(line, 0);
 
@@ -82,11 +100,8 @@ let render =
     let previousIndentLevel = ref(cursorLineIndentLevel^);
 
     while (topLine^ >= 0 && ! topFinished^) {
-      let lineText = Buffer.getLine(buffer, topLine^);
       let indentLevel =
-        lineText != ""
-          ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
-          : previousIndentLevel^;
+        _getIndentLevel(indentationSettings, buffer, endLine, topLine^, previousIndentLevel^);
 
       if (indentLevel < cursorLineIndentLevel^) {
         topFinished := true;
@@ -99,11 +114,8 @@ let render =
     previousIndentLevel := cursorLineIndentLevel^;
 
     while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
-      let lineText = Buffer.getLine(buffer, bottomLine^);
       let indentLevel =
-        lineText != ""
-          ? Oni_Core.Indentation.getLevel(indentationSettings, lineText)
-          : previousIndentLevel^;
+        _getIndentLevel(indentationSettings, buffer, endLine, bottomLine^, previousIndentLevel^);
 
       if (indentLevel < cursorLineIndentLevel^) {
         bottomFinished := true;
