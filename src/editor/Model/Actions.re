@@ -49,9 +49,7 @@ type t =
   | MenuNextItem
   | MenuPreviousItem
   | MenuPosition(int)
-  | CloseFileById(int)
   | OpenFileByPath(string)
-  | OpenFileById(int)
   | AddRightDock(WindowManager.dock)
   | AddLeftDock(WindowManager.dock)
   | AddSplit(WindowManager.splitMetadata)
@@ -65,6 +63,8 @@ type t =
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
+  | ViewCloseEditor(int)
+  | ViewSetActiveEditor(int)
   | Noop
 and menuCommand = {
   category: option(string),
