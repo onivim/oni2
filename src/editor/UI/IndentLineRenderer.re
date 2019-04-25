@@ -15,9 +15,9 @@ let _getIndentLevel =
     (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
   let lineText = Buffer.getLine(buffer, line);
 
-  /* 
+  /*
    * If the line isn't empty, we should use that lines indent settings.
-   * 
+   *
    * If the line is empty, we should check the next line along.
    *  - If the next and previous lines are within one of each other, take the minimum indent level.
    *  - If they are not, drop to 0 indentation level.
@@ -34,9 +34,9 @@ let _getIndentLevel =
       };
 
     if (abs(nextLineLevel - previousIndentLevel) <= 1) {
-      min(nextLineLevel, previousIndentLevel)
+      min(nextLineLevel, previousIndentLevel);
     } else {
-      0
+      0;
     };
   };
 };
