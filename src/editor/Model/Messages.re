@@ -20,5 +20,6 @@ let reduce = (state: t, action: Actions.t) =>
   switch (action) {
   | ShowMessage(message) => [message, ...state]
   | ClearMessages => []
+  | ShowMessagesHistory(messages) => messages
   | _ => state
   };

@@ -190,6 +190,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
           | CommandlineShow(c) => CommandlineShow(c)
           | CommandlineHide(c) => CommandlineHide(c)
           | ShowMessage(message) => ShowMessage(message)
+          | ShowMessagesHistory(messages) => ShowMessagesHistory(messages)
           | ClearMessages => ClearMessages
           | _ => Noop
           };

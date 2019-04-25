@@ -58,6 +58,7 @@ type t =
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
   | VisualRangeUpdate(Core.VisualRange.t)
+  | ShowMessagesHistory(list(Core.Types.message))
   | ShowMessage(Core.Types.message)
   | ClearMessages
   | Ignored;
@@ -153,21 +154,23 @@ let updateWildmenu = selected =>
   | _ => Ignored
   };
 
+let getMessageContent = messages => {
+  ListLabels.fold_left(
+    ~f=
+      (accum, message) =>
+        switch (message) {
+        | M.List([M.Int(_), M.String(chunk)]) => accum @ [chunk]
+        | _ => accum
+        },
+    ~init=[],
+    messages,
+  );
+};
+
 let showMessage = msgs => {
   switch (msgs) {
   | [M.String(kind), M.List(messages), M.Bool(replaceLast)] =>
-    let content =
-      ListLabels.fold_left(
-        ~f=
-          (accum, message) =>
-            switch (message) {
-            | M.List([M.Int(_), M.String(chunk)]) => accum @ [chunk]
-            | _ => accum
-            },
-        ~init=[],
-        messages,
-      );
-
+    let content = getMessageContent(messages);
     ShowMessage({
       kind: Model.Messages.getMessageType(kind),
       content,
@@ -175,6 +178,35 @@ let showMessage = msgs => {
     });
   | _ => Ignored
   };
+};
+
+let showHistory = (msgs: list(M.t)) => {
+  let history =
+    ListLabels.fold_left(
+      ~f=
+        (accum, entry) =>
+          switch (entry) {
+          | M.List(items) =>
+            List.map(
+              fun
+              | M.List([M.String(kind), M.List(content)]) => [
+                  {
+                    Core.Types.kind: Model.Messages.getMessageType(kind),
+                    content: getMessageContent(content),
+                    replaceLast: false,
+                  },
+                  ...accum,
+                ]
+              | _ => accum,
+              items,
+            )
+            |> List.flatten
+          | _ => accum
+          },
+      ~init=[],
+      msgs,
+    );
+  ShowMessagesHistory(history);
 };
 
 let parseRedraw = (msgs: list(Msgpck.t)) => {
@@ -194,6 +226,8 @@ let parseRedraw = (msgs: list(Msgpck.t)) => {
       hideWildmenu(msgs)
     | M.List([M.String("msg_show"), M.List(msgs)]) => showMessage(msgs)
     | M.List([M.String("msg_clear"), _]) => ClearMessages
+    | M.List([M.String("msg_history_show"), M.List(msgs)]) =>
+      showHistory(msgs)
     | M.List([M.String("tabline_update"), M.List(_)]) => Ignored
     | M.List([
         M.String("mode_change"),
