@@ -61,8 +61,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           let editor =
             Window.createSplit(
               ~direction=Vertical,
-              ~component=
-                splitFactory(state => <EditorGroupView state editorGroupId />),
+              ~editorGroupId,
               (),
             );
 

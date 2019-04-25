@@ -24,6 +24,12 @@ let create = setItems => {
       command: () => Actions.Command("view.closeEditor"),
       icon: None,
     },
+    {
+      category: Some("View"),
+      name: "Split Editor",
+      command: () => Actions.Command("view.splitVertical"),
+      icon: None,
+    },
   ];
 
   setItems(commands);
