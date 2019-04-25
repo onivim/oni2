@@ -13,7 +13,7 @@ type panel = {
 let headerTextSize = 15;
 
 let underlineStyles =
-  Style.[height(2), backgroundColor(Revery.Colors.white)];
+  Style.[height(1), backgroundColor(Revery.Colors.white)];
 
 let header = Style.[padding(8)];
 
