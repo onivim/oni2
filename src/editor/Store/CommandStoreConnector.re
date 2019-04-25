@@ -34,7 +34,14 @@ let start = () => {
         ]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
-    ("menu.close", _ => multipleActionEffect([MenuClose, SetInputControlMode(EditorTextFocus)])),
+    (
+      "menu.close",
+      _ =>
+        multipleActionEffect([
+          MenuClose,
+          SetInputControlMode(EditorTextFocus),
+        ]),
+    ),
     (
       "menu.open",
       _ =>
