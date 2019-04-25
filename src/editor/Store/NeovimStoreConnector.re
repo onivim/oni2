@@ -111,10 +111,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       let editor =
         Model.Selectors.getActiveEditorGroup(state)
         |> Model.Selectors.getActiveEditor;
-        switch (editor) {
-        | Some(v) =>
-        | None => ();
-        }
 
       let editorBuffer = Model.Selectors.getActiveBuffer(state);
       switch (editorBuffer, currentBufferId^) {
@@ -139,10 +135,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       };
 
       switch (editor, currentEditorId^) {
-      | (Some(e), Some(v)) =>
-        if (e.id != v) {
-          synchronizeCursorPosition(e);
-        }
+      | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
       | (Some(e), _) => synchronizeCursorPosition(e)
       | _ => ()
       };
@@ -168,7 +161,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
           ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
       )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
-    | Model.Actions.ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.ViewSetActiveEditor(_) => (
+        state,
+        synchronizeEditorEffect(state),
+      )
     | Model.Actions.ViewCloseEditor(_) => (
         state,
         synchronizeEditorEffect(state),
