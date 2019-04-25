@@ -18,25 +18,19 @@ let rec _getIndentLevel =
   /*
    * If the line isn't empty, we should use that lines indent settings.
    *
-   * If the line is empty, we should check the next line along.
-   *  - If the next and previous lines are within one of each other, take the minimum indent level.
-   *  - If they are not, drop to 0 indentation level.
+   * If the line is empty, we should find the next non-blank line and take the minimum indent level between that line and the previous indent level.
    */
-  if (lineText != "") {
+  if (lineText != "" || line + 1 == endLine) {
     Oni_Core.Indentation.getLevel(indentationSettings, lineText);
   } else {
     let nextLineLevel =
-      if (line + 1 == endLine) {
-        0;
-      } else {
-        _getIndentLevel(
-          indentationSettings,
-          buffer,
-          endLine,
-          line + 1,
-          previousIndentLevel,
-        );
-      };
+      _getIndentLevel(
+        indentationSettings,
+        buffer,
+        endLine,
+        line + 1,
+        previousIndentLevel,
+      );
 
     min(nextLineLevel, previousIndentLevel);
   };
