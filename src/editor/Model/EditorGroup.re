@@ -143,11 +143,12 @@ let reduce = (v: t, action: Actions.t) => {
   let metrics = EditorMetrics.reduce(v.metrics, action);
 
   /* Only send updates to _active_ editor */
-  let editors = switch((v.activeEditorId, getActiveEditor(v))) {
-  | (Some(id), Some(e)) => 
-        IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
-  | _ => v.editors
-  };
+  let editors =
+    switch (v.activeEditorId, getActiveEditor(v)) {
+    | (Some(id), Some(e)) =>
+      IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
+    | _ => v.editors
+    };
 
   let v = {...v, metrics, editors};
 

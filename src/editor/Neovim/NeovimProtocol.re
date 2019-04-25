@@ -133,10 +133,14 @@ let make = (nvimApi: NeovimApi.t) => {
 
   let moveCursor: Cursor.move =
     (~column, ~line) => {
-      nvimApi.requestSync("nvim_call_function", M.List([M.String("cursor"), M.List([
-        M.Int(line),
-        M.Int(column),
-      ])])) |> ignore;
+      nvimApi.requestSync(
+        "nvim_call_function",
+        M.List([
+          M.String("cursor"),
+          M.List([M.Int(line), M.Int(column)]),
+        ]),
+      )
+      |> ignore;
     };
 
   let getCurrentDir = () =>

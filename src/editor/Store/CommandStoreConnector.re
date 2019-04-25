@@ -20,8 +20,7 @@ let start = () => {
 
       switch (editor) {
       | None => ()
-      | Some(v) =>
-        dispatch(ViewCloseEditor(v.id));
+      | Some(v) => dispatch(ViewCloseEditor(v.id))
       };
     });
 
