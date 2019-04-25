@@ -12,7 +12,7 @@ open Oni_Model;
 type bufferPositionToPixel = (int, int) => (float, float);
 
 let rec _getIndentLevel =
-        (indentationSettings, buffer, endLine, line, previousIndentLevel) => {
+        (~reverse=false, indentationSettings, buffer, endLine, line, previousIndentLevel) => {
   let lineText = Buffer.getLine(buffer, line);
 
   /*
@@ -21,26 +21,29 @@ let rec _getIndentLevel =
    * If the line is empty, we should find the next non-blank line.
    * Then if the previous and next indent is within 1 indent level of each
    * other, take the larger one. Else, take the smaller indent level.
-   * 
+   *
    * If we hit the last line, just set the next line indent to 0.
    */
   if (lineText != "") {
     Oni_Core.Indentation.getLevel(indentationSettings, lineText);
   } else {
+    let newLine = reverse ? line - 1 : line + 1;
     let nextLineLevel =
-      if (line + 1 == endLine) {
-        0
+      if (newLine == endLine || newLine < 0) {
+        0;
       } else {
         _getIndentLevel(
           indentationSettings,
           buffer,
           endLine,
-          line + 1,
+          newLine,
           previousIndentLevel,
         );
       };
 
-    if (abs(nextLineLevel - previousIndentLevel) <= 1 && previousIndentLevel != 0 && nextLineLevel != 0) {
+    if (abs(nextLineLevel - previousIndentLevel) <= 1
+        && previousIndentLevel != 0
+        && nextLineLevel != 0) {
       max(nextLineLevel, previousIndentLevel);
     } else {
       min(nextLineLevel, previousIndentLevel);
@@ -123,6 +126,7 @@ let render =
     while (topLine^ >= 0 && ! topFinished^) {
       let indentLevel =
         _getIndentLevel(
+          ~reverse=true,
           indentationSettings,
           buffer,
           endLine,
