@@ -75,7 +75,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     let splits = [
       <View style=Style.[flexGrow(1)]>
         {renderTree(~direction=Vertical, theme, windows)}
-        <MessagesView state />
+        <PanelsView state />
       </View>,
     ];
 
