@@ -12,7 +12,14 @@ open Oni_Model;
 type bufferPositionToPixel = (int, int) => (float, float);
 
 let rec _getIndentLevel =
-        (~reverse=false, indentationSettings, buffer, endLine, line, previousIndentLevel) => {
+        (
+          ~reverse=false,
+          indentationSettings,
+          buffer,
+          endLine,
+          line,
+          previousIndentLevel,
+        ) => {
   let lineText = Buffer.getLine(buffer, line);
 
   /*
