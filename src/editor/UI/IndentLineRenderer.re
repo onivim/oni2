@@ -16,9 +16,11 @@ let rec _getIndentLevel =
   let lineText = Buffer.getLine(buffer, line);
 
   /*
-   * If the line isn't empty, we should use that lines indent settings.
+   * If the line isn't empty, we should use that lines indent level.
    *
-   * If the line is empty, we should find the next non-blank line and take the minimum indent level between that line and the previous indent level.
+   * If the line is empty, we should find the next non-blank line.
+   * Then if the previous and next indent is within 1 indent level of each
+   * other, take the larger one. ELse, take the smaller indent level.
    */
   if (lineText != "" || line + 1 == endLine) {
     Oni_Core.Indentation.getLevel(indentationSettings, lineText);
@@ -32,7 +34,11 @@ let rec _getIndentLevel =
         previousIndentLevel,
       );
 
-    min(nextLineLevel, previousIndentLevel);
+    if (abs(nextLineLevel - previousIndentLevel) <= 1) {
+      min(nextLineLevel, previousIndentLevel);
+    } else {
+      max(nextLineLevel, previousIndentLevel);
+    };
   };
 };
 
