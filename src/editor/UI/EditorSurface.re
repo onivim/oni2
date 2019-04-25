@@ -459,7 +459,8 @@ let createElement =
                           -. editor.scrollY,
                         ~height=fontHeight,
                         ~width=
-                          float_of_int(endOffset - startOffset) *. fontWidth,
+                          max(float_of_int(endOffset - startOffset), 1.0)
+                          *. fontWidth,
                         ~color=theme.colors.editorSelectionBackground,
                         (),
                       );
