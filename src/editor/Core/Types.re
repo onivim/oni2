@@ -238,8 +238,8 @@ type messageKind =
   | Echomsg /* ordinary message from plugin (|:echomsg|) */
   | Echoerr /* error message from plugin (|:echoerr|) */
   | ReturnPrompt /* |press-enter| prompt after a group of messages */
-  | Quickfix
-  | Unknown; /* Quickfix navigation message */
+  | Quickfix /* Quickfix navigation message */
+  | Unknown;
 
 [@deriving show({with_path: false})]
 type message = {
