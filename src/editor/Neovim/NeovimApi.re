@@ -136,7 +136,6 @@ let make = (msgpack: MsgpackTransport.t) => {
 
   let requestSync: requestSyncFunction =
     (methodName: string, args: M.t) => {
-      prerr_endline("requestSync: " ++ methodName ++ " | " ++ M.show(args));
       let requestId = getNextId();
 
       let request =
