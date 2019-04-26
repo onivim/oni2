@@ -34,11 +34,14 @@ let getLayout =
       (),
     );
 
+  let minimapPadding =
+    isMinimapShown ? float_of_int(Constants.default.minimapPadding) : 0.0;
+
   let availableWidthInPixels =
     pixelWidth
     -. lineNumberWidthInPixels
     -. float_of_int(Constants.default.scrollBarThickness)
-    -. float_of_int(Constants.default.minimapPadding)
+    -. minimapPadding
     *. 2.;
 
   let widthInCharacters =
@@ -62,8 +65,13 @@ let getLayout =
     };
 
   let minimapWidthInCharacters =
-    maxMinimapCharacters > widthInCharacters
-      ? widthInCharacters : maxMinimapCharacters;
+    if (isMinimapShown) {
+      maxMinimapCharacters > widthInCharacters
+        ? widthInCharacters : maxMinimapCharacters;
+    } else {
+      0;
+    };
+
   let minimapWidthInPixels =
     Constants.default.minimapCharacterWidth * minimapWidthInCharacters;
 
@@ -79,13 +87,15 @@ let getLayout =
 
   let bufferHeightInCharacters = int_of_float(pixelHeight /. characterHeight);
   let minimapHeightInCharacters =
-    int_of_float(
-      pixelHeight
-      /. float_of_int(
-           Constants.default.minimapCharacterHeight
-           + Constants.default.minimapLineSpacing,
-         ),
-    );
+    isMinimapShown
+      ? int_of_float(
+          pixelHeight
+          /. float_of_int(
+               Constants.default.minimapCharacterHeight
+               + Constants.default.minimapLineSpacing,
+             ),
+        )
+      : 0;
 
   let leftOverWidth =
     pixelWidth
@@ -93,7 +103,7 @@ let getLayout =
     -. float_of_int(minimapWidthInPixels)
     -. lineNumberWidthInPixels
     -. float_of_int(Constants.default.scrollBarThickness)
-    -. float_of_int(Constants.default.minimapPadding)
+    -. minimapPadding
     *. 2.;
 
   {

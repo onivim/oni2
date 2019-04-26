@@ -34,6 +34,7 @@ let renderLineNumber =
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
+      lineSetting,
       cursorLine: int,
       yOffset: float,
       transform,
@@ -51,7 +52,7 @@ let renderLineNumber =
       LineNumber.getLineNumber(
         ~bufferLine=lineNumber + 1,
         ~cursorLine=cursorLine + 1,
-        ~setting=Relative,
+        ~setting=lineSetting,
         (),
       ),
     );
@@ -319,7 +320,7 @@ let createElement =
         ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown=true,
+        ~isMinimapShown=state.configuration.editorMinimapEnabled,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
         ~bufferLineCount=lineCount,
@@ -385,6 +386,21 @@ let createElement =
         (),
       );
     };
+
+    let minimapLayout =
+      state.configuration.editorMinimapEnabled
+        ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
+            <Minimap
+              state
+              editor
+              width={layout.minimapWidthInPixels}
+              height={metrics.pixelHeight}
+              count=lineCount
+              metrics
+              getTokensForLine
+            />
+          </View>
+        : React.empty;
 
     (
       hooks,
@@ -524,6 +540,7 @@ let createElement =
                         item,
                         lineNumberWidth,
                         theme,
+                        state.configuration.editorLineNumbers,
                         cursorLine,
                         offset,
                         transform,
@@ -567,17 +584,7 @@ let createElement =
             />
           </View>
         </View>
-        <View style=minimapViewStyle onMouseWheel=scrollMinimap>
-          <Minimap
-            state
-            editor
-            width={layout.minimapWidthInPixels}
-            height={metrics.pixelHeight}
-            count=lineCount
-            metrics
-            getTokensForLine
-          />
-        </View>
+        minimapLayout
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
