@@ -11,7 +11,7 @@ open Oni_Model;
 
 type bufferPositionToPixel = (int, int) => (float, float);
 
-let rec _getIndentLevel =
+let rec getIndentLevel =
         (
           ~reverse=false,
           indentationSettings,
@@ -39,7 +39,8 @@ let rec _getIndentLevel =
       if (newLine == endLine || newLine < 0) {
         0;
       } else {
-        _getIndentLevel(
+        getIndentLevel(
+          ~reverse,
           indentationSettings,
           buffer,
           endLine,
@@ -89,7 +90,7 @@ let render =
   while (l^ < endLine) {
     let line = l^;
     let level =
-      _getIndentLevel(
+      getIndentLevel(
         indentationSettings,
         buffer,
         endLine,
@@ -132,7 +133,7 @@ let render =
 
     while (topLine^ >= 0 && ! topFinished^) {
       let indentLevel =
-        _getIndentLevel(
+        getIndentLevel(
           ~reverse=true,
           indentationSettings,
           buffer,
@@ -153,7 +154,7 @@ let render =
 
     while (bottomLine^ < bufferLineCount && ! bottomFinished^) {
       let indentLevel =
-        _getIndentLevel(
+        getIndentLevel(
           indentationSettings,
           buffer,
           endLine,
