@@ -16,6 +16,7 @@ let rec getIndentLevel =
           ~reverse=false,
           indentationSettings,
           buffer,
+          startLine,
           endLine,
           line,
           previousIndentLevel,
@@ -29,20 +30,22 @@ let rec getIndentLevel =
    * Then if the previous and next indent is within 1 indent level of each
    * other, take the larger one. Else, take the smaller indent level.
    *
-   * If we hit the last line, just set the next line indent to 0.
+   * If we hit the top or bottom of the buffer, just set the next line indent
+   * to 0.
    */
   if (String.trim(lineText) != "") {
     Oni_Core.Indentation.getLevel(indentationSettings, lineText);
   } else {
     let newLine = reverse ? line - 1 : line + 1;
     let nextLineLevel =
-      if (newLine == endLine || newLine < 0) {
+      if (newLine >= endLine || newLine <= startLine) {
         0;
       } else {
         getIndentLevel(
           ~reverse,
           indentationSettings,
           buffer,
+          startLine,
           endLine,
           newLine,
           previousIndentLevel,
@@ -93,6 +96,7 @@ let render =
       getIndentLevel(
         indentationSettings,
         buffer,
+        startLine,
         endLine,
         line,
         previousIndentLevel^,
@@ -137,6 +141,7 @@ let render =
           ~reverse=true,
           indentationSettings,
           buffer,
+          startLine,
           endLine,
           topLine^,
           previousIndentLevel^,
@@ -157,6 +162,7 @@ let render =
         getIndentLevel(
           indentationSettings,
           buffer,
+          startLine,
           endLine,
           bottomLine^,
           previousIndentLevel^,
