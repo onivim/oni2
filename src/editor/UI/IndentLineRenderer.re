@@ -9,8 +9,6 @@ open Revery.Draw;
 open Oni_Core;
 open Oni_Model;
 
-type bufferPositionToPixel = (int, int) => (float, float);
-
 let rec getIndentLevel =
         (
           ~reverse=false,
