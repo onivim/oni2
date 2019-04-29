@@ -56,7 +56,7 @@ type t =
   | WildmenuShow(Wildmenu.t)
   | WildmenuHide(Wildmenu.t)
   | WildmenuSelected(int)
-  | VisualRangeUpdate(Core.Types.VisualRange.t)
+  | VisualRangeUpdate(Core.VisualRange.t)
   | Ignored;
 
 type commandlineInput = {input: string};
@@ -259,7 +259,7 @@ let parse = (t: string, msg: Msgpck.t) => {
         ]),
       ) =>
       let visRange =
-        Core.Types.VisualRange.create(
+        Core.VisualRange.create(
           ~startLine,
           ~startColumn,
           ~endLine,

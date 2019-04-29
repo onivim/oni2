@@ -421,7 +421,7 @@ let createElement =
               switch (activeBuffer) {
               | Some(b) =>
                 let ranges = Selection.getRanges(editor.selection, b);
-                Oni_Core.Types.Range.(
+                Oni_Core.Range.(
                   List.iter(
                     (r: Range.t) => {
                       let line = Index.toZeroBasedInt(r.startPosition.line);
