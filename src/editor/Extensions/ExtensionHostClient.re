@@ -129,16 +129,16 @@ let start =
   let onNotification = (n: Notification.t, _) => {
     switch (n.method, n.params) {
     | ("host/msg", json) =>
-      open Protocol.Notification;
-      print_endline("JSON: " ++ Yojson.Safe.to_string(json));
-      switch (parse(json)) {
-      | Request(req) => handleMessage(req.reqId, req.payload)
-      | Reply(_) => ()
-      | Ack(_) => ()
-      | Error => ()
-      | Ready => _sendInitData()
-      | Initialized => _handleInitialization()
-      };
+      Protocol.Notification.(
+        switch (parse(json)) {
+        | Request(req) => handleMessage(req.reqId, req.payload)
+        | Reply(_) => ()
+        | Ack(_) => ()
+        | Error => ()
+        | Ready => _sendInitData()
+        | Initialized => _handleInitialization()
+        }
+      )
 
     | _ =>
       print_endline("[Extension Host Client] Unknown message: " ++ n.method)

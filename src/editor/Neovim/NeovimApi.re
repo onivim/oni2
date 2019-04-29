@@ -36,6 +36,7 @@ type t = {
    */
   pump: unit => unit,
   onNotification: Event.t(notification),
+  dispose: unit => unit,
 };
 
 exception RequestFailed(string);
@@ -80,6 +81,8 @@ let make = (msgpack: MsgpackTransport.t) => {
       },
     );
 
+  let isRunning = ref(true);
+
   /**
    * NOTE:
    *
@@ -107,19 +110,20 @@ let make = (msgpack: MsgpackTransport.t) => {
     | _ => prerr_endline("Unknown message: " ++ M.show(m))
     };
 
-  let _ = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
+  let dispose1 = Event.subscribe(msgpack.onMessage, m => handleMessage(m));
   /** END NOTE */
 
-  let pump = () => {
-    let notifications = getAndClearNotifications();
+  let pump = () =>
+    if (isRunning^) {
+      let notifications = getAndClearNotifications();
 
-    let f = n => Event.dispatch(onNotification, n);
+      let f = n => Event.dispatch(onNotification, n);
 
-    /* Because of the way we queue notifications in `handleMessage`,
-     * they come in reverse order - therefore, we need to reverse it
-     * to get the correct ordering */
-    List.rev(notifications) |> List.iter(f);
-  };
+      /* Because of the way we queue notifications in `handleMessage`,
+       * they come in reverse order - therefore, we need to reverse it
+       * to get the correct ordering */
+      List.rev(notifications) |> List.iter(f);
+    };
 
   let request = (methodName: string, args: M.t) => {
     let requestId = getNextId();
@@ -140,23 +144,40 @@ let make = (msgpack: MsgpackTransport.t) => {
       clearQueuedResponses();
       msgpack.write(request);
 
-      Utility.waitForCondition(~timeout=10.0, () =>
-        List.length(getQueuedResponses()) >= 1
-      );
+      let hasResponse = v =>
+        List.length(List.filter(m => m.responseId == requestId, v)) >= 1;
 
-      if (List.length(getQueuedResponses()) == 0) {
+      Utility.waitForCondition(~timeout=10.0, () =>
+        hasResponse(getQueuedResponses())
+      );
+      let queuedResponses = getQueuedResponses();
+
+      if (!hasResponse(queuedResponses)) {
         let errorMessage =
           "Request timed out: "
           ++ methodName
           ++ " ("
           ++ string_of_int(requestId)
-          ++ ")";
+          ++ ")"
+          ++ M.show(args);
         prerr_endline(errorMessage);
+        prerr_endline("Queued responses: ");
+        List.iter(
+          m =>
+            prerr_endline(
+              "id: "
+              ++ string_of_int(m.responseId)
+              ++ " payload: "
+              ++ M.show(m.payload),
+            ),
+          queuedResponses,
+        );
         raise(RequestFailed(errorMessage));
       };
 
       let matchingResponse =
-        List.filter(m => m.responseId == requestId, queuedResponses^)
+        queuedResponses
+        |> List.filter(m => m.responseId == requestId)
         |> List.hd;
 
       /* prerr_endline("Got response!"); */
@@ -164,6 +185,11 @@ let make = (msgpack: MsgpackTransport.t) => {
       ret;
     };
 
-  let ret: t = {pump, request, requestSync, onNotification};
+  let dispose = () => {
+    isRunning := false;
+    dispose1();
+  };
+
+  let ret: t = {pump, request, requestSync, onNotification, dispose};
   ret;
 };

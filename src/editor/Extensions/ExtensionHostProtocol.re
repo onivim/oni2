@@ -253,6 +253,16 @@ module OutgoingNotifications = {
     };
   };
 
+  module ExtensionService = {
+    let activateByEvent = (event: string) => {
+      _buildNotification(
+        "ExtHostExtensionService",
+        "$activateByEvent",
+        `List([`String(event)]),
+      );
+    };
+  };
+
   module Workspace = {
     [@deriving
       (show({with_path: false}), yojson({strict: false, exn: true}))

@@ -32,16 +32,30 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       (),
     );
 
-  let _ =
+  let (stream, dispatch) = Isolinear.Stream.create();
+
+  let dispose1 =
     Event.subscribe(nvim.onClose, code =>
       if (code === 0) {
-        App.quit(0);
+        dispatch(Model.Actions.Quit);
       } else {
         ();
           /* TODO: What to do in case Neovim crashes? */
       }
     );
   let nvimApi = NeovimApi.make(msgpackTransport);
+
+  let quitCleanup = () => {
+    print_endline("Neovim - cleaning up...");
+    nvimApi.dispose();
+    msgpackTransport.close();
+    dispose1();
+    nvim.kill(0);
+    print_endline("Neovim - done...");
+  };
+
+  let currentBufferId: ref(option(int)) = ref(None);
+  let currentEditorId: ref(option(int)) = ref(None);
 
   /* let _ = */
   /*   Event.subscribe(nvimApi.onNotification, n => */
@@ -70,40 +84,90 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       neovimProtocol.openFile(~path=filePath, ())
     );
 
-  let openFileByIdEffect = id =>
-    Isolinear.Effect.create(~name="neovim.openFileById", () =>
-      neovimProtocol.openFile(~id, ())
-    );
-
-  let closeFileByIdEffect = id =>
-    Isolinear.Effect.create(~name="neovim.closeFileByIdEffect", () =>
-      neovimProtocol.closeFile(~id, ())
-    );
-
   let requestVisualRangeUpdateEffect =
     Isolinear.Effect.create(~name="neovim.refreshVisualRange", () =>
       neovimProtocol.requestVisualRangeUpdate()
     );
 
+  let registerQuitHandlerEffect =
+    Isolinear.Effect.createWithDispatch(
+      ~name="neovim.registerQuitHandler", dispatch =>
+      dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup))
+    );
+
+  /**
+   synchronizeEditorEffect checks the current state of the app:
+   - open buffer
+   - open editor
+
+   If it is changed from the last time we 'synchronized', we
+   push those changes to Neovim and record the latest state.
+
+   This allows us to keep the buffer management in Onivim 2,
+   and treat Neovim as an entity for manipulating a singular buffer.
+   */
+  let synchronizeEditorEffect = state =>
+    Isolinear.Effect.create(~name="neovim.synchronizeEditor", () => {
+      let editor =
+        Model.Selectors.getActiveEditorGroup(state)
+        |> Model.Selectors.getActiveEditor;
+
+      let editorBuffer = Model.Selectors.getActiveBuffer(state);
+      switch (editorBuffer, currentBufferId^) {
+      | (Some(editorBuffer), Some(v)) =>
+        let id = Model.Buffer.getId(editorBuffer);
+        if (id != v) {
+          neovimProtocol.openFile(~id, ());
+        };
+      | (Some(editorBuffer), _) =>
+        let id = Model.Buffer.getId(editorBuffer);
+        neovimProtocol.openFile(~id, ());
+      | _ => ()
+      };
+
+      let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+        open Core.Types;
+        neovimProtocol.moveCursor(
+          ~column=Index.toOneBasedInt(editor.cursorPosition.character),
+          ~line=Index.toOneBasedInt(editor.cursorPosition.line),
+        );
+        currentEditorId := Some(editor.id);
+      };
+
+      switch (editor, currentEditorId^) {
+      | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
+      | (Some(e), _) => synchronizeCursorPosition(e)
+      | _ => ()
+      };
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Init =>
       let filesToOpen = cli.filesToOpen;
-      let openFileEffects =
-        filesToOpen
-        |> List.map(openFileByPathEffect)
+      let openFileEffects = filesToOpen |> List.map(openFileByPathEffect);
+
+      let allEffects =
+        [registerQuitHandlerEffect, ...openFileEffects]
         |> Isolinear.Effect.batch;
-      (state, openFileEffects);
+      (state, allEffects);
     | Model.Actions.OpenFileByPath(path) => (
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.OpenFileById(id) => (state, openFileByIdEffect(id))
-    | Model.Actions.CloseFileById(id) => (state, closeFileByIdEffect(id))
     | Model.Actions.CursorMove(_) => (
         state,
         state.mode === Core.Types.Mode.Visual
           ? requestVisualRangeUpdateEffect : Isolinear.Effect.none,
+      )
+    | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.ViewSetActiveEditor(_) => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Model.Actions.ViewCloseEditor(_) => (
+        state,
+        synchronizeEditorEffect(state),
       )
     | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
     | Model.Actions.Tick => (state, pumpEffect)
@@ -112,85 +176,74 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     };
   };
 
-  let stream =
-    Isolinear.Stream.ofDispatch(send => {
-      let _ =
-        Event.subscribe(
-          neovimProtocol.onNotification,
-          n => {
-            open Model.Actions;
-            let msg =
-              switch (n) {
-              | OniCommand("oni.editorView.scrollToCursor") =>
-                EditorScrollToCursorCentered
-              | OniCommand("oni.editorView.scrollToCursorTop") =>
-                EditorScrollToCursorTop
-              | OniCommand("oni.editorView.scrollToCursorBottom") =>
-                EditorScrollToCursorBottom
-              | OniCommand("oni.editorView.moveCursorToTop") =>
-                EditorMoveCursorToTop(neovimProtocol.moveCursor)
-              | OniCommand("oni.editorView.moveCursorToMiddle") =>
-                EditorMoveCursorToMiddle(neovimProtocol.moveCursor)
-              | OniCommand("oni.editorView.moveCursorToBottom") =>
-                EditorMoveCursorToBottom(neovimProtocol.moveCursor)
-              | ModeChanged("normal") => ChangeMode(Normal)
-              | ModeChanged("insert") => ChangeMode(Insert)
-              | ModeChanged("replace") => ChangeMode(Replace)
-              | ModeChanged("visual") => ChangeMode(Visual)
-              | ModeChanged("operator") => ChangeMode(Operator)
-              | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
-              | TablineUpdate(tabs) => TablineUpdate(tabs)
-              | ModeChanged(_) => ChangeMode(Other)
-              | VisualRangeUpdate(vr) => SelectionChanged(vr)
-              | CursorMoved(c) =>
-                CursorMove(
-                  Core.Types.Position.create(c.cursorLine, c.cursorColumn),
-                )
-              | BufferWritePost({activeBufferId, _}) =>
-                BufferWritePost({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                })
-              | TextChangedI({activeBufferId, modified, _}) =>
-                TextChangedI({activeBufferId, modified})
-              | TextChanged({activeBufferId, modified, _}) =>
-                TextChanged({activeBufferId, modified})
-              | BufferEnter({activeBufferId, _}) =>
-                neovimProtocol.bufAttach(activeBufferId);
-                BufferEnter({
-                  bufferId: activeBufferId,
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                });
-              | BufferDelete(bd) =>
-                BufferDelete({
-                  buffers: NeovimBuffer.getBufferList(nvimApi),
-                  bufferId: bd.activeBufferId,
-                })
-              | BufferLines(bc) =>
-                BufferUpdate(
-                  Core.Types.BufferUpdate.createFromZeroBasedIndices(
-                    ~id=bc.id,
-                    ~startLine=bc.firstLine,
-                    ~endLine=bc.lastLine,
-                    ~lines=bc.lines,
-                    ~version=bc.changedTick,
-                    (),
-                  ),
-                )
-              | WildmenuShow(w) => WildmenuShow(w)
-              | WildmenuHide(w) => WildmenuHide(w)
-              | WildmenuSelected(s) => WildmenuSelected(s)
-              | CommandlineUpdate(u) => CommandlineUpdate(u)
-              | CommandlineShow(c) => CommandlineShow(c)
-              | CommandlineHide(c) => CommandlineHide(c)
-              | _ => Noop
-              };
+  let _ =
+    Event.subscribe(
+      neovimProtocol.onNotification,
+      n => {
+        open Model.Actions;
+        let msg =
+          switch (n) {
+          | OniCommand("oni.editorView.scrollToCursor") =>
+            EditorScrollToCursorCentered
+          | OniCommand("oni.editorView.scrollToCursorTop") =>
+            EditorScrollToCursorTop
+          | OniCommand("oni.editorView.scrollToCursorBottom") =>
+            EditorScrollToCursorBottom
+          | OniCommand("oni.editorView.moveCursorToTop") =>
+            EditorMoveCursorToTop(neovimProtocol.moveCursor)
+          | OniCommand("oni.editorView.moveCursorToMiddle") =>
+            EditorMoveCursorToMiddle(neovimProtocol.moveCursor)
+          | OniCommand("oni.editorView.moveCursorToBottom") =>
+            EditorMoveCursorToBottom(neovimProtocol.moveCursor)
+          | ModeChanged("normal") => ChangeMode(Normal)
+          | ModeChanged("insert") => ChangeMode(Insert)
+          | ModeChanged("replace") => ChangeMode(Replace)
+          | ModeChanged("visual") => ChangeMode(Visual)
+          | ModeChanged("operator") => ChangeMode(Operator)
+          | ModeChanged("cmdline_normal") => ChangeMode(Commandline)
+          | ModeChanged(_) => ChangeMode(Other)
+          | VisualRangeUpdate(vr) => SelectionChanged(vr)
+          | CursorMoved(c) =>
+            CursorMove(
+              Core.Types.Position.create(c.cursorLine, c.cursorColumn),
+            )
+          | BufferWritePost({activeBufferId, _}) =>
+            let context = NeovimBuffer.getContext(nvimApi, activeBufferId);
+            BufferSaved(context);
+          | TextChanged({activeBufferId, _})
+          | TextChangedI({activeBufferId, _}) =>
+            BufferMarkDirty(activeBufferId)
+          | BufferEnter({activeBufferId, _}) =>
+            neovimProtocol.bufAttach(activeBufferId);
 
-            send(msg);
-          },
-        );
-      ();
-    });
+            let context = NeovimBuffer.getContext(nvimApi, activeBufferId);
+            currentBufferId := Some(activeBufferId);
+            BufferEnter(context);
+
+          | BufferDelete(_) => Noop
+          | BufferLines(bc) =>
+            BufferUpdate(
+              Core.Types.BufferUpdate.createFromZeroBasedIndices(
+                ~id=bc.id,
+                ~startLine=bc.firstLine,
+                ~endLine=bc.lastLine,
+                ~lines=bc.lines,
+                ~version=bc.changedTick,
+                (),
+              ),
+            )
+          | WildmenuShow(w) => WildmenuShow(w)
+          | WildmenuHide(w) => WildmenuHide(w)
+          | WildmenuSelected(s) => WildmenuSelected(s)
+          | CommandlineUpdate(u) => CommandlineUpdate(u)
+          | CommandlineShow(c) => CommandlineShow(c)
+          | CommandlineHide(c) => CommandlineHide(c)
+          | _ => Noop
+          };
+
+        dispatch(msg);
+      },
+    );
 
   (updater, stream);
 };

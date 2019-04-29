@@ -8,10 +8,9 @@
 
 open Revery.UI;
 open Oni_Model;
+module Model = Oni_Model;
 
 module Window = WindowManager;
-
-let noop = () => ();
 
 let component = React.component("Editor");
 
@@ -26,21 +25,6 @@ let editorViewStyle = (background, foreground) =>
     bottom(0),
     flexDirection(`Column),
   ];
-
-let toUiTabs = (tabs: list(State.Tab.t)) => {
-  let f = (t: State.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: () => GlobalContext.current().openFileById(t.id),
-      onClose: () => GlobalContext.current().closeFileById(t.id),
-    };
-    ret;
-  };
-
-  List.map(f, tabs);
-};
 
 /**
    We wrap each split component as we have to have a type signature
@@ -60,7 +44,6 @@ let splitFactory = (fn, ()) => {
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let mode = state.mode;
     let hooks =
       React.Hooks.effect(
         OnMount,
@@ -73,10 +56,13 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
+          let editorGroupId = state.editorGroups.activeId;
+
           let editor =
             Window.createSplit(
               ~direction=Vertical,
-              ~component=splitFactory(state => <EditorSurface state />),
+              ~component=
+                splitFactory(state => <EditorGroupView state editorGroupId />),
               (),
             );
 
@@ -87,16 +73,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         hooks,
       );
 
-    let tabs = toUiTabs(state.tabs);
-    let uiFont = state.uiFont;
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (
-      hooks,
-      <View style>
-        <Tabs theme tabs mode uiFont />
-        <EditorLayoutView state />
-      </View>,
-    );
+    (hooks, <View style> <EditorLayoutView state /> </View>);
   });

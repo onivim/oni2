@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Model;
 
+let metrics = EditorMetrics.create();
+
 /* Create a state with some editor size */
 let simpleState =
   Reducer.reduce(
@@ -22,6 +24,8 @@ let simpleState =
       ),
     ),
   );
+
+let simpleEditor = Editor.create();
 
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!") |> Array.to_list;

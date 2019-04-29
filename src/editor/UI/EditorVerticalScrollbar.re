@@ -17,15 +17,17 @@ let absoluteStyle =
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~height as totalHeight,
       ~width as totalWidth,
       ~diagnostics: list(Diagnostics.Diagnostic.t),
+      ~metrics,
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let scrollMetrics =
-      Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
+      Editor.getVerticalScrollbarMetrics(editor, totalHeight, metrics);
 
     let scrollThumbStyle =
       Style.[
@@ -38,7 +40,7 @@ let createElement =
       ];
 
     let totalPixel =
-      Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
+      Editor.getTotalSizeInPixels(editor, metrics) |> float_of_int;
 
     let bufferLineToScrollbarPixel = line => {
       let pixelY =

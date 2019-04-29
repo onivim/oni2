@@ -7,23 +7,10 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-module Tab = {
-  type t = {
-    id: int,
-    title: string,
-    active: bool,
-    modified: bool,
-  };
-
-  let create = (id, title) => {id, title, active: false, modified: false};
-};
-
 type t = {
   mode: Mode.t,
   diagnostics: Diagnostics.t,
-  tabs: list(Tab.t),
-  buffers: BufferMap.t,
-  activeBufferId: int,
+  buffers: Buffers.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   menu: Menu.t,
@@ -32,10 +19,11 @@ type t = {
   configuration: Configuration.t,
   syntaxHighlighting: SyntaxHighlighting.t,
   theme: Theme.t,
-  editor: Editor.t,
+  editorGroups: EditorGroups.t,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
+  lifecycle: Lifecycle.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
 };
@@ -48,8 +36,7 @@ let create: unit => t =
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
-    activeBufferId: 0,
-    buffers: BufferMap.empty,
+    buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
@@ -58,11 +45,11 @@ let create: unit => t =
         ~measuredHeight=1.,
         (),
       ),
+    lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
-    tabs: [],
     theme: Theme.create(),
-    editor: Editor.create(),
+    editorGroups: EditorGroups.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),

@@ -93,35 +93,6 @@ module Position = {
   };
 };
 
-module Range = {
-  [@deriving show({with_path: false})]
-  type t = {
-    startPosition: Position.t,
-    endPosition: Position.t,
-  };
-
-  let createFromPositions = (~startPosition, ~endPosition, ()) => {
-    startPosition,
-    endPosition,
-  };
-
-  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
-    createFromPositions(
-      ~startPosition=Position.create(startLine, startCharacter),
-      ~endPosition=Position.create(endLine, endCharacter),
-      (),
-    );
-
-  let zero =
-    create(
-      ~startLine=ZeroBasedIndex(0),
-      ~startCharacter=ZeroBasedIndex(0),
-      ~endLine=ZeroBasedIndex(0),
-      ~endCharacter=ZeroBasedIndex(0),
-      (),
-    );
-};
-
 [@deriving show({with_path: false})]
 type buftype =
   | Empty
@@ -164,8 +135,8 @@ module BufferMetadata = {
         ~bufType=Empty,
         ~id=0,
         ~hidden=false,
-        ~modified=false,
         ~version=0,
+        ~modified=false,
         (),
       ) => {
     filePath,
@@ -173,23 +144,13 @@ module BufferMetadata = {
     bufType,
     id,
     hidden,
-    modified,
     version,
-  };
-};
-
-module BufferNotification = {
-  [@deriving show({with_path: false})]
-  type t = {
-    bufferId: int,
-    buffers: list(BufferMetadata.t),
+    modified,
   };
 
-  let getBufferMetadataOpt = (id, v: t) => {
-    let result =
-      v.buffers |> List.filter((b: BufferMetadata.t) => b.id == id);
-    List.nth_opt(result, 0);
-  };
+  let markSaved = (bm: t) => {...bm, modified: false};
+
+  let markDirty = (bm: t) => {...bm, modified: true};
 };
 
 module BufferUpdate = {
@@ -242,24 +203,6 @@ module BufferUpdate = {
       version,
     };
     ret;
-  };
-};
-
-module Tabline = {
-  [@deriving show({with_path: false})]
-  type t = {
-    tab: int,
-    name: string,
-  };
-
-  [@deriving show({with_path: false})]
-  type tabs = list(t);
-};
-
-module TextChanged = {
-  type t = {
-    activeBufferId: int,
-    modified: bool,
   };
 };
 
@@ -320,62 +263,5 @@ module Input = {
   type keyBindings = {
     key: string,
     command: string,
-  };
-};
-
-module VisualRange = {
-  [@deriving show({with_path: false})]
-  type mode =
-    | None
-    | Visual /* "v" */
-    | BlockwiseVisual /* "<C-v>" */
-    | LinewiseVisual; /* "V" */
-
-  [@deriving show({with_path: false})]
-  type t = {
-    range: Range.t,
-    mode,
-  };
-
-  let _modeFromString = s => {
-    switch (s) {
-    | "V" => LinewiseVisual
-    | "vb" => BlockwiseVisual
-    | "v" => Visual
-    | _ => None
-    };
-  };
-
-  /*
-   * The range might not always come through in the correct 'order' -
-   * this method normalizes the range so that the (startLine, startColumn) is
-   * before or equal to (endLine, endColumn)
-   */
-  let _normalizeRange = (startLine, startColumn, endLine, endColumn) =>
-    if (startLine > endLine) {
-      (endLine, endColumn, startLine, startColumn);
-    } else if (startLine == endLine && startColumn > endColumn) {
-      (endLine, endColumn, startLine, startColumn);
-    } else {
-      (startLine, startColumn, endLine, endColumn);
-    };
-
-  let create =
-      (~startLine=1, ~startColumn=1, ~endLine=1, ~endColumn=1, ~mode="", ()) => {
-    let (startLine, startColumn, endLine, endColumn) =
-      _normalizeRange(startLine, startColumn, endLine, endColumn);
-
-    let range =
-      Range.create(
-        ~startLine=OneBasedIndex(startLine),
-        ~startCharacter=OneBasedIndex(startColumn),
-        ~endLine=OneBasedIndex(endLine),
-        ~endCharacter=OneBasedIndex(endColumn),
-        (),
-      );
-
-    let mode = _modeFromString(mode);
-
-    {range, mode};
   };
 };

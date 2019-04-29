@@ -1,8 +1,7 @@
 {
-  "editor.lineNumbers": ["relative"],
+  "editor.lineNumbers": "relative",
   "editor.minimap.enabled": true,
   "editor.minimap.showSlider": true,
-  "editor.tablineMode": ["buffers"],
   "workbench.iconTheme": "vs-seti",
   "editor.insertSpaces": false,
   "editor.indentSize": 4,

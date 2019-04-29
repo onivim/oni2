@@ -5,6 +5,7 @@
  * based on the visual selection state
  */
 
+open Oni_Core;
 open Oni_Core.Types;
 
 let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {

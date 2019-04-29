@@ -8,7 +8,9 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Model;
+module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
+module Editor = Oni_Model.Editor;
+module State = Oni_Model.State;
 
 open Types;
 
@@ -49,8 +51,8 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let getMinimapSize = (view: Editor.t) => {
-  let currentViewSize = Editor.getVisibleView(view);
+let getMinimapSize = (view: Editor.t, metrics) => {
+  let currentViewSize = Editor.getVisibleView(metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
@@ -58,10 +60,12 @@ let getMinimapSize = (view: Editor.t) => {
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~width: int,
       ~height: int,
       ~count,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
+      ~metrics,
       ~children as _,
       (),
     ) =>
@@ -75,8 +79,8 @@ let createElement =
     let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
 
     let getScrollTo = (mouseY: float) => {
-      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
-      let visibleHeight: int = state.editor.size.pixelHeight;
+      let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
+      let visibleHeight: int = metrics.pixelHeight;
       let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
@@ -92,7 +96,7 @@ let createElement =
         Always,
         () => {
           let isCaptured = isActive;
-          let startPosition = state.editor.scrollY;
+          let startPosition = editor.scrollY;
 
           Mouse.setCapture(
             ~onMouseMove=
@@ -102,8 +106,7 @@ let createElement =
                   let minimapLineSize =
                     Constants.default.minimapCharacterWidth
                     + Constants.default.minimapCharacterHeight;
-                  let linesInMinimap =
-                    state.editor.size.pixelHeight / minimapLineSize;
+                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
                   GlobalContext.current().editorScroll(
                     ~deltaY=
                       (startPosition -. scrollTo)
@@ -126,17 +129,16 @@ let createElement =
         hooks,
       );
 
-    let scrollY = state.editor.minimapScrollY;
+    let scrollY = editor.minimapScrollY;
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
-      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
+      let linesInMinimap = metrics.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
-        ~deltaY=
-          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
+        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
@@ -156,11 +158,11 @@ let createElement =
                 ~y=
                   rowHeight
                   *. float_of_int(
-                       Editor.getTopVisibleLine(state.editor) - 1,
+                       Editor.getTopVisibleLine(editor, metrics) - 1,
                      )
                   -. scrollY,
                 ~height=
-                  rowHeight *. float_of_int(getMinimapSize(state.editor)),
+                  rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
                 ~width=float_of_int(width),
                 ~color=state.theme.colors.scrollbarSliderHoverBackground,
                 (),
@@ -173,7 +175,7 @@ let createElement =
               ~y=
                 rowHeight
                 *. float_of_int(
-                     Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                     Index.toZeroBasedInt(editor.cursorPosition.line),
                    )
                 -. scrollY,
               ~height=float_of_int(Constants.default.minimapCharacterHeight),
