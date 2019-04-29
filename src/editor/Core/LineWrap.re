@@ -60,9 +60,28 @@ let create: (string, int) => t = (s, width) => {
 
 let count: (t) => int = (v) => Array.length(v);
 
-let toVirtualPosition: (Index.t, t) => Position.t = (character, _v) => {
+let toVirtualPosition: (Index.t, t) => Position.t = (character, v) => {
 	let c = Index.toInt0(character);
+    let len = Array.length(v);
 
-    Position.fromIndices0(0, c);
+    let idx = ref(0);
+    let curr = ref(c);
+	let found = ref(false);
+
+	while (idx^ < len && !found^) {
+	   let i = idx^;
+ 
+	   let currentLine = v[i];
+	   
+	   if (curr^ >= currentLine.length) {
+					curr := curr^ - currentLine.length;
+				} else {
+					found := true;
+				}
+
+	   incr(idx);
+	};
+
+    Position.fromIndices0(idx^ - 1, curr^);
 };
 
