@@ -1,58 +1,77 @@
 open Types;
 
-  [@deriving show({with_path: false})]
-  type t = {
-    startPosition: Position.t,
-    endPosition: Position.t,
+[@deriving show({with_path: false})]
+type t = {
+  startPosition: Position.t,
+  endPosition: Position.t,
+};
+
+let createFromPositions = (~startPosition, ~endPosition, ()) => {
+  startPosition,
+  endPosition,
+};
+
+let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
+  createFromPositions(
+    ~startPosition=Position.create(startLine, startCharacter),
+    ~endPosition=Position.create(endLine, endCharacter),
+    (),
+  );
+
+let zero =
+  create(
+    ~startLine=ZeroBasedIndex(0),
+    ~startCharacter=ZeroBasedIndex(0),
+    ~endLine=ZeroBasedIndex(0),
+    ~endCharacter=ZeroBasedIndex(0),
+    (),
+  );
+
+let toZeroBasedPair = (v: Position.t) => {
+  (Index.toZeroBasedInt(v.line), Index.toZeroBasedInt(v.character));
+};
+
+let explode = (v, measure) => {
+  let (startLine, startCharacter) = v.startPosition |> toZeroBasedPair;
+  let (endLine, endCharacter) = v.endPosition |> toZeroBasedPair;
+
+  if (startLine == endLine) {
+    [v];
+  } else {
+    let idx = ref(startLine);
+
+    let ranges = ref([]);
+
+    while (idx^ < endLine) {
+      let i = idx^;
+
+      let startCharacter = i == startLine ? startCharacter : 0;
+      let endCharacter = min(0, measure(i) - 1);
+
+      ranges :=
+        [
+          create(
+            ~startLine=ZeroBasedIndex(i),
+            ~startCharacter=ZeroBasedIndex(startCharacter),
+            ~endCharacter=ZeroBasedIndex(endCharacter),
+            ~endLine=ZeroBasedIndex(i),
+            (),
+          ),
+          ...ranges^,
+        ];
+
+      incr(idx);
+    };
+
+    [
+      create(
+        ~startLine=ZeroBasedIndex(endLine),
+        ~startCharacter=ZeroBasedIndex(0),
+        ~endCharacter=ZeroBasedIndex(endCharacter),
+        ~endLine=ZeroBasedIndex(endLine),
+        (),
+      ),
+      ...ranges^,
+    ];
   };
-
-  let createFromPositions = (~startPosition, ~endPosition, ()) => {
-    startPosition,
-    endPosition,
-  };
-
-  let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
-    createFromPositions(
-      ~startPosition=Position.create(startLine, startCharacter),
-      ~endPosition=Position.create(endLine, endCharacter),
-      (),
-    );
-
-  let zero =
-    create(
-      ~startLine=ZeroBasedIndex(0),
-      ~startCharacter=ZeroBasedIndex(0),
-      ~endLine=ZeroBasedIndex(0),
-      ~endCharacter=ZeroBasedIndex(0),
-      (),
-    );
-
-  let toZeroBasedPair = (v: Position.t) => {
-			(Index.toZeroBasedInt(v.line), Index.toZeroBasedInt(v.character))
-	};
-
-  let explode = (v, measure) => {
-     let (startLine, startCharacter) = v.startPosition |> toZeroBasedPair;
-	 let (endLine, endCharacter) = v.endPosition |> toZeroBasedPair;
-
-     if (startLine == endLine) {
-					[v]
-	} else {
-		let idx = ref(startLine);
-
-		let ranges = ref([]);
-
-		while (idx^ < endLine) {
-			let i = idx^;
-
-			let startCharacter = i == startLine ? startCharacter : 0;
-			let endCharacter = min(0, measure(i) - 1);
-
-			ranges := [create(~startLine=ZeroBasedIndex(i), ~startCharacter=ZeroBasedIndex(startCharacter), ~endCharacter=ZeroBasedIndex(endCharacter), ~endLine=ZeroBasedIndex(i), ()), ...ranges^];
-
-			incr(idx);
-		};
-
-		[create(~startLine=ZeroBasedIndex(endLine), ~startCharacter=ZeroBasedIndex(0), ~endCharacter=ZeroBasedIndex(endCharacter), ~endLine=ZeroBasedIndex(endLine), ()), ...ranges^];
-	}
-  };
+};
