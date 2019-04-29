@@ -48,13 +48,13 @@ let createElement =
         *. state.editorFont.measuredHeight;
       int_of_float(
         pixelY
-        /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
+        /. (totalPixel +. float_of_int(metrics.pixelHeight))
         *. float_of_int(totalHeight),
       );
     };
 
     let cursorPosition =
-      bufferLineToScrollbarPixel(state.editor.cursorPosition.line);
+      bufferLineToScrollbarPixel(editor.cursorPosition.line);
     let cursorSize = 2;
 
     let scrollCursorStyle =
