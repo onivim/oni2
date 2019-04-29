@@ -46,11 +46,11 @@ let getVirtualLine = (_idx, _buffer, _v) => {
 
 let getVirtualLineCount = v => v.virtualLines;
 
-let bufferRangeToVirtualPosition = (_position, _v) => {
+let bufferPositionToVirtual = (_position, _v) => {
   Position.zero;
 };
 
-let bufferRangeToVirtualRanges = (range, _v) => {
+let bufferRangeToVirtual = (range, _v) => {
   [range];
 };
 
