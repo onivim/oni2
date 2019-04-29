@@ -183,7 +183,7 @@ describe("Extension Client", ({describe, _}) => {
         let contentChange =
           ModelContentChange.create(
             ~range=
-              Types.Range.create(
+              Range.create(
                 ~startLine=ZeroBasedIndex(0),
                 ~endLine=ZeroBasedIndex(0),
                 ~startCharacter=ZeroBasedIndex(0),

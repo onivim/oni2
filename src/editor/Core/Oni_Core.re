@@ -25,3 +25,4 @@ module Range = Range;
 module Ripgrep = Ripgrep;
 module Tokenizer = Tokenizer;
 module Uri = Uri;
+module VisualRange = VisualRange;

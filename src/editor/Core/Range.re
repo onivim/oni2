@@ -1,3 +1,5 @@
+open Types;
+
   [@deriving show({with_path: false})]
   type t = {
     startPosition: Position.t,
@@ -24,3 +26,34 @@
       ~endCharacter=ZeroBasedIndex(0),
       (),
     );
+
+  let toZeroBasedPair = (v: Position.t) => {
+			(Index.toZeroBasedInt(v.line), Index.toZeroBasedInt(v.character))
+	};
+
+  let explode = (v, measure) => {
+     let (startLine, startCharacter) = v.startPosition |> toZeroBasedPair;
+	 let (endLine, endCharacter) = v.endPosition |> toZeroBasedPair;
+
+     if (startLine == endLine) {
+					[v]
+	} else {
+		let idx = ref(startLine);
+
+		let ranges = ref([]);
+
+		while (idx^ < endLine) {
+			let i = idx^;
+
+			let startCharacter = i == startLine ? startCharacter : 0;
+			let endCharacter = min(0, measure(i) - 1);
+
+			ranges := [create(~startLine=ZeroBasedIndex(i), ~startCharacter=ZeroBasedIndex(startCharacter), ~endCharacter=ZeroBasedIndex(endCharacter), ~endLine=ZeroBasedIndex(i), ()), ...ranges^];
+
+			incr(idx);
+		};
+
+		[create(~startLine=ZeroBasedIndex(endLine), ~startCharacter=ZeroBasedIndex(0), ~endCharacter=ZeroBasedIndex(endCharacter), ~endLine=ZeroBasedIndex(endLine), ()), ...ranges^];
+	}
+
+  };

@@ -7,7 +7,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 
 module Diagnostic = {
   type t = {range: Range.t};

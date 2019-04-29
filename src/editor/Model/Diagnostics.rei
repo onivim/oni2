@@ -6,7 +6,7 @@
  * or minimap.
  */
 
-open Oni_Core.Types;
+open Oni_Core;
 
 module Diagnostic: {
   type t = {range: Range.t};
