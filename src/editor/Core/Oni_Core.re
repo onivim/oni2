@@ -21,6 +21,7 @@ module IndentationSettings = IndentationSettings;
 module Theme = Theme;
 module Keybindings = Keybindings;
 module Filesystem = Filesystem;
+module Range = Range;
 module Ripgrep = Ripgrep;
 module Tokenizer = Tokenizer;
 module Uri = Uri;
