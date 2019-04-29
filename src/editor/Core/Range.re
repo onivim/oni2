@@ -55,5 +55,4 @@ open Types;
 
 		[create(~startLine=ZeroBasedIndex(endLine), ~startCharacter=ZeroBasedIndex(0), ~endCharacter=ZeroBasedIndex(endCharacter), ~endLine=ZeroBasedIndex(endLine), ()), ...ranges^];
 	}
-
   };
