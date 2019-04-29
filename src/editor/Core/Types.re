@@ -10,11 +10,18 @@ module Index = {
     | OneBasedIndex(n) => n - 1
     };
 
+  let ofInt0 = (v) => ZeroBasedIndex(v);
+  let ofInt1 = (v) => OneBasedIndex(v);
+
+  let toInt0 = toZeroBasedInt;
+
   let toOneBasedInt = (pos: t) =>
     switch (pos) {
     | ZeroBasedIndex(n) => n + 1
     | OneBasedIndex(n) => n
     };
+
+  let toInt1 = toOneBasedInt;
 };
 
 module EditorSize = {
@@ -91,6 +98,10 @@ module Position = {
     line: ZeroBasedIndex(line),
     character: ZeroBasedIndex(character),
   };
+ 
+  let fromIndices0 = createFromZeroBasedIndices;
+	
+  let toIndices0 = (v: t) => (Index.toInt0(v.line), Index.toInt0(v.character))
 };
 
 module Range = {

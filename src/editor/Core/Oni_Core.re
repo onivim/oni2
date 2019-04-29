@@ -10,6 +10,7 @@ module ConfigurationParser = ConfigurationParser;
 module Constants = Constants;
 module IntMap = IntMap;
 module LineNumber = LineNumber;
+module LineWrap = LineWrap;
 module Log = Log;
 module Node = Node;
 module Setup = Setup;

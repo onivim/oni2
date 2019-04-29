@@ -4,6 +4,8 @@
  * Logic for wrapping lines in Onivim 2
  */
 
+open Types;
+
 type wrap = {
 	/*
 	 * The UTF-8 index of the start of a wrapped (virtual) line
@@ -16,12 +18,12 @@ type wrap = {
 	length: int,
 };
 
-type t = {
-	wraps: array(wrap),
-};
+type t = array(wrap);
 
-let wrapLine: (string, int) => t = (s, width) => {
-	let len = Zed_utf8.len(s);
+let empty = [|{index: 0, length: 0}|];
+
+let create: (string, int) => t = (s, width) => {
+	let len = Zed_utf8.length(s);
 	let idx = ref(0);
 	let wraps = ref([]);
 
@@ -35,8 +37,8 @@ let wrapLine: (string, int) => t = (s, width) => {
 		- Showing indent character
 	*/
 	while (idx^ < len) {
-		let segment = min(width, len - idx);
 		let i = idx^;
+		let segment = min(width, len - i);
 		let wrap = {
 			index: i,
 			length: i + segment,
@@ -45,9 +47,22 @@ let wrapLine: (string, int) => t = (s, width) => {
 		idx := i + segment;
 	};
 
-	wraps
+	let ret = wraps^
 	|> List.rev
-	|> List.to_array;
+	|> Array.of_list;
+
+	switch (Array.length(ret)) {
+	| 0 => empty
+	| _ => ret
+	};
+
 };
 
+let count: (t) => int = (v) => Array.length(v);
+
+let toVirtualPosition: (Index.t, t) => Position.t = (character, _v) => {
+	let c = Index.toInt0(character);
+
+    Position.fromIndices0(0, c);
+};
 
