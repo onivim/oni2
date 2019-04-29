@@ -25,8 +25,8 @@ let create = (buffer: Buffer.t, wrapColumn: int) => {
 	let bufferLineMap: ref(IntMap.t(LineWrap.t)) = ref(IntMap.empty);
 
 	let idx = ref(0);
-	let lineCount = ref(0);
-	while (idx < lineCount) {
+	let virtualLineCount = ref(0);
+	while (idx^ < lineCount) {
 
 		let i = idx^;
 		let line = Buffer.getLine(buffer, i);
@@ -34,7 +34,7 @@ let create = (buffer: Buffer.t, wrapColumn: int) => {
 		let lineWrap = LineWrap.create(line, wrapColumn);
 		bufferLineMap := IntMap.add(i, lineWrap, bufferLineMap^);
 
-		lineCount := lineCount^ + LineWrap.count(lineWrap);
+		virtualLineCount := virtualLineCount^ + LineWrap.count(lineWrap);
 
 		incr(idx);
 	};
@@ -42,6 +42,6 @@ let create = (buffer: Buffer.t, wrapColumn: int) => {
 	{
 		bufferLineToVirtualLine: bufferLineMap^,
 		virtualLineToBufferLine: IntMap.empty,
-		virtualLines: lineCount^,
+		virtualLines: virtualLineCount^,
 	};
 };
