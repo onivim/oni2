@@ -10,6 +10,7 @@ module Actions = Actions;
 module Buffer = Buffer;
 module Buffers = Buffers;
 module BufferViewTokenizer = BufferViewTokenizer;
+module BufferWrap = BufferWrap;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
 module Diagnostics = Diagnostics;
