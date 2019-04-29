@@ -21,16 +21,3 @@ let repeat = (~iterations: int=5, f) => {
     count := count^ + 1;
   };
 };
-
-let createNumericalList = (v: int) => {
-	let ret = ref([]);
-
-	let curr = ref(v);
-
-	while (curr > 0) {
-		decr(curr);
-		ret := [curr^, ...ret^];
-	}
-
-	ret;
-};

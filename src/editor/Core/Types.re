@@ -22,6 +22,8 @@ module Index = {
     };
 
   let toInt1 = toOneBasedInt;
+
+  let zero = ZeroBasedIndx(0);
 };
 
 module EditorSize = {
@@ -105,6 +107,8 @@ module Position = {
     Index.toInt0(v.line),
     Index.toInt0(v.character),
   );
+
+  let zero = fromIndices0(0, 0);
 };
 
 module Range = {
@@ -126,14 +130,7 @@ module Range = {
       (),
     );
 
-  let zero =
-    create(
-      ~startLine=ZeroBasedIndex(0),
-      ~startCharacter=ZeroBasedIndex(0),
-      ~endLine=ZeroBasedIndex(0),
-      ~endCharacter=ZeroBasedIndex(0),
-      (),
-    );
+  let zero = createFromPositions(~startPosition=Position.zero, ~endPosition=Position.zero, ());
 };
 
 [@deriving show({with_path: false})]

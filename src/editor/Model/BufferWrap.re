@@ -6,6 +6,7 @@
  */
 
 open Oni_Core;
+open Oni_Core.Types;
 
 type t = {
 	bufferLineToVirtualLine: IntMap.t(LineWrap.t),
@@ -19,7 +20,7 @@ let empty = {
 	virtualLines: 0,
 };
 
-let create = (buffer: Buffer.t, wrapColumn: int) => {
+let create = (buffer, wrapColumn) => {
 	let lineCount = Buffer.getNumberOfLines(buffer);
 
 	let bufferLineMap: ref(IntMap.t(LineWrap.t)) = ref(IntMap.empty);
@@ -44,4 +45,16 @@ let create = (buffer: Buffer.t, wrapColumn: int) => {
 		virtualLineToBufferLine: IntMap.empty,
 		virtualLines: virtualLineCount^,
 	};
+};
+
+let getVirtualLine = (idx, buffer, v) => {
+	""
+};
+
+let bufferRangeToVirtualPosition = (position, v) => {
+	Position.zero;
+};
+
+let bufferRangeToVirtualRanges = (range, v) => {
+	[range]
 };
