@@ -4,7 +4,7 @@ open TestFramework;
 
 let smallBuffer = Buffer.ofLines([|"Hello World"|]);
 
-describe("BufferWrap", ({describe, _}) =>
+describe("BufferWrap", ({describe, _}) => {
   describe("getVirtualLines", ({test, _}) =>
     test("basic virtual line validation", ({expect}) => {
       let w = BufferWrap.create(smallBuffer, 6);
@@ -28,4 +28,4 @@ describe("BufferWrap", ({describe, _}) =>
       expect.int(0).toBe(2);
     });
   });
-);
+});
