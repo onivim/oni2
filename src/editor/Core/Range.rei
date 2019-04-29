@@ -35,4 +35,4 @@ let zero: t;
  * If the input range is a single line, a single item list with the input range
  * will be returned.
  */
-let explode: (t, int => int) => list(t);
+let explode: (int => int, t) => list(t);

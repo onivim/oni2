@@ -31,7 +31,7 @@ let toZeroBasedPair = (v: Position.t) => {
   (Index.toZeroBasedInt(v.line), Index.toZeroBasedInt(v.character));
 };
 
-let explode = (v, measure) => {
+let explode = (measure, v) => {
   let (startLine, startCharacter) = v.startPosition |> toZeroBasedPair;
   let (endLine, endCharacter) = v.endPosition |> toZeroBasedPair;
 
@@ -46,7 +46,7 @@ let explode = (v, measure) => {
       let i = idx^;
 
       let startCharacter = i == startLine ? startCharacter : 0;
-      let endCharacter = min(0, measure(i) - 1);
+      let endCharacter = max(0, measure(i) - 1);
 
       ranges :=
         [
@@ -72,6 +72,7 @@ let explode = (v, measure) => {
         (),
       ),
       ...ranges^,
-    ];
+    ]
+    |> List.rev;
   };
 };

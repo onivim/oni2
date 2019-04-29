@@ -5,7 +5,7 @@ module Range = Oni_Core.Range;
 module Buffer = Oni_Model.Buffer;
 module Selection = Oni_Model.Selection;
 
-open Helpers;
+open Oni_Core_Test.Helpers;
 
 describe("Selection", ({test, _}) =>
   test("linewise: clamps range to buffer lines", ({expect}) => {
