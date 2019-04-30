@@ -1,4 +1,4 @@
-PositionToVirtualmodule Index = {
+module Index = {
   [@deriving show({with_path: false})]
   type t =
     | ZeroBasedIndex(int)

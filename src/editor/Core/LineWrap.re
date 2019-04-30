@@ -35,7 +35,7 @@ let create = (s, width) => {
   while (idx^ < len) {
     let i = idx^;
     let segment = min(width, len - i);
-    let wrap = {index: i, length: i + segment};
+    let wrap = {index: i, length: segment};
     wraps := [wrap, ...wraps^];
     idx := i + segment;
   };
@@ -73,4 +73,9 @@ let toVirtualPosition = (character, v) => {
   };
 
   Position.fromIndices0(idx^ - 1, curr^);
+};
+
+let getOffsets = (idx, v) => {
+	let {index, length} = v[idx];	
+	(index, length)
 };

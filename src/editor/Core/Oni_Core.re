@@ -8,6 +8,7 @@ module Cli = Cli;
 module Configuration = Configuration;
 module ConfigurationParser = ConfigurationParser;
 module Constants = Constants;
+module IntHash = IntHash;
 module IntMap = IntMap;
 module LineNumber = LineNumber;
 module LineWrap = LineWrap;

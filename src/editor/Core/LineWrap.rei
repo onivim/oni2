@@ -25,3 +25,5 @@ let count: t => int;
  * based on the virtual line information.
  */
 let toVirtualPosition: (Index.t, t) => Position.t;
+
+let getOffsets: (int, t) => (int, int);
