@@ -60,8 +60,8 @@ let create = (buffer, wrapMode) => {
   };
 
   {
-	bufferId: id,
-	bufferVersion: version,
+    bufferId: id,
+    bufferVersion: version,
     bufferLineToVirtualInfo: bufferLineHash,
     virtualLineToBufferLine: virtualLineHash,
     virtualLines: virtualLineCount^,
@@ -69,13 +69,13 @@ let create = (buffer, wrapMode) => {
 };
 
 let assertBufferMatches = (buffer, v) => {
-	let {id, version, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
-	let {bufferId, bufferVersion, _} = v;
+  let {id, version, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
+  let {bufferId, bufferVersion, _} = v;
 
-	switch (id == bufferId && version == bufferVersion) {
-	| false => raise(BufferOutOfSync)
-	| _ => ();
-	}
+  switch (id == bufferId && version == bufferVersion) {
+  | false => raise(BufferOutOfSync)
+  | _ => ()
+  };
 };
 
 let getVirtualLine = (idx, buffer, v) => {

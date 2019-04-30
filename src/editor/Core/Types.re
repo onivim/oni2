@@ -201,20 +201,18 @@ module BufferUpdate = {
   let to_yojson = (v: t) => {
     let jsonr: jsont = {
       id: v.id,
-      startLine: v.startLine |> Index.toZeroBasedInt,
-      endLine: v.endLine |> Index.toZeroBasedInt,
+      startLine: v.startLine |> Index.toInt0,
+      endLine: v.endLine |> Index.toInt0,
       lines: v.lines,
       version: v.version,
     };
     jsont_to_yojson(jsonr);
   };
 
-  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
-    id,
-    startLine,
-    endLine,
-    lines,
-    version,
+  let create =
+      (~id=0, ~startLine: Index.t, ~endLine: Index.t, ~lines, ~version, ()) => {
+    let ret: t = {id, startLine, endLine, lines, version};
+    ret;
   };
 
   let createFromZeroBasedIndices =
