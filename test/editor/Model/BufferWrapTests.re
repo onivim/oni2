@@ -83,4 +83,24 @@ describe("BufferWrap", ({describe, _}) => {
       validateRanges(expect, actual, expected);
     });
   });
+
+  describe("update", ({test, _}) => {
+	let multiLineBuffer = Buffer.ofLines([|"line1", "line2", "line3"|]);
+
+	test("same buffer lines, add virtual lines", ({expect}) => {
+		expect.int(0).toBe(1);
+	});
+
+	test("same buffer lines, remove virtual lines", ({expect}) => {
+		expect.int(0).toBe(1);
+	});
+
+	test("add buffer lines", ({expect}) => {
+		expect.int(0).toBe(1);
+	});
+
+	test("remove buffer lines", ({expect}) => {
+		expect.int(0).toBe(1);
+	});
+  });
 });
