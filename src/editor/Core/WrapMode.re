@@ -3,9 +3,9 @@
  */
 
 type t =
-| NoWrap
-| WrapColumn(int);
+  | NoWrap
+  | WrapColumn(int);
 
 let noWrap = NoWrap;
 
-let column = (i) => WrapColumn(i);
+let column = i => WrapColumn(i);
