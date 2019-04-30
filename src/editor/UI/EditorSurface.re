@@ -484,34 +484,36 @@ let createElement =
                 ~count,
                 ~render=
                   (item, offset) => {
+                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                      {let (x0, y0) =
+                         bufferPositionToPixel(
+                           Index.toZeroBasedInt(d.range.startPosition.line),
+                           Index.toZeroBasedInt(
+                             d.range.startPosition.character,
+                           ),
+                         )
+                       let (x1, _) =
+                         bufferPositionToPixel(
+                           Index.toZeroBasedInt(d.range.endPosition.line),
+                           Index.toZeroBasedInt(
+                             d.range.endPosition.character,
+                           ),
+                         )
 
-					let renderDiagnostics = (d: Diagnostics.Diagnostic.t) => {
-								let (x0, y0) =
-										bufferPositionToPixel(
-												Index.toZeroBasedInt(d.range.startPosition.line),
-												Index.toZeroBasedInt(d.range.startPosition.character),
-										);
-								let (x1, _) =
-										bufferPositionToPixel(
-												Index.toZeroBasedInt(d.range.endPosition.line),
-												Index.toZeroBasedInt(d.range.endPosition.character),
-										);
+                       Shapes.drawRect(
+                         ~transform,
+                         ~x=x0,
+                         ~y=y0 +. offset +. fontHeight,
+                         ~height=1.,
+                         ~width=x1 -. x0,
+                         ~color=Colors.red,
+                         (),
+                       )};
 
-						Shapes.drawRect(
-							~transform,
-							~x=x0,
-							~y=y0 +. offset +. fontHeight,
-							~height=1.,
-							~width=x1 -. x0,
-							~color=Colors.red,
-							(),
-							);
-					};
-
-					switch (IntMap.find_opt(item, diagnostics)) {
-					| None => ()
-					| Some(v) => List.iter(renderDiagnostics, v)
-					};
+                    switch (IntMap.find_opt(item, diagnostics)) {
+                    | None => ()
+                    | Some(v) => List.iter(renderDiagnostics, v)
+                    };
                   },
                 (),
               );

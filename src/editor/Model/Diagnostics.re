@@ -20,8 +20,7 @@ module Diagnostic = {
   let explode = (buffer: Buffer.t, v: t) => {
     let measure = Buffer.getLineLength(buffer);
 
-	Range.explode(measure, v.range)
-	|> List.map((range) => create(~range, ()));
+    Range.explode(measure, v.range) |> List.map(range => create(~range, ()));
   };
 };
 
@@ -49,20 +48,22 @@ let _updateDiagnosticsMap =
   StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
 };
 
-
 let _explodeDiagnostics = (diagnostics, buffer) => {
-	let f = (prev, curr: Diagnostic.t) => {
-		IntMap.update(Index.toZeroBasedInt(curr.range.startPosition.line), (existing) => {
-		switch(existing) {
-		| None => Some([curr])
-		| Some(v) => Some([curr, ...v])
-		}
-		}, prev);
-	};
+  let f = (prev, curr: Diagnostic.t) => {
+    IntMap.update(
+      Index.toZeroBasedInt(curr.range.startPosition.line),
+      existing =>
+        switch (existing) {
+        | None => Some([curr])
+        | Some(v) => Some([curr, ...v])
+        },
+      prev,
+    );
+  };
 
-	List.map(Diagnostic.explode(buffer), diagnostics)
-	|> List.flatten
-	|> List.fold_left(f, IntMap.empty);
+  List.map(Diagnostic.explode(buffer), diagnostics)
+  |> List.flatten
+  |> List.fold_left(f, IntMap.empty);
 };
 
 let change = (instance, buffer, diagKey, diagnostics) => {
@@ -82,19 +83,26 @@ let change = (instance, buffer, diagKey, diagnostics) => {
 };
 
 let getDiagnostics = (_instance, _buffer) => {
-
-  IntMap.add(0,  [
-    Diagnostic.create(~range=Range.createFromPositions(
-				~startPosition=Position.createFromZeroBasedIndices(0, 0),
-				~endPosition=Position.createFromZeroBasedIndices(0, 2),
-				(),
-				), ()),
-    /* []; */
-    /* let f = ((_key, v)) => v; */
-    /* let bufferKey = _getKeyForBuffer(buffer); */
-    /* switch (StringMap.find_opt(bufferKey, instance)) { */
-    /* | None => [] */
-    /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
-    /* }; */
-  ], IntMap.empty);
+  IntMap.add(
+    0,
+    [
+      Diagnostic.create(
+        ~range=
+          Range.createFromPositions(
+            ~startPosition=Position.createFromZeroBasedIndices(0, 0),
+            ~endPosition=Position.createFromZeroBasedIndices(0, 2),
+            (),
+          ),
+        (),
+      ),
+      /* []; */
+      /* let f = ((_key, v)) => v; */
+      /* let bufferKey = _getKeyForBuffer(buffer); */
+      /* switch (StringMap.find_opt(bufferKey, instance)) { */
+      /* | None => [] */
+      /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
+      /* }; */
+    ],
+    IntMap.empty,
+  );
 };

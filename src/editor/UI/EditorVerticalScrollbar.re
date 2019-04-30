@@ -43,9 +43,7 @@ let createElement =
       Editor.getTotalSizeInPixels(editor, metrics) |> float_of_int;
 
     let bufferLineToScrollbarPixel = line => {
-      let pixelY =
-        float_of_int(line)
-        *. state.editorFont.measuredHeight;
+      let pixelY = float_of_int(line) *. state.editorFont.measuredHeight;
       int_of_float(
         pixelY
         /. (totalPixel +. float_of_int(metrics.pixelHeight))
@@ -54,7 +52,9 @@ let createElement =
     };
 
     let cursorPosition =
-      bufferLineToScrollbarPixel(Index.toZeroBasedInt(editor.cursorPosition.line));
+      bufferLineToScrollbarPixel(
+        Index.toZeroBasedInt(editor.cursorPosition.line),
+      );
     let cursorSize = 2;
 
     let scrollCursorStyle =
@@ -67,17 +67,17 @@ let createElement =
         backgroundColor(state.theme.colors.foreground),
       ];
 
-	let diagnosticLines = IntMap.bindings(diagnostics)
-	|> List.map((binding) => {
-		let (key, _) = binding;
-		key
-	});
+    let diagnosticLines =
+      IntMap.bindings(diagnostics)
+      |> List.map(binding => {
+           let (key, _) = binding;
+           key;
+         });
 
     let diagnosticElements =
       List.map(
-        (line) => {
-          let diagTop =
-            bufferLineToScrollbarPixel(line);
+        line => {
+          let diagTop = bufferLineToScrollbarPixel(line);
 
           let diagnosticStyle =
             Style.[
