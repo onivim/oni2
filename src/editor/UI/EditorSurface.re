@@ -388,7 +388,7 @@ let createElement =
     let diagnostics =
       switch (activeBuffer) {
       | Some(b) => Diagnostics.getDiagnostics(state.diagnostics, b)
-      | None => []
+      | None => IntMap.empty
       };
 
     (
@@ -477,25 +477,43 @@ let createElement =
               };
 
               /* Draw error markers */
-              List.iter(
-                (d: Diagnostics.Diagnostic.t) => {
-                  let (x, y) =
-                    bufferPositionToPixel(
-                      Index.toZeroBasedInt(d.range.startPosition.line),
-                      Index.toZeroBasedInt(d.range.startPosition.character),
-                    );
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height=float_of_int(height),
+                ~count,
+                ~render=
+                  (item, offset) => {
 
-                  Shapes.drawRect(
-                    ~transform,
-                    ~x,
-                    ~y=y +. fontHeight,
-                    ~height=1.,
-                    ~width=100.,
-                    ~color=Colors.red,
-                    (),
-                  );
-                },
-                diagnostics,
+					let renderDiagnostics = (d: Diagnostics.Diagnostic.t) => {
+								let (x0, y0) =
+										bufferPositionToPixel(
+												Index.toZeroBasedInt(d.range.startPosition.line),
+												Index.toZeroBasedInt(d.range.startPosition.character),
+										);
+								let (x1, _) =
+										bufferPositionToPixel(
+												Index.toZeroBasedInt(d.range.endPosition.line),
+												Index.toZeroBasedInt(d.range.endPosition.character),
+										);
+
+						Shapes.drawRect(
+							~transform,
+							~x=x0,
+							~y=y0 +. offset +. fontHeight,
+							~height=1.,
+							~width=x1 -. x0,
+							~color=Colors.red,
+							(),
+							);
+					};
+
+					switch (IntMap.find_opt(item, diagnostics)) {
+					| None => ()
+					| Some(v) => List.iter(renderDiagnostics, v)
+					};
+                  },
+                (),
               );
 
               FlatList.render(

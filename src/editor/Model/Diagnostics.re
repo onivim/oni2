@@ -7,6 +7,7 @@
  */
 
 open Oni_Core;
+open Oni_Core.Types;
 
 module Diagnostic = {
   type t = {range: Range.t};
@@ -14,6 +15,13 @@ module Diagnostic = {
   let create = (~range: Range.t, ()) => {
     let ret: t = {range: range};
     ret;
+  };
+
+  let explode = (buffer: Buffer.t, v: t) => {
+    let measure = Buffer.getLineLength(buffer);
+
+	Range.explode(measure, v.range)
+	|> List.map((range) => create(~range, ()));
   };
 };
 
@@ -24,7 +32,7 @@ module Diagnostic = {
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
  */
-type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
+type t = StringMap.t(StringMap.t(IntMap.t(list(Diagnostic.t))));
 
 let create = () => StringMap.empty;
 
@@ -36,16 +44,33 @@ let _updateDiagnosticsMap =
     (
       diagnosticsKey,
       diagnostics,
-      diagnosticsMap: StringMap.t(list(Diagnostic.t)),
+      diagnosticsMap: StringMap.t(IntMap.t(list(Diagnostic.t))),
     ) => {
   StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
 };
 
+
+let _explodeDiagnostics = (diagnostics, buffer) => {
+	let f = (prev, curr: Diagnostic.t) => {
+		IntMap.update(Index.toZeroBasedInt(curr.range.startPosition.line), (existing) => {
+		switch(existing) {
+		| None => Some([curr])
+		| Some(v) => Some([curr, ...v])
+		}
+		}, prev);
+	};
+
+	List.map(Diagnostic.explode(buffer), diagnostics)
+	|> List.flatten
+	|> List.fold_left(f, IntMap.empty);
+};
+
 let change = (instance, buffer, diagKey, diagnostics) => {
   let bufferKey = _getKeyForBuffer(buffer);
+  let diagnostics = _explodeDiagnostics(diagnostics, buffer);
 
   let updateBufferMap =
-      (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
+      (bufferMap: option(StringMap.t(IntMap.t(list(Diagnostic.t))))) => {
     switch (bufferMap) {
     | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
     | None =>
@@ -57,8 +82,13 @@ let change = (instance, buffer, diagKey, diagnostics) => {
 };
 
 let getDiagnostics = (_instance, _buffer) => {
-  [
-    Diagnostic.create(~range=Range.zero, ()),
+
+  IntMap.add(0,  [
+    Diagnostic.create(~range=Range.createFromPositions(
+				~startPosition=Position.createFromZeroBasedIndices(0, 0),
+				~endPosition=Position.createFromZeroBasedIndices(0, 2),
+				(),
+				), ()),
     /* []; */
     /* let f = ((_key, v)) => v; */
     /* let bufferKey = _getKeyForBuffer(buffer); */
@@ -66,5 +96,5 @@ let getDiagnostics = (_instance, _buffer) => {
     /* | None => [] */
     /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
     /* }; */
-  ];
+  ], IntMap.empty);
 };
