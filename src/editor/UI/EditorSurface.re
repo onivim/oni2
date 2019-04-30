@@ -621,7 +621,7 @@ let createElement =
             width={layout.minimapWidthInPixels}
             height={metrics.pixelHeight}
             count=lineCount
-			diagnostics
+            diagnostics
             metrics
             getTokensForLine
           />

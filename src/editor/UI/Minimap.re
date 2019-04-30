@@ -66,7 +66,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
-	  ~diagnostics,
+      ~diagnostics,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
       ~metrics,
       ~children as _,
@@ -207,26 +207,34 @@ let createElement =
               ~count,
               ~render=
                 (item, offset) => {
-                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
-                      {
-					let startX = Index.toZeroBasedInt(d.range.startPosition.character) * Constants.default.minimapCharacterWidth |> float_of_int;
-					let endX = Index.toZeroBasedInt(d.range.endPosition.character) * Constants.default.minimapCharacterWidth |> float_of_int;
+                  let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                    {let startX =
+                       Index.toZeroBasedInt(d.range.startPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
+                     let endX =
+                       Index.toZeroBasedInt(d.range.endPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
 
-                       Shapes.drawRect(
-                         ~transform,
-                         ~x=startX -. 1.0,
-                         ~y=offset -. 1.0,
-                         ~height=float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
-                         ~width=endX -. startX +. 2.,
-                         ~color=Color.rgba(1.0, 0., 0., 0.7),
-                         (),
-                       )};
+                     Shapes.drawRect(
+                       ~transform,
+                       ~x=startX -. 1.0,
+                       ~y=offset -. 1.0,
+                       ~height=
+                         float_of_int(
+                           Constants.default.minimapCharacterHeight,
+                         )
+                         +. 2.0,
+                       ~width=endX -. startX +. 2.,
+                       ~color=Color.rgba(1.0, 0., 0., 0.7),
+                       (),
+                     )};
 
-                  
-					switch (IntMap.find_opt(item, diagnostics)) {
-					| Some(v) => List.iter(renderDiagnostics, v);
-					| None => ()
-					};
+                  switch (IntMap.find_opt(item, diagnostics)) {
+                  | Some(v) => List.iter(renderDiagnostics, v)
+                  | None => ()
+                  };
                 },
               (),
             );

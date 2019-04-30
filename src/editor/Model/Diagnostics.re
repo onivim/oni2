@@ -84,54 +84,54 @@ let change = (instance, buffer, diagKey, diagnostics) => {
 };
 
 let getDiagnostics = (_instance, _buffer) => {
-      /* []; */
-      /* let f = ((_key, v)) => v; */
-      /* let bufferKey = _getKeyForBuffer(buffer); */
-      /* switch (StringMap.find_opt(bufferKey, instance)) { */
-      /* | None => [] */
-      /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
-      /* }; */
+  /* []; */
+  /* let f = ((_key, v)) => v; */
+  /* let bufferKey = _getKeyForBuffer(buffer); */
+  /* switch (StringMap.find_opt(bufferKey, instance)) { */
+  /* | None => [] */
+  /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
+  /* }; */
   IntMap.empty
   |> IntMap.add(
-    0,
-    [
-      Diagnostic.create(
-        ~range=
-          Range.createFromPositions(
-            ~startPosition=Position.createFromZeroBasedIndices(0, 5),
-            ~endPosition=Position.createFromZeroBasedIndices(0, 10),
-            (),
-          ),
-        (),
-      ),
-   ]
-  )
+       0,
+       [
+         Diagnostic.create(
+           ~range=
+             Range.createFromPositions(
+               ~startPosition=Position.createFromZeroBasedIndices(0, 5),
+               ~endPosition=Position.createFromZeroBasedIndices(0, 10),
+               (),
+             ),
+           (),
+         ),
+       ],
+     )
   |> IntMap.add(
-    2,
-    [
-      Diagnostic.create(
-        ~range=
-          Range.createFromPositions(
-            ~startPosition=Position.createFromZeroBasedIndices(2, 1),
-            ~endPosition=Position.createFromZeroBasedIndices(2, 15),
-            (),
-          ),
-        (),
-      ),
-   ]
-  )
+       2,
+       [
+         Diagnostic.create(
+           ~range=
+             Range.createFromPositions(
+               ~startPosition=Position.createFromZeroBasedIndices(2, 1),
+               ~endPosition=Position.createFromZeroBasedIndices(2, 15),
+               (),
+             ),
+           (),
+         ),
+       ],
+     )
   |> IntMap.add(
-    50,
-    [
-      Diagnostic.create(
-        ~range=
-          Range.createFromPositions(
-            ~startPosition=Position.createFromZeroBasedIndices(50, 1),
-            ~endPosition=Position.createFromZeroBasedIndices(50, 15),
-            (),
-          ),
-        (),
-      ),
-   ]
-  );
+       50,
+       [
+         Diagnostic.create(
+           ~range=
+             Range.createFromPositions(
+               ~startPosition=Position.createFromZeroBasedIndices(50, 1),
+               ~endPosition=Position.createFromZeroBasedIndices(50, 15),
+               (),
+             ),
+           (),
+         ),
+       ],
+     );
 };
