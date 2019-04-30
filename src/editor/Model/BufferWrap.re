@@ -76,6 +76,21 @@ let getVirtualLine = (idx, buffer, v) => {
   };
 };
 
+let getVirtualLineLength = (idx, v) => {
+  switch (IntHash.find_opt(v.virtualLineToBufferLine, idx)) {
+  | None => 0
+  | Some(bufferLineIdx) =>
+    switch (IntHash.find_opt(v.bufferLineToVirtualInfo, bufferLineIdx)) {
+    | None => 0
+    | Some(vInfo) =>
+      let virtualLineStart = vInfo.virtualStartLine;
+      let arrayOffset = idx - virtualLineStart;
+      let (_, length) = LineWrap.getOffsets(arrayOffset, vInfo.lineWrap);
+	  length
+	};
+	};
+};
+
 let getVirtualLineCount = v => v.virtualLines;
 
 exception BufferWrapOutOfRangePosition;
@@ -90,15 +105,20 @@ let bufferPositionToVirtual = (position, v) => {
     let (lineOffset, character) =
       LineWrap.toVirtualPosition(Index.ofInt0(character0), lineWrap)
       |> Position.toIndices0;
-    prerr_endline("virtualStartLine: " ++ string_of_int(virtualStartLine));
-    prerr_endline("virtualStartLine: " ++ string_of_int(lineOffset));
-    prerr_endline("virtualStartLine: " ++ string_of_int(character));
     Position.fromIndices0(virtualStartLine + lineOffset, character);
   };
 };
 
-let bufferRangeToVirtual = (range, _v) => {
-  [range];
+let bufferRangeToVirtual = (range: Range.t, v) => {
+	open Range;
+	let { startPosition, endPosition } = range;
+
+	let vStartPos = bufferPositionToVirtual(startPosition, v);
+	let vEndPos = bufferPositionToVirtual(endPosition, v);
+
+	let virtualRange = Range.ofPositions(~startPosition=vStartPos, ~endPosition=vEndPos, ());
+	
+    Range.explode((l) => getVirtualLineLength(l, v), virtualRange);
 };
 
 let update = (_update, v) => v;

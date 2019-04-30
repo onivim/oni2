@@ -25,6 +25,18 @@ let create:
   ) =>
   t;
 
+let ofInt0:
+  (
+    ~startLine: int,
+    ~startCharacter: int,
+    ~endLine: int,
+    ~endCharacter: int,
+    unit
+  ) =>
+  t;
+
+let ofPositions: (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
+
 let zero: t;
 
 /*

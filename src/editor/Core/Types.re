@@ -23,6 +23,15 @@ module Index = {
 
   let toInt1 = toOneBasedInt;
 
+  let equal = (a, b) => {
+	switch ((a, b)) {
+	| (ZeroBasedIndex(v0), ZeroBasedIndex(v1)) => v0 === v1
+	| (OneBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1
+	| (ZeroBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1 - 1
+	| (OneBasedIndex(v0), ZeroBasedIndex(v1)) => v0 - 1 === v1
+	}
+  };
+	
   let zero = ZeroBasedIndex(0);
 };
 
