@@ -5,6 +5,9 @@
  * for a particular buffer / view
  */
 
+exception BufferWrapOutOfRangePosition;
+exception BufferOutOfSync;
+
 open Oni_Core;
 open Oni_Core.Types;
 
@@ -14,6 +17,8 @@ type virtualLineInfo = {
 };
 
 type t = {
+  bufferId: int,
+  bufferVersion: int,
   bufferLineToVirtualInfo: IntHash.t(virtualLineInfo),
   virtualLineToBufferLine: IntHash.t(int),
   virtualLines: int,
@@ -21,6 +26,8 @@ type t = {
 
 let create = (buffer, wrapMode) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
+
+  let {id, version, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
 
   /* let bufferLineMap: ref(IntMap.t(LineWrap.t)) = ref(IntMap.empty); */
 
@@ -53,13 +60,27 @@ let create = (buffer, wrapMode) => {
   };
 
   {
+	bufferId: id,
+	bufferVersion: version,
     bufferLineToVirtualInfo: bufferLineHash,
     virtualLineToBufferLine: virtualLineHash,
     virtualLines: virtualLineCount^,
   };
 };
 
+let assertBufferMatches = (buffer, v) => {
+	let {id, version, _}: BufferMetadata.t = Buffer.getMetadata(buffer);
+	let {bufferId, bufferVersion, _} = v;
+
+	switch (id == bufferId && version == bufferVersion) {
+	| false => raise(BufferOutOfSync)
+	| _ => ();
+	}
+};
+
 let getVirtualLine = (idx, buffer, v) => {
+  assertBufferMatches(buffer, v);
+
   switch (IntHash.find_opt(v.virtualLineToBufferLine, idx)) {
   | None => ""
   | Some(bufferLineIdx) =>
@@ -94,8 +115,6 @@ let getVirtualLineLength = (idx, v) => {
 };
 
 let getVirtualLineCount = v => v.virtualLines;
-
-exception BufferWrapOutOfRangePosition;
 
 let bufferPositionToVirtual = (position, v) => {
   let (line0, character0) = Position.toInt0(position);
