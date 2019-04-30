@@ -9,6 +9,7 @@
 open Oni_Core;
 
 module Diagnostic: {
+  [@deriving show({with_path: false})]
   type t = {range: Range.t};
 
   let create: (~range: Range.t, unit) => t;
@@ -30,3 +31,4 @@ let change: (t, Buffer.t, string, list(Diagnostic.t)) => t;
  * Get all diagnostics for a buffer
  */
 let getDiagnostics: (t, Buffer.t) => list(Diagnostic.t);
+let getDiagnosticsMap: (t, Buffer.t) => IntMap.t(list(Diagnostic.t));
