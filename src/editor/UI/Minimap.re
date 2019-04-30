@@ -104,23 +104,23 @@ let createElement =
             Mouse.setCapture(
               ~onMouseMove=
                 evt => {
-                    let scrollTo = getScrollTo(evt.mouseY);
-                    let minimapLineSize =
-                      Constants.default.minimapCharacterWidth
-                      + Constants.default.minimapCharacterHeight;
-                    let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-                    GlobalContext.current().editorScroll(
-                      ~deltaY=
-                        (startPosition -. scrollTo)
-                        *. (-1.)
-                        -. float_of_int(linesInMinimap),
-                      (),
-                    );
-                  },
+                  let scrollTo = getScrollTo(evt.mouseY);
+                  let minimapLineSize =
+                    Constants.default.minimapCharacterWidth
+                    + Constants.default.minimapCharacterHeight;
+                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+                  GlobalContext.current().editorScroll(
+                    ~deltaY=
+                      (startPosition -. scrollTo)
+                      *. (-1.)
+                      -. float_of_int(linesInMinimap),
+                    (),
+                  );
+                },
               ~onMouseUp=_evt => scrollComplete(),
               (),
             );
-          }
+          };
           Some(
             () =>
               if (isCaptured) {
