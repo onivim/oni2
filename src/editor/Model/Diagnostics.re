@@ -10,11 +10,18 @@ open Oni_Core;
 open Oni_Core.Types;
 
 module Diagnostic = {
+  [@deriving show({with_path: false})]
   type t = {range: Range.t};
 
   let create = (~range: Range.t, ()) => {
     let ret: t = {range: range};
     ret;
+  };
+
+  let explode = (buffer: Buffer.t, v: t) => {
+    let measure = Buffer.getLineLength(buffer);
+
+    Range.explode(measure, v.range) |> List.map(range => create(~range, ()));
   };
 };
 
@@ -29,11 +36,11 @@ type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 
 let create = () => StringMap.empty;
 
-let _getKeyForBuffer = (b: Buffer.t) => {
+let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
 };
 
-let _updateDiagnosticsMap =
+let updateDiagnosticsMap =
     (
       diagnosticsKey,
       diagnostics,
@@ -42,15 +49,33 @@ let _updateDiagnosticsMap =
   StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
 };
 
+let explodeDiagnostics = (buffer, diagnostics) => {
+  let f = (prev, curr: Diagnostic.t) => {
+    IntMap.update(
+      Index.toZeroBasedInt(curr.range.startPosition.line),
+      existing =>
+        switch (existing) {
+        | None => Some([curr])
+        | Some(v) => Some([curr, ...v])
+        },
+      prev,
+    );
+  };
+
+  List.map(Diagnostic.explode(buffer), diagnostics)
+  |> List.flatten
+  |> List.fold_left(f, IntMap.empty);
+};
+
 let change = (instance, buffer, diagKey, diagnostics) => {
-  let bufferKey = _getKeyForBuffer(buffer);
+  let bufferKey = getKeyForBuffer(buffer);
 
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
     switch (bufferMap) {
-    | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
+    | Some(v) => Some(updateDiagnosticsMap(diagKey, diagnostics, v))
     | None =>
-      Some(_updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
+      Some(updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
     };
   };
 
@@ -59,10 +84,13 @@ let change = (instance, buffer, diagKey, diagnostics) => {
 
 let getDiagnostics = (instance, buffer) => {
   let f = ((_key, v)) => v;
-
-  let bufferKey = _getKeyForBuffer(buffer);
+  let bufferKey = getKeyForBuffer(buffer);
   switch (StringMap.find_opt(bufferKey, instance)) {
   | None => []
   | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
   };
+};
+
+let getDiagnosticsMap = (instance, buffer) => {
+  getDiagnostics(instance, buffer) |> explodeDiagnostics(buffer);
 };
