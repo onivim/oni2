@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Model;
 open BenchFramework;
 
@@ -15,16 +16,24 @@ let mediumBuffer =
     ),
   );
 
-let wrapBuffer = (buffer, ()) => {
-  BufferWrap.create(buffer, 25) |> ignore;
+let wrapBuffer = (buffer, wrapMode, ()) => {
+  BufferWrap.create(buffer, wrapMode) |> ignore;
 };
 
 let options = Reperf.Options.create(~iterations=1000, ());
 
 bench(
+  ~name="BufferWrap: Apply no-wrapping to buffer (10000 Lines)",
+  ~setup,
+  ~options,
+  ~f=wrapBuffer(mediumBuffer, WrapMode.noWrap),
+  (),
+);
+
+bench(
   ~name="BufferWrap: Apply wrapping to buffer (10000 Lines)",
   ~setup,
   ~options,
-  ~f=wrapBuffer(mediumBuffer),
+  ~f=wrapBuffer(mediumBuffer, WrapMode.column(25)),
   (),
 );

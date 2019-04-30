@@ -13,7 +13,7 @@ type t;
 /*
  * Construct virtual line info based on a string and a wrap point
  */
-let create: (string, int) => t;
+let create: (string, WrapMode.t) => t;
 
 /*
  * Return the number of virtual lines

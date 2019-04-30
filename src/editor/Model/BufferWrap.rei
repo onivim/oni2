@@ -7,7 +7,7 @@ open Oni_Core.Types;
 
 type t;
 
-let create: (Buffer.t, int) => t;
+let create: (Buffer.t, WrapMode.t) => t;
 
 let getVirtualLine: (int, Buffer.t, t) => string;
 let getVirtualLineCount: t => int;

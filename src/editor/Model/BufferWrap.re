@@ -19,7 +19,7 @@ type t = {
   virtualLines: int,
 };
 
-let create = (buffer, wrapColumn) => {
+let create = (buffer, wrapMode) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
 
   /* let bufferLineMap: ref(IntMap.t(LineWrap.t)) = ref(IntMap.empty); */
@@ -33,7 +33,7 @@ let create = (buffer, wrapColumn) => {
     let i = idx^;
     let line = Buffer.getLine(buffer, i);
 
-    let lineWrap = LineWrap.create(line, wrapColumn);
+    let lineWrap = LineWrap.create(line, wrapMode);
     let vlc = virtualLineCount^;
 
     let vInfo = {virtualStartLine: vlc, lineWrap};

@@ -1,7 +1,9 @@
 /**
  * LineWrap.re
  */
+
 open Types;
+open WrapMode;
 
 type wrap = {
   /*
@@ -18,33 +20,38 @@ type t = array(wrap);
 
 let empty = [|{index: 0, length: 0}|];
 
-let create = (s, width) => {
+let create = (s, wrapMode) => {
   let len = Zed_utf8.length(s);
-  let idx = ref(0);
-  let wraps = ref([]);
 
-  /*
-   	Very naive logic for line wrapping!
+  switch (wrapMode) {
+  | NoWrap => [|{index: 0, length: len}|]
+  | WrapColumn(width) =>
+			let idx = ref(0);
+			let wraps = ref([]);
 
-   	Should take into account:
-   	- Multi-width characters (logic assumes every character is 1 width)
-   	- Different wrapping strategies (wrap _words_)
-   	- Matching indent of parent line
-   	- Showing indent character
-   */
-  while (idx^ < len) {
-    let i = idx^;
-    let segment = min(width, len - i);
-    let wrap = {index: i, length: segment};
-    wraps := [wrap, ...wraps^];
-    idx := i + segment;
-  };
+			/*
+					Very naive logic for line wrapping!
 
-  let ret = wraps^ |> List.rev |> Array.of_list;
+					Should take into account:
+					- Multi-width characters (logic assumes every character is 1 width)
+					- Different wrapping strategies (wrap _words_)
+					- Matching indent of parent line
+					- Showing indent character
+				*/
+			while (idx^ < len) {
+					let i = idx^;
+					let segment = min(width, len - i);
+					let wrap = {index: i, length: segment};
+					wraps := [wrap, ...wraps^];
+					idx := i + segment;
+			};
 
-  switch (Array.length(ret)) {
-  | 0 => empty
-  | _ => ret
+			let ret = wraps^ |> List.rev |> Array.of_list;
+
+			switch (Array.length(ret)) {
+			| 0 => empty
+			| _ => ret
+			};
   };
 };
 

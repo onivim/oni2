@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
 
@@ -9,7 +10,7 @@ let smallBuffer = Buffer.ofLines([|"Hello World"|]);
 describe("BufferWrap", ({describe, _}) => {
   describe("getVirtualLines", ({test, _}) =>
     test("basic virtual line validation", ({expect}) => {
-      let w = BufferWrap.create(smallBuffer, 6);
+      let w = BufferWrap.create(smallBuffer, WrapMode.column(6));
 
       let vlineCount = BufferWrap.getVirtualLineCount(w);
       let line1 = BufferWrap.getVirtualLine(0, smallBuffer, w);
@@ -22,7 +23,7 @@ describe("BufferWrap", ({describe, _}) => {
   );
   describe("bufferPositionToVirtual", ({test, _}) =>
     test("simple wrapping", ({expect}) => {
-      let w = BufferWrap.create(abcdBuffer, 1);
+      let w = BufferWrap.create(abcdBuffer, WrapMode.column(1));
       let p0 = Position.fromIndices0(0, 0);
       let p2 = Position.fromIndices0(0, 2);
       let p3 = Position.fromIndices0(0, 3);

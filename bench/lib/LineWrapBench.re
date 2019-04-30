@@ -15,6 +15,14 @@ bench(
   ~name="LineWrap: Apply wrapping to long line (100000 characters)",
   ~setup,
   ~options,
-  ~f=wrapLine(longLine, 50),
+  ~f=wrapLine(longLine, WrapMode.column(50)),
+  (),
+);
+
+bench(
+  ~name="LineWrap: Apply no-wrap to long line (100000 characters)",
+  ~setup,
+  ~options,
+  ~f=wrapLine(longLine, WrapMode.noWrap),
   (),
 );
