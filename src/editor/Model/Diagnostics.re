@@ -32,24 +32,24 @@ module Diagnostic = {
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
  */
-type t = StringMap.t(StringMap.t(IntMap.t(list(Diagnostic.t))));
+type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 
 let create = () => StringMap.empty;
 
-let _getKeyForBuffer = (b: Buffer.t) => {
+let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
 };
 
-let _updateDiagnosticsMap =
+let updateDiagnosticsMap =
     (
       diagnosticsKey,
       diagnostics,
-      diagnosticsMap: StringMap.t(IntMap.t(list(Diagnostic.t))),
+      diagnosticsMap: StringMap.t(list(Diagnostic.t)),
     ) => {
   StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
 };
 
-let _explodeDiagnostics = (diagnostics, buffer) => {
+let explodeDiagnostics = (buffer, diagnostics) => {
   let f = (prev, curr: Diagnostic.t) => {
     IntMap.update(
       Index.toZeroBasedInt(curr.range.startPosition.line),
@@ -68,70 +68,25 @@ let _explodeDiagnostics = (diagnostics, buffer) => {
 };
 
 let change = (instance, buffer, diagKey, diagnostics) => {
-  let bufferKey = _getKeyForBuffer(buffer);
-  let diagnostics = _explodeDiagnostics(diagnostics, buffer);
+  let bufferKey = getKeyForBuffer(buffer);
 
   let updateBufferMap =
-      (bufferMap: option(StringMap.t(IntMap.t(list(Diagnostic.t))))) => {
+      (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
     switch (bufferMap) {
-    | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
+    | Some(v) => Some(updateDiagnosticsMap(diagKey, diagnostics, v))
     | None =>
-      Some(_updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
+      Some(updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
     };
   };
 
   StringMap.update(bufferKey, updateBufferMap, instance);
 };
 
-let getDiagnostics = (_instance, _buffer) => {
-  /* []; */
-  /* let f = ((_key, v)) => v; */
-  /* let bufferKey = _getKeyForBuffer(buffer); */
-  /* switch (StringMap.find_opt(bufferKey, instance)) { */
-  /* | None => [] */
-  /* | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten */
-  /* }; */
-  IntMap.empty
-  |> IntMap.add(
-       0,
-       [
-         Diagnostic.create(
-           ~range=
-             Range.createFromPositions(
-               ~startPosition=Position.createFromZeroBasedIndices(0, 5),
-               ~endPosition=Position.createFromZeroBasedIndices(0, 10),
-               (),
-             ),
-           (),
-         ),
-       ],
-     )
-  |> IntMap.add(
-       2,
-       [
-         Diagnostic.create(
-           ~range=
-             Range.createFromPositions(
-               ~startPosition=Position.createFromZeroBasedIndices(2, 1),
-               ~endPosition=Position.createFromZeroBasedIndices(2, 15),
-               (),
-             ),
-           (),
-         ),
-       ],
-     )
-  |> IntMap.add(
-       50,
-       [
-         Diagnostic.create(
-           ~range=
-             Range.createFromPositions(
-               ~startPosition=Position.createFromZeroBasedIndices(50, 1),
-               ~endPosition=Position.createFromZeroBasedIndices(50, 15),
-               (),
-             ),
-           (),
-         ),
-       ],
-     );
+let getDiagnostics = (instance, buffer) => {
+   let f = ((_key, v)) => v;
+   let bufferKey = getKeyForBuffer(buffer);
+   switch (StringMap.find_opt(bufferKey, instance)) {
+   | None => IntMap.empty
+   | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten |> explodeDiagnostics(buffer);
+   }; 
 };
