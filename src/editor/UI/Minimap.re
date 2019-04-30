@@ -140,11 +140,13 @@ let createElement =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-      GlobalContext.current().editorScroll(
-        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
-        (),
-      );
-      setActive(true);
+      if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+        GlobalContext.current().editorScroll(
+          ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
+          (),
+        );
+        setActive(true);
+      }
     };
 
     (
