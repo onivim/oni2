@@ -146,7 +146,7 @@ let createElement =
           (),
         );
         setActive(true);
-      }
+      };
     };
 
     (
