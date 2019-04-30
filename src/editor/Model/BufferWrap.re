@@ -71,13 +71,10 @@ let getVirtualLine = (idx, buffer, v) => {
 		| None => ""
 		| Some(vInfo) => {
 			let line = Buffer.getLine(buffer, bufferLineIdx);
-			prerr_endline ("WHOLE LINE: " ++ line);
 			let virtualLineStart = vInfo.virtualStartLine;
 			let arrayOffset = idx - virtualLineStart;
 
 			let (idx, length) = LineWrap.getOffsets(arrayOffset, vInfo.lineWrap);
-			prerr_endline ("IDX: " ++ string_of_int(idx));
-			prerr_endline ("LENGTH: " ++ string_of_int(length));
 			Zed_utf8.sub(line, idx, length);
 		}
 		}
@@ -87,8 +84,25 @@ let getVirtualLine = (idx, buffer, v) => {
 
 let getVirtualLineCount = v => v.virtualLines;
 
-let bufferPositionToVirtual = (_position, _v) => {
-  Position.zero;
+exception BufferWrapOutOfRangePosition;
+
+let bufferPositionToVirtual = (position, v) => {
+  let (line0, character0) = Position.toIndices0(position);
+	
+  
+  switch (IntHash.find_opt(v.bufferLineToVirtualInfo, line0)) {
+  | None => raise(BufferWrapOutOfRangePosition);
+  | Some(v) => {
+			let {virtualStartLine, lineWrap} = v;
+			let (lineOffset, character) = LineWrap.toVirtualPosition(Index.ofInt0(character0), lineWrap) |> Position.toIndices0;
+			prerr_endline ("virtualStartLine: " ++ string_of_int(virtualStartLine));
+			prerr_endline ("virtualStartLine: " ++ string_of_int(lineOffset));
+			prerr_endline ("virtualStartLine: " ++ string_of_int(character));
+			Position.fromIndices0(virtualStartLine + lineOffset, character);
+		}
+		}
+
+
 };
 
 let bufferRangeToVirtual = (range, _v) => {
