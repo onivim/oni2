@@ -387,7 +387,7 @@ let createElement =
     };
     let diagnostics =
       switch (activeBuffer) {
-      | Some(b) => Diagnostics.getDiagnostics(state.diagnostics, b)
+      | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
       | None => IntMap.empty
       };
 
@@ -483,7 +483,7 @@ let createElement =
                 ~height=float_of_int(height),
                 ~count,
                 ~render=
-                  (item, offset) => {
+                  (item, _offset) => {
                     let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
                       {let (x0, y0) =
                          bufferPositionToPixel(

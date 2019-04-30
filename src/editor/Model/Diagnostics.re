@@ -86,11 +86,15 @@ let getDiagnostics = (instance, buffer) => {
   let f = ((_key, v)) => v;
   let bufferKey = getKeyForBuffer(buffer);
   switch (StringMap.find_opt(bufferKey, instance)) {
-  | None => IntMap.empty
+  | None => []
   | Some(v) =>
     StringMap.bindings(v)
     |> List.map(f)
     |> List.flatten
-    |> explodeDiagnostics(buffer)
   };
+};
+
+let getDiagnosticsMap = (instance, buffer) => {
+	getDiagnostics(instance, buffer)
+    |> explodeDiagnostics(buffer)
 };
