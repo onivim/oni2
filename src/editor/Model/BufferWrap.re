@@ -70,7 +70,8 @@ let getVirtualLine = (idx, buffer, v) => {
       let virtualLineStart = vInfo.virtualStartLine;
       let arrayOffset = idx - virtualLineStart;
 
-      let (idx, length) = LineWrap.getOffsets(arrayOffset, vInfo.lineWrap);
+      let (idx, length) =
+        LineWrap.getOffsets(Index.ofInt0(arrayOffset), vInfo.lineWrap);
       Zed_utf8.sub(line, idx, length);
     }
   };
@@ -85,10 +86,11 @@ let getVirtualLineLength = (idx, v) => {
     | Some(vInfo) =>
       let virtualLineStart = vInfo.virtualStartLine;
       let arrayOffset = idx - virtualLineStart;
-      let (_, length) = LineWrap.getOffsets(arrayOffset, vInfo.lineWrap);
-	  length
-	};
-	};
+      let (_, length) =
+        LineWrap.getOffsets(Index.ofInt0(arrayOffset), vInfo.lineWrap);
+      length;
+    }
+  };
 };
 
 let getVirtualLineCount = v => v.virtualLines;
@@ -96,7 +98,7 @@ let getVirtualLineCount = v => v.virtualLines;
 exception BufferWrapOutOfRangePosition;
 
 let bufferPositionToVirtual = (position, v) => {
-  let (line0, character0) = Position.toIndices0(position);
+  let (line0, character0) = Position.toInt0(position);
 
   switch (IntHash.find_opt(v.bufferLineToVirtualInfo, line0)) {
   | None => raise(BufferWrapOutOfRangePosition)
@@ -104,21 +106,46 @@ let bufferPositionToVirtual = (position, v) => {
     let {virtualStartLine, lineWrap} = v;
     let (lineOffset, character) =
       LineWrap.toVirtualPosition(Index.ofInt0(character0), lineWrap)
-      |> Position.toIndices0;
-    Position.fromIndices0(virtualStartLine + lineOffset, character);
+      |> Position.toInt0;
+    Position.ofInt0(virtualStartLine + lineOffset, character);
   };
 };
 
+let addOneCharacter = range => {
+  open Range;
+
+  let {startPosition, endPosition} = range;
+
+  let (sl, sc) = Position.toInt0(startPosition);
+  let (el, ec) = Position.toInt0(endPosition);
+
+  Range.ofInt0(
+    ~startLine=sl,
+    ~startCharacter=sc,
+    ~endLine=el,
+    ~endCharacter=ec + 1,
+    (),
+  );
+};
+
 let bufferRangeToVirtual = (range: Range.t, v) => {
-	open Range;
-	let { startPosition, endPosition } = range;
+  open Range;
+  let {startPosition, endPosition} = range;
 
-	let vStartPos = bufferPositionToVirtual(startPosition, v);
-	let vEndPos = bufferPositionToVirtual(endPosition, v);
+  let vStartPos = bufferPositionToVirtual(startPosition, v);
+  let vEndPos = bufferPositionToVirtual(endPosition, v);
 
-	let virtualRange = Range.ofPositions(~startPosition=vStartPos, ~endPosition=vEndPos, ());
-	
-    Range.explode((l) => getVirtualLineLength(l, v), virtualRange);
+  if (Index.equal(vStartPos.line, vEndPos.line)) {
+    [Range.ofPositions(~startPosition=vStartPos, ~endPosition=vEndPos, ())];
+  } else {
+    let virtualRange =
+      Range.ofPositions(~startPosition=vStartPos, ~endPosition=vEndPos, ())
+      |> addOneCharacter;
+
+    let ranges =
+      Range.explode(l => getVirtualLineLength(l, v) + 1, virtualRange);
+    ranges;
+  };
 };
 
 let update = (_update, v) => v;

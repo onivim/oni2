@@ -25,7 +25,7 @@ let ofInt0 = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) => {
     ~endLine=ZeroBasedIndex(endLine),
     ~endCharacter=ZeroBasedIndex(endCharacter),
     (),
-				);
+  );
 };
 
 let ofPositions = createFromPositions;
@@ -40,8 +40,8 @@ let zero =
   );
 
 let explode = (measure, v) => {
-  let (startLine, startCharacter) = v.startPosition |> Position.toIndices0;
-  let (endLine, endCharacter) = v.endPosition |> Position.toIndices0;
+  let (startLine, startCharacter) = v.startPosition |> Position.toInt0;
+  let (endLine, endCharacter) = v.endPosition |> Position.toInt0;
 
   if (startLine == endLine) {
     [v];

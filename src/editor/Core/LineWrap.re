@@ -78,10 +78,11 @@ let toVirtualPosition = (character, v) => {
     incr(idx);
   };
 
-  Position.fromIndices0(idx^ - 1, curr^);
+  Position.ofInt0(idx^ - 1, curr^);
 };
 
 let getOffsets = (idx, v) => {
+  let idx = Index.toInt0(idx);
   let {index, length} = v[idx];
   (index, length);
 };

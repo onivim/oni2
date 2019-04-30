@@ -24,14 +24,14 @@ module Index = {
   let toInt1 = toOneBasedInt;
 
   let equal = (a, b) => {
-	switch ((a, b)) {
-	| (ZeroBasedIndex(v0), ZeroBasedIndex(v1)) => v0 === v1
-	| (OneBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1
-	| (ZeroBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1 - 1
-	| (OneBasedIndex(v0), ZeroBasedIndex(v1)) => v0 - 1 === v1
-	}
+    switch (a, b) {
+    | (ZeroBasedIndex(v0), ZeroBasedIndex(v1)) => v0 === v1
+    | (OneBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1
+    | (ZeroBasedIndex(v0), OneBasedIndex(v1)) => v0 === v1 - 1
+    | (OneBasedIndex(v0), ZeroBasedIndex(v1)) => v0 - 1 === v1
+    };
   };
-	
+
   let zero = ZeroBasedIndex(0);
 };
 
@@ -110,14 +110,11 @@ module Position = {
     character: ZeroBasedIndex(character),
   };
 
-  let fromIndices0 = createFromZeroBasedIndices;
+  let ofInt0 = createFromZeroBasedIndices;
 
-  let toIndices0 = (v: t) => (
-    Index.toInt0(v.line),
-    Index.toInt0(v.character),
-  );
+  let toInt0 = (v: t) => (Index.toInt0(v.line), Index.toInt0(v.character));
 
-  let zero = fromIndices0(0, 0);
+  let zero = ofInt0(0, 0);
 };
 
 [@deriving show({with_path: false})]

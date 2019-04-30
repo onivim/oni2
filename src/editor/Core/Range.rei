@@ -35,7 +35,8 @@ let ofInt0:
   ) =>
   t;
 
-let ofPositions: (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
+let ofPositions:
+  (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
 
 let zero: t;
 

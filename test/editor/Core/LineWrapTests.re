@@ -28,12 +28,25 @@ describe("LineWrap", ({describe, _}) => {
       expect.int(LineWrap.count(lw)).toBe(3);
     });
   });
+  describe("getOffsets", ({test, _}) =>
+    test("unwrapped position", ({expect}) => {
+      let lw = LineWrap.create(line5, WrapMode.column(1));
+      let (idx, length) = LineWrap.getOffsets(Index.ofInt0(1), lw);
+
+      expect.int(idx).toBe(1);
+      expect.int(length).toBe(1);
+
+      let (idx, length) = LineWrap.getOffsets(Index.ofInt0(2), lw);
+
+      expect.int(idx).toBe(2);
+      expect.int(length).toBe(1);
+    })
+  );
   describe("toVirtualPosition", ({test, _}) => {
     test("unwrapped position", ({expect}) => {
       let lw = LineWrap.create(line5, WrapMode.column(3));
       let (line0, column0) =
-        LineWrap.toVirtualPosition(Index.ofInt0(1), lw)
-        |> Position.toIndices0;
+        LineWrap.toVirtualPosition(Index.ofInt0(1), lw) |> Position.toInt0;
 
       expect.int(line0).toBe(0);
       expect.int(column0).toBe(1);
@@ -41,8 +54,7 @@ describe("LineWrap", ({describe, _}) => {
     test("wrapped position", ({expect}) => {
       let lw = LineWrap.create(line5, WrapMode.column(3));
       let (line0, column0) =
-        LineWrap.toVirtualPosition(Index.ofInt0(3), lw)
-        |> Position.toIndices0;
+        LineWrap.toVirtualPosition(Index.ofInt0(3), lw) |> Position.toInt0;
 
       expect.int(line0).toBe(1);
       expect.int(column0).toBe(0);

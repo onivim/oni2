@@ -26,4 +26,4 @@ let count: t => int;
  */
 let toVirtualPosition: (Index.t, t) => Position.t;
 
-let getOffsets: (int, t) => (int, int);
+let getOffsets: (Index.t, t) => (int, int);
