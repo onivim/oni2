@@ -41,6 +41,27 @@ describe("BufferWrap", ({describe, _}) => {
       let (line3, char3) =
         BufferWrap.bufferPositionToVirtual(p3, w) |> Position.toIndices0;
       expect.int(line3).toBe(3);
+  describe("bufferRangeToVirtual", ({test, _}) =>
+    test("simple wrapping", ({expect}) => {
+      let w = BufferWrap.create(abcdBuffer, WrapMode.column(1));
+      let p0 = Position.fromIndices0(0, 0);
+      let p2 = Position.fromIndices0(0, 2);
+      let p3 = Position.fromIndices0(0, 3);
+
+      let (line0, char0) =
+        BufferWrap.bufferPositionToVirtual(p0, w) |> Position.toIndices0;
+      expect.int(line0).toBe(0);
+      expect.int(char0).toBe(0);
+
+      let (line2, char2) =
+        BufferWrap.bufferPositionToVirtual(p2, w) |> Position.toIndices0;
+      expect.int(line2).toBe(2);
+      expect.int(char2).toBe(0);
+
+      let (line3, char3) =
+        BufferWrap.bufferPositionToVirtual(p3, w) |> Position.toIndices0;
+      expect.int(line3).toBe(3);
+
       expect.int(char3).toBe(0);
     })
   );

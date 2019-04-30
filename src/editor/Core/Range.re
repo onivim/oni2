@@ -18,6 +18,15 @@ let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
     (),
   );
 
+let ofInt0 = (startLine, startCharacter, endLine, endCharacter, ()) => {
+  create(
+    ~startLine=ZeroBasedIndex(startLine),
+    ~startCharacter=ZeroBasedIndex(startCharacter),
+    ~endLine=ZeroBasedIndex(endLine),
+    ~endCharacter=ZeroBasedIndex(endCharacter),
+    (),
+};
+
 let zero =
   create(
     ~startLine=ZeroBasedIndex(0),
@@ -27,13 +36,9 @@ let zero =
     (),
   );
 
-let toZeroBasedPair = (v: Position.t) => {
-  (Index.toZeroBasedInt(v.line), Index.toZeroBasedInt(v.character));
-};
-
 let explode = (measure, v) => {
-  let (startLine, startCharacter) = v.startPosition |> toZeroBasedPair;
-  let (endLine, endCharacter) = v.endPosition |> toZeroBasedPair;
+  let (startLine, startCharacter) = v.startPosition |> Position.toIndices0;
+  let (endLine, endCharacter) = v.endPosition |> Position.toIndices0;
 
   if (startLine == endLine) {
     [v];
