@@ -4,11 +4,13 @@
  * Component that handles Minimap rendering
  */
 
+open Revery;
 open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
+module Diagnostics = Oni_Model.Diagnostics;
 module Editor = Oni_Model.Editor;
 module State = Oni_Model.State;
 
@@ -64,6 +66,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
+	  ~diagnostics,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
       ~metrics,
       ~children as _,
@@ -193,6 +196,37 @@ let createElement =
                 (item, offset) => {
                   let tokens = getTokensForLine(item);
                   renderLine(transform, offset, tokens);
+                },
+              (),
+            );
+
+            FlatList.render(
+              ~scrollY,
+              ~rowHeight,
+              ~height=float_of_int(height),
+              ~count,
+              ~render=
+                (item, offset) => {
+                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                      {
+					let startX = Index.toZeroBasedInt(d.range.startPosition.character) * Constants.default.minimapCharacterWidth |> float_of_int;
+					let endX = Index.toZeroBasedInt(d.range.endPosition.character) * Constants.default.minimapCharacterWidth |> float_of_int;
+
+                       Shapes.drawRect(
+                         ~transform,
+                         ~x=startX -. 1.0,
+                         ~y=offset -. 1.0,
+                         ~height=float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
+                         ~width=endX -. startX +. 2.,
+                         ~color=Color.rgba(1.0, 0., 0., 0.7),
+                         (),
+                       )};
+
+                  
+					switch (IntMap.find_opt(item, diagnostics)) {
+					| Some(v) => List.iter(renderDiagnostics, v);
+					| None => ()
+					};
                 },
               (),
             );

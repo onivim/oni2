@@ -503,7 +503,7 @@ let createElement =
                        Shapes.drawRect(
                          ~transform,
                          ~x=x0,
-                         ~y=y0 +. offset +. fontHeight,
+                         ~y=y0 +. fontHeight,
                          ~height=1.,
                          ~width=x1 -. x0,
                          ~color=Colors.red,
@@ -621,6 +621,7 @@ let createElement =
             width={layout.minimapWidthInPixels}
             height={metrics.pixelHeight}
             count=lineCount
+			diagnostics
             metrics
             getTokensForLine
           />

@@ -9,6 +9,7 @@
 open Oni_Core;
 
 module Diagnostic: {
+  [@deriving show({with_path: false})]
   type t = {range: Range.t};
 
   let create: (~range: Range.t, unit) => t;
