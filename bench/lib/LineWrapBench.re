@@ -5,8 +5,8 @@ let setup = () => ();
 
 let longLine = String.make(100000, 'a');
 
-let wrapLine = (line, wrapPoint) => () => {
-	LineWrap.create(line, wrapPoint) |> ignore;
+let wrapLine = (line, wrapPoint, ()) => {
+  LineWrap.create(line, wrapPoint) |> ignore;
 };
 
 let options = Reperf.Options.create(~iterations=1000, ());

@@ -8,10 +8,15 @@ let rootNode = (new node)();
 let setup = () => ();
 
 let mediumBuffer =
-  Buffer.ofLines(Array.make(10000, "This buffer is pretty big and has a lot of text in its line which may be an issue for word wrapping but we'll see what the benchmark says"));
+  Buffer.ofLines(
+    Array.make(
+      10000,
+      "This buffer is pretty big and has a lot of text in its line which may be an issue for word wrapping but we'll see what the benchmark says",
+    ),
+  );
 
-let wrapBuffer = (buffer) => () => {
-	BufferWrap.create(buffer, 25) |> ignore;
+let wrapBuffer = (buffer, ()) => {
+  BufferWrap.create(buffer, 25) |> ignore;
 };
 
 let options = Reperf.Options.create(~iterations=1000, ());

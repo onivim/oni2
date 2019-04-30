@@ -7,5 +7,5 @@
 include Hashtbl.Make({
   type t = int;
   let equal = (i, j) => i == j;
-  let hash = (i) => i land max_int;
+  let hash = i => i land max_int;
 });

@@ -76,6 +76,6 @@ let toVirtualPosition = (character, v) => {
 };
 
 let getOffsets = (idx, v) => {
-	let {index, length} = v[idx];	
-	(index, length)
+  let {index, length} = v[idx];
+  (index, length);
 };
