@@ -7,46 +7,6 @@ open TestFramework;
 open ExtensionClientHelper;
 open ExtHostProtocol;
 
-module JsonInformationMessageFormat = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
-  type t = {
-    [@key "type"]
-    messageType: string,
-    filename: string,
-    fullText: string,
-  };
-};
-
-let empty: unit => ref(list(string)) = () => ref([]);
-let emptyInfoMsgs: unit => ref(list(JsonInformationMessageFormat.t)) =
-  () => ref([]);
-
-let clear = (r: ref(list(string))) => r := [];
-
-let appendInfoMsg = (r, s) => {
-  let json = Yojson.Safe.from_string(s);
-  let info = JsonInformationMessageFormat.of_yojson(json);
-
-  switch (info) {
-  | Ok(v) => r := [v, ...r^]
-  | _ => ()
-  };
-};
-
-let doesInfoMessageMatch = (r: ref(list(JsonInformationMessageFormat.t)), f) => {
-  let l = r^ |> List.filter(f) |> List.length;
-  l > 0;
-};
-
-let append = (r: ref(list(string)), s: string) => r := [s, ...r^];
-
-let any = (r: ref(list(string)), ()) => List.length(r^) > 0;
-
-let isStringValueInList = (r: ref(list(string)), match: string) => {
-  let l = r^ |> List.filter(id => String.equal(id, match)) |> List.length;
-  l > 0;
-};
-
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", ({expect}) => {
