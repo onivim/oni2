@@ -61,9 +61,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
 
   let extensions =
     ExtensionScanner.scan(testExtensionsPath)
-    |> List.map(ext =>
-         ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
-       );
+    |> List.map(ext => ExtHostInitData.ExtensionInfo.ofScannedExtension(ext));
 
   let initData = ExtHostInitData.create(~extensions, ());
 

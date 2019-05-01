@@ -106,10 +106,7 @@ let start =
     };
 
   let _sendInitData = () => {
-    send(
-      Protocol.MessageType.initData,
-      ExtHostInitData.to_yojson(initData),
-    );
+    send(Protocol.MessageType.initData, ExtHostInitData.to_yojson(initData));
   };
 
   let _handleInitialization = () => {

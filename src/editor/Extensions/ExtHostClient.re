@@ -35,22 +35,22 @@ let start =
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadStatusBar", "$setEntry", args) =>
-      In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry)
-	  Ok(None);
-    | _ => Ok(None);
+      In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
+      Ok(None);
+    | _ => Ok(None)
     };
-	};
+  };
 
-    let transport =
-      ExtHostTransport.start(
-        ~initData,
-        ~onInitialized,
-        ~onMessage,
-        ~onClosed,
-        setup,
-      );
-    let ret: t = {transport: transport};
-	ret;
+  let transport =
+    ExtHostTransport.start(
+      ~initData,
+      ~onInitialized,
+      ~onMessage,
+      ~onClosed,
+      setup,
+    );
+  let ret: t = {transport: transport};
+  ret;
 };
 
 let activateByEvent = (evt, v) => {
@@ -61,21 +61,21 @@ let activateByEvent = (evt, v) => {
 };
 
 let addDocument = (doc, v) => {
-	ExtHostTransport.send(
-	v.transport,
-	Out.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-		~addedDocuments=[doc],
-		~removedDocuments=[],
-		(),
-	)
-	);
+  ExtHostTransport.send(
+    v.transport,
+    Out.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+      ~addedDocuments=[doc],
+      ~removedDocuments=[],
+      (),
+    ),
+  );
 };
 
 let updateDocument = (uri, modelChange, dirty, v) => {
-	ExtHostTransport.send(
-	v.transport,
-	Out.Documents.acceptModelChanged(uri, modelChange, dirty)
-	);
+  ExtHostTransport.send(
+    v.transport,
+    Out.Documents.acceptModelChanged(uri, modelChange, dirty),
+  );
 };
 
 let pump = (v: t) => ExtHostTransport.pump(v.transport);

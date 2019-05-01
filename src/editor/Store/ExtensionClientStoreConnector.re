@@ -21,23 +21,21 @@ let start = (extensions, setup: Core.Setup.t) => {
   let extensionInfo =
     extensions
     |> List.map(ext =>
-         Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(
-           ext,
-         )
+         Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
-      dispatch(
-        Model.Actions.StatusBarAddItem(
-          Model.StatusBarModel.Item.create(
-            ~id,
-            ~text,
-            ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
-            ~priority,
-            (),
-          ),
+    dispatch(
+      Model.Actions.StatusBarAddItem(
+        Model.StatusBarModel.Item.create(
+          ~id,
+          ~text,
+          ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+          ~priority,
+          (),
         ),
-      );
+      ),
+    );
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -86,7 +84,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(v) => ExtHostClient.addDocument(v, extHostClient);
+      | Some(v) => ExtHostClient.addDocument(v, extHostClient)
       }
     );
 
@@ -112,10 +110,10 @@ let start = (extensions, setup: Core.Setup.t) => {
         let uri = Model.Buffer.getUri(v);
 
         ExtHostClient.updateDocument(
-            uri,
-            modelChangedEvent,
-            true,
-			extHostClient,
+          uri,
+          modelChangedEvent,
+          true,
+          extHostClient,
         );
       }
     );
