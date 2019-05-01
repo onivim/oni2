@@ -20,19 +20,30 @@ module JsonInformationMessageFormat = {
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
-    test("activates by language", _ =>
-      withExtensionClient(api => {
-        let waitForActivationMessage =
-          api
-          |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
+    test("activates by language", ({expect}) => {
+      let activations: ref(list(string)) = ref([]);
+      let onDidActivateExtension = id => activations := [id, ...activations^];
 
-        api.start();
+      let isExpectedExtensionActivated = () => {
+        let l =
+          activations^
+          |> List.filter(id =>
+               String.equal(id, "oni-activation-events-test")
+             )
+          |> List.length;
+        l > 0;
+      };
 
-        api.send(ExtensionService.activateByEvent("onLanguage:testlang"));
+      withExtensionClient2(
+        ~onDidActivateExtension,
+        client => {
+          ExtHostClient.activateByEvent("onLanguage:testLang", client);
 
-        waitForActivationMessage();
-      })
-    );
+          WaitHelper.wait(isExpectedExtensionActivated, client);
+          expect.bool(isExpectedExtensionActivated()).toBe(true);
+        },
+      );
+    });
 
     test("activates by command", _ =>
       withExtensionClient(api => {

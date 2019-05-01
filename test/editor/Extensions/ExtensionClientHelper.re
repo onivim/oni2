@@ -23,6 +23,15 @@ type extHostApi = {
 };
 
 module Waiters = {
+  let wait = (client: ExtHostClient.t) => {
+      Oni_Core.Utility.waitForCondition(
+        ~timeout=10.0,
+        () => {
+		  ExtHostClient.pump(client);
+		  f();
+      );
+  };
+
   let createCommandRegistrationWaiter = (command: string, api: extHostApi) => {
     api.createWaiterForMessage("MainThreadCommands", "$registerCommand", args =>
       switch (args) {
@@ -52,7 +61,7 @@ module Waiters = {
     );
   };
 };
-let withExtensionClient2 = (f: ExtHostClient.t => unit) => {
+let withExtensionClient2 = (~onStatusBarSetEntry, ~onDidActivateExtension, ~onShowMessage, f: ExtHostClient.t => unit) => {
   let setup = Setup.init();
 
   let rootPath = Rench.Environment.getWorkingDirectory();
@@ -70,36 +79,29 @@ let withExtensionClient2 = (f: ExtHostClient.t => unit) => {
   let onClosed = () => closed := true;
   let onInitialized = () => initialized := true;
 
-  let extClient = ref(None);
-
-  let start = () => {
     let v =
-      ExtHostClient.create(
+      ExtHostClient.start(
         ~initData,
         ~onInitialized,
-        ~onMessage,
+		~onStatusBarSetEntry,
+		~onDidActivateExtension,
+		~onShowMessage,
         ~onClosed,
         setup,
       );
 
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(v);
+      ExtHostClient.pump(v);
       initialized^;
     });
 
     if (! initialized^) {
       failwith("extension host client did not initialize successfully");
-    };
+    } else {
 
-    extClient := Some(v);
-  };
-
-  switch (extClient^) {
-  | None => ()
-  | Some(extClient) =>  
-		f(extClient);
-		ExtHostClient.close(extClient);
-  };
+				f(v);
+				ExtHostClient.close(v);
+				};
 };
 
 let withExtensionClient = (f: extHostApi => unit) => {
