@@ -1,5 +1,5 @@
 /*
- * ExtensionHostClient.re
+ * ExtHostClient.re
  *
  * This is a client-side API for integrating with our VSCode extension host API.
  *
@@ -10,7 +10,7 @@ open Reason_jsonrpc;
 open Rench;
 /* open Revery; */
 
-module Protocol = ExtensionHostProtocol;
+module Protocol = ExtHostProtocol;
 
 type t = {
   process: NodeProcess.t,
@@ -30,7 +30,7 @@ let defaultMessageHandler = (_, _, _) => Ok(None);
 
 let start =
     (
-      ~initData=ExtensionHostInitData.create(),
+      ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
@@ -73,7 +73,7 @@ let start =
   };
 
   let sendRequest = (msg: Yojson.Safe.json) => {
-    send(ExtensionHostProtocol.MessageType.requestJsonArgs, msg);
+    send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
   };
 
   let sendResponse = (msgType, reqId, msg) => {
@@ -108,14 +108,14 @@ let start =
   let _sendInitData = () => {
     send(
       Protocol.MessageType.initData,
-      ExtensionHostInitData.to_yojson(initData),
+      ExtHostInitData.to_yojson(initData),
     );
   };
 
   let _handleInitialization = () => {
     onInitialized();
     /* Send workspace and configuration info to get the extensions started */
-    open ExtensionHostProtocol.OutgoingNotifications;
+    open ExtHostProtocol.OutgoingNotifications;
 
     Configuration.initializeConfiguration() |> sendRequest;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
@@ -171,12 +171,12 @@ let pump = (v: t) => Rpc.pump(v.rpc);
 let send =
     (
       v: t,
-      ~msgType=ExtensionHostProtocol.MessageType.requestJsonArgs,
+      ~msgType=ExtHostProtocol.MessageType.requestJsonArgs,
       msg: Yojson.Safe.json,
     ) => {
   v.send(msgType, msg);
 };
 
 let close = (v: t) => {
-  v.send(ExtensionHostProtocol.MessageType.terminate, `Assoc([]));
+  v.send(ExtHostProtocol.MessageType.terminate, `Assoc([]));
 };

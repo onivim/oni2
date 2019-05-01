@@ -1,5 +1,5 @@
 /*
- * ExtensionHostClient.re
+ * ExtHostClient.re
  *
  * This is a client-side API for integrating with our VSCode extension host API.
  *
@@ -7,12 +7,12 @@
 
 open Oni_Core;
 
-module Protocol = ExtensionHostProtocol;
+module Protocol = ExtHostProtocol;
 
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
 
-type t = {transport: ExtensionHostTransport.t};
+type t = {transport: ExtHostTransport.t};
 
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
@@ -26,7 +26,7 @@ let apply = (f, r) => {
 
 let start =
     (
-      ~initData=ExtensionHostInitData.create(),
+      ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
       ~onStatusBarSetEntry,
@@ -42,7 +42,7 @@ let start =
 	};
 
     let transport =
-      ExtensionHostTransport.start(
+      ExtHostTransport.start(
         ~initData,
         ~onInitialized,
         ~onMessage,
@@ -54,14 +54,14 @@ let start =
 };
 
 let activateByEvent = (evt, v) => {
-  ExtensionHostTransport.send(
+  ExtHostTransport.send(
     v.transport,
     Out.ExtensionService.activateByEvent(evt),
   );
 };
 
 let addDocument = (doc, v) => {
-	ExtensionHostTransport.send(
+	ExtHostTransport.send(
 	v.transport,
 	Out.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
 		~addedDocuments=[doc],
@@ -72,12 +72,12 @@ let addDocument = (doc, v) => {
 };
 
 let updateDocument = (uri, modelChange, dirty, v) => {
-	ExtensionHostTransport.send(
+	ExtHostTransport.send(
 	v.transport,
 	Out.Documents.acceptModelChanged(uri, modelChange, dirty)
 	);
 };
 
-let pump = (v: t) => ExtensionHostTransport.pump(v.transport);
+let pump = (v: t) => ExtHostTransport.pump(v.transport);
 
-let close = (v: t) => ExtensionHostTransport.close(v.transport);
+let close = (v: t) => ExtHostTransport.close(v.transport);
