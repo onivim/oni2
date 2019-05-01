@@ -14,8 +14,7 @@
     "format": "esy dune build @fmt --auto-promote",
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js",
-    "test": "esy x OniUnitTestRunner",
-    "test-ci": "esy x OniUnitTestRunnerCI"
+    "test": "esy @test run"
   },
   "dependencies": {
     "ocaml": "~4.7.0",

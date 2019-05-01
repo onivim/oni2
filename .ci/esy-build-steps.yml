@@ -11,7 +11,7 @@ steps:
     displayName: 'Build: esy build'
   - script: esy @test install
     displayName: 'Test: install'
-  - script: esy @test run
+  - script: esy @test run-ci
     displayName: 'Unit Tests: esy test-ci (round 1)'
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
