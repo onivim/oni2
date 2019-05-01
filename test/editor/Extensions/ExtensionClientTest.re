@@ -6,7 +6,6 @@ open TestFramework;
 
 open ExtensionClientHelper;
 open ExtHostProtocol;
-open ExtHostProtocol.OutgoingNotifications;
 
 module JsonInformationMessageFormat = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
@@ -168,33 +167,25 @@ describe("ExtHostClient", ({describe, _}) => {
         })
       });
 
-    test("document updated successfully", _ =>
-      withExtensionClient(api => {
-        let waitForCommandRegistration =
-          api
-          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+    test("document updated successfully", ({expect}) => {
+      let registeredCommands = empty();
+      let messages = emptyInfoMsgs();
 
-        let waitForOpenMessage =
-          api
-          |> Waiters.createMessageWaiter(s => {
-               let json = Yojson.Safe.from_string(s);
-               open JsonInformationMessageFormat;
-               let info = JsonInformationMessageFormat.of_yojson_exn(json);
+      let onShowMessage = appendInfoMsg(messages);
+      let onRegisterCommand = append(registeredCommands);
 
-               String.equal(info.filename, "test.txt")
-               && String.equal(
-                    info.messageType,
-                    "workspace.onDidOpenTextDocument",
-                  );
-             });
+      let isExpectedCommandRegistered = () =>
+        isStringValueInList(registeredCommands, "extension.helloWorld");
 
-        let waitForUpdateMessage =
-          api
-          |> Waiters.createMessageWaiter(s => {
-               let json = Yojson.Safe.from_string(s);
-               open JsonInformationMessageFormat;
-               let info = JsonInformationMessageFormat.of_yojson_exn(json);
+      let didGetOpenMessage = () => doesInfoMessageMatch(messages, (info) => {
+                 String.equal(info.filename, "test.txt")
+                 && String.equal(
+                      info.messageType,
+                      "workspace.onDidOpenTextDocument",
+                    );
+						});
 
+      let didGetUpdateMessage = () => doesInfoMessageMatch(messages, (info) => {
                String.equal(info.filename, "test.txt")
                && String.equal(
                     info.messageType,
@@ -204,25 +195,22 @@ describe("ExtHostClient", ({describe, _}) => {
                     info.fullText,
                     "Greetings" ++ Eol.toString(Eol.default) ++ "world",
                   );
-             });
+						});
 
-        api.start();
-        waitForCommandRegistration();
-        api.send(
-          DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-            ~removedDocuments=[],
-            ~addedDocuments=[
+      withExtensionClient2(~onShowMessage, ~onRegisterCommand, client => {
+
+		  Waiters.wait(isExpectedCommandRegistered, client);
+		  expect.bool(isExpectedCommandRegistered()).toBe(true);
+
+		ExtHostClient.addDocument(
               createInitialDocumentModel(
                 ~lines=["hello", "world"],
                 ~path="test.txt",
                 (),
               ),
-            ],
-            (),
-          ),
-        );
-
-        waitForOpenMessage();
+														client);
+		  Waiters.wait(didGetOpenMessage, client);
+		  expect.bool(didGetOpenMessage()).toBe(true);
 
         let contentChange =
           ModelContentChange.create(
@@ -245,17 +233,15 @@ describe("ExtHostClient", ({describe, _}) => {
             ~versionId=1,
             (),
           );
-
-        api.send(
-          Documents.acceptModelChanged(
+		ExtHostClient.updateDocument(
             Uri.fromPath("test.txt"),
             modelChangedEvent,
             true,
-          ),
-        );
+			client);
 
-        waitForUpdateMessage();
+		  Waiters.wait(didGetUpdateMessage, client);
+		  expect.bool(didGetUpdateMessage()).toBe(true);
       })
-    );
+    });
   });
 });
