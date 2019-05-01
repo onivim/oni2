@@ -16,7 +16,7 @@ type t = {transport: ExtHostTransport.t};
 
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
-let defaultOneArgCallback = (_) => ();
+let defaultOneArgCallback = _ => ();
 
 let apply = (f, r) => {
   switch (r) {
@@ -30,17 +30,23 @@ let start =
       ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
-	  ~onDidActivateExtension=defaultOneArgCallback,
-	  ~onShowMessage=defaultOneArgCallback,
+      ~onDidActivateExtension=defaultOneArgCallback,
+      ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
-    | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) => onShowMessage(s);
-				Ok(None);
-	| ("MainThreadExtensionService", "$onDidActivateExtension", [`String(v), ..._]) => onDidActivateExtension(v);
-	  Ok(None);
+    | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
+      onShowMessage(s);
+      Ok(None);
+    | (
+        "MainThreadExtensionService",
+        "$onDidActivateExtension",
+        [`String(v), ..._],
+      ) =>
+      onDidActivateExtension(v);
+      Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
