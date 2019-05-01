@@ -25,14 +25,13 @@ let apply = (f, r) => {
   };
 };
 
-
 let start =
     (
       ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
-	  ~onRegisterCommand=defaultOneArgCallback,
+      ~onRegisterCommand=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
@@ -47,7 +46,7 @@ let start =
       onDidActivateExtension(id);
       Ok(None);
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
-	  onRegisterCommand(v);
+      onRegisterCommand(v);
       Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
