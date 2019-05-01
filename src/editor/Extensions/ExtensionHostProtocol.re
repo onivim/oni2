@@ -174,6 +174,26 @@ module ModelChangedEvent = {
   let create = (~changes, ~eol, ~versionId, ()) => {changes, eol, versionId};
 };
 
+module IncomingNotifications = {
+	module StatusBar = {
+	let parseSetEntry = (args) => {
+									switch(args) {
+			| [
+											`Int(id),
+											_,
+											`String(text),
+											_,
+											_,
+											_,
+											`Int(alignment),
+											`Int(priority),
+									] => Some(id, text, alignment, priority))
+			| _ => None
+			};
+	}
+	}
+};
+
 module OutgoingNotifications = {
   let _buildNotification = (scopeName, methodName, payload) => {
     `List([`String(scopeName), `String(methodName), payload]);
