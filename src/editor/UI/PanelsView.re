@@ -16,7 +16,8 @@ let headerTextSize = 15;
 let underlineStyles =
   Style.[height(1), backgroundColor(Revery.Colors.white)];
 
-let header = Style.[padding(8)];
+let header = bgColor =>
+  Style.[padding(8), backgroundColor(bgColor), flexDirection(`Row)];
 
 let headerText = font =>
   Style.[
@@ -25,7 +26,8 @@ let headerText = font =>
     textOverflow(`Ellipsis),
   ];
 
-let heading = Style.[width(80), justifyContent(`Center)];
+let heading =
+  Style.[width(80), justifyContent(`Center), marginHorizontal(5)];
 
 let component = React.component("Panels");
 
@@ -40,13 +42,14 @@ let panels = [
 let createElement = (~children, ~state: State.t, ()) =>
   component(hooks => {
     let font = state.uiFont.fontFile;
+    let bg = state.theme.colors.editorWhitespaceForeground;
 
     let (activePanel, setActivePanel, hooks) =
       React.Hooks.state(Messages, hooks);
 
     let (hidePanels, setHidePanels, hooks) = React.Hooks.state(false, hooks);
 
-    let onClick = panel => {
+    let onClick = (panel, _) => {
       panel.command(state);
       setActivePanel(panel.panelType);
     };
@@ -55,12 +58,11 @@ let createElement = (~children, ~state: State.t, ()) =>
       hooks,
       !hidePanels
         ? <View>
-            <View style=header>
+            <View style={header(bg)}>
               ...{List.map(
                 panel =>
-                  <Clickable style=heading onClick={() => onClick(panel)}>
+                  <Clickable style=heading onClick={onClick(panel)}>
                     <Text text={panel.title} style={headerText(font)} />
-                    <View style=underlineStyles />
                   </Clickable>,
                 panels,
               )}
