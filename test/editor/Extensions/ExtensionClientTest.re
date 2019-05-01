@@ -19,8 +19,27 @@ module JsonInformationMessageFormat = {
 };
 
 let empty: unit => ref(list(string)) = () => ref([]);
+let emptyInfoMsgs: unit => ref(list(JsonInformationMessageFormat.t)) = () => ref([]);
 
 let clear = (r: ref(list(string))) => r := [];
+
+let appendInfoMsg = (r, s) => {
+
+													let json = Yojson.Safe.from_string(s);
+													let info = JsonInformationMessageFormat.of_yojson(json);
+
+		switch (info) {
+		| Ok(v) => r := [v, ...r^];
+		| _ => ()
+		};
+};
+
+let doesInfoMessageMatch = (r: ref(list(JsonInformationMessageFormat.t)), f) => {
+	let l = r^
+	|> List.filter(f)
+	|> List.length;
+	l > 0;
+};
 
 let append = (r: ref(list(string)), s: string) => r := [s, ...r^];
 
@@ -116,47 +135,38 @@ describe("ExtHostClient", ({describe, _}) => {
         (),
       );
     };
-    test("document added successfully", _
-      /*({expect}) =>*/
-      =>
-        withExtensionClient(api => {
-          let waitForCommandRegistration =
-            api
-            |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
+    test("document added successfully", ({expect}) => {
+      let registeredCommands = empty();
+      let messages = emptyInfoMsgs();
 
-          let waitForOpenMessage =
-            api
-            |> Waiters.createMessageWaiter(s => {
-                 let json = Yojson.Safe.from_string(s);
-                 open JsonInformationMessageFormat;
-                 let info = JsonInformationMessageFormat.of_yojson_exn(json);
+      let onShowMessage = appendInfoMsg(messages);
+      let onRegisterCommand = append(registeredCommands);
 
+      let isExpectedCommandRegistered = () =>
+        isStringValueInList(registeredCommands, "extension.helloWorld");
+
+      let didGetOpenMessage = () => doesInfoMessageMatch(messages, (info) => {
                  String.equal(info.filename, "test.txt")
                  && String.equal(
                       info.messageType,
                       "workspace.onDidOpenTextDocument",
                     );
-               });
+						});
 
-          api.start();
-          waitForCommandRegistration();
-          api.send(
-            DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-              ~removedDocuments=[],
-              ~addedDocuments=[
+        withExtensionClient2(~onRegisterCommand, ~onShowMessage, client => {
+		  Waiters.wait(isExpectedCommandRegistered, client);
+		  expect.bool(isExpectedCommandRegistered()).toBe(true);
+
+		 ExtHostClient.addDocument(
                 createInitialDocumentModel(
                   ~lines=["Hello world"],
                   ~path="test.txt",
                   (),
-                ),
-              ],
-              (),
-            ),
-          );
-
-          waitForOpenMessage();
+                ), client);
+		  Waiters.wait(didGetOpenMessage, client);
+		  expect.bool(didGetOpenMessage()).toBe(true);
         })
-      );
+      });
 
     test("document updated successfully", _ =>
       withExtensionClient(api => {
