@@ -110,4 +110,3 @@ let withExtensionClient =
     ExtHostClient.close(v);
   };
 };
-
