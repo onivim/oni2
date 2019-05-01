@@ -18,7 +18,7 @@ module JsonInformationMessageFormat = {
   };
 };
 
-describe("Extension Client", ({describe, _}) => {
+describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", _ =>
       withExtensionClient(api => {
