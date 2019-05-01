@@ -18,26 +18,24 @@ module JsonInformationMessageFormat = {
 };
 
 let empty: unit => ref(list(string)) = () => ref([]);
-let emptyInfoMsgs: unit => ref(list(JsonInformationMessageFormat.t)) = () => ref([]);
+let emptyInfoMsgs: unit => ref(list(JsonInformationMessageFormat.t)) =
+  () => ref([]);
 
 let clear = (r: ref(list(string))) => r := [];
 
 let appendInfoMsg = (r, s) => {
+  let json = Yojson.Safe.from_string(s);
+  let info = JsonInformationMessageFormat.of_yojson(json);
 
-													let json = Yojson.Safe.from_string(s);
-													let info = JsonInformationMessageFormat.of_yojson(json);
-
-		switch (info) {
-		| Ok(v) => r := [v, ...r^];
-		| _ => ()
-		};
+  switch (info) {
+  | Ok(v) => r := [v, ...r^]
+  | _ => ()
+  };
 };
 
 let doesInfoMessageMatch = (r: ref(list(JsonInformationMessageFormat.t)), f) => {
-	let l = r^
-	|> List.filter(f)
-	|> List.length;
-	l > 0;
+  let l = r^ |> List.filter(f) |> List.length;
+  l > 0;
 };
 
 let append = (r: ref(list(string)), s: string) => r := [s, ...r^];
@@ -144,28 +142,32 @@ describe("ExtHostClient", ({describe, _}) => {
       let isExpectedCommandRegistered = () =>
         isStringValueInList(registeredCommands, "extension.helloWorld");
 
-      let didGetOpenMessage = () => doesInfoMessageMatch(messages, (info) => {
-                 String.equal(info.filename, "test.txt")
-                 && String.equal(
-                      info.messageType,
-                      "workspace.onDidOpenTextDocument",
-                    );
-						});
+      let didGetOpenMessage = () =>
+        doesInfoMessageMatch(messages, info =>
+          String.equal(info.filename, "test.txt")
+          && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
+        );
 
-        withExtensionClient2(~onRegisterCommand, ~onShowMessage, client => {
-		  Waiters.wait(isExpectedCommandRegistered, client);
-		  expect.bool(isExpectedCommandRegistered()).toBe(true);
+      withExtensionClient2(
+        ~onRegisterCommand,
+        ~onShowMessage,
+        client => {
+          Waiters.wait(isExpectedCommandRegistered, client);
+          expect.bool(isExpectedCommandRegistered()).toBe(true);
 
-		 ExtHostClient.addDocument(
-                createInitialDocumentModel(
-                  ~lines=["Hello world"],
-                  ~path="test.txt",
-                  (),
-                ), client);
-		  Waiters.wait(didGetOpenMessage, client);
-		  expect.bool(didGetOpenMessage()).toBe(true);
-        })
-      });
+          ExtHostClient.addDocument(
+            createInitialDocumentModel(
+              ~lines=["Hello world"],
+              ~path="test.txt",
+              (),
+            ),
+            client,
+          );
+          Waiters.wait(didGetOpenMessage, client);
+          expect.bool(didGetOpenMessage()).toBe(true);
+        },
+      );
+    });
 
     test("document updated successfully", ({expect}) => {
       let registeredCommands = empty();
@@ -177,71 +179,75 @@ describe("ExtHostClient", ({describe, _}) => {
       let isExpectedCommandRegistered = () =>
         isStringValueInList(registeredCommands, "extension.helloWorld");
 
-      let didGetOpenMessage = () => doesInfoMessageMatch(messages, (info) => {
-                 String.equal(info.filename, "test.txt")
-                 && String.equal(
-                      info.messageType,
-                      "workspace.onDidOpenTextDocument",
-                    );
-						});
+      let didGetOpenMessage = () =>
+        doesInfoMessageMatch(messages, info =>
+          String.equal(info.filename, "test.txt")
+          && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
+        );
 
-      let didGetUpdateMessage = () => doesInfoMessageMatch(messages, (info) => {
-               String.equal(info.filename, "test.txt")
-               && String.equal(
-                    info.messageType,
-                    "workspace.onDidChangeTextDocument",
-                  )
-               && String.equal(
-                    info.fullText,
-                    "Greetings" ++ Eol.toString(Eol.default) ++ "world",
-                  );
-						});
+      let didGetUpdateMessage = () =>
+        doesInfoMessageMatch(messages, info =>
+          String.equal(info.filename, "test.txt")
+          && String.equal(
+               info.messageType,
+               "workspace.onDidChangeTextDocument",
+             )
+          && String.equal(
+               info.fullText,
+               "Greetings" ++ Eol.toString(Eol.default) ++ "world",
+             )
+        );
 
-      withExtensionClient2(~onShowMessage, ~onRegisterCommand, client => {
+      withExtensionClient2(
+        ~onShowMessage,
+        ~onRegisterCommand,
+        client => {
+          Waiters.wait(isExpectedCommandRegistered, client);
+          expect.bool(isExpectedCommandRegistered()).toBe(true);
 
-		  Waiters.wait(isExpectedCommandRegistered, client);
-		  expect.bool(isExpectedCommandRegistered()).toBe(true);
-
-		ExtHostClient.addDocument(
-              createInitialDocumentModel(
-                ~lines=["hello", "world"],
-                ~path="test.txt",
-                (),
-              ),
-														client);
-		  Waiters.wait(didGetOpenMessage, client);
-		  expect.bool(didGetOpenMessage()).toBe(true);
-
-        let contentChange =
-          ModelContentChange.create(
-            ~range=
-              Range.create(
-                ~startLine=ZeroBasedIndex(0),
-                ~endLine=ZeroBasedIndex(0),
-                ~startCharacter=ZeroBasedIndex(0),
-                ~endCharacter=ZeroBasedIndex(5),
-                (),
-              ),
-            ~text="Greetings",
-            (),
+          ExtHostClient.addDocument(
+            createInitialDocumentModel(
+              ~lines=["hello", "world"],
+              ~path="test.txt",
+              (),
+            ),
+            client,
           );
+          Waiters.wait(didGetOpenMessage, client);
+          expect.bool(didGetOpenMessage()).toBe(true);
 
-        let modelChangedEvent =
-          ModelChangedEvent.create(
-            ~changes=[contentChange],
-            ~eol=Eol.default,
-            ~versionId=1,
-            (),
-          );
-		ExtHostClient.updateDocument(
+          let contentChange =
+            ModelContentChange.create(
+              ~range=
+                Range.create(
+                  ~startLine=ZeroBasedIndex(0),
+                  ~endLine=ZeroBasedIndex(0),
+                  ~startCharacter=ZeroBasedIndex(0),
+                  ~endCharacter=ZeroBasedIndex(5),
+                  (),
+                ),
+              ~text="Greetings",
+              (),
+            );
+
+          let modelChangedEvent =
+            ModelChangedEvent.create(
+              ~changes=[contentChange],
+              ~eol=Eol.default,
+              ~versionId=1,
+              (),
+            );
+          ExtHostClient.updateDocument(
             Uri.fromPath("test.txt"),
             modelChangedEvent,
             true,
-			client);
+            client,
+          );
 
-		  Waiters.wait(didGetUpdateMessage, client);
-		  expect.bool(didGetUpdateMessage()).toBe(true);
-      })
+          Waiters.wait(didGetUpdateMessage, client);
+          expect.bool(didGetUpdateMessage()).toBe(true);
+        },
+      );
     });
   });
 });
