@@ -5,8 +5,8 @@ open Oni_Extensions;
 open TestFramework;
 
 open ExtensionClientHelper;
-open ExtensionHostProtocol;
-open ExtensionHostProtocol.OutgoingNotifications;
+open ExtHostProtocol;
+open ExtHostProtocol.OutgoingNotifications;
 
 module JsonInformationMessageFormat = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
@@ -221,13 +221,13 @@ describe("Extension Client", ({describe, _}) => {
         let setup = Setup.init();
         let initialized = ref(false);
         let onInitialized = () => initialized := true;
-        let extClient = ExtensionHostClient.start(~onInitialized, setup);
+        let extClient = ExtHostTransport.start(~onInitialized, setup);
         Oni_Core.Utility.waitForCondition(() => {
-          ExtensionHostClient.pump(extClient);
+          ExtHostTransport.pump(extClient);
           initialized^;
         });
         expect.bool(initialized^).toBe(true);
-        ExtensionHostClient.close(extClient);
+        ExtHostTransport.close(extClient);
       })
     );
     test("doesn't die after a few seconds", ({expect}) => {
@@ -237,9 +237,9 @@ describe("Extension Client", ({describe, _}) => {
       let onClosed = () => closed := true;
       let onInitialized = () => initialized := true;
       let extClient =
-        ExtensionHostClient.start(~onInitialized, ~onClosed, setup);
+        ExtHostTransport.start(~onInitialized, ~onClosed, setup);
       Oni_Core.Utility.waitForCondition(() => {
-        ExtensionHostClient.pump(extClient);
+        ExtHostTransport.pump(extClient);
         initialized^;
       });
       expect.bool(initialized^).toBe(true);
@@ -255,15 +255,15 @@ describe("Extension Client", ({describe, _}) => {
       let onClosed = () => closed := true;
       let onInitialized = () => initialized := true;
       let extClient =
-        ExtensionHostClient.start(~onInitialized, ~onClosed, setup);
+        ExtHostTransport.start(~onInitialized, ~onClosed, setup);
       Oni_Core.Utility.waitForCondition(() => {
-        ExtensionHostClient.pump(extClient);
+        ExtHostTransport.pump(extClient);
         initialized^;
       });
       expect.bool(initialized^).toBe(true);
-      ExtensionHostClient.close(extClient);
+      ExtHostTransport.close(extClient);
       Oni_Core.Utility.waitForCondition(() => {
-        ExtensionHostClient.pump(extClient);
+        ExtHostTransport.pump(extClient);
         closed^;
       });
       expect.bool(closed^).toBe(false);
@@ -276,7 +276,7 @@ describe("Extension Client", ({describe, _}) => {
       let extensions =
         ExtensionScanner.scan(testExtensionsPath)
         |> List.map(ext =>
-             ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext)
+             ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
            );
       let gotWillActivateMessage = ref(false);
       let gotDidActivateMessage = ref(false);
@@ -290,17 +290,17 @@ describe("Extension Client", ({describe, _}) => {
         };
         Ok(None);
       };
-      let initData = ExtensionHostInitData.create(~extensions, ());
-      let extClient = ExtensionHostClient.start(~initData, ~onMessage, setup);
+      let initData = ExtHostInitData.create(~extensions, ());
+      let extClient = ExtHostTransport.start(~initData, ~onMessage, setup);
       Oni_Core.Utility.waitForCondition(() => {
-        ExtensionHostClient.pump(extClient);
+        ExtHostTransport.pump(extClient);
         gotWillActivateMessage^;
       });
       Oni_Core.Utility.waitForCondition(() => {
-        ExtensionHostClient.pump(extClient);
+        ExtHostTransport.pump(extClient);
         gotDidActivateMessage^;
       });
-      ExtensionHostClient.close(extClient);
+      ExtHostTransport.close(extClient);
     });
   });
 });

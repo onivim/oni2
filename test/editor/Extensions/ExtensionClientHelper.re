@@ -62,10 +62,10 @@ let withExtensionClient = (f: extHostApi => unit) => {
   let extensions =
     ExtensionScanner.scan(testExtensionsPath)
     |> List.map(ext =>
-         ExtensionHostInitData.ExtensionInfo.ofScannedExtension(ext)
+         ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
-  let initData = ExtensionHostInitData.create(~extensions, ());
+  let initData = ExtHostInitData.create(~extensions, ());
 
   let initialized = ref(false);
   let closed = ref(false);
@@ -98,7 +98,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
         ~timeout=10.0,
         () => {
           switch (extClient^) {
-          | Some(v) => ExtensionHostClient.pump(v)
+          | Some(v) => ExtHostTransport.pump(v)
           | None =>
             failwith("extension client must be initialized prior to waiting")
           };
@@ -123,7 +123,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
 
   let start = () => {
     let v =
-      ExtensionHostClient.start(
+      ExtHostTransport.start(
         ~initData,
         ~onInitialized,
         ~onMessage,
@@ -132,7 +132,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
       );
 
     Oni_Core.Utility.waitForCondition(() => {
-      ExtensionHostClient.pump(v);
+      ExtHostTransport.pump(v);
       initialized^;
     });
 
@@ -147,7 +147,7 @@ let withExtensionClient = (f: extHostApi => unit) => {
     switch (extClient^) {
     | None =>
       failwith("Extension client not started - call start() before send()")
-    | Some(extClient) => ExtensionHostClient.send(extClient, json)
+    | Some(extClient) => ExtHostTransport.send(extClient, json)
     };
   };
 
@@ -158,9 +158,9 @@ let withExtensionClient = (f: extHostApi => unit) => {
   switch (extClient^) {
   | None => ()
   | Some(extClient) =>
-    ExtensionHostClient.close(extClient);
+    ExtHostTransport.close(extClient);
     Oni_Core.Utility.waitForCondition(() => {
-      ExtensionHostClient.pump(extClient);
+      ExtHostTransport.pump(extClient);
       closed^;
     });
   };

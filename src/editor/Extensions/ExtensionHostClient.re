@@ -6,8 +6,6 @@
  */
 
 open Oni_Core;
-open Reason_jsonrpc;
-open Rench;
 
 module Protocol = ExtensionHostProtocol;
 
@@ -34,12 +32,14 @@ let start =
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
-  let onMessage = json => {
+  let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry)
-    | _ => ()
+	  Ok(None);
+    | _ => Ok(None);
     };
+	};
 
     let transport =
       ExtensionHostTransport.start(
@@ -49,13 +49,8 @@ let start =
         ~onClosed,
         setup,
       );
-    transport;
-  };
-  ();
-};
-
-let ofTransport = (transport: ExtensionHostTransport.t) => {
-  transport;
+    let ret: t = {transport: transport};
+	ret;
 };
 
 let activateByEvent = (evt, v) => {
@@ -65,6 +60,24 @@ let activateByEvent = (evt, v) => {
   );
 };
 
-let pump = (v: t) => ExtensionHostTransport.pump(v);
+let addDocument = (doc, v) => {
+	ExtensionHostTransport.send(
+	v.transport,
+	Out.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+		~addedDocuments=[doc],
+		~removedDocuments=[],
+		(),
+	)
+	);
+};
 
-let close = (v: t) => ExtensionHostTransport.close(v);
+let updateDocument = (uri, modelChange, dirty, v) => {
+	ExtensionHostTransport.send(
+	v.transport,
+	Out.Documents.acceptModelChanged(uri, modelChange, dirty)
+	);
+};
+
+let pump = (v: t) => ExtensionHostTransport.pump(v.transport);
+
+let close = (v: t) => ExtensionHostTransport.close(v.transport);
