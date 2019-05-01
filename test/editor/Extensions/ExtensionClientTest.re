@@ -22,7 +22,10 @@ describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", ({expect}) => {
       let activations: ref(list(string)) = ref([]);
-      let onDidActivateExtension = id => activations := [id, ...activations^];
+      let onDidActivateExtension = id => {
+						prerr_endline ("EXTENSION: " ++ id);
+						activations := [id, ...activations^];
+						};
 
       let isExpectedExtensionActivated = () => {
         let l =
@@ -39,7 +42,7 @@ describe("ExtHostClient", ({describe, _}) => {
         client => {
           ExtHostClient.activateByEvent("onLanguage:testLang", client);
 
-          WaitHelper.wait(isExpectedExtensionActivated, client);
+          Waiters.wait(isExpectedExtensionActivated, client);
           expect.bool(isExpectedExtensionActivated()).toBe(true);
         },
       );

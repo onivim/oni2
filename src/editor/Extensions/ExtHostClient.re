@@ -43,14 +43,18 @@ let start =
     | (
         "MainThreadExtensionService",
         "$onDidActivateExtension",
-        [`String(v), ..._],
+        [v, ..._],
       ) =>
-      onDidActivateExtension(v);
+		let id = Protocol.PackedString.parse(v);
+						prerr_endline ("ExtHostClient - onDidActivateExtension: " ++ id);
+      onDidActivateExtension(id);
       Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | _ => Ok(None)
+    | (s, m, a) => 
+		prerr_endline ("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+		List.iter((v) => prerr_endline(Yojson.Safe.to_string(v)), a); Ok(None);
     };
   };
 

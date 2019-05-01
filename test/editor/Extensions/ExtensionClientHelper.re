@@ -23,13 +23,13 @@ type extHostApi = {
 };
 
 module Waiters = {
-  let wait = (client: ExtHostClient.t) => {
+  let wait = (f, client: ExtHostClient.t) => {
       Oni_Core.Utility.waitForCondition(
         ~timeout=10.0,
         () => {
 		  ExtHostClient.pump(client);
 		  f();
-      );
+      });
   };
 
   let createCommandRegistrationWaiter = (command: string, api: extHostApi) => {
@@ -61,7 +61,9 @@ module Waiters = {
     );
   };
 };
-let withExtensionClient2 = (~onStatusBarSetEntry, ~onDidActivateExtension, ~onShowMessage, f: ExtHostClient.t => unit) => {
+  let noop1 = (_) => ();
+let withExtensionClient2 = (~onStatusBarSetEntry=noop1, ~onDidActivateExtension=noop1, ~onShowMessage=noop1, f: ExtHostClient.t => unit) => {
+
   let setup = Setup.init();
 
   let rootPath = Rench.Environment.getWorkingDirectory();
