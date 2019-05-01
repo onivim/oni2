@@ -100,11 +100,10 @@ let createElement =
         () => {
           let isCaptured = isActive;
           let startPosition = editor.scrollY;
-
-          Mouse.setCapture(
-            ~onMouseMove=
-              evt =>
-                if (isCaptured) {
+          if (isCaptured) {
+            Mouse.setCapture(
+              ~onMouseMove=
+                evt => {
                   let scrollTo = getScrollTo(evt.mouseY);
                   let minimapLineSize =
                     Constants.default.minimapCharacterWidth
@@ -118,10 +117,10 @@ let createElement =
                     (),
                   );
                 },
-            ~onMouseUp=_evt => scrollComplete(),
-            (),
-          );
-
+              ~onMouseUp=_evt => scrollComplete(),
+              (),
+            );
+          };
           Some(
             () =>
               if (isCaptured) {
