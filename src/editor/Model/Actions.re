@@ -11,21 +11,19 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferDelete(BufferNotification.t)
-  | BufferEnter(BufferNotification.t)
+  | BufferEnter(BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferWritePost(BufferNotification.t)
+  | BufferSaved(BufferMetadata.t)
+  | BufferMarkDirty(int)
+  | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | TablineUpdate(Tabline.tabs)
-  | TextChanged(TextChanged.t)
-  | TextChangedI(TextChanged.t)
   | ChangeMode(Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
-  | RecalculateEditorView
+  | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(commandline)
   | CommandlineHide(commandline)
   | CommandlineUpdate((int, int))
@@ -51,20 +49,22 @@ type t =
   | MenuNextItem
   | MenuPreviousItem
   | MenuPosition(int)
-  | CloseFileById(int)
   | OpenFileByPath(string)
-  | OpenFileById(int)
   | AddRightDock(WindowManager.dock)
   | AddLeftDock(WindowManager.dock)
   | AddSplit(WindowManager.splitMetadata)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
+  | Quit
+  | RegisterQuitCleanup(unit => unit)
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
+  | ViewCloseEditor(int)
+  | ViewSetActiveEditor(int)
   | Noop
 and menuCommand = {
   category: option(string),

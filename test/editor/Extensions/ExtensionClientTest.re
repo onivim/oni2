@@ -19,6 +19,40 @@ module JsonInformationMessageFormat = {
 };
 
 describe("Extension Client", ({describe, _}) => {
+  describe("activation", ({test, _}) => {
+    test("activates by language", _ =>
+      withExtensionClient(api => {
+        let waitForActivationMessage =
+          api
+          |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
+
+        api.start();
+
+        api.send(ExtensionService.activateByEvent("onLanguage:testlang"));
+
+        waitForActivationMessage();
+      })
+    );
+
+    test("activates by command", _ =>
+      withExtensionClient(api => {
+        let waitForActivationMessage =
+          api
+          |> Waiters.createMessageWaiter(s => String.equal(s, "Activated!"));
+
+        api.start();
+
+        api.send(
+          ExtensionService.activateByEvent(
+            "onCommand:extension.activationTest",
+          ),
+        );
+
+        waitForActivationMessage();
+      })
+    );
+  });
+
   describe("commands", ({test, _}) =>
     test("executes simple command", _ =>
       withExtensionClient(api => {
@@ -149,7 +183,7 @@ describe("Extension Client", ({describe, _}) => {
         let contentChange =
           ModelContentChange.create(
             ~range=
-              Types.Range.create(
+              Range.create(
                 ~startLine=ZeroBasedIndex(0),
                 ~endLine=ZeroBasedIndex(0),
                 ~startCharacter=ZeroBasedIndex(0),

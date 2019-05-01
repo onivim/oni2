@@ -52,7 +52,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     | Model.Actions.Tick => (state, pumpEffect)
     | Model.Actions.BufferUpdate(bc) =>
       let bufferId = bc.id;
-      let buffer = Model.BufferMap.getBuffer(bufferId, state.buffers);
+      let buffer = Model.Buffers.getBuffer(bufferId, state.buffers);
 
       switch (buffer) {
       | None => default

@@ -13,7 +13,7 @@ let editorSurfaceMinimalState = () => {
   let _ =
     React.RenderedElement.render(
       rootNode,
-      <EditorSurface state=simpleState />,
+      <EditorSurface editor=simpleEditor state=simpleState metrics />,
     );
   ();
 };
@@ -22,7 +22,7 @@ let editorSurfaceThousandLineState = () => {
   let _ =
     React.RenderedElement.render(
       rootNode,
-      <EditorSurface state=thousandLineState />,
+      <EditorSurface editor=simpleEditor state=thousandLineState metrics />,
     );
   ();
 };
@@ -31,7 +31,11 @@ let editorSurfaceHundredThousandLineState = () => {
   let _ =
     React.RenderedElement.render(
       rootNode,
-      <EditorSurface state=hundredThousandLineState />,
+      <EditorSurface
+        editor=simpleEditor
+        state=hundredThousandLineState
+        metrics
+      />,
     );
   ();
 };
@@ -44,7 +48,10 @@ let setupSurfaceThousandLineLayout = () => {
   );
 
   let container = Container.create(rootNode);
-  Container.update(container, <EditorSurface state=thousandLineState />)
+  Container.update(
+    container,
+    <EditorSurface editor=simpleEditor state=thousandLineState metrics />,
+  )
   |> ignore;
 
   rootNode;

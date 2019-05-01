@@ -100,32 +100,26 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtensionHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bu: Core.Types.BufferNotification.t) =>
-    Isolinear.Effect.create(~name="exthost.bufferEnter", () => {
-      let metadata =
-        Core.Types.BufferNotification.getBufferMetadataOpt(bu.bufferId, bu);
-      switch (metadata) {
+  let sendBufferEnterEffect = (bm: Core.Types.BufferMetadata.t) =>
+    Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
+      switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(bm) =>
-        switch (_bufferMetadataToModelAddedDelta(bm)) {
-        | None => ()
-        | Some(v) =>
-          ExtensionHostClient.send(
-            extHostClient,
-            Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-              ~removedDocuments=[],
-              ~addedDocuments=[v],
-              (),
-            ),
-          )
-        }
-      };
-    });
+      | Some(v) =>
+        ExtensionHostClient.send(
+          extHostClient,
+          Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~removedDocuments=[],
+            ~addedDocuments=[v],
+            (),
+          ),
+        )
+      }
+    );
 
   let modelChangedEffect =
-      (buffers: Model.BufferMap.t, bu: Core.Types.BufferUpdate.t) =>
+      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Model.BufferMap.getBuffer(bu.id, buffers)) {
+      switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
         let modelContentChange =
@@ -154,8 +148,19 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
+  let registerQuitCleanupEffect =
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.registerQuitCleanup", dispatch =>
+      dispatch(
+        Model.Actions.RegisterQuitCleanup(
+          () => ExtensionHostClient.close(extHostClient),
+        ),
+      )
+    );
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
+    | Model.Actions.Init => (state, registerQuitCleanupEffect)
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),

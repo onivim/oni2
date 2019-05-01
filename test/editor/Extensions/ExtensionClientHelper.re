@@ -41,6 +41,16 @@ module Waiters = {
       }
     );
   };
+
+  let createActivationWaiter = (extensionId, api: extHostApi) => {
+    api.createWaiterForMessage(
+      "MainThreadExtensionService", "$onDidActivateExtension", args =>
+      switch (args) {
+      | [`String(v), ..._] => String.equal(extensionId, v)
+      | _ => false
+      }
+    );
+  };
 };
 
 let withExtensionClient = (f: extHostApi => unit) => {

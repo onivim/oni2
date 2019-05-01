@@ -4,24 +4,19 @@
  * Component that handles Minimap rendering
  */
 
+open Revery;
 open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Model;
+module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
+module Diagnostics = Oni_Model.Diagnostics;
+module Editor = Oni_Model.Editor;
+module State = Oni_Model.State;
 
 open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
-
-/* let rec getCurrentTokenColor = (tokens: list(TextmateClient.ColorizedToken.t), startPos: int, endPos: int) => { */
-/*     switch (tokens) { */
-/*     | [] => [TextmateClient.ColorizedToken.default] */
-/*     | [last] => [last] */
-/*     | [v1, v2, ...tail] when (v1.index <= startPos && v2.index > startPos) => [v1, v2, ...tail] */
-/*     | [_, ...tail] => getCurrentTokenColor(tail, startPos, endPos) */
-/*     } */
-/* } */
 
 let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
   let f = (token: BufferViewTokenizer.t) => {
@@ -30,14 +25,6 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       let startPosition = Index.toZeroBasedInt(token.startPosition);
       let endPosition = Index.toZeroBasedInt(token.endPosition);
       let tokenWidth = endPosition - startPosition;
-
-      /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
-      /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
-
-      /* tokenCursor := getCurrentTokenColor(tokenCursor^, startPosition, endPosition); */
-      /* let color: ColorizedToken.t = List.hd(tokenCursor^); */
-
-      /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
 
       let x =
         float_of_int(Constants.default.minimapCharacterWidth * startPosition);
@@ -66,8 +53,8 @@ let component = React.component("Minimap");
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let getMinimapSize = (view: Editor.t) => {
-  let currentViewSize = Editor.getVisibleView(view);
+let getMinimapSize = (view: Editor.t, metrics) => {
+  let currentViewSize = Editor.getVisibleView(metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
@@ -75,10 +62,13 @@ let getMinimapSize = (view: Editor.t) => {
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~width: int,
       ~height: int,
       ~count,
+      ~diagnostics,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
+      ~metrics,
       ~children as _,
       (),
     ) =>
@@ -92,8 +82,8 @@ let createElement =
     let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
 
     let getScrollTo = (mouseY: float) => {
-      let totalHeight: int = Editor.getTotalSizeInPixels(state.editor);
-      let visibleHeight: int = state.editor.size.pixelHeight;
+      let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
+      let visibleHeight: int = metrics.pixelHeight;
       let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
@@ -109,7 +99,7 @@ let createElement =
         Always,
         () => {
           let isCaptured = isActive;
-          let startPosition = state.editor.scrollY;
+          let startPosition = editor.scrollY;
 
           Mouse.setCapture(
             ~onMouseMove=
@@ -119,8 +109,7 @@ let createElement =
                   let minimapLineSize =
                     Constants.default.minimapCharacterWidth
                     + Constants.default.minimapCharacterHeight;
-                  let linesInMinimap =
-                    state.editor.size.pixelHeight / minimapLineSize;
+                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
                   GlobalContext.current().editorScroll(
                     ~deltaY=
                       (startPosition -. scrollTo)
@@ -143,23 +132,20 @@ let createElement =
         hooks,
       );
 
-    let scrollY = state.editor.minimapScrollY;
+    let scrollY = editor.minimapScrollY;
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
-      let linesInMinimap = state.editor.size.pixelHeight / minimapLineSize;
+      let linesInMinimap = metrics.pixelHeight / minimapLineSize;
       GlobalContext.current().editorScroll(
-        ~deltaY=
-          scrollTo -. state.editor.scrollY -. float_of_int(linesInMinimap),
+        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
       setActive(true);
     };
-
-    ignore(width);
 
     (
       hooks,
@@ -175,11 +161,11 @@ let createElement =
                 ~y=
                   rowHeight
                   *. float_of_int(
-                       Editor.getTopVisibleLine(state.editor) - 1,
+                       Editor.getTopVisibleLine(editor, metrics) - 1,
                      )
                   -. scrollY,
                 ~height=
-                  rowHeight *. float_of_int(getMinimapSize(state.editor)),
+                  rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
                 ~width=float_of_int(width),
                 ~color=state.theme.colors.scrollbarSliderHoverBackground,
                 (),
@@ -192,7 +178,7 @@ let createElement =
               ~y=
                 rowHeight
                 *. float_of_int(
-                     Index.toZeroBasedInt(state.editor.cursorPosition.line),
+                     Index.toZeroBasedInt(editor.cursorPosition.line),
                    )
                 -. scrollY,
               ~height=float_of_int(Constants.default.minimapCharacterHeight),
@@ -210,6 +196,45 @@ let createElement =
                 (item, offset) => {
                   let tokens = getTokensForLine(item);
                   renderLine(transform, offset, tokens);
+                },
+              (),
+            );
+
+            FlatList.render(
+              ~scrollY,
+              ~rowHeight,
+              ~height=float_of_int(height),
+              ~count,
+              ~render=
+                (item, offset) => {
+                  let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                    {let startX =
+                       Index.toZeroBasedInt(d.range.startPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
+                     let endX =
+                       Index.toZeroBasedInt(d.range.endPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
+
+                     Shapes.drawRect(
+                       ~transform,
+                       ~x=startX -. 1.0,
+                       ~y=offset -. 1.0,
+                       ~height=
+                         float_of_int(
+                           Constants.default.minimapCharacterHeight,
+                         )
+                         +. 2.0,
+                       ~width=endX -. startX +. 2.,
+                       ~color=Color.rgba(1.0, 0., 0., 0.7),
+                       (),
+                     )};
+
+                  switch (IntMap.find_opt(item, diagnostics)) {
+                  | Some(v) => List.iter(renderDiagnostics, v)
+                  | None => ()
+                  };
                 },
               (),
             );

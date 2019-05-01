@@ -16,8 +16,8 @@ type editorScroll = (~deltaY: float, unit) => unit;
 type t = {
   notifySizeChanged,
   editorScroll,
-  openFileById: int => unit,
-  closeFileById: int => unit,
+  openEditorById: int => unit,
+  closeEditorById: int => unit,
   dispatch: Actions.t => unit,
   getState: unit => State.t,
   state: State.t,
@@ -31,9 +31,9 @@ let default = {
   getState: () => State.create(),
   notifySizeChanged: (~width as _, ~height as _, ()) => (),
   editorScroll: (~deltaY as _, ()) => (),
-  openFileById: _ => (),
+  openEditorById: _ => (),
   dispatch: _ => (),
-  closeFileById: _ => (),
+  closeEditorById: _ => (),
 };
 
 let _current: ref(t) = ref(default);

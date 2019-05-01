@@ -2,8 +2,10 @@
  * EditorVerticalScrollbar.re
  */
 
+open Revery;
 open Revery.UI;
 
+open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
 
@@ -15,14 +17,17 @@ let absoluteStyle =
 let createElement =
     (
       ~state: State.t,
+      ~editor: Editor.t,
       ~height as totalHeight,
       ~width as totalWidth,
+      ~diagnostics: IntMap.t(list(Diagnostics.Diagnostic.t)),
+      ~metrics,
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let scrollMetrics =
-      Editor.getVerticalScrollbarMetrics(state.editor, totalHeight);
+      Editor.getVerticalScrollbarMetrics(editor, totalHeight, metrics);
 
     let scrollThumbStyle =
       Style.[
@@ -34,17 +39,21 @@ let createElement =
         backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
-    let cursorPixelY =
-      float_of_int(Index.toZeroBasedInt(state.editor.cursorPosition.line))
-      *. state.editorFont.measuredHeight;
     let totalPixel =
-      Editor.getTotalSizeInPixels(state.editor) |> float_of_int;
+      Editor.getTotalSizeInPixels(editor, metrics) |> float_of_int;
+
+    let bufferLineToScrollbarPixel = line => {
+      let pixelY = float_of_int(line) *. state.editorFont.measuredHeight;
+      int_of_float(
+        pixelY
+        /. (totalPixel +. float_of_int(metrics.pixelHeight))
+        *. float_of_int(totalHeight),
+      );
+    };
 
     let cursorPosition =
-      int_of_float(
-        cursorPixelY
-        /. (totalPixel +. float_of_int(state.editor.size.pixelHeight))
-        *. float_of_int(totalHeight),
+      bufferLineToScrollbarPixel(
+        Index.toZeroBasedInt(editor.cursorPosition.line),
       );
     let cursorSize = 2;
 
@@ -58,11 +67,38 @@ let createElement =
         backgroundColor(state.theme.colors.foreground),
       ];
 
+    let diagnosticLines =
+      IntMap.bindings(diagnostics)
+      |> List.map(binding => {
+           let (key, _) = binding;
+           key;
+         });
+
+    let diagnosticElements =
+      List.map(
+        line => {
+          let diagTop = bufferLineToScrollbarPixel(line);
+
+          let diagnosticStyle =
+            Style.[
+              position(`Absolute),
+              top(diagTop),
+              right(0),
+              width(Constants.default.scrollBarThickness / 3),
+              height(cursorSize),
+              backgroundColor(Colors.red),
+            ];
+          <View style=diagnosticStyle />;
+        },
+        diagnosticLines,
+      );
+
     (
       hooks,
       <View style=absoluteStyle>
         <View style=scrollThumbStyle />
         <View style=scrollCursorStyle />
+        <View style=absoluteStyle> ...diagnosticElements </View>
       </View>,
     );
   });
