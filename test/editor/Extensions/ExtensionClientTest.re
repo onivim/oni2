@@ -78,7 +78,7 @@ describe("ExtHostClient", ({describe, _}) => {
 	  let messages = empty();
 
 	  let onShowMessage = append(messages);
-	  let onRegisterCommand = append(messages);
+	  let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () => isStringValueInList(registeredCommands, "extension.helloWorld");
 
