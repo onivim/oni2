@@ -16,7 +16,7 @@ describe("ExtHostClient", ({describe, _}) => {
       let isExpectedExtensionActivated = () =>
         isStringValueInList(activations, "oni-activation-events-test");
 
-      withExtensionClient2(
+      withExtensionClient(
         ~onDidActivateExtension,
         client => {
           ExtHostClient.activateByEvent("onLanguage:testlang", client);
@@ -33,7 +33,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let isExpectedExtensionActivated = () =>
         isStringValueInList(activations, "oni-activation-events-test");
-      withExtensionClient2(
+      withExtensionClient(
         ~onDidActivateExtension,
         client => {
           ExtHostClient.activateByEvent(
@@ -61,7 +61,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let anyMessages = any(messages);
 
-      withExtensionClient2(
+      withExtensionClient(
         ~onShowMessage,
         ~onRegisterCommand,
         client => {
@@ -108,7 +108,7 @@ describe("ExtHostClient", ({describe, _}) => {
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
-      withExtensionClient2(
+      withExtensionClient(
         ~onRegisterCommand,
         ~onShowMessage,
         client => {
@@ -158,7 +158,7 @@ describe("ExtHostClient", ({describe, _}) => {
              )
         );
 
-      withExtensionClient2(
+      withExtensionClient(
         ~onShowMessage,
         ~onRegisterCommand,
         client => {

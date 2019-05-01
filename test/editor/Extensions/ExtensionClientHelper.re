@@ -61,7 +61,7 @@ module Waiters = {
 };
 
 let noop1 = _ => ();
-let withExtensionClient2 =
+let withExtensionClient =
     (
       ~onStatusBarSetEntry=noop1,
       ~onDidActivateExtension=noop1,
