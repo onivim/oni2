@@ -52,6 +52,55 @@ module Waiters = {
     );
   };
 };
+let withExtensionClient2 = (f: ExtHostClient.t => unit) => {
+  let setup = Setup.init();
+
+  let rootPath = Rench.Environment.getWorkingDirectory();
+  let testExtensionsPath = Rench.Path.join(rootPath, "test/test_extensions");
+
+  let extensions =
+    ExtensionScanner.scan(testExtensionsPath)
+    |> List.map(ext => ExtHostInitData.ExtensionInfo.ofScannedExtension(ext));
+
+  let initData = ExtHostInitData.create(~extensions, ());
+
+  let initialized = ref(false);
+  let closed = ref(false);
+
+  let onClosed = () => closed := true;
+  let onInitialized = () => initialized := true;
+
+  let extClient = ref(None);
+
+  let start = () => {
+    let v =
+      ExtHostClient.create(
+        ~initData,
+        ~onInitialized,
+        ~onMessage,
+        ~onClosed,
+        setup,
+      );
+
+    Oni_Core.Utility.waitForCondition(() => {
+      ExtHostTransport.pump(v);
+      initialized^;
+    });
+
+    if (! initialized^) {
+      failwith("extension host client did not initialize successfully");
+    };
+
+    extClient := Some(v);
+  };
+
+  switch (extClient^) {
+  | None => ()
+  | Some(extClient) =>  
+		f(extClient);
+		ExtHostClient.close(extClient);
+  };
+};
 
 let withExtensionClient = (f: extHostApi => unit) => {
   let setup = Setup.init();
