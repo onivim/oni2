@@ -68,6 +68,7 @@ let withExtensionClient2 =
       ~onStatusBarSetEntry=noop1,
       ~onDidActivateExtension=noop1,
       ~onShowMessage=noop1,
+	  ~onRegisterCommand=noop1,
       f: ExtHostClient.t => unit,
     ) => {
   let setup = Setup.init();
@@ -93,6 +94,7 @@ let withExtensionClient2 =
       ~onInitialized,
       ~onStatusBarSetEntry,
       ~onDidActivateExtension,
+      ~onRegisterCommand,
       ~onShowMessage,
       ~onClosed,
       setup,

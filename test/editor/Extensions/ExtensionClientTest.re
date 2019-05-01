@@ -18,10 +18,19 @@ module JsonInformationMessageFormat = {
   };
 };
 
+let empty: unit => ref(list(string)) = () => ref([]);
+
+let clear = (r: ref(list(string))) => r := [];
+
+let append = (r: ref(list(string)), s: string) => r := [s, ...r^];
+
+let any = (r: ref(list(string))) => () => List.length(r^) > 0;
+
 let isStringValueInList = (r: ref(list(string)), match: string) => {
   let l = r^ |> List.filter(id => String.equal(id, match)) |> List.length;
   l > 0;
 };
+
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
@@ -39,8 +48,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
           Waiters.wait(isExpectedExtensionActivated, client);
           expect.bool(isExpectedExtensionActivated()).toBe(true);
-        },
-      );
+        });
     });
 
     test("activates by command", ({expect}) => {
@@ -59,29 +67,37 @@ describe("ExtHostClient", ({describe, _}) => {
 
           Waiters.wait(isExpectedExtensionActivated, client);
           expect.bool(isExpectedExtensionActivated()).toBe(true);
-        },
-      );
+        });
     });
   });
 
-  describe("commands", ({test, _}) =>
-    test("executes simple command", _ =>
-      withExtensionClient(api => {
-        let waitForCommandRegistration =
-          api
-          |> Waiters.createCommandRegistrationWaiter("extension.helloWorld");
-        let waitForShowMessage = api |> Waiters.createMessageWaiter(_ => true);
+  describe("commands", ({test, _}) => {
+    test("executes simple command", ({expect}) => {
 
-        api.start();
+	  let registeredCommands = empty();
+	  let messages = empty();
 
-        waitForCommandRegistration();
+	  let onShowMessage = append(messages);
+	  let onRegisterCommand = append(messages);
 
-        api.send(Commands.executeContributedCommand("extension.helloWorld"));
+      let isExpectedCommandRegistered = () => isStringValueInList(registeredCommands, "extension.helloWorld");
 
-        waitForShowMessage();
-      })
-    )
-  );
+	  let anyMessages = any(messages);
+
+      withExtensionClient2(~onShowMessage, ~onRegisterCommand, client => {
+
+          Waiters.wait(isExpectedCommandRegistered, client);
+          expect.bool(isExpectedCommandRegistered()).toBe(true);
+
+										clear(messages);
+
+		  ExtHostClient.executeContributedCommand("extension.helloWorld", client);
+
+          Waiters.wait(anyMessages, client);
+          expect.bool(anyMessages()).toBe(true);
+      });
+    })
+  });
 
   describe("DocumentsAndEditors", ({test, _}) => {
     let createInitialDocumentModel = (~lines, ~path, ()) => {
