@@ -40,7 +40,7 @@ describe("ExtHostClient", ({describe, _}) => {
       withExtensionClient2(
         ~onDidActivateExtension,
         client => {
-          ExtHostClient.activateByEvent("onLanguage:testLang", client);
+          ExtHostClient.activateByEvent("onLanguage:testlang", client);
 
           Waiters.wait(isExpectedExtensionActivated, client);
           expect.bool(isExpectedExtensionActivated()).toBe(true);
