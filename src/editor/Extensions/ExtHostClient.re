@@ -25,12 +25,14 @@ let apply = (f, r) => {
   };
 };
 
+
 let start =
     (
       ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
+	  ~onRegisterCommand=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
@@ -43,6 +45,9 @@ let start =
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
+      Ok(None);
+    | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
+	  onRegisterCommand(v);
       Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
@@ -78,7 +83,7 @@ let activateByEvent = (evt, v) => {
 let executeContributedCommand = (cmd, v) => {
   ExtHostTransport.send(
     v.transport,
-    Out.ExtensionService.executeContributedCommand(cmd),
+    Out.Commands.executeContributedCommand(cmd),
   );
 };
 
