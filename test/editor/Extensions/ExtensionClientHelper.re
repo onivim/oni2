@@ -24,12 +24,13 @@ type extHostApi = {
 
 module Waiters = {
   let wait = (f, client: ExtHostClient.t) => {
-      Oni_Core.Utility.waitForCondition(
-        ~timeout=10.0,
-        () => {
-		  ExtHostClient.pump(client);
-		  f();
-      });
+    Oni_Core.Utility.waitForCondition(
+      ~timeout=10.0,
+      () => {
+        ExtHostClient.pump(client);
+        f();
+      },
+    );
   };
 
   let createCommandRegistrationWaiter = (command: string, api: extHostApi) => {
@@ -61,9 +62,14 @@ module Waiters = {
     );
   };
 };
-  let noop1 = (_) => ();
-let withExtensionClient2 = (~onStatusBarSetEntry=noop1, ~onDidActivateExtension=noop1, ~onShowMessage=noop1, f: ExtHostClient.t => unit) => {
-
+let noop1 = _ => ();
+let withExtensionClient2 =
+    (
+      ~onStatusBarSetEntry=noop1,
+      ~onDidActivateExtension=noop1,
+      ~onShowMessage=noop1,
+      f: ExtHostClient.t => unit,
+    ) => {
   let setup = Setup.init();
 
   let rootPath = Rench.Environment.getWorkingDirectory();
@@ -81,29 +87,28 @@ let withExtensionClient2 = (~onStatusBarSetEntry=noop1, ~onDidActivateExtension=
   let onClosed = () => closed := true;
   let onInitialized = () => initialized := true;
 
-    let v =
-      ExtHostClient.start(
-        ~initData,
-        ~onInitialized,
-		~onStatusBarSetEntry,
-		~onDidActivateExtension,
-		~onShowMessage,
-        ~onClosed,
-        setup,
-      );
+  let v =
+    ExtHostClient.start(
+      ~initData,
+      ~onInitialized,
+      ~onStatusBarSetEntry,
+      ~onDidActivateExtension,
+      ~onShowMessage,
+      ~onClosed,
+      setup,
+    );
 
-    Oni_Core.Utility.waitForCondition(() => {
-      ExtHostClient.pump(v);
-      initialized^;
-    });
+  Oni_Core.Utility.waitForCondition(() => {
+    ExtHostClient.pump(v);
+    initialized^;
+  });
 
-    if (! initialized^) {
-      failwith("extension host client did not initialize successfully");
-    } else {
-
-				f(v);
-				ExtHostClient.close(v);
-				};
+  if (! initialized^) {
+    failwith("extension host client did not initialize successfully");
+  } else {
+    f(v);
+    ExtHostClient.close(v);
+  };
 };
 
 let withExtensionClient = (f: extHostApi => unit) => {

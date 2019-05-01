@@ -19,22 +19,18 @@ module JsonInformationMessageFormat = {
 };
 
 let isStringValueInList = (r: ref(list(string)), match: string) => {
-        let l =
-          r^
-          |> List.filter(id =>
-               String.equal(id, match)
-             )
-          |> List.length;
-        l > 0;
+  let l = r^ |> List.filter(id => String.equal(id, match)) |> List.length;
+  l > 0;
 };
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", ({expect}) => {
       let activations: ref(list(string)) = ref([]);
-      let onDidActivateExtension = id =>  activations := [id, ...activations^];
+      let onDidActivateExtension = id => activations := [id, ...activations^];
 
-      let isExpectedExtensionActivated = () => isStringValueInList(activations, "oni-activation-events-test");
+      let isExpectedExtensionActivated = () =>
+        isStringValueInList(activations, "oni-activation-events-test");
 
       withExtensionClient2(
         ~onDidActivateExtension,
@@ -49,16 +45,22 @@ describe("ExtHostClient", ({describe, _}) => {
 
     test("activates by command", ({expect}) => {
       let activations: ref(list(string)) = ref([]);
-      let onDidActivateExtension = id =>  activations := [id, ...activations^];
+      let onDidActivateExtension = id => activations := [id, ...activations^];
 
-      let isExpectedExtensionActivated = () => isStringValueInList(activations, "oni-activation-events-test");
-      withExtensionClient2(~onDidActivateExtension, client => {
-
-	   ExtHostClient.activateByEvent("onCommand:extension.activationTest", client);
+      let isExpectedExtensionActivated = () =>
+        isStringValueInList(activations, "oni-activation-events-test");
+      withExtensionClient2(
+        ~onDidActivateExtension,
+        client => {
+          ExtHostClient.activateByEvent(
+            "onCommand:extension.activationTest",
+            client,
+          );
 
           Waiters.wait(isExpectedExtensionActivated, client);
           expect.bool(isExpectedExtensionActivated()).toBe(true);
-      })
+        },
+      );
     });
   });
 

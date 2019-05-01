@@ -40,23 +40,19 @@ let start =
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);
-    | (
-        "MainThreadExtensionService",
-        "$onDidActivateExtension",
-        [v, ..._],
-      ) =>
-		let id = Protocol.PackedString.parse(v);
+    | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
+      let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | (_s, _m, _a) => 
-		/*
-		prerr_endline ("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
-		List.iter((v) => prerr_endline(Yojson.Safe.to_string(v)), a);
-		*/
-		Ok(None);
+    | (_s, _m, _a) =>
+      /*
+       prerr_endline ("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+       List.iter((v) => prerr_endline(Yojson.Safe.to_string(v)), a);
+       */
+      Ok(None)
     };
   };
 
@@ -76,6 +72,13 @@ let activateByEvent = (evt, v) => {
   ExtHostTransport.send(
     v.transport,
     Out.ExtensionService.activateByEvent(evt),
+  );
+};
+
+let executeContributedCommand = (cmd, v) => {
+  ExtHostTransport.send(
+    v.transport,
+    Out.ExtensionService.executeContributedCommand(cmd),
   );
 };
 

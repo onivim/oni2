@@ -61,15 +61,14 @@ module Eol = {
 
 module PackedString = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
-	type json = {
-		value: string,
-		_lower: string,
-	};
+  type json = {
+    value: string,
+    _lower: string,
+  };
 
-	let parse = (v: Yojson.Safe.json) => {
-		json_of_yojson_exn(v)
-		|> (r) => r.value;
-	};
+  let parse = (v: Yojson.Safe.json) => {
+    json_of_yojson_exn(v) |> (r => r.value);
+  };
 };
 
 module ModelAddedDelta = {
