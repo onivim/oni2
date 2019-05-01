@@ -14,18 +14,16 @@ module Protocol = ExtensionHostProtocol;
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
 
-type t = {
-	transport: ExtensionHostTransport.t,
-};
+type t = {transport: ExtensionHostTransport.t};
 
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 let apply = (f, r) => {
-	switch (r) {
-	| Some(v) => f(v)
-	| None => ();
-	}
+  switch (r) {
+  | Some(v) => f(v)
+  | None => ()
+  };
 };
 
 let start =
@@ -33,35 +31,40 @@ let start =
       ~initData=ExtensionHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
-	  ~onStatusBarSetEntry,
+      ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
-
-		let onMessage = (json) => {
-
+  let onMessage = json => {
     switch (scope, method, args) {
-    | (
-        "MainThreadStatusBar",
-        "$setEntry",
-		args
-	) => In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry)
-	| _ => ();
-	}
+    | ("MainThreadStatusBar", "$setEntry", args) =>
+      In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry)
+    | _ => ()
+    };
 
-		let transport = ExtensionHostTransport.start(~initData, ~onInitialized, ~onMessage, ~onClosed, setup);
-		{ transport };
-	};
+    let transport =
+      ExtensionHostTransport.start(
+        ~initData,
+        ~onInitialized,
+        ~onMessage,
+        ~onClosed,
+        setup,
+      );
+    transport;
+  };
+  ();
 };
 
 let ofTransport = (transport: ExtensionHostTransport.t) => {
-	{ transport };
+  transport;
 };
 
 let activateByEvent = (evt, v) => {
-	ExtensionHostTransport.send(v.transport, Out.ExtensionService.activateByEvent(evt));
+  ExtensionHostTransport.send(
+    v.transport,
+    Out.ExtensionService.activateByEvent(evt),
+  );
 };
 
 let pump = (v: t) => ExtensionHostTransport.pump(v);
 
 let close = (v: t) => ExtensionHostTransport.close(v);
-

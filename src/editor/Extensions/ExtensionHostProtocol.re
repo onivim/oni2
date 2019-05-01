@@ -175,23 +175,24 @@ module ModelChangedEvent = {
 };
 
 module IncomingNotifications = {
-	module StatusBar = {
-	let parseSetEntry = (args) => {
-									switch(args) {
-			| [
-											`Int(id),
-											_,
-											`String(text),
-											_,
-											_,
-											_,
-											`Int(alignment),
-											`Int(priority),
-									] => Some(id, text, alignment, priority))
-			| _ => None
-			};
-	}
-	}
+  module StatusBar = {
+    let parseSetEntry = args => {
+      switch (args) {
+      | [
+          `Int(id),
+          _,
+          `String(text),
+          _,
+          _,
+          _,
+          `Int(alignment),
+          `Int(priority),
+        ] =>
+        Some((id, text, alignment, priority))
+      | _ => None
+      };
+    };
+  };
 };
 
 module OutgoingNotifications = {
