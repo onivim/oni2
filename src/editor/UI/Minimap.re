@@ -4,26 +4,19 @@
  * Component that handles Minimap rendering
  */
 
+open Revery;
 open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
+module Diagnostics = Oni_Model.Diagnostics;
 module Editor = Oni_Model.Editor;
 module State = Oni_Model.State;
 
 open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
-
-/* let rec getCurrentTokenColor = (tokens: list(TextmateClient.ColorizedToken.t), startPos: int, endPos: int) => { */
-/*     switch (tokens) { */
-/*     | [] => [TextmateClient.ColorizedToken.default] */
-/*     | [last] => [last] */
-/*     | [v1, v2, ...tail] when (v1.index <= startPos && v2.index > startPos) => [v1, v2, ...tail] */
-/*     | [_, ...tail] => getCurrentTokenColor(tail, startPos, endPos) */
-/*     } */
-/* } */
 
 let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
   let f = (token: BufferViewTokenizer.t) => {
@@ -32,14 +25,6 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       let startPosition = Index.toZeroBasedInt(token.startPosition);
       let endPosition = Index.toZeroBasedInt(token.endPosition);
       let tokenWidth = endPosition - startPosition;
-
-      /* let defaultForegroundColor: Color.t = theme.colors.editorForeground; */
-      /* let defaultBackgroundColor: Color.t = theme.colors.editorBackground; */
-
-      /* tokenCursor := getCurrentTokenColor(tokenCursor^, startPosition, endPosition); */
-      /* let color: ColorizedToken.t = List.hd(tokenCursor^); */
-
-      /* let foregroundColor = ColorMap.get(colorMap, color.foregroundColor, defaultForegroundColor, defaultBackgroundColor); */
 
       let x =
         float_of_int(Constants.default.minimapCharacterWidth * startPosition);
@@ -81,6 +66,7 @@ let createElement =
       ~width: int,
       ~height: int,
       ~count,
+      ~diagnostics,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
       ~metrics,
       ~children as _,
@@ -114,11 +100,10 @@ let createElement =
         () => {
           let isCaptured = isActive;
           let startPosition = editor.scrollY;
-
-          Mouse.setCapture(
-            ~onMouseMove=
-              evt =>
-                if (isCaptured) {
+          if (isCaptured) {
+            Mouse.setCapture(
+              ~onMouseMove=
+                evt => {
                   let scrollTo = getScrollTo(evt.mouseY);
                   let minimapLineSize =
                     Constants.default.minimapCharacterWidth
@@ -132,10 +117,10 @@ let createElement =
                     (),
                   );
                 },
-            ~onMouseUp=_evt => scrollComplete(),
-            (),
-          );
-
+              ~onMouseUp=_evt => scrollComplete(),
+              (),
+            );
+          };
           Some(
             () =>
               if (isCaptured) {
@@ -154,14 +139,14 @@ let createElement =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-      GlobalContext.current().editorScroll(
-        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
-        (),
-      );
-      setActive(true);
+      if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+        GlobalContext.current().editorScroll(
+          ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
+          (),
+        );
+        setActive(true);
+      };
     };
-
-    ignore(width);
 
     (
       hooks,
@@ -212,6 +197,45 @@ let createElement =
                 (item, offset) => {
                   let tokens = getTokensForLine(item);
                   renderLine(transform, offset, tokens);
+                },
+              (),
+            );
+
+            FlatList.render(
+              ~scrollY,
+              ~rowHeight,
+              ~height=float_of_int(height),
+              ~count,
+              ~render=
+                (item, offset) => {
+                  let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                    {let startX =
+                       Index.toZeroBasedInt(d.range.startPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
+                     let endX =
+                       Index.toZeroBasedInt(d.range.endPosition.character)
+                       * Constants.default.minimapCharacterWidth
+                       |> float_of_int
+
+                     Shapes.drawRect(
+                       ~transform,
+                       ~x=startX -. 1.0,
+                       ~y=offset -. 1.0,
+                       ~height=
+                         float_of_int(
+                           Constants.default.minimapCharacterHeight,
+                         )
+                         +. 2.0,
+                       ~width=endX -. startX +. 2.,
+                       ~color=Color.rgba(1.0, 0., 0., 0.7),
+                       (),
+                     )};
+
+                  switch (IntMap.find_opt(item, diagnostics)) {
+                  | Some(v) => List.iter(renderDiagnostics, v)
+                  | None => ()
+                  };
                 },
               (),
             );

@@ -59,6 +59,18 @@ module Eol = {
     };
 };
 
+module PackedString = {
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  type json = {
+    value: string,
+    _lower: string,
+  };
+
+  let parse = (v: Yojson.Safe.json) => {
+    json_of_yojson_exn(v) |> (r => r.value);
+  };
+};
+
 module ModelAddedDelta = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t = {
@@ -172,6 +184,27 @@ module ModelChangedEvent = {
   };
 
   let create = (~changes, ~eol, ~versionId, ()) => {changes, eol, versionId};
+};
+
+module IncomingNotifications = {
+  module StatusBar = {
+    let parseSetEntry = args => {
+      switch (args) {
+      | [
+          `Int(id),
+          _,
+          `String(text),
+          _,
+          _,
+          _,
+          `Int(alignment),
+          `Int(priority),
+        ] =>
+        Some((id, text, alignment, priority))
+      | _ => None
+      };
+    };
+  };
 };
 
 module OutgoingNotifications = {

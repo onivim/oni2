@@ -387,6 +387,12 @@ let createElement =
       );
     };
 
+    let diagnostics =
+      switch (activeBuffer) {
+      | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
+      | None => IntMap.empty
+      };
+
     let minimapLayout =
       state.configuration.editorMinimapEnabled
         ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
@@ -396,6 +402,7 @@ let createElement =
               width={layout.minimapWidthInPixels}
               height={metrics.pixelHeight}
               count=lineCount
+              diagnostics
               metrics
               getTokensForLine
             />
@@ -437,7 +444,7 @@ let createElement =
               switch (activeBuffer) {
               | Some(b) =>
                 let ranges = Selection.getRanges(editor.selection, b);
-                Oni_Core.Types.Range.(
+                Oni_Core.Range.(
                   List.iter(
                     (r: Range.t) => {
                       let line = Index.toZeroBasedInt(r.startPosition.line);
@@ -486,6 +493,48 @@ let createElement =
                 );
               | None => ()
               };
+
+              /* Draw error markers */
+              FlatList.render(
+                ~scrollY,
+                ~rowHeight,
+                ~height=float_of_int(height),
+                ~count,
+                ~render=
+                  (item, _offset) => {
+                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                      {let (x0, y0) =
+                         bufferPositionToPixel(
+                           Index.toZeroBasedInt(d.range.startPosition.line),
+                           Index.toZeroBasedInt(
+                             d.range.startPosition.character,
+                           ),
+                         )
+                       let (x1, _) =
+                         bufferPositionToPixel(
+                           Index.toZeroBasedInt(d.range.endPosition.line),
+                           Index.toZeroBasedInt(
+                             d.range.endPosition.character,
+                           ),
+                         )
+
+                       Shapes.drawRect(
+                         ~transform,
+                         ~x=x0,
+                         ~y=y0 +. fontHeight,
+                         ~height=1.,
+                         ~width=x1 -. x0,
+                         ~color=Colors.red,
+                         (),
+                       )};
+
+                    switch (IntMap.find_opt(item, diagnostics)) {
+                    | None => ()
+                    | Some(v) => List.iter(renderDiagnostics, v)
+                    };
+                  },
+                (),
+              );
 
               FlatList.render(
                 ~scrollY,
@@ -592,6 +641,7 @@ let createElement =
             metrics
             width={Constants.default.scrollBarThickness}
             height={metrics.pixelHeight}
+            diagnostics
           />
         </View>
       </View>,
