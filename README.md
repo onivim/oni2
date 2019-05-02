@@ -34,6 +34,10 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 - __VimL compatibility__ - we may not support all features of VimL plugins / configuration.
 
+### See also
+
+See also the document about motivations, software architecture, the model for sustainability and risks : https://github.com/onivim/oni2/blob/master/docs/MOTIVATION.md
+
 ## Documentation
 
 Coming soon!
