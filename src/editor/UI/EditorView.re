@@ -66,7 +66,15 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               (),
             );
 
+          let explorer =
+            Window.createDock(
+              ~width=150,
+              ~component=splitFactory(state => <FileExplorerView state />),
+              (),
+            );
+
           dispatch(AddLeftDock(dock));
+          dispatch(AddLeftDock(explorer));
           dispatch(AddSplit(editor));
           None;
         },
