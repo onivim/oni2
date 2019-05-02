@@ -62,7 +62,13 @@ let dummyFiles =
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
 let itemRenderer =
-    (~indent, font, itemFontSize, {data, status, _}: Tree.content(string)) => {
+    (
+      ~indent,
+      ~onClick,
+      font,
+      itemFontSize,
+      {data, status, id}: Tree.content(string),
+    ) => {
   open Tree;
   open Revery;
 
@@ -78,7 +84,7 @@ let itemRenderer =
   let indentStr = String.make(indent * 2, ' ');
   let arrow = isOpen ? FontAwesome.sortDown : FontAwesome.sortUp;
 
-  <Clickable>
+  <Clickable onClick={() => onClick(id)}>
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
       <FontIcon
@@ -93,14 +99,39 @@ let itemRenderer =
 
 let treeContainer = (_theme: Core.Theme.t) =>
   Style.[padding(20), overflow(`Hidden), flexGrow(1)];
+
 let title = (theme: Core.Theme.t, font) =>
   Style.[padding(5), fontSize(14), fontFamily(font)];
+
+let toggleStatus = status =>
+  Tree.(
+    switch (status) {
+    | Open => Closed
+    | Closed => Open
+    }
+  );
+
+let rec updateNode = (tree, nodeId) => {
+  Tree.(
+    switch (tree) {
+    | Node({id, status, _} as data, children) when id == nodeId =>
+      Node({...data, status: toggleStatus(status)}, children)
+    | Node(data, children) =>
+      let newChildren = List.map(node => updateNode(node, nodeId), children);
+      Node(data, newChildren);
+    | Empty => Empty
+    }
+  );
+};
 
 let createElement = (~children, ~state: State.t, ()) =>
   component(hooks => {
     let font = state.uiFont.fontFile;
     let {State.theme} = state;
     let itemFontSize = 12;
+    let (tree, setTree, hooks) = React.Hooks.state(dummyFiles, hooks);
+
+    let onClick = id => updateNode(tree, id) |> setTree;
 
     (
       hooks,
@@ -116,8 +147,8 @@ let createElement = (~children, ~state: State.t, ()) =>
         </View>
         <ScrollView style={treeContainer(theme)}>
           <Tree
-            tree=dummyFiles
-            nodeRenderer={itemRenderer(font, itemFontSize)}
+            tree
+            nodeRenderer={itemRenderer(~onClick, font, itemFontSize)}
           />
         </ScrollView>
       </View>,
