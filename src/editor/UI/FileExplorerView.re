@@ -60,30 +60,39 @@ let dummyFiles =
   );
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
+
 let itemRenderer =
     (~indent, font, itemFontSize, {data, status, _}: Tree.content(string)) => {
   open Tree;
+  open Revery;
+
   let isOpen =
     switch (status) {
     | Open => true
     | Closed => false
     };
-  open Style;
-  let textStyles = [fontSize(itemFontSize), color(Revery.Colors.white)];
+
+  let textStyles =
+    Style.[fontSize(itemFontSize), fontFamily(font), color(Colors.white)];
+
   let indentStr = String.make(indent * 2, ' ');
-  let arrow = isOpen ? {||} : {||};
+  let arrow = isOpen ? FontAwesome.sortDown : FontAwesome.sortUp;
+
   <Clickable>
     <View style=itemStyles>
-      <Text
-        text={indentStr ++ arrow ++ " "}
-        style=[fontFamily("FontAwesome5FreeSolid.otf"), ...textStyles]
+      <Text text=indentStr style=textStyles />
+      <FontIcon
+        icon=arrow
+        backgroundColor=Colors.transparentWhite
+        color=Colors.white
       />
-      <Text text=data style=[fontFamily(font), ...textStyles] />
+      <Text text=data style=Style.[marginLeft(10), ...textStyles] />
     </View>
   </Clickable>;
 };
 
-let treeContainer = (_theme: Core.Theme.t) => Style.[padding(20)];
+let treeContainer = (_theme: Core.Theme.t) =>
+  Style.[padding(20), overflow(`Hidden), flexGrow(1)];
 let title = (theme: Core.Theme.t, font) =>
   Style.[padding(5), fontSize(14), fontFamily(font)];
 
@@ -95,7 +104,7 @@ let createElement = (~children, ~state: State.t, ()) =>
 
     (
       hooks,
-      <View>
+      <View style=Style.[flexGrow(1)]>
         <View
           style=Style.[
             flexDirection(`Row),
@@ -105,12 +114,12 @@ let createElement = (~children, ~state: State.t, ()) =>
           ]>
           <Text text="File Explorer" style={title(theme, font)} />
         </View>
-        <View style={treeContainer(theme)}>
+        <ScrollView style={treeContainer(theme)}>
           <Tree
             tree=dummyFiles
             nodeRenderer={itemRenderer(font, itemFontSize)}
           />
-        </View>
+        </ScrollView>
       </View>,
     );
   });
