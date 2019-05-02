@@ -58,7 +58,7 @@ Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
-Onivim 2 is licensed under the [Outrun Labs EULA 1.0](./Outrun-Labs-EULA-v1.0.md).
+Onivim 2 is licensed under the [Outrun Labs EULA 1.1](./Outrun-Labs-EULA-v1.1.md).
 
 The TL;DR is:
 - __Free__ for __non-commercial__ and __educational use__.
