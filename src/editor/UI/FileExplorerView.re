@@ -58,7 +58,6 @@ let dummyFiles =
 
 let createElement = (~children, ~state, ()) =>
   component(hooks => {
-    open Lwt.Infix;
     let (dir, setDir, hooks) = React.Hooks.state(None, hooks);
     let hooks =
       React.Hooks.effect(
