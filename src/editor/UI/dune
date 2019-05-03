@@ -13,4 +13,4 @@
         Oni2.model
         Rench
         Revery
-    ))
+    )(preprocess (pps lwt_ppx)))
