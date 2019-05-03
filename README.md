@@ -77,7 +77,9 @@ Alternatively, you can contribute to the project through [Patreon](https://www.p
 
 Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
 
-We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project eventually end up back in the open!)
+Any external contributions to the project from outside Outrun Labs, LLC will not be subject to this 'time-bomb' delay - they'll be dual-licensed immediately under the MIT License.
+
+We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities by having our work eventually end up in the open, and ensuring that external contributions are always open source.
 
 #### Third-Party Code
 
