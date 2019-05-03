@@ -3,78 +3,68 @@ open Revery.UI.Components;
 
 let component = React.component("FileExplorerView");
 
-let dummyFiles =
+let rec getFiles = cwd => {
+  Lwt_unix.files_of_directory(cwd)
+  |> Lwt_stream.map(file => {
+       let name = Filename.concat(cwd, file);
+       let isDirectory = Sys.is_directory(name);
+       TreeView.{
+         name,
+         hasChildren: isDirectory,
+         children: isDirectory ? /* getFiles(name) */ [] : [],
+       };
+     })
+  |> Lwt_stream.to_list;
+};
+
+module ExplorerId =
+  Revery.UniqueId.Make({});
+
+let rec listToTree = (nodes, parent) => {
   Tree.(
-    Node(
-      {data: "root", id: 1, status: Open},
-      [
-        Node(
-          {data: "subfolder 1", id: 2, status: Open},
-          [
-            Node(
-              {data: "subdirectory 1", id: 3, status: Closed},
-              [Empty, Empty],
-            ),
-          ],
-        ),
-        Node(
-          {data: "home", id: 4, status: Open},
-          [
-            Node({status: Closed, id: 5, data: "downloads"}, [Empty, Empty]),
-            Node(
-              {data: "desktop", id: 6, status: Open},
-              [
-                Node(
-                  {status: Open, id: 7, data: "subfolder 2"},
-                  [
-                    Node(
-                      {status: Open, id: 8, data: "pictures"},
-                      [
-                        Node({status: Closed, id: 12, data: "Images"}, []),
-                        Node(
-                          {status: Closed, id: 10, data: "holiday 2018"},
-                          [],
-                        ),
-                        Node(
-                          {status: Closed, id: 11, data: "Graduation 2017"},
-                          [],
-                        ),
-                      ],
-                    ),
-                    Empty,
-                  ],
-                ),
-                Node(
-                  {data: "subfolder 3", id: 9, status: Closed},
-                  [Empty, Empty],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+    List.fold_left(
+      (tree, node) =>
+        switch (tree) {
+        | Node(x, children) =>
+          Node(
+            x,
+            [
+              Node(
+                {id: ExplorerId.getUniqueId(), data: node, status: Closed},
+                TreeView.[listToTree(node.children, node)],
+              ),
+              ...children,
+            ],
+          )
+        | Empty => tree
+        },
+      Node({id: 0, data: parent, status: Open}, []),
+      nodes,
     )
   );
+};
 
 let createElement = (~children, ~state, ()) =>
   component(hooks => {
-    let (dir, setDir, hooks) = React.Hooks.state(None, hooks);
+    open TreeView;
+    let (tree, setDirectoryTree, hooks) =
+      React.Hooks.state(Tree.Empty, hooks);
     let hooks =
       React.Hooks.effect(
         OnMount,
         () => {
-          let promise = {
-            let cwd = Rench.Environment.getWorkingDirectory();
-            Lwt_unix.files_of_directory(cwd)
-            |> Lwt_stream.map(Filename.concat(cwd))
-            |> Lwt_stream.to_list;
-          };
+          let cwd = Rench.Environment.getWorkingDirectory();
+          let directory = getFiles(cwd) |> Lwt_main.run;
+          let newTree =
+            listToTree(
+              directory,
+              {name: cwd, hasChildren: true, children: directory},
+            );
 
-          let dir = Lwt_main.run(promise);
-          setDir(Some(dir));
+          setDirectoryTree(newTree);
           None;
         },
         hooks,
       );
-    (hooks, <TreeView tree=dummyFiles title="File Explorer" state />);
+    (hooks, <TreeView tree title="File Explorer" state />);
   });

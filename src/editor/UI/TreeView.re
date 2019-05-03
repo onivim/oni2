@@ -4,7 +4,14 @@ open Revery.UI.Components;
 
 module Core = Oni_Core;
 
-let component = React.component("FileExplorer");
+[@deriving show]
+type treeItem = {
+  name: string,
+  hasChildren: bool,
+  children: list(treeItem),
+};
+
+let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
@@ -14,7 +21,7 @@ let itemRenderer =
       ~onClick,
       font,
       itemFontSize,
-      {data, status, id}: Tree.content('a),
+      {data, status, id}: Tree.content(treeItem),
     ) => {
   open Tree;
   open Revery;
@@ -39,7 +46,7 @@ let itemRenderer =
         backgroundColor=Colors.transparentWhite
         color=Colors.white
       />
-      <Text text=data style=Style.[marginLeft(10), ...textStyles] />
+      <Text text={data.name} style=Style.[marginLeft(10), ...textStyles] />
     </View>
   </Clickable>;
 };
@@ -71,7 +78,8 @@ let rec updateNode = (tree, nodeId) => {
   );
 };
 
-let createElement = (~children, ~title, ~tree, ~state: State.t, ()) =>
+let createElement =
+    (~children, ~title, ~tree: Tree.tree(treeItem), ~state: State.t, ()) =>
   component(hooks => {
     let itemFontSize = 12;
     let font = state.uiFont.fontFile;

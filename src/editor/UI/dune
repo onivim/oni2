@@ -13,4 +13,5 @@
         Oni2.model
         Rench
         Revery
-    )(preprocess (pps lwt_ppx)))
+        ppx_deriving.runtime
+    )(preprocess (pps ppx_deriving.show lwt_ppx)))
