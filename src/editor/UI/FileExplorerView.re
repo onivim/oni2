@@ -13,7 +13,7 @@ let rec getFiles = cwd => {
          displayName: file,
          isDirectory,
          children: isDirectory ? /* getFiles(name) */ [] : [],
-         icon: Some(FontAwesome.file),
+         icon: Some(isDirectory ? FontAwesome.folder : FontAwesome.file),
        });
      })
   |> Lwt_stream.to_list;
