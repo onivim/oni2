@@ -42,12 +42,15 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 };
 
 let keyPressToCommand =
-    ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent, os: Revery_Core.Environment.os) => {
-
-  let commandKeyPressed = switch(os) {
-  | Mac => superKey
-  | _ => ctrlKey
-  }
+    (
+      {shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent,
+      os: Revery_Core.Environment.os,
+    ) => {
+  let commandKeyPressed =
+    switch (os) {
+    | Mac => superKey
+    | _ => ctrlKey
+    };
 
   let keyString =
     commandKeyPressed
