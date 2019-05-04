@@ -5,11 +5,16 @@ open Revery.UI.Components;
 module Core = Oni_Core;
 
 [@deriving show]
-type treeItem = {
-  name: string,
-  hasChildren: bool,
-  children: list(treeItem),
+type fsNode('a) = {
+  displayName: string,
+  fullPath: string,
+  isDirectory: bool,
+  children: list('a),
 };
+
+[@deriving show]
+type treeItem =
+  | FileSystemNode(fsNode(treeItem));
 
 let component = React.component("TreeView");
 
@@ -38,6 +43,11 @@ let itemRenderer =
   let indentStr = String.make(indent * 2, ' ');
   let arrow = isOpen ? FontAwesome.sortDown : FontAwesome.sortUp;
 
+  let label =
+    switch (data) {
+    | FileSystemNode({displayName, _}) => displayName
+    };
+
   <Clickable onClick={() => onClick(id)}>
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
@@ -46,7 +56,7 @@ let itemRenderer =
         backgroundColor=Colors.transparentWhite
         color=Colors.white
       />
-      <Text text={data.name} style=Style.[marginLeft(10), ...textStyles] />
+      <Text text=label style=Style.[marginLeft(10), ...textStyles] />
     </View>
   </Clickable>;
 };
@@ -78,13 +88,32 @@ let rec updateNode = (tree, nodeId) => {
   );
 };
 
+let rec logTree = t => {
+  Tree.(
+    switch (t) {
+    | Node({data, _}, children) =>
+      switch (data) {
+      | FileSystemNode({displayName, _}) =>
+        print_endline("Name: " ++ displayName)
+      };
+      print_endline(
+        "No. of Siblings: " ++ (List.length(children) |> string_of_int),
+      );
+      List.iter(logTree, children);
+    | Empty => print_endline("Nothing!!!!")
+    }
+  );
+};
+
 let createElement =
     (~children, ~title, ~tree: Tree.tree(treeItem), ~state: State.t, ()) =>
   component(hooks => {
     let itemFontSize = 12;
     let font = state.uiFont.fontFile;
     let {State.theme} = state;
+
     let (stateTree, setTree, hooks) = React.Hooks.state(tree, hooks);
+    logTree(stateTree);
 
     let onClick = id => updateNode(stateTree, id) |> setTree;
 
@@ -103,7 +132,7 @@ let createElement =
         </View>
         <ScrollView style={containerStyles(theme)}>
           <Tree
-            tree=stateTree
+            tree
             nodeRenderer={itemRenderer(~onClick, font, itemFontSize)}
           />
         </ScrollView>

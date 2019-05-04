@@ -8,11 +8,12 @@ let rec getFiles = cwd => {
   |> Lwt_stream.map(file => {
        let name = Filename.concat(cwd, file);
        let isDirectory = Sys.is_directory(name);
-       TreeView.{
-         name,
-         hasChildren: isDirectory,
+       TreeView.FileSystemNode({
+         fullPath: name,
+         displayName: file,
+         isDirectory,
          children: isDirectory ? /* getFiles(name) */ [] : [],
-       };
+       });
      })
   |> Lwt_stream.to_list;
 };
@@ -20,28 +21,25 @@ let rec getFiles = cwd => {
 module ExplorerId =
   Revery.UniqueId.Make({});
 
-let rec listToTree = (nodes, parent) => {
-  Tree.(
-    List.fold_left(
-      (tree, node) =>
-        switch (tree) {
-        | Node(x, children) =>
-          Node(
-            x,
-            [
-              Node(
-                {id: ExplorerId.getUniqueId(), data: node, status: Closed},
-                TreeView.[listToTree(node.children, node)],
-              ),
-              ...children,
-            ],
-          )
-        | Empty => tree
-        },
-      Node({id: 0, data: parent, status: Open}, []),
+let listToTree = (nodes, parent) => {
+  open Tree;
+  open TreeView;
+
+  let parentId = ExplorerId.getUniqueId();
+  let children =
+    List.map(
+      node => {
+        let id = ExplorerId.getUniqueId();
+        /**
+           TODO: This should recursively create a list of
+           children which are themselves trees
+         */
+        Node({id, data: node, status: Closed}, []);
+      },
       nodes,
-    )
-  );
+    );
+
+  Node({id: parentId, data: parent, status: Open}, children);
 };
 
 let createElement = (~children, ~state, ()) =>
@@ -49,6 +47,7 @@ let createElement = (~children, ~state, ()) =>
     open TreeView;
     let (tree, setDirectoryTree, hooks) =
       React.Hooks.state(Tree.Empty, hooks);
+
     let hooks =
       React.Hooks.effect(
         OnMount,
@@ -58,7 +57,12 @@ let createElement = (~children, ~state, ()) =>
           let newTree =
             listToTree(
               directory,
-              {name: cwd, hasChildren: true, children: directory},
+              FileSystemNode({
+                fullPath: cwd,
+                displayName: Filename.basename(cwd),
+                isDirectory: true,
+                children: directory,
+              }),
             );
 
           setDirectoryTree(newTree);
