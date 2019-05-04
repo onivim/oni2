@@ -75,7 +75,7 @@ let rec getFiles = (cwd, getIcon, ~ignored) => {
 module ExplorerId =
   Revery.UniqueId.Make({});
 
-let toFilesystemNode =
+let toFsNode =
   TreeView.(
     fun
     | FileSystemNode(n) => n
@@ -90,12 +90,12 @@ let rec listToTree =
   let children =
     List.map(
       node => {
-        let n = toFilesystemNode(node);
-        let descendantNodes = List.map(toFilesystemNode, n.children);
+        let n = toFsNode(node);
+        let descendantNodes = List.map(toFsNode, n.children);
 
         let descendants =
           List.map(
-            ({children, _}) => listToTree(children, FileSystemNode(n)),
+            c => listToTree(c.children, FileSystemNode(c)),
             descendantNodes,
           );
 
@@ -143,10 +143,10 @@ let createElement = (~children, ~state: State.t, ()) =>
     (
       hooks,
       <TreeView
-        onNodeClick={tree => setDirectoryTree(tree)}
         tree
-        title="File Explorer"
         state
+        title="File Explorer"
+        onNodeClick=setDirectoryTree
       />,
     );
   });
