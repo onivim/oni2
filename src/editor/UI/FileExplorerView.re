@@ -152,13 +152,18 @@ let createElement = (~children, ~state: State.t, ()) =>
         },
         hooks,
       );
-    (
-      hooks,
-      <TreeView
-        tree
-        state
-        title="File Explorer"
-        onNodeClick=setDirectoryTree
-      />,
-    );
+
+    let onNodeClick = (clicked, tree) => {
+      setDirectoryTree(tree);
+      Tree.(
+        switch (clicked) {
+        | Node({data}, _) =>
+          let node = toFsNode(data);
+          GlobalContext.current().dispatch(OpenFileByPath(node.path));
+        | Empty => ()
+        }
+      );
+    };
+
+    (hooks, <TreeView tree state title="File Explorer" onNodeClick />);
   });

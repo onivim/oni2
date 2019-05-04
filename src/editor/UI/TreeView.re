@@ -107,32 +107,18 @@ let toggleStatus = status =>
     }
   );
 
-let rec updateNode = (tree, nodeId) => {
+let rec updateNode = (tree, nodeId, ~found) => {
   Tree.(
     switch (tree) {
     | Node({id, status, _} as data, children) when id == nodeId =>
-      Node({...data, status: toggleStatus(status)}, children)
+      let node = Node({...data, status: toggleStatus(status)}, children);
+      found := node;
+      node;
     | Node(data, children) =>
-      let newChildren = List.map(node => updateNode(node, nodeId), children);
+      let newChildren =
+        List.map(node => updateNode(node, nodeId, ~found), children);
       Node(data, newChildren);
     | Empty => Empty
-    }
-  );
-};
-
-let rec logTree = t => {
-  Tree.(
-    switch (t) {
-    | Node({data, _}, children) =>
-      switch (data) {
-      | FileSystemNode({displayName, _}) =>
-        print_endline("Name: " ++ displayName)
-      };
-      print_endline(
-        "No. of Siblings: " ++ (List.length(children) |> string_of_int),
-      );
-      List.iter(logTree, children);
-    | Empty => print_endline("Nothing!!!!")
     }
   );
 };
@@ -151,7 +137,8 @@ let createElement =
     let font = state.uiFont.fontFile;
     let {State.theme} = state;
 
-    let onClick = id => updateNode(tree, id) |> onNodeClick;
+    let found = ref(Tree.Empty);
+    let onClick = id => updateNode(tree, id, ~found) |> onNodeClick(found^);
 
     (
       hooks,
