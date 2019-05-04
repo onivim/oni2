@@ -12,6 +12,10 @@ let rec getFiles = cwd => {
          fullPath: name,
          displayName: file,
          isDirectory,
+         /***
+            TODO: recursively call getFiles
+            to get all the files and subfolder of each directory
+          */
          children: isDirectory ? /* getFiles(name) */ [] : [],
          icon: Some(isDirectory ? FontAwesome.folder : FontAwesome.file),
        });
