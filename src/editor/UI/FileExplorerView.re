@@ -1,4 +1,5 @@
 open Oni_Model;
+open Oni_Core;
 open Revery_UI;
 open Revery.UI.Components;
 
@@ -17,27 +18,58 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let rec getFiles = (cwd, getIcon) => {
-  Lwt_unix.files_of_directory(cwd)
-  |> Lwt_stream.map(file => {
-       let name = Filename.concat(cwd, file);
-       let isDirectory = Sys.is_directory(name);
-       TreeView.FileSystemNode({
-         fullPath: name,
-         displayName: file,
-         isDirectory,
-         /***
-            TODO: recursively call getFiles
-            to get all the files and subfolder of each directory
-          */
-         children: isDirectory ? /* getFiles(name) */ [] : [],
-         icon:
-           isDirectory
-             ? Some(createIcon(~character=FontAwesome.folder))
-             : getIcon(name),
-       });
-     })
-  |> Lwt_stream.to_list;
+let rec getFiles = (cwd, getIcon, ~ignored) => {
+  try%lwt (
+    Lwt_unix.files_of_directory(cwd)
+    /* Filter out the relative name for current and parent directory*/
+    |> Lwt_stream.filter(name => name != ".." && name != ".")
+    /* Remove ignored files from search */
+    |> Lwt_stream.filter(name => !List.mem(name, ignored))
+    |> Lwt_stream.to_list
+    |> (
+      promise =>
+        Lwt.bind(promise, files =>
+          Lwt_list.map_p(
+            file => {
+              let name = Filename.concat(cwd, file);
+              let isDirectory =
+                try (Sys.is_directory(name)) {
+                | Sys_error(error) =>
+                  print_endline(error);
+                  false;
+                };
+
+              let%lwt children =
+                isDirectory
+                  ? getFiles(~ignored, name, getIcon) : Lwt.return([]);
+
+              let icon =
+                isDirectory
+                  ? Some(createIcon(~character=FontAwesome.folder))
+                  : getIcon(name);
+
+              TreeView.FileSystemNode({
+                fullPath: name,
+                displayName: file,
+                isDirectory,
+                children,
+                icon,
+              })
+              |> Lwt.return;
+            },
+            files,
+          )
+        )
+    )
+  )
+    {
+    | Failure(e) =>
+      print_endline(e);
+      Lwt.return([]);
+    };
+    /* | Unix.Unix_error(_, _, message) => */
+    /*   print_endline("Error: " ++ message); */
+    /*   Lwt.return([]); */
 };
 
 module ExplorerId =
@@ -77,7 +109,8 @@ let createElement = (~children, ~state: State.t, ()) =>
         OnMount,
         () => {
           let cwd = Rench.Environment.getWorkingDirectory();
-          let directory = getFiles(cwd, getIcon) |> Lwt_main.run;
+          let ignored = ["node_modules", "_esy"];
+          let directory = getFiles(~ignored, cwd, getIcon) |> Lwt_main.run;
           let newTree =
             listToTree(
               directory,
