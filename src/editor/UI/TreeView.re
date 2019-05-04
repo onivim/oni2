@@ -136,16 +136,20 @@ let rec logTree = t => {
 };
 
 let createElement =
-    (~children, ~title, ~tree: Tree.tree(treeItem), ~state: State.t, ()) =>
+    (
+      ~children,
+      ~title,
+      ~tree: Tree.tree(treeItem),
+      ~onNodeClick,
+      ~state: State.t,
+      (),
+    ) =>
   component(hooks => {
     let itemFontSize = 12;
     let font = state.uiFont.fontFile;
     let {State.theme} = state;
 
-    let (stateTree, setTree, hooks) = React.Hooks.state(tree, hooks);
-    logTree(stateTree);
-
-    let onClick = id => updateNode(stateTree, id) |> setTree;
+    let onClick = id => updateNode(tree, id) |> onNodeClick;
 
     (
       hooks,

@@ -90,12 +90,13 @@ let rec listToTree =
   let children =
     List.map(
       node => {
-        let fsNode = toFilesystemNode(node);
+        let n = toFilesystemNode(node);
+        let descendantNodes = List.map(toFilesystemNode, n.children);
+
         let descendants =
           List.map(
-            ({children, _}) =>
-              listToTree(children, FileSystemNode(fsNode)),
-            List.map(toFilesystemNode, fsNode.children),
+            ({children, _}) => listToTree(children, FileSystemNode(n)),
+            descendantNodes,
           );
 
         let id = ExplorerId.getUniqueId();
@@ -139,5 +140,13 @@ let createElement = (~children, ~state: State.t, ()) =>
         },
         hooks,
       );
-    (hooks, <TreeView tree title="File Explorer" state />);
+    (
+      hooks,
+      <TreeView
+        onNodeClick={tree => setDirectoryTree(tree)}
+        tree
+        title="File Explorer"
+        state
+      />,
+    );
   });
