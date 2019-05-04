@@ -10,6 +10,7 @@ type fsNode('a) = {
   fullPath: string,
   isDirectory: bool,
   children: list('a),
+  icon: option(int),
 };
 
 [@deriving show]
@@ -41,18 +42,26 @@ let itemRenderer =
     Style.[fontSize(itemFontSize), fontFamily(font), color(Colors.white)];
 
   let indentStr = String.make(indent * 2, ' ');
-  let arrow = isOpen ? FontAwesome.sortDown : FontAwesome.sortUp;
+
+  let icon =
+    switch (data) {
+    | FileSystemNode({icon}) =>
+      switch (icon) {
+      | Some(i) => i
+      | None => isOpen ? FontAwesome.sortDown : FontAwesome.sortUp
+      }
+    };
 
   let label =
     switch (data) {
-    | FileSystemNode({displayName, _}) => displayName
+    | FileSystemNode({displayName}) => displayName
     };
 
   <Clickable onClick={() => onClick(id)}>
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
       <FontIcon
-        icon=arrow
+        icon
         backgroundColor=Colors.transparentWhite
         color=Colors.white
       />
@@ -66,6 +75,15 @@ let containerStyles = (_theme: Core.Theme.t) =>
 
 let titleStyles = (theme: Core.Theme.t, font) =>
   Style.[padding(5), fontSize(14), fontFamily(font)];
+
+let headingStyles = (theme: Core.Theme.t) =>
+  Style.[
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    backgroundColor(theme.colors.editorBackground),
+    paddingTop(5),
+  ];
 
 let toggleStatus = status =>
   Tree.(
@@ -120,14 +138,7 @@ let createElement =
     (
       hooks,
       <View style=Style.[flexGrow(1)]>
-        <View
-          style=Style.[
-            flexDirection(`Row),
-            justifyContent(`Center),
-            alignItems(`Center),
-            backgroundColor(theme.colors.editorBackground),
-            paddingTop(5),
-          ]>
+        <View style={headingStyles(theme)}>
           <Text text=title style={titleStyles(theme, font)} />
         </View>
         <ScrollView style={containerStyles(theme)}>

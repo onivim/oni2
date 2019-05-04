@@ -13,6 +13,7 @@ let rec getFiles = cwd => {
          displayName: file,
          isDirectory,
          children: isDirectory ? /* getFiles(name) */ [] : [],
+         icon: Some(FontAwesome.file),
        });
      })
   |> Lwt_stream.to_list;
@@ -62,6 +63,7 @@ let createElement = (~children, ~state, ()) =>
                 displayName: Filename.basename(cwd),
                 isDirectory: true,
                 children: directory,
+                icon: Some(FontAwesome.folderOpen),
               }),
             );
 
