@@ -75,7 +75,14 @@ let rec getFiles = (cwd, getIcon, ~ignored) => {
 module ExplorerId =
   Revery.UniqueId.Make({});
 
-let listToTree = (nodes, parent) => {
+let toFilesystemNode =
+  TreeView.(
+    fun
+    | FileSystemNode(n) => n
+  );
+
+let rec listToTree =
+        (nodes: list(TreeView.treeItem), parent: TreeView.treeItem) => {
   open Tree;
   open TreeView;
 
@@ -83,12 +90,16 @@ let listToTree = (nodes, parent) => {
   let children =
     List.map(
       node => {
+        let fsNode = toFilesystemNode(node);
+        let descendants =
+          List.map(
+            ({children, _}) =>
+              listToTree(children, FileSystemNode(fsNode)),
+            List.map(toFilesystemNode, fsNode.children),
+          );
+
         let id = ExplorerId.getUniqueId();
-        /**
-           TODO: This should recursively create a list of
-           children which are themselves trees
-         */
-        Node({id, data: node, status: Closed}, []);
+        Node({id, data: node, status: Closed}, descendants);
       },
       nodes,
     );
