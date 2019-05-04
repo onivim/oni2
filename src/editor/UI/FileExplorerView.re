@@ -1,9 +1,23 @@
+open Oni_Model;
 open Revery_UI;
 open Revery.UI.Components;
 
 let component = React.component("FileExplorerView");
 
-let rec getFiles = cwd => {
+let createIcon = TreeView.toIcon(~color=Revery.Colors.white);
+
+let getFileIcon = (languageInfo, iconTheme, filePath) => {
+  let fileIcon =
+    LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
+    |> IconTheme.getIconForFile(iconTheme, filePath);
+
+  switch (fileIcon) {
+  | Some(icon) as x => x
+  | None => None
+  };
+};
+
+let rec getFiles = (cwd, getIcon) => {
   Lwt_unix.files_of_directory(cwd)
   |> Lwt_stream.map(file => {
        let name = Filename.concat(cwd, file);
@@ -17,7 +31,10 @@ let rec getFiles = cwd => {
             to get all the files and subfolder of each directory
           */
          children: isDirectory ? /* getFiles(name) */ [] : [],
-         icon: Some(isDirectory ? FontAwesome.folder : FontAwesome.file),
+         icon:
+           isDirectory
+             ? Some(createIcon(~character=FontAwesome.folder))
+             : getIcon(name),
        });
      })
   |> Lwt_stream.to_list;
@@ -47,18 +64,20 @@ let listToTree = (nodes, parent) => {
   Node({id: parentId, data: parent, status: Open}, children);
 };
 
-let createElement = (~children, ~state, ()) =>
+let createElement = (~children, ~state: State.t, ()) =>
   component(hooks => {
     open TreeView;
     let (tree, setDirectoryTree, hooks) =
       React.Hooks.state(Tree.Empty, hooks);
+
+    let getIcon = getFileIcon(state.languageInfo, state.iconTheme);
 
     let hooks =
       React.Hooks.effect(
         OnMount,
         () => {
           let cwd = Rench.Environment.getWorkingDirectory();
-          let directory = getFiles(cwd) |> Lwt_main.run;
+          let directory = getFiles(cwd, getIcon) |> Lwt_main.run;
           let newTree =
             listToTree(
               directory,
@@ -67,7 +86,7 @@ let createElement = (~children, ~state, ()) =>
                 displayName: Filename.basename(cwd),
                 isDirectory: true,
                 children: directory,
-                icon: Some(FontAwesome.folderOpen),
+                icon: Some(createIcon(~character=FontAwesome.folderOpen)),
               }),
             );
 

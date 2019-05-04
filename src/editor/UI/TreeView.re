@@ -4,22 +4,23 @@ open Revery.UI.Components;
 
 module Core = Oni_Core;
 
-[@deriving show]
 type fsNode('a) = {
   displayName: string,
   fullPath: string,
   isDirectory: bool,
   children: list('a),
-  icon: option(int),
+  icon: option(IconTheme.IconDefinition.t),
 };
 
-[@deriving show]
 type treeItem =
   | FileSystemNode(fsNode(treeItem));
 
 let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
+
+let toIcon = (~character, ~color) =>
+  IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
 let itemRenderer =
     (
@@ -46,10 +47,20 @@ let itemRenderer =
   let icon =
     switch (data) {
     | FileSystemNode({icon}) =>
+      let makeIcon = toIcon(~color=Colors.white);
       switch (icon) {
       | Some(i) => i
-      | None => isOpen ? FontAwesome.sortDown : FontAwesome.sortUp
-      }
+      | None =>
+        isOpen
+          ? makeIcon(~character=FontAwesome.sortDown)
+          : makeIcon(~character=FontAwesome.sortUp)
+      };
+    };
+
+  let fontFamily =
+    switch (data) {
+    | FileSystemNode({isDirectory: true}) => "FontAwesome5FreeSolid.otf"
+    | FileSystemNode({isDirectory: false}) => "seti.ttf"
     };
 
   let label =
@@ -61,9 +72,10 @@ let itemRenderer =
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
       <FontIcon
-        icon
+        fontFamily
+        color={icon.fontColor}
+        icon={icon.fontCharacter}
         backgroundColor=Colors.transparentWhite
-        color=Colors.white
       />
       <Text text=label style=Style.[marginLeft(10), ...textStyles] />
     </View>
