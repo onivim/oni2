@@ -6,10 +6,11 @@ module Core = Oni_Core;
 
 type fsNode('a) = {
   displayName: string,
-  fullPath: string,
+  path: string,
   isDirectory: bool,
   children: list('a),
   icon: option(IconTheme.IconDefinition.t),
+  secondaryIcon: option(IconTheme.IconDefinition.t),
 };
 
 type treeItem =
@@ -46,14 +47,15 @@ let itemRenderer =
 
   let icon =
     switch (data) {
-    | FileSystemNode({icon}) =>
+    | FileSystemNode({icon, secondaryIcon}) =>
       let makeIcon = toIcon(~color=Colors.white);
-      switch (icon) {
-      | Some(i) => i
-      | None =>
-        isOpen
-          ? makeIcon(~character=FontAwesome.sortDown)
-          : makeIcon(~character=FontAwesome.sortUp)
+      switch (icon, secondaryIcon, isOpen) {
+      | (Some(primary), Some(secondary), true) => secondary
+      | (Some(primary), Some(secondary), false) => primary
+      | (Some(primary), None, _) => primary
+      | (None, Some(secondary), _) => secondary
+      | (None, None, true) => makeIcon(~character=FontAwesome.caretDown)
+      | (None, None, false) => makeIcon(~character=FontAwesome.caretRight)
       };
     };
 

@@ -18,6 +18,32 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
+let checkIsDirectory = dir =>
+  try (Sys.is_directory(dir)) {
+  | Sys_error(error) =>
+    print_endline(error);
+    false;
+  };
+
+let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
+  let (primary, secondary) =
+    isDirectory
+      ? (
+        Some(createIcon(~character=FontAwesome.folder)),
+        Some(createIcon(~character=FontAwesome.folderOpen)),
+      )
+      : (fileIcon, None);
+
+  TreeView.FileSystemNode({
+    path,
+    displayName,
+    children,
+    isDirectory,
+    icon: primary,
+    secondaryIcon: secondary,
+  });
+};
+
 let rec getFiles = (cwd, getIcon, ~ignored) => {
   try%lwt (
     Lwt_unix.files_of_directory(cwd)
@@ -31,30 +57,20 @@ let rec getFiles = (cwd, getIcon, ~ignored) => {
         Lwt.bind(promise, files =>
           Lwt_list.map_p(
             file => {
-              let name = Filename.concat(cwd, file);
-              let isDirectory =
-                try (Sys.is_directory(name)) {
-                | Sys_error(error) =>
-                  print_endline(error);
-                  false;
-                };
+              let path = Filename.concat(cwd, file);
+              let isDirectory = checkIsDirectory(path);
 
               let%lwt children =
                 isDirectory
-                  ? getFiles(~ignored, name, getIcon) : Lwt.return([]);
+                  ? getFiles(~ignored, path, getIcon) : Lwt.return([]);
 
-              let icon =
-                isDirectory
-                  ? Some(createIcon(~character=FontAwesome.folder))
-                  : getIcon(name);
-
-              TreeView.FileSystemNode({
-                fullPath: name,
-                displayName: file,
-                isDirectory,
-                children,
-                icon,
-              })
+              createFsNode(
+                ~path,
+                ~displayName=file,
+                ~children,
+                ~isDirectory,
+                ~fileIcon=getIcon(path),
+              )
               |> Lwt.return;
             },
             files,
@@ -81,15 +97,13 @@ let toFsNode =
     | FileSystemNode(n) => n
   );
 
-let rec listToTree =
-        (nodes: list(TreeView.treeItem), parent: TreeView.treeItem) => {
+let rec listToTree = (nodes, parent) => {
   open Tree;
-  open TreeView;
-
   let parentId = ExplorerId.getUniqueId();
   let children =
     List.map(
       node => {
+        open TreeView;
         let n = toFsNode(node);
         let descendantNodes = List.map(toFsNode, n.children);
 
@@ -124,16 +138,14 @@ let createElement = (~children, ~state: State.t, ()) =>
           let ignored = ["node_modules", "_esy"];
           let directory = getFiles(~ignored, cwd, getIcon) |> Lwt_main.run;
           let newTree =
-            listToTree(
-              directory,
-              FileSystemNode({
-                fullPath: cwd,
-                displayName: Filename.basename(cwd),
-                isDirectory: true,
-                children: directory,
-                icon: Some(createIcon(~character=FontAwesome.folderOpen)),
-              }),
-            );
+            createFsNode(
+              ~path=cwd,
+              ~displayName=Filename.basename(cwd),
+              ~isDirectory=true,
+              ~children=directory,
+              ~fileIcon=getIcon(cwd),
+            )
+            |> listToTree(directory);
 
           setDirectoryTree(newTree);
           None;
