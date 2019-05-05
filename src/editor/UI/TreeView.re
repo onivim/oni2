@@ -9,6 +9,21 @@ let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
+let containerStyles = (_theme: Core.Theme.t) =>
+  Style.[padding(20), overflow(`Hidden), flexGrow(1)];
+
+let titleStyles = (theme: Core.Theme.t, font) =>
+  Style.[padding(5), fontSize(14), fontFamily(font)];
+
+let headingStyles = (theme: Core.Theme.t) =>
+  Style.[
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    backgroundColor(theme.colors.editorBackground),
+    paddingTop(5),
+  ];
+
 let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
@@ -66,63 +81,37 @@ let itemRenderer =
   </Clickable>;
 };
 
-let containerStyles = (_theme: Core.Theme.t) =>
-  Style.[padding(20), overflow(`Hidden), flexGrow(1)];
-
-let titleStyles = (theme: Core.Theme.t, font) =>
-  Style.[padding(5), fontSize(14), fontFamily(font)];
-
-let headingStyles = (theme: Core.Theme.t) =>
-  Style.[
-    flexDirection(`Row),
-    justifyContent(`Center),
-    alignItems(`Center),
-    backgroundColor(theme.colors.editorBackground),
-    paddingTop(5),
-  ];
-
 let toggleStatus = status =>
-  Tree.(
-    switch (status) {
-    | Open => Closed
-    | Closed => Open
-    }
-  );
+  switch (status) {
+  | Open => Closed
+  | Closed => Open
+  };
 
 let updateNode = (nodeId, tree) => {
-  let updatedNode = ref(Tree.Empty);
+  let updatedNode = ref(Empty);
 
   let rec update = (nodeId, tree) => {
-    Tree.(
-      switch (tree) {
-      | Node({id, status, _} as data, children) when id == nodeId =>
-        let node = Node({...data, status: toggleStatus(status)}, children);
-        /*
-         Store a reference to the located/updated node
-         TODO: find a solution that doesn't require a ref
-         */
-        updatedNode := node;
-        node;
-      | Node(data, children) =>
-        let newChildren = List.map(update(nodeId), children);
-        Node(data, newChildren);
-      | Empty => Empty
-      }
-    );
+    switch (tree) {
+    | Node({id, status, _} as data, children) when id == nodeId =>
+      let node = Node({...data, status: toggleStatus(status)}, children);
+      /*
+       Store a reference to the located/updated node
+       TODO: find a solution that doesn't require a ref
+       */
+      updatedNode := node;
+      node;
+    | Node(data, children) =>
+      let newChildren = List.map(update(nodeId), children);
+      Node(data, newChildren);
+    | Empty => Empty
+    };
   };
 
   {updated: updatedNode^, tree: update(nodeId, tree)};
 };
 
 let createElement =
-    (
-      ~children,
-      ~title,
-      ~tree: Tree.tree(treeItem),
-      ~onNodeClick,
-      ~state: State.t,
-      (),
-    ) =>
+    (~children, ~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) =>
   component(hooks => {
     let itemFontSize = 12;
     let font = state.uiFont.fontFile;
