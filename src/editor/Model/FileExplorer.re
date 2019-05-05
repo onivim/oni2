@@ -113,7 +113,7 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
   };
 };
 
-let rec listToTree = (nodes, parent) => {
+let rec listToTree = (~status, nodes, parent) => {
   open UiTree;
   let parentId = ExplorerId.getUniqueId();
   let children =
@@ -121,11 +121,14 @@ let rec listToTree = (nodes, parent) => {
       node => {
         let fsNode = toFsNode(node);
         let descendantNodes = List.map(toFsNode, fsNode.children);
-
         let descendants =
           List.map(
             descendant =>
-              listToTree(descendant.children, FileSystemNode(descendant)),
+              listToTree(
+                ~status=Closed,
+                descendant.children,
+                FileSystemNode(descendant),
+              ),
             descendantNodes,
           );
 
@@ -135,7 +138,7 @@ let rec listToTree = (nodes, parent) => {
       nodes,
     );
 
-  Node({id: parentId, data: parent, status: Open}, children);
+  Node({id: parentId, data: parent, status}, children);
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
@@ -149,7 +152,7 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     ~children=directory,
     ~fileIcon=getIcon(cwd),
   )
-  |> listToTree(directory);
+  |> listToTree(~status=Open, directory);
 };
 
 let create = () => {directory: UiTree.Empty, isOpen: true};
