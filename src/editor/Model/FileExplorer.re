@@ -107,12 +107,10 @@ let rec listToTree = (nodes, parent) => {
         let descendantNodes = List.map(toFsNode, fsNode.children);
 
         let descendants =
-          UiTree.(
-            List.map(
-              descendant =>
-                listToTree(descendant.children, FileSystemNode(descendant)),
-              descendantNodes,
-            )
+          List.map(
+            descendant =>
+              listToTree(descendant.children, FileSystemNode(descendant)),
+            descendantNodes,
           );
 
         let id = ExplorerId.getUniqueId();
