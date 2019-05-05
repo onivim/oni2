@@ -26,7 +26,7 @@ let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
 let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
-  let createIcon = toIcon(~color=Revery.Colors.white);
+  let createIcon = toIcon(~color=Colors.white);
   let (primary, secondary) =
     isDirectory
       ? (
