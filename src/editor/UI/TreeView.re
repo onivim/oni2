@@ -27,7 +27,15 @@ let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
 let itemRenderer =
-    (~indent, ~onClick, font, itemFontSize, {data, status, id}: itemContent) => {
+    (
+      ~font,
+      ~indent,
+      ~onClick,
+      ~primaryRootIcon,
+      ~secondaryRootIcon,
+      ~itemSize,
+      {data, status, id}: itemContent,
+    ) => {
   open Revery;
 
   let isOpen =
@@ -37,7 +45,7 @@ let itemRenderer =
     };
 
   let textStyles =
-    Style.[fontSize(itemFontSize), fontFamily(font), color(Colors.white)];
+    Style.[fontSize(itemSize), fontFamily(font), color(Colors.white)];
 
   let indentStr = String.make(indent * 2, ' ');
 
@@ -50,8 +58,8 @@ let itemRenderer =
       | (Some(primary), Some(_), false) => primary
       | (Some(primary), None, _) => primary
       | (None, Some(secondary), _) => secondary
-      | (None, None, true) => makeIcon(~character=FontAwesome.caretDown)
-      | (None, None, false) => makeIcon(~character=FontAwesome.caretRight)
+      | (None, None, false) => makeIcon(~character=primaryRootIcon)
+      | (None, None, true) => makeIcon(~character=secondaryRootIcon)
       };
     };
 
@@ -116,10 +124,12 @@ let createElement =
       ~tree: UiTree.t,
       ~onNodeClick,
       ~state: State.t,
+      ~primaryRootIcon=FontAwesome.caretRight,
+      ~secondaryRootIcon=FontAwesome.caretDown,
       (),
     ) =>
   component(hooks => {
-    let itemFontSize = 12;
+    let itemSize = 12;
     let font = state.uiFont.fontFile;
     let {State.theme, _} = state;
 
@@ -136,7 +146,13 @@ let createElement =
         <ScrollView style=containerStyles>
           <Tree
             tree
-            nodeRenderer={itemRenderer(~onClick, font, itemFontSize)}
+            nodeRenderer={itemRenderer(
+              ~onClick,
+              ~primaryRootIcon,
+              ~secondaryRootIcon,
+              ~font,
+              ~itemSize,
+            )}
           />
         </ScrollView>
       </View>,

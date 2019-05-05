@@ -34,9 +34,9 @@ let createElement = (~children as _, ~state: State.t, ()) =>
       hooks,
       <TreeView
         state
-        tree={state.fileExplorer.directory}
-        title="Explorer"
         onNodeClick
+        title="Explorer"
+        tree={state.fileExplorer.directory}
       />,
     );
   });
