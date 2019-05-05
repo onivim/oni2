@@ -9,10 +9,9 @@ let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
-let containerStyles = (_theme: Core.Theme.t) =>
-  Style.[padding(20), overflow(`Hidden), flexGrow(1)];
+let containerStyles = Style.[padding(20), overflow(`Hidden), flexGrow(1)];
 
-let titleStyles = (theme: Core.Theme.t, font) =>
+let titleStyles = font =>
   Style.[padding(5), fontSize(14), fontFamily(font)];
 
 let headingStyles = (theme: Core.Theme.t) =>
@@ -44,11 +43,11 @@ let itemRenderer =
 
   let icon =
     switch (data) {
-    | FileSystemNode({icon, secondaryIcon}) =>
+    | FileSystemNode({icon, secondaryIcon, _}) =>
       let makeIcon = toIcon(~color=Colors.white);
       switch (icon, secondaryIcon, isOpen) {
-      | (Some(primary), Some(secondary), true) => secondary
-      | (Some(primary), Some(secondary), false) => primary
+      | (Some(_), Some(secondary), true) => secondary
+      | (Some(primary), Some(_), false) => primary
       | (Some(primary), None, _) => primary
       | (None, Some(secondary), _) => secondary
       | (None, None, true) => makeIcon(~character=FontAwesome.caretDown)
@@ -58,13 +57,13 @@ let itemRenderer =
 
   let fontFamily =
     switch (data) {
-    | FileSystemNode({isDirectory: true}) => "FontAwesome5FreeSolid.otf"
-    | FileSystemNode({isDirectory: false}) => "seti.ttf"
+    | FileSystemNode({isDirectory: true, _}) => "FontAwesome5FreeSolid.otf"
+    | FileSystemNode({isDirectory: false, _}) => "seti.ttf"
     };
 
   let label =
     switch (data) {
-    | FileSystemNode({displayName}) => displayName
+    | FileSystemNode({displayName, _}) => displayName
     };
 
   <Clickable onClick={() => onClick(id)}>
@@ -111,23 +110,30 @@ let updateNode = (nodeId, tree) => {
 };
 
 let createElement =
-    (~children, ~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) =>
+    (
+      ~title,
+      ~children as _,
+      ~tree: UiTree.t,
+      ~onNodeClick,
+      ~state: State.t,
+      (),
+    ) =>
   component(hooks => {
     let itemFontSize = 12;
     let font = state.uiFont.fontFile;
-    let {State.theme} = state;
+    let {State.theme, _} = state;
 
     let onClick = id =>
       updateNode(id, tree)
-      |> (({updated, tree}) => onNodeClick(updated, tree));
+      |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
     (
       hooks,
       <View style=Style.[flexGrow(1)]>
         <View style={headingStyles(theme)}>
-          <Text text=title style={titleStyles(theme, font)} />
+          <Text text=title style={titleStyles(font)} />
         </View>
-        <ScrollView style={containerStyles(theme)}>
+        <ScrollView style=containerStyles>
           <Tree
             tree
             nodeRenderer={itemRenderer(~onClick, font, itemFontSize)}
