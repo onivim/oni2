@@ -57,6 +57,9 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
    if it is a directory we recursively call getFilesAndFolders on it
    to resolves its subfolders and files. We do this concurrently using
    Lwt_list.map_p
+
+   TODO: Add the concept of depth to this function so we can terminate
+   the file resolution early and avoid choking on large directories
  */
 let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
   /* Wrap the operation in a try%lwt which will catch all async exceptions */

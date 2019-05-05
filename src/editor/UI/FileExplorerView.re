@@ -20,12 +20,14 @@ let createElement = (~children, ~state: State.t, ()) =>
       );
 
     let onNodeClick = (clicked, tree) => {
-      Tree.(
+      UiTree.(
         switch (clicked) {
-        | Node({data}, _) =>
-          let node = FileExplorer.toFsNode(data);
+        | Node({data: FileSystemNode({isDirectory: false, path, _})}, _) =>
           GlobalContext.current().dispatch(SetExplorerTree(tree));
-          GlobalContext.current().dispatch(OpenFileByPath(node.path));
+          /* Only open files not directories */
+          GlobalContext.current().dispatch(OpenFileByPath(path));
+        | Node({data: FileSystemNode({isDirectory: true, _})}, _) =>
+          GlobalContext.current().dispatch(SetExplorerTree(tree))
         | Empty => ()
         }
       );
