@@ -137,6 +137,15 @@ let createElement =
       updateNode(id, tree)
       |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
+    let nodeRenderer =
+      itemRenderer(
+        ~onClick,
+        ~primaryRootIcon,
+        ~secondaryRootIcon,
+        ~font,
+        ~itemSize,
+      );
+
     (
       hooks,
       <View style=Style.[flexGrow(1)]>
@@ -144,16 +153,7 @@ let createElement =
           <Text text=title style={titleStyles(font)} />
         </View>
         <ScrollView style=containerStyles>
-          <Tree
-            tree
-            nodeRenderer={itemRenderer(
-              ~onClick,
-              ~primaryRootIcon,
-              ~secondaryRootIcon,
-              ~font,
-              ~itemSize,
-            )}
-          />
+          <Tree tree nodeRenderer />
         </ScrollView>
       </View>,
     );
