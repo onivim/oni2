@@ -46,15 +46,14 @@ let rec getFiles = (cwd, getIcon, ~ignored) => {
           )
         )
     )
-  )
-    {
-    | Failure(e) =>
-      print_endline(e);
-      Lwt.return([]);
-    };
-    /* | Unix.Unix_error(_, _, message) => */
-    /*   print_endline("Error: " ++ message); */
-    /*   Lwt.return([]); */
+  ) {
+  | Failure(e) =>
+    Log.error(e);
+    Lwt.return([]);
+  | Unix.Unix_error(_, _, message) =>
+    Log.error(message);
+    Lwt.return([]);
+  };
 };
 
 let start = () => {
@@ -63,7 +62,6 @@ let start = () => {
   let getExplorerFilesEffect = (cwd, languageInfo, iconTheme, ignored) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.open", dispatch => {
       let getIcon = FileExplorer.getFileIcon(languageInfo, iconTheme);
-      let ignored = ["node_modules", "_esy"];
       let directory = getFiles(~ignored, cwd, getIcon) |> Lwt_main.run;
       let newTree =
         FileExplorer.createFsNode(

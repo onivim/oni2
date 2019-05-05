@@ -1,7 +1,7 @@
 open Oni_Model;
 open Revery_UI;
 open Revery.UI.Components;
-open OniTree;
+open UiTree;
 
 module Core = Oni_Core;
 
@@ -18,7 +18,7 @@ let itemRenderer =
       ~onClick,
       font,
       itemFontSize,
-      {data, status, id}: OniTree.content,
+      {data, status, id}: UiTree.content,
     ) => {
   open Tree;
   open Revery;

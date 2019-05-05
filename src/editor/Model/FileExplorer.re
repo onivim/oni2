@@ -1,11 +1,14 @@
 open Revery;
 open Oni_Core;
 
-type t = {directory: OniTree.t};
+type t = {directory: UiTree.t};
+
+module ExplorerId =
+  UniqueId.Make({});
 
 let toFsNode = node =>
   switch (node) {
-  | OniTree.FileSystemNode(n) => n
+  | UiTree.FileSystemNode(n) => n
   };
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
@@ -19,9 +22,6 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-module ExplorerId =
-  UniqueId.Make({});
-
 let rec listToTree = (nodes, parent) => {
   open UI.Components.Tree;
 
@@ -33,7 +33,7 @@ let rec listToTree = (nodes, parent) => {
         let descendantNodes = List.map(toFsNode, fsNode.children);
 
         let descendants =
-          OniTree.(
+          UiTree.(
             List.map(
               c => listToTree(c.children, FileSystemNode(c)),
               descendantNodes,
@@ -62,7 +62,7 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
       )
       : (fileIcon, None);
 
-  OniTree.FileSystemNode({
+  UiTree.FileSystemNode({
     path,
     displayName,
     children,
@@ -72,7 +72,7 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
   });
 };
 
-let create = () => {directory: OniTree.empty};
+let create = () => {directory: UiTree.empty};
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {

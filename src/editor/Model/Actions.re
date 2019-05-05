@@ -41,7 +41,7 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
-  | SetExplorerTree(OniTree.t)
+  | SetExplorerTree(UiTree.t)
   | MenuSearch(string)
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
