@@ -7,10 +7,12 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
+        lwt
+        lwt.unix
         Oni2.core
         Oni2.model
         Oni2.neovim
         Oni2.extensions
         isolinear
     )
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
+    (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

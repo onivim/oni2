@@ -88,7 +88,7 @@ let createElement =
         justifyContent(`Center),
       ];
 
-    let icon = modified ? FontAwesome.circle : FontAwesome.times;
+    let icon = modified ? Model.FontAwesome.circle : Model.FontAwesome.times;
 
     let state = GlobalContext.current().state;
     let language =

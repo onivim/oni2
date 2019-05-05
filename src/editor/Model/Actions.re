@@ -40,6 +40,8 @@ type t =
   | EditorMoveCursorToBottom(Cursor.move)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
+  | OpenExplorer(string)
+  | SetExplorerTree(OniTree.t)
   | MenuSearch(string)
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))

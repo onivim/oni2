@@ -1,20 +1,9 @@
 open Oni_Model;
 open Revery_UI;
 open Revery.UI.Components;
+open OniTree;
 
 module Core = Oni_Core;
-
-type fsNode('a) = {
-  displayName: string,
-  path: string,
-  isDirectory: bool,
-  children: list('a),
-  icon: option(IconTheme.IconDefinition.t),
-  secondaryIcon: option(IconTheme.IconDefinition.t),
-};
-
-type treeItem =
-  | FileSystemNode(fsNode(treeItem));
 
 let component = React.component("TreeView");
 
@@ -29,7 +18,7 @@ let itemRenderer =
       ~onClick,
       font,
       itemFontSize,
-      {data, status, id}: Tree.content(treeItem),
+      {data, status, id}: OniTree.content,
     ) => {
   open Tree;
   open Revery;
@@ -106,11 +95,6 @@ let toggleStatus = status =>
     | Closed => Open
     }
   );
-
-type treeUpdate = {
-  updated: Tree.tree(treeItem),
-  tree: Tree.tree(treeItem),
-};
 
 let updateNode = (nodeId, tree) => {
   let updatedNode = ref(Tree.Empty);

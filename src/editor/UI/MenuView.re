@@ -85,7 +85,10 @@ let createElement =
     let hooks =
       React.Hooks.effect(
         Always,
-        () => Some(() => loseFocusOnClose(menu.isOpen)),
+        () => {
+          loseFocusOnClose(menu.isOpen);
+          None;
+        },
         hooks,
       );
 

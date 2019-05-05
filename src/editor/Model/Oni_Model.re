@@ -32,3 +32,6 @@ module Tab = Tab;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
+module OniTree = OniTree;
+module FileExplorer = FileExplorer;
+module FontAwesome = FontAwesome;
