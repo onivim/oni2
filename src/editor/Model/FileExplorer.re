@@ -17,7 +17,7 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
     |> IconTheme.getIconForFile(iconTheme, filePath);
 
   switch (fileIcon) {
-  | Some(icon) as x => x
+  | Some(_) as x => x
   | None => None
   };
 };
