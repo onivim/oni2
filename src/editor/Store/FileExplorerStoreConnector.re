@@ -24,7 +24,7 @@ let start = () => {
           directory,
           state.languageInfo,
           state.iconTheme,
-          ["node_modules", "_esy"],
+          state.configuration.filesExclude,
         ),
       )
     | _ => (state, Isolinear.Effect.none)

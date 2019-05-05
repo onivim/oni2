@@ -18,6 +18,22 @@ let parseInt = json =>
   | _ => 0
   };
 
+let parseStringList = json => {
+  switch (json) {
+  | `List(items) =>
+    List.fold_left(
+      (accum, item) =>
+        switch (item) {
+        | `String(v) => [v, ...accum]
+        | _ => accum
+        },
+      [],
+      items,
+    )
+  | _ => []
+  };
+};
+
 let parseLineNumberSetting = json =>
   switch (json) {
   | `String(v) =>
@@ -91,6 +107,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.renderWhitespace",
     (s, v) => {...s, editorRenderWhitespace: parseRenderWhitespace(v)},
   ),
+  ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
   (
     "workbench.iconTheme",
     (s, v) => {...s, workbenchIconTheme: parseString(v)},
