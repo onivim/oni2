@@ -24,6 +24,16 @@ let start = () => {
       };
     });
 
+  let toggleExplorerEffect = ({fileExplorer}: State.t, _) => {
+    Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
+      let action =
+        fileExplorer.isOpen
+          ? RemoveDockItem(WindowManager.ExplorerDock)
+          : AddDockItem(WindowManager.ExplorerDock);
+      dispatch(action);
+    });
+  };
+
   let commands = [
     (
       "commandPalette.open",
@@ -72,6 +82,7 @@ let start = () => {
         ]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
+    ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 
   let commandMap =

@@ -36,16 +36,16 @@ let getDockStyle = ({width, _}: dock) => {
 };
 
 let renderDock = (dockItems: list(dock), state: State.t) =>
-  List.fold_left(
-    (accum, item) =>
-      [
-        <View style={getDockStyle(item)}> {item.component()} </View>,
-        <WindowHandle direction=Vertical theme={state.theme} />,
-        ...accum,
-      ],
-    [],
-    dockItems,
-  );
+  List.sort((prev, curr) => curr.order > prev.order ? 1 : 0, dockItems)
+  |> List.fold_left(
+       (accum, item) =>
+         [
+           <View style={getDockStyle(item)}> {item.component()} </View>,
+           <WindowHandle direction=Vertical theme={state.theme} />,
+           ...accum,
+         ],
+       [],
+     );
 
 let parentStyle = (dir: direction) => {
   let flexDir =

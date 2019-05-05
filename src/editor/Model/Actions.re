@@ -52,8 +52,9 @@ type t =
   | MenuPreviousItem
   | MenuPosition(int)
   | OpenFileByPath(string)
-  | AddRightDock(WindowManager.dock)
-  | AddLeftDock(WindowManager.dock)
+  | RegisterDockItem(WindowManager.dock)
+  | RemoveDockItem(WindowManager.docks)
+  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowManager.splitMetadata)
   | RemoveSplit(int)
   | OpenConfigFile(string)

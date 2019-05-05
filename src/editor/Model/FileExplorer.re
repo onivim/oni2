@@ -1,7 +1,10 @@
 open Revery;
 open Oni_Core;
 
-type t = {directory: UiTree.t};
+type t = {
+  directory: UiTree.t,
+  isOpen: bool,
+};
 
 module ExplorerId =
   UniqueId.Make({});
@@ -136,11 +139,12 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   |> listToTree(directory);
 };
 
-let create = () => {directory: UiTree.Empty};
+let create = () => {directory: UiTree.Empty, isOpen: true};
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
-  | SetExplorerTree(tree) => {directory: tree}
+  | SetExplorerTree(tree) => {directory: tree, isOpen: true}
+  | RemoveDockItem(dockId) when id == id => {...state, isOpen: false}
   | _ => state
   };
 };
