@@ -26,12 +26,12 @@ let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
 let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
-  let createIcon = toIcon(~color=Colors.white);
+  let icon = toIcon(~color=Colors.white);
   let (primary, secondary) =
     isDirectory
       ? (
-        Some(createIcon(~character=FontAwesome.folder)),
-        Some(createIcon(~character=FontAwesome.folderOpen)),
+        Some(icon(~character=FontAwesome.folder)),
+        Some(icon(~character=FontAwesome.folderOpen)),
       )
       : (fileIcon, None);
 
@@ -69,9 +69,9 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
 
               createFsNode(
                 ~path,
-                ~displayName=file,
                 ~children,
                 ~isDirectory,
+                ~displayName=file,
                 ~fileIcon=getIcon(path),
               )
               |> Lwt.return;
@@ -98,8 +98,7 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
 };
 
 let rec listToTree = (nodes, parent) => {
-  open UI.Components.Tree;
-
+  open UiTree;
   let parentId = ExplorerId.getUniqueId();
   let children =
     List.map(
@@ -110,7 +109,8 @@ let rec listToTree = (nodes, parent) => {
         let descendants =
           UiTree.(
             List.map(
-              c => listToTree(c.children, FileSystemNode(c)),
+              descendant =>
+                listToTree(descendant.children, FileSystemNode(descendant)),
               descendantNodes,
             )
           );
@@ -138,7 +138,7 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   |> listToTree(directory);
 };
 
-let create = () => {directory: UiTree.empty};
+let create = () => {directory: UiTree.Empty};
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {

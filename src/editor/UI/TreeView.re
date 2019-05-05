@@ -1,7 +1,7 @@
 open Oni_Model;
+open UiTree;
 open Revery_UI;
 open Revery.UI.Components;
-open UiTree;
 
 module Core = Oni_Core;
 
@@ -13,14 +13,7 @@ let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
 let itemRenderer =
-    (
-      ~indent,
-      ~onClick,
-      font,
-      itemFontSize,
-      {data, status, id}: UiTree.content,
-    ) => {
-  open Tree;
+    (~indent, ~onClick, font, itemFontSize, {data, status, id}: itemContent) => {
   open Revery;
 
   let isOpen =

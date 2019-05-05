@@ -1,4 +1,4 @@
-module ReveryTree = Revery.UI.Components.Tree;
+include Revery.UI.Components.Tree;
 
 type fsNode('a) = {
   displayName: string,
@@ -12,10 +12,8 @@ type fsNode('a) = {
 type treeItem =
   | FileSystemNode(fsNode(treeItem));
 
-type t = ReveryTree.tree(treeItem);
-type content = ReveryTree.content(treeItem);
-
-let empty = ReveryTree.Empty;
+type t = tree(treeItem);
+type itemContent = content(treeItem);
 
 type treeUpdate = {
   updated: t,
