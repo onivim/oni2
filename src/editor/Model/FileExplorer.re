@@ -48,6 +48,16 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
   });
 };
 
+/**
+  getFilesAndFolders
+
+   This function uses Lwt to get all the files and folders in a directory
+   then for each we check if it is a file, if so we create a filesystem
+   node (an in-memory representation of the file) without children
+   if it is a directory we recursively call getFilesAndFolders on it
+   to resolves its subfolders and files. We do this concurrently using
+   Lwt_list.map_p
+ */
 let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
   /* Wrap the operation in a try%lwt which will catch all async exceptions */
   try%lwt (
@@ -144,7 +154,7 @@ let create = () => {directory: UiTree.Empty, isOpen: true};
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | SetExplorerTree(tree) => {directory: tree, isOpen: true}
-  | RemoveDockItem(dockId) when id == id => {...state, isOpen: false}
+  | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}
   | _ => state
   };
 };

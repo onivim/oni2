@@ -78,6 +78,11 @@ type t = {
   activeWindowId: int,
   leftDock: list(dock),
   rightDock: list(dock),
+  /*
+   * Cache all the registered dock items so
+   * these can be reused i.e. docks can be
+   * reopened and closed
+   */
   dockItems: list(dock),
 };
 
