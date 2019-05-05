@@ -1,13 +1,10 @@
 open Oni_Model;
-open Oni_Core;
 open Revery_UI;
-open Revery.UI.Components;
 
 let component = React.component("FileExplorerView");
 
-let createElement = (~children, ~state: State.t, ()) =>
+let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    open TreeView;
     let hooks =
       React.Hooks.effect(
         OnMount,
