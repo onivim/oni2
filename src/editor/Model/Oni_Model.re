@@ -34,4 +34,3 @@ module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
 module UiTree = UiTree;
 module FileExplorer = FileExplorer;
-module FontAwesome = FontAwesome;

@@ -25,18 +25,13 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let toIcon = (~character, ~color) =>
-  IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
-
 let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
-  let icon = toIcon(~color=Colors.white);
-  let (primary, secondary) =
-    isDirectory
-      ? (
-        Some(icon(~character=FontAwesome.folder)),
-        Some(icon(~character=FontAwesome.folderOpen)),
-      )
-      : (fileIcon, None);
+  /**
+     TODO: Find an icon theme with folders and use those icons
+     Fallbacks are used for the directory icons. FontAwesome is not
+     accessible here so we specify no icons for directories.
+   */
+  let (primary, secondary) = isDirectory ? (None, None) : (fileIcon, None);
 
   UiTree.FileSystemNode({
     path,
