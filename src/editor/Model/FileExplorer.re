@@ -46,7 +46,7 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
 };
 
 let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
-  /* Wrap the operation in a try%lwt which which will catch all async exceptions */
+  /* Wrap the operation in a try%lwt which will catch all async exceptions */
   try%lwt (
     Lwt_unix.files_of_directory(cwd)
     /* Filter out the relative name for current and parent directory*/
