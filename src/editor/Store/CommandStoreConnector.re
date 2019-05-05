@@ -24,7 +24,7 @@ let start = () => {
       };
     });
 
-  let toggleExplorerEffect = ({fileExplorer}: State.t, _) => {
+  let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
       let action =
         fileExplorer.isOpen

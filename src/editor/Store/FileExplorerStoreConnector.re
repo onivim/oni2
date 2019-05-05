@@ -3,11 +3,10 @@
 
    Implements an updater (reducer + side effects) for the File Explorer
  */
-open Oni_Core;
 open Oni_Model;
 
 let start = () => {
-  let (stream, dispatch) = Isolinear.Stream.create();
+  let (stream, _) = Isolinear.Stream.create();
 
   let getExplorerFilesEffect = (cwd, languageInfo, iconTheme, ignored) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.open", dispatch => {
