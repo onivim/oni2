@@ -1,7 +1,7 @@
 /**
    FileExplorerStoreConnector.re
 
-   Implements an updater (reducer + side effects) for the Menu
+   Implements an updater (reducer + side effects) for the File Explorer
  */
 open Oni_Core;
 open Oni_Model;
