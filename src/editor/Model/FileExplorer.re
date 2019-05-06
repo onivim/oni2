@@ -26,7 +26,7 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
 };
 
 let createFsNode =
-    (~children, ~depth as _, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
+    (~children, ~depth, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
   /**
      TODO: Find an icon theme with folders and use those icons
      Fallbacks are used for the directory icons. FontAwesome is not
@@ -36,6 +36,7 @@ let createFsNode =
 
   UiTree.FileSystemNode({
     path,
+    depth,
     displayName,
     children,
     isDirectory,
@@ -141,8 +142,9 @@ let rec listToTree = (~status, nodes, parent) => {
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   let getIcon = getFileIcon(languageInfo, iconTheme);
+  let maxDepth = Constants.default.maximumExplorerDepth;
   let directory =
-    getFilesAndFolders(~maxDepth=4, ~ignored, cwd, getIcon) |> Lwt_main.run;
+    getFilesAndFolders(~maxDepth, ~ignored, cwd, getIcon) |> Lwt_main.run;
 
   createFsNode(
     ~depth=0,

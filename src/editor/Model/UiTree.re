@@ -2,6 +2,7 @@ include Revery.UI.Components.Tree;
 
 type fsNode('a) = {
   displayName: string,
+  depth: int,
   path: string,
   isDirectory: bool,
   children: list('a),

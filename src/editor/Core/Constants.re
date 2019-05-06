@@ -22,6 +22,11 @@ type t = {
   minimapLineSpacing: int,
   scrollBarThickness: int,
   minimapMaxColumn: int,
+  /*
+   * Maximum levels of the file system to traverse
+   * when initially populating the file explorer
+   */
+  maximumExplorerDepth: int,
 };
 
 let default: t = {
@@ -31,4 +36,5 @@ let default: t = {
   minimapLineSpacing: 1,
   scrollBarThickness: 15,
   minimapMaxColumn: 120,
+  maximumExplorerDepth: 20,
 };
