@@ -47,6 +47,26 @@ let createFsNode =
 
 let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
 
+let printUnixError = (error, fn, arg) =>
+  Printf.sprintf(
+    "Error: %s encountered in %s called with %s",
+    Unix.error_message(error),
+    fn,
+    arg,
+  )
+  |> Log.error;
+
+let handleError = (~defaultValue, func) => {
+  try%lwt (func()) {
+  | Unix.Unix_error(error, fn, arg) =>
+    printUnixError(error, fn, arg);
+    Lwt.return(defaultValue);
+  | Failure(e) =>
+    Log.error(e);
+    Lwt.return([]);
+  };
+};
+
 /**
   getFilesAndFolders
 
@@ -73,11 +93,19 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
               let path = Filename.concat(cwd, file);
               let isDirectory = isDir(path);
               let nextDepth = depth + 1;
-              let notMaximumDepth = nextDepth < maxDepth;
 
+              /**
+                 If resolving children for a particular directory fails
+                 log the error but carry on processing other directories
+                 TODO: add hasError prop to a node so we can indicate there
+                 was a problem resolving a directory
+               */
               let%lwt children =
-                isDirectory && notMaximumDepth
-                  ? getDirContent(~depth=nextDepth, path, getIcon)
+                isDirectory && nextDepth < maxDepth
+                  ? handleError(
+                      () => getDirContent(~depth=nextDepth, path, getIcon),
+                      ~defaultValue=[],
+                    )
                   : Lwt.return([]);
 
               createFsNode(
@@ -96,20 +124,7 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
     );
   };
 
-  try%lwt (getDirContent(~depth=0, cwd, getIcon)) {
-  | Failure(e) =>
-    Log.error(e);
-    Lwt.return([]);
-  | Unix.Unix_error(error, fn, arg) =>
-    Printf.sprintf(
-      "Error: %s encountered in %s called with %s",
-      Unix.error_message(error),
-      fn,
-      arg,
-    )
-    |> Log.error;
-    Lwt.return([]);
-  };
+  handleError(() => getDirContent(~depth=0, cwd, getIcon), ~defaultValue=[]);
 };
 
 let rec listToTree = (~status, nodes, parent) => {
