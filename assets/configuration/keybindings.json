@@ -9,6 +9,7 @@
         { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<D-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<D-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] }
+        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]}
     ]
 }

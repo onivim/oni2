@@ -32,3 +32,5 @@ module Tab = Tab;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
+module UiTree = UiTree;
+module FileExplorer = FileExplorer;

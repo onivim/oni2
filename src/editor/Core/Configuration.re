@@ -23,6 +23,7 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   workbenchIconTheme: string,
+  filesExclude: list(string),
 };
 
 let default = {
@@ -37,6 +38,7 @@ let default = {
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
   workbenchIconTheme: "vs-seti",
+  filesExclude: ["node_modules", "_esy"],
 };
 
 let getBundledConfigPath = () => {
