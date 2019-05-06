@@ -36,5 +36,5 @@ let default: t = {
   minimapLineSpacing: 1,
   scrollBarThickness: 15,
   minimapMaxColumn: 120,
-  maximumExplorerDepth: 20,
+  maximumExplorerDepth: 10,
 };
