@@ -40,7 +40,7 @@ let updateNode = (nodeId, tree, ~updater=toggleNodeStatus, ()) => {
 
   let rec update = (nodeId, tree) => {
     switch (tree) {
-    | Node({id, _}, children) as x when id == nodeId =>
+    | Node({id, _}, _) as x when id == nodeId =>
       let node = updater(x);
       /*
        Store a reference to the located/updated node
