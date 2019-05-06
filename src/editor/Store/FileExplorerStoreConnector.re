@@ -16,6 +16,30 @@ let start = () => {
     });
   };
 
+  let updateFolderEffect =
+      (~folder, ~nodeId, ~languageInfo, ~iconTheme, ~ignored, ~tree) => {
+    Isolinear.Effect.createWithDispatch(~name="explorer.update", dispatch => {
+      let updatedFolder =
+        FileExplorer.getDirectoryTree(
+          folder,
+          languageInfo,
+          iconTheme,
+          ignored,
+        );
+
+      let updater = node =>
+        UiTree.(
+          switch (node) {
+          | Node(_, _) => updatedFolder
+          | Empty => Empty
+          }
+        );
+
+      let updated = UiTree.updateNode(nodeId, tree, ~updater, ());
+      dispatch(Actions.SetExplorerTree(updated.tree));
+    });
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | OpenExplorer(directory) => (
@@ -27,6 +51,23 @@ let start = () => {
           state.configuration.filesExclude,
         ),
       )
+    | UpdateExplorerNode(clicked, tree) =>
+      let path = FileExplorer.getNodePath(clicked);
+      let id = FileExplorer.getNodeId(clicked);
+      switch (path, id) {
+      | (Some(p), Some(id)) => (
+          state,
+          updateFolderEffect(
+            ~folder=p,
+            ~nodeId=id,
+            ~languageInfo=state.languageInfo,
+            ~iconTheme=state.iconTheme,
+            ~ignored=state.configuration.filesExclude,
+            ~tree,
+          ),
+        )
+      | (_, _) => (state, Isolinear.Effect.none)
+      };
     | _ => (state, Isolinear.Effect.none)
     };
   };

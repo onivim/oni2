@@ -157,6 +157,24 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   |> listToTree(~status=Open, directory);
 };
 
+let getNodePath = node => {
+  UiTree.(
+    switch (node) {
+    | Node({data: FileSystemNode({path, _}), _}, _) => Some(path)
+    | Empty => None
+    }
+  );
+};
+
+let getNodeId = node => {
+  UiTree.(
+    switch (node) {
+    | Node({id, _}, _) => Some(id)
+    | Empty => None
+    }
+  );
+};
+
 let create = () => {directory: UiTree.Empty, isOpen: true};
 
 let reduce = (state: t, action: Actions.t) => {

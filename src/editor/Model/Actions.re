@@ -42,6 +42,7 @@ type t =
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
   | SetExplorerTree(UiTree.t)
+  | UpdateExplorerNode(UiTree.t, UiTree.t)
   | MenuSearch(string)
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))

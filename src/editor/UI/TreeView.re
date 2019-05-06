@@ -88,35 +88,6 @@ let itemRenderer =
   </Clickable>;
 };
 
-let toggleStatus = status =>
-  switch (status) {
-  | Open => Closed
-  | Closed => Open
-  };
-
-let updateNode = (nodeId, tree) => {
-  let updatedNode = ref(Empty);
-
-  let rec update = (nodeId, tree) => {
-    switch (tree) {
-    | Node({id, status, _} as data, children) when id == nodeId =>
-      let node = Node({...data, status: toggleStatus(status)}, children);
-      /*
-       Store a reference to the located/updated node
-       TODO: find a solution that doesn't require a ref
-       */
-      updatedNode := node;
-      node;
-    | Node(data, children) =>
-      let newChildren = List.map(update(nodeId), children);
-      Node(data, newChildren);
-    | Empty => Empty
-    };
-  };
-
-  {updated: updatedNode^, tree: update(nodeId, tree)};
-};
-
 let createElement =
     (
       ~title,
@@ -134,7 +105,7 @@ let createElement =
     let {State.theme, _} = state;
 
     let onClick = id =>
-      updateNode(id, tree)
+      UiTree.updateNode(id, tree, ())
       |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
     let nodeRenderer =
