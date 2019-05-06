@@ -45,19 +45,17 @@ let createFsNode =
   });
 };
 
-let isDir = path => {
-  Sys.file_exists(path) ? Sys.is_directory(path) : false;
-};
+let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
 
 /**
   getFilesAndFolders
 
    This function uses Lwt to get all the files and folders in a directory
-   then for each we check if it is a file, if so we create a filesystem
-   node (an in-memory representation of the file) without children
+   then for each we check if it is a file or folder.
    if it is a directory we recursively call getFilesAndFolders on it
    to resolves its subfolders and files. We do this concurrently using
-   Lwt_list.map_p
+   Lwt_list.map_p. The recursion is gated by the depth value so it does
+   not recurse too far.
  */
 let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
   let rec getDirContent = (~depth, cwd, getIcon) => {
