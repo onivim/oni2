@@ -96,14 +96,13 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
     Log.error(e);
     Lwt.return([]);
   | Unix.Unix_error(error, fn, arg) =>
-    let message =
-      "Error: "
-      ++ Unix.error_message(error)
-      ++ " encountered in "
-      ++ fn
-      ++ " called with "
-      ++ arg;
-    Log.error(message);
+    Printf.sprintf(
+      "Error: %s encountered in %s called with %s",
+      Unix.error_message(error),
+      fn,
+      arg,
+    )
+    |> Log.error;
     Lwt.return([]);
   };
 };
