@@ -34,7 +34,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
         ? <ScrollView style=messagesStyles>
             ...{
                  List.map(
-                   ({kind, content}) =>
+                   ({kind, content, _}) =>
                      List.map(
                        item => renderMessage(item, kind, font),
                        content,
