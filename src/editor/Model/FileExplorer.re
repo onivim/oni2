@@ -25,7 +25,8 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
+let createFsNode =
+    (~children, ~depth as _, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
   /**
      TODO: Find an icon theme with folders and use those icons
      Fallbacks are used for the directory icons. FontAwesome is not
@@ -56,13 +57,9 @@ let isDir = path => {
    if it is a directory we recursively call getFilesAndFolders on it
    to resolves its subfolders and files. We do this concurrently using
    Lwt_list.map_p
-
-   TODO: Add the concept of depth to this function so we can terminate
-   the file resolution early and avoid choking on large directories
  */
-let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
-  /* Wrap the operation in a try%lwt which will catch all async exceptions */
-  try%lwt (
+let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
+  let rec getDirContent = (~depth, cwd, getIcon) => {
     Lwt_unix.files_of_directory(cwd)
     /* Filter out the relative name for current and parent directory*/
     |> Lwt_stream.filter(name => name != ".." && name != ".")
@@ -78,14 +75,15 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
               let isDirectory = isDir(path);
 
               let%lwt children =
-                isDirectory
-                  ? getFilesAndFolders(~ignored, path, getIcon)
+                isDirectory && notMaximumDepth
+                  ? getDirContent(~depth=nextDepth, path, getIcon)
                   : Lwt.return([]);
 
               createFsNode(
                 ~path,
                 ~children,
                 ~isDirectory,
+                ~depth=nextDepth,
                 ~displayName=file,
                 ~fileIcon=getIcon(path),
               )
@@ -94,8 +92,10 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
             files,
           )
         )
-    )
-  ) {
+    );
+  };
+
+  try%lwt (getDirContent(~depth=0, cwd, getIcon)) {
   | Failure(e) =>
     Log.error(e);
     Lwt.return([]);
@@ -141,9 +141,11 @@ let rec listToTree = (~status, nodes, parent) => {
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   let getIcon = getFileIcon(languageInfo, iconTheme);
-  let directory = getFilesAndFolders(~ignored, cwd, getIcon) |> Lwt_main.run;
+  let directory =
+    getFilesAndFolders(~maxDepth=4, ~ignored, cwd, getIcon) |> Lwt_main.run;
 
   createFsNode(
+    ~depth=0,
     ~path=cwd,
     ~displayName=Filename.basename(cwd),
     ~isDirectory=true,
