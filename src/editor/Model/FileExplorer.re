@@ -63,7 +63,7 @@ let handleError = (~defaultValue, func) => {
     Lwt.return(defaultValue);
   | Failure(e) =>
     Log.error(e);
-    Lwt.return([]);
+    Lwt.return(defaultValue);
   };
 };
 
