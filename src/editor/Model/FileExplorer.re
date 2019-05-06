@@ -43,6 +43,10 @@ let createFsNode = (~children, ~path, ~displayName, ~fileIcon, ~isDirectory) => 
   });
 };
 
+let isDir = path => {
+  Sys.file_exists(path) ? Sys.is_directory(path) : false;
+};
+
 /**
   getFilesAndFolders
 
@@ -71,7 +75,7 @@ let rec getFilesAndFolders = (cwd, getIcon, ~ignored) => {
           Lwt_list.map_p(
             file => {
               let path = Filename.concat(cwd, file);
-              let isDirectory = Utility.checkIsDirectory(path);
+              let isDirectory = isDir(path);
 
               let%lwt children =
                 isDirectory

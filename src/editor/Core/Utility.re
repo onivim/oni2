@@ -34,14 +34,6 @@ let getFileContents = (path, ~handler) => {
   contents^;
 };
 
-let checkIsDirectory = dir =>
-  try (Sys.is_directory(dir)) {
-  /* This error is raised if the file passed does not exist */
-  | Sys_error(error) =>
-    Log.error(error);
-    false;
-  };
-
 let convertUTF8string = str =>
   CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
 
