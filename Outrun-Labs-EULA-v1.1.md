@@ -4,7 +4,7 @@ Copyright 2019 Outrun Labs LLC
 
 Outrun Labs LLC
 END USER LICENSE AGREEMENT
-3/7/2019
+5/2/2019
 
 PLEASE READ CAREFULLY BEFORE USING THIS PRODUCT: This End-User License Agreement ("EULA") is a legal agreement ("Agreement") between (a) you, either an individual or a single entity ("Licensee") and (b) Outrun Labs LLC ("Outrun Labs") that governs your use of software programs ("Software").
 
@@ -26,7 +26,7 @@ The Software may include various third-party software components or software ser
 
 __1.4 Restrictions on Use.__ 
 
-You shall use the Software strictly in accordance with the terms of the this Agreements and shall not: (a) distribute the Software (b) make the Software available over a network or other environment permitting access or use by multiple users at the same time; (c) violate any applicable laws, rules, or regulations in connection with Your access or use of the Software; (d) use the Software for any revenue generating endeavor, commercial enterprise, employment, or other purpose for which it is not designed or intended; (e) use the Software for creating a product, service, or software that is, directly or indirectly, competitive with or in any way a substitute for services, product or software offered by Company; (f) remove proprietary notices from the Software or the Documentation.
+You shall use the Software strictly in accordance with the terms of the this Agreements and shall not: (a) distribute the Software (b) make the Software available over a network or other environment permitting access or use by multiple users at the same time; (c) violate any applicable laws, rules, or regulations in connection with Your access or use of the Software; (d) use the Software for any revenue generating endeavor, commercial enterprise, employment, or other purpose for which it is not designed or intended; (e) remove proprietary notices from the Software or the Documentation.
 
 __1.5 Reservation of Rights.__ 
 
@@ -38,7 +38,7 @@ Except as expressly granted in this Agreement, there are no other licenses grant
 
 (a) "Non-Commercial License"
 
-If the License is a Non-Commercial License, Licensee warrants and represents that Licensee is a natural person, that they will only access and/or use one copy of a Non-Commercial License for personal, recreational, and non-commercial purposes and that only Licensee will use the Software. Under a Non-Commercial License, Licensee will not use the Software: (a) in conjunction with any other copies or versions of the Software, under any type of License model; (b) for any commercial, professional, for-profit and/or on-sale purpose or otherwise to provide any commercial service(s) to a third-party. (c) in the course of any employment or business undertaking of Licensee; (d) on any commercial premises during business hours (except where use of the Software is solely for a personal, recreational, educational, or other non-commercial purpose); and/or (e) to create any commercial tools or plugins.
+If the License is a Non-Commercial License, Licensee warrants and represents that Licensee is a natural person, that they will only access and/or use one copy of a Non-Commercial License for personal, recreational, and non-commercial purposes and that only Licensee will use the Software. Under a Non-Commercial License, Licensee will not use the Software: (a) for any commercial, professional, for-profit and/or on-sale purpose or otherwise to provide any commercial service(s) to a third-party. (b) in the course of any employment or business undertaking of Licensee; (c) on any commercial premises during business hours (except where use of the Software is solely for a personal, recreational, educational, or other non-commercial purpose); and/or (d) to create any commercial tools or plugins.
 
 (b) "Commercial Subscription License"
 
@@ -48,7 +48,7 @@ If the Licensee purchases a License for Commercial Use, then the provisions of c
 
 Notwithstanding that clause 1.1 defines "Software" as an object code version and that clause 1.4 provides that Licensee may use the Software in object code form only:
 
-__3.1__ Licensee shall be licensed to use the source code or elements of the source code ("Source Code") as Software on the terms of this EULA and (a) Licensee may use the Source Code at its own risk in any reasonable way for the limited purpose of enhancing its use of the Software solely for its own internal business purposes and in all respects in accordancew ith this EULA; (b) Licensee shall in respect of the Source Code comply strictly with all other restrictions applying to its use of the Software under this EULA as well as any other restriction or instruction that is communicated to it by Outrun Labs at any time during the Agreement.
+__3.1__ Licensee shall be licensed to use the source code or elements of the source code ("Source Code") as Software on the terms of this EULA and (a) Licensee may use the Source Code at its own risk in any reasonable way for the limited purpose of enhancing its use of the Software solely for its own internal business purposes and in all respects in accordance with this EULA; (b) Licensee shall in respect of the Source Code comply strictly with all other restrictions applying to its use of the Software under this EULA.
 
 __3.2__ To the extent that the Software links to any open source software libraries ("Third-Party Software") that are provided to Licensee with the software, nothing in the EULA shall affect Licensee's rights under the licenses on which the relevant Third Party licensor has licensed the OSS Libraries. To the extent that Third Party Licensors have licensed Third-Party Software on the terms of v2.1 of the Lesser General Public License issued by the Free Software Foundation (see http://www.gnu.org/licenses/lgpl-2.1.html) (the "LGPL"), those OSS Libraries are licensed to Licensee on the terms of the LGPL and are referred to in this caluse 2.2 as the LGPL Libraries.
 
