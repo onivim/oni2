@@ -74,6 +74,8 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
             file => {
               let path = Filename.concat(cwd, file);
               let isDirectory = isDir(path);
+              let nextDepth = depth + 1;
+              let notMaximumDepth = nextDepth < maxDepth;
 
               let%lwt children =
                 isDirectory && notMaximumDepth
