@@ -36,7 +36,7 @@ let getFileContents = (path, ~handler) => {
 
 let checkIsDirectory = dir =>
   try (Sys.is_directory(dir)) {
-  /* This error is raised if the file passed does not exist*/
+  /* This error is raised if the file passed does not exist */
   | Sys_error(error) =>
     Log.error(error);
     false;
