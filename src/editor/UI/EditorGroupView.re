@@ -47,20 +47,6 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
   };
 };
 
-let rec filterMap = (f, l) => {
-  let rec inner = l =>
-    switch (l) {
-    | [] => []
-    | [hd, ...tail] =>
-      switch (f(hd)) {
-      | Some(v) => [v, ...inner(tail)]
-      | None => inner(tail)
-      }
-    };
-
-  inner(l) |> List.rev;
-};
-
 let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
@@ -79,7 +65,7 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     };
   };
 
-  filterMap(f, editorGroup.reverseTabOrder);
+  Utility.filterMap(f, editorGroup.reverseTabOrder);
 };
 
 let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =>
