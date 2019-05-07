@@ -45,11 +45,10 @@ let createElement = (~children as _, ~state: State.t, ()) =>
 
     (
       hooks,
-      <TreeView
-        state
-        onNodeClick
-        title="Explorer"
-        tree={state.fileExplorer.directory}
-      />,
+      switch (state.fileExplorer.directory) {
+      | Empty => React.empty
+      | Node(_, _) as tree =>
+        <TreeView state onNodeClick title="Explorer" tree />
+      },
     );
   });
