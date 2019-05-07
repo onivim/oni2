@@ -96,6 +96,13 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
+let isActiveEditor = (state, editorId) => {
+	switch (state.activeEditorId) {
+	| None => false
+	| Some(v) => v == editorId;
+	}
+}
+
 let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
@@ -154,6 +161,7 @@ let reduce = (v: t, action: Actions.t) => {
 
   switch (action) {
   | BufferEnter({id, _}) =>
+	prerr_endline ("BUFFER ENTER: " ++ show(v));
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
   | ViewCloseEditor(id) => removeEditorById(v, id)

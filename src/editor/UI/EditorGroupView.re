@@ -7,6 +7,7 @@
  */
 
 open Revery.UI;
+open Oni_Core;
 open Oni_Model;
 module Model = Oni_Model;
 
@@ -28,19 +29,59 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(Model.Tab.t)) => {
-  let f = (t: Model.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: () => GlobalContext.current().openEditorById(t.id),
-      onClose: () => GlobalContext.current().closeEditorById(t.id),
-    };
-    ret;
+let truncateFilepath = path =>
+  switch (path) {
+  | Some(p) => Filename.basename(p)
+  | None => "untitled"
   };
 
-  List.map(f, tabs);
+let getBufferMetadata = (buffer: option(Buffer.t)) => {
+	switch (buffer) {
+	| None => (false, "untitled")
+	| Some(v) => {
+		open Types.BufferMetadata;
+		let { filePath, modified } = Buffer.getMetadata(v);
+
+		let title = filePath |> truncateFilepath;
+		(modified, title)
+	}
+	}
+}
+
+let rec filterMap = (f, l) => {
+	let rec inner = (l) => switch (l) {
+	| [] => []
+	| [hd, ...tail] => switch (f(hd)) {
+	| Some(v) => [v, ...inner(tail)]
+	| None => inner(tail)
+	}
+	};
+
+	inner(l) |> List.rev;
+};
+
+let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
+
+  let f = (id: int) => {
+
+    
+
+	switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
+	| None => None
+	| Some(v) => 
+		let (modified, title) = Model.Buffers.getBuffer(id, buffers) |> getBufferMetadata;
+    let ret: Tabs.tabInfo = {
+      title,
+      modified,
+      active: EditorGroup.isActiveEditor(editorGroup, v.id),
+      onClick: () => GlobalContext.current().openEditorById(v.id),
+      onClose: () => GlobalContext.current().closeEditorById(v.id),
+    };
+    Some(ret);
+				};
+  };
+
+  filterMap(f, editorGroup.reverseTabOrder);
 };
 
 let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =>
@@ -58,7 +99,7 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
       | Some(v) =>
         let editor =
           Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-        let tabs = Model.Selectors.getTabs(state, v) |> toUiTabs;
+        let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
 
         let metrics = v.metrics;
