@@ -78,6 +78,7 @@ let handleError = (~defaultValue, func) => {
    not recurse too far.
  */
 let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
+  let attempt = handleError(~defaultValue=[]);
   let rec getDirContent = (~depth, cwd, getIcon) => {
     Lwt_unix.files_of_directory(cwd)
     /* Filter out the relative name for current and parent directory*/
@@ -97,14 +98,11 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
               /**
                  If resolving children for a particular directory fails
                  log the error but carry on processing other directories
-                 TODO: add hasError prop to a node so we can indicate there
-                 was a problem resolving a directory
                */
               let%lwt children =
                 isDirectory && nextDepth < maxDepth
-                  ? handleError(
-                      () => getDirContent(~depth=nextDepth, path, getIcon),
-                      ~defaultValue=[],
+                  ? attempt(() =>
+                      getDirContent(~depth=nextDepth, path, getIcon)
                     )
                   : Lwt.return([]);
 
@@ -124,7 +122,7 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
     );
   };
 
-  handleError(() => getDirContent(~depth=0, cwd, getIcon), ~defaultValue=[]);
+  attempt(() => getDirContent(~depth=0, cwd, getIcon));
 };
 
 let rec listToTree = (~status, nodes, parent) => {
