@@ -65,7 +65,7 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     };
   };
 
-  Utility.filterMap(f, editorGroup.reverseTabOrder);
+  Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
 let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =>

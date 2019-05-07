@@ -101,5 +101,5 @@ let rec filterMap = (f, l) => {
       }
     };
 
-  inner(l) |> List.rev;
+  inner(l);
 };
