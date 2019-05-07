@@ -36,49 +36,47 @@ let truncateFilepath = path =>
   };
 
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
-	switch (buffer) {
-	| None => (false, "untitled")
-	| Some(v) => {
-		open Types.BufferMetadata;
-		let { filePath, modified } = Buffer.getMetadata(v);
+  switch (buffer) {
+  | None => (false, "untitled")
+  | Some(v) =>
+    open Types.BufferMetadata;
+    let {filePath, modified} = Buffer.getMetadata(v);
 
-		let title = filePath |> truncateFilepath;
-		(modified, title)
-	}
-	}
-}
+    let title = filePath |> truncateFilepath;
+    (modified, title);
+  };
+};
 
 let rec filterMap = (f, l) => {
-	let rec inner = (l) => switch (l) {
-	| [] => []
-	| [hd, ...tail] => switch (f(hd)) {
-	| Some(v) => [v, ...inner(tail)]
-	| None => inner(tail)
-	}
-	};
+  let rec inner = l =>
+    switch (l) {
+    | [] => []
+    | [hd, ...tail] =>
+      switch (f(hd)) {
+      | Some(v) => [v, ...inner(tail)]
+      | None => inner(tail)
+      }
+    };
 
-	inner(l) |> List.rev;
+  inner(l) |> List.rev;
 };
 
 let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
-
   let f = (id: int) => {
-
-    
-
-	switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
-	| None => None
-	| Some(v) => 
-		let (modified, title) = Model.Buffers.getBuffer(id, buffers) |> getBufferMetadata;
-    let ret: Tabs.tabInfo = {
-      title,
-      modified,
-      active: EditorGroup.isActiveEditor(editorGroup, v.id),
-      onClick: () => GlobalContext.current().openEditorById(v.id),
-      onClose: () => GlobalContext.current().closeEditorById(v.id),
+    switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
+    | None => None
+    | Some(v) =>
+      let (modified, title) =
+        Model.Buffers.getBuffer(id, buffers) |> getBufferMetadata;
+      let ret: Tabs.tabInfo = {
+        title,
+        modified,
+        active: EditorGroup.isActiveEditor(editorGroup, v.id),
+        onClick: () => GlobalContext.current().openEditorById(v.id),
+        onClose: () => GlobalContext.current().closeEditorById(v.id),
+      };
+      Some(ret);
     };
-    Some(ret);
-				};
   };
 
   filterMap(f, editorGroup.reverseTabOrder);
