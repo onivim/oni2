@@ -161,7 +161,6 @@ let reduce = (v: t, action: Actions.t) => {
 
   switch (action) {
   | BufferEnter({id, _}) =>
-    prerr_endline("BUFFER ENTER: " ++ show(v));
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
   | ViewCloseEditor(id) => removeEditorById(v, id)
