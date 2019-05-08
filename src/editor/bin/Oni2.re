@@ -153,7 +153,8 @@ let init = app => {
     };
 
   Event.subscribe(w.onKeyDown, keyEvent =>
-    Input.keyPressToCommand(keyEvent) |> keyEventListener
+    Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
+    |> keyEventListener
   )
   |> ignore;
 

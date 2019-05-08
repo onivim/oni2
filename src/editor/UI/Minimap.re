@@ -84,7 +84,8 @@ let createElement =
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
       let visibleHeight: int = metrics.pixelHeight;
-      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
+      let offsetMouseY: int =
+        int_of_float(mouseY) - Constants.default.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
       *. float_of_int(totalHeight);
@@ -100,11 +101,10 @@ let createElement =
         () => {
           let isCaptured = isActive;
           let startPosition = editor.scrollY;
-
-          Mouse.setCapture(
-            ~onMouseMove=
-              evt =>
-                if (isCaptured) {
+          if (isCaptured) {
+            Mouse.setCapture(
+              ~onMouseMove=
+                evt => {
                   let scrollTo = getScrollTo(evt.mouseY);
                   let minimapLineSize =
                     Constants.default.minimapCharacterWidth
@@ -118,10 +118,10 @@ let createElement =
                     (),
                   );
                 },
-            ~onMouseUp=_evt => scrollComplete(),
-            (),
-          );
-
+              ~onMouseUp=_evt => scrollComplete(),
+              (),
+            );
+          };
           Some(
             () =>
               if (isCaptured) {
@@ -140,11 +140,13 @@ let createElement =
         Constants.default.minimapCharacterWidth
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-      GlobalContext.current().editorScroll(
-        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
-        (),
-      );
-      setActive(true);
+      if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+        GlobalContext.current().editorScroll(
+          ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
+          (),
+        );
+        setActive(true);
+      };
     };
 
     (

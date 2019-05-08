@@ -89,3 +89,17 @@ let escapeSpaces = str => {
   let whitespace = Str.regexp(" ");
   Str.global_replace(whitespace, "\\ ", str);
 };
+
+let filterMap = (f, l) => {
+  let rec inner = l =>
+    switch (l) {
+    | [] => []
+    | [hd, ...tail] =>
+      switch (f(hd)) {
+      | Some(v) => [v, ...inner(tail)]
+      | None => inner(tail)
+      }
+    };
+
+  inner(l);
+};

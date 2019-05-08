@@ -21,6 +21,7 @@ let reduce: (State.t, Actions.t) => State.t =
         wildmenu: Wildmenu.reduce(s.wildmenu, a),
         commandline: Commandline.reduce(s.commandline, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
+        fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
       };
 
       switch (a) {
@@ -33,19 +34,39 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
       | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
-      | AddLeftDock(dock) => {
-          ...s,
-          editorLayout: {
-            ...s.editorLayout,
-            leftDock: [dock, ...s.editorLayout.leftDock],
-          },
+      | RegisterDockItem(dock) =>
+        switch (dock) {
+        | {position: Left, _} => {
+            ...s,
+            editorLayout: {
+              ...s.editorLayout,
+              leftDock: [dock, ...s.editorLayout.leftDock],
+              dockItems: [dock, ...s.editorLayout.dockItems],
+            },
+          }
+        | {position: Right, _} => {
+            ...s,
+            editorLayout: {
+              ...s.editorLayout,
+              rightDock: [dock, ...s.editorLayout.rightDock],
+              dockItems: [dock, ...s.editorLayout.dockItems],
+            },
+          }
         }
-      | AddRightDock(dock) => {
+      | RemoveDockItem(id) => {
           ...s,
-          editorLayout: {
-            ...s.editorLayout,
-            rightDock: [dock, ...s.editorLayout.rightDock],
-          },
+          editorLayout: WindowManager.removeDockItem(~id, s.editorLayout),
+        }
+      | AddDockItem(id) =>
+        switch (WindowManager.findDockItem(id, s.editorLayout)) {
+        | Some(dock) => {
+            ...s,
+            editorLayout: {
+              ...s.editorLayout,
+              leftDock: s.editorLayout.leftDock @ [dock],
+            },
+          }
+        | None => s
         }
       | AddSplit(split) =>
         let id = WindowManager.WindowId.current();

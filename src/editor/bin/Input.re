@@ -42,9 +42,18 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 };
 
 let keyPressToCommand =
-    ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent) => {
+    (
+      {shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent,
+      os: Revery_Core.Environment.os,
+    ) => {
+  let commandKeyPressed =
+    switch (os) {
+    | Mac => superKey
+    | _ => ctrlKey
+    };
+
   let keyString =
-    ctrlKey
+    commandKeyPressed
       ? /**
         TODO:
         Revery's toString method returns lower case

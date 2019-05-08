@@ -68,6 +68,9 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
+  let (fileExplorerUpdater, explorerStream) =
+    FileExplorerStoreConnector.start();
+
   let commandUpdater = CommandStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
@@ -86,6 +89,7 @@ let start =
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
+          fileExplorerUpdater,
         ]),
       (),
     );
@@ -119,6 +123,7 @@ let start =
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
   Isolinear.Stream.connect(dispatch, menuStream);
+  Isolinear.Stream.connect(dispatch, explorerStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
