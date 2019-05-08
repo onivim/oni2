@@ -9,7 +9,13 @@ let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
-let containerStyles = Style.[paddingLeft(16), paddingVertical(8), overflow(`Hidden), flexGrow(1)];
+let containerStyles =
+  Style.[
+    paddingLeft(16),
+    paddingVertical(8),
+    overflow(`Hidden),
+    flexGrow(1),
+  ];
 
 let titleStyles = (fgColor, bgColor, font) =>
   Style.[
