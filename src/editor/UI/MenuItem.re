@@ -20,11 +20,12 @@ let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
 let containerStyles = (~bg, ()) =>
   Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
 
-let iconStyles =
+let iconStyles = fgColor =>
   Style.[
-    fontFamily("FontAwesome5FreeSolid.otf"),
+    fontFamily("seti.ttf"),
     fontSize(menuItemFontSize),
     marginRight(10),
+	color(fgColor),
   ];
 
 let noop = () => ();
@@ -33,7 +34,7 @@ let createElement =
     (
       ~children as _,
       ~style=[],
-      ~icon={||},
+      ~icon=None,
       ~label,
       ~selected,
       ~theme,
@@ -66,12 +67,13 @@ let createElement =
           ~target=style,
         )
       );
+	let { fontCharacter, fontColor } = IconTheme.IconDefinition.(icon);
     (
       hooks,
       <Clickable onClick>
         <View
           onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
-          <Text style=iconStyles text=icon />
+          <Text style=iconStyles(fontColor) text={fontCharacter} />
           <Text style=labelStyles text=label />
         </View>
       </Clickable>,
