@@ -34,10 +34,14 @@ let start =
       ~onRegisterCommand=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
+	  ~onDiagnosticsChangeMany=defaultOneArgCallback,
+	  ~onDiagnosticsClear=defaultOneArgCallback,
       setup: Setup.t,
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
+	| ("MainThreadDiagnostics", "$changeMany", args) => In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
+	| ("MainThreadDiagnostics", "$clear", args) => In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);

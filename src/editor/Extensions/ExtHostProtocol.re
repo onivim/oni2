@@ -205,6 +205,18 @@ module IncomingNotifications = {
       };
     };
   };
+
+  module Diagnostics = {
+		let parseClear = args => switch(args) {
+		| [`String(owner)] => Some(owner)
+		| _ => None
+		};
+
+		let parseChangeMany = args => switch(args) {
+		| [`String(owner), `List([uri, markers])] => None
+		| _ => None
+		};
+  };
 };
 
 module OutgoingNotifications = {
