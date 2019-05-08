@@ -4,7 +4,7 @@
 
 - Install [Git](https://git-scm.com/)
 - Install [Esy](https://esy.sh) (__0.5.6__ is required)
-- [Check and install any system packages for Revery](https://github.com/revery-ui/revery#building)
+- [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
 
 ## Build and Run
 
