@@ -90,7 +90,7 @@ let escapeSpaces = str => {
   Str.global_replace(whitespace, "\\ ", str);
 };
 
-let rec filterMap = (f, l) => {
+let filterMap = (f, l) => {
   let rec inner = l =>
     switch (l) {
     | [] => []

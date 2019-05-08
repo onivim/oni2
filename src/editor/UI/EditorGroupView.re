@@ -40,7 +40,7 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
   | None => (false, "untitled")
   | Some(v) =>
     open Types.BufferMetadata;
-    let {filePath, modified} = Buffer.getMetadata(v);
+    let {filePath, modified, _} = Buffer.getMetadata(v);
 
     let title = filePath |> truncateFilepath;
     (modified, title);
