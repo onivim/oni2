@@ -15,7 +15,8 @@ let start = () => {
   let position =
       (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
     let nextIndex = selectedItem + change;
-    nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
+    nextIndex >= List.length(commands)
+      ? 0 : nextIndex < 0 ? List.length(commands) - 1 : nextIndex;
   };
 
   let menuOpenEffect = menuConstructor =>
