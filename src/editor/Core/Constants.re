@@ -27,6 +27,7 @@ type t = {
    * when initially populating the file explorer
    */
   maximumExplorerDepth: int,
+  tabHeight: int,
 };
 
 let default: t = {
@@ -37,4 +38,5 @@ let default: t = {
   scrollBarThickness: 15,
   minimapMaxColumn: 120,
   maximumExplorerDepth: 10,
+  tabHeight: 35,
 };

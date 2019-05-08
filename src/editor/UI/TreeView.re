@@ -9,18 +9,29 @@ let component = React.component("TreeView");
 
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
-let containerStyles = Style.[padding(20), overflow(`Hidden), flexGrow(1)];
+let containerStyles =
+  Style.[
+    paddingLeft(16),
+    paddingVertical(8),
+    overflow(`Hidden),
+    flexGrow(1),
+  ];
 
-let titleStyles = font =>
-  Style.[padding(5), fontSize(14), fontFamily(font)];
+let titleStyles = (fgColor, bgColor, font) =>
+  Style.[
+    fontSize(14),
+    fontFamily(font),
+    backgroundColor(bgColor),
+    color(fgColor),
+  ];
 
 let headingStyles = (theme: Core.Theme.t) =>
   Style.[
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
-    backgroundColor(theme.colors.editorBackground),
-    paddingTop(5),
+    backgroundColor(theme.colors.sideBarBackground),
+    height(Core.Constants.default.tabHeight),
   ];
 
 let toIcon = (~character, ~color) =>
@@ -34,25 +45,32 @@ let itemRenderer =
       ~primaryRootIcon,
       ~secondaryRootIcon,
       ~itemSize,
+      ~foregroundColor,
+      ~backgroundColor,
       {data, status, id}: itemContent,
     ) => {
-  open Revery;
-
   let isOpen =
     switch (status) {
     | Open => true
     | Closed => false
     };
 
+  let bgColor = backgroundColor;
+
   let textStyles =
-    Style.[fontSize(itemSize), fontFamily(font), color(Colors.white)];
+    Style.[
+      fontSize(itemSize),
+      fontFamily(font),
+      color(foregroundColor),
+      backgroundColor(bgColor),
+    ];
 
   let indentStr = String.make(indent * 2, ' ');
 
   let icon =
     switch (data) {
     | FileSystemNode({icon, secondaryIcon, _}) =>
-      let makeIcon = toIcon(~color=Colors.white);
+      let makeIcon = toIcon(~color=foregroundColor);
       switch (icon, secondaryIcon, isOpen) {
       | (Some(_), Some(secondary), true) => secondary
       | (Some(primary), Some(_), false) => primary
@@ -81,7 +99,7 @@ let itemRenderer =
         fontFamily
         color={icon.fontColor}
         icon={icon.fontCharacter}
-        backgroundColor=Colors.transparentWhite
+        backgroundColor
       />
       <Text text=label style=Style.[marginLeft(10), ...textStyles] />
     </View>
@@ -108,6 +126,9 @@ let createElement =
       UiTree.updateNode(id, tree, ())
       |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
+    let backgroundColor = state.theme.colors.sideBarBackground;
+    let foregroundColor = state.theme.colors.sideBarForeground;
+
     let nodeRenderer =
       itemRenderer(
         ~onClick,
@@ -115,13 +136,18 @@ let createElement =
         ~secondaryRootIcon,
         ~font,
         ~itemSize,
+        ~backgroundColor,
+        ~foregroundColor,
       );
 
     (
       hooks,
       <View style=Style.[flexGrow(1)]>
         <View style={headingStyles(theme)}>
-          <Text text=title style={titleStyles(font)} />
+          <Text
+            text=title
+            style={titleStyles(foregroundColor, backgroundColor, font)}
+          />
         </View>
         <ScrollView style=containerStyles>
           <Tree tree nodeRenderer />

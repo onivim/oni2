@@ -71,7 +71,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           let explorer =
             registerDock(
               ~order=2,
-              ~width=250,
+              ~width=225,
               ~id=ExplorerDock,
               ~component=splitFactory(state => <FileExplorerView state />),
               (),

@@ -84,7 +84,8 @@ let createElement =
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
       let visibleHeight: int = metrics.pixelHeight;
-      let offsetMouseY: int = int_of_float(mouseY) - Tab.tabHeight;
+      let offsetMouseY: int =
+        int_of_float(mouseY) - Constants.default.tabHeight;
       float_of_int(offsetMouseY)
       /. float_of_int(visibleHeight)
       *. float_of_int(totalHeight);
