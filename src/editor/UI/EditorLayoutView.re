@@ -6,6 +6,7 @@
  */
 open Revery;
 open UI;
+open Oni_Core;
 open Oni_Model;
 open WindowManager;
 
@@ -26,13 +27,18 @@ let splitStyle = (split: split) =>
     }
   );
 
-let getDockStyle = ({width, _}: dock) => {
+let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
   let w =
     switch (width) {
     | Some(w) => w
     | None => 10
     };
-  Style.[width(w), top(0), bottom(0)];
+  Style.[
+    width(w),
+    top(0),
+    bottom(0),
+    backgroundColor(theme.colors.sideBarBackground),
+  ];
 };
 
 let renderDock = (dockItems: list(dock), state: State.t) =>
@@ -40,7 +46,9 @@ let renderDock = (dockItems: list(dock), state: State.t) =>
   |> List.fold_left(
        (accum, item) =>
          [
-           <View style={getDockStyle(item)}> {item.component()} </View>,
+           <View style={getDockStyle(item, state.theme)}>
+             {item.component()}
+           </View>,
            <WindowHandle direction=Vertical theme={state.theme} />,
            ...accum,
          ],

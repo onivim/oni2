@@ -41,11 +41,15 @@ module EditorColors = {
     statusBarForeground: Color.t,
     statusBarBackground: Color.t,
     scrollbarSliderHoverBackground: Color.t,
+    sideBarBackground: Color.t,
+    sideBarForeground: Color.t,
   };
 
   let default: t = {
     background: Color.hex("#282C35"),
     foreground: Color.hex("#ECEFF4"),
+    sideBarBackground: Color.hex("#21252b"),
+    sideBarForeground: Color.hex("#ECEFF4"),
     editorBackground: Color.hex("#2F3440"),
     editorForeground: Color.hex("#DCDCDC"),
     editorLineHighlightBackground: Color.hex("#495162"),
