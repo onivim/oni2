@@ -53,7 +53,7 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     | None => None
     | Some(v) =>
       let (modified, title) =
-        Model.Buffers.getBuffer(id, buffers) |> getBufferMetadata;
+        Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
       let ret: Tabs.tabInfo = {
         title,
         modified,
