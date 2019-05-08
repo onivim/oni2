@@ -49,8 +49,6 @@ let itemRenderer =
       ~backgroundColor,
       {data, status, id}: itemContent,
     ) => {
-  open Revery;
-
   let isOpen =
     switch (status) {
     | Open => true
