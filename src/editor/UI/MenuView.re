@@ -35,12 +35,6 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let getIcon = icon =>
-  switch (icon) {
-  | Some(i) => i
-  | None => ""
-  };
-
 let handleChange = (event: Input.changeEvent) =>
   GlobalContext.current().dispatch(MenuSearch(event.value));
 
@@ -119,7 +113,7 @@ let createElement =
                     theme
                     style=menuItemStyle
                     label={getLabel(cmd)}
-                    icon={getIcon(cmd.icon)}
+                    icon={cmd.icon}
                     onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
                   />;

@@ -74,7 +74,7 @@ and menuCommand = {
   category: option(string),
   name: string,
   command: unit => t,
-  icon: option(string),
+  icon: option(IconTheme.IconDefinition.t),
 }
 and menuSetItems = list(menuCommand) => unit
 and menuCreationFunction = menuSetItems => unit
