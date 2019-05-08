@@ -67,13 +67,21 @@ let createElement =
           ~target=style,
         )
       );
-	let { fontCharacter, fontColor } = IconTheme.IconDefinition.(icon);
+
+	let iconView = switch(icon) {
+	| Some(v) => 
+		  open IconTheme.IconDefinition;
+          <Text style=iconStyles(v.fontColor) text={FontIcon.codeToIcon(v.fontCharacter)} />
+	| None => 
+          <Text style=iconStyles(Colors.transparentWhite) text={""} />
+	};
+
     (
       hooks,
       <Clickable onClick>
         <View
           onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
-          <Text style=iconStyles(fontColor) text={fontCharacter} />
+		  iconView
           <Text style=labelStyles text=label />
         </View>
       </Clickable>,
