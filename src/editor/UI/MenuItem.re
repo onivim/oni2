@@ -25,7 +25,7 @@ let iconStyles = fgColor =>
     fontFamily("seti.ttf"),
     fontSize(menuItemFontSize),
     marginRight(10),
-	color(fgColor),
+    color(fgColor),
   ];
 
 let noop = () => ();
@@ -68,20 +68,24 @@ let createElement =
         )
       );
 
-	let iconView = switch(icon) {
-	| Some(v) => 
-		  open IconTheme.IconDefinition;
-          <Text style=iconStyles(v.fontColor) text={FontIcon.codeToIcon(v.fontCharacter)} />
-	| None => 
-          <Text style=iconStyles(Colors.transparentWhite) text={""} />
-	};
+    let iconView =
+      switch (icon) {
+      | Some(v) =>
+        IconTheme.IconDefinition.(
+          <Text
+            style={iconStyles(v.fontColor)}
+            text={FontIcon.codeToIcon(v.fontCharacter)}
+          />
+        )
+      | None => <Text style={iconStyles(Colors.transparentWhite)} text="" />
+      };
 
     (
       hooks,
       <Clickable onClick>
         <View
           onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
-		  iconView
+          iconView
           <Text style=labelStyles text=label />
         </View>
       </Clickable>,
