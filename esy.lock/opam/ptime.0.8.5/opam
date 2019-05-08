@@ -1,28 +1,29 @@
 opam-version: "2.0"
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
 authors: ["The ptime programmers"]
-homepage: "http://erratique.ch/software/ptime"
-doc: "http://erratique.ch/software/ptime/doc"
+homepage: "https://erratique.ch/software/ptime"
+doc: "https://erratique.ch/software/ptime/doc"
 dev-repo: "git+http://erratique.ch/repos/ptime.git"
 bug-reports: "https://github.com/dbuenzli/ptime/issues"
 tags: [ "time" "posix" "system" "org:erratique" ]
 license: "ISC"
 depends: [
-  "ocaml" {>= "4.01.0"}
-  "ocamlfind" {build}
-  "ocamlbuild" {build}
-  "topkg" {build}
-  "result"
+ "ocaml" {>= "4.01.0"}
+ "ocamlfind" {build}
+ "ocamlbuild" {build}
+ "topkg" {build}
+ "result"
 ]
 depopts: [ "js_of_ocaml" ]
-conflicts: [
-  "js_of_ocaml" {>= "3.4.0"} ]
+conflicts: [ "js_of_ocaml" { < "3.3.0" } ]
 build:[[
    "ocaml" "pkg/pkg.ml" "build"
    "--pinned" "%{pinned}%"
    "--with-js_of_ocaml" "%{js_of_ocaml:installed}%" ]]
-synopsis: "POSIX time for OCaml"
-description: """
+
+synopsis: """POSIX time for OCaml"""
+description: """\
+
 Ptime has platform independent POSIX time support in pure OCaml. It
 provides a type to represent a well-defined range of POSIX timestamps
 with picosecond precision, conversion with date-time values,
@@ -40,8 +41,9 @@ support depends on [js_of_ocaml][jsoo]. Ptime and its libraries are
 distributed under the ISC license.
 
 [rfc3339]: http://tools.ietf.org/html/rfc3339
-[jsoo]: http://ocsigen.org/js_of_ocaml/"""
+[jsoo]: http://ocsigen.org/js_of_ocaml/
+"""
 url {
-  src: "http://erratique.ch/software/ptime/releases/ptime-0.8.4.tbz"
-  checksum: "md5=12fb5e8c3eb1d2e6075ac31ce93f7dd6"
+archive: "https://erratique.ch/software/ptime/releases/ptime-0.8.5.tbz"
+checksum: "4d48055d623ecf2db792439b3e96a520"
 }
