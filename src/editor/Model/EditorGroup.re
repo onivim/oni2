@@ -96,6 +96,13 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
+let isActiveEditor = (state, editorId) => {
+  switch (state.activeEditorId) {
+  | None => false
+  | Some(v) => v == editorId
+  };
+};
+
 let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
