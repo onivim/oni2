@@ -21,7 +21,7 @@
     "@esy-ocaml/reason": "3.4.0",
     "isolinear": "*",
     "@opam/ocamlbuild": "*",
-    "revery": "0.18.0",
+    "revery": "0.19.0",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
