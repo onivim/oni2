@@ -8,6 +8,7 @@
         Oni_Core_Test
         Oni_Extensions_Test
         Oni_Model_Test
+        Oni_Store_Test
             ))
 
 (executable
@@ -32,6 +33,16 @@
             ))
 
 (executable
+    (name OniUnitTestRunnerStore)
+    (public_name OniUnitTestRunnerStore)
+    (modules OniUnitTestRunnerStore)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Oni_Store_Test
+            ))
+
+(executable
     (name OniUnitTestRunnerCI)
     (public_name OniUnitTestRunnerCI)
     (modules OniUnitTestRunnerCI)
@@ -41,4 +52,5 @@
         Oni_Core_Test
         Oni_Extensions_Test
         Oni_Model_Test
+        Oni_Store_Test
             ))

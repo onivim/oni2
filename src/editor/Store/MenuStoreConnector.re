@@ -12,9 +12,7 @@ module Extensions = Oni_Extensions;
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let position =
-      (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
-    let nextIndex = selectedItem + change;
+  let position = (nextIndex, commands: list(Model.Actions.menuCommand)) => {
     nextIndex >= List.length(commands)
       ? 0 : nextIndex < 0 ? List.length(commands) - 1 : nextIndex;
   };
@@ -39,7 +37,7 @@ let start = () => {
   let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
     switch (action) {
     | MenuPosition(index) => (
-        {...state, selectedItem: index},
+        {...state, selectedItem: position(index, state.commands)},
         Isolinear.Effect.none,
       )
     | MenuPreviousItem => (

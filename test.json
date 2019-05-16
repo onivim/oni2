@@ -4,7 +4,8 @@
     "run": "esy '@test' x OniUnitTestRunner",
     "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
-    "model": "esy '@test' x OniUnitTestRunnerModel"
+    "model": "esy '@test' x OniUnitTestRunnerModel",
+    "store": "esy '@test' x OniUnitTestRunnerStore"
   },
   "override": {
       "build": ["dune build --root . -j4"],
