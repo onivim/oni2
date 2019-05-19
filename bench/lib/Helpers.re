@@ -11,6 +11,7 @@ let simpleState =
       Types.EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
     ),
   );
+
 let simpleState =
   Reducer.reduce(
     simpleState,
@@ -44,9 +45,35 @@ let thousandLineState =
     ),
   );
 
+/* Apply indents so we go into deeper and deeper indentation, before returning back. */
+let applyIndent = (line, lineNum, fileLen) =>
+  if (lineNum < fileLen / 2) {
+    String.make(lineNum, '\t') ++ line;
+  } else {
+    String.make(fileLen - lineNum, '\t') ++ line;
+  };
+
+let thousandLinesWithIndents =
+  List.mapi((i, l) => applyIndent(l, i, 1000), thousandLines);
+
+let thousandLineStateWithIndents =
+  Reducer.reduce(
+    simpleState,
+    Actions.BufferUpdate(
+      Types.BufferUpdate.createFromZeroBasedIndices(
+        ~startLine=0,
+        ~endLine=1,
+        ~lines=thousandLinesWithIndents,
+        ~version=1,
+        (),
+      ),
+    ),
+  );
+
 let hundredThousandLines =
   Array.make(100000, "This is a buffer with a hundred thousand lines!")
   |> Array.to_list;
+
 let hundredThousandLineState =
   Reducer.reduce(
     simpleState,
