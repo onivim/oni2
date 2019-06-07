@@ -25,7 +25,6 @@
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
-    "@opam/msgpck": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_let": "v0.11.0",
@@ -36,7 +35,8 @@
     "reason-jsonrpc": "1.0.1",
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
-    "reasonFuzz": "*"
+    "reasonFuzz": "*",
+    "reason-libvim": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
@@ -45,7 +45,8 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056"
+    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
+    "reason-libvim": "link:../reason-libvim"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

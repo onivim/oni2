@@ -15,7 +15,7 @@ build: [
   ["jbuilder" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 depends: [
-  "ocaml" {>= "4.02.0"}
+  "ocaml" {>= "4.02.0" & < "4.08.0"}
   "jbuilder" {build & >= "1.0+beta17"}
   "ocaml-migrate-parsetree" {>= "1.0.10" & < "1.3.0"}
 ]

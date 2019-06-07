@@ -9,8 +9,8 @@
         ppx_deriving_yojson.runtime
         Oni2.core
         Oni2.model
-        Oni2.neovim
         Oni2.extensions
         isolinear
+        libvim
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

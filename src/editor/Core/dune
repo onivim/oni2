@@ -6,7 +6,6 @@
         bigarray
         zed
         reglfw
-        msgpck
         lwt
         lwt.unix
         Rench
