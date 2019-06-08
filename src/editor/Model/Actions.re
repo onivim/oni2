@@ -11,9 +11,9 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferEnter(BufferMetadata.t)
+  | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferSaved(BufferMetadata.t)
+  | BufferSaved(Vim.BufferMetadata.t)
   | BufferMarkDirty(int)
   | Command(string)
   | ConfigurationReload

@@ -82,60 +82,6 @@ module Position = {
   };
 };
 
-[@deriving show({with_path: false})]
-type buftype =
-  | Empty
-  | Help
-  | NoFile
-  | QuickFix
-  | Terminal
-  | NoWrite
-  | ACWrite
-  | Unknown;
-
-let getBufType = bt =>
-  switch (bt) {
-  | "help" => Help
-  | "nofile" => NoFile
-  | "quickfix" => QuickFix
-  | "terminal" => Terminal
-  | "nowrite" => NoWrite
-  | "acwrite" => ACWrite
-  | "" => Empty
-  | _ => Unknown
-  };
-
-module BufferMetadata = {
-  [@deriving show({with_path: false})]
-  type t = {
-    filePath: option(string),
-    fileType: option(string),
-    modified: bool,
-    id: int,
-    version: int,
-  };
-
-  let create =
-      (
-        ~filePath=None,
-        ~fileType=None,
-        ~id=0,
-        ~version=0,
-        ~modified=false,
-        (),
-      ) => {
-    filePath,
-    fileType,
-    id,
-    version,
-    modified,
-  };
-
-  let markSaved = (bm: t) => {...bm, modified: false};
-
-  let markDirty = (bm: t) => {...bm, modified: true};
-};
-
 module BufferUpdate = {
   [@deriving show({with_path: false})]
   type t = {

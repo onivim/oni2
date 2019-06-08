@@ -30,7 +30,23 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
   });
 
+  let _ = Vim.AutoCommands.onDispatch((cmd, buf) => {
+    switch (cmd) {
+    | BufEnter => {
+        print_endline ("Dispatching buffer enter!");
+        let meta = Vim.BufferMetadata.ofBuffer(buf);
+        dispatch(Model.Actions.BufferEnter(meta));
+    }
+    | _ => ()
+    }
+  });
+
   Vim.init();
+
+  /* TODO: Move to init */
+  /* let metadata = Vim.Buffer.getCurrent() */
+  /* |> Vim.BufferMetadata.ofBuffer; */
+  /* dispatch(Model.Actions.BufferEnter(metadata)); */
 
   let currentBufferId: ref(option(int)) = ref(None);
   let currentEditorId: ref(option(int)) = ref(None);
