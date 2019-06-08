@@ -121,9 +121,7 @@ module BufferMetadata = {
   type t = {
     filePath: option(string),
     fileType: option(string),
-    bufType: buftype,
     modified: bool,
-    hidden: bool,
     id: int,
     version: int,
   };
@@ -132,18 +130,14 @@ module BufferMetadata = {
       (
         ~filePath=None,
         ~fileType=None,
-        ~bufType=Empty,
         ~id=0,
-        ~hidden=false,
         ~version=0,
         ~modified=false,
         (),
       ) => {
     filePath,
     fileType,
-    bufType,
     id,
-    hidden,
     version,
     modified,
   };

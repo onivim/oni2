@@ -25,14 +25,15 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let currentEditorId: ref(option(int)) = ref(None);
 
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", () =>
+    Isolinear.Effect.create(~name="vim.input", () => {
+      print_endline ("Sending key: " ++ key);
       Vim.input(key)
-    );
+    });
 
   let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
-      vimProtocol.openFile(~path=filePath, ())
-    );
+    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      Vim.Buffer.openFile(filePath) |> ignore;
+    });
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
@@ -62,20 +63,29 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       | (Some(editorBuffer), Some(v)) =>
         let id = Model.Buffer.getId(editorBuffer);
         if (id != v) {
-          vimProtocol.openFile(~id, ());
+		  let buf = Vim.Buffer.getById(id)
+        switch (buf) {
+        | None => ()
+        | Some(v) => Vim.Buffer.setCurrent(v);
+        };
         };
       | (Some(editorBuffer), _) =>
         let id = Model.Buffer.getId(editorBuffer);
-        vimProtocol.openFile(~id, ());
+		  let buf = Vim.Buffer.getById(id)
+        switch (buf) {
+        | None => ()
+        | Some(v) => Vim.Buffer.setCurrent(v);
+        };
       | _ => ()
       };
 
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
         open Core.Types;
-        vimProtocol.moveCursor(
-          ~column=Index.toOneBasedInt(editor.cursorPosition.character),
-          ~line=Index.toOneBasedInt(editor.cursorPosition.line),
-        );
+        /* TODO */
+        /* vimProtocol.moveCursor( */
+        /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
+        /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
+        /* ); */
         currentEditorId := Some(editor.id);
       };
 
@@ -88,14 +98,14 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.Init =>
-      let filesToOpen = cli.filesToOpen;
-      let openFileEffects = filesToOpen |> List.map(openFileByPathEffect);
+    /* | Model.Actions.Init => */
+    /*   let filesToOpen = cli.filesToOpen; */
+    /*   let openFileEffects = filesToOpen |> List.map(openFileByPathEffect); */
 
-      let allEffects =
-        [registerQuitHandlerEffect, ...openFileEffects]
-        |> Isolinear.Effect.batch;
-      (state, allEffects);
+    /*   let allEffects = */
+    /*     [registerQuitHandlerEffect, ...openFileEffects] */
+    /*     |> Isolinear.Effect.batch; */
+    /*   (state, allEffects); */
     | Model.Actions.OpenFileByPath(path) => (
         state,
         openFileByPathEffect(path),
@@ -114,11 +124,15 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         synchronizeEditorEffect(state),
       )
-    | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect)
+    /* | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect) */
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
     };
   };
+
+  let _ = Vim.Mode.onChanged((newMode) => {
+		print_endline("MODE CHANGED!");
+  });
 
   /* let _ = */
   /*   Event.subscribe( */
