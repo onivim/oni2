@@ -131,7 +131,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   };
 
   let _ = Vim.Mode.onChanged((newMode) => {
-		print_endline("MODE CHANGED!");
+    print_endline("Mode changed!");
+    dispatch(Model.Actions.ChangeMode(newMode));
   });
 
   /* let _ = */
