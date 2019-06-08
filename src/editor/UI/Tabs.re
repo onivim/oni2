@@ -42,7 +42,7 @@ let createElement =
       ~children as _,
       ~theme,
       ~tabs: list(tabInfo),
-      ~mode: Types.Mode.t,
+      ~mode: Vim.Mode.t,
       ~uiFont,
       (),
     ) =>

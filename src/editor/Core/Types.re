@@ -34,22 +34,6 @@ module Cursor = {
   type move = (~column: int, ~line: int) => unit;
 };
 
-module Mode = {
-  /**
-     hide path for this printer as the value is shown
-     to the end user
-   */
-  [@deriving show({with_path: false})]
-  type t =
-    | Insert
-    | Normal
-    | Replace
-    | Visual
-    | Operator
-    | Commandline
-    | Other;
-};
-
 /**
    This type module represents the various "views" of vim
    each of which can be interacted in their own ways

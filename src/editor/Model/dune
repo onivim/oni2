@@ -6,6 +6,7 @@
         bigarray
         zed
         reglfw
+        libvim
         lwt
         lwt.unix
         Rench
