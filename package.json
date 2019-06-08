@@ -46,7 +46,8 @@
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
-    "reason-libvim": "link:../reason-libvim"
+    "reason-libvim": "link:../reason-libvim",
+    "libvim": "link:../libvim1/src"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
