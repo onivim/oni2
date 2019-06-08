@@ -19,27 +19,33 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let _ = Vim.Mode.onChanged((newMode) => {
-    print_endline("Mode changed!");
-    dispatch(Model.Actions.ChangeMode(newMode));
-  });
+  let _ =
+    Vim.Mode.onChanged(newMode => {
+      print_endline("Mode changed!");
+      dispatch(Model.Actions.ChangeMode(newMode));
+    });
 
-  let _ = Vim.Cursor.onCursorMoved((newPosition) => {
-    let cursorPos = Core.Types.Position.createFromOneBasedIndices(newPosition.line, newPosition.column);
-    dispatch(Model.Actions.CursorMove(cursorPos));
-    /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
-  });
+  let _ =
+    Vim.Cursor.onCursorMoved(newPosition => {
+      let cursorPos =
+        Core.Types.Position.createFromOneBasedIndices(
+          newPosition.line,
+          newPosition.column,
+        );
+      dispatch(Model.Actions.CursorMove(cursorPos));
+      /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
+    });
 
-  let _ = Vim.AutoCommands.onDispatch((cmd, buf) => {
-    switch (cmd) {
-    | BufEnter => {
-        print_endline ("Dispatching buffer enter!");
+  let _ =
+    Vim.AutoCommands.onDispatch((cmd, buf) =>
+      switch (cmd) {
+      | BufEnter =>
+        print_endline("Dispatching buffer enter!");
         let meta = Vim.BufferMetadata.ofBuffer(buf);
         dispatch(Model.Actions.BufferEnter(meta));
-    }
-    | _ => ()
-    }
-  });
+      | _ => ()
+      }
+    );
 
   Vim.init();
 
@@ -52,17 +58,17 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let currentEditorId: ref(option(int)) = ref(None);
 
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", () => {
+    Isolinear.Effect.create(~name="vim.input", () =>
       if (!String.equal(key, "<S-SHIFT>") && !String.equal(key, "<C->")) {
-      print_endline ("Sending key: " ++ key);
-      Vim.input(key)
+        print_endline("Sending key: " ++ key);
+        Vim.input(key);
       }
-    });
+    );
 
   let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      Vim.Buffer.openFile(filePath) |> ignore;
-    });
+    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
+      Vim.Buffer.openFile(filePath) |> ignore
+    );
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
@@ -92,30 +98,30 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       | (Some(editorBuffer), Some(v)) =>
         let id = Model.Buffer.getId(editorBuffer);
         if (id != v) {
-		  let buf = Vim.Buffer.getById(id)
-        switch (buf) {
-        | None => ()
-        | Some(v) => Vim.Buffer.setCurrent(v);
-        };
+          let buf = Vim.Buffer.getById(id);
+          switch (buf) {
+          | None => ()
+          | Some(v) => Vim.Buffer.setCurrent(v)
+          };
         };
       | (Some(editorBuffer), _) =>
         let id = Model.Buffer.getId(editorBuffer);
-		  let buf = Vim.Buffer.getById(id)
+        let buf = Vim.Buffer.getById(id);
         switch (buf) {
         | None => ()
-        | Some(v) => Vim.Buffer.setCurrent(v);
+        | Some(v) => Vim.Buffer.setCurrent(v)
         };
       | _ => ()
       };
 
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-        open Core.Types;
-        /* TODO */
-        /* vimProtocol.moveCursor( */
-        /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-        /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-        /* ); */
-        currentEditorId := Some(editor.id);
+        Core.Types.
+          /* TODO */
+          /* vimProtocol.moveCursor( */
+          /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
+          /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
+          /* ); */
+          (currentEditorId := Some(editor.id));
       };
 
       switch (editor, currentEditorId^) {
