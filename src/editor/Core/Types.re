@@ -75,6 +75,11 @@ module Position = {
     line: ZeroBasedIndex(line),
     character: ZeroBasedIndex(character),
   };
+
+  let createFromOneBasedIndices = (line: int, character: int) => {
+    line: OneBasedIndex(line),
+    character: OneBasedIndex(character),
+  };
 };
 
 [@deriving show({with_path: false})]

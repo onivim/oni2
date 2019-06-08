@@ -24,6 +24,12 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     dispatch(Model.Actions.ChangeMode(newMode));
   });
 
+  let _ = Vim.Cursor.onCursorMoved((newPosition) => {
+    let cursorPos = Core.Types.Position.createFromOneBasedIndices(newPosition.line, newPosition.column);
+    dispatch(Model.Actions.CursorMove(cursorPos));
+    /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
+  });
+
   Vim.init();
 
   let currentBufferId: ref(option(int)) = ref(None);
