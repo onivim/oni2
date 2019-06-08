@@ -26,8 +26,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () => {
+      if (!String.equal(key, "<S-SHIFT>") && !String.equal(key, "<C->")) {
       print_endline ("Sending key: " ++ key);
       Vim.input(key)
+      }
     });
 
   let openFileByPathEffect = filePath =>
