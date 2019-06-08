@@ -17,9 +17,14 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let initVimPath = Path.join(executingDirectory, "init.vim");
   Core.Log.debug("initVimPath: " ++ initVimPath);
 
-  Vim.init();
-
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let _ = Vim.Mode.onChanged((newMode) => {
+    print_endline("Mode changed!");
+    dispatch(Model.Actions.ChangeMode(newMode));
+  });
+
+  Vim.init();
 
   let currentBufferId: ref(option(int)) = ref(None);
   let currentEditorId: ref(option(int)) = ref(None);
@@ -131,11 +136,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     | _ => (state, Isolinear.Effect.none)
     };
   };
-
-  let _ = Vim.Mode.onChanged((newMode) => {
-    print_endline("Mode changed!");
-    dispatch(Model.Actions.ChangeMode(newMode));
-  });
 
   /* let _ = */
   /*   Event.subscribe( */

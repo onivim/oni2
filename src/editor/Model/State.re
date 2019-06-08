@@ -33,7 +33,7 @@ let create: unit => t =
   () => {
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
-    mode: Insert,
+    mode: Normal,
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
