@@ -105,9 +105,9 @@ let createElement =
                 rowHeight=40
                 height={menuHeight - 50}
                 width=menuWidth
-                count={List.length(menu.commands)}
+                count={List.length(menu.filteredCommands)}
                 render={index => {
-                  let cmd = List.nth(menu.commands, index);
+                  let cmd = List.nth(menu.filteredCommands, index);
                   <MenuItem
                     onClick
                     theme
