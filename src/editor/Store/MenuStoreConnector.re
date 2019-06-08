@@ -67,17 +67,11 @@ let start = () => {
         {...state, isOpen: true, commands: []},
         menuOpenEffect(menuConstructor),
       )
-    | MenuUpdate(update) => {
-		let commands = List.append(state.commands, update);
-		let filteredCommands = Model.Filter.menu(state.searchQuery, commands);
+    | MenuUpdate(update) =>
+      let commands = List.append(state.commands, update);
+      let filteredCommands = Model.Filter.menu(state.searchQuery, commands);
 
-		(
-        {...state, 
-				commands,
-				filteredCommands},
-        Isolinear.Effect.none,
-      )
-						}
+      ({...state, commands, filteredCommands}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
         {...state, dispose},
         Isolinear.Effect.none,
