@@ -68,7 +68,7 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 };
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
-  let updateLines = Array.of_list(update.lines);
+  let updateLines = update.lines;
   let startLine = update.startLine |> Index.toZeroBasedInt;
   let endLine = update.endLine |> Index.toZeroBasedInt;
   if (Array.length(lines) == 0) {
@@ -86,7 +86,7 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
         (),
       );
 
-    let lines = Array.of_list(update.lines);
+    let lines = update.lines;
 
     Array.concat([prev, lines, post]);
   };
@@ -105,7 +105,7 @@ let update = (buf: t, update: BufferUpdate.t) =>
         ...buf.metadata,
         version,
       },
-      lines: Array.of_list(update.lines),
+      lines: update.lines,
     }
   | {version, _} when version > buf.metadata.version =>
     let metadata = {...buf.metadata, version: update.version};

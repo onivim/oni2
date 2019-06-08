@@ -88,7 +88,7 @@ module BufferUpdate = {
     id: int,
     startLine: Index.t,
     endLine: Index.t,
-    lines: list(string),
+    lines: array(string),
     version: int,
   };
 
@@ -99,7 +99,7 @@ module BufferUpdate = {
     id: int,
     startLine: int,
     endLine: int,
-    lines: list(string),
+    lines: array(string),
     version: int,
   };
 
@@ -115,13 +115,15 @@ module BufferUpdate = {
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
+    let ret: t = {
     id,
     startLine,
     endLine,
     lines,
     version,
+};
+    ret;
   };
-
   let createFromZeroBasedIndices =
       (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
     let ret: t = {

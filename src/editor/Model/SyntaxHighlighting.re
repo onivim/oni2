@@ -170,7 +170,7 @@ let reduce: (t, Actions.t) => t =
                     v,
                     startLine,
                     endLine,
-                    List.length(bu.lines) - (endLine - startLine),
+                    Array.length(bu.lines) - (endLine - startLine),
                   ),
                 );
               },

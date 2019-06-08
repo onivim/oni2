@@ -30,11 +30,17 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
           newPosition.line,
-          newPosition.column,
+          newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
       /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
     });
+
+  /* let _ = */
+  /*   Vim.Buffer.onEnter((buf) => { */
+  /*       let meta = Vim.BufferMetadata.ofBuffer(buf); */
+  /*       dispatch(Model.Actions.BufferEnter(meta)); */
+  /*   }); */
 
   let _ =
     Vim.AutoCommands.onDispatch((cmd, buf) =>
@@ -47,7 +53,26 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       }
     );
 
-  Vim.init();
+  let _ =
+    Vim.Buffer.onUpdate(update => {
+        open Vim.BufferUpdate;
+        open Core.Types;
+        let bu = Core.Types.BufferUpdate.create(
+            ~id=update.id,
+            ~startLine=Index.OneBasedIndex(update.startLine),
+            ~endLine=Index.OneBasedIndex(update.endLine),
+            ~lines=update.lines,
+            ~version=update.version,
+            ()
+        );
+
+        dispatch(Model.Actions.BufferUpdate(bu));
+    })
+
+
+  let initEffect = Isolinear.Effect.create(~name="vim.init", () => {
+      Vim.init();
+    });
 
   /* TODO: Move to init */
   /* let metadata = Vim.Buffer.getCurrent() */
@@ -133,14 +158,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    /* | Model.Actions.Init => */
-    /*   let filesToOpen = cli.filesToOpen; */
-    /*   let openFileEffects = filesToOpen |> List.map(openFileByPathEffect); */
-
-    /*   let allEffects = */
-    /*     [registerQuitHandlerEffect, ...openFileEffects] */
-    /*     |> Isolinear.Effect.batch; */
-    /*   (state, allEffects); */
+    | Model.Actions.Init => (state, initEffect);
     | Model.Actions.OpenFileByPath(path) => (
         state,
         openFileByPathEffect(path),

@@ -18,10 +18,12 @@ module Store = Oni_Store;
 /**
    This allows a stack trace to be printed when exceptions occur
  */
-switch (Sys.getenv_opt("ONI2_DEBUG")) {
-| Some(_) => Printexc.record_backtrace(true) |> ignore
-| None => ()
-};
+/* switch (Sys.getenv_opt("ONI2_DEBUG")) { */
+/* | Some(_) => Printexc.record_backtrace(true) |> ignore */
+/* | None => () */
+/* }; */
+
+Printexc.record_backtrace(true);
 
 /* The 'main' function for our app */
 let init = app => {
