@@ -5,7 +5,6 @@ open Actions;
 
 let lastId = ref(0);
 
-[@deriving show]
 type t = {
   id: int,
   bufferId: int,

@@ -34,13 +34,18 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
 
-      /* If we are in visual mode, get the current visual range, too */
-
-      /* if (Vim.Mode.getCurrent() == Visual) { */
-        
-      /* } */
-
       /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
+    });
+
+  let _ =
+    Vim.Visual.onRangeChanged(range => {
+        open Vim.Range;
+
+        let { startPos, endPos } = range;
+        let mode = Vim.Visual.getType(); 
+        let vr = Core.VisualRange.create(~startLine=startPos.line, ~startColumn=startPos.column, ~endLine=endPos.line, ~endColumn=endPos.column, ~mode, ());
+        dispatch(SelectionChanged(vr));
+        /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
     });
 
   /* let _ = */
