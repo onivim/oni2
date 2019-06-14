@@ -169,14 +169,11 @@ type wildmenu = {
   selected: int,
 };
 
-[@deriving show({with_path: false})]
+/* [@deriving show({with_path: false})] */
 type commandline = {
-  content: string,
-  firstC: string,
+  text: string,
+  cmdType: Vim.Types.cmdlineType,
   position: int,
-  level: int,
-  indent: int,
-  prompt: string,
   show: bool,
 };
 

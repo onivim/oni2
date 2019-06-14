@@ -67,7 +67,24 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         );
 
         dispatch(Model.Actions.BufferUpdate(bu));
-    })
+    });
+
+  let _ =
+      Vim.CommandLine.onEnter((c) => {
+        dispatch(Model.Actions.CommandlineShow(c.cmdType));
+      });
+
+  let _ =
+      Vim.CommandLine.onUpdate((c) => {
+        dispatch(Model.Actions.CommandlineUpdate(c));
+      });
+
+  let _ =
+      Vim.CommandLine.onLeave(() => {
+        dispatch(Model.Actions.CommandlineHide);
+      });
+
+
 
 
   let initEffect = Isolinear.Effect.create(~name="vim.init", () => {

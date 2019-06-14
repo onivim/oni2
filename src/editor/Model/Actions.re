@@ -24,9 +24,9 @@ type t =
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(commandline)
-  | CommandlineHide(commandline)
-  | CommandlineUpdate((int, int))
+  | CommandlineShow(Vim.Types.cmdlineType)
+  | CommandlineHide
+  | CommandlineUpdate(Vim.Types.cmdline)
   | KeyboardInput(string)
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
