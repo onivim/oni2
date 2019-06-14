@@ -26,7 +26,7 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     });
 
   let _ =
-    Vim.Cursor.onCursorMoved(newPosition => {
+    Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
           newPosition.line,
