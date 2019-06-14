@@ -52,8 +52,8 @@ let start =
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
-  let (neovimUpdater, neovimStream) =
-    NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
+  let (vimUpdater, vimStream) =
+    VimStoreConnector.start(executingDirectory, setup, cliOptions);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -81,7 +81,7 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
-          neovimUpdater,
+          vimUpdater,
           textmateUpdater,
           extHostUpdater,
           menuHostUpdater,
@@ -118,7 +118,7 @@ let start =
     };
   };
 
-  Isolinear.Stream.connect(dispatch, neovimStream);
+  Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
