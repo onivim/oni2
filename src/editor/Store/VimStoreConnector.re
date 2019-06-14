@@ -33,6 +33,13 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
+
+      /* If we are in visual mode, get the current visual range, too */
+
+      /* if (Vim.Mode.getCurrent() == Visual) { */
+        
+      /* } */
+
       /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
     });
 
@@ -65,6 +72,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
             ~version=update.version,
             ()
         );
+
+        print_endline ("Buffer update: " ++ Core.Types.BufferUpdate.show(bu));
 
         dispatch(Model.Actions.BufferUpdate(bu));
     });
