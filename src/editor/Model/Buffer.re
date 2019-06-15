@@ -12,7 +12,7 @@ type t = {
   lines: array(string),
 };
 
-let show = (v: t) => "TODO";
+let show = (_) => "TODO";
 
 let ofLines = (lines: array(string)) => {
   metadata: Vim.BufferMetadata.create(),

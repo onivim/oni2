@@ -43,6 +43,11 @@ let start =
       ~onStateChanged,
       (),
     ) => {
+
+  /* TODO: Bring cliOptions back */
+  ignore(executingDirectory);
+  ignore(cliOptions);
+
   let state = Model.State.create();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
@@ -53,7 +58,7 @@ let start =
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(executingDirectory, setup, cliOptions);
+    VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

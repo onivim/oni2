@@ -6,17 +6,11 @@
  * - Translates Actions into Effects that should run against vim
  */
 
-open Rench;
-open Revery;
-
 module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
-let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
-  let initVimPath = Path.join(executingDirectory, "init.vim");
-  Core.Log.debug("initVimPath: " ++ initVimPath);
-
+let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -171,13 +165,12 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
       };
 
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-        Core.Types.
           /* TODO */
           /* vimProtocol.moveCursor( */
           /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
           /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
           /* ); */
-          (currentEditorId := Some(editor.id));
+          currentEditorId := Some(editor.id);
       };
 
       switch (editor, currentEditorId^) {
@@ -194,11 +187,6 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         openFileByPathEffect(path),
       )
-    /* | Model.Actions.CursorMove(_) => ( */
-    /*     state, */
-    /*     state.mode === Core.Types.Mode.Visual */
-    /*       ? requestVisualRangeUpdateEffect : Isolinear.Effect.none, */
-    /*   ) */
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
@@ -208,80 +196,10 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         state,
         synchronizeEditorEffect(state),
       )
-    /* | Model.Actions.ChangeMode(_) => (state, requestVisualRangeUpdateEffect) */
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
     | _ => (state, Isolinear.Effect.none)
     };
   };
-
-  /* let _ = */
-  /*   Event.subscribe( */
-  /*     vimProtocol.onNotification, */
-  /*     n => { */
-  /*       open Model.Actions; */
-  /*       let msg = */
-  /*         switch (n) { */
-  /*         | OniCommand("oni.editorView.scrollToCursor") => */
-  /*           EditorScrollToCursorCentered */
-  /*         | OniCommand("oni.editorView.scrollToCursorTop") => */
-  /*           EditorScrollToCursorTop */
-  /*         | OniCommand("oni.editorView.scrollToCursorBottom") => */
-  /*           EditorScrollToCursorBottom */
-  /*         | OniCommand("oni.editorView.moveCursorToTop") => */
-  /*           EditorMoveCursorToTop(vimProtocol.moveCursor) */
-  /*         | OniCommand("oni.editorView.moveCursorToMiddle") => */
-  /*           EditorMoveCursorToMiddle(vimProtocol.moveCursor) */
-  /*         | OniCommand("oni.editorView.moveCursorToBottom") => */
-  /*           EditorMoveCursreason-orToBottom(vimProtocol.moveCursor) */
-  /*         | ModeChanged("normal") => ChangeMode(Normal) */
-  /*         | ModeChanged("insert") => ChangeMode(Insert) */
-  /*         | ModeChanged("replace") => ChangeMode(Replace) */
-  /*         | ModeChanged("visual") => ChangeMode(Visual) */
-  /*         | ModeChanged("operator") => ChangeMode(Operator) */
-  /*         | ModeChanged("cmdline_normal") => ChangeMode(Commandline) */
-  /*         | ModeChanged(_) => ChangeMode(Other) */
-  /*         | VisualRangeUpdate(vr) => SelectionChanged(vr) */
-  /*         | CursorMoved(c) => */
-  /*           CursorMove( */
-  /*             Core.Types.Position.create(c.cursorLine, c.cursorColumn), */
-  /*           ) */
-  /*         /1* | BufferWritePost({activeBufferId, _}) => *1/ */
-  /*         /1*   let context = vimBuffer.getContext(nvimApi, activeBufferId); *1/ */
-  /*         /1*   BufferSaved(context); *1/ */
-  /*         | TextChanged({activeBufferId, _}) */
-  /*         | TextChangedI({activeBufferId, _}) => */
-  /*           BufferMarkDirty(activeBufferId) */
-  /*         | BufferEnter({activeBufferId, _}) => */
-  /*           /1* vimProtocol.bufAttach(activeBufferId); *1/ */
-
-  /*           let context = vimBuffer.getContext(nvimApi, activeBufferId); */
-  /*           currentBufferId := Some(activeBufferId); */
-  /*           BufferEnter(context); */
-
-  /*         | BufferDelete(_) => Noop */
-  /*         | BufferLines(bc) => */
-  /*           BufferUpdate( */
-  /*             Core.Types.BufferUpdate.createFromZeroBasedIndices( */
-  /*               ~id=bc.id, */
-  /*               ~startLine=bc.firstLine, */
-  /*               ~endLine=bc.lastLine, */
-  /*               ~lines=bc.lines, */
-  /*               ~version=bc.changedTick, */
-  /*               (), */
-  /*             ), */
-  /*           ) */
-  /*         | WildmenuShow(w) => WildmenuShow(w) */
-  /*         | WildmenuHide(w) => WildmenuHide(w) */
-  /*         | WildmenuSelected(s) => WildmenuSelected(s) */
-  /*         | CommandlineUpdate(u) => CommandlineUpdate(u) */
-  /*         | CommandlineShow(c) => CommandlineShow(c) */
-  /*         | CommandlineHide(c) => CommandlineHide(c) */
-  /*         | _ => Noop */
-  /*         }; */
-
-  /*       dispatch(msg); */
-  /*     }, */
-  /*   ); */
 
   (updater, stream);
 };

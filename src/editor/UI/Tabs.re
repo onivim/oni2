@@ -7,8 +7,6 @@
 open Revery.UI;
 open Rench;
 
-open Oni_Core;
-
 let noop = () => ();
 
 type tabInfo = {
