@@ -1,5 +1,5 @@
 {
-  "checksum": "9dd5c94dcd0a893d528f1b8b39cfae62",
+  "checksum": "12ce2f626b2e0526383724762bdf540e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -158,18 +158,23 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@link:../reason-libvim": {
-      "id": "reason-libvim@link:../reason-libvim",
+    "reason-libvim@8.10869.6001@d41d8cd9": {
+      "id": "reason-libvim@8.10869.6001@d41d8cd9",
       "name": "reason-libvim",
-      "version": "link:../reason-libvim",
-      "source": { "type": "link", "path": "../reason-libvim" },
+      "version": "8.10869.6001",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.6001.tgz#sha1:f1ad97bd0902db0c05f36e908c3d6459152a6fd2"
+        ]
+      },
       "overrides": [],
       "dependencies": [
         "refmterr@3.1.10@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@link:../libvim1/src", "@opam/dune@opam:1.7.3@72aad784",
+        "libvim@8.10869.6@d41d8cd9", "@opam/dune@opam:1.7.3@72aad784",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-jsonrpc@1.0.1@d41d8cd9": {
       "id": "reason-jsonrpc@1.0.1@d41d8cd9",
@@ -281,11 +286,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@link:../libvim1/src": {
-      "id": "libvim@link:../libvim1/src",
+    "libvim@8.10869.6@d41d8cd9": {
+      "id": "libvim@8.10869.6@d41d8cd9",
       "name": "libvim",
-      "version": "link:../libvim1/src",
-      "source": { "type": "link", "path": "../libvim1/src" },
+      "version": "8.10869.6",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.6.tgz#sha1:c5e6768345c290cc558fcdaa395c397a9d046a02"
+        ]
+      },
       "overrides": [],
       "dependencies": [],
       "devDependencies": []
@@ -438,7 +448,7 @@
       "dependencies": [
         "revery@0.20.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@link:../reason-libvim",
+        "reason-libvim@8.10869.6001@d41d8cd9",
         "reason-jsonrpc@1.0.1@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
