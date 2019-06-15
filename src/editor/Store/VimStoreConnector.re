@@ -38,12 +38,15 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
     });
 
   let _ =
-    Vim.Visual.onRangeChanged(range => {
+    Vim.Visual.onRangeChanged(vr => {
         open Vim.Range;
+        open Vim.VisualRange;
 
+        let { visualType, range } = vr;
         let { startPos, endPos } = range;
-        let mode = Vim.Visual.getType(); 
-        let vr = Core.VisualRange.create(~startLine=startPos.line, ~startColumn=startPos.column, ~endLine=endPos.line, ~endColumn=endPos.column, ~mode, ());
+        let startColumn = startPos.column + 1;
+        let endColumn = endPos.column + 1;
+        let vr = Core.VisualRange.create(~startLine=startPos.line, ~startColumn, ~endLine=endPos.line, ~endColumn, ~mode=visualType, ());
         dispatch(SelectionChanged(vr));
         /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
     });
