@@ -51,22 +51,18 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
         /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
     });
 
-  /* let _ = */
-  /*   Vim.Buffer.onEnter((buf) => { */
-  /*       let meta = Vim.BufferMetadata.ofBuffer(buf); */
-  /*       dispatch(Model.Actions.BufferEnter(meta)); */
-  /*   }); */
-
   let _ =
-    Vim.AutoCommands.onDispatch((cmd, buf) =>
-      switch (cmd) {
-      | BufEnter =>
-        print_endline("Dispatching buffer enter!");
-        let meta = Vim.BufferMetadata.ofBuffer(buf);
+      Vim.Buffer.onEnter(buf => {
+        let meta = {
+            ...Vim.BufferMetadata.ofBuffer(buf),
+            /*
+                Set version to 0 so that a buffer update is processed.
+                If not - we'd ignore the first buffer update that came through!
+            */
+            version: 0, 
+        };
         dispatch(Model.Actions.BufferEnter(meta));
-      | _ => ()
-      }
-    );
+      });
 
   let _ =
     Vim.Buffer.onUpdate(update => {
@@ -118,7 +114,8 @@ let start = (executingDirectory, setup: Core.Setup.t, cli: Core.Cli.t) => {
 
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (!String.equal(key, "<S-SHIFT>") && !String.equal(key, "<C->")) {
+      /* TODO: Fix these keypaths in libvim to not be blocking */
+      if (!String.equal(key, "<S-SHIFT>") && !String.equal(key, "<C->") && !String.equal(key, "<A-C->")) {
         print_endline("Sending key: " ++ key);
         Vim.input(key);
       }

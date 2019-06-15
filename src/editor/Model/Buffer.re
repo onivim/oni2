@@ -92,7 +92,7 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
+let update = (buf: t, update: BufferUpdate.t) => {
   switch (update) {
   /***
      When a buffer is first attached it emits an update with
@@ -112,6 +112,7 @@ let update = (buf: t, update: BufferUpdate.t) =>
     {metadata, lines: applyUpdate(buf.lines, update)};
   | _ => buf
   };
+};
 
 let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
   {...buf, metadata};
