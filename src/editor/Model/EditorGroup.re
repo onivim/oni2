@@ -164,12 +164,11 @@ let reduce = (v: t, action: Actions.t) => {
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
   | ViewCloseEditor(id) => removeEditorById(v, id)
-  | ViewSetActiveEditor(id) => {
-        switch (IntMap.find_opt(id, v.editors)) {
-        | None => v
-        | Some(_) => { ...v, activeEditorId: Some(id) }
-        }
-}
+  | ViewSetActiveEditor(id) =>
+    switch (IntMap.find_opt(id, v.editors)) {
+    | None => v
+    | Some(_) => {...v, activeEditorId: Some(id)}
+    }
   | _ => v
   };
 };
