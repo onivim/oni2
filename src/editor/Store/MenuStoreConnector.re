@@ -32,9 +32,6 @@ let start = () => {
       dispatch(action);
     });
 
-  let updateMenuCommands = (commands, state: Model.Menu.t) =>
-    List.append(state.commands, commands);
-
   let disposeMenuEffect = dispose =>
     Isolinear.Effect.create(~name="menu.dispose", dispose);
 
@@ -62,7 +59,7 @@ let start = () => {
         {
           ...state,
           searchQuery: query,
-          commands: Model.Filter.menu(query, state.commands),
+          filteredCommands: Model.Filter.menu(query, state.commands),
         },
         Isolinear.Effect.none,
       )
@@ -70,10 +67,11 @@ let start = () => {
         {...state, isOpen: true, commands: []},
         menuOpenEffect(menuConstructor),
       )
-    | MenuUpdate(update) => (
-        {...state, commands: updateMenuCommands(update, state)},
-        Isolinear.Effect.none,
-      )
+    | MenuUpdate(update) =>
+      let commands = List.append(state.commands, update);
+      let filteredCommands = Model.Filter.menu(state.searchQuery, commands);
+
+      ({...state, commands, filteredCommands}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
         {...state, dispose},
         Isolinear.Effect.none,
