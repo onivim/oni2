@@ -152,7 +152,7 @@ let init = app => {
       inputHandler(~state=currentState^, k) |> List.iter(dispatch)
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
-  }
+  };
 
   Event.subscribe(w.onKeyDown, keyEvent =>
     Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)

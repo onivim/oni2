@@ -127,4 +127,4 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };
-}
+};

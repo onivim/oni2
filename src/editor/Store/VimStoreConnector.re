@@ -14,9 +14,9 @@ let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
-    Vim.Mode.onChanged(newMode => {
-      dispatch(Model.Actions.ChangeMode(newMode));
-    });
+    Vim.Mode.onChanged(newMode =>
+      dispatch(Model.Actions.ChangeMode(newMode))
+    );
 
   let _ =
     Vim.Cursor.onMoved(newPosition => {
