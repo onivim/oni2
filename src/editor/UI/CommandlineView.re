@@ -23,11 +23,11 @@ let getStringParts = (index, str) =>
   };
 
 let getFirstC = (t: Vim.Types.cmdlineType) => {
-    switch (t) {
-    | SearchForward => "/" 
-    | SearchReverse => "?"
-    | _ => ":"
-    }
+  switch (t) {
+  | SearchForward => "/"
+  | SearchReverse => "?"
+  | _ => ":"
+  };
 };
 
 let createElement =
@@ -45,8 +45,7 @@ let createElement =
         textWrap(TextWrapping.WhitespaceWrap),
       ];
 
-    let (startStr, endStr) =
-      getStringParts(command.position, command.text);
+    let (startStr, endStr) = getStringParts(command.position, command.text);
     command.show
       ? (
         hooks,

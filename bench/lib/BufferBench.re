@@ -20,8 +20,7 @@ let smallBuffer =
   Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
 let smallBufferId = Buffer.getMetadata(smallBuffer).id;
 
-let hundredThousandLines =
-  Array.make(100000, "Another big buffer update");
+let hundredThousandLines = Array.make(100000, "Another big buffer update");
 
 let addLinesToEmptyBuffer = () => {
   let _ =

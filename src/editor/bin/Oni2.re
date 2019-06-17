@@ -22,7 +22,6 @@ module Store = Oni_Store;
 /* | Some(_) => Printexc.record_backtrace(true) |> ignore */
 /* | None => () */
 /* }; */
-
 Printexc.record_backtrace(true);
 
 /* The 'main' function for our app */

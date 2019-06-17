@@ -115,13 +115,7 @@ module BufferUpdate = {
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
-    let ret: t = {
-    id,
-    startLine,
-    endLine,
-    lines,
-    version,
-};
+    let ret: t = {id, startLine, endLine, lines, version};
     ret;
   };
   let createFromZeroBasedIndices =

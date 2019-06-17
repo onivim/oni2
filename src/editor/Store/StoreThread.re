@@ -43,7 +43,6 @@ let start =
       ~onStateChanged,
       (),
     ) => {
-
   /* TODO: Bring cliOptions back */
   ignore(executingDirectory);
   ignore(cliOptions);
@@ -57,8 +56,7 @@ let start =
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
-  let (vimUpdater, vimStream) =
-    VimStoreConnector.start();
+  let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

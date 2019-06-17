@@ -27,76 +27,77 @@ let start = () => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
-
       /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
     });
 
   let _ =
     Vim.Visual.onRangeChanged(vr => {
-        open Vim.Range;
-        open Vim.VisualRange;
+      open Vim.Range;
+      open Vim.VisualRange;
 
-        let { visualType, range } = vr;
-        let { startPos, endPos } = range;
-        let startColumn = startPos.column + 1;
-        let endColumn = endPos.column + 1;
-        let vr = Core.VisualRange.create(~startLine=startPos.line, ~startColumn, ~endLine=endPos.line, ~endColumn, ~mode=visualType, ());
-        dispatch(SelectionChanged(vr));
-        /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
+      let {visualType, range} = vr;
+      let {startPos, endPos} = range;
+      let startColumn = startPos.column + 1;
+      let endColumn = endPos.column + 1;
+      let vr =
+        Core.VisualRange.create(
+          ~startLine=startPos.line,
+          ~startColumn,
+          ~endLine=endPos.line,
+          ~endColumn,
+          ~mode=visualType,
+          (),
+        );
+      dispatch(SelectionChanged(vr));
+      /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
     });
 
   let _ =
-      Vim.Buffer.onEnter(buf => {
-        let meta = {
-            ...Vim.BufferMetadata.ofBuffer(buf),
-            /*
-                Set version to 0 so that a buffer update is processed.
-                If not - we'd ignore the first buffer update that came through!
-            */
-            version: 0, 
-        };
-        dispatch(Model.Actions.BufferEnter(meta));
-      });
+    Vim.Buffer.onEnter(buf => {
+      let meta = {
+        ...Vim.BufferMetadata.ofBuffer(buf),
+        /*
+             Set version to 0 so that a buffer update is processed.
+             If not - we'd ignore the first buffer update that came through!
+         */
+        version: 0,
+      };
+      dispatch(Model.Actions.BufferEnter(meta));
+    });
 
   let _ =
     Vim.Buffer.onUpdate(update => {
-        open Vim.BufferUpdate;
-        open Core.Types;
-        let bu = Core.Types.BufferUpdate.create(
-            ~id=update.id,
-            ~startLine=Index.OneBasedIndex(update.startLine),
-            ~endLine=Index.OneBasedIndex(update.endLine),
-            ~lines=update.lines,
-            ~version=update.version,
-            ()
+      open Vim.BufferUpdate;
+      open Core.Types;
+      let bu =
+        Core.Types.BufferUpdate.create(
+          ~id=update.id,
+          ~startLine=Index.OneBasedIndex(update.startLine),
+          ~endLine=Index.OneBasedIndex(update.endLine),
+          ~lines=update.lines,
+          ~version=update.version,
+          (),
         );
 
-        print_endline ("Buffer update: " ++ Core.Types.BufferUpdate.show(bu));
+      print_endline("Buffer update: " ++ Core.Types.BufferUpdate.show(bu));
 
-        dispatch(Model.Actions.BufferUpdate(bu));
+      dispatch(Model.Actions.BufferUpdate(bu));
     });
 
   let _ =
-      Vim.CommandLine.onEnter((c) => {
-        dispatch(Model.Actions.CommandlineShow(c.cmdType));
-      });
+    Vim.CommandLine.onEnter(c =>
+      dispatch(Model.Actions.CommandlineShow(c.cmdType))
+    );
 
   let _ =
-      Vim.CommandLine.onUpdate((c) => {
-        dispatch(Model.Actions.CommandlineUpdate(c));
-      });
+    Vim.CommandLine.onUpdate(c =>
+      dispatch(Model.Actions.CommandlineUpdate(c))
+    );
 
   let _ =
-      Vim.CommandLine.onLeave(() => {
-        dispatch(Model.Actions.CommandlineHide);
-      });
+    Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
-
-
-
-  let initEffect = Isolinear.Effect.create(~name="vim.init", () => {
-      Vim.init();
-    });
+  let initEffect = Isolinear.Effect.create(~name="vim.init", () => Vim.init());
 
   /* TODO: Move to init */
   /* let metadata = Vim.Buffer.getCurrent() */
@@ -107,13 +108,16 @@ let start = () => {
   let currentEditorId: ref(option(int)) = ref(None);
 
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", () =>
+    Isolinear.Effect.create(~name="vim.input", ()
       /* TODO: Fix these keypaths in libvim to not be blocking */
-      if (!String.equal(key, "<S-SHIFT>") && !String.equal(key, "<C->") && !String.equal(key, "<A-C->")) {
-        print_endline("Sending key: " ++ key);
-        Vim.input(key);
-      }
-    );
+      =>
+        if (!String.equal(key, "<S-SHIFT>")
+            && !String.equal(key, "<C->")
+            && !String.equal(key, "<A-C->")) {
+          print_endline("Sending key: " ++ key);
+          Vim.input(key);
+        }
+      );
 
   let openFileByPathEffect = filePath =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
@@ -165,12 +169,12 @@ let start = () => {
       };
 
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-          /* TODO */
-          /* vimProtocol.moveCursor( */
-          /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-          /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-          /* ); */
-          currentEditorId := Some(editor.id);
+        /* TODO */
+        /* vimProtocol.moveCursor( */
+        /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
+        /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
+        /* ); */
+        currentEditorId := Some(editor.id);
       };
 
       switch (editor, currentEditorId^) {
@@ -182,7 +186,7 @@ let start = () => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.Init => (state, initEffect);
+    | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path) => (
         state,
         openFileByPathEffect(path),
