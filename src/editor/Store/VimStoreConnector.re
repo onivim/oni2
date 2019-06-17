@@ -109,7 +109,6 @@ let start = () => {
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
-          print_endline("Sending key: " ++ key);
           Vim.input(key);
         }
       );
