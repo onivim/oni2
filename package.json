@@ -36,7 +36,7 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "*"
+    "reason-libvim": "8.10869.7001"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
@@ -45,9 +45,7 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
-    "reason-libvim": "8.10869.6001",
-    "libvim": "8.10869.6"
+    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
