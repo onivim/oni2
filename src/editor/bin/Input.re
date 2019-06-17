@@ -117,7 +117,6 @@ let getActionsForBinding =
   Handle Input from Oni or Neovim
  */
 let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
-  print_endline ("Input key: " ++ inputKey);
   switch (state.inputControlMode) {
   | NeovimMenuFocus
   | EditorTextFocus =>
