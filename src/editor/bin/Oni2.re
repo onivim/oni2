@@ -144,7 +144,7 @@ let init = app => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let keyEventListener = key =>
+  let keyEventListener = key => {
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
@@ -152,6 +152,7 @@ let init = app => {
       inputHandler(~state=currentState^, k) |> List.iter(dispatch)
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
+  }
 
   Event.subscribe(w.onKeyDown, keyEvent =>
     Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)

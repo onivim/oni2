@@ -15,7 +15,6 @@ let start = () => {
 
   let _ =
     Vim.Mode.onChanged(newMode => {
-      print_endline("Mode changed!");
       dispatch(Model.Actions.ChangeMode(newMode));
     });
 
@@ -27,7 +26,6 @@ let start = () => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
-      /* Printf.printf("Cursor position - line: %d column: %d\n", newPosition.line, newPosition.column); */
     });
 
   let _ =
@@ -49,7 +47,6 @@ let start = () => {
           (),
         );
       dispatch(SelectionChanged(vr));
-      /* VisualRangeUpdate(vr) => SelectionChanged(vr) */
     });
 
   let _ =
@@ -78,8 +75,6 @@ let start = () => {
           ~version=update.version,
           (),
         );
-
-      print_endline("Buffer update: " ++ Core.Types.BufferUpdate.show(bu));
 
       dispatch(Model.Actions.BufferUpdate(bu));
     });
