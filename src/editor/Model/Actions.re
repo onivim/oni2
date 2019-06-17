@@ -32,12 +32,7 @@ type t =
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
   | EditorScroll(float)
-  | EditorScrollToCursorCentered
-  | EditorScrollToCursorTop
-  | EditorScrollToCursorBottom
-  | EditorMoveCursorToTop(Cursor.move)
-  | EditorMoveCursorToMiddle(Cursor.move)
-  | EditorMoveCursorToBottom(Cursor.move)
+  | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)

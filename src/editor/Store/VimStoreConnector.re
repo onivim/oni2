@@ -93,7 +93,10 @@ let start = () => {
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
   let _ =
-      Vim.Window.onTopLineChanged((t) => print_endline ("Top line: " ++ string_of_int(t)));
+      Vim.Window.onTopLineChanged((t) => {
+       dispatch(Model.Actions.EditorScrollToLine(t - 1));
+       print_endline ("Top line: " ++ string_of_int(t));
+      });
 
   let hasInitialized = ref(false);
   let initEffect = Isolinear.Effect.create(~name="vim.init", () => {
@@ -173,9 +176,11 @@ let start = () => {
       };
 
       let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
-        print_endline ("Synchronizing window metrics");
         let vimWidth = Vim.Window.getWidth(); 
         let vimHeight = Vim.Window.getHeight();
+
+        print_endline("Current width: " ++ string_of_int(vimWidth));
+        print_endline("Current height: " ++ string_of_int(vimHeight));
 
         let (lines, columns) = Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
 
@@ -184,6 +189,7 @@ let start = () => {
         }
 
         if (lines != vimHeight) {
+            print_endline ("Setting height: " ++ string_of_int(lines));
             Vim.Window.setHeight(lines);
         }
       };
