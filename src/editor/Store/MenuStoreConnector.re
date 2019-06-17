@@ -44,14 +44,14 @@ let start = () => {
     | MenuPreviousItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, -1, state.commands),
+          selectedItem: position(state.selectedItem, -1, state.filteredCommands),
         },
         Isolinear.Effect.none,
       )
     | MenuNextItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, 1, state.commands),
+          selectedItem: position(state.selectedItem, 1, state.filteredCommands),
         },
         Isolinear.Effect.none,
       )
@@ -84,7 +84,7 @@ let start = () => {
       );
     | MenuSelect =>
       let effect =
-        List.nth(state.commands, state.selectedItem)
+        List.nth(state.filteredCommands, state.selectedItem)
         |> (selected => selectItemEffect(selected.command));
 
       /* Also close menu */

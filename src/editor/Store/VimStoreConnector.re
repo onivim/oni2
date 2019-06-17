@@ -92,7 +92,14 @@ let start = () => {
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
-  let initEffect = Isolinear.Effect.create(~name="vim.init", () => Vim.init());
+  let _ =
+      Vim.Window.onTopLineChanged((t) => print_endline ("Top line: " ++ string_of_int(t)));
+
+  let hasInitialized = ref(false);
+  let initEffect = Isolinear.Effect.create(~name="vim.init", () => {
+      Vim.init()
+      hasInitialized := true;
+  });
 
   /* TODO: Move to init */
   /* let metadata = Vim.Buffer.getCurrent() */
@@ -136,10 +143,13 @@ let start = () => {
    and treat vim as an entity for manipulating a singular buffer.
    */
   let synchronizeEditorEffect = state =>
-    Isolinear.Effect.create(~name="vim.synchronizeEditor", () => {
-      let editor =
+    Isolinear.Effect.create(~name="vim.synchronizeEditor", () => switch (hasInitialized^) {
+    | false => ()
+    | true =>
+      let editorGroup =
         Model.Selectors.getActiveEditorGroup(state)
-        |> Model.Selectors.getActiveEditor;
+
+    let editor = Model.Selectors.getActiveEditor(editorGroup);
 
       let editorBuffer = Model.Selectors.getActiveBuffer(state);
       switch (editorBuffer, currentBufferId^) {
@@ -162,7 +172,30 @@ let start = () => {
       | _ => ()
       };
 
+      let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
+        print_endline ("Synchronizing window metrics");
+        let vimWidth = Vim.Window.getWidth(); 
+        let vimHeight = Vim.Window.getHeight();
+
+        let (lines, columns) = Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
+
+        if (columns != vimWidth) {
+            Vim.Window.setWidth(columns);
+        }
+
+        if (lines != vimHeight) {
+            Vim.Window.setHeight(lines);
+        }
+      };
+
+      switch (editorGroup) {
+      | Some(v) => synchronizeWindowMetrics(v)
+      | None => ();
+      }
+
       let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+
+        /* Make sure the width / height are synchronized */
         /* TODO */
         /* vimProtocol.moveCursor( */
         /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
@@ -185,6 +218,8 @@ let start = () => {
         state,
         openFileByPathEffect(path),
       )
+    | Model.Actions.SetEditorSize(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.SetEditorFont(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
