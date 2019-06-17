@@ -44,14 +44,16 @@ let start = () => {
     | MenuPreviousItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, -1, state.filteredCommands),
+          selectedItem:
+            position(state.selectedItem, -1, state.filteredCommands),
         },
         Isolinear.Effect.none,
       )
     | MenuNextItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, 1, state.filteredCommands),
+          selectedItem:
+            position(state.selectedItem, 1, state.filteredCommands),
         },
         Isolinear.Effect.none,
       )

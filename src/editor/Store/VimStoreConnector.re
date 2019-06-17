@@ -93,16 +93,18 @@ let start = () => {
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
   let _ =
-      Vim.Window.onTopLineChanged((t) => {
-       dispatch(Model.Actions.EditorScrollToLine(t - 1));
-       print_endline ("Top line: " ++ string_of_int(t));
-      });
+    Vim.Window.onTopLineChanged(t =>
+      /* TODO */
+      /* dispatch(Model.Actions.EditorScrollToLine(t - 1)); */
+      ()
+    );
 
   let hasInitialized = ref(false);
-  let initEffect = Isolinear.Effect.create(~name="vim.init", () => {
-      Vim.init()
+  let initEffect =
+    Isolinear.Effect.create(~name="vim.init", () => {
+      Vim.init();
       hasInitialized := true;
-  });
+    });
 
   /* TODO: Move to init */
   /* let metadata = Vim.Buffer.getCurrent() */
@@ -146,76 +148,74 @@ let start = () => {
    and treat vim as an entity for manipulating a singular buffer.
    */
   let synchronizeEditorEffect = state =>
-    Isolinear.Effect.create(~name="vim.synchronizeEditor", () => switch (hasInitialized^) {
-    | false => ()
-    | true =>
-      let editorGroup =
-        Model.Selectors.getActiveEditorGroup(state)
+    Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
+      switch (hasInitialized^) {
+      | false => ()
+      | true =>
+        let editorGroup = Model.Selectors.getActiveEditorGroup(state);
 
-    let editor = Model.Selectors.getActiveEditor(editorGroup);
+        let editor = Model.Selectors.getActiveEditor(editorGroup);
 
-      let editorBuffer = Model.Selectors.getActiveBuffer(state);
-      switch (editorBuffer, currentBufferId^) {
-      | (Some(editorBuffer), Some(v)) =>
-        let id = Model.Buffer.getId(editorBuffer);
-        if (id != v) {
+        let editorBuffer = Model.Selectors.getActiveBuffer(state);
+        switch (editorBuffer, currentBufferId^) {
+        | (Some(editorBuffer), Some(v)) =>
+          let id = Model.Buffer.getId(editorBuffer);
+          if (id != v) {
+            let buf = Vim.Buffer.getById(id);
+            switch (buf) {
+            | None => ()
+            | Some(v) => Vim.Buffer.setCurrent(v)
+            };
+          };
+        | (Some(editorBuffer), _) =>
+          let id = Model.Buffer.getId(editorBuffer);
           let buf = Vim.Buffer.getById(id);
           switch (buf) {
           | None => ()
           | Some(v) => Vim.Buffer.setCurrent(v)
           };
+        | _ => ()
         };
-      | (Some(editorBuffer), _) =>
-        let id = Model.Buffer.getId(editorBuffer);
-        let buf = Vim.Buffer.getById(id);
-        switch (buf) {
-        | None => ()
-        | Some(v) => Vim.Buffer.setCurrent(v)
-        };
-      | _ => ()
-      };
 
-      let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
-        let vimWidth = Vim.Window.getWidth(); 
-        let vimHeight = Vim.Window.getHeight();
+        let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
+          let vimWidth = Vim.Window.getWidth();
+          let vimHeight = Vim.Window.getHeight();
 
-        print_endline("Current width: " ++ string_of_int(vimWidth));
-        print_endline("Current height: " ++ string_of_int(vimHeight));
+          let (lines, columns) =
+            Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
 
-        let (lines, columns) = Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
-
-        if (columns != vimWidth) {
+          if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
-        }
+          };
 
-        if (lines != vimHeight) {
-            print_endline ("Setting height: " ++ string_of_int(lines));
+          if (lines != vimHeight) {
             Vim.Window.setHeight(lines);
-        }
-      };
+          };
+        };
 
-      switch (editorGroup) {
-      | Some(v) => synchronizeWindowMetrics(v)
-      | None => ();
+        switch (editorGroup) {
+        | Some(v) => synchronizeWindowMetrics(v)
+        | None => ()
+        };
+
+        let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+          ()/* Make sure the width / height are synchronized */
+            /* TODO */
+            /* vimProtocol.moveCursor( */
+            /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
+            /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
+            /* ); */
+            ;
+            /* currentEditorId := Some(editor.id); */
+        };
+
+        switch (editor, currentEditorId^) {
+        | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
+        | (Some(e), _) => synchronizeCursorPosition(e)
+        | _ => ()
+        };
       }
-
-      let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-
-        /* Make sure the width / height are synchronized */
-        /* TODO */
-        /* vimProtocol.moveCursor( */
-        /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-        /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-        /* ); */
-        currentEditorId := Some(editor.id);
-      };
-
-      switch (editor, currentEditorId^) {
-      | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
-      | (Some(e), _) => synchronizeCursorPosition(e)
-      | _ => ()
-      };
-    });
+    );
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
@@ -224,8 +224,14 @@ let start = () => {
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.SetEditorSize(_) => (state, synchronizeEditorEffect(state))
-    | Model.Actions.SetEditorFont(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.SetEditorSize(_) => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Model.Actions.SetEditorFont(_) => (
+        state,
+        synchronizeEditorEffect(state),
+      )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,

@@ -18,10 +18,12 @@ let create = () => {
 };
 
 let toLinesAndColumns = (v: t) => {
-    let numberOfLines = int_of_float(float_of_int(v.pixelHeight) /. v.lineHeight);
-    let numberOfColumns = int_of_float(float_of_int(v.pixelWidth) /. v.characterWidth);
-    (numberOfLines, numberOfColumns);
-}
+  let numberOfLines =
+    int_of_float(float_of_int(v.pixelHeight) /. v.lineHeight);
+  let numberOfColumns =
+    int_of_float(float_of_int(v.pixelWidth) /. v.characterWidth);
+  (numberOfLines, numberOfColumns);
+};
 
 let reduce = (v: t, action) => {
   switch (action) {

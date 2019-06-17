@@ -127,10 +127,9 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 };
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
-    
-    let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-    scrollTo(view, scrollAmount, metrics);
-}
+  let scrollAmount = float_of_int(line) *. metrics.lineHeight;
+  scrollTo(view, scrollAmount, metrics);
+};
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
   let newScrollX = max(0., newScrollX);
