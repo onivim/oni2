@@ -45,7 +45,8 @@
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056"
+    "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
+    "pesy": "0.4.1"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
