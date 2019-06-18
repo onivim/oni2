@@ -93,7 +93,7 @@ let start = () => {
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
   let _ =
-    Vim.Window.onTopLineChanged(t =>
+    Vim.Window.onTopLineChanged(_ =>
       /* TODO */
       /* dispatch(Model.Actions.EditorScrollToLine(t - 1)); */
       ()
@@ -198,7 +198,7 @@ let start = () => {
         | None => ()
         };
 
-        let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+        let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
           ()/* Make sure the width / height are synchronized */
             /* TODO */
             /* vimProtocol.moveCursor( */
