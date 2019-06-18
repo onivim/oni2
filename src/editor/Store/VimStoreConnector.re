@@ -93,9 +93,9 @@ let start = () => {
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
   let _ =
-    Vim.Window.onTopLineChanged(t => {
-      dispatch(Model.Actions.EditorScrollToLine(t - 1));
-    });
+    Vim.Window.onTopLineChanged(t =>
+      dispatch(Model.Actions.EditorScrollToLine(t - 1))
+    );
 
   let hasInitialized = ref(false);
   let initEffect =
@@ -115,13 +115,12 @@ let start = () => {
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", ()
       /* TODO: Fix these keypaths in libvim to not be blocking */
-      => {
+      =>
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
           Vim.input(key);
         }
-      }
       );
 
   let openFileByPathEffect = filePath =>
@@ -198,13 +197,13 @@ let start = () => {
         };
 
         let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
-            /* Make sure the width / height are synchronized */
+          ()/* Make sure the width / height are synchronized */
             /* TODO */
             /* vimProtocol.moveCursor( */
             /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
             /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
             /* ); */
-            ();
+            ;
             /* currentEditorId := Some(editor.id); */
         };
 
