@@ -197,12 +197,11 @@ let start = () => {
         };
 
         let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
-          ()/* TODO */
-            /* vimProtocol.moveCursor( */
+          ()/* vimProtocol.moveCursor( */
             /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
             /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
             /* ); */
-            ; /* Make sure the width / height are synchronized */
+            ; /* TODO */ /* Make sure the width / height are synchronized */
             /* currentEditorId := Some(editor.id); */
         };
 
