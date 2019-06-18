@@ -47,7 +47,7 @@
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
     "pesy": "0.4.1",
-    "libvim": "8.10869.8"
+    "libvim": "8.10869.9"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
