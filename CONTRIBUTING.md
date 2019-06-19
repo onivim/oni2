@@ -22,7 +22,7 @@ esy build
 
 ```sh
 cd src/textmate_service
-node install
+npm install
 npm run build
 ```
 
