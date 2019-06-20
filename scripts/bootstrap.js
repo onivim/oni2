@@ -14,7 +14,6 @@ const isLinux = !isMac && !isWindows
 let nodePath
 let textMateServicePath = path.join(rootDir, "src", "textmate_service", "lib", "src", "index.js")
 let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
-let neovimPath
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
@@ -28,18 +27,13 @@ if (isWindows) {
     textMateServicePath = getCygwinPath(textMateServicePath)
     extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath)
-    neovimPath = getCygwinPath(
-        path.join(vendorPath, "neovim-0.3.3", "nvim-win64", "bin", "nvim.exe"),
-    )
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
 } else if (isMac) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "osx", "node")
-    neovimPath = path.join(vendorPath, "neovim-0.3.3", "nvim-osx64", "bin", "nvim")
     rgPath = path.join(rgPath, "mac", "rg")
 } else if (isLinux) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "linux-x64", "node")
-    neovimPath = path.join(vendorPath, "neovim-0.3.3", "nvim-linux64", "bin", "nvim")
     rgPath = path.join(rgPath, "linux", "rg")
 } else {
     console.error("Unknown OS...aborting.")
@@ -47,7 +41,6 @@ if (isWindows) {
 }
 
 const config = {
-    neovim: neovimPath,
     node: nodePath,
     textmateService: textMateServicePath,
     bundledExtensions: extensionsPath,
