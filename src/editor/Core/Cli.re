@@ -28,9 +28,11 @@ let noop = () => ();
 let parse = (setup: Setup.t) => {
   let args: ref(list(string)) = ref([]);
 
-  Arg.parse([
-    ("-attach", Unit(noop), "")
-], arg => args := [arg, ...args^], header(setup.version));
+  Arg.parse(
+    [("-attach", Unit(noop), "")],
+    arg => args := [arg, ...args^],
+    header(setup.version),
+  );
 
   let paths = args^ |> List.rev;
   let workingDirectory = Environment.getWorkingDirectory();

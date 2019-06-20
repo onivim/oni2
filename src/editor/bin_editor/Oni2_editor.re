@@ -4,7 +4,6 @@
  * This is the entry point for launching the editor.
  */
 
-
 open Revery;
 open Revery.UI;
 
