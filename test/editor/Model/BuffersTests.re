@@ -1,6 +1,7 @@
 open TestFramework;
 
-open Oni_Core.Types;
+open Vim;
+
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Model.Buffer;
 

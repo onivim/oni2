@@ -55,6 +55,16 @@ let start = getState => {
       dispatch(AddSplit(split));
     });
 
+  let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
+    Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
+      let action =
+        fileExplorer.isOpen
+          ? RemoveDockItem(WindowManager.ExplorerDock)
+          : AddDockItem(WindowManager.ExplorerDock);
+      dispatch(action);
+    });
+  };
+
   let commands = [
     (
       "commandPalette.open",
@@ -65,6 +75,14 @@ let start = getState => {
         ]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
+    (
+      "menu.close",
+      _ =>
+        multipleActionEffect([
+          MenuClose,
+          SetInputControlMode(EditorTextFocus),
+        ]),
+    ),
     (
       "menu.open",
       _ =>
@@ -96,6 +114,7 @@ let start = getState => {
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state)),
+    ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 
   let commandMap =

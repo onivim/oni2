@@ -1,11 +1,11 @@
 open TestFramework;
 
-module VisualRange = Oni_Core.Types.VisualRange;
-module Range = Oni_Core.Types.Range;
+module VisualRange = Oni_Core.VisualRange;
+module Range = Oni_Core.Range;
 module Buffer = Oni_Model.Buffer;
 module Selection = Oni_Model.Selection;
 
-open Helpers;
+open Oni_Core_Test.Helpers;
 
 describe("Selection", ({test, _}) =>
   test("linewise: clamps range to buffer lines", ({expect}) => {
@@ -18,7 +18,7 @@ describe("Selection", ({test, _}) =>
         ~startColumn=1,
         ~endLine=2,
         ~endColumn=5,
-        ~mode="V",
+        ~mode=Vim.Types.Line,
         (),
       );
 

@@ -13,6 +13,11 @@ module WindowId = {
 };
 
 [@deriving show({with_path: false})]
+type docks =
+  | ExplorerDock
+  | MainDock;
+
+[@deriving show({with_path: false})]
 type componentCreator = unit => React.syntheticElement;
 
 [@deriving show({with_path: false})]
@@ -31,14 +36,21 @@ type split = {
   height: option(int),
 };
 
+[@deriving show({with_path: false})]
+type dockPosition =
+  | Left
+  | Right;
+
 /**
    A dock is a sub type of split, it does not require
    a parent ID as docks are list of splits, not a tree
  */
 [@deriving show({with_path: false})]
 type dock = {
-  id: int,
+  id: docks,
+  order: int,
   component: componentCreator,
+  position: dockPosition,
   width: option(int),
 };
 
@@ -66,6 +78,12 @@ type t = {
   activeWindowId: int,
   leftDock: list(dock),
   rightDock: list(dock),
+  /*
+   * Cache all the registered dock items so
+   * these can be reused i.e. docks can be
+   * reopened and closed
+   */
+  dockItems: list(dock),
 };
 
 let initialWindowId = WindowId.next();
@@ -77,6 +95,7 @@ let create = (): t => {
   windows: empty,
   leftDock: [],
   rightDock: [],
+  dockItems: [],
 };
 
 let createSplit = (~width=?, ~height=?, ~editorGroupId, ~direction, ()) => {
@@ -95,11 +114,25 @@ let enrichSplit = (parentId, s: splitMetadata): split => {
   height: s.height,
 };
 
-let createDock = (~component, ~width=?, ()) => {
+let registerDock = (~component, ~id, ~order, ~position=Left, ~width=?, ()) => {
+  order,
   component,
-  id: WindowSplitId.getUniqueId(),
+  position,
+  id,
   width,
 };
+
+let removeDockItem = (~id, layout: t) => {
+  let leftDock = List.filter(item => item.id != id, layout.leftDock);
+  let rightDock = List.filter(item => item.id != id, layout.rightDock);
+  {...layout, leftDock, rightDock};
+};
+
+let findDockItem = (id, layout: t) =>
+  switch (List.find_opt(item => item.id == id, layout.dockItems)) {
+  | Some(_) as item => item
+  | None => None
+  };
 
 let directionChanged = (direction, split) => direction != split.direction;
 let matchingParent = (id, parentId) => id == parentId;

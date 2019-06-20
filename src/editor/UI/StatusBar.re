@@ -197,7 +197,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
                 color(foreground),
                 ...textStyle,
               ]
-              text={Types.Mode.show(mode)}
+              text={Vim.Mode.show(mode)}
             />
           </StatusBarItem>
         </StatusBarSection>

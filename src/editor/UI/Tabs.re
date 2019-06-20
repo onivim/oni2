@@ -7,8 +7,6 @@
 open Revery.UI;
 open Rench;
 
-open Oni_Core;
-
 let noop = () => ();
 
 type tabInfo = {
@@ -42,7 +40,7 @@ let createElement =
       ~children as _,
       ~theme,
       ~tabs: list(tabInfo),
-      ~mode: Types.Mode.t,
+      ~mode: Vim.Mode.t,
       ~uiFont,
       (),
     ) =>

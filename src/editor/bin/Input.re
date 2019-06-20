@@ -42,9 +42,18 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 };
 
 let keyPressToCommand =
-    ({shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent) => {
+    (
+      {shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent,
+      os: Revery_Core.Environment.os,
+    ) => {
+  let commandKeyPressed =
+    switch (os) {
+    | Mac => superKey || ctrlKey
+    | _ => ctrlKey
+    };
+
   let keyString =
-    ctrlKey
+    commandKeyPressed
       ? /**
         TODO:
         Revery's toString method returns lower case
@@ -58,7 +67,7 @@ let keyPressToCommand =
         | KEY_ESCAPE => Some("ESC")
         | KEY_TAB => Some("TAB")
         | KEY_ENTER => Some("CR")
-        | KEY_BACKSPACE => Some("BS")
+        | KEY_BACKSPACE => Some("C-h")
         | KEY_LEFT => Some("LEFT")
         | KEY_RIGHT => Some("RIGHT")
         | KEY_DOWN => Some("DOWN")
@@ -107,7 +116,7 @@ let getActionsForBinding =
 /**
   Handle Input from Oni or Neovim
  */
-let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) =>
+let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
   | NeovimMenuFocus
   | EditorTextFocus =>
@@ -118,3 +127,4 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) =>
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };
+};

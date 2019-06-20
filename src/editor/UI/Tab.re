@@ -12,7 +12,6 @@ module Model = Oni_Model;
 
 type tabAction = unit => unit;
 
-let tabHeight = 35;
 let minWidth_ = 125;
 let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
@@ -41,7 +40,7 @@ let createElement =
       ~onClose,
       ~theme: Theme.t,
       ~uiFont: Types.UiFont.t,
-      ~mode: Types.Mode.t,
+      ~mode: Vim.Mode.t,
       ~children as _,
       (),
     ) =>
@@ -60,7 +59,7 @@ let createElement =
         borderTop(~color=borderColor, ~width=2),
         borderBottom(~color=theme.colors.editorBackground, ~width=2),
         opacity(opacityValue),
-        height(tabHeight),
+        height(Constants.default.tabHeight),
         minWidth(minWidth_),
         flexDirection(`Row),
         justifyContent(`Center),
@@ -83,7 +82,7 @@ let createElement =
     let iconContainerStyle =
       Style.[
         width(32),
-        height(tabHeight),
+        height(Constants.default.tabHeight),
         alignItems(`Center),
         justifyContent(`Center),
       ];

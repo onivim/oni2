@@ -20,8 +20,7 @@ let smallBuffer =
   Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
 let smallBufferId = Buffer.getMetadata(smallBuffer).id;
 
-let hundredThousandLines =
-  Array.make(100000, "Another big buffer update") |> Array.to_list;
+let hundredThousandLines = Array.make(100000, "Another big buffer update");
 
 let addLinesToEmptyBuffer = () => {
   let _ =
@@ -43,7 +42,7 @@ let clearLargeBuffer = () => {
       ~id=hundredThousandLineBufferId,
       ~startLine=0,
       ~endLine=-1,
-      ~lines=[],
+      ~lines=[||],
       ~version=1,
       (),
     )
@@ -57,7 +56,7 @@ let insertInMiddleOfSmallBuffer = () => {
       ~id=smallBufferId,
       ~startLine=50,
       ~endLine=51,
-      ~lines=["this is a new line"],
+      ~lines=[|"this is a new line"|],
       ~version=1,
       (),
     )
@@ -71,7 +70,7 @@ let insertInMiddleOfLargeBuffer = () => {
       ~id=hundredThousandLineBufferId,
       ~startLine=5000,
       ~endLine=50001,
-      ~lines=["this is a new line"],
+      ~lines=[|"this is a new line"|],
       ~version=1,
       (),
     )

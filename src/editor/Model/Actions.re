@@ -11,36 +11,34 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferEnter(BufferMetadata.t)
+  | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferSaved(BufferMetadata.t)
+  | BufferSaved(Vim.BufferMetadata.t)
   | BufferMarkDirty(int)
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | ChangeMode(Mode.t)
+  | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
   | SetEditorSize(EditorSize.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(commandline)
-  | CommandlineHide(commandline)
-  | CommandlineUpdate((int, int))
+  | CommandlineShow(Vim.Types.cmdlineType)
+  | CommandlineHide
+  | CommandlineUpdate(Vim.Types.cmdline)
   | KeyboardInput(string)
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
   | EditorGroupAdd(editorGroup)
   | EditorScroll(float)
-  | EditorScrollToCursorCentered
-  | EditorScrollToCursorTop
-  | EditorScrollToCursorBottom
-  | EditorMoveCursorToTop(Cursor.move)
-  | EditorMoveCursorToMiddle(Cursor.move)
-  | EditorMoveCursorToBottom(Cursor.move)
+  | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
+  | OpenExplorer(string)
+  | SetExplorerTree(UiTree.t)
+  | UpdateExplorerNode(UiTree.t, UiTree.t)
   | MenuSearch(string)
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
@@ -51,8 +49,9 @@ type t =
   | MenuPreviousItem
   | MenuPosition(int)
   | OpenFileByPath(string)
-  | AddRightDock(WindowManager.dock)
-  | AddLeftDock(WindowManager.dock)
+  | RegisterDockItem(WindowManager.dock)
+  | RemoveDockItem(WindowManager.docks)
+  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowManager.splitMetadata)
   | RemoveSplit(int)
   | OpenConfigFile(string)
@@ -101,7 +100,7 @@ and menuCommand = {
   category: option(string),
   name: string,
   command: unit => t,
-  icon: option(string),
+  icon: option(IconTheme.IconDefinition.t),
 }
 and menuSetItems = list(menuCommand) => unit
 and menuCreationFunction = menuSetItems => unit

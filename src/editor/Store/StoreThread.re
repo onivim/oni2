@@ -43,6 +43,10 @@ let start =
       ~onStateChanged,
       (),
     ) => {
+  /* TODO: Bring cliOptions back */
+  ignore(executingDirectory);
+  ignore(cliOptions);
+
   let state = Model.State.create();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
@@ -52,8 +56,7 @@ let start =
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
-  let (neovimUpdater, neovimStream) =
-    NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
+  let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -68,7 +71,8 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
-  let commandUpdater = CommandStoreConnector.start(() => latestState^);
+  let (fileExplorerUpdater, explorerStream) =
+    FileExplorerStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
 
@@ -78,7 +82,7 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
-          neovimUpdater,
+          vimUpdater,
           textmateUpdater,
           extHostUpdater,
           menuHostUpdater,
@@ -86,6 +90,7 @@ let start =
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
+          fileExplorerUpdater,
         ]),
       (),
     );
@@ -114,11 +119,12 @@ let start =
     };
   };
 
-  Isolinear.Stream.connect(dispatch, neovimStream);
+  Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
   Isolinear.Stream.connect(dispatch, menuStream);
+  Isolinear.Stream.connect(dispatch, explorerStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
