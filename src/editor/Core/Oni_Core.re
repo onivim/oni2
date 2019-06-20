@@ -17,6 +17,7 @@ module StringMap = StringMap;
 module Types = Types;
 module Utility = Utility;
 module Indentation = Indentation;
+module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module Theme = Theme;
 module Keybindings = Keybindings;
