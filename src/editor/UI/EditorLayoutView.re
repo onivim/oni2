@@ -66,15 +66,13 @@ let parentStyle = (dir: direction) => {
 
 let rec renderTree = (~direction, theme, state, tree) =>
   switch (tree) {
-  | Parent(direction, _, children) =>  {
-
+  | Parent(direction, _, children) =>
     /* let _c = renderTree(~direction, theme, children, state); */
     /* React.empty */
     <View style={parentStyle(direction)}>
       ...{List.map(renderTree(~direction, theme, state), children)}
     </View>
-  }
-  | Leaf(window) => 
+  | Leaf(window) =>
     <View style={splitStyle(window)}>
       <EditorGroupView state editorGroupId={window.editorGroupId} />
       <WindowHandle direction theme />
