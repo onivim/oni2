@@ -23,10 +23,14 @@ let show = (v: t) => {
   "Folder: " ++ v.folder ++ newline ++ "Files: " ++ files;
 };
 
+let noop = () => ();
+
 let parse = (setup: Setup.t) => {
   let args: ref(list(string)) = ref([]);
 
-  Arg.parse([], arg => args := [arg, ...args^], header(setup.version));
+  Arg.parse([
+    ("-attach", Unit(noop), "")
+], arg => args := [arg, ...args^], header(setup.version));
 
   let paths = args^ |> List.rev;
   let workingDirectory = Environment.getWorkingDirectory();

@@ -100,6 +100,7 @@ let start = () => {
   let hasInitialized = ref(false);
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
+        
       Vim.init();
       hasInitialized := true;
     });
