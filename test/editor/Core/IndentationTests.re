@@ -8,7 +8,8 @@ let tab4 = IndentationSettings.create(~mode=Tabs, ~size=4, ~tabSize=4, ());
 let space4 =
   IndentationSettings.create(~mode=Spaces, ~size=4, ~tabSize=4, ());
 
-describe("Indentation", ({describe, _}) =>
+describe("Indentation", ({describe, _}) => {
+
   describe("getLevel", ({test, _}) => {
     test("string with no tabs / spaces has level 0", ({expect}) => {
       let level = Indentation.getLevel(tab2, "test string");
@@ -75,4 +76,4 @@ describe("Indentation", ({describe, _}) =>
       expect.int(a2).toBe(0);
     });
   })
-);
+});
