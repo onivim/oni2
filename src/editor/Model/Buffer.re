@@ -7,20 +7,21 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-[@deriving show]
 type t = {
-  metadata: BufferMetadata.t,
+  metadata: Vim.BufferMetadata.t,
   lines: array(string),
 };
 
+let show = _ => "TODO";
+
 let ofLines = (lines: array(string)) => {
-  metadata: BufferMetadata.create(),
+  metadata: Vim.BufferMetadata.create(),
   lines,
 };
 
 let empty = ofLines([||]);
 
-let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
+let ofMetadata = (metadata: Vim.BufferMetadata.t) => {metadata, lines: [||]};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
@@ -29,7 +30,7 @@ let getId = (buffer: t) => buffer.metadata.id;
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getUri = (buffer: t) => {
-  let getUriFromMetadata = (metadata: BufferMetadata.t) => {
+  let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {
     switch (metadata.filePath) {
     | None => Uri.fromMemory(string_of_int(metadata.id))
     | Some(v) => Uri.fromPath(v)
@@ -67,7 +68,7 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 };
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
-  let updateLines = Array.of_list(update.lines);
+  let updateLines = update.lines;
   let startLine = update.startLine |> Index.toZeroBasedInt;
   let endLine = update.endLine |> Index.toZeroBasedInt;
   if (Array.length(lines) == 0) {
@@ -85,13 +86,13 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
         (),
       );
 
-    let lines = Array.of_list(update.lines);
+    let lines = update.lines;
 
     Array.concat([prev, lines, post]);
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
+let update = (buf: t, update: BufferUpdate.t) => {
   switch (update) {
   /***
      When a buffer is first attached it emits an update with
@@ -104,22 +105,15 @@ let update = (buf: t, update: BufferUpdate.t) =>
         ...buf.metadata,
         version,
       },
-      lines: Array.of_list(update.lines),
+      lines: update.lines,
     }
   | {version, _} when version > buf.metadata.version =>
     let metadata = {...buf.metadata, version: update.version};
     {metadata, lines: applyUpdate(buf.lines, update)};
   | _ => buf
   };
+};
 
-let updateMetadata = (metadata: BufferMetadata.t, buf: t) => {
+let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
   {...buf, metadata};
-};
-
-let markSaved = (buf: t) => {
-  {...buf, metadata: BufferMetadata.markSaved(buf.metadata)};
-};
-
-let markDirty = (buf: t) => {
-  {...buf, metadata: BufferMetadata.markDirty(buf.metadata)};
 };

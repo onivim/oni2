@@ -5,7 +5,6 @@ open Actions;
 
 let lastId = ref(0);
 
-[@deriving show]
 type t = {
   id: int,
   bufferId: int,
@@ -125,6 +124,11 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+};
+
+let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
+  let scrollAmount = float_of_int(line) *. metrics.lineHeight;
+  scrollTo(view, scrollAmount, metrics);
 };
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
@@ -316,14 +320,6 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY, metrics)
-  | EditorScrollToCursorTop => scrollToCursorTop(view, metrics)
-  | EditorScrollToCursorBottom => scrollToCursorBottom(view, metrics)
-  | EditorScrollToCursorCentered => scrollToCursor(view, metrics)
-  | EditorMoveCursorToTop(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Top, metrics)
-  | EditorMoveCursorToMiddle(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Middle, metrics)
-  | EditorMoveCursorToBottom(moveCursor) =>
-    moveCursorToPosition(~moveCursor, view, Bottom, metrics)
+  | EditorScrollToLine(line) => scrollToLine(view, line, metrics)
   | _ => view
   };

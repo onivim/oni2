@@ -48,7 +48,7 @@ let keyPressToCommand =
     ) => {
   let commandKeyPressed =
     switch (os) {
-    | Mac => superKey
+    | Mac => superKey || ctrlKey
     | _ => ctrlKey
     };
 
@@ -67,7 +67,7 @@ let keyPressToCommand =
         | KEY_ESCAPE => Some("ESC")
         | KEY_TAB => Some("TAB")
         | KEY_ENTER => Some("CR")
-        | KEY_BACKSPACE => Some("BS")
+        | KEY_BACKSPACE => Some("C-h")
         | KEY_LEFT => Some("LEFT")
         | KEY_RIGHT => Some("RIGHT")
         | KEY_DOWN => Some("DOWN")
@@ -116,7 +116,7 @@ let getActionsForBinding =
 /**
   Handle Input from Oni or Neovim
  */
-let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) =>
+let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
   | NeovimMenuFocus
   | EditorTextFocus =>
@@ -127,3 +127,4 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) =>
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
   };
+};

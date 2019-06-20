@@ -39,7 +39,7 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
   | None => (false, "untitled")
   | Some(v) =>
-    open Types.BufferMetadata;
+    open Vim.BufferMetadata;
     let {filePath, modified, _} = Buffer.getMetadata(v);
 
     let title = filePath |> truncateFilepath;

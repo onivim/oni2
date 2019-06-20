@@ -33,7 +33,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetEditorFont(font) => {...s, editorFont: font}
       | SetInputControlMode(m) => {...s, inputControlMode: m}
       | CommandlineShow(_) => {...s, inputControlMode: NeovimMenuFocus}
-      | CommandlineHide(_) => {...s, inputControlMode: EditorTextFocus}
+      | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | RegisterDockItem(dock) =>
         switch (dock) {
         | {position: Left, _} => {

@@ -111,14 +111,14 @@ let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
 
 let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
 
-let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
+let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
   let (background, foreground) =
     switch (mode) {
     | Visual => (
         theme.colors.oniVisualModeBackground,
         theme.colors.oniVisualModeForeground,
       )
-    | Commandline => (
+    | CommandLine => (
         theme.colors.oniCommandlineModeBackground,
         theme.colors.oniCommandlineModeForeground,
       )
@@ -134,7 +134,6 @@ let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
         theme.colors.oniReplaceModeBackground,
         theme.colors.oniReplaceModeForeground,
       )
-    | Other
     | Normal => (
         theme.colors.oniNormalModeBackground,
         theme.colors.oniNormalModeForeground,

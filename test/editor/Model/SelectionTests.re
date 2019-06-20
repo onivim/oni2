@@ -18,7 +18,7 @@ describe("Selection", ({test, _}) =>
         ~startColumn=1,
         ~endLine=2,
         ~endColumn=5,
-        ~mode="V",
+        ~mode=Vim.Types.Line,
         (),
       );
 

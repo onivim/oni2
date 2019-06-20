@@ -8,7 +8,6 @@
         Oni_Core_Test
         Oni_Extensions_Test
         Oni_Model_Test
-        Oni_Neovim_Test
             ))
 
 (executable
@@ -42,5 +41,4 @@
         Oni_Core_Test
         Oni_Extensions_Test
         Oni_Model_Test
-        Oni_Neovim_Test
             ))

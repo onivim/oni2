@@ -6,7 +6,7 @@
         bigarray
         zed
         reglfw
-        msgpck
+        libvim
         lwt
         lwt.unix
         Rench

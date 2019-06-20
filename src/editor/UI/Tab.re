@@ -40,7 +40,7 @@ let createElement =
       ~onClose,
       ~theme: Theme.t,
       ~uiFont: Types.UiFont.t,
-      ~mode: Types.Mode.t,
+      ~mode: Vim.Mode.t,
       ~children as _,
       (),
     ) =>

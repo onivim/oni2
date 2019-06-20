@@ -18,10 +18,11 @@ module Store = Oni_Store;
 /**
    This allows a stack trace to be printed when exceptions occur
  */
-switch (Sys.getenv_opt("ONI2_DEBUG")) {
-| Some(_) => Printexc.record_backtrace(true) |> ignore
-| None => ()
-};
+/* switch (Sys.getenv_opt("ONI2_DEBUG")) { */
+/* | Some(_) => Printexc.record_backtrace(true) |> ignore */
+/* | None => () */
+/* }; */
+Printexc.record_backtrace(true);
 
 /* The 'main' function for our app */
 let init = app => {
@@ -143,7 +144,7 @@ let init = app => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let keyEventListener = key =>
+  let keyEventListener = key => {
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
@@ -151,6 +152,7 @@ let init = app => {
       inputHandler(~state=currentState^, k) |> List.iter(dispatch)
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
+  };
 
   Event.subscribe(w.onKeyDown, keyEvent =>
     Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)

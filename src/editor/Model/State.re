@@ -8,7 +8,7 @@ open Oni_Core;
 open Oni_Core.Types;
 
 type t = {
-  mode: Mode.t,
+  mode: Vim.Mode.t,
   diagnostics: Diagnostics.t,
   buffers: Buffers.t,
   editorFont: EditorFont.t,
@@ -33,7 +33,7 @@ let create: unit => t =
   () => {
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
-    mode: Insert,
+    mode: Normal,
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
