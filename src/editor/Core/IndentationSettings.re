@@ -23,7 +23,5 @@ let ofConfiguration = (configuration: Configuration.t) => {
 let create = (~mode, ~size, ~tabSize, ()) => {mode, size, tabSize};
 
 let isEqual = (a: t, b: t) => {
-    a.mode == b.mode &&
-    a.size == b.size &&
-    a.tabSize == b.tabSize
+  a.mode == b.mode && a.size == b.size && a.tabSize == b.tabSize;
 };
