@@ -89,10 +89,7 @@ let init = app => {
   runEffects();
 
   List.iter(
-    v => {
-      dispatch(Model.Actions.OpenFileByPath(v));
-      print_endline("Opening: " ++ v);
-    },
+    v => dispatch(Model.Actions.OpenFileByPath(v)),
     cliOptions.filesToOpen,
   );
 

@@ -124,9 +124,9 @@ let start = () => {
       );
 
   let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      Vim.Buffer.openFile(filePath) |> ignore;
-    });
+    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
+      Vim.Buffer.openFile(filePath) |> ignore
+    );
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
