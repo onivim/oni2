@@ -60,6 +60,9 @@ let start = () => {
         version: 0,
       };
       dispatch(Model.Actions.BufferEnter(meta));
+
+      Vim.Options.setTabSize(10);
+      Vim.Options.setInsertSpaces(true);
     });
 
   let _ =
