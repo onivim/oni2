@@ -22,9 +22,11 @@ esy build
 
 ```sh
 cd src/textmate_service
-node install
+node install.js
 npm run build
 ```
+
+> __NOTE:__ The non-standard `node install.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary - and the native dependencies for the textmate service rely on being built with the same version of node that it uses at runtime.
 
 ### Run
 

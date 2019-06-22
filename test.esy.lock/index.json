@@ -1,5 +1,5 @@
 {
-  "checksum": "f7094b032c6259b68d41d298694cc3a2",
+  "checksum": "838480e18e100b47dd0b3878a4f44171",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -158,32 +158,32 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@8.10869.7001@d41d8cd9": {
-      "id": "reason-libvim@8.10869.7001@d41d8cd9",
+    "reason-libvim@8.10869.10001@d41d8cd9": {
+      "id": "reason-libvim@8.10869.10001@d41d8cd9",
       "name": "reason-libvim",
-      "version": "8.10869.7001",
+      "version": "8.10869.10001",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.7001.tgz#sha1:5dbf5bfa078191aeb1530a3a65b30ccb522289a9"
+          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.10001.tgz#sha1:4408ca9d076e675c6297786d31de8ee1745c03af"
         ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.1.10@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.9@d41d8cd9", "@opam/dune@opam:1.7.3@72aad784",
+        "libvim@8.10869.10@d41d8cd9", "@opam/dune@opam:1.7.3@72aad784",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "reason-jsonrpc@1.0.1@d41d8cd9": {
-      "id": "reason-jsonrpc@1.0.1@d41d8cd9",
+    "reason-jsonrpc@1.1.0@d41d8cd9": {
+      "id": "reason-jsonrpc@1.1.0@d41d8cd9",
       "name": "reason-jsonrpc",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-jsonrpc/-/reason-jsonrpc-1.0.1.tgz#sha1:f003f993783a9f88bba23bc989d9f609c23d393a"
+          "archive:https://registry.npmjs.org/reason-jsonrpc/-/reason-jsonrpc-1.1.0.tgz#sha1:5a704f093254a5082e8dfbc049172c9759c0c73e"
         ]
       },
       "overrides": [],
@@ -286,14 +286,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.9@d41d8cd9": {
-      "id": "libvim@8.10869.9@d41d8cd9",
+    "libvim@8.10869.10@d41d8cd9": {
+      "id": "libvim@8.10869.10@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.9",
+      "version": "8.10869.10",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.9.tgz#sha1:6116cd9f7fd93f37de57a5eaffaf96d0a2d52c12"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.10.tgz#sha1:5628e27a87052169dbfdfa265e26e9b1869dcfc6"
         ]
       },
       "overrides": [],
@@ -448,8 +448,8 @@
       "dependencies": [
         "revery@0.20.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@8.10869.7001@d41d8cd9",
-        "reason-jsonrpc@1.0.1@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
+        "reason-libvim@8.10869.10001@d41d8cd9",
+        "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9", "@opam/zed@opam:1.6@004ea65e",
         "@opam/yojson@opam:1.5.0@890db858",
@@ -1314,20 +1314,20 @@
         "@opam/ocamlfind@opam:1.8.0@f744a0c5"
       ]
     },
-    "@opam/menhir@opam:20190613@ea48c81c": {
-      "id": "@opam/menhir@opam:20190613@ea48c81c",
+    "@opam/menhir@opam:20190620@a914c43f": {
+      "id": "@opam/menhir@opam:20190620@a914c43f",
       "name": "@opam/menhir",
-      "version": "opam:20190613",
+      "version": "opam:20190620",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/23/23c380e23903e1974c923f3a6ff25ad4#md5:23c380e23903e1974c923f3a6ff25ad4",
-          "archive:https://gitlab.inria.fr/fpottier/menhir/repository/20190613/archive.tar.gz#md5:23c380e23903e1974c923f3a6ff25ad4"
+          "archive:https://opam.ocaml.org/cache/md5/f7/f77d327a6203dfa031a9b94466b0c560#md5:f77d327a6203dfa031a9b94466b0c560",
+          "archive:https://gitlab.inria.fr/fpottier/menhir/repository/20190620/archive.tar.gz#md5:f77d327a6203dfa031a9b94466b0c560"
         ],
         "opam": {
           "name": "menhir",
-          "version": "20190613",
-          "path": "test.esy.lock/opam/menhir.20190613"
+          "version": "20190620",
+          "path": "test.esy.lock/opam/menhir.20190620"
         }
       },
       "overrides": [],
@@ -2112,7 +2112,7 @@
         "@opam/ocamlfind@opam:1.8.0@f744a0c5",
         "@opam/ocaml-migrate-parsetree@opam:1.3.1@266527bd",
         "@opam/merlin-extend@opam:0.3@0af73a50",
-        "@opam/menhir@opam:20190613@ea48c81c",
+        "@opam/menhir@opam:20190620@a914c43f",
         "@opam/dune@opam:1.7.3@72aad784"
       ],
       "devDependencies": []

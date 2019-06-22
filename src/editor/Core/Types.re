@@ -10,11 +10,15 @@ module Index = {
     | OneBasedIndex(n) => n - 1
     };
 
+  let toInt0 = toZeroBasedInt;
+
   let toOneBasedInt = (pos: t) =>
     switch (pos) {
     | ZeroBasedIndex(n) => n + 1
     | OneBasedIndex(n) => n
     };
+
+  let toInt1 = toOneBasedInt;
 };
 
 module EditorSize = {
@@ -124,6 +128,17 @@ module BufferUpdate = {
       id,
       startLine: Index.ZeroBasedIndex(startLine),
       endLine: Index.ZeroBasedIndex(endLine),
+      lines,
+      version,
+    };
+    ret;
+  };
+  let createFromOneBasedIndices =
+      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+    let ret: t = {
+      id,
+      startLine: Index.OneBasedIndex(startLine),
+      endLine: Index.OneBasedIndex(endLine),
       lines,
       version,
     };

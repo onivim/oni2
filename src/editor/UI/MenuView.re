@@ -40,6 +40,10 @@ let handleChange = (event: Input.changeEvent) =>
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
+  | {key: Revery.Key.KEY_DOWN, _} =>
+    GlobalContext.current().dispatch(MenuNextItem)
+  | {key: Revery.Key.KEY_UP, _} =>
+    GlobalContext.current().dispatch(MenuPreviousItem)
   | {key: Revery.Key.KEY_ESCAPE, _} =>
     GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
   | _ => ()
