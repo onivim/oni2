@@ -88,10 +88,13 @@ let init = app => {
   dispatch(Model.Actions.Init);
   runEffects();
 
-  List.iter((v) => {
-  	dispatch(Model.Actions.OpenFileByPath(v));
-	  print_endline("Opening: " ++ v);
-	}, cliOptions.filesToOpen);
+  List.iter(
+    v => {
+      dispatch(Model.Actions.OpenFileByPath(v));
+      print_endline("Opening: " ++ v);
+    },
+    cliOptions.filesToOpen,
+  );
 
   let setFont = (fontFamily, fontSize) => {
     let scaleFactor =
