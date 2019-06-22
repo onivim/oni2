@@ -32,11 +32,14 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       let width =
         float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
 
+
+	let color = Color.multiplyAlpha(0.5, token.color);
+
       Shapes.drawRect(
         ~transform,
         ~y=yOffset,
         ~x,
-        ~color=token.color,
+        ~color,
         ~width,
         ~height,
         (),
