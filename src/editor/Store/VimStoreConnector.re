@@ -102,7 +102,6 @@ let start = () => {
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
       hasInitialized := true;
-      print_endline("Vim initialized.");
     });
 
   /* TODO: Move to init */
@@ -126,9 +125,7 @@ let start = () => {
 
   let openFileByPathEffect = filePath =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      print_endline("Opening file: " ++ filePath);
       Vim.Buffer.openFile(filePath) |> ignore;
-      print_endline("Opening file complete!");
     });
 
   /* let registerQuitHandlerEffect = */
