@@ -36,8 +36,10 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
     });
 
-    test("BufEnter update does not duplicate content, 1-based indices", ({expect}) => {
-prerr_endline ("=== STARTING TEST ==");
+    test(
+      "BufEnter update does not duplicate content, 1-based indices",
+      ({expect}) => {
+      prerr_endline("=== STARTING TEST ==");
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.createFromOneBasedIndices(
@@ -49,7 +51,7 @@ prerr_endline ("=== STARTING TEST ==");
         );
       let updatedBuffer = Buffer.update(buffer, update);
       validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
-prerr_endline ("=== ENDING TEST ==");
+      prerr_endline("=== ENDING TEST ==");
     });
 
     test("update single line", ({expect}) => {

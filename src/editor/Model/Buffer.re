@@ -93,33 +93,30 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
 };
 
 let update = (buf: t, update: BufferUpdate.t) => {
-    let endLine = Index.toInt0(update.endLine);
-
+  let endLine = Index.toInt0(update.endLine);
 
   if (update.version > buf.metadata.version) {
-
-  /***
-     When a buffer is first attached it emits an update with
-     a startLine of 0 and endLine of -1 in this case we should
-     update the buffer's version but set the content of the buffer
-     rather than update it, which would result in duplication
-   */
-   if (endLine < 0) {
+    /***
+       When a buffer is first attached it emits an update with
+       a startLine of 0 and endLine of -1 in this case we should
+       update the buffer's version but set the content of the buffer
+       rather than update it, which would result in duplication
+     */
+    if (endLine < 0) {
       {
-      metadata: {
-        ...buf.metadata,
-        version: update.version
-      },
-      lines: update.lines,
-    }
-
-   } else {
-    let metadata = {...buf.metadata, version: update.version};
-    {metadata, lines: applyUpdate(buf.lines, update)};
-   }
-   } else {
-        buf
-    }
+        metadata: {
+          ...buf.metadata,
+          version: update.version,
+        },
+        lines: update.lines,
+      };
+    } else {
+      let metadata = {...buf.metadata, version: update.version};
+      {metadata, lines: applyUpdate(buf.lines, update)};
+    };
+  } else {
+    buf;
+  };
 };
 
 let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
