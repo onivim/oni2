@@ -85,9 +85,23 @@ let start = () => {
     );
 
   let _ =
-    Vim.CommandLine.onUpdate(c =>
+    Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c))
-    );
+
+      let cmdlineType = Vim.CommandLine.getType();
+      switch (cmdlineType) {
+      | SearchForward
+      | SearchReverse => 
+        let highlights = Vim.Search.getHighlights();
+
+        print_endline ("highlights: ");
+        Array.iter((h) => {
+            open Vim.Range;
+            print_endline("Range: " ++ Vim.Position.show(h.startPos) ++ "|" ++ Vim.Position.show(h.endPos));
+        }, highlights);
+      | _ => ()
+      }
+    });
 
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
