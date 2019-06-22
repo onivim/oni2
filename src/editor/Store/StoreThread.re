@@ -57,7 +57,7 @@ let start =
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
-  let (commandUpdater) = CommandStoreConnector.start(getState);
+  let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
