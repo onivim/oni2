@@ -218,18 +218,18 @@ let start = () => {
         | None => ()
         };
 
-        let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
-          /* vimProtocol.moveCursor( */
-          /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-          /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-          /* currentEditorId := Some(editor.id); */
-
-          let ret = ();
-          ret;
+        let synchronizeCursorPosition = (editor: Model.Editor.t) => {
+			print_endline("Synchronizing cursor position!");
+	  	Vim.Cursor.setPosition(Core.Types.Index.toInt1(editor.cursorPosition.line), Core.Types.Index.toInt1(editor.cursorPosition.character));
         };
 
         switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
+        | (Some(e), Some(v)) when e.id != v => {
+			open Model.Editor;
+
+			synchronizeCursorPosition(e)
+			currentEditorId := Some(e.id);
+			}
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
         };
