@@ -33,7 +33,10 @@ let start = () => {
             "Number of lines checking: " ++ string_of_int(count),
           );
 
-          let guess = IndentationGuesser.guessIndentation(~f, count, 4, true);
+	      let defaultInsertSpaces = state.configuration.editorInsertSpaces;
+	      let defaultIndentSize = state.configuration.editorIndentSize;
+	      
+          let guess = IndentationGuesser.guessIndentation(~f, count, defaultIndentSize, defaultInsertSpaces);
 
           let modeStr =
             switch (guess.mode) {
