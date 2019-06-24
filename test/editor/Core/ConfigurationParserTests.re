@@ -5,6 +5,27 @@ open Oni_Core.Configuration;
 module ConfigurationParser = Oni_Core.ConfigurationParser;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
+  describe("per-filetype handling", ({test, _}) => {
+    test("simple filetype case", ({expect}) => {
+      let fileTypeConfiguration = {|
+      	"editor.insertSpaces": false,
+		  "[reason]": {
+		  	"editor.insertSpaces": true,
+		  }
+      |};
+
+	  switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
+	  | Error(_) => expect.bool(true).toBe(false)
+	  | Ok(v) => {
+	  	let insertSpaces = Configuration.getValue(~fileType="reason", (c) => Some(c.editorInsertSpaces), v);
+		  expect.bool(insertSpaces).toBe(true);
+		
+	  	let insertSpaces = Configuration.getValue(~fileType="someotherlang", (c) => Some(c.editorInsertSpaces), v);
+		  expect.bool(insertSpaces).toBe(false);
+	  }
+	  };
+    });
+  });
   describe("error handling", ({test, _}) => {
     test("invalid json returns error", ({expect}) => {
       let invalidConfiguration = "{]";
@@ -44,4 +65,5 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
+  
 });
