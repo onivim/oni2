@@ -22,7 +22,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       | Ok(v) =>
         let insertSpaces =
           Configuration.getValue(
-            ~fileType=Some("reason"),
+            ~fileType="reason",
             c => c.editorInsertSpaces,
             v,
           );
@@ -30,7 +30,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 
         let insertSpaces =
           Configuration.getValue(
-            ~fileType=Some("someotherlang"),
+            ~fileType="someotherlang",
             c => c.editorInsertSpaces,
             v,
           );
@@ -40,23 +40,25 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 
     test("ignores doubly-nested languages", ({expect}) => {
       let fileTypeConfiguration = {|
+	  {
       	"editor.insertSpaces": false,
 		  "[reason]": {
 		  	"editor.insertSpaces": true,
 			  "[ocaml]": {
-			  	"editor.insertSpaces": false,
+			  	"editor.insertSpaces": false
 			  }
 		  },
 		  "[ocaml]": {
 		  	"editor.insertSpaces": true
 		  }
+	  }
       |};
       switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.bool(true).toBe(false)
+      | Error(_) => expect.int(1).toBe(2)
       | Ok(v) =>
         let ocamlInsertSpaces =
           Configuration.getValue(
-            ~fileType=Some("ocaml"),
+            ~fileType="ocaml",
             c => c.editorInsertSpaces,
             v,
           );
