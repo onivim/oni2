@@ -90,6 +90,10 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
   ),
   (
+    "editor.detectIndentation",
+    (s, v) => {...s, editorDetectIndentation: parseBool(v)},
+  ),
+  (
     "editor.insertSpaces",
     (s, v) => {...s, editorInsertSpaces: parseBool(v)},
   ),

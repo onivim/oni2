@@ -69,6 +69,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let commandUpdater = CommandStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
+  let indentationUpdater = IndentationStoreConnector.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -85,6 +86,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
+          indentationUpdater,
         ]),
       (),
     );
