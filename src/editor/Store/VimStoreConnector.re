@@ -25,13 +25,20 @@ let start = () => {
           newPosition.line,
           newPosition.column + 1,
         );
+      dispatch(Model.Actions.CursorMove(cursorPos));
+
+	  let buffer = Vim.Buffer.getCurrent();
+	  let id = Vim.Buffer.getId(buffer);
 
 	  let result = Vim.Search.getMatchingPair();
 	  switch (result) {
-	  | None => print_endline ("No matching pair!");
-	  | Some({line, column}) => print_endline ("Matching pair: " ++ string_of_int(line) ++ ", " ++ string_of_int(column));
+	  | None => dispatch(Model.Actions.SearchClearMatchingPair(id))
+	  | Some({line, column}) => dispatch(Model.Actions.SearchSetMatchingPair(
+	  	id,
+		  Core.Types.Position.create(OneBasedIndex(newPosition.line), OneBasedIndex(newPosition.column)),
+		  Core.Types.Position.create(OneBasedIndex(line), OneBasedIndex(column))
+	  ))
 	  }
-      dispatch(Model.Actions.CursorMove(cursorPos));
     });
 
   let _ =
