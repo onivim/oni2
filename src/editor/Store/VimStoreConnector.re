@@ -136,8 +136,9 @@ let start = () => {
         | Spaces => true
         };
 
-      Vim.Options.setInsertSpaces(insertSpaces);
+		print_endline ("Setting insert spaces: " ++ string_of_bool(insertSpaces));
       Vim.Options.setTabSize(indentation.size);
+      Vim.Options.setInsertSpaces(insertSpaces);
     });
 
   /* let registerQuitHandlerEffect = */

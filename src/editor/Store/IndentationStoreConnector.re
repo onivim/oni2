@@ -17,15 +17,15 @@ let start = () => {
    */
   let checkIndentationEffect = (state, bufferId) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="indentation.detectAndSet", _dispatch => {
+      ~name="indentation.detectAndSet", dispatch => {
       open State;
       let buffer = Buffers.getBuffer(bufferId, state.buffers);
       switch (buffer) {
       | None => ()
       | Some(b) =>
         if (!Buffer.isIndentationSet(b)) {
-          print_endline("Indentation not set! Detecting");
 
+	  	let indentationSettings = if(state.configuration.editorDetectIndentation) {
           let f = Buffer.getLine(b);
           let count = Buffer.getNumberOfLines(b);
 
@@ -38,18 +38,18 @@ let start = () => {
 	      
           let guess = IndentationGuesser.guessIndentation(~f, count, defaultIndentSize, defaultInsertSpaces);
 
-          let modeStr =
-            switch (guess.mode) {
-            | Tabs => "tabs"
-            | Spaces => "spaces"
-            };
+		  IndentationSettings.create(
+		  	~mode=guess.mode,
+			~size=guess.size,
+			~tabSize=state.configuration.editorTabSize,
+			()
+			);
 
-          print_endline(
-            "Guessed indentation: "
-            ++ string_of_int(guess.size)
-            ++ " | "
-            ++ modeStr,
-          );
+		  } else {
+		  	IndentationSettings.ofConfiguration(state.configuration);
+		  }
+
+		  dispatch(Actions.BufferSetIndentation(bufferId, indentationSettings))
         } else {
           ();
         }
