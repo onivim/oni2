@@ -31,7 +31,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         let insertSpaces =
           Configuration.getValue(
             ~fileType=Some("someotherlang"),
-            c =>c.editorInsertSpaces,
+            c => c.editorInsertSpaces,
             v,
           );
         expect.bool(insertSpaces).toBe(false);
@@ -61,7 +61,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
             v,
           );
         expect.bool(ocamlInsertSpaces).toBe(true);
-	}
+      };
     });
   });
   describe("error handling", ({test, _}) => {
@@ -88,7 +88,11 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     let emptyConfiguration = "{}";
 
     switch (ConfigurationParser.ofString(emptyConfiguration)) {
-    | Ok(v) => expect.string(Configuration.getValue(c => c.workbenchIconTheme, v)).toEqual("vs-seti")
+    | Ok(v) =>
+      expect.string(Configuration.getValue(c => c.workbenchIconTheme, v)).
+        toEqual(
+        "vs-seti",
+      )
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
@@ -99,7 +103,11 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       |};
 
     switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) => expect.bool(Configuration.getValue(c => c.editorMinimapEnabled, v)).toBe(false)
+    | Ok(v) =>
+      expect.bool(Configuration.getValue(c => c.editorMinimapEnabled, v)).
+        toBe(
+        false,
+      )
     | Error(_) => expect.bool(false).toBe(true)
     };
   });

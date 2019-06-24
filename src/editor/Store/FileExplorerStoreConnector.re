@@ -63,7 +63,11 @@ let start = () => {
             ~nodeId=id,
             ~languageInfo=state.languageInfo,
             ~iconTheme=state.iconTheme,
-            ~ignored=Configuration.getValue(c => c.filesExclude, state.configuration),
+            ~ignored=
+              Configuration.getValue(
+                c => c.filesExclude,
+                state.configuration,
+              ),
             ~tree,
           ),
         )

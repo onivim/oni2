@@ -127,86 +127,103 @@ let keyToParser: Hashtbl.t(string, parseFunction) =
   );
 
 type parseResult = {
-	nestedConfigurations: list((string, Yojson.Safe.json)),
-	configurationValues: ConfigurationValues.t,
+  nestedConfigurations: list((string, Yojson.Safe.json)),
+  configurationValues: ConfigurationValues.t,
 };
 
 let isFiletype = (str: string) => {
-	let str = String.trim(str);
+  let str = String.trim(str);
 
-	let len = String.length(str);
+  let len = String.length(str);
 
-	if (len >= 3) {
-		String.get(str, 0) == '[' && String.get(str, len - 1) == ']'
-	} else {
-		false
-	}
+  if (len >= 3) {
+    str.[0] == '[' && str.[len - 1] == ']';
+  } else {
+    false;
+  };
 };
 
 let getFiletype = (str: string) => {
-	let str = String.trim(str);
-	let len = String.length(str);
-	
-	String.sub(str, 1, len - 2);
+  let str = String.trim(str);
+  let len = String.length(str);
+
+  String.sub(str, 1, len - 2);
 };
 
-let parse: list((string, Yojson.Safe.json)) => parseResult = items => {
-      List.fold_left(
-        (prev, cur) => {
-          let (key, json) = cur;
-		  let { nestedConfigurations, configurationValues } = prev;
+let parse: list((string, Yojson.Safe.json)) => parseResult =
+  items => {
+    List.fold_left(
+      (prev, cur) => {
+        let (key, json) = cur;
+        let {nestedConfigurations, configurationValues} = prev;
 
-		  switch (isFiletype(key)) {
-		  | true =>
-		  	let nestedConfigurations = [(getFiletype(key), json), ...nestedConfigurations];
-			  { nestedConfigurations, configurationValues }
-		  | false =>
-		  switch (Hashtbl.find_opt(keyToParser, key)) {
-		  | Some(v) => { nestedConfigurations, configurationValues: v(configurationValues, json) }
-		  | None => prev
-		  };
-		  }
-
-        },
-	{ nestedConfigurations: [], configurationValues: ConfigurationValues.default },
-        items,
-      )
-}
+        isFiletype(key)
+          ? {
+            let nestedConfigurations = [
+              (getFiletype(key), json),
+              ...nestedConfigurations,
+            ];
+            {nestedConfigurations, configurationValues};
+          }
+          : (
+            switch (Hashtbl.find_opt(keyToParser, key)) {
+            | Some(v) => {
+                nestedConfigurations,
+                configurationValues: v(configurationValues, json),
+              }
+            | None => prev
+            }
+          );
+      },
+      {
+        nestedConfigurations: [],
+        configurationValues: ConfigurationValues.default,
+      },
+      items,
+    );
+  };
 
 let parseNested = (json: Yojson.Safe.json, default: ConfigurationValues.t) => {
-	switch (json) {
-	| `Assoc(items) => {
-		List.fold_left((prev, cur) => {
-			let (key, json) = cur;
+  switch (json) {
+  | `Assoc(items) =>
+    List.fold_left(
+      (prev, cur) => {
+        let (key, json) = cur;
 
-		 	switch (isFiletype(key)) {
-			| true => prev
-			| false => switch(Hashtbl.find_opt(keyToParser, key)) {
-			| Some(v) => { v(prev, json) }
-			| None => prev
-			}
-			}
-
-		}, default, items);
-	}
-	| _ => default
-	}
-}
+        isFiletype(key)
+          ? prev
+          : (
+            switch (Hashtbl.find_opt(keyToParser, key)) {
+            | Some(v) => v(prev, json)
+            | None => prev
+            }
+          );
+      },
+      default,
+      items,
+    )
+  | _ => default
+  };
+};
 
 let ofJson = json => {
   switch (json) {
-  | `Assoc(items) => {
+  | `Assoc(items) =>
+    let {configurationValues, nestedConfigurations} = parse(items);
 
-      let { configurationValues, nestedConfigurations } = parse(items);
+    let perFiletype =
+      List.fold_left(
+        (prev, cur) => {
+          let (key, json) = cur;
+          StringMap.add(key, parseNested(json, configurationValues), prev);
+        },
+        StringMap.empty,
+        nestedConfigurations,
+      );
 
-	  let perFiletype = List.fold_left((prev, cur) => {
-		let (key, json) = cur;
-		StringMap.add(key, parseNested(json, configurationValues), prev);
-	  }, StringMap.empty, nestedConfigurations);
-
-      let configuration = Configuration.({default: configurationValues, perFiletype });
-      Ok(configuration);
-}
+    let configuration =
+      Configuration.{default: configurationValues, perFiletype};
+    Ok(configuration);
   | _ => Error("Incorrect JSON format for configuration")
   };
 };

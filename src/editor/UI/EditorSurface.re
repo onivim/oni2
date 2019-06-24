@@ -316,7 +316,11 @@ let createElement =
 
     let layout =
       EditorLayout.getLayout(
-        ~maxMinimapCharacters=Configuration.getValue(c => c.editorMinimapMaxColumn, state.configuration),
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
         ~isMinimapShown=true,
@@ -540,7 +544,10 @@ let createElement =
                         editor.scrollX,
                         offset,
                         transform,
-                        Configuration.getValue(c => c.editorRenderWhitespace, state.configuration),
+                        Configuration.getValue(
+                          c => c.editorRenderWhitespace,
+                          state.configuration,
+                        ),
                       );
                     ();
                   },
@@ -580,8 +587,16 @@ let createElement =
                 (),
               );
 
-				let renderIndentGuides = Configuration.getValue(c => c.editorRenderIndentGuides, state.configuration);
-				let showActive = Configuration.getValue(c => c.editorHighlightActiveIndentGuide, state.configuration);
+              let renderIndentGuides =
+                Configuration.getValue(
+                  c => c.editorRenderIndentGuides,
+                  state.configuration,
+                );
+              let showActive =
+                Configuration.getValue(
+                  c => c.editorHighlightActiveIndentGuide,
+                  state.configuration,
+                );
 
               if (renderIndentGuides) {
                 switch (activeBuffer) {
