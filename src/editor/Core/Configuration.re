@@ -14,10 +14,10 @@ let default = {
   perFiletype: StringMap.empty,
 };
 
-let getValueOpt =
+let getValue =
     (
       ~fileType=None,
-      selector: ConfigurationValues.t => option('a),
+      selector: ConfigurationValues.t => 'a,
       configuration: t,
     ) => {
   let defaultValue = selector(configuration.default);
@@ -28,24 +28,7 @@ let getValueOpt =
     switch (StringMap.find_opt(f, configuration.perFiletype)) {
     | None => defaultValue
     | Some(fileTypeConfig) =>
-      switch (selector(fileTypeConfig)) {
-      | None => defaultValue
-      | Some(c) => Some(c)
-      }
+      selector(fileTypeConfig)
     }
-  };
-};
-
-exception ConfigurationNotFound;
-
-let getValue =
-    (
-      ~fileType=None,
-      selector: ConfigurationValues.t => option('a),
-      configuration: t,
-    ) => {
-  switch (getValueOpt(~fileType, selector, configuration)) {
-  | Some(v) => v
-  | None => raise(ConfigurationNotFound)
   };
 };

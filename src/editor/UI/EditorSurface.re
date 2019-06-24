@@ -122,7 +122,7 @@ let renderTokens =
       xOffset: float,
       yOffset: float,
       transform,
-      whitespaceSetting: Configuration.editorRenderWhitespace,
+      whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
     ) => {
   let yF = yOffset;
   let xF = xOffset;
@@ -316,7 +316,7 @@ let createElement =
 
     let layout =
       EditorLayout.getLayout(
-        ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
+        ~maxMinimapCharacters=Configuration.getValue(c => c.editorMinimapMaxColumn, state.configuration),
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
         ~isMinimapShown=true,
@@ -540,7 +540,7 @@ let createElement =
                         editor.scrollX,
                         offset,
                         transform,
-                        state.configuration.editorRenderWhitespace,
+                        Configuration.getValue(c => c.editorRenderWhitespace, state.configuration),
                       );
                     ();
                   },
@@ -580,7 +580,10 @@ let createElement =
                 (),
               );
 
-              if (state.configuration.editorRenderIndentGuides) {
+				let renderIndentGuides = Configuration.getValue(c => c.editorRenderIndentGuides, state.configuration);
+				let showActive = Configuration.getValue(c => c.editorHighlightActiveIndentGuide, state.configuration);
+
+              if (renderIndentGuides) {
                 switch (activeBuffer) {
                 | None => ()
                 | Some(buffer) =>
@@ -596,8 +599,7 @@ let createElement =
                     ~theme=state.theme,
                     ~indentationSettings=indentation,
                     ~bufferPositionToPixel,
-                    ~showActive=
-                      state.configuration.editorHighlightActiveIndentGuide,
+                    ~showActive,
                     (),
                   )
                 };
