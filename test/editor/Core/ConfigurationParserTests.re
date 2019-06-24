@@ -14,16 +14,25 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 		  }
       |};
 
-	  switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-	  | Error(_) => expect.bool(true).toBe(false)
-	  | Ok(v) => {
-	  	let insertSpaces = Configuration.getValue(~fileType="reason", (c) => Some(c.editorInsertSpaces), v);
-		  expect.bool(insertSpaces).toBe(true);
-		
-	  	let insertSpaces = Configuration.getValue(~fileType="someotherlang", (c) => Some(c.editorInsertSpaces), v);
-		  expect.bool(insertSpaces).toBe(false);
-	  }
-	  };
+      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
+      | Error(_) => expect.bool(true).toBe(false)
+      | Ok(v) =>
+        let insertSpaces =
+          Configuration.getValue(
+            ~fileType="reason",
+            c => Some(c.editorInsertSpaces),
+            v,
+          );
+        expect.bool(insertSpaces).toBe(true);
+
+        let insertSpaces =
+          Configuration.getValue(
+            ~fileType="someotherlang",
+            c => Some(c.editorInsertSpaces),
+            v,
+          );
+        expect.bool(insertSpaces).toBe(false);
+      };
     });
 
     test("ignores doubly-nested languages", ({expect}) => {
@@ -39,6 +48,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 		  	"editor.insertSpaces": true
 		  }
       |};
+      ();
     });
   });
   describe("error handling", ({test, _}) => {
@@ -80,5 +90,4 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
-  
 });

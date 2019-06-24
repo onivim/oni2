@@ -64,7 +64,8 @@ let parseString = json =>
   | _ => ""
   };
 
-type parseFunction = (ConfigurationValues.t, Yojson.Safe.json) => ConfigurationValues.t;
+type parseFunction =
+  (ConfigurationValues.t, Yojson.Safe.json) => ConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
