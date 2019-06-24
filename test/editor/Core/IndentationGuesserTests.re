@@ -72,9 +72,11 @@ describe("IndentationGuesser", ({describe, _}) =>
     test("indeterminate uses passed-in settings", ({expect}) => {
       let settings = guessIndentationArray(indeterminateLines, 4, true);
       expect.bool(settings.mode == IndentationSettings.Spaces).toBe(true);
+      expect.int(settings.size).toBe(4);
 
-      let settings = guessIndentationArray(indeterminateLines, 4, false);
+      let settings = guessIndentationArray(indeterminateLines, 3, false);
       expect.bool(settings.mode == IndentationSettings.Tabs).toBe(true);
+      expect.int(settings.size).toBe(3);
     });
 
     test("more tabs than spaces", ({expect}) => {
