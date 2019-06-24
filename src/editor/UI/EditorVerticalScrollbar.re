@@ -93,32 +93,36 @@ let createElement =
         diagnosticLines,
       );
 
-          let matchingPairStyle = (t) =>
-            Style.[
-              position(`Absolute),
-              top(t - 3),
-              left(4),
-	      	right(4),
-              height(8),
-              backgroundColor(state.theme.colors.editorOverviewRulerBracketMatchForeground),
-            ];
+    let matchingPairStyle = t =>
+      Style.[
+        position(`Absolute),
+        top(t - 3),
+        left(4),
+        right(4),
+        height(8),
+        backgroundColor(
+          state.theme.colors.editorOverviewRulerBracketMatchForeground,
+        ),
+      ];
 
+    print_endline(
+      "Checking matching pairs for buffer: " ++ string_of_int(editor.bufferId),
+    );
 
-	print_endline ("Checking matching pairs for buffer: " ++ string_of_int(editor.bufferId));
-
-	let matchingPairElements = switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
-	| None => []
-	| Some(mp) => {
-		let topLine = bufferLineToScrollbarPixel(Index.toInt0(mp.startPos.line));
-		let botLine = bufferLineToScrollbarPixel(Index.toInt0(mp.endPos.line));
-		print_endline ("GOT MATCHING PAIRS");
-	    [
-		<View style=matchingPairStyle(topLine) />,
-		<View style=matchingPairStyle(botLine) />,
-	    ];
-		
-	}
-	};
+    let matchingPairElements =
+      switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+      | None => []
+      | Some(mp) =>
+        let topLine =
+          bufferLineToScrollbarPixel(Index.toInt0(mp.startPos.line));
+        let botLine =
+          bufferLineToScrollbarPixel(Index.toInt0(mp.endPos.line));
+        print_endline("GOT MATCHING PAIRS");
+        [
+          <View style={matchingPairStyle(topLine)} />,
+          <View style={matchingPairStyle(botLine)} />,
+        ];
+      };
 
     (
       hooks,

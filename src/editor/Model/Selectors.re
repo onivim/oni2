@@ -30,13 +30,12 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
 };
 
 let getMatchingPairs = (state: State.t, bufferId: int) => {
-	switch(IntMap.find_opt(bufferId, state.searchHighlights)) {
-	| Some(v) => {
-			print_endline ("Selectors - getMatchingPairs -returning a pair");
-			v.matchingPair
-			}
-	| None => None
-	}
+  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+  | Some(v) =>
+    print_endline("Selectors - getMatchingPairs -returning a pair");
+    v.matchingPair;
+  | None => None
+  };
 };
 
 let getActiveBuffer = (state: State.t) => {
