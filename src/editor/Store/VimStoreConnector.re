@@ -26,6 +26,28 @@ let start = () => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
+
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      let result = Vim.Search.getMatchingPair();
+      switch (result) {
+      | None => dispatch(Model.Actions.SearchClearMatchingPair(id))
+      | Some({line, column}) =>
+        dispatch(
+          Model.Actions.SearchSetMatchingPair(
+            id,
+            Core.Types.Position.create(
+              OneBasedIndex(newPosition.line),
+              OneBasedIndex(newPosition.column),
+            ),
+            Core.Types.Position.create(
+              OneBasedIndex(line),
+              OneBasedIndex(column),
+            ),
+          ),
+        )
+      };
     });
 
   let _ =
