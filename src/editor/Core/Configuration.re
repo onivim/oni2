@@ -5,45 +5,39 @@
  */
 
 [@deriving show({with_path: false})]
-type editorRenderWhitespace =
-  | All
-  | Boundary
-  | None;
-
-[@deriving show({with_path: false})]
 type t = {
-  editorLineNumbers: LineNumber.setting,
-  editorMinimapEnabled: bool,
-  editorMinimapShowSlider: bool,
-  editorMinimapMaxColumn: int,
-  editorInsertSpaces: bool,
-  editorIndentSize: int,
-  editorTabSize: int,
-  editorHighlightActiveIndentGuide: bool,
-  editorRenderIndentGuides: bool,
-  editorRenderWhitespace,
-  workbenchIconTheme: string,
-  filesExclude: list(string),
+  default: ConfigurationValues.t,
+  perFiletype: StringMap.t(ConfigurationValues.t)
 };
 
 let default = {
-  editorMinimapEnabled: true,
-  editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
-  editorLineNumbers: Relative,
-  editorInsertSpaces: false,
-  editorIndentSize: 4,
-  editorTabSize: 4,
-  editorRenderIndentGuides: true,
-  editorHighlightActiveIndentGuide: true,
-  editorRenderWhitespace: All,
-  workbenchIconTheme: "vs-seti",
-  filesExclude: ["node_modules", "_esy"],
+  default: ConfigurationValues.t,
+  perFiletype: StringMap.empty,
 };
 
-let getBundledConfigPath = () => {
-  Rench.Path.join(
-    Rench.Environment.getExecutingDirectory(),
-    "configuration.json",
-  );
+let getValueOpt = (selector: (ConfigurationValues.t) => option('a), fileType: option(string) = None, configuration: t) => {
+
+	let defaultValue = selector(configuration.default);
+
+	let ret = switch (fileType) {
+	| None => defaultValue
+	| Some(f) => {
+		switch(StringMap.find_opt(configuration.perFiletype, f)) {
+		| None => defaultValue
+		| Some(filetypeConfig) => switch(selector(fileTypeConfig)) {
+		| None => defaultValue
+		| Some(c) => c
+		}
+		}
+	}
+	}
+};
+
+exception ConfigurationNotFound;
+
+let getValue = (selector: (ConfigurationValues.t) => option('a), fileType: option(string) = None, configuration: t) => {
+	switch (getValueOpt(selector, fileType, configuration)) {
+	| Some(v) => v
+	| None => raise(ConfigurationNotFound)
+	}
 };
