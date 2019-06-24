@@ -25,6 +25,21 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 	  }
 	  };
     });
+
+    test("ignores doubly-nested languages", ({expect}) => {
+      let fileTypeConfiguration = {|
+      	"editor.insertSpaces": false,
+		  "[reason]": {
+		  	"editor.insertSpaces": true,
+			  "[ocaml]": {
+			  	"editor.insertSpaces": false,
+			  }
+		  },
+		  "[ocaml]": {
+		  	"editor.insertSpaces": true
+		  }
+      |};
+    });
   });
   describe("error handling", ({test, _}) => {
     test("invalid json returns error", ({expect}) => {
