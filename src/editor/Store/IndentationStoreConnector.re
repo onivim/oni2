@@ -17,7 +17,7 @@ let start = () => {
    */
   let checkIndentationEffect = (state, bufferId) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="indentation.detectAndSet", dispatch => {
+      ~name="indentation.detectAndSet", _dispatch => {
       open State;
       let buffer = Buffers.getBuffer(bufferId, state.buffers);
       switch (buffer) {
@@ -33,7 +33,7 @@ let start = () => {
             "Number of lines checking: " ++ string_of_int(count),
           );
 
-          let guess = IndentationGuesser.guessIndentation(f, count, 4, true);
+          let guess = IndentationGuesser.guessIndentation(~f, count, 4, true);
 
           let modeStr =
             switch (guess.mode) {
