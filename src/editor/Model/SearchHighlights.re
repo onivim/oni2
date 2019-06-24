@@ -36,7 +36,7 @@ let reduce = (action: Actions.t, state: t) => {
       oldHighlights =>
         switch (oldHighlights) {
         | None => None
-        | Some(v) => Some({matchingPair: None})
+        | Some(_) => Some({matchingPair: None})
         },
       state,
     )
