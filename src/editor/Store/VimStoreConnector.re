@@ -76,10 +76,6 @@ let start = () => {
           (),
         );
 
-      print_endline ("Got update: " ++ string_of_int(update.version));
-
-      Array.iteri((idx, l) => print_endline("Line " ++ string_of_int(idx) ++ ": " ++ l), update.lines);
-
       dispatch(Model.Actions.BufferUpdate(bu));
     });
 
@@ -119,15 +115,13 @@ let start = () => {
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", ()
       /* TODO: Fix these keypaths in libvim to not be blocking */
-      =>{
+      =>
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
           Vim.input(key);
         }
-
-		print_endline ("First line of buffer: " ++ Vim.Buffer.getLine(Vim.Buffer.getCurrent(), 0));
-      });
+      );
 
   let openFileByPathEffect = filePath =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>

@@ -29,10 +29,6 @@ let start = () => {
               let f = Buffer.getLine(b);
               let count = Buffer.getNumberOfLines(b);
 
-              print_endline(
-                "Number of lines checking: " ++ string_of_int(count),
-              );
-
               let defaultInsertSpaces = state.configuration.editorInsertSpaces;
               let defaultIndentSize = state.configuration.editorIndentSize;
 
@@ -61,7 +57,6 @@ let start = () => {
           ();
         }
       };
-      print_endline("Dispatching detect and set!");
     });
 
   let updater = (state: State.t, action: Actions.t) => {
