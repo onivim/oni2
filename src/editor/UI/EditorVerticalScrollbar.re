@@ -105,10 +105,6 @@ let createElement =
         ),
       ];
 
-    print_endline(
-      "Checking matching pairs for buffer: " ++ string_of_int(editor.bufferId),
-    );
-
     let matchingPairElements =
       switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
       | None => []
@@ -117,7 +113,6 @@ let createElement =
           bufferLineToScrollbarPixel(Index.toInt0(mp.startPos.line));
         let botLine =
           bufferLineToScrollbarPixel(Index.toInt0(mp.endPos.line));
-        print_endline("GOT MATCHING PAIRS");
         [
           <View style={matchingPairStyle(topLine)} />,
           <View style={matchingPairStyle(botLine)} />,
