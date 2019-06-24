@@ -60,9 +60,6 @@ let start = () => {
         version: 0,
       };
       dispatch(Model.Actions.BufferEnter(meta));
-
-      Vim.Options.setTabSize(10);
-      Vim.Options.setInsertSpaces(true);
     });
 
   let _ =
@@ -130,6 +127,18 @@ let start = () => {
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
       Vim.Buffer.openFile(filePath) |> ignore
     );
+
+  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
+    Isolinear.Effect.create(~name="vim.setIndentation", () => {
+      let insertSpaces =
+        switch (indentation.mode) {
+        | Tabs => false
+        | Spaces => true
+        };
+
+      Vim.Options.setInsertSpaces(insertSpaces);
+      Vim.Options.setTabSize(indentation.size);
+    });
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
@@ -233,6 +242,10 @@ let start = () => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.BufferSetIndentation(_, indent) => (
+        state,
+        synchronizeIndentationEffect(indent),
+      )
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),
