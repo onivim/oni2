@@ -136,7 +136,9 @@ let start = () => {
         | Spaces => true
         };
 
-		print_endline ("Setting insert spaces: " ++ string_of_bool(insertSpaces));
+      print_endline(
+        "Setting insert spaces: " ++ string_of_bool(insertSpaces),
+      );
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });

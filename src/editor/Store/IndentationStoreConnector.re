@@ -24,32 +24,39 @@ let start = () => {
       | None => ()
       | Some(b) =>
         if (!Buffer.isIndentationSet(b)) {
+          let indentationSettings =
+            if (state.configuration.editorDetectIndentation) {
+              let f = Buffer.getLine(b);
+              let count = Buffer.getNumberOfLines(b);
 
-	  	let indentationSettings = if(state.configuration.editorDetectIndentation) {
-          let f = Buffer.getLine(b);
-          let count = Buffer.getNumberOfLines(b);
+              print_endline(
+                "Number of lines checking: " ++ string_of_int(count),
+              );
 
-          print_endline(
-            "Number of lines checking: " ++ string_of_int(count),
+              let defaultInsertSpaces = state.configuration.editorInsertSpaces;
+              let defaultIndentSize = state.configuration.editorIndentSize;
+
+              let guess =
+                IndentationGuesser.guessIndentation(
+                  ~f,
+                  count,
+                  defaultIndentSize,
+                  defaultInsertSpaces,
+                );
+
+              IndentationSettings.create(
+                ~mode=guess.mode,
+                ~size=guess.size,
+                ~tabSize=state.configuration.editorTabSize,
+                (),
+              );
+            } else {
+              IndentationSettings.ofConfiguration(state.configuration);
+            };
+
+          dispatch(
+            Actions.BufferSetIndentation(bufferId, indentationSettings),
           );
-
-	      let defaultInsertSpaces = state.configuration.editorInsertSpaces;
-	      let defaultIndentSize = state.configuration.editorIndentSize;
-	      
-          let guess = IndentationGuesser.guessIndentation(~f, count, defaultIndentSize, defaultInsertSpaces);
-
-		  IndentationSettings.create(
-		  	~mode=guess.mode,
-			~size=guess.size,
-			~tabSize=state.configuration.editorTabSize,
-			()
-			);
-
-		  } else {
-		  	IndentationSettings.ofConfiguration(state.configuration);
-		  }
-
-		  dispatch(Actions.BufferSetIndentation(bufferId, indentationSettings))
         } else {
           ();
         }

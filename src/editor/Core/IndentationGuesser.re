@@ -35,7 +35,12 @@ let getMaxKey = (map: IntMap.t(int)) => {
       (key, v, curr) => {
         let (curMaxKey, curMaxVal) = curr;
 
-		 print_endline ("Get max key - key: " ++ string_of_int(key) ++ " val: " ++ string_of_int(v));
+        print_endline(
+          "Get max key - key: "
+          ++ string_of_int(key)
+          ++ " val: "
+          ++ string_of_int(v),
+        );
         if (v > curMaxVal || curMaxKey == (-1)) {
           (key, v);
         } else {
@@ -89,18 +94,18 @@ let guessIndentation =
         getLeadingWhitespace(prevLine);
       if (prevFoundChar) {
         let diff = abs(prevSpaceCount - spaceCount);
-	    if (diff > 0) {
-        spaceDelta :=
-          IntMap.update(
-            diff,
-            curr =>
-              switch (curr) {
-              | Some(v) => Some(v + 1)
-              | None => Some(1)
-              },
-            spaceDelta^,
-          );
-	    }
+        if (diff > 0) {
+          spaceDelta :=
+            IntMap.update(
+              diff,
+              curr =>
+                switch (curr) {
+                | Some(v) => Some(v + 1)
+                | None => Some(1)
+                },
+              spaceDelta^,
+            );
+        };
       };
     };
 
@@ -122,12 +127,13 @@ let guessIndentation =
   let size =
     switch (shouldInsertSpaces) {
     | false => defaultTabSize
-    | true => let max = getMaxKey(spaceDelta^);
-    if (max > 0) {
-    	max
-    } else {
-    	defaultTabSize
-    }
+    | true =>
+      let max = getMaxKey(spaceDelta^);
+      if (max > 0) {
+        max;
+      } else {
+        defaultTabSize;
+      };
     };
 
   let mode =
