@@ -111,7 +111,7 @@ let getIndentation = buf => buf.indentation;
 let update = (buf: t, update: BufferUpdate.t) => {
   let endLine = Index.toInt0(update.endLine);
 
-  if (update.version > buf.metadata.version) {
+  if (update.version >= buf.metadata.version) {
     /***
        When a buffer is first attached it emits an update with
        a startLine of 0 and endLine of -1 in this case we should
