@@ -58,6 +58,8 @@ type t =
   | QuickOpen
   | Quit
   | RegisterQuitCleanup(unit => unit)
+  | SearchClearMatchingPair(int)
+  | SearchSetMatchingPair(int, Position.t, Position.t)
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)

@@ -36,7 +36,7 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "8.10869.10001"
+    "reason-libvim": "8.10869.11001"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",

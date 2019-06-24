@@ -35,17 +35,9 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start =
-    (
-      ~cliOptions: Core.Cli.t,
-      ~setup: Core.Setup.t,
-      ~executingDirectory,
-      ~onStateChanged,
-      (),
-    ) => {
+let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
   /* TODO: Bring cliOptions back */
   ignore(executingDirectory);
-  ignore(cliOptions);
 
   let state = Model.State.create();
 
@@ -162,18 +154,21 @@ let start =
 
   setIconTheme("vs-seti");
 
+  let runEffects = () => {
+    let effects = accumulatedEffects^;
+    accumulatedEffects := [];
+
+    List.iter(e => Isolinear.Effect.run(e, dispatch), effects);
+  };
+
   let _ =
     Tick.interval(
       _ => {
         dispatch(Model.Actions.Tick);
-
-        let effects = accumulatedEffects^;
-        accumulatedEffects := [];
-
-        List.iter(e => Isolinear.Effect.run(e, dispatch), effects);
+        runEffects();
       },
       Seconds(0.),
     );
 
-  dispatch;
+  (dispatch, runEffects);
 };
