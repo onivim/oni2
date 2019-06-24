@@ -4,6 +4,8 @@
  * Helpers to map the State.t to more usable values
  */
 
+open Oni_Core;
+
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
 };
@@ -25,6 +27,13 @@ let getBufferById = (state: State.t, id: int) => {
 
 let getBufferForEditor = (state: State.t, editor: Editor.t) => {
   Buffers.getBuffer(editor.bufferId, state.buffers);
+};
+
+let getMatchingPairs = (state: State.t, bufferId: int) => {
+  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+  | Some(v) => v.matchingPair
+  | None => None
+  };
 };
 
 let getActiveBuffer = (state: State.t) => {
