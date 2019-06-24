@@ -25,6 +25,12 @@ let start = () => {
           newPosition.line,
           newPosition.column + 1,
         );
+
+	  let result = Vim.Search.getMatchingPair();
+	  switch (result) {
+	  | None => print_endline ("No matching pair!");
+	  | Some({line, column}) => print_endline ("Matching pair: " ++ string_of_int(line) ++ ", " ++ string_of_int(column));
+	  }
       dispatch(Model.Actions.CursorMove(cursorPos));
     });
 
