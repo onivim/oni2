@@ -3,7 +3,7 @@
  *
  * Resilient parsing for Configuration
  */
-open Configuration;
+open ConfigurationValues;
 open LineNumber;
 
 let parseBool = json =>
@@ -64,7 +64,7 @@ let parseString = json =>
   | _ => ""
   };
 
-type parseFunction = (Configuration.t, Yojson.Safe.json) => Configuration.t;
+type parseFunction = (ConfigurationValues.t, Yojson.Safe.json) => ConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
@@ -137,7 +137,7 @@ let ofJson = json => {
           | None => prev
           };
         },
-        Configuration.default,
+        ConfigurationValues.default,
         items,
       ),
     )
