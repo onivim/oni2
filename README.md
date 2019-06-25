@@ -46,7 +46,7 @@ Coming soon!
 
 We'd :heart: help building Onivim 2!
 
-If you are interesting in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
+If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
 
 - [How to build and run from source](./CONTRIBUTING.md#build-and-run)
 - [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)

@@ -26,6 +26,28 @@ let start = () => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
+
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      let result = Vim.Search.getMatchingPair();
+      switch (result) {
+      | None => dispatch(Model.Actions.SearchClearMatchingPair(id))
+      | Some({line, column}) =>
+        dispatch(
+          Model.Actions.SearchSetMatchingPair(
+            id,
+            Core.Types.Position.create(
+              OneBasedIndex(newPosition.line),
+              OneBasedIndex(newPosition.column),
+            ),
+            Core.Types.Position.create(
+              OneBasedIndex(line),
+              OneBasedIndex(column),
+            ),
+          ),
+        )
+      };
     });
 
   let _ =
@@ -142,6 +164,21 @@ let start = () => {
       Vim.Buffer.openFile(filePath) |> ignore
     );
 
+  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
+    Isolinear.Effect.create(~name="vim.setIndentation", () => {
+      let insertSpaces =
+        switch (indentation.mode) {
+        | Tabs => false
+        | Spaces => true
+        };
+
+      print_endline(
+        "Setting insert spaces: " ++ string_of_bool(insertSpaces),
+      );
+      Vim.Options.setTabSize(indentation.size);
+      Vim.Options.setInsertSpaces(insertSpaces);
+    });
+
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
   /*     ~name="vim.registerQuitHandler", dispatch => */
@@ -244,6 +281,10 @@ let start = () => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.BufferSetIndentation(_, indent) => (
+        state,
+        synchronizeIndentationEffect(indent),
+      )
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),

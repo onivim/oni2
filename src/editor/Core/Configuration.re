@@ -12,6 +12,7 @@ type editorRenderWhitespace =
 
 [@deriving show({with_path: false})]
 type t = {
+  editorDetectIndentation: bool,
   editorLineNumbers: LineNumber.setting,
   editorMinimapEnabled: bool,
   editorMinimapShowSlider: bool,
@@ -27,6 +28,7 @@ type t = {
 };
 
 let default = {
+  editorDetectIndentation: true,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
   editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
