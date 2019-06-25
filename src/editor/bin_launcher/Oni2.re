@@ -20,10 +20,7 @@ let anonArg = _ => ();
 
 let () = Arg.parse(spec, anonArg, "Usage: ");
 
-let executable = switch(Sys.win32) {
-| true => "Oni2_editor.exe"
-| false => "Oni2_editor"
-}
+let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
 
 let startProcess = (stdio, stdout, stderr) => {
   let executingDirectory = Filename.dirname(Sys.argv[0]);
