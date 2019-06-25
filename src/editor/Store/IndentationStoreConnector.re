@@ -25,12 +25,23 @@ let start = () => {
       | Some(b) =>
         if (!Buffer.isIndentationSet(b)) {
           let indentationSettings =
-            if (state.configuration.editorDetectIndentation) {
+            if (Configuration.getValue(
+                  c => c.editorDetectIndentation,
+                  state.configuration,
+                )) {
               let f = Buffer.getLine(b);
               let count = Buffer.getNumberOfLines(b);
 
-              let defaultInsertSpaces = state.configuration.editorInsertSpaces;
-              let defaultIndentSize = state.configuration.editorIndentSize;
+              let defaultInsertSpaces =
+                Configuration.getValue(
+                  c => c.editorInsertSpaces,
+                  state.configuration,
+                );
+              let defaultIndentSize =
+                Configuration.getValue(
+                  c => c.editorIndentSize,
+                  state.configuration,
+                );
 
               let guess =
                 IndentationGuesser.guessIndentation(
@@ -43,7 +54,11 @@ let start = () => {
               IndentationSettings.create(
                 ~mode=guess.mode,
                 ~size=guess.size,
-                ~tabSize=state.configuration.editorTabSize,
+                ~tabSize=
+                  Configuration.getValue(
+                    c => c.editorTabSize,
+                    state.configuration,
+                  ),
                 (),
               );
             } else {
