@@ -1,6 +1,5 @@
 open Types.Input;
 
-
 [@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type keyBindings = {
   key: string,
