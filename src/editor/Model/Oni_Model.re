@@ -23,6 +23,7 @@ module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module Reducer = Reducer;
+module SearchHighlights = SearchHighlights;
 module Selection = Selection;
 module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;

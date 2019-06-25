@@ -119,7 +119,8 @@ let makeColorizer = (
 	colorMap: ColorMap.t,
 	selection: option(Range.t),
 	defaultBackgroundColor: Color.t,
-	selectionColor: Color.t
+	selectionColor: Color.t,
+	matchingPair: option(int),
 ) => {
     let tokenColorArray: array(ColorizedToken.t) =
       Array.make(length, ColorizedToken.default);
@@ -150,17 +151,31 @@ let makeColorizer = (
     f(tokenColors, length - 1);
 
 	(i) => {
-		if (i >= selectionStart && i <= selectionEnd) {
-			(Colors.black, Colors.white)
-		} else {
-			(Colors.white, Colors.black)
-		}
+
+
+	let colorIndex = tokenColorArray[i];
+
+	let matchingPair = switch(matchingPair) {
+	| None => -1
+	| Some(v) => v
+	};
+
+	let backgroundColor = 
+	i >= selectionStart && i < selectionEnd || i == matchingPair ? selectionColor : defaultBackgroundColor;
+
+	let color =
+		ColorMap.get(
+			colorMap,
+			colorIndex.foregroundColor,
+			theme.colors.editorForeground,
+			theme.colors.editorBackground,
+		);
+		(backgroundColor, color)
 	};
 
 };
 
 let colorEqual = (c1: Color.t, c2: Color.t) => {
- open Color;
  Float.equal(c1.r, c2.r) 
  && Float.equal(c1.g, c2.g)
  && Float.equal(c1.b, c2.b)
