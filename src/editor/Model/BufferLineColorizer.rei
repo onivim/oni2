@@ -32,6 +32,7 @@ let create:
     option(Range.t),
     Color.t,
     Color.t,
-    option(int)
+    option(int),
+    list(Range.t)
   ) =>
   t;

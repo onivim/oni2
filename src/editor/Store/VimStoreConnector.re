@@ -107,9 +107,41 @@ let start = () => {
     );
 
   let _ =
-    Vim.CommandLine.onUpdate(c =>
-      dispatch(Model.Actions.CommandlineUpdate(c))
-    );
+    Vim.CommandLine.onUpdate(c => {
+      dispatch(Model.Actions.CommandlineUpdate(c));
+
+      let cmdlineType = Vim.CommandLine.getType();
+      switch (cmdlineType) {
+      | SearchForward
+      | SearchReverse =>
+        let highlights = Vim.Search.getHighlights();
+
+        let sameLineFilter = (range: Vim.Range.t) =>
+          range.startPos.line == range.endPos.line;
+
+        let buffer = Vim.Buffer.getCurrent();
+        let id = Vim.Buffer.getId(buffer);
+
+        let toOniRange = (range: Vim.Range.t) =>
+          Core.Range.create(
+            ~startLine=OneBasedIndex(range.startPos.line),
+            ~startCharacter=ZeroBasedIndex(range.startPos.column),
+            ~endLine=OneBasedIndex(range.endPos.line),
+            ~endCharacter=ZeroBasedIndex(range.endPos.column),
+            (),
+          );
+
+        let highlightList =
+          highlights
+          |> Array.to_list
+          |> List.filter(sameLineFilter)
+          |> List.map(toOniRange);
+
+        dispatch(SearchSetHighlights(id, highlightList));
+
+      | _ => ()
+      };
+    });
 
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));

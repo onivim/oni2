@@ -279,6 +279,9 @@ let createElement =
         backgroundColor(Colors.white),
       ];
 
+    let searchHighlights =
+      Selectors.getSearchHighlights(state, editor.bufferId);
+
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
@@ -287,6 +290,12 @@ let createElement =
           bufferId,
           i,
         );
+
+      let searchHighlightRanges =
+        switch (IntMap.find_opt(i, searchHighlights)) {
+        | Some(v) => v
+        | None => []
+        };
 
       let isActiveLine = i == cursorLine;
       let defaultBackground =
@@ -317,6 +326,7 @@ let createElement =
           defaultBackground,
           theme.colors.editorSelectionBackground,
           matchingPairIndex,
+          searchHighlightRanges,
         );
 
       BufferViewTokenizer.tokenize(
@@ -450,6 +460,49 @@ let createElement =
               let selectionRanges: Hashtbl.t(int, Range.t) =
                 Hashtbl.create(100);
 
+              let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
+                {let halfOffset = offset /. 2.0
+                 let line = Index.toZeroBasedInt(r.startPosition.line)
+                 let start = Index.toZeroBasedInt(r.startPosition.character)
+                 let endC = Index.toZeroBasedInt(r.endPosition.character)
+
+                 let text = Buffer.getLine(buffer, line)
+                 let (startOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     text,
+                     start,
+                   )
+                 let (endOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     text,
+                     endC,
+                   )
+
+                 Shapes.drawRect(
+                   ~transform,
+                   ~x=
+                     lineNumberWidth
+                     +. float_of_int(startOffset)
+                     *. fontWidth
+                     -. halfOffset,
+                   ~y=
+                     fontHeight
+                     *. float_of_int(
+                          Index.toZeroBasedInt(r.startPosition.line),
+                        )
+                     -. editor.scrollY
+                     -. halfOffset,
+                   ~height=fontHeight +. offset,
+                   ~width=
+                     offset
+                     +. max(float_of_int(endOffset - startOffset), 1.0)
+                     *. fontWidth,
+                   ~color,
+                   (),
+                 )};
+
               /* Draw selection ranges */
               switch (activeBuffer) {
               | Some(b) =>
@@ -458,44 +511,10 @@ let createElement =
                   List.iter(
                     (r: Range.t) => {
                       let line = Index.toZeroBasedInt(r.startPosition.line);
-                      let start =
-                        Index.toZeroBasedInt(r.startPosition.character);
-                      let endC =
-                        Index.toZeroBasedInt(r.endPosition.character);
-
-                      let text = Buffer.getLine(b, line);
-                      let (startOffset, _) =
-                        BufferViewTokenizer.getCharacterPositionAndWidth(
-                          ~indentation,
-                          text,
-                          start,
-                        );
-                      let (endOffset, _) =
-                        BufferViewTokenizer.getCharacterPositionAndWidth(
-                          ~indentation,
-                          text,
-                          endC,
-                        );
-
                       Hashtbl.add(selectionRanges, line, r);
-                      Shapes.drawRect(
-                        ~transform,
-                        ~x=
-                          lineNumberWidth
-                          +. float_of_int(startOffset)
-                          *. fontWidth,
-                        ~y=
-                          fontHeight
-                          *. float_of_int(
-                               Index.toZeroBasedInt(r.startPosition.line),
-                             )
-                          -. editor.scrollY,
-                        ~height=fontHeight,
-                        ~width=
-                          max(float_of_int(endOffset - startOffset), 1.0)
-                          *. fontWidth,
+                      renderRange(
                         ~color=theme.colors.editorSelectionBackground,
-                        (),
+                        r,
                       );
                     },
                     ranges,
@@ -513,34 +532,25 @@ let createElement =
                 ~render=
                   (item, _offset) => {
                     let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
-                      {let (x0, y0) =
-                         bufferPositionToPixel(
-                           Index.toZeroBasedInt(d.range.startPosition.line),
-                           Index.toZeroBasedInt(
-                             d.range.startPosition.character,
-                           ),
-                         )
-                       let (x1, _) =
-                         bufferPositionToPixel(
-                           Index.toZeroBasedInt(d.range.endPosition.line),
-                           Index.toZeroBasedInt(
-                             d.range.endPosition.character,
-                           ),
-                         )
-
-                       Shapes.drawRect(
-                         ~transform,
-                         ~x=x0,
-                         ~y=y0 +. fontHeight,
-                         ~height=1.,
-                         ~width=x1 -. x0,
-                         ~color=Colors.red,
-                         (),
-                       )};
+                      renderRange(~color=Colors.red, d.range);
 
                     switch (IntMap.find_opt(item, diagnostics)) {
                     | None => ()
                     | Some(v) => List.iter(renderDiagnostics, v)
+                    };
+
+                    switch (IntMap.find_opt(item, searchHighlights)) {
+                    | None => ()
+                    | Some(v) =>
+                      List.iter(
+                        r =>
+                          renderRange(
+                            ~offset=2.0,
+                            ~color=theme.colors.editorFindMatchBackground,
+                            r,
+                          ),
+                        v,
+                      )
                     };
                   },
                 (),
