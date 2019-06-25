@@ -19,9 +19,7 @@ let remove = IntMap.remove;
 let log = (m: t) =>
   IntMap.iter(
     (_, b) =>
-      Buffer.show(b)
-      |> (++)("Buffer ======================: \n")
-      |> print_endline,
+      Buffer.show(b) |> (++)("Buffer ======================: \n") |> Log.info,
     m,
   );
 

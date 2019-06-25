@@ -10,6 +10,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+module Log = Core.Log;
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -173,7 +175,9 @@ let start = () => {
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
+          Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
+          Log.debug("VimStoreConnector - handled key: " ++ key);
         }
       );
 
@@ -190,9 +194,6 @@ let start = () => {
         | Spaces => true
         };
 
-      print_endline(
-        "Setting insert spaces: " ++ string_of_bool(insertSpaces),
-      );
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });
