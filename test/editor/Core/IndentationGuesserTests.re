@@ -31,12 +31,52 @@ describe("IndentationGuesser", ({describe, _}) =>
       "      ghi",
     |];
 
+    let largerExample = [|
+      "module Index = {",
+      "  [@deriving show({with_path: false})]",
+      "  type t =",
+      "    | ZeroBasedIndex(int)",
+      "    | OneBasedIndex(int);",
+      "",
+      "  let toZeroBasedInt = (pos: t) =>",
+      "    switch (pos) {",
+      "    | ZeroBasedIndex(n) => n",
+      "    | OneBasedIndex(n) => n - 1",
+      "    };",
+      "",
+      "  let toInt0 = toZeroBasedInt;",
+      "",
+      "  let toOneBasedInt = (pos: t) =>",
+      "    switch (pos) {",
+      "    | ZeroBasedIndex(n) => n + 1",
+      "    | OneBasedIndex(n) => n",
+      "    };",
+      "",
+      "  let toInt1 = toOneBasedInt;",
+      "};",
+      "",
+      "module EditorSize = {",
+      "  [@deriving show({with_path: false})]",
+      "  type t = {",
+      "    pixelWidth: int,",
+      "    pixelHeight: int,",
+      "  };",
+      "",
+      "  let create = (~pixelWidth: int, ~pixelHeight: int, ()) => {",
+      "    pixelWidth,",
+      "    pixelHeight,",
+      "  };",
+      "};",
+    |];
+
     test("indeterminate uses passed-in settings", ({expect}) => {
       let settings = guessIndentationArray(indeterminateLines, 4, true);
       expect.bool(settings.mode == IndentationSettings.Spaces).toBe(true);
+      expect.int(settings.size).toBe(4);
 
-      let settings = guessIndentationArray(indeterminateLines, 4, false);
+      let settings = guessIndentationArray(indeterminateLines, 3, false);
       expect.bool(settings.mode == IndentationSettings.Tabs).toBe(true);
+      expect.int(settings.size).toBe(3);
     });
 
     test("more tabs than spaces", ({expect}) => {
@@ -62,6 +102,12 @@ describe("IndentationGuesser", ({describe, _}) =>
 
     test("mostly double spaced", ({expect}) => {
       let r = guessIndentationArray(mostlyDoubleSpaced, 4, true);
+      expect.bool(r.mode == Spaces).toBe(true);
+      expect.int(r.size).toBe(2);
+    });
+
+    test("larger example", ({expect}) => {
+      let r = guessIndentationArray(largerExample, 4, false);
       expect.bool(r.mode == Spaces).toBe(true);
       expect.int(r.size).toBe(2);
     });

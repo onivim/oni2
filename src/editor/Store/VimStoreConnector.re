@@ -150,6 +150,21 @@ let start = () => {
       Vim.Buffer.openFile(filePath) |> ignore
     );
 
+  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
+    Isolinear.Effect.create(~name="vim.setIndentation", () => {
+      let insertSpaces =
+        switch (indentation.mode) {
+        | Tabs => false
+        | Spaces => true
+        };
+
+      print_endline(
+        "Setting insert spaces: " ++ string_of_bool(insertSpaces),
+      );
+      Vim.Options.setTabSize(indentation.size);
+      Vim.Options.setInsertSpaces(insertSpaces);
+    });
+
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
   /*     ~name="vim.registerQuitHandler", dispatch => */
@@ -252,6 +267,10 @@ let start = () => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.BufferSetIndentation(_, indent) => (
+        state,
+        synchronizeIndentationEffect(indent),
+      )
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),
