@@ -43,14 +43,14 @@ let launch = () =>
     let (stdout, pstdout) = Unix.pipe();
     let (stderr, pstderr) = Unix.pipe();
 
+    let _ = startProcess(pstdin, pstdout, pstderr);
+
     Unix.set_close_on_exec(pstdin);
     Unix.set_close_on_exec(stdin);
     Unix.set_close_on_exec(pstdout);
     Unix.set_close_on_exec(stdout);
     Unix.set_close_on_exec(pstderr);
     Unix.set_close_on_exec(stderr);
-
-    let _ = startProcess(pstdin, pstdout, pstderr);
 
     Unix.close(pstdin);
     Unix.close(pstdout);
