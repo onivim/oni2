@@ -4,6 +4,20 @@
  * Simple console logger
  */
 
+let canPrint = ref(false);
+
+let enablePrinting = () => canPrint := true;
+
+let print = msg => switch (canPrint^) {
+| true => print_endline (msg);
+| false => ();
+};
+
+let prerr = msg => switch (canPrint^) {
+| true => prerr_endline (msg);
+| false => ();
+};
+
 let fileChannel =
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | Some(v) =>
@@ -28,8 +42,8 @@ let logCore = (~error=false, msg) => {
     flush(oc);
   | None =>
     switch (error) {
-    | false => print_endline(msg)
-    | true => prerr_endline(msg)
+    | false => print(msg)
+    | true => prerr(msg)
     }
   };
 };
