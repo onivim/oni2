@@ -304,7 +304,7 @@ let createElement =
         };
 
       let colorizer =
-        BufferViewTokenizer.makeColorizer(
+        BufferLineColorizer.create(
           Zed_utf8.length(line),
           state.theme,
           tokenColors,
