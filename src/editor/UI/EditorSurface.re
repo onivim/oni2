@@ -122,7 +122,7 @@ let renderTokens =
       xOffset: float,
       yOffset: float,
       transform,
-      whitespaceSetting: Configuration.editorRenderWhitespace,
+      whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
     ) => {
   let yF = yOffset;
   let xF = xOffset;
@@ -212,7 +212,11 @@ let createElement =
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let indentation = IndentationSettings.default;
+    let indentation =
+      switch (Buffer.getIndentation(buffer)) {
+      | Some(v) => v
+      | None => IndentationSettings.default
+      };
 
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
@@ -290,15 +294,35 @@ let createElement =
           ? theme.colors.editorLineHighlightBackground
           : theme.colors.editorBackground;
 
+      let matchingPairIndex =
+        switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+        | None => None
+        | Some(v) =>
+          if (Index.toInt0(v.startPos.line) == i) {
+            Some(Index.toInt0(v.startPos.character));
+          } else if (Index.toInt0(v.endPos.line) == i) {
+            Some(Index.toInt0(v.endPos.character));
+          } else {
+            None;
+          }
+        };
+
+      let colorizer =
+        BufferLineColorizer.create(
+          Zed_utf8.length(line),
+          state.theme,
+          tokenColors,
+          state.syntaxHighlighting.colorMap,
+          selection,
+          defaultBackground,
+          theme.colors.editorSelectionBackground,
+          matchingPairIndex,
+        );
+
       BufferViewTokenizer.tokenize(
         line,
-        state.theme,
-        tokenColors,
-        state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
-        selection,
-        defaultBackground,
-        theme.colors.editorSelectionBackground,
+        colorizer,
       );
     };
 
@@ -316,7 +340,11 @@ let createElement =
 
     let layout =
       EditorLayout.getLayout(
-        ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
         ~isMinimapShown=true,
@@ -540,7 +568,10 @@ let createElement =
                         editor.scrollX,
                         offset,
                         transform,
-                        state.configuration.editorRenderWhitespace,
+                        Configuration.getValue(
+                          c => c.editorRenderWhitespace,
+                          state.configuration,
+                        ),
                       );
                     ();
                   },
@@ -580,7 +611,18 @@ let createElement =
                 (),
               );
 
-              if (state.configuration.editorRenderIndentGuides) {
+              let renderIndentGuides =
+                Configuration.getValue(
+                  c => c.editorRenderIndentGuides,
+                  state.configuration,
+                );
+              let showActive =
+                Configuration.getValue(
+                  c => c.editorHighlightActiveIndentGuide,
+                  state.configuration,
+                );
+
+              if (renderIndentGuides) {
                 switch (activeBuffer) {
                 | None => ()
                 | Some(buffer) =>
@@ -596,8 +638,7 @@ let createElement =
                     ~theme=state.theme,
                     ~indentationSettings=indentation,
                     ~bufferPositionToPixel,
-                    ~showActive=
-                      state.configuration.editorHighlightActiveIndentGuide,
+                    ~showActive,
                     (),
                   )
                 };

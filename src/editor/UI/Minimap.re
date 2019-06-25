@@ -166,7 +166,10 @@ let createElement =
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
-            if (state.configuration.editorMinimapShowSlider) {
+            if (Configuration.getValue(
+                  c => c.editorMinimapShowSlider,
+                  state.configuration,
+                )) {
               /* Draw current view */
               Shapes.drawRect(
                 ~transform,

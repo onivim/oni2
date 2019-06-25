@@ -3,6 +3,7 @@
 
    Implements an updater (reducer + side effects) for the File Explorer
  */
+open Oni_Core;
 open Oni_Model;
 
 let start = () => {
@@ -48,7 +49,7 @@ let start = () => {
           directory,
           state.languageInfo,
           state.iconTheme,
-          state.configuration.filesExclude,
+          Configuration.getValue(c => c.filesExclude, state.configuration),
         ),
       )
     | UpdateExplorerNode(clicked, tree) =>
@@ -62,7 +63,11 @@ let start = () => {
             ~nodeId=id,
             ~languageInfo=state.languageInfo,
             ~iconTheme=state.iconTheme,
-            ~ignored=state.configuration.filesExclude,
+            ~ignored=
+              Configuration.getValue(
+                c => c.filesExclude,
+                state.configuration,
+              ),
             ~tree,
           ),
         )
