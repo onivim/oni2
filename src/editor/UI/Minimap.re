@@ -19,7 +19,13 @@ open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
-let renderLine = (shouldHighlight, transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
+let renderLine =
+    (
+      shouldHighlight,
+      transform,
+      yOffset,
+      tokens: list(BufferViewTokenizer.t),
+    ) => {
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
@@ -34,25 +40,18 @@ let renderLine = (shouldHighlight, transform, yOffset, tokens: list(BufferViewTo
         float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
 
       let emphasis = shouldHighlight(startPosition);
-      let color = emphasis ? token.color : Color.multiplyAlpha(0.5, token.color);
+      let color =
+        emphasis ? token.color : Color.multiplyAlpha(0.5, token.color);
 
       let offset = 1.0;
       let halfOffset = offset /. 2.0;
-      
-      let x = emphasis ? x -. halfOffset: x;
-      let y = emphasis ? yOffset -. halfOffset: yOffset;
+
+      let x = emphasis ? x -. halfOffset : x;
+      let y = emphasis ? yOffset -. halfOffset : yOffset;
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      Shapes.drawRect(
-        ~transform,
-        ~y,
-        ~x,
-        ~color,
-        ~width,
-        ~height,
-        (),
-      );
+      Shapes.drawRect(~transform, ~y, ~x, ~color, ~width, ~height, ());
     | _ => ()
     };
   };
@@ -201,7 +200,8 @@ let createElement =
               (),
             );
 
-            let searchHighlights = Selectors.getSearchHighlights(state, editor.bufferId);
+            let searchHighlights =
+              Selectors.getSearchHighlights(state, editor.bufferId);
 
             FlatList.render(
               ~scrollY,
@@ -212,11 +212,18 @@ let createElement =
                 (item, offset) => {
                   open Range;
                   let tokens = getTokensForLine(item);
-                  let highlightRanges = switch(IntMap.find_opt(item, searchHighlights)) {
-                  | Some(v) => v
-                  | None => []
-                  }
-                  let shouldHighlight = (i) => List.exists(r => Index.toInt0(r.startPosition.character) <= i && Index.toInt0(r.endPosition.character) >= i, highlightRanges);
+                  let highlightRanges =
+                    switch (IntMap.find_opt(item, searchHighlights)) {
+                    | Some(v) => v
+                    | None => []
+                    };
+                  let shouldHighlight = i =>
+                    List.exists(
+                      r =>
+                        Index.toInt0(r.startPosition.character) <= i
+                        && Index.toInt0(r.endPosition.character) >= i,
+                      highlightRanges,
+                    );
                   renderLine(shouldHighlight, transform, offset, tokens);
                 },
               (),
