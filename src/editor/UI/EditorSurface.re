@@ -279,7 +279,8 @@ let createElement =
         backgroundColor(Colors.white),
       ];
 
-    let searchHighlights = Selectors.getSearchHighlights(state, editor.bufferId);
+    let searchHighlights =
+      Selectors.getSearchHighlights(state, editor.bufferId);
 
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
@@ -290,10 +291,11 @@ let createElement =
           i,
         );
 
-      let searchHighlightRanges = switch (IntMap.find_opt(i, searchHighlights)) {
-      | Some(v) => v
-      | None => [];
-      };
+      let searchHighlightRanges =
+        switch (IntMap.find_opt(i, searchHighlights)) {
+        | Some(v) => v
+        | None => []
+        };
 
       let isActiveLine = i == cursorLine;
       let defaultBackground =

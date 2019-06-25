@@ -65,13 +65,18 @@ let create =
         ? selectionColor : defaultBackgroundColor;
 
     let doesSearchIntersect = (range: Range.t) => {
-      open Range;
-      Index.toInt0(range.startPosition.character) < i && Index.toInt0(range.endPosition.character) >= i;
+      Range.(
+        Index.toInt0(range.startPosition.character) < i
+        && Index.toInt0(range.endPosition.character) >= i
+      );
     };
 
-    let isSearchHighlight = List.exists(doesSearchIntersect, searchHighlightRanges);
+    let isSearchHighlight =
+      List.exists(doesSearchIntersect, searchHighlightRanges);
 
-    let backgroundColor = isSearchHighlight ? theme.colors.editorFindMatchBackground : backgroundColor;
+    let backgroundColor =
+      isSearchHighlight
+        ? theme.colors.editorFindMatchBackground : backgroundColor;
 
     let color =
       ColorMap.get(
