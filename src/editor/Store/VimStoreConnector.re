@@ -108,28 +108,31 @@ let start = () => {
 
   let _ =
     Vim.CommandLine.onUpdate(c => {
-      dispatch(Model.Actions.CommandlineUpdate(c))
+      dispatch(Model.Actions.CommandlineUpdate(c));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
       | SearchForward
-      | SearchReverse => 
+      | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: Vim.Range.t) => range.startPos.line == range.endPos.line;
-      
-      let buffer = Vim.Buffer.getCurrent();
-      let id = Vim.Buffer.getId(buffer);
+        let sameLineFilter = (range: Vim.Range.t) =>
+          range.startPos.line == range.endPos.line;
 
-        let toOniRange = (range: Vim.Range.t) => Core.Range.create(
-        ~startLine=OneBasedIndex(range.startPos.line),
-        ~startCharacter=OneBasedIndex(range.startPos.column),
-        ~endLine=OneBasedIndex(range.endPos.line),
-        ~endCharacter=OneBasedIndex(range.endPos.column),
-        (),
-        );
+        let buffer = Vim.Buffer.getCurrent();
+        let id = Vim.Buffer.getId(buffer);
 
-        let highlightList = highlights
+        let toOniRange = (range: Vim.Range.t) =>
+          Core.Range.create(
+            ~startLine=OneBasedIndex(range.startPos.line),
+            ~startCharacter=OneBasedIndex(range.startPos.column),
+            ~endLine=OneBasedIndex(range.endPos.line),
+            ~endCharacter=OneBasedIndex(range.endPos.column),
+            (),
+          );
+
+        let highlightList =
+          highlights
           |> Array.to_list
           |> List.filter(sameLineFilter)
           |> List.map(toOniRange);
@@ -137,7 +140,7 @@ let start = () => {
         dispatch(SearchSetHighlights(id, highlightList));
 
       | _ => ()
-      }
+      };
     });
 
   let _ =

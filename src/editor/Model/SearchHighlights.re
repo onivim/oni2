@@ -13,28 +13,33 @@ type matchingPair = {
 };
 
 type highlights = {
-	matchingPair: option(matchingPair),
-	highlightRanges: IntMap.t(list(Range.t)),
+  matchingPair: option(matchingPair),
+  highlightRanges: IntMap.t(list(Range.t)),
 };
 
-let default: highlights = {
-	matchingPair: None,
-	highlightRanges: IntMap.empty,
-};
+let default: highlights = {matchingPair: None, highlightRanges: IntMap.empty};
 
 type t = IntMap.t(highlights);
 
 let create: unit => t = () => IntMap.empty;
 
 let highlightRangesToMap = (ranges: list(Range.t)) => {
-
-  List.fold_left((prev, cur) => {
-    open Range;
-    IntMap.update(Index.toInt0(cur.startPosition.line), (v) => switch(v) {
-    | None => Some([cur])
-    | Some(v) => Some([cur, ...v])
-    }, prev);
-  }, IntMap.empty, ranges);
+  List.fold_left(
+    (prev, cur) =>
+      Range.(
+        IntMap.update(
+          Index.toInt0(cur.startPosition.line),
+          v =>
+            switch (v) {
+            | None => Some([cur])
+            | Some(v) => Some([cur, ...v])
+            },
+          prev,
+        )
+      ),
+    IntMap.empty,
+    ranges,
+  );
 };
 
 let reduce = (action: Actions.t, state: t) => {
@@ -50,14 +55,16 @@ let reduce = (action: Actions.t, state: t) => {
       state,
     )
   | SearchSetHighlights(bid, ranges) =>
-      let highlightRanges = highlightRangesToMap(ranges);
-  	IntMap.update(
-		bid,
-		oldHighlights =>
-		switch(oldHighlights) {
-		| None => Some({...default, highlightRanges })
-		| Some(v) => Some({...v, highlightRanges })
-		}, state);
+    let highlightRanges = highlightRangesToMap(ranges);
+    IntMap.update(
+      bid,
+      oldHighlights =>
+        switch (oldHighlights) {
+        | None => Some({...default, highlightRanges})
+        | Some(v) => Some({...v, highlightRanges})
+        },
+      state,
+    );
   | SearchClearMatchingPair(bid) =>
     IntMap.update(
       bid,
