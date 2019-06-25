@@ -46,7 +46,8 @@
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
-    "pesy": "0.4.1"
+    "pesy": "0.4.1",
+    "reason-libvim": "github:onivim/reason-libvim#4478aef"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
