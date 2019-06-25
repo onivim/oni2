@@ -107,9 +107,17 @@ let start = () => {
     );
 
   let _ =
-    Vim.CommandLine.onUpdate(c =>
-      dispatch(Model.Actions.CommandlineUpdate(c))
-    );
+    Vim.CommandLine.onUpdate(c => {
+      dispatch(Model.Actions.CommandlineUpdate(c));
+
+      let cmdType = Vim.CommandLine.getType();
+      switch (cmdType) {
+      | Ex => 
+          let completions = Vim.CommandLine.getCompletions();
+          Array.iter(c => print_endline(c), completions);
+      | _ => ()
+      }
+    });
 
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
