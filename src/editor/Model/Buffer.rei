@@ -23,6 +23,10 @@ let getId: t => int;
 
 let getNumberOfLines: t => int;
 
+let isIndentationSet: t => bool;
+let setIndentation: (IndentationSettings.t, t) => t;
+let getIndentation: t => option(IndentationSettings.t);
+
 let update: (t, BufferUpdate.t) => t;
 let updateMetadata: (Vim.BufferMetadata.t, t) => t;
 

@@ -10,6 +10,7 @@ open Oni_Core.Types;
 type t = {
   metadata: Vim.BufferMetadata.t,
   lines: array(string),
+  indentation: option(IndentationSettings.t),
 };
 
 let show = _ => "TODO";
@@ -17,11 +18,16 @@ let show = _ => "TODO";
 let ofLines = (lines: array(string)) => {
   metadata: Vim.BufferMetadata.create(),
   lines,
+  indentation: None,
 };
 
 let empty = ofLines([||]);
 
-let ofMetadata = (metadata: Vim.BufferMetadata.t) => {metadata, lines: [||]};
+let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
+  metadata,
+  lines: [||],
+  indentation: None,
+};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
@@ -92,25 +98,41 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
+let isIndentationSet = buf => {
+  switch (buf.indentation) {
+  | Some(_) => true
+  | None => false
+  };
+};
+let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
+
+let getIndentation = buf => buf.indentation;
+
 let update = (buf: t, update: BufferUpdate.t) => {
-  switch (update) {
-  /***
-     When a buffer is first attached it emits an update with
-     a startLine of 0 and endLine of -1 in this case we should
-     update the buffer's version but set the content of the buffer
-     rather than update it, which would result in duplication
-   */
-  | {startLine: ZeroBasedIndex(0), endLine: ZeroBasedIndex((-1)), version, _} => {
-      metadata: {
-        ...buf.metadata,
-        version,
-      },
-      lines: update.lines,
-    }
-  | {version, _} when version > buf.metadata.version =>
-    let metadata = {...buf.metadata, version: update.version};
-    {metadata, lines: applyUpdate(buf.lines, update)};
-  | _ => buf
+  let endLine = Index.toInt0(update.endLine);
+
+  if (update.version > buf.metadata.version) {
+    /***
+       When a buffer is first attached it emits an update with
+       a startLine of 0 and endLine of -1 in this case we should
+       update the buffer's version but set the content of the buffer
+       rather than update it, which would result in duplication
+     */
+    if (endLine < 0) {
+      {
+        ...buf,
+        metadata: {
+          ...buf.metadata,
+          version: update.version,
+        },
+        lines: update.lines,
+      };
+    } else {
+      let metadata = {...buf.metadata, version: update.version};
+      {...buf, metadata, lines: applyUpdate(buf.lines, update)};
+    };
+  } else {
+    buf;
   };
 };
 

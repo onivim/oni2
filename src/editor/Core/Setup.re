@@ -6,8 +6,6 @@
 
 [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
-  [@key "neovim"]
-  neovimPath: string,
   [@key "node"]
   nodePath: string,
   [@key "textmateService"]

@@ -7,6 +7,7 @@
 module Cli = Cli;
 module Configuration = Configuration;
 module ConfigurationParser = ConfigurationParser;
+module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
 module IntMap = IntMap;
 module LineNumber = LineNumber;
@@ -17,6 +18,7 @@ module StringMap = StringMap;
 module Types = Types;
 module Utility = Utility;
 module Indentation = Indentation;
+module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module Theme = Theme;
 module Keybindings = Keybindings;

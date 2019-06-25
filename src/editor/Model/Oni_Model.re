@@ -9,6 +9,7 @@
 module Actions = Actions;
 module Buffer = Buffer;
 module Buffers = Buffers;
+module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
@@ -23,6 +24,7 @@ module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module Reducer = Reducer;
+module SearchHighlights = SearchHighlights;
 module Selection = Selection;
 module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;

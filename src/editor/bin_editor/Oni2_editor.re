@@ -66,9 +66,8 @@ let init = app => {
   };
 
   Log.debug("Startup: Starting StoreThread");
-  let dispatch =
+  let (dispatch, runEffects) =
     Store.StoreThread.start(
-      ~cliOptions,
       ~setup,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
@@ -97,6 +96,12 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
+  runEffects();
+
+  List.iter(
+    v => dispatch(Model.Actions.OpenFileByPath(v)),
+    cliOptions.filesToOpen,
+  );
 
   let setFont = (fontFamily, fontSize) => {
     let scaleFactor =
