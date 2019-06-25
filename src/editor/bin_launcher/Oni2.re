@@ -23,7 +23,6 @@ print_endline("Args parsed!");
 
 let startProcess = (stdio, stdout, stderr) => {
   let executingDirectory = Filename.dirname(Sys.argv[0]);
-  print_endline("Executing directory: " ++ executingDirectory);
   Unix.create_process(
     executingDirectory ++ "/" ++ "Oni2_editor.exe",
     Sys.argv,
@@ -50,9 +49,7 @@ let launch = () =>
     Unix.set_close_on_exec(pstderr);
     Unix.set_close_on_exec(stderr);
 
-    print_endline("Starting process....");
     let _ = startProcess(pstdin, pstdout, pstderr);
-    print_endline("Started!");
 
     Unix.close(pstdin);
     Unix.close(pstdout);
