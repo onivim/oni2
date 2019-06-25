@@ -6,7 +6,7 @@ open Actions;
 
 let reduce = (v: EditorMetrics.t, action) => {
   switch (action) {
-  | SetEditorSize({pixelWidth, pixelHeight}) => {
+  | EditorGroupSetSize(_, {pixelWidth, pixelHeight}) => {
       ...v,
       pixelWidth,
       pixelHeight,

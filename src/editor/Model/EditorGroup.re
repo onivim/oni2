@@ -53,6 +53,10 @@ let getActiveEditor = (v: t) => {
   };
 };
 
+let setActiveEditor = (v: t, editorId: int) => {
+  {...v, activeEditorId: Some(editorId) }
+};
+
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(v) => (state, v)

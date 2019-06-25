@@ -39,6 +39,7 @@ let start = getState => {
           let ec = EditorGroup.create();
           let (g, _) =
             EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
+          let g = EditorGroup.setActiveEditor(ec, g.id);
           g;
         | None => EditorGroup.create()
         };

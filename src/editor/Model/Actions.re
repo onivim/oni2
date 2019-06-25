@@ -23,7 +23,6 @@ type t =
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
-  | SetEditorSize(EditorSize.t)
   | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(Vim.Types.cmdlineType)
   | CommandlineHide
@@ -33,6 +32,7 @@ type t =
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
   | EditorGroupAdd(editorGroup)
+  | EditorGroupSetSize(int, EditorSize.t)
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)

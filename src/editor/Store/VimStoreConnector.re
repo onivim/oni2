@@ -291,7 +291,7 @@ let start = () => {
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.SetEditorSize(_) => (
+    | Model.Actions.EditorGroupSetSize(_, _) => (
         state,
         synchronizeEditorEffect(state),
       )

@@ -48,6 +48,9 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
 };
 
 let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
+  print_endline(
+    "toUiTabs - editorGroupId: " ++ string_of_int(editorGroup.id),
+  );
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
@@ -81,16 +84,17 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
       switch (editorGroup) {
       | None => [React.empty]
       | Some(v) =>
-        let editor =
-          Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+        let editor = Some(v) |> Selectors.getActiveEditor;
         let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
+        open Model.EditorGroup;
+        print_endline("EditorGroupId: " ++ string_of_int(v.id));
 
         let metrics = v.metrics;
 
         let editorView =
           switch (editor) {
-          | Some(v) => <EditorSurface metrics editor=v state />
+          | Some(v) => <EditorSurface editorGroupId metrics editor=v state />
           | None => React.empty
           };
         [<Tabs theme tabs mode uiFont />, editorView];

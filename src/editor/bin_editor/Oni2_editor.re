@@ -77,9 +77,10 @@ let init = app => {
 
   GlobalContext.set({
     getState: () => currentState^,
-    notifySizeChanged: (~width, ~height, ()) =>
+    notifySizeChanged: (~editorGroupId, ~width, ~height, ()) =>
       dispatch(
-        Model.Actions.SetEditorSize(
+        Model.Actions.EditorGroupSetSize(
+          editorGroupId,
           Core.Types.EditorSize.create(
             ~pixelWidth=width,
             ~pixelHeight=height,

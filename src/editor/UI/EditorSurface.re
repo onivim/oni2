@@ -182,6 +182,7 @@ let component = React.component("EditorSurface");
 let createElement =
     (
       ~state: State.t,
+      ~editorGroupId: int,
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
       ~children as _,
@@ -345,7 +346,18 @@ let createElement =
 
     let onDimensionsChanged =
         ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-      GlobalContext.current().notifySizeChanged(~width, ~height, ());
+      print_endline(
+        "NOTIFY SIZE CHANGED - editorGroup: " ++ string_of_int(editorGroupId) ++ ":"
+        ++ string_of_int(width)
+        ++ ", "
+        ++ string_of_int(height),
+      );
+      GlobalContext.current().notifySizeChanged(
+        ~editorGroupId,
+        ~width,
+        ~height,
+        (),
+      );
     };
 
     let layout =
