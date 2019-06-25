@@ -112,7 +112,7 @@ let start = () => {
 
       let cmdType = Vim.CommandLine.getType();
       switch (cmdType) {
-      | Ex => 
+      | Ex =>  ();
           let completions = Vim.CommandLine.getCompletions();
           Array.iter(c => print_endline(c), completions);
       | _ => ()
