@@ -48,20 +48,15 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   };
 };
 
+type colorizer = (int) => (Color.t, Color.t);
+
 let textRunToToken =
     (
-      defaultColor,
-      selectionColor,
-      colorMap,
-      theme: Theme.t,
-      tokenColorArray: array(ColorizedToken.t),
-      selectionStart: int,
-      selectionEnd: int,
+      colorizer: colorizer,
       r: Tokenizer.TextRun.t,
     ) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
-  let endIndex = Index.toZeroBasedInt(r.endIndex);
-  let colorIndex = tokenColorArray[startIndex];
+  let (bg, fg) = colorizer(startIndex);
 
   let firstChar = Zed_utf8.get(r.text, 0);
 
@@ -74,18 +69,9 @@ let textRunToToken =
       Text;
     };
 
-  let color =
-    ColorMap.get(
-      colorMap,
-      colorIndex.foregroundColor,
-      theme.colors.editorForeground,
-      theme.colors.editorBackground,
-    );
-
-  let backgroundColor =
-    startIndex >= selectionStart && endIndex <= selectionEnd
-      ? selectionColor : defaultColor;
-
+  let color = fg;
+  let backgroundColor = bg;
+  
   let ret: t = {
     tokenType,
     text: r.text,
@@ -126,31 +112,17 @@ let getCharacterPositionAndWidth =
   (totalOffset^, width);
 };
 
-let tokenize:
-  (
-    string,
-    Theme.t,
-    list(ColorizedToken.t),
-    ColorMap.t,
-    IndentationSettings.t,
-    option(Range.t),
-    Color.t,
-    Color.t
-  ) =>
-  list(t) =
-  (
-    s,
-    theme,
-    tokenColors,
-    colorMap,
-    indentationSettings,
-    selection,
-    defaultBackgroundColor,
-    selectionColor,
-  ) => {
-    let len = Zed_utf8.length(s);
+let makeColorizer = (
+	length: int,
+	theme: Theme.t,
+	tokenColors: list(ColorizedToken.t),
+	colorMap: ColorMap.t,
+	selection: option(Range.t),
+	defaultBackgroundColor: Color.t,
+	selectionColor: Color.t
+) => {
     let tokenColorArray: array(ColorizedToken.t) =
-      Array.make(len, ColorizedToken.default);
+      Array.make(length, ColorizedToken.default);
 
     let rec f = (tokens: list(ColorizedToken.t), start) =>
       switch (tokens) {
@@ -175,34 +147,53 @@ let tokenize:
 
     let tokenColors = List.rev(tokenColors);
 
-    f(tokenColors, len - 1);
+    f(tokenColors, length - 1);
 
+	(i) => {
+		if (i >= selectionStart && i <= selectionEnd) {
+			(Colors.black, Colors.white)
+		} else {
+			(Colors.white, Colors.black)
+		}
+	};
+
+};
+
+let colorEqual = (c1: Color.t, c2: Color.t) => {
+ open Color;
+ Float.equal(c1.r, c2.r) 
+ && Float.equal(c1.g, c2.g)
+ && Float.equal(c1.b, c2.b)
+ && Float.equal(c1.a, c2.a)
+};
+
+let tokenize:
+  (
+    string,
+    IndentationSettings.t,
+    colorizer,
+  ) =>
+  list(t) =
+  (
+    s,
+    indentationSettings,
+    colorizer,
+  ) => {
     let split = (i0, c0, i1, c1) => {
-      let colorizedToken1 = tokenColorArray[i0];
-      let colorizedToken2 = tokenColorArray[i1];
-      _isWhitespace(c0) != _isWhitespace(c1)
-      || colorizedToken1 !== colorizedToken2
+      let (bg1, fg1) = colorizer(i0);
+      let (bg2, fg2) = colorizer(i1);
+      
+      !colorEqual(bg1, bg2)
+      || !colorEqual(fg1, fg2)
+      || _isWhitespace(c0) != _isWhitespace(c1)
       /* Always split on tabs */
       || UChar.eq(c0, tab)
       || UChar.eq(c1, tab)
-      /* And selection */
-      || i0 == selectionStart
-      || i0 == selectionEnd
-      || i1 == selectionStart
-      || i1 == selectionEnd;
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
     |> List.map(
-         textRunToToken(
-           defaultBackgroundColor,
-           selectionColor,
-           colorMap,
-           theme,
-           tokenColorArray,
-           selectionStart,
-           selectionEnd,
-         ),
+         textRunToToken(colorizer)
        );
   };

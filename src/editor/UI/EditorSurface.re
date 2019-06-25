@@ -290,15 +290,21 @@ let createElement =
           ? theme.colors.editorLineHighlightBackground
           : theme.colors.editorBackground;
 
+
+	  let colorizer = BufferViewTokenizer.makeColorizer(
+	  	Zed_utf8.length(line),
+		state.theme,
+		tokenColors,
+		state.syntaxHighlighting.colorMap,
+		selection,
+		defaultBackground,
+		theme.colors.editorSelectionBackground
+	  );
+
       BufferViewTokenizer.tokenize(
         line,
-        state.theme,
-        tokenColors,
-        state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
-        selection,
-        defaultBackground,
-        theme.colors.editorSelectionBackground,
+        colorizer
       );
     };
 
