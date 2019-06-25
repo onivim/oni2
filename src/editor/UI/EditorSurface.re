@@ -212,10 +212,11 @@ let createElement =
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let indentation = switch(Buffer.getIndentation(buffer)) {
-    | Some(v) => v
-    | None => IndentationSettings.default
-    };
+    let indentation =
+      switch (Buffer.getIndentation(buffer)) {
+      | Some(v) => v
+      | None => IndentationSettings.default
+      };
 
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
@@ -620,8 +621,6 @@ let createElement =
                   c => c.editorHighlightActiveIndentGuide,
                   state.configuration,
                 );
-
-              print_endline ("Indentation: " ++ string_of_int(indentation.size) ++ " | " ++ string_of_int(indentation.tabSize));
 
               if (renderIndentGuides) {
                 switch (activeBuffer) {
