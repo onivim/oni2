@@ -118,7 +118,7 @@ let createElement =
           <View style={matchingPairStyle(botLine)} />,
         ];
       };
-    
+
     let searchMatches = t =>
       Style.[
         position(`Absolute),
@@ -126,16 +126,20 @@ let createElement =
         left(4),
         right(4),
         height(8),
-        backgroundColor(
-          state.theme.colors.editorFindMatchBackground,
-        ),
+        backgroundColor(state.theme.colors.editorFindMatchBackground),
       ];
 
     let searchHighlightToElement = ((line, _)) => {
-          <View style={searchMatches(bufferLineToScrollbarPixel(line))} />
+      <View style={searchMatches(bufferLineToScrollbarPixel(line))} />;
     };
 
-    let searchMatchElements = List.map(searchHighlightToElement, IntMap.bindings(Selectors.getSearchHighlights(state, editor.bufferId)));
+    let searchMatchElements =
+      List.map(
+        searchHighlightToElement,
+        IntMap.bindings(
+          Selectors.getSearchHighlights(state, editor.bufferId),
+        ),
+      );
 
     (
       hooks,
