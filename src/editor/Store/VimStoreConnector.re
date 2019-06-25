@@ -116,11 +116,26 @@ let start = () => {
       | SearchReverse => 
         let highlights = Vim.Search.getHighlights();
 
-        print_endline ("highlights: ");
-        Array.iter((h) => {
-            open Vim.Range;
-            print_endline("Range: " ++ Vim.Position.show(h.startPos) ++ "|" ++ Vim.Position.show(h.endPos));
-        }, highlights);
+        let sameLineFilter = (range: Vim.Range.t) => range.startPos.line == range.endPos.line;
+      
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+        let toOniRange = (range: Vim.Range.t) => Core.Range.create(
+        ~startLine=OneBasedIndex(range.startPos.line),
+        ~startCharacter=OneBasedIndex(range.startPos.column),
+        ~endLine=OneBasedIndex(range.endPos.line),
+        ~endCharacter=OneBasedIndex(range.endPos.column),
+        (),
+        );
+
+        let highlightList = highlights
+          |> Array.to_list
+          |> List.filter(sameLineFilter)
+          |> List.map(toOniRange);
+
+        dispatch(SearchSetHighlights(id, highlightList));
+
       | _ => ()
       }
     });

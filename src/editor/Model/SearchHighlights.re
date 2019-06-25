@@ -14,17 +14,28 @@ type matchingPair = {
 
 type highlights = {
 	matchingPair: option(matchingPair),
-	highlightRanges: list(Range.t)
+	highlightRanges: IntMap.t(list(Range.t)),
 };
 
 let default: highlights = {
 	matchingPair: None,
-	highlightRanges: [],
+	highlightRanges: IntMap.empty,
 };
 
 type t = IntMap.t(highlights);
 
 let create: unit => t = () => IntMap.empty;
+
+let highlightRangesToMap = (ranges: list(Range.t)) => {
+
+  List.fold_left((prev, cur) => {
+    open Range;
+    IntMap.update(Index.toInt0(cur.startPosition.line), (v) => switch(v) {
+    | None => Some([cur])
+    | Some(v) => Some([cur, ...v])
+    }, prev);
+  }, IntMap.empty, ranges);
+};
 
 let reduce = (action: Actions.t, state: t) => {
   switch (action) {
@@ -38,7 +49,8 @@ let reduce = (action: Actions.t, state: t) => {
         },
       state,
     )
-  | SearchSetHighlights(bid, highlightRanges) =>
+  | SearchSetHighlights(bid, ranges) =>
+      let highlightRanges = highlightRangesToMap(ranges);
   	IntMap.update(
 		bid,
 		oldHighlights =>
