@@ -10,6 +10,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+module Log = Core.Log;
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 

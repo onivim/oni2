@@ -6,22 +6,20 @@
 
 let stayAttached = ref(false);
 
-let attach = () => {
-  stayAttached := true;
-};
-
 let version = () => {
   print_endline("Onivim 2 0.0.0");
 };
 
 let spec = [
-  ("-attach", Arg.Unit(attach), ""),
+  ("-f", Arg.Set(stayAttached), ""),
+  ("--nofork", Arg.Set(stayAttached), ""),
   ("-version", Arg.Unit(version), ""),
 ];
 
 let anonArg = _ => ();
 
 let () = Arg.parse(spec, anonArg, "Usage: ");
+print_endline ("Args parsed!");
 
 let startProcess = (stdio, stdout, stderr) => {
   let executingDirectory = Filename.dirname(Sys.argv[0]);

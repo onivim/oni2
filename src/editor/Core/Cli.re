@@ -29,7 +29,9 @@ let parse = (setup: Setup.t) => {
   let args: ref(list(string)) = ref([]);
 
   Arg.parse(
-    [("-attach", Unit(noop), "")],
+    [
+    ("-f", Unit(noop), ""),
+    ("--nofork", Unit(noop), "")],
     arg => args := [arg, ...args^],
     header(setup.version),
   );
