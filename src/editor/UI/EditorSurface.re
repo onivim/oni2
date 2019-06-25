@@ -621,6 +621,8 @@ let createElement =
                   state.configuration,
                 );
 
+              print_endline ("Indentation: " ++ string_of_int(indentation.size) ++ " | " ++ string_of_int(indentation.tabSize));
+
               if (renderIndentGuides) {
                 switch (activeBuffer) {
                 | None => ()

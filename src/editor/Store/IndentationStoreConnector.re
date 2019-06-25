@@ -51,14 +51,19 @@ let start = () => {
                   defaultInsertSpaces,
                 );
 
-              IndentationSettings.create(
-                ~mode=guess.mode,
-                ~size=guess.size,
-                ~tabSize=
+              let size = switch (guess.mode) {
+              | Tabs => 
                   Configuration.getValue(
                     c => c.editorTabSize,
                     state.configuration,
-                  ),
+                  )
+              | Spaces => guess.size
+              };
+
+              IndentationSettings.create(
+                ~mode=guess.mode,
+                ~size=size,
+                ~tabSize=size,
                 (),
               );
             } else {
