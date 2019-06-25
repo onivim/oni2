@@ -48,13 +48,9 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   };
 };
 
-type colorizer = (int) => (Color.t, Color.t);
+type colorizer = int => (Color.t, Color.t);
 
-let textRunToToken =
-    (
-      colorizer: colorizer,
-      r: Tokenizer.TextRun.t,
-    ) => {
+let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let (bg, fg) = colorizer(startIndex);
 
@@ -71,7 +67,7 @@ let textRunToToken =
 
   let color = fg;
   let backgroundColor = bg;
-  
+
   let ret: t = {
     tokenType,
     text: r.text,
@@ -112,103 +108,91 @@ let getCharacterPositionAndWidth =
   (totalOffset^, width);
 };
 
-let makeColorizer = (
-	length: int,
-	theme: Theme.t,
-	tokenColors: list(ColorizedToken.t),
-	colorMap: ColorMap.t,
-	selection: option(Range.t),
-	defaultBackgroundColor: Color.t,
-	selectionColor: Color.t,
-	matchingPair: option(int),
-) => {
-    let tokenColorArray: array(ColorizedToken.t) =
-      Array.make(length, ColorizedToken.default);
+let makeColorizer =
+    (
+      length: int,
+      theme: Theme.t,
+      tokenColors: list(ColorizedToken.t),
+      colorMap: ColorMap.t,
+      selection: option(Range.t),
+      defaultBackgroundColor: Color.t,
+      selectionColor: Color.t,
+      matchingPair: option(int),
+    ) => {
+  let tokenColorArray: array(ColorizedToken.t) =
+    Array.make(length, ColorizedToken.default);
 
-    let rec f = (tokens: list(ColorizedToken.t), start) =>
-      switch (tokens) {
-      | [] => ()
-      | [hd, ...tail] =>
-        let pos = ref(start);
-        while (pos^ >= hd.index) {
-          tokenColorArray[pos^] = hd;
-          decr(pos);
-        };
-        f(tail, pos^);
+  let rec f = (tokens: list(ColorizedToken.t), start) =>
+    switch (tokens) {
+    | [] => ()
+    | [hd, ...tail] =>
+      let pos = ref(start);
+      while (pos^ >= hd.index) {
+        tokenColorArray[pos^] = hd;
+        decr(pos);
+      };
+      f(tail, pos^);
+    };
+
+  let (selectionStart, selectionEnd) =
+    switch (selection) {
+    | Some(v) =>
+      let s = Index.toZeroBasedInt(v.startPosition.character);
+      let e = Index.toZeroBasedInt(v.endPosition.character);
+      e > s ? (s, e) : (e, s);
+    | None => ((-1), (-1))
+    };
+
+  let tokenColors = List.rev(tokenColors);
+
+  f(tokenColors, length - 1);
+
+  i => {
+    let colorIndex = tokenColorArray[i];
+
+    let matchingPair =
+      switch (matchingPair) {
+      | None => (-1)
+      | Some(v) => v
       };
 
-    let (selectionStart, selectionEnd) =
-      switch (selection) {
-      | Some(v) =>
-        let s = Index.toZeroBasedInt(v.startPosition.character);
-        let e = Index.toZeroBasedInt(v.endPosition.character);
-        e > s ? (s, e) : (e, s);
-      | None => ((-1), (-1))
-      };
+    let backgroundColor =
+      i >= selectionStart && i < selectionEnd || i == matchingPair
+        ? selectionColor : defaultBackgroundColor;
 
-    let tokenColors = List.rev(tokenColors);
-
-    f(tokenColors, length - 1);
-
-	(i) => {
-
-
-	let colorIndex = tokenColorArray[i];
-
-	let matchingPair = switch(matchingPair) {
-	| None => -1
-	| Some(v) => v
-	};
-
-	let backgroundColor = 
-	i >= selectionStart && i < selectionEnd || i == matchingPair ? selectionColor : defaultBackgroundColor;
-
-	let color =
-		ColorMap.get(
-			colorMap,
-			colorIndex.foregroundColor,
-			theme.colors.editorForeground,
-			theme.colors.editorBackground,
-		);
-		(backgroundColor, color)
-	};
-
+    let color =
+      ColorMap.get(
+        colorMap,
+        colorIndex.foregroundColor,
+        theme.colors.editorForeground,
+        theme.colors.editorBackground,
+      );
+    (backgroundColor, color);
+  };
 };
 
 let colorEqual = (c1: Color.t, c2: Color.t) => {
- Float.equal(c1.r, c2.r) 
- && Float.equal(c1.g, c2.g)
- && Float.equal(c1.b, c2.b)
- && Float.equal(c1.a, c2.a)
+  Float.equal(c1.r, c2.r)
+  && Float.equal(c1.g, c2.g)
+  && Float.equal(c1.b, c2.b)
+  && Float.equal(c1.a, c2.a);
 };
 
-let tokenize:
-  (
-    string,
-    IndentationSettings.t,
-    colorizer,
-  ) =>
-  list(t) =
-  (
-    s,
-    indentationSettings,
-    colorizer,
-  ) => {
+let tokenize: (string, IndentationSettings.t, colorizer) => list(t) =
+  (s, indentationSettings, colorizer) => {
     let split = (i0, c0, i1, c1) => {
       let (bg1, fg1) = colorizer(i0);
       let (bg2, fg2) = colorizer(i1);
-      
+
       !colorEqual(bg1, bg2)
       || !colorEqual(fg1, fg2)
       || _isWhitespace(c0) != _isWhitespace(c1)
       /* Always split on tabs */
       || UChar.eq(c0, tab)
-      || UChar.eq(c1, tab)
+      || UChar.eq(c1, tab);
     };
 
     Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
-    |> List.map(
-         textRunToToken(colorizer)
-       );
+    |> List.map(textRunToToken(colorizer));
   };
