@@ -10,6 +10,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+module Log = Core.Log;
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -26,6 +28,28 @@ let start = () => {
           newPosition.column + 1,
         );
       dispatch(Model.Actions.CursorMove(cursorPos));
+
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      let result = Vim.Search.getMatchingPair();
+      switch (result) {
+      | None => dispatch(Model.Actions.SearchClearMatchingPair(id))
+      | Some({line, column}) =>
+        dispatch(
+          Model.Actions.SearchSetMatchingPair(
+            id,
+            Core.Types.Position.create(
+              OneBasedIndex(newPosition.line),
+              ZeroBasedIndex(newPosition.column),
+            ),
+            Core.Types.Position.create(
+              OneBasedIndex(line),
+              ZeroBasedIndex(column),
+            ),
+          ),
+        )
+      };
     });
 
   let _ =
@@ -85,9 +109,41 @@ let start = () => {
     );
 
   let _ =
-    Vim.CommandLine.onUpdate(c =>
-      dispatch(Model.Actions.CommandlineUpdate(c))
-    );
+    Vim.CommandLine.onUpdate(c => {
+      dispatch(Model.Actions.CommandlineUpdate(c));
+
+      let cmdlineType = Vim.CommandLine.getType();
+      switch (cmdlineType) {
+      | SearchForward
+      | SearchReverse =>
+        let highlights = Vim.Search.getHighlights();
+
+        let sameLineFilter = (range: Vim.Range.t) =>
+          range.startPos.line == range.endPos.line;
+
+        let buffer = Vim.Buffer.getCurrent();
+        let id = Vim.Buffer.getId(buffer);
+
+        let toOniRange = (range: Vim.Range.t) =>
+          Core.Range.create(
+            ~startLine=OneBasedIndex(range.startPos.line),
+            ~startCharacter=ZeroBasedIndex(range.startPos.column),
+            ~endLine=OneBasedIndex(range.endPos.line),
+            ~endCharacter=ZeroBasedIndex(range.endPos.column),
+            (),
+          );
+
+        let highlightList =
+          highlights
+          |> Array.to_list
+          |> List.filter(sameLineFilter)
+          |> List.map(toOniRange);
+
+        dispatch(SearchSetHighlights(id, highlightList));
+
+      | _ => ()
+      };
+    });
 
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
@@ -119,7 +175,9 @@ let start = () => {
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
+          Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
+          Log.debug("VimStoreConnector - handled key: " ++ key);
         }
       );
 
@@ -127,6 +185,18 @@ let start = () => {
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
       Vim.Buffer.openFile(filePath) |> ignore
     );
+
+  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
+    Isolinear.Effect.create(~name="vim.setIndentation", () => {
+      let insertSpaces =
+        switch (indentation.mode) {
+        | Tabs => false
+        | Spaces => true
+        };
+
+      Vim.Options.setTabSize(indentation.size);
+      Vim.Options.setInsertSpaces(insertSpaces);
+    });
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
@@ -230,6 +300,10 @@ let start = () => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
+    | Model.Actions.BufferSetIndentation(_, indent) => (
+        state,
+        synchronizeIndentationEffect(indent),
+      )
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),

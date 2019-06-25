@@ -10,6 +10,7 @@ open Oni_Core.Types;
 type t = {
   metadata: Vim.BufferMetadata.t,
   lines: array(string),
+  indentation: option(IndentationSettings.t),
 };
 
 let show = _ => "TODO";
@@ -17,11 +18,16 @@ let show = _ => "TODO";
 let ofLines = (lines: array(string)) => {
   metadata: Vim.BufferMetadata.create(),
   lines,
+  indentation: None,
 };
 
 let empty = ofLines([||]);
 
-let ofMetadata = (metadata: Vim.BufferMetadata.t) => {metadata, lines: [||]};
+let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
+  metadata,
+  lines: [||],
+  indentation: None,
+};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
@@ -92,6 +98,16 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   };
 };
 
+let isIndentationSet = buf => {
+  switch (buf.indentation) {
+  | Some(_) => true
+  | None => false
+  };
+};
+let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
+
+let getIndentation = buf => buf.indentation;
+
 let update = (buf: t, update: BufferUpdate.t) => {
   let endLine = Index.toInt0(update.endLine);
 
@@ -104,6 +120,7 @@ let update = (buf: t, update: BufferUpdate.t) => {
      */
     if (endLine < 0) {
       {
+        ...buf,
         metadata: {
           ...buf.metadata,
           version: update.version,
@@ -112,7 +129,7 @@ let update = (buf: t, update: BufferUpdate.t) => {
       };
     } else {
       let metadata = {...buf.metadata, version: update.version};
-      {metadata, lines: applyUpdate(buf.lines, update)};
+      {...buf, metadata, lines: applyUpdate(buf.lines, update)};
     };
   } else {
     buf;

@@ -12,13 +12,20 @@ open Oni_Core;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
 module Diagnostics = Oni_Model.Diagnostics;
 module Editor = Oni_Model.Editor;
+module Selectors = Oni_Model.Selectors;
 module State = Oni_Model.State;
 
 open Types;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
-let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
+let renderLine =
+    (
+      shouldHighlight,
+      transform,
+      yOffset,
+      tokens: list(BufferViewTokenizer.t),
+    ) => {
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
@@ -32,15 +39,18 @@ let renderLine = (transform, yOffset, tokens: list(BufferViewTokenizer.t)) => {
       let width =
         float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
 
-      Shapes.drawRect(
-        ~transform,
-        ~y=yOffset,
-        ~x,
-        ~color=token.color,
-        ~width,
-        ~height,
-        (),
-      );
+      let emphasis = shouldHighlight(startPosition);
+      let color =
+        emphasis ? token.color : Color.multiplyAlpha(0.5, token.color);
+
+      let offset = 1.0;
+      let halfOffset = offset /. 2.0;
+
+      let x = emphasis ? x -. halfOffset : x;
+      let y = yOffset;
+      let width = emphasis ? width +. offset : width;
+
+      Shapes.drawRect(~transform, ~y, ~x, ~color, ~width, ~height, ());
     | _ => ()
     };
   };
@@ -155,7 +165,10 @@ let createElement =
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
-            if (state.configuration.editorMinimapShowSlider) {
+            if (Configuration.getValue(
+                  c => c.editorMinimapShowSlider,
+                  state.configuration,
+                )) {
               /* Draw current view */
               Shapes.drawRect(
                 ~transform,
@@ -189,6 +202,9 @@ let createElement =
               (),
             );
 
+            let searchHighlights =
+              Selectors.getSearchHighlights(state, editor.bufferId);
+
             FlatList.render(
               ~scrollY,
               ~rowHeight,
@@ -196,8 +212,21 @@ let createElement =
               ~count,
               ~render=
                 (item, offset) => {
+                  open Range;
                   let tokens = getTokensForLine(item);
-                  renderLine(transform, offset, tokens);
+                  let highlightRanges =
+                    switch (IntMap.find_opt(item, searchHighlights)) {
+                    | Some(v) => v
+                    | None => []
+                    };
+                  let shouldHighlight = i =>
+                    List.exists(
+                      r =>
+                        Index.toInt0(r.startPosition.character) <= i
+                        && Index.toInt0(r.endPosition.character) >= i,
+                      highlightRanges,
+                    );
+                  renderLine(shouldHighlight, transform, offset, tokens);
                 },
               (),
             );

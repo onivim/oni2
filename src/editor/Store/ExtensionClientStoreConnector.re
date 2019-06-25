@@ -16,7 +16,7 @@ module Protocol = Extensions.ExtHostProtocol;
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onExtHostClosed = () => print_endline("ext host closed");
+  let onExtHostClosed = () => Core.Log.info("ext host closed");
 
   let extensionInfo =
     extensions

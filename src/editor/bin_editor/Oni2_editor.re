@@ -14,6 +14,7 @@ open Oni_UI;
 module Core = Oni_Core;
 module Model = Oni_Model;
 module Store = Oni_Store;
+module Log = Core.Log;
 
 /**
    This allows a stack trace to be printed when exceptions occur
@@ -23,6 +24,8 @@ module Store = Oni_Store;
 /* | None => () */
 /* }; */
 Printexc.record_backtrace(true);
+
+let () = Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
@@ -38,8 +41,13 @@ let init = app => {
       "Oni2",
     );
 
+  let () = Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
+  Log.debug("Startup: Parsing CLI options");
   let cliOptions = Core.Cli.parse(setup);
+  Log.debug("Startup: Parsing CLI options complete");
+
+  Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
   Sys.chdir(cliOptions.folder);
 
   PreflightChecks.run();
@@ -57,14 +65,15 @@ let init = app => {
     update(<Root state />);
   };
 
-  let dispatch =
+  Log.debug("Startup: Starting StoreThread");
+  let (dispatch, runEffects) =
     Store.StoreThread.start(
-      ~cliOptions,
       ~setup,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       (),
     );
+  Log.debug("Startup: StoreThread started!");
 
   GlobalContext.set({
     getState: () => currentState^,
@@ -87,6 +96,12 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
+  runEffects();
+
+  List.iter(
+    v => dispatch(Model.Actions.OpenFileByPath(v)),
+    cliOptions.filesToOpen,
+  );
 
   let setFont = (fontFamily, fontSize) => {
     let scaleFactor =
@@ -166,4 +181,5 @@ let init = app => {
 };
 
 /* Let's get this party started! */
+let () = Log.debug("Calling App.start");
 App.start(init);

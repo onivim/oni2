@@ -1,4 +1,5 @@
 [![Build Status](https://dev.azure.com/onivim/oni2/_apis/build/status/onivim.oni2?branchName=master)](https://dev.azure.com/onivim/oni2/_build/latest?definitionId=1?branchName=master)
+[![Discord](https://img.shields.io/discord/417774914645262338.svg)](https://discord.gg/7maEAxV)
 
 # Onivim 2
 
@@ -8,6 +9,7 @@
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/13532591/53999860-e8e70780-40f9-11e9-8428-295adb18c4dd.gif" alt="Onivim 2" />
+   <img src="https://img.shields.io/discord/417774914645262338.svg" alt="Join the chat on discord!">
  </p>
 
 
@@ -46,7 +48,7 @@ Coming soon!
 
 We'd :heart: help building Onivim 2!
 
-If you are interesting in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
+If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
 
 - [How to build and run from source](./CONTRIBUTING.md#build-and-run)
 - [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)

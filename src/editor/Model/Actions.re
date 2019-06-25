@@ -14,6 +14,7 @@ type t =
   | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
+  | BufferSetIndentation(int, IndentationSettings.t)
   | BufferMarkDirty(int)
   | Command(string)
   | ConfigurationReload
@@ -58,6 +59,9 @@ type t =
   | QuickOpen
   | Quit
   | RegisterQuitCleanup(unit => unit)
+  | SearchClearMatchingPair(int)
+  | SearchSetMatchingPair(int, Position.t, Position.t)
+  | SearchSetHighlights(int, list(Range.t))
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
