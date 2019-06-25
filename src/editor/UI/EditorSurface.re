@@ -279,6 +279,8 @@ let createElement =
         backgroundColor(Colors.white),
       ];
 
+    let searchHighlights = Selectors.getSearchHighlights(state, editor.bufferId);
+
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
@@ -287,6 +289,11 @@ let createElement =
           bufferId,
           i,
         );
+
+      let searchHighlightRanges = switch (IntMap.find_opt(i, searchHighlights)) {
+      | Some(v) => v
+      | None => [];
+      };
 
       let isActiveLine = i == cursorLine;
       let defaultBackground =
@@ -317,6 +324,7 @@ let createElement =
           defaultBackground,
           theme.colors.editorSelectionBackground,
           matchingPairIndex,
+          searchHighlightRanges,
         );
 
       BufferViewTokenizer.tokenize(

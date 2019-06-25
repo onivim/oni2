@@ -21,6 +21,7 @@ let create =
       defaultBackgroundColor: Color.t,
       selectionColor: Color.t,
       matchingPair: option(int),
+      searchHighlightRanges: list(Range.t),
     ) => {
   let tokenColorArray: array(ColorizedToken.t) =
     Array.make(length, ColorizedToken.default);
@@ -62,6 +63,15 @@ let create =
     let backgroundColor =
       i >= selectionStart && i < selectionEnd || i == matchingPair
         ? selectionColor : defaultBackgroundColor;
+
+    let doesSearchIntersect = (range: Range.t) => {
+      open Range;
+      Index.toInt0(range.startPosition.character) < i && Index.toInt0(range.endPosition.character) >= i;
+    };
+
+    let isSearchHighlight = List.exists(doesSearchIntersect, searchHighlightRanges);
+
+    let backgroundColor = isSearchHighlight ? theme.colors.editorFindMatchBackground : backgroundColor;
 
     let color =
       ColorMap.get(
