@@ -66,8 +66,8 @@ let create =
 
     let doesSearchIntersect = (range: Range.t) => {
       Range.(
-        Index.toInt0(range.startPosition.character) < i
-        && Index.toInt0(range.endPosition.character) >= i
+        Index.toInt0(range.startPosition.character) <= i
+        && Index.toInt0(range.endPosition.character) > i
       );
     };
 

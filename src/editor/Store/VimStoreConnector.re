@@ -125,9 +125,9 @@ let start = () => {
         let toOniRange = (range: Vim.Range.t) =>
           Core.Range.create(
             ~startLine=OneBasedIndex(range.startPos.line),
-            ~startCharacter=OneBasedIndex(range.startPos.column),
+            ~startCharacter=ZeroBasedIndex(range.startPos.column),
             ~endLine=OneBasedIndex(range.endPos.line),
-            ~endCharacter=OneBasedIndex(range.endPos.column),
+            ~endCharacter=ZeroBasedIndex(range.endPos.column),
             (),
           );
 
