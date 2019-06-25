@@ -39,11 +39,11 @@ let start = () => {
             id,
             Core.Types.Position.create(
               OneBasedIndex(newPosition.line),
-              OneBasedIndex(newPosition.column),
+              ZeroBasedIndex(newPosition.column),
             ),
             Core.Types.Position.create(
               OneBasedIndex(line),
-              OneBasedIndex(column),
+              ZeroBasedIndex(column),
             ),
           ),
         )

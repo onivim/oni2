@@ -290,15 +290,35 @@ let createElement =
           ? theme.colors.editorLineHighlightBackground
           : theme.colors.editorBackground;
 
+      let matchingPairIndex =
+        switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+        | None => None
+        | Some(v) =>
+          if (Index.toInt0(v.startPos.line) == i) {
+            Some(Index.toInt0(v.startPos.character));
+          } else if (Index.toInt0(v.endPos.line) == i) {
+            Some(Index.toInt0(v.endPos.character));
+          } else {
+            None;
+          }
+        };
+
+      let colorizer =
+        BufferLineColorizer.create(
+          Zed_utf8.length(line),
+          state.theme,
+          tokenColors,
+          state.syntaxHighlighting.colorMap,
+          selection,
+          defaultBackground,
+          theme.colors.editorSelectionBackground,
+          matchingPairIndex,
+        );
+
       BufferViewTokenizer.tokenize(
         line,
-        state.theme,
-        tokenColors,
-        state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
-        selection,
-        defaultBackground,
-        theme.colors.editorSelectionBackground,
+        colorizer,
       );
     };
 
