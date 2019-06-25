@@ -54,7 +54,7 @@ let getActiveEditor = (v: t) => {
 };
 
 let setActiveEditor = (v: t, editorId: int) => {
-  {...v, activeEditorId: Some(editorId) }
+  {...v, activeEditorId: Some(editorId)};
 };
 
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {

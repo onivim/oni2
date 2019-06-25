@@ -347,7 +347,9 @@ let createElement =
     let onDimensionsChanged =
         ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
       print_endline(
-        "NOTIFY SIZE CHANGED - editorGroup: " ++ string_of_int(editorGroupId) ++ ":"
+        "NOTIFY SIZE CHANGED - editorGroup: "
+        ++ string_of_int(editorGroupId)
+        ++ ":"
         ++ string_of_int(width)
         ++ ", "
         ++ string_of_int(height),

@@ -10,7 +10,6 @@ open Oni_Core.Types;
 type t = {
   idToGroup: IntMap.t(EditorGroup.t),
   activeId: int,
-
   /* Cache the last editor font, so when a new group is created, we can share it */
   lastEditorFont: option(EditorFont.t),
 };
@@ -32,23 +31,19 @@ let getActiveEditorGroup = (v: t) => {
 
 let reduce = (v: t, action: Actions.t) => {
   switch (action) {
-  | SetEditorFont(ef) => {
-    ...v,
-    lastEditorFont: Some(ef),
-  }
-  | EditorGroupAdd(editorGroup) => {
-      let editorGroup = switch (v.lastEditorFont) {
-      | Some(ef) =>
-      EditorGroupReducer.reduce(editorGroup, SetEditorFont(ef));
+  | SetEditorFont(ef) => {...v, lastEditorFont: Some(ef)}
+  | EditorGroupAdd(editorGroup) =>
+    let editorGroup =
+      switch (v.lastEditorFont) {
+      | Some(ef) => EditorGroupReducer.reduce(editorGroup, SetEditorFont(ef))
       | None => editorGroup
       };
 
-      {
+    {
       ...v,
       activeId: editorGroup.id,
       idToGroup: IntMap.add(editorGroup.id, editorGroup, v.idToGroup),
-      }
-    }
+    };
   | EditorGroupSetSize(editorGroupId, _) =>
     let idToGroup =
       IntMap.update(

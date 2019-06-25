@@ -10,7 +10,8 @@
 open Oni_Core.Types;
 open Oni_Model;
 
-type notifySizeChanged = (~editorGroupId: int, ~width: int, ~height: int, unit) => unit;
+type notifySizeChanged =
+  (~editorGroupId: int, ~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: float, unit) => unit;
 
 type t = {
@@ -29,7 +30,8 @@ let viewNoop: Views.viewOperation =
 let default = {
   state: State.create(),
   getState: () => State.create(),
-  notifySizeChanged: (~editorGroupId as _, ~width as _, ~height as _, ()) => (),
+  notifySizeChanged: (~editorGroupId as _, ~width as _, ~height as _, ()) =>
+    (),
   editorScroll: (~deltaY as _, ()) => (),
   openEditorById: _ => (),
   dispatch: _ => (),
