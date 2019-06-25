@@ -212,7 +212,11 @@ let createElement =
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let indentation = IndentationSettings.default;
+    let indentation =
+      switch (Buffer.getIndentation(buffer)) {
+      | Some(v) => v
+      | None => IndentationSettings.default
+      };
 
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
