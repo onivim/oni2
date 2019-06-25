@@ -538,16 +538,33 @@ let createElement =
                     | None => ()
                     | Some(v) => List.iter(renderDiagnostics, v)
                     };
-                    
+
                     /* Draw match highlights */
                     let matchColor = theme.colors.editorSelectionBackground;
-                    switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+                    switch (
+                      Selectors.getMatchingPairs(state, editor.bufferId)
+                    ) {
                     | None => ()
-                    | Some(v) =>  {
-                      renderRange(~offset=0.0, ~color=matchColor, Range.createFromPositions(~startPosition=v.startPos, ~endPosition=v.startPos, ()));
-                      renderRange(~offset=0.0, ~color=matchColor, Range.createFromPositions(~startPosition=v.endPos, ~endPosition=v.endPos, ()));
-                      }
-                    }
+                    | Some(v) =>
+                      renderRange(
+                        ~offset=0.0,
+                        ~color=matchColor,
+                        Range.createFromPositions(
+                          ~startPosition=v.startPos,
+                          ~endPosition=v.startPos,
+                          (),
+                        ),
+                      );
+                      renderRange(
+                        ~offset=0.0,
+                        ~color=matchColor,
+                        Range.createFromPositions(
+                          ~startPosition=v.endPos,
+                          ~endPosition=v.endPos,
+                          (),
+                        ),
+                      );
+                    };
 
                     /* Draw search highlights */
                     switch (IntMap.find_opt(item, searchHighlights)) {
