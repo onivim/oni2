@@ -12,7 +12,15 @@ type matchingPair = {
   endPos: Position.t,
 };
 
-type highlights = {matchingPair: option(matchingPair)};
+type highlights = {
+	matchingPair: option(matchingPair),
+	highlightRanges: list(Range.t)
+};
+
+let default: highlights = {
+	matchingPair: None,
+	highlightRanges: [],
+};
 
 type t = IntMap.t(highlights);
 
@@ -25,18 +33,26 @@ let reduce = (action: Actions.t, state: t) => {
       bid,
       oldHighlights =>
         switch (oldHighlights) {
-        | None
-        | Some(_) => Some({matchingPair: Some({startPos, endPos})})
+        | None => Some({...default, matchingPair: Some({startPos, endPos})})
+        | Some(v) => Some({...v, matchingPair: Some({startPos, endPos})})
         },
       state,
     )
+  | SearchSetHighlights(bid, highlightRanges) =>
+  	IntMap.update(
+		bid,
+		oldHighlights =>
+		switch(oldHighlights) {
+		| None => Some({...default, highlightRanges })
+		| Some(v) => Some({...v, highlightRanges })
+		}, state);
   | SearchClearMatchingPair(bid) =>
     IntMap.update(
       bid,
       oldHighlights =>
         switch (oldHighlights) {
         | None => None
-        | Some(_) => Some({matchingPair: None})
+        | Some(v) => Some({...v, matchingPair: None})
         },
       state,
     )
