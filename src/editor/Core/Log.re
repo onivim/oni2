@@ -8,15 +8,9 @@ let canPrint = ref(false);
 
 let enablePrinting = () => canPrint := true;
 
-let print = msg => switch (canPrint^) {
-| true => print_endline (msg);
-| false => ();
-};
+let print = msg => canPrint^ ? print_endline(msg) : ();
 
-let prerr = msg => switch (canPrint^) {
-| true => prerr_endline (msg);
-| false => ();
-};
+let prerr = msg => canPrint^ ? prerr_endline(msg) : ();
 
 let fileChannel =
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {

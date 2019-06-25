@@ -29,7 +29,10 @@ let parse = (setup: Setup.t) => {
   let args: ref(list(string)) = ref([]);
 
   Arg.parse(
-    [("-f", Unit(Log.enablePrinting), ""), ("--nofork", Unit(Log.enablePrinting), "")],
+    [
+      ("-f", Unit(Log.enablePrinting), ""),
+      ("--nofork", Unit(Log.enablePrinting), ""),
+    ],
     arg => args := [arg, ...args^],
     header(setup.version),
   );
