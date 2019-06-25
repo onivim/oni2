@@ -47,7 +47,6 @@ let renderLine =
       let halfOffset = offset /. 2.0;
 
       let x = emphasis ? x -. halfOffset : x;
-      let y = emphasis ? yOffset -. halfOffset : yOffset;
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
