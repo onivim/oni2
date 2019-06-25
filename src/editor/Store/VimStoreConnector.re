@@ -193,7 +193,7 @@ let start = () => {
         | Tabs => false
         | Spaces => true
         };
-      
+
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });
