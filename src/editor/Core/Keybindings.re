@@ -1,5 +1,6 @@
 open Types.Input;
 
+
 [@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type keyBindings = {
   key: string,
@@ -28,7 +29,7 @@ let get = () => {
   switch (ofFile(getBundledKeybindingsPath())) {
   | Ok(b) => b.bindings
   | Error(e) =>
-    print_endline("Error parsing keybindings file ------- " ++ e);
+    Log.error("Error parsing keybindings file ------- " ++ e);
     [];
   };
 };

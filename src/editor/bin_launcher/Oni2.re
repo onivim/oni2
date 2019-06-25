@@ -19,7 +19,6 @@ let spec = [
 let anonArg = _ => ();
 
 let () = Arg.parse(spec, anonArg, "Usage: ");
-print_endline("Args parsed!");
 
 let startProcess = (stdio, stdout, stderr) => {
   let executingDirectory = Filename.dirname(Sys.argv[0]);

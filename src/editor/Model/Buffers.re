@@ -21,7 +21,7 @@ let log = (m: t) =>
     (_, b) =>
       Buffer.show(b)
       |> (++)("Buffer ======================: \n")
-      |> print_endline,
+      |> Log.info
     m,
   );
 
