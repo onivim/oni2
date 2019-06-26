@@ -78,21 +78,21 @@ let explode = (measure, v) => {
 };
 
 let toHash = (ranges: list(t)) => {
-              let rangeHash: Hashtbl.t(int, list(t)) =
-                Hashtbl.create(100);
+  let rangeHash: Hashtbl.t(int, list(t)) = Hashtbl.create(100);
   List.iter(
-    (r) => {
+    r => {
       let line = Index.toZeroBasedInt(r.startPosition.line);
 
-      let newVal = switch(Hashtbl.find_opt(rangeHash, line)) {
-      | Some(v) => [r, ...v]
-      | None => [r]
-      }
+      let newVal =
+        switch (Hashtbl.find_opt(rangeHash, line)) {
+        | Some(v) => [r, ...v]
+        | None => [r]
+        };
 
       Hashtbl.add(rangeHash, line, newVal);
     },
     ranges,
   );
 
-  rangeHash
+  rangeHash;
 };

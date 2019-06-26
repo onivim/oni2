@@ -428,9 +428,9 @@ let createElement =
       | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
       | None => IntMap.empty
       };
-                
-                let ranges = Selection.getRanges(editor.selection, buffer);
-                let selectionRanges = Range.toHash(ranges);
+
+    let ranges = Selection.getRanges(editor.selection, buffer);
+    let selectionRanges = Range.toHash(ranges);
 
     (
       hooks,
@@ -521,9 +521,14 @@ let createElement =
 
                     switch (Hashtbl.find_opt(selectionRanges, item)) {
                     | None => ()
-                    | Some(v) => List.iter(renderRange(~color=theme.colors.editorSelectionBackground), v);
+                    | Some(v) =>
+                      List.iter(
+                        renderRange(
+                          ~color=theme.colors.editorSelectionBackground,
+                        ),
+                        v,
+                      )
                     };
-
 
                     /* Draw match highlights */
                     let matchColor = theme.colors.editorSelectionBackground;
@@ -578,12 +583,13 @@ let createElement =
                 ~render=
                   (item, offset) => {
                     let selectionRange =
-                      switch(Hashtbl.find_opt(selectionRanges, item)) {
+                      switch (Hashtbl.find_opt(selectionRanges, item)) {
                       | None => None
-                      | Some(v) => switch(List.length(v)) {
-                      | 0 => None
-                      | _ => Some(List.hd(v));
-                      }
+                      | Some(v) =>
+                        switch (List.length(v)) {
+                        | 0 => None
+                        | _ => Some(List.hd(v))
+                        }
                       };
                     let tokens =
                       getTokensForLine(~selection=selectionRange, item);
