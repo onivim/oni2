@@ -10,6 +10,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+module Log = Core.Log;
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -110,13 +112,40 @@ let start = () => {
     Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c));
 
-      let cmdType = Vim.CommandLine.getType();
-      switch (cmdType) {
+      let cmdlineType = Vim.CommandLine.getType();
+      switch (cmdlineType) {
       | Ex =>  ();
           let completions = Vim.CommandLine.getCompletions();
           Array.iter(c => print_endline(c), completions);
+      | SearchForward
+      | SearchReverse =>
+        let highlights = Vim.Search.getHighlights();
+
+        let sameLineFilter = (range: Vim.Range.t) =>
+          range.startPos.line == range.endPos.line;
+
+        let buffer = Vim.Buffer.getCurrent();
+        let id = Vim.Buffer.getId(buffer);
+
+        let toOniRange = (range: Vim.Range.t) =>
+          Core.Range.create(
+            ~startLine=OneBasedIndex(range.startPos.line),
+            ~startCharacter=ZeroBasedIndex(range.startPos.column),
+            ~endLine=OneBasedIndex(range.endPos.line),
+            ~endCharacter=ZeroBasedIndex(range.endPos.column),
+            (),
+          );
+
+        let highlightList =
+          highlights
+          |> Array.to_list
+          |> List.filter(sameLineFilter)
+          |> List.map(toOniRange);
+
+        dispatch(SearchSetHighlights(id, highlightList));
+
       | _ => ()
-      }
+      };
     });
 
   let _ =
@@ -149,7 +178,9 @@ let start = () => {
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
             && !String.equal(key, "<A-C->")) {
+          Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
+          Log.debug("VimStoreConnector - handled key: " ++ key);
         }
       );
 
@@ -166,9 +197,6 @@ let start = () => {
         | Spaces => true
         };
 
-      print_endline(
-        "Setting insert spaces: " ++ string_of_bool(insertSpaces),
-      );
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });
