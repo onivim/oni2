@@ -35,7 +35,7 @@ let default = {
     (),
   editorScroll: (~deltaY as _, ()) => (),
   openEditorById: _ => (),
-  setActiveEditorGroup: editorGroupId => (),
+  setActiveEditorGroup: _ => (),
   dispatch: _ => (),
   closeEditorById: _ => (),
 };
