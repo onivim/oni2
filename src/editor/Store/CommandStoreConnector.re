@@ -29,7 +29,7 @@ let start = getState => {
     fn(state);
   };
 
-  let splitEditorEffect = (state, direction,  _) =>
+  let splitEditorEffect = (state, direction, _) =>
     Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
       let buffer = Selectors.getActiveBuffer(state);
 
@@ -37,9 +37,10 @@ let start = getState => {
         switch (buffer) {
         | Some(b) =>
           let ec = EditorGroup.create();
-          let (g, _) =
+          let (g, editorId) =
             EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
-          let g = EditorGroup.setActiveEditor(ec, g.id);
+          let g = EditorGroup.setActiveEditor(g, editorId);
+          print_endline("Adding editor group: " ++ EditorGroup.show(g));
           g;
         | None => EditorGroup.create()
         };

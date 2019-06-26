@@ -29,9 +29,18 @@ let getActiveEditorGroup = (v: t) => {
   getEditorGroupById(v, v.activeId);
 };
 
+let applyToAllEditorGroups =
+    (editors: IntMap.t(EditorGroup.t), action: Actions.t) => {
+  IntMap.map(eg => EditorGroupReducer.reduce(eg, action), editors);
+};
+
 let reduce = (v: t, action: Actions.t) => {
   switch (action) {
-  | SetEditorFont(ef) => {...v, lastEditorFont: Some(ef)}
+  | SetEditorFont(ef) => {
+      ...v,
+      idToGroup: applyToAllEditorGroups(v.idToGroup, action),
+      lastEditorFont: Some(ef),
+    }
   | EditorGroupAdd(editorGroup) =>
     let editorGroup =
       switch (v.lastEditorFont) {
