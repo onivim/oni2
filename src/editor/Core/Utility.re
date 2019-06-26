@@ -103,3 +103,29 @@ let filterMap = (f, l) => {
 
   inner(l);
 };
+  
+let getCommandLineCompletionsMeet = (str: string, position: int) => {
+    let len = String.length(str);
+
+    if (len == 0 || position < len) {
+      None
+    } else {
+      /* Look backwards for '/' or ' ' */
+      let found = ref(false);
+      let meet = ref(position);
+
+      while (meet^ > 0 && !found^) {
+
+        let pos = meet^ - 1;
+        let c = String.get(str, pos);
+        if (c == ' ') {
+          found := true;
+        } else {
+          decr(meet);
+        }
+      }
+
+      Some(meet^);
+    }
+};
+

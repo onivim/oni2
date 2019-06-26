@@ -115,8 +115,22 @@ let start = () => {
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
       | Ex =>  ();
-          let completions = Vim.CommandLine.getCompletions();
-          Array.iter(c => print_endline(c), completions);
+          let text = switch(Vim.CommandLine.getText()) {
+          | Some(v) => v;
+          | None => "";
+          }
+          let position = Vim.CommandLine.getPosition();
+          print_endline ("Command line text: " ++ text ++ " position: " ++ string_of_int(position));
+          let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+          switch (meet) {
+          | Some(v) => print_endline("Completion meet is: " ++ string_of_int(v));
+          | None => print_endline("Completion met is: NONE");
+          };
+          print_endline ("getting completions...");
+          let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+          dispatch(Model.Actions.WildmenuShow(completions));
+          print_endline ("got completions!");
+          List.iter(c => print_endline(c), completions);
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();

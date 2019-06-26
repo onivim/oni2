@@ -171,13 +171,6 @@ module UiFont = {
   let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
 };
 
-[@deriving show({with_path: false})]
-type wildmenu = {
-  items: list(string),
-  show: bool,
-  selected: int,
-};
-
 /* [@deriving show({with_path: false})] */
 type commandline = {
   text: string,
