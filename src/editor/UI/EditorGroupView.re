@@ -124,8 +124,8 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
       print_endline(
         "CLICKED FROM editorGroup: " ++ string_of_int(editorGroupId),
       );
-        GlobalContext.current().setActiveEditorGroup(editorGroupId);
-      };
+      GlobalContext.current().setActiveEditorGroup(editorGroupId);
+    };
 
     (
       hooks,

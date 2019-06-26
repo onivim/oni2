@@ -41,10 +41,7 @@ let reduce = (v: t, action: Actions.t) => {
       idToGroup: applyToAllEditorGroups(v.idToGroup, action),
       lastEditorFont: Some(ef),
     }
-  | EditorGroupSetActive(editorGroupId) => {
-    ...v,
-    activeId: editorGroupId,
-  }
+  | EditorGroupSetActive(editorGroupId) => {...v, activeId: editorGroupId}
   | EditorGroupAdd(editorGroup) =>
     let editorGroup =
       switch (v.lastEditorFont) {
