@@ -118,7 +118,6 @@ let getActionsForBinding =
  */
 let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
-  | NeovimMenuFocus
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
     | [] => [Actions.KeyboardInput(inputKey)]

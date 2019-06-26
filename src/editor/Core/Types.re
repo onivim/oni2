@@ -187,7 +187,7 @@ module Input = {
     | [@name "menuFocus"] MenuFocus
     | [@name "textInputFocus"] TextInputFocus
     | [@name "editorTextFocus"] EditorTextFocus
-    | [@name "neovimMenuFocus"] NeovimMenuFocus;
+    | [@name "commandLineFocus"] CommandLineFocus;
 
   [@deriving show({with_path: false})]
   type keyBindings = {
