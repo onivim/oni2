@@ -77,9 +77,10 @@ let init = app => {
 
   GlobalContext.set({
     getState: () => currentState^,
-    notifySizeChanged: (~width, ~height, ()) =>
+    notifySizeChanged: (~editorGroupId, ~width, ~height, ()) =>
       dispatch(
-        Model.Actions.SetEditorSize(
+        Model.Actions.EditorGroupSetSize(
+          editorGroupId,
           Core.Types.EditorSize.create(
             ~pixelWidth=width,
             ~pixelHeight=height,
@@ -91,6 +92,8 @@ let init = app => {
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScroll: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
+    setActiveEditorGroup: id =>
+      dispatch(Model.Actions.EditorGroupSetActive(id)),
     dispatch,
     state: initialState,
   });

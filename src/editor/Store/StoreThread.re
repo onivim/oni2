@@ -44,10 +44,12 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
   let latestState: ref(Model.State.t) = ref(state);
+  let getState = () => latestState^;
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
+  let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
@@ -65,8 +67,6 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
-
-  let commandUpdater = CommandStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
   let indentationUpdater = IndentationStoreConnector.start();

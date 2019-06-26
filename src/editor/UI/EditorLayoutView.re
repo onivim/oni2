@@ -64,15 +64,17 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let rec renderTree = (~direction, theme, tree) =>
+let rec renderTree = (~direction, theme, state, tree) =>
   switch (tree) {
   | Parent(direction, _, children) =>
+    /* let _c = renderTree(~direction, theme, children, state); */
+    /* React.empty */
     <View style={parentStyle(direction)}>
-      ...{List.map(renderTree(~direction, theme), children)}
+      ...{List.map(renderTree(~direction, theme, state), children)}
     </View>
   | Leaf(window) =>
     <View style={splitStyle(window)}>
-      {window.component()}
+      <EditorGroupView state editorGroupId={window.editorGroupId} />
       <WindowHandle direction theme />
     </View>
   | Empty => React.empty
@@ -85,7 +87,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
 
     let splits =
       renderDock(rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, windows)])
+      |> (@)([renderTree(~direction=Vertical, theme, state, windows)])
       |> (@)(renderDock(leftDock, state));
     (hooks, <View style=splitContainer> ...splits </View>);
   });

@@ -13,7 +13,12 @@ let editorSurfaceMinimalState = () => {
   let _ =
     React.RenderedElement.render(
       rootNode,
-      <EditorSurface editor=simpleEditor state=simpleState metrics />,
+      <EditorSurface
+        editorGroupId
+        editor=simpleEditor
+        state=simpleState
+        metrics
+      />,
     );
   ();
 };
@@ -22,7 +27,26 @@ let editorSurfaceThousandLineState = () => {
   let _ =
     React.RenderedElement.render(
       rootNode,
-      <EditorSurface editor=simpleEditor state=thousandLineState metrics />,
+      <EditorSurface
+        editorGroupId
+        editor=simpleEditor
+        state=thousandLineState
+        metrics
+      />,
+    );
+  ();
+};
+
+let editorSurfaceThousandLineStateWithIndents = () => {
+  let _ =
+    React.RenderedElement.render(
+      rootNode,
+      <EditorSurface
+        editorGroupId
+        editor=simpleEditor
+        state=thousandLineStateWithIndents
+        metrics
+      />,
     );
   ();
 };
@@ -32,6 +56,7 @@ let editorSurfaceHundredThousandLineState = () => {
     React.RenderedElement.render(
       rootNode,
       <EditorSurface
+        editorGroupId
         editor=simpleEditor
         state=hundredThousandLineState
         metrics
@@ -50,7 +75,12 @@ let setupSurfaceThousandLineLayout = () => {
   let container = Container.create(rootNode);
   Container.update(
     container,
-    <EditorSurface editor=simpleEditor state=thousandLineState metrics />,
+    <EditorSurface
+      editorGroupId
+      editor=simpleEditor
+      state=thousandLineState
+      metrics
+    />,
   )
   |> ignore;
 
@@ -70,11 +100,20 @@ bench(
   ~f=editorSurfaceMinimalState,
   (),
 );
+
 bench(
   ~name="EditorSurface - Rendering: 1000 Lines state",
   ~options,
   ~setup,
   ~f=editorSurfaceThousandLineState,
+  (),
+);
+
+bench(
+  ~name="EditorSurface - Rendering: 1000 Lines state (Indented)",
+  ~options,
+  ~setup,
+  ~f=editorSurfaceThousandLineStateWithIndents,
   (),
 );
 

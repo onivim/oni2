@@ -5,29 +5,14 @@ open Actions;
 
 let lastId = ref(0);
 
-type t = {
-  id: int,
-  bufferId: int,
-  scrollX: float,
-  scrollY: float,
-  minimapMaxColumnWidth: int,
-  minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
-  cursorPosition: Position.t,
-  selection: VisualRange.t,
-};
+type t = Actions.editor;
 
 let create = (~bufferId=0, ()) => {
   let id = lastId^;
   incr(lastId);
 
   let ret: t = {
-    id,
+    editorId: id,
     bufferId,
     scrollX: 0.,
     scrollY: 0.,

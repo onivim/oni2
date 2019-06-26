@@ -175,7 +175,9 @@ let start = () => {
       =>
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
-            && !String.equal(key, "<A-C->")) {
+            && !String.equal(key, "<A-C->")
+            && !String.equal(key, "<SHIFT>")
+            && !String.equal(key, "<S-C->")) {
           Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
           Log.debug("VimStoreConnector - handled key: " ++ key);
@@ -278,7 +280,8 @@ let start = () => {
         };
 
         switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
+        | (Some(e), Some(v)) when e.editorId != v =>
+          synchronizeCursorPosition(e)
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
         };
@@ -292,15 +295,13 @@ let start = () => {
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.SetEditorSize(_) => (
+    | Model.Actions.BufferEnter(_)
+    | Model.Actions.SetEditorFont(_)
+    | Model.Actions.EditorGroupSetActive(_)
+    | Model.Actions.EditorGroupSetSize(_, _) => (
         state,
         synchronizeEditorEffect(state),
       )
-    | Model.Actions.SetEditorFont(_) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
