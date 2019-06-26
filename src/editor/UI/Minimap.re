@@ -78,6 +78,7 @@ let createElement =
       ~count,
       ~diagnostics,
       ~getTokensForLine: int => list(BufferViewTokenizer.t),
+      ~selection: Hashtbl.t(int, list(Range.t)),
       ~metrics,
       ~children as _,
       (),
@@ -205,6 +206,28 @@ let createElement =
             let searchHighlights =
               Selectors.getSearchHighlights(state, editor.bufferId);
 
+            let renderRange = (~color, ~offset, range: Range.t) =>
+              {let startX =
+                 Index.toZeroBasedInt(range.startPosition.character)
+                 * Constants.default.minimapCharacterWidth
+                 |> float_of_int
+               let endX =
+                 Index.toZeroBasedInt(range.endPosition.character)
+                 * Constants.default.minimapCharacterWidth
+                 |> float_of_int
+
+               Shapes.drawRect(
+                 ~transform,
+                 ~x=startX -. 1.0,
+                 ~y=offset -. 1.0,
+                 ~height=
+                   float_of_int(Constants.default.minimapCharacterHeight)
+                   +. 2.0,
+                 ~width=endX -. startX +. 2.,
+                 ~color,
+                 (),
+               )};
+
             FlatList.render(
               ~scrollY,
               ~rowHeight,
@@ -213,6 +236,18 @@ let createElement =
               ~render=
                 (item, offset) => {
                   open Range;
+                  /* draw selection */
+                  switch (Hashtbl.find_opt(selection, item)) {
+                  | None => ()
+                  | Some(v) =>
+                    let selectionColor =
+                      state.theme.colors.editorSelectionBackground;
+                    List.iter(
+                      renderRange(~color=selectionColor, ~offset),
+                      v,
+                    );
+                  };
+
                   let tokens = getTokensForLine(item);
                   let highlightRanges =
                     switch (IntMap.find_opt(item, searchHighlights)) {
@@ -237,36 +272,20 @@ let createElement =
               ~height=float_of_int(height),
               ~count,
               ~render=
-                (item, offset) => {
-                  let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
-                    {let startX =
-                       Index.toZeroBasedInt(d.range.startPosition.character)
-                       * Constants.default.minimapCharacterWidth
-                       |> float_of_int
-                     let endX =
-                       Index.toZeroBasedInt(d.range.endPosition.character)
-                       * Constants.default.minimapCharacterWidth
-                       |> float_of_int
-
-                     Shapes.drawRect(
-                       ~transform,
-                       ~x=startX -. 1.0,
-                       ~y=offset -. 1.0,
-                       ~height=
-                         float_of_int(
-                           Constants.default.minimapCharacterHeight,
-                         )
-                         +. 2.0,
-                       ~width=endX -. startX +. 2.,
-                       ~color=Color.rgba(1.0, 0., 0., 0.7),
-                       (),
-                     )};
-
+                (item, offset) =>
                   switch (IntMap.find_opt(item, diagnostics)) {
-                  | Some(v) => List.iter(renderDiagnostics, v)
+                  | Some(v) =>
+                    List.iter(
+                      (d: Diagnostics.Diagnostic.t) =>
+                        renderRange(
+                          ~offset,
+                          ~color=Color.rgba(1.0, 0., 0., 0.7),
+                          d.range,
+                        ),
+                      v,
+                    )
                   | None => ()
-                  };
-                },
+                  },
               (),
             );
           }}
