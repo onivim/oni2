@@ -4,13 +4,17 @@ open Oni_Model;
 let metrics = EditorMetrics.create();
 
 /* Create a state with some editor size */
-let simpleState =
+let simpleState = {
+  let state = State.create();
+
   Reducer.reduce(
-    State.create(),
-    Actions.SetEditorSize(
+    state,
+    Actions.EditorGroupSetSize(
+      state.editorGroups.activeId,
       Types.EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
     ),
   );
+};
 
 let simpleState =
   Reducer.reduce(
@@ -27,6 +31,7 @@ let simpleState =
   );
 
 let simpleEditor = Editor.create();
+let editorGroupId = simpleState.editorGroups.activeId;
 
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");

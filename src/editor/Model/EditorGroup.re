@@ -5,29 +5,24 @@
  */
 
 open Oni_Core;
+open Actions;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});
 
-type t = {
-  id: int,
-  activeEditorId: option(int),
-  editors: IntMap.t(Editor.t),
-  bufferIdToEditorId: IntMap.t(int),
-  reverseTabOrder: list(int),
-  metrics: EditorMetrics.t,
-};
+type t = Actions.editorGroup;
 
-let create = () => {
-  {
-    id: EditorGroupId.getUniqueId(),
-    editors: IntMap.empty,
-    bufferIdToEditorId: IntMap.empty,
-    activeEditorId: None,
-    reverseTabOrder: [],
-    metrics: EditorMetrics.create(),
+let create: unit => t =
+  () => {
+    {
+      editorGroupId: EditorGroupId.getUniqueId(),
+      editors: IntMap.empty,
+      bufferIdToEditorId: IntMap.empty,
+      activeEditorId: None,
+      reverseTabOrder: [],
+      metrics: EditorMetrics.create(),
+    };
   };
-};
 
 let show = (v: t) => {
   IntMap.fold(
@@ -58,6 +53,10 @@ let getActiveEditor = (v: t) => {
   };
 };
 
+let setActiveEditor = (v: t, editorId: int) => {
+  {...v, activeEditorId: Some(editorId)};
+};
+
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(v) => (state, v)
@@ -65,12 +64,12 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
     let newEditor = Editor.create(~bufferId, ());
     let newState = {
       ...state,
-      editors: IntMap.add(newEditor.id, newEditor, state.editors),
+      editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
       bufferIdToEditorId:
-        IntMap.add(bufferId, newEditor.id, state.bufferIdToEditorId),
-      reverseTabOrder: [newEditor.id, ...state.reverseTabOrder],
+        IntMap.add(bufferId, newEditor.editorId, state.bufferIdToEditorId),
+      reverseTabOrder: [newEditor.editorId, ...state.reverseTabOrder],
     };
-    (newState, newEditor.id);
+    (newState, newEditor.editorId);
   };
 };
 
@@ -143,32 +142,5 @@ let removeEditorsForBuffer = (state, bufferId) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | None => state
   | Some(v) => removeEditorById(state, v)
-  };
-};
-
-let reduce = (v: t, action: Actions.t) => {
-  let metrics = EditorMetrics.reduce(v.metrics, action);
-
-  /* Only send updates to _active_ editor */
-  let editors =
-    switch (v.activeEditorId, getActiveEditor(v)) {
-    | (Some(id), Some(e)) =>
-      IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
-    | _ => v.editors
-    };
-
-  let v = {...v, metrics, editors};
-
-  switch (action) {
-  | BufferEnter({id, _}) =>
-    let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
-    {...newState, activeEditorId: Some(activeEditorId)};
-  | ViewCloseEditor(id) => removeEditorById(v, id)
-  | ViewSetActiveEditor(id) =>
-    switch (IntMap.find_opt(id, v.editors)) {
-    | None => v
-    | Some(_) => {...v, activeEditorId: Some(id)}
-    }
-  | _ => v
   };
 };
