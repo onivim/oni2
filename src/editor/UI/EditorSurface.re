@@ -428,6 +428,9 @@ let createElement =
       | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
       | None => IntMap.empty
       };
+                
+                let ranges = Selection.getRanges(editor.selection, buffer);
+                let selectionRanges = Range.toHash(ranges);
 
     (
       hooks,
@@ -456,9 +459,6 @@ let createElement =
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
-                
-                let ranges = Selection.getRanges(editor.selection, buffer);
-                let selectionRanges = Range.toHash(ranges);
 
               let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
                 {let halfOffset = offset /. 2.0
@@ -695,6 +695,7 @@ let createElement =
             diagnostics
             metrics
             getTokensForLine
+            selection=selectionRanges
           />
         </View>
         <View style=verticalScrollBarStyle>
