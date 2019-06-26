@@ -71,7 +71,7 @@ type t =
   | ViewSetActiveEditor(int)
   | Noop
 and editor = {
-  id: int,
+  editorId: int,
   bufferId: int,
   scrollX: float,
   scrollY: float,
@@ -93,7 +93,7 @@ and editorMetrics = {
   characterWidth: float,
 }
 and editorGroup = {
-  id: int,
+  editorGroupId: int,
   activeEditorId: option(int),
   editors: IntMap.t(editor),
   bufferIdToEditorId: IntMap.t(int),

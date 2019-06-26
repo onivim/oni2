@@ -16,7 +16,7 @@ type t = {
 
 let create = () => {
   let defaultGroup = EditorGroup.create();
-  let activeId = defaultGroup.id;
+  let activeId = defaultGroup.editorGroupId;
   let idToGroup = IntMap.add(activeId, defaultGroup, IntMap.empty);
   {idToGroup, activeId, lastEditorFont: None};
 };
@@ -50,8 +50,9 @@ let reduce = (v: t, action: Actions.t) => {
 
     {
       ...v,
-      activeId: editorGroup.id,
-      idToGroup: IntMap.add(editorGroup.id, editorGroup, v.idToGroup),
+      activeId: editorGroup.editorGroupId,
+      idToGroup:
+        IntMap.add(editorGroup.editorGroupId, editorGroup, v.idToGroup),
     };
   | EditorGroupSetSize(editorGroupId, _) =>
     let idToGroup =

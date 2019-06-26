@@ -49,7 +49,7 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
 
 let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
   print_endline(
-    "toUiTabs - editorGroupId: " ++ string_of_int(editorGroup.id),
+    "toUiTabs - editorGroupId: " ++ string_of_int(editorGroup.editorGroupId),
   );
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
@@ -60,9 +60,9 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
       let ret: Tabs.tabInfo = {
         title,
         modified,
-        active: EditorGroup.isActiveEditor(editorGroup, v.id),
-        onClick: () => GlobalContext.current().openEditorById(v.id),
-        onClose: () => GlobalContext.current().closeEditorById(v.id),
+        active: EditorGroup.isActiveEditor(editorGroup, v.editorId),
+        onClick: () => GlobalContext.current().openEditorById(v.editorId),
+        onClose: () => GlobalContext.current().closeEditorById(v.editorId),
       };
       Some(ret);
     };
@@ -87,8 +87,7 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
         let editor = Some(v) |> Selectors.getActiveEditor;
         let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
-        open Model.EditorGroup;
-        print_endline("EditorGroupId: " ++ string_of_int(v.id));
+        print_endline("EditorGroupId: " ++ string_of_int(v.editorGroupId));
 
         let metrics = v.metrics;
 

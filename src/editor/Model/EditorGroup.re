@@ -15,7 +15,7 @@ type t = Actions.editorGroup;
 let create: unit => t =
   () => {
     {
-      id: EditorGroupId.getUniqueId(),
+      editorGroupId: EditorGroupId.getUniqueId(),
       editors: IntMap.empty,
       bufferIdToEditorId: IntMap.empty,
       activeEditorId: None,
@@ -68,13 +68,13 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
     let newEditor = Editor.create(~bufferId, ());
     let newState = {
       ...state,
-      editors: IntMap.add(newEditor.id, newEditor, state.editors),
+      editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
       bufferIdToEditorId:
-        IntMap.add(bufferId, newEditor.id, state.bufferIdToEditorId),
-      reverseTabOrder: [newEditor.id, ...state.reverseTabOrder],
+        IntMap.add(bufferId, newEditor.editorId, state.bufferIdToEditorId),
+      reverseTabOrder: [newEditor.editorId, ...state.reverseTabOrder],
     };
-    print_endline("Editor id: " ++ string_of_int(newEditor.id));
-    (newState, newEditor.id);
+    print_endline("Editor id: " ++ string_of_int(newEditor.editorId));
+    (newState, newEditor.editorId);
   };
 };
 

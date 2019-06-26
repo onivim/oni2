@@ -12,7 +12,7 @@ let create = (~bufferId=0, ()) => {
   incr(lastId);
 
   let ret: t = {
-    id,
+    editorId: id,
     bufferId,
     scrollX: 0.,
     scrollY: 0.,

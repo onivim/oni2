@@ -279,7 +279,8 @@ let start = () => {
         };
 
         switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.id != v => synchronizeCursorPosition(e)
+        | (Some(e), Some(v)) when e.editorId != v =>
+          synchronizeCursorPosition(e)
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
         };
