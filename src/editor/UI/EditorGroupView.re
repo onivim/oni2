@@ -80,27 +80,26 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    let isActive = switch(editorGroup) {
-    | None => false
-    | Some(v) => v.editorGroupId == state.editorGroups.activeId
-    };
-    
-    let overlayStyle = Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-      backgroundColor(Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1)),
-    ];
+    let isActive =
+      switch (editorGroup) {
+      | None => false
+      | Some(v) => v.editorGroupId == state.editorGroups.activeId
+      };
 
-    let absoluteStyle = Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-    ];
+    let overlayStyle =
+      Style.[
+        position(`Absolute),
+        top(0),
+        left(0),
+        right(0),
+        bottom(0),
+        backgroundColor(
+          Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1),
+        ),
+      ];
+
+    let absoluteStyle =
+      Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
 
     let children =
       switch (editorGroup) {
@@ -126,5 +125,11 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
         "CLICKED FROM editorGroup: " ++ string_of_int(editorGroupId),
       );
 
-    (hooks, <View onMouseDown style> <View style=absoluteStyle>...children</View><View style=overlayStyle /> </View>);
+    (
+      hooks,
+      <View onMouseDown style>
+        <View style=absoluteStyle> ...children </View>
+        <View style=overlayStyle />
+      </View>,
+    );
   });

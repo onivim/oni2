@@ -26,7 +26,7 @@ let toTab = (theme, mode, uiFont, numberOfTabs, active, index, t: tabInfo) =>
     numberOfTabs
     title={Path.filename(t.title)}
     active={t.active}
-    showHighlight={active}
+    showHighlight=active
     modified={t.modified}
     uiFont
     mode
