@@ -19,13 +19,14 @@ type tabInfo = {
 
 let component = React.component("Tabs");
 
-let toTab = (theme, mode, uiFont, numberOfTabs, index, t: tabInfo) =>
+let toTab = (theme, mode, uiFont, numberOfTabs, active, index, t: tabInfo) =>
   <Tab
     theme
     tabPosition={index + 1}
     numberOfTabs
     title={Path.filename(t.title)}
     active={t.active}
+    showHighlight={active}
     modified={t.modified}
     uiFont
     mode
@@ -42,11 +43,12 @@ let createElement =
       ~tabs: list(tabInfo),
       ~mode: Vim.Mode.t,
       ~uiFont,
+      ~active,
       (),
     ) =>
   component(hooks => {
     let tabCount = List.length(tabs);
     let tabComponents =
-      List.mapi(toTab(theme, mode, uiFont, tabCount), tabs);
+      List.mapi(toTab(theme, mode, uiFont, tabCount, active), tabs);
     (hooks, <View style=viewStyle> ...tabComponents </View>);
   });
