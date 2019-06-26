@@ -118,10 +118,11 @@ let getActionsForBinding =
  */
 let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   switch (state.inputControlMode) {
+  | CommandLineFocus
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] => [Actions.KeyboardInput(inputKey)]
-    | actions => actions
+    | [] => { print_endline("Sending raw input: " ++ inputKey); [Actions.KeyboardInput(inputKey)] }
+    | actions => { print_endline("Sending actions."); actions; }
     }
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)

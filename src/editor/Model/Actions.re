@@ -30,7 +30,7 @@ type t =
   | KeyboardInput(string)
   | WildmenuShow(list(string))
   | WildmenuNext
-  | WildmenuPrev
+  | WildmenuPrevious
   | WildmenuSelect
   | WildmenuHide
   | EditorGroupAdd(editorGroup)

@@ -103,6 +103,11 @@ let filterMap = (f, l) => {
 
   inner(l);
 };
+
+type commandLineCompletionMeet = {
+  prefix: string,
+  position: int,
+};
   
 let getCommandLineCompletionsMeet = (str: string, position: int) => {
     let len = String.length(str);
@@ -125,7 +130,12 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
         }
       }
 
-      Some(meet^);
+      let pos = meet^;
+      print_endline ("str: |" ++ str ++ "| POS: " ++ string_of_int(pos) ++ " LEN: " ++ string_of_int(len));
+      Some({
+          prefix: String.sub(str, pos, len - pos),
+        position: pos,
+      });
     }
 };
 

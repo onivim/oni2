@@ -152,6 +152,7 @@ let init = app => {
   setFont("FiraCode-Regular.ttf", 14);
 
   let commands = Core.Keybindings.get();
+  print_endline ("KEY COMMANDS: " ++ Core.Keybindings.show(commands));
 
   /* Add an updater to handle a KeyboardInput action */
   let inputHandler = Input.handle(~commands);

@@ -108,6 +108,9 @@ let start = () => {
       dispatch(Model.Actions.CommandlineShow(c.cmdType))
     );
 
+  let lastCompletionMeet = ref(None);
+  let isCompleting = ref(false);
+
   let _ =
     Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c));
@@ -122,15 +125,20 @@ let start = () => {
           let position = Vim.CommandLine.getPosition();
           print_endline ("Command line text: " ++ text ++ " position: " ++ string_of_int(position));
           let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+          lastCompletionMeet := meet;
           switch (meet) {
-          | Some(v) => print_endline("Completion meet is: " ++ string_of_int(v));
+          | Some({position, prefix}) => print_endline("Completion meet is: |" ++ prefix ++ "| at " ++ string_of_int(position));
           | None => print_endline("Completion met is: NONE");
           };
-          print_endline ("getting completions...");
-          let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
-          dispatch(Model.Actions.WildmenuShow(completions));
-          print_endline ("got completions!");
-          List.iter(c => print_endline(c), completions);
+
+          switch (isCompleting^) {
+          | true => ()
+          | false => 
+            print_endline ("getting completions...");
+            let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+            dispatch(Model.Actions.WildmenuShow(completions));
+            print_endline ("got completions!");
+          }
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -161,7 +169,11 @@ let start = () => {
     });
 
   let _ =
-    Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
+    Vim.CommandLine.onLeave(() => {
+    lastCompletionMeet := None;
+    isCompleting := false;
+    dispatch(Model.Actions.CommandlineHide);
+    });
 
   let _ =
     Vim.Window.onTopLineChanged(t =>
@@ -202,6 +214,24 @@ let start = () => {
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
       Vim.Buffer.openFile(filePath) |> ignore
     );
+
+  let applyCompletionEffect = completion =>
+    Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () => {
+      open Core.Utility;
+      switch (lastCompletionMeet^) {
+      | None => ();
+      | Some({position, _}) => {
+        isCompleting := true;
+        let currentPos = ref(Vim.CommandLine.getPosition());
+        while(currentPos^ > position) {
+          Vim.input("<bs>");
+          currentPos := Vim.CommandLine.getPosition();
+        }
+        String.iter((c) => Vim.input(String.make(1, c)), completion);
+        isCompleting := false;
+      }
+      };
+    });
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
     Isolinear.Effect.create(~name="vim.setIndentation", () => {
@@ -304,6 +334,18 @@ let start = () => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.WildmenuNext => {
+      print_endline ("MENU NEXT ITEM VIM");
+      let eff = switch(Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+      | None => Isolinear.Effect.none
+      | Some(v) => applyCompletionEffect(v)
+      };
+      (state, eff)
+    }
+    | Model.Actions.WildmenuPrevious => {
+      print_endline ("MENU NEXT ITEM VIM");
+      (state, Isolinear.Effect.none)
+    }
     | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path) => (
         state,
