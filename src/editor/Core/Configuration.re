@@ -4,44 +4,26 @@
  * Configuration settings for the editor
  */
 
-[@deriving show({with_path: false})]
-type editorRenderWhitespace =
-  | All
-  | Boundary
-  | None;
-
-[@deriving show({with_path: false})]
 type t = {
-  editorLineNumbers: LineNumber.setting,
-  editorMinimapEnabled: bool,
-  editorMinimapShowSlider: bool,
-  editorMinimapMaxColumn: int,
-  editorInsertSpaces: bool,
-  editorIndentSize: int,
-  editorTabSize: int,
-  editorHighlightActiveIndentGuide: bool,
-  editorRenderIndentGuides: bool,
-  editorRenderWhitespace,
-  workbenchIconTheme: string,
+  default: ConfigurationValues.t,
+  perFiletype: StringMap.t(ConfigurationValues.t),
 };
 
 let default = {
-  editorMinimapEnabled: true,
-  editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
-  editorLineNumbers: Relative,
-  editorInsertSpaces: false,
-  editorIndentSize: 4,
-  editorTabSize: 4,
-  editorRenderIndentGuides: true,
-  editorHighlightActiveIndentGuide: true,
-  editorRenderWhitespace: All,
-  workbenchIconTheme: "vs-seti",
+  default: ConfigurationValues.default,
+  perFiletype: StringMap.empty,
 };
 
-let getBundledConfigPath = () => {
-  Rench.Path.join(
-    Rench.Environment.getExecutingDirectory(),
-    "configuration.json",
-  );
+let getValue =
+    (~fileType=?, selector: ConfigurationValues.t => 'a, configuration: t) => {
+  let defaultValue = selector(configuration.default);
+
+  switch (fileType) {
+  | None => defaultValue
+  | Some(f) =>
+    switch (StringMap.find_opt(f, configuration.perFiletype)) {
+    | None => defaultValue
+    | Some(fileTypeConfig) => selector(fileTypeConfig)
+    }
+  };
 };

@@ -10,11 +10,15 @@ module Index = {
     | OneBasedIndex(n) => n - 1
     };
 
+  let toInt0 = toZeroBasedInt;
+
   let toOneBasedInt = (pos: t) =>
     switch (pos) {
     | ZeroBasedIndex(n) => n + 1
     | OneBasedIndex(n) => n
     };
+
+  let toInt1 = toOneBasedInt;
 };
 
 module EditorSize = {
@@ -32,22 +36,6 @@ module EditorSize = {
 
 module Cursor = {
   type move = (~column: int, ~line: int) => unit;
-};
-
-module Mode = {
-  /**
-     hide path for this printer as the value is shown
-     to the end user
-   */
-  [@deriving show({with_path: false})]
-  type t =
-    | Insert
-    | Normal
-    | Replace
-    | Visual
-    | Operator
-    | Commandline
-    | Other;
 };
 
 /**
@@ -91,66 +79,11 @@ module Position = {
     line: ZeroBasedIndex(line),
     character: ZeroBasedIndex(character),
   };
-};
 
-[@deriving show({with_path: false})]
-type buftype =
-  | Empty
-  | Help
-  | NoFile
-  | QuickFix
-  | Terminal
-  | NoWrite
-  | ACWrite
-  | Unknown;
-
-let getBufType = bt =>
-  switch (bt) {
-  | "help" => Help
-  | "nofile" => NoFile
-  | "quickfix" => QuickFix
-  | "terminal" => Terminal
-  | "nowrite" => NoWrite
-  | "acwrite" => ACWrite
-  | "" => Empty
-  | _ => Unknown
+  let createFromOneBasedIndices = (line: int, character: int) => {
+    line: OneBasedIndex(line),
+    character: OneBasedIndex(character),
   };
-
-module BufferMetadata = {
-  [@deriving show({with_path: false})]
-  type t = {
-    filePath: option(string),
-    fileType: option(string),
-    bufType: buftype,
-    modified: bool,
-    hidden: bool,
-    id: int,
-    version: int,
-  };
-
-  let create =
-      (
-        ~filePath=None,
-        ~fileType=None,
-        ~bufType=Empty,
-        ~id=0,
-        ~hidden=false,
-        ~version=0,
-        ~modified=false,
-        (),
-      ) => {
-    filePath,
-    fileType,
-    bufType,
-    id,
-    hidden,
-    version,
-    modified,
-  };
-
-  let markSaved = (bm: t) => {...bm, modified: false};
-
-  let markDirty = (bm: t) => {...bm, modified: true};
 };
 
 module BufferUpdate = {
@@ -159,7 +92,7 @@ module BufferUpdate = {
     id: int,
     startLine: Index.t,
     endLine: Index.t,
-    lines: list(string),
+    lines: array(string),
     version: int,
   };
 
@@ -170,7 +103,7 @@ module BufferUpdate = {
     id: int,
     startLine: int,
     endLine: int,
-    lines: list(string),
+    lines: array(string),
     version: int,
   };
 
@@ -186,19 +119,26 @@ module BufferUpdate = {
   };
 
   let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
-    id,
-    startLine,
-    endLine,
-    lines,
-    version,
+    let ret: t = {id, startLine, endLine, lines, version};
+    ret;
   };
-
   let createFromZeroBasedIndices =
       (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
     let ret: t = {
       id,
       startLine: Index.ZeroBasedIndex(startLine),
       endLine: Index.ZeroBasedIndex(endLine),
+      lines,
+      version,
+    };
+    ret;
+  };
+  let createFromOneBasedIndices =
+      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+    let ret: t = {
+      id,
+      startLine: Index.OneBasedIndex(startLine),
+      endLine: Index.OneBasedIndex(endLine),
       lines,
       version,
     };
@@ -238,14 +178,11 @@ type wildmenu = {
   selected: int,
 };
 
-[@deriving show({with_path: false})]
+/* [@deriving show({with_path: false})] */
 type commandline = {
-  content: string,
-  firstC: string,
+  text: string,
+  cmdType: Vim.Types.cmdlineType,
   position: int,
-  level: int,
-  indent: int,
-  prompt: string,
   show: bool,
 };
 

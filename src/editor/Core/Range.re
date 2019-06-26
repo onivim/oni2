@@ -76,3 +76,23 @@ let explode = (measure, v) => {
     |> List.rev;
   };
 };
+
+let toHash = (ranges: list(t)) => {
+  let rangeHash: Hashtbl.t(int, list(t)) = Hashtbl.create(100);
+  List.iter(
+    r => {
+      let line = Index.toZeroBasedInt(r.startPosition.line);
+
+      let newVal =
+        switch (Hashtbl.find_opt(rangeHash, line)) {
+        | Some(v) => [r, ...v]
+        | None => [r]
+        };
+
+      Hashtbl.add(rangeHash, line, newVal);
+    },
+    ranges,
+  );
+
+  rangeHash;
+};

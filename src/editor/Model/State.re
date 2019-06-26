@@ -8,7 +8,7 @@ open Oni_Core;
 open Oni_Core.Types;
 
 type t = {
-  mode: Mode.t,
+  mode: Vim.Mode.t,
   diagnostics: Diagnostics.t,
   buffers: Buffers.t,
   editorFont: EditorFont.t,
@@ -24,15 +24,17 @@ type t = {
   iconTheme: IconTheme.t,
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
+  searchHighlights: SearchHighlights.t,
   statusBar: StatusBarModel.t,
   editorLayout: WindowManager.t,
+  fileExplorer: FileExplorer.t,
 };
 
 let create: unit => t =
   () => {
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
-    mode: Insert,
+    mode: Normal,
     menu: Menu.create(),
     commandline: Commandline.create(),
     wildmenu: Wildmenu.create(),
@@ -53,6 +55,8 @@ let create: unit => t =
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     languageInfo: LanguageInfo.create(),
+    searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
     editorLayout: WindowManager.create(),
+    fileExplorer: FileExplorer.create(),
   };

@@ -35,17 +35,15 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let getIcon = icon =>
-  switch (icon) {
-  | Some(i) => i
-  | None => ""
-  };
-
 let handleChange = (event: Input.changeEvent) =>
   GlobalContext.current().dispatch(MenuSearch(event.value));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
+  | {key: Revery.Key.KEY_DOWN, _} =>
+    GlobalContext.current().dispatch(MenuNextItem)
+  | {key: Revery.Key.KEY_UP, _} =>
+    GlobalContext.current().dispatch(MenuPreviousItem)
   | {key: Revery.Key.KEY_ESCAPE, _} =>
     GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
   | _ => ()
@@ -85,7 +83,10 @@ let createElement =
     let hooks =
       React.Hooks.effect(
         Always,
-        () => Some(() => loseFocusOnClose(menu.isOpen)),
+        () => {
+          loseFocusOnClose(menu.isOpen);
+          None;
+        },
         hooks,
       );
 
@@ -108,15 +109,15 @@ let createElement =
                 rowHeight=40
                 height={menuHeight - 50}
                 width=menuWidth
-                count={List.length(menu.commands)}
+                count={List.length(menu.filteredCommands)}
                 render={index => {
-                  let cmd = List.nth(menu.commands, index);
+                  let cmd = List.nth(menu.filteredCommands, index);
                   <MenuItem
                     onClick
                     theme
                     style=menuItemStyle
                     label={getLabel(cmd)}
-                    icon={getIcon(cmd.icon)}
+                    icon={cmd.icon}
                     onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
                   />;

@@ -14,7 +14,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
-          ~lines=["a"],
+          ~lines=[|"a"|],
           ~version=1,
           (),
         );
@@ -28,7 +28,23 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=-1,
-          ~lines=["a", "d", "e", "f", "c"],
+          ~lines=[|"a", "d", "e", "f", "c"|],
+          ~version=2,
+          (),
+        );
+      let updatedBuffer = Buffer.update(buffer, update);
+      validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
+    });
+
+    test(
+      "BufEnter update does not duplicate content, 1-based indices",
+      ({expect}) => {
+      let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
+      let update =
+        BufferUpdate.createFromOneBasedIndices(
+          ~startLine=1,
+          ~endLine=-1,
+          ~lines=[|"a", "d", "e", "f", "c"|],
           ~version=2,
           (),
         );
@@ -42,7 +58,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
-          ~lines=["abc"],
+          ~lines=[|"abc"|],
           ~version=1,
           (),
         );
@@ -56,7 +72,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=0,
           ~endLine=1,
-          ~lines=[],
+          ~lines=[||],
           ~version=1,
           (),
         );
@@ -70,7 +86,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=1,
           ~endLine=2,
-          ~lines=["d", "e", "f"],
+          ~lines=[|"d", "e", "f"|],
           ~version=1,
           (),
         );
@@ -84,7 +100,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
-          ~lines=["d"],
+          ~lines=[|"d"|],
           ~version=1,
           (),
         );
@@ -98,7 +114,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
-          ~lines=["d"],
+          ~lines=[|"d"|],
           ~version=5,
           (),
         );
@@ -114,7 +130,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
-          ~lines=["d"],
+          ~lines=[|"d"|],
           ~version=6,
           (),
         );
@@ -124,7 +140,7 @@ describe("Buffer", ({describe, _}) =>
         BufferUpdate.createFromZeroBasedIndices(
           ~startLine=3,
           ~endLine=3,
-          ~lines=["e"],
+          ~lines=[|"e"|],
           ~version=5,
           (),
         );

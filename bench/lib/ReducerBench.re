@@ -16,7 +16,8 @@ let doubleEditorSize = () => {
   let _ =
     Reducer.reduce(
       state,
-      Actions.SetEditorSize(
+      Actions.EditorGroupSetSize(
+        editorGroupId,
         Types.EditorSize.create(~pixelWidth=3200, ~pixelHeight=2400, ()),
       ),
     );

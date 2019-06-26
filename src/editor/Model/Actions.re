@@ -11,35 +11,36 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
-  | BufferEnter(BufferMetadata.t)
+  | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
-  | BufferSaved(BufferMetadata.t)
+  | BufferSaved(Vim.BufferMetadata.t)
+  | BufferSetIndentation(int, IndentationSettings.t)
   | BufferMarkDirty(int)
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
-  | ChangeMode(Mode.t)
+  | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
-  | SetEditorSize(EditorSize.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(commandline)
-  | CommandlineHide(commandline)
-  | CommandlineUpdate((int, int))
+  | CommandlineShow(Vim.Types.cmdlineType)
+  | CommandlineHide
+  | CommandlineUpdate(Vim.Types.cmdline)
   | KeyboardInput(string)
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
+  | EditorGroupAdd(editorGroup)
+  | EditorGroupSetSize(int, EditorSize.t)
+  | EditorGroupSetActive(int)
   | EditorScroll(float)
-  | EditorScrollToCursorCentered
-  | EditorScrollToCursorTop
-  | EditorScrollToCursorBottom
-  | EditorMoveCursorToTop(Cursor.move)
-  | EditorMoveCursorToMiddle(Cursor.move)
-  | EditorMoveCursorToBottom(Cursor.move)
+  | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
+  | OpenExplorer(string)
+  | SetExplorerTree(UiTree.t)
+  | UpdateExplorerNode(UiTree.t, UiTree.t)
   | MenuSearch(string)
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
@@ -50,14 +51,18 @@ type t =
   | MenuPreviousItem
   | MenuPosition(int)
   | OpenFileByPath(string)
-  | AddRightDock(WindowManager.dock)
-  | AddLeftDock(WindowManager.dock)
+  | RegisterDockItem(WindowManager.dock)
+  | RemoveDockItem(WindowManager.docks)
+  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowManager.splitMetadata)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
   | Quit
   | RegisterQuitCleanup(unit => unit)
+  | SearchClearMatchingPair(int)
+  | SearchSetMatchingPair(int, Position.t, Position.t)
+  | SearchSetHighlights(int, list(Range.t))
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
@@ -66,11 +71,41 @@ type t =
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | Noop
+and editor = {
+  editorId: int,
+  bufferId: int,
+  scrollX: float,
+  scrollY: float,
+  minimapMaxColumnWidth: int,
+  minimapScrollY: float,
+  /*
+   * The maximum line visible in the view.
+   * TODO: This will be dependent on line-wrap settings.
+   */
+  maxLineLength: int,
+  viewLines: int,
+  cursorPosition: Position.t,
+  selection: VisualRange.t,
+}
+and editorMetrics = {
+  pixelWidth: int,
+  pixelHeight: int,
+  lineHeight: float,
+  characterWidth: float,
+}
+and editorGroup = {
+  editorGroupId: int,
+  activeEditorId: option(int),
+  editors: IntMap.t(editor),
+  bufferIdToEditorId: IntMap.t(int),
+  reverseTabOrder: list(int),
+  metrics: editorMetrics,
+}
 and menuCommand = {
   category: option(string),
   name: string,
   command: unit => t,
-  icon: option(string),
+  icon: option(IconTheme.IconDefinition.t),
 }
 and menuSetItems = list(menuCommand) => unit
 and menuCreationFunction = menuSetItems => unit

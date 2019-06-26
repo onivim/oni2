@@ -16,7 +16,7 @@ module Protocol = Extensions.ExtHostProtocol;
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onExtHostClosed = () => print_endline("ext host closed");
+  let onExtHostClosed = () => Core.Log.info("ext host closed");
 
   let extensionInfo =
     extensions
@@ -47,7 +47,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Core.Types.BufferMetadata.t) =>
+  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t) =>
     switch (bm.filePath, bm.fileType) {
     | (Some(fp), Some(_)) =>
       Some(
@@ -80,7 +80,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bm: Core.Types.BufferMetadata.t) =>
+  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()

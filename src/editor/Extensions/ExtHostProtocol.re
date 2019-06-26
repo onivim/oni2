@@ -167,7 +167,7 @@ module ModelContentChange = {
 
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
     let (isInsert, range) = getRangeFromEdit(bu);
-    let text = joinLines(Eol.toString(eol), bu.lines);
+    let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
 
     let text = isInsert ? text ++ Eol.toString(eol) : text;
 

@@ -19,11 +19,15 @@ module EditorColors = {
     editorActiveLineNumberForeground: Color.t,
     scrollbarSliderBackground: Color.t,
     scrollbarSliderActiveBackground: Color.t,
+    editorFindMatchBackground: Color.t,
+    editorFindMatchBorder: Color.t,
+    editorFindMatchHighlightBackground: Color.t,
     editorIndentGuideBackground: Color.t,
     editorIndentGuideActiveBackground: Color.t,
     editorMenuBackground: Color.t,
     editorMenuForeground: Color.t,
     editorMenuItemSelected: Color.t,
+    editorOverviewRulerBracketMatchForeground: Color.t,
     editorWhitespaceForeground: Color.t,
     tabActiveForeground: Color.t,
     oniVisualModeBackground: Color.t,
@@ -41,16 +45,24 @@ module EditorColors = {
     statusBarForeground: Color.t,
     statusBarBackground: Color.t,
     scrollbarSliderHoverBackground: Color.t,
+    sideBarBackground: Color.t,
+    sideBarForeground: Color.t,
   };
 
   let default: t = {
     background: Color.hex("#282C35"),
     foreground: Color.hex("#ECEFF4"),
+    sideBarBackground: Color.hex("#21252b"),
+    sideBarForeground: Color.hex("#ECEFF4"),
     editorBackground: Color.hex("#2F3440"),
     editorForeground: Color.hex("#DCDCDC"),
+    editorFindMatchBackground: Color.hex("#42557b"),
+    editorFindMatchBorder: Color.hex("#457dff"),
+    editorFindMatchHighlightBackground: Color.hex("#314365"),
     editorLineHighlightBackground: Color.hex("#495162"),
     editorLineNumberBackground: Color.hex("#2F3440"),
     editorLineNumberForeground: Color.hex("#495162"),
+    editorOverviewRulerBracketMatchForeground: Color.hex("#A0A0A0"),
     editorActiveLineNumberForeground: Color.hex("#737984"),
     editorSelectionBackground: Color.hex("#687595"),
     scrollbarSliderBackground: Color.rgba(0., 0., 0., 0.2),
@@ -107,14 +119,14 @@ let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
 
 let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
 
-let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
+let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
   let (background, foreground) =
     switch (mode) {
     | Visual => (
         theme.colors.oniVisualModeBackground,
         theme.colors.oniVisualModeForeground,
       )
-    | Commandline => (
+    | CommandLine => (
         theme.colors.oniCommandlineModeBackground,
         theme.colors.oniCommandlineModeForeground,
       )
@@ -130,7 +142,6 @@ let getColorsForMode = (theme: t, mode: Types.Mode.t) => {
         theme.colors.oniReplaceModeBackground,
         theme.colors.oniReplaceModeForeground,
       )
-    | Other
     | Normal => (
         theme.colors.oniNormalModeBackground,
         theme.colors.oniNormalModeForeground,

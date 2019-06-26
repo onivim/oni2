@@ -1,31 +1,20 @@
 open Revery;
 open Oni_Core;
 open Oni_Model;
-open Oni_Extensions;
 open TestFramework;
 
 open Helpers;
 
 let theme = Theme.create();
 
-let tokenColors = [];
-let colorMap = ColorMap.create();
-
 let indentation = IndentationSettings.default;
+
+let basicColorizer = _ => (Colors.black, Colors.white);
 
 describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("empty string", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(
-        "",
-        theme,
-        tokenColors,
-        colorMap,
-        indentation,
-        None,
-        Colors.white,
-        Colors.black,
-      );
+      BufferViewTokenizer.tokenize("", indentation, basicColorizer);
     expect.int(List.length(result)).toBe(0);
   });
 
@@ -34,16 +23,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       let indentation =
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
       let result =
-        BufferViewTokenizer.tokenize(
-          "\tabc",
-          theme,
-          tokenColors,
-          colorMap,
-          indentation,
-          None,
-          Colors.white,
-          Colors.black,
-        );
+        BufferViewTokenizer.tokenize("\tabc", indentation, basicColorizer);
 
       let expectedTokens: list(BufferViewTokenizer.t) = [
         {
@@ -70,31 +50,13 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("string with only whitespace", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(
-        "   \t",
-        theme,
-        tokenColors,
-        colorMap,
-        indentation,
-        None,
-        Colors.white,
-        Colors.black,
-      );
+      BufferViewTokenizer.tokenize("   \t", indentation, basicColorizer);
     expect.int(List.length(result)).toBe(2);
   });
 
   test("single word token", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(
-        "testWord",
-        theme,
-        tokenColors,
-        colorMap,
-        indentation,
-        None,
-        Colors.white,
-        Colors.black,
-      );
+      BufferViewTokenizer.tokenize("testWord", indentation, basicColorizer);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -114,13 +76,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         "  testWord  ",
-        theme,
-        tokenColors,
-        colorMap,
         indentation,
-        None,
-        Colors.white,
-        Colors.black,
+        basicColorizer,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -155,16 +112,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("single letter token, no spaces", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(
-        "a",
-        theme,
-        tokenColors,
-        colorMap,
-        indentation,
-        None,
-        Colors.white,
-        Colors.black,
-      );
+      BufferViewTokenizer.tokenize("a", indentation, basicColorizer);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -181,20 +129,14 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   });
 
   test("respects tokenColor breaks", ({expect}) => {
-    let tokenColors = [
-      ColorizedToken.create(0, 0),
-      ColorizedToken.create(1, 0),
-    ];
+    let differentColorTokenizer = i =>
+      i > 0 ? (Colors.green, Colors.yellow) : (Colors.black, Colors.white);
+
     let result =
       BufferViewTokenizer.tokenize(
         "ab",
-        theme,
-        tokenColors,
-        colorMap,
         indentation,
-        None,
-        Colors.white,
-        Colors.black,
+        differentColorTokenizer,
       );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
@@ -221,16 +163,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("multiple tokens", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(
-        " a btest ",
-        theme,
-        tokenColors,
-        colorMap,
-        indentation,
-        None,
-        Colors.white,
-        Colors.black,
-      );
+      BufferViewTokenizer.tokenize(" a btest ", indentation, basicColorizer);
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {

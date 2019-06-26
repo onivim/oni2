@@ -1,4 +1,5 @@
 [![Build Status](https://dev.azure.com/onivim/oni2/_apis/build/status/onivim.oni2?branchName=master)](https://dev.azure.com/onivim/oni2/_build/latest?definitionId=1?branchName=master)
+[![Discord](https://img.shields.io/discord/417774914645262338.svg)](https://discord.gg/7maEAxV)
 
 # Onivim 2
 
@@ -8,6 +9,7 @@
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/13532591/53999860-e8e70780-40f9-11e9-8428-295adb18c4dd.gif" alt="Onivim 2" />
+   <img src="https://img.shields.io/discord/417774914645262338.svg" alt="Join the chat on discord!">
  </p>
 
 
@@ -17,7 +19,7 @@ Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2
 
 Onivim 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
-Onivim 2 uses [neovim](https://neovim.io) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning, eventually, complete support for VSCode extensions and configuration.
+Onivim 2 uses [libvim](https://github.com/onivim/libvim) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning, eventually, complete support for VSCode extensions and configuration.
 
 ### Goals
 
@@ -34,6 +36,10 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 - __VimL compatibility__ - we may not support all features of VimL plugins / configuration.
 
+### See also
+
+See also the document about motivations, software architecture, the model for sustainability and risks : https://github.com/onivim/oni2/blob/master/docs/MOTIVATION.md
+
 ## Documentation
 
 Coming soon!
@@ -42,7 +48,7 @@ Coming soon!
 
 We'd :heart: help building Onivim 2!
 
-If you are interesting in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
+If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
 
 - [How to build and run from source](./CONTRIBUTING.md#build-and-run)
 - [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)
@@ -58,7 +64,7 @@ Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## License
 
-Onivim 2 is licensed under the [Outrun Labs EULA 1.0](./Outrun-Labs-EULA-v1.0.md).
+Onivim 2 is licensed under the [Outrun Labs EULA 1.1](./Outrun-Labs-EULA-v1.1.md).
 
 The TL;DR is:
 - __Free__ for __non-commercial__ and __educational use__.
@@ -77,7 +83,9 @@ Alternatively, you can contribute to the project through [Patreon](https://www.p
 
 Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
 
-We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities (and ensuring that contributions to the project eventually end up back in the open!)
+Any external contributions to the project from outside Outrun Labs, LLC will not be subject to this 'time-bomb' delay - they'll be dual-licensed immediately under the MIT License.
+
+We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities by having our work eventually end up in the open, and ensuring that external contributions are always open source.
 
 #### Third-Party Code
 

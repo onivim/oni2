@@ -36,3 +36,10 @@ let zero: t;
  * will be returned.
  */
 let explode: (int => int, t) => list(t);
+
+/**
+ * [toHash(ranges)] takes a list [ranges] of [Range.t], and returns them as a
+ * a hash table, where the key is the 0-based startLine of the [Range.t],
+ * and the value is the list of all ranges with that startLine.
+ */
+let toHash: list(t) => Hashtbl.t(int, list(t));

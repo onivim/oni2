@@ -35,25 +35,22 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start =
-    (
-      ~cliOptions: Core.Cli.t,
-      ~setup: Core.Setup.t,
-      ~executingDirectory,
-      ~onStateChanged,
-      (),
-    ) => {
+let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+  /* TODO: Bring cliOptions back */
+  ignore(executingDirectory);
+
   let state = Model.State.create();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
   let latestState: ref(Model.State.t) = ref(state);
+  let getState = () => latestState^;
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
-  let (neovimUpdater, neovimStream) =
-    NeovimStoreConnector.start(executingDirectory, setup, cliOptions);
+  let commandUpdater = CommandStoreConnector.start(getState);
+  let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -68,9 +65,11 @@ let start =
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
-  let commandUpdater = CommandStoreConnector.start();
+  let (fileExplorerUpdater, explorerStream) =
+    FileExplorerStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start();
+  let indentationUpdater = IndentationStoreConnector.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -78,7 +77,7 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
-          neovimUpdater,
+          vimUpdater,
           textmateUpdater,
           extHostUpdater,
           menuHostUpdater,
@@ -86,6 +85,8 @@ let start =
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
+          fileExplorerUpdater,
+          indentationUpdater,
         ]),
       (),
     );
@@ -114,11 +115,12 @@ let start =
     };
   };
 
-  Isolinear.Stream.connect(dispatch, neovimStream);
+  Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
   Isolinear.Stream.connect(dispatch, extHostStream);
   Isolinear.Stream.connect(dispatch, menuStream);
+  Isolinear.Stream.connect(dispatch, explorerStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
@@ -152,18 +154,21 @@ let start =
 
   setIconTheme("vs-seti");
 
+  let runEffects = () => {
+    let effects = accumulatedEffects^;
+    accumulatedEffects := [];
+
+    List.iter(e => Isolinear.Effect.run(e, dispatch), effects);
+  };
+
   let _ =
     Tick.interval(
       _ => {
         dispatch(Model.Actions.Tick);
-
-        let effects = accumulatedEffects^;
-        accumulatedEffects := [];
-
-        List.iter(e => Isolinear.Effect.run(e, dispatch), effects);
+        runEffects();
       },
       Seconds(0.),
     );
 
-  dispatch;
+  (dispatch, runEffects);
 };

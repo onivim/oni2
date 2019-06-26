@@ -1,23 +1,8 @@
-[@deriving show({with_path: false})]
-type mode =
-  | None
-  | Visual /* "v" */
-  | BlockwiseVisual /* "<C-v>" */
-  | LinewiseVisual; /* "V" */
+type mode = Vim.Types.visualType;
 
-[@deriving show({with_path: false})]
 type t = {
   range: Range.t,
   mode,
-};
-
-let _modeFromString = s => {
-  switch (s) {
-  | "V" => LinewiseVisual
-  | "vb" => BlockwiseVisual
-  | "v" => Visual
-  | _ => None
-  };
 };
 
 /*
@@ -35,7 +20,14 @@ let _normalizeRange = (startLine, startColumn, endLine, endColumn) =>
   };
 
 let create =
-    (~startLine=1, ~startColumn=1, ~endLine=1, ~endColumn=1, ~mode="", ()) => {
+    (
+      ~startLine=1,
+      ~startColumn=1,
+      ~endLine=1,
+      ~endColumn=1,
+      ~mode=Vim.Types.None,
+      (),
+    ) => {
   let (startLine, startColumn, endLine, endColumn) =
     _normalizeRange(startLine, startColumn, endLine, endColumn);
 
@@ -47,8 +39,6 @@ let create =
       ~endCharacter=OneBasedIndex(endColumn),
       (),
     );
-
-  let mode = _modeFromString(mode);
 
   {range, mode};
 };

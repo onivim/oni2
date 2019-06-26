@@ -4,13 +4,18 @@ open Oni_Model;
 let metrics = EditorMetrics.create();
 
 /* Create a state with some editor size */
-let simpleState =
+let simpleState = {
+  let state = State.create();
+
   Reducer.reduce(
-    State.create(),
-    Actions.SetEditorSize(
+    state,
+    Actions.EditorGroupSetSize(
+      state.editorGroups.activeId,
       Types.EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
     ),
   );
+};
+
 let simpleState =
   Reducer.reduce(
     simpleState,
@@ -26,9 +31,10 @@ let simpleState =
   );
 
 let simpleEditor = Editor.create();
+let editorGroupId = simpleState.editorGroups.activeId;
 
 let thousandLines =
-  Array.make(1000, "This is a buffer with a thousand lines!") |> Array.to_list;
+  Array.make(1000, "This is a buffer with a thousand lines!");
 
 let thousandLineState =
   Reducer.reduce(
@@ -44,9 +50,34 @@ let thousandLineState =
     ),
   );
 
+/* Apply indents so we go into deeper and deeper indentation, before returning back. */
+let applyIndent = (line, lineNum, fileLen) =>
+  if (lineNum < fileLen / 2) {
+    String.make(lineNum, '\t') ++ line;
+  } else {
+    String.make(fileLen - lineNum, '\t') ++ line;
+  };
+
+let thousandLinesWithIndents =
+  Array.mapi((i, l) => applyIndent(l, i, 1000), thousandLines);
+
+let thousandLineStateWithIndents =
+  Reducer.reduce(
+    simpleState,
+    Actions.BufferUpdate(
+      Types.BufferUpdate.createFromZeroBasedIndices(
+        ~startLine=0,
+        ~endLine=1,
+        ~lines=thousandLinesWithIndents,
+        ~version=1,
+        (),
+      ),
+    ),
+  );
+
 let hundredThousandLines =
-  Array.make(100000, "This is a buffer with a hundred thousand lines!")
-  |> Array.to_list;
+  Array.make(100000, "This is a buffer with a hundred thousand lines!");
+
 let hundredThousandLineState =
   Reducer.reduce(
     simpleState,

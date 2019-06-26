@@ -10,8 +10,6 @@ open Revery.UI;
 open Oni_Model;
 module Model = Oni_Model;
 
-module Window = WindowManager;
-
 let component = React.component("Editor");
 
 let editorViewStyle = (background, foreground) =>
@@ -48,25 +46,33 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       React.Hooks.effect(
         OnMount,
         () => {
+          open WindowManager;
+
           let dispatch = GlobalContext.current().dispatch;
           let dock =
-            Window.createDock(
+            registerDock(
+              ~order=1,
               ~width=50,
+              ~id=MainDock,
               ~component=splitFactory(state => <Dock state />),
               (),
             );
 
           let editorGroupId = state.editorGroups.activeId;
 
-          let editor =
-            Window.createSplit(
-              ~direction=Vertical,
-              ~component=
-                splitFactory(state => <EditorGroupView state editorGroupId />),
+          let editor = createSplit(~direction=Vertical, ~editorGroupId, ());
+
+          let explorer =
+            registerDock(
+              ~order=2,
+              ~width=225,
+              ~id=ExplorerDock,
+              ~component=splitFactory(state => <FileExplorerView state />),
               (),
             );
 
-          dispatch(AddLeftDock(dock));
+          dispatch(RegisterDockItem(dock));
+          dispatch(RegisterDockItem(explorer));
           dispatch(AddSplit(editor));
           None;
         },

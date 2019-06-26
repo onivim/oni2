@@ -3,7 +3,7 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-let start = () => {
+let start = _ => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
@@ -20,9 +20,46 @@ let start = () => {
 
       switch (editor) {
       | None => ()
-      | Some(v) => dispatch(ViewCloseEditor(v.id))
+      | Some(v) => dispatch(ViewCloseEditor(v.editorId))
       };
     });
+
+  let splitEditorEffect = (state, direction, _) =>
+    Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
+      let buffer = Selectors.getActiveBuffer(state);
+
+      let newEditorGroup =
+        switch (buffer) {
+        | Some(b) =>
+          let ec = EditorGroup.create();
+          let (g, editorId) =
+            EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
+          let g = EditorGroup.setActiveEditor(g, editorId);
+          g;
+        | None => EditorGroup.create()
+        };
+
+      dispatch(EditorGroupAdd(newEditorGroup));
+
+      let split =
+        WindowManager.createSplit(
+          ~direction,
+          ~editorGroupId=newEditorGroup.editorGroupId,
+          (),
+        );
+
+      dispatch(AddSplit(split));
+    });
+
+  let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
+    Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
+      let action =
+        fileExplorer.isOpen
+          ? RemoveDockItem(WindowManager.ExplorerDock)
+          : AddDockItem(WindowManager.ExplorerDock);
+      dispatch(action);
+    });
+  };
 
   let commands = [
     (
@@ -72,6 +109,9 @@ let start = () => {
         ]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
+    ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
+    ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
+    ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 
   let commandMap =

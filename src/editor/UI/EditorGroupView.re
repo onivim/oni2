@@ -7,6 +7,7 @@
  */
 
 open Revery.UI;
+open Oni_Core;
 open Oni_Model;
 module Model = Oni_Model;
 
@@ -28,19 +29,43 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let toUiTabs = (tabs: list(Model.Tab.t)) => {
-  let f = (t: Model.Tab.t) => {
-    let ret: Tabs.tabInfo = {
-      title: t.title,
-      modified: t.modified,
-      active: t.active,
-      onClick: () => GlobalContext.current().openEditorById(t.id),
-      onClose: () => GlobalContext.current().closeEditorById(t.id),
-    };
-    ret;
+let truncateFilepath = path =>
+  switch (path) {
+  | Some(p) => Filename.basename(p)
+  | None => "untitled"
   };
 
-  List.map(f, tabs);
+let getBufferMetadata = (buffer: option(Buffer.t)) => {
+  switch (buffer) {
+  | None => (false, "untitled")
+  | Some(v) =>
+    open Vim.BufferMetadata;
+    let {filePath, modified, _} = Buffer.getMetadata(v);
+
+    let title = filePath |> truncateFilepath;
+    (modified, title);
+  };
+};
+
+let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
+  let f = (id: int) => {
+    switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
+    | None => None
+    | Some(v) =>
+      let (modified, title) =
+        Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
+      let ret: Tabs.tabInfo = {
+        title,
+        modified,
+        active: EditorGroup.isActiveEditor(editorGroup, v.editorId),
+        onClick: () => GlobalContext.current().openEditorById(v.editorId),
+        onClose: () => GlobalContext.current().closeEditorById(v.editorId),
+      };
+      Some(ret);
+    };
+  };
+
+  Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
 let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =>
@@ -52,24 +77,54 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
+    let isActive =
+      switch (editorGroup) {
+      | None => false
+      | Some(v) => v.editorGroupId == state.editorGroups.activeId
+      };
+
+    let overlayStyle =
+      Style.[
+        position(`Absolute),
+        top(0),
+        left(0),
+        right(0),
+        bottom(0),
+        backgroundColor(
+          Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1),
+        ),
+      ];
+
+    let absoluteStyle =
+      Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
+
     let children =
       switch (editorGroup) {
       | None => [React.empty]
       | Some(v) =>
-        let editor =
-          Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-        let tabs = Model.Selectors.getTabs(state, v) |> toUiTabs;
+        let editor = Some(v) |> Selectors.getActiveEditor;
+        let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
 
         let metrics = v.metrics;
 
         let editorView =
           switch (editor) {
-          | Some(v) => <EditorSurface metrics editor=v state />
+          | Some(v) => <EditorSurface editorGroupId metrics editor=v state />
           | None => React.empty
           };
-        [<Tabs theme tabs mode uiFont />, editorView];
+        [<Tabs active=isActive theme tabs mode uiFont />, editorView];
       };
 
-    (hooks, <View style> ...children </View>);
+    let onMouseDown = _ => {
+      GlobalContext.current().setActiveEditorGroup(editorGroupId);
+    };
+
+    (
+      hooks,
+      <View onMouseDown style>
+        <View style=absoluteStyle> ...children </View>
+        <View style=overlayStyle />
+      </View>,
+    );
   });

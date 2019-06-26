@@ -4,6 +4,8 @@
  * Helpers to map the State.t to more usable values
  */
 
+open Oni_Core;
+
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
 };
@@ -27,6 +29,20 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
   Buffers.getBuffer(editor.bufferId, state.buffers);
 };
 
+let getMatchingPairs = (state: State.t, bufferId: int) => {
+  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+  | Some(v) => v.matchingPair
+  | None => None
+  };
+};
+
+let getSearchHighlights = (state: State.t, bufferId: int) => {
+  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+  | Some(v) => v.highlightRanges
+  | None => IntMap.empty
+  };
+};
+
 let getActiveBuffer = (state: State.t) => {
   let editorOpt = state |> getActiveEditorGroup |> getActiveEditor;
 
@@ -34,30 +50,4 @@ let getActiveBuffer = (state: State.t) => {
   | Some(editor) => getBufferForEditor(state, editor)
   | None => None
   };
-};
-
-let getTabs = (state: State.t, editorGroup: EditorGroup.t) => {
-  let activeEditorId = editorGroup.activeEditorId;
-  let f = (editorId: int) => {
-    let editor = EditorGroup.getEditorById(editorId, editorGroup);
-
-    let buffer =
-      switch (editor) {
-      | None => None
-      | Some(v) => getBufferById(state, v.bufferId)
-      };
-
-    let active =
-      switch (activeEditorId) {
-      | None => false
-      | Some(v) => v == editorId
-      };
-
-    switch (buffer) {
-    | Some(v) => Tab.ofBuffer(~buffer=v, ~active, ())
-    | None => Tab.create(~id=-1, ~title="Unknown", ())
-    };
-  };
-
-  editorGroup.reverseTabOrder |> List.rev |> List.map(f);
 };

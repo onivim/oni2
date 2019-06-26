@@ -123,7 +123,7 @@ let renderTokens =
       xOffset: float,
       yOffset: float,
       transform,
-      whitespaceSetting: Configuration.editorRenderWhitespace,
+      whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
     ) => {
   let yF = yOffset;
   let xF = xOffset;
@@ -183,6 +183,7 @@ let component = React.component("EditorSurface");
 let createElement =
     (
       ~state: State.t,
+      ~editorGroupId: int,
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
       ~children as _,
@@ -213,7 +214,11 @@ let createElement =
     let fontWidth = state.editorFont.measuredWidth;
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let indentation = IndentationSettings.default;
+    let indentation =
+      switch (Buffer.getIndentation(buffer)) {
+      | Some(v) => v
+      | None => IndentationSettings.default
+      };
 
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
@@ -276,6 +281,9 @@ let createElement =
         backgroundColor(Colors.white),
       ];
 
+    let searchHighlights =
+      Selectors.getSearchHighlights(state, editor.bufferId);
+
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
@@ -285,21 +293,48 @@ let createElement =
           i,
         );
 
+      let searchHighlightRanges =
+        switch (IntMap.find_opt(i, searchHighlights)) {
+        | Some(v) => v
+        | None => []
+        };
+
       let isActiveLine = i == cursorLine;
       let defaultBackground =
         isActiveLine
           ? theme.colors.editorLineHighlightBackground
           : theme.colors.editorBackground;
 
+      let matchingPairIndex =
+        switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+        | None => None
+        | Some(v) =>
+          if (Index.toInt0(v.startPos.line) == i) {
+            Some(Index.toInt0(v.startPos.character));
+          } else if (Index.toInt0(v.endPos.line) == i) {
+            Some(Index.toInt0(v.endPos.character));
+          } else {
+            None;
+          }
+        };
+
+      let colorizer =
+        BufferLineColorizer.create(
+          Zed_utf8.length(line),
+          state.theme,
+          tokenColors,
+          state.syntaxHighlighting.colorMap,
+          selection,
+          defaultBackground,
+          theme.colors.editorSelectionBackground,
+          matchingPairIndex,
+          searchHighlightRanges,
+        );
+
       BufferViewTokenizer.tokenize(
         line,
-        state.theme,
-        tokenColors,
-        state.syntaxHighlighting.colorMap,
         IndentationSettings.default,
-        selection,
-        defaultBackground,
-        theme.colors.editorSelectionBackground,
+        colorizer,
       );
     };
 
@@ -312,15 +347,26 @@ let createElement =
 
     let onDimensionsChanged =
         ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-      GlobalContext.current().notifySizeChanged(~width, ~height, ());
+      GlobalContext.current().notifySizeChanged(
+        ~editorGroupId,
+        ~width,
+        ~height,
+        (),
+      );
     };
+
+    let isMinimapShown = Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
 
     let layout =
       EditorLayout.getLayout(
-        ~maxMinimapCharacters=state.configuration.editorMinimapMaxColumn,
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown=state.configuration.editorMinimapEnabled,
+        ~isMinimapShown,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
         ~bufferLineCount=lineCount,
@@ -392,9 +438,11 @@ let createElement =
       | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
       | None => IntMap.empty
       };
+    let ranges = Selection.getRanges(editor.selection, buffer);
+    let selectionRanges = Range.toHash(ranges);
 
     let minimapLayout =
-      state.configuration.editorMinimapEnabled
+      isMinimapShown
         ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
             <Minimap
               state
@@ -405,6 +453,7 @@ let createElement =
               diagnostics
               metrics
               getTokensForLine
+              selection=selectionRanges
             />
           </View>
         : React.empty;
@@ -437,64 +486,49 @@ let createElement =
                 (),
               );
 
-              let selectionRanges: Hashtbl.t(int, Range.t) =
-                Hashtbl.create(100);
+              let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
+                {let halfOffset = offset /. 2.0
+                 let line = Index.toZeroBasedInt(r.startPosition.line)
+                 let start = Index.toZeroBasedInt(r.startPosition.character)
+                 let endC = Index.toZeroBasedInt(r.endPosition.character)
 
-              /* Draw selection ranges */
-              switch (activeBuffer) {
-              | Some(b) =>
-                let ranges = Selection.getRanges(editor.selection, b);
-                Oni_Core.Range.(
-                  List.iter(
-                    (r: Range.t) => {
-                      let line = Index.toZeroBasedInt(r.startPosition.line);
-                      let start =
-                        Index.toZeroBasedInt(r.startPosition.character);
-                      let endC =
-                        Index.toZeroBasedInt(r.endPosition.character);
+                 let text = Buffer.getLine(buffer, line)
+                 let (startOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     text,
+                     start,
+                   )
+                 let (endOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     text,
+                     endC,
+                   )
 
-                      let text = Buffer.getLine(b, line);
-                      let (startOffset, _) =
-                        BufferViewTokenizer.getCharacterPositionAndWidth(
-                          ~indentation,
-                          text,
-                          start,
-                        );
-                      let (endOffset, _) =
-                        BufferViewTokenizer.getCharacterPositionAndWidth(
-                          ~indentation,
-                          text,
-                          endC,
-                        );
+                 Shapes.drawRect(
+                   ~transform,
+                   ~x=
+                     lineNumberWidth
+                     +. float_of_int(startOffset)
+                     *. fontWidth
+                     -. halfOffset,
+                   ~y=
+                     fontHeight
+                     *. float_of_int(
+                          Index.toZeroBasedInt(r.startPosition.line),
+                        )
+                     -. editor.scrollY
+                     -. halfOffset,
+                   ~height=fontHeight +. offset,
+                   ~width=
+                     offset
+                     +. max(float_of_int(endOffset - startOffset), 1.0)
+                     *. fontWidth,
+                   ~color,
+                   (),
+                 )};
 
-                      Hashtbl.add(selectionRanges, line, r);
-                      Shapes.drawRect(
-                        ~transform,
-                        ~x=
-                          lineNumberWidth
-                          +. float_of_int(startOffset)
-                          *. fontWidth,
-                        ~y=
-                          fontHeight
-                          *. float_of_int(
-                               Index.toZeroBasedInt(r.startPosition.line),
-                             )
-                          -. editor.scrollY,
-                        ~height=fontHeight,
-                        ~width=
-                          max(float_of_int(endOffset - startOffset), 1.0)
-                          *. fontWidth,
-                        ~color=theme.colors.editorSelectionBackground,
-                        (),
-                      );
-                    },
-                    ranges,
-                  )
-                );
-              | None => ()
-              };
-
-              /* Draw error markers */
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
@@ -503,34 +537,65 @@ let createElement =
                 ~render=
                   (item, _offset) => {
                     let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
-                      {let (x0, y0) =
-                         bufferPositionToPixel(
-                           Index.toZeroBasedInt(d.range.startPosition.line),
-                           Index.toZeroBasedInt(
-                             d.range.startPosition.character,
-                           ),
-                         )
-                       let (x1, _) =
-                         bufferPositionToPixel(
-                           Index.toZeroBasedInt(d.range.endPosition.line),
-                           Index.toZeroBasedInt(
-                             d.range.endPosition.character,
-                           ),
-                         )
+                      renderRange(~color=Colors.red, d.range);
 
-                       Shapes.drawRect(
-                         ~transform,
-                         ~x=x0,
-                         ~y=y0 +. fontHeight,
-                         ~height=1.,
-                         ~width=x1 -. x0,
-                         ~color=Colors.red,
-                         (),
-                       )};
-
+                    /* Draw error markers */
                     switch (IntMap.find_opt(item, diagnostics)) {
                     | None => ()
                     | Some(v) => List.iter(renderDiagnostics, v)
+                    };
+
+                    switch (Hashtbl.find_opt(selectionRanges, item)) {
+                    | None => ()
+                    | Some(v) =>
+                      List.iter(
+                        renderRange(
+                          ~color=theme.colors.editorSelectionBackground,
+                        ),
+                        v,
+                      )
+                    };
+
+                    /* Draw match highlights */
+                    let matchColor = theme.colors.editorSelectionBackground;
+                    switch (
+                      Selectors.getMatchingPairs(state, editor.bufferId)
+                    ) {
+                    | None => ()
+                    | Some(v) =>
+                      renderRange(
+                        ~offset=0.0,
+                        ~color=matchColor,
+                        Range.createFromPositions(
+                          ~startPosition=v.startPos,
+                          ~endPosition=v.startPos,
+                          (),
+                        ),
+                      );
+                      renderRange(
+                        ~offset=0.0,
+                        ~color=matchColor,
+                        Range.createFromPositions(
+                          ~startPosition=v.endPos,
+                          ~endPosition=v.endPos,
+                          (),
+                        ),
+                      );
+                    };
+
+                    /* Draw search highlights */
+                    switch (IntMap.find_opt(item, searchHighlights)) {
+                    | None => ()
+                    | Some(v) =>
+                      List.iter(
+                        r =>
+                          renderRange(
+                            ~offset=2.0,
+                            ~color=theme.colors.editorFindMatchBackground,
+                            r,
+                          ),
+                        v,
+                      )
                     };
                   },
                 (),
@@ -544,7 +609,14 @@ let createElement =
                 ~render=
                   (item, offset) => {
                     let selectionRange =
-                      Hashtbl.find_opt(selectionRanges, item);
+                      switch (Hashtbl.find_opt(selectionRanges, item)) {
+                      | None => None
+                      | Some(v) =>
+                        switch (List.length(v)) {
+                        | 0 => None
+                        | _ => Some(List.hd(v))
+                        }
+                      };
                     let tokens =
                       getTokensForLine(~selection=selectionRange, item);
 
@@ -558,7 +630,10 @@ let createElement =
                         editor.scrollX,
                         offset,
                         transform,
-                        state.configuration.editorRenderWhitespace,
+                        Configuration.getValue(
+                          c => c.editorRenderWhitespace,
+                          state.configuration,
+                        ),
                       );
                     ();
                   },
@@ -589,7 +664,7 @@ let createElement =
                         item,
                         lineNumberWidth,
                         theme,
-                        state.configuration.editorLineNumbers,
+                        Configuration.getValue(c => c.editorLineNumbers, state.configuration),
                         cursorLine,
                         offset,
                         transform,
@@ -599,7 +674,18 @@ let createElement =
                 (),
               );
 
-              if (state.configuration.editorRenderIndentGuides) {
+              let renderIndentGuides =
+                Configuration.getValue(
+                  c => c.editorRenderIndentGuides,
+                  state.configuration,
+                );
+              let showActive =
+                Configuration.getValue(
+                  c => c.editorHighlightActiveIndentGuide,
+                  state.configuration,
+                );
+
+              if (renderIndentGuides) {
                 switch (activeBuffer) {
                 | None => ()
                 | Some(buffer) =>
@@ -615,8 +701,7 @@ let createElement =
                     ~theme=state.theme,
                     ~indentationSettings=indentation,
                     ~bufferPositionToPixel,
-                    ~showActive=
-                      state.configuration.editorHighlightActiveIndentGuide,
+                    ~showActive,
                     (),
                   )
                 };

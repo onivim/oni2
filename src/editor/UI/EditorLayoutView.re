@@ -6,6 +6,7 @@
  */
 open Revery;
 open UI;
+open Oni_Core;
 open Oni_Model;
 open WindowManager;
 
@@ -26,26 +27,33 @@ let splitStyle = (split: split) =>
     }
   );
 
-let getDockStyle = ({width, _}: dock) => {
+let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
   let w =
     switch (width) {
     | Some(w) => w
     | None => 10
     };
-  Style.[width(w), top(0), bottom(0)];
+  Style.[
+    width(w),
+    top(0),
+    bottom(0),
+    backgroundColor(theme.colors.sideBarBackground),
+  ];
 };
 
 let renderDock = (dockItems: list(dock), state: State.t) =>
-  List.fold_left(
-    (accum, item) =>
-      [
-        <View style={getDockStyle(item)}> {item.component()} </View>,
-        <WindowHandle direction=Vertical theme={state.theme} />,
-        ...accum,
-      ],
-    [],
-    dockItems,
-  );
+  List.sort((prev, curr) => curr.order > prev.order ? 1 : 0, dockItems)
+  |> List.fold_left(
+       (accum, item) =>
+         [
+           <View style={getDockStyle(item, state.theme)}>
+             {item.component()}
+           </View>,
+           <WindowHandle direction=Vertical theme={state.theme} />,
+           ...accum,
+         ],
+       [],
+     );
 
 let parentStyle = (dir: direction) => {
   let flexDir =
@@ -56,15 +64,17 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let rec renderTree = (~direction, theme, tree) =>
+let rec renderTree = (~direction, theme, state, tree) =>
   switch (tree) {
   | Parent(direction, _, children) =>
+    /* let _c = renderTree(~direction, theme, children, state); */
+    /* React.empty */
     <View style={parentStyle(direction)}>
-      ...{List.map(renderTree(~direction, theme), children)}
+      ...{List.map(renderTree(~direction, theme, state), children)}
     </View>
   | Leaf(window) =>
     <View style={splitStyle(window)}>
-      {window.component()}
+      <EditorGroupView state editorGroupId={window.editorGroupId} />
       <WindowHandle direction theme />
     </View>
   | Empty => React.empty
@@ -77,7 +87,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
 
     let splits =
       renderDock(rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, windows)])
+      |> (@)([renderTree(~direction=Vertical, theme, state, windows)])
       |> (@)(renderDock(leftDock, state));
     (hooks, <View style=splitContainer> ...splits </View>);
   });

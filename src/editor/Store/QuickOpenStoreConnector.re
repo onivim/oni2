@@ -15,15 +15,17 @@ let start = (rg: Core.Ripgrep.t) => {
     Str.replace_first(re, "", fullPath);
   };
 
-  let stringToCommand: (string, string) => Model.Actions.menuCommand =
-    (parentDir, fullPath) => {
+  let stringToCommand:
+    (Model.LanguageInfo.t, Model.IconTheme.t, string, string) =>
+    Model.Actions.menuCommand =
+    (languageInfo, iconTheme, parentDir, fullPath) => {
       category: None,
       name: getDisplayPath(fullPath, parentDir),
       command: () => Model.Actions.OpenFileByPath(fullPath),
-      icon: Some({||}),
+      icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
 
-  let createQuickOpen = setItems => {
+  let createQuickOpen = (languageInfo, iconTheme, setItems) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
@@ -34,7 +36,9 @@ let start = (rg: Core.Ripgrep.t) => {
           let result =
             items
             |> List.filter(item => !Sys.is_directory(item))
-            |> List.map(stringToCommand(currentDirectory));
+            |> List.map(
+                 stringToCommand(languageInfo, iconTheme, currentDirectory),
+               );
 
           setItems(result);
         },
@@ -43,15 +47,20 @@ let start = (rg: Core.Ripgrep.t) => {
     dispose;
   };
 
-  let openQuickOpenEffect =
+  let openQuickOpenEffect = (languageInfo, iconTheme) =>
     Isolinear.Effect.createWithDispatch(~name="quickOpen.show", dispatch => {
-      dispatch(Model.Actions.MenuOpen(createQuickOpen));
+      dispatch(
+        Model.Actions.MenuOpen(createQuickOpen(languageInfo, iconTheme)),
+      );
       dispatch(Model.Actions.SetInputControlMode(TextInputFocus));
     });
 
-  let updater = (state, action) => {
+  let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.QuickOpen => (state, openQuickOpenEffect)
+    | Model.Actions.QuickOpen => (
+        state,
+        openQuickOpenEffect(state.languageInfo, state.iconTheme),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

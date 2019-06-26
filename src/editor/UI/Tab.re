@@ -12,7 +12,6 @@ module Model = Oni_Model;
 
 type tabAction = unit => unit;
 
-let tabHeight = 35;
 let minWidth_ = 125;
 let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
 
@@ -41,14 +40,16 @@ let createElement =
       ~onClose,
       ~theme: Theme.t,
       ~uiFont: Types.UiFont.t,
-      ~mode: Types.Mode.t,
+      ~mode: Vim.Mode.t,
+      ~showHighlight: bool,
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
 
-    let borderColor = active ? modeColor : Colors.transparentBlack;
+    let borderColor =
+      active && showHighlight ? modeColor : Colors.transparentBlack;
 
     let opacityValue = 1.0;
 
@@ -60,7 +61,7 @@ let createElement =
         borderTop(~color=borderColor, ~width=2),
         borderBottom(~color=theme.colors.editorBackground, ~width=2),
         opacity(opacityValue),
-        height(tabHeight),
+        height(Constants.default.tabHeight),
         minWidth(minWidth_),
         flexDirection(`Row),
         justifyContent(`Center),
@@ -83,7 +84,7 @@ let createElement =
     let iconContainerStyle =
       Style.[
         width(32),
-        height(tabHeight),
+        height(Constants.default.tabHeight),
         alignItems(`Center),
         justifyContent(`Center),
       ];
