@@ -355,7 +355,11 @@ let createElement =
       );
     };
 
-    let isMinimapShown = Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
+    let isMinimapShown =
+      Configuration.getValue(
+        c => c.editorMinimapEnabled,
+        state.configuration,
+      );
 
     let layout =
       EditorLayout.getLayout(
@@ -664,7 +668,10 @@ let createElement =
                         item,
                         lineNumberWidth,
                         theme,
-                        Configuration.getValue(c => c.editorLineNumbers, state.configuration),
+                        Configuration.getValue(
+                          c => c.editorLineNumbers,
+                          state.configuration,
+                        ),
                         cursorLine,
                         offset,
                         transform,
