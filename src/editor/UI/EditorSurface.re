@@ -456,9 +456,9 @@ let createElement =
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
-
-              let selectionRanges: Hashtbl.t(int, Range.t) =
-                Hashtbl.create(100);
+                
+                let ranges = Selection.getRanges(editor.selection, buffer);
+                let selectionRanges = Range.toHash(ranges);
 
               let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
                 {let halfOffset = offset /. 2.0
@@ -503,26 +503,6 @@ let createElement =
                    (),
                  )};
 
-              /* Draw selection ranges */
-              switch (activeBuffer) {
-              | Some(b) =>
-                let ranges = Selection.getRanges(editor.selection, b);
-                Oni_Core.Range.(
-                  List.iter(
-                    (r: Range.t) => {
-                      let line = Index.toZeroBasedInt(r.startPosition.line);
-                      Hashtbl.add(selectionRanges, line, r);
-                      renderRange(
-                        ~color=theme.colors.editorSelectionBackground,
-                        r,
-                      );
-                    },
-                    ranges,
-                  )
-                );
-              | None => ()
-              };
-
               FlatList.render(
                 ~scrollY,
                 ~rowHeight,
@@ -538,6 +518,12 @@ let createElement =
                     | None => ()
                     | Some(v) => List.iter(renderDiagnostics, v)
                     };
+
+                    switch (Hashtbl.find_opt(selectionRanges, item)) {
+                    | None => ()
+                    | Some(v) => List.iter(renderRange(~color=theme.colors.editorSelectionBackground), v);
+                    };
+
 
                     /* Draw match highlights */
                     let matchColor = theme.colors.editorSelectionBackground;
@@ -592,7 +578,13 @@ let createElement =
                 ~render=
                   (item, offset) => {
                     let selectionRange =
-                      Hashtbl.find_opt(selectionRanges, item);
+                      switch(Hashtbl.find_opt(selectionRanges, item)) {
+                      | None => None
+                      | Some(v) => switch(List.length(v)) {
+                      | 0 => None
+                      | _ => Some(List.hd(v));
+                      }
+                      };
                     let tokens =
                       getTokensForLine(~selection=selectionRange, item);
 
