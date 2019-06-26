@@ -58,13 +58,9 @@ let setActiveEditor = (v: t, editorId: int) => {
 };
 
 let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
-  print_endline(
-    "getOrCreateEditorForBuffer - buffer id: " ++ string_of_int(bufferId),
-  );
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(v) => (state, v)
   | None =>
-    print_endline("Buffer id to editor id is NONE as expected");
     let newEditor = Editor.create(~bufferId, ());
     let newState = {
       ...state,
@@ -73,7 +69,6 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
         IntMap.add(bufferId, newEditor.editorId, state.bufferIdToEditorId),
       reverseTabOrder: [newEditor.editorId, ...state.reverseTabOrder],
     };
-    print_endline("Editor id: " ++ string_of_int(newEditor.editorId));
     (newState, newEditor.editorId);
   };
 };

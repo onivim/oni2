@@ -35,7 +35,6 @@ let start = _ => {
           let (g, editorId) =
             EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
           let g = EditorGroup.setActiveEditor(g, editorId);
-          print_endline("Adding editor group: " ++ EditorGroup.show(g));
           g;
         | None => EditorGroup.create()
         };

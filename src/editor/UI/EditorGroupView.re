@@ -48,9 +48,6 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
 };
 
 let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
-  print_endline(
-    "toUiTabs - editorGroupId: " ++ string_of_int(editorGroup.editorGroupId),
-  );
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
@@ -108,7 +105,6 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
         let editor = Some(v) |> Selectors.getActiveEditor;
         let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
-        print_endline("EditorGroupId: " ++ string_of_int(v.editorGroupId));
 
         let metrics = v.metrics;
 
@@ -121,9 +117,6 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
       };
 
     let onMouseDown = _ => {
-      print_endline(
-        "CLICKED FROM editorGroup: " ++ string_of_int(editorGroupId),
-      );
       GlobalContext.current().setActiveEditorGroup(editorGroupId);
     };
 
