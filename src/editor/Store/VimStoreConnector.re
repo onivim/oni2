@@ -1,5 +1,5 @@
 /*
- * vimStoreConnector.re
+ * VimStoreConnector.re
  *
  * This module connects vim to the Store:
  * - Translates incoming vim notifications into Actions
@@ -141,9 +141,7 @@ let start = () => {
           |> Array.to_list
           |> List.filter(sameLineFilter)
           |> List.map(toOniRange);
-
         dispatch(SearchSetHighlights(id, highlightList));
-
       | _ => ()
       };
     });
