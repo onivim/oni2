@@ -92,6 +92,7 @@ let init = app => {
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScroll: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
+    setActiveEditorGroup: id => dispatch(Model.Actions.EditorGroupSetActive(id)),
     dispatch,
     state: initialState,
   });

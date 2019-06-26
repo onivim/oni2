@@ -33,6 +33,7 @@ type t =
   | WildmenuSelected(int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
+  | EditorGroupSetActive(int)
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)

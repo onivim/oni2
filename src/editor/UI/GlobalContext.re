@@ -17,6 +17,7 @@ type editorScroll = (~deltaY: float, unit) => unit;
 type t = {
   notifySizeChanged,
   editorScroll,
+  setActiveEditorGroup: int => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
   dispatch: Actions.t => unit,
@@ -34,6 +35,7 @@ let default = {
     (),
   editorScroll: (~deltaY as _, ()) => (),
   openEditorById: _ => (),
+  setActiveEditorGroup: (editorGroupId) => (),
   dispatch: _ => (),
   closeEditorById: _ => (),
 };

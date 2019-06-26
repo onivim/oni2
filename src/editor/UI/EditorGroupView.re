@@ -120,10 +120,12 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
         [<Tabs active=isActive theme tabs mode uiFont />, editorView];
       };
 
-    let onMouseDown = _ =>
+    let onMouseDown = _ => {
       print_endline(
         "CLICKED FROM editorGroup: " ++ string_of_int(editorGroupId),
       );
+        GlobalContext.current().setActiveEditorGroup(editorGroupId);
+      };
 
     (
       hooks,
