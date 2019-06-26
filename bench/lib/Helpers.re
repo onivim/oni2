@@ -54,7 +54,7 @@ let applyIndent = (line, lineNum, fileLen) =>
   };
 
 let thousandLinesWithIndents =
-  List.mapi((i, l) => applyIndent(l, i, 1000), thousandLines);
+  Array.mapi((i, l) => applyIndent(l, i, 1000), thousandLines);
 
 let thousandLineStateWithIndents =
   Reducer.reduce(
@@ -72,7 +72,6 @@ let thousandLineStateWithIndents =
 
 let hundredThousandLines =
   Array.make(100000, "This is a buffer with a hundred thousand lines!");
-  |> Array.to_list;
 
 let hundredThousandLineState =
   Reducer.reduce(
