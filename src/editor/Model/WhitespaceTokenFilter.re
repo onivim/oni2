@@ -7,7 +7,7 @@
 
 open Oni_Core;
 open BufferViewTokenizer;
-open Configuration;
+open ConfigurationValues;
 
 let filterAllWhitespace = token =>
   switch (token.tokenType) {
@@ -24,7 +24,7 @@ let filterBoundaryWhitespace = token =>
 
 let filter =
     (
-      whitespaceSetting: Configuration.editorRenderWhitespace,
+      whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
       tokens: list(BufferViewTokenizer.t),
     ) => {
   switch (whitespaceSetting) {

@@ -5,6 +5,7 @@
  * based on the visual selection state
  */
 
+open Oni_Core;
 open Oni_Core.Types;
 
 let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
@@ -139,7 +140,7 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
       Index.toZeroBasedInt(selection.range.endPosition.character);
 
     switch (selection.mode) {
-    | BlockwiseVisual =>
+    | Vim.Types.Block =>
       getRangesForBlockSelection(
         startLine,
         startCharacter,
@@ -147,9 +148,9 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
         endCharacter,
         buffer,
       )
-    | LinewiseVisual =>
+    | Vim.Types.Line =>
       getRangesForLinewiseSelection(startLine, endLine, buffer)
-    | Visual =>
+    | Vim.Types.Character =>
       getRangesForVisualSelection(
         startLine,
         startCharacter,

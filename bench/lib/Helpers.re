@@ -29,7 +29,7 @@ let simpleState =
 let simpleEditor = Editor.create();
 
 let thousandLines =
-  Array.make(1000, "This is a buffer with a thousand lines!") |> Array.to_list;
+  Array.make(1000, "This is a buffer with a thousand lines!");
 
 let thousandLineState =
   Reducer.reduce(
@@ -71,7 +71,7 @@ let thousandLineStateWithIndents =
   );
 
 let hundredThousandLines =
-  Array.make(100000, "This is a buffer with a hundred thousand lines!")
+  Array.make(100000, "This is a buffer with a hundred thousand lines!");
   |> Array.to_list;
 
 let hundredThousandLineState =

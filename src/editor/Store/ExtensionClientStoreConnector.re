@@ -11,63 +11,43 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
-module Protocol = Extensions.ExtensionHostProtocol;
+module Protocol = Extensions.ExtHostProtocol;
 
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onExtHostClosed = () => print_endline("ext host closed");
+  let onExtHostClosed = () => Core.Log.info("ext host closed");
 
   let extensionInfo =
     extensions
     |> List.map(ext =>
-         Extensions.ExtensionHostInitData.ExtensionInfo.ofScannedExtension(
-           ext,
-         )
+         Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
-  let onMessage = (scope, method, args) => {
-    switch (scope, method, args) {
-    | (
-        "MainThreadStatusBar",
-        "$setEntry",
-        [
-          `Int(id),
-          _,
-          `String(text),
-          _,
-          _,
-          _,
-          `Int(alignment),
-          `Int(priority),
-        ],
-      ) =>
-      dispatch(
-        Model.Actions.StatusBarAddItem(
-          Model.StatusBarModel.Item.create(
-            ~id,
-            ~text,
-            ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
-            ~priority,
-            (),
-          ),
+  let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
+    dispatch(
+      Model.Actions.StatusBarAddItem(
+        Model.StatusBarModel.Item.create(
+          ~id,
+          ~text,
+          ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+          ~priority,
+          (),
         ),
-      );
-      Ok(None);
-    | _ => Ok(None)
-    };
+      ),
+    );
   };
 
-  let initData = ExtensionHostInitData.create(~extensions=extensionInfo, ());
+  let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
-    Extensions.ExtensionHostClient.start(
+    Extensions.ExtHostClient.start(
       ~initData,
       ~onClosed=onExtHostClosed,
-      ~onMessage,
+      ~onStatusBarSetEntry,
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Core.Types.BufferMetadata.t) =>
+  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t) =>
     switch (bm.filePath, bm.fileType) {
     | (Some(fp), Some(_)) =>
       Some(
@@ -97,22 +77,14 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let pumpEffect =
     Isolinear.Effect.create(~name="exthost.pump", () =>
-      ExtensionHostClient.pump(extHostClient)
+      ExtHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bm: Core.Types.BufferMetadata.t) =>
+  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(v) =>
-        ExtensionHostClient.send(
-          extHostClient,
-          Protocol.OutgoingNotifications.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-            ~removedDocuments=[],
-            ~addedDocuments=[v],
-            (),
-          ),
-        )
+      | Some(v) => ExtHostClient.addDocument(v, extHostClient)
       }
     );
 
@@ -137,13 +109,11 @@ let start = (extensions, setup: Core.Setup.t) => {
 
         let uri = Model.Buffer.getUri(v);
 
-        ExtensionHostClient.send(
+        ExtHostClient.updateDocument(
+          uri,
+          modelChangedEvent,
+          true,
           extHostClient,
-          Protocol.OutgoingNotifications.Documents.acceptModelChanged(
-            uri,
-            modelChangedEvent,
-            true,
-          ),
         );
       }
     );
@@ -153,7 +123,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
         Model.Actions.RegisterQuitCleanup(
-          () => ExtensionHostClient.close(extHostClient),
+          () => ExtHostClient.close(extHostClient),
         ),
       )
     );

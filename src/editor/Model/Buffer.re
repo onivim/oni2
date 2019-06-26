@@ -7,20 +7,27 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-[@deriving show]
 type t = {
-  metadata: BufferMetadata.t,
+  metadata: Vim.BufferMetadata.t,
   lines: array(string),
+  indentation: option(IndentationSettings.t),
 };
 
+let show = _ => "TODO";
+
 let ofLines = (lines: array(string)) => {
-  metadata: BufferMetadata.create(),
+  metadata: Vim.BufferMetadata.create(),
   lines,
+  indentation: None,
 };
 
 let empty = ofLines([||]);
 
-let ofMetadata = (metadata: BufferMetadata.t) => {metadata, lines: [||]};
+let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
+  metadata,
+  lines: [||],
+  indentation: None,
+};
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
@@ -29,7 +36,7 @@ let getId = (buffer: t) => buffer.metadata.id;
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getUri = (buffer: t) => {
-  let getUriFromMetadata = (metadata: BufferMetadata.t) => {
+  let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {
     switch (metadata.filePath) {
     | None => Uri.fromMemory(string_of_int(metadata.id))
     | Some(v) => Uri.fromPath(v)
@@ -67,7 +74,7 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 };
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
-  let updateLines = Array.of_list(update.lines);
+  let updateLines = update.lines;
   let startLine = update.startLine |> Index.toZeroBasedInt;
   let endLine = update.endLine |> Index.toZeroBasedInt;
   if (Array.length(lines) == 0) {
@@ -85,41 +92,50 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
         (),
       );
 
-    let lines = Array.of_list(update.lines);
+    let lines = update.lines;
 
     Array.concat([prev, lines, post]);
   };
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
-  switch (update) {
-  /***
-     When a buffer is first attached it emits an update with
-     a startLine of 0 and endLine of -1 in this case we should
-     update the buffer's version but set the content of the buffer
-     rather than update it, which would result in duplication
-   */
-  | {startLine: ZeroBasedIndex(0), endLine: ZeroBasedIndex((-1)), version, _} => {
-      metadata: {
-        ...buf.metadata,
-        version,
-      },
-      lines: Array.of_list(update.lines),
-    }
-  | {version, _} when version > buf.metadata.version =>
-    let metadata = {...buf.metadata, version: update.version};
-    {metadata, lines: applyUpdate(buf.lines, update)};
-  | _ => buf
+let isIndentationSet = buf => {
+  switch (buf.indentation) {
+  | Some(_) => true
+  | None => false
   };
+};
+let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
 
-let updateMetadata = (metadata: BufferMetadata.t, buf: t) => {
+let getIndentation = buf => buf.indentation;
+
+let update = (buf: t, update: BufferUpdate.t) => {
+  let endLine = Index.toInt0(update.endLine);
+
+  if (update.version > buf.metadata.version) {
+    /***
+       When a buffer is first attached it emits an update with
+       a startLine of 0 and endLine of -1 in this case we should
+       update the buffer's version but set the content of the buffer
+       rather than update it, which would result in duplication
+     */
+    if (endLine < 0) {
+      {
+        ...buf,
+        metadata: {
+          ...buf.metadata,
+          version: update.version,
+        },
+        lines: update.lines,
+      };
+    } else {
+      let metadata = {...buf.metadata, version: update.version};
+      {...buf, metadata, lines: applyUpdate(buf.lines, update)};
+    };
+  } else {
+    buf;
+  };
+};
+
+let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
   {...buf, metadata};
-};
-
-let markSaved = (buf: t) => {
-  {...buf, metadata: BufferMetadata.markSaved(buf.metadata)};
-};
-
-let markDirty = (buf: t) => {
-  {...buf, metadata: BufferMetadata.markDirty(buf.metadata)};
 };

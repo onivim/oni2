@@ -74,10 +74,17 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   };
 };
 
+let rec getIndexOfElement = (l, elem) => {
+  switch (l) {
+  | [] => (-1)
+  | [hd, ...tl] => hd === elem ? 0 : getIndexOfElement(tl, elem) + 1
+  };
+};
+
 let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
-  switch (List.find_opt(v => v === editor, reverseTabOrder)) {
-  | None => None
-  | Some(idx) =>
+  switch (getIndexOfElement(reverseTabOrder, editor)) {
+  | (-1) => None
+  | idx =>
     switch (
       List.nth_opt(reverseTabOrder, idx + 1),
       List.nth_opt(reverseTabOrder, max(idx - 1, 0)),
@@ -89,20 +96,29 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
-let removeEditorsForBuffer = (state, bufferId) => {
-  switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
+let isActiveEditor = (state, editorId) => {
+  switch (state.activeEditorId) {
+  | None => false
+  | Some(v) => v == editorId
+  };
+};
+
+let removeEditorById = (state, editorId) => {
+  switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
   | Some(v) =>
-    let filteredTabList = List.filter(t => v != t, state.reverseTabOrder);
+    let bufferId = v.bufferId;
+    let filteredTabList =
+      List.filter(t => editorId != t, state.reverseTabOrder);
     let bufferIdToEditorId =
       IntMap.remove(bufferId, state.bufferIdToEditorId);
-    let editors = IntMap.remove(v, state.editors);
+    let editors = IntMap.remove(editorId, state.editors);
 
     let newActiveEditorId =
       switch (state.activeEditorId) {
       | None => None
       | Some(currentEditorId) =>
-        if (currentEditorId === v) {
+        if (currentEditorId === editorId) {
           _getAdjacentEditor(currentEditorId, state.reverseTabOrder);
         } else {
           /* We're not removing the current editor, so we can just leave it */
@@ -123,16 +139,23 @@ let removeEditorsForBuffer = (state, bufferId) => {
   };
 };
 
+let removeEditorsForBuffer = (state, bufferId) => {
+  switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
+  | None => state
+  | Some(v) => removeEditorById(state, v)
+  };
+};
+
 let reduce = (v: t, action: Actions.t) => {
   let metrics = EditorMetrics.reduce(v.metrics, action);
 
+  /* Only send updates to _active_ editor */
   let editors =
-    IntMap.fold(
-      (key, value, prev) =>
-        IntMap.add(key, Editor.reduce(value, action, metrics), prev),
-      v.editors,
-      IntMap.empty,
-    );
+    switch (v.activeEditorId, getActiveEditor(v)) {
+    | (Some(id), Some(e)) =>
+      IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
+    | _ => v.editors
+    };
 
   let v = {...v, metrics, editors};
 
@@ -140,6 +163,12 @@ let reduce = (v: t, action: Actions.t) => {
   | BufferEnter({id, _}) =>
     let (newState, activeEditorId) = getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
+  | ViewCloseEditor(id) => removeEditorById(v, id)
+  | ViewSetActiveEditor(id) =>
+    switch (IntMap.find_opt(id, v.editors)) {
+    | None => v
+    | Some(_) => {...v, activeEditorId: Some(id)}
+    }
   | _ => v
   };
 };

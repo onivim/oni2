@@ -13,6 +13,27 @@ let start = () => {
       List.iter(v => dispatch(v), actions)
     );
 
+  let closeEditorEffect = (state, _) =>
+    Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
+      let editor =
+        Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
+
+      switch (editor) {
+      | None => ()
+      | Some(v) => dispatch(ViewCloseEditor(v.id))
+      };
+    });
+
+  let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
+    Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
+      let action =
+        fileExplorer.isOpen
+          ? RemoveDockItem(WindowManager.ExplorerDock)
+          : AddDockItem(WindowManager.ExplorerDock);
+      dispatch(action);
+    });
+  };
+
   let commands = [
     (
       "commandPalette.open",
@@ -23,6 +44,14 @@ let start = () => {
         ]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
+    (
+      "menu.close",
+      _ =>
+        multipleActionEffect([
+          MenuClose,
+          SetInputControlMode(EditorTextFocus),
+        ]),
+    ),
     (
       "menu.open",
       _ =>
@@ -52,6 +81,8 @@ let start = () => {
           SetInputControlMode(EditorTextFocus),
         ]),
     ),
+    ("view.closeEditor", state => closeEditorEffect(state)),
+    ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 
   let commandMap =

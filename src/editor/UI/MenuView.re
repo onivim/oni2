@@ -35,17 +35,15 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let getIcon = icon =>
-  switch (icon) {
-  | Some(i) => i
-  | None => ""
-  };
-
 let handleChange = (event: Input.changeEvent) =>
   GlobalContext.current().dispatch(MenuSearch(event.value));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
+  | {key: Revery.Key.KEY_DOWN, _} =>
+    GlobalContext.current().dispatch(MenuNextItem)
+  | {key: Revery.Key.KEY_UP, _} =>
+    GlobalContext.current().dispatch(MenuPreviousItem)
   | {key: Revery.Key.KEY_ESCAPE, _} =>
     GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
   | _ => ()
@@ -72,13 +70,23 @@ let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
 
 type fontT = Types.UiFont.t;
 
+let getLabel = (command: Actions.menuCommand) => {
+  switch (command.category) {
+  | Some(v) => v ++ ": " ++ command.name
+  | None => command.name
+  };
+};
+
 let createElement =
     (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(
         Always,
-        () => Some(() => loseFocusOnClose(menu.isOpen)),
+        () => {
+          loseFocusOnClose(menu.isOpen);
+          None;
+        },
         hooks,
       );
 
@@ -101,15 +109,15 @@ let createElement =
                 rowHeight=40
                 height={menuHeight - 50}
                 width=menuWidth
-                count={List.length(menu.commands)}
+                count={List.length(menu.filteredCommands)}
                 render={index => {
-                  let cmd = List.nth(menu.commands, index);
+                  let cmd = List.nth(menu.filteredCommands, index);
                   <MenuItem
                     onClick
                     theme
                     style=menuItemStyle
-                    label={cmd.name}
-                    icon={getIcon(cmd.icon)}
+                    label={getLabel(cmd)}
+                    icon={cmd.icon}
                     onMouseOver={_ => onMouseOver(index)}
                     selected={index == menu.selectedItem}
                   />;

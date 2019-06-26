@@ -8,6 +8,14 @@ let component = React.component("Dock");
 
 let button = Style.[marginVertical(8)];
 
+let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
+  let action =
+    fileExplorer.isOpen
+      ? Actions.RemoveDockItem(WindowManager.ExplorerDock)
+      : Actions.AddDockItem(WindowManager.ExplorerDock);
+  GlobalContext.current().dispatch(action);
+};
+
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let bg = state.theme.colors.editorLineNumberBackground;
@@ -21,7 +29,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
           backgroundColor(bg),
           alignItems(`Center),
         ]>
-        <Clickable style=button>
+        <Clickable onClick={toggleExplorer(state)} style=button>
           <FontIcon
             backgroundColor=bg
             color=Colors.white

@@ -13,13 +13,15 @@ module Model = Oni_Model;
 
 module Extensions = Oni_Extensions;
 
+module Log = Core.Log;
+
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onScopeLoaded = s => prerr_endline("Scope loaded: " ++ s);
+  let onScopeLoaded = s => Log.debug("Scope loaded: " ++ s);
   let onColorMap = cm => dispatch(Model.Actions.SyntaxHighlightColorMap(cm));
   let onTokens = tr => dispatch(Model.Actions.SyntaxHighlightTokens(tr));
 
