@@ -174,7 +174,9 @@ let start = () => {
       =>
         if (!String.equal(key, "<S-SHIFT>")
             && !String.equal(key, "<C->")
-            && !String.equal(key, "<A-C->")) {
+            && !String.equal(key, "<A-C->")
+            && !String.equal(key, "<SHIFT>") 
+            && !String.equal(key, "<S-C->")) {
           Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
           Log.debug("VimStoreConnector - handled key: " ++ key);
