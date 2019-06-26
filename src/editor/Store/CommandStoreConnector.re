@@ -29,7 +29,7 @@ let start = getState => {
     fn(state);
   };
 
-  let splitEditorEffect = (state, _) =>
+  let splitEditorEffect = (state, direction,  _) =>
     Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
       let buffer = Selectors.getActiveBuffer(state);
 
@@ -48,7 +48,7 @@ let start = getState => {
 
       let split =
         WindowManager.createSplit(
-          ~direction=Vertical,
+          ~direction,
           ~editorGroupId=newEditorGroup.id,
           (),
         );
@@ -114,7 +114,8 @@ let start = getState => {
         ]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state)),
+    ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
+    ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 

@@ -100,5 +100,7 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
         [<Tabs theme tabs mode uiFont />, editorView];
       };
 
-    (hooks, <View style> ...children </View>);
+    let onMouseDown = (_) =>  print_endline ("CLICKED FROM editorGroup: " ++ string_of_int(editorGroupId));
+
+    (hooks, <View onMouseDown style> ...children </View>);
   });

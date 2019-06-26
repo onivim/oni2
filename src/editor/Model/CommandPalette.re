@@ -26,8 +26,14 @@ let create = setItems => {
     },
     {
       category: Some("View"),
-      name: "Split Editor",
+      name: "Split Editor Vertically",
       command: () => Actions.Command("view.splitVertical"),
+      icon: None,
+    },
+    {
+      category: Some("View"),
+      name: "Split Editor Horizontally",
+      command: () => Actions.Command("view.splitHorizontal"),
       icon: None,
     },
   ];
