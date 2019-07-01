@@ -16,8 +16,6 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
-exception BadNewsBears;
-
 let () = Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
@@ -39,8 +37,6 @@ let init = app => {
   Log.debug("Startup: Parsing CLI options");
   let cliOptions = Core.Cli.parse(setup);
   Log.debug("Startup: Parsing CLI options complete");
-
-let () = raise(BadNewsBears);
 
   Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
   Sys.chdir(cliOptions.folder);

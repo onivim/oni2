@@ -7,7 +7,7 @@
 let canPrint = ref(false);
 
 let enablePrinting = () => {
-  canPrint := true
+  canPrint := true;
 };
 
 let print = msg => canPrint^ ? print_endline(msg) : ();
@@ -50,14 +50,19 @@ let debug = msg => isDebugLoggingEnabled ? logCore("[DEBUG] " ++ msg) : ();
 
 let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
 
-
-let () = switch(isDebugLoggingEnabled) {
-| false => ()
-| true => 
-  debug("Recording backtraces");
-  Printexc.record_backtrace(true);
-  Printexc.set_uncaught_exception_handler((e, bt) => {
-  error("Exception " ++ Printexc.to_string(e) ++ ":\n" ++ Printexc.raw_backtrace_to_string(bt));
-  flush_all();
-});
-}
+let () =
+  switch (isDebugLoggingEnabled) {
+  | false => ()
+  | true =>
+    debug("Recording backtraces");
+    Printexc.record_backtrace(true);
+    Printexc.set_uncaught_exception_handler((e, bt) => {
+      error(
+        "Exception "
+        ++ Printexc.to_string(e)
+        ++ ":\n"
+        ++ Printexc.raw_backtrace_to_string(bt),
+      );
+      flush_all();
+    });
+  };
