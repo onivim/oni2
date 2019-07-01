@@ -113,11 +113,18 @@ let createElement = (~state: State.t, ~editorGroupId: int, ~children as _, ()) =
           | Some(v) => <EditorSurface editorGroupId metrics editor=v state />
           | None => React.empty
           };
-        switch (Configuration.getValue(
-                          c => c.workbenchEditorShowTabs, state.configuration)) {
+        switch (
+          Configuration.getValue(
+            c => c.workbenchEditorShowTabs,
+            state.configuration,
+          )
+        ) {
         | false => [editorView]
-        | true => [<Tabs active=isActive theme tabs mode uiFont />, editorView]
-        }
+        | true => [
+            <Tabs active=isActive theme tabs mode uiFont />,
+            editorView,
+          ]
+        };
       };
 
     let onMouseDown = _ => {
