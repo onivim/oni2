@@ -54,12 +54,12 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
-  /* 
-    For our July builds, we won't be including the extension host -
-    but we'll bring this back as we start implementing those features!
-  */
+  /*
+     For our July builds, we won't be including the extension host -
+     but we'll bring this back as we start implementing those features!
+   */
   /* let (extHostUpdater, extHostStream) =
-    ExtensionClientStoreConnector.start(extensions, setup); */
+     ExtensionClientStoreConnector.start(extensions, setup); */
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
