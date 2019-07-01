@@ -16,15 +16,6 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
-/**
-   This allows a stack trace to be printed when exceptions occur
- */
-/* switch (Sys.getenv_opt("ONI2_DEBUG")) { */
-/* | Some(_) => Printexc.record_backtrace(true) |> ignore */
-/* | None => () */
-/* }; */
-Printexc.record_backtrace(true);
-
 let () = Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
