@@ -118,7 +118,7 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, workbenchIconTheme: parseString(v)},
   ),
   (
-    "workbench.editor.showTab",
+    "workbench.editor.showTabs",
     (s, v) => {...s, workbenchEditorShowTabs: parseBool(v)},
   ),
 ];
