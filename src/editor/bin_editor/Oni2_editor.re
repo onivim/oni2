@@ -16,14 +16,7 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
-/**
-   This allows a stack trace to be printed when exceptions occur
- */
-/* switch (Sys.getenv_opt("ONI2_DEBUG")) { */
-/* | Some(_) => Printexc.record_backtrace(true) |> ignore */
-/* | None => () */
-/* }; */
-Printexc.record_backtrace(true);
+exception BadNewsBears;
 
 let () = Log.debug("Starting Onivim 2.");
 
@@ -46,6 +39,8 @@ let init = app => {
   Log.debug("Startup: Parsing CLI options");
   let cliOptions = Core.Cli.parse(setup);
   Log.debug("Startup: Parsing CLI options complete");
+
+let () = raise(BadNewsBears);
 
   Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
   Sys.chdir(cliOptions.folder);
