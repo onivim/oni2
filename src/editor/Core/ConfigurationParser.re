@@ -117,6 +117,10 @@ let configurationParsers: list(configurationTuple) = [
     "workbench.iconTheme",
     (s, v) => {...s, workbenchIconTheme: parseString(v)},
   ),
+  (
+    "workbench.editor.showTabs",
+    (s, v) => {...s, workbenchEditorShowTabs: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

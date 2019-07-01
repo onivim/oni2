@@ -23,6 +23,7 @@ type t = {
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
+  workbenchEditorShowTabs: bool,
   workbenchIconTheme: string,
   filesExclude: list(string),
 };
@@ -39,6 +40,7 @@ let default = {
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
+  workbenchEditorShowTabs: true,
   workbenchIconTheme: "vs-seti",
   filesExclude: ["node_modules", "_esy"],
 };
