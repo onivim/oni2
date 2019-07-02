@@ -14,7 +14,7 @@ let start = () => {
       let bufferFileName =
         switch (Vim.Buffer.getFilename(buffer)) {
         | None => ""
-        | Some(v) => v
+        | Some(fileName) => fileName
         };
       if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
         dispatch(Actions.ConfigurationReload);
