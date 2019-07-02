@@ -8,12 +8,28 @@ open Oni_Core;
 open Oni_Model;
 
 let start = () => {
+  let configurationFileName = "configuration.json";
+  let reloadConfigOnWritePost = (~configPath, dispatch) => {
+    Vim.AutoCommands.onDispatch((cmd, buffer) => {
+      let bufferFileName =
+        switch (Vim.Buffer.getFilename(buffer)) {
+        | None => ""
+        | Some(v) => v
+        };
+      if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
+        dispatch(Actions.ConfigurationReload);
+      };
+    });
+    ();
+  };
+
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
-      let configPath = Filesystem.getOrCreateConfigFile("configuration.json");
+      let configPath =
+        Filesystem.getOrCreateConfigFile(configurationFileName);
       switch (configPath) {
-      | Ok(v) =>
-        switch (ConfigurationParser.ofFile(v)) {
+      | Ok(configPathAsString) =>
+        switch (ConfigurationParser.ofFile(configPathAsString)) {
         | Ok(v) => dispatch(Actions.ConfigurationSet(v))
         | Error(err) =>
           prerr_endline("Error loading configuration file: " ++ err)
@@ -21,6 +37,20 @@ let start = () => {
       | Error(err) =>
         prerr_endline("Error loading configuration file: " ++ err)
       };
+    });
+
+  let initConfigurationEffect =
+    Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
+      dispatch(Actions.ConfigurationReload);
+      let configPath =
+        Filesystem.getOrCreateConfigFile(configurationFileName);
+      switch (configPath) {
+      | Ok(configPathAsString) =>
+        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch)
+      | Error(err) =>
+        prerr_endline("Error loading configuration file: " ++ err)
+      };
+      ();
     });
 
   let openConfigurationFileEffect = filePath =>
@@ -34,7 +64,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, reloadConfigurationEffect)
+    | Actions.Init => (state, initConfigurationEffect)
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
         Isolinear.Effect.none,
