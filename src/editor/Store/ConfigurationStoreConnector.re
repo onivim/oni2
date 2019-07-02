@@ -10,16 +10,17 @@ open Oni_Model;
 let start = () => {
   let configurationFileName = "configuration.json";
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
-    Vim.AutoCommands.onDispatch((cmd, buffer) => {
-      let bufferFileName =
-        switch (Vim.Buffer.getFilename(buffer)) {
-        | None => ""
-        | Some(fileName) => fileName
+    let _ =
+      Vim.AutoCommands.onDispatch((cmd, buffer) => {
+        let bufferFileName =
+          switch (Vim.Buffer.getFilename(buffer)) {
+          | None => ""
+          | Some(fileName) => fileName
+          };
+        if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
+          dispatch(Actions.ConfigurationReload);
         };
-      if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
-        dispatch(Actions.ConfigurationReload);
-      };
-    });
+      });
     ();
   };
 
