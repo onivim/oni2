@@ -1,3 +1,4 @@
+const cp = require("child_process");
 const fs = require("fs-extra");
 const path = require("path");
 
@@ -21,3 +22,8 @@ fs.copySync(curBin, platformReleaseDirectory);
 
 // Copy extensions over
 fs.copySync(extensionsSourceDirectory, extensionsDestDirectory);
+
+if (process.platform == 'darwin') {
+	let out = cp.execSync("dylibbundler", ["--help"]).toString("utf8");
+	console.log("dylibbundler output: " + out);
+}
