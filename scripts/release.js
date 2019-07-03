@@ -40,8 +40,22 @@ if (process.platform == "darwin") {
   const libsDirectory = path.join(contentsDirectory, "libs");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
 
+  const plistFile = path.join(appDirectory, "Info.plist");
+
+  const plistContents = {
+      CFBundleName: "Onivim2",
+      CFBundleDisplayName: "Onivim 2",
+      CFBundleIdentifier: "com.outrunlabs.onivim2",
+      CFBundleVersion: "0.01",
+      CFBundlePackageType: "APPL",
+      CFBundleSignature: "????",
+      CFBundleExecutable: "Oni2"
+  };
+
   fs.mkdirpSync(libsDirectory);
   fs.mkdirpSync(extensionsDestDirectory);
+
+  fs.writeFileSync(plistFile, require("plist").build(plistContents));
 
   // Copy bins over
   copy(curBin, binaryDirectory);
