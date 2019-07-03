@@ -37,9 +37,13 @@ if (process.platform == "darwin") {
 
   const appDirectory = path.join(releaseDirectory, "Onivim2.App");
   const contentsDirectory = path.join(appDirectory, "Contents");
+  const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
   const libsDirectory = path.join(contentsDirectory, "libs");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
+
+  const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
+  const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
 
   const plistFile = path.join(contentsDirectory, "Info.plist");
 
@@ -47,6 +51,7 @@ if (process.platform == "darwin") {
       CFBundleName: "Onivim2",
       CFBundleDisplayName: "Onivim 2",
       CFBundleIdentifier: "com.outrunlabs.onivim2",
+      CFBundleIconFile: "Onivim2",
       CFBundleVersion: "0.01",
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
@@ -55,12 +60,18 @@ if (process.platform == "darwin") {
 
   fs.mkdirpSync(libsDirectory);
   fs.mkdirpSync(extensionsDestDirectory);
+  fs.mkdirpSync(resourcesDirectory);
 
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
 
   // Copy bins over
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, extensionsDestDirectory);
+
+  // Copy icon
+  copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
+
+  
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
 
@@ -70,7 +81,7 @@ if (process.platform == "darwin") {
 
   const dmgJson = {
     title: "Onivim 2",
-    background: path.join(rootDirectory, "assets", "images", "dmg-background.png"),
+    background: path.join(imageSourceDirectory, "dmg-background.png"),
     format: "ULFO",
     window: {
         size: {
