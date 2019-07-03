@@ -6,6 +6,7 @@ let curBin = process.env["cur__bin"];
 console.log("Bin folder: " + curBin);
 console.log("Working directory: " + process.cwd());
 
+const rootDirectory = process.cwd();
 const releaseDirectory = path.join(process.cwd(), "_release");
 
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
@@ -40,7 +41,7 @@ if (process.platform == "darwin") {
   const libsDirectory = path.join(contentsDirectory, "libs");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
 
-  const plistFile = path.join(appDirectory, "Info.plist");
+  const plistFile = path.join(contentsDirectory, "Info.plist");
 
   const plistContents = {
       CFBundleName: "Onivim2",
@@ -62,6 +63,55 @@ if (process.platform == "darwin") {
   copy(extensionsSourceDirectory, extensionsDestDirectory);
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
+
+  const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
+  const basePath = releaseDirectory;
+
+  const ee = require("appdmg")({
+    target: dmgPath,
+    basepath: basePath,
+    specification: {
+        title: "Onivim 2",
+        background: path.join(rootDirectory, "assets", "images", "dmg-background.png");
+    },
+    format: "ULFO",
+    window: {
+        size: {
+            width: 660,
+            height: 400,
+        }
+    },
+    contents: [
+        {
+            x: 180,
+            y: 170,
+            type: "file",
+            path: appDirectory,
+        },
+        {
+            x: 480,
+            y: 170,
+            type: "link",
+            path: "/Applications"
+        }
+    ]
+  });
+
+  ee.on("progress", info => {
+    if (info.type == "step-begin") {
+        console.log("[dmg]: " +info.title);
+    }
+  });
+
+  ee.on("finish", () => {
+    console.log("[dmg] Success!");
+  });
+
+  ee.on("error", error => {
+    console.error("[dmg] Failed with: " + error);
+  });
+   
+
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(releaseDirectory, "extensions");
