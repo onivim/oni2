@@ -65,15 +65,12 @@ if (process.platform == "darwin") {
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
+  const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");
   const basePath = releaseDirectory;
 
-  const ee = require("appdmg")({
-    target: dmgPath,
-    basepath: basePath,
-    specification: {
-        title: "Onivim 2",
-        background: path.join(rootDirectory, "assets", "images", "dmg-background.png");
-    },
+  const dmgJson = {
+    title: "Onivim 2",
+    background: path.join(rootDirectory, "assets", "images", "dmg-background.png"),
     format: "ULFO",
     window: {
         size: {
@@ -95,23 +92,8 @@ if (process.platform == "darwin") {
             path: "/Applications"
         }
     ]
-  });
-
-  ee.on("progress", info => {
-    if (info.type == "step-begin") {
-        console.log("[dmg]: " +info.title);
-    }
-  });
-
-  ee.on("finish", () => {
-    console.log("[dmg] Success!");
-  });
-
-  ee.on("error", error => {
-    console.error("[dmg] Failed with: " + error);
-  });
-   
-
+  };
+  fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(releaseDirectory, "extensions");
