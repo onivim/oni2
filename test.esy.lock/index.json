@@ -1,5 +1,5 @@
 {
-  "checksum": "74175a193dcc57f01922034747a6123d",
+  "checksum": "8aab97539ba2b00b1a8a8b3624aace48",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -16,14 +16,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "revery@0.20.0@d41d8cd9": {
-      "id": "revery@0.20.0@d41d8cd9",
+    "revery@0.22.0@d41d8cd9": {
+      "id": "revery@0.22.0@d41d8cd9",
       "name": "revery",
-      "version": "0.20.0",
+      "version": "0.22.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.20.0.tgz#sha1:c6984ce9b73f7a016e0a390f22347b56f25849e5"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.22.0.tgz#sha1:2a6d17e5a8f5e0e3959606ce82af6e23a32df3e8"
         ]
       },
       "overrides": [],
@@ -446,7 +446,7 @@
       },
       "overrides": [ "test.json" ],
       "dependencies": [
-        "revery@0.20.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
+        "revery@0.22.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-libvim@8.10869.12001@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
