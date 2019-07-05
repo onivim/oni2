@@ -107,9 +107,9 @@ if (process.platform == "darwin") {
   fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
-  const extensionsDestDirectory = path.join(releaseDirectory, "extensions");
+  const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
   fs.mkdirpSync(platformReleaseDirectory);
 
-  fs.copySync(curBin, binaryDirectory, { deference: true});
+  fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
 }
