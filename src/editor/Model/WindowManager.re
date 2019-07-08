@@ -1,4 +1,3 @@
-
 open Revery_UI;
 
 module WindowSplitId =

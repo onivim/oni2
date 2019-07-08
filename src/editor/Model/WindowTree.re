@@ -1,4 +1,3 @@
-
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
@@ -30,47 +29,49 @@ let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
   height,
 };
 
-let filterEmpty = (v) => switch(v) {
-| Empty => false
-| _ => true
-}
+let filterEmpty = v =>
+  switch (v) {
+  | Empty => false
+  | _ => true
+  };
 
 let addSplit = (~target=None, direction, newSplit, currentTree) => {
-
-
   let rec f = (targetId, parent, split) => {
-  switch (split) {
-  | Parent(d, tree) => [Parent(d, List.concat(List.map(f(targetId, Some(split)), tree)))]
-  | Leaf(v) => 
+    switch (split) {
+    | Parent(d, tree) => [
+        Parent(d, List.concat(List.map(f(targetId, Some(split)), tree))),
+      ]
+    | Leaf(v) =>
       if (v.id == targetId) {
         switch (parent) {
-        | Some(Parent(dir, _)) => if (dir == direction) {
-          prerr_endline ("leaf found parent equal");
-          [Leaf(newSplit), Leaf(v)] 
-        } else {
-          prerr_endline ("leaf found parent not equal");
-          [Parent(direction, [Leaf(newSplit), Leaf(v)])]
-        }
-        | _ => {  
-          prerr_endline ("other case");
-        [Leaf(newSplit), Leaf(v)] 
-        }
-        }
+        | Some(Parent(dir, _)) =>
+          if (dir == direction) {
+            prerr_endline("leaf found parent equal");
+            [Leaf(newSplit), Leaf(v)];
+          } else {
+            prerr_endline("leaf found parent not equal");
+            [Parent(direction, [Leaf(newSplit), Leaf(v)])];
+          }
+        | _ =>
+          prerr_endline("other case");
+          [Leaf(newSplit), Leaf(v)];
+        };
       } else {
-      [Leaf(v)]
+        [Leaf(v)];
       }
-  | Empty => [Leaf(newSplit)]
-  }
+    | Empty => [Leaf(newSplit)]
+    };
   };
 
   switch (target) {
-  | Some(targetId) => f(targetId, None, currentTree) |> List.hd;
-  | None => switch(currentTree) {
-    | Parent(d, tree) => Parent(d, List.filter(filterEmpty, [Leaf(newSplit), ...tree]))
+  | Some(targetId) => f(targetId, None, currentTree) |> List.hd
+  | None =>
+    switch (currentTree) {
+    | Parent(d, tree) =>
+      Parent(d, List.filter(filterEmpty, [Leaf(newSplit), ...tree]))
     | v => v
-  }
-  }
-
+    }
+  };
 };
 
 let rec removeSplit = (id, currentTree) =>
