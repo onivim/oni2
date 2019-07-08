@@ -75,13 +75,18 @@ let start = () => {
 
   let _ =
     Vim.Window.onSplit((splitType, buf) => {
+      Log.info("Vim.Window.onSplit");
       let command = switch (splitType) {
       | Vim.Types.Vertical => Model.Actions.Command("view.splitVertical")
       | Vim.Types.Horizontal => Model.Actions.Command("view.splitHorizontal")
       | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf)
       };
       dispatch(command);
-      Log.info("Got a split!");
+    });
+
+  let _ =
+    Vim.Window.onMovement((_movementType, _count) => {
+      Log.info("Vim.Window.onMovement");
     });
 
   let _ =
