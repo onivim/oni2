@@ -111,6 +111,13 @@ let start = () => {
   let lastCompletionMeet = ref(None);
   let isCompleting = ref(false);
 
+  let checkCommandLineCompletions = () => {
+            print_endline ("getting completions...");
+            let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+            dispatch(Model.Actions.WildmenuShow(completions));
+            print_endline ("got completions!");
+  }
+
   let _ =
     Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c));
@@ -133,11 +140,7 @@ let start = () => {
 
           switch (isCompleting^) {
           | true => ()
-          | false => 
-            print_endline ("getting completions...");
-            let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
-            dispatch(Model.Actions.WildmenuShow(completions));
-            print_endline ("got completions!");
+          | false => checkCommandLineCompletions();
           }
       | SearchForward
       | SearchReverse =>
@@ -229,6 +232,8 @@ let start = () => {
           Vim.input("<bs>");
           currentPos := Vim.CommandLine.getPosition();
         }
+
+        let completion = Core.Utility.trimTrailingSlash(completion);
         String.iter((c) => Vim.input(String.make(1, c)), completion);
         isCompleting := false;
       }

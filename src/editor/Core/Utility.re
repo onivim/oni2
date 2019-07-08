@@ -139,3 +139,13 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
     }
 };
 
+let trimTrailingSlash = (item: string) => {
+    let len = String.length(item);
+    let lastC = String.get(item, len - 1);
+    /* Remove trailing slashes */
+    if(lastC == '\\' || lastC == '/') {
+      String.sub(item, 0, len - 1);
+    } else {
+      item
+    }
+}
