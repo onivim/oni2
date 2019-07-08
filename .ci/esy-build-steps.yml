@@ -32,3 +32,12 @@ steps:
     displayName: "Bench: build"
   - script: esy @bench run
     displayName: "Bench: run"
+  - script: esy x Oni2 --help
+    displayName: "esy x Oni2 --help"
+  - script: esy create-release
+    displayName: "esy create-release"
+  - task: PublishBuildArtifacts@1
+    displayName: "Release Artifact: ${{ parameters.platform }}"
+    inputs:
+      PathToPublish: "_release"
+      ArtifactName: "Release_${{parameters.platform }}"
