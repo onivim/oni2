@@ -149,9 +149,16 @@ let start = () => {
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
 
   let _ =
-    Vim.Window.onTopLineChanged(t =>
+    Vim.Window.onTopLineChanged(t => {
+      Log.info("onTopLineChanged");
       dispatch(Model.Actions.EditorScrollToLine(t - 1))
-    );
+    });
+
+  let _ = 
+    Vim.Window.onLeftColumnChanged(t => {
+      Log.info("onLeftColumnChanged");
+      dispatch(Model.Actions.EditorScrollToColumn(t))
+    });
 
   let hasInitialized = ref(false);
   let initEffect =
@@ -277,8 +284,6 @@ let start = () => {
 
         switch (editor, currentEditorId^) {
         | (Some(e), Some(v)) when e.editorId != v => {
-			open Model.Editor;
-
 			synchronizeCursorPosition(e)
 currentEditorId := Some(e.editorId);
 			}
