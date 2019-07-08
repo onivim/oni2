@@ -280,7 +280,7 @@ let start = () => {
 			open Model.Editor;
 
 			synchronizeCursorPosition(e)
-			currentEditorId := Some(e.id);
+currentEditorId := Some(e.editorId);
 			}
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
