@@ -1,5 +1,5 @@
 {
-  "checksum": "8aab97539ba2b00b1a8a8b3624aace48",
+  "checksum": "1adb86b0fac1dac11ae2614620bf37c1",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "universalify@0.1.2@d41d8cd9": {
@@ -16,14 +16,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "revery@0.22.0@d41d8cd9": {
-      "id": "revery@0.22.0@d41d8cd9",
+    "revery@0.24.0@d41d8cd9": {
+      "id": "revery@0.24.0@d41d8cd9",
       "name": "revery",
-      "version": "0.22.0",
+      "version": "0.24.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.22.0.tgz#sha1:2a6d17e5a8f5e0e3959606ce82af6e23a32df3e8"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.24.0.tgz#sha1:9a9c42749a221054a0b4a844290c847f75e88ffa"
         ]
       },
       "overrides": [],
@@ -446,7 +446,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@0.22.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
+        "revery@0.24.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
         "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-libvim@8.10869.12001@d41d8cd9",
@@ -456,7 +456,7 @@
         "@opam/yojson@opam:1.5.0@890db858",
         "@opam/ppx_let@opam:v0.11.0@059b0142",
         "@opam/ppx_deriving_yojson@opam:3.3@80aab5d8",
-        "@opam/ppx_deriving@opam:4.3@5cbca322",
+        "@opam/ppx_deriving@opam:4.3@3de7e73a",
         "@opam/ocamlbuild@opam:0.14.0@427a2331",
         "@opam/lwt@opam:4.2.1@c1888ec9", "@opam/dune@opam:1.7.3@72aad784",
         "@opam/camomile@opam:1.0.1@ab4729e2",
@@ -1064,18 +1064,18 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/yojson@opam:1.5.0@890db858",
         "@opam/result@opam:1.4@7add0d71", "@opam/ppxfind@opam:1.3@a7b3cc46",
         "@opam/ppx_tools@opam:5.1+4.06.0@a9357225",
-        "@opam/ppx_deriving@opam:4.3@5cbca322",
+        "@opam/ppx_deriving@opam:4.3@3de7e73a",
         "@opam/dune@opam:1.7.3@72aad784", "@opam/cppo@opam:1.6.6@25eb99ce",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/yojson@opam:1.5.0@890db858",
         "@opam/result@opam:1.4@7add0d71",
-        "@opam/ppx_deriving@opam:4.3@5cbca322"
+        "@opam/ppx_deriving@opam:4.3@3de7e73a"
       ]
     },
-    "@opam/ppx_deriving@opam:4.3@5cbca322": {
-      "id": "@opam/ppx_deriving@opam:4.3@5cbca322",
+    "@opam/ppx_deriving@opam:4.3@3de7e73a": {
+      "id": "@opam/ppx_deriving@opam:4.3@3de7e73a",
       "name": "@opam/ppx_deriving",
       "version": "opam:4.3",
       "source": {
@@ -1155,7 +1155,7 @@
         }
       ],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/conf-m4@opam:1@dd7dde42",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/conf-m4@opam:1@da6f4f44",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
@@ -1784,8 +1784,8 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
-    "@opam/conf-which@opam:1@56319cdb": {
-      "id": "@opam/conf-which@opam:1@56319cdb",
+    "@opam/conf-which@opam:1@576f0c6d": {
+      "id": "@opam/conf-which@opam:1@576f0c6d",
       "name": "@opam/conf-which",
       "version": "opam:1",
       "source": {
@@ -1801,8 +1801,8 @@
       "dependencies": [ "@esy-ocaml/substs@0.0.1@d41d8cd9" ],
       "devDependencies": []
     },
-    "@opam/conf-m4@opam:1@dd7dde42": {
-      "id": "@opam/conf-m4@opam:1@dd7dde42",
+    "@opam/conf-m4@opam:1@da6f4f44": {
+      "id": "@opam/conf-m4@opam:1@da6f4f44",
       "name": "@opam/conf-m4",
       "version": "opam:1",
       "source": {
@@ -1939,7 +1939,7 @@
       "dependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/jbuilder@opam:transition@58bdfe0a",
         "@opam/easy-format@opam:1.3.1@9abfd4ed",
-        "@opam/conf-which@opam:1@56319cdb",
+        "@opam/conf-which@opam:1@576f0c6d",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
