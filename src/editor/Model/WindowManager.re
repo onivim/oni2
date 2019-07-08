@@ -40,12 +40,6 @@ type dock = {
 };
 
 [@deriving show({with_path: false})]
-type splitTree =
-  | Parent(direction, int, list(splitTree))
-  | Leaf(split)
-  | Empty;
-
-[@deriving show({with_path: false})]
 type t = {
   windows: WindowTree.t,
   activeWindowId: int,

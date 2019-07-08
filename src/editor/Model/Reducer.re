@@ -77,14 +77,14 @@ let reduce: (State.t, Actions.t) => State.t =
             ...s.editorLayout,
             activeWindowId: id,
             windows:
-              WindowManager.addSplit(id, direction, split, s.editorLayout.windows),
+              WindowTree.addSplit(~target=Some(id), direction, split, s.editorLayout.windows),
           },
         };
       | RemoveSplit(id) => {
           ...s,
           editorLayout: {
             ...s.editorLayout,
-            windows: WindowManager.removeSplit(id, s.editorLayout.windows),
+            windows: WindowTree.removeSplit(id, s.editorLayout.windows),
           },
         }
       | _ => s

@@ -47,6 +47,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         OnMount,
         () => {
           open WindowManager;
+          open WindowTree;
 
           let dispatch = GlobalContext.current().dispatch;
           let dock =

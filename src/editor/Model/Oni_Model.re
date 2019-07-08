@@ -33,5 +33,6 @@ module SyntaxHighlighting = SyntaxHighlighting;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
+module WindowTree = WindowTree;
 module UiTree = UiTree;
 module FileExplorer = FileExplorer;

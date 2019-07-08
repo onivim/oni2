@@ -42,7 +42,7 @@ let start = _ => {
       dispatch(EditorGroupAdd(newEditorGroup));
 
       let split =
-        WindowManager.createSplit(
+        WindowTree.createSplit(
           ~editorGroupId=newEditorGroup.editorGroupId,
           (),
         );

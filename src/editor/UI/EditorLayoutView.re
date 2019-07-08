@@ -9,6 +9,7 @@ open UI;
 open Oni_Core;
 open Oni_Model;
 open WindowManager;
+open WindowTree;
 
 let component = React.component("EditorSplits");
 
@@ -57,7 +58,7 @@ let parentStyle = (dir: direction) => {
 
 let rec renderTree = (~direction, theme, state, tree) =>
   switch (tree) {
-  | Parent(direction, _, children) =>
+  | Parent(direction, children) =>
     /* let _c = renderTree(~direction, theme, children, state); */
     /* React.empty */
     <View style={parentStyle(direction)}>

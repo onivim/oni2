@@ -54,7 +54,7 @@ type t =
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
-  | AddSplit(WindowManager.direction, WindowManager.split)
+  | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
