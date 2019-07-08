@@ -34,6 +34,7 @@ let renderLineNumber =
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
+      lineSetting,
       cursorLine: int,
       yOffset: float,
       transform,
@@ -51,7 +52,7 @@ let renderLineNumber =
       LineNumber.getLineNumber(
         ~bufferLine=lineNumber + 1,
         ~cursorLine=cursorLine + 1,
-        ~setting=Relative,
+        ~setting=lineSetting,
         (),
       ),
     );
@@ -354,6 +355,12 @@ let createElement =
       );
     };
 
+    let isMinimapShown =
+      Configuration.getValue(
+        c => c.editorMinimapEnabled,
+        state.configuration,
+      );
+
     let layout =
       EditorLayout.getLayout(
         ~maxMinimapCharacters=
@@ -363,7 +370,7 @@ let createElement =
           ),
         ~pixelWidth=float_of_int(metrics.pixelWidth),
         ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown=true,
+        ~isMinimapShown,
         ~characterWidth=state.editorFont.measuredWidth,
         ~characterHeight=state.editorFont.measuredHeight,
         ~bufferLineCount=lineCount,
@@ -429,14 +436,31 @@ let createElement =
         (),
       );
     };
+
     let diagnostics =
       switch (activeBuffer) {
       | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
       | None => IntMap.empty
       };
-
     let ranges = Selection.getRanges(editor.selection, buffer);
     let selectionRanges = Range.toHash(ranges);
+
+    let minimapLayout =
+      isMinimapShown
+        ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
+            <Minimap
+              state
+              editor
+              width={layout.minimapWidthInPixels}
+              height={metrics.pixelHeight}
+              count=lineCount
+              diagnostics
+              metrics
+              getTokensForLine
+              selection=selectionRanges
+            />
+          </View>
+        : React.empty;
 
     (
       hooks,
@@ -644,6 +668,10 @@ let createElement =
                         item,
                         lineNumberWidth,
                         theme,
+                        Configuration.getValue(
+                          c => c.editorLineNumbers,
+                          state.configuration,
+                        ),
                         cursorLine,
                         offset,
                         transform,
@@ -697,19 +725,7 @@ let createElement =
             />
           </View>
         </View>
-        <View style=minimapViewStyle onMouseWheel=scrollMinimap>
-          <Minimap
-            state
-            editor
-            width={layout.minimapWidthInPixels}
-            height={metrics.pixelHeight}
-            count=lineCount
-            diagnostics
-            metrics
-            getTokensForLine
-            selection=selectionRanges
-          />
-        </View>
+        minimapLayout
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state

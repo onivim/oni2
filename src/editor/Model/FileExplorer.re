@@ -125,10 +125,31 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
   attempt(() => getDirContent(~depth=0, cwd, getIcon));
 };
 
+let sortByLoweredDisplayName = (a, b) => {
+  open UiTree;
+  let aName =
+    (
+      switch (a) {
+      | Node({data: FileSystemNode({displayName, _}), _}, _) => displayName
+      | _ => ""
+      }
+    )
+    |> String.lowercase_ascii;
+  let bName =
+    (
+      switch (b) {
+      | Node({data: FileSystemNode({displayName, _}), _}, _) => displayName
+      | _ => ""
+      }
+    )
+    |> String.lowercase_ascii;
+  aName > bName ? 1 : aName < bName ? (-1) : 0;
+};
+
 let rec listToTree = (~status, nodes, parent) => {
   open UiTree;
   let parentId = ExplorerId.getUniqueId();
-  let children =
+  let children: list(Oni_Model__.UiTree.tree(Oni_Model__.UiTree.treeItem)) =
     List.map(
       node => {
         let fsNode = toFsNode(node);
@@ -148,7 +169,22 @@ let rec listToTree = (~status, nodes, parent) => {
         Node({id, data: node, status: Closed}, descendants);
       },
       nodes,
-    );
+    )
+    |> List.sort((a, b) =>
+         UiTree.(
+           switch (a, b) {
+           | (
+               Node({data: FileSystemNode({isDirectory: true, _}), _}, _),
+               Node({data: FileSystemNode({isDirectory: false, _}), _}, _),
+             ) => (-1)
+           | (
+               Node({data: FileSystemNode({isDirectory: false, _}), _}, _),
+               Node({data: FileSystemNode({isDirectory: true, _}), _}, _),
+             ) => 1
+           | _ => sortByLoweredDisplayName(a, b)
+           }
+         )
+       );
 
   Node({id: parentId, data: parent, status}, children);
 };
