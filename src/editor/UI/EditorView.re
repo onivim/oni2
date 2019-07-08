@@ -60,7 +60,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
           let editorGroupId = state.editorGroups.activeId;
 
-          let editor = createSplit(~direction=Vertical, ~editorGroupId, ());
+          let editor = createSplit(~editorGroupId, ());
 
           let explorer =
             registerDock(
@@ -73,7 +73,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
           dispatch(RegisterDockItem(dock));
           dispatch(RegisterDockItem(explorer));
-          dispatch(AddSplit(editor));
+          dispatch(AddSplit(Vertical, editor));
           None;
         },
         hooks,

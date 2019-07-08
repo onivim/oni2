@@ -43,12 +43,11 @@ let start = _ => {
 
       let split =
         WindowManager.createSplit(
-          ~direction,
           ~editorGroupId=newEditorGroup.editorGroupId,
           (),
         );
 
-      dispatch(AddSplit(split));
+      dispatch(AddSplit(direction, split));
     });
 
   let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {

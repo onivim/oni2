@@ -14,18 +14,9 @@ let component = React.component("EditorSplits");
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
-let splitStyle = (split: split) =>
-  Style.(
-    switch (split) {
-    | {direction: Vertical, width: Some(w), _} => [width(w), flexGrow(1)]
-    | {direction: Vertical, width: None, _} => [flexGrow(1)]
-    | {direction: Horizontal, height: None, _} => [flexGrow(1)]
-    | {direction: Horizontal, height: Some(h), _} => [
-        height(h),
-        flexGrow(1),
-      ]
-    }
-  );
+let splitStyle = Style.[
+  flexGrow(1),
+];
 
 let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
   let w =
@@ -73,7 +64,7 @@ let rec renderTree = (~direction, theme, state, tree) =>
       ...{List.map(renderTree(~direction, theme, state), children)}
     </View>
   | Leaf(window) =>
-    <View style={splitStyle(window)}>
+    <View style={splitStyle}>
       <EditorGroupView state editorGroupId={window.editorGroupId} />
       <WindowHandle direction theme />
     </View>

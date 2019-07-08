@@ -69,7 +69,7 @@ let reduce: (State.t, Actions.t) => State.t =
           }
         | None => s
         }
-      | AddSplit(split) =>
+      | AddSplit(direction, split) =>
         let id = WindowManager.WindowId.current();
         {
           ...s,
@@ -77,7 +77,7 @@ let reduce: (State.t, Actions.t) => State.t =
             ...s.editorLayout,
             activeWindowId: id,
             windows:
-              WindowManager.addSplit(id, split, s.editorLayout.windows),
+              WindowManager.addSplit(id, direction, split, s.editorLayout.windows),
           },
         };
       | RemoveSplit(id) => {

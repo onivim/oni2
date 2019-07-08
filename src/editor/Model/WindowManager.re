@@ -1,3 +1,4 @@
+
 open Revery_UI;
 
 module WindowSplitId =
@@ -28,10 +29,7 @@ type direction =
 [@deriving show({with_path: false})]
 type split = {
   id: int,
-  parentId: int,
   editorGroupId: int,
-  direction,
-  /* if omitted the split will grow to occupy whatever space is available */
   width: option(int),
   height: option(int),
 };
@@ -52,18 +50,6 @@ type dock = {
   component: componentCreator,
   position: dockPosition,
   width: option(int),
-};
-
-/**
-   A partial version of a split with only the fields
-   that need to be explicitly set
- */
-[@deriving show({with_path: false})]
-type splitMetadata = {
-  editorGroupId: int,
-  width: option(int),
-  height: option(int),
-  direction,
 };
 
 [@deriving show({with_path: false})]
@@ -98,20 +84,11 @@ let create = (): t => {
   dockItems: [],
 };
 
-let createSplit = (~width=?, ~height=?, ~editorGroupId, ~direction, ()) => {
+let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
+  id: WindowSplitId.getUniqueId(),
   editorGroupId,
   width,
   height,
-  direction,
-};
-
-let enrichSplit = (parentId, s: splitMetadata): split => {
-  parentId,
-  editorGroupId: s.editorGroupId,
-  direction: s.direction,
-  id: WindowSplitId.getUniqueId(),
-  width: s.width,
-  height: s.height,
 };
 
 let registerDock = (~component, ~id, ~order, ~position=Left, ~width=?, ()) => {
@@ -134,31 +111,41 @@ let findDockItem = (id, layout: t) =>
   | None => None
   };
 
-let directionChanged = (direction, split) => direction != split.direction;
 let matchingParent = (id, parentId) => id == parentId;
 
-let rec addSplit = (id, split, currentTree) =>
+let getRootId = (currentTree) => {
   switch (currentTree) {
-  | Parent(direction, parentId, tree)
-      when matchingParent(id, parentId) && directionChanged(direction, split) =>
+  | Parent(_, id, _) => id
+  | Leaf({ id, _}) => id
+  | Empty => -1
+  }
+}
+
+let rec addSplit = (rootId, direction, split, currentTree) =>
+  switch (currentTree) {
+  | Parent(parentDirection, parentId, tree)
+      when matchingParent(rootId, parentId) && parentDirection != direction && List.length(tree) == 0 =>
+    Parent(direction, parentId, [Leaf(split)]);
+  | Parent(parentDirection, parentId, tree)
+      when matchingParent(rootId, parentId) && parentDirection != direction =>
     let newParentId = WindowId.next();
     let newParent =
       Parent(
-        split.direction,
+        direction,
         newParentId,
-        [Leaf(enrichSplit(newParentId, split))],
+        [Leaf(split)],
       );
-    Parent(split.direction, parentId, tree @ [newParent]);
-  | Parent(direction, parentId, children) when matchingParent(parentId, id) =>
+    Parent(direction, parentId, tree @ [newParent]);
+  | Parent(parentDirection, parentId, children) when matchingParent(parentId, rootId) =>
     Parent(
-      direction,
+      parentDirection,
       parentId,
-      [Leaf(enrichSplit(parentId, split)), ...children],
+      [Leaf(split), ...children],
     )
-  | Parent(direction, parentId, children) =>
+  | Parent(parentDirection, parentId, children) =>
     let newChildren =
-      List.map(child => addSplit(id, split, child), children);
-    Parent(direction, parentId, newChildren);
+      List.map(child => addSplit(rootId, direction, split, child), children);
+    Parent(parentDirection, parentId, newChildren);
   | Leaf(split) => Leaf(split)
   | Empty => Empty
   };
