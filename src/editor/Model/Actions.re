@@ -14,6 +14,7 @@ type t =
   | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
+  | BufferSetIndentation(int, IndentationSettings.t)
   | BufferMarkDirty(int)
   | Command(string)
   | ConfigurationReload
@@ -22,7 +23,6 @@ type t =
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
   | SetEditorFont(EditorFont.t)
-  | SetEditorSize(EditorSize.t)
   | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(Vim.Types.cmdlineType)
   | CommandlineHide
@@ -31,6 +31,9 @@ type t =
   | WildmenuShow(wildmenu)
   | WildmenuHide(wildmenu)
   | WildmenuSelected(int)
+  | EditorGroupAdd(editorGroup)
+  | EditorGroupSetSize(int, EditorSize.t)
+  | EditorGroupSetActive(int)
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | SyntaxHighlightColorMap(ColorMap.t)
@@ -59,6 +62,7 @@ type t =
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Position.t, Position.t)
+  | SearchSetHighlights(int, list(Range.t))
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
@@ -67,6 +71,36 @@ type t =
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | Noop
+and editor = {
+  editorId: int,
+  bufferId: int,
+  scrollX: float,
+  scrollY: float,
+  minimapMaxColumnWidth: int,
+  minimapScrollY: float,
+  /*
+   * The maximum line visible in the view.
+   * TODO: This will be dependent on line-wrap settings.
+   */
+  maxLineLength: int,
+  viewLines: int,
+  cursorPosition: Position.t,
+  selection: VisualRange.t,
+}
+and editorMetrics = {
+  pixelWidth: int,
+  pixelHeight: int,
+  lineHeight: float,
+  characterWidth: float,
+}
+and editorGroup = {
+  editorGroupId: int,
+  activeEditorId: option(int),
+  editors: IntMap.t(editor),
+  bufferIdToEditorId: IntMap.t(int),
+  reverseTabOrder: list(int),
+  metrics: editorMetrics,
+}
 and menuCommand = {
   category: option(string),
   name: string,

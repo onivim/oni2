@@ -36,7 +36,6 @@ let discoverExtensions = (setup: Core.Setup.t) => {
 };
 
 let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
-  /* TODO: Bring cliOptions back */
   ignore(executingDirectory);
 
   let state = Model.State.create();
@@ -44,17 +43,23 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
   let latestState: ref(Model.State.t) = ref(state);
+  let getState = () => latestState^;
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
+  let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) = VimStoreConnector.start();
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
-  let (extHostUpdater, extHostStream) =
-    ExtensionClientStoreConnector.start(extensions, setup);
+  /*
+     For our July builds, we won't be including the extension host -
+     but we'll bring this back as we start implementing those features!
+   */
+  /* let (extHostUpdater, extHostStream) =
+     ExtensionClientStoreConnector.start(extensions, setup); */
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
@@ -66,9 +71,8 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
-  let commandUpdater = CommandStoreConnector.start();
-
   let lifecycleUpdater = LifecycleStoreConnector.start();
+  let indentationUpdater = IndentationStoreConnector.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -78,13 +82,14 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           textmateUpdater,
-          extHostUpdater,
+          /* extHostUpdater, */
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
+          indentationUpdater,
         ]),
       (),
     );
@@ -116,7 +121,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
-  Isolinear.Stream.connect(dispatch, extHostStream);
+  /* Isolinear.Stream.connect(dispatch, extHostStream); */
   Isolinear.Stream.connect(dispatch, menuStream);
   Isolinear.Stream.connect(dispatch, explorerStream);
 

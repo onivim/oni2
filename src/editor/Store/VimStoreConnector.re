@@ -10,6 +10,8 @@ module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
+module Log = Core.Log;
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -39,11 +41,11 @@ let start = () => {
             id,
             Core.Types.Position.create(
               OneBasedIndex(newPosition.line),
-              OneBasedIndex(newPosition.column),
+              ZeroBasedIndex(newPosition.column),
             ),
             Core.Types.Position.create(
               OneBasedIndex(line),
-              OneBasedIndex(column),
+              ZeroBasedIndex(column),
             ),
           ),
         )
@@ -107,9 +109,41 @@ let start = () => {
     );
 
   let _ =
-    Vim.CommandLine.onUpdate(c =>
-      dispatch(Model.Actions.CommandlineUpdate(c))
-    );
+    Vim.CommandLine.onUpdate(c => {
+      dispatch(Model.Actions.CommandlineUpdate(c));
+
+      let cmdlineType = Vim.CommandLine.getType();
+      switch (cmdlineType) {
+      | SearchForward
+      | SearchReverse =>
+        let highlights = Vim.Search.getHighlights();
+
+        let sameLineFilter = (range: Vim.Range.t) =>
+          range.startPos.line == range.endPos.line;
+
+        let buffer = Vim.Buffer.getCurrent();
+        let id = Vim.Buffer.getId(buffer);
+
+        let toOniRange = (range: Vim.Range.t) =>
+          Core.Range.create(
+            ~startLine=OneBasedIndex(range.startPos.line),
+            ~startCharacter=ZeroBasedIndex(range.startPos.column),
+            ~endLine=OneBasedIndex(range.endPos.line),
+            ~endCharacter=ZeroBasedIndex(range.endPos.column),
+            (),
+          );
+
+        let highlightList =
+          highlights
+          |> Array.to_list
+          |> List.filter(sameLineFilter)
+          |> List.map(toOniRange);
+
+        dispatch(SearchSetHighlights(id, highlightList));
+
+      | _ => ()
+      };
+    });
 
   let _ =
     Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
@@ -139,9 +173,15 @@ let start = () => {
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (!String.equal(key, "<S-SHIFT>")
+            && !String.equal(key, "<D->")
+            && !String.equal(key, "<D-S->")
             && !String.equal(key, "<C->")
-            && !String.equal(key, "<A-C->")) {
+            && !String.equal(key, "<A-C->")
+            && !String.equal(key, "<SHIFT>")
+            && !String.equal(key, "<S-C->")) {
+          Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
+          Log.debug("VimStoreConnector - handled key: " ++ key);
         }
       );
 
@@ -149,6 +189,18 @@ let start = () => {
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
       Vim.Buffer.openFile(filePath) |> ignore
     );
+
+  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
+    Isolinear.Effect.create(~name="vim.setIndentation", () => {
+      let insertSpaces =
+        switch (indentation.mode) {
+        | Tabs => false
+        | Spaces => true
+        };
+
+      Vim.Options.setTabSize(indentation.size);
+      Vim.Options.setInsertSpaces(insertSpaces);
+    });
 
   /* let registerQuitHandlerEffect = */
   /*   Isolinear.Effect.createWithDispatch( */
@@ -224,7 +276,7 @@ let start = () => {
         };
 
         switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.id != v => {
+        | (Some(e), Some(v)) when e.editorId != v => {
 			open Model.Editor;
 
 			synchronizeCursorPosition(e)
@@ -243,15 +295,17 @@ let start = () => {
         state,
         openFileByPathEffect(path),
       )
-    | Model.Actions.SetEditorSize(_) => (
+    | Model.Actions.BufferEnter(_)
+    | Model.Actions.SetEditorFont(_)
+    | Model.Actions.EditorGroupSetActive(_)
+    | Model.Actions.EditorGroupSetSize(_, _) => (
         state,
         synchronizeEditorEffect(state),
       )
-    | Model.Actions.SetEditorFont(_) => (
+    | Model.Actions.BufferSetIndentation(_, indent) => (
         state,
-        synchronizeEditorEffect(state),
+        synchronizeIndentationEffect(indent),
       )
-    | Model.Actions.BufferEnter(_) => (state, synchronizeEditorEffect(state))
     | Model.Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),

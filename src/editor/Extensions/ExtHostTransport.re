@@ -102,7 +102,10 @@ let start =
       | _ => sendResponse(12, reqId, `Assoc([]))
       }
     | _ =>
-      print_endline("Unknown message: " ++ Yojson.Safe.to_string(payload))
+      Log.error(
+        "ExtHostTransport - Unknown message: "
+        ++ Yojson.Safe.to_string(payload),
+      )
     };
 
   let _sendInitData = () => {
@@ -137,8 +140,7 @@ let start =
         }
       )
 
-    | _ =>
-      print_endline("[Extension Host Client] Unknown message: " ++ n.method)
+    | _ => Log.error("[Extension Host Client] Unknown message: " ++ n.method)
     };
   };
 

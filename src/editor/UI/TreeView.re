@@ -1,6 +1,6 @@
 open Oni_Model;
 open UiTree;
-open Revery_UI;
+open Revery.UI;
 open Revery.UI.Components;
 
 module Core = Oni_Core;

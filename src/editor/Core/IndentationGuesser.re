@@ -88,16 +88,18 @@ let guessIndentation =
         getLeadingWhitespace(prevLine);
       if (prevFoundChar) {
         let diff = abs(prevSpaceCount - spaceCount);
-        spaceDelta :=
-          IntMap.update(
-            diff,
-            curr =>
-              switch (curr) {
-              | Some(v) => Some(v + 1)
-              | None => Some(1)
-              },
-            spaceDelta^,
-          );
+        if (diff > 0) {
+          spaceDelta :=
+            IntMap.update(
+              diff,
+              curr =>
+                switch (curr) {
+                | Some(v) => Some(v + 1)
+                | None => Some(1)
+                },
+              spaceDelta^,
+            );
+        };
       };
     };
 
@@ -119,7 +121,13 @@ let guessIndentation =
   let size =
     switch (shouldInsertSpaces) {
     | false => defaultTabSize
-    | true => getMaxKey(spaceDelta^)
+    | true =>
+      let max = getMaxKey(spaceDelta^);
+      if (max > 0) {
+        max;
+      } else {
+        defaultTabSize;
+      };
     };
 
   let mode =

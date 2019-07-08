@@ -60,13 +60,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
 
           let editorGroupId = state.editorGroups.activeId;
 
-          let editor =
-            createSplit(
-              ~direction=Vertical,
-              ~component=
-                splitFactory(state => <EditorGroupView state editorGroupId />),
-              (),
-            );
+          let editor = createSplit(~direction=Vertical, ~editorGroupId, ());
 
           let explorer =
             registerDock(

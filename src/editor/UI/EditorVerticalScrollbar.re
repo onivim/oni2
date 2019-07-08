@@ -119,13 +119,70 @@ let createElement =
         ];
       };
 
+    let selectionStyle = (t, bot) => {
+      Style.[
+        position(`Absolute),
+        top(t),
+        left(0),
+        right(0),
+        height(bot - t),
+        backgroundColor(
+          Color.multiplyAlpha(
+            0.5,
+            state.theme.colors.editorSelectionBackground,
+          ),
+        ),
+      ];
+    };
+    let getSelectionElements = (selection: VisualRange.t) => {
+      switch (selection.mode) {
+      | Vim.Types.None => []
+      | _ =>
+        let topLine =
+          bufferLineToScrollbarPixel(
+            Index.toInt0(selection.range.startPosition.line),
+          );
+        let botLine =
+          bufferLineToScrollbarPixel(
+            Index.toInt0(selection.range.endPosition.line) + 1,
+          );
+        [<View style={selectionStyle(topLine, botLine)} />];
+      };
+    };
+
+    let selectionElements = getSelectionElements(editor.selection);
+
+    let searchMatches = t =>
+      Style.[
+        position(`Absolute),
+        top(t - 3),
+        left(4),
+        right(4),
+        height(8),
+        backgroundColor(state.theme.colors.editorFindMatchBackground),
+      ];
+
+    let searchHighlightToElement = ((line, _)) => {
+      <View style={searchMatches(bufferLineToScrollbarPixel(line))} />;
+    };
+
+    let searchMatchElements =
+      List.map(
+        searchHighlightToElement,
+        IntMap.bindings(
+          Selectors.getSearchHighlights(state, editor.bufferId),
+        ),
+      );
+
     (
       hooks,
       <View style=absoluteStyle>
         <View style=scrollThumbStyle />
         <View style=scrollCursorStyle />
+        <View style=absoluteStyle> ...selectionElements </View>
         <View style=absoluteStyle> ...diagnosticElements </View>
         <View style=absoluteStyle> ...matchingPairElements </View>
+        <View style=absoluteStyle> ...searchMatchElements </View>
       </View>,
     );
   });

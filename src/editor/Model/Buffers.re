@@ -19,9 +19,7 @@ let remove = IntMap.remove;
 let log = (m: t) =>
   IntMap.iter(
     (_, b) =>
-      Buffer.show(b)
-      |> (++)("Buffer ======================: \n")
-      |> print_endline,
+      Buffer.show(b) |> (++)("Buffer ======================: \n") |> Log.info,
     m,
   );
 
@@ -46,6 +44,13 @@ let updateMetadata = (metadata, buffer) => {
   };
 };
 
+let setIndentation = (indent, buffer) => {
+  switch (buffer) {
+  | None => None
+  | Some(b) => Some(Buffer.setIndentation(indent, b))
+  };
+};
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferEnter(metadata) =>
@@ -56,6 +61,8 @@ let reduce = (state: t, action: Actions.t) => {
       };
     IntMap.update(metadata.id, f, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
+  | BufferSetIndentation(id, indent) =>
+    IntMap.update(id, setIndentation(indent), state)
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferSaved(metadata) =>
     IntMap.update(metadata.id, updateMetadata(metadata), state)

@@ -41,13 +41,15 @@ let createElement =
       ~theme: Theme.t,
       ~uiFont: Types.UiFont.t,
       ~mode: Vim.Mode.t,
+      ~showHighlight: bool,
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
 
-    let borderColor = active ? modeColor : Colors.transparentBlack;
+    let borderColor =
+      active && showHighlight ? modeColor : Colors.transparentBlack;
 
     let opacityValue = 1.0;
 
