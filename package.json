@@ -21,7 +21,7 @@
     "@esy-ocaml/reason": "3.4.0",
     "isolinear": "*",
     "@opam/ocamlbuild": "*",
-    "revery": "0.22.0",
+    "revery": "0.24.0",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
@@ -36,7 +36,7 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "8.10869.12001",
+    "reason-libvim": "8.10869.14001",
     "esy-macdylibbundler": "*"
   },
   "resolutions": {
@@ -47,7 +47,8 @@
     "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
-    "pesy": "0.4.1"
+    "pesy": "0.4.1",
+    "@opam/ocaml-migrate-parsetree": "1.3.1"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
