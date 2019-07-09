@@ -342,7 +342,6 @@ let start = () => {
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.WildmenuNext => {
-      print_endline ("MENU NEXT ITEM VIM");
       let eff = switch(Model.Wildmenu.getSelectedItem(state.wildmenu)) {
       | None => Isolinear.Effect.none
       | Some(v) => applyCompletionEffect(v)
@@ -350,8 +349,11 @@ let start = () => {
       (state, eff)
     }
     | Model.Actions.WildmenuPrevious => {
-      print_endline ("MENU NEXT ITEM VIM");
-      (state, Isolinear.Effect.none)
+      let eff = switch(Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+      | None => Isolinear.Effect.none
+      | Some(v) => applyCompletionEffect(v)
+      };
+      (state, eff)
     }
     | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path) => (
