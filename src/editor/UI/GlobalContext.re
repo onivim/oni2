@@ -34,7 +34,8 @@ let default = {
   state: State.create(),
   getState: () => State.create(),
   notifyWindowTreeSizeChanged: (~width as _, ~height as _, ()) => (),
-  notifyEditorSizeChanged: (~editorGroupId as _, ~width as _, ~height as _, ()) =>
+  notifyEditorSizeChanged:
+    (~editorGroupId as _, ~width as _, ~height as _, ()) =>
     (),
   editorScroll: (~deltaY as _, ()) => (),
   openEditorById: _ => (),

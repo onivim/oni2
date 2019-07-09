@@ -50,7 +50,6 @@ type t = {
    * reopened and closed
    */
   dockItems: list(dock),
-
   windowTreeWidth: int,
   windowTreeHeight: int,
 };

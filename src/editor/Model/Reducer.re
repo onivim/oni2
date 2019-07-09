@@ -70,11 +70,11 @@ let reduce: (State.t, Actions.t) => State.t =
         | None => s
         }
       | WindowTreeSetSize(width, height) => {
-        ...s,
-        windowManager: WindowManager.setTreeSize(width, height, s.windowManager)
-      }
-      | AddSplit(direction, split) =>
-        {
+          ...s,
+          windowManager:
+            WindowManager.setTreeSize(width, height, s.windowManager),
+        }
+      | AddSplit(direction, split) => {
           ...s,
           windowManager: {
             ...s.windowManager,
@@ -87,12 +87,13 @@ let reduce: (State.t, Actions.t) => State.t =
                 s.windowManager.windowTree,
               ),
           },
-        };
+        }
       | RemoveSplit(id) => {
           ...s,
           windowManager: {
             ...s.windowManager,
-            windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
+            windowTree:
+              WindowTree.removeSplit(id, s.windowManager.windowTree),
           },
         }
       | _ => s

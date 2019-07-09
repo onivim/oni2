@@ -56,7 +56,14 @@ let parentStyle = (dir: direction) => {
 
 let renderTree = (state, tree) => {
   open State;
-  let items = WindowTreeLayout.layout(0, 0, state.windowManager.windowTreeWidth, state.windowManager.windowTreeHeight, tree);
+  let items =
+    WindowTreeLayout.layout(
+      0,
+      0,
+      state.windowManager.windowTreeWidth,
+      state.windowManager.windowTreeHeight,
+      tree,
+    );
 
   List.map(
     (item: WindowTreeLayout.t) =>
@@ -84,9 +91,13 @@ let createElement = (~children as _, ~state: State.t, ()) =>
       renderDock(leftDock, state)
       @ [
         <View
-          onDimensionsChanged={dim => {
-            GlobalContext.current().notifyWindowTreeSizeChanged(~width=dim.width, ~height=dim.height, ());
-          }}
+          onDimensionsChanged={dim =>
+            GlobalContext.current().notifyWindowTreeSizeChanged(
+              ~width=dim.width,
+              ~height=dim.height,
+              (),
+            )
+          }
           style=Style.[flexGrow(1)]>
           ...children
         </View>,
