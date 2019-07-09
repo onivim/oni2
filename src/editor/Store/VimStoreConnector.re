@@ -420,7 +420,7 @@ let start = () => {
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)
-    | Model.Actions.EditorGroupSetActive(_)
+    | Model.Actions.WindowSetActive(_, _)
     | Model.Actions.EditorGroupSetSize(_, _) => (
         state,
         synchronizeEditorEffect(state),

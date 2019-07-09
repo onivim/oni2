@@ -25,10 +25,10 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
       EditorGroup.getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
   | ViewCloseEditor(id) => EditorGroup.removeEditorById(v, id)
-  | ViewSetActiveEditor(id) =>
-    switch (IntMap.find_opt(id, v.editors)) {
+  | WindowSetActive(_, editorGroupId) =>
+    switch (IntMap.find_opt(editorGroupId, v.editors)) {
     | None => v
-    | Some(_) => {...v, activeEditorId: Some(id)}
+    | Some(_) => {...v, activeEditorId: Some(editorGroupId)}
     }
   | _ => v
   };

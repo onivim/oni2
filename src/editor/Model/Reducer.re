@@ -69,6 +69,13 @@ let reduce: (State.t, Actions.t) => State.t =
           }
         | None => s
         }
+      | WindowSetActive(splitId, _) => {
+        ...s,
+        windowManager: {
+          ...s.windowManager,
+          activeWindowId: splitId
+        }
+      }
       | WindowTreeSetSize(width, height) => {
           ...s,
           windowManager:

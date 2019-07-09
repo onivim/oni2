@@ -75,7 +75,7 @@ let renderTree = (state, tree) => {
           width(item.width),
           height(item.height),
         ]>
-        <EditorGroupView state editorGroupId={item.split.editorGroupId} />
+        <EditorGroupView state windowId=item.split.id editorGroupId={item.split.editorGroupId} />
       </View>,
     items,
   );
