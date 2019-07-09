@@ -2,7 +2,7 @@ open WindowTree;
 
 [@deriving show({with_path: false})]
 type t = {
-  id: int,
+  split: WindowTree.split,
   x: int,
   y: int,
   width: int,
@@ -29,7 +29,7 @@ let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) =
 
     List.concat(result);
   }
-  | Leaf({id, _}) => [{id, x, y, width, height}]
+  | Leaf(split) => [{split, x, y, width, height}]
   | Empty => []
   }
 };

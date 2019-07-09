@@ -22,8 +22,8 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
       expect.bool([
-        { id: split2.id, width: 100, height: 200, x: 0, y: 0 },
-        { id: split1.id, width: 100, height: 200, x: 100, y: 0 }
+        { split: split2, width: 100, height: 200, x: 0, y: 0 },
+        { split: split1, width: 100, height: 200, x: 100, y: 0 }
       ] == layoutItems).toBe(true);
     });
     
@@ -38,8 +38,8 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
       expect.bool([
-        { id: split2.id, width: 200, height: 100, x: 0, y: 0 },
-        { id: split1.id, width: 200, height: 100, x: 0, y: 100 }
+        { split: split2, width: 200, height: 100, x: 0, y: 0 },
+        { split: split1, width: 200, height: 100, x: 0, y: 100 }
       ] == layoutItems).toBe(true);
     });
     test("layout mixed splits", ({expect}) => {
@@ -58,9 +58,9 @@ describe("WindowTreeLayout", ({describe, _}) => {
         List.iter(i => prerr_endline(WindowTreeLayout.show(i)), layoutItems);
         
         expect.bool([
-          { id: split2.id, width: 200, height: 100, x: 0, y: 0 },
-          { id: split3.id, width: 100, height: 100, x: 0, y: 100 },
-          { id: split1.id, width: 100, height: 100, x: 100, y: 100 }
+          { split: split2, width: 200, height: 100, x: 0, y: 0 },
+          { split: split3, width: 100, height: 100, x: 0, y: 100 },
+          { split: split1, width: 100, height: 100, x: 100, y: 100 }
         ] == layoutItems).toBe(true);
     });
   });
