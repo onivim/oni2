@@ -76,18 +76,27 @@ let start = () => {
   let _ =
     Vim.Window.onSplit((splitType, buf) => {
       Log.info("Vim.Window.onSplit");
-      let command = switch (splitType) {
-      | Vim.Types.Vertical => Model.Actions.OpenFileByPath(buf, Some(Model.WindowManager.Vertical))
-      | Vim.Types.Horizontal => Model.Actions.OpenFileByPath(buf, Some(Model.WindowManager.Horizontal))
-      | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
-      };
+      let command =
+        switch (splitType) {
+        | Vim.Types.Vertical =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Vertical),
+          )
+        | Vim.Types.Horizontal =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Horizontal),
+          )
+        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
+        };
       dispatch(command);
     });
 
   let _ =
-    Vim.Window.onMovement((_movementType, _count) => {
-      Log.info("Vim.Window.onMovement");
-    });
+    Vim.Window.onMovement((_movementType, _count) =>
+      Log.info("Vim.Window.onMovement")
+    );
 
   let _ =
     Vim.Buffer.onEnter(buf => {
@@ -203,13 +212,12 @@ let start = () => {
 
   let openFileByPathEffect = (filePath, dir) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
         let eg = Model.EditorGroup.create();
         dispatch(Model.Actions.EditorGroupAdd(eg));
-        
+
         let split =
           Model.WindowManager.createSplit(
             ~direction,
@@ -219,26 +227,23 @@ let start = () => {
 
         dispatch(Model.Actions.AddSplit(split));
       | None => ()
-      }
+      };
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
 
-      /* 
+      /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
       switch (dir) {
-      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata));
+      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata))
       | None => ()
-      }
-          
-          /* let ec = Model.EditorGroup.create();
-          let (g, editorId) =
-            Model.EditorGroup.getOrCreateEditorForBuffer(ec, metadata.id);
-          let newEditorGroup  = Model.EditorGroup.setActiveEditor(g, editorId); */
-      
-      
+      };
+      /* let ec = Model.EditorGroup.create();
+         let (g, editorId) =
+           Model.EditorGroup.getOrCreateEditorForBuffer(ec, metadata.id);
+         let newEditorGroup  = Model.EditorGroup.setActiveEditor(g, editorId); */
     });
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
