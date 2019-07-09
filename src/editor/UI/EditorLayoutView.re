@@ -72,9 +72,9 @@ let rec renderTree = (~direction, theme, state, tree) =>
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let {State.editorLayout, theme, _} = state;
-    let {windows, leftDock, rightDock, _} = editorLayout;
+    let {State.editorLayout, _} = state;
+    let {leftDock, rightDock, _} = editorLayout;
 
-    let splits = renderDock(leftDock, state) @ [<View style=Style.[flexGrow(1), backgroundColor(Colors.red)] />] @ renderDock(rightDock, state);
+    let splits = renderDock(leftDock, state) @ [<View onDimensionsChanged={(dim) => print_endline("changed: " ++ string_of_int(dim.width))}  style=Style.[flexGrow(1), backgroundColor(Colors.red)] />] @ renderDock(rightDock, state);
     (hooks, <View style=splitContainer> ...splits </View>);
   });
