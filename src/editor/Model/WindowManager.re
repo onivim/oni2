@@ -26,10 +26,10 @@ type dockPosition =
   | Right;
 
 type direction =
-| Up
-| Left
-| Down
-| Right;
+  | Up
+  | Left
+  | Down
+  | Right;
 
 /**
    A dock is a sub type of split, it does not require
@@ -78,7 +78,8 @@ let setTreeSize = (width, height, v: t) => {
   windowTreeHeight: height,
 };
 
-let registerDock = (~component, ~id, ~order, ~position:dockPosition=Left, ~width=?, ()) => {
+let registerDock =
+    (~component, ~id, ~order, ~position: dockPosition=Left, ~width=?, ()) => {
   order,
   component,
   position,
@@ -93,7 +94,7 @@ let moveCore = (dirX, dirY, v: t) => {
   switch (newWindow) {
   | None => v.activeWindowId
   | Some(newId) => newId
-  }
+  };
 };
 
 let moveLeft = moveCore(-1, 0);
@@ -106,8 +107,8 @@ let move = (direction: direction, v) => {
   | Up => moveUp(v)
   | Down => moveDown(v)
   | Left => moveLeft(v)
-  | Right => moveRight(v);
-  }
+  | Right => moveRight(v)
+  };
 };
 
 let removeDockItem = (~id, layout: t) => {

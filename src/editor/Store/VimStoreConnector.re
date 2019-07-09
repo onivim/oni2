@@ -95,23 +95,29 @@ let start = (getState: unit => Model.State.t) => {
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let v = switch (movementType) {
-      | FullLeft
-      | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
-      | FullRight
-      | OneRight => Model.WindowManager.moveRight(currentState.windowManager)
-      | FullDown
-      | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
-      | FullUp
-      | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
-      | _ => currentState.windowManager.activeWindowId
-      }
+      let v =
+        switch (movementType) {
+        | FullLeft
+        | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
+        | FullRight
+        | OneRight =>
+          Model.WindowManager.moveRight(currentState.windowManager)
+        | FullDown
+        | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
+        | FullUp
+        | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
+        | _ => currentState.windowManager.activeWindowId
+        };
 
-          let editorId = Model.WindowTree.getEditorGroupIdFromSplitId(v, currentState.windowManager.windowTree);
-          switch (editorId) {
-          | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
-          | None => ()
-          }
+      let editorId =
+        Model.WindowTree.getEditorGroupIdFromSplitId(
+          v,
+          currentState.windowManager.windowTree,
+        );
+      switch (editorId) {
+      | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
+      | None => ()
+      };
     });
 
   let _ =
