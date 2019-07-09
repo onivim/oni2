@@ -77,11 +77,11 @@ let start = () => {
     Vim.Window.onSplit((splitType, buf) => {
       Log.info("Vim.Window.onSplit");
       let command = switch (splitType) {
-      | Vim.Types.Vertical => [Model.Actions.Command("view.splitVertical"), Model.Actions.OpenFileByPath(buf)]
-      | Vim.Types.Horizontal => [Model.Actions.Command("view.splitHorizontal"), Model.Actions.OpenFileByPath(buf)]
-      | Vim.Types.TabPage => [Model.Actions.OpenFileByPath(buf)]
+      | Vim.Types.Vertical => Model.Actions.OpenFileByPath(buf, Some(Model.WindowManager.Vertical))
+      | Vim.Types.Horizontal => Model.Actions.OpenFileByPath(buf, Some(Model.WindowManager.Horizontal))
+      | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
       };
-      List.iter(c => dispatch(c), command);
+      dispatch(command);
     });
 
   let _ =
@@ -201,24 +201,37 @@ let start = () => {
         }
       );
 
-  let openFileByPathEffect = filePath =>
+  let openFileByPathEffect = (filePath, dir) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
 
-      let eg = Model.EditorGroup.create();
-      dispatch(Model.Actions.EditorGroupAdd(eg));
-      
-      let split =
-        Model.WindowManager.createSplit(
-          ~direction=Horizontal,
-          ~editorGroupId=eg.editorGroupId,
-          (),
-        );
+      /* If a split was requested, create that first! */
+      switch (dir) {
+      | Some(direction) =>
+        let eg = Model.EditorGroup.create();
+        dispatch(Model.Actions.EditorGroupAdd(eg));
+        
+        let split =
+          Model.WindowManager.createSplit(
+            ~direction,
+            ~editorGroupId=eg.editorGroupId,
+            (),
+          );
 
-      dispatch(Model.Actions.AddSplit(split));
-
+        dispatch(Model.Actions.AddSplit(split));
+      | None => ()
+      }
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+
+      /* 
+       * If we're splitting, make sure a BufferEnter event gets dispatched.
+       * (This wouldn't happen if we're splitting the same buffer we're already at)
+       */
+      switch (dir) {
+      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata));
+      | None => ()
+      }
           
           /* let ec = Model.EditorGroup.create();
           let (g, editorId) =
@@ -330,9 +343,9 @@ let start = () => {
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path) => (
+    | Model.Actions.OpenFileByPath(path, direction) => (
         state,
-        openFileByPathEffect(path),
+        openFileByPathEffect(path, direction),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)

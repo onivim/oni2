@@ -21,7 +21,7 @@ let start = (rg: Core.Ripgrep.t) => {
     (languageInfo, iconTheme, parentDir, fullPath) => {
       category: None,
       name: getDisplayPath(fullPath, parentDir),
-      command: () => Model.Actions.OpenFileByPath(fullPath),
+      command: () => Model.Actions.OpenFileByPath(fullPath, None),
       icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
 

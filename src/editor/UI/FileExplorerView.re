@@ -24,7 +24,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
         | Node({data: FileSystemNode({isDirectory: false, path, _}), _}, _) =>
           GlobalContext.current().dispatch(SetExplorerTree(tree));
           /* Only open files not directories */
-          GlobalContext.current().dispatch(OpenFileByPath(path));
+          GlobalContext.current().dispatch(OpenFileByPath(path, None));
         /*
          * If the depth of the clicked node is at the maximum depth its children
          * will have no content so we call the update action which will populate
