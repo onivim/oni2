@@ -52,8 +52,8 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (s, m, _a) =>
-       Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
-      Ok(None)
+      Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+      Ok(None);
     };
   };
 
