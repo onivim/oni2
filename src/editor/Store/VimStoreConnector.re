@@ -202,9 +202,31 @@ let start = () => {
       );
 
   let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
-      Vim.Buffer.openFile(filePath) |> ignore
-    );
+    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+
+      let eg = Model.EditorGroup.create();
+      dispatch(Model.Actions.EditorGroupAdd(eg));
+      
+      let split =
+        Model.WindowManager.createSplit(
+          ~direction=Horizontal,
+          ~editorGroupId=eg.editorGroupId,
+          (),
+        );
+
+      dispatch(Model.Actions.AddSplit(split));
+
+
+      let buffer = Vim.Buffer.openFile(filePath);
+      let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+          
+          /* let ec = Model.EditorGroup.create();
+          let (g, editorId) =
+            Model.EditorGroup.getOrCreateEditorForBuffer(ec, metadata.id);
+          let newEditorGroup  = Model.EditorGroup.setActiveEditor(g, editorId); */
+      
+      
+    });
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
     Isolinear.Effect.create(~name="vim.setIndentation", () => {
