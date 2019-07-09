@@ -16,7 +16,7 @@ describe("WindowTreeLayout", ({describe, _}) =>
       let split2 = createSplit(~editorGroupId=2, ());
 
       let splits = WindowTree.empty
-      |> addSplit(~target=None, Vertical, split1);
+      |> addSplit(~target=None, Vertical, split1)
       |> addSplit(~target=Some(split1.id), Vertical, split2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
@@ -32,7 +32,7 @@ describe("WindowTreeLayout", ({describe, _}) =>
       let split2 = createSplit(~editorGroupId=2, ());
 
       let splits = WindowTree.empty
-      |> addSplit(~target=None, Horizontal, split1);
+      |> addSplit(~target=None, Horizontal, split1)
       |> addSplit(~target=Some(split1.id), Horizontal, split2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);

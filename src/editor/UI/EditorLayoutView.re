@@ -75,9 +75,6 @@ let createElement = (~children as _, ~state: State.t, ()) =>
     let {State.editorLayout, theme, _} = state;
     let {windows, leftDock, rightDock, _} = editorLayout;
 
-    let splits =
-      renderDock(rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, state, windows)])
-      |> (@)(renderDock(leftDock, state));
+    let splits = renderDock(leftDock, state) @ [<View style=Style.[flexGrow(1), backgroundColor(Colors.red)] />] @ renderDock(rightDock, state);
     (hooks, <View style=splitContainer> ...splits </View>);
   });
