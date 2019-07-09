@@ -28,14 +28,17 @@ type t =
   | CommandlineHide
   | CommandlineUpdate(Vim.Types.cmdline)
   | KeyboardInput(string)
-  | WildmenuShow(wildmenu)
-  | WildmenuHide(wildmenu)
-  | WildmenuSelected(int)
+  | WildmenuShow(list(string))
+  | WildmenuNext
+  | WildmenuPrevious
+  | WildmenuSelect
+  | WildmenuHide
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
   | EditorGroupSetActive(int)
   | EditorScroll(float)
   | EditorScrollToLine(int)
+  | EditorScrollToColumn(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
@@ -50,7 +53,7 @@ type t =
   | MenuNextItem
   | MenuPreviousItem
   | MenuPosition(int)
-  | OpenFileByPath(string)
+  | OpenFileByPath(string, option(WindowManager.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
@@ -76,6 +79,8 @@ and editor = {
   bufferId: int,
   scrollX: float,
   scrollY: float,
+  lastTopLine: int,
+  lastLeftCol: int,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*

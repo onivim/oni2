@@ -1,5 +1,5 @@
 /*
- * vimStoreConnector.re
+ * VimStoreConnector.re
  *
  * This module connects vim to the Store:
  * - Translates incoming vim notifications into Actions
@@ -74,6 +74,31 @@ let start = () => {
     });
 
   let _ =
+    Vim.Window.onSplit((splitType, buf) => {
+      Log.info("Vim.Window.onSplit");
+      let command =
+        switch (splitType) {
+        | Vim.Types.Vertical =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Vertical),
+          )
+        | Vim.Types.Horizontal =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Horizontal),
+          )
+        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
+        };
+      dispatch(command);
+    });
+
+  let _ =
+    Vim.Window.onMovement((_movementType, _count) =>
+      Log.info("Vim.Window.onMovement")
+    );
+
+  let _ =
     Vim.Buffer.onEnter(buf => {
       let meta = {
         ...Vim.BufferMetadata.ofBuffer(buf),
@@ -108,12 +133,38 @@ let start = () => {
       dispatch(Model.Actions.CommandlineShow(c.cmdType))
     );
 
+  let lastCompletionMeet = ref(None);
+  let isCompleting = ref(false);
+
+  let checkCommandLineCompletions = () => {
+    Log.info("VimStoreConnector::checkCommandLineCompletions");
+    let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+    Log.info(
+      "VimStoreConnector::checkCommandLineCompletions - got "
+      ++ string_of_int(List.length(completions))
+      ++ " completions.",
+    );
+    dispatch(Model.Actions.WildmenuShow(completions));
+  };
+
   let _ =
     Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
+      | Ex =>
+        ();
+        let text =
+          switch (Vim.CommandLine.getText()) {
+          | Some(v) => v
+          | None => ""
+          };
+        let position = Vim.CommandLine.getPosition();
+        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        lastCompletionMeet := meet;
+
+        isCompleting^ ? () : checkCommandLineCompletions();
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -138,20 +189,29 @@ let start = () => {
           |> Array.to_list
           |> List.filter(sameLineFilter)
           |> List.map(toOniRange);
-
         dispatch(SearchSetHighlights(id, highlightList));
-
       | _ => ()
       };
     });
 
   let _ =
-    Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
+    Vim.CommandLine.onLeave(() => {
+      lastCompletionMeet := None;
+      isCompleting := false;
+      dispatch(Model.Actions.CommandlineHide);
+    });
 
   let _ =
-    Vim.Window.onTopLineChanged(t =>
-      dispatch(Model.Actions.EditorScrollToLine(t - 1))
-    );
+    Vim.Window.onTopLineChanged(t => {
+      Log.info("onTopLineChanged: " ++ string_of_int(t));
+      dispatch(Model.Actions.EditorScrollToLine(t - 1));
+    });
+
+  let _ =
+    Vim.Window.onLeftColumnChanged(t => {
+      Log.info("onLeftColumnChanged: " ++ string_of_int(t));
+      dispatch(Model.Actions.EditorScrollToColumn(t));
+    });
 
   let hasInitialized = ref(false);
   let initEffect =
@@ -185,9 +245,56 @@ let start = () => {
         }
       );
 
-  let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
-      Vim.Buffer.openFile(filePath) |> ignore
+  let openFileByPathEffect = (filePath, dir) =>
+    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      /* If a split was requested, create that first! */
+      switch (dir) {
+      | Some(direction) =>
+        let eg = Model.EditorGroup.create();
+        dispatch(Model.Actions.EditorGroupAdd(eg));
+
+        let split =
+          Model.WindowManager.createSplit(
+            ~direction,
+            ~editorGroupId=eg.editorGroupId,
+            (),
+          );
+
+        dispatch(Model.Actions.AddSplit(split));
+      | None => ()
+      };
+
+      let buffer = Vim.Buffer.openFile(filePath);
+      let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+
+      /*
+       * If we're splitting, make sure a BufferEnter event gets dispatched.
+       * (This wouldn't happen if we're splitting the same buffer we're already at)
+       */
+      switch (dir) {
+      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata))
+      | None => ()
+      };
+    });
+
+  let applyCompletionEffect = completion =>
+    Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
+      Core.Utility.(
+        switch (lastCompletionMeet^) {
+        | None => ()
+        | Some({position, _}) =>
+          isCompleting := true;
+          let currentPos = ref(Vim.CommandLine.getPosition());
+          while (currentPos^ > position) {
+            Vim.input("<bs>");
+            currentPos := Vim.CommandLine.getPosition();
+          };
+
+          let completion = Core.Utility.trimTrailingSlash(completion);
+          String.iter(c => Vim.input(String.make(1, c)), completion);
+          isCompleting := false;
+        }
+      )
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
@@ -225,9 +332,10 @@ let start = () => {
       | false => ()
       | true =>
         let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-
         let editor = Model.Selectors.getActiveEditor(editorGroup);
 
+        /* If the editor / buffer in Onivim changed,
+         * let libvim know about it and set it as the current buffer */
         let editorBuffer = Model.Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
@@ -249,12 +357,13 @@ let start = () => {
         | _ => ()
         };
 
-        let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
+        let synchronizeWindowMetrics =
+            (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
           let (lines, columns) =
-            Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
+            Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -265,25 +374,31 @@ let start = () => {
           };
         };
 
-        switch (editorGroup) {
-        | Some(v) => synchronizeWindowMetrics(v)
-        | None => ()
+        /* Update the window metrics for the editor */
+        /* This synchronizes the window width / height with libvim's model */
+        switch (editor, editorGroup) {
+        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        | _ => ()
         };
 
-        let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
-          /* vimProtocol.moveCursor( */
-          /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-          /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-          /* currentEditorId := Some(editor.id); */
-
-          let ret = ();
-          ret;
+        /* Update the cursor position and the scroll (top line, left column) -
+         * ensure these are in sync with libvim's model */
+        let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
+          Vim.Cursor.setPosition(
+            Core.Types.Index.toInt1(editor.cursorPosition.line),
+            Core.Types.Index.toInt1(editor.cursorPosition.character),
+          );
+          Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
         };
 
+        /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
         | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeCursorPosition(e)
-        | (Some(e), _) => synchronizeCursorPosition(e)
+          synchronizeCursorAndScroll(e);
+          currentEditorId := Some(e.editorId);
+        | (Some(e), None) =>
+          synchronizeCursorAndScroll(e);
+          currentEditorId := Some(e.editorId);
         | _ => ()
         };
       }
@@ -291,10 +406,24 @@ let start = () => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.WildmenuNext =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
+    | Model.Actions.WildmenuPrevious =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path) => (
+    | Model.Actions.OpenFileByPath(path, direction) => (
         state,
-        openFileByPathEffect(path),
+        openFileByPathEffect(path, direction),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)

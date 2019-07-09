@@ -110,6 +110,8 @@ let start = _ => {
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
+    ("wildmenu.next", _ => singleActionEffect(WildmenuNext)),
+    ("wildmenu.previous", _ => singleActionEffect(WildmenuPrevious)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
   ];
 

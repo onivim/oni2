@@ -56,7 +56,7 @@ let start =
 
   let send = (msgType, msg: Yojson.Safe.json) => {
     switch (rpcRef^) {
-    | None => prerr_endline("RPC not initialized.")
+    | None => Log.error("ExtHostClient: RPC not initialized.")
     | Some(v) =>
       incr(lastReqId);
       let reqId = lastReqId^;
@@ -78,7 +78,7 @@ let start =
 
   let sendResponse = (msgType, reqId, msg) => {
     switch (rpcRef^) {
-    | None => prerr_endline("RPC not initialized.")
+    | None => Log.error("ExtHostClient: RPC not initialized.")
     | Some(v) =>
       let response =
         `Assoc([

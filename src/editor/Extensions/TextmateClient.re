@@ -160,7 +160,7 @@ let setTheme = (v: t, themePath: string) => {
     (response, _) =>
     switch (response) {
     | Ok(json) => v.onColorMap(ColorMap.ofJson(json))
-    | _ => prerr_endline("Unable to load theme")
+    | _ => Log.error("Unable to load theme")
     }
   );
 };
