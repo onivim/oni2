@@ -41,7 +41,8 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "8.10869.12001"
+    "reason-libvim": "8.10869.15001",
+    "esy-macdylibbundler": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
@@ -61,6 +62,7 @@
     "fs-extra": "7.0.1",
     "lodash": "*",
     "shelljs": "*",
-    "innosetup-compiler": "5.5.9"
+    "innosetup-compiler": "5.5.9",
+    "plist": "3.0.1"
   }
 }

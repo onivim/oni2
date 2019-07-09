@@ -93,7 +93,7 @@ let init = app => {
   runEffects();
 
   List.iter(
-    v => dispatch(Model.Actions.OpenFileByPath(v)),
+    v => dispatch(Model.Actions.OpenFileByPath(v, None)),
     cliOptions.filesToOpen,
   );
 
@@ -136,7 +136,7 @@ let init = app => {
           ),
         );
       },
-      _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
+      _ => Log.error("setFont: Failed to load font " ++ fontFamily),
     );
   };
 
