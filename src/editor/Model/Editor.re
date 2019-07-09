@@ -16,6 +16,8 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
+    lastTopLine: 0,
+    lastLeftCol: 0,
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -113,7 +115,7 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  scrollTo(view, scrollAmount, metrics);
+  {...scrollTo(view, scrollAmount, metrics), lastTopLine: line};
 };
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
@@ -142,70 +144,11 @@ let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
   {...view, scrollX};
 };
 
-let scroll = (view: t, scrollDeltaY, metrics) => {
-  let newScrollY = view.scrollY +. scrollDeltaY;
-  scrollTo(view, newScrollY, metrics);
-};
-
-/* Scroll so that the cursor is at the TOP of the view */
-let scrollToCursorTop = (view: t, metrics) => {
-  let scrollPosition = getCursorPixelLine(view, metrics);
-  scrollTo(view, scrollPosition, metrics);
-};
-
-/* Scroll so that the cursor is at the BOTTOM of the view */
-let scrollToCursorBottom = (view: t, metrics: EditorMetrics.t) => {
-  let cursorPixelPosition = getCursorPixelLine(view, metrics);
-  let scrollPosition =
-    cursorPixelPosition
-    -. (float_of_int(metrics.pixelHeight) -. metrics.lineHeight);
-  scrollTo(view, scrollPosition, metrics);
-};
-
-/* Scroll so that the cursor is at the LEFT of the view */
-let scrollToCursorLeft = (view: t, metrics) => {
-  let cursorPixelColumn = getCursorPixelColumn(view, metrics);
-
-  let scrollPosition = cursorPixelColumn;
-  scrollToHorizontal(view, scrollPosition, metrics);
-};
-
-/* Scroll so that the cursor is at the RIGHT of the view */
-let scrollToCursorRight = (view: t, availableWidth, metrics) => {
-  let cursorPixelColumn = getCursorPixelColumn(view, metrics);
-
-  let scrollPosition =
-    cursorPixelColumn -. availableWidth +. metrics.characterWidth;
-  scrollToHorizontal(view, scrollPosition, metrics);
-};
-
-let scrollToCursor = (view: t, metrics: EditorMetrics.t) => {
-  let scrollPosition =
-    getCursorPixelLine(view, metrics)
-    -. float_of_int(metrics.pixelHeight / 2)
-    +. metrics.lineHeight
-    /. 2.;
-
-  scrollTo(view, scrollPosition, metrics);
-};
-
-let snapToCursorPosition = (view: t, metrics: EditorMetrics.t) => {
-  let cursorPixelPositionY = getCursorPixelLine(view, metrics);
-  let scrollY = view.scrollY;
-
-  let view =
-    if (cursorPixelPositionY < scrollY) {
-      scrollToCursorTop(view, metrics);
-    } else if (cursorPixelPositionY > scrollY
-               +. float_of_int(metrics.pixelHeight)
-               -. metrics.lineHeight) {
-      scrollToCursorBottom(view, metrics);
-    } else {
-      view;
-    };
-
-  let layout =
+let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
+  open EditorLayout;
+  let {bufferWidthInCharacters, bufferHeightInCharacters, _} =
     EditorLayout.getLayout(
+      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
       ~pixelWidth=float_of_int(metrics.pixelWidth),
       ~pixelHeight=float_of_int(metrics.pixelHeight),
       ~isMinimapShown=true,
@@ -215,23 +158,17 @@ let snapToCursorPosition = (view: t, metrics: EditorMetrics.t) => {
       (),
     );
 
-  let cursorPixelPositionX = getCursorPixelColumn(view, metrics);
-  let scrollX = view.scrollX;
+  (bufferHeightInCharacters, bufferWidthInCharacters);
+};
 
-  let availableWidth = layout.bufferWidthInPixels;
+let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
+  let scrollAmount = float_of_int(column) *. metrics.characterWidth;
+  {...scrollToHorizontal(view, scrollAmount, metrics), lastLeftCol: column};
+};
 
-  let view =
-    if (cursorPixelPositionX < scrollX) {
-      scrollToCursorLeft(view, metrics);
-    } else if (cursorPixelPositionX >= scrollX
-               +. layout.bufferWidthInPixels
-               -. metrics.characterWidth) {
-      scrollToCursorRight(view, availableWidth, metrics);
-    } else {
-      view;
-    };
-
-  view;
+let scroll = (view: t, scrollDeltaY, metrics) => {
+  let newScrollY = view.scrollY +. scrollDeltaY;
+  scrollTo(view, newScrollY, metrics);
 };
 
 type cursorLocation =
@@ -300,11 +237,11 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) =>
-    snapToCursorPosition({...view, cursorPosition: b}, metrics)
+  | CursorMove(b) => {...view, cursorPosition: b}
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY, metrics)
   | EditorScrollToLine(line) => scrollToLine(view, line, metrics)
+  | EditorScrollToColumn(column) => scrollToColumn(view, column, metrics)
   | _ => view
   };

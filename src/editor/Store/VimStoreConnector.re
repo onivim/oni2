@@ -202,9 +202,16 @@ let start = () => {
     });
 
   let _ =
-    Vim.Window.onTopLineChanged(t =>
-      dispatch(Model.Actions.EditorScrollToLine(t - 1))
-    );
+    Vim.Window.onTopLineChanged(t => {
+      Log.info("onTopLineChanged: " ++ string_of_int(t));
+      dispatch(Model.Actions.EditorScrollToLine(t - 1));
+    });
+
+  let _ =
+    Vim.Window.onLeftColumnChanged(t => {
+      Log.info("onLeftColumnChanged: " ++ string_of_int(t));
+      dispatch(Model.Actions.EditorScrollToColumn(t));
+    });
 
   let hasInitialized = ref(false);
   let initEffect =
@@ -325,9 +332,10 @@ let start = () => {
       | false => ()
       | true =>
         let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-
         let editor = Model.Selectors.getActiveEditor(editorGroup);
 
+        /* If the editor / buffer in Onivim changed,
+         * let libvim know about it and set it as the current buffer */
         let editorBuffer = Model.Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
@@ -349,12 +357,13 @@ let start = () => {
         | _ => ()
         };
 
-        let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
+        let synchronizeWindowMetrics =
+            (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
           let (lines, columns) =
-            Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
+            Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -365,25 +374,31 @@ let start = () => {
           };
         };
 
-        switch (editorGroup) {
-        | Some(v) => synchronizeWindowMetrics(v)
-        | None => ()
+        /* Update the window metrics for the editor */
+        /* This synchronizes the window width / height with libvim's model */
+        switch (editor, editorGroup) {
+        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        | _ => ()
         };
 
-        let synchronizeCursorPosition = (_editor: Model.Editor.t) => {
-          /* vimProtocol.moveCursor( */
-          /*   ~column=Index.toOneBasedInt(editor.cursorPosition.character), */
-          /*   ~line=Index.toOneBasedInt(editor.cursorPosition.line), */
-          /* currentEditorId := Some(editor.id); */
-
-          let ret = ();
-          ret;
+        /* Update the cursor position and the scroll (top line, left column) -
+         * ensure these are in sync with libvim's model */
+        let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
+          Vim.Cursor.setPosition(
+            Core.Types.Index.toInt1(editor.cursorPosition.line),
+            Core.Types.Index.toInt1(editor.cursorPosition.character),
+          );
+          Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
         };
 
+        /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
         | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeCursorPosition(e)
-        | (Some(e), _) => synchronizeCursorPosition(e)
+          synchronizeCursorAndScroll(e);
+          currentEditorId := Some(e.editorId);
+        | (Some(e), None) =>
+          synchronizeCursorAndScroll(e);
+          currentEditorId := Some(e.editorId);
         | _ => ()
         };
       }

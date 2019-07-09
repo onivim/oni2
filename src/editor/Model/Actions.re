@@ -38,6 +38,7 @@ type t =
   | EditorGroupSetActive(int)
   | EditorScroll(float)
   | EditorScrollToLine(int)
+  | EditorScrollToColumn(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
@@ -78,6 +79,8 @@ and editor = {
   bufferId: int,
   scrollX: float,
   scrollY: float,
+  lastTopLine: int,
+  lastLeftCol: int,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
