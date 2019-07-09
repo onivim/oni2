@@ -108,43 +108,39 @@ type commandLineCompletionMeet = {
   prefix: string,
   position: int,
 };
-  
+
 let getCommandLineCompletionsMeet = (str: string, position: int) => {
-    let len = String.length(str);
+  let len = String.length(str);
 
-    if (len == 0 || position < len) {
-      None
-    } else {
-      /* Look backwards for '/' or ' ' */
-      let found = ref(false);
-      let meet = ref(position);
+  if (len == 0 || position < len) {
+    None;
+  } else {
+    /* Look backwards for '/' or ' ' */
+    let found = ref(false);
+    let meet = ref(position);
 
-      while (meet^ > 0 && !found^) {
+    while (meet^ > 0 && ! found^) {
+      let pos = meet^ - 1;
+      let c = str.[pos];
+      if (c == ' ') {
+        found := true;
+      } else {
+        decr(meet);
+      };
+    };
 
-        let pos = meet^ - 1;
-        let c = String.get(str, pos);
-        if (c == ' ') {
-          found := true;
-        } else {
-          decr(meet);
-        }
-      }
-
-      let pos = meet^;
-      Some({
-          prefix: String.sub(str, pos, len - pos),
-        position: pos,
-      });
-    }
+    let pos = meet^;
+    Some({prefix: String.sub(str, pos, len - pos), position: pos});
+  };
 };
 
 let trimTrailingSlash = (item: string) => {
-    let len = String.length(item);
-    let lastC = String.get(item, len - 1);
-    /* Remove trailing slashes */
-    if(lastC == '\\' || lastC == '/') {
-      String.sub(item, 0, len - 1);
-    } else {
-      item
-    }
-}
+  let len = String.length(item);
+  let lastC = item.[len - 1];
+  /* Remove trailing slashes */
+  if (lastC == '\\' || lastC == '/') {
+    String.sub(item, 0, len - 1);
+  } else {
+    item;
+  };
+};

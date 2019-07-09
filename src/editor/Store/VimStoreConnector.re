@@ -114,9 +114,13 @@ let start = () => {
   let checkCommandLineCompletions = () => {
     Log.info("VimStoreConnector::checkCommandLineCompletions");
     let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
-    Log.info("VimStoreConnector::checkCommandLineCompletions - got " ++ string_of_int(List.length(completions)) ++ " completions.");
+    Log.info(
+      "VimStoreConnector::checkCommandLineCompletions - got "
+      ++ string_of_int(List.length(completions))
+      ++ " completions.",
+    );
     dispatch(Model.Actions.WildmenuShow(completions));
-  }
+  };
 
   let _ =
     Vim.CommandLine.onUpdate(c => {
@@ -124,19 +128,18 @@ let start = () => {
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
-      | Ex =>  ();
-          let text = switch(Vim.CommandLine.getText()) {
-          | Some(v) => v;
-          | None => "";
-          }
-          let position = Vim.CommandLine.getPosition();
-          let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
-          lastCompletionMeet := meet;
-          
-          switch (isCompleting^) {
-          | true => ()
-          | false => checkCommandLineCompletions();
-          }
+      | Ex =>
+        ();
+        let text =
+          switch (Vim.CommandLine.getText()) {
+          | Some(v) => v
+          | None => ""
+          };
+        let position = Vim.CommandLine.getPosition();
+        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        lastCompletionMeet := meet;
+
+        isCompleting^ ? () : checkCommandLineCompletions();
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -168,9 +171,9 @@ let start = () => {
 
   let _ =
     Vim.CommandLine.onLeave(() => {
-    lastCompletionMeet := None;
-    isCompleting := false;
-    dispatch(Model.Actions.CommandlineHide);
+      lastCompletionMeet := None;
+      isCompleting := false;
+      dispatch(Model.Actions.CommandlineHide);
     });
 
   let _ =
@@ -216,24 +219,24 @@ let start = () => {
     );
 
   let applyCompletionEffect = completion =>
-    Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () => {
-      open Core.Utility;
-      switch (lastCompletionMeet^) {
-      | None => ();
-      | Some({position, _}) => {
-        isCompleting := true;
-        let currentPos = ref(Vim.CommandLine.getPosition());
-        while(currentPos^ > position) {
-          Vim.input("<bs>");
-          currentPos := Vim.CommandLine.getPosition();
-        }
+    Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
+      Core.Utility.(
+        switch (lastCompletionMeet^) {
+        | None => ()
+        | Some({position, _}) =>
+          isCompleting := true;
+          let currentPos = ref(Vim.CommandLine.getPosition());
+          while (currentPos^ > position) {
+            Vim.input("<bs>");
+            currentPos := Vim.CommandLine.getPosition();
+          };
 
-        let completion = Core.Utility.trimTrailingSlash(completion);
-        String.iter((c) => Vim.input(String.make(1, c)), completion);
-        isCompleting := false;
-      }
-      };
-    });
+          let completion = Core.Utility.trimTrailingSlash(completion);
+          String.iter(c => Vim.input(String.make(1, c)), completion);
+          isCompleting := false;
+        }
+      )
+    );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
     Isolinear.Effect.create(~name="vim.setIndentation", () => {
@@ -336,20 +339,20 @@ let start = () => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.WildmenuNext => {
-      let eff = switch(Model.Wildmenu.getSelectedItem(state.wildmenu)) {
-      | None => Isolinear.Effect.none
-      | Some(v) => applyCompletionEffect(v)
-      };
-      (state, eff)
-    }
-    | Model.Actions.WildmenuPrevious => {
-      let eff = switch(Model.Wildmenu.getSelectedItem(state.wildmenu)) {
-      | None => Isolinear.Effect.none
-      | Some(v) => applyCompletionEffect(v)
-      };
-      (state, eff)
-    }
+    | Model.Actions.WildmenuNext =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
+    | Model.Actions.WildmenuPrevious =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
     | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path) => (
         state,

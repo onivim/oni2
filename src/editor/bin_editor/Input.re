@@ -121,13 +121,12 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   | CommandLineFocus
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] => { 
-        Log.info("Input::handle - sending raw input: " ++ inputKey); 
-        [Actions.KeyboardInput(inputKey)] }
-    | actions => { 
-        Log.info("Input::handle - sending bound actions."); 
-        actions; 
-        }
+    | [] =>
+      Log.info("Input::handle - sending raw input: " ++ inputKey);
+      [Actions.KeyboardInput(inputKey)];
+    | actions =>
+      Log.info("Input::handle - sending bound actions.");
+      actions;
     }
   | TextInputFocus
   | MenuFocus => getActionsForBinding(inputKey, commands, state)
