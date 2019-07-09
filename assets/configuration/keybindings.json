@@ -13,6 +13,8 @@
         { "key": "<C-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
         { "key": "<D-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
         { "key": "<D-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
+        { "key": "<TAB>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
+        { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
         { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]}
     ]
