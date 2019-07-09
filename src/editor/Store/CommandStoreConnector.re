@@ -129,7 +129,6 @@ let start = _ => {
   let updater = (state: State.t, action) => {
     switch (action) {
     | Command(cmd) =>
-      print_endline ("GOT COMMAND: " ++ cmd);
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
       | None => (state, Isolinear.Effect.none)

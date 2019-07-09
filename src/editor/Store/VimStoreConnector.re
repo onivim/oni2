@@ -112,10 +112,10 @@ let start = () => {
   let isCompleting = ref(false);
 
   let checkCommandLineCompletions = () => {
-            print_endline ("getting completions...");
-            let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
-            dispatch(Model.Actions.WildmenuShow(completions));
-            print_endline ("got completions!");
+    Log.info("VimStoreConnector::checkCommandLineCompletions");
+    let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+    Log.info("VimStoreConnector::checkCommandLineCompletions - got " ++ string_of_int(List.length(completions)) ++ " completions.");
+    dispatch(Model.Actions.WildmenuShow(completions));
   }
 
   let _ =
@@ -130,14 +130,9 @@ let start = () => {
           | None => "";
           }
           let position = Vim.CommandLine.getPosition();
-          print_endline ("Command line text: " ++ text ++ " position: " ++ string_of_int(position));
           let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
           lastCompletionMeet := meet;
-          switch (meet) {
-          | Some({position, prefix}) => print_endline("Completion meet is: |" ++ prefix ++ "| at " ++ string_of_int(position));
-          | None => print_endline("Completion met is: NONE");
-          };
-
+          
           switch (isCompleting^) {
           | true => ()
           | false => checkCommandLineCompletions();
