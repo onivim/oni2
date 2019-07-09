@@ -2,18 +2,38 @@
  * Wildmenu.re
  *
  */
-open Oni_Core.Types;
 open Actions;
 
-[@deriving show]
-type t = wildmenu;
+[@deriving show({with_path: false})]
+type t = {
+  items: list(string),
+  show: bool,
+  selected: int,
+  count: int,
+};
 
-let create = () => {items: [], selected: 0, show: false};
+let empty = [];
+
+let create = () => {items: empty, selected: 0, show: false, count: 0};
+
+let getSelectedItem = (v: t) =>
+  if (v.count <= 0 || v.selected < 0 || v.selected > v.count - 1) {
+    None;
+  } else {
+    Some(List.nth(v.items, v.selected));
+  };
 
 let reduce = (s, action) =>
   switch (action) {
-  | WildmenuShow(wildmenu) => wildmenu
-  | WildmenuHide(wildmenu) => wildmenu
-  | WildmenuSelected(selected) => {...s, selected}
+  | WildmenuShow(items) => {
+      show: true,
+      selected: (-1),
+      items,
+      count: List.length(items),
+    }
+  | CommandlineHide
+  | WildmenuHide => {show: false, selected: 0, items: empty, count: 0}
+  | WildmenuNext => {...s, selected: (s.selected + 1) mod s.count}
+  | WildmenuPrevious => {...s, selected: (s.selected - 1) mod s.count}
   | _ => s
   };

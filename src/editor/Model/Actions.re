@@ -28,9 +28,11 @@ type t =
   | CommandlineHide
   | CommandlineUpdate(Vim.Types.cmdline)
   | KeyboardInput(string)
-  | WildmenuShow(wildmenu)
-  | WildmenuHide(wildmenu)
-  | WildmenuSelected(int)
+  | WildmenuShow(list(string))
+  | WildmenuNext
+  | WildmenuPrevious
+  | WildmenuSelect
+  | WildmenuHide
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
   | EditorGroupSetActive(int)
