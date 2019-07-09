@@ -12,22 +12,14 @@ open WindowTreeLayout;
 describe("WindowTreeLayout", ({describe, _}) =>
   describe("layout", ({test, _}) => {
     test("layout vertical splits", ({expect}) => {
-      let splits = WindowTree.empty;
-
-      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
-
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
-      let splits = addSplit(~target=None, Vertical, split1, splits);
-      let splits = addSplit(~target=Some(split1.id), Vertical, split2, splits);
+      let splits = WindowTree.empty
+      |> addSplit(~target=None, Vertical, split1);
+      |> addSplit(~target=Some(split1.id), Vertical, split2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
-
-      
-      prerr_endline("--");
-      List.iter(i => prerr_endline(WindowTreeLayout.show(i)), layoutItems);
-      prerr_endline("--");
 
       expect.bool([
         { id: split2.id, width: 100, height: 200, x: 0, y: 0 },
@@ -36,22 +28,14 @@ describe("WindowTreeLayout", ({describe, _}) =>
     });
     
     test("layout horizontal splits", ({expect}) => {
-      let splits = WindowTree.empty;
-
-      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
-
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
-      let splits = addSplit(~target=None, Horizontal, split1, splits);
-      let splits = addSplit(~target=Some(split1.id), Horizontal, split2, splits);
+      let splits = WindowTree.empty
+      |> addSplit(~target=None, Horizontal, split1);
+      |> addSplit(~target=Some(split1.id), Horizontal, split2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
-
-      
-      prerr_endline("--");
-      List.iter(i => prerr_endline(WindowTreeLayout.show(i)), layoutItems);
-      prerr_endline("--");
 
       expect.bool([
         { id: split2.id, width: 200, height: 100, x: 0, y: 0 },
