@@ -25,6 +25,12 @@ type dockPosition =
   | Left
   | Right;
 
+type direction =
+  | Up
+  | Left
+  | Down
+  | Right;
+
 /**
    A dock is a sub type of split, it does not require
    a parent ID as docks are list of splits, not a tree
@@ -72,12 +78,37 @@ let setTreeSize = (width, height, v: t) => {
   windowTreeHeight: height,
 };
 
-let registerDock = (~component, ~id, ~order, ~position=Left, ~width=?, ()) => {
+let registerDock =
+    (~component, ~id, ~order, ~position: dockPosition=Left, ~width=?, ()) => {
   order,
   component,
   position,
   id,
   width,
+};
+
+let moveCore = (dirX, dirY, v: t) => {
+  let layout = WindowTreeLayout.layout(0, 0, 200, 200, v.windowTree);
+  let newWindow = WindowTreeLayout.move(v.activeWindowId, dirX, dirY, layout);
+
+  switch (newWindow) {
+  | None => v.activeWindowId
+  | Some(newId) => newId
+  };
+};
+
+let moveLeft = moveCore(-1, 0);
+let moveRight = moveCore(1, 0);
+let moveUp = moveCore(0, -1);
+let moveDown = moveCore(0, 1);
+
+let move = (direction: direction, v) => {
+  switch (direction) {
+  | Up => moveUp(v)
+  | Down => moveDown(v)
+  | Left => moveLeft(v)
+  | Right => moveRight(v)
+  };
 };
 
 let removeDockItem = (~id, layout: t) => {

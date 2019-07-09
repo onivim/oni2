@@ -19,7 +19,7 @@ type t = {
   notifyEditorSizeChanged,
   notifyWindowTreeSizeChanged,
   editorScroll,
-  setActiveEditorGroup: int => unit,
+  setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
   dispatch: Actions.t => unit,
@@ -39,7 +39,7 @@ let default = {
     (),
   editorScroll: (~deltaY as _, ()) => (),
   openEditorById: _ => (),
-  setActiveEditorGroup: _ => (),
+  setActiveWindow: (_, _) => (),
   dispatch: _ => (),
   closeEditorById: _ => (),
 };
