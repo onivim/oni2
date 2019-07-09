@@ -1,5 +1,5 @@
 /*
- * vimStoreConnector.re
+ * VimStoreConnector.re
  *
  * This module connects vim to the Store:
  * - Translates incoming vim notifications into Actions
@@ -108,12 +108,38 @@ let start = () => {
       dispatch(Model.Actions.CommandlineShow(c.cmdType))
     );
 
+  let lastCompletionMeet = ref(None);
+  let isCompleting = ref(false);
+
+  let checkCommandLineCompletions = () => {
+    Log.info("VimStoreConnector::checkCommandLineCompletions");
+    let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+    Log.info(
+      "VimStoreConnector::checkCommandLineCompletions - got "
+      ++ string_of_int(List.length(completions))
+      ++ " completions.",
+    );
+    dispatch(Model.Actions.WildmenuShow(completions));
+  };
+
   let _ =
     Vim.CommandLine.onUpdate(c => {
       dispatch(Model.Actions.CommandlineUpdate(c));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
+      | Ex =>
+        ();
+        let text =
+          switch (Vim.CommandLine.getText()) {
+          | Some(v) => v
+          | None => ""
+          };
+        let position = Vim.CommandLine.getPosition();
+        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        lastCompletionMeet := meet;
+
+        isCompleting^ ? () : checkCommandLineCompletions();
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -138,15 +164,17 @@ let start = () => {
           |> Array.to_list
           |> List.filter(sameLineFilter)
           |> List.map(toOniRange);
-
         dispatch(SearchSetHighlights(id, highlightList));
-
       | _ => ()
       };
     });
 
   let _ =
-    Vim.CommandLine.onLeave(() => dispatch(Model.Actions.CommandlineHide));
+    Vim.CommandLine.onLeave(() => {
+      lastCompletionMeet := None;
+      isCompleting := false;
+      dispatch(Model.Actions.CommandlineHide);
+    });
 
   let _ =
     Vim.Window.onTopLineChanged(t => {
@@ -195,6 +223,26 @@ let start = () => {
   let openFileByPathEffect = filePath =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () =>
       Vim.Buffer.openFile(filePath) |> ignore
+    );
+
+  let applyCompletionEffect = completion =>
+    Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
+      Core.Utility.(
+        switch (lastCompletionMeet^) {
+        | None => ()
+        | Some({position, _}) =>
+          isCompleting := true;
+          let currentPos = ref(Vim.CommandLine.getPosition());
+          while (currentPos^ > position) {
+            Vim.input("<bs>");
+            currentPos := Vim.CommandLine.getPosition();
+          };
+
+          let completion = Core.Utility.trimTrailingSlash(completion);
+          String.iter(c => Vim.input(String.make(1, c)), completion);
+          isCompleting := false;
+        }
+      )
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
@@ -304,6 +352,20 @@ let start = () => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.WildmenuNext =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
+    | Model.Actions.WildmenuPrevious =>
+      let eff =
+        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => applyCompletionEffect(v)
+        };
+      (state, eff);
     | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path) => (
         state,
