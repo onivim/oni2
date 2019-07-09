@@ -13,11 +13,6 @@ let intersects = (x, y, split: t) => {
   x >= split.x && x <= split.x + split.width && y >= split.y && y <= split.height;
 }
 
-let moveLeft = (id, splits) => move(id, -1, 0, splits);
-let moveRight = (id, splits) => move(id, 1, 0, splits);
-let moveUp = (id, splits) => move(id, 0, -1, splits);
-let moveDown = (id, splits) => move(id, 0, 1, splits);
-
 let move = (id, dirX, dirY, splits: list(t)) => {
 
   let (minX, minY, maxX, maxY, deltaX, deltaY) = List.fold_left((prev, cur) => {
@@ -47,11 +42,11 @@ let move = (id, dirX, dirY, splits: list(t)) => {
     let found = ref(false);
     let result = ref(None);
 
-    while (!(found^) && curX^ >= minX && curX^ <= maxX && curY^ >= minY && curY <= maxY) {
+    while (!(found^) && curX^ >= minX && curX^ <= maxX && curY^ >= minY && curY^ <= maxY) {
       let x = curX^; 
       let y  = curY^;
 
-      let intersects = List.filter((s) => s.id != startSplit.id && intersects(x, y, s), splits);
+      let intersects = List.filter((s) => s.split.id != startSplit.split.id && intersects(x, y, s), splits);
 
       if (List.length(intersects) > 0) {
         result := Some(List.hd(intersects).split.id);
@@ -65,6 +60,11 @@ let move = (id, dirX, dirY, splits: list(t)) => {
     result^
   }
 };
+
+let moveLeft = (id, splits) => move(id, -1, 0, splits);
+let moveRight = (id, splits) => move(id, 1, 0, splits);
+let moveUp = (id, splits) => move(id, 0, -1, splits);
+let moveDown = (id, splits) => move(id, 0, 1, splits);
 
 let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) => {
   switch (tree) {
