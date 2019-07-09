@@ -50,8 +50,7 @@ let addSplit = (~target=None, direction, newSplit, currentTree) => {
           } else {
             [Parent(direction, [Leaf(newSplit), Leaf(v)])];
           }
-        | _ =>
-          [Leaf(newSplit), Leaf(v)];
+        | _ => [Leaf(newSplit), Leaf(v)]
         };
       } else {
         [Leaf(v)];
