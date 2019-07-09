@@ -347,7 +347,7 @@ let createElement =
 
     let onDimensionsChanged =
         ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-      GlobalContext.current().notifySizeChanged(
+      GlobalContext.current().notifyEditorSizeChanged(
         ~editorGroupId,
         ~width,
         ~height,

@@ -68,7 +68,9 @@ let init = app => {
 
   GlobalContext.set({
     getState: () => currentState^,
-    notifySizeChanged: (~editorGroupId, ~width, ~height, ()) =>
+    notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
+      dispatch(Model.Actions.WindowTreeSetSize(width, height)),
+    notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
       dispatch(
         Model.Actions.EditorGroupSetSize(
           editorGroupId,

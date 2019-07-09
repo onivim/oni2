@@ -26,7 +26,7 @@ type t = {
   lifecycle: Lifecycle.t,
   searchHighlights: SearchHighlights.t,
   statusBar: StatusBarModel.t,
-  editorLayout: WindowManager.t,
+  windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
 };
 
@@ -57,6 +57,6 @@ let create: unit => t =
     languageInfo: LanguageInfo.create(),
     searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
-    editorLayout: WindowManager.create(),
+    windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
   };

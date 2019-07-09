@@ -9,23 +9,13 @@ open UI;
 open Oni_Core;
 open Oni_Model;
 open WindowManager;
+open WindowTree;
 
 let component = React.component("EditorSplits");
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
-let splitStyle = (split: split) =>
-  Style.(
-    switch (split) {
-    | {direction: Vertical, width: Some(w), _} => [width(w), flexGrow(1)]
-    | {direction: Vertical, width: None, _} => [flexGrow(1)]
-    | {direction: Horizontal, height: None, _} => [flexGrow(1)]
-    | {direction: Horizontal, height: Some(h), _} => [
-        height(h),
-        flexGrow(1),
-      ]
-    }
-  );
+let splitStyle = Style.[flexGrow(1)];
 
 let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
   let w =
@@ -64,30 +54,55 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let rec renderTree = (~direction, theme, state, tree) =>
-  switch (tree) {
-  | Parent(direction, _, children) =>
-    /* let _c = renderTree(~direction, theme, children, state); */
-    /* React.empty */
-    <View style={parentStyle(direction)}>
-      ...{List.map(renderTree(~direction, theme, state), children)}
-    </View>
-  | Leaf(window) =>
-    <View style={splitStyle(window)}>
-      <EditorGroupView state editorGroupId={window.editorGroupId} />
-      <WindowHandle direction theme />
-    </View>
-  | Empty => React.empty
-  };
+let renderTree = (state, tree) => {
+  open State;
+  let items =
+    WindowTreeLayout.layout(
+      0,
+      0,
+      state.windowManager.windowTreeWidth,
+      state.windowManager.windowTreeHeight,
+      tree,
+    );
 
+  List.map(
+    (item: WindowTreeLayout.t) =>
+      <View
+        style=Style.[
+          position(`Absolute),
+          top(item.y),
+          left(item.x),
+          width(item.width),
+          height(item.height),
+        ]>
+        <EditorGroupView state editorGroupId={item.split.editorGroupId} />
+      </View>,
+    items,
+  );
+};
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let {State.editorLayout, theme, _} = state;
-    let {windows, leftDock, rightDock, _} = editorLayout;
+    let {State.windowManager, _} = state;
+    let {windowTree, leftDock, rightDock, _} = windowManager;
+
+    let children = renderTree(state, windowTree);
 
     let splits =
-      renderDock(rightDock, state)
-      |> (@)([renderTree(~direction=Vertical, theme, state, windows)])
-      |> (@)(renderDock(leftDock, state));
+      renderDock(leftDock, state)
+      @ [
+        <View
+          onDimensionsChanged={dim =>
+            GlobalContext.current().notifyWindowTreeSizeChanged(
+              ~width=dim.width,
+              ~height=dim.height,
+              (),
+            )
+          }
+          style=Style.[flexGrow(1)]>
+          ...children
+        </View>,
+      ]
+      @ renderDock(rightDock, state);
+
     (hooks, <View style=splitContainer> ...splits </View>);
   });

@@ -1,6 +1,6 @@
 open Revery.UI;
 open Oni_Model;
-open WindowManager;
+open WindowTree;
 
 module Core = Oni_Core;
 

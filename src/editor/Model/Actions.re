@@ -33,6 +33,7 @@ type t =
   | WildmenuPrevious
   | WildmenuSelect
   | WildmenuHide
+  | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
   | EditorGroupSetActive(int)
@@ -53,11 +54,11 @@ type t =
   | MenuNextItem
   | MenuPreviousItem
   | MenuPosition(int)
-  | OpenFileByPath(string, option(WindowManager.direction))
+  | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
-  | AddSplit(WindowManager.splitMetadata)
+  | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
