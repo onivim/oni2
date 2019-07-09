@@ -2,7 +2,6 @@
  * Wildmenu.re
  *
  */
-open Oni_Core.Types;
 open Actions;
 
 [@deriving show({with_path: false})]
