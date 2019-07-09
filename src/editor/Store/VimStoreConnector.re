@@ -341,9 +341,11 @@ let start = () => {
 
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
-        | (Some(e), None)
         | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeCursorPosition(e);
+          synchronizeCursorAndScroll(e);
+          currentEditorId := Some(e.editorId);
+        | (Some(e), None) =>
+          synchronizeCursorAndScroll(e);
           currentEditorId := Some(e.editorId);
         | _ => ()
         };
