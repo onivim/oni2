@@ -40,7 +40,7 @@ type dock = {
 
 [@deriving show({with_path: false})]
 type t = {
-  windows: WindowTree.t,
+  windowTree: WindowTree.t,
   activeWindowId: int,
   leftDock: list(dock),
   rightDock: list(dock),
@@ -50,16 +50,27 @@ type t = {
    * reopened and closed
    */
   dockItems: list(dock),
+
+  windowTreeWidth: int,
+  windowTreeHeight: int,
 };
 
 let initialWindowId = WindowId.next();
 
 let create = (): t => {
   activeWindowId: initialWindowId,
-  windows: WindowTree.empty,
+  windowTree: WindowTree.empty,
   leftDock: [],
   rightDock: [],
   dockItems: [],
+  windowTreeWidth: 1,
+  windowTreeHeight: 1,
+};
+
+let setTreeSize = (width, height, v: t) => {
+  ...v,
+  windowTreeWidth: width,
+  windowTreeHeight: height,
 };
 
 let registerDock = (~component, ~id, ~order, ~position=Left, ~width=?, ()) => {

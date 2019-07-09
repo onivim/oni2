@@ -54,8 +54,9 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let rec renderTree = (state, tree) => {
-  let items = WindowTreeLayout.layout(0, 0, 400, 400, tree);
+let renderTree = (state, tree) => {
+  open State;
+  let items = WindowTreeLayout.layout(0, 0, state.windowManager.windowTreeWidth, state.windowManager.windowTreeHeight, tree);
 
   print_endline("ITEMS: " ++ string_of_int(List.length(items)));
 
@@ -76,18 +77,19 @@ let rec renderTree = (state, tree) => {
 };
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let {State.editorLayout, _} = state;
-    let {windows, leftDock, rightDock, _} = editorLayout;
+    let {State.windowManager, _} = state;
+    let {windowTree, leftDock, rightDock, _} = windowManager;
 
-    let children = renderTree(state, windows);
+    let children = renderTree(state, windowTree);
 
     let splits =
       renderDock(leftDock, state)
       @ [
         <View
-          onDimensionsChanged={dim =>
+          onDimensionsChanged={dim => {
+            GlobalContext.current().notifyWindowTreeSizeChanged(~width=dim.width, ~height=dim.height, ());
             print_endline("changed: " ++ string_of_int(dim.width))
-          }
+          }}
           style=Style.[flexGrow(1), backgroundColor(Colors.red)]>
           ...children
         </View>,

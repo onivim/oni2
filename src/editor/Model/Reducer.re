@@ -39,56 +39,60 @@ let reduce: (State.t, Actions.t) => State.t =
         switch (dock) {
         | {position: Left, _} => {
             ...s,
-            editorLayout: {
-              ...s.editorLayout,
-              leftDock: [dock, ...s.editorLayout.leftDock],
-              dockItems: [dock, ...s.editorLayout.dockItems],
+            windowManager: {
+              ...s.windowManager,
+              leftDock: [dock, ...s.windowManager.leftDock],
+              dockItems: [dock, ...s.windowManager.dockItems],
             },
           }
         | {position: Right, _} => {
             ...s,
-            editorLayout: {
-              ...s.editorLayout,
-              rightDock: [dock, ...s.editorLayout.rightDock],
-              dockItems: [dock, ...s.editorLayout.dockItems],
+            windowManager: {
+              ...s.windowManager,
+              rightDock: [dock, ...s.windowManager.rightDock],
+              dockItems: [dock, ...s.windowManager.dockItems],
             },
           }
         }
       | RemoveDockItem(id) => {
           ...s,
-          editorLayout: WindowManager.removeDockItem(~id, s.editorLayout),
+          windowManager: WindowManager.removeDockItem(~id, s.windowManager),
         }
       | AddDockItem(id) =>
-        switch (WindowManager.findDockItem(id, s.editorLayout)) {
+        switch (WindowManager.findDockItem(id, s.windowManager)) {
         | Some(dock) => {
             ...s,
-            editorLayout: {
-              ...s.editorLayout,
-              leftDock: s.editorLayout.leftDock @ [dock],
+            windowManager: {
+              ...s.windowManager,
+              leftDock: s.windowManager.leftDock @ [dock],
             },
           }
         | None => s
         }
+      | WindowTreeSetSize(width, height) => {
+        ...s,
+        windowManager: WindowManager.setTreeSize(width, height, s.windowManager)
+      }
       | AddSplit(direction, split) =>
         {
           ...s,
-          editorLayout: {
-            ...s.editorLayout,
+          windowManager: {
+            ...s.windowManager,
             activeWindowId: split.id,
-            windows:
+            windowTree:
               WindowTree.addSplit(
-                ~target=Some(s.editorLayout.activeWindowId),
+                ~target=Some(s.windowManager.activeWindowId),
                 direction,
                 split,
-                s.editorLayout.windows,
+                s.windowManager.windowTree,
               ),
           },
         };
       | RemoveSplit(id) => {
           ...s,
-          editorLayout: {
-            ...s.editorLayout,
-            windows: WindowTree.removeSplit(id, s.editorLayout.windows),
+          windowManager: {
+            ...s.windowManager,
+            windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
           },
         }
       | _ => s

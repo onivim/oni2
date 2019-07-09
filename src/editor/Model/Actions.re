@@ -33,6 +33,7 @@ type t =
   | WildmenuPrevious
   | WildmenuSelect
   | WildmenuHide
+  | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
   | EditorGroupSetActive(int)
