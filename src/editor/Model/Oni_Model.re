@@ -34,5 +34,6 @@ module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
 module WindowTree = WindowTree;
+module WindowTreeLayout = WindowTreeLayout;
 module UiTree = UiTree;
 module FileExplorer = FileExplorer;
