@@ -51,11 +51,8 @@ let start =
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | (_s, _m, _a) =>
-      /*
-       prerr_endline ("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
-       List.iter((v) => prerr_endline(Yojson.Safe.to_string(v)), a);
-       */
+    | (s, m, _a) =>
+       Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
       Ok(None)
     };
   };
