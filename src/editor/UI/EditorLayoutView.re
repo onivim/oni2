@@ -58,8 +58,6 @@ let renderTree = (state, tree) => {
   open State;
   let items = WindowTreeLayout.layout(0, 0, state.windowManager.windowTreeWidth, state.windowManager.windowTreeHeight, tree);
 
-  print_endline("ITEMS: " ++ string_of_int(List.length(items)));
-
   List.map(
     (item: WindowTreeLayout.t) =>
       <View
@@ -88,9 +86,8 @@ let createElement = (~children as _, ~state: State.t, ()) =>
         <View
           onDimensionsChanged={dim => {
             GlobalContext.current().notifyWindowTreeSizeChanged(~width=dim.width, ~height=dim.height, ());
-            print_endline("changed: " ++ string_of_int(dim.width))
           }}
-          style=Style.[flexGrow(1), backgroundColor(Colors.red)]>
+          style=Style.[flexGrow(1)]>
           ...children
         </View>,
       ]
