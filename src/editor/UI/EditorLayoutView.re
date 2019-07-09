@@ -54,27 +54,33 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let rec renderTree = (~direction, theme, state, tree) =>
-  switch (tree) {
-  | Parent(direction, children) =>
-    /* let _c = renderTree(~direction, theme, children, state); */
-    /* React.empty */
-    <View style={parentStyle(direction)}>
-      ...{List.map(renderTree(~direction, theme, state), children)}
-    </View>
-  | Leaf(window) =>
-    <View style=splitStyle>
-      <EditorGroupView state editorGroupId={window.editorGroupId} />
-      <WindowHandle direction theme />
-    </View>
-  | Empty => React.empty
-  };
+let rec renderTree = (state, tree) => {
+  let items = WindowTreeLayout.layout(0, 0, 400, 400, tree);
 
+  print_endline ("ITEMS: " ++ string_of_int(List.length(items)));
+
+  List.map((item: WindowTreeLayout.t) => {
+    <View style=Style.[
+     position(`Absolute),
+     top(item.y),
+     left(item.x),
+     width(item.width),
+     height(item.height),
+    ]>
+      <EditorGroupView state editorGroupId={item.split.editorGroupId} />
+    </View>
+  }, items);
+}
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let {State.editorLayout, _} = state;
-    let {leftDock, rightDock, _} = editorLayout;
+    let {windows, leftDock, rightDock, _} = editorLayout;
 
-    let splits = renderDock(leftDock, state) @ [<View onDimensionsChanged={(dim) => print_endline("changed: " ++ string_of_int(dim.width))}  style=Style.[flexGrow(1), backgroundColor(Colors.red)] />] @ renderDock(rightDock, state);
+    let children = renderTree(state, windows);
+
+    let splits = renderDock(leftDock, state) 
+    @ [<View onDimensionsChanged={(dim) => print_endline("changed: " ++ string_of_int(dim.width))}  style=Style.[flexGrow(1), backgroundColor(Colors.red)]>...children</View>] 
+    @ renderDock(rightDock, state);
+    
     (hooks, <View style=splitContainer> ...splits </View>);
   });
