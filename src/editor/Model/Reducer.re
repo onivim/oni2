@@ -70,15 +70,14 @@ let reduce: (State.t, Actions.t) => State.t =
         | None => s
         }
       | AddSplit(direction, split) =>
-        let id = WindowManager.WindowId.current();
         {
           ...s,
           editorLayout: {
             ...s.editorLayout,
-            activeWindowId: id,
+            activeWindowId: split.id,
             windows:
               WindowTree.addSplit(
-                ~target=Some(id),
+                ~target=Some(s.editorLayout.activeWindowId),
                 direction,
                 split,
                 s.editorLayout.windows,
