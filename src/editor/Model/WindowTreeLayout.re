@@ -43,8 +43,8 @@ let move = (id, dirX, dirY, splits: list(t)) => {
   } else {
     let startSplit = List.hd(splitInfo);
 
-    let curX = ref(minX + deltaX);
-    let curY = ref(minY + deltaY);
+    let curX = ref(startSplit.x + startSplit.width / 2);
+    let curY = ref(startSplit.y + startSplit.height / 2);
     let found = ref(false);
     let result = ref(None);
 
