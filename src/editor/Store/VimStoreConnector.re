@@ -151,13 +151,13 @@ let start = () => {
   let _ =
     Vim.Window.onTopLineChanged(t => {
       Log.info("onTopLineChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToLine(t - 1))
+      dispatch(Model.Actions.EditorScrollToLine(t - 1));
     });
 
-  let _ = 
+  let _ =
     Vim.Window.onLeftColumnChanged(t => {
       Log.info("onLeftColumnChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToColumn(t))
+      dispatch(Model.Actions.EditorScrollToColumn(t));
     });
 
   let hasInitialized = ref(false);
@@ -256,14 +256,15 @@ let start = () => {
         | _ => ()
         };
 
-        let synchronizeWindowMetrics = (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
+        let synchronizeWindowMetrics =
+            (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
           let (lines, columns) =
             Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
 
-Log.info("lines: " ++ string_of_int(lines));
+          Log.info("lines: " ++ string_of_int(lines));
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -274,23 +275,25 @@ Log.info("lines: " ++ string_of_int(lines));
           };
         };
 
-        switch ((editor, editorGroup)) {
+        switch (editor, editorGroup) {
         | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
         | _ => ()
         };
 
         let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-			print_endline("Synchronizing cursor position!");
-	  	Vim.Cursor.setPosition(Core.Types.Index.toInt1(editor.cursorPosition.line), Core.Types.Index.toInt1(editor.cursorPosition.character));
-      Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
+          print_endline("Synchronizing cursor position!");
+          Vim.Cursor.setPosition(
+            Core.Types.Index.toInt1(editor.cursorPosition.line),
+            Core.Types.Index.toInt1(editor.cursorPosition.character),
+          );
+          Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
         };
 
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.editorId != v => {
-            synchronizeCursorPosition(e)
-            currentEditorId := Some(e.editorId);
-			}
+        | (Some(e), Some(v)) when e.editorId != v =>
+          synchronizeCursorPosition(e);
+          currentEditorId := Some(e.editorId);
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
         };

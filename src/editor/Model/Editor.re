@@ -115,10 +115,7 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  {
-    ...scrollTo(view, scrollAmount, metrics),
-    lastTopLine: line,
-  }
+  {...scrollTo(view, scrollAmount, metrics), lastTopLine: line};
 };
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
@@ -161,14 +158,12 @@ let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
       (),
     );
 
-    (bufferHeightInCharacters, bufferWidthInCharacters);
+  (bufferHeightInCharacters, bufferWidthInCharacters);
 };
 
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
-  { ...scrollToHorizontal(view, scrollAmount, metrics),
-    lastLeftCol: column
-    };
+  {...scrollToHorizontal(view, scrollAmount, metrics), lastLeftCol: column};
 };
 
 let scroll = (view: t, scrollDeltaY, metrics) => {
