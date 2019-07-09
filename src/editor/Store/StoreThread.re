@@ -49,7 +49,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let commandUpdater = CommandStoreConnector.start(getState);
-  let (vimUpdater, vimStream) = VimStoreConnector.start();
+  let (vimUpdater, vimStream) = VimStoreConnector.start(getState);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

@@ -12,7 +12,7 @@ module Model = Oni_Model;
 
 module Log = Core.Log;
 
-let start = () => {
+let start = (getState: unit => Model.State.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -91,9 +91,28 @@ let start = () => {
     });
 
   let _ =
-    Vim.Window.onMovement((_movementType, _count) =>
-      Log.info("Vim.Window.onMovement")
-    );
+    Vim.Window.onMovement((movementType, _count) => {
+      Log.info("Vim.Window.onMovement");
+      let currentState = getState();
+
+      let v = switch (movementType) {
+      | FullLeft
+      | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
+      | FullRight
+      | OneRight => Model.WindowManager.moveRight(currentState.windowManager)
+      | FullDown
+      | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
+      | FullUp
+      | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
+      | _ => currentState.windowManager.activeWindowId
+      }
+
+          let editorId = Model.WindowTree.getEditorGroupIdFromSplitId(v, currentState.windowManager.windowTree);
+          switch (editorId) {
+          | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
+          | None => ()
+          }
+    });
 
   let _ =
     Vim.Buffer.onEnter(buf => {

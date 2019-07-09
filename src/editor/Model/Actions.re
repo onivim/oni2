@@ -33,6 +33,7 @@ type t =
   | WildmenuPrevious
   | WildmenuSelect
   | WildmenuHide
+  | WindowMoveSplit(WindowManager.direction)
   | WindowSetActive(int, int)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)

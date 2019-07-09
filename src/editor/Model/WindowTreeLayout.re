@@ -75,11 +75,6 @@ let move = (id, dirX, dirY, splits: list(t)) => {
   };
 };
 
-let moveLeft = (id, splits) => move(id, -1, 0, splits);
-let moveRight = (id, splits) => move(id, 1, 0, splits);
-let moveUp = (id, splits) => move(id, 0, -1, splits);
-let moveDown = (id, splits) => move(id, 0, 1, splits);
-
 let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) => {
   switch (tree) {
   | Parent(direction, children) =>
