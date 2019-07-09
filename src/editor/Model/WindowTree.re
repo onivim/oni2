@@ -37,16 +37,20 @@ let filterEmpty = v =>
 
 let rec getEditorGroupIdFromSplitId = (splitId: int, currentTree) => {
   switch (currentTree) {
-  | Parent(_, tree) => List.fold_left((prev, curr) => {
-    switch (prev) {
-    | Some(_) => prev
-    | None => getEditorGroupIdFromSplitId(splitId, curr)
-    }
-  }, None, tree);
+  | Parent(_, tree) =>
+    List.fold_left(
+      (prev, curr) =>
+        switch (prev) {
+        | Some(_) => prev
+        | None => getEditorGroupIdFromSplitId(splitId, curr)
+        },
+      None,
+      tree,
+    )
   | Leaf(split) => split.id == splitId ? Some(split.editorGroupId) : None
   | Empty => None
-  }
-}
+  };
+};
 
 let addSplit = (~target=None, direction, newSplit, currentTree) => {
   let rec f = (targetId, parent, split) => {

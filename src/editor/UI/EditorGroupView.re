@@ -68,7 +68,8 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
   Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let createElement = (~state: State.t, ~windowId: int, ~editorGroupId: int, ~children as _, ()) =>
+let createElement =
+    (~state: State.t, ~windowId: int, ~editorGroupId: int, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let mode = state.mode;
