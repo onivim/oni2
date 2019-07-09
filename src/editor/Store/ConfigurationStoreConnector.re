@@ -32,11 +32,9 @@ let start = () => {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString)) {
         | Ok(v) => dispatch(Actions.ConfigurationSet(v))
-        | Error(err) =>
-          prerr_endline("Error loading configuration file: " ++ err)
+        | Error(err) => Log.error("Error loading configuration file: " ++ err)
         }
-      | Error(err) =>
-        prerr_endline("Error loading configuration file: " ++ err)
+      | Error(err) => Log.error("Error loading configuration file: " ++ err)
       };
     });
 
@@ -48,8 +46,7 @@ let start = () => {
       switch (configPath) {
       | Ok(configPathAsString) =>
         reloadConfigOnWritePost(~configPath=configPathAsString, dispatch)
-      | Error(err) =>
-        prerr_endline("Error loading configuration file: " ++ err)
+      | Error(err) => Log.error("Error loading configuration file: " ++ err)
       };
       ();
     });
@@ -59,7 +56,7 @@ let start = () => {
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
       | Ok(path) => dispatch(Actions.OpenFileByPath(path, None))
-      | Error(e) => prerr_endline(e)
+      | Error(e) => Log.error(e)
       }
     );
 

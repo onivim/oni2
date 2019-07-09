@@ -136,7 +136,7 @@ let init = app => {
           ),
         );
       },
-      _ => prerr_endline("setFont: Failed to load font " ++ fontFamily),
+      _ => Log.error("setFont: Failed to load font " ++ fontFamily),
     );
   };
 
