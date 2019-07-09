@@ -232,9 +232,10 @@ let start = () => {
       | false => ()
       | true =>
         let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-
         let editor = Model.Selectors.getActiveEditor(editorGroup);
 
+        /* If the editor / buffer in Onivim changed,
+         * let libvim know about it and set it as the current buffer */
         let editorBuffer = Model.Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
@@ -264,8 +265,6 @@ let start = () => {
           let (lines, columns) =
             Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
 
-          Log.info("lines: " ++ string_of_int(lines));
-
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
           };
@@ -275,13 +274,16 @@ let start = () => {
           };
         };
 
+        /* Update the window metrics for the editor */
+        /* This synchronizes the window width / height with libvim's model */
         switch (editor, editorGroup) {
         | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
         | _ => ()
         };
 
-        let synchronizeCursorPosition = (editor: Model.Editor.t) => {
-          print_endline("Synchronizing cursor position!");
+        /* Update the cursor position and the scroll (top line, left column) -
+         * ensure these are in sync with libvim's model */
+        let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
           Vim.Cursor.setPosition(
             Core.Types.Index.toInt1(editor.cursorPosition.line),
             Core.Types.Index.toInt1(editor.cursorPosition.character),
@@ -291,10 +293,10 @@ let start = () => {
 
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
+        | (Some(e), None)
         | (Some(e), Some(v)) when e.editorId != v =>
           synchronizeCursorPosition(e);
           currentEditorId := Some(e.editorId);
-        | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()
         };
       }
