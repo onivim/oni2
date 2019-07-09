@@ -79,10 +79,7 @@ let start = () => {
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(
-            buf,
-            Some(Model.WindowTree.Vertical),
-          )
+          Model.Actions.OpenFileByPath(buf, Some(Model.WindowTree.Vertical))
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
@@ -254,10 +251,7 @@ let start = () => {
         dispatch(Model.Actions.EditorGroupAdd(eg));
 
         let split =
-          Model.WindowTree.createSplit(
-            ~editorGroupId=eg.editorGroupId,
-            (),
-          );
+          Model.WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
 
         dispatch(Model.Actions.AddSplit(direction, split));
       | None => ()
