@@ -22,15 +22,14 @@ depends: [
   "ppx_tools"  {>= "4.02.3"}
   "result"
   "ounit"      {with-test}
-  "ocaml" {>= "4.02" & < "4.08.0"}
+  "ocaml" {>= "4.02" & < "4.09.0"}
 ]
-synopsis: "Type-driven code generation for OCaml >=4.02"
+synopsis: "Type-driven code generation for OCaml >=4.02.2"
 description: """
 ppx_deriving provides common infrastructure for generating
 code based on type definitions, and a set of useful plugins
 for common tasks.
 """
 url {
-  src: "https://github.com/ocaml-ppx/ppx_deriving/archive/v4.3.tar.gz"
-  checksum: "sha256=89d9bb599b6212de65597b8a3e714e1c3cd6b7e5a45bcb6a4405e4feb08cd190"
-}
+  src: "https://github.com/ocaml-ppx/ppx_deriving/archive/v4.4.tar.gz"
+  checksum: "sha256=c2d85af4cb65a1f163f624590fb0395a164bbfd0d05082092526b669e66bcc34"}
