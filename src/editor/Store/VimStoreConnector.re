@@ -81,12 +81,12 @@ let start = () => {
         | Vim.Types.Vertical =>
           Model.Actions.OpenFileByPath(
             buf,
-            Some(Model.WindowManager.Vertical),
+            Some(Model.WindowTree.Vertical),
           )
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
-            Some(Model.WindowManager.Horizontal),
+            Some(Model.WindowTree.Horizontal),
           )
         | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
         };
@@ -254,13 +254,12 @@ let start = () => {
         dispatch(Model.Actions.EditorGroupAdd(eg));
 
         let split =
-          Model.WindowManager.createSplit(
-            ~direction,
+          Model.WindowTree.createSplit(
             ~editorGroupId=eg.editorGroupId,
             (),
           );
 
-        dispatch(Model.Actions.AddSplit(split));
+        dispatch(Model.Actions.AddSplit(direction, split));
       | None => ()
       };
 
