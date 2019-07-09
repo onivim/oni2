@@ -46,14 +46,11 @@ let addSplit = (~target=None, direction, newSplit, currentTree) => {
         switch (parent) {
         | Some(Parent(dir, _)) =>
           if (dir == direction) {
-            prerr_endline("leaf found parent equal");
             [Leaf(newSplit), Leaf(v)];
           } else {
-            prerr_endline("leaf found parent not equal");
             [Parent(direction, [Leaf(newSplit), Leaf(v)])];
           }
         | _ =>
-          prerr_endline("other case");
           [Leaf(newSplit), Leaf(v)];
         };
       } else {
