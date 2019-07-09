@@ -240,10 +240,6 @@ let start = () => {
       | Some(_) => dispatch(Model.Actions.BufferEnter(metadata))
       | None => ()
       };
-      /* let ec = Model.EditorGroup.create();
-         let (g, editorId) =
-           Model.EditorGroup.getOrCreateEditorForBuffer(ec, metadata.id);
-         let newEditorGroup  = Model.EditorGroup.setActiveEditor(g, editorId); */
     });
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
