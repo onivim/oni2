@@ -77,11 +77,11 @@ let start = () => {
     Vim.Window.onSplit((splitType, buf) => {
       Log.info("Vim.Window.onSplit");
       let command = switch (splitType) {
-      | Vim.Types.Vertical => Model.Actions.Command("view.splitVertical")
-      | Vim.Types.Horizontal => Model.Actions.Command("view.splitHorizontal")
-      | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf)
+      | Vim.Types.Vertical => [Model.Actions.Command("view.splitVertical"), Model.Actions.OpenFileByPath(buf)]
+      | Vim.Types.Horizontal => [Model.Actions.Command("view.splitHorizontal"), Model.Actions.OpenFileByPath(buf)]
+      | Vim.Types.TabPage => [Model.Actions.OpenFileByPath(buf)]
       };
-      dispatch(command);
+      List.iter(c => dispatch(c), command);
     });
 
   let _ =
