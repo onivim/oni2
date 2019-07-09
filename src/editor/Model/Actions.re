@@ -61,7 +61,8 @@ type t =
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuickOpen
-  | Quit
+  | QuitBuffer(Vim.Buffer.t, bool)
+  | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Position.t, Position.t)
