@@ -52,7 +52,7 @@ type t =
   | MenuNextItem
   | MenuPreviousItem
   | MenuPosition(int)
-  | OpenFileByPath(string)
+  | OpenFileByPath(string, option(WindowManager.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)

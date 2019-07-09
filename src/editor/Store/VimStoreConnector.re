@@ -74,6 +74,31 @@ let start = () => {
     });
 
   let _ =
+    Vim.Window.onSplit((splitType, buf) => {
+      Log.info("Vim.Window.onSplit");
+      let command =
+        switch (splitType) {
+        | Vim.Types.Vertical =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Vertical),
+          )
+        | Vim.Types.Horizontal =>
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowManager.Horizontal),
+          )
+        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
+        };
+      dispatch(command);
+    });
+
+  let _ =
+    Vim.Window.onMovement((_movementType, _count) =>
+      Log.info("Vim.Window.onMovement")
+    );
+
+  let _ =
     Vim.Buffer.onEnter(buf => {
       let meta = {
         ...Vim.BufferMetadata.ofBuffer(buf),
@@ -213,10 +238,37 @@ let start = () => {
         }
       );
 
-  let openFileByPathEffect = filePath =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () =>
-      Vim.Buffer.openFile(filePath) |> ignore
-    );
+  let openFileByPathEffect = (filePath, dir) =>
+    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      /* If a split was requested, create that first! */
+      switch (dir) {
+      | Some(direction) =>
+        let eg = Model.EditorGroup.create();
+        dispatch(Model.Actions.EditorGroupAdd(eg));
+
+        let split =
+          Model.WindowManager.createSplit(
+            ~direction,
+            ~editorGroupId=eg.editorGroupId,
+            (),
+          );
+
+        dispatch(Model.Actions.AddSplit(split));
+      | None => ()
+      };
+
+      let buffer = Vim.Buffer.openFile(filePath);
+      let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+
+      /*
+       * If we're splitting, make sure a BufferEnter event gets dispatched.
+       * (This wouldn't happen if we're splitting the same buffer we're already at)
+       */
+      switch (dir) {
+      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata))
+      | None => ()
+      };
+    });
 
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
@@ -354,9 +406,9 @@ let start = () => {
         };
       (state, eff);
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path) => (
+    | Model.Actions.OpenFileByPath(path, direction) => (
         state,
-        openFileByPathEffect(path),
+        openFileByPathEffect(path, direction),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)
