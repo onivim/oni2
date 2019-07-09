@@ -13,7 +13,7 @@ build: [
   ["dune" "runtest" "-p" name] {with-test}
 ]
 depends: [
-  "ocaml" {>= "4.04.0"}
+  "ocaml" {>= "4.04.0" & < "4.08.0"}
   "yojson" {< "1.6.0"}
   "result"
   "ppx_deriving" {>= "4.0" & < "5.0"}
