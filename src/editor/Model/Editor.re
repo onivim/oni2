@@ -16,6 +16,8 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
+    lastTopLine: 0,
+    lastLeftCol: 0,
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -113,7 +115,10 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  scrollTo(view, scrollAmount, metrics);
+  {
+    ...scrollTo(view, scrollAmount, metrics),
+    lastTopLine: line,
+  }
 };
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
@@ -142,9 +147,28 @@ let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
   {...view, scrollX};
 };
 
+let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
+  open EditorLayout;
+  let {bufferWidthInCharacters, bufferHeightInCharacters, _} =
+    EditorLayout.getLayout(
+      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
+      ~pixelWidth=float_of_int(metrics.pixelWidth),
+      ~pixelHeight=float_of_int(metrics.pixelHeight),
+      ~isMinimapShown=true,
+      ~characterWidth=metrics.characterWidth,
+      ~characterHeight=metrics.lineHeight,
+      ~bufferLineCount=view.viewLines,
+      (),
+    );
+
+    (bufferHeightInCharacters, bufferWidthInCharacters);
+};
+
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
-  scrollToHorizontal(view, scrollAmount, metrics);
+  { ...scrollToHorizontal(view, scrollAmount, metrics),
+    lastLeftCol: column
+    };
 };
 
 let scroll = (view: t, scrollDeltaY, metrics) => {

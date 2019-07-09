@@ -150,13 +150,13 @@ let start = () => {
 
   let _ =
     Vim.Window.onTopLineChanged(t => {
-      Log.info("onTopLineChanged");
+      Log.info("onTopLineChanged: " ++ string_of_int(t));
       dispatch(Model.Actions.EditorScrollToLine(t - 1))
     });
 
   let _ = 
     Vim.Window.onLeftColumnChanged(t => {
-      Log.info("onLeftColumnChanged");
+      Log.info("onLeftColumnChanged: " ++ string_of_int(t));
       dispatch(Model.Actions.EditorScrollToColumn(t))
     });
 
@@ -256,12 +256,14 @@ let start = () => {
         | _ => ()
         };
 
-        let synchronizeWindowMetrics = (editorGroup: Model.EditorGroup.t) => {
+        let synchronizeWindowMetrics = (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
           let (lines, columns) =
-            Model.EditorMetrics.toLinesAndColumns(editorGroup.metrics);
+            Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
+
+Log.info("lines: " ++ string_of_int(lines));
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -272,20 +274,22 @@ let start = () => {
           };
         };
 
-        switch (editorGroup) {
-        | Some(v) => synchronizeWindowMetrics(v)
-        | None => ()
+        switch ((editor, editorGroup)) {
+        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        | _ => ()
         };
 
         let synchronizeCursorPosition = (editor: Model.Editor.t) => {
 			print_endline("Synchronizing cursor position!");
 	  	Vim.Cursor.setPosition(Core.Types.Index.toInt1(editor.cursorPosition.line), Core.Types.Index.toInt1(editor.cursorPosition.character));
+      Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
         };
 
+        /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
         | (Some(e), Some(v)) when e.editorId != v => {
-			synchronizeCursorPosition(e)
-currentEditorId := Some(e.editorId);
+            synchronizeCursorPosition(e)
+            currentEditorId := Some(e.editorId);
 			}
         | (Some(e), _) => synchronizeCursorPosition(e)
         | _ => ()

@@ -77,6 +77,8 @@ and editor = {
   bufferId: int,
   scrollX: float,
   scrollY: float,
+  lastTopLine: int,
+  lastLeftCol: int,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
