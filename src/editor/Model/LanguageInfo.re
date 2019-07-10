@@ -35,8 +35,8 @@ let getLanguageFromFilePath = (li: t, fp: string) => {
 let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
   switch (Buffer.getFilePath(buffer)) {
   | None => defaultLanguage
-  | Some(v) => getLanguageFromFilePath(li, v);
-  }
+  | Some(v) => getLanguageFromFilePath(li, v)
+  };
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {

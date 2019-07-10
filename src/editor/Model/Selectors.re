@@ -30,15 +30,16 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
-  let fileType = LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+  let fileType =
+    LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
   Configuration.getValue(~fileType, f, state.configuration);
 };
 
 let getMatchingPairs = (state: State.t, bufferId: int) => {
-    switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-    | Some(v) => v.matchingPair
-    | None => None
-  }
+  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+  | Some(v) => v.matchingPair
+  | None => None
+  };
 };
 
 let getSearchHighlights = (state: State.t, bufferId: int) => {
