@@ -114,8 +114,11 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
   && Float.equal(c1.a, c2.a);
 };
 
-let tokenize: (string, IndentationSettings.t, colorizer) => list(t) =
-  (s, indentationSettings, colorizer) => {
+let tokenize =
+  (~startIndex=0, ~endIndex=-1, s, indentationSettings, colorizer) => {
+    print_endline("STARTINDEX: " ++ string_of_int(startIndex) ++ " ENDINDEX: " 
+      ++ string_of_int(endIndex) ++ " s length: " 
+      ++ string_of_int(Zed_utf8.length(s)));
     let split = (i0, c0, i1, c1) => {
       let (bg1, fg1) = colorizer(i0);
       let (bg2, fg2) = colorizer(i1);
@@ -128,7 +131,7 @@ let tokenize: (string, IndentationSettings.t, colorizer) => list(t) =
       || UChar.eq(c1, tab);
     };
 
-    Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
+    Tokenizer.tokenize(~startIndex, ~endIndex, ~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
     |> List.map(textRunToToken(colorizer));
   };

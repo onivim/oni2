@@ -55,6 +55,42 @@ let validateTokens =
 describe("Tokenizer", ({test, describe, _}) => {
   describe("start / end indices", ({test, _}) => {
     test(
+      "empty string returns nothing",
+      ({expect}) => {
+      let measure = _ => 1;
+
+      let result =
+        Tokenizer.tokenize(
+          ~startIndex=1,
+          ~endIndex=3,
+          ~f=noSplit,
+          ~measure,
+          "",
+        );
+
+      let runs = [];
+
+      validateTokens(expect, result, runs);
+    });
+    test(
+      "start index past string",
+      ({expect}) => {
+      let measure = _ => 1;
+
+      let result =
+        Tokenizer.tokenize(
+          ~startIndex=5,
+          ~endIndex=8,
+          ~f=noSplit,
+          ~measure,
+          "abc",
+        );
+
+      let runs = [];
+
+      validateTokens(expect, result, runs);
+    });
+    test(
       "only part of token is produced when start / end index is specified",
       ({expect}) => {
       let measure = _ => 1;

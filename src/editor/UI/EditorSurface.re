@@ -220,6 +220,7 @@ let createElement =
       | None => IndentationSettings.default
       };
 
+    let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
@@ -283,6 +284,29 @@ let createElement =
 
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
+    
+    let isMinimapShown =
+      Configuration.getValue(
+        c => c.editorMinimapEnabled,
+        state.configuration,
+      );
+
+    let layout =
+      EditorLayout.getLayout(
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
+        ~pixelWidth=float_of_int(metrics.pixelWidth),
+        ~pixelHeight=float_of_int(metrics.pixelHeight),
+        ~isMinimapShown,
+        ~characterWidth=state.editorFont.measuredWidth,
+        ~characterHeight=state.editorFont.measuredHeight,
+        ~bufferLineCount=lineCount,
+        (),
+      );
+
 
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
@@ -332,6 +356,8 @@ let createElement =
         );
 
       BufferViewTokenizer.tokenize(
+        ~startIndex=leftVisibleColumn,
+        ~endIndex=(leftVisibleColumn + layout.bufferWidthInCharacters),
         line,
         IndentationSettings.default,
         colorizer,
@@ -354,28 +380,6 @@ let createElement =
         (),
       );
     };
-
-    let isMinimapShown =
-      Configuration.getValue(
-        c => c.editorMinimapEnabled,
-        state.configuration,
-      );
-
-    let layout =
-      EditorLayout.getLayout(
-        ~maxMinimapCharacters=
-          Configuration.getValue(
-            c => c.editorMinimapMaxColumn,
-            state.configuration,
-          ),
-        ~pixelWidth=float_of_int(metrics.pixelWidth),
-        ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown,
-        ~characterWidth=state.editorFont.measuredWidth,
-        ~characterHeight=state.editorFont.measuredHeight,
-        ~bufferLineCount=lineCount,
-        (),
-      );
 
     let bufferPixelWidth =
       layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;

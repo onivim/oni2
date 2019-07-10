@@ -87,38 +87,43 @@ let tokenize =
       s: string,
     ) => {
   let len = Zed_utf8.length(s);
-  let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-  let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
-  let idx = ref(startIndex);
-  let tokens: ref(list(TextRun.t)) = ref([]);
+  if (len == 0 || startIndex >= len) {
+    []
+  } else {
+    let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-  let offset = ref(initialOffset);
+    let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
+    let idx = ref(startIndex);
+    let tokens: ref(list(TextRun.t)) = ref([]);
 
-  while (idx^ < maxIndex) {
-    let startToken = idx^;
-    let startOffset = offset^;
-    let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
+    let offset = ref(initialOffset);
 
-    let text = Zed_utf8.sub(s, startToken, endToken - startToken);
-    let endOffset =
-      startOffset
-      + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
+    while (idx^ < maxIndex) {
+      let startToken = idx^;
+      let startOffset = offset^;
+      let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
 
-    let textRun =
-      TextRun.create(
-        ~text,
-        ~startIndex=ZeroBasedIndex(startToken),
-        ~endIndex=ZeroBasedIndex(endToken),
-        ~startPosition=ZeroBasedIndex(startOffset),
-        ~endPosition=ZeroBasedIndex(endOffset),
-        (),
-      );
+      let text = Zed_utf8.sub(s, startToken, endToken - startToken);
+      let endOffset =
+        startOffset
+        + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
 
-    tokens := [textRun, ...tokens^];
-    idx := endToken;
-    offset := endOffset;
-  };
+      let textRun =
+        TextRun.create(
+          ~text,
+          ~startIndex=ZeroBasedIndex(startToken),
+          ~endIndex=ZeroBasedIndex(endToken),
+          ~startPosition=ZeroBasedIndex(startOffset),
+          ~endPosition=ZeroBasedIndex(endOffset),
+          (),
+        );
 
-  tokens^ |> List.rev;
+      tokens := [textRun, ...tokens^];
+      idx := endToken;
+      offset := endOffset;
+    };
+
+    tokens^ |> List.rev;
+  }
 };
