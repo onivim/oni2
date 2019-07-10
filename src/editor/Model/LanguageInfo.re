@@ -19,15 +19,24 @@ let getGrammars = (li: t) => {
   li.grammars;
 };
 
+let defaultLanguage = "plaintext";
+
 let getLanguageFromExtension = (li: t, ext: string) => {
   switch (StringMap.find_opt(ext, li.extToLanguage)) {
   | Some(v) => v
-  | None => "plaintext"
+  | None => defaultLanguage
   };
 };
 
-let getLanguageFromFilePath = (li: t, ext: string) => {
-  Path.extname(ext) |> getLanguageFromExtension(li);
+let getLanguageFromFilePath = (li: t, fp: string) => {
+  Path.extname(fp) |> getLanguageFromExtension(li);
+};
+
+let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
+  switch (Buffer.getFilePath(buffer)) {
+  | None => defaultLanguage
+  | Some(v) => getLanguageFromFilePath(li, v);
+  }
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {
