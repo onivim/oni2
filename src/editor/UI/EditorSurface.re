@@ -284,6 +284,15 @@ let createElement =
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
 
+    let matchingPairsEnabled =
+      Selectors.getConfigurationValue(state, buffer, c =>
+        c.editorMatchBrackets
+      );
+
+    let matchingPairs =
+      !matchingPairsEnabled
+        ? None : Selectors.getMatchingPairs(state, editor.bufferId);
+
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
@@ -306,7 +315,7 @@ let createElement =
           : theme.colors.editorBackground;
 
       let matchingPairIndex =
-        switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+        switch (matchingPairs) {
         | None => None
         | Some(v) =>
           if (Index.toInt0(v.startPos.line) == i) {
@@ -562,9 +571,7 @@ let createElement =
 
                     /* Draw match highlights */
                     let matchColor = theme.colors.editorSelectionBackground;
-                    switch (
-                      Selectors.getMatchingPairs(state, editor.bufferId)
-                    ) {
+                    switch (matchingPairs) {
                     | None => ()
                     | Some(v) =>
                       renderRange(
