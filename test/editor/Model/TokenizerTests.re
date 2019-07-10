@@ -7,7 +7,14 @@ open CamomileLibrary;
 module TextRun = Tokenizer.TextRun;
 
 let alwaysSplit = (_, _, _, _) => true;
+let noSplit = (_, _, _, _) => false;
 let splitOnCharacter = (_, c1, _, c2) => !UChar.eq(c1, c2);
+
+let thickB = c =>
+  switch (UChar.char_of(c)) {
+  | 'b' => 2
+  | _ => 1
+  };
 
 let validateToken =
     (
@@ -21,6 +28,12 @@ let validateToken =
   );
   expect.int(Index.toZeroBasedInt(actualToken.endIndex)).toBe(
     Index.toZeroBasedInt(expectedToken.endIndex),
+  );
+  expect.int(Index.toZeroBasedInt(actualToken.startPosition)).toBe(
+    Index.toZeroBasedInt(expectedToken.startPosition),
+  );
+  expect.int(Index.toZeroBasedInt(actualToken.endPosition)).toBe(
+    Index.toZeroBasedInt(expectedToken.endPosition),
   );
 };
 
@@ -39,15 +52,54 @@ let validateTokens =
   List.iter2(f, actualTokens, expectedTokens);
 };
 
-describe("tokenize", ({test, describe, _}) => {
+describe("Tokenizer", ({test, describe, _}) => {
+  describe("start / end indices", ({test, _}) => {
+    test("only part of token is produced when start / end index is specified", ({expect}) => {
+
+      let measure = (_) => 1;
+
+      let result = 
+        Tokenizer.tokenize(~startIndex=1, ~endIndex=3, ~f=noSplit, ~measure, "abcd");
+      
+      let runs = [
+        TextRun.create(
+          ~text="bc",
+          ~startIndex=ZeroBasedIndex(1),
+          ~endIndex=ZeroBasedIndex(3),
+          ~startPosition=ZeroBasedIndex(1),
+          ~endPosition=ZeroBasedIndex(3),
+          (),
+        ),
+      ];
+
+      validateTokens(expect, result, runs);
+    });
+    test("offset prior to tokenize is handled", ({expect}) => {
+
+      // Pretend 'b' is actually 2 characters wide
+      let measure = thickB;
+
+      let result = 
+        Tokenizer.tokenize(~startIndex=2, ~endIndex=4, ~f=noSplit, ~measure, "bbbcd");
+      
+      let runs = [
+        TextRun.create(
+          ~text="bc",
+          ~startIndex=ZeroBasedIndex(2),
+          ~endIndex=ZeroBasedIndex(4),
+          ~startPosition=ZeroBasedIndex(4),
+          ~endPosition=ZeroBasedIndex(7),
+          (),
+        ),
+      ];
+
+      validateTokens(expect, result, runs);
+    });
+  });
+  
   describe("character measurement", ({test, _}) =>
     test("wide b", ({expect}) => {
       let str = "abab";
-      let thickB = c =>
-        switch (UChar.char_of(c)) {
-        | 'b' => 2
-        | _ => 1
-        };
       let result =
         Tokenizer.tokenize(~f=splitOnCharacter, ~measure=thickB, str);
 

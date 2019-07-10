@@ -128,7 +128,7 @@ let tokenize: (string, IndentationSettings.t, colorizer) => list(t) =
       || UChar.eq(c1, tab);
     };
 
-    Tokenizer.tokenize(~startIndex=1, ~endIndex=100, ~f=split, ~measure=measure(indentationSettings), s)
+    Tokenizer.tokenize(~f=split, ~measure=measure(indentationSettings), s)
     |> List.filter(filterRuns)
     |> List.map(textRunToToken(colorizer));
   };
