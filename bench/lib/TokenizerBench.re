@@ -28,12 +28,12 @@ let tokenizeWithoutSplits = () => {
 };
 
 let tokenizeWithSplitsSub = () => {
-  let _ = Tokenizer.tokenize(~startIndex=1, ~endIndex=100, ~f=splitEverything, giantString);
+  let _ = Tokenizer.tokenize(~startIndex=100, ~endIndex=200, ~f=splitEverything, giantString);
   ();
 };
 
 let tokenizeWithoutSplitsSub = () => {
-  let _ = Tokenizer.tokenize(~startIndex=1, ~endIndex=100, ~f=splitNothing, giantString);
+  let _ = Tokenizer.tokenize(~startIndex=100, ~endIndex=200, ~f=splitNothing, giantString);
   ();
 };
 
@@ -58,7 +58,7 @@ bench(
 );
 
 bench(
-  ~name="Tokenizer: Tokenize large line subset (1-100), high split count",
+  ~name="Tokenizer: Tokenize large line subset (100-200), high split count",
   ~options,
   ~setup,
   ~f=tokenizeWithoutSplitsSub,
@@ -66,7 +66,7 @@ bench(
 );
 
 bench(
-  ~name="Tokenizer: Tokenize large line subset (1-100), no splits",
+  ~name="Tokenizer: Tokenize large line subset (100-200), no splits",
   ~options,
   ~setup,
   ~f=tokenizeWithoutSplitsSub,
