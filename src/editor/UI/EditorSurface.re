@@ -459,7 +459,10 @@ let createElement =
               count=lineCount
               diagnostics
               metrics
-              getTokensForLine=getTokensForLine(0, layout.bufferWidthInCharacters)
+              getTokensForLine={getTokensForLine(
+                0,
+                layout.bufferWidthInCharacters,
+              )}
               selection=selectionRanges
             />
           </View>
@@ -625,7 +628,12 @@ let createElement =
                         }
                       };
                     let tokens =
-                      getTokensForLine(~selection=selectionRange, leftVisibleColumn, leftVisibleColumn + layout.bufferWidthInCharacters, item);
+                      getTokensForLine(
+                        ~selection=selectionRange,
+                        leftVisibleColumn,
+                        leftVisibleColumn + layout.bufferWidthInCharacters,
+                        item,
+                      );
 
                     let _ =
                       renderTokens(
