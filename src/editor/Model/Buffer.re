@@ -29,11 +29,15 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   indentation: None,
 };
 
+let getFilePath = (buffer: t) => buffer.metadata.filePath;
+
 let getMetadata = (buffer: t) => buffer.metadata;
 
 let getId = (buffer: t) => buffer.metadata.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
+
+let isModified = (buffer: t) => buffer.metadata.modified;
 
 let getUri = (buffer: t) => {
   let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {

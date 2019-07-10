@@ -71,7 +71,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start();
+  let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start();
   let indentationUpdater = IndentationStoreConnector.start();
 
   let (storeDispatch, storeStream) =
@@ -124,6 +124,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   /* Isolinear.Stream.connect(dispatch, extHostStream); */
   Isolinear.Stream.connect(dispatch, menuStream);
   Isolinear.Stream.connect(dispatch, explorerStream);
+  Isolinear.Stream.connect(dispatch, lifecycleStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

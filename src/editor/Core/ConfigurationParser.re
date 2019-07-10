@@ -75,6 +75,10 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorLineNumbers: parseLineNumberSetting(v)},
   ),
   (
+    "editor.matchBrackets",
+    (s, v) => {...s, editorMatchBrackets: parseBool(v)},
+  ),
+  (
     "editor.minimap.enabled",
     (s, v) => {...s, editorMinimapEnabled: parseBool(v)},
   ),
