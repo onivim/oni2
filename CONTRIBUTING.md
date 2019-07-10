@@ -3,8 +3,10 @@
 ## Prerequisites
 
 - Install [Git](https://git-scm.com/)
+- Install [Node](https://nodejs.org/en)
 - Install [Esy](https://esy.sh) (__0.5.6__ is required)
 - [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
+- __Windows-only__: Install additional tools: `npm install -g windows-build-tools`
 
 ## Build and Run
 
