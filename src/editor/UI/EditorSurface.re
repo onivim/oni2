@@ -307,7 +307,7 @@ let createElement =
         (),
       );
 
-    let getTokensForLine = (~selection=None, i) => {
+    let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
@@ -355,8 +355,8 @@ let createElement =
         );
 
       BufferViewTokenizer.tokenize(
-        ~startIndex=leftVisibleColumn,
-        ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+        ~startIndex,
+        ~endIndex,
         line,
         IndentationSettings.default,
         colorizer,
@@ -459,7 +459,7 @@ let createElement =
               count=lineCount
               diagnostics
               metrics
-              getTokensForLine
+              getTokensForLine=getTokensForLine(0, layout.bufferWidthInCharacters)
               selection=selectionRanges
             />
           </View>
@@ -625,7 +625,7 @@ let createElement =
                         }
                       };
                     let tokens =
-                      getTokensForLine(~selection=selectionRange, item);
+                      getTokensForLine(~selection=selectionRange, leftVisibleColumn, leftVisibleColumn + layout.bufferWidthInCharacters, item);
 
                     let _ =
                       renderTokens(
