@@ -35,6 +35,8 @@ let getId = (buffer: t) => buffer.metadata.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
+let isModified = (buffer: t) => buffer.metadata.modified;
+
 let getUri = (buffer: t) => {
   let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {
     switch (metadata.filePath) {

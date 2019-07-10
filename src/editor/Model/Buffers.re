@@ -25,6 +25,14 @@ let log = (m: t) =>
 
 let getBuffer = (id, map) => IntMap.find_opt(id, map);
 
+let anyModified = (buffers: t) => {
+  IntMap.fold(
+    (_key, v, prev) => Buffer.isModified(v) || prev,
+    buffers,
+    false,
+  );
+};
+
 let getBufferMetadata = (id, map) =>
   switch (getBuffer(id, map)) {
   | Some(v) => Some(Buffer.getMetadata(v))
