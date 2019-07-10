@@ -34,6 +34,31 @@ let applyToAllEditorGroups =
   IntMap.map(eg => EditorGroupReducer.reduce(eg, action), editors);
 };
 
+/* Validate 'activeId' is set to a valid editor group,
+   otherwise move to the first valid */
+let ensureActiveId = (v: t) => {
+  switch (IntMap.find_opt(v.activeId, v.idToGroup)) {
+  | Some(_) => v
+  | None => {
+    switch (IntMap.min_binding_opt(v.idToGroup)) {
+    | Some((key, _)) => { ...v, activeId: key }
+    | _ =>  v
+    }
+  }
+  }
+};
+
+let removeEmptyEditorGroups = (v: t) => {
+  let idToGroup = IntMap.filter((key, v) => {
+    !EditorGroup.isEmpty(v)
+  }, v.idToGroup);
+
+  {
+    ...v,
+    idToGroup
+  }
+};
+
 let reduce = (v: t, action: Actions.t) => {
   switch (action) {
   | SetEditorFont(ef) => {
@@ -69,7 +94,7 @@ let reduce = (v: t, action: Actions.t) => {
 
     {...v, idToGroup};
   | action =>
-    switch (getActiveEditorGroup(v)) {
+    let ret = switch (getActiveEditorGroup(v)) {
     | Some(eg) => {
         ...v,
         idToGroup:
@@ -80,6 +105,14 @@ let reduce = (v: t, action: Actions.t) => {
           ),
       }
     | None => v
+    }
+
+    switch(action) {
+    | ViewCloseEditor(_) => 
+    ret
+    |> removeEmptyEditorGroups
+    |> ensureActiveId;
+    | _ => ret
     }
   };
 };
