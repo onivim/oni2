@@ -53,12 +53,12 @@ let start = () => {
     });
 
   let _ =
-    Vim.onQuit((quitType, force) => {
-     switch (quitType) {
-     | QuitAll => dispatch(Quit(force))
-     | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
-     }
-    });
+    Vim.onQuit((quitType, force) =>
+      switch (quitType) {
+      | QuitAll => dispatch(Quit(force))
+      | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
+      }
+    );
 
   let _ =
     Vim.Visual.onRangeChanged(vr => {
