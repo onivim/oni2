@@ -63,38 +63,67 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
 
 let defaultMeasure: measureFunc = _ => 1;
 
-let tokenize = (~f: splitFunc, ~measure=defaultMeasure, s: string) => {
-  let startIndex = 0;
-  let maxIndex = Zed_utf8.length(s);
-  let idx = ref(startIndex);
-  let tokens: ref(list(TextRun.t)) = ref([]);
+let getOffsetFromStart = (~measure, ~idx, s) =>
+  if (idx <= 0) {
+    0;
+  } else {
+    let offset = ref(0);
+    let i = ref(0);
 
-  let offset = ref(0);
+    while (i^ < idx) {
+      offset := offset^ + measure(Zed_utf8.get(s, i^));
+      incr(i);
+    };
 
-  while (idx^ < maxIndex) {
-    let startToken = idx^;
-    let startOffset = offset^;
-    let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
-
-    let text = Zed_utf8.sub(s, startToken, endToken - startToken);
-    let endOffset =
-      startOffset
-      + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
-
-    let textRun =
-      TextRun.create(
-        ~text,
-        ~startIndex=ZeroBasedIndex(startToken),
-        ~endIndex=ZeroBasedIndex(endToken),
-        ~startPosition=ZeroBasedIndex(startOffset),
-        ~endPosition=ZeroBasedIndex(endOffset),
-        (),
-      );
-
-    tokens := [textRun, ...tokens^];
-    idx := endToken;
-    offset := endOffset;
+    offset^;
   };
 
-  tokens^ |> List.rev;
+let tokenize =
+    (
+      ~startIndex=0,
+      ~endIndex=(-1),
+      ~f: splitFunc,
+      ~measure=defaultMeasure,
+      s: string,
+    ) => {
+  let len = Zed_utf8.length(s);
+
+  if (len == 0 || startIndex >= len) {
+    [];
+  } else {
+    let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
+
+    let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
+    let idx = ref(startIndex);
+    let tokens: ref(list(TextRun.t)) = ref([]);
+
+    let offset = ref(initialOffset);
+
+    while (idx^ < maxIndex) {
+      let startToken = idx^;
+      let startOffset = offset^;
+      let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
+
+      let text = Zed_utf8.sub(s, startToken, endToken - startToken);
+      let endOffset =
+        startOffset
+        + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
+
+      let textRun =
+        TextRun.create(
+          ~text,
+          ~startIndex=ZeroBasedIndex(startToken),
+          ~endIndex=ZeroBasedIndex(endToken),
+          ~startPosition=ZeroBasedIndex(startOffset),
+          ~endPosition=ZeroBasedIndex(endOffset),
+          (),
+        );
+
+      tokens := [textRun, ...tokens^];
+      idx := endToken;
+      offset := endOffset;
+    };
+
+    tokens^ |> List.rev;
+  };
 };
