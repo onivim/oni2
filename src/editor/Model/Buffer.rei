@@ -14,6 +14,7 @@ let show: t => string;
 let ofLines: array(string) => t;
 let ofMetadata: Vim.BufferMetadata.t => t;
 
+let getFilePath: t => string;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
 
