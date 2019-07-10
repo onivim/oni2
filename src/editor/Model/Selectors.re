@@ -30,10 +30,15 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
 };
 
 let getMatchingPairs = (state: State.t, bufferId: int) => {
-  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-  | Some(v) => v.matchingPair
-  | None => None
-  };
+  switch (state.configuration.default.editorMatchBrackets) {
+  | false => None
+  | true => {
+    switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
+    | Some(v) => v.matchingPair
+    | None => None
+  }
+  }
+  }
 };
 
 let getSearchHighlights = (state: State.t, bufferId: int) => {

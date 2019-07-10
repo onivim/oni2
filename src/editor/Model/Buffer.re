@@ -30,7 +30,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
 };
 
 
-let getFilePath = (buffer: t) => buffer.filePath;
+let getFilePath = (buffer: t) => buffer.metadata.filePath;
 
 let getMetadata = (buffer: t) => buffer.metadata;
 
