@@ -8,12 +8,13 @@ type t = {search: (string, list(string) => unit) => disposeFunction};
 let process = (rgPath, args, callback) => {
   let cp = ChildProcess.spawn(rgPath, args);
 
-  Event.subscribe(cp.stdout.onData, value =>
+  Event.subscribe(cp.stdout.onData, value => {
+    print_endline ("got bytes\n");
     Bytes.to_string(value)
     |> String.trim
     |> String.split_on_char('\n')
     |> callback
-  )
+  })
   |> ignore;
 
   () => cp.kill(Sys.sigkill);
@@ -25,6 +26,6 @@ let process = (rgPath, args, callback) => {
    path, modified, created
  */
 let search = (path, query, callback) =>
-  process(path, [|"--files", "--sort", "accessed", "--", query|], callback);
+  process(path, [|"--files", "--", query|], callback);
 
 let make = path => {search: search(path)};

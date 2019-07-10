@@ -471,6 +471,8 @@ let createElement =
           </View>
         : React.empty;
 
+  print_endline ("RENDERING!!");
+
     (
       hooks,
       <View style onDimensionsChanged>
