@@ -20,8 +20,8 @@ let getLineLength: (t, int) => int;
 let getMetadata: t => Vim.BufferMetadata.t;
 let getUri: t => Uri.t;
 let getId: t => int;
-
 let getNumberOfLines: t => int;
+let isModified: t => bool;
 
 let isIndentationSet: t => bool;
 let setIndentation: (IndentationSettings.t, t) => t;
