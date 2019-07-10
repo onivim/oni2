@@ -89,7 +89,7 @@ let tokenize =
   let len = Zed_utf8.length(s);
 
   if (len == 0 || startIndex >= len) {
-    []
+    [];
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
@@ -125,5 +125,5 @@ let tokenize =
     };
 
     tokens^ |> List.rev;
-  }
+  };
 };

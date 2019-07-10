@@ -177,9 +177,11 @@ type cursorLocation =
   | Bottom;
 
 let getLeftVisibleColumn = (view, metrics: EditorMetrics.t) => {
-  print_endline ("metrics.characterWidth: " ++ string_of_float(metrics.characterWidth));
+  print_endline(
+    "metrics.characterWidth: " ++ string_of_float(metrics.characterWidth),
+  );
   int_of_float(view.scrollX /. metrics.characterWidth);
-  }
+};
 
 let getTopVisibleLine = (view, metrics: EditorMetrics.t) =>
   int_of_float(view.scrollY /. metrics.lineHeight) + 1;

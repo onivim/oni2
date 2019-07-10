@@ -115,23 +115,34 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
 };
 
 let tokenize =
-  (~startIndex=0, ~endIndex=-1, s, indentationSettings, colorizer) => {
-    print_endline("STARTINDEX: " ++ string_of_int(startIndex) ++ " ENDINDEX: " 
-      ++ string_of_int(endIndex) ++ " s length: " 
-      ++ string_of_int(Zed_utf8.length(s)));
-    let split = (i0, c0, i1, c1) => {
-      let (bg1, fg1) = colorizer(i0);
-      let (bg2, fg2) = colorizer(i1);
+    (~startIndex=0, ~endIndex=(-1), s, indentationSettings, colorizer) => {
+  print_endline(
+    "STARTINDEX: "
+    ++ string_of_int(startIndex)
+    ++ " ENDINDEX: "
+    ++ string_of_int(endIndex)
+    ++ " s length: "
+    ++ string_of_int(Zed_utf8.length(s)),
+  );
+  let split = (i0, c0, i1, c1) => {
+    let (bg1, fg1) = colorizer(i0);
+    let (bg2, fg2) = colorizer(i1);
 
-      !colorEqual(bg1, bg2)
-      || !colorEqual(fg1, fg2)
-      || _isWhitespace(c0) != _isWhitespace(c1)
-      /* Always split on tabs */
-      || UChar.eq(c0, tab)
-      || UChar.eq(c1, tab);
-    };
-
-    Tokenizer.tokenize(~startIndex, ~endIndex, ~f=split, ~measure=measure(indentationSettings), s)
-    |> List.filter(filterRuns)
-    |> List.map(textRunToToken(colorizer));
+    !colorEqual(bg1, bg2)
+    || !colorEqual(fg1, fg2)
+    || _isWhitespace(c0) != _isWhitespace(c1)
+    /* Always split on tabs */
+    || UChar.eq(c0, tab)
+    || UChar.eq(c1, tab);
   };
+
+  Tokenizer.tokenize(
+    ~startIndex,
+    ~endIndex,
+    ~f=split,
+    ~measure=measure(indentationSettings),
+    s,
+  )
+  |> List.filter(filterRuns)
+  |> List.map(textRunToToken(colorizer));
+};

@@ -54,9 +54,7 @@ let validateTokens =
 
 describe("Tokenizer", ({test, describe, _}) => {
   describe("start / end indices", ({test, _}) => {
-    test(
-      "empty string returns nothing",
-      ({expect}) => {
+    test("empty string returns nothing", ({expect}) => {
       let measure = _ => 1;
 
       let result =
@@ -72,9 +70,7 @@ describe("Tokenizer", ({test, describe, _}) => {
 
       validateTokens(expect, result, runs);
     });
-    test(
-      "start index past string",
-      ({expect}) => {
+    test("start index past string", ({expect}) => {
       let measure = _ => 1;
 
       let result =

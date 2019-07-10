@@ -284,7 +284,7 @@ let createElement =
 
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
-    
+
     let isMinimapShown =
       Configuration.getValue(
         c => c.editorMinimapEnabled,
@@ -306,7 +306,6 @@ let createElement =
         ~bufferLineCount=lineCount,
         (),
       );
-
 
     let getTokensForLine = (~selection=None, i) => {
       let line = Buffer.getLine(buffer, i);
@@ -357,7 +356,7 @@ let createElement =
 
       BufferViewTokenizer.tokenize(
         ~startIndex=leftVisibleColumn,
-        ~endIndex=(leftVisibleColumn + layout.bufferWidthInCharacters),
+        ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
         line,
         IndentationSettings.default,
         colorizer,
