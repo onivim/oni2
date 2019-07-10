@@ -64,8 +64,6 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
 let defaultMeasure: measureFunc = _ => 1;
 
 let tokenize = (~startIndex=0, ~endIndex=-1, ~f: splitFunc, ~measure=defaultMeasure, s: string) => {
-  let startIndex = 0;
-
   let len = Zed_utf8.length(s)
   let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
   
