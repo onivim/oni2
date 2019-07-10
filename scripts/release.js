@@ -28,6 +28,19 @@ const shell = (cmd) => {
     console.log(`[shell - output]: ${out.toString("utf8")}`);
 };
 
+const getRipgrepPath = () => {
+
+    const rg = "ripgrep-v0.10.0";
+
+    if (process.platform == "darwin") {
+        return path.join(rootDirectory, "vendor", rg, "mac", "rg");
+    } else if (process.platform == "win32") {
+        return path.join(rootDirectory, "vendor", rg, "windows", "rg.exe");
+    } else {
+        return path.join(rootDirectory, "vendor", rg, "linux", "rg");
+    }
+}
+
 if (process.platform == "darwin") {
 
   const executables = [
@@ -68,6 +81,8 @@ if (process.platform == "darwin") {
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, extensionsDestDirectory);
 
+  copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
+
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
@@ -105,11 +120,14 @@ if (process.platform == "darwin") {
     ]
   };
   fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
+  fs.removeSync(path.join(binaryDirectory, "setup.json"));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
   fs.mkdirpSync(platformReleaseDirectory);
 
+  copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
+  fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
 }
