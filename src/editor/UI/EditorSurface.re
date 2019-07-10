@@ -285,7 +285,6 @@ let createElement =
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
 
-<<<<<<< HEAD
     let isMinimapShown =
       Configuration.getValue(
         c => c.editorMinimapEnabled,
