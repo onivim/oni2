@@ -81,7 +81,10 @@ let init = app => {
           ),
         ),
       ),
-    openEditorById: id => dispatch(Model.Actions.ViewSetActiveEditor(id)),
+    openEditorById: id => {
+      print_endline("OpenEditorById: " ++ string_of_int(id));
+      dispatch(Model.Actions.ViewSetActiveEditor(id));
+    },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScroll: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
