@@ -63,29 +63,32 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
 
 let defaultMeasure: measureFunc = _ => 1;
 
-let getOffsetFromStart = (~measure, ~idx, s) => {
-
+let getOffsetFromStart = (~measure, ~idx, s) =>
   if (idx <= 0) {
-    0
+    0;
   } else {
-  
     let offset = ref(0);
     let i = ref(0);
 
     while (i^ < idx) {
       offset := offset^ + measure(Zed_utf8.get(s, i^));
       incr(i);
-    }
-    
-    offset^;
-  }
-};
+    };
 
-let tokenize = (~startIndex=0, ~endIndex=-1, ~f: splitFunc, ~measure=defaultMeasure, s: string) => {
-  let len = Zed_utf8.length(s)
+    offset^;
+  };
+
+let tokenize =
+    (
+      ~startIndex=0,
+      ~endIndex=(-1),
+      ~f: splitFunc,
+      ~measure=defaultMeasure,
+      s: string,
+    ) => {
+  let len = Zed_utf8.length(s);
   let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-  
   let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
   let idx = ref(startIndex);
   let tokens: ref(list(TextRun.t)) = ref([]);

@@ -54,13 +54,20 @@ let validateTokens =
 
 describe("Tokenizer", ({test, describe, _}) => {
   describe("start / end indices", ({test, _}) => {
-    test("only part of token is produced when start / end index is specified", ({expect}) => {
+    test(
+      "only part of token is produced when start / end index is specified",
+      ({expect}) => {
+      let measure = _ => 1;
 
-      let measure = (_) => 1;
+      let result =
+        Tokenizer.tokenize(
+          ~startIndex=1,
+          ~endIndex=3,
+          ~f=noSplit,
+          ~measure,
+          "abcd",
+        );
 
-      let result = 
-        Tokenizer.tokenize(~startIndex=1, ~endIndex=3, ~f=noSplit, ~measure, "abcd");
-      
       let runs = [
         TextRun.create(
           ~text="bc",
@@ -75,13 +82,18 @@ describe("Tokenizer", ({test, describe, _}) => {
       validateTokens(expect, result, runs);
     });
     test("offset prior to tokenize is handled", ({expect}) => {
-
       // Pretend 'b' is actually 2 characters wide
       let measure = thickB;
 
-      let result = 
-        Tokenizer.tokenize(~startIndex=2, ~endIndex=4, ~f=noSplit, ~measure, "bbbcd");
-      
+      let result =
+        Tokenizer.tokenize(
+          ~startIndex=2,
+          ~endIndex=4,
+          ~f=noSplit,
+          ~measure,
+          "bbbcd",
+        );
+
       let runs = [
         TextRun.create(
           ~text="bc",
@@ -96,7 +108,7 @@ describe("Tokenizer", ({test, describe, _}) => {
       validateTokens(expect, result, runs);
     });
   });
-  
+
   describe("character measurement", ({test, _}) =>
     test("wide b", ({expect}) => {
       let str = "abab";

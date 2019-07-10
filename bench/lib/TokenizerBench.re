@@ -1,14 +1,12 @@
 open Oni_Core;
 open BenchFramework;
 
-let createGiantString = (iter) => {
- let rec f = (s, i) => {
-  switch (i > 0) {
-  | true => f(s ++ "this is a really\tlong_linewithsomelongtokens", i - 1)
-  | false => s
-  }
-  }
-  
+let createGiantString = iter => {
+  let rec f = (s, i) => {
+    i > 0
+      ? f(s ++ "this is a really\tlong_linewithsomelongtokens", i - 1) : s;
+  };
+
   f("", iter);
 };
 
@@ -28,12 +26,24 @@ let tokenizeWithoutSplits = () => {
 };
 
 let tokenizeWithSplitsSub = () => {
-  let _ = Tokenizer.tokenize(~startIndex=100, ~endIndex=200, ~f=splitEverything, giantString);
+  let _ =
+    Tokenizer.tokenize(
+      ~startIndex=100,
+      ~endIndex=200,
+      ~f=splitEverything,
+      giantString,
+    );
   ();
 };
 
 let tokenizeWithoutSplitsSub = () => {
-  let _ = Tokenizer.tokenize(~startIndex=100, ~endIndex=200, ~f=splitNothing, giantString);
+  let _ =
+    Tokenizer.tokenize(
+      ~startIndex=100,
+      ~endIndex=200,
+      ~f=splitNothing,
+      giantString,
+    );
   ();
 };
 
