@@ -37,6 +37,11 @@ let parse = (setup: Setup.t) => {
     header(setup.version),
   );
 
+  if (!Log.canPrint^) {
+    /* On Windows, detach the application from the console if we're not logging to console */
+    Utility.freeConsole();
+  }
+
   let paths = args^ |> List.rev;
   let workingDirectory = Environment.getWorkingDirectory();
 

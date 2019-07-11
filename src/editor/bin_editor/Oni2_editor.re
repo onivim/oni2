@@ -18,8 +18,6 @@ module Log = Core.Log;
 
 let () = Log.debug("Starting Onivim 2.");
 
-let () = Core.Utility.freeConsole();
-
 /* The 'main' function for our app */
 let init = app => {
   let w =
