@@ -87,6 +87,23 @@ let registerDock =
   width,
 };
 
+/* Ensure the activeWindowId points to a valid winodw */
+let ensureActive = (v: t) => {
+  let splits: list(WindowTree.split) = WindowTree.getSplits(v.windowTree);
+  let activeWindowId: int = v.activeWindowId;
+
+  let splitIsActive = List.exists((s: WindowTree.split) => s.id == activeWindowId, splits);
+
+  if (!splitIsActive && List.length(splits) > 0) {
+    {
+        ...v,
+        activeWindowId: List.hd(splits).id
+    }
+  } else {
+    v
+  }
+};
+
 let moveCore = (dirX, dirY, v: t) => {
   let layout = WindowTreeLayout.layout(0, 0, 200, 200, v.windowTree);
   let newWindow = WindowTreeLayout.move(v.activeWindowId, dirX, dirY, layout);

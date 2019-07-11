@@ -47,6 +47,13 @@ let ensureActiveId = (v: t) => {
   };
 };
 
+let isEmpty = (id: int, v: t) => {
+  switch (IntMap.find_opt(id, v.idToGroup)) {
+  | None => true
+  | Some(v) => EditorGroup.isEmpty(v)
+  }
+};
+
 let removeEmptyEditorGroups = (v: t) => {
   let idToGroup =
     IntMap.filter((key, v) => !EditorGroup.isEmpty(v), v.idToGroup);

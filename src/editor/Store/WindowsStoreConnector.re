@@ -81,6 +81,27 @@ let start = () => {
           windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
         },
       }
+    | ViewCloseEditor(_) => {
+      /* When an editor is closed... lets see if any window splits are empty */
+
+      /* Remove splits */
+      let windowTree = s.windowManager.windowTree
+      |> WindowTree.getSplits
+      |> List.filter((split: WindowTree.split) => Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups))
+      |> List.fold_left((prev: WindowTree.t, curr: WindowTree.split) => {
+          WindowTree.removeSplit(curr.id, prev)
+      }, s.windowManager.windowTree);
+
+      let windowManager = WindowManager.ensureActive({
+        ...s.windowManager,
+        windowTree,
+      });
+
+      {
+        ...s,
+        windowManager
+      }
+    }
     | _ => s
     };
 

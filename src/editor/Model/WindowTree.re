@@ -29,6 +29,20 @@ let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
   height,
 };
 
+let getSplits = (tree: t) => {
+  let rec f = (tree: t, splits: list(split)) => {
+  switch (tree) {
+  | Parent(_, children) => List.fold_left((c, curr) => {
+      f(curr, c)
+  }, splits, children);
+  | Leaf(split) => [split, ...splits]
+  | Empty => splits
+  }
+  }
+
+  f(tree, []);
+};
+
 let filterEmpty = v =>
   switch (v) {
   | Empty => false
