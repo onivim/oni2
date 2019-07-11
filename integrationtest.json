@@ -1,7 +1,7 @@
 {
   "source": "./package.json",
   "scripts": {
-    "run": "esy '@integrationtest' x BasicTest"
+    "run": "esy '@integrationtest' x bash -c run-tests.sh"
   },
   "override": {
       "build": ["dune build --root . -j4"],
