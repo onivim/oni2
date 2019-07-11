@@ -1,0 +1,11 @@
+(executables
+    (names InsertModeTest)
+    (libraries
+        libvim
+        Oni_IntegrationTestLib
+            ))
+
+(install
+    (section bin)
+    (package OniIntegrationTests)
+    (files InsertModeTest.exe))
