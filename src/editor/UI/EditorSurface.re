@@ -220,6 +220,7 @@ let createElement =
       | None => IndentationSettings.default
       };
 
+    let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
@@ -284,6 +285,28 @@ let createElement =
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
 
+    let isMinimapShown =
+      Configuration.getValue(
+        c => c.editorMinimapEnabled,
+        state.configuration,
+      );
+
+    let layout =
+      EditorLayout.getLayout(
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
+        ~pixelWidth=float_of_int(metrics.pixelWidth),
+        ~pixelHeight=float_of_int(metrics.pixelHeight),
+        ~isMinimapShown,
+        ~characterWidth=state.editorFont.measuredWidth,
+        ~characterHeight=state.editorFont.measuredHeight,
+        ~bufferLineCount=lineCount,
+        (),
+      );
+
     let matchingPairsEnabled =
       Selectors.getConfigurationValue(state, buffer, c =>
         c.editorMatchBrackets
@@ -293,7 +316,7 @@ let createElement =
       !matchingPairsEnabled
         ? None : Selectors.getMatchingPairs(state, editor.bufferId);
 
-    let getTokensForLine = (~selection=None, i) => {
+    let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
@@ -341,6 +364,8 @@ let createElement =
         );
 
       BufferViewTokenizer.tokenize(
+        ~startIndex,
+        ~endIndex,
         line,
         IndentationSettings.default,
         colorizer,
@@ -363,28 +388,6 @@ let createElement =
         (),
       );
     };
-
-    let isMinimapShown =
-      Configuration.getValue(
-        c => c.editorMinimapEnabled,
-        state.configuration,
-      );
-
-    let layout =
-      EditorLayout.getLayout(
-        ~maxMinimapCharacters=
-          Configuration.getValue(
-            c => c.editorMinimapMaxColumn,
-            state.configuration,
-          ),
-        ~pixelWidth=float_of_int(metrics.pixelWidth),
-        ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown,
-        ~characterWidth=state.editorFont.measuredWidth,
-        ~characterHeight=state.editorFont.measuredHeight,
-        ~bufferLineCount=lineCount,
-        (),
-      );
 
     let bufferPixelWidth =
       layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
@@ -465,7 +468,10 @@ let createElement =
               count=lineCount
               diagnostics
               metrics
-              getTokensForLine
+              getTokensForLine={getTokensForLine(
+                0,
+                layout.bufferWidthInCharacters,
+              )}
               selection=selectionRanges
             />
           </View>
@@ -629,7 +635,12 @@ let createElement =
                         }
                       };
                     let tokens =
-                      getTokensForLine(~selection=selectionRange, item);
+                      getTokensForLine(
+                        ~selection=selectionRange,
+                        leftVisibleColumn,
+                        leftVisibleColumn + layout.bufferWidthInCharacters,
+                        item,
+                      );
 
                     let _ =
                       renderTokens(
