@@ -7,12 +7,12 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-module Extensions = Oni_Extensions;
+open Model;
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let rec menuUpdater = (s: Model.State.t, action: Model.Actions.t) =>
+  let rec windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
       | RegisterDockItem(dock) =>
         switch (dock) {
@@ -84,13 +84,11 @@ let start = () => {
         }
       | _ => s
       };
-  };
 
   let updater = (state: Model.State.t, action: Model.Actions.t) =>
     if (action === Model.Actions.Tick) {
       (state, Isolinear.Effect.none);
     } else {
-      let windowState= windowUpdater(state, action);
       let state = windowUpdater(state, action);
       (state, Isolinear.Effect.none);
     };

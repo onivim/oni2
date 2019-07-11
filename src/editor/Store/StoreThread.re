@@ -73,7 +73,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
 
   let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start();
   let indentationUpdater = IndentationStoreConnector.start();
-  let (windowUpdater, windowStream) = WindowStoreConnector.start();
+  let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
