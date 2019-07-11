@@ -1,0 +1,13 @@
+{
+  "source": "./package.json",
+  "scripts": {
+    "run": "esy '@integrationtest' x BasicTest"
+  },
+  "override": {
+      "build": ["dune build --root . -j4"],
+      "install": [
+          "esy-installer Oni2.install",
+          "esy-installer OniIntegrationTests.install"
+      ]
+  }
+}

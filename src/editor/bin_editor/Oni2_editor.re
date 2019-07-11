@@ -44,7 +44,7 @@ let init = app => {
   PreflightChecks.run();
 
   let initialState = Model.State.create();
-  let currentState = ref(Model.State.create());
+  let currentState = ref(initialState);
 
   let update = UI.start(w, <Root state=currentState^ />);
 

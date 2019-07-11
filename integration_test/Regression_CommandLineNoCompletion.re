@@ -14,6 +14,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait) => {
     });
     
     dispatch(KeyboardInput("e"));
+
     wait(~name="Mode switches to command line", (state: State.t) => {
         state.commandline.text == "e"
     });
