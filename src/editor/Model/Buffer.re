@@ -29,6 +29,8 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   indentation: None,
 };
 
+let getFilePath = (buffer: t) => buffer.metadata.filePath;
+
 let getMetadata = (buffer: t) => buffer.metadata;
 
 let getId = (buffer: t) => buffer.metadata.id;

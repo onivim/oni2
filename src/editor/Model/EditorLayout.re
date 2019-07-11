@@ -18,6 +18,7 @@ type t = {
 
 let getLayout =
     (
+      ~showLineNumbers=true,
       ~maxMinimapCharacters=120,
       ~pixelWidth: float,
       ~pixelHeight: float,
@@ -28,11 +29,13 @@ let getLayout =
       (),
     ) => {
   let lineNumberWidthInPixels =
-    LineNumber.getLineNumberPixelWidth(
-      ~lines=bufferLineCount,
-      ~fontPixelWidth=characterWidth,
-      (),
-    );
+    showLineNumbers
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=bufferLineCount,
+          ~fontPixelWidth=characterWidth,
+          (),
+        )
+      : 0.0;
 
   let minimapPadding =
     isMinimapShown ? float_of_int(Constants.default.minimapPadding) : 0.0;

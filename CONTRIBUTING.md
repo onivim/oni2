@@ -3,7 +3,9 @@
 ## Prerequisites
 
 - Install [Git](https://git-scm.com/)
+- Install [Node](https://nodejs.org/en)
 - Install [Esy](https://esy.sh) (__0.5.6__ is required)
+- __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
 
 ## Build and Run
@@ -18,6 +20,7 @@ esy bootstrap
 esy build
 ```
 
+> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions (more info here: https://github.com/esy/esy/issues/389).
 ### Build the textmate service
 
 ```sh

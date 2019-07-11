@@ -18,6 +18,10 @@ steps:
     displayName: 'esy @test install'
   - script: git diff --exit-code
     displayName: 'check that `test.esy.lock` is up-to-date. If this fails, commit `test.esy.lock` changes and re-submit PR.'
+  - script: esy @integrationtest install
+    displayName: 'esy @integrationtest install'
+  - script: git diff --exit-code
+    displayName: 'check that `test.esy.lock` is up-to-date. If this fails, commit `test.esy.lock` changes and re-submit PR.'
   - script: esy bootstrap
     displayName: 'esy bootstrap'
   - script: esy build

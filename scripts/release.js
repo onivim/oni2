@@ -9,6 +9,7 @@ console.log("Working directory: " + process.cwd());
 const rootDirectory = process.cwd();
 const releaseDirectory = path.join(process.cwd(), "_release");
 
+const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate_service");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
 
@@ -27,6 +28,30 @@ const shell = (cmd) => {
     const out = cp.execSync(cmd);
     console.log(`[shell - output]: ${out.toString("utf8")}`);
 };
+
+const getRipgrepPath = () => {
+    const rg = "ripgrep-v0.10.0";
+
+    if (process.platform == "darwin") {
+        return path.join(rootDirectory, "vendor", rg, "mac", "rg");
+    } else if (process.platform == "win32") {
+        return path.join(rootDirectory, "vendor", rg, "windows", "rg.exe");
+    } else {
+        return path.join(rootDirectory, "vendor", rg, "linux", "rg");
+    }
+}
+
+const getNodePath = () => {
+    const nodeDir = "node-v10.15.1";
+
+    if (process.platform == "darwin") {
+        return path.join(rootDirectory, "vendor", nodeDir, "osx", "node");
+    } else if (process.platform == "win32") {
+        return path.join(rootDirectory, "vendor", nodeDir, "win-x64", "node.exe");
+    } else {
+        return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
+    }
+}
 
 if (process.platform == "darwin") {
 
@@ -68,6 +93,8 @@ if (process.platform == "darwin") {
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, extensionsDestDirectory);
 
+  copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
+
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
@@ -105,11 +132,17 @@ if (process.platform == "darwin") {
     ]
   };
   fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
+  fs.removeSync(path.join(binaryDirectory, "setup.json"));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
+  const textmateServiceDestDirectory = path.join(platformReleaseDirectory, "textmate_service");
   fs.mkdirpSync(platformReleaseDirectory);
 
+  copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
+  copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
+  fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});
+  fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
 }

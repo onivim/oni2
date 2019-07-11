@@ -203,12 +203,19 @@ let createElement =
     let bufferId = Buffer.getId(buffer);
     let lineCount = Buffer.getNumberOfLines(buffer);
 
-    let lineNumberWidth =
-      LineNumber.getLineNumberPixelWidth(
-        ~lines=lineCount,
-        ~fontPixelWidth=state.editorFont.measuredWidth,
-        (),
+    let showLineNumbers =
+      Configuration.getValue(
+        c => c.editorLineNumbers != LineNumber.Off,
+        state.configuration,
       );
+    let lineNumberWidth =
+      showLineNumbers
+        ? LineNumber.getLineNumberPixelWidth(
+            ~lines=lineCount,
+            ~fontPixelWidth=state.editorFont.measuredWidth,
+            (),
+          )
+        : 0.0;
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
@@ -220,6 +227,7 @@ let createElement =
       | None => IndentationSettings.default
       };
 
+    let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
     let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
     let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
@@ -284,7 +292,39 @@ let createElement =
     let searchHighlights =
       Selectors.getSearchHighlights(state, editor.bufferId);
 
-    let getTokensForLine = (~selection=None, i) => {
+    let isMinimapShown =
+      Configuration.getValue(
+        c => c.editorMinimapEnabled,
+        state.configuration,
+      );
+
+    let layout =
+      EditorLayout.getLayout(
+        ~showLineNumbers,
+        ~maxMinimapCharacters=
+          Configuration.getValue(
+            c => c.editorMinimapMaxColumn,
+            state.configuration,
+          ),
+        ~pixelWidth=float_of_int(metrics.pixelWidth),
+        ~pixelHeight=float_of_int(metrics.pixelHeight),
+        ~isMinimapShown,
+        ~characterWidth=state.editorFont.measuredWidth,
+        ~characterHeight=state.editorFont.measuredHeight,
+        ~bufferLineCount=lineCount,
+        (),
+      );
+
+    let matchingPairsEnabled =
+      Selectors.getConfigurationValue(state, buffer, c =>
+        c.editorMatchBrackets
+      );
+
+    let matchingPairs =
+      !matchingPairsEnabled
+        ? None : Selectors.getMatchingPairs(state, editor.bufferId);
+
+    let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
       let line = Buffer.getLine(buffer, i);
       let tokenColors =
         SyntaxHighlighting.getTokensForLine(
@@ -306,7 +346,7 @@ let createElement =
           : theme.colors.editorBackground;
 
       let matchingPairIndex =
-        switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
+        switch (matchingPairs) {
         | None => None
         | Some(v) =>
           if (Index.toInt0(v.startPos.line) == i) {
@@ -332,6 +372,8 @@ let createElement =
         );
 
       BufferViewTokenizer.tokenize(
+        ~startIndex,
+        ~endIndex,
         line,
         IndentationSettings.default,
         colorizer,
@@ -354,28 +396,6 @@ let createElement =
         (),
       );
     };
-
-    let isMinimapShown =
-      Configuration.getValue(
-        c => c.editorMinimapEnabled,
-        state.configuration,
-      );
-
-    let layout =
-      EditorLayout.getLayout(
-        ~maxMinimapCharacters=
-          Configuration.getValue(
-            c => c.editorMinimapMaxColumn,
-            state.configuration,
-          ),
-        ~pixelWidth=float_of_int(metrics.pixelWidth),
-        ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown,
-        ~characterWidth=state.editorFont.measuredWidth,
-        ~characterHeight=state.editorFont.measuredHeight,
-        ~bufferLineCount=lineCount,
-        (),
-      );
 
     let bufferPixelWidth =
       layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
@@ -456,7 +476,10 @@ let createElement =
               count=lineCount
               diagnostics
               metrics
-              getTokensForLine
+              getTokensForLine={getTokensForLine(
+                0,
+                layout.bufferWidthInCharacters,
+              )}
               selection=selectionRanges
             />
           </View>
@@ -562,9 +585,7 @@ let createElement =
 
                     /* Draw match highlights */
                     let matchColor = theme.colors.editorSelectionBackground;
-                    switch (
-                      Selectors.getMatchingPairs(state, editor.bufferId)
-                    ) {
+                    switch (matchingPairs) {
                     | None => ()
                     | Some(v) =>
                       renderRange(
@@ -622,7 +643,12 @@ let createElement =
                         }
                       };
                     let tokens =
-                      getTokensForLine(~selection=selectionRange, item);
+                      getTokensForLine(
+                        ~selection=selectionRange,
+                        leftVisibleColumn,
+                        leftVisibleColumn + layout.bufferWidthInCharacters,
+                        item,
+                      );
 
                     let _ =
                       renderTokens(
@@ -645,41 +671,43 @@ let createElement =
               );
 
               /* Draw background for line numbers */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=0.,
-                ~width=lineNumberWidth,
-                ~height=float_of_int(height),
-                ~color=theme.colors.editorLineNumberBackground,
-                (),
-              );
+              if (showLineNumbers) {
+                Shapes.drawRect(
+                  ~transform,
+                  ~x=0.,
+                  ~y=0.,
+                  ~width=lineNumberWidth,
+                  ~height=float_of_int(height),
+                  ~color=theme.colors.editorLineNumberBackground,
+                  (),
+                );
 
-              FlatList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height=float_of_int(height),
-                ~count,
-                ~render=
-                  (item, offset) => {
-                    let _ =
-                      renderLineNumber(
-                        fontWidth,
-                        item,
-                        lineNumberWidth,
-                        theme,
-                        Configuration.getValue(
-                          c => c.editorLineNumbers,
-                          state.configuration,
-                        ),
-                        cursorLine,
-                        offset,
-                        transform,
-                      );
-                    ();
-                  },
-                (),
-              );
+                FlatList.render(
+                  ~scrollY,
+                  ~rowHeight,
+                  ~height=float_of_int(height),
+                  ~count,
+                  ~render=
+                    (item, offset) => {
+                      let _ =
+                        renderLineNumber(
+                          fontWidth,
+                          item,
+                          lineNumberWidth,
+                          theme,
+                          Configuration.getValue(
+                            c => c.editorLineNumbers,
+                            state.configuration,
+                          ),
+                          cursorLine,
+                          offset,
+                          transform,
+                        );
+                      ();
+                    },
+                  (),
+                );
+              };
 
               let renderIndentGuides =
                 Configuration.getValue(

@@ -14,6 +14,7 @@ type editorRenderWhitespace =
 type t = {
   editorDetectIndentation: bool,
   editorLineNumbers: LineNumber.setting,
+  editorMatchBrackets: bool,
   editorMinimapEnabled: bool,
   editorMinimapShowSlider: bool,
   editorMinimapMaxColumn: int,
@@ -30,10 +31,11 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
+  editorMatchBrackets: true,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
   editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
-  editorLineNumbers: Relative,
+  editorLineNumbers: On,
   editorInsertSpaces: false,
   editorIndentSize: 4,
   editorTabSize: 4,
