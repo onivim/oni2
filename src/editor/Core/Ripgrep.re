@@ -25,6 +25,6 @@ let process = (rgPath, args, callback) => {
    path, modified, created
  */
 let search = (path, query, callback) =>
-  process(path, [|"--files", "--sort", "accessed", "--", query|], callback);
+  process(path, [|"--files", "--", query|], callback);
 
 let make = path => {search: search(path)};
