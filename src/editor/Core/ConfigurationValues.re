@@ -35,7 +35,7 @@ let default = {
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
   editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
-  editorLineNumbers: Relative,
+  editorLineNumbers: On,
   editorInsertSpaces: false,
   editorIndentSize: 4,
   editorTabSize: 4,
