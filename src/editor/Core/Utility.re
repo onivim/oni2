@@ -144,3 +144,5 @@ let trimTrailingSlash = (item: string) => {
     item;
   };
 };
+
+external freeConsole: unit => unit = "win32_free_console";
