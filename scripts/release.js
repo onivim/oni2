@@ -7,8 +7,9 @@ console.log("Bin folder: " + curBin);
 console.log("Working directory: " + process.cwd());
 
 const rootDirectory = process.cwd();
-const releaseDirectory = path.join(process.cwd(), "_release");
+const releaseDirectory = path.join(process.cwd(), "_release2");
 
+const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate_service");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
 
@@ -29,7 +30,6 @@ const shell = (cmd) => {
 };
 
 const getRipgrepPath = () => {
-
     const rg = "ripgrep-v0.10.0";
 
     if (process.platform == "darwin") {
@@ -38,6 +38,18 @@ const getRipgrepPath = () => {
         return path.join(rootDirectory, "vendor", rg, "windows", "rg.exe");
     } else {
         return path.join(rootDirectory, "vendor", rg, "linux", "rg");
+    }
+}
+
+const getNodePath = () => {
+    const nodeDir = "node-v10.15.1";
+
+    if (process.platform == "darwin") {
+        return path.join(rootDirectory, "vendor", nodeDir, "osx", "node");
+    } else if (process.platform == "win32") {
+        return path.join(rootDirectory, "vendor", nodeDir, "win-x64", "node.exe");
+    } else {
+        return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
     }
 }
 
@@ -124,10 +136,13 @@ if (process.platform == "darwin") {
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
+  const textmateServiceDestDirectory = path.join(platformReleaseDirectory, "textmate_service");
   fs.mkdirpSync(platformReleaseDirectory);
 
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
+  copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
+  fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});
   fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
 }
