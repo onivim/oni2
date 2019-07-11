@@ -32,7 +32,7 @@ if (process.env["APPVEYOR"]) {
 
 const valuesToReplace = {
     AppName: prodName,
-    AppExecutableName: `${prodName}.exe`,
+    AppExecutableName: `Oni2.exe`,
     AppSetupExecutableName: `${prodName}-${version}-${buildFolderPrefix}win`,
     Version: version,
     SourcePath: path.join(__dirname, "..", "..", "_release", `win32`, "*"),
