@@ -10,6 +10,6 @@ runTest(~name="InsertMode test", (dispatch, wait) => {
     dispatch(KeyboardInput("i"));
     
     wait(~name="Mode switches to insert", (state: State.t) => {
-        state.mode == Vim.Types.Visual;
+        state.mode == Vim.Types.Insert;
     });
 });

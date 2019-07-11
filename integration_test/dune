@@ -1,6 +1,6 @@
 (executables
     (names InsertModeTest
-           RegressionCommandLineNoCompletion
+           RegressionCommandLineNoCompletionTest
     )
     (libraries
         libvim
@@ -11,6 +11,7 @@
     (section bin)
     (package OniIntegrationTests)
     (files 
+        run-tests.sh
         InsertModeTest.exe
-        RegressionCommandLineNoCompletion.exe
+        RegressionCommandLineNoCompletionTest.exe
         ))
