@@ -1,5 +1,7 @@
 (executables
-    (names InsertModeTest)
+    (names InsertModeTest
+           RegressionCommandLineNoCompletion
+    )
     (libraries
         libvim
         Oni_IntegrationTestLib
@@ -8,4 +10,7 @@
 (install
     (section bin)
     (package OniIntegrationTests)
-    (files InsertModeTest.exe))
+    (files 
+        InsertModeTest.exe
+        RegressionCommandLineNoCompletion.exe
+        ))
