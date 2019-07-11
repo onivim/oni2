@@ -5,10 +5,17 @@
  */
 
 let canPrint = ref(false);
+let debugLogging = ref(false);
 
 let enablePrinting = () => {
   canPrint := true;
 };
+
+let enableDebugLogging = () => {
+  debugLogging := true;
+};
+
+let isDebugLoggingEnabled = () => debugLogging^;
 
 let print = msg => canPrint^ ? print_endline(msg) : ();
 
@@ -24,11 +31,11 @@ let fileChannel =
   | None => None
   };
 
-let isDebugLoggingEnabled =
+let _ =
   switch (Sys.getenv_opt("ONI2_DEBUG"), Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | (Some(_), _) => true
-  | (_, Some(_)) => true
-  | _ => false
+  | (Some(_), _) => debugLogging := true
+  | (_, Some(_)) => debugLogging := true
+  | _ => ()
   };
 
 let logCore = (~error=false, msg) => {
@@ -46,12 +53,12 @@ let logCore = (~error=false, msg) => {
 
 let info = msg => logCore("[INFO] " ++ msg);
 
-let debug = msg => isDebugLoggingEnabled ? logCore("[DEBUG] " ++ msg) : ();
+let debug = msg => debugLogging^ ? logCore("[DEBUG] " ++ msg) : ();
 
 let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
 
 let () =
-  switch (isDebugLoggingEnabled) {
+  switch (debugLogging^) {
   | false => ()
   | true =>
     debug("Recording backtraces");
