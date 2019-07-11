@@ -12,7 +12,12 @@ open Model;
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let rec windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
+  let quitEffect =
+    Isolinear.Effect.create(~name="windows.quitEffect", () => {
+      dispatch(Model.Actions.Quit(false));
+    });
+
+  let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | RegisterDockItem(dock) =>
       switch (dock) {
@@ -85,6 +90,7 @@ let start = () => {
       /* When an editor is closed... lets see if any window splits are empty */
 
       /* Remove splits */
+      let initialSplitCount = List.length(WindowTree.getSplits(s.windowManager.windowTree));
       let windowTree = s.windowManager.windowTree
       |> WindowTree.getSplits
       |> List.filter((split: WindowTree.split) => Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups))
@@ -96,6 +102,8 @@ let start = () => {
         ...s.windowManager,
         windowTree,
       });
+      
+      let newSplitCount = List.length(WindowTree.getSplits(windowManager.windowTree));
 
       {
         ...s,
@@ -110,7 +118,18 @@ let start = () => {
       (state, Isolinear.Effect.none);
     } else {
       let state = windowUpdater(state, action);
-      (state, Isolinear.Effect.none);
+
+      let effect = switch(action) {
+      | ViewCloseEditor(_) => 
+        if(List.length(WindowTree.getSplits(state.windowManager.windowTree)) == 0) {
+          quitEffect
+        } else {
+          Isolinear.Effect.none
+        }
+      | _ => Isolinear.Effect.none
+      };
+
+      (state, effect);
     };
 
   (updater, stream);

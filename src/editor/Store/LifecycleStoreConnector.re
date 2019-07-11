@@ -30,12 +30,16 @@ let start = () => {
   let quitBufferEffect = (state: Model.State.t, buffer: Vim.Buffer.t, force) => {
     Isolinear.Effect.create(~name="lifecycle.quitBuffer", () => {
       let editorGroup = Model.Selectors.getActiveEditorGroup(state);
+      print_endline("---> lifecycle - quit buffer");
       switch (Model.Selectors.getActiveEditor(editorGroup)) {
       | None => ()
       | Some(editor) =>
+      print_endline ("---> some editor");
         let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
         if (editor.bufferId == bufferMeta.id) {
+      print_endline ("---> stuff matches");
           if (force || !bufferMeta.modified) {
+      print_endline ("---> dispatching viewcloseeditor: " ++ string_of_int(editor.editorId));
             dispatch(Model.Actions.ViewCloseEditor(editor.editorId));
           };
         };

@@ -40,8 +40,13 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   logInit("Sending init event");
 
   dispatch(Model.Actions.Init);
-  runEffects();
 
+  let wrappedRunEffects = () => {
+    runEffects();
+  };
+
+  wrappedRunEffects();
+  
   logInit("Setting editor font");
   dispatch(
     Model.Actions.SetEditorFont(
@@ -55,6 +60,17 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     ),
   );
 
+  /* TODO: Move this to a shared place... */
+  let editorGroupId = currentState^.editorGroups.activeId;
+
+  let editor = Model.WindowTree.createSplit(~editorGroupId, ());
+  dispatch(AddSplit(Vertical, editor));
+
+  let wrappedDispatch = (action) => {
+    dispatch(action);
+    runEffects();
+  };
+
   let waitForState = (~name, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
     let startTime = Unix.gettimeofday();
@@ -67,7 +83,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
            -. maxWaitTime < startTime) {
       logWaiter("Iteration: " ++ string_of_int(iteration^));
       incr(iteration);
-      runEffects();
+      wrappedRunEffects();
       Unix.sleepf(0.1);
     };
 
@@ -82,7 +98,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   };
 
   Log.info("--- Starting test: " ++ name);
-  test(dispatch, waitForState);
+  test(wrappedDispatch, waitForState);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));

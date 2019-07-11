@@ -80,7 +80,7 @@ let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) =
   | Parent(direction, children) =>
     let startX = x;
     let startY = y;
-    let count = List.length(children);
+    let count = max(List.length(children), 1);
     let individualWidth = width / count;
     let individualHeight = height / count;
 

@@ -1,18 +1,33 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="InsertMode test", (dispatch, wait) => {
-  wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
-  );
+runTest(~name="AddRemoveSplitTest", (dispatch, wait) => {
+  wait(~name="Wait for split to be created 1", (state: State.t) => {
+    let splitCount = state.windowManager.windowTree
+    |> WindowTree.getSplits
+    |> List.length
 
-  Vim.command("vsp");
+    splitCount == 1
+  });
 
+
+  dispatch(Command("view.splitVertical"));
+  
   wait(~name="Wait for split to be created", (state: State.t) => {
     let splitCount = state.windowManager.windowTree
     |> WindowTree.getSplits
     |> List.length
 
     splitCount == 2
+  });
+  
+  dispatch(QuitBuffer(Vim.Buffer.getCurrent(), false))
+
+  wait(~name="Wait for split to be closed", (state: State.t) => {
+    let splitCount = state.windowManager.windowTree
+    |> WindowTree.getSplits
+    |> List.length
+
+    splitCount == 1
   });
 });

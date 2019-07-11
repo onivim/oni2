@@ -53,12 +53,13 @@ let start = (getState: unit => Model.State.t) => {
     });
 
   let _ =
-    Vim.onQuit((quitType, force) =>
+    Vim.onQuit((quitType, force) => {
+      print_endline("got q bud");
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
       | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
       }
-    );
+    });
 
   let _ =
     Vim.Visual.onRangeChanged(vr => {
@@ -334,12 +335,6 @@ let start = (getState: unit => Model.State.t) => {
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });
-
-  /* let registerQuitHandlerEffect = */
-  /*   Isolinear.Effect.createWithDispatch( */
-  /*     ~name="vim.registerQuitHandler", dispatch => */
-  /*     dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup)) */
-  /*   ); */
 
   /**
    synchronizeEditorEffect checks the current state of the app:
