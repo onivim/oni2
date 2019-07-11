@@ -203,12 +203,19 @@ let createElement =
     let bufferId = Buffer.getId(buffer);
     let lineCount = Buffer.getNumberOfLines(buffer);
 
-    let lineNumberWidth =
-      LineNumber.getLineNumberPixelWidth(
-        ~lines=lineCount,
-        ~fontPixelWidth=state.editorFont.measuredWidth,
-        (),
+    let showLineNumbers =
+      Configuration.getValue(
+        c => c.editorLineNumbers != LineNumber.Off,
+        state.configuration,
       );
+    let lineNumberWidth =
+      showLineNumbers
+        ? LineNumber.getLineNumberPixelWidth(
+            ~lines=lineCount,
+            ~fontPixelWidth=state.editorFont.measuredWidth,
+            (),
+          )
+        : 0.0;
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
@@ -293,6 +300,7 @@ let createElement =
 
     let layout =
       EditorLayout.getLayout(
+        ~showLineNumbers,
         ~maxMinimapCharacters=
           Configuration.getValue(
             c => c.editorMinimapMaxColumn,
@@ -663,41 +671,43 @@ let createElement =
               );
 
               /* Draw background for line numbers */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=0.,
-                ~width=lineNumberWidth,
-                ~height=float_of_int(height),
-                ~color=theme.colors.editorLineNumberBackground,
-                (),
-              );
+              if (showLineNumbers) {
+                Shapes.drawRect(
+                  ~transform,
+                  ~x=0.,
+                  ~y=0.,
+                  ~width=lineNumberWidth,
+                  ~height=float_of_int(height),
+                  ~color=theme.colors.editorLineNumberBackground,
+                  (),
+                );
 
-              FlatList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height=float_of_int(height),
-                ~count,
-                ~render=
-                  (item, offset) => {
-                    let _ =
-                      renderLineNumber(
-                        fontWidth,
-                        item,
-                        lineNumberWidth,
-                        theme,
-                        Configuration.getValue(
-                          c => c.editorLineNumbers,
-                          state.configuration,
-                        ),
-                        cursorLine,
-                        offset,
-                        transform,
-                      );
-                    ();
-                  },
-                (),
-              );
+                FlatList.render(
+                  ~scrollY,
+                  ~rowHeight,
+                  ~height=float_of_int(height),
+                  ~count,
+                  ~render=
+                    (item, offset) => {
+                      let _ =
+                        renderLineNumber(
+                          fontWidth,
+                          item,
+                          lineNumberWidth,
+                          theme,
+                          Configuration.getValue(
+                            c => c.editorLineNumbers,
+                            state.configuration,
+                          ),
+                          cursorLine,
+                          offset,
+                          transform,
+                        );
+                      ();
+                    },
+                  (),
+                );
+              };
 
               let renderIndentGuides =
                 Configuration.getValue(
