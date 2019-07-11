@@ -7,7 +7,7 @@ console.log("Bin folder: " + curBin);
 console.log("Working directory: " + process.cwd());
 
 const rootDirectory = process.cwd();
-const releaseDirectory = path.join(process.cwd(), "_release2");
+const releaseDirectory = path.join(process.cwd(), "_release");
 
 const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate_service");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
