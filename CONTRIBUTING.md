@@ -20,6 +20,7 @@ esy bootstrap
 esy build
 ```
 
+> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions (more info here: https://github.com/esy/esy/issues/389).
 ### Build the textmate service
 
 ```sh
