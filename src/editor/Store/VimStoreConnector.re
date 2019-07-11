@@ -20,9 +20,10 @@ let start = (getState: unit => Model.State.t) => {
       dispatch(Model.Actions.ChangeMode(newMode))
     );
 
-  let _ = Vim.onDirectoryChanged(upd => {
-    dispatch(Model.Actions.OpenExplorer(upd))
-  });
+  let _ =
+    Vim.onDirectoryChanged(newDir =>
+      dispatch(Model.Actions.OpenExplorer(newDir))
+    );
 
   let _ =
     Vim.Cursor.onMoved(newPosition => {
