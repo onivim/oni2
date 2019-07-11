@@ -39,24 +39,19 @@ let applyToAllEditorGroups =
 let ensureActiveId = (v: t) => {
   switch (IntMap.find_opt(v.activeId, v.idToGroup)) {
   | Some(_) => v
-  | None => {
+  | None =>
     switch (IntMap.min_binding_opt(v.idToGroup)) {
-    | Some((key, _)) => { ...v, activeId: key }
-    | _ =>  v
+    | Some((key, _)) => {...v, activeId: key}
+    | _ => v
     }
-  }
-  }
+  };
 };
 
 let removeEmptyEditorGroups = (v: t) => {
-  let idToGroup = IntMap.filter((key, v) => {
-    !EditorGroup.isEmpty(v)
-  }, v.idToGroup);
+  let idToGroup =
+    IntMap.filter((key, v) => !EditorGroup.isEmpty(v), v.idToGroup);
 
-  {
-    ...v,
-    idToGroup
-  }
+  {...v, idToGroup};
 };
 
 let reduce = (v: t, action: Actions.t) => {
@@ -94,25 +89,23 @@ let reduce = (v: t, action: Actions.t) => {
 
     {...v, idToGroup};
   | action =>
-    let ret = switch (getActiveEditorGroup(v)) {
-    | Some(eg) => {
-        ...v,
-        idToGroup:
-          IntMap.add(
-            v.activeId,
-            EditorGroupReducer.reduce(eg, action),
-            v.idToGroup,
-          ),
-      }
-    | None => v
-    }
+    let ret =
+      switch (getActiveEditorGroup(v)) {
+      | Some(eg) => {
+          ...v,
+          idToGroup:
+            IntMap.add(
+              v.activeId,
+              EditorGroupReducer.reduce(eg, action),
+              v.idToGroup,
+            ),
+        }
+      | None => v
+      };
 
-    switch(action) {
-    | ViewCloseEditor(_) => 
-    ret
-    |> removeEmptyEditorGroups
-    |> ensureActiveId;
+    switch (action) {
+    | ViewCloseEditor(_) => ret |> removeEmptyEditorGroups |> ensureActiveId
     | _ => ret
-    }
+    };
   };
 };

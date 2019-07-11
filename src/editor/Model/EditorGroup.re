@@ -95,9 +95,9 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
-let isEmpty = (v) => {
+let isEmpty = v => {
   IntMap.is_empty(v.editors);
-}
+};
 
 let isActiveEditor = (state, editorId) => {
   switch (state.activeEditorId) {

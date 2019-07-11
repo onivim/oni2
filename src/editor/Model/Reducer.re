@@ -36,5 +36,5 @@ let reduce: (State.t, Actions.t) => State.t =
       | CommandlineShow(_) => {...s, inputControlMode: CommandLineFocus}
       | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | _ => s
+      };
     };
-   }
