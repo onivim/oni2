@@ -66,6 +66,7 @@ if (process.platform == "darwin") {
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
   const libsDirectory = path.join(contentsDirectory, "libs");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
+  const textmateServiceDestDirectory = path.join(contentsDirectory, "textmate_service");
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
@@ -85,6 +86,7 @@ if (process.platform == "darwin") {
 
   fs.mkdirpSync(libsDirectory);
   fs.mkdirpSync(extensionsDestDirectory);
+  fs.mkdirpSync(textmateServiceDestDirectory);
   fs.mkdirpSync(resourcesDirectory);
 
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
@@ -92,13 +94,12 @@ if (process.platform == "darwin") {
   // Copy bins over
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, extensionsDestDirectory);
-
+  copy(textmateServiceSourceDirectory, textmateServiceDestDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
+  copy(getNodePath(), path.join(binaryDirectory, "nodec"));
 
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
-
-  
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
 
