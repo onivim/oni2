@@ -65,6 +65,7 @@ typings/
 _build/
 _esy/
 _release/
+_staging/
 
 .DS_Store
 setup.txt

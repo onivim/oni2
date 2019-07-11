@@ -52,8 +52,10 @@ const getNodePath = () => {
         return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
     }
 }
-
-if (process.platform == "darwin") {
+if (process.platform == "linux") {
+  const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
+console.log(result.output.toString());
+} else if (process.platform == "darwin") {
 
   const executables = [
     "Oni2",
