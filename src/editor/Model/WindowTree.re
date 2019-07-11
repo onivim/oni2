@@ -31,14 +31,13 @@ let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
 
 let getSplits = (tree: t) => {
   let rec f = (tree: t, splits: list(split)) => {
-  switch (tree) {
-  | Parent(_, children) => List.fold_left((c, curr) => {
-      f(curr, c)
-  }, splits, children);
-  | Leaf(split) => [split, ...splits]
-  | Empty => splits
-  }
-  }
+    switch (tree) {
+    | Parent(_, children) =>
+      List.fold_left((c, curr) => f(curr, c), splits, children)
+    | Leaf(split) => [split, ...splits]
+    | Empty => splits
+    };
+  };
 
   f(tree, []);
 };
@@ -104,7 +103,7 @@ let addSplit = (~target=None, direction, newSplit, currentTree) => {
 let rec removeSplit = (id, currentTree) =>
   switch (currentTree) {
   | Parent(direction, children) =>
-    let newChildren = 
+    let newChildren =
       children
       |> List.map(child => removeSplit(id, child))
       |> List.filter(filterEmpty);

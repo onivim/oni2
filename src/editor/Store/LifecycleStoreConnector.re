@@ -34,12 +34,15 @@ let start = () => {
       switch (Model.Selectors.getActiveEditor(editorGroup)) {
       | None => ()
       | Some(editor) =>
-      print_endline ("---> some editor");
+        print_endline("---> some editor");
         let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
         if (editor.bufferId == bufferMeta.id) {
-      print_endline ("---> stuff matches");
+          print_endline("---> stuff matches");
           if (force || !bufferMeta.modified) {
-      print_endline ("---> dispatching viewcloseeditor: " ++ string_of_int(editor.editorId));
+            print_endline(
+              "---> dispatching viewcloseeditor: "
+              ++ string_of_int(editor.editorId),
+            );
             dispatch(Model.Actions.ViewCloseEditor(editor.editorId));
           };
         };

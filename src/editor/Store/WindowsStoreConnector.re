@@ -13,9 +13,9 @@ let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitEffect =
-    Isolinear.Effect.create(~name="windows.quitEffect", () => {
-      dispatch(Model.Actions.Quit(false));
-    });
+    Isolinear.Effect.create(~name="windows.quitEffect", () =>
+      dispatch(Model.Actions.Quit(false))
+    );
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
@@ -86,30 +86,31 @@ let start = () => {
           windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
         },
       }
-    | ViewCloseEditor(_) => {
+    | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
       /* Remove splits */
-      let initialSplitCount = List.length(WindowTree.getSplits(s.windowManager.windowTree));
-      let windowTree = s.windowManager.windowTree
-      |> WindowTree.getSplits
-      |> List.filter((split: WindowTree.split) => Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups))
-      |> List.fold_left((prev: WindowTree.t, curr: WindowTree.split) => {
-          WindowTree.removeSplit(curr.id, prev)
-      }, s.windowManager.windowTree);
+      let initialSplitCount =
+        List.length(WindowTree.getSplits(s.windowManager.windowTree));
+      let windowTree =
+        s.windowManager.windowTree
+        |> WindowTree.getSplits
+        |> List.filter((split: WindowTree.split) =>
+             Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups)
+           )
+        |> List.fold_left(
+             (prev: WindowTree.t, curr: WindowTree.split) =>
+               WindowTree.removeSplit(curr.id, prev),
+             s.windowManager.windowTree,
+           );
 
-      let windowManager = WindowManager.ensureActive({
-        ...s.windowManager,
-        windowTree,
-      });
-      
-      let newSplitCount = List.length(WindowTree.getSplits(windowManager.windowTree));
+      let windowManager =
+        WindowManager.ensureActive({...s.windowManager, windowTree});
 
-      {
-        ...s,
-        windowManager
-      }
-    }
+      let newSplitCount =
+        List.length(WindowTree.getSplits(windowManager.windowTree));
+
+      {...s, windowManager};
     | _ => s
     };
 
@@ -119,15 +120,19 @@ let start = () => {
     } else {
       let state = windowUpdater(state, action);
 
-      let effect = switch(action) {
-      | ViewCloseEditor(_) => 
-        if(List.length(WindowTree.getSplits(state.windowManager.windowTree)) == 0) {
-          quitEffect
-        } else {
-          Isolinear.Effect.none
-        }
-      | _ => Isolinear.Effect.none
-      };
+      let effect =
+        switch (action) {
+        | ViewCloseEditor(_) =>
+          if (List.length(
+                WindowTree.getSplits(state.windowManager.windowTree),
+              )
+              == 0) {
+            quitEffect;
+          } else {
+            Isolinear.Effect.none;
+          }
+        | _ => Isolinear.Effect.none
+        };
 
       (state, effect);
     };

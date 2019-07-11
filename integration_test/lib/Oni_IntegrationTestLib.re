@@ -46,7 +46,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   };
 
   wrappedRunEffects();
-  
+
   logInit("Setting editor font");
   dispatch(
     Model.Actions.SetEditorFont(
@@ -66,7 +66,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   let editor = Model.WindowTree.createSplit(~editorGroupId, ());
   dispatch(AddSplit(Vertical, editor));
 
-  let wrappedDispatch = (action) => {
+  let wrappedDispatch = action => {
     dispatch(action);
     runEffects();
   };

@@ -51,7 +51,7 @@ let isEmpty = (id: int, v: t) => {
   switch (IntMap.find_opt(id, v.idToGroup)) {
   | None => true
   | Some(v) => EditorGroup.isEmpty(v)
-  }
+  };
 };
 
 let removeEmptyEditorGroups = (v: t) => {
@@ -96,7 +96,9 @@ let reduce = (v: t, action: Actions.t) => {
 
     {...v, idToGroup};
   | action =>
-    print_endline ("Hit this reducer - activeEditorGroup: " ++ string_of_int(v.activeId));
+    print_endline(
+      "Hit this reducer - activeEditorGroup: " ++ string_of_int(v.activeId),
+    );
     let ret =
       switch (getActiveEditorGroup(v)) {
       | Some(eg) => {
@@ -112,10 +114,9 @@ let reduce = (v: t, action: Actions.t) => {
       };
 
     switch (action) {
-    | ViewCloseEditor(id) => {
-        print_endline ("ViewCloseEditor: " ++ string_of_int(id));
-        ret |> removeEmptyEditorGroups |> ensureActiveId
-        };
+    | ViewCloseEditor(id) =>
+      print_endline("ViewCloseEditor: " ++ string_of_int(id));
+      ret |> removeEmptyEditorGroups |> ensureActiveId;
     | _ => ret
     };
   };

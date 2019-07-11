@@ -92,16 +92,14 @@ let ensureActive = (v: t) => {
   let splits: list(WindowTree.split) = WindowTree.getSplits(v.windowTree);
   let activeWindowId: int = v.activeWindowId;
 
-  let splitIsActive = List.exists((s: WindowTree.split) => s.id == activeWindowId, splits);
+  let splitIsActive =
+    List.exists((s: WindowTree.split) => s.id == activeWindowId, splits);
 
   if (!splitIsActive && List.length(splits) > 0) {
-    {
-        ...v,
-        activeWindowId: List.hd(splits).id
-    }
+    {...v, activeWindowId: List.hd(splits).id};
   } else {
-    v
-  }
+    v;
+  };
 };
 
 let moveCore = (dirX, dirY, v: t) => {

@@ -58,7 +58,7 @@ let start = (getState: unit => Model.State.t) => {
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
       | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
-      }
+      };
     });
 
   let _ =
