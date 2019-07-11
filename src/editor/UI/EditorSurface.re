@@ -203,17 +203,19 @@ let createElement =
     let bufferId = Buffer.getId(buffer);
     let lineCount = Buffer.getNumberOfLines(buffer);
 
-    let showLineNumbers  =
+    let showLineNumbers =
       Configuration.getValue(
         c => c.editorLineNumbers != LineNumber.Off,
         state.configuration,
       );
-    let lineNumberWidth = showLineNumbers ? 
-      LineNumber.getLineNumberPixelWidth(
-        ~lines=lineCount,
-        ~fontPixelWidth=state.editorFont.measuredWidth,
-        (),
-      ) : 0.0;
+    let lineNumberWidth =
+      showLineNumbers
+        ? LineNumber.getLineNumberPixelWidth(
+            ~lines=lineCount,
+            ~fontPixelWidth=state.editorFont.measuredWidth,
+            (),
+          )
+        : 0.0;
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
@@ -705,7 +707,7 @@ let createElement =
                     },
                   (),
                 );
-              }
+              };
 
               let renderIndentGuides =
                 Configuration.getValue(

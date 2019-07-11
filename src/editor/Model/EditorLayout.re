@@ -28,12 +28,14 @@ let getLayout =
       ~bufferLineCount: int,
       (),
     ) => {
-  let lineNumberWidthInPixels = showLineNumbers ?
-    LineNumber.getLineNumberPixelWidth(
-      ~lines=bufferLineCount,
-      ~fontPixelWidth=characterWidth,
-      (),
-    ) : 0.0;
+  let lineNumberWidthInPixels =
+    showLineNumbers
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=bufferLineCount,
+          ~fontPixelWidth=characterWidth,
+          (),
+        )
+      : 0.0;
 
   let minimapPadding =
     isMinimapShown ? float_of_int(Constants.default.minimapPadding) : 0.0;
