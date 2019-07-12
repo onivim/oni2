@@ -242,6 +242,7 @@ let createElement =
             ~indentation,
             cursorStr,
             Index.toZeroBasedInt(editor.cursorPosition.character),
+            leftVisibleColumn
           );
         (cursorOffset, width);
       } else {
@@ -525,12 +526,14 @@ let createElement =
                      ~indentation,
                      text,
                      start,
+                     leftVisibleColumn
                    )
                  let (endOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
                      ~indentation,
                      text,
                      endC,
+                     leftVisibleColumn
                    )
 
                  Shapes.drawRect(
