@@ -21,6 +21,11 @@ let start = (getState: unit => Model.State.t) => {
     );
 
   let _ =
+    Vim.onDirectoryChanged(newDir =>
+      dispatch(Model.Actions.OpenExplorer(newDir))
+    );
+
+  let _ =
     Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(

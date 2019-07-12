@@ -148,3 +148,5 @@ let trimTrailingSlash = (item: string) => {
 let getExecutingDirectory = () => {
     Revery.Environment.executingDirectory;
 }
+
+external freeConsole: unit => unit = "win32_free_console";
