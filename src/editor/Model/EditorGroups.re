@@ -111,7 +111,7 @@ let reduce = (v: t, action: Actions.t) => {
       };
 
     switch (action) {
-    | ViewCloseEditor(id) => ret |> removeEmptyEditorGroups |> ensureActiveId
+    | ViewCloseEditor(_) => ret |> removeEmptyEditorGroups |> ensureActiveId
     | _ => ret
     };
   };
