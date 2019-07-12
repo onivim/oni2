@@ -1,5 +1,5 @@
 {
-  "checksum": "dad5c86410766bdae420d88eeab3e366",
+  "checksum": "576b076580b718946ca9d98de60a3443",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,14 +75,14 @@
       ],
       "devDependencies": []
     },
-    "revery@0.24.0@d41d8cd9": {
-      "id": "revery@0.24.0@d41d8cd9",
+    "revery@0.25.0@d41d8cd9": {
+      "id": "revery@0.25.0@d41d8cd9",
       "name": "revery",
-      "version": "0.24.0",
+      "version": "0.25.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/revery/-/revery-0.24.0.tgz#sha1:9a9c42749a221054a0b4a844290c847f75e88ffa"
+          "archive:https://registry.npmjs.org/revery/-/revery-0.25.0.tgz#sha1:2de1535bd0df40d8fc6bde55385c0a158efbcdef"
         ]
       },
       "overrides": [],
@@ -245,14 +245,14 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@8.10869.16003@d41d8cd9": {
-      "id": "reason-libvim@8.10869.16003@d41d8cd9",
+    "reason-libvim@8.10869.16004@d41d8cd9": {
+      "id": "reason-libvim@8.10869.16004@d41d8cd9",
       "name": "reason-libvim",
-      "version": "8.10869.16003",
+      "version": "8.10869.16004",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.16003.tgz#sha1:b86832cb03b8562f0a03f0d8734144fa9666052c"
+          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.16004.tgz#sha1:d6518e9dd41aeea4ecca2fba1d7312a2fb180cbf"
         ]
       },
       "overrides": [],
@@ -780,9 +780,9 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@0.24.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
+        "revery@0.25.0@d41d8cd9", "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@8.10869.16003@d41d8cd9",
+        "reason-libvim@8.10869.16004@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
