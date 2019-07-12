@@ -20,6 +20,8 @@ cp assets/images/icon512.png _release/linux/Onivim2.png
 ./_staging/linuxdeploy-x86_64.AppImage -e _release/linux/bin/Oni2_editor --appdir _release/Onivim2.AppDir -d _release/linux/Onivim2.desktop -i _release/linux/Onivim2.png
 
 cp scripts/linux/Onivim2.desktop _release/Onivim2.AppDir/Onivim2.desktop
+cp scripts/linux/AppRun _release/Onivim2.AppDir/AppRun
+chmod +x _release/Onivim2.AppDir/AppRun
 cp assets/images/icon512.png _release/Onivim2.AppDir/Onivim2.png
 
 cp _release/linux/bin/*.* _release/Onivim2.AppDir/usr/bin
