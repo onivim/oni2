@@ -58,12 +58,12 @@ let start = (getState: unit => Model.State.t) => {
     });
 
   let _ =
-    Vim.onQuit((quitType, force) => {
+    Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
       | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
-      };
-    });
+      }
+    );
 
   let _ =
     Vim.Visual.onRangeChanged(vr => {
