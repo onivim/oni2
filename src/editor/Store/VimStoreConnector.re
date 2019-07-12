@@ -59,7 +59,6 @@ let start = (getState: unit => Model.State.t) => {
 
   let _ =
     Vim.onQuit((quitType, force) => {
-      print_endline("got q bud");
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
       | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
