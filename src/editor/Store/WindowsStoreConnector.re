@@ -90,8 +90,6 @@ let start = () => {
       /* When an editor is closed... lets see if any window splits are empty */
 
       /* Remove splits */
-      let initialSplitCount =
-        List.length(WindowTree.getSplits(s.windowManager.windowTree));
       let windowTree =
         s.windowManager.windowTree
         |> WindowTree.getSplits
@@ -106,9 +104,6 @@ let start = () => {
 
       let windowManager =
         WindowManager.ensureActive({...s.windowManager, windowTree});
-
-      let newSplitCount =
-        List.length(WindowTree.getSplits(windowManager.windowTree));
 
       {...s, windowManager};
     | _ => s
