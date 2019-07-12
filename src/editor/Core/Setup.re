@@ -24,7 +24,8 @@ type t = {
 let version = "0.2.0";
 
 let default = () => {
-  let execDir = Utility.getExecutingDirectory() ++ "/";
+  let execDir = Utility.getExecutingDirectory();
+  print_endline ("Exec filename: " ++ Sys.executable_name);
   print_endline ("Exec dir: " ++ execDir);
 
   switch (Revery.Environment.os) {

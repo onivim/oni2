@@ -31,7 +31,7 @@ let init = app => {
       app,
       "Oni2",
     );
-
+print_endline("EXEC1: " ++Sys.executable_name);
   let () = Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
   Log.debug("Startup: Parsing CLI options");
