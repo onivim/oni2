@@ -146,22 +146,5 @@ let trimTrailingSlash = (item: string) => {
 };
 
 let getExecutingDirectory = () => {
-    let dir = 
-    switch (Rench.Environment.getExecutingDirectory()) {
-    | "." => switch(String.rindex_opt(Sys.executable_name, '.')) {
-        | Some(v) => String.sub(Sys.executable_name, 0, v)
-        | None => Sys.executable_name
-        }
-    | v => v
-    };
-
-    let len = String.length(dir);
-
-    let ret = switch (String.get(dir, len - 1)) {
-    | '/' => dir
-    | _ => dir ++ "/"
-    }
-
-    print_endline ("DERP: " ++ ret);
-        ret;
+    Revery.Environment.executingDirectory;
 }
