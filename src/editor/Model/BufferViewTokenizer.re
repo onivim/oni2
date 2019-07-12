@@ -86,7 +86,7 @@ let measure = (indentationSettings: IndentationSettings.t, c) =>
   };
 
 let getCharacterPositionAndWidth =
-    (~indentation: IndentationSettings.t, str, i, viewOffset) => {
+    (~indentation: IndentationSettings.t, ~viewOffset: int=0, str, i) => {
   let x = ref(0);
   let totalOffset = ref(0);
   let len = Zed_utf8.length(str);
@@ -103,8 +103,8 @@ let getCharacterPositionAndWidth =
   };
 
   if (viewOffset > 0) {
-    totalOffset := totalOffset^ - viewOffset
-  }
+    totalOffset := totalOffset^ - viewOffset;
+  };
 
   let width = i < len ? measure(Zed_utf8.get(str, i)) : 1;
 
