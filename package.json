@@ -26,7 +26,7 @@
     "@esy-ocaml/reason": "3.4.0",
     "isolinear": "*",
     "@opam/ocamlbuild": "*",
-    "revery": "0.24.0",
+    "revery": "0.25.0",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
@@ -41,7 +41,7 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "8.10869.16003",
+    "reason-libvim": "8.10869.16004",
     "esy-macdylibbundler": "*"
   },
   "resolutions": {
