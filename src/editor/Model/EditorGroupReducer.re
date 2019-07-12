@@ -23,12 +23,6 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
   | BufferEnter({id, _}) =>
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(v, id);
-    print_endline(
-      "GOt new buffer! bufferId: "
-      ++ string_of_int(id)
-      ++ " editorId: "
-      ++ string_of_int(id),
-    );
     {...newState, activeEditorId: Some(activeEditorId)};
   | ViewCloseEditor(id) => EditorGroup.removeEditorById(v, id)
   | ViewSetActiveEditor(id) =>
