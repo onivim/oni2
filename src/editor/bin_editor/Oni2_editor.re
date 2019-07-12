@@ -109,10 +109,15 @@ let init = app => {
 
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
+    let fontFile = Core.Utility.getExecutingDirectory()  ++ fontFamily;
+
+    Log.info("Loading font: " ++ fontFile);
+
     Fontkit.fk_new_face(
-      Revery.Environment.getExecutingDirectory() ++ fontFamily,
+      fontFile,
       adjSize,
       font => {
+        Log.info("Font loaded!");
         open Oni_Model.Actions;
         open Oni_Core.Types;
 

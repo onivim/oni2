@@ -93,10 +93,10 @@ if (process.platform == "darwin") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  copy(extensionsSourceDirectory, extensionsDestDirectory);
-  copy(textmateServiceSourceDirectory, textmateServiceDestDirectory);
+  copy(extensionsSourceDirectory, contentsDirectory);
+  copy(textmateServiceSourceDirectory, contentsDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
-  copy(getNodePath(), path.join(binaryDirectory, "nodec"));
+  copy(getNodePath(), path.join(binaryDirectory, "node"));
 
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));

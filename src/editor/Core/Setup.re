@@ -24,7 +24,8 @@ type t = {
 let version = "0.2.0";
 
 let default = () => {
-  let execDir = Revery.Environment.getExecutingDirectory();
+  let execDir = Utility.getExecutingDirectory() ++ "/";
+  print_endline ("Exec dir: " ++ execDir);
 
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
@@ -38,7 +39,7 @@ let default = () => {
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
-      textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
+      textmateServicePath: execDir ++ "../textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "../extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",

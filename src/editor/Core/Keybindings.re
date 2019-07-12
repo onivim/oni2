@@ -21,7 +21,7 @@ let getBundledKeybindingsPath = () => {
     print_endline("EXECUTIN DIRECTORY: " ++ Rench.Environment.getExecutingDirectory());
     print_endline("Current executable: " ++ Sys.executable_name);
   Rench.Path.join(
-    Rench.Environment.getExecutingDirectory(),
+    Utility.getExecutingDirectory(),
     "keybindings.json",
   );
 };
