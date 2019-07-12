@@ -41,7 +41,7 @@
     "reason-glfw": "^3.2.1022",
     "isolinear": "^2.0.0",
     "reasonFuzz": "*",
-    "reason-libvim": "8.10869.16001",
+    "reason-libvim": "8.10869.16002",
     "esy-macdylibbundler": "*"
   },
   "resolutions": {
