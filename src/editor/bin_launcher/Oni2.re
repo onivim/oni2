@@ -10,9 +10,12 @@ let version = () => {
   print_endline("Onivim 2 0.0.0");
 };
 
+let passthrough = Arg.Unit(() => ());
+
 let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
+  ("--checkhealth", passthrough, ""),
   ("-version", Arg.Unit(version), ""),
 ];
 
