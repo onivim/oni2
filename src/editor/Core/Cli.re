@@ -12,10 +12,6 @@ type t = {
 
 let newline = "\n";
 
-let header = (version: string) => {
-  newline ++ "Onivim 2." ++ version ++ newline ++ newline;
-};
-
 let show = (v: t) => {
   let files =
     List.fold_left((curr, p) => curr ++ newline ++ p, "", v.filesToOpen);

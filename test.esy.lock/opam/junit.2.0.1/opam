@@ -8,7 +8,7 @@ dev-repo: "git+https://github.com/Khady/ocaml-junit.git"
 doc: "https://khady.github.io/ocaml-junit/"
 tags: ["junit" "jenkins"]
 depends: [
-  "dune" {build & >= "1.0"}
+  "dune" {>= "1.0"}
   "ptime"
   "tyxml" {>= "4.0.0"}
   "odoc" {with-doc & >= "1.1.1"}
