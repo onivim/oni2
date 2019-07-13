@@ -65,8 +65,6 @@ let init = () => {
   let setupJsonPath =
     Revery.Environment.getExecutingDirectory() ++ "setup.json";
 
-  prerr_endline("SETUPJSONPATH: " ++ setupJsonPath);
-
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);
   } else {
