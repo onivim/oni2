@@ -110,7 +110,7 @@ let init = app => {
 
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    let fontFile = Core.Utility.executingDirectory  ++ fontFamily;
+    let fontFile = Core.Utility.executingDirectory ++ fontFamily;
 
     Log.info("Loading font: " ++ fontFile);
 
