@@ -23,9 +23,9 @@ let () = Arg.parse(spec, anonArg, "Usage: ");
 let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
 
 let startProcess = (stdio, stdout, stderr) => {
-  let executingDirectory = Filename.dirname(Sys.argv[0]);
+  let executingDirectory = Oni_Core.Utility.executingDirectory;
   Unix.create_process(
-    executingDirectory ++ "/" ++ executable,
+    executingDirectory ++ executable,
     Sys.argv,
     stdio,
     stdout,

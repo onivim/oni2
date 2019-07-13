@@ -18,10 +18,7 @@ let ofFile = filePath =>
   Yojson.Safe.from_file(filePath) |> json_keybindings_of_yojson;
 
 let getBundledKeybindingsPath = () => {
-  Rench.Path.join(
-    Rench.Environment.getExecutingDirectory(),
-    "keybindings.json",
-  );
+  Rench.Path.join(Utility.executingDirectory, "keybindings.json");
 };
 
 let get = () => {

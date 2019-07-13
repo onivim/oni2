@@ -67,7 +67,9 @@ console.log(result.output.toString());
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
   const libsDirectory = path.join(contentsDirectory, "libs");
+  const libsEditorDirectory = path.join(contentsDirectory, "libs_editor");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
+  const textmateServiceDestDirectory = path.join(contentsDirectory, "textmate_service");
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
@@ -87,22 +89,24 @@ console.log(result.output.toString());
 
   fs.mkdirpSync(libsDirectory);
   fs.mkdirpSync(extensionsDestDirectory);
+  fs.mkdirpSync(textmateServiceDestDirectory);
   fs.mkdirpSync(resourcesDirectory);
 
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  copy(extensionsSourceDirectory, extensionsDestDirectory);
-
+  copy(extensionsSourceDirectory, contentsDirectory);
+  copy(textmateServiceSourceDirectory, contentsDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
+  copy(getNodePath(), path.join(binaryDirectory, "node"));
 
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
-  
+  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2")}" -d "${libsDirectory}" -cd`);
 
-  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
+  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsEditorDirectory}" -cd`);
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
   const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");

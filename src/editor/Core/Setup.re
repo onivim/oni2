@@ -38,8 +38,8 @@ let default = () => {
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
-      textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
-      bundledExtensionsPath: execDir ++ "extensions",
+      textmateServicePath: execDir ++ "../textmate_service/lib/src/index.js",
+      bundledExtensionsPath: execDir ++ "../extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",
       rgPath: execDir ++ "rg",
