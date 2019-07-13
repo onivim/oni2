@@ -16,10 +16,14 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
+let cliOptions = Core.Cli.parse();
+Log.debug("Startup: Parsing CLI options complete");
+
 let () = Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
+  Log.debug("Init");
   let w =
     App.createWindow(
       ~createOptions=
@@ -35,8 +39,6 @@ print_endline("EXEC1: " ++Sys.executable_name);
   let () = Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
   Log.debug("Startup: Parsing CLI options");
-  let cliOptions = Core.Cli.parse(setup);
-  Log.debug("Startup: Parsing CLI options complete");
 
   Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
   Sys.chdir(cliOptions.folder);

@@ -523,12 +523,14 @@ let createElement =
                  let (startOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
                      ~indentation,
+                     ~viewOffset=leftVisibleColumn,
                      text,
                      start,
                    )
                  let (endOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
                      ~indentation,
+                     ~viewOffset=leftVisibleColumn,
                      text,
                      endC,
                    )

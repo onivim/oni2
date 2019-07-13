@@ -12,10 +12,6 @@ type t = {
 
 let newline = "\n";
 
-let header = (version: string) => {
-  newline ++ "Onivim 2." ++ version ++ newline ++ newline;
-};
-
 let show = (v: t) => {
   let files =
     List.fold_left((curr, p) => curr ++ newline ++ p, "", v.filesToOpen);
@@ -25,7 +21,7 @@ let show = (v: t) => {
 
 let noop = () => ();
 
-let parse = (setup: Setup.t) => {
+let parse = () => {
   let args: ref(list(string)) = ref([]);
 
   Arg.parse(
@@ -34,7 +30,7 @@ let parse = (setup: Setup.t) => {
       ("--nofork", Unit(Log.enablePrinting), ""),
     ],
     arg => args := [arg, ...args^],
-    header(setup.version),
+    "",
   );
 
   if (! Log.canPrint^) {

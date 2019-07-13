@@ -64,6 +64,8 @@ let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 let init = () => {
   let setupJsonPath = Utility.executingDirectory ++ "setup.json";
 
+  Log.debug("Setup: Looking for setupJson at: " ++ setupJsonPath);
+
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);
   } else {
