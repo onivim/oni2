@@ -35,7 +35,7 @@ let init = app => {
       app,
       "Oni2",
     );
-print_endline("EXEC1: " ++Sys.executable_name);
+
   let () = Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
   Log.debug("Startup: Parsing CLI options");
@@ -110,7 +110,7 @@ print_endline("EXEC1: " ++Sys.executable_name);
 
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    let fontFile = Core.Utility.getExecutingDirectory()  ++ fontFamily;
+    let fontFile = Core.Utility.executingDirectory  ++ fontFamily;
 
     Log.info("Loading font: " ++ fontFile);
 

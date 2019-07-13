@@ -18,10 +18,8 @@ let ofFile = filePath =>
   Yojson.Safe.from_file(filePath) |> json_keybindings_of_yojson;
 
 let getBundledKeybindingsPath = () => {
-    print_endline("EXECUTIN DIRECTORY: " ++ Rench.Environment.getExecutingDirectory());
-    print_endline("Current executable: " ++ Sys.executable_name);
   Rench.Path.join(
-    Utility.getExecutingDirectory(),
+    Utility.executingDirectory,
     "keybindings.json",
   );
 };
