@@ -14,6 +14,7 @@ let editorSurfaceMinimalState = () => {
     React.RenderedElement.render(
       rootNode,
       <EditorSurface
+        isActiveSplit=true
         editorGroupId
         editor=simpleEditor
         state=simpleState
@@ -28,6 +29,7 @@ let editorSurfaceThousandLineState = () => {
     React.RenderedElement.render(
       rootNode,
       <EditorSurface
+        isActiveSplit=true
         editorGroupId
         editor=simpleEditor
         state=thousandLineState
@@ -42,6 +44,7 @@ let editorSurfaceThousandLineStateWithIndents = () => {
     React.RenderedElement.render(
       rootNode,
       <EditorSurface
+        isActiveSplit=true
         editorGroupId
         editor=simpleEditor
         state=thousandLineStateWithIndents
@@ -56,6 +59,7 @@ let editorSurfaceHundredThousandLineState = () => {
     React.RenderedElement.render(
       rootNode,
       <EditorSurface
+        isActiveSplit=true
         editorGroupId
         editor=simpleEditor
         state=hundredThousandLineState
@@ -76,6 +80,7 @@ let setupSurfaceThousandLineLayout = () => {
   Container.update(
     container,
     <EditorSurface
+      isActiveSplit=true
       editorGroupId
       editor=simpleEditor
       state=thousandLineState
