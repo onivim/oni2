@@ -82,7 +82,6 @@ let init = app => {
         ),
       ),
     openEditorById: id => {
-      print_endline("OpenEditorById: " ++ string_of_int(id));
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),

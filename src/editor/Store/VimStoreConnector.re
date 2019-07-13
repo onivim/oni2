@@ -21,6 +21,11 @@ let start = (getState: unit => Model.State.t) => {
     );
 
   let _ =
+    Vim.onDirectoryChanged(newDir =>
+      dispatch(Model.Actions.OpenExplorer(newDir))
+    );
+
+  let _ =
     Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
@@ -334,12 +339,6 @@ let start = (getState: unit => Model.State.t) => {
       Vim.Options.setTabSize(indentation.size);
       Vim.Options.setInsertSpaces(insertSpaces);
     });
-
-  /* let registerQuitHandlerEffect = */
-  /*   Isolinear.Effect.createWithDispatch( */
-  /*     ~name="vim.registerQuitHandler", dispatch => */
-  /*     dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup)) */
-  /*   ); */
 
   /**
    synchronizeEditorEffect checks the current state of the app:

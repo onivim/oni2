@@ -1,6 +1,7 @@
 (executables
     (names InsertModeTest
            RegressionCommandLineNoCompletionTest
+           AddRemoveSplitTest
     )
     (libraries
         libvim
@@ -14,4 +15,5 @@
         run-tests.sh
         InsertModeTest.exe
         RegressionCommandLineNoCompletionTest.exe
+        AddRemoveSplitTest.exe
         ))
