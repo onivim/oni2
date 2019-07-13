@@ -183,6 +183,7 @@ let component = React.component("EditorSurface");
 let createElement =
     (
       ~state: State.t,
+      ~isActiveSplit: bool,
       ~editorGroupId: int,
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
@@ -255,11 +256,17 @@ let createElement =
       (x, y);
     };
 
+    let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
+
     let cursorWidth =
-      switch (state.mode) {
-      | Insert => 2
-      | _ => cursorCharacterWidth * int_of_float(fontWidth)
+      switch ((state.mode, isActiveSplit)) {
+      | (Insert, true) => 2
+      | _ => fullCursorWidth
       };
+
+
+    let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
+      
 
     let cursorStyle =
       Style.[
@@ -285,7 +292,7 @@ let createElement =
         ),
         height(iFontHeight),
         width(cursorWidth),
-        opacity(0.5),
+        opacity(cursorOpacity),
         backgroundColor(Colors.white),
       ];
 
