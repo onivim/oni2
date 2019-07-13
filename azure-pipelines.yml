@@ -47,6 +47,7 @@ jobs:
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: linux
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
   - template: .ci/publish-build-cache.yml
 
 - job: MacOS
@@ -70,6 +71,7 @@ jobs:
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: darwin
+  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
@@ -91,4 +93,5 @@ jobs:
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: windows
+  - script: _release/win32/Oni2.exe -f --checkhealth
   - template: .ci/publish-build-cache.yml
