@@ -25,7 +25,7 @@ let show = (v: t) => {
 
 let noop = () => ();
 
-let parse = (setup: Setup.t) => {
+let parse = () => {
   let args: ref(list(string)) = ref([]);
 
   Arg.parse(
@@ -34,7 +34,7 @@ let parse = (setup: Setup.t) => {
       ("--nofork", Unit(Log.enablePrinting), ""),
     ],
     arg => args := [arg, ...args^],
-    header(setup.version),
+    header("test"),
   );
 
   if (! Log.canPrint^) {
