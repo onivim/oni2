@@ -20,6 +20,26 @@ let anonArg = _ => ();
 
 let () = Arg.parse(spec, anonArg, "Usage: ");
 
+type platform =
+  | Windows
+  | Mac
+  | Linux
+  | Unknown;
+
+let os =
+  switch (Sys.os_type) {
+  | "Win32" => Windows
+  | _ =>
+    let ic = Unix.open_process_in("uname");
+    let uname = input_line(ic);
+    let _ = close_in(ic);
+    switch (uname) {
+    | "Darwin" => Mac
+    | "Linux" => Linux
+    | _ => Unknown
+    };
+  };
+
 /* NOTE: This is duplicated from Revery's core utility
  * This is the only method we use from Revery - this prevents us
  * from needing to bring in the full set of Revery's dependencies
