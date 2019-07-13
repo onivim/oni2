@@ -27,5 +27,12 @@ cp assets/images/icon512.png _release/Onivim2.AppDir/Onivim2.png
 cp _release/linux/bin/*.* _release/Onivim2.AppDir/usr/bin
 cp _release/linux/bin/Oni2 _release/Onivim2.AppDir/usr/bin/Oni2
 
+cp vendor/ripgrep-v0.10.0/linux/rg _release/Onivim2.AppDir/usr/bin/rg
+cp vendor/node-v10.15.1/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
+
+cp -r extensions/ _release/Onivim2.AppDir/usr/bin
+cp -r src/textmate_service/ _release/Onivim2.AppDir/usr/bin
+
+
 ARCH=x86_64 _staging/appimagetool-x86_64.AppImage _release/Onivim2.AppDir _release/Onivim2-x86_64.AppImage
 
