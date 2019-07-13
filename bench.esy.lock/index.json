@@ -1,5 +1,5 @@
 {
-  "checksum": "9b01cacdc654751953adab458d884b26",
+  "checksum": "5fbce93b5ff47253759da1f99b59c3c3",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -245,14 +245,14 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@8.10869.16001@d41d8cd9": {
-      "id": "reason-libvim@8.10869.16001@d41d8cd9",
+    "reason-libvim@8.10869.16004@d41d8cd9": {
+      "id": "reason-libvim@8.10869.16004@d41d8cd9",
       "name": "reason-libvim",
-      "version": "8.10869.16001",
+      "version": "8.10869.16004",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.16001.tgz#sha1:f0276bca6089b2c8ff1d80c07c0a4262d8d30ac6"
+          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.16004.tgz#sha1:d6518e9dd41aeea4ecca2fba1d7312a2fb180cbf"
         ]
       },
       "overrides": [],
@@ -783,7 +783,7 @@
         "revery@0.24.0@d41d8cd9", "reperf@1.4.0@d41d8cd9",
         "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@8.10869.16001@d41d8cd9",
+        "reason-libvim@8.10869.16004@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1024@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
