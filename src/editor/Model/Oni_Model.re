@@ -16,6 +16,7 @@ module CommandPalette = CommandPalette;
 module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;
+module EditorGroups = EditorGroups;
 module EditorLayout = EditorLayout;
 module EditorMetrics = EditorMetrics;
 module Filter = Filter;

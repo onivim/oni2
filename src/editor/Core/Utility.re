@@ -144,3 +144,16 @@ let trimTrailingSlash = (item: string) => {
     item;
   };
 };
+
+let executingDirectory =
+  switch (Revery.Environment.os) {
+  /* TODO: Backport this fix to Revery */
+  /* The default strategy of preferring Sys.executable_name is mostly OK,
+   * but in Linux, it will return the symlink source instead of the symlink destination -
+   * this causes problems when trying to load assets relative to the binary.
+   */
+  | Mac => Revery.Environment.executingDirectory
+  | _ => Filename.dirname(Sys.argv[0]) ++ Filename.dir_sep
+  };
+
+external freeConsole: unit => unit = "win32_free_console";
