@@ -40,5 +40,5 @@ let run = () => {
   Log.info("");
 
   Log.info("All systems go.") /*exit(result ? 0 : 1); */;
-  exit(1);
+  exit(101);
 };

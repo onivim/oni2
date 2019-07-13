@@ -39,8 +39,13 @@ let startProcess = (stdio, stdout, stderr) => {
 let launch = () =>
   if (stayAttached^) {
     let pid = startProcess(Unix.stdin, Unix.stdout, Unix.stderr);
-    let _ = Unix.waitpid([], pid);
-    ();
+    let (_, status) = Unix.waitpid([], pid);
+    let exitCode =
+      switch (status) {
+      | WEXITED(v) => v
+      | _ => 1
+      };
+    exit(exitCode);
   } else {
     let (pstdin, stdin) = Unix.pipe();
     let (stdout, pstdout) = Unix.pipe();
