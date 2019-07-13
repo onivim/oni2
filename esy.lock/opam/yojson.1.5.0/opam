@@ -11,7 +11,7 @@ build: [
 ]
 depends: [
   "ocaml" {>= "4.02.3"}
-  "dune" {build}
+  "dune"
   "cppo" {build}
   "easy-format"
   "biniou" {>= "1.2.0"}

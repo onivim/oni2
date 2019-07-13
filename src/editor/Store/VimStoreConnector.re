@@ -340,12 +340,6 @@ let start = (getState: unit => Model.State.t) => {
       Vim.Options.setInsertSpaces(insertSpaces);
     });
 
-  /* let registerQuitHandlerEffect = */
-  /*   Isolinear.Effect.createWithDispatch( */
-  /*     ~name="vim.registerQuitHandler", dispatch => */
-  /*     dispatch(Model.Actions.RegisterQuitCleanup(quitCleanup)) */
-  /*   ); */
-
   /**
    synchronizeEditorEffect checks the current state of the app:
    - open buffer

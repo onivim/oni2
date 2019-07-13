@@ -60,7 +60,7 @@ print_endline("EXEC1: " ++Sys.executable_name);
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       (),
     );
@@ -82,7 +82,6 @@ print_endline("EXEC1: " ++Sys.executable_name);
         ),
       ),
     openEditorById: id => {
-      print_endline("OpenEditorById: " ++ string_of_int(id));
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),

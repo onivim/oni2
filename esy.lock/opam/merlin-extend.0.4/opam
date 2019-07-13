@@ -10,7 +10,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "dune" {build}
+  "dune"
   "cppo" {build}
   "ocaml" {>= "4.02.3"}
 ]
