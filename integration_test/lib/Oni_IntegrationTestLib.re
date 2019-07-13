@@ -58,9 +58,8 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
         (),
       ),
     ),
-  );
+  ) /* TODO: Move this to a shared place... */;
 
-  /* TODO: Move this to a shared place... */
   let editorGroupId = currentState^.editorGroups.activeId;
 
   let editor = Model.WindowTree.createSplit(~editorGroupId, ());
