@@ -10,7 +10,7 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "dune" {build & >= "1.0"}
+  "dune" {>= "1.0"}
   "ocaml-migrate-parsetree"
   "ocamlfind"
   "ocaml" {>= "4.02.3"}
