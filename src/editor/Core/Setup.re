@@ -25,7 +25,7 @@ let version = "0.2.0";
 
 let default = () => {
   let execDir = Utility.executingDirectory;
- 
+
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
       nodePath: execDir ++ "node.exe",
@@ -62,8 +62,7 @@ let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let init = () => {
-  let setupJsonPath =
-  Utility.executingDirectory ++ "setup.json";
+  let setupJsonPath = Utility.executingDirectory ++ "setup.json";
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);
