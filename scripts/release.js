@@ -104,8 +104,6 @@ console.log(result.output.toString());
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
-  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2")}" -d "${libsDirectory}" -cd`);
-
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsEditorDirectory}" -cd`);
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
