@@ -4,5 +4,5 @@
     (name Oni2)
     (package Oni2)
     (public_name Oni2)
-    (libraries unix Oni2.core)
+    (libraries unix)
 )
