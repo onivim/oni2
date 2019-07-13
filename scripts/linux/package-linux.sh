@@ -33,6 +33,7 @@ cp vendor/node-v10.15.1/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
 cp -r extensions/ _release/Onivim2.AppDir/usr/bin
 cp -r src/textmate_service/ _release/Onivim2.AppDir/usr/bin
 
+rm _release/Onivim2.AppDir/usr/bin/setup.json
 
 ARCH=x86_64 _staging/appimagetool-x86_64.AppImage _release/Onivim2.AppDir _release/Onivim2-x86_64.AppImage
 
