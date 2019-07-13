@@ -25,26 +25,17 @@ let show = (v: t) => {
 
 let noop = () => ();
 
-<<<<<<< Updated upstream
-let parse = (setup: Setup.t) => {
-=======
-let derp = () => {
-  print_endline ("YO");
-  exit(0);
-};
-
 let parse = () => {
->>>>>>> Stashed changes
   let args: ref(list(string)) = ref([]);
 
   Arg.parse(
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
-      ("--checkhealth", Unit(derp), ""),
+      ("--checkhealth", Unit(HealthCheck.run), ""),
     ],
     arg => args := [arg, ...args^],
-    header(setup.version),
+    "",
   );
 
   if (! Log.canPrint^) {
