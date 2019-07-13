@@ -24,7 +24,7 @@ type t = {
 let version = "0.2.0";
 
 let default = () => {
-  let execDir = Revery.Environment.getExecutingDirectory();
+  let execDir = Utility.executingDirectory;
 
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
@@ -65,7 +65,7 @@ let init = () => {
   let setupJsonPath =
     Revery.Environment.getExecutingDirectory() ++ "setup.json";
 
-  prerr_endline ("SETUPJSONPATH: " ++ setupJsonPath);
+  prerr_endline("SETUPJSONPATH: " ++ setupJsonPath);
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);

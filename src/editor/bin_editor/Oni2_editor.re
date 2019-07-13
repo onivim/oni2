@@ -60,7 +60,7 @@ let init = app => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       (),
     );
