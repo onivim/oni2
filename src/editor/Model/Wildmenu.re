@@ -33,7 +33,13 @@ let reduce = (s, action) =>
     }
   | CommandlineHide
   | WildmenuHide => {show: false, selected: 0, items: empty, count: 0}
-  | WildmenuNext => {...s, selected: (s.selected + 1) mod s.count}
-  | WildmenuPrevious => {...s, selected: (s.selected - 1) mod s.count}
+  | WildmenuNext => {
+      ...s,
+      selected: s.count > 0 ? (s.selected + 1) mod s.count : 0,
+    }
+  | WildmenuPrevious => {
+      ...s,
+      selected: s.count > 0 ? (s.selected - 1) mod s.count : 0,
+    }
   | _ => s
   };
