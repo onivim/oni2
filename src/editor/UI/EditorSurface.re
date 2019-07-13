@@ -259,14 +259,12 @@ let createElement =
     let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
 
     let cursorWidth =
-      switch ((state.mode, isActiveSplit)) {
+      switch (state.mode, isActiveSplit) {
       | (Insert, true) => 2
       | _ => fullCursorWidth
       };
 
-
     let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
-      
 
     let cursorStyle =
       Style.[

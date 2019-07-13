@@ -111,7 +111,14 @@ let createElement =
 
         let editorView =
           switch (editor) {
-          | Some(v) => <EditorSurface isActiveSplit=isActive editorGroupId metrics editor=v state />
+          | Some(v) =>
+            <EditorSurface
+              isActiveSplit=isActive
+              editorGroupId
+              metrics
+              editor=v
+              state
+            />
           | None => React.empty
           };
         switch (
