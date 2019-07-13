@@ -21,8 +21,6 @@ Log.debug("Startup: Parsing CLI options complete");
 
 let () = Log.debug("Starting Onivim 2.");
 
-print_endline ("yo");
-
 /* The 'main' function for our app */
 let init = app => {
   Log.debug("Init");
@@ -31,7 +29,7 @@ let init = app => {
       ~createOptions=
         WindowCreateOptions.create(
           ~maximized=false,
-          ~icon=None,
+          ~icon=Some("logo.png"),
           (),
         ),
       app,
