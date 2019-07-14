@@ -6,10 +6,10 @@
 
 Printexc.record_backtrace(true);
 
-let () = Log.debug("Starting Onivim 2.");
-
 module Core = Oni_Core;
 module Log = Core.Log;
+
+let () = Log.debug("Starting Onivim 2.");
 
 let cliOptions = Core.Cli.parse();
 let () = Log.debug("Startup: Parsing CLI options complete");
