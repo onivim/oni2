@@ -39,6 +39,6 @@ let run = () => {
   result ? Log.info("** PASSED **") : Log.info("** FAILED **");
   Log.info("");
 
-  Log.info("All systems go.") /*exit(result ? 0 : 1); */;
-  exit(101);
+  Log.info("All systems go.");
+  exit(result ? 0 : 1);
 };
