@@ -117,7 +117,7 @@ let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
   {
     ...scrollTo(view, scrollAmount, metrics),
-    lastTopLine: Index.ZeroBasedIndex(line),
+    lastTopLine: Index.OneBasedIndex(line + 1),
   };
 };
 
