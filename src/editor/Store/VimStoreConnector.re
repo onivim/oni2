@@ -245,7 +245,7 @@ let start = (getState: unit => Model.State.t) => {
   let _ =
     Vim.Window.onTopLineChanged(t => {
       Log.info("onTopLineChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToLine(t));
+      dispatch(Model.Actions.EditorScrollToLine(t - 1));
     });
 
   let _ =
@@ -415,19 +415,11 @@ let start = (getState: unit => Model.State.t) => {
         /* Update the cursor position and the scroll (top line, left column) -
          * ensure these are in sync with libvim's model */
         let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
-
-          Console.log("Line/Char/Top/Left");
-          Console.log(Core.Types.Index.toInt0(editor.cursorPosition.line));
-          Console.log(Core.Types.Index.toInt0(editor.cursorPosition.character));
-          Console.log(editor.lastTopLine);
-          Console.log(editor.lastLeftCol);
-          Console.log("Done!");
-
           Vim.Cursor.setPosition(
             Core.Types.Index.toInt1(editor.cursorPosition.line),
             Core.Types.Index.toInt0(editor.cursorPosition.character),
           );
-          Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
+          Vim.Window.setTopLeft(editor.lastTopLine + 1, editor.lastLeftCol);
         };
 
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
