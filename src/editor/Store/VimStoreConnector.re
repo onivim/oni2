@@ -26,6 +26,12 @@ let start = (getState: unit => Model.State.t) => {
     );
 
   let _ =
+    Vim.Buffer.onFilenameChanged(meta => {
+      Log.info("Buffer metadata changed: " ++ string_of_int(meta.id));
+      dispatch(Model.Actions.BufferEnter(meta));
+    });
+
+  let _ =
     Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
