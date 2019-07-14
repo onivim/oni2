@@ -10,9 +10,12 @@ let version = () => {
   print_endline("Onivim 2 0.0.0");
 };
 
+let passthrough = Arg.Unit(() => ());
+
 let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
+  ("--checkhealth", passthrough, ""),
   ("-version", Arg.Unit(version), ""),
 ];
 
@@ -92,8 +95,13 @@ let startProcess = (stdio, stdout, stderr) => {
 let launch = () =>
   if (stayAttached^) {
     let pid = startProcess(Unix.stdin, Unix.stdout, Unix.stderr);
-    let _ = Unix.waitpid([], pid);
-    ();
+    let (_, status) = Unix.waitpid([], pid);
+    let exitCode =
+      switch (status) {
+      | WEXITED(v) => v
+      | _ => 1
+      };
+    exit(exitCode);
   } else {
     let (pstdin, stdin) = Unix.pipe();
     let (stdout, pstdout) = Unix.pipe();

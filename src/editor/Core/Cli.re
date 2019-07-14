@@ -28,6 +28,7 @@ let parse = () => {
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
+      ("--checkhealth", Unit(HealthCheck.run), ""),
     ],
     arg => args := [arg, ...args^],
     "",
