@@ -17,7 +17,7 @@ let create = (~bufferId=0, ()) => {
     scrollX: 0.,
     scrollY: 0.,
     lastTopLine: Index.ZeroBasedIndex(0),
-    lastLeftCol: Index.ZeroBasedIndex(0),
+    lastLeftCol: Index.OneBasedIndex(0),
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -117,7 +117,7 @@ let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
   {
     ...scrollTo(view, scrollAmount, metrics),
-    lastTopLine: Index.OneBasedIndex(line + 1),
+    lastTopLine: Index.ZeroBasedIndex(line),
   };
 };
 
@@ -168,7 +168,7 @@ let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
   {
     ...scrollToHorizontal(view, scrollAmount, metrics),
-    lastLeftCol: Index.OneBasedIndex(column),
+    lastLeftCol: Index.ZeroBasedIndex(column),
   };
 };
 
