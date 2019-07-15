@@ -54,9 +54,8 @@ let init = app => {
 
   print_endline ("init done!");
   
-};
-/*  Log.debug("Init");
-
+  // PASS
+  
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
@@ -109,6 +108,9 @@ let init = app => {
 
   dispatch(Model.Actions.Init);
   runEffects();
+
+};
+/*
 
   List.iter(
     v => dispatch(Model.Actions.OpenFileByPath(v, None)),
