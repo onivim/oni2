@@ -27,7 +27,7 @@ type t = {
 let version = "0.2.0";
 
 let default = () => {
-  let execDir = Utility.executingDirectory;
+  let execDir = Revery.Environment.executingDirectory;
 
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
@@ -68,7 +68,7 @@ let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let init = () => {
-  let setupJsonPath = Utility.executingDirectory ++ "setup.json";
+  let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
   Log.debug("Setup: Looking for setupJson at: " ++ setupJsonPath);
 

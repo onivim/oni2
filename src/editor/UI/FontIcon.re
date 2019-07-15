@@ -5,7 +5,7 @@
  */
 
 open Revery.UI;
-open CamomileLibraryDefault.Camomile;
+open Oni_Core.CamomileBundled.Camomile;
 
 let component = React.component("FontIcon");
 

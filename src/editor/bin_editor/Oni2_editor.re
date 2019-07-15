@@ -23,7 +23,7 @@ Log.debug("Startup: Parsing CLI options complete");
 Log.debug("Starting Onivim 2.");
 
 /* Camomile - root cause of failure? */
-open CamomileLibraryDefault.Camomile;
+open Oni_Core.CamomileBundled.Camomile;
 /* How about Zed_utf8? */
 let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
