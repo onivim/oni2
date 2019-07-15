@@ -24,6 +24,8 @@ Log.debug("Starting Onivim 2.");
 
 /* Camomile - root cause of failure? */
 open CamomileLibraryDefault.Camomile;
+/* How about Zed_utf8? */
+let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
 
 /* The 'main' function for our app */
 let init = app => {
