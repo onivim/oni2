@@ -21,13 +21,25 @@ print_endline("Startup: Parsing CLI options complete");
  
  print_endline ("2");
  
+let cliOptions = Core.Cli.parse();
+ 
 let init = _app => {
+   print_endline ("Initializing setup");
+   let setup = Core.Setup.init();
+
+   print_endline ("Folder: " ++ cliOptions.folder);
+   Sys.chdir(cliOptions.folder);
+
+   print_endline ("Running preflight checks");
+   PreflightChecks.run();
+
+   print_endline ("Getting keybindings");
+   let _ = Core.Keybindings.get();
+   
   print_endline("init");
 };
 
 App.start(init);
- 
-let cliOptions = Core.Cli.parse();
 
 /*
  open Revery.UI;
