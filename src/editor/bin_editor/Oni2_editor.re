@@ -24,7 +24,7 @@ let cliOptions = Core.Cli.parse();
 
 let init = _app => {
   print_endline("Initializing setup");
-  let _setup = Core.Setup.init();
+  let setup = Core.Setup.init();
 
   print_endline("Folder: " ++ cliOptions.folder);
   Sys.chdir(cliOptions.folder);
@@ -34,13 +34,20 @@ let init = _app => {
 
   print_endline("Getting keybindings");
   let _ = Core.Keybindings.get();
+  
+  module Model = Oni_Model;
 
   print_endline("Creating some states");
 
-  let _initialState = Model.State.create();
+  let initialState = Model.State.create();
   let _currentState = ref(initialState);
 
+  let onStateChanged = _ => {
+    print_endline ("onStateChanged");
+  };
+
   print_endline("Starting store thread");
+ module Store = Oni_Store;
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
