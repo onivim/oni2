@@ -11,13 +11,6 @@ open Oni_Model;
 
 let component = React.component("Root");
 
-let createElement = (~state as _, ~children as _, ()) => {
-  component(hooks => {
-    (hooks, <View />);
-  });
-};
-
-/*
 let statusBarHeight = 25;
 
 let rootStyle = (background, foreground) =>
@@ -53,6 +46,14 @@ let statusBarStyle =
     justifyContent(`Center),
     alignItems(`Center),
   ];
+
+let createElement = (~state as _, ~children as _, ()) => {
+  component(hooks => {
+    (hooks, <View style=statusBarStyle />);
+  });
+};
+
+/*
 
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
