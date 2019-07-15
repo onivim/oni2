@@ -22,6 +22,9 @@ Log.debug("Startup: Parsing CLI options complete");
 
 Log.debug("Starting Onivim 2.");
 
+/* Camomile - root cause of failure? */
+open CamomileLibraryDefault.Camomile;
+
 /* The 'main' function for our app */
 let init = app => {
   open Oni_UI;
@@ -60,9 +63,9 @@ let init = app => {
   let currentState = ref(initialState);
 
   // Fail - is it the View or UI.start?
+  /*
   let view = <Root state=currentState^ />;
   
-  /*
   let update = UI.start(w, view);
 
   let onStateChanged = v => {
