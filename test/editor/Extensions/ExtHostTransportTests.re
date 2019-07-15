@@ -1,3 +1,6 @@
+/*
+TODO: Bring back for exthost work
+
 open Oni_Core;
 open Oni_Core_Test;
 open Oni_Extensions;
@@ -90,3 +93,5 @@ describe("ExtHostTransport", ({test, _}) => {
     ExtHostTransport.close(extClient);
   });
 });
+
+*/
