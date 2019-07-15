@@ -3,3 +3,5 @@ steps:
     displayName: 'Use Node 8.x'
     inputs:
       versionSpec: 8.x
+  - script: npm install -g rimraf
+    displayName: "Install rimraf"
