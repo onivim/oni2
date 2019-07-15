@@ -8,6 +8,9 @@
 type t = {
   [@key "node"]
   nodePath: string,
+  /* Camomile runtime files */
+  [@key "camomile"],
+  camomilePath: string
   [@key "textmateService"]
   textmateServicePath: string,
   [@key "bundledExtensions"]
@@ -29,6 +32,7 @@ let default = () => {
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
       nodePath: execDir ++ "node.exe",
+      camomilePath: execDir ++ "camomile",
       textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
@@ -38,6 +42,7 @@ let default = () => {
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
+      camomilePath: execDir ++ "../camomile",
       textmateServicePath: execDir ++ "../textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "../extensions",
       developmentExtensionsPath: None,
@@ -47,6 +52,7 @@ let default = () => {
     }
   | _ => {
       nodePath: execDir ++ "node",
+      camomilePath: execDir ++ "../share/camomile",
       textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
