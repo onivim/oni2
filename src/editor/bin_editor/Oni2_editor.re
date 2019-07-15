@@ -23,7 +23,7 @@ Log.debug("Startup: Parsing CLI options complete");
 Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
-let init = _app => {
+let init = app => {
   open Oni_UI;
 
   open Revery;
@@ -31,9 +31,6 @@ let init = _app => {
   open Rench;
 
   print_endline ("init");
-  
-};
-/*  Log.debug("Init");
   let w =
     App.createWindow(
       ~createOptions=
@@ -54,6 +51,11 @@ let init = _app => {
   Sys.chdir(cliOptions.folder);
 
   PreflightChecks.run();
+
+  print_endline ("init done!");
+  
+};
+/*  Log.debug("Init");
 
   let initialState = Model.State.create();
   let currentState = ref(initialState);
