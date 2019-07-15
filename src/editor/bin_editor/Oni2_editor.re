@@ -4,6 +4,8 @@
  * This is the entry point for launching the editor.
  */
 
+Printexc.record_backtrace(true);
+
 print_endline ("Top");
 
 open Oni_UI;
