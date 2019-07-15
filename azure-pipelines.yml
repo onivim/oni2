@@ -124,3 +124,22 @@ jobs:
   - script: ./scripts/linux/validate-release.sh
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+
+- job: ValidateMacOSRelease
+  displayName: "MacOS: Validate Release"
+  dependsOn: MacOS
+  pool:
+    vmImage: 'macOS 10.14'
+
+  steps:
+  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
+    displayName: 'Echo artifact dir'
+  - task: DownloadBuildArtifacts@0
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Darwin'
+      downloadPath: '$(System.ArtifactsDirectory)'
+  - script: ./scripts/osx/validate-release.sh
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
