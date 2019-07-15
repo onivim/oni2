@@ -69,6 +69,8 @@ let init = app => {
     update(<Root state />);
   };
 
+
+  /*
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -104,11 +106,13 @@ let init = app => {
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     dispatch,
     state: initialState,
-  });
+  }); 
 
   dispatch(Model.Actions.Init);
   runEffects();
+  */
 
+  // FAIL
 };
 /*
 
