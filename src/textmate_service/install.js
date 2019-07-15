@@ -18,4 +18,11 @@ if (process.platform === "win32") {
     nodeBinaryPath = path.join(nodeVendorDir, "linux-x64", "node")
 }
 
-cp.spawnSync(nodeBinaryPath, [yarnScript, "install"], {stdio: "inherit"});
+let useProductionDeps = process.argv.filter((i) => i.indexOf("-prod") >= 0).length > 0;
+
+console.log(`-- Production: ${useProductionDeps}`);
+
+let args = [yarnScript, "install"];
+let args2 = useProductionDeps ? [...args, "--production=true"] : args;
+
+cp.spawnSync(nodeBinaryPath, args2, {stdio: "inherit"});

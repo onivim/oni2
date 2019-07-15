@@ -10,3 +10,8 @@ steps:
   - script: npm run test
     displayName: 'textmate: npm test'
     workingDirectory: src/textmate_service
+  - script: rimraf src/textmate_service/node_modules
+    displayName: 'textmate: remove developer node_modules'
+  - script: node install.js --prod
+    workingDirectory: src/textmate_service
+    displayName: 'textmate: npm install --prod'

@@ -1,213 +1,218 @@
-open Oni_Core;
-open Oni_Core_Test;
-open Oni_Extensions;
+/*
 
-open TestFramework;
+ TODO: Bring back for exthost work
 
-open ExtensionClientHelper;
-open ExtHostProtocol;
+ open Oni_Core;
+ open Oni_Core_Test;
+ open Oni_Extensions;
 
-describe("ExtHostClient", ({describe, _}) => {
-  describe("activation", ({test, _}) => {
-    test("activates by language", ({expect}) => {
-      let activations: ref(list(string)) = ref([]);
-      let onDidActivateExtension = id => activations := [id, ...activations^];
+ open TestFramework;
 
-      let isExpectedExtensionActivated = () =>
-        isStringValueInList(activations, "oni-activation-events-test");
+ open ExtensionClientHelper;
+ open ExtHostProtocol;
 
-      withExtensionClient(
-        ~onDidActivateExtension,
-        client => {
-          ExtHostClient.activateByEvent("onLanguage:testlang", client);
+ describe("ExtHostClient", ({describe, _}) => {
+   describe("activation", ({test, _}) => {
+     test("activates by language", ({expect}) => {
+       let activations: ref(list(string)) = ref([]);
+       let onDidActivateExtension = id => activations := [id, ...activations^];
 
-          Waiters.wait(isExpectedExtensionActivated, client);
-          expect.bool(isExpectedExtensionActivated()).toBe(true);
-        },
-      );
-    });
+       let isExpectedExtensionActivated = () =>
+         isStringValueInList(activations, "oni-activation-events-test");
 
-    test("activates by command", ({expect}) => {
-      let activations: ref(list(string)) = ref([]);
-      let onDidActivateExtension = id => activations := [id, ...activations^];
+       withExtensionClient(
+         ~onDidActivateExtension,
+         client => {
+           ExtHostClient.activateByEvent("onLanguage:testlang", client);
 
-      let isExpectedExtensionActivated = () =>
-        isStringValueInList(activations, "oni-activation-events-test");
-      withExtensionClient(
-        ~onDidActivateExtension,
-        client => {
-          ExtHostClient.activateByEvent(
-            "onCommand:extension.activationTest",
-            client,
-          );
+           Waiters.wait(isExpectedExtensionActivated, client);
+           expect.bool(isExpectedExtensionActivated()).toBe(true);
+         },
+       );
+     });
 
-          Waiters.wait(isExpectedExtensionActivated, client);
-          expect.bool(isExpectedExtensionActivated()).toBe(true);
-        },
-      );
-    });
-  });
+     test("activates by command", ({expect}) => {
+       let activations: ref(list(string)) = ref([]);
+       let onDidActivateExtension = id => activations := [id, ...activations^];
 
-  describe("commands", ({test, _}) =>
-    test("executes simple command", ({expect}) => {
-      let registeredCommands = empty();
-      let messages = empty();
+       let isExpectedExtensionActivated = () =>
+         isStringValueInList(activations, "oni-activation-events-test");
+       withExtensionClient(
+         ~onDidActivateExtension,
+         client => {
+           ExtHostClient.activateByEvent(
+             "onCommand:extension.activationTest",
+             client,
+           );
 
-      let onShowMessage = append(messages);
-      let onRegisterCommand = append(registeredCommands);
+           Waiters.wait(isExpectedExtensionActivated, client);
+           expect.bool(isExpectedExtensionActivated()).toBe(true);
+         },
+       );
+     });
+   });
 
-      let isExpectedCommandRegistered = () =>
-        isStringValueInList(registeredCommands, "extension.helloWorld");
+   describe("commands", ({test, _}) =>
+     test("executes simple command", ({expect}) => {
+       let registeredCommands = empty();
+       let messages = empty();
 
-      let anyMessages = any(messages);
+       let onShowMessage = append(messages);
+       let onRegisterCommand = append(registeredCommands);
 
-      withExtensionClient(
-        ~onShowMessage,
-        ~onRegisterCommand,
-        client => {
-          Waiters.wait(isExpectedCommandRegistered, client);
-          expect.bool(isExpectedCommandRegistered()).toBe(true);
+       let isExpectedCommandRegistered = () =>
+         isStringValueInList(registeredCommands, "extension.helloWorld");
 
-          clear(messages);
+       let anyMessages = any(messages);
 
-          ExtHostClient.executeContributedCommand(
-            "extension.helloWorld",
-            client,
-          );
+       withExtensionClient(
+         ~onShowMessage,
+         ~onRegisterCommand,
+         client => {
+           Waiters.wait(isExpectedCommandRegistered, client);
+           expect.bool(isExpectedCommandRegistered()).toBe(true);
 
-          Waiters.wait(anyMessages, client);
-          expect.bool(anyMessages()).toBe(true);
-        },
-      );
-    })
-  );
+           clear(messages);
 
-  describe("DocumentsAndEditors", ({test, _}) => {
-    let createInitialDocumentModel = (~lines, ~path, ()) => {
-      ModelAddedDelta.create(
-        ~uri=Uri.fromPath(path),
-        ~lines,
-        ~modeId="test_language",
-        ~isDirty=false,
-        (),
-      );
-    };
-    test("document added successfully", ({expect}) => {
-      let registeredCommands = empty();
-      let messages = emptyInfoMsgs();
+           ExtHostClient.executeContributedCommand(
+             "extension.helloWorld",
+             client,
+           );
 
-      let onShowMessage = appendInfoMsg(messages);
-      let onRegisterCommand = append(registeredCommands);
+           Waiters.wait(anyMessages, client);
+           expect.bool(anyMessages()).toBe(true);
+         },
+       );
+     })
+   );
 
-      let isExpectedCommandRegistered = () =>
-        isStringValueInList(registeredCommands, "extension.helloWorld");
+   describe("DocumentsAndEditors", ({test, _}) => {
+     let createInitialDocumentModel = (~lines, ~path, ()) => {
+       ModelAddedDelta.create(
+         ~uri=Uri.fromPath(path),
+         ~lines,
+         ~modeId="test_language",
+         ~isDirty=false,
+         (),
+       );
+     };
+     test("document added successfully", ({expect}) => {
+       let registeredCommands = empty();
+       let messages = emptyInfoMsgs();
 
-      let didGetOpenMessage = () =>
-        doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
-          && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
-        );
+       let onShowMessage = appendInfoMsg(messages);
+       let onRegisterCommand = append(registeredCommands);
 
-      withExtensionClient(
-        ~onRegisterCommand,
-        ~onShowMessage,
-        client => {
-          Waiters.wait(isExpectedCommandRegistered, client);
-          expect.bool(isExpectedCommandRegistered()).toBe(true);
+       let isExpectedCommandRegistered = () =>
+         isStringValueInList(registeredCommands, "extension.helloWorld");
 
-          ExtHostClient.addDocument(
-            createInitialDocumentModel(
-              ~lines=["Hello world"],
-              ~path="test.txt",
-              (),
-            ),
-            client,
-          );
-          Waiters.wait(didGetOpenMessage, client);
-          expect.bool(didGetOpenMessage()).toBe(true);
-        },
-      );
-    });
+       let didGetOpenMessage = () =>
+         doesInfoMessageMatch(messages, info =>
+           String.equal(info.filename, "test.txt")
+           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
+         );
 
-    test("document updated successfully", ({expect}) => {
-      let registeredCommands = empty();
-      let messages = emptyInfoMsgs();
+       withExtensionClient(
+         ~onRegisterCommand,
+         ~onShowMessage,
+         client => {
+           Waiters.wait(isExpectedCommandRegistered, client);
+           expect.bool(isExpectedCommandRegistered()).toBe(true);
 
-      let onShowMessage = appendInfoMsg(messages);
-      let onRegisterCommand = append(registeredCommands);
+           ExtHostClient.addDocument(
+             createInitialDocumentModel(
+               ~lines=["Hello world"],
+               ~path="test.txt",
+               (),
+             ),
+             client,
+           );
+           Waiters.wait(didGetOpenMessage, client);
+           expect.bool(didGetOpenMessage()).toBe(true);
+         },
+       );
+     });
 
-      let isExpectedCommandRegistered = () =>
-        isStringValueInList(registeredCommands, "extension.helloWorld");
+     test("document updated successfully", ({expect}) => {
+       let registeredCommands = empty();
+       let messages = emptyInfoMsgs();
 
-      let didGetOpenMessage = () =>
-        doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
-          && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
-        );
+       let onShowMessage = appendInfoMsg(messages);
+       let onRegisterCommand = append(registeredCommands);
 
-      let didGetUpdateMessage = () =>
-        doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
-          && String.equal(
-               info.messageType,
-               "workspace.onDidChangeTextDocument",
-             )
-          && String.equal(
-               info.fullText,
-               "Greetings" ++ Eol.toString(Eol.default) ++ "world",
-             )
-        );
+       let isExpectedCommandRegistered = () =>
+         isStringValueInList(registeredCommands, "extension.helloWorld");
 
-      withExtensionClient(
-        ~onShowMessage,
-        ~onRegisterCommand,
-        client => {
-          Waiters.wait(isExpectedCommandRegistered, client);
-          expect.bool(isExpectedCommandRegistered()).toBe(true);
+       let didGetOpenMessage = () =>
+         doesInfoMessageMatch(messages, info =>
+           String.equal(info.filename, "test.txt")
+           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
+         );
 
-          ExtHostClient.addDocument(
-            createInitialDocumentModel(
-              ~lines=["hello", "world"],
-              ~path="test.txt",
-              (),
-            ),
-            client,
-          );
-          Waiters.wait(didGetOpenMessage, client);
-          expect.bool(didGetOpenMessage()).toBe(true);
+       let didGetUpdateMessage = () =>
+         doesInfoMessageMatch(messages, info =>
+           String.equal(info.filename, "test.txt")
+           && String.equal(
+                info.messageType,
+                "workspace.onDidChangeTextDocument",
+              )
+           && String.equal(
+                info.fullText,
+                "Greetings" ++ Eol.toString(Eol.default) ++ "world",
+              )
+         );
 
-          let contentChange =
-            ModelContentChange.create(
-              ~range=
-                Range.create(
-                  ~startLine=ZeroBasedIndex(0),
-                  ~endLine=ZeroBasedIndex(0),
-                  ~startCharacter=ZeroBasedIndex(0),
-                  ~endCharacter=ZeroBasedIndex(5),
-                  (),
-                ),
-              ~text="Greetings",
-              (),
-            );
+       withExtensionClient(
+         ~onShowMessage,
+         ~onRegisterCommand,
+         client => {
+           Waiters.wait(isExpectedCommandRegistered, client);
+           expect.bool(isExpectedCommandRegistered()).toBe(true);
 
-          let modelChangedEvent =
-            ModelChangedEvent.create(
-              ~changes=[contentChange],
-              ~eol=Eol.default,
-              ~versionId=1,
-              (),
-            );
-          ExtHostClient.updateDocument(
-            Uri.fromPath("test.txt"),
-            modelChangedEvent,
-            true,
-            client,
-          );
+           ExtHostClient.addDocument(
+             createInitialDocumentModel(
+               ~lines=["hello", "world"],
+               ~path="test.txt",
+               (),
+             ),
+             client,
+           );
+           Waiters.wait(didGetOpenMessage, client);
+           expect.bool(didGetOpenMessage()).toBe(true);
 
-          Waiters.wait(didGetUpdateMessage, client);
-          expect.bool(didGetUpdateMessage()).toBe(true);
-        },
-      );
-    });
-  });
-});
+           let contentChange =
+             ModelContentChange.create(
+               ~range=
+                 Range.create(
+                   ~startLine=ZeroBasedIndex(0),
+                   ~endLine=ZeroBasedIndex(0),
+                   ~startCharacter=ZeroBasedIndex(0),
+                   ~endCharacter=ZeroBasedIndex(5),
+                   (),
+                 ),
+               ~text="Greetings",
+               (),
+             );
+
+           let modelChangedEvent =
+             ModelChangedEvent.create(
+               ~changes=[contentChange],
+               ~eol=Eol.default,
+               ~versionId=1,
+               (),
+             );
+           ExtHostClient.updateDocument(
+             Uri.fromPath("test.txt"),
+             modelChangedEvent,
+             true,
+             client,
+           );
+
+           Waiters.wait(didGetUpdateMessage, client);
+           expect.bool(didGetUpdateMessage()).toBe(true);
+         },
+       );
+     });
+   });
+ });
+ */
