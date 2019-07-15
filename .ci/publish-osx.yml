@@ -1,8 +1,9 @@
 # Cross-platform set of build steps for building esy projects
 
 steps:
+  - script: scripts/osx/publish.sh
   - task: PublishBuildArtifacts@1
-    displayName: "Release Artifact: ${{ parameters.platform }}"
+    displayName: "Release Artifact: Darwin"
     inputs:
       PathToPublish: "_publish"
-      ArtifactName: "Release_${{parameters.platform }}"
+      ArtifactName: "Release_Darwin"
