@@ -8,8 +8,6 @@ Printexc.record_backtrace(true);
 
 print_endline ("Top");
 
-open Oni_UI;
-
 print_endline ("1");
 
 module Core = Oni_Core;
@@ -22,15 +20,16 @@ print_endline ("2");
 let cliOptions = Core.Cli.parse();
 Log.debug("Startup: Parsing CLI options complete");
 
-let () = Log.debug("Starting Onivim 2.");
+Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
+  open Oni_UI;
 
   open Revery;
   open Revery.UI;
-
   open Rench;
+  
   Log.debug("Init");
   let w =
     App.createWindow(
@@ -44,7 +43,7 @@ let init = app => {
       "Oni2",
     );
 
-  let () = Log.debug("Initializing setup.");
+  Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
   Log.debug("Startup: Parsing CLI options");
 
@@ -194,5 +193,5 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-let () = Log.debug("Calling App.start");
-App.start(init);
+Log.debug("Calling App.start");
+Revery.App.start(init);
