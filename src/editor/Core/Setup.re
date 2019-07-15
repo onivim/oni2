@@ -9,8 +9,8 @@ type t = {
   [@key "node"]
   nodePath: string,
   /* Camomile runtime files */
-  [@key "camomile"],
-  camomilePath: string
+  [@key "camomile"]
+  camomilePath: string,
   [@key "textmateService"]
   textmateServicePath: string,
   [@key "bundledExtensions"]

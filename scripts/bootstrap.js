@@ -1,3 +1,4 @@
+const cp = require("child_process");
 const fs = require("fs")
 const path = require("path")
 
@@ -17,6 +18,8 @@ let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modu
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
+
+let camomilePath = cp.execSync("esy bash -c \"echo #{@opam/camomile.install}\"").toString("utf8").trim();
 
 const getCygwinPath = inputPath => {
     return inputPath.replace(/\\/g, "/")
@@ -42,6 +45,7 @@ if (isWindows) {
 
 const config = {
     node: nodePath,
+    camomile: camomilePath,
     textmateService: textMateServicePath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,
