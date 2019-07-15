@@ -9,33 +9,33 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
-  - script: esy @test install
-    displayName: 'Test: install'
-  - script: esy @test run-ci
-    displayName: 'Unit Tests: esy test-ci (round 1)'
-  - script: esy @integrationtest install
-    displayName: 'Integration Tests: install'
-  - script: esy @integrationtest run
-    displayName: 'Integration Tests: run'
+#  - script: esy @test install
+#    displayName: 'Test: install'
+#  - script: esy @test run-ci
+#    displayName: 'Unit Tests: esy test-ci (round 1)'
+#  - script: esy @integrationtest install
+#    displayName: 'Integration Tests: install'
+#  - script: esy @integrationtest run
+#    displayName: 'Integration Tests: run'
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
   #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
   # - script: esy x OniUnitTestRunner
   #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
-  - task: PublishTestResults@2
-    displayName: 'Publish JUnit file'
-    inputs:
-      testResultsFormat: JUnit
-      testResultsFiles: '**/*junit.xml'
-      buildPlatform: ${{ parameters.platform }}
-      testRunTitle: ${{ parameters.platform }}
-      failTaskOnFailedTests: true
-  - script: esy @bench install
-    displayName: "Bench: install"
-  - script: esy @bench build
-    displayName: "Bench: build"
-  - script: esy @bench run
-    displayName: "Bench: run"
+#  - task: PublishTestResults@2
+#    displayName: 'Publish JUnit file'
+#    inputs:
+#      testResultsFormat: JUnit
+#      testResultsFiles: '**/*junit.xml'
+#      buildPlatform: ${{ parameters.platform }}
+#      testRunTitle: ${{ parameters.platform }}
+#      failTaskOnFailedTests: true
+#  - script: esy @bench install
+#    displayName: "Bench: install"
+#  - script: esy @bench build
+#    displayName: "Bench: build"
+#  - script: esy @bench run
+#    displayName: "Bench: run"
   - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy create-release
