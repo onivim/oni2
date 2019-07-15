@@ -14,6 +14,7 @@ Log.debug("Starting Onivim 2.");
 let cliOptions = Core.Cli.parse();
 Log.debug("Startup: Parsing CLI options complete");
 
+/*
 open Revery;
 open Revery.UI;
 open Rench;
@@ -189,3 +190,4 @@ let init = app => {
 /* Let's get this party started! */
 let () = Log.debug("Calling App.start");
 App.start(init);
+*/
