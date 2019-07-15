@@ -17,8 +17,17 @@ Log.debug("Startup: Parsing CLI options complete");
 
  open Revery;
  print_endline ("open Revery");
+ 
+ let _ = App.start;
+ 
+ print_endline ("2");
+ 
+ 
+
+/*
  open Revery.UI;
  print_endline ("open Revery.UI");
+
  open Rench;
  print_endline ("open Rench");
  open Oni_UI;
@@ -28,8 +37,6 @@ Log.debug("Startup: Parsing CLI options complete");
  print_endline ("open Oni_Model");
  module Store = Oni_Store;
  print_endline ("open Oni_Store");
- 
-/*
 
  /* The 'main' function for our app */
  let init = app => {
