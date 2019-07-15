@@ -2,7 +2,7 @@ mkdir -p _unpacked
 
 ls $SYSTEM_ARTIFACTSDIRECTORY
 
-tar -xzf $SYSTEM_ARTIFACTSDIRECTORY/Onivim2.tar.gz _unpacked/.
+tar -xzf $SYSTEM_ARTIFACTSDIRECTORY/Release_Darwin/Onivim2.tar.gz _unpacked/.
 
 ls _unpacked
 
