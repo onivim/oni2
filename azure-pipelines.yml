@@ -143,3 +143,22 @@ jobs:
   - script: ./scripts/osx/validate-release.sh
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+
+- job: ValidateWindowsRelease
+  displayName: "Windows: Validate Release"
+  dependsOn: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  steps:
+  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
+    displayName: 'Echo artifact dir'
+  - task: DownloadBuildArtifacts@0
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Windows'
+      downloadPath: '$(System.ArtifactsDirectory)'
+  - powershell: ./scripts/windows/validate-release.ps1
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
