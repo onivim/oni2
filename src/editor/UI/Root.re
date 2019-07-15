@@ -49,6 +49,7 @@ let statusBarStyle =
 
 let createElement = (~state: State.t, ~children as _, ()) => {
   component(hooks => {
+  let theme = state.theme;
     (hooks, <View style=statusBarStyle>
                 <EditorView state />
                 <Overlay>
