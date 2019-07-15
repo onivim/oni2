@@ -59,6 +59,7 @@ let init = app => {
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
+  /*
   let update = UI.start(w, <Root state=currentState^ />);
 
   let onStateChanged = v => {
@@ -70,7 +71,7 @@ let init = app => {
   };
 
 
-  /*
+  // FAIL
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
