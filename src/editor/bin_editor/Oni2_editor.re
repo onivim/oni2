@@ -13,29 +13,49 @@ print_endline("Starting Onivim 2.");
 
 print_endline("Startup: Parsing CLI options complete");
 
+open Revery;
+print_endline("open Revery");
 
- open Revery;
- print_endline ("open Revery");
- 
- let _ = App.start;
- 
- print_endline ("2");
- 
+let _ = App.start;
+
+print_endline("2");
+
 let cliOptions = Core.Cli.parse();
- 
+
 let init = _app => {
-   print_endline ("Initializing setup");
-   let _setup = Core.Setup.init();
+  print_endline("Initializing setup");
+  let _setup = Core.Setup.init();
 
-   print_endline ("Folder: " ++ cliOptions.folder);
-   Sys.chdir(cliOptions.folder);
+  print_endline("Folder: " ++ cliOptions.folder);
+  Sys.chdir(cliOptions.folder);
 
-   print_endline ("Running preflight checks");
-   PreflightChecks.run();
+  print_endline("Running preflight checks");
+  PreflightChecks.run();
 
-   print_endline ("Getting keybindings");
-   let _ = Core.Keybindings.get();
-   
+  print_endline("Getting keybindings");
+  let _ = Core.Keybindings.get();
+
+  print_endline("Creating some states");
+
+  let _initialState = Model.State.create();
+  let _currentState = ref(initialState);
+
+  print_endline("Starting store thread");
+  let (dispatch, runEffects) =
+    Store.StoreThread.start(
+      ~setup,
+      ~executingDirectory=Core.Utility.executingDirectory,
+      ~onStateChanged,
+      (),
+    );
+  print_endline("Startup: StoreThread started!");
+
+  print_endline("Dispatching init");
+  dispatch(Model.Actions.Init);
+
+  print_endline("Running effects");
+  runEffects();
+
   print_endline("init");
 };
 
