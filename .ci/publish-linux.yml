@@ -1,0 +1,10 @@
+# Publish binaries on linux
+
+steps:
+  - script: scripts/linux/publish.sh
+    displayName: "Publish: scripts/linux/publish.sh"
+  - task: PublishBuildArtifacts@1
+    displayName: "Release Artifact: Linux"
+    inputs:
+      PathToPublish: "_publish"
+      ArtifactName: "Release_linux"

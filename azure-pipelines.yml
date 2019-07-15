@@ -49,6 +49,7 @@ jobs:
       platform: linux
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
+  - template: .ci/publish-linux.yml
   - template: .ci/publish-build-cache.yml
 
 - job: MacOS
@@ -74,6 +75,7 @@ jobs:
       platform: darwin
   - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
+  - template: .ci/publish-osx.yml
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
@@ -101,4 +103,5 @@ jobs:
   - script: Oni2.exe -f --checkhealth
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
+  - template: .ci/publish-win.yml
   - template: .ci/publish-build-cache.yml
