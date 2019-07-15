@@ -9,10 +9,9 @@ Printexc.record_backtrace(true);
 module Core = Oni_Core;
 module Log = Core.Log;
 
-Log.debug("Starting Onivim 2.");
+print_endline("Starting Onivim 2.");
 
-let cliOptions = Core.Cli.parse();
-Log.debug("Startup: Parsing CLI options complete");
+print_endline("Startup: Parsing CLI options complete");
 
 
  open Revery;
@@ -22,7 +21,13 @@ Log.debug("Startup: Parsing CLI options complete");
  
  print_endline ("2");
  
+let init = _app => {
+  print_endline("init");
+};
+
+App.start(init);
  
+let cliOptions = Core.Cli.parse();
 
 /*
  open Revery.UI;
