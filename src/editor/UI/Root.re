@@ -53,8 +53,8 @@ let createElement = (~state: State.t, ~children as _, ()) => {
     (hooks, <View style=statusBarStyle>
                 <EditorView state />
                 <Overlay>
-                  <CommandlineView theme command={state.commandline} />
-                  <WildmenuView theme wildmenu={state.wildmenu} />
+                  /*<CommandlineView theme command={state.commandline} />
+                  <WildmenuView theme wildmenu={state.wildmenu} /> */
                   <MenuView theme menu={state.menu} font={state.uiFont} />
                 </Overlay>
             </View>);
