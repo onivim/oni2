@@ -121,4 +121,6 @@ jobs:
       downloadType: 'single'
       artifactName: 'Release_Linux'
       downloadPath: '$(System.ArtifactsDirectory)'
-
+  - script: ./scripts/linux/validate-release.sh
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
