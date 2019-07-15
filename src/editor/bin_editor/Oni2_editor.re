@@ -23,14 +23,17 @@ Log.debug("Startup: Parsing CLI options complete");
 Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
-let init = app => {
+let init = _app => {
   open Oni_UI;
 
   open Revery;
   open Revery.UI;
   open Rench;
+
+  print_endline ("init");
   
-  Log.debug("Init");
+};
+/*  Log.debug("Init");
   let w =
     App.createWindow(
       ~createOptions=
@@ -190,7 +193,7 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-};
+*/
 
 /* Let's get this party started! */
 Log.debug("Calling App.start");
