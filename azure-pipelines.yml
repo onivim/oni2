@@ -116,8 +116,9 @@ jobs:
   - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
     displayName: 'Echo artifact dir'
   - task: DownloadBuildArtifacts@0
-    input: 'current'
-    downloadType: 'single'
-    artifactName: 'Release_Linux'
-    downloadPath: '$(System.ArtifactsDirectory)'
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Linux'
+      downloadPath: '$(System.ArtifactsDirectory)'
 
