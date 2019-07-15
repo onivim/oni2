@@ -8,7 +8,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "vscode-textmate": "^4.0.1"
+    "vscode-textmate": "^4.0.1",
+    "vscode-jsonrpc": "^4.0.0",
+    "vscode-exthost": "1.33.3"
   },
   "jest": {
       "testRegex": "./lib/test/*.*"
@@ -18,8 +20,6 @@
   "devDependencies": {
     "@types/node": "^11.9.5",
     "typescript": "^3.3.3333",
-    "vscode-jsonrpc": "^4.0.0",
-    "vscode-exthost": "1.33.3",
     "jest": "*",
     "@types/jest": "*"
   }
