@@ -20,9 +20,22 @@ let _ = App.start;
 
 print_endline("2");
 
-let cliOptions = Core.Cli.parse();
+let init = app => {
+   print_endline ("Creating window...");
+   let _w =
+     App.createWindow(
+       ~createOptions=
+         WindowCreateOptions.create(
+           ~maximized=false,
+           ~icon=Some("logo.png"),
+           (),
+         ),
+       app,
+       "Oni2",
+     );
 
-let init = _app => {
+  let cliOptions = Core.Cli.parse();
+
   print_endline("Initializing setup");
   let setup = Core.Setup.init();
 
