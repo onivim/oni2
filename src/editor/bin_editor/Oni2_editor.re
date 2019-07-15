@@ -4,22 +4,23 @@
  * This is the entry point for launching the editor.
  */
 
-open Revery;
-open Revery.UI;
-
-open Rench;
-
-open Oni_UI;
+Printexc.record_backtrace(true);
 
 module Core = Oni_Core;
-module Model = Oni_Model;
-module Store = Oni_Store;
 module Log = Core.Log;
+
+Log.debug("Starting Onivim 2.");
 
 let cliOptions = Core.Cli.parse();
 Log.debug("Startup: Parsing CLI options complete");
 
-let () = Log.debug("Starting Onivim 2.");
+open Revery;
+open Revery.UI;
+open Rench;
+open Oni_UI;
+
+module Model = Oni_Model;
+module Store = Oni_Store;
 
 /* The 'main' function for our app */
 let init = app => {
