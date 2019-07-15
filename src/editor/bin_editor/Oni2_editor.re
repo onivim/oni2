@@ -59,9 +59,10 @@ let init = app => {
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
-  /*
+  // Fail?
   let update = UI.start(w, <Root state=currentState^ />);
 
+  /*
   let onStateChanged = v => {
     currentState := v;
     let state = currentState^;
