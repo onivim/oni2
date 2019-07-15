@@ -25,7 +25,7 @@ let cliOptions = Core.Cli.parse();
  
 let init = _app => {
    print_endline ("Initializing setup");
-   let setup = Core.Setup.init();
+   let _setup = Core.Setup.init();
 
    print_endline ("Folder: " ++ cliOptions.folder);
    Sys.chdir(cliOptions.folder);
