@@ -26,6 +26,18 @@ let start = (getState: unit => Model.State.t) => {
     );
 
   let _ =
+    Vim.onMessage((priority, t, msg) => {
+      open Vim.Types;
+      let priorityString =
+        switch (priority) {
+        | Error => "ERROR"
+        | Warning => "WARNING"
+        | Info => "INFO"
+        };
+      Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+    });
+
+  let _ =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.info("Buffer metadata changed: " ++ string_of_int(meta.id));
       let meta = {
