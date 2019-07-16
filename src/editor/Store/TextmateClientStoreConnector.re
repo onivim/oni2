@@ -48,9 +48,14 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
 
-  let clearHighlightsEffect = (bufferId) => 
+  let clearHighlightsEffect = (buffer) => 
     Isolinear.Effect.create(~name="textmate.clearHighlights", () => {
-      dispatch(SyntaxHighlightClear(bufferId));
+      let bufferId = Model.Buffer.getId(buffer);
+      if (Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
+        Log.debug("Disabling syntax highlighting for buffer: " ++ string_of_int(bufferId));
+        dispatch(BufferDisableSyntaxHighlighting(bufferId));
+        dispatch(SyntaxHighlightClear(bufferId));
+      }
     });
     
 
@@ -67,7 +72,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       | Some(buffer) =>
         let largeFileOptimizations = Model.Selectors.getConfigurationValue(state, buffer, (c) => c.editorLargeFileOptimizations);
 
-        if (!largeFileOptimizations || Model.Buffer.getNumberOfLines(buffer) < Core.Constants.default.largeFileLineCountThreshold) {
+        if ((!largeFileOptimizations || Model.Buffer.getNumberOfLines(buffer) < Core.Constants.default.largeFileLineCountThreshold) && Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
           switch (Model.Buffer.getMetadata(buffer).filePath) {
           | None => default
           | Some(v) =>
@@ -80,7 +85,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             };
           }
         } else {
-          (state, clearHighlightsEffect(Model.Buffer.getId(buffer)))
+          (state, clearHighlightsEffect(buffer))
         }
       };
 

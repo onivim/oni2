@@ -23,10 +23,12 @@ let getUri: t => Uri.t;
 let getId: t => int;
 let getNumberOfLines: t => int;
 let isModified: t => bool;
+let isSyntaxHighlightingEnabled: t => bool;
 
 let isIndentationSet: t => bool;
 let setIndentation: (IndentationSettings.t, t) => t;
 let getIndentation: t => option(IndentationSettings.t);
+let disableSyntaxHighlighting: t => t;
 
 let update: (t, BufferUpdate.t) => t;
 let updateMetadata: (Vim.BufferMetadata.t, t) => t;

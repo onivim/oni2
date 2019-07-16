@@ -11,6 +11,7 @@ type t = {
   metadata: Vim.BufferMetadata.t,
   lines: array(string),
   indentation: option(IndentationSettings.t),
+  syntaxHighlightingEnabled: bool,
 };
 
 let show = _ => "TODO";
@@ -19,6 +20,7 @@ let ofLines = (lines: array(string)) => {
   metadata: Vim.BufferMetadata.create(),
   lines,
   indentation: None,
+  syntaxHighlightingEnabled: true,
 };
 
 let empty = ofLines([||]);
@@ -27,6 +29,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   metadata,
   lines: [||],
   indentation: None,
+  syntaxHighlightingEnabled: true,
 };
 
 let getFilePath = (buffer: t) => buffer.metadata.filePath;
@@ -38,6 +41,12 @@ let getId = (buffer: t) => buffer.metadata.id;
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let isModified = (buffer: t) => buffer.metadata.modified;
+
+let isSyntaxHighlightingEnabled = (buffer: t) => buffer.syntaxHighlightingEnabled;
+let disableSyntaxHighlighting = (buffer: t) => {
+...buffer,
+syntaxHighlightingEnabled: false,
+};
 
 let getUri = (buffer: t) => {
   let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {

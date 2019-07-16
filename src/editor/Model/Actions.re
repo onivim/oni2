@@ -11,6 +11,7 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
+  | BufferDisableSyntaxHighlighting(int)
   | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
