@@ -4,10 +4,12 @@ module Store = Oni_Store;
 module Log = Core.Log;
 
 type dispatchFunction = Model.Actions.t => unit;
+type runEffectsFunction = unit => unit;
 type waiter = Model.State.t => bool;
 type waitForState = (~name: string, waiter) => unit;
 
-type testCallback = (dispatchFunction, waitForState) => unit;
+type testCallback =
+  (dispatchFunction, waitForState, runEffectsFunction) => unit;
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
@@ -62,7 +64,6 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
 
   let wrappedDispatch = action => {
     dispatch(action);
-    runEffects();
   };
 
   let waitForState = (~name, waiter) => {
@@ -92,7 +93,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   };
 
   Log.info("--- Starting test: " ++ name);
-  test(wrappedDispatch, waitForState);
+  test(wrappedDispatch, waitForState, wrappedRunEffects);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));
