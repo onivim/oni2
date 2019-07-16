@@ -20,7 +20,10 @@ let developmentExtensionsPath = path.join(rootDir, "src", "development_extension
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 
 let esyCommand = process.win32 ? "esy.cmd" : "esy";
-let camomilePath = cp.execSync(esyCommand + " bash -c \"echo #{@opam/camomile.install}\"").toString("utf8").trim();
+let camomileRoot = cp.execSync(esyCommand + " bash -c \"echo #{@opam/camomile.install}\"").toString("utf8").trim();
+let camomilePath = path.join(camomileRoot, "share", "camomile");
+
+
 
 const getCygwinPath = inputPath => {
     return inputPath.replace(/\\/g, "/")
