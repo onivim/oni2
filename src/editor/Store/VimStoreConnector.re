@@ -24,6 +24,17 @@ let start = (getState: unit => Model.State.t) => {
     Vim.onDirectoryChanged(newDir =>
       dispatch(Model.Actions.OpenExplorer(newDir))
     );
+    
+  let _ =
+    Vim.onMessage((priority, t, msg) => {
+      open Vim.Types;
+      let priorityString = switch(priority) {
+      | Error => "ERROR"
+      | Warning => "WARNING"
+      | Info => "INFO"
+      };
+      Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+  });
 
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
