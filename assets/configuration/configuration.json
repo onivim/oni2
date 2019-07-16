@@ -1,10 +1,6 @@
 {
-  "editor.lineNumbers": "relative",
   "editor.minimap.enabled": true,
-  "editor.minimap.showSlider": true,
-  "workbench.iconTheme": "vs-seti",
   "editor.insertSpaces": false,
   "editor.indentSize": 4,
   "editor.tabSize": 4,
-  "files.exclude": ["node_modules", "_esy"]
 }
