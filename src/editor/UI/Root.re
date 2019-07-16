@@ -24,7 +24,7 @@ let rootStyle = (background, foreground) =>
     alignItems(`Center),
   ];
 
-let surfaceStyle = (statusBarHeight) =>
+let surfaceStyle = statusBarHeight =>
   Style.[
     position(`Absolute),
     top(0),
@@ -33,7 +33,7 @@ let surfaceStyle = (statusBarHeight) =>
     bottom(statusBarHeight),
   ];
 
-let statusBarStyle = (statusBarHeight) =>
+let statusBarStyle = statusBarHeight =>
   Style.[
     backgroundColor(Color.hex("#21252b")),
     position(`Absolute),
@@ -50,24 +50,30 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
     let style = rootStyle(theme.colors.background, theme.colors.foreground);
 
-
-    let statusBarVisible = Selectors.getActiveConfigurationValue(state, (c) => c.workbenchStatusBarVisible);
+    let statusBarVisible =
+      Selectors.getActiveConfigurationValue(state, c =>
+        c.workbenchStatusBarVisible
+      );
     let statusBarHeight = statusBarVisible ? 25 : 0;
-    let statusBar = statusBarVisible ? 
-        <View style=statusBarStyle(statusBarHeight)>
-          <StatusBar height=statusBarHeight state />
-        </View> : React.empty;
+    let statusBar =
+      statusBarVisible
+        ? <View style={statusBarStyle(statusBarHeight)}>
+            <StatusBar height=statusBarHeight state />
+          </View>
+        : React.empty;
 
     (
       hooks,
       <View style>
-        <View style=surfaceStyle(statusBarHeight)> <EditorView state /> </View>
+        <View style={surfaceStyle(statusBarHeight)}>
+          <EditorView state />
+        </View>
         <Overlay>
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />
           <MenuView theme menu={state.menu} font={state.uiFont} />
         </Overlay>
-        {statusBar}
+        statusBar
       </View>,
     );
   });

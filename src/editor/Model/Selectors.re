@@ -60,10 +60,10 @@ let getActiveBuffer = (state: State.t) => {
 
 let getActiveConfigurationValue = (state: State.t, f) => {
   switch (getActiveBuffer(state)) {
-  | None => Configuration.getValue(f, state.configuration);
-  | Some(buffer) => 
+  | None => Configuration.getValue(f, state.configuration)
+  | Some(buffer) =>
     let fileType =
       LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
-      Configuration.getValue(~fileType, f, state.configuration);
-  }
+    Configuration.getValue(~fileType, f, state.configuration);
+  };
 };

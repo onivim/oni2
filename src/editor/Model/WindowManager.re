@@ -139,12 +139,12 @@ let findDockItem = (id, layout: t) =>
   };
 
 let addDockItem = (~id, layout: t) => {
-  switch (List.exists(item => item.id == id, layout.leftDock)) {
-  | true => layout
-  | false =>  switch(findDockItem(id, layout)) {
-    | None => layout
-    | Some(dock) =>
-    { ...layout, leftDock: layout.leftDock @ [dock]}
-  }
-  }
+  List.exists(item => item.id == id, layout.leftDock)
+    ? layout
+    : (
+      switch (findDockItem(id, layout)) {
+      | None => layout
+      | Some(dock) => {...layout, leftDock: layout.leftDock @ [dock]}
+      }
+    );
 };

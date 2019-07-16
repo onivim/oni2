@@ -67,20 +67,28 @@ let start = getState => {
 
   let synchronizeConfiguration = (configuration: Core.Configuration.t) =>
     Isolinear.Effect.create(~name="windows.syncConfig", () => {
-      let activityBarVisible = Core.Configuration.getValue((c) => c.workbenchActivityBarVisible, configuration); 
-      let sideBarVisible = Core.Configuration.getValue((c) => c.workbenchSideBarVisible, configuration);
+      let activityBarVisible =
+        Core.Configuration.getValue(
+          c => c.workbenchActivityBarVisible,
+          configuration,
+        );
+      let sideBarVisible =
+        Core.Configuration.getValue(
+          c => c.workbenchSideBarVisible,
+          configuration,
+        );
 
       if (activityBarVisible) {
         dispatch(AddDockItem(MainDock));
       } else {
         dispatch(RemoveDockItem(MainDock));
-      }
-      
+      };
+
       if (sideBarVisible) {
         dispatch(AddDockItem(ExplorerDock));
       } else {
         dispatch(RemoveDockItem(ExplorerDock));
-      }
+      };
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
@@ -109,9 +117,9 @@ let start = getState => {
         windowManager: WindowManager.removeDockItem(~id, s.windowManager),
       }
     | AddDockItem(id) => {
-      ...s,
-      windowManager: WindowManager.addDockItem(~id, s.windowManager),
-    }
+        ...s,
+        windowManager: WindowManager.addDockItem(~id, s.windowManager),
+      }
     | WindowSetActive(splitId, _) => {
         ...s,
         windowManager: {
