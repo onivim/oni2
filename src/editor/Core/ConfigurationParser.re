@@ -131,7 +131,7 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "workbench.sideBar.visible",
-    (s, v) => {...s, workbenchActivityBarVisible: parseBool(v)},
+    (s, v) => {...s, workbenchSideBarVisible: parseBool(v)},
   ),
   (
     "workbench.statusBar.visible",
