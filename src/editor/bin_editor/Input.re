@@ -10,7 +10,7 @@ open Reglfw.Glfw;
 open Revery_Core;
 
 open CamomileBundled.Camomile;
-module Zed = Oni_Core.ZedBundled;
+module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
@@ -20,7 +20,7 @@ let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = altKey ? "A-" ++ s : s;
   let s = superKey ? "D-" ++ s : s;
 
-  let ret = Zed.length(s) > 1 ? "<" ++ s ++ ">" : s;
+  let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
   ret;
 };
 

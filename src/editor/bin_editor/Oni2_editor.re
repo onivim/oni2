@@ -19,7 +19,7 @@ module Log = Core.Log;
 let cliOptions = Core.Cli.parse();
 Log.debug("Startup: Parsing CLI options complete");
 
-let Log.debug("Starting Onivim 2.");
+Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
