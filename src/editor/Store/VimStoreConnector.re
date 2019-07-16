@@ -28,6 +28,14 @@ let start = (getState: unit => Model.State.t) => {
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.info("Buffer metadata changed: " ++ string_of_int(meta.id));
+      let meta = {
+        ...meta,
+        /*
+             Set version to 0 so that a buffer update is processed.
+             If not - we'd ignore the first buffer update that came through!
+         */
+        version: 0,
+      };
       dispatch(Model.Actions.BufferEnter(meta));
     });
 
@@ -155,6 +163,7 @@ let start = (getState: unit => Model.State.t) => {
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
+      Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
       open Core.Types;
       let bu =
         Core.Types.BufferUpdate.create(
