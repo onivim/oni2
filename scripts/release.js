@@ -57,8 +57,7 @@ if (process.platform == "linux") {
   const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
   console.log(result.output.toString());
 } else if (process.platform == "darwin") {
-  const camomileRoot = shell("esy bash -c 'echo #{@opam/camomile.install}'");
-  console.log("CAMOMILE ROOT: " + camomileRoot);
+  const camomileRoot = shell("esy bash -c 'echo #{@opam/camomile.install}'").trim();
   const camomilePath = path.join(camomileRoot, "share", "camomile");
 
   const executables = [
