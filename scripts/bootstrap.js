@@ -19,7 +19,7 @@ let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 
-let esyCommand = process.win32 ? "esy.cmd" : "esy";
+let esyCommand = process.platform == "win32" ? "esy.cmd" : "esy";
 let camomileRoot = cp.execSync(esyCommand + " bash -c \"echo #{@opam/camomile.install}\"").toString("utf8").trim();
 let camomilePath = path.join(camomileRoot, "share", "camomile");
 
