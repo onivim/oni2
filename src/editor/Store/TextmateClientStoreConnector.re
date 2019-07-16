@@ -48,6 +48,19 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
 
+  let clearHighlightsEffect = buffer =>
+    Isolinear.Effect.create(~name="textmate.clearHighlights", () => {
+      let bufferId = Model.Buffer.getId(buffer);
+      if (Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
+        Log.debug(
+          "Disabling syntax highlighting for buffer: "
+          ++ string_of_int(bufferId),
+        );
+        dispatch(BufferDisableSyntaxHighlighting(bufferId));
+        dispatch(SyntaxHighlightClear(bufferId));
+      };
+    });
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
@@ -59,17 +72,34 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       switch (buffer) {
       | None => default
       | Some(buffer) =>
-        switch (Model.Buffer.getMetadata(buffer).filePath) {
-        | None => default
-        | Some(v) =>
-          let extension = Path.extname(v);
-          switch (
-            Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
-          ) {
+        let largeFileOptimizations =
+          Model.Selectors.getConfigurationValue(state, buffer, c =>
+            c.editorLargeFileOptimizations
+          );
+
+        if ((
+              !largeFileOptimizations
+              || Model.Buffer.getNumberOfLines(buffer)
+              < Core.Constants.default.largeFileLineCountThreshold
+            )
+            && Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
+          switch (Model.Buffer.getMetadata(buffer).filePath) {
           | None => default
-          | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+          | Some(v) =>
+            let extension = Path.extname(v);
+            switch (
+              Model.LanguageInfo.getScopeFromExtension(
+                languageInfo,
+                extension,
+              )
+            ) {
+            | None => default
+            | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+            };
           };
-        }
+        } else {
+          (state, clearHighlightsEffect(buffer));
+        };
       };
 
     | _ => default

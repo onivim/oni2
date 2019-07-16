@@ -11,6 +11,7 @@ open Oni_Extensions;
 type t =
   | Init
   | Tick
+  | BufferDisableSyntaxHighlighting(int)
   | BufferEnter(Vim.BufferMetadata.t)
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
@@ -40,6 +41,7 @@ type t =
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | EditorScrollToColumn(int)
+  | SyntaxHighlightClear(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)

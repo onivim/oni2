@@ -28,6 +28,11 @@ type t = {
    */
   maximumExplorerDepth: int,
   tabHeight: int,
+  /*
+   * The line count considered a 'large file' - if a file exceeds this limit,
+   * some features like syntax highlighting will be disabled.
+   */
+  largeFileLineCountThreshold: int,
 };
 
 let default: t = {
@@ -39,4 +44,11 @@ let default: t = {
   minimapMaxColumn: 120,
   maximumExplorerDepth: 1,
   tabHeight: 35,
+
+  /*
+   * The threshold we set right now is artificially low,
+   * because our current textmate highlighting strategy is very slow.
+   * We'll switch to a native strategy, and bump this up.
+   */
+  largeFileLineCountThreshold: 1000,
 };

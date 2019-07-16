@@ -13,6 +13,7 @@ type editorRenderWhitespace =
 [@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
+  editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
   editorMatchBrackets: bool,
   editorMinimapEnabled: bool,
@@ -25,6 +26,7 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   workbenchActivityBarVisible: bool,
+  /* Onivim2 specific setting */
   workbenchSideBarVisible: bool,
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
@@ -34,6 +36,7 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
+  editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
