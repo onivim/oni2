@@ -1,3 +1,4 @@
+const cp = require("child_process");
 const fs = require("fs")
 const path = require("path")
 
@@ -5,6 +6,7 @@ const rootDir = path.join(__dirname, "..")
 const configPath = path.join(rootDir, "assets", "configuration")
 const vendorPath = path.join(rootDir, "vendor")
 
+console.log("STRINGIFIED: " + JSON.stringify(process.argv));
 const outputFile = path.join(configPath, "setup.json")
 
 const isMac = process.platform === "darwin"
@@ -17,6 +19,11 @@ let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modu
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
+
+let camomileRoot = process.argv[2];
+let camomilePath = path.join(camomileRoot, "share", "camomile");
+
+console.log("Camomile path: " + camomilePath);
 
 const getCygwinPath = inputPath => {
     return inputPath.replace(/\\/g, "/")
@@ -42,6 +49,7 @@ if (isWindows) {
 
 const config = {
     node: nodePath,
+    camomile: camomilePath,
     textmateService: textMateServicePath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,

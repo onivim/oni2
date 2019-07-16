@@ -6,7 +6,7 @@
     (public_name Oni2_editor)
     (libraries
         bigarray
-        zed
+        zed_oni
         reglfw
         lwt
         lwt.unix

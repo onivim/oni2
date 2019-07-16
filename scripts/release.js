@@ -13,6 +13,11 @@ const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
 
+let camomileRoot = process.argv[2];
+let camomilePath = path.join(camomileRoot, "share", "camomile");
+
+console.log("Camomile path: " + camomilePath);
+
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`);
      if (process.platform == "darwin") {
@@ -27,6 +32,7 @@ const shell = (cmd) => {
     console.log(`[shell] ${cmd}`);
     const out = cp.execSync(cmd);
     console.log(`[shell - output]: ${out.toString("utf8")}`);
+    return out.toString("utf8");
 };
 
 const getRipgrepPath = () => {
@@ -54,9 +60,8 @@ const getNodePath = () => {
 }
 if (process.platform == "linux") {
   const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
-console.log(result.output.toString());
+  console.log(result.output.toString());
 } else if (process.platform == "darwin") {
-
   const executables = [
     "Oni2",
     "Oni2_editor",
@@ -97,6 +102,7 @@ console.log(result.output.toString());
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, contentsDirectory);
   copy(textmateServiceSourceDirectory, contentsDirectory);
+  copy(camomilePath, contentsDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
 
@@ -144,6 +150,7 @@ console.log(result.output.toString());
 
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
+  copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
   fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});

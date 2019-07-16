@@ -9,7 +9,8 @@ open Oni_Model;
 open Reglfw.Glfw;
 open Revery_Core;
 
-open CamomileLibraryDefault.Camomile;
+open CamomileBundled.Camomile;
+module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;

@@ -38,7 +38,7 @@ let _isWhitespace = c => {
 let _isNonWhitespace = c => !_isWhitespace(c);
 
 let filterRuns = (r: Tokenizer.TextRun.t) => {
-  let len = Zed_utf8.length(r.text);
+  let len = ZedBundled.length(r.text);
 
   if (len == 0) {
     false;
@@ -53,7 +53,7 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   let startIndex = Index.toZeroBasedInt(r.startIndex);
   let (bg, fg) = colorizer(startIndex);
 
-  let firstChar = Zed_utf8.get(r.text, 0);
+  let firstChar = ZedBundled.get(r.text, 0);
 
   let tokenType =
     if (UChar.eq(firstChar, tab)) {
@@ -89,12 +89,12 @@ let getCharacterPositionAndWidth =
     (~indentation: IndentationSettings.t, ~viewOffset: int=0, str, i) => {
   let x = ref(0);
   let totalOffset = ref(0);
-  let len = Zed_utf8.length(str);
+  let len = ZedBundled.length(str);
 
   let measure = measure(indentation);
 
   while (x^ < len && x^ < i) {
-    let c = Zed_utf8.get(str, x^);
+    let c = ZedBundled.get(str, x^);
     let width = measure(c);
 
     totalOffset := totalOffset^ + width;
@@ -106,7 +106,7 @@ let getCharacterPositionAndWidth =
     totalOffset := totalOffset^ - viewOffset;
   };
 
-  let width = i < len ? measure(Zed_utf8.get(str, i)) : 1;
+  let width = i < len ? measure(ZedBundled.get(str, i)) : 1;
 
   (totalOffset^, width);
 };
