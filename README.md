@@ -8,8 +8,7 @@
 :warning: Pre-alpha - not yet usable! :warning: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/13532591/53999860-e8e70780-40f9-11e9-8428-295adb18c4dd.gif" alt="Onivim 2" />
-   <img src="https://img.shields.io/discord/417774914645262338.svg" alt="Join the chat on discord!">
+  <img src="https://user-images.githubusercontent.com/13532591/61331099-1d6c7d80-a7d6-11e9-8c5d-e3c95def6144.png" alt="Onivim 2" />
  </p>
 
 
