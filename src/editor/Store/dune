@@ -10,6 +10,7 @@
         Oni2.core
         Oni2.model
         Oni2.extensions
+        Oni2.ui
         isolinear
         libvim
     )
