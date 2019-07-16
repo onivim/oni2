@@ -9,7 +9,6 @@ open Revery;
 open Revery.Draw;
 open Revery.UI;
 
-
 open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
 open Oni_Model;

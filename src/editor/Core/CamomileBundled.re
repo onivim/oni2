@@ -1,7 +1,7 @@
 /*
  * CamomileBundled.re
  *
- * 
+ *
  */
 
 let setup = Setup.init();
@@ -15,10 +15,18 @@ module LocalConfig = {
 
 let show = () => {
   "Camomile Runtime Paths:\n\n"
-  ++ " Datadir: " ++ LocalConfig.datadir ++ "\n"
-  ++ " Localedir: " ++ LocalConfig.localedir ++ "\n"
-  ++ " Charmapdir: " ++ LocalConfig.charmapdir ++ "\n"
-  ++ " Unimapdir: " ++ LocalConfig.unimapdir ++ "\n"
+  ++ " Datadir: "
+  ++ LocalConfig.datadir
+  ++ "\n"
+  ++ " Localedir: "
+  ++ LocalConfig.localedir
+  ++ "\n"
+  ++ " Charmapdir: "
+  ++ LocalConfig.charmapdir
+  ++ "\n"
+  ++ " Unimapdir: "
+  ++ LocalConfig.unimapdir
+  ++ "\n";
 };
 
 module Camomile = CamomileLibrary.Make(LocalConfig);
