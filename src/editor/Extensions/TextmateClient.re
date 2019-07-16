@@ -112,9 +112,7 @@ let start =
       setup: Setup.t,
       initializationInfo,
     ) => {
-  let env = [
-    "ONI2_PARENT_PID=" ++ string_of_int(Process.pid()),
-  ];
+  let env = ["ONI2_PARENT_PID=" ++ string_of_int(Process.pid())];
   let process = NodeProcess.start(~env, setup, setup.textmateServicePath);
 
   let onNotification = (n: Notification.t, _) => {
