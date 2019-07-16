@@ -47,28 +47,6 @@ let statusBarStyle =
     alignItems(`Center),
   ];
 
-let createElement = (~state: State.t, ~children as _, ()) => {
-  component(hooks => {
-  let theme = state.theme;
-    (
-      hooks,
-      <View style>
-        <View style=surfaceStyle> <EditorView state /> </View>
-        <Overlay>
-          <CommandlineView theme command={state.commandline} />
-          <WildmenuView theme wildmenu={state.wildmenu} />
-          <MenuView theme menu={state.menu} font={state.uiFont} />
-        </Overlay>
-        <View style=statusBarStyle>
-          <StatusBar height=statusBarHeight state />
-        </View>
-      </View>,
-    );
-  });
-};
-
-/*
-
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
@@ -89,4 +67,3 @@ let createElement = (~state: State.t, ~children as _, ()) =>
       </View>,
     );
   });
-  */
