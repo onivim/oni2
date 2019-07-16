@@ -14,7 +14,7 @@
   "fileAssociations": []
   },
   "scripts": {
-    "bootstrap": "esy node ./scripts/bootstrap.js",
+    "bootstrap": "esy node ./scripts/bootstrap.js #{@opam/camomile.install}",
     "format": "esy dune build @fmt --auto-promote",
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js",
