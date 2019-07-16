@@ -4,7 +4,7 @@
     (libraries
         str
         bigarray
-        zed
+        zed_oni
         reglfw
         lwt
         lwt.unix

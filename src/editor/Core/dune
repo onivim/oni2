@@ -5,7 +5,7 @@
     (libraries 
         str
         bigarray
-        zed
+        zed_oni
         reglfw
         libvim
         lwt

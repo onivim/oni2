@@ -19,7 +19,7 @@ steps:
     displayName: 'Integration Tests: run'
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
-  #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
+  #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
   # - script: esy x OniUnitTestRunner
   #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
   - task: PublishTestResults@2

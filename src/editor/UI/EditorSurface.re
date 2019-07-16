@@ -9,9 +9,8 @@ open Revery;
 open Revery.Draw;
 open Revery.UI;
 
-open CamomileLibraryDefault.Camomile;
-
 open Oni_Core;
+open Oni_Core.CamomileBundled.Camomile;
 open Oni_Model;
 
 open Types;
@@ -26,7 +25,7 @@ let textHeaderStyle =
 let fontAwesomeStyle =
   Style.[fontFamily("FontAwesome5FreeRegular.otf"), fontSize(14)];
 
-let fontAwesomeIcon = Zed_utf8.singleton(UChar.of_int(0xF556));
+let fontAwesomeIcon = ZedBundled.singleton(UChar.of_int(0xF556));
 
 let renderLineNumber =
     (
@@ -365,7 +364,7 @@ let createElement =
 
       let colorizer =
         BufferLineColorizer.create(
-          Zed_utf8.length(line),
+          ZedBundled.length(line),
           state.theme,
           tokenColors,
           state.syntaxHighlighting.colorMap,

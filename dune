@@ -1,1 +1,1 @@
-(ignored_subdirs (node_modules _esy vendor extensions esy.lock bench.esy.lock test.esy.lock))
+(ignored_subdirs (node_modules _esy extensions esy.lock bench.esy.lock test.esy.lock))

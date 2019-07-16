@@ -6,6 +6,8 @@ open Types;
 
 open CamomileLibrary;
 
+module Zed_utf8 = ZedBundled;
+
 module TextRun = {
   type t = {
     text: string,

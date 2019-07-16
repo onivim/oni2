@@ -35,7 +35,7 @@ let getFileContents = (path, ~handler) => {
 };
 
 let convertUTF8string = str =>
-  CamomileLibraryDefault.Camomile.(UChar.code(UTF8.get(str, 0)));
+  CamomileBundled.Camomile.(UChar.code(UTF8.get(str, 0)));
 
 let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
   try (List.fold_left2(fn, accum, list1, list2)) {

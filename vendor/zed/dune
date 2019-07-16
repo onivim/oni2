@@ -1,0 +1,6 @@
+(library
+  (name zed_oni)
+  (public_name Oni2.zed)
+  (wrapped false)
+  (flags (:standard -safe-string))
+  (libraries bytes react camomile result charInfo_width))

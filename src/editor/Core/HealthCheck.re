@@ -1,5 +1,21 @@
 let checks = [
   (
+    "Verify camomile:datadir",
+    _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
+  ),
+  (
+    "Verify camomile:localedir",
+    _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
+  ),
+  (
+    "Verify camomile:charmpdir",
+    _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
+  ),
+  (
+    "Verify camomile:unimapdir",
+    _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
+  ),
+  (
     "Verify node executable",
     (setup: Setup.t) => Sys.file_exists(setup.nodePath),
   ),
