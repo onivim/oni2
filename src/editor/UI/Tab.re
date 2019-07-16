@@ -111,12 +111,20 @@ let createElement =
       | None => React.empty
       };
 
+    let onAnyClick = (evt: NodeEvents.mouseButtonEventParams) => {
+      switch (evt.button) {
+      | Revery.MouseButton.BUTTON_MIDDLE => onClose()
+      | Revery.MouseButton.BUTTON_LEFT => onClick()
+      | _ => ()
+      };
+    };
+
     (
       hooks,
       <View style=containerStyle>
         <View style=iconContainerStyle> fileIconView </View>
         <Clickable
-          onClick
+          onAnyClick
           style=Style.[
             width(proportion(0.80)),
             flexGrow(1),
