@@ -13,6 +13,7 @@ type editorRenderWhitespace =
 [@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
+  editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
   editorMatchBrackets: bool,
   editorMinimapEnabled: bool,
@@ -34,6 +35,7 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
+  editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,

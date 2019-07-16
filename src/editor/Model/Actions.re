@@ -40,6 +40,7 @@ type t =
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | EditorScrollToColumn(int)
+  | SyntaxHighlightClear(int)
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)

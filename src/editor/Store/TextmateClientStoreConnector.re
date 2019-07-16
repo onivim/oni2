@@ -48,6 +48,12 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
 
+  let clearHighlightsEffect = (bufferId) => 
+    Isolinear.Effect.create(~name="textmate.clearHighlights", () => {
+      dispatch(SyntaxHighlightClear(bufferId));
+    });
+    
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
@@ -56,19 +62,26 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       let bufferId = bc.id;
       let buffer = Model.Buffers.getBuffer(bufferId, state.buffers);
 
+
       switch (buffer) {
       | None => default
       | Some(buffer) =>
-        switch (Model.Buffer.getMetadata(buffer).filePath) {
-        | None => default
-        | Some(v) =>
-          let extension = Path.extname(v);
-          switch (
-            Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
-          ) {
+        let largeFileOptimizations = Selectors.getConfigurationValue(state, buffer, (c) => c.editorLargeFileOptimizations);
+
+        if (!largeFileOptimizations || Buffer.getNumberOfLines(buffer) < Constants.default.largeFileLineCountThreshold) {
+          switch (Model.Buffer.getMetadata(buffer).filePath) {
           | None => default
-          | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
-          };
+          | Some(v) =>
+            let extension = Path.extname(v);
+            switch (
+              Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
+            ) {
+            | None => default
+            | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+            };
+          }
+        } else {
+          (state, clearHighlightsEffect(Buffer.getId(buffer)))
         }
       };
 

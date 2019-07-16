@@ -127,6 +127,17 @@ let reduce: (t, Actions.t) => t =
   (state, action) =>
     switch (action) {
     | SyntaxHighlightColorMap(colorMap) => {...state, colorMap}
+    | SyntaxHighlightClear(bufferId) => {
+      ...state,
+      idToBufferSyntaxHighlights: IntMap.update(
+        tokens.bufferId,
+        buffer => switch(buffer) {
+        | None => None
+        | Some(_) => None
+        },
+        state.idToBufferSyntaxHighlights,
+        ),
+      }
     | SyntaxHighlightTokens(tokens) => {
         ...state,
         idToBufferSyntaxHighlights:
