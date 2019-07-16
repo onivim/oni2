@@ -12,7 +12,6 @@
 CAMLprim value win32_free_console(value unit) {
 
 #ifdef WIN32
-  printf("yo from c\n");
   FreeConsole();
 #endif
 
