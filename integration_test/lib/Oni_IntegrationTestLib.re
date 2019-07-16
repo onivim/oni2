@@ -58,7 +58,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
         (),
       ),
     ),
-  )
+  );
 
   let wrappedDispatch = action => {
     dispatch(action);

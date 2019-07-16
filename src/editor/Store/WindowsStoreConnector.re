@@ -9,7 +9,7 @@ module Model = Oni_Model;
 
 open Model;
 
-let start = (getState) => {
+let start = getState => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitEffect =
@@ -34,36 +34,35 @@ let start = (getState) => {
 
   let initializeDefaultViewEffect = (state: State.t) =>
     Isolinear.Effect.create(~name="windows.init", () => {
-          open WindowManager;
-          open WindowTree;
-          open Oni_UI;
+      open WindowManager;
+      open WindowTree;
+      open Oni_UI;
 
-          let dock =
-            registerDock(
-              ~order=1,
-              ~width=50,
-              ~id=MainDock,
-              ~component=splitFactory(state => <Dock state />),
-              (),
-            );
+      let dock =
+        registerDock(
+          ~order=1,
+          ~width=50,
+          ~id=MainDock,
+          ~component=splitFactory(state => <Dock state />),
+          (),
+        );
 
-          let editorGroupId = state.editorGroups.activeId;
+      let editorGroupId = state.editorGroups.activeId;
 
-          let editor = createSplit(~editorGroupId, ());
+      let editor = createSplit(~editorGroupId, ());
 
-          let explorer =
-            registerDock(
-              ~order=2,
-              ~width=225,
-              ~id=ExplorerDock,
-              ~component=splitFactory(state => <FileExplorerView state />),
-              (),
-            );
+      let explorer =
+        registerDock(
+          ~order=2,
+          ~width=225,
+          ~id=ExplorerDock,
+          ~component=splitFactory(state => <FileExplorerView state />),
+          (),
+        );
 
-          dispatch(RegisterDockItem(dock));
-          dispatch(RegisterDockItem(explorer));
-          Core.Log.info("!!! Adding split!");
-          dispatch(AddSplit(Vertical, editor));
+      dispatch(RegisterDockItem(dock));
+      dispatch(RegisterDockItem(explorer));
+      dispatch(AddSplit(Vertical, editor));
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
@@ -114,8 +113,7 @@ let start = (getState) => {
         windowManager:
           WindowManager.setTreeSize(width, height, s.windowManager),
       }
-    | AddSplit(direction, split) => 
-    {
+    | AddSplit(direction, split) => {
         ...s,
         windowManager: {
           ...s.windowManager,
