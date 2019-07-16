@@ -13,6 +13,27 @@ import * as Protocol from "./Protocol"
 import * as Tokenization from "./Tokenization"
 import * as TokenizationStore from "./TokenizationStore"
 
+// Ported from VSCode Extension Host logic:
+// Terminate when parent terminates
+
+function terminateWhenParentTerminates() {
+    const parentPid = Number(process.env['ONI2_PARENT_PID']);
+
+    if (typeof parentPid === 'number' && !isNaN(parentPid)) {
+        setInterval(function () {
+            try {
+                process.kill(parentPid, 0); // throws an exception if the main process doesn't xist anymore
+            } catch (e) {
+                process.exit();
+            }
+        }, 5000);
+    }
+}
+
+if (process.env['ONI2_PARENT_PID']) {
+    terminateWhenParentTerminates();
+}
+
 let connection = rpc.createMessageConnection(
     new rpc.StreamMessageReader(process.stdin),
     new rpc.StreamMessageWriter(process.stdout),
