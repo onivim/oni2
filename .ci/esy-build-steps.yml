@@ -18,10 +18,10 @@ steps:
   - script: esy @integrationtest run
     displayName: 'Integration Tests: run'
   # TODO: Stabilize and bring back!
-  - script: esy x OniUnitTestRunner
-     displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
-  - script: esy x OniUnitTestRunner
-     displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
+  # - script: esy x OniUnitTestRunner
+  #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
+  # - script: esy x OniUnitTestRunner
+  #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
   - task: PublishTestResults@2
     displayName: 'Publish JUnit file'
     inputs:
