@@ -9,13 +9,62 @@ module Model = Oni_Model;
 
 open Model;
 
-let start = () => {
+let start = (getState) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitEffect =
     Isolinear.Effect.create(~name="windows.quitEffect", () =>
       dispatch(Model.Actions.Quit(false))
     );
+
+  /**
+     We wrap each split component as we have to have a type signature
+     that matches unit => React.syntheticElement this is because
+     in the WindowManager module we cannot pass a reference of state
+     in the type signature e.g. State.t => React.syntheticElement because
+     this would cause a circular reference.
+
+     Alternatives are type parameters but this invloves a lot of unrelated
+     type params being added everywhere. ?Functors is another route
+   */
+  let splitFactory = (fn, ()) => {
+    let state = getState();
+    fn(state);
+  };
+
+  let initializeDefaultViewEffect = (state: State.t) =>
+    Isolinear.Effect.create(~name="windows.init", () => {
+          open WindowManager;
+          open WindowTree;
+          open Oni_UI;
+
+          let dock =
+            registerDock(
+              ~order=1,
+              ~width=50,
+              ~id=MainDock,
+              ~component=splitFactory(state => <Dock state />),
+              (),
+            );
+
+          let editorGroupId = state.editorGroups.activeId;
+
+          let editor = createSplit(~editorGroupId, ());
+
+          let explorer =
+            registerDock(
+              ~order=2,
+              ~width=225,
+              ~id=ExplorerDock,
+              ~component=splitFactory(state => <FileExplorerView state />),
+              (),
+            );
+
+          dispatch(RegisterDockItem(dock));
+          dispatch(RegisterDockItem(explorer));
+          Core.Log.info("!!! Adding split!");
+          dispatch(AddSplit(Vertical, editor));
+    });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
@@ -65,7 +114,8 @@ let start = () => {
         windowManager:
           WindowManager.setTreeSize(width, height, s.windowManager),
       }
-    | AddSplit(direction, split) => {
+    | AddSplit(direction, split) => 
+    {
         ...s,
         windowManager: {
           ...s.windowManager,
@@ -117,6 +167,7 @@ let start = () => {
 
       let effect =
         switch (action) {
+        | Init => initializeDefaultViewEffect(state)
         | ViewCloseEditor(_) =>
           if (List.length(
                 WindowTree.getSplits(state.windowManager.windowTree),

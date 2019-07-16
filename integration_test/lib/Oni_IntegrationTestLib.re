@@ -58,12 +58,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
         (),
       ),
     ),
-  ) /* TODO: Move this to a shared place... */;
-
-  let editorGroupId = currentState^.editorGroups.activeId;
-
-  let editor = Model.WindowTree.createSplit(~editorGroupId, ());
-  dispatch(AddSplit(Vertical, editor));
+  )
 
   let wrappedDispatch = action => {
     dispatch(action);

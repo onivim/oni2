@@ -5,8 +5,7 @@ runTest(~name="AddRemoveSplitTest", (dispatch, wait) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
-
-    splitCount == 1;
+      splitCount == 1;
   });
 
   dispatch(Command("view.splitVertical"));
