@@ -1,8 +1,6 @@
 {
   "editor.minimap.enabled": true,
-  "editor.minimap.showSlider": true,
   "editor.insertSpaces": false,
   "editor.indentSize": 4,
   "editor.tabSize": 4,
-  "files.exclude": ["node_modules", "_esy"]
 }
