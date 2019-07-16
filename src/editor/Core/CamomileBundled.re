@@ -15,4 +15,9 @@ module LocalConfig = {
 
 print_endline ("CamomileLibrary.Make");
 
+print_endline ("Datadir: " ++ LocalConfig.datadir);
+print_endline ("Localedir: " ++ LocalConfig.localedir);
+print_endline ("Charmapdir: " ++ LocalConfig.charmapdir);
+print_endline ("Unimapdir: " ++ LocalConfig.unimapdir);
+
 module Camomile = CamomileLibrary.Make(LocalConfig);

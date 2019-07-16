@@ -6,10 +6,11 @@
 
 open Revery.UI;
 open Oni_Core.CamomileBundled.Camomile;
+module ZedBundled = Oni_Core.ZedBundled;
 
 let component = React.component("FontIcon");
 
-let codeToIcon = icon => Zed_utf8.singleton(UChar.of_int(icon));
+let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
 
 let createElement =
     (

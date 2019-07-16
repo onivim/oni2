@@ -7,7 +7,10 @@
  * This file is a part of Zed, an editor engine.
  *)
 
-open CamomileLibraryDefault.Camomile
+module Make (Camomile: CamomileLibrary.Type) =
+struct
+
+open Camomile
 
 type t = string
 exception Invalid of string * string
@@ -996,3 +999,5 @@ let escaped_string enc str =
   let buf = Buffer.create (String.length str) in
   add_escaped_string buf enc str;
   Buffer.contents buf
+ 
+end
