@@ -26,10 +26,8 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   workbenchActivityBarVisible: bool,
-
   /* Onivim2 specific setting */
   workbenchSideBarVisible: bool,
-
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,

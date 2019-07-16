@@ -42,10 +42,11 @@ let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let isModified = (buffer: t) => buffer.metadata.modified;
 
-let isSyntaxHighlightingEnabled = (buffer: t) => buffer.syntaxHighlightingEnabled;
+let isSyntaxHighlightingEnabled = (buffer: t) =>
+  buffer.syntaxHighlightingEnabled;
 let disableSyntaxHighlighting = (buffer: t) => {
-...buffer,
-syntaxHighlightingEnabled: false,
+  ...buffer,
+  syntaxHighlightingEnabled: false,
 };
 
 let getUri = (buffer: t) => {

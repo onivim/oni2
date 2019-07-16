@@ -28,7 +28,6 @@ type t = {
    */
   maximumExplorerDepth: int,
   tabHeight: int,
-
   /*
    * The line count considered a 'large file' - if a file exceeds this limit,
    * some features like syntax highlighting will be disabled.

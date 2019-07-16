@@ -34,10 +34,10 @@ let anyModified = (buffers: t) => {
 };
 
 let ofBufferOpt = (f, buffer) => {
-  switch(buffer) {
+  switch (buffer) {
   | None => None
-  | Some(b) => Some(f(b));
-  }
+  | Some(b) => Some(f(b))
+  };
 };
 
 let getBufferMetadata = (id, map) =>
@@ -46,25 +46,22 @@ let getBufferMetadata = (id, map) =>
   | Some(v) => Some(Buffer.getMetadata(v))
   };
 
-let applyBufferUpdate = (bufferUpdate) => ofBufferOpt((buffer) => {
-    Buffer.update(buffer, bufferUpdate);
-});
+let applyBufferUpdate = bufferUpdate =>
+  ofBufferOpt(buffer => Buffer.update(buffer, bufferUpdate));
 
-let updateMetadata = (metadata) => ofBufferOpt((buffer) => {
-  Buffer.updateMetadata(metadata, buffer);
-});
+let updateMetadata = metadata =>
+  ofBufferOpt(buffer => Buffer.updateMetadata(metadata, buffer));
 
-let setIndentation = (indent) => ofBufferOpt((buffer) => {
-  Buffer.setIndentation(indent, buffer);
-});
+let setIndentation = indent =>
+  ofBufferOpt(buffer => Buffer.setIndentation(indent, buffer));
 
-let disableSyntaxHighlighting = ofBufferOpt((buffer) => {
-  Buffer.disableSyntaxHighlighting(buffer);
-});
+let disableSyntaxHighlighting =
+  ofBufferOpt(buffer => Buffer.disableSyntaxHighlighting(buffer));
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
-  | BufferDisableSyntaxHighlighting(id) => IntMap.update(id, disableSyntaxHighlighting, state);
+  | BufferDisableSyntaxHighlighting(id) =>
+    IntMap.update(id, disableSyntaxHighlighting, state)
   | BufferEnter(metadata) =>
     let f = buffer =>
       switch (buffer) {

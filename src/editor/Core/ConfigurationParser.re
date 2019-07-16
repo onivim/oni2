@@ -103,7 +103,10 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorInsertSpaces: parseBool(v)},
   ),
   ("editor.indentSize", (s, v) => {...s, editorIndentSize: parseInt(v)}),
-  ("editor.largeFileOptimizations", (s, v) => {...s, editorLargeFileOptimizations: parseBool(v)}),
+  (
+    "editor.largeFileOptimizations",
+    (s, v) => {...s, editorLargeFileOptimizations: parseBool(v)},
+  ),
   ("editor.tabSize", (s, v) => {...s, editorTabSize: parseInt(v)}),
   (
     "editor.highlightActiveIndentGuide",
