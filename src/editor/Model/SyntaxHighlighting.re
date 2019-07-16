@@ -130,7 +130,7 @@ let reduce: (t, Actions.t) => t =
     | SyntaxHighlightClear(bufferId) => {
       ...state,
       idToBufferSyntaxHighlights: IntMap.update(
-        tokens.bufferId,
+        bufferId,
         buffer => switch(buffer) {
         | None => None
         | Some(_) => None

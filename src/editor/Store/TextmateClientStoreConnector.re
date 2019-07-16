@@ -62,13 +62,12 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       let bufferId = bc.id;
       let buffer = Model.Buffers.getBuffer(bufferId, state.buffers);
 
-
       switch (buffer) {
       | None => default
       | Some(buffer) =>
-        let largeFileOptimizations = Selectors.getConfigurationValue(state, buffer, (c) => c.editorLargeFileOptimizations);
+        let largeFileOptimizations = Model.Selectors.getConfigurationValue(state, buffer, (c) => c.editorLargeFileOptimizations);
 
-        if (!largeFileOptimizations || Buffer.getNumberOfLines(buffer) < Constants.default.largeFileLineCountThreshold) {
+        if (!largeFileOptimizations || Model.Buffer.getNumberOfLines(buffer) < Core.Constants.default.largeFileLineCountThreshold) {
           switch (Model.Buffer.getMetadata(buffer).filePath) {
           | None => default
           | Some(v) =>
@@ -81,7 +80,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             };
           }
         } else {
-          (state, clearHighlightsEffect(Buffer.getId(buffer)))
+          (state, clearHighlightsEffect(Model.Buffer.getId(buffer)))
         }
       };
 
