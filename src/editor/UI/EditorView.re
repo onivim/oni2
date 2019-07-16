@@ -55,7 +55,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               ~order=1,
               ~width=50,
               ~id=MainDock,
-              ~component=splitFactory(state => <Dock state />),
+              ~component=splitFactory(state => {
+                    let activityBarVisible = Selectors.getActiveConfigurationValue(state, (c) => c.workbenchActivityBarVisible);
+                    activityBarVisible ? <Dock state /> : React.empty;
+                    }),
               (),
             );
 
@@ -68,7 +71,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
               ~order=2,
               ~width=225,
               ~id=ExplorerDock,
-              ~component=splitFactory(state => <FileExplorerView state />),
+              ~component=splitFactory(state => {
+                  let sideBarVisible = Selectors.getActiveConfigurationValue(state, (c) => c.workbenchSideBarVisible);
+                  sideBarVisible ? <FileExplorerView state /> : React.empty;
+              }),
               (),
             );
 
