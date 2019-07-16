@@ -11,8 +11,6 @@ open Oni_Model;
 
 let component = React.component("Root");
 
-let statusBarHeight = 25;
-
 let rootStyle = (background, foreground) =>
   Style.[
     backgroundColor(background),
@@ -26,7 +24,7 @@ let rootStyle = (background, foreground) =>
     alignItems(`Center),
   ];
 
-let surfaceStyle =
+let surfaceStyle = (statusBarHeight) =>
   Style.[
     position(`Absolute),
     top(0),
@@ -35,7 +33,7 @@ let surfaceStyle =
     bottom(statusBarHeight),
   ];
 
-let statusBarStyle =
+let statusBarStyle = (statusBarHeight) =>
   Style.[
     backgroundColor(Color.hex("#21252b")),
     position(`Absolute),
@@ -52,18 +50,24 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let theme = state.theme;
     let style = rootStyle(theme.colors.background, theme.colors.foreground);
 
+
+    let statusBarVisible = Selectors.getActiveConfigurationValue(state, (c) => c.workbenchStatusBarVisible);
+    let statusBarHeight = statusBarVisible ? 25 : 0;
+    let statusBar = statusBarVisible ? 
+        <View style=statusBarStyle(statusBarHeight)>
+          <StatusBar height=statusBarHeight state />
+        </View> : React.empty;
+
     (
       hooks,
       <View style>
-        <View style=surfaceStyle> <EditorView state /> </View>
+        <View style=surfaceStyle(statusBarHeight)> <EditorView state /> </View>
         <Overlay>
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />
           <MenuView theme menu={state.menu} font={state.uiFont} />
         </Overlay>
-        <View style=statusBarStyle>
-          <StatusBar height=statusBarHeight state />
-        </View>
+        {statusBar}
       </View>,
     );
   });
