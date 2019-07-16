@@ -4,38 +4,26 @@
  * This is the entry point for launching the editor.
  */
 
-Printexc.record_backtrace(true);
+open Revery;
+open Revery.UI;
 
-print_endline ("Top");
+open Rench;
 
-print_endline ("1");
+open Oni_UI;
 
 module Core = Oni_Core;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
-print_endline ("2");
-
 let cliOptions = Core.Cli.parse();
 Log.debug("Startup: Parsing CLI options complete");
 
-Log.debug("Starting Onivim 2.");
-
-/* Camomile - root cause of failure? */
-open Oni_Core.CamomileBundled.Camomile;
-/* How about Zed_utf8? */
-let fontAwesomeIcon = Core.ZedBundled.singleton(UChar.of_int(0xF556));
+let () = Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
-  open Oni_UI;
-
-  open Revery;
-  open Revery.UI;
-  open Rench;
-
-  print_endline ("init");
+  Log.debug("Init");
   let w =
     App.createWindow(
       ~createOptions=
@@ -48,7 +36,7 @@ let init = app => {
       "Oni2",
     );
 
-  Log.debug("Initializing setup.");
+  let () = Log.debug("Initializing setup.");
   let setup = Core.Setup.init();
   Log.debug("Startup: Parsing CLI options");
 
@@ -57,18 +45,10 @@ let init = app => {
 
   PreflightChecks.run();
 
-  print_endline ("init done!");
-  
-  // PASS
-  
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
-  // Fail - is it the View or UI.start?
-  /*
-  let view = <Root state=currentState^ />;
-  
-  let update = UI.start(w, view);
+  let update = UI.start(w, <Root state=currentState^ />);
 
   let onStateChanged = v => {
     currentState := v;
@@ -78,8 +58,6 @@ let init = app => {
     update(<Root state />);
   };
 
-
-  // FAIL
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -115,15 +93,10 @@ let init = app => {
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     dispatch,
     state: initialState,
-  }); 
+  });
 
   dispatch(Model.Actions.Init);
   runEffects();
-  */
-
-  // FAIL
-};
-/*
 
   List.iter(
     v => dispatch(Model.Actions.OpenFileByPath(v, None)),
@@ -210,8 +183,8 @@ let init = app => {
   Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
   );
-*/
+};
 
 /* Let's get this party started! */
-Log.debug("Calling App.start");
-Revery.App.start(init);
+let () = Log.debug("Calling App.start");
+App.start(init);
