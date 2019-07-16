@@ -165,7 +165,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(e => Isolinear.Effect.run(e, dispatch), effects);
+    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
   let _ =

@@ -2,6 +2,8 @@
     (names InsertModeTest
            RegressionCommandLineNoCompletionTest
            AddRemoveSplitTest
+           TypingBatchedTest
+           TypingUnbatchedTest
     )
     (libraries
         libvim
@@ -16,4 +18,6 @@
         InsertModeTest.exe
         RegressionCommandLineNoCompletionTest.exe
         AddRemoveSplitTest.exe
+        TypingBatchedTest.exe
+        TypingUnbatchedTest.exe
         ))
