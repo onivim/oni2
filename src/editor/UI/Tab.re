@@ -112,11 +112,11 @@ let createElement =
       };
 
     let onAnyClick = (evt: NodeEvents.mouseButtonEventParams) => {
-        switch (evt.button) {
-        | Revery.MouseButton.BUTTON_MIDDLE  => onClose();
-        | Revery.MouseButton.BUTTON_LEFT => onClick();
-        | _ => ();
-        }
+      switch (evt.button) {
+      | Revery.MouseButton.BUTTON_MIDDLE => onClose()
+      | Revery.MouseButton.BUTTON_LEFT => onClick()
+      | _ => ()
+      };
     };
 
     (
