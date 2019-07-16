@@ -54,8 +54,11 @@ const getNodePath = () => {
 }
 if (process.platform == "linux") {
   const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
-console.log(result.output.toString());
+  console.log(result.output.toString());
 } else if (process.platform == "darwin") {
+  const camomileRoot = cp.spawnSync("esy", ["bash", "-c", "echo '#{@opam/camomile.install}'"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
+  console.log("CAMOMILE ROOT: " + camomileRoot);
+  const camomilePath = path.join(camomileRoot, "share", "camomile");
 
   const executables = [
     "Oni2",
@@ -97,6 +100,7 @@ console.log(result.output.toString());
   copy(curBin, binaryDirectory);
   copy(extensionsSourceDirectory, contentsDirectory);
   copy(textmateServiceSourceDirectory, contentsDirectory);
+  copy(camomilePath, contentsDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
 
