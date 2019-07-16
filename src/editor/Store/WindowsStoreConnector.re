@@ -65,6 +65,32 @@ let start = getState => {
       dispatch(AddSplit(Vertical, editor));
     });
 
+  let synchronizeConfiguration = (configuration: Core.Configuration.t) =>
+    Isolinear.Effect.create(~name="windows.syncConfig", () => {
+      let activityBarVisible =
+        Core.Configuration.getValue(
+          c => c.workbenchActivityBarVisible,
+          configuration,
+        );
+      let sideBarVisible =
+        Core.Configuration.getValue(
+          c => c.workbenchSideBarVisible,
+          configuration,
+        );
+
+      if (activityBarVisible) {
+        dispatch(AddDockItem(MainDock));
+      } else {
+        dispatch(RemoveDockItem(MainDock));
+      };
+
+      if (sideBarVisible) {
+        dispatch(AddDockItem(ExplorerDock));
+      } else {
+        dispatch(RemoveDockItem(ExplorerDock));
+      };
+    });
+
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | RegisterDockItem(dock) =>
@@ -90,16 +116,9 @@ let start = getState => {
         ...s,
         windowManager: WindowManager.removeDockItem(~id, s.windowManager),
       }
-    | AddDockItem(id) =>
-      switch (WindowManager.findDockItem(id, s.windowManager)) {
-      | Some(dock) => {
-          ...s,
-          windowManager: {
-            ...s.windowManager,
-            leftDock: s.windowManager.leftDock @ [dock],
-          },
-        }
-      | None => s
+    | AddDockItem(id) => {
+        ...s,
+        windowManager: WindowManager.addDockItem(~id, s.windowManager),
       }
     | WindowSetActive(splitId, _) => {
         ...s,
@@ -166,6 +185,7 @@ let start = getState => {
       let effect =
         switch (action) {
         | Init => initializeDefaultViewEffect(state)
+        | ConfigurationSet(c) => synchronizeConfiguration(c)
         | ViewCloseEditor(_) =>
           if (List.length(
                 WindowTree.getSplits(state.windowManager.windowTree),

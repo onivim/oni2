@@ -118,12 +118,24 @@ let configurationParsers: list(configurationTuple) = [
   ),
   ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
   (
+    "workbench.activityBar.visible",
+    (s, v) => {...s, workbenchActivityBarVisible: parseBool(v)},
+  ),
+  (
     "workbench.iconTheme",
     (s, v) => {...s, workbenchIconTheme: parseString(v)},
   ),
   (
     "workbench.editor.showTabs",
     (s, v) => {...s, workbenchEditorShowTabs: parseBool(v)},
+  ),
+  (
+    "workbench.sideBar.visible",
+    (s, v) => {...s, workbenchSideBarVisible: parseBool(v)},
+  ),
+  (
+    "workbench.statusBar.visible",
+    (s, v) => {...s, workbenchStatusBarVisible: parseBool(v)},
   ),
 ];
 
