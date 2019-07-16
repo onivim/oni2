@@ -13,11 +13,12 @@ module LocalConfig = {
   let unimapdir = Filename.concat(setup.camomilePath, "mappings");
 };
 
-print_endline ("CamomileLibrary.Make");
-
-print_endline ("Datadir: " ++ LocalConfig.datadir);
-print_endline ("Localedir: " ++ LocalConfig.localedir);
-print_endline ("Charmapdir: " ++ LocalConfig.charmapdir);
-print_endline ("Unimapdir: " ++ LocalConfig.unimapdir);
+let show = () => {
+  "Camomile Runtime Paths:\n\n"
+  ++ " Datadir: " ++ LocalConfig.datadir ++ "\n"
+  ++ " Localedir: " ++ LocalConfig.localedir ++ "\n"
+  ++ " Charmapdir: " ++ LocalConfig.charmapdir ++ "\n"
+  ++ " Unimapdir: " ++ LocalConfig.unimapdir ++ "\n"
+};
 
 module Camomile = CamomileLibrary.Make(LocalConfig);
