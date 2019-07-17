@@ -12,7 +12,8 @@ $env:ONI2_DEBUG=1
 Write-Host "** Validating .exe installer **"
 rm -rf _unpacked
 mkdir _unpacked
-$env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim2-0.2.0-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="_unpacked/installed_app"
+cp $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim-0.2.0-win.exe _unpacked/Onivim-0.2.0-win.exe
+_unpacked/Onivim2-0.2.0-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="_unpacked/installed_app"
 
 ls _unpacked/installed_app
 ./_unpacked/installed_app/win32/Oni2.exe -f --checkhealth
