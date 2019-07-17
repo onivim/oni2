@@ -9,6 +9,9 @@ ls _unpacked
 
 ONI2_DEBUG=1 ./_unpacked/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
 
-cp $SYSTEM_ARTIFACTSDIRECTORY/Onivim2-x86_64.AppImage Onivim2-x86_64.AppImage
-chmod +x Onivim2-x86_64.AppImage
-./Onivim2-x86_64.AppImage -f --checkhealth
+cp $SYSTEM_ARTIFACTSDIRECTORY/Release_linux/Onivim2-x86_64.AppImage _unpacked/Onivim2-x86_64.AppImage
+
+ls _unpacked
+
+chmod +x _unpacked/Onivim2-x86_64.AppImage
+./_unpacked/Onivim2-x86_64.AppImage -f --checkhealth
