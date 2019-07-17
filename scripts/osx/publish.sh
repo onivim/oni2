@@ -4,4 +4,4 @@ mkdir -p _publish
 
 tar -C _release -cvzf _publish/Onivim2.tar.gz Onivim2.App
 
-appdmg _publish/appdmg.json _release/Onivim2.dmg
+appdmg _release/appdmg.json _publish/Onivim2.dmg
