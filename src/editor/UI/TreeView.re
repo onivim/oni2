@@ -92,7 +92,9 @@ let itemRenderer =
     | FileSystemNode({displayName, _}) => displayName
     };
 
-  <Clickable onClick={() => onClick(id)}>
+  <Clickable
+    onClick={() => onClick(id)}
+    style=Style.[cursor(Revery.MouseCursors.pointer)]>
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
       <FontIcon
