@@ -13,14 +13,15 @@ Write-Host "** Validating .exe installer **"
 rm -r _unpacked
 mkdir _unpacked
 cp $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim2-0.2.0-win.exe _unpacked/Onivim2-0.2.0-win.exe
-_unpacked/Onivim2-0.2.0-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="D:/a/1/s/Onivim2" /Log="D:/a/1/s/_unpacked/install.log"
+_unpacked/Onivim2-0.2.0-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="D:/a/1/s/Onivim2" /log="D:/a/1/s/install.log"
 
 Write-Host "Ran installer!"
 
 ls .
+ls D:/a/1/s
 ls _unpacked
 
-Get-Content -Path _unpacked/install.log
+Get-Content -Path install.log
 
 ls D:/
 ls D:/a/1/s
