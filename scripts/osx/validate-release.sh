@@ -16,7 +16,3 @@ sudo hdiutil attach $SYSTEM_ARTIFACTSDIRECTORY/Onivim2.dmg
 cp -rf "/Volumes/Onivim 2"/*.App _unpacked
 sudo hdiutil detach "/Volumes/Onivim 2"
 ONI2_DEBUG=1 ./_unpacked/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
-
-
-
-
