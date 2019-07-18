@@ -502,14 +502,11 @@ let createElement =
       | None => print_endline ("NO element ref");
       | Some(r) => {
         let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
-        print_endline ("width: " ++ string_of_float(Revery.Math.Rectangle.getWidth(rect)));
-        print_endline ("mouse down: " ++ string_of_float(evt.mouseY -. Revery.Math.Rectangle.getY(rect)));
 
         let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
         let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
 
         let (line, col) = Editor.pixelPositionToLineColumn(editor, metrics, relX -. lineNumberWidth, relY);
-        print_endline ("LINE: " ++ string_of_int(line) ++ " COLUMN: " ++ string_of_int(col));
         Vim.Cursor.setPosition(line + 1, col);
         }
       }
