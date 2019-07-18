@@ -106,6 +106,9 @@ let createElement =
       setActive(false);
     };
 
+    let (elementRef, setElementRef, hooks) =
+      React.Hooks.ref(None, hooks);
+
     let hooks =
       React.Hooks.effect(
         Always,
@@ -162,7 +165,7 @@ let createElement =
 
     (
       hooks,
-      <View style=absoluteStyle onMouseDown>
+      <View style=absoluteStyle ref={(node) => setElementRef(Some(node))} onMouseDown>
         <OpenGL
           style=absoluteStyle
           render={(transform, _) => {
