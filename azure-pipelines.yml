@@ -91,9 +91,7 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
-  - powershell: ls /
-    displayName: 'Which program files?'
-  - powershell: ls 'C:/Program Files (x86)'
+  - powershell: ls 'C:/Program Files (x86)/Windows Kits'
     displayName: 'Is signtool in path?'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
