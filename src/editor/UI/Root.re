@@ -53,7 +53,8 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let statusBarVisible =
       Selectors.getActiveConfigurationValue(state, c =>
         c.workbenchStatusBarVisible
-      );
+      )
+      && !state.zenMode;
     let statusBarHeight = statusBarVisible ? 25 : 0;
     let statusBar =
       statusBarVisible
