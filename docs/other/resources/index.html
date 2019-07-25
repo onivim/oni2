@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Appendix B: More Resources · Onivim 2 User Manual</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="## Learning Vim"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Appendix B: More Resources · Onivim 2 User Manual"/><meta property="og:type" content="website"/><meta property="og:url" content="https://your-docusaurus-test-site.com/"/><meta property="og:description" content="## Learning Vim"/><meta property="og:image" content="https://your-docusaurus-test-site.com/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://your-docusaurus-test-site.com/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo2.png" alt="Onivim 2 User Manual"/><h2 class="headerTitleWithLogo">Onivim 2 User Manual</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="https://v2.onivim.io/early-access-portal" target="_self">Early Access</a></li><li class=""><a href="https://v2.onivim.io/#about" target="_self">About</a></li><li class=""><a href="https://v2.onivim.io/#timeline" target="_self">Timeline</a></li><li class="siteNavGroupActive"><a href="/docs/getting-started/why-onivim" target="_self">Docs</a></li><li class=""><a href="/tips-and-tricks" target="_self">Tips &amp; Tricks</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Other</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/getting-started/why-onivim">Why Onivim?</a></li><li class="navListItem"><a class="navItem" href="/docs/getting-started/installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/getting-started/vim-differences">Vim Differences</a></li><li class="navListItem"><a class="navItem" href="/docs/getting-started/modal-editing-101">Modal Editing 101</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Basic Usage</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/using-onivim/moving-in-onivim">Moving in Onivim</a></li><li class="navListItem"><a class="navItem" href="/docs/using-onivim/editing-and-deleting">Editing and Deleting Text</a></li><li class="navListItem"><a class="navItem" href="/docs/using-onivim/visual-mode">Visual Mode (Selection)</a></li><li class="navListItem"><a class="navItem" href="/docs/using-onivim/working-with-files">Working with Files</a></li><li class="navListItem"><a class="navItem" href="/docs/using-onivim/configuration">Configuration</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">For Developers</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/for-developers/contributing">How to Contribute</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Other</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/other/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/docs/other/motivation">Appendix A: Motivation</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/other/resources">Appendix B: More Resources</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Appendix B: More Resources</h1></header><article><div><span><h2><a class="anchor" aria-hidden="true" id="learning-vim"></a><a href="#learning-vim" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Learning Vim</h2>
+<ul>
+<li><a href="https://pragprog.com/book/dnvim2/practical-vim-second-edition">Practical Vim</a> is a great book on Vim, and mostly applicable to Onivim.</li>
+<li><a href="https://moolenaar.net/habits.html">Seven habits of effective text editing</a> by Bram Moolenaar (the creator of Vim) is a great resource, and again, mostly applicable to Onivim.</li>
+</ul>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/other/motivation"><span class="arrow-prev">← </span><span>Appendix A: Motivation</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#learning-vim">Learning Vim</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home" style="opacity:0"><img src="/img/logo2.png" alt="Onivim 2 User Manual" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/docs/en/doc2.html">Guides (or other categories)</a><a href="/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="https://discordapp.com/">Reddit</a><a href="https://discordapp.com/">Discord</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="https://github.com/onivim/oni2">GitHub</a><a class="github-button" href="https://github.com/onivim/oni2" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Outrun Labs, LLC</section></footer></div></body></html>
