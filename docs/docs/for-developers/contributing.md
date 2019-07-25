@@ -1,3 +1,9 @@
+---
+id: contributing
+title: How to Contribute
+sidebar_label: How to Contribute
+---
+
 # How to Contribute
 
 ## Prerequisites
