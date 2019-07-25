@@ -78,11 +78,13 @@ __Anyone who has contributed financially to the project__ - via BountySource, Pa
 
 Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
 
-#### 'Time-Bomb' Dual License
+#### 'Time-Delay' Dual License
 
 Because of the support we've received from open source communities, we've decided to __dual-license the code after 18 months__ - every commit, starting with [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), will be dual-licensed via the __MIT License__ 18 months from that commit's date to `master`. For commit [017c513](https://github.com/onivim/oni2/commit/017c5131b4bba3006f726a3ef0f5a33028e059b5), as it was committed to `master` on __4/18/2019__ that means it would be dual-licensed with __MIT License__ on __10/18/2020__. 
 
-Any external contributions to the project from outside Outrun Labs, LLC will not be subject to this 'time-bomb' delay - they'll be dual-licensed immediately under the MIT License.
+For convenience, we will maintain an [oni2-mit](https://github.com/onivim/oni2-mit) repo containing the MIT-licensed code. The first commit to that repo will be on __July 2, 2020__.
+
+Any external contributions to the project from outside Outrun Labs, LLC will not be subject to this 'time-delay' - they'll be dual-licensed immediately under the MIT License.
 
 We hope that this approach will bring us the best of worlds - the ability to have a commercially sustainable product, with high quality - as well as giving back to the open source communities by having our work eventually end up in the open, and ensuring that external contributions are always open source.
 
