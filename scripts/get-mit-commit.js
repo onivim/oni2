@@ -9,6 +9,8 @@ const cp = require("child_process");
 const date = new Date();
 const eighteenMonthsAgo = new Date(date.setMonth(date.getMonth() - 18));
 
+console.log(eighteenMonthsAgo.toString());
+
 const month = eighteenMonthsAgo.toLocaleString('en-us', { month: 'short' });
 const day = eighteenMonthsAgo.getDate();
 const year = eighteenMonthsAgo.getFullYear();
