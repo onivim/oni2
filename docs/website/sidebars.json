@@ -1,7 +1,21 @@
 {
   "docs": {
-    "Docusaurus": ["doc1"],
-    "First Category": ["doc2"],
-    "Second Category": ["doc3"]
+    "Getting Started": [
+      "getting-started/why-onivim",
+      "getting-started/installation",
+      "getting-started/vim-differences",
+      "getting-started/modal-editing-101"
+    ],
+    "Basic Usage": [
+      "using-onivim/moving-in-onivim",
+      "using-onivim/editing-and-deleting",
+      "using-onivim/visual-mode",
+      "using-onivim/working-with-files",
+      "using-onivim/configuration"
+    ],
+    "Other": [
+      "other/faq",
+      "other/motivation"
+    ]
   }
 }

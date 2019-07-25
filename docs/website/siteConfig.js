@@ -41,7 +41,7 @@ const siteConfig = {
     {href: "https://v2.onivim.io/early-access-portal", label: "Early Access" },
     {href: "https://v2.onivim.io/#about", label: "About" },
     {href: "https://v2.onivim.io/#timeline", label: "Timeline" },
-    {doc: 'doc1', label: 'Docs'},
+    {doc: 'getting-started/why-onivim', label: 'Docs'},
     {page: 'tips-and-tricks', label: 'Tips & Tricks'},
   ],
 
@@ -56,7 +56,7 @@ const siteConfig = {
   /* Colors for website */
   colors: {
     primaryColor: '#29292e',
-    secondaryColor: '#FF0000',
+    secondaryColor: '#eb6f8a',
   },
 
   /* Custom fonts for website */

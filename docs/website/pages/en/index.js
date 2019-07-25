@@ -22,7 +22,7 @@ class HomeSplash extends React.Component {
     const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
 
     const SplashContainer = props => (
-      <div className="homeContainer">
+      <div className="homeContainer" style={{color: "white"}}>
         <div className="homeSplashFade">
           <div className="wrapper homeWrapper">{props.children}</div>
         </div>
@@ -30,15 +30,21 @@ class HomeSplash extends React.Component {
     );
 
     const Logo = props => (
-      <div className="projectLogo">
-        <img src={props.img_src} alt="Project Logo" />
+      <div>
+        <img src={"img/title-logo-halo.png"} alt="Project Logo" />
+      </div>
+    );
+    
+    const Grid = props => (
+      <div style={{position: "absolute", bottom: 0, width: "100%", opacity: 0.2}}>
+        <img src={"img/background-grid.png"} alt="Background" />
       </div>
     );
 
     const ProjectTitle = () => (
       <h2 className="projectTitle">
-        {siteConfig.title}
-        <small>{siteConfig.tagline}</small>
+        {"User Manual"}
+        <small>{"Retro-futuristic modal editing"}</small>
       </h2>
     );
 
@@ -60,12 +66,13 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
+        <Grid />
         <Logo img_src={`${baseUrl}img/undraw_monitor.svg`} />
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
             <Button href="https://v2.onivim.io/early-access-portal">Early Access</Button>
-            <Button href={docUrl('doc1.html')}>Docs</Button>
+            <Button href={docUrl('getting-started/why-onivim.html')}>Docs</Button>
             <Button href={docUrl('doc2.html')}>Tips & Tricks</Button>
           </PromoSection>
         </div>
@@ -194,7 +201,7 @@ class Index extends React.Component {
     };
 
     return (
-      <div>
+      <div style={{backgroundColor: "rgb(20, 20, 20)"}}>
         <HomeSplash siteConfig={siteConfig} language={language} />
       </div>
     );
