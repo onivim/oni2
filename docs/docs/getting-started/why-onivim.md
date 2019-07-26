@@ -6,7 +6,7 @@ sidebar_label: Why Onivim?
 
 A fair question to ask is - why yet _another_ text editor? Aren't Vim, VSCode, Atom, or Sublime good enough?
 
-We appreciate aspects of each of these editors, as we've taken ideas and inspiration from each of those. But we think we can do better, and this is embodied in our principles below.
+We appreciate aspects of these editors, as we've taken ideas and inspiration from each. But, in our opinion, none in isolation are perfect - and we think we can do better, by taking the aspects we appreciate of each and combining it into our vision of a perfect code editor.
 
 ## Principles
 

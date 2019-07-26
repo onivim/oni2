@@ -16,10 +16,12 @@
     "Advanced Usage": [
     ],
     "For Developers": [
+      "for-developers/contributing"
     ],
     "Other": [
       "other/faq",
-      "other/motivation"
+      "other/motivation",
+      "other/resources"
     ]
   }
 }

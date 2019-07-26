@@ -31,7 +31,8 @@ const siteConfig = {
 
   // Used for publishing and more
   twitterUserName: "oni_vim",
-  organizationName: 'Outrun Labs, LLC',
+  organizationName: 'onivim',
+  projectName: 'onivim.github.io',
   // For top-level user or org sites, the organization is still the same.
   // e.g., for the https://JoelMarcey.github.io site, it would be set like...
   //   organizationName: 'JoelMarcey'

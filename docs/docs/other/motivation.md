@@ -1,3 +1,11 @@
+---
+id: motivation
+title: Appendix A: Motivation
+sidebar_label: Appendix A: Motivation
+---
+
+> NOTE: This was the initial design document for v2 of Onivim, and is kept around for historical context. This was drafted prior to work began in earnest on the editor.
+
 # Oni v2
 
 A next-generation modal editor - built on [Revery](https://github.com/bryphe/revery) ([Reason](https://reasonml.github.io/)/[Ocaml](https://ocaml.org/)) + [Neovim](https://neovim.io/), leveraging the VSCode Extension Host model.
