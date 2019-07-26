@@ -112,3 +112,19 @@ let rec removeSplit = (id, currentTree) =>
   | Leaf(_) as leaf => leaf
   | Empty => Empty
   };
+ 
+let rec rotateSplit = (id, currentTree) => {
+  switch (currentTree) {
+  | Parent(dir, children) => {
+    if (List.exists((c: split) => c.id == id, children)) {
+        let [hd, ...tail] = children;
+        let newChildren = List.concat(tail, [hd]);
+        Parent(dir, newChildren)
+    } else {
+      let newChildren = List.map(c => rotateSplit(id, c), children);
+      Parent(dir, newChildren)
+    }
+  }
+  | v => v
+  }
+};

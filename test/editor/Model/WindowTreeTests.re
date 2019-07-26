@@ -7,7 +7,19 @@ module WindowTree = Oni_Model.WindowTree;
 
 open WindowTree;
 
-describe("WindowTreeTests", ({describe, _}) =>
+describe("WindowTreeTests", ({describe, _}) => {
+  describe("rotateSplit", ({test, _}) => {
+    test("moves head split to end", ({expect}) => {
+      let splits = WindowTree.empty;
+      let split1 = createSplit(~editorGroupId=1, ());
+      let split2 = createSplit(~editorGroupId=2, ());
+
+      let splits = splits
+        |>addSplit(~target=None, Vertical, split)
+        |>addSplit(~target=Some(split1.id), Vertical, split);
+ 
+    });
+  });
   describe("addSplit", ({test, _}) => {
     test("add vertical split", ({expect}) => {
       let splits = WindowTree.empty;
@@ -79,4 +91,4 @@ describe("WindowTreeTests", ({describe, _}) =>
       );
     });
   })
-);
+});
