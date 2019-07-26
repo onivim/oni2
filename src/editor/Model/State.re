@@ -28,6 +28,7 @@ type t = {
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
+  zenMode: bool,
 };
 
 let create: unit => t =
@@ -59,4 +60,5 @@ let create: unit => t =
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
+    zenMode: false,
   };
