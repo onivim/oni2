@@ -14,7 +14,7 @@ else
 	security default-keychain -s build.keychain
 	security unlock-keychain -p p@ssword1 build.keychain
 
-	security import certificate.p12 -k build.keychain -p $CODESIGN_PASSWORD
+	security import certificate.p12 -k build.keychain -P $CODESIGN_PASSWORD
 
 	security find-identity -v
 
