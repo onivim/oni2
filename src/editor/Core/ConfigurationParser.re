@@ -141,6 +141,10 @@ let configurationParsers: list(configurationTuple) = [
     "workbench.statusBar.visible",
     (s, v) => {...s, workbenchStatusBarVisible: parseBool(v)},
   ),
+  (
+    "editor.zenMode.hideTabs",
+    (s, v) => {...s, zenModeHideTabs: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

@@ -32,6 +32,7 @@ type t = {
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,
   filesExclude: list(string),
+  zenModeHideTabs: bool,
 };
 
 let default = {
@@ -54,6 +55,7 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   filesExclude: ["node_modules", "_esy"],
+  zenModeHideTabs: true,
 };
 
 let getBundledConfigPath = () => {
