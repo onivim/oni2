@@ -16,12 +16,18 @@ else
 
 	security import certificate.p12 -k build.keychain -P $CODESIGN_PASSWORD
 
+	echo "Checking identities..."
+
 	security find-identity -v
 
+	echo "Starting codesign..."
 	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App --options runtime
+	echo "Onivim2.App codesign complete!"
 
 	# Validate
+	echo "Validate codesigning..."
 	codesign --verify --deep --strict --verbose=2 _release/Onivim2.App
+	echo "Validation complete!"
 fi
 
 npm install -g appdmg
@@ -38,4 +44,5 @@ then
 else
 	echo "Code signing DMG"
 	codesign --verbose --sign "Outrun Labs, LLC" _publish/Onivim2-$SHORT_COMMIT_ID.dmg --options runtime
+	echo "Code signing DMG complete!"
 fi
