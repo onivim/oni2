@@ -36,7 +36,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <View style>
           <EditorGroupView
             state
-            windowId=0
+            windowId={state.windowManager.activeWindowId}
             editorGroupId={state.editorGroups.activeId}
           />
         </View>,
