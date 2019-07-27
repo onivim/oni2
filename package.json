@@ -21,16 +21,16 @@
         "name": "C++ source",
         "role": "Editor",
         "ext": [
-          ".cpp",
-          ".cc",
-          ".cxx",
-          ".hpp",
-          ".hh",
-          ".hxx",
-          ".h",
-          ".ino",
-          ".inl",
-          ".ipp"
+          "cpp",
+          "cc",
+          "cxx",
+          "hpp",
+          "hh",
+          "hxx",
+          "h",
+          "ino",
+          "inl",
+          "ipp"
         ]
       },
       {
@@ -42,126 +42,126 @@
         "name": "HTML document",
         "role": "Editor",
         "ext": [
-          ".html",
-          ".htm",
-          ".shtml",
-          ".xhtml",
-          ".mdoc",
-          ".jsp",
-          ".asp",
-          ".aspx",
-          ".jshtm",
-          ".volt",
-          ".ejs",
-          ".rhtml"
+          "html",
+          "htm",
+          "shtml",
+          "xhtml",
+          "mdoc",
+          "jsp",
+          "asp",
+          "aspx",
+          "jshtm",
+          "volt",
+          "ejs",
+          "rhtml"
         ]
       },
       {
         "name": "Java source",
         "role": "Editor",
         "ext": [
-          ".java",
-          ".jav"
+          "java",
+          "jav"
         ]
       },
       {
         "name": "Javascript source",
         "role": "Editor",
         "ext": [
-          ".js",
-          ".es6",
-          ".mjs",
-          ".pac"
+          "js",
+          "es6",
+          "mjs",
+          "pac"
         ]
       },
       {
         "name": "JSON",
         "role": "Editor",
         "ext": [
-          ".json",
-          ".bowerrc",
-          ".jshintrc",
-          ".jscsrc",
-          ".eslintrc",
-          ".swcrc",
-          ".webmanifest",
-          ".js.map",
-          ".css.map"
+          "json",
+          "bowerrc",
+          "jshintrc",
+          "jscsrc",
+          "eslintrc",
+          "swcrc",
+          "webmanifest",
+          "js.map",
+          "css.map"
         ]
       },
       {
         "name": "JSON with Comments",
         "role": "Editor",
         "ext": [
-          ".hintrc",
-          ".babelrc",
-          ".jsonc"
+          "hintrc",
+          "babelrc",
+          "jsonc"
         ]
       },
       {
         "name": "Markdown Source",
         "role": "Editor",
         "ext": [
-          ".md",
-          ".mkd",
-          ".mdwn",
-          ".mdown",
-          ".markdown",
-          ".markdn",
-          ".mdtxt",
-          ".mdtext",
-          ".workbook"
+          "md",
+          "mkd",
+          "mdwn",
+          "mdown",
+          "markdown",
+          "markdn",
+          "mdtxt",
+          "mdtext",
+          "workbook"
         ]
       },
       {
         "name": "Python Source",
         "role": "Editor",
         "ext": [
-          ".py",
-          ".rpy",
-          ".pyw",
-          ".cpy",
-          ".gyp",
-          ".gypi",
-          ".snakefile",
-          ".smk",
-          ".pyi",
-          ".ipy"
+          "py",
+          "rpy",
+          "pyw",
+          "cpy",
+          "gyp",
+          "gypi",
+          "snakefile",
+          "smk",
+          "pyi",
+          "ipy"
         ]
       },
       {
         "name": "Shell source",
         "role": "Editor",
         "ext": [
-          ".sh",
-          ".bash",
-          ".bashrc",
-          ".bash_aliases",
-          ".bash_profile",
-          ".bash_login",
-          ".ebuild",
-          ".install",
-          ".profile",
-          ".bash_logout",
-          ".zsh",
-          ".zshrc",
-          ".zprofile",
-          ".zlogin",
-          ".zlogout",
-          ".zshenv",
-          ".zsh-theme",
-          ".ksh"
+          "sh",
+          "bash",
+          "bashrc",
+          "bash_aliases",
+          "bash_profile",
+          "bash_login",
+          "ebuild",
+          "install",
+          "profile",
+          "bash_logout",
+          "zsh",
+          "zshrc",
+          "zprofile",
+          "zlogin",
+          "zlogout",
+          "zshenv",
+          "zsh-theme",
+          "ksh"
         ]
       },
       {
         "name": "Typescript",
         "role": "Editor",
-        "ext": ".ts"
+        "ext": "ts"
       },
       {
         "name": "Typescript React",
         "role": "Editor",
-        "ext": ".tsx"
+        "ext": "tsx"
       }
     ]
   },
