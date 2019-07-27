@@ -65,6 +65,16 @@
         ]
       },
       {
+        "name": "Javascript source",
+        "role": "Editor",
+        "ext": [
+          ".js",
+          ".es6",
+          ".mjs",
+          ".pac"
+        ]
+      },
+      {
         "name": "JSON",
         "role": "Editor",
         "ext": [
