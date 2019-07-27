@@ -14,7 +14,9 @@ else
 	security default-keychain -s build.keychain
 	security unlock-keychain -p p@ssword1 build.keychain
 
-	security import certificate.p12 -k build.keychain -P $CODESIGN_PASSWORD
+	security import certificate.p12 -k build.keychain -P $CODESIGN_PASSWORD -T /usr/bin/codesign
+	
+	security set-key-partition-list -S apple-tool:,apple: -s -k p@ssword1 build.keychain
 
 	echo "Checking identities..."
 
