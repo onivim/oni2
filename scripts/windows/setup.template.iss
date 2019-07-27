@@ -20,6 +20,8 @@ WizardImageFile={{WizardImageFilePath}}
 WizardImageStretch=no
 WizardSmallImageFile={{WizardSmallImageFilePath}}
 ChangesAssociations=yes
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 
 [Files]
 Source: "{{SourcePath}}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
