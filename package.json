@@ -10,8 +10,150 @@
     ]
   },
   "build": {
-  "productName": "Onivim2",
-  "fileAssociations": []
+    "productName": "Onivim2",
+    "fileAssociations": [
+      {
+        "name": "C source",
+        "role": "Editor",
+        "ext": "c"
+      },
+      {
+        "name": "C++ source",
+        "role": "Editor",
+        "ext": [
+          ".cpp",
+          ".cc",
+          ".cxx",
+          ".hpp",
+          ".hh",
+          ".hxx",
+          ".h",
+          ".ino",
+          ".inl",
+          ".ipp"
+        ]
+      },
+      {
+        "name": "Cascading style sheet",
+        "role": "Editor",
+        "ext": "css"
+      },
+      {
+        "name": "HTML document",
+        "role": "Editor",
+        "ext": [
+          ".html",
+          ".htm",
+          ".shtml",
+          ".xhtml",
+          ".mdoc",
+          ".jsp",
+          ".asp",
+          ".aspx",
+          ".jshtm",
+          ".volt",
+          ".ejs",
+          ".rhtml"
+        ]
+      },
+      {
+        "name": "Java source",
+        "role": "Editor",
+        "ext": [
+          ".java",
+          ".jav"
+        ]
+      },
+      {
+        "name": "JSON",
+        "role": "Editor",
+        "ext": [
+          ".json",
+          ".bowerrc",
+          ".jshintrc",
+          ".jscsrc",
+          ".eslintrc",
+          ".swcrc",
+          ".webmanifest",
+          ".js.map",
+          ".css.map"
+        ]
+      },
+      {
+        "name": "JSON with Comments",
+        "role": "Editor",
+        "ext": [
+          ".hintrc",
+          ".babelrc",
+          ".jsonc"
+        ]
+      },
+      {
+        "name": "Markdown Source",
+        "role": "Editor",
+        "ext": [
+          ".md",
+          ".mkd",
+          ".mdwn",
+          ".mdown",
+          ".markdown",
+          ".markdn",
+          ".mdtxt",
+          ".mdtext",
+          ".workbook"
+        ]
+      },
+      {
+        "name": "Python Source",
+        "role": "Editor",
+        "ext": [
+          ".py",
+          ".rpy",
+          ".pyw",
+          ".cpy",
+          ".gyp",
+          ".gypi",
+          ".snakefile",
+          ".smk",
+          ".pyi",
+          ".ipy"
+        ]
+      },
+      {
+        "name": "Shell source",
+        "role": "Editor",
+        "ext": [
+          ".sh",
+          ".bash",
+          ".bashrc",
+          ".bash_aliases",
+          ".bash_profile",
+          ".bash_login",
+          ".ebuild",
+          ".install",
+          ".profile",
+          ".bash_logout",
+          ".zsh",
+          ".zshrc",
+          ".zprofile",
+          ".zlogin",
+          ".zlogout",
+          ".zshenv",
+          ".zsh-theme",
+          ".ksh"
+        ]
+      },
+      {
+        "name": "Typescript",
+        "role": "Editor",
+        "ext": ".ts"
+      },
+      {
+        "name": "Typescript React",
+        "role": "Editor",
+        "ext": ".tsx"
+      }
+    ]
   },
   "scripts": {
     "bootstrap": "esy node ./scripts/bootstrap.js #{@opam/camomile.install}",
@@ -24,9 +166,8 @@
   "dependencies": {
     "ocaml": "~4.7.0",
     "@esy-ocaml/reason": "3.4.0",
-    "isolinear": "*",
     "@opam/ocamlbuild": "*",
-    "revery": "*", 
+    "revery": "*",
     "@opam/dune": "*",
     "@opam/lwt": "*",
     "@opam/camomile": "^1.0.1",
