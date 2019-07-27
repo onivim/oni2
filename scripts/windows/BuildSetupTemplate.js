@@ -51,6 +51,12 @@ Root: HKCU; Subkey: "SOFTWARE\\Classes\\*\\shell\\${prodName}\\command"; ValueTy
 `
 
 function getFileRegKey(ext, desc) {
+
+    // Check that an actual extension was given, make it one if not.
+    if (ext[0] !== '.') {
+        ext = `.${ext}`
+    }
+
     return `
 Root: HKCR; Subkey: "${ext}\\OpenWithProgids"; ValueType: none; ValueName: "${prodName}"; Flags: deletevalue uninsdeletevalue; Tasks: registerAsEditor;
 Root: HKCR; Subkey: "${ext}\\OpenWithProgids"; ValueType: string; ValueName: "${prodName}${ext}"; ValueData: ""; Flags: uninsdeletevalue; Tasks: registerAsEditor;
@@ -67,13 +73,9 @@ _.keys(valuesToReplace).forEach(key => {
 let allFilesToAddRegKeysFor = ""
 
 packageMeta.build.fileAssociations.forEach(association => {
-    if (Array.isArray(association.ext)) {
-        association.ext.forEach(extension => {
-            allFilesToAddRegKeysFor += getFileRegKey(`.${extension}`, association.name)
-        })
-    } else {
-        allFilesToAddRegKeysFor += getFileRegKey(`.${association.ext}`, association.name)
-    }
+    association.ext.forEach(extension => {
+        allFilesToAddRegKeysFor += getFileRegKey(extension, association.name)
+    })
 })
 
 allFilesToAddRegKeysFor += addToEnv
