@@ -42,8 +42,8 @@ const siteConfig = {
     {href: "https://v2.onivim.io/early-access-portal", label: "Early Access" },
     {href: "https://v2.onivim.io/#about", label: "About" },
     {href: "https://v2.onivim.io/#timeline", label: "Timeline" },
-    {doc: 'getting-started/why-onivim', label: 'Docs'},
-    /* {page: 'tips-and-tricks', label: 'Tips & Tricks'}, */
+    {doc: 'getting-started/why-onivim', label: 'Docs'}
+    // {page: 'tips-and-tricks', label: 'Tips & Tricks'}
   ],
 
   // If you have users set above, you add it here:
