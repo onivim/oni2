@@ -1,8 +1,34 @@
+$SHORT_COMMIT_ID_UNTRIMMED = (git rev-parse --short HEAD) | Out-String
+$SHORT_COMMIT_ID = $SHORT_COMMIT_ID_UNTRIMMED.Trim()
+
+function CodeSign {
+    Param ([string]$path)
+
+    Write-Host "Signing $path with certificate $env:CODESIGN_CERTIFICATE"
+
+    &"C:/Program Files (x86)/Windows Kits/8.1/bin/x64/signtool.exe" sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f $env:CODESIGN_CERTIFICATE /p $env:CODESIGN_PASSWORD $path
+}
+
+if (Test-Path env:CODESIGN_CERTIFICATE) {
+    Write-Host "Code signing enabled."
+
+    CodeSign("_release/win32/Oni2.exe")
+    CodeSign("_release/win32/Oni2_editor.exe")
+    CodeSign("_release/win32/rg.exe")
+    CodeSign("_release/win32/node.exe")
+}
+
 mkdir -p _publish
 
-Compress-Archive -Path _release/win32 -DestinationPath _publish/Onivim2.zip
+Compress-Archive -Path _release/win32 -DestinationPath _publish/Onivim2-$SHORT_COMMIT_ID.zip
 
 esy create-win-setup
 
 npm install -g innosetup-compiler
 innosetup-compiler _release/setup.iss --O=_publish
+
+if (Test-Path env:CODESIGN_CERTIFICATE) {
+    CodeSign("_publish/Onivim2-0.2.0-win.exe");
+}
+
+mv _publish/Onivim2-0.2.0-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe

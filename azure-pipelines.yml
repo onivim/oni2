@@ -91,6 +91,8 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
+  - powershell: ./scripts/windows/verify-signtool.ps1
+    displayName: 'Validate signtool path'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml

@@ -125,66 +125,43 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
   attempt(() => getDirContent(~depth=0, cwd, getIcon));
 };
 
-let sortByLoweredDisplayName = (a, b) => {
-  open UiTree;
-  let aName =
-    (
-      switch (a) {
-      | Node({data: FileSystemNode({displayName, _}), _}, _) => displayName
-      | _ => ""
-      }
-    )
-    |> String.lowercase_ascii;
-  let bName =
-    (
-      switch (b) {
-      | Node({data: FileSystemNode({displayName, _}), _}, _) => displayName
-      | _ => ""
-      }
-    )
-    |> String.lowercase_ascii;
-  aName > bName ? 1 : aName < bName ? (-1) : 0;
-};
-
 let rec listToTree = (~status, nodes, parent) => {
   open UiTree;
   let parentId = ExplorerId.getUniqueId();
-  let children: list(Oni_Model__.UiTree.tree(Oni_Model__.UiTree.treeItem)) =
-    List.map(
-      node => {
-        let fsNode = toFsNode(node);
-        let descendantNodes = List.map(toFsNode, fsNode.children);
-        let descendants =
-          List.map(
-            descendant =>
-              listToTree(
-                ~status=Closed,
-                descendant.children,
-                FileSystemNode(descendant),
-              ),
-            descendantNodes,
-          );
+  let sortByLoweredDisplayName = (a, b) => {
+    switch (a.isDirectory, b.isDirectory) {
+    | (true, false) => (-1)
+    | (false, true) => 1
+    | _ =>
+      compare(
+        a.displayName |> String.lowercase_ascii,
+        b.displayName |> String.lowercase_ascii,
+      )
+    };
+  };
+  let children =
+    nodes
+    |> List.map(toFsNode)
+    |> List.sort(sortByLoweredDisplayName)
+    |> List.map(fsNode => {
+         let descendantNodes = List.map(toFsNode, fsNode.children);
+         let descendants =
+           List.map(
+             descendant =>
+               listToTree(
+                 ~status=Closed,
+                 descendant.children,
+                 FileSystemNode(descendant),
+               ),
+             descendantNodes,
+           );
 
-        let id = ExplorerId.getUniqueId();
-        Node({id, data: node, status: Closed}, descendants);
-      },
-      nodes,
-    )
-    |> List.sort((a, b) =>
-         UiTree.(
-           switch (a, b) {
-           | (
-               Node({data: FileSystemNode({isDirectory: true, _}), _}, _),
-               Node({data: FileSystemNode({isDirectory: false, _}), _}, _),
-             ) => (-1)
-           | (
-               Node({data: FileSystemNode({isDirectory: false, _}), _}, _),
-               Node({data: FileSystemNode({isDirectory: true, _}), _}, _),
-             ) => 1
-           | _ => sortByLoweredDisplayName(a, b)
-           }
-         )
-       );
+         let id = ExplorerId.getUniqueId();
+         Node(
+           {id, data: FileSystemNode(fsNode), status: Closed},
+           descendants,
+         );
+       });
 
   Node({id: parentId, data: parent, status}, children);
 };

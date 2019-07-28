@@ -99,6 +99,16 @@ let createElement =
     let absoluteStyle =
       Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
 
+    let showTabs =
+      if (state.zenMode) {
+        Configuration.getValue(c => !c.zenModeHideTabs, state.configuration);
+      } else {
+        Configuration.getValue(
+          c => c.workbenchEditorShowTabs,
+          state.configuration,
+        );
+      };
+
     let children =
       switch (editorGroup) {
       | None => [React.empty]
@@ -121,12 +131,7 @@ let createElement =
             />
           | None => React.empty
           };
-        switch (
-          Configuration.getValue(
-            c => c.workbenchEditorShowTabs,
-            state.configuration,
-          )
-        ) {
+        switch (showTabs) {
         | false => [editorView]
         | true => [
             <Tabs active=isActive theme tabs mode uiFont />,

@@ -77,6 +77,7 @@ type t =
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
+  | ToggleZenMode
   | Noop
 and editor = {
   editorId: int,
