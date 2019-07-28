@@ -41,4 +41,4 @@ To avoid duplicate work, if you decide to start working on an issue, please leav
 
 ## Discussion Etiquette
 
-We strictly enforce a [Code of Conduct](./CODE_OF_CONDUCT.md) and have a zero-tolerance policy towards infractions. Be considerate to others, and try to be courteous and professional at all times.
+We strictly enforce a [Code of Conduct](https://github.com/onivim/oni2/blob/master/CODE_OF_CONDUCT.md) and have a zero-tolerance policy towards infractions. Be considerate to others, and try to be courteous and professional at all times.

@@ -4,6 +4,8 @@ title: Building from Source
 sidebar_label: Building from Source
 ---
 
+# Building the Editor
+
 ## Prerequisites
 
 - Install [Git](https://git-scm.com/)
@@ -50,3 +52,13 @@ npm run build
 - `esy '@bench' install`
 - `esy '@bench' build`
 - `esy '@bench' run`
+
+# Building the Documentation Website
+
+From the `oni2` directory:
+
+- `cd docs/website`
+- `npm install`
+- `npm start`
+
+T
