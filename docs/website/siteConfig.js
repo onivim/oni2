@@ -22,7 +22,7 @@ const users = [
 
 const siteConfig = {
   title: 'Onivim 2 User Manual', // Title for your website.
-  tagline: 'Experience retro-futuristic modal editing',
+  tagline: 'Modal Editing from the Future',
   url: 'https://your-docusaurus-test-site.com', // Your website URL
   baseUrl: '/', // Base URL for your project */
   // For github.io type URLs, you would set the url and baseUrl like:
@@ -43,7 +43,7 @@ const siteConfig = {
     {href: "https://v2.onivim.io/#about", label: "About" },
     {href: "https://v2.onivim.io/#timeline", label: "Timeline" },
     {doc: 'getting-started/why-onivim', label: 'Docs'},
-    {page: 'tips-and-tricks', label: 'Tips & Tricks'},
+    /* {page: 'tips-and-tricks', label: 'Tips & Tricks'}, */
   ],
 
   // If you have users set above, you add it here:
