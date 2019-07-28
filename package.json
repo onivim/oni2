@@ -214,7 +214,7 @@
     "pesy": "0.4.1",
     "@opam/ocaml-migrate-parsetree": "1.3.1",
     "@opam/ppx_tools_versioned": "5.2.2",
-    "revery": "github:revery-ui/revery#f80eafe",
+    "revery": "github:revery-ui/revery#3f932c5",
     "reason-libvim": "github:onivim/reason-libvim#3fab519"
   },
   "devDependencies": {
