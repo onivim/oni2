@@ -114,7 +114,17 @@ let start = (getState: unit => Model.State.t) => {
 
   let _ =
     Vim.Window.onSplit((splitType, buf) => {
-      Log.info("Vim.Window.onSplit");
+      /* If buf wasn't specified, use the filepath from the current buffer */
+      let buf = switch(buf) {
+      | "" => switch(Vim.Buffer.getFilename(Vim.Buffer.getCurrent())) {
+      | None => ""
+      | Some(v) => v
+      }
+      | v => v
+      };
+
+      Log.info("Vim.Window.onSplit: " ++ buf);
+      
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
