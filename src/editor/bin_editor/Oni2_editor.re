@@ -41,7 +41,10 @@ let init = app => {
   Log.debug("Startup: Parsing CLI options");
 
   Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
-  Sys.chdir(cliOptions.folder);
+  switch (Sys.chdir(cliOptions.folder)) {
+  | exception (Sys_error(msg)) => Log.debug("Folder does not exist: " ++ msg)
+  | v => v
+  };
 
   PreflightChecks.run();
 
