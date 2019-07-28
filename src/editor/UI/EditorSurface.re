@@ -191,9 +191,8 @@ let createElement =
     ) =>
   component(hooks => {
     let theme = state.theme;
-    
-    let (elementRef, setElementRef, hooks) =
-      React.Hooks.ref(None, hooks);
+
+    let (elementRef, setElementRef, hooks) = React.Hooks.ref(None, hooks);
 
     let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
@@ -494,32 +493,37 @@ let createElement =
 
     /* TODO: Selection! */
     /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-      
-    };*/
+
+      };*/
 
     let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
       switch (elementRef) {
-      | None => print_endline ("NO element ref");
-      | Some(r) => {
+      | None => print_endline("NO element ref")
+      | Some(r) =>
         let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
 
         let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
         let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
 
-        let (line, col) = Editor.pixelPositionToLineColumn(editor, metrics, relX -. lineNumberWidth, relY);
+        let (line, col) =
+          Editor.pixelPositionToLineColumn(
+            editor,
+            metrics,
+            relX -. lineNumberWidth,
+            relY,
+          );
         Vim.Cursor.setPosition(line + 1, col);
-        }
-      }
+      };
     };
 
     (
       hooks,
-      <View style 
-            ref={(node) => setElementRef(Some(node))} 
-            onDimensionsChanged>
-        <View style=bufferViewStyle 
-            onMouseUp=editorMouseUp
-            onMouseWheel=scrollSurface>
+      <View
+        style ref={node => setElementRef(Some(node))} onDimensionsChanged>
+        <View
+          style=bufferViewStyle
+          onMouseUp=editorMouseUp
+          onMouseWheel=scrollSurface>
           <OpenGL
             style=bufferViewStyle
             render={(transform, _ctx) => {

@@ -45,10 +45,12 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
-let pixelPositionToLineColumn = (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
+let pixelPositionToLineColumn =
+    (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
   let line = int_of_float((pixelY +. view.scrollY) /. metrics.lineHeight);
-  let column = int_of_float((pixelX +. view.scrollX) /. metrics.characterWidth);
-  (line, column)
+  let column =
+    int_of_float((pixelX +. view.scrollX) /. metrics.characterWidth);
+  (line, column);
 };
 
 let getVisibleView = (metrics: EditorMetrics.t) =>
