@@ -493,12 +493,11 @@ let createElement =
 
     /* TODO: Selection! */
     /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-
       };*/
 
     let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
       switch (elementRef) {
-      | None => print_endline("NO element ref")
+      | None => ()
       | Some(r) =>
         let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
 
