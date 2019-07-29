@@ -13,6 +13,9 @@ const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
 
+const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md");
+const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt");
+
 let camomileRoot = process.argv[2];
 let camomilePath = path.join(camomileRoot, "share", "camomile");
 
@@ -105,6 +108,9 @@ if (process.platform == "linux") {
   copy(camomilePath, contentsDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
+  
+  fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
+  fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
 
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
@@ -151,6 +157,8 @@ if (process.platform == "linux") {
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
+  fs.copySync(eulaFile, path.join(platformReleaseDirectory, "EULA.md"));
+  fs.copySync(thirdPartyFile, path.join(platformReleaseDirectory, "ThirdPartyLicenses.txt"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
   fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});
