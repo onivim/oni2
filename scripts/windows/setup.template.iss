@@ -14,6 +14,7 @@ DefaultDirName={pf}\{{AppName}}
 DefaultGroupName={{AppName}}
 UninstallDisplayIcon={app}\{{AppExecutableName}}
 Compression=zip
+SetupIconFile={{SetupIconFile}}
 SolidCompression=yes
 OutputBaseFilename={{AppSetupExecutableName}}
 WizardImageFile={{WizardImageFilePath}}

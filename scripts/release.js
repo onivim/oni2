@@ -157,6 +157,9 @@ if (process.platform == "linux") {
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
+  const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
+  const iconFile = path.join(imageSourceDirectory, "oni2.ico");
+  fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"));
   fs.copySync(eulaFile, path.join(platformReleaseDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(platformReleaseDirectory, "ThirdPartyLicenses.txt"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
