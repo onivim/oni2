@@ -19,7 +19,6 @@ sidebar_label: Building from Source
 ### Build the front-end
 
 > __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions (more info here: https://github.com/esy/esy/issues/389).
-### Build the textmate service
 
 ```sh
 git clone https://github.com/onivim/oni2
@@ -28,6 +27,8 @@ esy install
 esy bootstrap
 esy build
 ```
+
+### Build the textmate service
 
 ```sh
 cd src/textmate_service
