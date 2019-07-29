@@ -18,3 +18,10 @@
 .projectTitle {
     color: rgb(220, 220, 200);
 }
+
+.nav-site a {
+    font-family: Montserrat, sans-serif;
+    font-size: 12px !important;
+    text-transform: uppercase;
+    font-weight: 600 !important;
+}

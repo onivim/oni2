@@ -44,7 +44,7 @@ class HomeSplash extends React.Component {
     const ProjectTitle = () => (
       <h2 className="projectTitle">
         {"User Manual"}
-        <small>{"Retro-futuristic modal editing"}</small>
+        <small>{"Modal Editing from the Future"}</small>
       </h2>
     );
 

@@ -1,7 +1,7 @@
 ---
 id: motivation
-title: Appendix A: Motivation
-sidebar_label: Appendix A: Motivation
+title: Appendix A: v2 Design Doc
+sidebar_label: Appendix A: v2 Design Doc
 ---
 
 > NOTE: This was the initial design document for v2 of Onivim, and is kept around for historical context. This was drafted prior to work began in earnest on the editor.
