@@ -21,7 +21,8 @@ else
 	echo "Checking identities..."
 
 	security find-identity -v
-	# Need to sign some files specifically
+	# Need to sign the dylib files directly, as they aren't
+	# picked up by --deep
 	codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App/Contents/libs/*.dylib --options runtime
 
 	echo "Starting codesign..."
@@ -32,7 +33,7 @@ else
 	echo "Validate codesigning..."
 	codesign --verify --deep --strict --verbose=2 _release/Onivim2.App
 	echo "Validation complete!"
-#fi
+fi
 
 npm install -g appdmg
 
