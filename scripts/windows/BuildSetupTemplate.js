@@ -36,6 +36,7 @@ const valuesToReplace = {
     AppExecutableName: executableName,
     AppSetupExecutableName: `${prodName}-${version}-${buildFolderPrefix}win`,
     Version: version,
+    SetupIconFile: path.join(__dirname, "..", "..", "assets", "images", "oni2.ico"),
     SourcePath: path.join(__dirname, "..", "..", "_release", `win32`, "*"),
     WizardImageFilePath: path.join(__dirname, "setup", "Onivim2_128.bmp"),
     WizardSmallImageFilePath: path.join(__dirname, "setup", "Onivim2_54.bmp"),
