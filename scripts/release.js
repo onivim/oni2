@@ -91,7 +91,8 @@ if (process.platform == "linux") {
       CFBundleVersion: "0.01",
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
-      CFBundleExecutable: "Oni2"
+      CFBundleExecutable: "Oni2",
+      NSHighResolutionCapable: true,
   };
 
   fs.mkdirpSync(libsDirectory);
