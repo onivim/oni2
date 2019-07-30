@@ -1,0 +1,28 @@
+{
+  "docs": {
+    "Getting Started": [
+      "getting-started/why-onivim",
+      "getting-started/installation",
+      "getting-started/vim-differences",
+      "getting-started/modal-editing-101"
+    ],
+    "Basic Usage": [
+      "using-onivim/moving-in-onivim",
+      "using-onivim/editing-and-deleting",
+      "using-onivim/visual-mode",
+      "using-onivim/working-with-files",
+      "using-onivim/configuration"
+    ],
+    "Advanced Usage": [
+    ],
+    "For Developers": [
+      "for-developers/building",
+      "for-developers/contributing"
+    ],
+    "Other": [
+      "other/faq",
+      "other/motivation",
+      "other/resources"
+    ]
+  }
+}
