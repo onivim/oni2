@@ -258,7 +258,7 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   | CursorMove(b) => {
       /* If the cursor moved, make sure we're snapping to the top line */
       /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
-      ...scrollToLine(view, view.lastTopLine, metrics),
+      ...scrollToLine(view, Index.toInt1(view.lastTopLine), metrics),
       cursorPosition: b,
     }
   | SelectionChanged(selection) => {...view, selection}
