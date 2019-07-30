@@ -36,6 +36,12 @@ let create = setItems => {
       command: () => Actions.Command("view.splitHorizontal"),
       icon: None,
     },
+    {
+      category: Some("View"),
+      name: "Toggle Zen Mode",
+      command: () => Actions.ToggleZenMode,
+      icon: None,
+    },
   ];
 
   setItems(commands);

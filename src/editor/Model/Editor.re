@@ -16,8 +16,8 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
-    lastTopLine: 0,
-    lastLeftCol: 0,
+    lastTopLine: Index.ZeroBasedIndex(0),
+    lastLeftCol: Index.OneBasedIndex(0),
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -44,6 +44,14 @@ type scrollbarMetrics = {
 /*   pixelWidth: int, */
 /*   pixelHeight: int, */
 /* }; */
+
+let pixelPositionToLineColumn =
+    (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
+  let line = int_of_float((pixelY +. view.scrollY) /. metrics.lineHeight);
+  let column =
+    int_of_float((pixelX +. view.scrollX) /. metrics.characterWidth);
+  (line, column);
+};
 
 let getVisibleView = (metrics: EditorMetrics.t) =>
   int_of_float(float_of_int(metrics.pixelHeight) /. metrics.lineHeight);
@@ -115,7 +123,10 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  {...scrollTo(view, scrollAmount, metrics), lastTopLine: line};
+  {
+    ...scrollTo(view, scrollAmount, metrics),
+    lastTopLine: Index.ZeroBasedIndex(line),
+  };
 };
 
 let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
@@ -163,7 +174,10 @@ let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
 
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
-  {...scrollToHorizontal(view, scrollAmount, metrics), lastLeftCol: column};
+  {
+    ...scrollToHorizontal(view, scrollAmount, metrics),
+    lastLeftCol: Index.ZeroBasedIndex(column),
+  };
 };
 
 let scroll = (view: t, scrollDeltaY, metrics) => {
@@ -241,7 +255,12 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) => {...view, cursorPosition: b}
+  | CursorMove(b) => {
+      /* If the cursor moved, make sure we're snapping to the top line */
+      /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
+      ...scrollToLine(view, Index.toInt1(view.lastTopLine), metrics),
+      cursorPosition: b,
+    }
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorScroll(scrollY) => scroll(view, scrollY, metrics)

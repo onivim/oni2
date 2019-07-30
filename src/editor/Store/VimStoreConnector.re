@@ -114,7 +114,19 @@ let start = (getState: unit => Model.State.t) => {
 
   let _ =
     Vim.Window.onSplit((splitType, buf) => {
-      Log.info("Vim.Window.onSplit");
+      /* If buf wasn't specified, use the filepath from the current buffer */
+      let buf =
+        switch (buf) {
+        | "" =>
+          switch (Vim.Buffer.getFilename(Vim.Buffer.getCurrent())) {
+          | None => ""
+          | Some(v) => v
+          }
+        | v => v
+        };
+
+      Log.info("Vim.Window.onSplit: " ++ buf);
+
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
@@ -438,9 +450,12 @@ let start = (getState: unit => Model.State.t) => {
         let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
           Vim.Cursor.setPosition(
             Core.Types.Index.toInt1(editor.cursorPosition.line),
-            Core.Types.Index.toInt1(editor.cursorPosition.character),
+            Core.Types.Index.toInt0(editor.cursorPosition.character),
           );
-          Vim.Window.setTopLeft(editor.lastTopLine, editor.lastLeftCol);
+          Vim.Window.setTopLeft(
+            Core.Types.Index.toInt1(editor.lastTopLine),
+            Core.Types.Index.toInt0(editor.lastLeftCol),
+          );
         };
 
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */

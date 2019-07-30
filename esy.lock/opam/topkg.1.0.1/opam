@@ -8,10 +8,9 @@ dev-repo: "git+http://erratique.ch/repos/topkg.git"
 bug-reports: "https://github.com/dbuenzli/topkg/issues"
 tags: ["packaging" "ocamlbuild" "org:erratique"]
 depends: [
-  "ocaml" {>= "4.01.0"}
+  "ocaml" {>= "4.03.0"}
   "ocamlfind" {build & >= "1.6.1"}
-  "ocamlbuild"
-  "result" ]
+  "ocamlbuild" ]
 build: [[
   "ocaml" "pkg/pkg.ml" "build"
           "--pkg-name" name
@@ -44,6 +43,6 @@ Topkg-care is distributed under the ISC license it depends on
 [webbrowser]: http://erratique.ch/software/webbrowser
 """
 url {
-src: "http://erratique.ch/software/topkg/releases/topkg-1.0.0.tbz"
-checksum: "md5=e3d76bda06bf68cb5853caf6627da603"
+archive: "http://erratique.ch/software/topkg/releases/topkg-1.0.1.tbz"
+checksum: "16b90e066d8972a5ef59655e7c28b3e9"
 }

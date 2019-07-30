@@ -30,5 +30,18 @@ let createElement = (~state: State.t, ~children as _, ()) =>
     let style =
       editorViewStyle(theme.colors.background, theme.colors.foreground);
 
-    (hooks, <View style> <EditorLayoutView state /> </View>);
+    if (state.zenMode) {
+      (
+        hooks,
+        <View style>
+          <EditorGroupView
+            state
+            windowId={state.windowManager.activeWindowId}
+            editorGroupId={state.editorGroups.activeId}
+          />
+        </View>,
+      );
+    } else {
+      (hooks, <View style> <EditorLayoutView state /> </View>);
+    };
   });

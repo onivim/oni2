@@ -77,14 +77,15 @@ type t =
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
+  | ToggleZenMode
   | Noop
 and editor = {
   editorId: int,
   bufferId: int,
   scrollX: float,
   scrollY: float,
-  lastTopLine: int,
-  lastLeftCol: int,
+  lastTopLine: Index.t,
+  lastLeftCol: Index.t,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*

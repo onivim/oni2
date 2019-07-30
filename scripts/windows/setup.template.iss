@@ -14,12 +14,15 @@ DefaultDirName={pf}\{{AppName}}
 DefaultGroupName={{AppName}}
 UninstallDisplayIcon={app}\{{AppExecutableName}}
 Compression=zip
+SetupIconFile={{SetupIconFile}}
 SolidCompression=yes
 OutputBaseFilename={{AppSetupExecutableName}}
 WizardImageFile={{WizardImageFilePath}}
 WizardImageStretch=no
 WizardSmallImageFile={{WizardSmallImageFilePath}}
 ChangesAssociations=yes
+ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64
 
 [Files]
 Source: "{{SourcePath}}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs

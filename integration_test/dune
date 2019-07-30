@@ -1,6 +1,7 @@
 (executables
     (names InsertModeTest
            RegressionCommandLineNoCompletionTest
+           RegressionVspEmpty
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -17,6 +18,7 @@
         run-tests.sh
         InsertModeTest.exe
         RegressionCommandLineNoCompletionTest.exe
+        RegressionVspEmpty.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
