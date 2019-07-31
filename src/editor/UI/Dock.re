@@ -6,7 +6,7 @@ open Oni_Model;
 
 let component = React.component("Dock");
 
-let button = Style.[marginVertical(8)];
+let button = Style.[marginVertical(24)];
 
 let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   let action =
