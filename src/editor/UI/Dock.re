@@ -6,7 +6,7 @@ open Oni_Model;
 
 let component = React.component("Dock");
 
-let button = Style.[marginVertical(8)];
+let button = Style.[marginVertical(24)];
 
 let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   let action =
@@ -34,13 +34,6 @@ let createElement = (~children as _, ~state: State.t, ()) =>
             backgroundColor=bg
             color=Colors.white
             icon=FontAwesome.file
-          />
-        </Clickable>
-        <Clickable style=button>
-          <FontIcon
-            backgroundColor=bg
-            color=Colors.white
-            icon=FontAwesome.search
           />
         </Clickable>
       </View>,
