@@ -74,7 +74,7 @@ if (process.platform == "linux") {
   const contentsDirectory = path.join(appDirectory, "Contents");
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
-  const libsDirectory = path.join(contentsDirectory, "libs");
+  const libsDirectory = path.join(contentsDirectory, "Frameworks");
   const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
   const textmateServiceDestDirectory = path.join(contentsDirectory, "textmate_service");
 

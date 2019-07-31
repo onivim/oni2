@@ -34,6 +34,6 @@ notarize_uuid=$(xcrun altool --notarize-app --primary-bundle-id "${uuid}" --user
 		echo "Staple success!"
 
 		echo "Checking gatekeeper conformance"
-		spctl -a -t install -vv "_publish/Onivim2-$SHORT_COMMIT_ID.dmg"
+		spctl --assess --verbose "_publish/Onivim2-$SHORT_COMMIT_ID.dmg"
 		echo "Complete!"
 	fi
