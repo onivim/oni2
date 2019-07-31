@@ -10,7 +10,7 @@ We appreciate aspects of these editors, as we've taken ideas and inspiration fro
 
 ## Principles
 
-Onivim 2 is our ideal code editor - in our vision, the fastest way to go from thought to code. 
+Onivim 2 is our ideal code editor - in our vision, the fastest way to go from thought to code. We're building it with the following principles in mind: 
 
 ### Performant
 
@@ -18,16 +18,16 @@ We built Onivim 2 from the ground up to be performant. Our ideal code editor sta
 
 The current trend of code editors is to build them on a web technology stack - which, in our mind, compromises the user experience. The fact is, hybrid applications built with tools like Electron will always be at a deficit compared to a native solution.
 
-Our 'secret sauce' to a performant, native foundation, while enjoying the productivity of the web stack is [ReasonML](https://reasonml.github.io) (which is built on [OCaml](https://ocaml.org) and [Revery](https://outrunlabs.com/revery). We believe a code editor is the perfect environment to put this tech to the test!
+Our 'secret sauce' to a performant, native foundation, while enjoying the productivity of the web stack is [ReasonML](https://reasonml.github.io) (which is built on [OCaml](https://ocaml.org) and [Revery](https://outrunlabs.com/revery)). We believe a code editor is the perfect environment to put this tech to the test!
 
 ### Modal
 
 Our ideal code editor is modal - allowing you to be __maximally productive__ using __just the keyboard__. There is a learning curve to modal editing, to be sure, but once you've learned it,
 it's tough to go back!
 
-Non-modal text editors, like Atom or VSCode, are optimized for _text insertion_. However, most of our work as developers is actually _navigating_ and _editing_ source code files. Modal editing provides a grammar for quickly navigating files.
+Non-modal text editors, like Atom or VSCode, are optimized for _text insertion_. However, most of our work as developers is actually _navigating_ and _editing_ source code files. Modal editing provides a grammar for navigating and editing using just the keyboard.
 
-As an example, the `dw` command in Vim is not just about deleting a word - it's actually a combination of a verb (`d` -> `delete`) + a motion (`w` ->`word`). There are many such operators and motions in Vim's modal editing language, and they can be combined in interesting ways - once you learn this, and build that muscle memory, you can edit text at the speed of thought.
+As an example, the `dw` command in Vim is not just about deleting a word - it's actually a combination of a _verb_ (`d` -> `delete`) and a _motion_ (`w` ->`word`). There are many such operators and motions in Vim's modal editing language, and they can be combined in interesting ways - once you learn this, and build that muscle memory, you can navigate and edit code as quickly as your fingers can type!
 
 ### Modern
 
