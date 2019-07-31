@@ -18,7 +18,7 @@ Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2
 
 Onivim 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
-Onivim 2 uses [libvim](https://github.com/onivim/libvim) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning, eventually, complete support for VSCode extensions and configuration.
+Onivim 2 uses [`libvim`](https://github.com/onivim/libvim) to manage buffers and provide authentic modal editing, and features a fast, native front-end. In addition, Onivim 2 leverages the VSCode Extension Host process in its entirety - meaning, eventually, complete support for VSCode extensions and configuration.
 
 ### Goals
 
@@ -33,15 +33,14 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 ### Non-goals
 
-- __VimL compatibility__ - we may not support all features of VimL plugins / configuration.
-
-### See also
-
-See also the document about motivations, software architecture, the model for sustainability and risks : https://github.com/onivim/oni2/blob/master/docs/MOTIVATION.md
+- __100% VimL compatibility__ - we may not support all features of VimL plugins / configuration.
 
 ## Documentation
 
-Coming soon!
+- Onivim User Manual
+  - [Getting Started](https://onivim.github.io/docs/getting-started/why-onivim)
+  - [Basic Usage](https://onivim.github.io/docs/using-onivim/moving-in-onivim)
+  - [FAQ](https://onivim.github.io/docs/other/faq)
 
 ## Contributing
 
@@ -49,8 +48,8 @@ We'd :heart: help building Onivim 2!
 
 If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
 
-- [How to build and run from source](./CONTRIBUTING.md#build-and-run)
-- [Pull Request Guidelines](./CONTRIBUTING.md#pull-requests)
+- [How to build and run from source](https://onivim.github.io/docs/for-developers/building)
+- [Pull Request Guidelines](https://onivim.github.io/docs/for-developers/contributing)
 
 Please also see our [Code of Conduct](./CODE_OF_CONDUCT.md).
 
