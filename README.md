@@ -46,7 +46,7 @@ The goal of this project is to build an editor that doesn't exist today - the _s
 
 We'd :heart: help building Onivim 2!
 
-If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](./CONTRIBUTING.md) document, which includes the following:
+If you are interested in fixing issues and contributing directly to the code, please see the [How to Contribute](https://onivim.github.io/docs/for-developers/contributing) document, which includes the following:
 
 - [How to build and run from source](https://onivim.github.io/docs/for-developers/building)
 - [Pull Request Guidelines](https://onivim.github.io/docs/for-developers/contributing)
