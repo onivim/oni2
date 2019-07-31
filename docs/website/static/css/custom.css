@@ -25,3 +25,12 @@
     text-transform: uppercase;
     font-weight: 600 !important;
 }
+
+.post a {
+    color: #61afef;
+    opacity: 0.9;
+}
+
+.post a:hover {
+    opacity: 1.0;
+}
