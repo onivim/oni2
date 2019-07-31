@@ -104,9 +104,9 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  copy(extensionsSourceDirectory, contentsDirectory);
-  copy(textmateServiceSourceDirectory, contentsDirectory);
-  copy(camomilePath, contentsDirectory);
+  copy(extensionsSourceDirectory, resourcesDirectory);
+  copy(textmateServiceSourceDirectory, resourcesDirectory);
+  copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   

@@ -22,9 +22,25 @@ type t = {
   [@key "rg"]
   rgPath: string,
   version: [@default "Unknown"] string,
+  fontsPath: [@default None] option(string),
+  imagesPath: [@default None] option(string),
 };
 
 let version = "0.2.0";
+
+let getFontPath = (setup: t, font) => {
+  switch (setup.fontsPath) {
+  | None => font
+  | Some(v) => v ++ font;
+  }
+};
+
+let getImagePath = (setup: t, image) => {
+  switch (setup.imagesPath) {
+  | None => image
+  | Some(v) => v ++ image;
+  }
+}
 
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
@@ -38,16 +54,20 @@ let default = () => {
       developmentExtensionsPath: None,
       extensionHostPath: "",
       rgPath: execDir ++ "rg.exe",
+      fontsPath: None,
+      imagesPath: None,
       version,
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
-      camomilePath: execDir ++ "../camomile",
-      textmateServicePath: execDir ++ "../textmate_service/lib/src/index.js",
-      bundledExtensionsPath: execDir ++ "../extensions",
+      camomilePath: execDir ++ "../Resources/camomile",
+      textmateServicePath: execDir ++ "../Resources/textmate_service/lib/src/index.js",
+      bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",
       rgPath: execDir ++ "rg",
+      fontsPath: Some(execDir ++ "../Resources/fonts"),
+      imagesPath: Some(execDir ++ "../Resources/images"),
       version,
     }
   | _ => {
@@ -58,6 +78,8 @@ let default = () => {
       developmentExtensionsPath: None,
       extensionHostPath: "",
       rgPath: execDir ++ "rg",
+      fontsPath: None,
+      imagesPath: None,
       version,
     }
   };

@@ -23,22 +23,23 @@ Log.debug("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
+
+  Log.debug("Initializing setup.");
+  let setup = Core.Setup.init();
+  Log.debug("Startup: Parsing CLI options");
+  
   Log.debug("Init");
   let w =
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
           ~maximized=false,
-          ~icon=Some("logo.png"),
+          ~icon=Some(Core.Setup.getImagePath(setup, "logo.png")),
           (),
         ),
       app,
       "Oni2",
     );
-
-  Log.debug("Initializing setup.");
-  let setup = Core.Setup.init();
-  Log.debug("Startup: Parsing CLI options");
 
   Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
   switch (Sys.chdir(cliOptions.folder)) {
@@ -70,6 +71,8 @@ let init = app => {
       (),
     );
   Log.debug("Startup: StoreThread started!");
+
+  let getFontPath = Core.Setup.getFontPath(setup);
 
   GlobalContext.set({
     getState: () => currentState^,
@@ -154,7 +157,7 @@ let init = app => {
     );
   };
 
-  setFont("FiraCode-Regular.ttf", 14);
+  setFont(getFontPath("FiraCode-Regular.ttf"), 14);
 
   let commands = Core.Keybindings.get();
 
