@@ -10,7 +10,10 @@ While we're developing Onivim 2, the latest builds are available at our [early a
 
 1. Download `Onivim2` for macOS.
 2. Double-click on the downloaded archive to expand the contents.
-3. Drag `Onivim2.App` to the `Applications` Folder, which will make it available in `Launchpad`.
+3. Right-click on `Onivim2` and select `Open`.
+
+> __NOTE:__ Due to [#501](https://github.com/onivim/oni2/issues/501), a GateKeeper warning will show - we're working through it. In the meantime, you can press 'Open' to run Onivim 2.
+
 4. _OPTIONAL:_ Add Onivim2 to your Dock by right-clicking on the icon to bring up the context menu, and choosing __Options, Keep in Dock.__
 
 ## Windows (x64)
