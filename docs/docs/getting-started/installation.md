@@ -8,9 +8,10 @@ While we're developing Onivim 2, the latest builds are available at our [early a
 
 ## OSX (10.13+)
 
-1. Download `Onivim2.dmg`.
-2. Double-click on the downloaded DMG to expand.
+1. Download `Onivim2` for macOS.
+2. Double-click on the downloaded archive to expand the contents.
 3. Drag `Onivim2.App` to the `Applications` Folder, which will make it available in `Launchpad`.
+4. _OPTIONAL:_ Add Onivim2 to your Dock by right-clicking on the icon to bring up the context menu, and choosing __Options, Keep in Dock.__
 
 ## Windows (x64)
 
