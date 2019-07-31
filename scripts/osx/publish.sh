@@ -23,10 +23,10 @@ else
 	security find-identity -v
 	# Need to sign the dylib files directly, as they aren't
 	# picked up by --deep
-	codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App/Contents/libs/*.dylib --options runtime
+	codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App/Contents/libs/*.dylib
 
 	echo "Starting codesign..."
-	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App --options runtime
+	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App
 	echo "Onivim2.App codesign complete!"
 
 	# Validate
@@ -48,6 +48,6 @@ then
 	echo "Not signing DMG"
 else
 	echo "Code signing DMG"
-	codesign --verbose --sign "Outrun Labs, LLC" _publish/Onivim2-$SHORT_COMMIT_ID.dmg --options runtime
+	codesign --verbose --sign "Outrun Labs, LLC" _publish/Onivim2-$SHORT_COMMIT_ID.dmg
 	echo "Code signing DMG complete!"
 fi
