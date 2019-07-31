@@ -23,7 +23,7 @@ chmod +x _staging/appimagetool-x86_64.AppImage
 cp scripts/linux/Onivim2.desktop _release/linux/Onivim2.desktop
 cp assets/images/icon512.png _release/linux/Onivim2.png
 
-./_staging/linuxdeploy-x86_64.AppImage -e _release/linux/bin/Oni2_editor --appdir _release/Onivim2.AppDir --library=$FREETYPE2_LIB_PATH --library=$HARFBUZZ_LIB_PATH -d _release/linux/Onivim2.desktop -i _release/linux/Onivim2.png
+./_staging/linuxdeploy-x86_64.AppImage -e _release/linux/bin/Oni2_editor --appdir _release/Onivim2.AppDir --library=$(ldconfig -p | grep x86-64 | grep -oP '/[^\s]+/libfreetype\.so\.\d+$' | head -n1) --library=$(ldconfig -p | grep x86-64 | grep -oP '/[^\s]+/libharfbuzz\.so\.\d+$' | head -n1) -d _release/linux/Onivim2.desktop -i _release/linux/Onivim2.png
 
 cp scripts/linux/Onivim2.desktop _release/Onivim2.AppDir/Onivim2.desktop
 cp scripts/linux/AppRun _release/Onivim2.AppDir/AppRun
