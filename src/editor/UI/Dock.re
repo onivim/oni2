@@ -36,13 +36,6 @@ let createElement = (~children as _, ~state: State.t, ()) =>
             icon=FontAwesome.file
           />
         </Clickable>
-        <Clickable style=button>
-          <FontIcon
-            backgroundColor=bg
-            color=Colors.white
-            icon=FontAwesome.search
-          />
-        </Clickable>
       </View>,
     );
   });
