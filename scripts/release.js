@@ -74,7 +74,7 @@ if (process.platform == "linux") {
   const contentsDirectory = path.join(appDirectory, "Contents");
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
-  const libsDirectory = path.join(contentsDirectory, "libs");
+  const frameworksDirectory = path.join(contentsDirectory, "Frameworks");
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
@@ -93,7 +93,7 @@ if (process.platform == "linux") {
       NSHighResolutionCapable: true,
   };
 
-  fs.mkdirpSync(libsDirectory);
+  fs.mkdirpSync(frameworksDirectory);
   fs.mkdirpSync(resourcesDirectory);
 
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
@@ -112,7 +112,7 @@ if (process.platform == "linux") {
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
-  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${libsDirectory}" -cd`);
+  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
   const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");
