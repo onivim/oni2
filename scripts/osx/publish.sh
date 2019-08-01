@@ -23,7 +23,7 @@ else
 	security find-identity -v
 
 	echo "Starting codesign..."
-	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App --options runtime
+	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App --options runtime --entitlements _release/entitlements.plist
 	echo "Onivim2.App codesign complete!"
 
 	# Validate
