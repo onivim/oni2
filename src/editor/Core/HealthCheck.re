@@ -22,11 +22,13 @@ let checks = [
   (
     "Verify node executable can execute simple script",
     (setup: Setup.t) => {
-      let ret = Rench.ChildProcess.spawnSync(setup.nodePath, [|"-e", "console.log(\"test\")"|]);
-      ret.stdout
-      |> String.trim
-      |> String.equal("test");
-    }
+      let ret =
+        Rench.ChildProcess.spawnSync(
+          setup.nodePath,
+          [|"-e", "console.log(\"test\")"|],
+        );
+      ret.stdout |> String.trim |> String.equal("test");
+    },
   ),
   (
     "Verify rg executable",
