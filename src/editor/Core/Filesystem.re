@@ -265,7 +265,11 @@ let createOniConfiguration = (~configDir, ~file) => {
   | None => ()
   };
 
-  close_out(configFile) |> return;
+
+  switch(close_out(configFile)) {
+    | exception(Sys_error(msg)) => error("Failed whilst making config %s, due to %s", file, msg)
+    | v => return(v)
+  }
 };
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));
