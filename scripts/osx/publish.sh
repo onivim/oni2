@@ -21,9 +21,6 @@ else
 	echo "Checking identities..."
 
 	security find-identity -v
-	# Need to sign the dylib files directly, as they aren't
-	# picked up by --deep
-	codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App/Contents/libs/*.dylib
 
 	echo "Starting codesign..."
 	codesign --deep --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.App
