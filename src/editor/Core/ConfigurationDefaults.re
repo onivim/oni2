@@ -13,7 +13,27 @@ let getDefaultConfigString = configName =>
   "editor.minimap.enabled": true,
   "editor.insertSpaces": false,
   "editor.indentSize": 4,
-  "editor.tabSize": 4
+  "editor.tabSize": 4,
+  "editor.DetectIndentation": true,
+  "editor.LargeFileOptimizations": true,
+  "editor.matchBrackets": true,
+  "editor.minimap.enabled": true,
+  "editor.minimap.showSlider": true,
+  "editor.minimap.maxColumn": 120,
+  "editor.lineNumbers": "on",
+  "editor.insertSpaces": false,
+  "editor.indentSize": 4,
+  "editor.tabSize": 4,
+  "editor.renderIndentGuides": true,
+  "editor.highlightActiveIndentGuide": true,
+  "editor.renderWhitespace": "all",
+  "workbench.activityBar.visible": true,
+  "workbench.editor.showTabs": true,
+  "workbench.sideBar.visible": true,
+  "workbench.statusBar.visible": true,
+  "workbench.iconTheme": "vs-seti",
+  "files.exclude": ["_esy", "node_modules"],
+  "editor.zenMode.hideTabs": true
 }
 |},
     )

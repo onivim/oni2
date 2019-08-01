@@ -5,30 +5,19 @@ open Oni_Core.ConfigurationDefaults;
 module Configuration = Oni_Core.Configuration;
 module ConfigurationParser = Oni_Core.ConfigurationParser;
 
-describe("ConfigurationDefaults", ({test, _}) => {
-    test("configuration.json matches", ({expect}) => {
-      let configJsonString =
-        switch (getDefaultConfigString("configuration.json")) {
-        | Some(c) => c
-        | None => ""
-        };
+describe("ConfigurationDefaults", ({test, _}) =>
+  test("configuration.json matches", ({expect}) => {
+    let configJsonString =
+      switch (getDefaultConfigString("configuration.json")) {
+      | Some(c) => c
+      | None => ""
+      };
 
-      switch(ConfigurationParser.ofString(configJsonString)) {
-          | Error(_) => expect.int(1).toBe(2)
-          | Ok(_) => expect.int(1).toBe(1)
-      }
-    });
+    let defaultConfig = Oni_Core.Configuration.default;
 
-    test("keybindings.json matches", ({expect}) => {
-      let configJsonString =
-        switch (getDefaultConfigString("keybindings.json")) {
-        | Some(c) => c
-        | None => ""
-        };
-
-      switch(ConfigurationParser.ofString(configJsonString)) {
-          | Error(_) => expect.int(1).toBe(2)
-          | Ok(_) => expect.int(1).toBe(1)
-      }
-    });
-});
+    switch (ConfigurationParser.ofString(configJsonString)) {
+    | Error(_) => expect.int(1).toBe(2)
+    | Ok(loadedConfig) => expect.equal(defaultConfig, loadedConfig)
+    };
+  })
+);
