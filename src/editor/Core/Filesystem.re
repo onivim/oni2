@@ -255,11 +255,7 @@ let copy = (source, dest) =>
   );
 
 let createOniConfiguration = (~configDir, ~file) => {
-  open Utility;
-
-  // let assetDir = Revery.Environment.getWorkingDirectory();
-  // let configurationPath = join([assetDir, "assets", "configuration", file]);
-  let userConfigPath = join([configDir, file]);
+  let userConfigPath = Utility.join([configDir, file]);
 
   let configFile = open_out(userConfigPath);
   let configString = ConfigurationValues.getDefaultConfigString(file);
@@ -268,8 +264,8 @@ let createOniConfiguration = (~configDir, ~file) => {
   | Some(c) => output_string(configFile, c)
   | None => ()
   };
+
   close_out(configFile) |> return;
-  // Printf.fprintf(configFile, "%s", ConfigurationValues.defaultConfigString) |> return;
 };
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));
