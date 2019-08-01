@@ -4,7 +4,6 @@
  * Configuration defaults in string form to generate default configuration from.
  */
 
-
 let getDefaultConfigString = configName =>
   switch (configName) {
   | "configuration.json" =>

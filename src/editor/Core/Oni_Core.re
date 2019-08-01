@@ -7,6 +7,7 @@
 module CamomileBundled = CamomileBundled;
 module Cli = Cli;
 module Configuration = Configuration;
+module ConfigurationDefaults = ConfigurationDefaults;
 module ConfigurationParser = ConfigurationParser;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
