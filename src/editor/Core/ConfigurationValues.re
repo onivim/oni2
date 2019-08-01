@@ -57,10 +57,3 @@ let default = {
   filesExclude: ["node_modules", "_esy"],
   zenModeHideTabs: true,
 };
-
-let getBundledConfigPath = () => {
-  Rench.Path.join(
-    Rench.Environment.getExecutingDirectory(),
-    "configuration.json",
-  );
-};

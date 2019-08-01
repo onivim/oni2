@@ -221,7 +221,6 @@ describe("Textmate Service", ({test, _}) => {
 
         switch (tokenizeResult, colorMap^) {
         | (Some(v), Some(cm)) =>
-          Console.error(v.colors);
           expect.int(List.length(v.colors)).toBe(6);
           let firstChild = List.hd(v.colors);
           let firstColor =

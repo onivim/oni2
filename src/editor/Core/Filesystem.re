@@ -255,13 +255,21 @@ let copy = (source, dest) =>
   );
 
 let createOniConfiguration = (~configDir, ~file) => {
-  open Utility;
+  let userConfigPath = Utility.join([configDir, file]);
 
-  let assetDir = Revery.Environment.getWorkingDirectory();
-  let configurationPath = join([assetDir, "assets", "configuration", file]);
-  let userConfigPath = join([configDir, file]);
+  let configFile = open_out(userConfigPath);
+  let configString = ConfigurationDefaults.getDefaultConfigString(file);
 
-  copy(configurationPath, userConfigPath);
+  switch (configString) {
+  | Some(c) => output_string(configFile, c)
+  | None => ()
+  };
+
+  switch (close_out(configFile)) {
+  | exception (Sys_error(msg)) =>
+    error("Failed whilst making config %s, due to %s", file, msg)
+  | v => return(v)
+  };
 };
 
 let getPath = (dir, file) => return(Utility.join([dir, file]));

@@ -69,8 +69,6 @@ describe("WindowTreeLayout", ({describe, _}) =>
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
-      List.iter(i => prerr_endline(WindowTreeLayout.show(i)), layoutItems);
-
       expect.bool(
         [
           {split: split2, width: 200, height: 100, x: 0, y: 0},

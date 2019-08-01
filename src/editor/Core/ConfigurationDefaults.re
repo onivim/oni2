@@ -1,3 +1,45 @@
+/*
+ * ConfigurationDefaults.re
+ *
+ * Configuration defaults in string form to generate default configuration from.
+ */
+
+let getDefaultConfigString = configName =>
+  switch (configName) {
+  | "configuration.json" =>
+    Some(
+      {|
+{
+  "editor.minimap.enabled": true,
+  "editor.insertSpaces": false,
+  "editor.indentSize": 4,
+  "editor.tabSize": 4,
+  "editor.DetectIndentation": true,
+  "editor.LargeFileOptimizations": true,
+  "editor.matchBrackets": true,
+  "editor.minimap.enabled": true,
+  "editor.minimap.showSlider": true,
+  "editor.minimap.maxColumn": 120,
+  "editor.lineNumbers": "on",
+  "editor.insertSpaces": false,
+  "editor.indentSize": 4,
+  "editor.tabSize": 4,
+  "editor.renderIndentGuides": true,
+  "editor.highlightActiveIndentGuide": true,
+  "editor.renderWhitespace": "all",
+  "workbench.activityBar.visible": true,
+  "workbench.editor.showTabs": true,
+  "workbench.sideBar.visible": true,
+  "workbench.statusBar.visible": true,
+  "workbench.iconTheme": "vs-seti",
+  "files.exclude": ["_esy", "node_modules"],
+  "editor.zenMode.hideTabs": true
+}
+|},
+    )
+  | "keybindings.json" =>
+    Some(
+      {|
 {
     "bindings": [
         { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
@@ -19,3 +61,7 @@
         { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]}
     ]
 }
+|},
+    )
+  | _ => None
+  };
