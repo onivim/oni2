@@ -33,7 +33,8 @@ let checks = [
   ),
   (
     "Verify bundled font exists",
-    (setup: Setup.t) => Sys.file_exists("FiraCode-Regular.ttf"),
+    (setup: Setup.t) =>
+      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
   ),
 ];
 
