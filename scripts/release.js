@@ -75,8 +75,6 @@ if (process.platform == "linux") {
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
   const frameworksDirectory = path.join(contentsDirectory, "Frameworks");
-  const extensionsDestDirectory = path.join(contentsDirectory, "extensions");
-  const textmateServiceDestDirectory = path.join(contentsDirectory, "textmate_service");
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
@@ -96,17 +94,15 @@ if (process.platform == "linux") {
   };
 
   fs.mkdirpSync(frameworksDirectory);
-  fs.mkdirpSync(extensionsDestDirectory);
-  fs.mkdirpSync(textmateServiceDestDirectory);
   fs.mkdirpSync(resourcesDirectory);
 
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  copy(extensionsSourceDirectory, contentsDirectory);
-  copy(textmateServiceSourceDirectory, contentsDirectory);
-  copy(camomilePath, contentsDirectory);
+  copy(extensionsSourceDirectory, resourcesDirectory);
+  copy(textmateServiceSourceDirectory, resourcesDirectory);
+  copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   
