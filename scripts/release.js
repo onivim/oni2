@@ -120,8 +120,9 @@ if (process.platform == "linux") {
     const fileDest = path.join(resourcesDirectory, file);
     console.log(`Moving file from ${fileSrc} to ${fileDest}.`);
     fs.moveSync(fileSrc, fileDest);
-    console.log(`Symlinking ${fileDest} -> ${fileSrc}`);
-    fs.ensureSymlinkSrc(fileDest, fileSrc);
+    const symlinkDest = path.join("../Resources", file);
+    console.log(`Symlinking ${symlinkDest} -> ${fileSrc}`);
+    fs.ensureSymlink(symlinkDest, fileSrc);
   });
   
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
