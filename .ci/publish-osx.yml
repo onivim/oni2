@@ -1,7 +1,5 @@
-# Cross-platform set of build steps for building esy projects
-
 steps:
-  - script: scripts/osx/publish.sh
+  - script: scripts/osx/package.sh
   - task: PublishBuildArtifacts@1
     displayName: "Release Artifact: Darwin"
     inputs:
