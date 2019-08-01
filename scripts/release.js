@@ -112,7 +112,7 @@ if (process.platform == "linux") {
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
-  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -cd`);
+  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
   const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");
