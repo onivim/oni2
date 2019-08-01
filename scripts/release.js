@@ -68,6 +68,8 @@ if (process.platform == "linux") {
   const executables = [
     "Oni2",
     "Oni2_editor",
+    "rg",
+    "node"
   ];
 
   const appDirectory = path.join(releaseDirectory, "Onivim2.App");
@@ -99,11 +101,33 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
+  
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
+
+  // Remove setup.json prior to remapping bundled files,
+  // so it doesn't get symlinked.
+  fs.removeSync(path.join(binaryDirectory, "setup.json"));
+
+  // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
+  // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
+  const filesToBeMoved = fs.readdirSync(binaryDirectory).filter((f) => {
+    console.log("- Checking executable: " + f);
+    return executables.indexOf(f) == -1;
+  });
+
+  filesToBeMoved.forEach((file) => {
+    const fileSrc = path.join(binaryDirectory, file);
+    const fileDest = path.join(resourcesDirectory, file);
+    console.log(`Moving file from ${fileSrc} to ${fileDest}.`);
+    fs.moveSync(fileSrc, fileDest);
+    const symlinkDest = path.join("../Resources", file);
+    console.log(`Symlinking ${symlinkDest} -> ${fileSrc}`);
+    fs.ensureSymlink(symlinkDest, fileSrc);
+  });
   
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
@@ -151,7 +175,6 @@ if (process.platform == "linux") {
     ]
   };
   fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
-  fs.removeSync(path.join(binaryDirectory, "setup.json"));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");

@@ -15,7 +15,11 @@ ONI2_DEBUG=1 ./_unpacked/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
 echo "** Validating DMG **"
 rm -rf _unpacked
 mkdir _unpacked
+echo " - Attaching dmg...."
 sudo hdiutil attach $SYSTEM_ARTIFACTSDIRECTORY/Release_Darwin/Onivim2-$SHORT_COMMIT_ID.dmg
+echo " - DMG attached! Copying..."
 cp -rf "/Volumes/Onivim 2"/*.App _unpacked
+echo " - Copy completed. Detaching DMG..."
 sudo hdiutil detach "/Volumes/Onivim 2"
+echo "DMG detached - running health check"
 ONI2_DEBUG=1 ./_unpacked/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth

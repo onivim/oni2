@@ -42,6 +42,11 @@ let checks = [
     "Verify bundled extensions exists",
     (setup: Setup.t) => Sys.is_directory(setup.bundledExtensionsPath),
   ),
+  (
+    "Verify bundled font exists",
+    _ =>
+      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
+  ),
 ];
 
 let run = () => {
