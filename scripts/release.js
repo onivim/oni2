@@ -95,7 +95,6 @@ if (process.platform == "linux") {
 
   fs.mkdirpSync(frameworksDirectory);
   fs.mkdirpSync(resourcesDirectory);
-
   fs.writeFileSync(plistFile, require("plist").build(plistContents));
 
   // Copy bins over
@@ -113,6 +112,14 @@ if (process.platform == "linux") {
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
+
+  const entitlementsPath = path.join(releaseDirectory, "entitlements.plist");
+  const entitlementsContents = {
+      "com.apple.security.cs.allow-jit": true,
+      "com.apple.security.cs.allow-unsigned-executable-memory": true,
+      "com.apple.security.cs.disable-library-validation": true,
+  };
+  fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents));
 
   const dmgPath = path.join(releaseDirectory, "Onivim2.dmg");
   const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");
