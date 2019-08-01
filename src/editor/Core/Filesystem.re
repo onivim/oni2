@@ -258,7 +258,7 @@ let createOniConfiguration = (~configDir, ~file) => {
   let userConfigPath = Utility.join([configDir, file]);
 
   let configFile = open_out(userConfigPath);
-  let configString = ConfigurationValues.getDefaultConfigString(file);
+  let configString = ConfigurationDefaults.getDefaultConfigString(file);
 
   switch (configString) {
   | Some(c) => output_string(configFile, c)

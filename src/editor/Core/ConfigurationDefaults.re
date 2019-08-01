@@ -1,0 +1,48 @@
+/*
+ * ConfigurationDefaults.re
+ *
+ * Configuration defaults in string form to generate default configuration from.
+ */
+
+
+let getDefaultConfigString = configName =>
+  switch (configName) {
+  | "configuration.json" =>
+    Some(
+      {|
+{
+  "editor.minimap.enabled": true,
+  "editor.insertSpaces": false,
+  "editor.indentSize": 4,
+  "editor.tabSize": 4
+}
+|},
+    )
+  | "keybindings.json" =>
+    Some(
+      {|
+{
+    "bindings": [
+        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
+        { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]]},
+        { "key": "<D-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<D-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<C-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
+        { "key": "<C-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
+        { "key": "<D-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
+        { "key": "<D-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
+        { "key": "<TAB>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
+        { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
+        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]}
+    ]
+}
+|},
+    )
+  | _ => None
+  };
