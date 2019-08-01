@@ -102,11 +102,16 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
+  
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
+
+  // Remove setup.json prior to remapping bundled files,
+  // so it doesn't get symlinked.
+  fs.removeSync(path.join(binaryDirectory, "setup.json"));
 
   // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
   // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
@@ -163,7 +168,6 @@ if (process.platform == "linux") {
     ]
   };
   fs.writeFileSync(dmgJsonPath, JSON.stringify(dmgJson));
-  fs.removeSync(path.join(binaryDirectory, "setup.json"));
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
