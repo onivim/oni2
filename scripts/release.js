@@ -125,7 +125,6 @@ if (process.platform == "linux") {
   const dmgJsonPath = path.join(releaseDirectory, "appdmg.json");
   const basePath = releaseDirectory;
 
-
   const dmgJson = {
     title: "Onivim 2",
     background: path.join(imageSourceDirectory, "dmg-background.png"),
