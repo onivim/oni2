@@ -42,9 +42,9 @@ let default = () => {
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
-      camomilePath: execDir ++ "../camomile",
-      textmateServicePath: execDir ++ "../textmate_service/lib/src/index.js",
-      bundledExtensionsPath: execDir ++ "../extensions",
+      camomilePath: execDir ++ "../Resources/camomile",
+      textmateServicePath: execDir ++ "../Resources/textmate_service/lib/src/index.js",
+      bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",
       rgPath: execDir ++ "rg",
