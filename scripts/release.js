@@ -68,6 +68,8 @@ if (process.platform == "linux") {
   const executables = [
     "Oni2",
     "Oni2_editor",
+    "rg",
+    "node"
   ];
 
   const appDirectory = path.join(releaseDirectory, "Onivim2.App");
@@ -105,6 +107,22 @@ if (process.platform == "linux") {
   copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
+
+  // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
+  // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
+  const filesToBeMoved = fs.readdirSync(binaryDirectory).filter((f) => {
+    console.log("- Checking executable: " + f);
+    return executables.indexOf(f) == -1;
+  });
+
+  filesToBeMoved.forEach((file) => {
+    const fileSrc = path.join(binaryDirectory, file);
+    const fileDest = path.join(resourcesDirectory, file);
+    console.log(`Moving file from ${fileSrc} to ${fileDest}.`);
+    fs.moveSync(fileSrc, fileDest);
+    console.log(`Symlinking ${fileDest} -> ${fileSrc}`);
+    fs.ensureSymlinkSrc(fileDest, fileSrc);
+  });
   
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
