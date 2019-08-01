@@ -39,10 +39,11 @@ Once you have finished typing, you can press `Escape`, `Control+c`, or `Control+
 ### Next Steps
 
 Play around with switching between insert mode and normal mode, and when you're ready, let's dive-in to some more advanced editing:
-- [Moving in Onivim](../usage/moving-in-onivim)
-- [Editing & Deleting Text](../usage/editing-and-deleting)
-- [Visual Mode (Selection)](../usage/visual-mode)
-- [Working with Files](../usage/editing-and-deleting)
+- [Moving in Onivim](../using-onivim/moving-in-onivim)
+- [Editing & Deleting Text](../using-onivim/editing-and-deleting)
+- [Visual Mode (Selection)](../using-onivim/visual-mode)
+- [Working with Files](../using-onivim/editing-and-deleting)
+- [Configuration](../using-onivim/configuration)
 
 
 
