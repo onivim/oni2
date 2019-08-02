@@ -18,7 +18,7 @@ We built Onivim 2 from the ground up to be performant. Our ideal code editor sta
 
 The current trend of code editors is to build them on a web technology stack - which, in our mind, compromises the user experience. The fact is, hybrid applications built with tools like Electron will always be at a deficit compared to a native solution.
 
-Our 'secret sauce' to a performant, native foundation, while enjoying the productivity of the web stack is [ReasonML](https://reasonml.github.io) (which is built on [OCaml](https://ocaml.org) and [Revery](https://outrunlabs.com/revery)). We believe a code editor is the perfect environment to put this tech to the test!
+Our 'secret sauce' to a performant, native foundation, while enjoying the productivity of the web stack is [ReasonML](https://reasonml.github.io) (which is built on [OCaml](https://ocaml.org)) and [Revery](https://outrunlabs.com/revery). We believe a code editor is the perfect environment to put this tech to the test!
 
 ### Modal
 
