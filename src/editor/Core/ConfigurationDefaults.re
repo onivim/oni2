@@ -43,6 +43,8 @@ let getDefaultConfigString = configName =>
 {
     "bindings": [
         { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["editorTextFocus"]] },
+        { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["editorTextFocus"]] },
         { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
         { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
