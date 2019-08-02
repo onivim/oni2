@@ -217,7 +217,10 @@
     "revery": "github:revery-ui/revery#3f932c5",
     "reason-libvim": "github:onivim/reason-libvim#3fab519",
     "reason-fontkit": "github:revery-ui/reason-fontkit#f364c36",
-    "@opam/ocamlfind": "1.8.0"
+    "@opam/biniou": "1.2.0",
+    "@opam/ocamlfind": "1.8.0",
+    "@opam/easy-format": "1.3.1",
+    "revery": "github:revery-ui/revery#4aac33d"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
