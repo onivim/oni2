@@ -10,31 +10,27 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 {
-  "editor.minimap.enabled": true,
-  "editor.insertSpaces": false,
-  "editor.indentSize": 4,
-  "editor.tabSize": 4,
   "editor.DetectIndentation": true,
   "editor.LargeFileOptimizations": true,
+  "editor.highlightActiveIndentGuide": true,
+  "editor.indentSize": 4,
+  "editor.insertSpaces": false,
+  "editor.lineNumbers": "on",
   "editor.matchBrackets": true,
   "editor.minimap.enabled": true,
-  "editor.minimap.showSlider": true,
   "editor.minimap.maxColumn": 120,
-  "editor.lineNumbers": "on",
-  "editor.insertSpaces": false,
-  "editor.indentSize": 4,
-  "editor.tabSize": 4,
+  "editor.minimap.showSlider": true,
   "editor.renderIndentGuides": true,
-  "editor.highlightActiveIndentGuide": true,
   "editor.renderWhitespace": "all",
   "editor.rulers": [],
+  "editor.tabSize": 4,
+  "editor.zenMode.hideTabs": true,
+  "files.exclude": ["_esy", "node_modules"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
-  "workbench.sideBar.visible": true,
-  "workbench.statusBar.visible": true,
   "workbench.iconTheme": "vs-seti",
-  "files.exclude": ["_esy", "node_modules"],
-  "editor.zenMode.hideTabs": true
+  "workbench.sideBar.visible": true,
+  "workbench.statusBar.visible": true
 }
 |},
     )
