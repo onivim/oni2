@@ -32,7 +32,9 @@ type action =
   | CursorPosition(cursorUpdate)
   | CursorTimer
   | SetFocus(bool)
-  | UpdateText(textUpdate)
+  | Delete
+  | Backspace
+  | InsertText(string)
   | ResetCursorTimer;
 
 let getStringParts = (index, str) => {
@@ -100,9 +102,30 @@ let reducer = (action, state) =>
           ? Time.Seconds(0.0)
           : Time.increment(state.cursorTimer, Time.Seconds(0.1)),
     }
-  | UpdateText({newString, _}) =>
-    state.isFocused
-      ? {...state, isFocused: true, internalValue: newString} : state
+  | Delete => {
+    let { newString, cursorPosition } = removeCharacterAfter(state.internalValue, state.cursorPosition)
+    {
+      ...state,
+      internalValue: newString,
+      cursorPosition,
+    }
+  }
+  | Backspace => {
+    let { newString, cursorPosition } = removeCharacterBefore(state.internalValue, state.cursorPosition)
+    {
+      ...state,
+      internalValue: newString,
+      cursorPosition,
+    }
+  }
+  | InsertText(t) => {
+    let { newString, cursorPosition } = addCharacter(state.internalValue, t, state.cursorPosition)
+    {
+      ...state,
+      internalValue: newString,
+      cursorPosition,
+    }
+  }
   | ResetCursorTimer => {...state, cursorTimer: Time.Seconds(0.0)}
   };
 
