@@ -1,8 +1,6 @@
-open Revery_UI;
-open Revery_Core;
-open Revery_UI_Primitives;
-
-module Hooks = Revery_UI_Hooks;
+open Revery;
+open Revery.UI;
+open Revery.UI.Components;
 
 type state = {
   isFocused: bool,
