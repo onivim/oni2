@@ -35,7 +35,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ~getClipboardText, ()) => {
   ignore(executingDirectory);
 
   let state = Model.State.create();
@@ -49,7 +49,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let commandUpdater = CommandStoreConnector.start(getState);
-  let (vimUpdater, vimStream) = VimStoreConnector.start(getState);
+  let (vimUpdater, vimStream) = VimStoreConnector.start(getState, getClipboardText);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

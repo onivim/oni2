@@ -65,6 +65,7 @@ let init = app => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
+      ~getClipboardText=Glfw.glfwGetClipboardText(w.glfwWindow),
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       (),

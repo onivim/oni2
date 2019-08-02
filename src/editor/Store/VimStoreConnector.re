@@ -13,7 +13,7 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t) => {
+let start = (getState: unit => Model.State.t, getClipboardText: unit => option(string)) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -475,13 +475,20 @@ let start = (getState: unit => Model.State.t) => {
   let pasteIntoEditorAction = 
     Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
       if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-        Vim.command("set paste");
-        let text = "pasting<<C-derp><<C-r>\ntext\nfrom\nclipboard!";
-        let pasteText = Zed_utf8.iter((s) => {
-          Vim.input(Zed_utf8.singleton(s));
-        }, text);
 
-        Vim.command("set nopaste");
+        switch (getClipboardText()) {
+        | Some(text) => {
+          Vim.command("set paste");
+          let pasteText = Zed_utf8.iter((s) => {
+            Vim.input(Zed_utf8.singleton(s));
+          }, text);
+
+          Vim.command("set nopaste");
+        }
+        | None => ();
+        }
+        }
+
       }
     });
 
