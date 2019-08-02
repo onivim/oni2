@@ -13,7 +13,7 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t, getClipboardText: unit => option(string)) => {
+let start = (getState: unit => Model.State.t, getClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -472,31 +472,26 @@ let start = (getState: unit => Model.State.t, getClipboardText: unit => option(s
       }
     );
 
-  let pasteIntoEditorAction = 
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+  let pasteIntoEditorAction =
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
       if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-
         switch (getClipboardText()) {
-        | Some(text) => {
+        | Some(text) =>
           Vim.command("set paste");
-          let pasteText = Zed_utf8.iter((s) => {
-            Vim.input(Zed_utf8.singleton(s));
-          }, text);
+          Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), text);
 
           Vim.command("set nopaste");
-        }
-        | None => ();
-        }
-        }
-
+        | None => ()
+        };
       }
-    });
+    );
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.Command("editor.action.clipboardPasteAction") => {
-      (state, pasteIntoEditorAction)
-    }
+    | Model.Actions.Command("editor.action.clipboardPasteAction") => (
+        state,
+        pasteIntoEditorAction,
+      )
     | Model.Actions.WildmenuNext =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
