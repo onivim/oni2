@@ -41,7 +41,17 @@ let filterPsnArgument = args => {
 
 let args = Sys.argv |> filterPsnArgument;
 
-let () = Arg.parse_argv(args, spec, anonArg, "Usage: ");
+let () = {
+  switch (Arg.parse_argv(args, spec, anonArg, "Usage: ")) {
+  | exception (Arg.Bad(err)) =>
+    prerr_endline(err);
+    exit(1);
+  | exception (Arg.Help(msg)) =>
+    print_endline(msg);
+    exit(0);
+  | _ => ()
+  };
+};
 
 type platform =
   | Windows
