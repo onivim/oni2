@@ -8,18 +8,19 @@ type t = {search: (string, list(string) => unit) => disposeFunction};
 let process = (rgPath, args, callback) => {
   let cp = ChildProcess.spawn(rgPath, args);
 
-  let unsubscribe = Event.subscribe(cp.stdout.onData, value => {
-        Revery.App.runOnMainThread(() => {
-          Bytes.to_string(value)
-          |> String.trim
-          |> String.split_on_char('\n')
-          |> callback;
-        });
-  });
+  let unsubscribe =
+    Event.subscribe(cp.stdout.onData, value =>
+      Revery.App.runOnMainThread(() =>
+        Bytes.to_string(value)
+        |> String.trim
+        |> String.split_on_char('\n')
+        |> callback
+      )
+    );
 
-  () => { 
-      unsubscribe();
-      cp.kill(Sys.sigkill);
+  () => {
+    unsubscribe();
+    cp.kill(Sys.sigkill);
   };
 };
 
