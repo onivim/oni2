@@ -95,7 +95,7 @@ let createElement =
       menu.isOpen
         ? <View style={containerStyles(theme)}>
             <View style=Style.[width(menuWidth), padding(5)]>
-              <Input
+              <OniInput
                 autofocus=true
                 placeholder="type here to search the menu"
                 cursorColor=Colors.white
