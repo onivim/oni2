@@ -558,7 +558,7 @@ let createElement =
                   ~y=0.0,
                   ~height=float_of_int(metrics.pixelHeight),
                   ~width=float_of_int(1),
-                  ~color=Color.rgba(0.78, 0.78, 0.78, 0.78),
+                  ~color=theme.colors.editorRulerForeground,
                   (),
                 );
 
