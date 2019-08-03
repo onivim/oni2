@@ -10,8 +10,8 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 {
-  "editor.DetectIndentation": true,
-  "editor.LargeFileOptimizations": true,
+  "editor.detectIndentation": true,
+  "editor.largeFileOptimizations": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
   "editor.insertSpaces": false,
