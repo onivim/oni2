@@ -13,7 +13,7 @@ type testCallback =
 
 let _currentClipboard: ref(option(string)) = ref(None);
 
-let setClipboard = (v) => _currentClipboard := v;
+let setClipboard = v => _currentClipboard := v;
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
@@ -36,7 +36,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~getClipboardText={() => _currentClipboard^},
+      ~getClipboardText=() => _currentClipboard^,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       (),

@@ -30,8 +30,7 @@ runTest(
       let line2 = Buffer.getLine(buf, 1);
       Log.info("Line1 is: " ++ line1 ++ "|");
       Log.info("Line2 is: " ++ line2 ++ "|");
-      String.equal(line1, "Adef")
-      && String.equal(line2, "ghiB");
+      String.equal(line1, "Adef") && String.equal(line2, "ghiB");
     }
   );
 });

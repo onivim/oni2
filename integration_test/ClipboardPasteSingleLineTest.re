@@ -8,7 +8,6 @@ runTest(
     state.mode == Vim.Types.Normal
   );
 
-
   dispatch(KeyboardInput("i"));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
