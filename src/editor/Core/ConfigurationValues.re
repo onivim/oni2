@@ -25,6 +25,7 @@ type t = {
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
+  editorRulers: list(int),
   workbenchActivityBarVisible: bool,
   /* Onivim2 specific setting */
   workbenchSideBarVisible: bool,
@@ -49,6 +50,7 @@ let default = {
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
+  editorRulers: [],
   workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchSideBarVisible: true,

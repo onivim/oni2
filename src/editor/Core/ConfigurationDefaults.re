@@ -27,6 +27,7 @@ let getDefaultConfigString = configName =>
   "editor.renderIndentGuides": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.renderWhitespace": "all",
+  "editor.rulers": [],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
   "workbench.sideBar.visible": true,
