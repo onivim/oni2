@@ -10,7 +10,6 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 {
-  "editor.minimap.enabled": true,
   "editor.insertSpaces": false,
   "editor.indentSize": 4,
   "editor.tabSize": 4,
