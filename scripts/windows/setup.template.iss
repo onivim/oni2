@@ -33,7 +33,7 @@ Name: "registerAsEditor"; Description: "Register {{AppName}} as an editor for al
 Name: "addToRightClickMenu"; Description: "Add {{AppName}} to the right click menu for all files."; GroupDescription: "Other"
 
 [Icons]
-Name: "{group}\{{AppName}}"; Filename: "{app}\{{AppExecutableName}}"
+Name: "{group}\{{AppName}}"; Filename: "{app}\{{AppExecutableName}}"; IconFilename: "{{AppIcon}}"
 
 [Run]
 Filename: "{app}\{{AppExecutableName}}"; Flags: postinstall skipifsilent nowait
