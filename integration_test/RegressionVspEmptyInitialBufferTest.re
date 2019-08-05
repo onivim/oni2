@@ -1,6 +1,11 @@
 // Regression test for #594:
 // When running ':vsp' on an initial buffer, we shouldn't get a new buffer
 
+// This is sort of an indirect way to test #594, but one of the contributing
+// factors to the crash is that we were deciding to open a new / invalid
+// buffer - so by testing that we aren't opening a new buffer at all,
+// we can avoid that particular issue.
+
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
