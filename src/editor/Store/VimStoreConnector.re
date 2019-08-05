@@ -291,7 +291,7 @@ let start = (getState: unit => Model.State.t) => {
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e Untitled-1");
+      let _ = Vim.command("e untitled");
       hasInitialized := true;
     });
 
