@@ -35,8 +35,8 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let handleChange = (event: OniInput.changeEvent) =>
-  GlobalContext.current().dispatch(MenuSearch(event.value));
+let handleChange = (str) =>
+  GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
