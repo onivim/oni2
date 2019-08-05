@@ -35,8 +35,7 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let handleChange = (str) =>
-  GlobalContext.current().dispatch(MenuSearch(str));
+let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {

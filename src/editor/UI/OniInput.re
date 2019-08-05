@@ -169,15 +169,16 @@ let make =
 
     let valueToDisplay = state.internalValue;
 
-    let slots = 
+    let slots =
       Hooks.effect(
-      If((!=), valueToDisplay),
-      () => {
-        onChange(valueToDisplay);
-        /*prerr_endline ("VALUE TO DISPLAY CHANGED: |" ++ valueToDisplay ++ "|"); */
-        None;
-      },
-      slots);
+        If((!=), valueToDisplay),
+        () => {
+          onChange(valueToDisplay);
+          /*prerr_endline ("VALUE TO DISPLAY CHANGED: |" ++ valueToDisplay ++ "|"); */
+          None;
+        },
+        slots,
+      );
 
     /*let slots =
       Hooks.effect(
