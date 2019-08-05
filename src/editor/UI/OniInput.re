@@ -92,13 +92,15 @@ let reducer = (action, state) =>
   switch (action) {
   | SetFocus(isFocused) => {...state, isFocused}
   | CursorLeft => {
-    ...state,
-    cursorPosition: getSafeStringBounds(state.internalValue, state.cursorPosition, -1)
-  }
+      ...state,
+      cursorPosition:
+        getSafeStringBounds(state.internalValue, state.cursorPosition, -1),
+    }
   | CursorRight => {
-    ...state,
-    cursorPosition: getSafeStringBounds(state.internalValue, state.cursorPosition, 1)
-  }
+      ...state,
+      cursorPosition:
+        getSafeStringBounds(state.internalValue, state.cursorPosition, 1),
+    }
   | CursorTimer => {
       ...state,
       cursorTimer:
@@ -106,30 +108,18 @@ let reducer = (action, state) =>
           ? Time.Seconds(0.0)
           : Time.increment(state.cursorTimer, Time.Seconds(0.1)),
     }
-  | Delete => {
-    let { newString, cursorPosition } = removeCharacterAfter(state.internalValue, state.cursorPosition);
-    {
-      ...state,
-      internalValue: newString,
-      cursorPosition,
-    }
-  }
-  | Backspace => {
-    let { newString, cursorPosition } = removeCharacterBefore(state.internalValue, state.cursorPosition);
-    {
-      ...state,
-      internalValue: newString,
-      cursorPosition,
-    }
-  }
-  | InsertText(t) => {
-    let { newString, cursorPosition } = addCharacter(state.internalValue, t, state.cursorPosition);
-    {
-      ...state,
-      internalValue: newString,
-      cursorPosition,
-    }
-  }
+  | Delete =>
+    let {newString, cursorPosition} =
+      removeCharacterAfter(state.internalValue, state.cursorPosition);
+    {...state, internalValue: newString, cursorPosition};
+  | Backspace =>
+    let {newString, cursorPosition} =
+      removeCharacterBefore(state.internalValue, state.cursorPosition);
+    {...state, internalValue: newString, cursorPosition};
+  | InsertText(t) =>
+    let {newString, cursorPosition} =
+      addCharacter(state.internalValue, t, state.cursorPosition);
+    {...state, internalValue: newString, cursorPosition};
   | ResetCursorTimer => {...state, cursorTimer: Time.Seconds(0.0)}
   };
 
@@ -197,14 +187,14 @@ let make =
 
     let handleKeyDown = (event: NodeEvents.keyEventParams) => {
       /*let createChangeEvent = inputString => {
-        value: inputString,
-        character: Key.toString(event.key),
-        key: event.key,
-        altKey: event.altKey,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        superKey: event.superKey,
-      }; */
+          value: inputString,
+          character: Key.toString(event.key),
+          key: event.key,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          superKey: event.superKey,
+        }; */
 
       dispatch(ResetCursorTimer);
 
@@ -215,10 +205,8 @@ let make =
       | Key.KEY_RIGHT =>
         onKeyDown(event);
         dispatch(CursorRight);
-      | Key.KEY_DELETE =>
-        dispatch(Delete);
-      | Key.KEY_BACKSPACE =>
-        dispatch(Backspace);
+      | Key.KEY_DELETE => dispatch(Delete)
+      | Key.KEY_BACKSPACE => dispatch(Backspace)
       | Key.KEY_ESCAPE =>
         onKeyDown(event);
         Focus.loseFocus();
