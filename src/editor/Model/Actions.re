@@ -23,6 +23,9 @@ type t =
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
+  // LoadEditorFont is the request to load a new font
+  // If successful, a SetEditorFont action will be dispatched.
+  | LoadEditorFont(string, string)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(Vim.Types.cmdlineType)

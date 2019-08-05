@@ -75,6 +75,8 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
+  let fontUpdater = FontStoreConnector.start();
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -84,6 +86,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
           vimUpdater,
           textmateUpdater,
           /* extHostUpdater, */
+          fontUpdater,
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,

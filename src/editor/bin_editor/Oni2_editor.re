@@ -106,55 +106,8 @@ let init = app => {
     cliOptions.filesToOpen,
   );
 
-  let setFont = (fontFamily, fontSize) => {
-    let scaleFactor =
-      Window.getDevicePixelRatio(w)
-      *. float_of_int(Window.getScaleFactor(w));
-
-    let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
-
-    let fontFile = Core.Utility.executingDirectory ++ fontFamily;
-
-    Log.info("Loading font: " ++ fontFile);
-
-    Fontkit.fk_new_face(
-      fontFile,
-      adjSize,
-      font => {
-        Log.info("Font loaded!");
-        open Oni_Model.Actions;
-        open Oni_Core.Types;
-
-        /* Measure text */
-        let shapedText = Fontkit.fk_shape(font, "H");
-        let firstShape = shapedText[0];
-        let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
-
-        let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight =
-          float_of_int(fontSize)
-          *. float_of_int(metrics.height)
-          /. float_of_int(metrics.unitsPerEm);
-
-        /* Set editor text based on measurements */
-        dispatch(
-          SetEditorFont(
-            EditorFont.create(
-              ~fontFile=fontFamily,
-              ~fontSize,
-              ~measuredWidth=
-                float_of_int(glyph.advance) /. (64. *. scaleFactor),
-              ~measuredHeight=floor(actualHeight +. 0.5),
-              (),
-            ),
-          ),
-        );
-      },
-      _ => Log.error("setFont: Failed to load font " ++ fontFamily),
-    );
-  };
-
-  setFont("FiraCode-Regular.ttf", 14);
+  dispatch(Model.Actions.LoadEditorFont("FiraCode-Regular.ttf", 14);
+  runEffects();
 
   let commands = Core.Keybindings.get();
 
