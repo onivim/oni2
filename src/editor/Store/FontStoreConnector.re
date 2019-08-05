@@ -7,15 +7,12 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = () => {
+let start = (~getScaleFactor, ()) => {
   let setFont = (dispatch, fontFamily, fontSize) => {
-    let scaleFactor =
-      Window.getDevicePixelRatio(w)
-      *. float_of_int(Window.getScaleFactor(w));
-
+    let scaleFactor = getScaleFactor();
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    let fontFile = Core.Utility.executingDirectory ++ fontFamily;
+    let fontFile = Utility.executingDirectory ++ fontFamily;
 
     Log.info("Loading font: " ++ fontFile);
 
@@ -25,7 +22,7 @@ let start = () => {
       font => {
         Log.info("Font loaded!");
         open Oni_Model.Actions;
-        open Oni_Core.Types;
+        open Types;
 
         /* Measure text */
         let shapedText = Fontkit.fk_shape(font, "H");
@@ -56,20 +53,20 @@ let start = () => {
     );
   };
   
-  let synchronizeConfiguration = (configuration: Core.Configuration.t) =>
-    Isolinear.Effect.create(~name="windows.syncConfig", () => {
+  let synchronizeConfiguration = (configuration: Configuration.t) =>
+    Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", (dispatch) => {
     
     let editorFontFamily = "FiraCode-Regular.ttf";
 
-    let editorFontSize = Core.Configuration.getValue(
+    let editorFontSize = Configuration.getValue(
       c => c.editorFontSize,
       configuration,
     );
 
-    setFont(dispatch, editorFontFamily, editorFontSize),
+    setFont(dispatch, editorFontFamily, editorFontSize);
   });
   
-  let loadFontEffect = (fontFamily, fontSize) =>
+  let loadEditorFontEffect = (fontFamily, fontSize) =>
     Isolinear.Effect.createWithDispatch(
     ~name="font.loadEditorFont", dispatch => {
       print_endline ("Trying to load font: " ++ fontFamily);
@@ -78,7 +75,7 @@ let start = () => {
   
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.ConfigurationSet(c) => synchronizeConfiguration(c)
+    | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (state, loadEditorFontEffect(fontFamily, fontSize))
     | _ => (state, Isolinear.Effect.none)
     };

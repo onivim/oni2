@@ -61,12 +61,18 @@ let init = app => {
     update(<Root state />);
   };
 
+  let getScaleFactor = () => {
+      Window.getDevicePixelRatio(w)
+      *. float_of_int(Window.getScaleFactor(w));
+  };
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
+      ~getScaleFactor,
       (),
     );
   Log.debug("Startup: StoreThread started!");
@@ -106,7 +112,7 @@ let init = app => {
     cliOptions.filesToOpen,
   );
 
-  dispatch(Model.Actions.LoadEditorFont("FiraCode-Regular.ttf", 14);
+  dispatch(Model.Actions.LoadEditorFont("FiraCode-Regular.ttf", 14));
   runEffects();
 
   let commands = Core.Keybindings.get();

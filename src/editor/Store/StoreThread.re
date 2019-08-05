@@ -35,7 +35,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ~getScaleFactor, ()) => {
   ignore(executingDirectory);
 
   let state = Model.State.create();
@@ -75,7 +75,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
-  let fontUpdater = FontStoreConnector.start();
+  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
