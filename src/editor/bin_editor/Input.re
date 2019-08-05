@@ -90,49 +90,54 @@ let keyPressToCommand =
   };
 };
 
-module Conditions {
+module Conditions = {
   type t = Hashtbl.t(Types.Input.controlMode, bool);
 
   let getBooleanCondition = (v: t, condition: Types.Input.controlMode) => {
     switch (Hashtbl.find_opt(v, condition)) {
     | Some(v) => v
-    | None => false;
+    | None => false
     };
   };
 
   let ofState = (state: State.t) => {
     // Not functional, but we'll use the hashtable for performance
-    let ret: t = Hashtbl.create(16); 
+    let ret: t = Hashtbl.create(16);
 
     Hashtbl.add(ret, state.inputControlMode, true);
 
-    switch (state.mode) {
-    | Vim.Types.Insert => Hashtbl.add(ret, Types.Input.InsertMode, true);
-    | _ => ();
-    }
+    // HACK: Because we don't have AND conditions yet for input
+    // (the conditions array are OR's), we are making `insertMode`
+    // only true when the editor is insert mode AND we are in the
+    // editor (editorTextFocus is set)
+    switch (state.inputControlMode, state.mode) {
+    | (Types.Input.EditorTextFocus, Vim.Types.Insert) =>
+      Hashtbl.add(ret, Types.Input.InsertMode, true)
+    | _ => ()
+    };
 
     ret;
   };
-}
+};
 
 /**
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (commandConditions, currentConditions, input, key) => {
+let matchesCondition = (commandConditions, currentConditions, input, key) =>
   if (input != key) {
     false;
   } else {
     List.fold_left(
-      (prevMatch, condition) => prevMatch || Conditions.getBooleanCondition(currentConditions, condition),
+      (prevMatch, condition) =>
+        prevMatch
+        || Conditions.getBooleanCondition(currentConditions, condition),
       false,
       commandConditions,
-    )
-  }
-}
+    );
+  };
 
-let getActionsForBinding =
-    (inputKey, commands, state: State.t) => {
+let getActionsForBinding = (inputKey, commands, state: State.t) => {
   let currentConditions = Conditions.ofState(state);
   Keybindings.(
     List.fold_left(
@@ -161,7 +166,7 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
       actions;
     }
   | TextInputFocus
-  | MenuFocus 
+  | MenuFocus
   | _ => getActionsForBinding(inputKey, commands, state)
   };
 };
