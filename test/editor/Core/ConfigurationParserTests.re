@@ -113,4 +113,19 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
+
+  test("list of numbers", ({expect}) => {
+    let configuration = {|
+      { "editor.rulers": [120, 80] }
+    |};
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
+        80,
+        120,
+      ])
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
 });
