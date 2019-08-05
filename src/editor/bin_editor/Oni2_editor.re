@@ -62,8 +62,7 @@ let init = app => {
   };
 
   let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w)
-      *. float_of_int(Window.getScaleFactor(w));
+    Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
   };
 
   Log.debug("Startup: Starting StoreThread");

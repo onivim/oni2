@@ -35,7 +35,14 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ~getScaleFactor, ()) => {
+let start =
+    (
+      ~setup: Core.Setup.t,
+      ~executingDirectory,
+      ~onStateChanged,
+      ~getScaleFactor,
+      (),
+    ) => {
   ignore(executingDirectory);
 
   let state = Model.State.create();

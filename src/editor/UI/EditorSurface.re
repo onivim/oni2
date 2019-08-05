@@ -229,7 +229,8 @@ let createElement =
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
     let fontFamily = "FiraCode-Regular.ttf";
-    let fontSize = Configuration.getValue(c => c.editorFontSize, state.configuration);
+    let fontSize =
+      Configuration.getValue(c => c.editorFontSize, state.configuration);
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let indentation =

@@ -52,31 +52,29 @@ let start = (~getScaleFactor, ()) => {
       _ => Log.error("setFont: Failed to load font " ++ fontFamily),
     );
   };
-  
-  let synchronizeConfiguration = (configuration: Configuration.t) =>
-    Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", (dispatch) => {
-    
-    let editorFontFamily = "FiraCode-Regular.ttf";
 
-    let editorFontSize = Configuration.getValue(
-      c => c.editorFontSize,
-      configuration,
+  let synchronizeConfiguration = (configuration: Configuration.t) =>
+    Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
+      let editorFontFamily = "FiraCode-Regular.ttf";
+
+      let editorFontSize =
+        Configuration.getValue(c => c.editorFontSize, configuration);
+
+      setFont(dispatch, editorFontFamily, editorFontSize);
+    });
+
+  let loadEditorFontEffect = (fontFamily, fontSize) =>
+    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch =>
+      print_endline("Trying to load font: " ++ fontFamily)
     );
 
-    setFont(dispatch, editorFontFamily, editorFontSize);
-  });
-  
-  let loadEditorFontEffect = (fontFamily, fontSize) =>
-    Isolinear.Effect.createWithDispatch(
-    ~name="font.loadEditorFont", dispatch => {
-      print_endline ("Trying to load font: " ++ fontFamily);
-    }
-  );
-  
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
-    | Actions.LoadEditorFont(fontFamily, fontSize) => (state, loadEditorFontEffect(fontFamily, fontSize))
+    | Actions.LoadEditorFont(fontFamily, fontSize) => (
+        state,
+        loadEditorFontEffect(fontFamily, fontSize),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };
