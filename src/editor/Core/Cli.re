@@ -44,7 +44,7 @@ let parse = () => {
 
   let stripTrailingPathCharacter = s => {
     let len = String.length(s);
-    if (len >= 1 && s.[len - 1] == '/') {
+    if (len > 1 && s.[len - 1] == '/') {
       String.sub(s, 0, len - 1);
     } else {
       s;
