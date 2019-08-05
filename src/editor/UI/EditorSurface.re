@@ -29,6 +29,8 @@ let fontAwesomeIcon = ZedBundled.singleton(UChar.of_int(0xF556));
 
 let renderLineNumber =
     (
+      fontFamily: string,
+      fontSize: int,
       fontWidth: float,
       lineNumber: int,
       lineNumberWidth: float,
@@ -71,8 +73,8 @@ let renderLineNumber =
     ~y=yF,
     ~backgroundColor=theme.colors.editorLineNumberBackground,
     ~color=lineNumberTextColor,
-    ~fontFamily="FiraCode-Regular.ttf",
-    ~fontSize=14,
+    ~fontFamily,
+    ~fontSize,
     lineNumber,
   );
 };
@@ -114,6 +116,8 @@ let renderSpaces =
 
 let renderTokens =
     (
+      fontFamily: string,
+      fontSize: int,
       fontWidth: float,
       fontHeight: float,
       lineNumberWidth: float,
@@ -145,8 +149,8 @@ let renderTokens =
         ~y,
         ~backgroundColor,
         ~color=token.color,
-        ~fontFamily="FiraCode-Regular.ttf",
-        ~fontSize=14,
+        ~fontFamily,
+        ~fontSize,
         token.text,
       )
     | Tab =>
@@ -224,6 +228,8 @@ let createElement =
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
+    let fontFamily = "FiraCode-Regular.ttf";
+    let fontSize = Configuration.getValue(c => c.editorFontSize, state.configuration);
 
     let iFontHeight = int_of_float(fontHeight +. 0.5);
     let indentation =
@@ -705,6 +711,8 @@ let createElement =
 
                     let _ =
                       renderTokens(
+                        fontFamily,
+                        fontSize,
                         fontWidth,
                         fontHeight,
                         lineNumberWidth,
@@ -744,6 +752,8 @@ let createElement =
                     (item, offset) => {
                       let _ =
                         renderLineNumber(
+                          fontFamily,
+                          fontSize,
                           fontWidth,
                           item,
                           lineNumberWidth,
