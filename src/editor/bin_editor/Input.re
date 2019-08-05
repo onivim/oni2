@@ -90,24 +90,54 @@ let keyPressToCommand =
   };
 };
 
+module Conditions {
+  type t = Hashtbl.t(Input.controlMode, bool);
+
+  type getBooleanCondition = (v: t, condition: Input.controlMode) => {
+    switch (Hashtbl.find_opt(v, condition)) {
+    | Some(v) => v
+    | None => false;
+    };
+  };
+
+  type ofState = (state: State.t) => {
+    // Not functional, but we'll use the hashtable for performance
+    let ret: t = Hashtbl.create(16); 
+
+    Hashtbl.add(ret, state.inputControlMode, true);
+
+    switch (state.mode) {
+    | Vim.Types.Insert => Hashtbl.add(ret, state.insertMode, true);
+    | _ => ();
+    }
+
+    ret;
+  };
+}
+
 /**
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (conditions, currentMode, input, key) =>
-  List.fold_left(
-    (prevMatch, condition) => prevMatch || condition == currentMode,
-    false,
-    conditions,
-  )
-  |> (&&)(input == key);
+let matchesCondition = (commandConditions, currentConditions, input, key) => {
+  if (input != key) {
+    false;
+  } else {
+    List.fold_left(
+      (prevMatch, condition) => prevMatch || Conditions.getBooleanCondition(currentConditions, condition)
+      false,
+      commandConditions,
+    )
+  }
+}
 
 let getActionsForBinding =
-    (inputKey, commands, {inputControlMode, _}: State.t) =>
+    (inputKey, commands, state: State.t) =>
+  let currentConditions = Conditions.ofState(state);
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, inputControlMode, inputKey, key)
+        matchesCondition(condition, currentConditions, inputKey, key)
           ? [Actions.Command(command)] : defaultAction,
       [],
       commands,
