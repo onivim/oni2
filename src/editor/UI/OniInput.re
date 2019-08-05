@@ -19,6 +19,11 @@ type action =
   | InsertText(string)
   | ResetCursorTimer;
 
+type textUpdate = {
+  newString: string,
+  cursorPosition: int,
+};
+
 let getStringParts = (index, str) => {
   switch (index) {
   | 0 => ("", str)
