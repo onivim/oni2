@@ -75,7 +75,11 @@ let addCharacter = (word, char, index) => {
 };
 let reducer = (action, state) =>
   switch (action) {
-  | SetFocus(isFocused) => {...state, cursorTimer: Time.Seconds(0.0), isFocused}
+  | SetFocus(isFocused) => {
+      ...state,
+      cursorTimer: Time.Seconds(0.0),
+      isFocused,
+    }
   | CursorLeft => {
       ...state,
       cursorTimer: Time.Seconds(0.0),
@@ -98,15 +102,30 @@ let reducer = (action, state) =>
   | Delete =>
     let {newString, cursorPosition} =
       removeCharacterAfter(state.internalValue, state.cursorPosition);
-    {...state, cursorTimer: Time.Seconds(0.0), internalValue: newString, cursorPosition};
+    {
+      ...state,
+      cursorTimer: Time.Seconds(0.0),
+      internalValue: newString,
+      cursorPosition,
+    };
   | Backspace =>
     let {newString, cursorPosition} =
       removeCharacterBefore(state.internalValue, state.cursorPosition);
-    {...state, cursorTimer: Time.Seconds(0.0), internalValue: newString, cursorPosition};
+    {
+      ...state,
+      cursorTimer: Time.Seconds(0.0),
+      internalValue: newString,
+      cursorPosition,
+    };
   | InsertText(t) =>
     let {newString, cursorPosition} =
       addCharacter(state.internalValue, t, state.cursorPosition);
-    {...state, cursorTimer: Time.Seconds(0.0), internalValue: newString, cursorPosition};
+    {
+      ...state,
+      cursorTimer: Time.Seconds(0.0),
+      internalValue: newString,
+      cursorPosition,
+    };
   };
 
 let defaultHeight = 50;
@@ -165,15 +184,15 @@ let make =
         slots,
       );
 
-    let slots = 
+    let slots =
       Hooks.effect(
-      OnMount,
-      () => {
-        let clear = 
+        OnMount,
+        () => {
+          let clear =
             Tick.interval(_ => dispatch(CursorTimer), Seconds(0.1));
-            Some(clear);
-      },
-      slots,
+          Some(clear);
+        },
+        slots,
       );
 
     let handleKeyPress = (event: NodeEvents.keyPressEventParams) => {
@@ -276,12 +295,8 @@ let make =
     (
       slots,
       <Clickable
-        onFocus={() => {
-          dispatch(SetFocus(true));
-        }}
-        onBlur={() => {
-          dispatch(SetFocus(false));
-        }}
+        onFocus={() => dispatch(SetFocus(true))}
+        onBlur={() => dispatch(SetFocus(false))}
         componentRef={autofocus ? Focus.focus : ignore}
         onKeyDown=handleKeyDown
         onKeyPress=handleKeyPress>
