@@ -10,6 +10,7 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 {
+  "editor.fontFamily": "FiraCode-Regular.ttf",
   "editor.fontSize": 14,
   "editor.minimap.enabled": true,
   "editor.insertSpaces": false,

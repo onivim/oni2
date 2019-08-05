@@ -228,7 +228,8 @@ let createElement =
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
-    let fontFamily = "FiraCode-Regular.ttf";
+    let fontFamily =
+      Configuration.getValue(c => c.editorFontFamily, state.configuration);
     let fontSize =
       Configuration.getValue(c => c.editorFontSize, state.configuration);
 

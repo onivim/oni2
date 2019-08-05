@@ -13,6 +13,7 @@ type editorRenderWhitespace =
 [@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
+  editorFontFamily: string,
   editorFontSize: int,
   editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
@@ -39,6 +40,7 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
+  editorFontFamily: "FiraCode-Regular.ttf",
   editorFontSize: 14,
   editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
