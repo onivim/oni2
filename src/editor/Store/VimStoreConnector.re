@@ -291,6 +291,7 @@ let start = (getState: unit => Model.State.t) => {
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
+      let _ = Vim.command("e Untitled-1");
       hasInitialized := true;
     });
 
@@ -336,6 +337,13 @@ let start = (getState: unit => Model.State.t) => {
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+
+      let fpFromMetadata = switch(metadata.filePath) {
+      | Some(v) => v
+      | None => "(None)"
+      };
+
+      print_endline ("ENTERING BUFFER: filePath: |" ++ filePath  ++ "| metadata: |" ++ fpFromMetadata ++ "|");
 
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.
