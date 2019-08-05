@@ -183,11 +183,17 @@ module Input = {
   [@deriving
     (show({with_path: false}), yojson({strict: false, exn: false}))
   ]
+  // This type is overloaded - describing both the current 'input mode'
+  // the UI is in, as well as the state of 'when' conditions in the input
+  // bindings. Need to decouple these.
   type controlMode =
+    // VSCode-compatible when parameters
     | [@name "menuFocus"] MenuFocus
     | [@name "textInputFocus"] TextInputFocus
     | [@name "editorTextFocus"] EditorTextFocus
-    | [@name "commandLineFocus"] CommandLineFocus;
+    | [@name "commandLineFocus"] CommandLineFocus
+    // Onivim extensions to the 'when' syntax
+    | [@name "insertMode"] InsertMode;
 
   [@deriving show({with_path: false})]
   type keyBindings = {
