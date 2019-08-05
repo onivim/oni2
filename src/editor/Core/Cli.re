@@ -80,15 +80,23 @@ let parse = () => {
   let directories = List.filter(isDirectory, absolutePaths);
   let filesToOpen = List.filter(p => !isDirectory(p), absolutePaths);
 
-  /* Set the folder to be opened, based on 3 options:
-     - If a folder(s) is given, use the first.
-     - If no folders are given, but files are, use the dir of the first file.
-     - If no files or folders are given, use the working directory. */
+  let homeOrWorkingDirectory =
+    switch (Sys.getenv_opt("HOME")) {
+    | Some(homePath) => homePath
+    | None => workingDirectory
+    };
+
+  /* Set the folder to be opened, based on 4 options:
+       - If a folder(s) is given, use the first.
+       - If no folders are given, but files are, use the dir of the first file.
+       - If no files or folders are given, use the home directory if available.
+       - If no files or folders are given, and no home directory, use workingDirectory.
+     */
   let folder =
     switch (directories, filesToOpen) {
     | ([hd, ..._], _) => hd
     | ([], [hd, ..._]) => Rench.Path.dirname(hd)
-    | ([], []) => workingDirectory
+    | ([], []) => homeOrWorkingDirectory
     };
 
   {folder, filesToOpen};
