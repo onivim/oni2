@@ -91,23 +91,23 @@ let keyPressToCommand =
 };
 
 module Conditions {
-  type t = Hashtbl.t(Input.controlMode, bool);
+  type t = Hashtbl.t(Types.Input.controlMode, bool);
 
-  type getBooleanCondition = (v: t, condition: Input.controlMode) => {
+  let getBooleanCondition = (v: t, condition: Types.Input.controlMode) => {
     switch (Hashtbl.find_opt(v, condition)) {
     | Some(v) => v
     | None => false;
     };
   };
 
-  type ofState = (state: State.t) => {
+  let ofState = (state: State.t) => {
     // Not functional, but we'll use the hashtable for performance
     let ret: t = Hashtbl.create(16); 
 
     Hashtbl.add(ret, state.inputControlMode, true);
 
     switch (state.mode) {
-    | Vim.Types.Insert => Hashtbl.add(ret, state.insertMode, true);
+    | Vim.Types.Insert => Hashtbl.add(ret, Types.Input.InsertMode, true);
     | _ => ();
     }
 
@@ -124,7 +124,7 @@ let matchesCondition = (commandConditions, currentConditions, input, key) => {
     false;
   } else {
     List.fold_left(
-      (prevMatch, condition) => prevMatch || Conditions.getBooleanCondition(currentConditions, condition)
+      (prevMatch, condition) => prevMatch || Conditions.getBooleanCondition(currentConditions, condition),
       false,
       commandConditions,
     )
@@ -132,7 +132,7 @@ let matchesCondition = (commandConditions, currentConditions, input, key) => {
 }
 
 let getActionsForBinding =
-    (inputKey, commands, state: State.t) =>
+    (inputKey, commands, state: State.t) => {
   let currentConditions = Conditions.ofState(state);
   Keybindings.(
     List.fold_left(
@@ -143,6 +143,7 @@ let getActionsForBinding =
       commands,
     )
   );
+};
 
 /**
   Handle Input from Oni or Neovim
@@ -160,6 +161,7 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
       actions;
     }
   | TextInputFocus
-  | MenuFocus => getActionsForBinding(inputKey, commands, state)
+  | MenuFocus 
+  | _ => getActionsForBinding(inputKey, commands, state)
   };
 };
