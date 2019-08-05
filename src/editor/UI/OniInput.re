@@ -9,25 +9,6 @@ type state = {
   cursorTimer: Time.t,
 };
 
-type textUpdate = {
-  newString: string,
-  cursorPosition: int,
-};
-
-type cursorUpdate = {
-  inputString: string,
-  change: int,
-};
-type changeEvent = {
-  value: string,
-  character: string,
-  key: Key.t,
-  altKey: bool,
-  ctrlKey: bool,
-  shiftKey: bool,
-  superKey: bool,
-};
-
 type action =
   | CursorLeft
   | CursorRight
@@ -174,22 +155,10 @@ let make =
         If((!=), valueToDisplay),
         () => {
           onChange(valueToDisplay);
-          /*prerr_endline ("VALUE TO DISPLAY CHANGED: |" ++ valueToDisplay ++ "|"); */
           None;
         },
         slots,
       );
-
-    /*let slots =
-      Hooks.effect(
-        OnMount,
-        () => {
-          let clear =
-            Tick.interval(_ => dispatch(CursorTimer), Seconds(0.1));
-          Some(clear);
-        },
-        slots,
-      );*/
 
     let handleKeyPress = (event: NodeEvents.keyPressEventParams) => {
       dispatch(ResetCursorTimer);
@@ -197,16 +166,6 @@ let make =
     };
 
     let handleKeyDown = (event: NodeEvents.keyEventParams) => {
-      /*let createChangeEvent = inputString => {
-          value: inputString,
-          character: Key.toString(event.key),
-          key: event.key,
-          altKey: event.altKey,
-          ctrlKey: event.ctrlKey,
-          shiftKey: event.shiftKey,
-          superKey: event.superKey,
-        }; */
-
       dispatch(ResetCursorTimer);
 
       switch (event.key) {
@@ -247,7 +206,6 @@ let make =
       );
 
     let viewStyles = Style.extractViewStyles(allStyles);
-
     let inputFontSize = Selector.select(style, FontSize, 18);
     let inputColor = Selector.select(style, Color, Colors.black);
     let inputFontFamily =
