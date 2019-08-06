@@ -179,6 +179,7 @@ let start =
   let _ =
     Tick.interval(
       _ => {
+        print_endline ("TICKER COUNT: " ++ string_of_int(Tick.getTickerCount()));
         dispatch(Model.Actions.Tick);
         runEffects();
       },

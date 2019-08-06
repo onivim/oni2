@@ -219,7 +219,8 @@
     "reason-fontkit": "github:revery-ui/reason-fontkit#f364c36",
     "@opam/ocamlfind": "1.8.0",
     "@opam/biniou": "1.2.0",
-    "@opam/easy-format": "1.3.1"
+    "@opam/easy-format": "1.3.1",
+    "revery": "link:../revery"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
