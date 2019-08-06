@@ -61,6 +61,17 @@ const getNodePath = () => {
         return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
     }
 }
+
+const updateIcon = (rcedit, exe, iconFile) => {
+    console.log(`Updating ${exe} icon`)
+
+    rcedit(exe, {
+        icon: iconFile
+    })
+
+    console.log(`Successfully updated icon.`)
+}
+
 if (process.platform == "linux") {
   const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
   console.log(result.output.toString());
@@ -193,4 +204,11 @@ if (process.platform == "linux") {
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
   fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});
   fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
+
+  // Now that we've copied set the app icon up correctly.
+  // rcedit is imported here as its a big import, only needed for windows.
+  // The image path here does not need to be in the release dir, as its just to do the embed.
+  const rcedit = require("rcedit");
+  updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2.exe"), iconFile);
+  updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2_editor.exe"), iconFile);
 }
