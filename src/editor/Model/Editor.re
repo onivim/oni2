@@ -256,10 +256,18 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
   | CursorMove(b) => {
+      let scrolledView = scrollToLine(view, Index.toInt0(view.lastTopLine), metrics);
+      
+      // If the scrolled view is less than a line, don't bother scrolling
+      let delta = Float.abs(scrolledView.scrollY -. view.scrollY);
+      let retView = delta < metrics.lineHeight ? view : scrolledView;
+
       /* If the cursor moved, make sure we're snapping to the top line */
       /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
-      ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
-      cursorPosition: b,
+      {
+        ...retView,
+        cursorPosition: b,
+      }
     }
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
