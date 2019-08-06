@@ -156,4 +156,13 @@ let rec last =
   | [x] => Some(x)
   | [_, ...t] => last(t);
 
+/**
+ * Return all but the last element in a list.
+ */
+let rec dropLast =
+  fun
+  | [] => []
+  | [_] => []
+  | [head, ...tail] => [head, ...dropLast(tail)];
+
 external freeConsole: unit => unit = "win32_free_console";
