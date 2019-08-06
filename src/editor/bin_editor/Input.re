@@ -69,6 +69,7 @@ let keyPressToCommand =
         | KEY_TAB => Some("TAB")
         | KEY_ENTER => Some("CR")
         | KEY_BACKSPACE => Some("C-h")
+        | KEY_DELETE => Some("DELETE")
         | KEY_LEFT => Some("LEFT")
         | KEY_RIGHT => Some("RIGHT")
         | KEY_DOWN => Some("DOWN")
