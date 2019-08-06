@@ -89,14 +89,16 @@ let parse = () => {
   /* Set the folder to be opened, based on 4 options:
        - If a folder(s) is given, use the first.
        - If no folders are given, but files are, use the dir of the first file.
-       - If no files or folders are given, use the home directory if available.
-       - If no files or folders are given, and no home directory, use workingDirectory.
-     */
+       - If no files or folders are given, and the path is, the root, "/", try and use the home directory
+       - If none of the other conditions are met, use the working directory
+   */
+
   let folder =
-    switch (directories, filesToOpen) {
-    | ([hd, ..._], _) => hd
-    | ([], [hd, ..._]) => Rench.Path.dirname(hd)
-    | ([], []) => homeOrWorkingDirectory
+    switch (directories, filesToOpen, workingDirectory) {
+    | ([hd, ..._], _, _) => hd
+    | ([], [hd, ..._], _) => Rench.Path.dirname(hd)
+    | ([], [], "/") => homeOrWorkingDirectory
+    | ([], [], workingDirectory) => workingDirectory
     };
 
   {folder, filesToOpen};
