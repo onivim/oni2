@@ -12,7 +12,7 @@ AppName={{AppName}}
 AppVersion={{Version}}
 DefaultDirName={pf}\{{AppName}}
 DefaultGroupName={{AppName}}
-UninstallDisplayIcon={{AppIcon}}
+UninstallDisplayIcon={app}\\{{AppExecutableName}}
 Compression=zip
 SetupIconFile={{SetupIconFile}}
 SolidCompression=yes
@@ -33,7 +33,7 @@ Name: "registerAsEditor"; Description: "Register {{AppName}} as an editor for al
 Name: "addToRightClickMenu"; Description: "Add {{AppName}} to the right click menu for all files."; GroupDescription: "Other"
 
 [Icons]
-Name: "{group}\{{AppName}}"; Filename: "{app}\{{AppExecutableName}}"; IconFilename: "{{AppIcon}}"
+Name: "{group}\{{AppName}}"; Filename: "{app}\{{AppExecutableName}}"
 
 [Run]
 Filename: "{app}\{{AppExecutableName}}"; Flags: postinstall skipifsilent nowait
