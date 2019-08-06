@@ -4,7 +4,8 @@
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
            RegressionCommandLineNoCompletionTest
-           RegressionVspEmpty
+           RegressionVspEmptyInitialBufferTest
+           RegressionVspEmptyExistingBufferTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -24,7 +25,8 @@
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
         RegressionCommandLineNoCompletionTest.exe
-        RegressionVspEmpty.exe
+        RegressionVspEmptyInitialBufferTest.exe
+        RegressionVspEmptyExistingBufferTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

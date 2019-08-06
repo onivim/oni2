@@ -292,6 +292,7 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
+      let _ = Vim.command("e untitled");
       hasInitialized := true;
     });
 
