@@ -215,11 +215,12 @@
     "@opam/ocaml-migrate-parsetree": "1.3.1",
     "@opam/ppx_tools_versioned": "5.2.2",
     "revery": "github:revery-ui/revery#3f932c5",
-    "reason-libvim": "github:onivim/reason-libvim#3fab519",
+    "reason-libvim": "link:../reason-libvim",
     "reason-fontkit": "github:revery-ui/reason-fontkit#f364c36",
     "@opam/ocamlfind": "1.8.0",
     "@opam/biniou": "1.2.0",
-    "@opam/easy-format": "1.3.1"
+    "@opam/easy-format": "1.3.1",
+    "@opam/merlin-extend": "0.4"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

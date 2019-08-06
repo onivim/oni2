@@ -1,5 +1,5 @@
 {
-  "checksum": "1ce9eba8c330a2059e2b65fc3cb43a06",
+  "checksum": "aa6118bf4d96872db64ae9367645266c",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -247,18 +247,15 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9",
+    "reason-libvim@link:../reason-libvim": {
+      "id": "reason-libvim@link:../reason-libvim",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#3fab519",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/reason-libvim#3fab519" ]
-      },
+      "version": "link:../reason-libvim",
+      "source": { "type": "link", "path": "../reason-libvim" },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.15@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
+        "libvim@8.10869.18@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
@@ -356,7 +353,7 @@
       "overrides": [],
       "dependencies": [
         "xmldom@0.1.27@d41d8cd9", "xmlbuilder@9.0.7@d41d8cd9",
-        "base64-js@1.3.0@d41d8cd9"
+        "base64-js@1.3.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -458,14 +455,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.15@d41d8cd9": {
-      "id": "libvim@8.10869.15@d41d8cd9",
+    "libvim@8.10869.18@d41d8cd9": {
+      "id": "libvim@8.10869.18@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.15",
+      "version": "8.10869.18",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.15.tgz#sha1:3006868d3ef76a6561d2da18d6490abf162800ce"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.18.tgz#sha1:6b025bba34578eff37ba95618f66ea080445dab1"
         ]
       },
       "overrides": [],
@@ -483,7 +480,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "graceful-fs@4.2.0@d41d8cd9" ],
+      "dependencies": [ "graceful-fs@4.2.1@d41d8cd9" ],
       "devDependencies": []
     },
     "isolinear@2.0.0@d41d8cd9": {
@@ -559,14 +556,14 @@
       "dependencies": [ "wrappy@1.0.2@d41d8cd9", "once@1.4.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "graceful-fs@4.2.0@d41d8cd9": {
-      "id": "graceful-fs@4.2.0@d41d8cd9",
+    "graceful-fs@4.2.1@d41d8cd9": {
+      "id": "graceful-fs@4.2.1@d41d8cd9",
       "name": "graceful-fs",
-      "version": "4.2.0",
+      "version": "4.2.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.0.tgz#sha1:8d8fdc73977cb04104721cb53666c1ca64cd328b"
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.1.tgz#sha1:1c1f0c364882c868f5bff6512146328336a11b1d"
         ]
       },
       "overrides": [],
@@ -618,7 +615,7 @@
       "overrides": [],
       "dependencies": [
         "universalify@0.1.2@d41d8cd9", "jsonfile@4.0.0@d41d8cd9",
-        "graceful-fs@4.2.0@d41d8cd9"
+        "graceful-fs@4.2.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -739,14 +736,14 @@
       ],
       "devDependencies": []
     },
-    "base64-js@1.3.0@d41d8cd9": {
-      "id": "base64-js@1.3.0@d41d8cd9",
+    "base64-js@1.3.1@d41d8cd9": {
+      "id": "base64-js@1.3.1@d41d8cd9",
       "name": "base64-js",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.3.0.tgz#sha1:cab1e6118f051095e58b5281aea8c1cd22bfc0e3"
+          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.3.1.tgz#sha1:58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
         ]
       },
       "overrides": [],
@@ -781,7 +778,7 @@
         "revery@github:revery-ui/revery#3f932c5@d41d8cd9",
         "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9",
+        "reason-libvim@link:../reason-libvim",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
