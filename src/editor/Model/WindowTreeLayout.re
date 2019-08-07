@@ -14,7 +14,7 @@ let intersects = (x, y, split: t) => {
   && x <= split.x
   + split.width
   && y >= split.y
-  && y <= split.height;
+  && y <= split.y + split.height;
 };
 
 let move = (id, dirX, dirY, splits: list(t)) => {
@@ -50,9 +50,9 @@ let move = (id, dirX, dirY, splits: list(t)) => {
 
     while (! found^
            && curX^ >= minX
-           && curX^ <= maxX
+           && curX^ < maxX
            && curY^ >= minY
-           && curY^ <= maxY) {
+           && curY^ < maxY) {
       let x = curX^;
       let y = curY^;
 
