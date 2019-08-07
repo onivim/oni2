@@ -65,6 +65,12 @@ let reduce = (action: Actions.t, state: t) => {
         },
       state,
     );
+  | SearchClearHighlights(bid) =>
+    IntMap.update(
+      bid,
+      _ => None,
+      state
+    );
   | SearchClearMatchingPair(bid) =>
     IntMap.update(
       bid,
