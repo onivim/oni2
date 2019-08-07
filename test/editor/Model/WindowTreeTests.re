@@ -80,3 +80,161 @@ describe("WindowTreeTests", ({describe, _}) =>
     });
   })
 );
+
+describe("rotateForward", ({test, _}) => {
+  test("simple tree", ({expect}) => {
+    let splitA = createSplit(~editorGroupId=1, ());
+    let splitB = createSplit(~editorGroupId=2, ());
+    let splitC = createSplit(~editorGroupId=3, ());
+    let tree =
+      WindowTree.empty
+      |> addSplit(Vertical, splitA)
+      |> addSplit(Vertical, splitB)
+      |> addSplit(Vertical, splitC);
+
+    expect.bool(
+      tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
+    ).
+      toBe(
+      true,
+    );
+
+    let newTree = rotateForward(splitC.id, tree);
+
+    expect.bool(
+      newTree
+      == Parent(Vertical, [Leaf(splitA), Leaf(splitC), Leaf(splitB)]),
+    ).
+      toBe(
+      true,
+    );
+  });
+
+  test("nested tree", ({expect}) => {
+    let splitA = createSplit(~editorGroupId=1, ());
+    let splitB = createSplit(~editorGroupId=2, ());
+    let splitC = createSplit(~editorGroupId=3, ());
+    let splitD = createSplit(~editorGroupId=4, ());
+    let tree =
+      WindowTree.empty
+      |> addSplit(Vertical, splitA)
+      |> addSplit(Horizontal, splitB, ~target=Some(splitA.id))
+      |> addSplit(Horizontal, splitC, ~target=Some(splitB.id))
+      |> addSplit(Vertical, splitD);
+
+    expect.bool(
+      tree
+      == Parent(
+           Vertical,
+           [
+             Leaf(splitD),
+             Parent(
+               Horizontal,
+               [Leaf(splitC), Leaf(splitB), Leaf(splitA)],
+             ),
+           ],
+         ),
+    ).
+      toBe(
+      true,
+    );
+
+    let newTree = rotateForward(splitA.id, tree);
+
+    expect.bool(
+      newTree
+      == Parent(
+           Vertical,
+           [
+             Leaf(splitD),
+             Parent(
+               Horizontal,
+               [Leaf(splitA), Leaf(splitC), Leaf(splitB)],
+             ),
+           ],
+         ),
+    ).
+      toBe(
+      true,
+    );
+  });
+});
+
+describe("rotateBackward", ({test, _}) => {
+  test("simple tree", ({expect}) => {
+    let splitA = createSplit(~editorGroupId=1, ());
+    let splitB = createSplit(~editorGroupId=2, ());
+    let splitC = createSplit(~editorGroupId=3, ());
+    let tree =
+      WindowTree.empty
+      |> addSplit(Vertical, splitA)
+      |> addSplit(Vertical, splitB)
+      |> addSplit(Vertical, splitC);
+
+    expect.bool(
+      tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
+    ).
+      toBe(
+      true,
+    );
+
+    let newTree = rotateBackward(splitC.id, tree);
+
+    expect.bool(
+      newTree
+      == Parent(Vertical, [Leaf(splitB), Leaf(splitA), Leaf(splitC)]),
+    ).
+      toBe(
+      true,
+    );
+  });
+
+  test("nested tree", ({expect}) => {
+    let splitA = createSplit(~editorGroupId=1, ());
+    let splitB = createSplit(~editorGroupId=2, ());
+    let splitC = createSplit(~editorGroupId=3, ());
+    let splitD = createSplit(~editorGroupId=4, ());
+    let tree =
+      WindowTree.empty
+      |> addSplit(Vertical, splitA)
+      |> addSplit(Horizontal, splitB, ~target=Some(splitA.id))
+      |> addSplit(Horizontal, splitC, ~target=Some(splitB.id))
+      |> addSplit(Vertical, splitD);
+
+    expect.bool(
+      tree
+      == Parent(
+           Vertical,
+           [
+             Leaf(splitD),
+             Parent(
+               Horizontal,
+               [Leaf(splitC), Leaf(splitB), Leaf(splitA)],
+             ),
+           ],
+         ),
+    ).
+      toBe(
+      true,
+    );
+
+    let newTree = rotateBackward(splitA.id, tree);
+
+    expect.bool(
+      newTree
+      == Parent(
+           Vertical,
+           [
+             Leaf(splitD),
+             Parent(
+               Horizontal,
+               [Leaf(splitB), Leaf(splitA), Leaf(splitC)],
+             ),
+           ],
+         ),
+    ).
+      toBe(
+      true,
+    );
+  });
+});
