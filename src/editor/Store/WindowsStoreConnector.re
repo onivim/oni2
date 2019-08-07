@@ -173,6 +173,28 @@ let start = getState => {
         WindowManager.ensureActive({...s.windowManager, windowTree});
 
       {...s, windowManager};
+    | Command("view.rotateForward") => {
+        ...s,
+        windowManager: {
+          ...s.windowManager,
+          windowTree:
+            WindowTree.rotateForward(
+              s.windowManager.activeWindowId,
+              s.windowManager.windowTree,
+            ),
+        },
+      }
+    | Command("view.rotateBackward") => {
+        ...s,
+        windowManager: {
+          ...s.windowManager,
+          windowTree:
+            WindowTree.rotateBackward(
+              s.windowManager.activeWindowId,
+              s.windowManager.windowTree,
+            ),
+        },
+      }
     | _ => s
     };
 
