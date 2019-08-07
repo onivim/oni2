@@ -61,7 +61,6 @@ let start = _ => {
   };
 
   let windowMoveEffect = (state: State.t, direction, _) => {
-    Log.info("WINDOW MOVE EFFECT");
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
       let windowId = WindowManager.move(direction, state.windowManager);
       let maybeEditorGroupId =
