@@ -1,7 +1,6 @@
 open TestFramework;
 
-module Utility = Oni_Core__Utility;
-open Utility;
+open Oni_Core.Utility;
 
 describe("last", ({test, _}) => {
   test("empty", ({expect}) =>

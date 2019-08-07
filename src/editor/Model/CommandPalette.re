@@ -42,6 +42,18 @@ let create = setItems => {
       command: () => Actions.ToggleZenMode,
       icon: None,
     },
+    {
+      category: Some("View"),
+      name: "Rotate Windows (Forwards)",
+      command: () => Actions.Command("view.rotateForward"),
+      icon: None,
+    },
+    {
+      category: Some("View"),
+      name: "Rotate Windows (Backwards)",
+      command: () => Actions.Command("view.rotateBackward"),
+      icon: None,
+    },
   ];
 
   setItems(commands);
