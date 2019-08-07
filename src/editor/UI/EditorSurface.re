@@ -514,13 +514,10 @@ let createElement =
             relX -. lineNumberWidth,
             relY,
           );
-        print_endline ("Setting top line: " ++ string_of_int(topVisibleLine));
-        print_endline ("------- START: setTopLeft --------");
+        Log.debug("EditorSurface - editorMouseUp: topVisibleLine is " ++ string_of_int(topVisibleLine));
         Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
-        print_endline ("------- END: setTopLeft --------");
-        print_endline ("------- START: setPosition --------");
+        Log.debug("EditorSurface - editorMouseUp: setPosition (" ++ string_of_int(line + 1) ++ ", " ++ string_of_int(col) ++ ")");
         Vim.Cursor.setPosition(line + 1, col);
-        print_endline ("------- END: setPosition --------");
       };
     };
 
