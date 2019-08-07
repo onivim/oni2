@@ -1,3 +1,5 @@
+open Oni_Core;
+
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
@@ -112,3 +114,53 @@ let rec removeSplit = (id, currentTree) =>
   | Leaf(_) as leaf => leaf
   | Empty => Empty
   };
+
+let rec rotate = (id, func, currenTree) => {
+  let findSplit = (id, children) => {
+    let predicate =
+      fun
+      | Leaf(split) => split.id == id
+      | _ => false;
+
+    List.exists(predicate, children);
+  };
+
+  switch (currenTree) {
+  | Parent(direction, children) =>
+    Parent(
+      direction,
+      List.map(
+        rotate(id, func),
+        findSplit(id, children) ? func(children) : children,
+      ),
+    )
+  | Leaf(_) as leaf => leaf
+  | Empty => Empty
+  };
+};
+
+let rotateForward = (id, currentTree) => {
+  let f =
+    fun
+    | [] => []
+    | [a] => [a]
+    | [a, b] => [b, a]
+    | l =>
+      switch (Utility.last(l)) {
+      | Some(x) => [x, ...Utility.dropLast(l)]
+      | None => []
+      };
+
+  rotate(id, f, currentTree);
+};
+
+let rotateBackward = (id, currentTree) => {
+  let f =
+    fun
+    | [] => []
+    | [a] => [a]
+    | [a, b] => [b, a]
+    | [head, ...tail] => tail @ [head];
+
+  rotate(id, f, currentTree);
+};
