@@ -515,8 +515,12 @@ let createElement =
             relY,
           );
         print_endline ("Setting top line: " ++ string_of_int(topVisibleLine));
-        Vim.Window.setTopLeft(topVisibleLine + 1, leftVisibleColumn);
+        print_endline ("------- START: setTopLeft --------");
+        Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
+        print_endline ("------- END: setTopLeft --------");
+        print_endline ("------- START: setPosition --------");
         Vim.Cursor.setPosition(line + 1, col);
+        print_endline ("------- END: setPosition --------");
       };
     };
 
