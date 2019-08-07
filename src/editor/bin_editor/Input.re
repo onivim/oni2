@@ -74,6 +74,11 @@ let keyPressToCommand =
         | KEY_RIGHT => Some("RIGHT")
         | KEY_DOWN => Some("DOWN")
         | KEY_UP => Some("UP")
+        | KEY_PAGE_UP => Some("PAGEUP")
+        | KEY_PAGE_DOWN => Some("PAGEDOWN")
+        | KEY_HOME => Some("HOME")
+        | KEY_END => Some("END")
+        | KEY_INSERT => Some("INSERT")
         | KEY_LEFT_SHIFT
         | KEY_RIGHT_SHIFT => Some("SHIFT")
         | _ => None
