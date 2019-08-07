@@ -85,6 +85,14 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
     });
 
   let _ =
+    Vim.Search.onStopSearchHighlight(() => {
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      dispatch(Model.Actions.SearchClearHighlights(id));
+    });
+
+  let _ =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
