@@ -215,7 +215,7 @@
     "@opam/ocaml-migrate-parsetree": "1.3.1",
     "@opam/ppx_tools_versioned": "5.2.2",
     "revery": "github:revery-ui/revery#b473741",
-    "reason-libvim": "github:onivim/reason-libvim#b1b554f",
+    "reason-libvim": "github:onivim/reason-libvim#5c81c76",
     "reason-fontkit": "github:revery-ui/reason-fontkit#f364c36",
     "@opam/ocamlfind": "1.8.0",
     "@opam/biniou": "1.2.0",
