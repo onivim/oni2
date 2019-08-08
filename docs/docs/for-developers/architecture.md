@@ -50,7 +50,7 @@ Overview:
 
 Vim is at the heart of Onivim 2. There are a few moving parts:
 
-- [libvim](https://github.com/onivim/libvim) - A fork of [Vim](https://vim.org) that is platform and terminal agnostic. It is the core buffer editing engine exposed via a simple [API](https://github.com/onivim/libvim/blob/master/src/libvim.h).
+- [libvim](https://github.com/onivim/libvim) - A fork of [Vim](https://www.vim.org) that is platform and terminal agnostic. It is the core buffer editing engine exposed via a simple [API](https://github.com/onivim/libvim/blob/master/src/libvim.h).
 - [reason-libvim](https://github.com/onivim/reason-libvim) - Reason bindings for `libvim`. Glance at the [rei](https://github.com/onivim/reason-libvim/blob/master/src/Vim.rei) to get a feel for the API.
 
 Onivim 2 integrates with `reason-libvim` via a _store connector_: [`VimStoreConnector.re`](https://github.com/onivim/oni2/blob/master/src/editor/Store/VimStoreConnector.re).
@@ -103,5 +103,3 @@ For learning more about the architectural ideas, we recommend:
 - [Elm Architecture](https://guide.elm-lang.org/architecture/)
 - [Redux](https://redux.js.org/)
 - [React](https://reactjs.org/)
-
-
