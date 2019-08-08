@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = () => {
+let start = (~cliOptions: Cli.t) => {
   let configurationFileName = "configuration.json";
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _ =
@@ -31,7 +31,15 @@ let start = () => {
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString)) {
-        | Ok(v) => dispatch(Actions.ConfigurationSet(v))
+        | Ok(v) =>
+          dispatch(Actions.ConfigurationSet(v));
+
+          let zenModeSingleFile =
+            Configuration.getValue(c => c.zenModeSingleFile, v);
+
+          if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+            dispatch(Actions.ToggleZenMode);
+          };
         | Error(err) => Log.error("Error loading configuration file: " ++ err)
         }
       | Error(err) => Log.error("Error loading configuration file: " ++ err)

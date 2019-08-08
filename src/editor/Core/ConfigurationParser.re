@@ -162,6 +162,10 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.hideTabs",
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
   ),
+  (
+    "editor.zenMode.singleFile",
+    (s, v) => {...s, zenModeSingleFile: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =
