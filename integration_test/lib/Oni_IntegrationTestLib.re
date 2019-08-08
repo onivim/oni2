@@ -39,6 +39,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
       ~getClipboardText=() => _currentClipboard^,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
+      ~cliOptions=None,
       (),
     );
 

@@ -41,7 +41,7 @@ let start =
       ~executingDirectory,
       ~onStateChanged,
       ~getClipboardText,
-      ~cliOptions,
+      ~cliOptions: option(Oni_Core.Cli.t),
       (),
     ) => {
   ignore(executingDirectory);
