@@ -68,7 +68,7 @@ let init = app => {
       ~getClipboardText=
         () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
       ~setClipboardText=
-        (v) => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, v),
+        v => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, v),
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       (),

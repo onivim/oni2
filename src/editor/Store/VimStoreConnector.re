@@ -13,7 +13,8 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
+let start =
+    (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -45,11 +46,16 @@ let start = (getState: unit => Model.State.t, getClipboardText, setClipboardText
       let regname = 'a';
       let isClipboardRegister = regname == '*' || regname == '+';
       let operator = Vim.Yank.Yank;
-      let shouldPropagateToClipboard = isClipboardRegister || (operator == Vim.Yank.Yank && allYanks) || (operator == Vim.Yank.Delete && allDeletes);
+      let shouldPropagateToClipboard =
+        isClipboardRegister
+        || operator == Vim.Yank.Yank
+        && allYanks
+        || operator == Vim.Yank.Delete
+        && allDeletes;
       if (shouldPropagateToClipboard) {
         let text = String.concat("\n", Array.to_list(lines));
         setClipboardText(text);
-      }
+      };
     });
 
   let _ =
