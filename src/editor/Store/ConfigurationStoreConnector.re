@@ -40,19 +40,22 @@ let start = (~cliOptions: option(Cli.t)) => {
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
-      dispatch(Actions.ConfigurationReload);
       let configPath =
         Filesystem.getOrCreateConfigFile(configurationFileName);
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {
         | (Ok(configuration), Some(cliOptions)) =>
+          dispatch(Actions.ConfigurationSet(configuration));
+
           let zenModeSingleFile =
             Configuration.getValue(c => c.zenModeSingleFile, configuration);
 
           if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
             dispatch(Actions.ToggleZenMode);
           };
+        | (Error(err), _) =>
+          Log.error("Error loading configuration file: " ++ err)
         | _ => ()
         };
         reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
