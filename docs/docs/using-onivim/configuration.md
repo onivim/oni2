@@ -35,3 +35,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
+
+### Vim
+
+- `vim.useSystemClipboard` __(_`true`_|_`false`_|_`"yank"`_ default: `"yank"`)__ - Whether or not deletes / yanks should integrate with the system clipboard:
+    - _`true`_ - all deletes and yanks, regardless of register used, will be pushed to the system clipboard
+    - _`"yank"`_ - all yanks, regardless of register used, will be pushed to the system clipboard
+    - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard
