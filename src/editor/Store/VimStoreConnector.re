@@ -42,17 +42,19 @@ let start =
   let _ =
     Vim.onYank(({lines, register, operator, _}) => {
       let state = getState();
-      let yankConfig = Model.Selectors.getActiveConfigurationValue(state, 
-      (c) => c.vimUseSystemClipboard);
+      let yankConfig =
+        Model.Selectors.getActiveConfigurationValue(state, c =>
+          c.vimUseSystemClipboard
+        );
       let allYanks = yankConfig.yank;
       let allDeletes = yankConfig.delete;
       let isClipboardRegister = register == '*' || register == '+';
       let shouldPropagateToClipboard =
         isClipboardRegister
-        || (operator == Vim.Yank.Yank
-        && allYanks)
-        || (operator == Vim.Yank.Delete
-        && allDeletes);
+        || operator == Vim.Yank.Yank
+        && allYanks
+        || operator == Vim.Yank.Delete
+        && allDeletes;
       if (shouldPropagateToClipboard) {
         let text = String.concat("\n", Array.to_list(lines));
         setClipboardText(text);

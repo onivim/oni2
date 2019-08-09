@@ -64,24 +64,25 @@ let parseLineNumberSetting = json =>
 
 let parseVimUseSystemClipboardSetting = json =>
   switch (json) {
-  | `Bool(true) => { yank: true, delete: true, paste: true }
-  | `Bool(false) => { yank: false, delete: false, paste: false }
+  | `Bool(true) => {yank: true, delete: true, paste: true}
+  | `Bool(false) => {yank: false, delete: false, paste: false}
   | `List(items) =>
     List.fold_left(
       (accum, item) =>
         switch (item) {
-        | `String(v) => switch (String.lowercase_ascii(v)) {
-          | "yank" => { ...accum, yank: true }
-          | "paste" => { ...accum, paste: true }
-          | "delete" => { ...accum, delete: true }
+        | `String(v) =>
+          switch (String.lowercase_ascii(v)) {
+          | "yank" => {...accum, yank: true}
+          | "paste" => {...accum, paste: true}
+          | "delete" => {...accum, delete: true}
           | _ => accum
-        }
+          }
         | _ => accum
         },
-      { yank: false, delete: false, paste: false },
+      {yank: false, delete: false, paste: false},
       items,
-    );
-  | _ => { yank: true, delete: false, paste: false }
+    )
+  | _ => {yank: true, delete: false, paste: false}
   };
 
 let parseRenderWhitespace = json =>
@@ -186,7 +187,10 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "vim.useSystemClipboard",
-    (s, v) => {...s, vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v)},
+    (s, v) => {
+      ...s,
+      vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v),
+    },
   ),
 ];
 

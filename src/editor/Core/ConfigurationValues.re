@@ -65,6 +65,10 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   filesExclude: ["node_modules", "_esy"],
-  vimUseSystemClipboard: { yank: true, delete: false, paste: false },
+  vimUseSystemClipboard: {
+    yank: true,
+    delete: false,
+    paste: false,
+  },
   zenModeHideTabs: true,
 };
