@@ -60,6 +60,23 @@ let start = _ => {
     });
   };
 
+  let windowMoveEffect = (state: State.t, direction, _) => {
+    Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
+      let windowId = WindowManager.move(direction, state.windowManager);
+      let maybeEditorGroupId =
+        WindowTree.getEditorGroupIdFromSplitId(
+          windowId,
+          state.windowManager.windowTree,
+        );
+
+      switch (maybeEditorGroupId) {
+      | Some(editorGroupId) =>
+        dispatch(WindowSetActive(windowId, editorGroupId))
+      | None => ()
+      };
+    });
+  };
+
   let commands = [
     (
       "commandPalette.open",
@@ -113,6 +130,10 @@ let start = _ => {
     ("wildmenu.next", _ => singleActionEffect(WildmenuNext)),
     ("wildmenu.previous", _ => singleActionEffect(WildmenuPrevious)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
+    ("window.moveLeft", state => windowMoveEffect(state, Left)),
+    ("window.moveRight", state => windowMoveEffect(state, Right)),
+    ("window.moveUp", state => windowMoveEffect(state, Up)),
+    ("window.moveDown", state => windowMoveEffect(state, Down)),
   ];
 
   let commandMap =

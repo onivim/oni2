@@ -1,6 +1,7 @@
 const cp = require("child_process");
 const fs = require("fs-extra");
 const path = require("path");
+const package = require("./../package.json")
 
 let curBin = process.env["cur__bin"];
 console.log("Bin folder: " + curBin);
@@ -99,7 +100,7 @@ if (process.platform == "linux") {
       CFBundleDisplayName: "Onivim 2",
       CFBundleIdentifier: "com.outrunlabs.onivim2",
       CFBundleIconFile: "Onivim2",
-      CFBundleVersion: "0.01",
+      CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
       CFBundleExecutable: "Oni2",
@@ -112,7 +113,7 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  
+
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
@@ -139,7 +140,7 @@ if (process.platform == "linux") {
     console.log(`Symlinking ${symlinkDest} -> ${fileSrc}`);
     fs.ensureSymlink(symlinkDest, fileSrc);
   });
-  
+
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
 
