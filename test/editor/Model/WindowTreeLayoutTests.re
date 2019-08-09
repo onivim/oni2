@@ -1,6 +1,6 @@
 open TestFramework;
 
-/* open Helpers; */
+open Oni_Core_Test.Helpers;
 
 /* open Oni_Core.Types; */
 module WindowTree = Oni_Model.WindowTree;
@@ -9,7 +9,47 @@ module WindowTreeLayout = Oni_Model.WindowTreeLayout;
 open WindowTree;
 open WindowTreeLayout;
 
-describe("WindowTreeLayout", ({describe, _}) =>
+describe("WindowTreeLayout", ({describe, _}) => {
+  describe("move", ({test, _}) => {
+    test("regression test for #603 - navigation across splits not working", ({expect}) => {
+      let split1 = createSplit(~editorGroupId=1, ());
+      let split2 = createSplit(~editorGroupId=2, ());
+      let split3 = createSplit(~editorGroupId=3, ());
+
+      let splits =
+        WindowTree.empty
+        |> addSplit(~target=None, Horizontal, split1)
+        |> addSplit(~target=Some(split1.id), Horizontal, split2)
+        |> addSplit(~target=Some(split2.id), Horizontal, split3);
+
+      let layoutItems = WindowTreeLayout.layout(0, 0, 300, 300, splits);
+
+      expect.bool(
+        [
+          {split: split3, width: 300, height: 100, x: 0, y: 0},
+          {split: split2, width: 300, height: 100, x: 0, y: 100},
+          {split: split1, width: 300, height: 100, x: 0, y: 200},
+        ]
+        == layoutItems,
+      ).
+        toBe(
+        true,
+      );
+
+      let destId = WindowTreeLayout.move(split3.id, 0, 1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(split2.id);
+      
+      let destId = WindowTreeLayout.move(split2.id, 0, 1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(split1.id);
+      
+      let destId = WindowTreeLayout.move(split1.id, 0, -1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(split2.id);
+      
+      let destId = WindowTreeLayout.move(split2.id, 0, -1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(split3.id);
+    });
+  });
+  
   describe("layout", ({test, _}) => {
     test("layout vertical splits", ({expect}) => {
       let split1 = createSplit(~editorGroupId=1, ());
@@ -82,4 +122,4 @@ describe("WindowTreeLayout", ({describe, _}) =>
       );
     });
   })
-);
+});
