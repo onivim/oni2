@@ -10,6 +10,7 @@ type editorRenderWhitespace =
   | Boundary
   | None;
 
+[@deriving show({with_path: false})]
 type vimUseSystemClipboard = {
   yank: bool,
   delete: bool,

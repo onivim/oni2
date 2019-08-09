@@ -40,12 +40,13 @@ let start =
     });
 
   let _ =
-    Vim.onYank(({lines, _}) => {
-      let allYanks = true;
-      let allDeletes = false;
-      let regname = 'a';
-      let isClipboardRegister = regname == '*' || regname == '+';
-      let operator = Vim.Yank.Yank;
+    Vim.onYank(({lines, register, operator, _}) => {
+      let state = getState();
+      let yankConfig = Model.Selectors.getActiveConfigurationValue(state, 
+      (c) => c.vimUseSystemClipboard);
+      let allYanks = yankConfig.yank;
+      let allDeletes = yankConfig.delete;
+      let isClipboardRegister = register == '*' || register == '+';
       let shouldPropagateToClipboard =
         isClipboardRegister
         || operator == Vim.Yank.Yank
