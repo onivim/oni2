@@ -1,5 +1,5 @@
 {
-  "checksum": "51c1283f55bfabf07b4f6bcbc52d1af5",
+  "checksum": "4c66855512db42681423827748266b90",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -246,13 +246,13 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#5c81c76@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#5c81c76@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#5c81c76",
+      "version": "github:onivim/reason-libvim#490ed3f",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#5c81c76" ]
+        "source": [ "github:onivim/reason-libvim#490ed3f" ]
       },
       "overrides": [],
       "dependencies": [
@@ -796,7 +796,7 @@
         "revery@github:revery-ui/revery#b473741@d41d8cd9",
         "rench@1.7.1@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#5c81c76@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
