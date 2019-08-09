@@ -62,11 +62,8 @@ let parseLineNumberSetting = json =>
   | _ => On
   };
 
-let parseVimUseSystemClipboardSetting = json =>
-  switch (json) {
-  | `Bool(true) => {yank: true, delete: true, paste: true}
-  | `Bool(false) => {yank: false, delete: false, paste: false}
-  | `List(items) =>
+let parseVimUseSystemClipboardSetting = json => {
+    let parseItems = (items) =>
     List.fold_left(
       (accum, item) =>
         switch (item) {
@@ -81,9 +78,15 @@ let parseVimUseSystemClipboardSetting = json =>
         },
       {yank: false, delete: false, paste: false},
       items,
-    )
+    );
+  switch (json) {
+  | `Bool(true) => {yank: true, delete: true, paste: true}
+  | `Bool(false) => {yank: false, delete: false, paste: false}
+  | `String(v) => parseItems([`String(v)])
+  | `List(items) => parseItems(items)
   | _ => {yank: true, delete: false, paste: false}
   };
+}
 
 let parseRenderWhitespace = json =>
   switch (json) {
