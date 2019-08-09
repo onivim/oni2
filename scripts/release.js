@@ -118,6 +118,9 @@ if (process.platform == "linux") {
   // Copy bins over
   copy(curBin, binaryDirectory);
 
+  // Copy run helper script over
+  copy("scripts/osx/run.sh", "_release/run.sh");
+
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
