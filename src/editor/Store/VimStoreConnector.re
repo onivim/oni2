@@ -49,10 +49,10 @@ let start =
       let isClipboardRegister = register == '*' || register == '+';
       let shouldPropagateToClipboard =
         isClipboardRegister
-        || operator == Vim.Yank.Yank
-        && allYanks
-        || operator == Vim.Yank.Delete
-        && allDeletes;
+        || (operator == Vim.Yank.Yank
+        && allYanks)
+        || (operator == Vim.Yank.Delete
+        && allDeletes);
       if (shouldPropagateToClipboard) {
         let text = String.concat("\n", Array.to_list(lines));
         setClipboardText(text);
