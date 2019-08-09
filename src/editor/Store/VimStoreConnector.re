@@ -154,7 +154,7 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let move = (moveFunc, state) => {
+      let move = (moveFunc) => {
         let windowId = moveFunc(currentState.windowManager);
         let maybeEditorGroupId =
           Model.WindowTree.getEditorGroupIdFromSplitId(
@@ -171,18 +171,18 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(Model.WindowManager.moveLeft, currentState)
+      | OneLeft => move(Model.WindowManager.moveLeft)
       | FullRight
-      | OneRight => move(Model.WindowManager.moveRight, currentState)
+      | OneRight => move(Model.WindowManager.moveRight)
       | FullDown
-      | OneDown => move(Model.WindowManager.moveDown, currentState)
+      | OneDown => move(Model.WindowManager.moveDown)
       | FullUp
-      | OneUp => move(Model.WindowManager.moveUp, currentState)
+      | OneUp => move(Model.WindowManager.moveUp)
       | RotateDownwards =>
         dispatch(Model.Actions.Command("view.rotateForward"))
       | RotateUpwards =>
         dispatch(Model.Actions.Command("view.rotateBackward"))
-      | _ => move(windowManager => windowManager.activeWindowId, currentState)
+      | _ => move(windowManager => windowManager.activeWindowId)
       };
     });
 
