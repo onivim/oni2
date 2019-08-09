@@ -34,6 +34,7 @@ type t = {
   workbenchIconTheme: string,
   filesExclude: list(string),
   zenModeHideTabs: bool,
+  explorerIndentSize: int,
 };
 
 let default = {
@@ -58,4 +59,5 @@ let default = {
   workbenchIconTheme: "vs-seti",
   filesExclude: ["node_modules", "_esy"],
   zenModeHideTabs: true,
+  explorerIndentSize: 2,
 };

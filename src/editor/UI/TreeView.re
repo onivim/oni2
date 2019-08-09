@@ -47,6 +47,7 @@ let itemRenderer =
       ~itemSize,
       ~foregroundColor,
       ~backgroundColor,
+      ~state: State.t,
       {data, status, id}: itemContent,
     ) => {
   let isOpen =
@@ -65,7 +66,8 @@ let itemRenderer =
       backgroundColor(bgColor),
     ];
 
-  let indentStr = String.make(indent * 2, ' ');
+  let explorerIndent = Core.Configuration.getValue(c => c.explorerIndentSize, state.configuration)
+  let indentStr = String.make(indent * explorerIndent, ' ');
 
   let icon =
     switch (data) {
@@ -140,6 +142,7 @@ let createElement =
         ~itemSize,
         ~backgroundColor,
         ~foregroundColor,
+        ~state,
       );
 
     (

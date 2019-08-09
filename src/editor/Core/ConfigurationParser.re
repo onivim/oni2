@@ -162,6 +162,10 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.hideTabs",
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
   ),
+  (
+    "explorer.indentSize",
+    (s, v) => {...s, explorerIndentSize: parseInt(v)}
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =
