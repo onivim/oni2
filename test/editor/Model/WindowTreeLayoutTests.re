@@ -10,8 +10,10 @@ open WindowTree;
 open WindowTreeLayout;
 
 describe("WindowTreeLayout", ({describe, _}) => {
-  describe("move", ({test, _}) => {
-    test("regression test for #603 - navigation across splits not working", ({expect}) => {
+  describe("move", ({test, _}) =>
+    test(
+      "regression test for #603 - navigation across splits not working",
+      ({expect}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
@@ -36,20 +38,24 @@ describe("WindowTreeLayout", ({describe, _}) => {
         true,
       );
 
-      let destId = WindowTreeLayout.move(split3.id, 0, 1, layoutItems) |> getOrThrow;
+      let destId =
+        WindowTreeLayout.move(split3.id, 0, 1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(split2.id);
-      
-      let destId = WindowTreeLayout.move(split2.id, 0, 1, layoutItems) |> getOrThrow;
+
+      let destId =
+        WindowTreeLayout.move(split2.id, 0, 1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(split1.id);
-      
-      let destId = WindowTreeLayout.move(split1.id, 0, -1, layoutItems) |> getOrThrow;
+
+      let destId =
+        WindowTreeLayout.move(split1.id, 0, -1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(split2.id);
-      
-      let destId = WindowTreeLayout.move(split2.id, 0, -1, layoutItems) |> getOrThrow;
+
+      let destId =
+        WindowTreeLayout.move(split2.id, 0, -1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(split3.id);
-    });
-  });
-  
+    })
+  );
+
   describe("layout", ({test, _}) => {
     test("layout vertical splits", ({expect}) => {
       let split1 = createSplit(~editorGroupId=1, ());
@@ -121,5 +127,5 @@ describe("WindowTreeLayout", ({describe, _}) => {
         true,
       );
     });
-  })
+  });
 });

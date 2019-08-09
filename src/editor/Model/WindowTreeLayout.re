@@ -14,7 +14,8 @@ let intersects = (x, y, split: t) => {
   && x <= split.x
   + split.width
   && y >= split.y
-  && y <= split.y + split.height;
+  && y <= split.y
+  + split.height;
 };
 
 let move = (id, dirX, dirY, splits: list(t)) => {
