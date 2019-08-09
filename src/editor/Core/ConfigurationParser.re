@@ -63,7 +63,7 @@ let parseLineNumberSetting = json =>
   };
 
 let parseVimUseSystemClipboardSetting = json => {
-    let parseItems = (items) =>
+  let parseItems = items =>
     List.fold_left(
       (accum, item) =>
         switch (item) {
@@ -86,7 +86,7 @@ let parseVimUseSystemClipboardSetting = json => {
   | `List(items) => parseItems(items)
   | _ => {yank: true, delete: false, paste: false}
   };
-}
+};
 
 let parseRenderWhitespace = json =>
   switch (json) {

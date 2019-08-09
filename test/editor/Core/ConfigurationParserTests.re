@@ -113,7 +113,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
-  
+
   test("vimUseSystemClipboard value", ({expect}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
@@ -121,46 +121,58 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 
     switch (ConfigurationParser.ofString(configuration)) {
     | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.vimUseSystemClipboard, v) == {yank: false, delete: false, paste: false}).
+      expect.bool(
+        Configuration.getValue(c => c.vimUseSystemClipboard, v)
+        == {yank: false, delete: false, paste: false},
+      ).
         toBe(
         true,
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-    
+
     let configuration = {|
       { "vim.useSystemClipboard": "yank" }
       |};
 
     switch (ConfigurationParser.ofString(configuration)) {
     | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.vimUseSystemClipboard, v) == {yank: true, delete: false, paste: false}).
+      expect.bool(
+        Configuration.getValue(c => c.vimUseSystemClipboard, v)
+        == {yank: true, delete: false, paste: false},
+      ).
         toBe(
         true,
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-    
+
     let configuration = {|
       { "vim.useSystemClipboard": ["yank", "delete"] }
       |};
 
     switch (ConfigurationParser.ofString(configuration)) {
     | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.vimUseSystemClipboard, v) == {yank: true, delete: true, paste: false}).
+      expect.bool(
+        Configuration.getValue(c => c.vimUseSystemClipboard, v)
+        == {yank: true, delete: true, paste: false},
+      ).
         toBe(
         true,
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-    
+
     let configuration = {|
       { "vim.useSystemClipboard": true }
       |};
 
     switch (ConfigurationParser.ofString(configuration)) {
     | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.vimUseSystemClipboard, v) == {yank: true, delete: true, paste: true}).
+      expect.bool(
+        Configuration.getValue(c => c.vimUseSystemClipboard, v)
+        == {yank: true, delete: true, paste: true},
+      ).
         toBe(
         true,
       )
