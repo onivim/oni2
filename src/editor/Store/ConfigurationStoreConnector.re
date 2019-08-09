@@ -31,20 +31,7 @@ let start = (~cliOptions: option(Cli.t)) => {
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString)) {
-        | Ok(v) =>
-          dispatch(Actions.ConfigurationSet(v));
-
-          switch (cliOptions) {
-          | Some(cliOptions) =>
-            let zenModeSingleFile =
-              Configuration.getValue(c => c.zenModeSingleFile, v);
-
-            if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
-              dispatch(Actions.ToggleZenMode);
-            };
-          | None => ()
-          };
-
+        | Ok(v) => dispatch(Actions.ConfigurationSet(v))
         | Error(err) => Log.error("Error loading configuration file: " ++ err)
         }
       | Error(err) => Log.error("Error loading configuration file: " ++ err)
@@ -58,7 +45,17 @@ let start = (~cliOptions: option(Cli.t)) => {
         Filesystem.getOrCreateConfigFile(configurationFileName);
       switch (configPath) {
       | Ok(configPathAsString) =>
-        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch)
+        switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {
+        | (Ok(configuration), Some(cliOptions)) =>
+          let zenModeSingleFile =
+            Configuration.getValue(c => c.zenModeSingleFile, configuration);
+
+          if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+            dispatch(Actions.ToggleZenMode);
+          };
+        | _ => ()
+        };
+        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
       | Error(err) => Log.error("Error loading configuration file: " ++ err)
       };
       ();
