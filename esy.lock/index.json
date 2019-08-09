@@ -1,5 +1,5 @@
 {
-  "checksum": "3f8075a0994248892ebdca0eb65831ec",
+  "checksum": "51c1283f55bfabf07b4f6bcbc52d1af5",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -89,9 +89,8 @@
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-glfw@3.2.1027@d41d8cd9",
         "reason-gl-matrix@0.9.9304@d41d8cd9",
-        "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9",
-        "ocaml@4.7.1004@d41d8cd9", "flex@1.2.2@d41d8cd9",
-        "@reason-native/console@0.0.3@d41d8cd9",
+        "reason-fontkit@2.5.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "flex@1.2.2@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.2.1@08ba7e51",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
@@ -325,13 +324,15 @@
       ],
       "devDependencies": []
     },
-    "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9": {
-      "id": "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9",
+    "reason-fontkit@2.5.0@d41d8cd9": {
+      "id": "reason-fontkit@2.5.0@d41d8cd9",
       "name": "reason-fontkit",
-      "version": "github:revery-ui/reason-fontkit#f364c36",
+      "version": "2.5.0",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-fontkit#f364c36" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.5.0.tgz#sha1:86af79381925ae16acd65a96d9bc91d3b06111bc"
+        ]
       },
       "overrides": [],
       "dependencies": [
