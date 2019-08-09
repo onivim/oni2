@@ -20,12 +20,12 @@ We want to have a functional lean to our codebase... and [ReasonML](https://reas
 - __State__ and __Model__: used interchangeably to describe the application state. 
 - __Reducer__: A function of (`state`, `action`) that returns a new `state`.
 - __Updater__: A function of (`state`, `action`) that returns a tuple of (`state`, `effects`). Similar to a reducer, but also handles side-effects. Inspired by the [Elm Architecture](https://guide.elm-lang.org/architecture/)
-- __Store Connector__: Loosely akin to a middleware in React.
-- __Store__: A __State__, __Updater__, and __Store Connectors__. Similar to a [store](https://redux.js.org/basics/store) in Redux.
+- __Store Connector__: Loosely akin to a [middleware](https://redux.js.org/advanced/middleware) in [Redux](https://redux.js.org).
+- __Store__: A __State__, __Updater__, and __Store Connectors__. Similar to a [store](https://redux.js.org/basics/store) in [Redux](https://redux.js.org).
 
 One additional concept is the idea of our UI as a _pure function_ of `state` - this will be familiar for anyone coming from [React](https://reactjs.org).
 
-The state management (actions, state, reducer, updaters, store) are facilitated by a reason-native library called [`isolinear](https://github.com/bryphe/isolinear).
+The state management (actions, state, reducers, updaters, store) are facilitated by a reason-native library called [`isolinear](https://github.com/bryphe/isolinear).
 
 ### Source Code Overview
 

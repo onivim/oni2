@@ -39,7 +39,13 @@ We're developing Onivim 2 [in the open](https://github.com/onivim/oni2), but it 
 However, we value open source - and to that end, we've implemented a 'time-delay' open source license. __Each commit that makes it to `master` will be dual-licensed under the permissive MIT license after 18 months__.
 We maintain a [separate repo](https://github.com/onivim/oni2-mit) containing the MIT licensed code, which is sync'd daily. 
 
-We hope that this can help us strike a balance: __the sustainability of a commercial offering__ while __giving back to the open source community__. 
+We hope that this can help us strike a balance: __the sustainability of a commercial offering__ while __giving back to the open source community__.
+
+When we talk about sustainability - we mean not only in the context of Onivim 2, but in the broader context of open-source. 
+
+To that end, we dedicate a portion of the proceeds from sales of Onivim 2 to open-source projects we leverage, like:
+- [Vim](https://www.vim.org/sponsor/hall_of_honour.php)
+- [Neovim](https://salt.bountysource.com/teams/neovim/supporters)
 
 ### Do I need multiple licenses to use on multiple machines?
 
