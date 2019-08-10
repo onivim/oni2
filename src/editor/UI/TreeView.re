@@ -67,7 +67,6 @@ let itemRenderer =
       backgroundColor(bgColor),
     ];
 
-  Core.Log.info("Indent"++string_of_int(indent))
 
   let explorerIndent = Core.Configuration.getValue(c => c.workbenchTreeIndent, state.configuration)
   
