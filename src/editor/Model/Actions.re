@@ -78,6 +78,7 @@ type t =
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
+  | YankBlock(int, VisualRange.t)
   | ToggleZenMode
   | Noop
 and editor = {

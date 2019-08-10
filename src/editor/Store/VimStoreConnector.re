@@ -38,6 +38,22 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
     });
 
+  let _ = Vim.onYank(({startLine, endLine, startColumn, endColumn, yankType, _ }) => {
+    print_endline ("startLine: " ++ string_of_int(startLine));
+
+    let buffer = Vim.Buffer.getCurrent();
+    let id = Vim.Buffer.getId(buffer);
+
+    let visualType = switch (yankType) {
+    | Block => Vim.Types.Block
+    | Line => Vim.Types.Line
+    | Char => Vim.Types.Character
+    };
+
+    let range = Core.VisualRange.create(~startLine, ~endLine, ~startColumn, ~endColumn, ~mode=visualType, ());
+    dispatch(YankBlock(id, range));
+  });
+
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.info("Buffer metadata changed: " ++ string_of_int(meta.id));

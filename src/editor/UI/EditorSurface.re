@@ -805,6 +805,30 @@ let createElement =
                     (),
                   )
                 };
+
+                 Shapes.drawRect(
+                   ~transform,
+                   ~x=10.,
+                     /*lineNumberWidth
+                     +. float_of_int(startOffset)
+                     *. fontWidth
+                     -. halfOffset,*/
+                   ~y=10.,
+                     /*fontHeight
+                     *. float_of_int(
+                          Index.toZeroBasedInt(r.startPosition.line),
+                        )
+                     -. editor.scrollY
+                     -. halfOffset,*/
+                  //  ~height=fontHeight +. offset,
+                   ~height=50.,
+                   ~width=50.,
+                    //  offset
+                    //  +. max(float_of_int(endOffset - startOffset), 1.0)
+                    //  *. fontWidth,
+                   ~color=Colors.yellow,
+                   (),
+                 );
               };
             }}
           />

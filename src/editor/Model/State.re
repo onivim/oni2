@@ -11,6 +11,7 @@ type t = {
   mode: Vim.Mode.t,
   diagnostics: Diagnostics.t,
   buffers: Buffers.t,
+  yankHighlights: YankHighlights.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   menu: Menu.t,
@@ -60,5 +61,6 @@ let create: unit => t =
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
+    yankHighlights: YankHighlights.create(),
     zenMode: false,
   };
