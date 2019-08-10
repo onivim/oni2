@@ -1,9 +1,12 @@
+open Oni_Core;
+
 type t = {
   searchQuery: string,
   isOpen: bool,
   commands: list(Actions.menuCommand),
   filteredCommands: list(Actions.menuCommand),
   selectedItem: int,
+  filterJob: MenuJob.t,
   dispose: unit => unit,
 };
 
@@ -11,7 +14,7 @@ let create = () => {
   searchQuery: "",
   isOpen: false,
   commands: [],
-  filteredCommands: [],
   selectedItem: 0,
+  filterJob: MenuJob.create(),
   dispose: () => (),
 };
