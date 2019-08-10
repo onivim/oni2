@@ -154,7 +154,7 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let move = (moveFunc) => {
+      let move = moveFunc => {
         let windowId = moveFunc(currentState.windowManager);
         let maybeEditorGroupId =
           Model.WindowTree.getEditorGroupIdFromSplitId(
