@@ -70,6 +70,7 @@ type t =
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Position.t, Position.t)
   | SearchSetHighlights(int, list(Range.t))
+  | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)

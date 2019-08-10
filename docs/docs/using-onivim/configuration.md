@@ -33,3 +33,7 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - `editor.minimapMaxColumn` __(_int_ default: `80`)__ - Sets the maximum column that will be rendered in the minimap. By default, we size the minimap proportionally to the editor surface - this puts a constraint on that size.
 
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
+
+- `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
+
+- `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.

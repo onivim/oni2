@@ -54,6 +54,20 @@ npm run build
 - `esy '@bench' build`
 - `esy '@bench' run`
 
+## Release 
+
+To create a release build, run:
+- `esy create-release`
+
+### Windows
+
+### OSX
+
+Once you have a release build created, you can create an `oni2` symlink to point to your development environment.
+
+Run the following from the `oni2` directory:
+- `./scripts/osx/create-symlink.sh`
+
 # Building the Documentation Website
 
 From the `oni2` directory:
@@ -61,5 +75,3 @@ From the `oni2` directory:
 - `cd docs/website`
 - `npm install`
 - `npm start`
-
-T

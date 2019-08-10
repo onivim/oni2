@@ -1,7 +1,12 @@
 (executables
     (names InsertModeTest
+           ClipboardPasteMultiLineTest
+           ClipboardPasteSingleLineTest
+           ClipboardPasteEmptyTest
+           SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
-           RegressionVspEmpty
+           RegressionVspEmptyInitialBufferTest
+           RegressionVspEmptyExistingBufferTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -17,8 +22,13 @@
     (files 
         run-tests.sh
         InsertModeTest.exe
+        ClipboardPasteMultiLineTest.exe
+        ClipboardPasteSingleLineTest.exe
+        ClipboardPasteEmptyTest.exe
         RegressionCommandLineNoCompletionTest.exe
-        RegressionVspEmpty.exe
+        RegressionVspEmptyInitialBufferTest.exe
+        RegressionVspEmptyExistingBufferTest.exe
+        SearchShowClearHighlightsTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

@@ -205,6 +205,9 @@ let createElement =
     let bufferId = Buffer.getId(buffer);
     let lineCount = Buffer.getNumberOfLines(buffer);
 
+    let rulers =
+      Configuration.getValue(c => c.editorRulers, state.configuration);
+
     let showLineNumbers =
       Configuration.getValue(
         c => c.editorLineNumbers != LineNumber.Off,
@@ -511,6 +514,18 @@ let createElement =
             relX -. lineNumberWidth,
             relY,
           );
+        Log.debug(
+          "EditorSurface - editorMouseUp: topVisibleLine is "
+          ++ string_of_int(topVisibleLine),
+        );
+        Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
+        Log.debug(
+          "EditorSurface - editorMouseUp: setPosition ("
+          ++ string_of_int(line + 1)
+          ++ ", "
+          ++ string_of_int(col)
+          ++ ")",
+        );
         Vim.Cursor.setPosition(line + 1, col);
       };
     };
@@ -546,6 +561,20 @@ let createElement =
                 ~color=theme.colors.editorLineHighlightBackground,
                 (),
               );
+
+              /* Draw configured rulers */
+              let renderRuler = ruler =>
+                Shapes.drawRect(
+                  ~transform,
+                  ~x=fst(bufferPositionToPixel(0, ruler)),
+                  ~y=0.0,
+                  ~height=float_of_int(metrics.pixelHeight),
+                  ~width=float_of_int(1),
+                  ~color=theme.colors.editorRulerForeground,
+                  (),
+                );
+
+              List.iter(renderRuler, rulers);
 
               let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
                 {let halfOffset = offset /. 2.0

@@ -1,6 +1,5 @@
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
@@ -35,8 +34,7 @@ let inputStyles = font =>
     fontFamily(font),
   ];
 
-let handleChange = (event: Input.changeEvent) =>
-  GlobalContext.current().dispatch(MenuSearch(event.value));
+let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event) {
@@ -97,7 +95,7 @@ let createElement =
       menu.isOpen
         ? <View style={containerStyles(theme)}>
             <View style=Style.[width(menuWidth), padding(5)]>
-              <Input
+              <OniInput
                 autofocus=true
                 placeholder="type here to search the menu"
                 cursorColor=Colors.white

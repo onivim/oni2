@@ -11,8 +11,9 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 module Log = Core.Log;
+module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t) => {
+let start = (getState: unit => Model.State.t, getClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -84,6 +85,13 @@ let start = (getState: unit => Model.State.t) => {
     });
 
   let _ =
+    Vim.Search.onStopSearchHighlight(() => {
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+      dispatch(Model.Actions.SearchClearHighlights(id));
+    });
+
+  let _ =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
@@ -146,28 +154,35 @@ let start = (getState: unit => Model.State.t) => {
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let v =
-        switch (movementType) {
-        | FullLeft
-        | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
-        | FullRight
-        | OneRight =>
-          Model.WindowManager.moveRight(currentState.windowManager)
-        | FullDown
-        | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
-        | FullUp
-        | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
-        | _ => currentState.windowManager.activeWindowId
-        };
+      let move = moveFunc => {
+        let windowId = moveFunc(currentState.windowManager);
+        let maybeEditorGroupId =
+          Model.WindowTree.getEditorGroupIdFromSplitId(
+            windowId,
+            currentState.windowManager.windowTree,
+          );
 
-      let editorId =
-        Model.WindowTree.getEditorGroupIdFromSplitId(
-          v,
-          currentState.windowManager.windowTree,
-        );
-      switch (editorId) {
-      | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
-      | None => ()
+        switch (maybeEditorGroupId) {
+        | Some(editorGroupId) =>
+          dispatch(Model.Actions.WindowSetActive(windowId, editorGroupId))
+        | None => ()
+        };
+      };
+
+      switch (movementType) {
+      | FullLeft
+      | OneLeft => move(Model.WindowManager.moveLeft)
+      | FullRight
+      | OneRight => move(Model.WindowManager.moveRight)
+      | FullDown
+      | OneDown => move(Model.WindowManager.moveDown)
+      | FullUp
+      | OneUp => move(Model.WindowManager.moveUp)
+      | RotateDownwards =>
+        dispatch(Model.Actions.Command("view.rotateForward"))
+      | RotateUpwards =>
+        dispatch(Model.Actions.Command("view.rotateBackward"))
+      | _ => move(windowManager => windowManager.activeWindowId)
       };
     });
 
@@ -291,6 +306,7 @@ let start = (getState: unit => Model.State.t) => {
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
+      let _ = Vim.command("e untitled");
       hasInitialized := true;
     });
 
@@ -471,8 +487,26 @@ let start = (getState: unit => Model.State.t) => {
       }
     );
 
+  let pasteIntoEditorAction =
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
+      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
+        switch (getClipboardText()) {
+        | Some(text) =>
+          Vim.command("set paste");
+          Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), text);
+
+          Vim.command("set nopaste");
+        | None => ()
+        };
+      }
+    );
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.Command("editor.action.clipboardPasteAction") => (
+        state,
+        pasteIntoEditorAction,
+      )
     | Model.Actions.WildmenuNext =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {

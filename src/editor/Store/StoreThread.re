@@ -35,7 +35,15 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   extensions;
 };
 
-let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => {
+let start =
+    (
+      ~setup: Core.Setup.t,
+      ~executingDirectory,
+      ~onStateChanged,
+      ~getClipboardText,
+      ~cliOptions: option(Oni_Core.Cli.t),
+      (),
+    ) => {
   ignore(executingDirectory);
 
   let state = Model.State.create();
@@ -49,7 +57,8 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
 
   let commandUpdater = CommandStoreConnector.start(getState);
-  let (vimUpdater, vimStream) = VimStoreConnector.start(getState);
+  let (vimUpdater, vimStream) =
+    VimStoreConnector.start(getState, getClipboardText);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -63,7 +72,7 @@ let start = (~setup: Core.Setup.t, ~executingDirectory, ~onStateChanged, ()) => 
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start();
+  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);

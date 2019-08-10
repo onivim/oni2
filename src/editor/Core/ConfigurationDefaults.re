@@ -10,30 +10,29 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 {
-  "editor.minimap.enabled": true,
-  "editor.insertSpaces": false,
+  "editor.detectIndentation": true,
+  "editor.largeFileOptimizations": true,
+  "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
-  "editor.tabSize": 4,
-  "editor.DetectIndentation": true,
-  "editor.LargeFileOptimizations": true,
+  "editor.insertSpaces": false,
+  "editor.lineNumbers": "on",
   "editor.matchBrackets": true,
   "editor.minimap.enabled": true,
-  "editor.minimap.showSlider": true,
   "editor.minimap.maxColumn": 120,
-  "editor.lineNumbers": "on",
-  "editor.insertSpaces": false,
-  "editor.indentSize": 4,
-  "editor.tabSize": 4,
+  "editor.minimap.showSlider": true,
   "editor.renderIndentGuides": true,
-  "editor.highlightActiveIndentGuide": true,
   "editor.renderWhitespace": "all",
+  "editor.rulers": [],
+  "editor.tabSize": 4,
+  "editor.zenMode.hideTabs": true,
+  "editor.zenMode.singleFile": true,
+  "files.exclude": ["_esy", "node_modules"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
+  "workbench.iconTheme": "vs-seti",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
-  "workbench.iconTheme": "vs-seti",
-  "files.exclude": ["_esy", "node_modules"],
-  "editor.zenMode.hideTabs": true
+  "workbench.tree.indent": 2
 }
 |},
     )
@@ -43,6 +42,8 @@ let getDefaultConfigString = configName =>
 {
     "bindings": [
         { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
+        { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
         { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },

@@ -34,6 +34,22 @@ let parseStringList = json => {
   };
 };
 
+let parseIntList = json => {
+  switch (json) {
+  | `List(items) =>
+    List.fold_left(
+      (accum, item) =>
+        switch (item) {
+        | `Int(v) => [v, ...accum]
+        | _ => accum
+        },
+      [],
+      items,
+    )
+  | _ => []
+  };
+};
+
 let parseLineNumberSetting = json =>
   switch (json) {
   | `String(v) =>
@@ -120,6 +136,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.renderWhitespace",
     (s, v) => {...s, editorRenderWhitespace: parseRenderWhitespace(v)},
   ),
+  ("editor.rulers", (s, v) => {...s, editorRulers: parseIntList(v)}),
   ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
   (
     "workbench.activityBar.visible",
@@ -144,6 +161,14 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.zenMode.hideTabs",
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
+  ),
+  (
+    "workbench.tree.indent",
+    (s, v) => {...s, workbenchTreeIndent: parseInt(v)},
+  ),
+  (
+    "editor.zenMode.singleFile",
+    (s, v) => {...s, zenModeSingleFile: parseBool(v)},
   ),
 ];
 

@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = () => {
+let start = (~cliOptions: option(Cli.t)) => {
   let configurationFileName = "configuration.json";
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _ =
@@ -40,12 +40,25 @@ let start = () => {
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
-      dispatch(Actions.ConfigurationReload);
       let configPath =
         Filesystem.getOrCreateConfigFile(configurationFileName);
       switch (configPath) {
       | Ok(configPathAsString) =>
-        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch)
+        switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {
+        | (Ok(configuration), Some(cliOptions)) =>
+          dispatch(Actions.ConfigurationSet(configuration));
+
+          let zenModeSingleFile =
+            Configuration.getValue(c => c.zenModeSingleFile, configuration);
+
+          if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+            dispatch(Actions.ToggleZenMode);
+          };
+        | (Error(err), _) =>
+          Log.error("Error loading configuration file: " ++ err)
+        | _ => ()
+        };
+        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
       | Error(err) => Log.error("Error loading configuration file: " ++ err)
       };
       ();

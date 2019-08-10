@@ -25,14 +25,17 @@ type t = {
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
+  editorRulers: list(int),
   workbenchActivityBarVisible: bool,
   /* Onivim2 specific setting */
   workbenchSideBarVisible: bool,
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,
+  workbenchTreeIndent: int,
   filesExclude: list(string),
   zenModeHideTabs: bool,
+  zenModeSingleFile: bool,
 };
 
 let default = {
@@ -49,11 +52,14 @@ let default = {
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
+  editorRulers: [],
   workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchSideBarVisible: true,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
+  workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
   zenModeHideTabs: true,
+  zenModeSingleFile: true,
 };
