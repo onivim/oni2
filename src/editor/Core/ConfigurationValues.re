@@ -32,9 +32,10 @@ type t = {
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,
+  workbenchTreeIndent: int,
   filesExclude: list(string),
   zenModeHideTabs: bool,
-  workbenchTreeIndent: int,
+  zenModeSingleFile: bool,
 };
 
 let default = {
@@ -57,7 +58,8 @@ let default = {
   workbenchSideBarVisible: true,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
+  workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
   zenModeHideTabs: true,
-  workbenchTreeIndent: 2,
+  zenModeSingleFile: true,
 };
