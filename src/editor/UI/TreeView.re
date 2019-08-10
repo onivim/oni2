@@ -1,4 +1,5 @@
 open Oni_Model;
+
 open UiTree;
 open Revery.UI;
 open Revery.UI.Components;
@@ -66,7 +67,10 @@ let itemRenderer =
       backgroundColor(bgColor),
     ];
 
-  let explorerIndent = Core.Configuration.getValue(c => c.explorerIndentSize, state.configuration)
+  Core.Log.info("Indent"++string_of_int(indent))
+
+  let explorerIndent = Core.Configuration.getValue(c => c.workbenchTreeIndent, state.configuration)
+  
   let indentStr = String.make(indent * explorerIndent, ' ');
 
   let icon =

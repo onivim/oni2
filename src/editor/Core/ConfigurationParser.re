@@ -163,8 +163,8 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
   ),
   (
-    "explorer.indentSize",
-    (s, v) => {...s, explorerIndentSize: parseInt(v)}
+    "workbench.tree.indent",
+    (s, v) => {...s, workbenchTreeIndent: parseInt(v)}
   ),
 ];
 

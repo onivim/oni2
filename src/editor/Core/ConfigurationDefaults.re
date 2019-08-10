@@ -31,7 +31,7 @@ let getDefaultConfigString = configName =>
   "workbench.iconTheme": "vs-seti",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
-  "explorer.indentSize": 2,
+  "workbench.tree.indent": 2,
 }
 |},
     )
