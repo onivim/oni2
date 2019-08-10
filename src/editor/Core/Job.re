@@ -3,7 +3,7 @@ open Revery;
 type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
 type doWork('p, 'c) = mapFn('p, 'c);
 
-type workPrinter('a) = ('a) => string;
+type workPrinter('a) = 'a => string;
 
 type t('p, 'c) = {
   f: doWork('p, 'c),
@@ -20,7 +20,7 @@ let defaultBudget = Time.Milliseconds(1.);
 
 let isComplete = (v: t('p, 'c)) => v.isComplete;
 
-let noopPrinter = (_) => " (no printer) ";
+let noopPrinter = _ => " (no printer) ";
 
 let getCompletedWork = (v: t('p, 'c)) => v.completedWork;
 
@@ -50,16 +50,23 @@ let create =
 
 let map = (~f: mapFn('p, 'c), v: t('p, 'c)) => {
   let {pendingWork, completedWork, _} = v;
-  let (isComplete, pendingWork, completedWork) = f(pendingWork, completedWork);
+  let (isComplete, pendingWork, completedWork) =
+    f(pendingWork, completedWork);
   {...v, isComplete, pendingWork, completedWork};
 };
 
 let doWork = (v: t('p, 'c)) => map(v.f, v);
 
 let show = (v: t('p, 'c)) => {
-  "Name: " ++ v.name ++ "\n"
-  ++ " - Pending work: " ++ v.pendingWorkPrinter(v.pendingWork) ++ "\n"
-  ++ " - Completed work: " ++ v.pendingWorkPrinter(v.pendingWork) ++ "\n"
+  "Name: "
+  ++ v.name
+  ++ "\n"
+  ++ " - Pending work: "
+  ++ v.pendingWorkPrinter(v.pendingWork)
+  ++ "\n"
+  ++ " - Completed work: "
+  ++ v.pendingWorkPrinter(v.pendingWork)
+  ++ "\n";
 };
 
 let tick: t('p, 'c) => t('p, 'c) =

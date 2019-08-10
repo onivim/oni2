@@ -29,12 +29,12 @@ let start = (rg: Core.Ripgrep.t) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
-    let filter = (item) => {
+    let filter = item => {
       switch (!Sys.is_directory(item)) {
       | exception _ => false
       | v => v
-      }
-    }
+      };
+    };
 
     let dispose =
       rg.search(

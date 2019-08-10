@@ -46,16 +46,14 @@ let start = () => {
     | MenuPreviousItem => (
         {
           ...state,
-          selectedItem:
-            position(state.selectedItem, -1, filteredCommands),
+          selectedItem: position(state.selectedItem, -1, filteredCommands),
         },
         Isolinear.Effect.none,
       )
     | MenuNextItem => (
         {
           ...state,
-          selectedItem:
-            position(state.selectedItem, 1, filteredCommands),
+          selectedItem: position(state.selectedItem, 1, filteredCommands),
         },
         Isolinear.Effect.none,
       )
@@ -63,7 +61,8 @@ let start = () => {
         {
           ...state,
           searchQuery: query,
-          filterJob: Core.Job.map(MenuJob.updateQuery(query), state.filterJob),
+          filterJob:
+            Core.Job.map(MenuJob.updateQuery(query), state.filterJob),
         },
         Isolinear.Effect.none,
       )
@@ -73,7 +72,8 @@ let start = () => {
       )
     | MenuUpdate(update) =>
       let commands = List.append(state.commands, update);
-      let filterJob = Core.Job.map(MenuJob.addItems(update), state.filterJob);
+      let filterJob =
+        Core.Job.map(MenuJob.addItems(update), state.filterJob);
 
       ({...state, commands, filterJob}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
@@ -83,7 +83,13 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {...state, filterJob: MenuJob.default, commands: [], isOpen: false, selectedItem: 0},
+        {
+          ...state,
+          filterJob: MenuJob.default,
+          commands: [],
+          isOpen: false,
+          selectedItem: 0,
+        },
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>
@@ -104,17 +110,19 @@ let start = () => {
       if (Core.Job.isComplete(state.menu.filterJob)) {
         (state, Isolinear.Effect.none);
       } else {
-        print_endline ("Work is not done!");
+        print_endline("Work is not done!");
         let newState = {
           ...state,
           menu: {
             ...state.menu,
-          filterJob: Core.Job.tick(state.menu.filterJob)
-          }
+            filterJob: Core.Job.tick(state.menu.filterJob),
+          },
         };
-        print_endline ("Latest status: " ++ Core.Job.show(newState.menu.filterJob));
+        print_endline(
+          "Latest status: " ++ Core.Job.show(newState.menu.filterJob),
+        );
         (newState, Isolinear.Effect.none);
-      }
+      };
     } else {
       let (menuState, menuEffect) = menuUpdater(state.menu, action);
       let state = {...state, menu: menuState};
