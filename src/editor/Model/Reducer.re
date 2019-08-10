@@ -36,6 +36,8 @@ let reduce: (State.t, Actions.t) => State.t =
       | CommandlineShow(_) => {...s, inputControlMode: CommandLineFocus}
       | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | ToggleZenMode => {...s, zenMode: !s.zenMode}
+      | EnableZenMode => {...s, zenMode: true}
+      | DisableZenMode => {...s, zenMode: false}
       | _ => s
       };
     };

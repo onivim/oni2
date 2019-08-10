@@ -79,6 +79,8 @@ type t =
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | ToggleZenMode
+  | EnableZenMode
+  | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
 and editor = {
