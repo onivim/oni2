@@ -163,6 +163,10 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
   ),
   (
+    "workbench.tree.indent",
+    (s, v) => {...s, workbenchTreeIndent: parseInt(v)},
+  ),
+  (
     "editor.zenMode.singleFile",
     (s, v) => {...s, zenModeSingleFile: parseBool(v)},
   ),
