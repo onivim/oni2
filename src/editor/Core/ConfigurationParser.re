@@ -164,7 +164,7 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "workbench.tree.indent",
-    (s, v) => {...s, workbenchTreeIndent: parseInt(v)}
+    (s, v) => {...s, workbenchTreeIndent: parseInt(v)},
   ),
 ];
 

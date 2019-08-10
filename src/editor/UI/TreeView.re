@@ -67,9 +67,12 @@ let itemRenderer =
       backgroundColor(bgColor),
     ];
 
+  let explorerIndent =
+    Core.Configuration.getValue(
+      c => c.workbenchTreeIndent,
+      state.configuration,
+    );
 
-  let explorerIndent = Core.Configuration.getValue(c => c.workbenchTreeIndent, state.configuration)
-  
   let indentStr = String.make(indent * explorerIndent, ' ');
 
   let icon =
