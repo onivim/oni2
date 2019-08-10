@@ -24,6 +24,7 @@ module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
+module MenuJob = MenuJob;
 module Reducer = Reducer;
 module SearchHighlights = SearchHighlights;
 module Selection = Selection;

@@ -4,7 +4,6 @@ type t = {
   searchQuery: string,
   isOpen: bool,
   commands: list(Actions.menuCommand),
-  filteredCommands: list(Actions.menuCommand),
   selectedItem: int,
   filterJob: MenuJob.t,
   dispose: unit => unit,

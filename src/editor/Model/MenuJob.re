@@ -24,10 +24,15 @@ let initialCompletedWork = [];
 let initialPendingWork = {
   filter: "",
   regex: Str.regexp(".*"),
+  fullCommands: [],
   commandsToFilter: [],
 };
 
-let ITERATIONS_PER_FRAME = 1000;
+let iterationsPerFrame = 1000;
+  
+// TODO: abc -> .*a.*b.*c
+let regexFromFilter = (s) => Str.regexp(".*");
+
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
 let updateQuery = (newQuery: string) => (p: pendingWork, c:completedWork) => {
@@ -36,27 +41,27 @@ let updateQuery = (newQuery: string) => (p: pendingWork, c:completedWork) => {
   // - If the query is just a stricter version... we could add the filter items back to completed
   // - If the query is broader, we could keep our current filtered items anyway
 
-  let regexFromFilter = Str.regexp(".*");
-
   let newPendingWork = {
     ...p,
     filter: newQuery,
-    regex: regexFromFilter,
+    regex: regexFromFilter(newQuery),
     commandsToFilter: p.fullCommands, // Reset the commands to filter
   };
 
   let newCompletedWork = [];
 
-  (newPendingWork, c);
+  (false, newPendingWork, newCompletedWork);
 };
 
 /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
 let addItems = (items: list(Actions.menuCommand)) => (p: pendingWork, c:completedWork)  => {
   let newPendingWork = {
     ...p,
-    fullCommands: List.concat(items, p.fullCommands),
-    commandsToFilter: List.concat(items, p.commandsToFilter),
+    fullCommands: List.append(items, p.fullCommands),
+    commandsToFilter: List.append(items, p.commandsToFilter),
   };
+
+  (false, newPendingWork, c);
 }
 
 /* [doWork] is run each frame until the work is completed! */
@@ -65,10 +70,10 @@ let doWork = (p: pendingWork, c: completedWork) => {
   let completed = ref(false);
   let result = ref(None);
 
-  while(i^ < ITERATIONS_PER_FRAME && !completed^) {
+  while(i^ < iterationsPerFrame && !completed^) {
     let (completed, newPendingWork, newCompletedWork) = switch (p.commandsToFilter) {
     | [] => (true, p, c)
-    | [hd, ...tail) => {
+    | [hd, ...tail] => {
       // Do a first filter pass to check if the item satisifies the regex
       let newCompleted = [hd, ...c];
       (false, {
@@ -81,6 +86,11 @@ let doWork = (p: pendingWork, c: completedWork) => {
 
     result := Some((completed, newPendingWork, newCompletedWork));
   }
+
+  switch (result^) {
+  | None => (true, p, c)
+  | Some((completed, p, c)) => (completed, p,  c)
+  }
 };
 
 let create = () => {
@@ -91,3 +101,5 @@ let create = () => {
     initialPendingWork
   );
 };
+
+let default = create();

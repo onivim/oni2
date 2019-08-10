@@ -1,7 +1,7 @@
 open Revery;
 
-type doWork('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
-type mapFn('p, 'c) = ('p, 'c) => ('p, 'c);
+type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
+type doWork('p, 'c) = mapFn('p, 'c);
 
 type workPrinter('a) = ('a) => string;
 
@@ -28,10 +28,10 @@ let getPendingWork = (v: t('p, 'c)) => v.pendingWork;
 
 let create =
     (
-      ~budget=defaultBudget,
       ~f: doWork('p, 'c),
       ~initialCompletedWork: 'c,
       ~name="anonymous",
+      ~budget=defaultBudget,
       ~pendingWorkPrinter=noopPrinter,
       ~completedWorkPrinter=noopPrinter,
       pendingWork: 'p,
@@ -50,15 +50,11 @@ let create =
 
 let map = (~f: mapFn('p, 'c), v: t('p, 'c)) => {
   let {pendingWork, completedWork, _} = v;
-  let (pendingWork, completedWork) = f(pendingWork, completedWork);
-  {...v, pendingWork, completedWork};
-};
-
-let doWork = (v: t('p, 'c)) => {
-  let (isComplete, pendingWork, completedWork) =
-    v.f(v.pendingWork, v.completedWork);
+  let (isComplete, pendingWork, completedWork) = f(pendingWork, completedWork);
   {...v, isComplete, pendingWork, completedWork};
 };
+
+let doWork = (v: t('p, 'c)) => map(v.f, v);
 
 let show = (v: t('p, 'c)) => {
   "Name: " ++ v.name ++ "\n"
