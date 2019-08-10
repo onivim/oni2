@@ -1,5 +1,3 @@
-open Oni_Core;
-
 type t = {
   searchQuery: string,
   isOpen: bool,

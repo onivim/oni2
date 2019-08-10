@@ -48,7 +48,7 @@ let create =
   };
 };
 
-let map = (~f: mapFn('p, 'c), v: t('p, 'c)) => {
+let map = (f: mapFn('p, 'c), v: t('p, 'c)) => {
   let {pendingWork, completedWork, _} = v;
   let (isComplete, pendingWork, completedWork) =
     f(pendingWork, completedWork);

@@ -28,13 +28,23 @@ let initialPendingWork = {
   commandsToFilter: [],
 };
 
-let iterationsPerFrame = 1000;
+let iterationsPerFrame = 5000;
 
 // TODO: abc -> .*a.*b.*c
-let regexFromFilter = s => Str.regexp(".*");
+//let regexFromFilter = s => Str.regexp(".*");
+
+let regexFromFilter = s => {
+    let a = s
+    |> String.to_seq
+    |> Seq.map((c) => String.make(1, c))
+    |> List.of_seq;
+    let b = String.concat(".*", a);
+    let c = ".*" ++ b ++ ".*";
+    Str.regexp(c);
+ };
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
-let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
+let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
   // TODO: Optimize - for now, if the query changes, just clear the completed work
   // However, there are several ways we could improve this:
   // - If the query is just a stricter version... we could add the filter items back to completed
@@ -64,6 +74,11 @@ let addItems =
   (false, newPendingWork, c);
 };
 
+let getStringToTest = (v: Actions.menuCommand) => switch (v.category) {
+| Some(c) => c ++ v.name
+| None => v.name
+};
+
 /* [doWork] is run each frame until the work is completed! */
 let doWork = (p: pendingWork, c: completedWork) => {
   let i = ref(0);
@@ -76,7 +91,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
       | [] => (true, p, c)
       | [hd, ...tail] =>
         // Do a first filter pass to check if the item satisifies the regex
-        let newCompleted = [hd, ...c];
+        let newCompleted = Str.string_match(p.regex, getStringToTest(hd), 0) ? [hd, ...c] : c;
         (false, {...p, commandsToFilter: tail}, newCompleted);
       };
     incr(i);
