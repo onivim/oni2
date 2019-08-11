@@ -23,16 +23,26 @@ let showPendingWork = (v: pendingWork) => {
   ++ " -- commandsToFilter: " ++ string_of_int(List.length(v.commandsToFilter));
 };
 
-type completedWork = list(Actions.menuCommand);
+type completedWork = {
+  allFiltered: list(Actions.menuCommand),
+  // If the allFiltered list is still huge,
+  // we take a subset prior to sorting to display in the UI
+  // The 'ui' filtered should be the main item for the UI to use
+  uiFiltered: list(Actions.menuCommand),
+};
 
 let showCompletedWork = (v: completedWork) => {
   "- Completed Work\n"
-  ++ " -- filteredCommands: " ++ string_of_int(List.length(v))
+  ++ " -- allFiltered: " ++ string_of_int(List.length(v.allFiltered))
+  ++ " -- uiFiltered: " ++ string_of_int(List.length(v.uiFiltered))
 };
 
 type t = Job.t(pendingWork, completedWork);
 
-let initialCompletedWork = [];
+let initialCompletedWork = {
+  allFiltered: [],
+  uiFiltered: [],
+};
 let initialPendingWork = {
   filter: "",
   regex: Str.regexp(".*"),
@@ -40,7 +50,9 @@ let initialPendingWork = {
   commandsToFilter: [],
 };
 
+// Constants
 let iterationsPerFrame = 5000;
+let maxItemsToFilter = 5000;
 
 // TODO: abc -> .*a.*b.*c
 //let regexFromFilter = s => Str.regexp(".*");
@@ -69,7 +81,7 @@ let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
     commandsToFilter: p.fullCommands // Reset the commands to filter
   };
 
-  let newCompletedWork = [];
+  let newCompletedWork = initialCompletedWork;
 
   (false, newPendingWork, newCompletedWork);
 };
@@ -98,7 +110,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
   let result = ref(None);
   
   let pendingWork = ref(p);
-  let completedWork = ref(c);
+  let completedWork = ref(c.allFiltered);
 
   while (i^ < iterationsPerFrame && !(completed^)) {
     let p = pendingWork^;
@@ -124,8 +136,14 @@ let doWork = (p: pendingWork, c: completedWork) => {
   | None => (true, p, c)
   | Some((completed, p, c)) => {
     /* As a last pass, run the menu filter to sort / score filtered items if under a certain length */
-    let c = Filter.menu(p.filter, c);
-    (completed, p, c)
+    let uiFiltered = 
+      c
+      |> Utility.firstk(maxItemsToFilter)
+      |> Filter.menu(p.filter);
+    (completed, p, {
+      allFiltered: c,
+      uiFiltered,
+    })
   }
   };
 };
@@ -135,7 +153,7 @@ let create = () => {
     ~pendingWorkPrinter=showPendingWork,
     ~completedWorkPrinter=showCompletedWork,
     ~name="MenuJob",
-    ~initialCompletedWork=[],
+    ~initialCompletedWork,
     ~f=doWork,
     initialPendingWork,
   );

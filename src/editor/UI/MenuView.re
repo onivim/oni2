@@ -88,7 +88,7 @@ let createElement =
         hooks,
       );
 
-    let commands = Job.getCompletedWork(menu.filterJob);
+    let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
 
     React.(
       hooks,

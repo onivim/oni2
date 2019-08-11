@@ -43,7 +43,7 @@ let start = () => {
     Isolinear.Effect.create(~name="menu.dispose", dispose);
 
   let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
-    let filteredCommands = Core.Job.getCompletedWork(state.filterJob);
+    let filteredCommands = Core.Job.getCompletedWork(state.filterJob).uiFiltered;
     switch (action) {
     | MenuPosition(index) => (
         {...state, selectedItem: index},

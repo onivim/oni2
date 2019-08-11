@@ -72,7 +72,7 @@ let show = (v: t('p, 'c)) => {
   ++ v.pendingWorkPrinter(v.pendingWork)
   ++ "\n"
   ++ " - Completed work: "
-  ++ v.pendingWorkPrinter(v.pendingWork)
+  ++ v.completedWorkPrinter(v.completedWork)
   ++ "\n";
 };
 
