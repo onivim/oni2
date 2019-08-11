@@ -121,4 +121,4 @@ and menuCommand = {
 and menuSetItems = list(menuCommand) => unit
 and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
-and menuCreator = menuSetItems => menuDisposeFunction;
+and menuCreator = (menuSetItems, Rench.Event.t(string)) => menuDisposeFunction;
