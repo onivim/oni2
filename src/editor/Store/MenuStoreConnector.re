@@ -68,7 +68,7 @@ let start = () => {
           ...state,
           searchQuery: query,
           filterJob:
-            Core.Job.map(MenuJob.updateQuery(query), state.filterJob),
+            Core.Job.mapw(MenuJob.updateQuery(query), state.filterJob),
         },
         queryChangedEffect(state.onQueryChanged, query),
       )
@@ -80,7 +80,7 @@ let start = () => {
     | MenuUpdate(update) =>
       let commands = List.append(state.commands, update);
       let filterJob =
-        Core.Job.map(MenuJob.addItems(update), state.filterJob);
+        Core.Job.mapw(MenuJob.addItems(update), state.filterJob);
 
       ({...state, commands, filterJob}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
