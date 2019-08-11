@@ -32,7 +32,8 @@ let start = (rg: Core.Ripgrep.t) => {
       icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
 
-  let createQuickOpen = (languageInfo, iconTheme, setItems, onQueryChanged, setLoading) => {
+  let createQuickOpen =
+      (languageInfo, iconTheme, setItems, onQueryChanged, setLoading) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
@@ -69,11 +70,11 @@ let start = (rg: Core.Ripgrep.t) => {
           setItems(result);
         },
         () => {
-            setLoading(false);
-            Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.")
-        }
+          setLoading(false);
+          Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
+        },
       );
-    }
+    };
 
     let dispose1 = ref(search("*"));
 
