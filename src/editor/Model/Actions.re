@@ -78,7 +78,6 @@ type t =
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
-  | ToggleZenMode
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard

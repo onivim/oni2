@@ -38,12 +38,6 @@ let create = setItems => {
     },
     {
       category: Some("View"),
-      name: "Toggle Zen Mode",
-      command: () => Actions.ToggleZenMode,
-      icon: None,
-    },
-    {
-      category: Some("View"),
       name: "Enable Zen Mode",
       command: () => Actions.EnableZenMode,
       icon: None,
