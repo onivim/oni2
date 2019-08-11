@@ -76,9 +76,8 @@ let start = (rg: Core.Ripgrep.t) => {
       ref(search("*"));
     
     let dispose2 = Rench.Event.subscribe(onQueryChanged, (newQuery) => {
-      /*(dispose1^)();
-      dispose1 := search(ripgrepQueryFromFilter(newQuery)); */
-      print_endline ("New query: " ++ newQuery);
+      (dispose1^)();
+      dispose1 := search(ripgrepQueryFromFilter(newQuery));
     });
 
 

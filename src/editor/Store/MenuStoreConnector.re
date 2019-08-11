@@ -117,7 +117,6 @@ let start = () => {
       if (Core.Job.isComplete(state.menu.filterJob)) {
         (state, Isolinear.Effect.none);
       } else {
-        print_endline("Work is not done!");
         let newState = {
           ...state,
           menu: {
@@ -125,9 +124,10 @@ let start = () => {
             filterJob: Core.Job.tick(state.menu.filterJob),
           },
         };
-        print_endline(
-          "Latest status: " ++ Core.Job.show(newState.menu.filterJob),
-        );
+        if (Core.Log.isDebugLoggingEnabled()) {
+          Core.Log.debug(Core.Job.show(state.menu.filterJob));
+        };
+        
         (newState, Isolinear.Effect.none);
       };
     } else {
