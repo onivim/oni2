@@ -17,7 +17,19 @@ type pendingWork = {
   commandsToFilter: list(Actions.menuCommand),
 };
 
+let showPendingWork = (v: pendingWork) => {
+  "- Pending Work\n"
+  ++ " -- fullCommands: " ++ string_of_int(List.length(v.fullCommands))
+  ++ " -- commandsToFilter: " ++ string_of_int(List.length(v.commandsToFilter));
+};
+
 type completedWork = list(Actions.menuCommand);
+
+let showCompletedWork = (v: completedWork) => {
+  "- Completed Work\n"
+  ++ " -- filteredCommands: " ++ string_of_int(List.length(v))
+};
+
 type t = Job.t(pendingWork, completedWork);
 
 let initialCompletedWork = [];
@@ -84,9 +96,14 @@ let doWork = (p: pendingWork, c: completedWork) => {
   let i = ref(0);
   let completed = ref(false);
   let result = ref(None);
+  
+  let pendingWork = ref(p);
+  let completedWork = ref(c);
 
-  while (i^ < iterationsPerFrame && ! completed^) {
-    let (completed, newPendingWork, newCompletedWork) =
+  while (i^ < iterationsPerFrame && !(completed^)) {
+    let p = pendingWork^;
+    let c = completedWork^;
+    let (c, newPendingWork, newCompletedWork) =
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
@@ -94,9 +111,13 @@ let doWork = (p: pendingWork, c: completedWork) => {
         let newCompleted = Str.string_match(p.regex, getStringToTest(hd), 0) ? [hd, ...c] : c;
         (false, {...p, commandsToFilter: tail}, newCompleted);
       };
+    pendingWork := newPendingWork;
+    completedWork := newCompletedWork;
     incr(i);
-
-    result := Some((completed, newPendingWork, newCompletedWork));
+    if (c) {
+      completed := c;
+    }
+    result := Some((c, newPendingWork, newCompletedWork));
   };
 
   switch (result^) {
@@ -107,6 +128,8 @@ let doWork = (p: pendingWork, c: completedWork) => {
 
 let create = () => {
   Job.create(
+    ~pendingWorkPrinter=showPendingWork,
+    ~completedWorkPrinter=showCompletedWork,
     ~name="MenuJob",
     ~initialCompletedWork=[],
     ~f=doWork,

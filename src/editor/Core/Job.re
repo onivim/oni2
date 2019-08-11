@@ -57,6 +57,13 @@ let map = (f: mapFn('p, 'c), v: t('p, 'c)) => {
 
 let doWork = (v: t('p, 'c)) => map(v.f, v);
 
+/* Like [map], but do a unit of work after mapping. */
+let mapw = (f: mapFn('p, 'c), v: t('p, 'c)) => {
+  v
+  |> map(f)
+  |> doWork
+};
+
 let show = (v: t('p, 'c)) => {
   "Name: "
   ++ v.name

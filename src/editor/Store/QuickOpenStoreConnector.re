@@ -25,19 +25,31 @@ let start = (rg: Core.Ripgrep.t) => {
       icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
 
-  let createQuickOpen = (languageInfo, iconTheme, setItems) => {
+  let createQuickOpen = (languageInfo, iconTheme, setItems, onQueryChanged) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
+    /* Create a hashtable to keep track of dups */
+    let discoveredPaths: Hashtbl.t(string, bool) = Hashtbl.create(1000);
+
+
+
     let filter = item => {
-      switch (!Sys.is_directory(item)) {
-      | exception _ => false
-      | v => v
-      };
+      switch (Hashtbl.find_opt(discoveredPaths, item)) {
+      | Some(_) => false
+      | None =>  {
+        Hashtbl.add(discoveredPaths, item, true);
+        switch (!Sys.is_directory(item)) {
+        | exception _ => false
+        | v => v
+        };
+      }
+      }
     };
 
-    let dispose =
-      rg.search(
+    let dispose1 =
+      ref(rg.search(
+        "*",
         currentDirectory,
         items => {
           let result =
@@ -49,9 +61,42 @@ let start = (rg: Core.Ripgrep.t) => {
 
           setItems(result);
         },
-      );
+        () => {
+          Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
+        },
+      ));
+    
+    let dispose2 = Rench.Event.subscribe(onQueryChanged, (newQuery) => {
+      (dispose1^)();
+      dispose1 :=
+        rg.search(
+          "*" ++ newQuery ++ "*",
+          currentDirectory,
+          items => {
+            let result =
+              items
+              |> List.filter(filter)
+              |> List.map(
+                   stringToCommand(languageInfo, iconTheme, currentDirectory),
+                 );
 
-    dispose;
+            setItems(result);
+          },
+          () => {
+            Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
+          },
+        );
+      print_endline ("New query: " ++ newQuery);
+    });
+
+
+    let ret = () => {
+      let _ = (dispose1^)();
+      let _ = dispose2();
+      ();
+    };
+
+    ret;
   };
 
   let openQuickOpenEffect = (languageInfo, iconTheme) =>
