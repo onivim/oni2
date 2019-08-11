@@ -44,7 +44,8 @@ let process = (rgPath, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, search, workingDirectory, callback, completedCallback) =>
+let search = (path, search, workingDirectory, callback, completedCallback) => {
+  print_endline ("workingDir: " ++ workingDirectory);
   process(
     path,
     [|
@@ -62,5 +63,6 @@ let search = (path, search, workingDirectory, callback, completedCallback) =>
     callback,
     completedCallback,
   );
+}
 
 let make = path => {search: search(path)};

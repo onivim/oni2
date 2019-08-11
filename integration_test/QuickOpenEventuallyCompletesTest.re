@@ -7,8 +7,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   );
 
   /* Switch to root directory */
-  dispatch(Model.Actions.OpenExplorer("/"));
-  runEffects();
+  Vim.command("cd /");
 
   /* Launch quick open */
   dispatch(QuickOpen);
