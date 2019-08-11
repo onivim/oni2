@@ -51,8 +51,8 @@ let initialPendingWork = {
 };
 
 // Constants
-let iterationsPerFrame = 5000;
-let maxItemsToFilter = 5000;
+let iterationsPerFrame = 2500;
+let maxItemsToFilter = 2500;
 
 // TODO: abc -> .*a.*b.*c
 //let regexFromFilter = s => Str.regexp(".*");
