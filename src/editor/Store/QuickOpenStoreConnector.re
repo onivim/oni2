@@ -10,13 +10,11 @@ module Model = Oni_Model;
 module Extensions = Oni_Extensions;
 
 let ripgrepQueryFromFilter = s => {
-    let a = s
-    |> String.to_seq
-    |> Seq.map((c) => String.make(1, c))
-    |> List.of_seq;
-    let b = String.concat("*", a);
-    "*" ++ b ++ "*";
- };
+  let a =
+    s |> String.to_seq |> Seq.map(c => String.make(1, c)) |> List.of_seq;
+  let b = String.concat("*", a);
+  "*" ++ b ++ "*";
+};
 
 let start = (rg: Core.Ripgrep.t) => {
   let getDisplayPath = (fullPath, dir) => {
@@ -44,17 +42,17 @@ let start = (rg: Core.Ripgrep.t) => {
     let filter = item => {
       switch (Hashtbl.find_opt(discoveredPaths, item)) {
       | Some(_) => false
-      | None =>  {
+      | None =>
         Hashtbl.add(discoveredPaths, item, true);
         switch (!Sys.is_directory(item)) {
         | exception _ => false
         | v => v
         };
-      }
-      }
+      };
     };
 
-    let search = (arg) => rg.search(
+    let search = arg =>
+      rg.search(
         arg,
         currentDirectory,
         items => {
@@ -67,22 +65,22 @@ let start = (rg: Core.Ripgrep.t) => {
 
           setItems(result);
         },
-        () => {
-          Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
+        () => Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed."),
+      );
+
+    let dispose1 = ref(search("*"));
+
+    let dispose2 =
+      Rench.Event.subscribe(
+        onQueryChanged,
+        newQuery => {
+          dispose1^();
+          dispose1 := search(ripgrepQueryFromFilter(newQuery));
         },
       );
 
-    let dispose1 =
-      ref(search("*"));
-    
-    let dispose2 = Rench.Event.subscribe(onQueryChanged, (newQuery) => {
-      (dispose1^)();
-      dispose1 := search(ripgrepQueryFromFilter(newQuery));
-    });
-
-
     let ret = () => {
-      let _ = (dispose1^)();
+      let _ = dispose1^();
       let _ = dispose2();
       ();
     };

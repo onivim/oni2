@@ -19,8 +19,10 @@ type pendingWork = {
 
 let showPendingWork = (v: pendingWork) => {
   "- Pending Work\n"
-  ++ " -- fullCommands: " ++ string_of_int(List.length(v.fullCommands))
-  ++ " -- commandsToFilter: " ++ string_of_int(List.length(v.commandsToFilter));
+  ++ " -- fullCommands: "
+  ++ string_of_int(List.length(v.fullCommands))
+  ++ " -- commandsToFilter: "
+  ++ string_of_int(List.length(v.commandsToFilter));
 };
 
 type completedWork = {
@@ -33,16 +35,15 @@ type completedWork = {
 
 let showCompletedWork = (v: completedWork) => {
   "- Completed Work\n"
-  ++ " -- allFiltered: " ++ string_of_int(List.length(v.allFiltered))
-  ++ " -- uiFiltered: " ++ string_of_int(List.length(v.uiFiltered))
+  ++ " -- allFiltered: "
+  ++ string_of_int(List.length(v.allFiltered))
+  ++ " -- uiFiltered: "
+  ++ string_of_int(List.length(v.uiFiltered));
 };
 
 type t = Job.t(pendingWork, completedWork);
 
-let initialCompletedWork = {
-  allFiltered: [],
-  uiFiltered: [],
-};
+let initialCompletedWork = {allFiltered: [], uiFiltered: []};
 let initialPendingWork = {
   filter: "",
   regex: Str.regexp(".*"),
@@ -58,14 +59,12 @@ let maxItemsToFilter = 1000;
 //let regexFromFilter = s => Str.regexp(".*");
 
 let regexFromFilter = s => {
-    let a = s
-    |> String.to_seq
-    |> Seq.map((c) => String.make(1, c))
-    |> List.of_seq;
-    let b = String.concat(".*", a);
-    let c = ".*" ++ b ++ ".*";
-    Str.regexp(c);
- };
+  let a =
+    s |> String.to_seq |> Seq.map(c => String.make(1, c)) |> List.of_seq;
+  let b = String.concat(".*", a);
+  let c = ".*" ++ b ++ ".*";
+  Str.regexp(c);
+};
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
 let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
@@ -98,21 +97,22 @@ let addItems =
   (false, newPendingWork, c);
 };
 
-let getStringToTest = (v: Actions.menuCommand) => switch (v.category) {
-| Some(c) => c ++ v.name
-| None => v.name
-};
+let getStringToTest = (v: Actions.menuCommand) =>
+  switch (v.category) {
+  | Some(c) => c ++ v.name
+  | None => v.name
+  };
 
 /* [doWork] is run each frame until the work is completed! */
 let doWork = (p: pendingWork, c: completedWork) => {
   let i = ref(0);
   let completed = ref(false);
   let result = ref(None);
-  
+
   let pendingWork = ref(p);
   let completedWork = ref(c.allFiltered);
 
-  while (i^ < iterationsPerFrame && !(completed^)) {
+  while (i^ < iterationsPerFrame && ! completed^) {
     let p = pendingWork^;
     let c = completedWork^;
     let (c, newPendingWork, newCompletedWork) =
@@ -120,7 +120,9 @@ let doWork = (p: pendingWork, c: completedWork) => {
       | [] => (true, p, c)
       | [hd, ...tail] =>
         // Do a first filter pass to check if the item satisifies the regex
-        let newCompleted = Str.string_match(p.regex, getStringToTest(hd), 0) ? [hd, ...c] : c;
+        let newCompleted =
+          Str.string_match(p.regex, getStringToTest(hd), 0)
+            ? [hd, ...c] : c;
         (false, {...p, commandsToFilter: tail}, newCompleted);
       };
     pendingWork := newPendingWork;
@@ -128,23 +130,17 @@ let doWork = (p: pendingWork, c: completedWork) => {
     incr(i);
     if (c) {
       completed := c;
-    }
+    };
     result := Some((c, newPendingWork, newCompletedWork));
   };
 
   switch (result^) {
   | None => (true, p, c)
-  | Some((completed, p, c)) => {
+  | Some((completed, p, c)) =>
     /* As a last pass, run the menu filter to sort / score filtered items if under a certain length */
-    let uiFiltered = 
-      c
-      |> Utility.firstk(maxItemsToFilter)
-      |> Filter.menu(p.filter);
-    (completed, p, {
-      allFiltered: c,
-      uiFiltered,
-    })
-  }
+    let uiFiltered =
+      c |> Utility.firstk(maxItemsToFilter) |> Filter.menu(p.filter);
+    (completed, p, {allFiltered: c, uiFiltered});
   };
 };
 

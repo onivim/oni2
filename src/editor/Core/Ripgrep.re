@@ -3,7 +3,10 @@ open Rench;
 type disposeFunction = unit => unit;
 
 [@deriving show]
-type t = {search: (string, string, list(string) => unit, unit => unit) => disposeFunction};
+type t = {
+  search:
+    (string, string, list(string) => unit, unit => unit) => disposeFunction,
+};
 
 let process = (rgPath, args, callback, completedCallback) => {
   let cp = ChildProcess.spawn(rgPath, args);
@@ -18,10 +21,16 @@ let process = (rgPath, args, callback, completedCallback) => {
       )
     );
 
-  let dispose2 = Event.subscribe(cp.onClose, (exitCode) => {
-    Log.info("Ripgrep completed - exit code: " ++ string_of_int(exitCode));
-    completedCallback();
-  });
+  let dispose2 =
+    Event.subscribe(
+      cp.onClose,
+      exitCode => {
+        Log.info(
+          "Ripgrep completed - exit code: " ++ string_of_int(exitCode),
+        );
+        completedCallback();
+      },
+    );
 
   () => {
     dispose1();
@@ -36,6 +45,22 @@ let process = (rgPath, args, callback, completedCallback) => {
    path, modified, created
  */
 let search = (path, search, workingDirectory, callback, completedCallback) =>
-  process(path, [|"--smart-case", "--files", "-g", search, "-g", "!_esy/*", "-g", "!node_modules/*", "--", workingDirectory|], callback, completedCallback);
+  process(
+    path,
+    [|
+      "--smart-case",
+      "--files",
+      "-g",
+      search,
+      "-g",
+      "!_esy/*",
+      "-g",
+      "!node_modules/*",
+      "--",
+      workingDirectory,
+    |],
+    callback,
+    completedCallback,
+  );
 
 let make = path => {search: search(path)};

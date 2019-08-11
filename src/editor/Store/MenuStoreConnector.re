@@ -14,8 +14,7 @@ module MenuJob = Model.MenuJob;
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let position =
-      (selectedItem, change, commands: list(Actions.menuCommand)) => {
+  let position = (selectedItem, change, commands: list(Actions.menuCommand)) => {
     let nextIndex = selectedItem + change;
     nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
   };
@@ -28,10 +27,10 @@ let start = () => {
       dispatch(Actions.MenuSetDispose(disposeFunction));
     });
 
-  let queryChangedEffect = (evt, newQuery) => 
-    Isolinear.Effect.create(~name="menu.queryChanged", () => {
-        Rench.Event.dispatch(evt, newQuery);
-    });
+  let queryChangedEffect = (evt, newQuery) =>
+    Isolinear.Effect.create(~name="menu.queryChanged", () =>
+      Rench.Event.dispatch(evt, newQuery)
+    );
 
   let selectItemEffect = command =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
@@ -43,7 +42,8 @@ let start = () => {
     Isolinear.Effect.create(~name="menu.dispose", dispose);
 
   let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
-    let filteredCommands = Core.Job.getCompletedWork(state.filterJob).uiFiltered;
+    let filteredCommands =
+      Core.Job.getCompletedWork(state.filterJob).uiFiltered;
     switch (action) {
     | MenuPosition(index) => (
         {...state, selectedItem: index},
@@ -72,11 +72,12 @@ let start = () => {
         },
         queryChangedEffect(state.onQueryChanged, query),
       )
-    | MenuOpen(menuConstructor) => {
-        let state = Menu.create();
-        ({...state, isOpen: true, commands: []},
-        menuOpenEffect(menuConstructor, state.onQueryChanged))
-      }
+    | MenuOpen(menuConstructor) =>
+      let state = Menu.create();
+      (
+        {...state, isOpen: true, commands: []},
+        menuOpenEffect(menuConstructor, state.onQueryChanged),
+      );
     | MenuUpdate(update) =>
       let commands = List.append(state.commands, update);
       let filterJob =
@@ -127,7 +128,7 @@ let start = () => {
         if (Core.Log.isDebugLoggingEnabled()) {
           Core.Log.debug(Core.Job.show(state.menu.filterJob));
         };
-        
+
         (newState, Isolinear.Effect.none);
       };
     } else {
