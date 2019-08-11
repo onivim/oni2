@@ -41,6 +41,7 @@ let start =
       ~executingDirectory,
       ~onStateChanged,
       ~getClipboardText,
+      ~setClipboardText,
       ~cliOptions: option(Oni_Core.Cli.t),
       (),
     ) => {
@@ -58,7 +59,7 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(getState, getClipboardText);
+    VimStoreConnector.start(getState, getClipboardText, setClipboardText);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

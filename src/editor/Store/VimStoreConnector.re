@@ -13,7 +13,8 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t, getClipboardText) => {
+let start =
+    (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let _ =
@@ -501,6 +502,14 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
       }
     );
 
+  let copyActiveFilepathToClipboardEffect =
+    Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
+      switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {
+      | Some(filename) => setClipboardText(filename)
+      | None => ()
+      }
+    );
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Command("editor.action.clipboardPasteAction") => (
@@ -546,6 +555,10 @@ let start = (getState: unit => Model.State.t, getClipboardText) => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Model.Actions.CopyActiveFilepathToClipboard => (
+        state,
+        copyActiveFilepathToClipboardEffect,
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };
