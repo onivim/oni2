@@ -32,9 +32,11 @@ let start = (rg: Core.Ripgrep.t) => {
       icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
 
-  let createQuickOpen = (languageInfo, iconTheme, setItems, onQueryChanged) => {
+  let createQuickOpen = (languageInfo, iconTheme, setItems, onQueryChanged, setLoading) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
+
+    setLoading(true);
 
     /* Create a hashtable to keep track of dups */
     let discoveredPaths: Hashtbl.t(string, bool) = Hashtbl.create(1000);
@@ -51,7 +53,8 @@ let start = (rg: Core.Ripgrep.t) => {
       };
     };
 
-    let search = arg =>
+    let search = arg => {
+      setLoading(true);
       rg.search(
         arg,
         currentDirectory,
@@ -65,8 +68,12 @@ let start = (rg: Core.Ripgrep.t) => {
 
           setItems(result);
         },
-        () => Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed."),
+        () => {
+            setLoading(false);
+            Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.")
+        }
       );
+    }
 
     let dispose1 = ref(search("*"));
 

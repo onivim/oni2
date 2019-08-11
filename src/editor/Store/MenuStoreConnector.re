@@ -22,8 +22,9 @@ let start = () => {
   let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
     Isolinear.Effect.create(~name="menu.construct", () => {
       let setItems = items => dispatch(Actions.MenuUpdate(items));
+      let setLoading = isLoading => dispatch(Actions.MenuSetLoading(isLoading));
 
-      let disposeFunction = menuConstructor(setItems, onQueryChangedEvent);
+      let disposeFunction = menuConstructor(setItems, onQueryChangedEvent, setLoading);
       dispatch(Actions.MenuSetDispose(disposeFunction));
     });
 
@@ -45,6 +46,10 @@ let start = () => {
     let filteredCommands =
       Core.Job.getCompletedWork(state.filterJob).uiFiltered;
     switch (action) {
+    | MenuSetLoading(isLoading) => (
+        {...state, isLoading},
+        Isolinear.Effect.none,
+    )
     | MenuPosition(index) => (
         {...state, selectedItem: index},
         Isolinear.Effect.none,

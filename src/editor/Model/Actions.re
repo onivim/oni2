@@ -51,6 +51,7 @@ type t =
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
+  | MenuSetLoading(bool)
   | MenuClose
   | MenuSelect
   | MenuNextItem
@@ -119,7 +120,8 @@ and menuCommand = {
   icon: option(IconTheme.IconDefinition.t),
 }
 and menuSetItems = list(menuCommand) => unit
+and menuSetLoading = bool => unit
 and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
 and menuCreator =
-  (menuSetItems, Rench.Event.t(string)) => menuDisposeFunction;
+  (menuSetItems, Rench.Event.t(string), menuSetLoading) => menuDisposeFunction;

@@ -3,6 +3,7 @@
            ClipboardPasteMultiLineTest
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
+           QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
@@ -25,6 +26,7 @@
         ClipboardPasteMultiLineTest.exe
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
+        QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe

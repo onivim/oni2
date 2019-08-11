@@ -1,4 +1,4 @@
-let create = (setItems, _) => {
+let create = (setItems, _, _) => {
   let commands: list(Actions.menuCommand) = [
     {
       category: Some("Preferences"),
