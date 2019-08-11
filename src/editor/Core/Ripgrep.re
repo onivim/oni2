@@ -36,6 +36,6 @@ let process = (rgPath, args, callback, completedCallback) => {
    path, modified, created
  */
 let search = (path, search, workingDirectory, callback, completedCallback) =>
-  process(path, [|"--smart-case", "--files", "-g", search, "--", workingDirectory|], callback, completedCallback);
+  process(path, [|"--smart-case", "--files", "-g", search, "!_esy/*", "!node_modules/*", "--", workingDirectory|], callback, completedCallback);
 
 let make = path => {search: search(path)};
