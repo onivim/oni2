@@ -324,6 +324,8 @@ let start =
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (!String.equal(key, "<S-SHIFT>")
+            && !String.equal(key, "<A-SHIFT>")
+            && !String.equal(key, "<D-SHIFT>")
             && !String.equal(key, "<D->")
             && !String.equal(key, "<D-S->")
             && !String.equal(key, "<C->")
