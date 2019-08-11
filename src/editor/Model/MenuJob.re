@@ -122,7 +122,11 @@ let doWork = (p: pendingWork, c: completedWork) => {
 
   switch (result^) {
   | None => (true, p, c)
-  | Some((completed, p, c)) => (completed, p, c)
+  | Some((completed, p, c)) => {
+    /* As a last pass, run the menu filter to sort / score filtered items if under a certain length */
+    let c = Filter.menu(p.filter, c);
+    (completed, p, c)
+  }
   };
 };
 
