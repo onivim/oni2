@@ -27,22 +27,23 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   let maxIterations = 300;
 
   while (iterations^ < maxIterations) {
-
     let currentRunCount = Ripgrep.getRunCount();
-    
+
     wait(
       ~name="Ripgrep iterations: round " ++ string_of_int(iterations^),
       (_state: State.t) => {
-        // Changing the search would 
+        // Changing the search would
         dispatch(MenuSearch("a"));
         runEffects();
         dispatch(MenuSearch("ab"));
         runEffects();
-        print_endline ("Ripgrep has been opened: " ++ string_of_int(Ripgrep.getRunCount()));
+        print_endline(
+          "Ripgrep has been opened: " ++ string_of_int(Ripgrep.getRunCount()),
+        );
         Ripgrep.getRunCount() > currentRunCount;
       },
     );
 
     incr(iterations);
-  }
+  };
 });
