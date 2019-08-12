@@ -47,8 +47,7 @@ let start = () => {
   let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
     let filteredCommands =
       Core.Job.getCompletedWork(state.filterJob).uiFiltered;
-    let filteredCommandsCount =
-      Core.Job.getCompletedWork(state.filterJob).uiCount;
+    let filteredCommandsCount = filteredCommands |> Array.length;
     switch (action) {
     | MenuSetLoading(isLoading) => (
         {...state, isLoading},
@@ -61,14 +60,16 @@ let start = () => {
     | MenuPreviousItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, -1, filteredCommandsCount),
+          selectedItem:
+            position(state.selectedItem, -1, filteredCommandsCount),
         },
         Isolinear.Effect.none,
       )
     | MenuNextItem => (
         {
           ...state,
-          selectedItem: position(state.selectedItem, 1, filteredCommandsCount),
+          selectedItem:
+            position(state.selectedItem, 1, filteredCommandsCount),
         },
         Isolinear.Effect.none,
       )
@@ -78,7 +79,8 @@ let start = () => {
           searchQuery: query,
           filterJob:
             Core.Job.mapw(MenuJob.updateQuery(query), state.filterJob),
-          selectedItem: position(state.selectedItem, 0, filteredCommandsCount),
+          selectedItem:
+            position(state.selectedItem, 0, filteredCommandsCount),
         },
         queryChangedEffect(state.onQueryChanged, query),
       )
@@ -88,14 +90,14 @@ let start = () => {
         {...state, isOpen: true, commands: []},
         menuOpenEffect(menuConstructor, state.onQueryChanged),
       );
-    | MenuUpdate(update) => {
+    | MenuUpdate(update) =>
       let commands = List.append(state.commands, update);
       let filterJob =
         Core.Job.mapw(MenuJob.addItems(update), state.filterJob);
-        let selectedItem = position(state.selectedItem, 0, filteredCommandsCount);
+      let selectedItem =
+        position(state.selectedItem, 0, filteredCommandsCount);
 
       ({...state, commands, filterJob, selectedItem}, Isolinear.Effect.none);
-    }
     | MenuSetDispose(dispose) => (
         {...state, dispose},
         Isolinear.Effect.none,
@@ -114,10 +116,10 @@ let start = () => {
       );
     | MenuSelect =>
       let effect =
-        switch(List.nth_opt(filteredCommands, state.selectedItem)) {
-        | None => Isolinear.Effect.none
-        | Some(v) => selectItemEffect(v.command);
-        }
+        switch (filteredCommands[state.selectedItem]) {
+        | exception (Invalid_argument(_)) => Isolinear.Effect.none
+        | v => selectItemEffect(v.command)
+        };
 
       /* Also close menu */
       let (closeState, closeEffect) = menuUpdater(state, MenuClose);

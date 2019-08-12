@@ -30,10 +30,7 @@ type completedWork = {
   // If the allFiltered list is still huge,
   // we take a subset prior to sorting to display in the UI
   // The 'ui' filtered should be the main item for the UI to use
-  uiFiltered: list(Actions.menuCommand),
-  // We keep the count here too, so that it does not need to be recalculated
-  // (List.length is expensive)
-  uiCount: int,
+  uiFiltered: array(Actions.menuCommand),
 };
 
 let showCompletedWork = (v: completedWork) => {
@@ -41,12 +38,12 @@ let showCompletedWork = (v: completedWork) => {
   ++ " -- allFiltered: "
   ++ string_of_int(List.length(v.allFiltered))
   ++ " -- uiFiltered: "
-  ++ string_of_int(v.uiCount);
+  ++ string_of_int(Array.length(v.uiFiltered));
 };
 
 type t = Job.t(pendingWork, completedWork);
 
-let initialCompletedWork = {allFiltered: [], uiFiltered: [], uiCount: 0};
+let initialCompletedWork = {allFiltered: [], uiFiltered: [||]};
 let initialPendingWork = {
   filter: "",
   regex: Str.regexp(".*"),
@@ -142,9 +139,11 @@ let doWork = (p: pendingWork, c: completedWork) => {
   | Some((completed, p, c)) =>
     /* As a last pass, run the menu filter to sort / score filtered items if under a certain length */
     let uiFiltered =
-      c |> Utility.firstk(maxItemsToFilter) |> Filter.menu(p.filter);
-    let uiCount = List.length(uiFiltered);
-    (completed, p, {allFiltered: c, uiFiltered, uiCount});
+      c
+      |> Utility.firstk(maxItemsToFilter)
+      |> Filter.menu(p.filter)
+      |> Array.of_list;
+    (completed, p, {allFiltered: c, uiFiltered});
   };
 };
 
