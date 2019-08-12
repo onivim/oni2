@@ -42,5 +42,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
         Ripgrep.getRunCount() > currentRunCount;
       },
     );
+
+    incr(iterations);
   }
 });
