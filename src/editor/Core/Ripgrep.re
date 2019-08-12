@@ -2,6 +2,13 @@ open Rench;
 
 type disposeFunction = unit => unit;
 
+/* Internal counters used for tracking */
+let _ripGrepRunCount = ref(0);
+let _ripGrepCompletedCount = ref(0);
+
+let getRunCount = () => _ripGrepRunCount^;
+let getCompletedCount = () => _ripGrepCompletedCount^;
+
 [@deriving show]
 type t = {
   search:
@@ -9,6 +16,7 @@ type t = {
 };
 
 let process = (rgPath, args, callback, completedCallback) => {
+  incr(_ripGrepRunCount);
   let cp = ChildProcess.spawn(rgPath, args);
 
   let dispose1 =
@@ -25,6 +33,7 @@ let process = (rgPath, args, callback, completedCallback) => {
     Event.subscribe(
       cp.onClose,
       exitCode => {
+        incr(_ripGrepCompletedCount);
         Log.info(
           "Ripgrep completed - exit code: " ++ string_of_int(exitCode),
         );

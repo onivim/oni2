@@ -4,6 +4,7 @@
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
            QuickOpenEventuallyCompletesTest
+           QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
@@ -27,6 +28,7 @@
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
         QuickOpenEventuallyCompletesTest.exe
+        QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe

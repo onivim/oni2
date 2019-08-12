@@ -6,4 +6,7 @@ type t = {
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
 
+let getRunCount: unit => int;
+let getCompletedCount: unit => int;
+
 let make: string => t;
