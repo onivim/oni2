@@ -3,6 +3,7 @@
            ClipboardPasteMultiLineTest
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
+           ClipboardYankTest
            CopyActiveFilepathToClipboardTest
            QuickOpenEventuallyCompletesTest
            QuickOpenDoesntLeakFileDescriptorsTest
@@ -28,6 +29,7 @@
         ClipboardPasteMultiLineTest.exe
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
+        ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
         QuickOpenEventuallyCompletesTest.exe
         QuickOpenDoesntLeakFileDescriptorsTest.exe

@@ -77,8 +77,8 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
   let waitForState = (~name, ~timeout=0.5, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
     let startTime = Unix.gettimeofday();
-    let iteration = ref(0);
     let maxWaitTime = timeout;
+    let iteration = ref(0);
 
     logWaiter("Starting");
     while (!waiter(currentState^)
