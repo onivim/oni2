@@ -1,5 +1,5 @@
 {
-  "checksum": "4d3bb59a5af5ecf643a7b48d4eaa39cf",
+  "checksum": "f958e94a1926f35bd358fbc97412a884",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -134,13 +134,13 @@
       ],
       "devDependencies": []
     },
-    "rench@github:bryphe/rench#7000075@d41d8cd9": {
-      "id": "rench@github:bryphe/rench#7000075@d41d8cd9",
+    "rench@github:bryphe/rench#8019577@d41d8cd9": {
+      "id": "rench@github:bryphe/rench#8019577@d41d8cd9",
       "name": "rench",
-      "version": "github:bryphe/rench#7000075",
+      "version": "github:bryphe/rench#8019577",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/rench#7000075" ]
+        "source": [ "github:bryphe/rench#8019577" ]
       },
       "overrides": [],
       "dependencies": [
@@ -792,7 +792,7 @@
       "overrides": [ "test.json" ],
       "dependencies": [
         "revery@github:revery-ui/revery#b473741@d41d8cd9",
-        "rench@github:bryphe/rench#7000075@d41d8cd9",
+        "rench@github:bryphe/rench#8019577@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
