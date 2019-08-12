@@ -57,7 +57,11 @@ npm run build
 ## Release 
 
 To create a release build, run:
+
+- `esy x Oni2 -f --checkhealth`
 - `esy create-release`
+
+This will create a `_release` folder at the root with the application bundle inside.
 
 ### Windows
 
