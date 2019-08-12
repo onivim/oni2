@@ -54,7 +54,6 @@ let process = (rgPath, args, callback, completedCallback) => {
    path, modified, created
  */
 let search = (path, search, workingDirectory, callback, completedCallback) => {
-  print_endline("workingDir: " ++ workingDirectory);
   process(
     path,
     [|
