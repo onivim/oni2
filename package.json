@@ -220,7 +220,8 @@
     "@opam/ocamlfind": "1.8.0",
     "@opam/biniou": "1.2.0",
     "@opam/easy-format": "1.3.1",
-    "@opam/merlin-extend": "0.4"
+    "@opam/merlin-extend": "0.4",
+    "rench": "github:bryphe/rench#7000075"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
