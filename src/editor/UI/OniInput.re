@@ -14,7 +14,9 @@ type action =
   | CursorRight
   | CursorTimer
   | SetFocus(bool)
-  | Delete
+  | DeleteCharacter
+  | DeleteLine
+  | DeleteWord
   | Backspace
   | InsertText(string);
 
@@ -66,6 +68,27 @@ let removeCharacterAfter = (word, cursorPosition) => {
   {newString, cursorPosition};
 };
 
+let deleteWord = (str, cursorPosition) => {
+  let positionToDeleteTo = switch(String.rindex_from_opt(str, cursorPosition - 1, ' ')) {
+  | None => 0
+  | Some(v) => v
+  };
+
+  // Get the 'before' position
+  let beforeStr = if (positionToDeleteTo > 0) {
+    String.sub(str, 0, positionToDeleteTo);
+  } else {
+    ""
+  }
+
+  let afterStr = if(cursorPosition <= String.length(str) - 1) {
+    String.sub(str, cursorPosition, String.length(str) - cursorPosition);
+  } else {
+    ""
+  };
+  {newString: beforeStr ++ afterStr, cursorPosition: positionToDeleteTo};
+};
+
 let addCharacter = (word, char, index) => {
   let (startStr, endStr) = getStringParts(index, word);
   {
@@ -99,7 +122,22 @@ let reducer = (action, state) =>
           ? Time.Seconds(0.0)
           : Time.increment(state.cursorTimer, Time.Seconds(0.1)),
     }
-  | Delete =>
+  | DeleteWord => 
+    let {newString, cursorPosition} = deleteWord(state.internalValue, state.cursorPosition);
+    {
+      ...state,
+      cursorTimer: Time.Seconds(0.0),
+      internalValue: newString,
+      cursorPosition
+    }
+  | DeleteLine =>
+    {
+      ...state,
+      cursorTimer: Time.Seconds(0.),
+      internalValue: "",
+      cursorPosition: 0
+    }
+  | DeleteCharacter =>
     let {newString, cursorPosition} =
       removeCharacterAfter(state.internalValue, state.cursorPosition);
     {
@@ -207,7 +245,10 @@ let make =
       | Key.KEY_RIGHT =>
         onKeyDown(event);
         dispatch(CursorRight);
-      | Key.KEY_DELETE => dispatch(Delete)
+      | Key.KEY_H when event.ctrlKey => dispatch(Backspace)
+      | Key.KEY_U when event.ctrlKey => dispatch(DeleteLine)
+      | Key.KEY_W when event.ctrlKey => dispatch(DeleteWord)
+      | Key.KEY_DELETE => dispatch(DeleteCharacter)
       | Key.KEY_BACKSPACE => dispatch(Backspace)
       | Key.KEY_ESCAPE =>
         onKeyDown(event);
