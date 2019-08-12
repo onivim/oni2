@@ -14,7 +14,6 @@ type testCallback =
 let _currentClipboard: ref(option(string)) = ref(None);
 
 let setClipboard = v => _currentClipboard := v;
-
 let getClipboard = () => _currentClipboard^;
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
@@ -39,9 +38,10 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     Store.StoreThread.start(
       ~setup,
       ~getClipboardText=() => _currentClipboard^,
-      ~setClipboardText=v => setClipboard(Some(v)),
+      ~setClipboardText=text => setClipboard(Some(text)),
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
+      ~cliOptions=None,
       (),
     );
 

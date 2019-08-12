@@ -79,6 +79,7 @@ type t =
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | ToggleZenMode
+  | CopyActiveFilepathToClipboard
   | Noop
 and editor = {
   editorId: int,

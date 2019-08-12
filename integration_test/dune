@@ -4,6 +4,7 @@
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
            ClipboardYankTest
+           CopyActiveFilepathToClipboardTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
@@ -27,6 +28,7 @@
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
         ClipboardYankTest.exe
+        CopyActiveFilepathToClipboardTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe

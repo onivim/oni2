@@ -39,9 +39,11 @@ type t = {
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,
+  workbenchTreeIndent: int,
   filesExclude: list(string),
   vimUseSystemClipboard,
   zenModeHideTabs: bool,
+  zenModeSingleFile: bool,
 };
 
 let default = {
@@ -64,6 +66,7 @@ let default = {
   workbenchSideBarVisible: true,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
+  workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
   vimUseSystemClipboard: {
     yank: true,
@@ -71,4 +74,5 @@ let default = {
     paste: false,
   },
   zenModeHideTabs: true,
+  zenModeSingleFile: true,
 };

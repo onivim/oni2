@@ -25,12 +25,14 @@ let getDefaultConfigString = configName =>
   "editor.rulers": [],
   "editor.tabSize": 4,
   "editor.zenMode.hideTabs": true,
+  "editor.zenMode.singleFile": true,
   "files.exclude": ["_esy", "node_modules"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
   "workbench.iconTheme": "vs-seti",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
+  "workbench.tree.indent": 2,
   "vim.useSystemClipboard": ["yank"]
 }
 |},

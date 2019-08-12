@@ -177,28 +177,35 @@ let start =
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let v =
-        switch (movementType) {
-        | FullLeft
-        | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
-        | FullRight
-        | OneRight =>
-          Model.WindowManager.moveRight(currentState.windowManager)
-        | FullDown
-        | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
-        | FullUp
-        | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
-        | _ => currentState.windowManager.activeWindowId
-        };
+      let move = moveFunc => {
+        let windowId = moveFunc(currentState.windowManager);
+        let maybeEditorGroupId =
+          Model.WindowTree.getEditorGroupIdFromSplitId(
+            windowId,
+            currentState.windowManager.windowTree,
+          );
 
-      let editorId =
-        Model.WindowTree.getEditorGroupIdFromSplitId(
-          v,
-          currentState.windowManager.windowTree,
-        );
-      switch (editorId) {
-      | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
-      | None => ()
+        switch (maybeEditorGroupId) {
+        | Some(editorGroupId) =>
+          dispatch(Model.Actions.WindowSetActive(windowId, editorGroupId))
+        | None => ()
+        };
+      };
+
+      switch (movementType) {
+      | FullLeft
+      | OneLeft => move(Model.WindowManager.moveLeft)
+      | FullRight
+      | OneRight => move(Model.WindowManager.moveRight)
+      | FullDown
+      | OneDown => move(Model.WindowManager.moveDown)
+      | FullUp
+      | OneUp => move(Model.WindowManager.moveUp)
+      | RotateDownwards =>
+        dispatch(Model.Actions.Command("view.rotateForward"))
+      | RotateUpwards =>
+        dispatch(Model.Actions.Command("view.rotateBackward"))
+      | _ => move(windowManager => windowManager.activeWindowId)
       };
     });
 
@@ -339,6 +346,8 @@ let start =
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (!String.equal(key, "<S-SHIFT>")
+            && !String.equal(key, "<A-SHIFT>")
+            && !String.equal(key, "<D-SHIFT>")
             && !String.equal(key, "<D->")
             && !String.equal(key, "<D-S->")
             && !String.equal(key, "<C->")
@@ -517,6 +526,14 @@ let start =
       }
     );
 
+  let copyActiveFilepathToClipboardEffect =
+    Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
+      switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {
+      | Some(filename) => setClipboardText(filename)
+      | None => ()
+      }
+    );
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.Command("editor.action.clipboardPasteAction") => (
@@ -562,6 +579,10 @@ let start =
         synchronizeEditorEffect(state),
       )
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Model.Actions.CopyActiveFilepathToClipboard => (
+        state,
+        copyActiveFilepathToClipboardEffect,
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

@@ -36,6 +36,8 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+
 ### Vim
 
 - `vim.useSystemClipboard` __(_`true`_|_`false`_|_`["yank", "paste", "delete"]`_ default: `["yank"]`)__ - Whether or not deletes / yanks should integrate with the system clipboard:

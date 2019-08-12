@@ -42,6 +42,7 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
+      ~cliOptions: option(Oni_Core.Cli.t),
       (),
     ) => {
   ignore(executingDirectory);
@@ -72,7 +73,7 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start();
+  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
