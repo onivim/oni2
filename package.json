@@ -221,7 +221,7 @@
     "@opam/biniou": "1.2.0",
     "@opam/easy-format": "1.3.1",
     "@opam/merlin-extend": "0.4",
-    "rench": "github:bryphe/rench#7000075"
+    "rench": "github:bryphe/rench#8019577"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
