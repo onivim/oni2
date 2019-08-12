@@ -7,7 +7,12 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   );
 
   /* Switch to root directory */
-  Vim.command("cd /");
+  if (Environment.os == Environment.Mac) {
+    // CI machines timeout with '/' - so we'll use home (which also reproduces the crash)
+    Vim.command("cd ~");
+  } else {
+    Vim.command("cd /");
+  }
 
   /* Launch quick open */
   dispatch(QuickOpen);
