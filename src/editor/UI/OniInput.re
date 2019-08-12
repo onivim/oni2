@@ -69,23 +69,26 @@ let removeCharacterAfter = (word, cursorPosition) => {
 };
 
 let deleteWord = (str, cursorPosition) => {
-  let positionToDeleteTo = switch(String.rindex_from_opt(str, cursorPosition - 1, ' ')) {
-  | None => 0
-  | Some(v) => v
-  };
+  let positionToDeleteTo =
+    switch (String.rindex_from_opt(str, cursorPosition - 1, ' ')) {
+    | None => 0
+    | Some(v) => v
+    };
 
   // Get the 'before' position
-  let beforeStr = if (positionToDeleteTo > 0) {
-    String.sub(str, 0, positionToDeleteTo);
-  } else {
-    ""
-  }
+  let beforeStr =
+    if (positionToDeleteTo > 0) {
+      String.sub(str, 0, positionToDeleteTo);
+    } else {
+      "";
+    };
 
-  let afterStr = if(cursorPosition <= String.length(str) - 1) {
-    String.sub(str, cursorPosition, String.length(str) - cursorPosition);
-  } else {
-    ""
-  };
+  let afterStr =
+    if (cursorPosition <= String.length(str) - 1) {
+      String.sub(str, cursorPosition, String.length(str) - cursorPosition);
+    } else {
+      "";
+    };
   {newString: beforeStr ++ afterStr, cursorPosition: positionToDeleteTo};
 };
 
@@ -122,20 +125,20 @@ let reducer = (action, state) =>
           ? Time.Seconds(0.0)
           : Time.increment(state.cursorTimer, Time.Seconds(0.1)),
     }
-  | DeleteWord => 
-    let {newString, cursorPosition} = deleteWord(state.internalValue, state.cursorPosition);
+  | DeleteWord =>
+    let {newString, cursorPosition} =
+      deleteWord(state.internalValue, state.cursorPosition);
     {
       ...state,
       cursorTimer: Time.Seconds(0.0),
       internalValue: newString,
-      cursorPosition
-    }
-  | DeleteLine =>
-    {
+      cursorPosition,
+    };
+  | DeleteLine => {
       ...state,
       cursorTimer: Time.Seconds(0.),
       internalValue: "",
-      cursorPosition: 0
+      cursorPosition: 0,
     }
   | DeleteCharacter =>
     let {newString, cursorPosition} =
