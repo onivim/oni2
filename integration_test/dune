@@ -3,6 +3,7 @@
            ClipboardPasteMultiLineTest
            ClipboardPasteSingleLineTest
            ClipboardPasteEmptyTest
+           CopyActiveFilepathToClipboardTest
            QuickOpenEventuallyCompletesTest
            QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
@@ -27,6 +28,7 @@
         ClipboardPasteMultiLineTest.exe
         ClipboardPasteSingleLineTest.exe
         ClipboardPasteEmptyTest.exe
+        CopyActiveFilepathToClipboardTest.exe
         QuickOpenEventuallyCompletesTest.exe
         QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe

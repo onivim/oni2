@@ -54,6 +54,12 @@ let create = (setItems, _, _) => {
       command: () => Actions.Command("view.rotateBackward"),
       icon: None,
     },
+    {
+      category: Some("Editor"),
+      name: "Copy Active Filepath To Clipboard",
+      command: () => Actions.CopyActiveFilepathToClipboard,
+      icon: None,
+    },
   ];
 
   setItems(commands);
