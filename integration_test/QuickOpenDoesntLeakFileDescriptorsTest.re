@@ -19,12 +19,11 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
     state.menu.isLoading == true
   );
 
-  // We're going to open and close Ripgrep ~300 times.
+  // We're going to open and close Ripgrep many300 times.
   // The leaking-file-descriptor bug would leak ~3 fds every time we
-  // run QuickOpen. Simulating running ripgrep 300 times would
-  // easily hit this limit and exercise that failure condition.
+  // run QuickOpen. 
   let iterations = ref(0);
-  let maxIterations = 300;
+  let maxIterations = 150;
 
   while (iterations^ < maxIterations) {
     let currentRunCount = Ripgrep.getRunCount();
