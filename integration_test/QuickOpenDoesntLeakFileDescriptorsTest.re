@@ -23,7 +23,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   // The leaking-file-descriptor bug would leak ~3 fds every time we
   // run QuickOpen.
   let iterations = ref(0);
-  let maxIterations = 150;
+  let maxIterations = 50;
 
   while (iterations^ < maxIterations) {
     let currentRunCount = Ripgrep.getRunCount();
