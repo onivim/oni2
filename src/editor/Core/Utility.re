@@ -165,4 +165,15 @@ let rec dropLast =
   | [_] => []
   | [head, ...tail] => [head, ...dropLast(tail)];
 
+let rec firstk = (k, v) =>
+  switch (v) {
+  | [] => []
+  | [hd, ...tail] =>
+    if (k <= 1) {
+      [hd];
+    } else {
+      [hd, ...firstk(k - 1, tail)];
+    }
+  };
+
 external freeConsole: unit => unit = "win32_free_console";

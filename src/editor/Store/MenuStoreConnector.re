@@ -7,24 +7,33 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-module Extensions = Oni_Extensions;
+module Actions = Model.Actions;
+module Menu = Model.Menu;
+module MenuJob = Model.MenuJob;
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let position =
-      (selectedItem, change, commands: list(Model.Actions.menuCommand)) => {
+  let position = (selectedItem, change, count) => {
     let nextIndex = selectedItem + change;
-    nextIndex >= List.length(commands) || nextIndex < 0 ? 0 : nextIndex;
+    nextIndex >= count || nextIndex < 0 ? 0 : nextIndex;
   };
 
-  let menuOpenEffect = menuConstructor =>
+  let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
     Isolinear.Effect.create(~name="menu.construct", () => {
-      let setItems = items => dispatch(Model.Actions.MenuUpdate(items));
+      let setItems = items => dispatch(Actions.MenuUpdate(items));
+      let setLoading = isLoading =>
+        dispatch(Actions.MenuSetLoading(isLoading));
 
-      let disposeFunction = menuConstructor(setItems);
-      dispatch(Model.Actions.MenuSetDispose(disposeFunction));
+      let disposeFunction =
+        menuConstructor(setItems, onQueryChangedEvent, setLoading);
+      dispatch(Actions.MenuSetDispose(disposeFunction));
     });
+
+  let queryChangedEffect = (evt, newQuery) =>
+    Isolinear.Effect.create(~name="menu.queryChanged", () =>
+      Rench.Event.dispatch(evt, newQuery)
+    );
 
   let selectItemEffect = command =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
@@ -35,8 +44,15 @@ let start = () => {
   let disposeMenuEffect = dispose =>
     Isolinear.Effect.create(~name="menu.dispose", dispose);
 
-  let rec menuUpdater = (state: Model.Menu.t, action: Model.Actions.t) =>
+  let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
+    let filteredCommands =
+      Core.Job.getCompletedWork(state.filterJob).uiFiltered;
+    let filteredCommandsCount = filteredCommands |> Array.length;
     switch (action) {
+    | MenuSetLoading(isLoading) => (
+        {...state, isLoading},
+        Isolinear.Effect.none,
+      )
     | MenuPosition(index) => (
         {...state, selectedItem: index},
         Isolinear.Effect.none,
@@ -45,7 +61,7 @@ let start = () => {
         {
           ...state,
           selectedItem:
-            position(state.selectedItem, -1, state.filteredCommands),
+            position(state.selectedItem, -1, filteredCommandsCount),
         },
         Isolinear.Effect.none,
       )
@@ -53,7 +69,7 @@ let start = () => {
         {
           ...state,
           selectedItem:
-            position(state.selectedItem, 1, state.filteredCommands),
+            position(state.selectedItem, 1, filteredCommandsCount),
         },
         Isolinear.Effect.none,
       )
@@ -61,19 +77,27 @@ let start = () => {
         {
           ...state,
           searchQuery: query,
-          filteredCommands: Model.Filter.menu(query, state.commands),
+          filterJob:
+            Core.Job.mapw(MenuJob.updateQuery(query), state.filterJob),
+          selectedItem:
+            position(state.selectedItem, 0, filteredCommandsCount),
         },
-        Isolinear.Effect.none,
+        queryChangedEffect(state.onQueryChanged, query),
       )
-    | MenuOpen(menuConstructor) => (
+    | MenuOpen(menuConstructor) =>
+      let state = Menu.create();
+      (
         {...state, isOpen: true, commands: []},
-        menuOpenEffect(menuConstructor),
-      )
+        menuOpenEffect(menuConstructor, state.onQueryChanged),
+      );
     | MenuUpdate(update) =>
       let commands = List.append(state.commands, update);
-      let filteredCommands = Model.Filter.menu(state.searchQuery, commands);
+      let filterJob =
+        Core.Job.mapw(MenuJob.addItems(update), state.filterJob);
+      let selectedItem =
+        position(state.selectedItem, 0, filteredCommandsCount);
 
-      ({...state, commands, filteredCommands}, Isolinear.Effect.none);
+      ({...state, commands, filterJob, selectedItem}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
         {...state, dispose},
         Isolinear.Effect.none,
@@ -81,13 +105,21 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {...state, commands: [], isOpen: false, selectedItem: 0},
+        {
+          ...state,
+          filterJob: MenuJob.default,
+          commands: [],
+          isOpen: false,
+          selectedItem: 0,
+        },
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>
       let effect =
-        List.nth(state.filteredCommands, state.selectedItem)
-        |> (selected => selectItemEffect(selected.command));
+        switch (filteredCommands[state.selectedItem]) {
+        | exception (Invalid_argument(_)) => Isolinear.Effect.none
+        | v => selectItemEffect(v.command)
+        };
 
       /* Also close menu */
       let (closeState, closeEffect) = menuUpdater(state, MenuClose);
@@ -95,10 +127,26 @@ let start = () => {
       (closeState, Isolinear.Effect.batch([effect, closeEffect]));
     | _ => (state, Isolinear.Effect.none)
     };
+  };
 
-  let updater = (state: Model.State.t, action: Model.Actions.t) =>
-    if (action === Model.Actions.Tick) {
-      (state, Isolinear.Effect.none);
+  let updater = (state: Model.State.t, action: Actions.t) =>
+    if (action === Actions.Tick) {
+      if (Core.Job.isComplete(state.menu.filterJob)) {
+        (state, Isolinear.Effect.none);
+      } else {
+        let newState = {
+          ...state,
+          menu: {
+            ...state.menu,
+            filterJob: Core.Job.tick(state.menu.filterJob),
+          },
+        };
+        if (Core.Log.isDebugLoggingEnabled()) {
+          Core.Log.debug(Core.Job.show(state.menu.filterJob));
+        };
+
+        (newState, Isolinear.Effect.none);
+      };
     } else {
       let (menuState, menuEffect) = menuUpdater(state.menu, action);
       let state = {...state, menu: menuState};

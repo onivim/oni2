@@ -12,6 +12,7 @@ module ConfigurationParser = ConfigurationParser;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
 module IntMap = IntMap;
+module Job = Job;
 module LineNumber = LineNumber;
 module Log = Log;
 module Node = Node;

@@ -5,6 +5,8 @@
            ClipboardPasteEmptyTest
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
+           QuickOpenEventuallyCompletesTest
+           QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
@@ -29,6 +31,8 @@
         ClipboardPasteEmptyTest.exe
         ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
+        QuickOpenEventuallyCompletesTest.exe
+        QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe

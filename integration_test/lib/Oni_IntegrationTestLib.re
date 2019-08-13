@@ -6,7 +6,7 @@ module Log = Core.Log;
 type dispatchFunction = Model.Actions.t => unit;
 type runEffectsFunction = unit => unit;
 type waiter = Model.State.t => bool;
-type waitForState = (~name: string, waiter) => unit;
+type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
 
 type testCallback =
   (dispatchFunction, waitForState, runEffectsFunction) => unit;
@@ -74,10 +74,10 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     dispatch(action);
   };
 
-  let waitForState = (~name, waiter) => {
+  let waitForState = (~name, ~timeout=0.5, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
     let startTime = Unix.gettimeofday();
-    let maxWaitTime = 0.5;
+    let maxWaitTime = timeout;
     let iteration = ref(0);
 
     logWaiter("Starting");
