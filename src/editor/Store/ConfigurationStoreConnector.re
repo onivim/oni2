@@ -52,7 +52,7 @@ let start = (~cliOptions: option(Cli.t)) => {
             Configuration.getValue(c => c.zenModeSingleFile, configuration);
 
           if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
-            dispatch(Actions.ToggleZenMode);
+            dispatch(Actions.EnableZenMode);
           };
         | (Error(err), _) =>
           Log.error("Error loading configuration file: " ++ err)
