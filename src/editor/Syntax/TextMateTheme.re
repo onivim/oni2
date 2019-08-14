@@ -7,13 +7,39 @@ open TextMateScopes;
 module TokenStyle = TextMateScopes.TokenStyle;
 module ResolvedStyle = TextMateScopes.ResolvedStyle;
 
+type themeSelector = (string, TokenStyle.t);
+
 type t = {
   selectors: list(Selector.t),
   trie: Trie.t(Selector.t),
 };
 
-let create = (~selectors: list(Selector.t), ()) => {
+let _explodeSelectors = (s: string) => {
+  s
+  |> String.split_on_char(',')
+  |> List.map(s => String.trim(s))
+};
+
+let create = (selectors: list(themeSelector)) => {
   open Selector;
+
+  let f = (v: themeSelector) => {
+    let (s, style) = v;
+
+    // Expand "foo, bar" -> ["foo", "bar"]
+    let explodedSelectors = _explodeSelectors(s);
+
+    List.map(scope => {
+      Selector.create(
+        ~style,
+        ~scopes=[Scope.ofString(scope)],
+        (),
+      )
+    }, explodedSelectors);
+  };
+  let selectors = selectors
+    |> List.map(f)
+    |> List.flatten;
 
   let trie =
     List.fold_left(

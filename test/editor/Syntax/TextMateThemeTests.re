@@ -14,37 +14,32 @@ describe("TextMateTheme", ({describe, _}) => {
      */
   let simpleTextMateTheme =
     TextMateTheme.create(
-      ~selectors=[
-        Selector.create(
-          ~style=TokenStyle.create(~foreground=9, ()),
-          ~scopes=[Scope.ofString("var")],
-          (),
-        ),
-        Selector.create(
-          ~style=TokenStyle.create(~foreground=2, ~bold=true, ()),
-          ~scopes=[Scope.ofString("var.identifier")],
-          (),
-        ),
-        Selector.create(
-          ~style=TokenStyle.create(~foreground=4, ~italic=true, ()),
-          ~scopes=[Scope.ofString("constant")],
-          (),
-        ),
-        Selector.create(
-          ~style=TokenStyle.create(~foreground=5, ()),
-          ~scopes=[Scope.ofString("constant.numeric")],
-          (),
-        ),
-        Selector.create(
-          ~style=TokenStyle.create(~bold=true, ()),
-          ~scopes=[Scope.ofString("constant.numeric.hex")],
-          (),
-        ),
-      ],
-      (),
+      [
+        ("var", TokenStyle.create(~foreground=9, ())),
+        ("var.identifier", TokenStyle.create(~foreground=2, ~bold=true, ())),
+        ("constant", TokenStyle.create(~foreground=4, ~italic=true, ())),
+        ("constant.numeric", TokenStyle.create(~foreground=5, ())),
+        ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
+        ("foo, bar", TokenStyle.create(~foreground=10, ())),
+      ]
     );
 
   describe("match", ({test, _}) => {
+    test("foo & bar gets correctly style (compound rule)", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("foo")]);
+      expect.int(style.foreground).toBe(10);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("bar")]);
+      expect.int(style.foreground).toBe(10);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    });
     test("baz gets default style (no match)", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("baz")]);
