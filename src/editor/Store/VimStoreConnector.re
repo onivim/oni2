@@ -18,7 +18,32 @@ let start =
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Vim.Clipboard.setProvider((reg) => {
-    Some("DERP");
+    let state = getState();
+    let yankConfig =
+      Model.Selectors.getActiveConfigurationValue(state, c =>
+        c.vimUseSystemClipboard
+      );
+
+    let getClipboardValue = () => {
+      switch(getClipboardText()) {
+      | None => None
+      | Some(v) => Some([|v|])
+      }
+    };
+
+    let starReg = Char.code('*');
+    let plusReg = Char.code('+');
+    let unnamedReg = 0;
+
+    let shouldPullFromClipboard = 
+        (reg == starReg || reg == plusReg) // always for '*' and '+'
+        || (reg == unnamedReg && yankConfig.paste); // or if 'paste' set, but unnamed
+
+      if (shouldPullFromClipboard) {
+        getClipboardValue();
+      } else {
+        None
+      }
   });
 
   let _ =

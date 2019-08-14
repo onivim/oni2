@@ -77,4 +77,82 @@ runTest(
       String.equal(line, "def");
     }
   });
+
+  // Test if the configuration is set - paste from unnamed register will pull from the keyboard
+  setClipboard(Some("jkl"));
+  
+  wait(
+    ~name="Set configuration to pull clipboard on paste",
+    (state: State.t) => {
+    let configuration = state.configuration;
+    dispatch(
+      ConfigurationSet({
+        ...configuration,
+        default: {
+          ...configuration.default,
+          vimUseSystemClipboard: {
+            yank: false,
+            delete: false,
+            paste: true,
+          },
+        },
+      }),
+    );
+    runEffects();
+    true;
+  });
+  
+  dispatch(KeyboardInput("y"))
+  dispatch(KeyboardInput("y"))
+  dispatch(KeyboardInput("P"));
+  runEffects();
+
+  wait(~name="paste from unnamed register pulls from clipboard when ['paste'] is set", (state: State.t) => {
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) =>
+      let line = Buffer.getLine(buf, 0);
+      Log.info("Current line is: |" ++ line ++ "|");
+      String.equal(line, "jkl");
+    }
+  });
+  
+  // Set configuration back (paste=false), and it should not pull from clipboard
+  setClipboard(Some("mno"));
+  
+  wait(
+    ~name="Set configuration to pull clipboard on paste",
+    (state: State.t) => {
+    let configuration = state.configuration;
+    dispatch(
+      ConfigurationSet({
+        ...configuration,
+        default: {
+          ...configuration.default,
+          vimUseSystemClipboard: {
+            yank: false,
+            delete: false,
+            paste: false,
+          },
+        },
+      }),
+    );
+    runEffects();
+    true;
+  });
+  
+  dispatch(KeyboardInput("y"))
+  dispatch(KeyboardInput("y"))
+  dispatch(KeyboardInput("P"));
+  runEffects();
+
+  wait(~name="paste from unnamed register pulls from clipboard when ['paste'] is set", (state: State.t) => {
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) =>
+      let line = Buffer.getLine(buf, 0);
+      Log.info("Current line is: |" ++ line ++ "|");
+      String.equal(line, "jkl");
+    }
+  });
 });
