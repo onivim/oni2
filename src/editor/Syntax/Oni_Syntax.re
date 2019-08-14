@@ -7,5 +7,5 @@
 let _ = print_endline("Hello, world");
 
 module TextMateScopes = TextMateScopes;
-module Theme = Theme;
+module TextMateTheme = TextMateTheme;
 module Trie = Trie;
