@@ -1,8 +1,9 @@
 (executables
     (names InsertModeTest
-           ClipboardPasteMultiLineTest
-           ClipboardPasteSingleLineTest
-           ClipboardPasteEmptyTest
+           ClipboardInsertModePasteMultiLineTest
+           ClipboardInsertModePasteSingleLineTest
+           ClipboardInsertModePasteEmptyTest
+           ClipboardNormalModePasteTest
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
            QuickOpenEventuallyCompletesTest
@@ -26,9 +27,10 @@
     (files 
         run-tests.sh
         InsertModeTest.exe
-        ClipboardPasteMultiLineTest.exe
-        ClipboardPasteSingleLineTest.exe
-        ClipboardPasteEmptyTest.exe
+        ClipboardInsertModePasteMultiLineTest.exe
+        ClipboardInsertModePasteSingleLineTest.exe
+        ClipboardInsertModePasteEmptyTest.exe
+        ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
         QuickOpenEventuallyCompletesTest.exe
