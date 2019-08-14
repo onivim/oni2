@@ -1,5 +1,5 @@
 /*
- Theme.re
+ TextMateTheme.re
  */
 
 open TextMateScopes;
@@ -16,6 +16,7 @@ type selectorWithParents = {
 
 type t = {trie: Trie.t(selectorWithParents)};
 
+/* Helper to split the selectors on ',' for groups */
 let _explodeSelectors = (s: string) => {
   s |> String.split_on_char(',') |> List.map(s => String.trim(s));
 };
@@ -106,11 +107,6 @@ let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
   {...prev, foreground, bold, italic};
 };
 
-/* [match] returns the resolved style information,
-      given the [scopes]. The [scopes] should include
-      the full ancestor list, separated by spaces, for example:
-      "text.html.basic source.php string.quoted.double.php"
-   */
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
   switch (scopes) {
