@@ -17,6 +17,10 @@ let start =
     (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  Vim.Clipboard.setProvider((reg) => {
+    Some("DERP");
+  });
+
   let _ =
     Vim.Mode.onChanged(newMode =>
       dispatch(Model.Actions.ChangeMode(newMode))
