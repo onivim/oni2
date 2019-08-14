@@ -16,7 +16,7 @@ describe("Theme", ({describe, _}) => {
     Theme.create(
       ~selectors=[
         Selector.create(
-          ~style=TokenStyle.create(~foreground=1, ()),
+          ~style=TokenStyle.create(~foreground=9, ()),
           ~scopes=[Scope.ofString("var")],
           (),
         ),
@@ -30,15 +30,42 @@ describe("Theme", ({describe, _}) => {
           ~scopes=[Scope.ofString("constant")],
           (),
         ),
+        Selector.create(
+          ~style=TokenStyle.create(~foreground=5, ()),
+          ~scopes=[Scope.ofString("constant.numeric")],
+          (),
+        ),
+        Selector.create(
+          ~style=TokenStyle.create(~bold=true, ()),
+          ~scopes=[Scope.ofString("constant.numeric.hex")],
+          (),
+        ),
       ],
       (),
     );
 
   describe("match", ({test, _}) => {
+    test("baz gets default style (no match)", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        Theme.match(simpleTheme, [Scope.ofString("baz")]);
+      expect.int(style.foreground).toBe(1);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    });
     test("var gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         Theme.match(simpleTheme, [Scope.ofString("var")]);
-      expect.int(style.foreground).toBe(1);
+      expect.int(style.foreground).toBe(9);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    });
+    
+    test("var.baz gets correct style (should match var)", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        Theme.match(simpleTheme, [Scope.ofString("var.baz")]);
+      expect.int(style.foreground).toBe(9);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
@@ -59,6 +86,24 @@ describe("Theme", ({describe, _}) => {
       expect.int(style.foreground).toBe(4);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+    });
+    
+    test("constant.numeric gets correct style", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        Theme.match(simpleTheme, [Scope.ofString("constant.numeric")]);
+      expect.int(style.foreground).toBe(5);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+    });
+    
+    test("constant.numeric.hex gets correct style", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        Theme.match(simpleTheme, [Scope.ofString("constant.numeric.hex")]);
+      expect.int(style.foreground).toBe(5);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(true);
     });
   });
