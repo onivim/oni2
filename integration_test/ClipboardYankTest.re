@@ -119,8 +119,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
     print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
     getClipboard() == None;
   });
-  /* TODO: Requires last libvim PR */
-  /* setClipboard(None);
+   setClipboard(None);
      /* Validate yank w/ + register sets clipboard */
      dispatch(KeyboardInput("\""));
      dispatch(KeyboardInput("+"));
@@ -131,5 +130,5 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
      wait(~name="Yank 4 w/ register '+' is still sent to clipboard", _ => {
        print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
        optEqual(getClipboard(), "abc");
-     }); */
+     });
 });
