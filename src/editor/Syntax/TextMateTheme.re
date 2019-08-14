@@ -109,7 +109,7 @@ let create = (selectors: list(themeSelector)) => {
    "text.html.basic source.php string.quoted.double.php"
 */
 let match = (theme: t, scopes: string) => {
-  let scopes = [Scope.ofString(scopes)];
+  let scopes = Scopes.ofString(scopes);
   let scope = List.hd(scopes);
   let p = Trie.matches(theme.trie, scope);
 
