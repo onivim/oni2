@@ -1,0 +1,15 @@
+(library
+    (name Oni_Syntax)
+    (public_name Oni2.syntax)
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        reglfw
+        lwt
+        lwt.unix
+        Oni2.core
+        Oni2.model
+        Rench
+        Revery
+    ))
