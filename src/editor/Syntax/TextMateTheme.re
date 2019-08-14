@@ -72,12 +72,13 @@ let create = (selectors: list(themeSelector)) => {
       selectors,
     );
 
-  prerr_endline(
-    Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), trie),
-  );
   let ret: t = {trie: trie};
 
   ret;
+};
+
+let show = (v: t) => {
+  Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), v.trie);
 };
 
 let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {

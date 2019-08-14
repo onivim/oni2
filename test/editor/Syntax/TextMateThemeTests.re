@@ -1,7 +1,5 @@
-/* open Oni_Core; */
 open TestFramework;
 
-/*open Oni_Core.Types;*/
 module TextMateTheme = Oni_Syntax.TextMateTheme;
 module Scope = Oni_Syntax.TextMateScopes.Scope;
 module Selector = Oni_Syntax.TextMateScopes.Selector;
@@ -41,7 +39,7 @@ describe("TextMateTheme", ({describe, _}) => {
           "text.html.basic source.php.html string.quoted",
         );
 
-      expect.int(style.foreground).toBe(16);
+      expect.int(style.foreground).toBe(15);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
