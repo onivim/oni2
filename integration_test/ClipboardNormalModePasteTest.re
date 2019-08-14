@@ -34,7 +34,7 @@ runTest(
       String.equal(line, "abc");
     }
   );
-  
+
   // '*' multi-line test case
   setClipboard(Some("1\n2\n3\n"));
 
@@ -46,7 +46,7 @@ runTest(
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
-    | Some(buf) => {
+    | Some(buf) =>
       let line = Buffer.getLine(buf, 0);
       Log.info("Current line is: |" ++ line ++ "|");
       let a = String.equal(line, "1");
@@ -58,8 +58,7 @@ runTest(
       let line = Buffer.getLine(buf, 2);
       Log.info("Current line is: |" ++ line ++ "|");
       let c = String.equal(line, "3");
-      a && b && c
-      }
+      a && b && c;
     }
   );
 
@@ -74,7 +73,7 @@ runTest(
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
-    | Some(buf) => {
+    | Some(buf) =>
       let line = Buffer.getLine(buf, 0);
       Log.info("Current line is: |" ++ line ++ "|");
       let a = String.equal(line, "4");
@@ -86,8 +85,7 @@ runTest(
       let line = Buffer.getLine(buf, 2);
       Log.info("Current line is: |" ++ line ++ "|");
       let c = String.equal(line, "6");
-      a && b && c
-      }
+      a && b && c;
     }
   );
   // '+' test case

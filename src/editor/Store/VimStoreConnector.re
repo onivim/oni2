@@ -17,45 +17,42 @@ let start =
     (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  Vim.Clipboard.setProvider((reg) => {
+  Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
       Model.Selectors.getActiveConfigurationValue(state, c =>
         c.vimUseSystemClipboard
       );
 
-    let removeWindowsNewLines = (s) =>
-        List.init(String.length(s), String.get(s))
-        |> List.filter((c) => c != '\r')
-        |> List.map((c) => String.make(1, c))
-        |> String.concat("");
+    let removeWindowsNewLines = s =>
+      List.init(String.length(s), String.get(s))
+      |> List.filter(c => c != '\r')
+      |> List.map(c => String.make(1, c))
+      |> String.concat("");
 
-    let splitNewLines = (s) => String.split_on_char('\n', s) |> Array.of_list;
+    let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch(getClipboardText()) {
+      switch (getClipboardText()) {
       | None => None
-      | Some(v) => {
-        Some(v
-        |> removeWindowsNewLines
-        |> splitNewLines);
-      }
-      }
+      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
+      };
     };
 
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
     let unnamedReg = 0;
 
-    let shouldPullFromClipboard = 
-        (reg == starReg || reg == plusReg) // always for '*' and '+'
-        || (reg == unnamedReg && yankConfig.paste); // or if 'paste' set, but unnamed
+    let shouldPullFromClipboard =
+      (reg == starReg || reg == plusReg)  // always for '*' and '+'
+      || reg == unnamedReg
+      && yankConfig.paste; // or if 'paste' set, but unnamed
 
-      if (shouldPullFromClipboard) {
-        getClipboardValue();
-      } else {
-        None
-      }
+    if (shouldPullFromClipboard) {
+      getClipboardValue();
+    } else {
+      None;
+    };
   });
 
   let _ =
