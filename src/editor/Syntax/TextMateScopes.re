@@ -27,12 +27,21 @@ module Scopes = {
 };
 
 module TokenStyle = {
+  
+  [@deriving show({with_path: false})]
   type t = {
     foreground: option(int),
     background: option(int),
     bold: option(bool),
     italic: option(bool),
   };
+
+  let show = (v: t) => {
+    switch (v.foreground) {
+    | None => "Foreground: None"
+    | Some(v) => "Foreground: Some(" ++ string_of_int(v) ++ ")"
+    }
+  }
 
   let create =
       (

@@ -10,7 +10,7 @@ module TokenStyle = Oni_Syntax.TextMateScopes.TokenStyle;
 
 describe("Theme", ({describe, _}) => {
   /* Test theme inspired by:
-        https://github.com/revery-ui/reason-font-manager
+        https://code.visualstudio.com/blogs/2017/02/08/syntax-highlighting-optimizations#_finally-whats-new-in-vs-code-19
      */
   let simpleTheme =
     Theme.create(
@@ -23,6 +23,11 @@ describe("Theme", ({describe, _}) => {
         Selector.create(
           ~style=TokenStyle.create(~foreground=2, ~bold=true, ()),
           ~scopes=[Scope.ofString("var.identifier")],
+          (),
+        ),
+        Selector.create(
+          ~style=TokenStyle.create(~foreground=4, ~italic=true, ()),
+          ~scopes=[Scope.ofString("constant")],
           (),
         ),
       ],
@@ -46,6 +51,15 @@ describe("Theme", ({describe, _}) => {
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
+    });
+    
+    test("constant gets correct style", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        Theme.match(simpleTheme, [Scope.ofString("constant")]);
+      expect.int(style.foreground).toBe(4);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
     });
   });
 });
