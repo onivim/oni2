@@ -9,9 +9,13 @@ module ResolvedStyle = TextMateScopes.ResolvedStyle;
 
 type themeSelector = (string, TokenStyle.t);
 
+type selectorWithParents = {
+  style: TokenStyle.t,
+  parents: list(Selector.t),
+}
+
 type t = {
-  selectors: list(Selector.t),
-  trie: Trie.t(Selector.t),
+  trie: Trie.t(selectorWithParents),
 };
 
 let _explodeSelectors = (s: string) => {
@@ -21,8 +25,6 @@ let _explodeSelectors = (s: string) => {
 };
 
 let create = (selectors: list(themeSelector)) => {
-  open Selector;
-
   let f = (v: themeSelector) => {
     let (s, style) = v;
 
@@ -32,7 +34,7 @@ let create = (selectors: list(themeSelector)) => {
     List.map(scope => {
       Selector.create(
         ~style,
-        ~scopes=[Scope.ofString(scope)],
+        ~scopes=Scopes.ofString(scope),
         (),
       )
     }, explodedSelectors);
@@ -44,21 +46,61 @@ let create = (selectors: list(themeSelector)) => {
   let trie =
     List.fold_left(
       (prev, curr) => {
-        let {scopes, _} = curr;
-        let scopeToAdd = List.rev(scopes) |> List.hd;
+        open Selector;
+        let {scopes, style} = curr;
+        
+        let revScopes = List.rev(scopes);
+        switch (revScopes) {
+        | [] => prev
+        | [hd] => {
 
-        let f = _ => Some(curr);
+            // If this is the only node (no parent selector),
+            // we just want to set the selector directly on the node
+            let f = prev => switch(prev) {
+            | None => Some({
+              parents: [],
+              style,
+            })
+            | Some(v) => Some({
+              ...v,
+              style,
+            })
+            }
 
-        Trie.update(scopeToAdd, f, prev);
+            Trie.update(hd, f, prev);
+        }
+        | [hd, ...tail] => {
+
+            let f = prev => switch(prev) {
+            | None => Some({
+              style: TokenStyle.default,
+              parents: [{
+                style,
+                scopes: tail,
+              }]
+            })
+            | Some(v) => Some({
+              ...v,
+              parents: [{ style, scopes: tail}, ...v.parents]
+            })
+            }
+
+            Trie.update(hd, f, prev);
+        }
+        };
       },
       Trie.empty,
       selectors,
     );
 
   prerr_endline(
-    Trie.show((i: Selector.t) => TokenStyle.show(i.style), trie),
+    Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), trie),
   );
-  {selectors, trie};
+  let ret: t = {
+    trie: trie,
+  };
+  
+  ret;
 };
 
 /* [match] returns the resolved style information,
@@ -74,7 +116,7 @@ let match = (theme: t, scopes: string) => {
   let result =
     List.fold_left(
       (prev: TokenStyle.t, curr) => {
-        let (_, selector: option(Selector.t)) = curr;
+        let (_, selector: option(selectorWithParents)) = curr;
 
         switch (selector) {
         | None => prev

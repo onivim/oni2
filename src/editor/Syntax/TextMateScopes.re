@@ -11,6 +11,20 @@ module Scope = {
   type t = list(string);
 
   let ofString = s => String.split_on_char('.', s);
+
+  let rec matches = (selector: t, v: t) => {
+    switch ((selector, v)) {
+    | ([], _) => true
+    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) => {
+      if (String.equal(selectorHd, scopeHd)) {
+        matches(selectorTl, scopeTl)
+      } else {
+        false
+      }
+    }
+    | (_, []) => false
+    }
+  };
 };
 
 module Scopes = {
@@ -24,6 +38,24 @@ module Scopes = {
      The [t] type models this, as each bullet is a [scope].
    */
   type t = list(Scope.t);
+
+  let ofString = s => s
+      |> String.split_on_char(' ')
+      |> List.map((v) => Scope.ofString(String.trim(v)));
+
+   let rec matches = (selector: t, v: t) => {
+    switch ((selector, v)) {
+    | ([], _) => true
+    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) => {
+      if (Scope.matches(selectorHd, scopeHd)) {
+        matches(selectorTl, scopeTl)
+      } else {
+        matches(selector, scopeTl)
+      }
+    }
+    | (_, []) => false
+    }
+   };
 };
 
 module TokenStyle = {
