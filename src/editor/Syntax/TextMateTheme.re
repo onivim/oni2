@@ -103,24 +103,7 @@ let create = (selectors: list(themeSelector)) => {
   ret;
 };
 
-/* [match] returns the resolved style information,
-   given the [scopes]. The [scopes] should include
-   the full ancestor list, separated by spaces, for example:
-   "text.html.basic source.php string.quoted.double.php"
-*/
-let match = (theme: t, scopes: string) => {
-  let scopes = Scopes.ofString(scopes);
-  let scope = List.hd(scopes);
-  let p = Trie.matches(theme.trie, scope);
-
-  let result =
-    List.fold_left(
-      (prev: TokenStyle.t, curr) => {
-        let (_, selector: option(selectorWithParents)) = curr;
-
-        switch (selector) {
-        | None => prev
-        | Some({style, _}) =>
+let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
           let foreground =
             switch (prev.foreground, style.foreground) {
             | (Some(v), _) => Some(v)
@@ -143,6 +126,45 @@ let match = (theme: t, scopes: string) => {
             };
 
           {...prev, foreground, bold, italic};
+
+};
+
+/* [match] returns the resolved style information,
+   given the [scopes]. The [scopes] should include
+   the full ancestor list, separated by spaces, for example:
+   "text.html.basic source.php string.quoted.double.php"
+*/
+let match = (theme: t, scopes: string) => {
+  let scopes = Scopes.ofString(scopes) |> List.rev;
+  switch(scopes) {
+  | [] => ResolvedStyle.default
+  | [scope, ...scopeParents] => {
+  
+  let p = Trie.matches(theme.trie, scope);
+
+  let result =
+    List.fold_left(
+      (prev: TokenStyle.t, curr) => {
+        let (_, selector: option(selectorWithParents)) = curr;
+
+        switch (selector) {
+        | None => prev
+        | Some({style, parents}) => {
+              let newStyle = _applyStyle(prev, style);
+
+              let parentsScopesToApply = parents
+                |> List.filter((selector) => Selector.matches(selector, scopeParents))
+
+              // Apply any parent selectors that match...
+              // we should be sorting this by score!
+              List.fold_left((prev, curr: Selector.t) => {
+                open Selector;
+                let { style, _ } = curr;
+                // Reversing the order because the parent style
+                // should take precedence over previous style
+                _applyStyle(style, prev);
+              }, newStyle, parentsScopesToApply);
+          }
         };
       },
       TokenStyle.default,
@@ -168,4 +190,6 @@ let match = (theme: t, scopes: string) => {
     };
 
   {...ResolvedStyle.default, foreground, bold, italic};
+  }
+  }
 };

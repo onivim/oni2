@@ -24,10 +24,48 @@ describe("TextMateTheme", ({describe, _}) => {
         ("entity", TokenStyle.create(~bold=true, ())),
         ("entity.other.attribute-name.foo,entity.other.attribute-name.bar", 
           TokenStyle.create(~foreground=11, ())),
+        ("html", 
+          TokenStyle.create(~foreground=12, ())),
+        ("meta html", 
+          TokenStyle.create(~foreground=14, ())),
       ]
     );
 
   describe("match", ({test, _}) => {
+    test("parent rule (meta html) gets applied", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, "meta html");
+        
+        expect.int(style.foreground).toBe(14);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(false);
+        expect.bool(style.italic).toBe(false);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, "meta.source.js html");
+        
+        expect.int(style.foreground).toBe(14);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(false);
+        expect.bool(style.italic).toBe(false);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, "html");
+        
+        expect.int(style.foreground).toBe(12);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(false);
+        expect.bool(style.italic).toBe(false);
+    });
+    test("parent rule gets ignored", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, "meta foo");
+        
+        expect.int(style.foreground).toBe(10);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(false);
+        expect.bool(style.italic).toBe(false);
+    });
     test("foo & bar gets correctly style (compound rule)", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "foo");

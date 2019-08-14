@@ -114,4 +114,6 @@ module Selector = {
   };
 
   let create = (~style=TokenStyle.default, ~scopes, ()) => {scopes, style};
+
+  let matches = (selector: t, scopes: Scopes.t) => Scopes.matches(selector.scopes, scopes);
 };
