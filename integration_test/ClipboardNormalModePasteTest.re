@@ -34,7 +34,62 @@ runTest(
       String.equal(line, "abc");
     }
   );
+  
+  // '*' multi-line test case
+  setClipboard(Some("1\n2\n3\n"));
 
+  dispatch(KeyboardInput("\""));
+  dispatch(KeyboardInput("*"));
+  dispatch(KeyboardInput("P"));
+  runEffects();
+
+  wait(~name="Multi-line paste works correctly", (state: State.t) =>
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) => {
+      let line = Buffer.getLine(buf, 0);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let a = String.equal(line, "1");
+
+      let line = Buffer.getLine(buf, 1);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let b = String.equal(line, "2");
+
+      let line = Buffer.getLine(buf, 2);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let c = String.equal(line, "3");
+      a && b && c
+      }
+    }
+  );
+
+  // '*' multi-line test case, windows style
+  setClipboard(Some("4\r\n5\r\n6\r\n"));
+
+  dispatch(KeyboardInput("\""));
+  dispatch(KeyboardInput("*"));
+  dispatch(KeyboardInput("P"));
+  runEffects();
+
+  wait(~name="Multi-line paste works correctly", (state: State.t) =>
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) => {
+      let line = Buffer.getLine(buf, 0);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let a = String.equal(line, "4");
+
+      let line = Buffer.getLine(buf, 1);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let b = String.equal(line, "5");
+
+      let line = Buffer.getLine(buf, 2);
+      Log.info("Current line is: |" ++ line ++ "|");
+      let c = String.equal(line, "6");
+      a && b && c
+      }
+    }
+  );
   // '+' test case
   setClipboard(Some("def"));
 

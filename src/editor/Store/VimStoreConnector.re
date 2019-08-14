@@ -24,10 +24,22 @@ let start =
         c.vimUseSystemClipboard
       );
 
+    let removeWindowsNewLines = (s) =>
+        List.init(String.length(s), String.get(s))
+        |> List.filter((c) => c != '\r')
+        |> List.map((c) => String.make(1, c))
+        |> String.concat("");
+
+    let splitNewLines = (s) => String.split_on_char('\n', s) |> Array.of_list;
+
     let getClipboardValue = () => {
       switch(getClipboardText()) {
       | None => None
-      | Some(v) => Some([|v|])
+      | Some(v) => {
+        Some(v
+        |> removeWindowsNewLines
+        |> splitNewLines);
+      }
       }
     };
 
