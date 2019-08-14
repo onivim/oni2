@@ -1,8 +1,8 @@
 /*
-  Trie.re
+ Trie.re
 
-  Simple Trie implementation to support scope selection
-  */
+ Simple Trie implementation to support scope selection
+ */
 
 module StringMap = Oni_Core.StringMap;
 
@@ -34,24 +34,28 @@ let rec update =
 };
 
 let show = (printer: 'a => string, root: t('a)) => {
-
-
   let rec f = (indentation, tree: t('a)) => {
-    let pp = switch(tree.v) {
-    | None => "None"
-    | Some(v) => "Some(" ++ printer(v) ++ ")";
-    }
+    let pp =
+      switch (tree.v) {
+      | None => "None"
+      | Some(v) => "Some(" ++ printer(v) ++ ")"
+      };
 
     let indent = String.make(indentation, ' ');
 
     let s = "\n" ++ indent ++ "(" ++ tree.prefix ++ " : " ++ pp;
-    let m = List.fold_left((prev, cur) => {
-      let (_, v) = cur;
-      prev ++ f(indentation + 1, v);
-    }, "", StringMap.bindings(tree.children));
+    let m =
+      List.fold_left(
+        (prev, cur) => {
+          let (_, v) = cur;
+          prev ++ f(indentation + 1, v);
+        },
+        "",
+        StringMap.bindings(tree.children),
+      );
 
     s ++ m ++ ")\n";
-  }
+  };
 
   f(0, root);
 };

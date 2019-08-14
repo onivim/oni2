@@ -1,11 +1,11 @@
 /*
-  TextMateScopes
-  */
+ TextMateScopes
+ */
 
 /*
-     [scope] is a list representation of TextMate scopes.
-     For example, "source.js" would be represented as ["source", "js"]
-   */
+   [scope] is a list representation of TextMate scopes.
+   For example, "source.js" would be represented as ["source", "js"]
+ */
 
 module Scope = {
   type t = list(string);
@@ -15,19 +15,18 @@ module Scope = {
 
 module Scopes = {
   /*
-          In general, tokens have multiple scopes. For example,
-          a token in a function might have the follow scopes:
-          - "source.js"
-          - "meta.definition.function.js"
-          - "entity.name.function.js"
+     In general, tokens have multiple scopes. For example,
+     a token in a function might have the follow scopes:
+     - "source.js"
+     - "meta.definition.function.js"
+     - "entity.name.function.js"
 
-          The [t] type models this, as each bullet is a [scope].
-        */
+     The [t] type models this, as each bullet is a [scope].
+   */
   type t = list(Scope.t);
 };
 
 module TokenStyle = {
-  
   [@deriving show({with_path: false})]
   type t = {
     foreground: option(int),
@@ -40,8 +39,8 @@ module TokenStyle = {
     switch (v.foreground) {
     | None => "Foreground: None"
     | Some(v) => "Foreground: Some(" ++ string_of_int(v) ++ ")"
-    }
-  }
+    };
+  };
 
   let create =
       (

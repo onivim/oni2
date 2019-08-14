@@ -1,6 +1,6 @@
 /*
-  Theme.re
-  */
+ Theme.re
+ */
 
 open TextMateScopes;
 
@@ -29,7 +29,9 @@ let create = (~selectors: list(Selector.t), ()) => {
       selectors,
     );
 
-  prerr_endline(Trie.show((i: Selector.t) => TokenStyle.show(i.style), trie));
+  prerr_endline(
+    Trie.show((i: Selector.t) => TokenStyle.show(i.style), trie),
+  );
   {selectors, trie};
 };
 
@@ -37,59 +39,59 @@ let match = (theme: t, scopes: Scopes.t) => {
   let scope = List.hd(scopes);
   let p = Trie.matches(theme.trie, scope);
 
-  let result = List.fold_left((prev: TokenStyle.t, curr) => {
+  let result =
+    List.fold_left(
+      (prev: TokenStyle.t, curr) => {
+        let (_, selector: option(Selector.t)) = curr;
 
-    let (_, selector: option(Selector.t)) = curr;
+        switch (selector) {
+        | None => prev
+        | Some({style, _}) =>
+          let foreground =
+            switch (prev.foreground, style.foreground) {
+            | (Some(v), _) => Some(v)
+            | (_, Some(v)) => Some(v)
+            | _ => None
+            };
 
-    switch (selector) {
-    | None => prev
-    | Some({ style, _ }) =>
-      let foreground = switch((prev.foreground, style.foreground)) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-      
-      let bold = switch((prev.bold, style.bold)) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-      
-      let italic = switch((prev.italic, style.italic)) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
+          let bold =
+            switch (prev.bold, style.bold) {
+            | (Some(v), _) => Some(v)
+            | (_, Some(v)) => Some(v)
+            | _ => None
+            };
 
-      {
-        ...prev,
-        foreground,
-        bold,
-        italic,
-      };
-    }
-  }, TokenStyle.default, p);
+          let italic =
+            switch (prev.italic, style.italic) {
+            | (Some(v), _) => Some(v)
+            | (_, Some(v)) => Some(v)
+            | _ => None
+            };
 
-  let foreground = switch(result.foreground) {
-  | Some(v) => v
-  | None => ResolvedStyle.default.foreground
-  };
-  
-  let bold = switch(result.bold) {
-  | Some(v) => v
-  | None => ResolvedStyle.default.bold
-  };
-  
-  let italic = switch(result.italic) {
-  | Some(v) => v
-  | None => ResolvedStyle.default.italic
-  };
+          {...prev, foreground, bold, italic};
+        };
+      },
+      TokenStyle.default,
+      p,
+    );
 
-  {
-    ...ResolvedStyle.default,
-    foreground,
-    bold,
-    italic,
-  }
+  let foreground =
+    switch (result.foreground) {
+    | Some(v) => v
+    | None => ResolvedStyle.default.foreground
+    };
+
+  let bold =
+    switch (result.bold) {
+    | Some(v) => v
+    | None => ResolvedStyle.default.bold
+    };
+
+  let italic =
+    switch (result.italic) {
+    | Some(v) => v
+    | None => ResolvedStyle.default.italic
+    };
+
+  {...ResolvedStyle.default, foreground, bold, italic};
 };

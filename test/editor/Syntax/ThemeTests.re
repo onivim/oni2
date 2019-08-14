@@ -61,7 +61,7 @@ describe("Theme", ({describe, _}) => {
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
     });
-    
+
     test("var.baz gets correct style (should match var)", ({expect, _}) => {
       let style: ResolvedStyle.t =
         Theme.match(simpleTheme, [Scope.ofString("var.baz")]);
@@ -79,7 +79,7 @@ describe("Theme", ({describe, _}) => {
       expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
     });
-    
+
     test("constant gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         Theme.match(simpleTheme, [Scope.ofString("constant")]);
@@ -88,7 +88,7 @@ describe("Theme", ({describe, _}) => {
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(true);
     });
-    
+
     test("constant.numeric gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         Theme.match(simpleTheme, [Scope.ofString("constant.numeric")]);
@@ -97,7 +97,7 @@ describe("Theme", ({describe, _}) => {
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(true);
     });
-    
+
     test("constant.numeric.hex gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         Theme.match(simpleTheme, [Scope.ofString("constant.numeric.hex")]);
