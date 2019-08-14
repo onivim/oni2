@@ -1,5 +1,5 @@
 {
-  "checksum": "06d9f9bff4e32ee87319aacec78b6b94",
+  "checksum": "bbdfac3f16c39e310fe80ff6c4b0076f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -244,18 +244,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#490ed3f",
+      "version": "github:onivim/reason-libvim#56aa31a",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#490ed3f" ]
+        "source": [ "github:onivim/reason-libvim#56aa31a" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.19@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
+        "libvim@8.10869.20@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
@@ -471,14 +471,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.19@d41d8cd9": {
-      "id": "libvim@8.10869.19@d41d8cd9",
+    "libvim@8.10869.20@d41d8cd9": {
+      "id": "libvim@8.10869.20@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.19",
+      "version": "8.10869.20",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.19.tgz#sha1:d5892f3107895347d7fc02befbad461ee41d8e12"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.20.tgz#sha1:40b1efd1def6d9a877fbb8322dd12235062dd3af"
         ]
       },
       "overrides": [],
@@ -496,7 +496,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "graceful-fs@4.2.1@d41d8cd9" ],
+      "dependencies": [ "graceful-fs@4.2.2@d41d8cd9" ],
       "devDependencies": []
     },
     "isolinear@2.0.0@d41d8cd9": {
@@ -572,14 +572,14 @@
       "dependencies": [ "wrappy@1.0.2@d41d8cd9", "once@1.4.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "graceful-fs@4.2.1@d41d8cd9": {
-      "id": "graceful-fs@4.2.1@d41d8cd9",
+    "graceful-fs@4.2.2@d41d8cd9": {
+      "id": "graceful-fs@4.2.2@d41d8cd9",
       "name": "graceful-fs",
-      "version": "4.2.1",
+      "version": "4.2.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.1.tgz#sha1:1c1f0c364882c868f5bff6512146328336a11b1d"
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.2.tgz#sha1:6f0952605d0140c1cfdb138ed005775b92d67b02"
         ]
       },
       "overrides": [],
@@ -631,7 +631,7 @@
       "overrides": [],
       "dependencies": [
         "universalify@0.1.2@d41d8cd9", "jsonfile@4.0.0@d41d8cd9",
-        "graceful-fs@4.2.1@d41d8cd9"
+        "graceful-fs@4.2.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -794,7 +794,7 @@
         "revery@github:revery-ui/revery#b473741@d41d8cd9",
         "rench@github:bryphe/rench#d8ebc99@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#490ed3f@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
