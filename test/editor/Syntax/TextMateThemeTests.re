@@ -21,6 +21,9 @@ describe("TextMateTheme", ({describe, _}) => {
         ("constant.numeric", TokenStyle.create(~foreground=5, ())),
         ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
         ("foo, bar", TokenStyle.create(~foreground=10, ())),
+        ("entity", TokenStyle.create(~bold=true, ())),
+        ("entity.other.attribute-name.foo,entity.other.attribute-name.bar", 
+          TokenStyle.create(~foreground=11, ())),
       ]
     );
 
@@ -38,6 +41,21 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.int(style.foreground).toBe(10);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    });
+    test("entity.other.attribute-name.foo & bar gets correctly style (more interesting compound rule)", ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("entity.other.attribute-name.foo")]);
+      expect.int(style.foreground).toBe(11);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(true);
+      expect.bool(style.italic).toBe(false);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("entity.other.attribute-name.bar")]);
+      expect.int(style.foreground).toBe(11);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
     });
     test("baz gets default style (no match)", ({expect, _}) => {
