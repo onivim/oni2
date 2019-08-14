@@ -30,14 +30,14 @@ describe("TextMateTheme", ({describe, _}) => {
   describe("match", ({test, _}) => {
     test("foo & bar gets correctly style (compound rule)", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("foo")]);
+        TextMateTheme.match(simpleTextMateTheme, "foo");
       expect.int(style.foreground).toBe(10);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
       
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("bar")]);
+        TextMateTheme.match(simpleTextMateTheme, "bar");
       expect.int(style.foreground).toBe(10);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -45,14 +45,14 @@ describe("TextMateTheme", ({describe, _}) => {
     });
     test("entity.other.attribute-name.foo & bar gets correctly style (more interesting compound rule)", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("entity.other.attribute-name.foo")]);
+        TextMateTheme.match(simpleTextMateTheme, "entity.other.attribute-name.foo");
       expect.int(style.foreground).toBe(11);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
       
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("entity.other.attribute-name.bar")]);
+        TextMateTheme.match(simpleTextMateTheme, "entity.other.attribute-name.bar");
       expect.int(style.foreground).toBe(11);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(true);
@@ -60,7 +60,7 @@ describe("TextMateTheme", ({describe, _}) => {
     });
     test("baz gets default style (no match)", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("baz")]);
+        TextMateTheme.match(simpleTextMateTheme, "baz");
       expect.int(style.foreground).toBe(1);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -68,7 +68,7 @@ describe("TextMateTheme", ({describe, _}) => {
     });
     test("var gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("var")]);
+        TextMateTheme.match(simpleTextMateTheme, "var");
       expect.int(style.foreground).toBe(9);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -77,7 +77,7 @@ describe("TextMateTheme", ({describe, _}) => {
 
     test("var.baz gets correct style (should match var)", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("var.baz")]);
+        TextMateTheme.match(simpleTextMateTheme, "var.baz");
       expect.int(style.foreground).toBe(9);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -86,7 +86,7 @@ describe("TextMateTheme", ({describe, _}) => {
 
     test("var.identifier gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("var.identifier")]);
+        TextMateTheme.match(simpleTextMateTheme, "var.identifier");
       expect.int(style.foreground).toBe(2);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(true);
@@ -95,7 +95,7 @@ describe("TextMateTheme", ({describe, _}) => {
 
     test("constant gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("constant")]);
+        TextMateTheme.match(simpleTextMateTheme, "constant");
       expect.int(style.foreground).toBe(4);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -104,7 +104,7 @@ describe("TextMateTheme", ({describe, _}) => {
 
     test("constant.numeric gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("constant.numeric")]);
+        TextMateTheme.match(simpleTextMateTheme, "constant.numeric");
       expect.int(style.foreground).toBe(5);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
@@ -113,7 +113,7 @@ describe("TextMateTheme", ({describe, _}) => {
 
     test("constant.numeric.hex gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, [Scope.ofString("constant.numeric.hex")]);
+        TextMateTheme.match(simpleTextMateTheme, "constant.numeric.hex");
       expect.int(style.foreground).toBe(5);
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(true);
