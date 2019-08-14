@@ -13,17 +13,16 @@ module Scope = {
   let ofString = s => String.split_on_char('.', s);
 
   let rec matches = (selector: t, v: t) => {
-    switch ((selector, v)) {
+    switch (selector, v) {
     | ([], _) => true
-    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) => {
+    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) =>
       if (String.equal(selectorHd, scopeHd)) {
-        matches(selectorTl, scopeTl)
+        matches(selectorTl, scopeTl);
       } else {
-        false
+        false;
       }
-    }
     | (_, []) => false
-    }
+    };
   };
 };
 
@@ -39,23 +38,23 @@ module Scopes = {
    */
   type t = list(Scope.t);
 
-  let ofString = s => s
-      |> String.split_on_char(' ')
-      |> List.map((v) => Scope.ofString(String.trim(v)));
+  let ofString = s =>
+    s
+    |> String.split_on_char(' ')
+    |> List.map(v => Scope.ofString(String.trim(v)));
 
-   let rec matches = (selector: t, v: t) => {
-    switch ((selector, v)) {
+  let rec matches = (selector: t, v: t) => {
+    switch (selector, v) {
     | ([], _) => true
-    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) => {
+    | ([selectorHd, ...selectorTl], [scopeHd, ...scopeTl]) =>
       if (Scope.matches(selectorHd, scopeHd)) {
-        matches(selectorTl, scopeTl)
+        matches(selectorTl, scopeTl);
       } else {
-        matches(selector, scopeTl)
+        matches(selector, scopeTl);
       }
-    }
     | (_, []) => false
-    }
-   };
+    };
+  };
 };
 
 module TokenStyle = {
@@ -115,5 +114,6 @@ module Selector = {
 
   let create = (~style=TokenStyle.default, ~scopes, ()) => {scopes, style};
 
-  let matches = (selector: t, scopes: Scopes.t) => Scopes.matches(selector.scopes, scopes);
+  let matches = (selector: t, scopes: Scopes.t) =>
+    Scopes.matches(selector.scopes, scopes);
 };

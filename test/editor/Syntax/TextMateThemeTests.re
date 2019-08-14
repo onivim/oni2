@@ -13,58 +13,72 @@ describe("TextMateTheme", ({describe, _}) => {
         https://code.visualstudio.com/blogs/2017/02/08/syntax-highlighting-optimizations#_finally-whats-new-in-vs-code-19
      */
   let simpleTextMateTheme =
-    TextMateTheme.create(
-      [
-        ("var", TokenStyle.create(~foreground=9, ())),
-        ("var.identifier", TokenStyle.create(~foreground=2, ~bold=true, ())),
-        ("constant", TokenStyle.create(~foreground=4, ~italic=true, ())),
-        ("constant.numeric", TokenStyle.create(~foreground=5, ())),
-        ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
-        ("foo, bar", TokenStyle.create(~foreground=10, ())),
-        ("entity", TokenStyle.create(~bold=true, ())),
-        ("entity.other.attribute-name.foo,entity.other.attribute-name.bar", 
-          TokenStyle.create(~foreground=11, ())),
-        ("html", 
-          TokenStyle.create(~foreground=12, ())),
-        ("meta html", 
-          TokenStyle.create(~foreground=14, ())),
-      ]
-    );
+    TextMateTheme.create([
+      ("var", TokenStyle.create(~foreground=9, ())),
+      ("var.identifier", TokenStyle.create(~foreground=2, ~bold=true, ())),
+      ("constant", TokenStyle.create(~foreground=4, ~italic=true, ())),
+      ("constant.numeric", TokenStyle.create(~foreground=5, ())),
+      ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
+      ("foo, bar", TokenStyle.create(~foreground=10, ())),
+      ("entity", TokenStyle.create(~bold=true, ())),
+      (
+        "entity.other.attribute-name.foo,entity.other.attribute-name.bar",
+        TokenStyle.create(~foreground=11, ()),
+      ),
+      ("html", TokenStyle.create(~foreground=12, ())),
+      ("meta html", TokenStyle.create(~foreground=14, ())),
+      ("source.php string", TokenStyle.create(~foreground=15, ())),
+      ("text.html source.php", TokenStyle.create(~foreground=16, ())),
+    ]);
 
   describe("match", ({test, _}) => {
+    test(
+      "deeper rule should win (source.php string over text.html source.php)",
+      ({expect, _}) => {
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(
+          simpleTextMateTheme,
+          "text.html.basic source.php.html string.quoted",
+        );
+
+      expect.int(style.foreground).toBe(16);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    });
     test("parent rule (meta html) gets applied", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "meta html");
-        
-        expect.int(style.foreground).toBe(14);
-        expect.int(style.background).toBe(0);
-        expect.bool(style.bold).toBe(false);
-        expect.bool(style.italic).toBe(false);
-      
+
+      expect.int(style.foreground).toBe(14);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "meta.source.js html");
-        
-        expect.int(style.foreground).toBe(14);
-        expect.int(style.background).toBe(0);
-        expect.bool(style.bold).toBe(false);
-        expect.bool(style.italic).toBe(false);
-      
+
+      expect.int(style.foreground).toBe(14);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "html");
-        
-        expect.int(style.foreground).toBe(12);
-        expect.int(style.background).toBe(0);
-        expect.bool(style.bold).toBe(false);
-        expect.bool(style.italic).toBe(false);
+
+      expect.int(style.foreground).toBe(12);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
     });
     test("parent rule gets ignored", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "meta foo");
-        
-        expect.int(style.foreground).toBe(10);
-        expect.int(style.background).toBe(0);
-        expect.bool(style.bold).toBe(false);
-        expect.bool(style.italic).toBe(false);
+
+      expect.int(style.foreground).toBe(10);
+      expect.int(style.background).toBe(0);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
     });
     test("foo & bar gets correctly style (compound rule)", ({expect, _}) => {
       let style: ResolvedStyle.t =
@@ -73,7 +87,7 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.int(style.background).toBe(0);
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
-      
+
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "bar");
       expect.int(style.foreground).toBe(10);
@@ -81,21 +95,30 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
     });
-    test("entity.other.attribute-name.foo & bar gets correctly style (more interesting compound rule)", ({expect, _}) => {
-      let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, "entity.other.attribute-name.foo");
-      expect.int(style.foreground).toBe(11);
-      expect.int(style.background).toBe(0);
-      expect.bool(style.bold).toBe(true);
-      expect.bool(style.italic).toBe(false);
-      
-      let style: ResolvedStyle.t =
-        TextMateTheme.match(simpleTextMateTheme, "entity.other.attribute-name.bar");
-      expect.int(style.foreground).toBe(11);
-      expect.int(style.background).toBe(0);
-      expect.bool(style.bold).toBe(true);
-      expect.bool(style.italic).toBe(false);
-    });
+    test(
+      "entity.other.attribute-name.foo & bar gets correctly style (more interesting compound rule)",
+      ({expect, _}) => {
+        let style: ResolvedStyle.t =
+          TextMateTheme.match(
+            simpleTextMateTheme,
+            "entity.other.attribute-name.foo",
+          );
+        expect.int(style.foreground).toBe(11);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(true);
+        expect.bool(style.italic).toBe(false);
+
+        let style: ResolvedStyle.t =
+          TextMateTheme.match(
+            simpleTextMateTheme,
+            "entity.other.attribute-name.bar",
+          );
+        expect.int(style.foreground).toBe(11);
+        expect.int(style.background).toBe(0);
+        expect.bool(style.bold).toBe(true);
+        expect.bool(style.italic).toBe(false);
+      },
+    );
     test("baz gets default style (no match)", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "baz");

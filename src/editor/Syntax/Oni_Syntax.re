@@ -4,8 +4,6 @@
  Library containing modules related to native syntax highlighting
  */
 
-let _ = print_endline("Hello, world");
-
 module TextMateScopes = TextMateScopes;
 module TextMateTheme = TextMateTheme;
 module Trie = Trie;
