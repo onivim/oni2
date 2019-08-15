@@ -11,9 +11,12 @@ type groupedPresses = {
   keys: list(string),
 };
 
-type t = list(groupedPresses);
+type t = {
+  active: bool,
+  presses: list(groupedPresses),
+};
 
-let empty: t = [];
+let empty: t = {active: false, presses: []};
 
 module Constants = {
   let timeToShow = 2.; // two seconds
@@ -22,12 +25,14 @@ module Constants = {
 
 let update = (time, v: t) => {
   let f = k => time -. k.time < Constants.timeToShow;
-  List.filter(f, v);
+  let presses = List.filter(f, v.presses);
+  let active = List.length(presses) > 0;
+  {active, presses};
 };
 
 let add = (time, key, v: t) => {
-  let ret =
-    switch (v) {
+  let presses =
+    switch (v.presses) {
     | [] => [{time, keys: [key]}]
     | [hd, ...tail] =>
       if (time -. hd.time <= Constants.timeToGroup) {
@@ -48,6 +53,8 @@ let add = (time, key, v: t) => {
       }
     };
 
+  let ret = {active: true, presses};
+
   // Also filter out old key presses, while we're here
   update(time, ret);
 };
@@ -63,7 +70,7 @@ let show = (v: t) => {
            ++ " keys: [\n"
            ++ String.concat(",\n", gp.keys)
            ++ "]}\n",
-         v,
+         v.presses,
        ),
      )
   ++ "]\n";

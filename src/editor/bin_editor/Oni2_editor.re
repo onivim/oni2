@@ -61,6 +61,8 @@ let init = app => {
     update(<Root state />);
   };
 
+  let getTime = () => Time.getTime() |> Time.toSeconds;
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -69,6 +71,7 @@ let init = app => {
         () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
       ~setClipboardText=
         text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+      ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~cliOptions=Some(cliOptions),
