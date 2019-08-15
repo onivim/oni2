@@ -12,7 +12,12 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.1, "b");
 
-      expect.bool(v == {active: true, presses: [{time: 1., keys: ["b", "a"]}]}).toBe(true);
+      expect.bool(
+        v == {active: true, presses: [{time: 1., keys: ["b", "a"]}]},
+      ).
+        toBe(
+        true,
+      );
     });
     test("keys not close together don't get grouped", ({expect}) => {
       let v =
@@ -21,7 +26,11 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1.5, "b");
 
       expect.bool(
-        v == {active: true, presses: [{time: 1.5, keys: ["b"]}, {time: 1., keys: ["a"]}]},
+        v
+        == {
+             active: true,
+             presses: [{time: 1.5, keys: ["b"]}, {time: 1., keys: ["a"]}],
+           },
       ).
         toBe(
         true,
@@ -36,10 +45,13 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1.5, "b")
         |> KeyDisplayer.update(5.1);
 
-      prerr_endline(KeyDisplayer.show(v));
-
       // "a" should be filtered out
-      expect.bool(v == {active: true, presses: [{time: 1.5, keys: ["b"]}]}).toBe(true);
+      expect.bool(
+        v == {active: true, presses: [{time: 1.5, keys: ["b"]}]},
+      ).
+        toBe(
+        true,
+      );
     })
   );
 });

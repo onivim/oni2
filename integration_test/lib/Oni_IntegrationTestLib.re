@@ -17,9 +17,8 @@ let _currentTime: ref(float) = ref(0.0);
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
-let setTime = (v) => _currentTime := v;
+let setTime = v => _currentTime := v;
 let getTime = () => _currentTime^;
-
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
