@@ -74,7 +74,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
         <keyGroupView uiFont text />;
       },
       state.keyDisplayer.presses,
-    );
+    )
+    |> List.rev;
 
   <Positioned bottom=50 right=50> ...groups </Positioned>;
 };
