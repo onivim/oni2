@@ -6,8 +6,6 @@
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
-
 open Oni_Model;
 
 let component = React.component("Root");

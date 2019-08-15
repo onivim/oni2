@@ -8,10 +8,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-open Oni_Core;
 open Oni_Model;
-
-open Oni_Model.StatusBarModel;
 
 let bgc = Color.rgb(0.1, 0.1, 0.1);
 let fgc = Color.rgb(0.9, 0.9, 0.9);
