@@ -18,6 +18,7 @@
         isolinear
         Oni2.core
         Oni2.extensions
+        Oni2.input
         ReasonFuzz
     )
     (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))
