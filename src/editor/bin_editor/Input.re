@@ -160,7 +160,7 @@ let getActionsForBinding = (inputKey, commands, state: State.t) => {
   Handle Input from Oni or Neovim
  */
 let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
-  switch (state.inputControlMode) {
+  let actions = switch (state.inputControlMode) {
   | CommandLineFocus
   | EditorTextFocus =>
     switch (getActionsForBinding(inputKey, commands, state)) {
@@ -175,4 +175,6 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   | MenuFocus
   | _ => getActionsForBinding(inputKey, commands, state)
   };
+
+  [Actions.NotifyKeyPressed(inputKey), ...actions]
 };

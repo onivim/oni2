@@ -176,8 +176,10 @@ let init = app => {
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, k) |> List.iter(dispatch)
+    | (Some((k, _)), {contents: None}) => {
+      inputHandler(~state=currentState^, k) |> List.iter(dispatch);
+      runEffects();
+      }
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
   };

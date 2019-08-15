@@ -28,6 +28,7 @@ type t =
   | CommandlineShow(Vim.Types.cmdlineType)
   | CommandlineHide
   | CommandlineUpdate(Vim.Types.cmdline)
+  | NotifyKeyPressed(string)
   | KeyboardInput(string)
   | WildmenuShow(list(string))
   | WildmenuNext
