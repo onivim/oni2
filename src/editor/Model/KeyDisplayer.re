@@ -7,6 +7,7 @@
 // We group key presses in time together,
 // so they show in the same line
 type groupedPresses = {
+  exclusive: bool,
   time: float,
   keys: list(string),
 };
@@ -34,22 +35,24 @@ let add = (time, key, v: t) =>
   if (!Oni_Input.Filter.filter(key)) {
     v;
   } else {
+    let exclusive = String.length(key) > 1;
     let presses =
       switch (v.presses) {
-      | [] => [{time, keys: [key]}]
+      | [] => [{time, exclusive, keys: [key]}]
       | [hd, ...tail] =>
-        if (time -. hd.time <= Constants.timeToGroup && String.length(key) == 1) {
+        if (time -. hd.time <= Constants.timeToGroup && !hd.exclusive && String.length(key) == 1) {
           [
             // The key presses was within the group time,
             // so we'll just add it to an existing group
-            {time, keys: [key, ...hd.keys]},
+            {time, exclusive, keys: [key, ...hd.keys]},
             ...tail,
           ];
         } else {
+        let exclusive = String.length(key) > 1;
           [
             // The time was past the group time..
             // so we'll create a new group
-            {time, keys: [key]},
+            {time, exclusive, keys: [key]},
             hd,
             ...tail,
           ];

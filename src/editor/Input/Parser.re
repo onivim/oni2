@@ -1,6 +1,7 @@
 let cMinus = Str.regexp_case_fold(".*c-.*");
 let aMinus = Str.regexp_case_fold(".*a-.*");
 let dMinus = Str.regexp_case_fold(".*d-.*");
+let sMinus = Str.regexp_case_fold(".*s-.*");
 
 /*
  [toFriendlyName(key)] takes a vim-style key description,
@@ -24,6 +25,7 @@ let toFriendlyName = (v: string) => {
 
       if (firstCharacter == '<' && lastCharacter == '>') {
         let hasControl = Str.string_match(cMinus, v, 0);
+        let hasShift = Str.string_match(sMinus, v, 0);
         let hasAlt = Str.string_match(aMinus, v, 0);
         let hasCommand = Str.string_match(dMinus, v, 0);
 
@@ -32,6 +34,9 @@ let toFriendlyName = (v: string) => {
         let ret = hasCommand ? "Command + " : "";
         let ret = ret ++ (hasControl ? "Control + ": "");
         let ret = ret ++ (hasAlt ? "Alt + ": "");
+
+        let character = !hasShift ? Char.lowercase_ascii(character) : character;
+
         Some(ret ++ String.make(1, character));
       } else {
         None
