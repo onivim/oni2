@@ -39,39 +39,41 @@ let textStyle = uiFont => {
 };
 
 let keyGroupView = (~children as _, ~uiFont, ~text: string, ()) => {
-    <View
+  <View
+    style=Style.[
+      backgroundColor(bgc),
+      justifyContent(`Center),
+      alignItems(`Center),
+      margin(8),
+      flexGrow(0),
+    ]>
+    <Text
       style=Style.[
+        fontFamily(uiFont),
+        fontSize(24),
+        textWrap(TextWrapping.NoWrap),
         backgroundColor(bgc),
-        justifyContent(`Center),
-        alignItems(`Center),
-        margin(8),
+        color(Colors.white),
+        marginHorizontal(16),
+        marginVertical(8),
         flexGrow(0),
-      ]>
-      <Text
-        style=Style.[
-          fontFamily(uiFont),
-          fontSize(24),
-          textWrap(TextWrapping.NoWrap),
-          backgroundColor(bgc),
-          color(Colors.white),
-          marginHorizontal(16),
-          marginVertical(8),
-          flexGrow(0),
-        ]
-        text
-      />
-    </View>
+      ]
+      text
+    />
+  </View>;
 };
 
 let createElement = (~children as _, ~state: State.t, ()) => {
   let uiFont = state.uiFont.fontFile;
 
-  let groups = List.map((keyGroup: KeyDisplayer.groupedPresses) => {
-    let text = String.concat("", keyGroup.keys |> List.rev);
-    <keyGroupView uiFont text />;
-  }, state.keyDisplayer.presses);
+  let groups =
+    List.map(
+      (keyGroup: KeyDisplayer.groupedPresses) => {
+        let text = String.concat("", keyGroup.keys |> List.rev);
+        <keyGroupView uiFont text />;
+      },
+      state.keyDisplayer.presses,
+    );
 
-  <Positioned bottom=50 right=50>
-    ...groups
-  </Positioned>;
+  <Positioned bottom=50 right=50> ...groups </Positioned>;
 };

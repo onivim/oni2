@@ -30,9 +30,9 @@ let update = (time, v: t) => {
   {active, presses};
 };
 
-let add = (time, key, v: t) => {
+let add = (time, key, v: t) =>
   if (!Oni_Input.Filter.filter(key)) {
-  v 
+    v;
   } else {
     let presses =
       switch (v.presses) {
@@ -60,8 +60,7 @@ let add = (time, key, v: t) => {
 
     // Also filter out old key presses, while we're here
     update(time, ret);
-  }
-};
+  };
 
 let show = (v: t) => {
   "KeyDisplayer: [\n"
