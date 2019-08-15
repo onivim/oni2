@@ -177,11 +177,10 @@ let init = app => {
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) => {
+    | (Some((k, _)), {contents: None}) =>
       inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
       // Run input effects _immediately_
       runEffects();
-      }
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
   };
