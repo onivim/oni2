@@ -66,7 +66,11 @@ let createElement = (~children as _, ~state: State.t, ()) => {
   let groups =
     List.map(
       (keyGroup: KeyDisplayer.groupedPresses) => {
-        let text = String.concat("", keyGroup.keys |> List.rev);
+        let f = s => switch(Oni_Input.Parser.toFriendlyName(s)) {
+        | None => ""
+        | Some(v) => v
+        };
+        let text = String.concat("", keyGroup.keys |> List.map(f) |> List.rev);
         <keyGroupView uiFont text />;
       },
       state.keyDisplayer.presses,

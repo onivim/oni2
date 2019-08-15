@@ -19,8 +19,8 @@ type t = {
 let empty: t = {active: false, presses: []};
 
 module Constants = {
-  let timeToShow = 4.;
-  let timeToGroup = 0.4;
+  let timeToShow = 2.5;
+  let timeToGroup = 0.3;
 };
 
 let update = (time, v: t) => {
@@ -38,11 +38,11 @@ let add = (time, key, v: t) =>
       switch (v.presses) {
       | [] => [{time, keys: [key]}]
       | [hd, ...tail] =>
-        if (time -. hd.time <= Constants.timeToGroup) {
+        if (time -. hd.time <= Constants.timeToGroup && String.length(key) == 1) {
           [
             // The key presses was within the group time,
             // so we'll just add it to an existing group
-            {time: hd.time, keys: [key, ...hd.keys]},
+            {time, keys: [key, ...hd.keys]},
             ...tail,
           ];
         } else {

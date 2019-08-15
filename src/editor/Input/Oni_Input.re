@@ -3,3 +3,4 @@
  */
 
 module Filter = Filter;
+module Parser = Parser;
