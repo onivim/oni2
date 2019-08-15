@@ -173,11 +173,13 @@ let init = app => {
      a revery element is focused oni2 should defer to revery
    */
   let keyEventListener = key => {
+    let time = Time.getTime() |> Time.toSeconds;
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) => {
-      inputHandler(~state=currentState^, k) |> List.iter(dispatch);
+      inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
+      // Run input effects _immediately_
       runEffects();
       }
     | (Some((_, false)), {contents: Some(_)}) => ()

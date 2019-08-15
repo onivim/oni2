@@ -157,9 +157,9 @@ let getActionsForBinding = (inputKey, commands, state: State.t) => {
 };
 
 /**
-  Handle Input from Oni or Neovim
+  Handle Input from Oni or Vim
  */
-let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
+let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
   let actions = switch (state.inputControlMode) {
   | CommandLineFocus
   | EditorTextFocus =>
@@ -176,5 +176,5 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
   | _ => getActionsForBinding(inputKey, commands, state)
   };
 
-  [Actions.NotifyKeyPressed(inputKey), ...actions]
+  [Actions.NotifyKeyPressed(time, inputKey), ...actions]
 };

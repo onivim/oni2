@@ -20,6 +20,7 @@ module EditorGroups = EditorGroups;
 module EditorLayout = EditorLayout;
 module EditorMetrics = EditorMetrics;
 module Filter = Filter;
+module KeyDisplayer = KeyDisplayer;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
