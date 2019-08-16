@@ -30,18 +30,64 @@ const getCommitsForRange = (startCommit, endCommit) => {
 };
 
 const getCommitInfo = async (commit) => {
-    return axios.get('https://api.github.com/repos/onivim/oni2/commits', { headers: { 'User-Agent': 'onivim2' } })
+    return axios.get('https://api.github.com/repos/onivim/oni2/commits/' + commit, { headers: { 'User-Agent': 'onivim2' } })
     .then((response) => {
-    console.log("Got response: " + response);
+   // console.log(response.data);
+    const body = response.data;
+    
         return {
-            author: response.author.login,
-            committer: response.committer.login,
-            message: response.message.split('\n')[0],
+            shortCommitId: commit.substring(0, 8),
+            commitId: commit,
+            date: new Date(body.commit.author.date),
+            author: body.author.login,
+            committer: body.committer.login,
+            message: body.commit.message.split('\n')[0],
         };
     })
     .catch((err) => {
-        console.error(err);
+        console.error(err.toString());
     });
+};
+
+const commitToMarkdown = (commit) => {
+    return `- [#${commit.shortCommitId}](https://github.com/onivim/oni2/commits/${commit.commitId}): ${commit.message} (@${commit.author})`;
+};
+
+const commitsToMarkdown = (commits) => {
+    return commits.map(commitToMarkdown).join("\n");
+};
+
+const getActivePrsForRepo = async (repo) => {
+    return axios.get(`https://api.github.com/repos/onivim/${repo}/pulls`, { headers: { 'User-Agent': 'onivim2' } })
+    .then((response) => {
+    const body = response.data;
+
+    return body.map((pr) => {
+    
+        return {
+            repoName: repo,
+            repoUrl: "https://github.com/onivim/" + repo,
+            number: pr.number,
+            prUrl: pr.html_url,
+            author: pr.user.login,
+            date: new Date(pr.updated_at),
+            author: body.author.login,
+            title: body.title,
+        };
+      });
+    })
+    .catch((err) => {
+        console.error(err.toString());
+    });
+
+};
+
+const prToMarkdown = (pr) => {
+    return `- [${pr.repoName}](${pr.repoUrl}) [#${pr.number}](${pr.prUrl}): ${pr.title} (@${pr.author})`
+};
+
+const prsToMarkdown = (prs) => {
+    return prs.map(prToMarkdown).join("\n");
 };
 
 
@@ -67,24 +113,38 @@ console.log(weekCommits);
 
 // Active work
 
-const run = async () => {
-    //const dayReleaseNotes = await Promise.all(dayCommits.map((c) => getCommitInfo(c)));
-    //console.log(dayReleaseNotes);
 
-    //const weekReleaseNotes = await Promise.all(weekCommits.map((c) => getCommitInfo(c)));
-    //console.log(weekReleaseNotes);
+
+
+const run = async () => {
+    let dayReleaseCommits = await Promise.all(dayCommits.map((c) => getCommitInfo(c)));
+    console.log(dayReleaseCommits);
+
+    const weekReleaseCommits = await Promise.all(weekCommits.map((c) => getCommitInfo(c)));
+
+    const dayReleaseNotes = commitsToMarkdown(dayReleaseCommits);
+    console.log("Daily release notes:");
+    console.log("====================");
+    console.log(dayReleaseNotes);
+    
+//    const weekReleaseNotes = commitsToMarkdown(weekReleaseCommits);
+    const weekReleaseNotes = [];
+    console.log("Week release notes:");
+    console.log("====================");
+    console.log(weekReleaseNotes);
+
+    const prs = await getActivePrsForRepo("oni2");
+    const prReleaseNotes = prsToMarkdown(prs);
 
     // TODO:
-    const dayReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
-    const weekReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
-
-    const activePrs = "- PR #636: Added syntax highlighting for golang (@NinoFurger)\n- PR #611: UI: Initial message / notifications\n";
+    //dayReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
+//     const weekReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
 
     console.log("Writing release notes to release.json...");
     fs.writeFileSync("release.json", JSON.stringify({
         dayReleaseNotes,
         weekReleaseNotes,
-        activePrs
+        prReleaseNotes,
     }));
     console.log("Done!");
 };
