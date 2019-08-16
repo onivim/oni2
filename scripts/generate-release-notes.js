@@ -50,18 +50,24 @@ const getCommitInfo = async (commit) => {
 };
 
 const commitToMarkdown = (commit) => {
-    return `- [#${commit.shortCommitId}](https://github.com/onivim/oni2/commits/${commit.commitId}): ${commit.message} (@${commit.author})`;
+    return `- [#${commit.shortCommitId}](https://github.com/onivim/oni2/commits/${commit.commitId}): ${commit.message} (@[${commit.author}](https://github.com/${commit.author})`;
 };
 
 const commitsToMarkdown = (commits) => {
     return commits.map(commitToMarkdown).join("\n");
 };
 
+const date = new Date();
+const oneDayAgo = new Date(date.setDate(date.getDate() - 1));
+
+const oneWeekAgo = new Date(date.setDate(date.getDate() - 7));
+
 const getActivePrsForRepo = async (repo) => {
     return axios.get(`https://api.github.com/repos/onivim/${repo}/pulls`, { headers: { 'User-Agent': 'onivim2' } })
     .then((response) => {
     const body = response.data;
 
+    
     return body.map((pr) => {
     
         return {
@@ -71,9 +77,12 @@ const getActivePrsForRepo = async (repo) => {
             prUrl: pr.html_url,
             author: pr.user.login,
             date: new Date(pr.updated_at),
-            author: body.author.login,
-            title: body.title,
+            title: pr.title,
         };
+      }).filter((pr) => {
+        const prUpdateTime = pr.date.getTime();
+        const weekAgoTime = oneWeekAgo.getTime();
+        return prUpdateTime >= weekAgoTime;
       });
     })
     .catch((err) => {
@@ -83,17 +92,13 @@ const getActivePrsForRepo = async (repo) => {
 };
 
 const prToMarkdown = (pr) => {
-    return `- [${pr.repoName}](${pr.repoUrl}) [#${pr.number}](${pr.prUrl}): ${pr.title} (@${pr.author})`
+    return `- [${pr.repoName}](${pr.repoUrl}) [#${pr.number}](${pr.prUrl}): ${pr.title} ([@${pr.author}](https://github.com/${pr.author}))`
 };
 
 const prsToMarkdown = (prs) => {
     return prs.map(prToMarkdown).join("\n");
 };
 
-
-const date = new Date();
-const oneDayAgo = new Date(date.setDate(date.getDate() - 1));
-const oneWeekAgo = new Date(date.setDate(date.getDate() - 7));
 
 const dayAgoCommit = getCommitAtDate(oneDayAgo);
 const weekAgoCommit = getCommitAtDate(oneWeekAgo);
@@ -112,33 +117,46 @@ const weekCommits = getCommitsForRange(weekAgoCommit, commitId);
 console.log(weekCommits);
 
 // Active work
-
-
-
-
 const run = async () => {
-    let dayReleaseCommits = await Promise.all(dayCommits.map((c) => getCommitInfo(c)));
+    const dayReleaseCommits = await Promise.all(dayCommits.map((c) => getCommitInfo(c)));
+    //const dayReleaseCommits = [];
     console.log(dayReleaseCommits);
 
     const weekReleaseCommits = await Promise.all(weekCommits.map((c) => getCommitInfo(c)));
+    //const weekReleaseCommits = [];
 
     const dayReleaseNotes = commitsToMarkdown(dayReleaseCommits);
     console.log("Daily release notes:");
     console.log("====================");
     console.log(dayReleaseNotes);
     
-//    const weekReleaseNotes = commitsToMarkdown(weekReleaseCommits);
-    const weekReleaseNotes = [];
+    const weekReleaseNotes = commitsToMarkdown(weekReleaseCommits);
     console.log("Week release notes:");
     console.log("====================");
     console.log(weekReleaseNotes);
 
-    const prs = await getActivePrsForRepo("oni2");
+
+    const oniPrs = await getActivePrsForRepo("oni2");
+    const libvimPrs = await getActivePrsForRepo("libvim");
+    const reasonLibvimPrs = await getActivePrsForRepo("reason-libvim");
+    const treeSitterPrs = await getActivePrsForRepo("esy-tree-sitter");
+    const reasonTreeSitterPrs = await getActivePrsForRepo("reason-tree-sitter");
+
+    let prs = [].concat(oniPrs).concat(libvimPrs).concat(reasonLibvimPrs).concat(treeSitterPrs).concat(reasonTreeSitterPrs);
+
+    prs = prs.sort((a, b) => {
+        return b.date.getTime() - a.date.getTime();
+    });
+
     const prReleaseNotes = prsToMarkdown(prs);
 
-    // TODO:
+    console.log("Active PR notes:");
+    console.log("====================");
+    console.log(prReleaseNotes);
+
+    //TODO:
     //dayReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
-//     const weekReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
+    //const weekReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
 
     console.log("Writing release notes to release.json...");
     fs.writeFileSync("release.json", JSON.stringify({
