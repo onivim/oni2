@@ -13,5 +13,6 @@
         Oni2.ui
         isolinear
         libvim
+        treesitter
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

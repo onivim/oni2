@@ -15,6 +15,8 @@ module Extensions = Oni_Extensions;
 
 module Log = Core.Log;
 
+open Treesitter;
+
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
@@ -43,10 +45,24 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.pump(tmClient)
     );
 
-  let notifyBufferUpdateEffect = (scope, bc) =>
-    Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
-      Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
-    );
+  let notifyBufferUpdateEffect = (scope, buffer, bc) =>
+    Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () => {
+      print_endline ("Scope: " ++ scope);
+
+      if (!String.equal(scope, "source.json")) {
+        Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
+      } else {
+        let parser = Treesitter.Parser.json();
+        /*let startTime = Unix.gettimeofday();
+        let _ = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
+        let endTime = Unix.gettimeofday();
+        print_endline ("time: " ++ string_of_float(endTime -. startTime));*/
+        let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
+        let node = Treesitter.Tree.getRootNode(tree);
+        print_endline(Treesitter.Node.toString(node));
+        ();
+      }
+    });
 
   let clearHighlightsEffect = buffer =>
     Isolinear.Effect.create(~name="textmate.clearHighlights", () => {
@@ -94,7 +110,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               )
             ) {
             | None => default
-            | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+            | Some(scope) => (state, notifyBufferUpdateEffect(scope, buffer,  bc))
             };
           };
         } else {

@@ -23,6 +23,8 @@ let ofLines = (lines: array(string)) => {
   syntaxHighlightingEnabled: true,
 };
 
+let getLines = (v: t) => v.lines;
+
 let empty = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
