@@ -37,7 +37,7 @@ module Matcher = {
 module Selector = {
   let firstChildRegex = Str.regexp(".*:first-child$");
   let nthChildRegex = Str.regexp(".*:nth-child(\\([0-9]*\\))$");
-
+  
   let checkChildSelector = (v: string) => {
     let matches = Str.string_match(nthChildRegex, v, 0);
 
@@ -48,6 +48,29 @@ module Selector = {
       }
       : Str.string_match(firstChildRegex, v, 0) ? Some("0") : None;
   };
+
+  let removeChildSelector = (v: string) => {
+    switch (String.rindex_opt(v, ':')) {
+    | Some(idx) => String.sub(v, 0, idx)
+    | _ => v
+    }
+  };
+
+  let parse = (v: string) => {
+    let childSelector = checkChildSelector(v);
+
+    let v = switch (childSelector) {
+    | Some(_) => removeChildSelector(v)
+    | None => v
+    };
+    
+    let expandedSelectors = v
+      |> Str.split(Str.regexp(" > "))
+      |> List.rev;
+
+    (expandedSelectors, childSelector)
+  };
+
 };
 
 /*
@@ -75,12 +98,11 @@ module TextMateConverter = {
           let {byChildSelectors, defaultSelectors} = prev;
           let (selector, matchers): scopeSelector = curr;
           
-          let expandedSelectors =
-            Str.split(Str.regexp(" > "), selector) |> List.rev;
+          let (expandedSelectors, childSelector) = Selector.parse(selector);
 
           let f = _ => Some(matchers);
 
-          let (byChildSelectors, defaultSelectors) = switch (Selector.checkChildSelector(selector)) {
+          let (byChildSelectors, defaultSelectors) = switch (childSelector) {
           // If there is no child selector, just toss it in the default selectors
           | None => (byChildSelectors, Trie.update(expandedSelectors, f, defaultSelectors))
           // Otherwise, we'll add an entry to the appropriate by-child selector
@@ -92,15 +114,7 @@ module TextMateConverter = {
               (byChildSelectors, defaultSelectors);
           }
           };
-         /* | Some(v) => (byChildSelectors, defaultSelectors)
-         | Some(_) => {
-              IntMap.update(v, (oldKey) => switch(oldKey) {
-              | None => Some(Trie.update(expandedSelectors, f, Trie.empty));
-              | Some(v) => Some(Trie.update(expandedSelectors, f, v));
-              }, v);
-          }
-          }*/
-
+          
           { byChildSelectors, defaultSelectors };
         },
         empty,
