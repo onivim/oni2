@@ -6,9 +6,9 @@ open Oni_IntegrationTestLib;
 // be re-rendering and using a lot of unnecessary CPU!
 runTest(~name="TickTest", (dispatch, wait, runEffects) => {
   let oldState = ref(None);
-  wait(~name="Capture initial state", (state: State.t) => {
+  wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
-  });
+  );
 
   // We'll flush a few rounds of effects
   let i = ref(0);
@@ -17,8 +17,8 @@ runTest(~name="TickTest", (dispatch, wait, runEffects) => {
     runEffects();
 
     wait(~name="Validate no state update", (state: State.t) => {
-     oldState := Some(state);
-     true
+      oldState := Some(state);
+      true;
     });
     incr(i);
   };
@@ -26,10 +26,10 @@ runTest(~name="TickTest", (dispatch, wait, runEffects) => {
   dispatch(Tick);
   runEffects();
 
-  wait(~name="Validate no state update", (state: State.t) => {
-   switch(oldState^) {
-   | Some(v) => v === state
-   | None => false
-   }
-  });
+  wait(~name="Validate no state update", (state: State.t) =>
+    switch (oldState^) {
+    | Some(v) => v === state
+    | None => false
+    }
+  );
 });

@@ -179,13 +179,16 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(e => {
-      open Isolinear.Effect;
-      if (Core.Log.isDebugLoggingEnabled()) {
-        Core.Log.debug("[EFFECT]: " ++ e.name);
-      }
-      Isolinear.Effect.run(e, dispatch)
-    }, List.rev(effects));
+    List.iter(
+      e => {
+        open Isolinear.Effect;
+        if (Core.Log.isDebugLoggingEnabled()) {
+          Core.Log.debug("[EFFECT]: " ++ e.name);
+        };
+        Isolinear.Effect.run(e, dispatch);
+      },
+      List.rev(effects),
+    );
   };
 
   let _ =
