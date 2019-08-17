@@ -54,6 +54,7 @@ type t =
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
+  | MenuSetLoading(bool)
   | MenuClose
   | MenuSelect
   | MenuNextItem
@@ -73,6 +74,7 @@ type t =
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Position.t, Position.t)
   | SearchSetHighlights(int, list(Range.t))
+  | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
   | SetIconTheme(IconTheme.t)
   | SetInputControlMode(Input.controlMode)
@@ -80,7 +82,9 @@ type t =
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
-  | ToggleZenMode
+  | EnableZenMode
+  | DisableZenMode
+  | CopyActiveFilepathToClipboard
   | Noop
 and editor = {
   editorId: int,
@@ -121,6 +125,8 @@ and menuCommand = {
   icon: option(IconTheme.IconDefinition.t),
 }
 and menuSetItems = list(menuCommand) => unit
+and menuSetLoading = bool => unit
 and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
-and menuCreator = menuSetItems => menuDisposeFunction;
+and menuCreator =
+  (menuSetItems, Rench.Event.t(string), menuSetLoading) => menuDisposeFunction;

@@ -185,11 +185,6 @@ let scroll = (view: t, scrollDeltaY, metrics) => {
   scrollTo(view, newScrollY, metrics);
 };
 
-type cursorLocation =
-  | Top
-  | Middle
-  | Bottom;
-
 let getLeftVisibleColumn = (view, metrics: EditorMetrics.t) => {
   int_of_float(view.scrollX /. metrics.characterWidth);
 };
@@ -205,23 +200,6 @@ let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
     );
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
-
-let moveCursorToPosition = (~moveCursor, view, position, metrics) =>
-  switch (position) {
-  | Top =>
-    let line = getTopVisibleLine(view, metrics);
-    moveCursor(~column=0, ~line);
-    view;
-  | Middle =>
-    let topLine = getTopVisibleLine(view, metrics);
-    let bottomLine = getBottomVisibleLine(view, metrics);
-    moveCursor(~column=0, ~line=(bottomLine + topLine) / 2);
-    view;
-  | Bottom =>
-    let line = getBottomVisibleLine(view, metrics);
-    moveCursor(~column=0, ~line);
-    view;
-  };
 
 let _getMaxLineLength = (buffer: Buffer.t) => {
   let i = ref(0);
@@ -255,9 +233,10 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) => {
-      /* If the cursor moved, make sure we're snapping to the top line */
-      /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
+  | CursorMove(b) =>
+    /* If the cursor moved, make sure we're snapping to the top line */
+    /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
+    {
       ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
       cursorPosition: b,
     }

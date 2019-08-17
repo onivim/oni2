@@ -71,39 +71,8 @@ begin
   until Length(Text)=0;
 end;
 
-// This update step checks for the old path variable ({app}) and removes it when installing if needed.
-// This is a modified version of the UninstallStepChanged, taken from VSCode.
-procedure CurStepChanged(CurUninstallStep: TSetupStep);
-var
-  Path: string;
-  OldOniPath: string;
-  Parts: TArrayOfString;
-  NewPath: string;
-  i: Integer;
-begin
-  if not CurUninstallStep = ssInstall then begin
-    exit;
-  end;
-  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', Path)
-  then begin
-    exit;
-  end;
-  NewPath := '';
-  OldOniPath := ExpandConstant('{app}')
-  Explode(Parts, Path, ';');
-  for i:=0 to GetArrayLength(Parts)-1 do begin
-    if CompareText(Parts[i], OldOniPath) <> 0 then begin
-      NewPath := NewPath + Parts[i];
-
-      if i < GetArrayLength(Parts) - 1 then begin
-        NewPath := NewPath + ';';
-      end;
-    end;
-  end;
-  RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', NewPath);
-end;
-
 // This is taken from the VSCode installer file.
+// It removes the unused part from the PATH as part of the uninstall.
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Path: string;

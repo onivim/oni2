@@ -11,6 +11,13 @@ type editorRenderWhitespace =
   | None;
 
 [@deriving show({with_path: false})]
+type vimUseSystemClipboard = {
+  yank: bool,
+  delete: bool,
+  paste: bool,
+};
+
+[@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
   editorFontFamily: string,
@@ -34,8 +41,11 @@ type t = {
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchIconTheme: string,
+  workbenchTreeIndent: int,
   filesExclude: list(string),
+  vimUseSystemClipboard,
   zenModeHideTabs: bool,
+  zenModeSingleFile: bool,
 };
 
 let default = {
@@ -60,6 +70,13 @@ let default = {
   workbenchSideBarVisible: true,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
+  workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
+  vimUseSystemClipboard: {
+    yank: true,
+    delete: false,
+    paste: false,
+  },
   zenModeHideTabs: true,
+  zenModeSingleFile: true,
 };

@@ -1,5 +1,5 @@
 {
-  "checksum": "1ce9eba8c330a2059e2b65fc3cb43a06",
+  "checksum": "bbdfac3f16c39e310fe80ff6c4b0076f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,13 +75,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#3f932c5@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#3f932c5@d41d8cd9",
+    "revery@github:revery-ui/revery#b473741@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#b473741@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#3f932c5",
+      "version": "github:revery-ui/revery#b473741",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#3f932c5" ]
+        "source": [ "github:revery-ui/revery#b473741" ]
       },
       "overrides": [],
       "dependencies": [
@@ -89,9 +89,8 @@
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-glfw@3.2.1027@d41d8cd9",
         "reason-gl-matrix@0.9.9304@d41d8cd9",
-        "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9",
-        "ocaml@4.7.1004@d41d8cd9", "flex@1.2.2@d41d8cd9",
-        "@reason-native/console@0.0.3@d41d8cd9",
+        "reason-fontkit@2.5.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "flex@1.2.2@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.2.1@08ba7e51",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
@@ -135,15 +134,13 @@
       ],
       "devDependencies": []
     },
-    "rench@1.7.1@d41d8cd9": {
-      "id": "rench@1.7.1@d41d8cd9",
+    "rench@github:bryphe/rench#d8ebc99@d41d8cd9": {
+      "id": "rench@github:bryphe/rench#d8ebc99@d41d8cd9",
       "name": "rench",
-      "version": "1.7.1",
+      "version": "github:bryphe/rench#d8ebc99",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/rench/-/rench-1.7.1.tgz#sha1:9efdd958711b338d2af7580eb3069ba843e00e19"
-        ]
+        "source": [ "github:bryphe/rench#d8ebc99" ]
       },
       "overrides": [],
       "dependencies": [
@@ -151,11 +148,11 @@
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt@opam:4.2.1@08ba7e51",
-        "@opam/lambda-term@opam:2.0.1@6ce56e6e",
+        "@opam/lambda-term@opam:2.0.2@ecff8c4f",
         "@opam/fpath@opam:0.7.2@45477b93", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
     "rejest@1.3.0@d41d8cd9": {
       "id": "rejest@1.3.0@d41d8cd9",
@@ -171,7 +168,7 @@
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.2.1@08ba7e51",
-        "@opam/lambda-term@opam:2.0.1@6ce56e6e",
+        "@opam/lambda-term@opam:2.0.2@ecff8c4f",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
         "@opam/js_of_ocaml@github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce@d41d8cd9",
@@ -247,18 +244,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#3fab519",
+      "version": "github:onivim/reason-libvim#56aa31a",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#3fab519" ]
+        "source": [ "github:onivim/reason-libvim#56aa31a" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.15@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
+        "libvim@8.10869.20@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
@@ -325,13 +322,15 @@
       ],
       "devDependencies": []
     },
-    "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9": {
-      "id": "reason-fontkit@github:revery-ui/reason-fontkit#f364c36@d41d8cd9",
+    "reason-fontkit@2.5.0@d41d8cd9": {
+      "id": "reason-fontkit@2.5.0@d41d8cd9",
       "name": "reason-fontkit",
-      "version": "github:revery-ui/reason-fontkit#f364c36",
+      "version": "2.5.0",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-fontkit#f364c36" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-fontkit/-/reason-fontkit-2.5.0.tgz#sha1:86af79381925ae16acd65a96d9bc91d3b06111bc"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -341,6 +340,20 @@
         "esy-cmake@0.3.5@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@3.4.0@d41d8cd9"
       ],
+      "devDependencies": []
+    },
+    "rcedit@2.0.0@d41d8cd9": {
+      "id": "rcedit@2.0.0@d41d8cd9",
+      "name": "rcedit",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/rcedit/-/rcedit-2.0.0.tgz#sha1:dcc85d93aa91a41c1ebc5c6aa1dfc43ea28b7dad"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
       "devDependencies": []
     },
     "plist@3.0.1@d41d8cd9": {
@@ -356,7 +369,7 @@
       "overrides": [],
       "dependencies": [
         "xmldom@0.1.27@d41d8cd9", "xmlbuilder@9.0.7@d41d8cd9",
-        "base64-js@1.3.0@d41d8cd9"
+        "base64-js@1.3.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -458,14 +471,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.15@d41d8cd9": {
-      "id": "libvim@8.10869.15@d41d8cd9",
+    "libvim@8.10869.20@d41d8cd9": {
+      "id": "libvim@8.10869.20@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.15",
+      "version": "8.10869.20",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.15.tgz#sha1:3006868d3ef76a6561d2da18d6490abf162800ce"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.20.tgz#sha1:40b1efd1def6d9a877fbb8322dd12235062dd3af"
         ]
       },
       "overrides": [],
@@ -483,7 +496,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "graceful-fs@4.2.0@d41d8cd9" ],
+      "dependencies": [ "graceful-fs@4.2.2@d41d8cd9" ],
       "devDependencies": []
     },
     "isolinear@2.0.0@d41d8cd9": {
@@ -559,14 +572,14 @@
       "dependencies": [ "wrappy@1.0.2@d41d8cd9", "once@1.4.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "graceful-fs@4.2.0@d41d8cd9": {
-      "id": "graceful-fs@4.2.0@d41d8cd9",
+    "graceful-fs@4.2.2@d41d8cd9": {
+      "id": "graceful-fs@4.2.2@d41d8cd9",
       "name": "graceful-fs",
-      "version": "4.2.0",
+      "version": "4.2.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.0.tgz#sha1:8d8fdc73977cb04104721cb53666c1ca64cd328b"
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.2.tgz#sha1:6f0952605d0140c1cfdb138ed005775b92d67b02"
         ]
       },
       "overrides": [],
@@ -618,7 +631,7 @@
       "overrides": [],
       "dependencies": [
         "universalify@0.1.2@d41d8cd9", "jsonfile@4.0.0@d41d8cd9",
-        "graceful-fs@4.2.0@d41d8cd9"
+        "graceful-fs@4.2.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -739,14 +752,14 @@
       ],
       "devDependencies": []
     },
-    "base64-js@1.3.0@d41d8cd9": {
-      "id": "base64-js@1.3.0@d41d8cd9",
+    "base64-js@1.3.1@d41d8cd9": {
+      "id": "base64-js@1.3.1@d41d8cd9",
       "name": "base64-js",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.3.0.tgz#sha1:cab1e6118f051095e58b5281aea8c1cd22bfc0e3"
+          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.3.1.tgz#sha1:58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
         ]
       },
       "overrides": [],
@@ -778,10 +791,10 @@
       },
       "overrides": [ "test.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#3f932c5@d41d8cd9",
-        "rench@1.7.1@d41d8cd9",
+        "revery@github:revery-ui/revery#b473741@d41d8cd9",
+        "rench@github:bryphe/rench#d8ebc99@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#3fab519@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
@@ -798,9 +811,10 @@
       ],
       "devDependencies": [
         "shelljs@0.8.3@d41d8cd9", "reperf@1.4.0@d41d8cd9",
-        "plist@3.0.1@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "lodash@4.17.15@d41d8cd9", "innosetup-compiler@5.5.9@d41d8cd9",
-        "fs-extra@7.0.1@d41d8cd9", "@opam/merlin@opam:3.2.2@e3edecdd"
+        "rcedit@2.0.0@d41d8cd9", "plist@3.0.1@d41d8cd9",
+        "ocaml@4.7.1004@d41d8cd9", "lodash@4.17.15@d41d8cd9",
+        "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
+        "@opam/merlin@opam:3.2.2@e3edecdd"
       ]
     },
     "@reason-native/rely@1.3.1@d41d8cd9": {
@@ -875,20 +889,20 @@
       ],
       "devDependencies": []
     },
-    "@opam/zed@opam:2.0.2@42c1a642": {
-      "id": "@opam/zed@opam:2.0.2@42c1a642",
+    "@opam/zed@opam:2.0.3@7016ad7c": {
+      "id": "@opam/zed@opam:2.0.3@7016ad7c",
       "name": "@opam/zed",
-      "version": "opam:2.0.2",
+      "version": "opam:2.0.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/5c/5c0cb1ee87147514adfd23966d58440e#md5:5c0cb1ee87147514adfd23966d58440e",
-          "archive:https://github.com/ocaml-community/zed/releases/download/2.0.2/zed-2.0.2.tbz#md5:5c0cb1ee87147514adfd23966d58440e"
+          "archive:https://opam.ocaml.org/cache/md5/87/878123c9114bf3c0bd18a19fb1af73cd#md5:878123c9114bf3c0bd18a19fb1af73cd",
+          "archive:https://github.com/ocaml-community/zed/releases/download/2.0.3/zed-2.0.3.tbz#md5:878123c9114bf3c0bd18a19fb1af73cd"
         ],
         "opam": {
           "name": "zed",
-          "version": "2.0.2",
-          "path": "test.esy.lock/opam/zed.2.0.2"
+          "version": "2.0.3",
+          "path": "test.esy.lock/opam/zed.2.0.3"
         }
       },
       "overrides": [],
@@ -1803,25 +1817,25 @@
         "@opam/dune@opam:1.7.3@e23fe0a7"
       ]
     },
-    "@opam/lambda-term@opam:2.0.1@6ce56e6e": {
-      "id": "@opam/lambda-term@opam:2.0.1@6ce56e6e",
+    "@opam/lambda-term@opam:2.0.2@ecff8c4f": {
+      "id": "@opam/lambda-term@opam:2.0.2@ecff8c4f",
       "name": "@opam/lambda-term",
-      "version": "opam:2.0.1",
+      "version": "opam:2.0.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/4b/4b4b8480fe1280e1ed2a34ed93d16675#md5:4b4b8480fe1280e1ed2a34ed93d16675",
-          "archive:https://github.com/ocaml-community/lambda-term/releases/download/2.0.1/lambda-term-2.0.1.tbz#md5:4b4b8480fe1280e1ed2a34ed93d16675"
+          "archive:https://opam.ocaml.org/cache/md5/46/4602aa4355705909e406513322b4b27e#md5:4602aa4355705909e406513322b4b27e",
+          "archive:https://github.com/ocaml-community/lambda-term/releases/download/2.0.2/lambda-term-2.0.2.tbz#md5:4602aa4355705909e406513322b4b27e"
         ],
         "opam": {
           "name": "lambda-term",
-          "version": "2.0.1",
-          "path": "test.esy.lock/opam/lambda-term.2.0.1"
+          "version": "2.0.2",
+          "path": "test.esy.lock/opam/lambda-term.2.0.2"
         }
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.2@42c1a642",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.3@7016ad7c",
         "@opam/react@opam:1.2.1@0e11855f",
         "@opam/lwt_react@opam:1.1.2@fb068e52",
         "@opam/lwt_log@opam:1.1.1@91643f38", "@opam/lwt@opam:4.2.1@08ba7e51",
@@ -1830,7 +1844,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.2@42c1a642",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.3@7016ad7c",
         "@opam/react@opam:1.2.1@0e11855f",
         "@opam/lwt_react@opam:1.1.2@fb068e52",
         "@opam/lwt_log@opam:1.1.1@91643f38", "@opam/lwt@opam:4.2.1@08ba7e51",

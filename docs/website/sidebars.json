@@ -16,6 +16,7 @@
     "Advanced Usage": [
     ],
     "For Developers": [
+      "for-developers/architecture",
       "for-developers/building",
       "for-developers/contributing"
     ],

@@ -1,4 +1,4 @@
-let create = setItems => {
+let create = (setItems, _, _) => {
   let commands: list(Actions.menuCommand) = [
     {
       category: Some("Preferences"),
@@ -38,8 +38,32 @@ let create = setItems => {
     },
     {
       category: Some("View"),
-      name: "Toggle Zen Mode",
-      command: () => Actions.ToggleZenMode,
+      name: "Enable Zen Mode",
+      command: () => Actions.EnableZenMode,
+      icon: None,
+    },
+    {
+      category: Some("View"),
+      name: "Disable Zen Mode",
+      command: () => Actions.DisableZenMode,
+      icon: None,
+    },
+    {
+      category: Some("View"),
+      name: "Rotate Windows (Forwards)",
+      command: () => Actions.Command("view.rotateForward"),
+      icon: None,
+    },
+    {
+      category: Some("View"),
+      name: "Rotate Windows (Backwards)",
+      command: () => Actions.Command("view.rotateBackward"),
+      icon: None,
+    },
+    {
+      category: Some("Editor"),
+      name: "Copy Active Filepath To Clipboard",
+      command: () => Actions.CopyActiveFilepathToClipboard,
       icon: None,
     },
   ];

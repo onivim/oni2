@@ -62,6 +62,32 @@ let parseLineNumberSetting = json =>
   | _ => On
   };
 
+let parseVimUseSystemClipboardSetting = json => {
+  let parseItems = items =>
+    List.fold_left(
+      (accum, item) =>
+        switch (item) {
+        | `String(v) =>
+          switch (String.lowercase_ascii(v)) {
+          | "yank" => {...accum, yank: true}
+          | "paste" => {...accum, paste: true}
+          | "delete" => {...accum, delete: true}
+          | _ => accum
+          }
+        | _ => accum
+        },
+      {yank: false, delete: false, paste: false},
+      items,
+    );
+  switch (json) {
+  | `Bool(true) => {yank: true, delete: true, paste: true}
+  | `Bool(false) => {yank: false, delete: false, paste: false}
+  | `String(v) => parseItems([`String(v)])
+  | `List(items) => parseItems(items)
+  | _ => {yank: true, delete: false, paste: false}
+  };
+};
+
 let parseRenderWhitespace = json =>
   switch (json) {
   | `String(v) =>
@@ -166,6 +192,21 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.zenMode.hideTabs",
     (s, v) => {...s, zenModeHideTabs: parseBool(v)},
+  ),
+  (
+    "workbench.tree.indent",
+    (s, v) => {...s, workbenchTreeIndent: parseInt(v)},
+  ),
+  (
+    "editor.zenMode.singleFile",
+    (s, v) => {...s, zenModeSingleFile: parseBool(v)},
+  ),
+  (
+    "vim.useSystemClipboard",
+    (s, v) => {
+      ...s,
+      vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v),
+    },
   ),
 ];
 

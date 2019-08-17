@@ -11,9 +11,49 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 module Log = Core.Log;
+module Zed_utf8 = Core.ZedBundled;
 
-let start = (getState: unit => Model.State.t) => {
+let start =
+    (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  Vim.Clipboard.setProvider(reg => {
+    let state = getState();
+    let yankConfig =
+      Model.Selectors.getActiveConfigurationValue(state, c =>
+        c.vimUseSystemClipboard
+      );
+
+    let removeWindowsNewLines = s =>
+      List.init(String.length(s), String.get(s))
+      |> List.filter(c => c != '\r')
+      |> List.map(c => String.make(1, c))
+      |> String.concat("");
+
+    let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
+
+    let getClipboardValue = () => {
+      switch (getClipboardText()) {
+      | None => None
+      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
+      };
+    };
+
+    let starReg = Char.code('*');
+    let plusReg = Char.code('+');
+    let unnamedReg = 0;
+
+    let shouldPullFromClipboard =
+      (reg == starReg || reg == plusReg)  // always for '*' and '+'
+      || reg == unnamedReg
+      && yankConfig.paste; // or if 'paste' set, but unnamed
+
+    if (shouldPullFromClipboard) {
+      getClipboardValue();
+    } else {
+      None;
+    };
+  });
 
   let _ =
     Vim.Mode.onChanged(newMode =>
@@ -35,6 +75,28 @@ let start = (getState: unit => Model.State.t) => {
         | Info => "INFO"
         };
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+    });
+
+  let _ =
+    Vim.onYank(({lines, register, operator, _}) => {
+      let state = getState();
+      let yankConfig =
+        Model.Selectors.getActiveConfigurationValue(state, c =>
+          c.vimUseSystemClipboard
+        );
+      let allYanks = yankConfig.yank;
+      let allDeletes = yankConfig.delete;
+      let isClipboardRegister = register == '*' || register == '+';
+      let shouldPropagateToClipboard =
+        isClipboardRegister
+        || operator == Vim.Yank.Yank
+        && allYanks
+        || operator == Vim.Yank.Delete
+        && allDeletes;
+      if (shouldPropagateToClipboard) {
+        let text = String.concat("\n", Array.to_list(lines));
+        setClipboardText(text);
+      };
     });
 
   let _ =
@@ -81,6 +143,13 @@ let start = (getState: unit => Model.State.t) => {
           ),
         )
       };
+    });
+
+  let _ =
+    Vim.Search.onStopSearchHighlight(() => {
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+      dispatch(Model.Actions.SearchClearHighlights(id));
     });
 
   let _ =
@@ -146,28 +215,35 @@ let start = (getState: unit => Model.State.t) => {
       Log.info("Vim.Window.onMovement");
       let currentState = getState();
 
-      let v =
-        switch (movementType) {
-        | FullLeft
-        | OneLeft => Model.WindowManager.moveLeft(currentState.windowManager)
-        | FullRight
-        | OneRight =>
-          Model.WindowManager.moveRight(currentState.windowManager)
-        | FullDown
-        | OneDown => Model.WindowManager.moveDown(currentState.windowManager)
-        | FullUp
-        | OneUp => Model.WindowManager.moveUp(currentState.windowManager)
-        | _ => currentState.windowManager.activeWindowId
-        };
+      let move = moveFunc => {
+        let windowId = moveFunc(currentState.windowManager);
+        let maybeEditorGroupId =
+          Model.WindowTree.getEditorGroupIdFromSplitId(
+            windowId,
+            currentState.windowManager.windowTree,
+          );
 
-      let editorId =
-        Model.WindowTree.getEditorGroupIdFromSplitId(
-          v,
-          currentState.windowManager.windowTree,
-        );
-      switch (editorId) {
-      | Some(ed) => dispatch(Model.Actions.WindowSetActive(v, ed))
-      | None => ()
+        switch (maybeEditorGroupId) {
+        | Some(editorGroupId) =>
+          dispatch(Model.Actions.WindowSetActive(windowId, editorGroupId))
+        | None => ()
+        };
+      };
+
+      switch (movementType) {
+      | FullLeft
+      | OneLeft => move(Model.WindowManager.moveLeft)
+      | FullRight
+      | OneRight => move(Model.WindowManager.moveRight)
+      | FullDown
+      | OneDown => move(Model.WindowManager.moveDown)
+      | FullUp
+      | OneUp => move(Model.WindowManager.moveUp)
+      | RotateDownwards =>
+        dispatch(Model.Actions.Command("view.rotateForward"))
+      | RotateUpwards =>
+        dispatch(Model.Actions.Command("view.rotateBackward"))
+      | _ => move(windowManager => windowManager.activeWindowId)
       };
     });
 
@@ -291,6 +367,7 @@ let start = (getState: unit => Model.State.t) => {
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
+      let _ = Vim.command("e untitled");
       hasInitialized := true;
     });
 
@@ -307,6 +384,8 @@ let start = (getState: unit => Model.State.t) => {
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (!String.equal(key, "<S-SHIFT>")
+            && !String.equal(key, "<A-SHIFT>")
+            && !String.equal(key, "<D-SHIFT>")
             && !String.equal(key, "<D->")
             && !String.equal(key, "<D-S->")
             && !String.equal(key, "<C->")
@@ -471,8 +550,34 @@ let start = (getState: unit => Model.State.t) => {
       }
     );
 
+  let pasteIntoEditorAction =
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
+      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
+        switch (getClipboardText()) {
+        | Some(text) =>
+          Vim.command("set paste");
+          Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), text);
+
+          Vim.command("set nopaste");
+        | None => ()
+        };
+      }
+    );
+
+  let copyActiveFilepathToClipboardEffect =
+    Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
+      switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {
+      | Some(filename) => setClipboardText(filename)
+      | None => ()
+      }
+    );
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.Command("editor.action.clipboardPasteAction") => (
+        state,
+        pasteIntoEditorAction,
+      )
     | Model.Actions.WildmenuNext =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
@@ -512,6 +617,10 @@ let start = (getState: unit => Model.State.t) => {
         synchronizeEditorEffect(state),
       )
     | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Model.Actions.CopyActiveFilepathToClipboard => (
+        state,
+        copyActiveFilepathToClipboardEffect,
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

@@ -1,6 +1,7 @@
 const cp = require("child_process");
 const fs = require("fs-extra");
 const path = require("path");
+const package = require("./../package.json")
 
 let curBin = process.env["cur__bin"];
 console.log("Bin folder: " + curBin);
@@ -8,6 +9,10 @@ console.log("Working directory: " + process.cwd());
 
 const rootDirectory = process.cwd();
 const releaseDirectory = path.join(process.cwd(), "_release");
+
+// Delete releaseDirectory, and remake
+fs.removeSync(releaseDirectory);
+fs.mkdirpSync(releaseDirectory);
 
 const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate_service");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
@@ -61,6 +66,17 @@ const getNodePath = () => {
         return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
     }
 }
+
+const updateIcon = (rcedit, exe, iconFile) => {
+    console.log(`Updating ${exe} icon`)
+
+    rcedit(exe, {
+        icon: iconFile
+    })
+
+    console.log(`Successfully updated icon.`)
+}
+
 if (process.platform == "linux") {
   const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], { cwd: process.cwd(), env: process.env, stdio: 'inherit'});
   console.log(result.output.toString());
@@ -88,7 +104,7 @@ if (process.platform == "linux") {
       CFBundleDisplayName: "Onivim 2",
       CFBundleIdentifier: "com.outrunlabs.onivim2",
       CFBundleIconFile: "Onivim2",
-      CFBundleVersion: "0.01",
+      CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
       CFBundleExecutable: "Oni2",
@@ -101,7 +117,10 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
-  
+
+  // Copy run helper script over
+  copy("scripts/osx/run.sh", "_release/run.sh");
+
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
@@ -128,7 +147,7 @@ if (process.platform == "linux") {
     console.log(`Symlinking ${symlinkDest} -> ${fileSrc}`);
     fs.ensureSymlink(symlinkDest, fileSrc);
   });
-  
+
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
 
@@ -193,4 +212,11 @@ if (process.platform == "linux") {
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
   fs.copySync(textmateServiceSourceDirectory, textmateServiceDestDirectory, {deference: true});
   fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
+
+  // Now that we've copied set the app icon up correctly.
+  // rcedit is imported here as its a big import, only needed for windows.
+  // The image path here does not need to be in the release dir, as its just to do the embed.
+  const rcedit = require("rcedit");
+  updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2.exe"), iconFile);
+  updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2_editor.exe"), iconFile);
 }

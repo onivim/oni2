@@ -69,9 +69,14 @@ let init = app => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
+      ~getClipboardText=
+        () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
+      ~setClipboardText=
+        text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
+      ~cliOptions=Some(cliOptions),
       (),
     );
   Log.debug("Startup: StoreThread started!");

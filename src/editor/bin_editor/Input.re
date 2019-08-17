@@ -69,10 +69,16 @@ let keyPressToCommand =
         | KEY_TAB => Some("TAB")
         | KEY_ENTER => Some("CR")
         | KEY_BACKSPACE => Some("C-h")
+        | KEY_DELETE => Some("DELETE")
         | KEY_LEFT => Some("LEFT")
         | KEY_RIGHT => Some("RIGHT")
         | KEY_DOWN => Some("DOWN")
         | KEY_UP => Some("UP")
+        | KEY_PAGE_UP => Some("PAGEUP")
+        | KEY_PAGE_DOWN => Some("PAGEDOWN")
+        | KEY_HOME => Some("HOME")
+        | KEY_END => Some("END")
+        | KEY_INSERT => Some("INSERT")
         | KEY_LEFT_SHIFT
         | KEY_RIGHT_SHIFT => Some("SHIFT")
         | _ => None
@@ -90,29 +96,65 @@ let keyPressToCommand =
   };
 };
 
+module Conditions = {
+  type t = Hashtbl.t(Types.Input.controlMode, bool);
+
+  let getBooleanCondition = (v: t, condition: Types.Input.controlMode) => {
+    switch (Hashtbl.find_opt(v, condition)) {
+    | Some(v) => v
+    | None => false
+    };
+  };
+
+  let ofState = (state: State.t) => {
+    // Not functional, but we'll use the hashtable for performance
+    let ret: t = Hashtbl.create(16);
+
+    Hashtbl.add(ret, state.inputControlMode, true);
+
+    // HACK: Because we don't have AND conditions yet for input
+    // (the conditions array are OR's), we are making `insertMode`
+    // only true when the editor is insert mode AND we are in the
+    // editor (editorTextFocus is set)
+    switch (state.inputControlMode, state.mode) {
+    | (Types.Input.EditorTextFocus, Vim.Types.Insert) =>
+      Hashtbl.add(ret, Types.Input.InsertMode, true)
+    | _ => ()
+    };
+
+    ret;
+  };
+};
+
 /**
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (conditions, currentMode, input, key) =>
-  List.fold_left(
-    (prevMatch, condition) => prevMatch || condition == currentMode,
-    false,
-    conditions,
-  )
-  |> (&&)(input == key);
+let matchesCondition = (commandConditions, currentConditions, input, key) =>
+  if (input != key) {
+    false;
+  } else {
+    List.fold_left(
+      (prevMatch, condition) =>
+        prevMatch
+        || Conditions.getBooleanCondition(currentConditions, condition),
+      false,
+      commandConditions,
+    );
+  };
 
-let getActionsForBinding =
-    (inputKey, commands, {inputControlMode, _}: State.t) =>
+let getActionsForBinding = (inputKey, commands, state: State.t) => {
+  let currentConditions = Conditions.ofState(state);
   Keybindings.(
     List.fold_left(
       (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, inputControlMode, inputKey, key)
+        matchesCondition(condition, currentConditions, inputKey, key)
           ? [Actions.Command(command)] : defaultAction,
       [],
       commands,
     )
   );
+};
 
 /**
   Handle Input from Oni or Neovim
@@ -130,6 +172,7 @@ let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
       actions;
     }
   | TextInputFocus
-  | MenuFocus => getActionsForBinding(inputKey, commands, state)
+  | MenuFocus
+  | _ => getActionsForBinding(inputKey, commands, state)
   };
 };
