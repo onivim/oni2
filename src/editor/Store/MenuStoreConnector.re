@@ -54,7 +54,7 @@ let start = () => {
         Isolinear.Effect.none,
       )
     | MenuPosition(index) => (
-        {...state, selectedItem: position(index, state.commands)},
+        {...state, selectedItem: position(index, filteredCommandsCount, 0)},
         Isolinear.Effect.none,
       )
     | MenuPreviousItem => (
