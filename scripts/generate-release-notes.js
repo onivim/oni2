@@ -160,10 +160,11 @@ const run = async () => {
 
     console.log("Writing release notes to release.json...");
     fs.writeFileSync("release.json", JSON.stringify({
+        commitId,
         dayReleaseNotes,
         weekReleaseNotes,
         prReleaseNotes,
-    }));
+    }, null, 2));
     console.log("Done!");
 };
 
