@@ -20,6 +20,8 @@ let getClipboard = () => _currentClipboard^;
 let setTime = v => _currentTime := v;
 let getTime = () => _currentTime^;
 
+let getScaleFactor = () => 1.0;
+
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
@@ -43,6 +45,7 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
       ~setup,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
+      ~getScaleFactor,
       ~getTime,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
