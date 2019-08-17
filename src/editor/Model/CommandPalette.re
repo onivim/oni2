@@ -31,12 +31,6 @@ let create = (setItems, _, _) => {
       icon: None,
     },
     {
-      category: Some("quick open temp"),
-      name: "Split Editor Vertically",
-      command: () => Actions.Command("quickOpen.openFiles"),
-      icon: None,
-    },
-    {
       category: Some("View"),
       name: "Split Editor Horizontally",
       command: () => Actions.Command("view.splitHorizontal"),
