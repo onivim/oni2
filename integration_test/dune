@@ -1,12 +1,18 @@
 (executables
     (names InsertModeTest
-           ClipboardPasteMultiLineTest
-           ClipboardPasteSingleLineTest
-           ClipboardPasteEmptyTest
+           ClipboardInsertModePasteMultiLineTest
+           ClipboardInsertModePasteSingleLineTest
+           ClipboardInsertModePasteEmptyTest
+           ClipboardNormalModePasteTest
+           ClipboardYankTest
+           CopyActiveFilepathToClipboardTest
+           QuickOpenEventuallyCompletesTest
+           QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
+           TickTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -22,14 +28,20 @@
     (files 
         run-tests.sh
         InsertModeTest.exe
-        ClipboardPasteMultiLineTest.exe
-        ClipboardPasteSingleLineTest.exe
-        ClipboardPasteEmptyTest.exe
+        ClipboardInsertModePasteMultiLineTest.exe
+        ClipboardInsertModePasteSingleLineTest.exe
+        ClipboardInsertModePasteEmptyTest.exe
+        ClipboardNormalModePasteTest.exe
+        ClipboardYankTest.exe
+        CopyActiveFilepathToClipboardTest.exe
+        QuickOpenEventuallyCompletesTest.exe
+        QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
         SearchShowClearHighlightsTest.exe
         AddRemoveSplitTest.exe
+        TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         ))

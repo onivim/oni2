@@ -88,6 +88,8 @@ let createElement =
         hooks,
       );
 
+    let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
+
     React.(
       hooks,
       menu.isOpen
@@ -107,9 +109,9 @@ let createElement =
                 rowHeight=40
                 height={menuHeight - 50}
                 width=menuWidth
-                count={List.length(menu.filteredCommands)}
+                count={Array.length(commands)}
                 render={index => {
-                  let cmd = List.nth(menu.filteredCommands, index);
+                  let cmd = commands[index];
                   <MenuItem
                     onClick
                     theme

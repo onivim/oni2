@@ -9,6 +9,7 @@
         Oni_Extensions_Test
         Oni_Model_Test
         Oni_Store_Test
+        Oni_Syntax_Test
             ))
 
 (executable

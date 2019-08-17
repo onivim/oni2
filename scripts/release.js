@@ -10,6 +10,10 @@ console.log("Working directory: " + process.cwd());
 const rootDirectory = process.cwd();
 const releaseDirectory = path.join(process.cwd(), "_release");
 
+// Delete releaseDirectory, and remake
+fs.removeSync(releaseDirectory);
+fs.mkdirpSync(releaseDirectory);
+
 const textmateServiceSourceDirectory = path.join(rootDirectory, "src", "textmate_service");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
@@ -113,6 +117,9 @@ if (process.platform == "linux") {
 
   // Copy bins over
   copy(curBin, binaryDirectory);
+
+  // Copy run helper script over
+  copy("scripts/osx/run.sh", "_release/run.sh");
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(textmateServiceSourceDirectory, resourcesDirectory);

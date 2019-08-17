@@ -41,6 +41,9 @@ let start =
       ~executingDirectory,
       ~onStateChanged,
       ~getClipboardText,
+      ~setClipboardText,
+      ~getTime,
+      ~cliOptions: option(Oni_Core.Cli.t),
       (),
     ) => {
   ignore(executingDirectory);
@@ -57,7 +60,7 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(getState, getClipboardText);
+    VimStoreConnector.start(getState, getClipboardText, setClipboardText);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -71,7 +74,7 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start();
+  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
@@ -82,6 +85,8 @@ let start =
   let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start();
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
+
+  let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -100,6 +105,7 @@ let start =
           fileExplorerUpdater,
           indentationUpdater,
           windowUpdater,
+          keyDisplayerUpdater,
         ]),
       (),
     );
@@ -173,7 +179,16 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
+    List.iter(
+      e => {
+        open Isolinear.Effect;
+        if (Core.Log.isDebugLoggingEnabled()) {
+          Core.Log.debug("[EFFECT]: " ++ e.name);
+        };
+        Isolinear.Effect.run(e, dispatch);
+      },
+      List.rev(effects),
+    );
   };
 
   let _ =

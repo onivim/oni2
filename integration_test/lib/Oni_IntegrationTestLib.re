@@ -6,14 +6,19 @@ module Log = Core.Log;
 type dispatchFunction = Model.Actions.t => unit;
 type runEffectsFunction = unit => unit;
 type waiter = Model.State.t => bool;
-type waitForState = (~name: string, waiter) => unit;
+type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
 
 type testCallback =
   (dispatchFunction, waitForState, runEffectsFunction) => unit;
 
 let _currentClipboard: ref(option(string)) = ref(None);
+let _currentTime: ref(float) = ref(0.0);
 
 let setClipboard = v => _currentClipboard := v;
+let getClipboard = () => _currentClipboard^;
+
+let setTime = v => _currentTime := v;
+let getTime = () => _currentTime^;
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
@@ -37,8 +42,11 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     Store.StoreThread.start(
       ~setup,
       ~getClipboardText=() => _currentClipboard^,
+      ~setClipboardText=text => setClipboard(Some(text)),
+      ~getTime,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
+      ~cliOptions=None,
       (),
     );
 
@@ -71,10 +79,10 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     dispatch(action);
   };
 
-  let waitForState = (~name, waiter) => {
+  let waitForState = (~name, ~timeout=0.5, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
     let startTime = Unix.gettimeofday();
-    let maxWaitTime = 0.5;
+    let maxWaitTime = timeout;
     let iteration = ref(0);
 
     logWaiter("Starting");
