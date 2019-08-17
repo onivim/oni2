@@ -15,7 +15,8 @@ describe("TreeSitterScopes", ({describe, _}) => {
       ("string_content", [
         RegExMatch(Str.regexp("^http:\\/\\/"), "markup.underline.link.http.hyperlink"),
         RegExMatch(Str.regexp("^https:\\/\\/"), "markup.underline.link.https.hyperlink"),
-      ])
+      ]),
+      ("pair > false", [Scope("constant.language")])
     ]);
 
     test("returns None for non-existent scopes", ({expect, _}) => {
@@ -54,6 +55,13 @@ describe("TreeSitterScopes", ({describe, _}) => {
         simpleConverter);
 
       expect.bool(scope == Some("markup.underline.link.https.hyperlink")).toBe(true);
+    })
+    test("child selector", ({expect, _}) => {
+      let scope  = TextMateConverter.getTextMateScope(
+        ~path=["false", "pair"],
+        simpleConverter);
+
+      expect.bool(scope == Some("constant.language")).toBe(true);
     })
   });
 });

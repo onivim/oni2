@@ -51,9 +51,11 @@ module TextMateConverter = {
   let create = (selectors: list(scopeSelector)) => {
     let defaultSelectors = List.fold_left(
       (prev, curr) => {
+
         let (selector, matchers): scopeSelector = curr;
+        let expandedSelectors = Str.split(Str.regexp(" > "), selector) |> List.rev;
         let f = _ => Some(matchers);
-        Trie.update([selector], f, prev);
+        Trie.update(expandedSelectors, f, prev);
       }, Trie.empty, selectors);
 
       let ret: t = { 
