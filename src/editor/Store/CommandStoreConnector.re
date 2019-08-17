@@ -88,6 +88,64 @@ let start = _ => {
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
     (
+      "quickOpen.openFiles",
+      state => {
+        let currentDirectory = Rench.Environment.getWorkingDirectory();
+
+        let getDisplayPath = (fullPath, dir) => {
+          let re = Str.regexp_string(dir ++ Filename.dir_sep);
+          Str.replace_first(re, "", fullPath);
+        };
+
+        multipleActionEffect([
+          MenuOpen(
+            setItems => {
+              let commands =
+                state.Oni_Model.State.buffers
+                |> IntMap.to_seq
+                |> List.of_seq
+                |> List.filter(element => {
+                     let (_, buffer) = element;
+
+                     switch (Buffer.getMetadata(buffer).filePath) {
+                     | Some(_) => true
+                     | None => false
+                     };
+                   })
+                |> List.map(element => {
+                     let (_, buffer) = element;
+
+                     let path =
+                       switch (Buffer.getMetadata(buffer).filePath) {
+                       | Some(e) => e
+                       | None => ""
+                       };
+
+                     {
+                       category: None,
+                       name: getDisplayPath(path, currentDirectory),
+                       command: () => {
+                         Oni_Model.Actions.OpenFileByPath(path);
+                       },
+                       icon:
+                         Oni_Model.FileExplorer.getFileIcon(
+                           state.languageInfo,
+                           state.iconTheme,
+                           path,
+                         ),
+                     };
+                   });
+
+              setItems(commands);
+
+              () => ();
+            },
+          ),
+          SetInputControlMode(TextInputFocus),
+        ]);
+      },
+    ),
+    (
       "menu.close",
       _ =>
         multipleActionEffect([
