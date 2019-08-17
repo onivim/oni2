@@ -59,20 +59,17 @@ module TextMateConverter = {
 
   type t = {
     // Tries to support 'nth-child(x)' rules
-    byChildSelectors: IntMap.t(Trie.t(scopeSelector)),
+    byChildSelectors: StringMap.t(Trie.t(list(Matcher.t))),
     // Tries to support the default case - no child selector
     defaultSelectors: Trie.t(list(Matcher.t)),
   };
 
   let empty: t = {
-    byChildSelectors: IntMap.empty,
+    byChildSelectors: StringMap.empty,
     defaultSelectors: Trie.empty,
   };
 
   let create = (selectors: list(scopeSelector)) => {
-
-    
-
       List.fold_left(
         (prev: t, curr) => {
           let {byChildSelectors, defaultSelectors} = prev;
@@ -84,8 +81,16 @@ module TextMateConverter = {
           let f = _ => Some(matchers);
 
           let (byChildSelectors, defaultSelectors) = switch (Selector.checkChildSelector(selector)) {
+          // If there is no child selector, just toss it in the default selectors
           | None => (byChildSelectors, Trie.update(expandedSelectors, f, defaultSelectors))
-          | Some(_) => (byChildSelectors, defaultSelectors);
+          // Otherwise, we'll add an entry to the appropriate by-child selector
+          | Some(childSelectorIndex) => {
+              let byChildSelectors = StringMap.update(childSelectorIndex, (v) => switch(v) {
+              | None => Some(Trie.update(expandedSelectors, f, Trie.empty));
+              | Some(childSelectorTrie) => Some(Trie.update(expandedSelectors, f, childSelectorTrie));
+              }, byChildSelectors);
+              (byChildSelectors, defaultSelectors);
+          }
           };
          /* | Some(v) => (byChildSelectors, defaultSelectors)
          | Some(_) => {
