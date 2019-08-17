@@ -131,5 +131,15 @@ describe("TreeSitterScopes", ({describe, _}) => {
 
       expect.bool(scope == Some("constant.language")).toBe(true);
     });
+    test("nth-child(1) selector matches", ({expect, _}) => {
+      let scope =
+        TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["string", "pair", "random-scope"],
+          simpleConverter,
+        );
+
+      expect.bool(scope == Some("string.quoted.dictionary.key.json")).toBe(true);
+    });
   });
 });
