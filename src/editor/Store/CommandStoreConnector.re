@@ -99,7 +99,7 @@ let start = _ => {
 
         multipleActionEffect([
           MenuOpen(
-            setItems => {
+            (setItems, _, _) => {
               let commands =
                 state.Oni_Model.State.buffers
                 |> IntMap.to_seq
@@ -125,7 +125,7 @@ let start = _ => {
                        category: None,
                        name: getDisplayPath(path, currentDirectory),
                        command: () => {
-                         Oni_Model.Actions.OpenFileByPath(path);
+                         Oni_Model.Actions.OpenFileByPath(path, None);
                        },
                        icon:
                          Oni_Model.FileExplorer.getFileIcon(
