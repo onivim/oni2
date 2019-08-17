@@ -60,7 +60,7 @@ let start = (~getScaleFactor, ()) => {
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
       // TODO
       /* let editorFontFamily =
-        Configuration.getValue(c => c.editorFontFamily, configuration); */
+         Configuration.getValue(c => c.editorFontFamily, configuration); */
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
