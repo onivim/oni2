@@ -2,20 +2,20 @@
  TreeSitterScopes
  */
 
-module Matcher  = {
-  
-  type t = 
-  // Just a single scope, like: 'string.quoted.double'
-  | Scope(string)
-  // A regex match clause, like: '{ match: "^http:", scopes: 'markup.underline.link'}'
-  | RegExMatch(Str.regexp, string)
-  // An exact match clause, like: '{ exact: "test": scopes: 'some.token' }'
-  | ExactMatch(string, string);
+module Matcher = {
+  type t =
+    // Just a single scope, like: 'string.quoted.double'
+    | Scope(string)
+    // A regex match clause, like: '{ match: "^http:", scopes: 'markup.underline.link'}'
+    | RegExMatch(Str.regexp, string)
+    // An exact match clause, like: '{ exact: "test": scopes: 'some.token' }'
+    | ExactMatch(string, string);
 
   let getMatch = (~token="", matcher: t) => {
     switch (matcher) {
     | Scope(v) => Some(v)
-    | RegExMatch(r, scope) => Str.string_match(r, token, 0) ? Some(scope) : None
+    | RegExMatch(r, scope) =>
+      Str.string_match(r, token, 0) ? Some(scope) : None
     | ExactMatch(m, scope) => String.equal(m, token) ? Some(scope) : None
     };
   };
@@ -23,21 +23,19 @@ module Matcher  = {
   let rec firstMatch = (~token="", matchers: list(t)) => {
     switch (matchers) {
     | [] => None
-    | [hd, ...tail] => {
+    | [hd, ...tail] =>
       switch (getMatch(~token, hd)) {
       | Some(v) => Some(v)
       | None => firstMatch(~token, tail)
       }
-    } 
-    }
+    };
   };
-  
-}
+};
 
 /*
-  [TextMateConverter] is a module that helps convert
-  tree-sitter paths into textmate scopes for th eming.
-*/
+   [TextMateConverter] is a module that helps convert
+   tree-sitter paths into textmate scopes for th eming.
+ */
 module TextMateConverter = {
   type scopeSelector = (string, list(Matcher.t));
 
@@ -49,35 +47,33 @@ module TextMateConverter = {
   };
 
   let create = (selectors: list(scopeSelector)) => {
-    let defaultSelectors = List.fold_left(
-      (prev, curr) => {
+    let defaultSelectors =
+      List.fold_left(
+        (prev, curr) => {
+          let (selector, matchers): scopeSelector = curr;
+          let expandedSelectors =
+            Str.split(Str.regexp(" > "), selector) |> List.rev;
+          let f = _ => Some(matchers);
+          Trie.update(expandedSelectors, f, prev);
+        },
+        Trie.empty,
+        selectors,
+      );
 
-        let (selector, matchers): scopeSelector = curr;
-        let expandedSelectors = Str.split(Str.regexp(" > "), selector) |> List.rev;
-        let f = _ => Some(matchers);
-        Trie.update(expandedSelectors, f, prev);
-      }, Trie.empty, selectors);
-
-      let ret: t = { 
-        defaultSelectors: defaultSelectors,
-      };
-      ret;
+    let ret: t = {defaultSelectors: defaultSelectors};
+    ret;
   };
 
   let getTextMateScope = (~_index=0, ~token="", ~path=[], v: t) => {
     switch (Trie.matches(v.defaultSelectors, path)) {
     | [] => None
-    | [hd, ..._] => {
-
+    | [hd, ..._] =>
       let (_, matchers) = hd;
 
       switch (matchers) {
       | None => None
-      | Some(v) => Matcher.firstMatch(~token, v);
-      }
-
-    }
-    }
+      | Some(v) => Matcher.firstMatch(~token, v)
+      };
+    };
   };
 };
-
