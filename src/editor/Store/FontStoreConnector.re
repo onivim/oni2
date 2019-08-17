@@ -71,9 +71,9 @@ let start = (~getScaleFactor, ()) => {
     });
 
   let loadEditorFontEffect = (fontFamily, fontSize) =>
-    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch =>
-      print_endline("Trying to load font: " ++ fontFamily)
-    );
+    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch => {
+      setFont(dispatch, fontFamily, fontSize);
+    });
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
