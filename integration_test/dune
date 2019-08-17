@@ -12,6 +12,7 @@
            RegressionCommandLineNoCompletionTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
+           TickTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -40,6 +41,7 @@
         RegressionVspEmptyExistingBufferTest.exe
         SearchShowClearHighlightsTest.exe
         AddRemoveSplitTest.exe
+        TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         ))

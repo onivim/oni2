@@ -64,6 +64,8 @@ let init = app => {
   let getScaleFactor = () => {
     Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
   };
+  
+  let getTime = () => Time.getTime() |> Time.toSeconds;
 
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
@@ -73,6 +75,7 @@ let init = app => {
         () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
       ~setClipboardText=
         text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+      ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
@@ -131,11 +134,14 @@ let init = app => {
      a revery element is focused oni2 should defer to revery
    */
   let keyEventListener = key => {
+    let time = Time.getTime() |> Time.toSeconds;
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, k) |> List.iter(dispatch)
+      inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
+      // Run input effects _immediately_
+      runEffects();
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
   };

@@ -31,6 +31,9 @@ type t =
   | CommandlineShow(Vim.Types.cmdlineType)
   | CommandlineHide
   | CommandlineUpdate(Vim.Types.cmdline)
+  | NotifyKeyPressed(float, string)
+  | DisableKeyDisplayer
+  | EnableKeyDisplayer
   | KeyboardInput(string)
   | WildmenuShow(list(string))
   | WildmenuNext
