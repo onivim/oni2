@@ -13,8 +13,8 @@ describe("TreeSitterScopes", ({describe, _}) => {
       ("value", [Scope("source.json")]),
       ("object", [Scope("meta.structure.dictionary.json")]),
       ("string_content", [
-        RegExMatch("^http:\/\/", scopes: "markup.underline.link.http.hyperlink"),
-        RegExMatch("^https:\/\/", scopes: "markup.underline.link.https.hyperlink"),
+        RegExMatch(Str.regexp("^http:\\/\\/"), "markup.underline.link.http.hyperlink"),
+        RegExMatch(Str.regexp("^https:\\/\\/"), "markup.underline.link.https.hyperlink"),
       ])
     ]);
 
@@ -38,6 +38,22 @@ describe("TreeSitterScopes", ({describe, _}) => {
         simpleConverter);
 
       expect.bool(scope == Some("meta.structure.dictionary.json")).toBe(true);
+    })
+    test("regex match failure", ({expect, _}) => {
+      let scope  = TextMateConverter.getTextMateScope(
+        ~path=["string_content"],
+        ~token="derp",
+        simpleConverter);
+
+      expect.bool(scope == None).toBe(true);
+    })
+    test("regex match success", ({expect, _}) => {
+      let scope  = TextMateConverter.getTextMateScope(
+        ~path=["string_content"],
+        ~token="https://v2.onivim.io",
+        simpleConverter);
+
+      expect.bool(scope == Some("markup.underline.link.https.hyperlink")).toBe(true);
     })
   });
 });
