@@ -5,38 +5,6 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 open TreeSitterScopes;
 
 describe("TreeSitterScopes", ({describe, _}) => {
-  describe("Selector", ({test, _}) => {
-    test("returns correct results", ({expect, _}) => {
-      expect.bool(Selector.checkChildSelector("pair") == None).toBe(true);
-      expect.bool(
-        Selector.checkChildSelector("pair:nth-child(0)") == Some("0"),
-      ).
-        toBe(
-        true,
-      );
-      expect.bool(
-        Selector.checkChildSelector("pair:nth-child(99)") == Some("99"),
-      ).
-        toBe(
-        true,
-      );
-      expect.bool(
-        Selector.checkChildSelector("pair:first-child") == Some("0"),
-      ).
-        toBe(
-        true,
-      );
-    });
-    test("parse", ({expect, _}) =>
-      expect.bool(
-        Selector.parse("pair > string:nth-child(0)")
-        == (["string", "pair"], Some("0")),
-      ).
-        toBe(
-        true,
-      )
-    );
-  });
   describe("TextMateConverter", ({test, _}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
