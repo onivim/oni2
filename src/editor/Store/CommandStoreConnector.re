@@ -78,6 +78,8 @@ let start = _ => {
   };
 
   let commands = [
+    ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
+    ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
       "commandPalette.open",
       _ =>
