@@ -33,25 +33,20 @@ module Matcher = {
 };
 
 module Selector = {
-
   let firstChildRegex = Str.regexp(".*:first-child$");
   let nthChildRegex = Str.regexp(".*:nth-child(\\([0-9]*\\))$");
 
-  let checkChildSelector  = (v: string) => {
+  let checkChildSelector = (v: string) => {
     let matches = Str.string_match(nthChildRegex, v, 0);
 
-    switch (matches) {
-    | true =>{ 
-      let v = Str.matched_group(1, v);
-      Some(v);
+    matches
+      ? {
+        let v = Str.matched_group(1, v);
+        Some(v);
       }
-    | false => switch (Str.string_match(firstChildRegex, v, 0)) {
-      | true => Some("0")
-      | false => None
-    }
-    }
+      : Str.string_match(firstChildRegex, v, 0) ? Some("0") : None;
   };
-}
+};
 
 /*
    [TextMateConverter] is a module that helps convert

@@ -5,15 +5,29 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 open TreeSitterScopes;
 
 describe("TreeSitterScopes", ({describe, _}) => {
-  describe("Selector", ({test, _}) => {
+  describe("Selector", ({test, _}) =>
     test("returns correct results", ({expect, _}) => {
-
       expect.bool(Selector.checkChildSelector("pair") == None).toBe(true);
-      expect.bool(Selector.checkChildSelector("pair:nth-child(0)") == Some("0")).toBe(true);
-      expect.bool(Selector.checkChildSelector("pair:nth-child(99)") == Some("99")).toBe(true);
-      expect.bool(Selector.checkChildSelector("pair:first-child") == Some("0")).toBe(true);
-    });
-  });
+      expect.bool(
+        Selector.checkChildSelector("pair:nth-child(0)") == Some("0"),
+      ).
+        toBe(
+        true,
+      );
+      expect.bool(
+        Selector.checkChildSelector("pair:nth-child(99)") == Some("99"),
+      ).
+        toBe(
+        true,
+      );
+      expect.bool(
+        Selector.checkChildSelector("pair:first-child") == Some("0"),
+      ).
+        toBe(
+        true,
+      );
+    })
+  );
   describe("TextMateConverter", ({test, _}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
@@ -35,7 +49,10 @@ describe("TreeSitterScopes", ({describe, _}) => {
           ],
         ),
         ("pair > string", [Scope("constant.language")]),
-        ("pair > string:nth-child(1)", [Scope("string.quoted.dictionary.key.json")]),
+        (
+          "pair > string:nth-child(1)",
+          [Scope("string.quoted.dictionary.key.json")],
+        ),
       ]);
 
     test("returns None for non-existent scopes", ({expect, _}) => {
@@ -108,11 +125,11 @@ describe("TreeSitterScopes", ({describe, _}) => {
     test("child selector matches descendants", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "pair" ,"random-scope"],
+          ~path=["string", "pair", "random-scope"],
           simpleConverter,
         );
 
       expect.bool(scope == Some("constant.language")).toBe(true);
     });
-  })
+  });
 });
