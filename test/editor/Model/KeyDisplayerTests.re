@@ -13,9 +13,7 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1.1, "b")
         |> KeyDisplayer.getPresses;
 
-      expect.bool(
-        v == [{time: 1., exclusive: false, keys: ["b", "a"]}],
-      ).
+      expect.bool(v == [{time: 1., exclusive: false, keys: ["b", "a"]}]).
         toBe(
         true,
       );
@@ -29,9 +27,10 @@ describe("KeyDisplayer", ({describe, _}) => {
 
       expect.bool(
         v
-        == 
-             [{time: 1.5, exclusive: false, keys: ["b"]}, {time: 1., exclusive: false, keys: ["a"]}]
-           
+        == [
+             {time: 1.5, exclusive: false, keys: ["b"]},
+             {time: 1., exclusive: false, keys: ["a"]},
+           ],
       ).
         toBe(
         true,
@@ -48,10 +47,7 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.getPresses;
 
       // "a" should be filtered out
-      expect.bool(
-        v == [{time: 1.5, exclusive: false, keys: ["b"]}],
-      ).
-        toBe(
+      expect.bool(v == [{time: 1.5, exclusive: false, keys: ["b"]}]).toBe(
         true,
       );
     })

@@ -77,9 +77,9 @@ let add = (time, key, v: t) =>
 
 let getPresses = (v: t) => v.presses;
 
-let getEnabled = (v:t) => v.enabled;
+let getEnabled = (v: t) => v.enabled;
 
-let getActive = (v:t) => v.enabled && v.active;
+let getActive = (v: t) => v.enabled && v.active;
 
 let show = (v: t) => {
   "KeyDisplayer: [\n"
