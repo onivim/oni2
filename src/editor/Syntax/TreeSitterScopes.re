@@ -2,6 +2,8 @@
  TreeSitterScopes
  */
 
+open Oni_Core;
+
 module Matcher = {
   type t =
     // Just a single scope, like: 'string.quoted.double'
@@ -57,30 +59,52 @@ module TextMateConverter = {
 
   type t = {
     // Tries to support 'nth-child(x)' rules
-    // byChildSelectors: IntMap.t(Trie.t(scopeSelector)),
+    byChildSelectors: IntMap.t(Trie.t(scopeSelector)),
     // Tries to support the default case - no child selector
     defaultSelectors: Trie.t(list(Matcher.t)),
   };
 
-  let create = (selectors: list(scopeSelector)) => {
-    let defaultSelectors =
-      List.fold_left(
-        (prev, curr) => {
-          let (selector, matchers): scopeSelector = curr;
-          let expandedSelectors =
-            Str.split(Str.regexp(" > "), selector) |> List.rev;
-          let f = _ => Some(matchers);
-          Trie.update(expandedSelectors, f, prev);
-        },
-        Trie.empty,
-        selectors,
-      );
-
-    let ret: t = {defaultSelectors: defaultSelectors};
-    ret;
+  let empty: t = {
+    byChildSelectors: IntMap.empty,
+    defaultSelectors: Trie.empty,
   };
 
-  let getTextMateScope = (~_index=0, ~token="", ~path=[], v: t) => {
+  let create = (selectors: list(scopeSelector)) => {
+
+    
+
+      List.fold_left(
+        (prev: t, curr) => {
+          let {byChildSelectors, defaultSelectors} = prev;
+          let (selector, matchers): scopeSelector = curr;
+          
+          let expandedSelectors =
+            Str.split(Str.regexp(" > "), selector) |> List.rev;
+
+          let f = _ => Some(matchers);
+
+          let (byChildSelectors, defaultSelectors) = switch (Selector.checkChildSelector(selector)) {
+          | None => (byChildSelectors, Trie.update(expandedSelectors, f, defaultSelectors))
+          | Some(_) => (byChildSelectors, defaultSelectors);
+          };
+         /* | Some(v) => (byChildSelectors, defaultSelectors)
+         | Some(_) => {
+              IntMap.update(v, (oldKey) => switch(oldKey) {
+              | None => Some(Trie.update(expandedSelectors, f, Trie.empty));
+              | Some(v) => Some(Trie.update(expandedSelectors, f, v));
+              }, v);
+          }
+          }*/
+
+          { byChildSelectors, defaultSelectors };
+        },
+        empty,
+        selectors,
+      );
+  };
+
+  let getTextMateScope = (~index=0, ~token="", ~path=[], v: t) => {
+    ignore(index);
     switch (Trie.matches(v.defaultSelectors, path)) {
     | [] => None
     | [hd, ..._] =>
