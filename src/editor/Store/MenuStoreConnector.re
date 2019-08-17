@@ -16,7 +16,7 @@ let start = () => {
 
   let position = (selectedItem, change, count) => {
     let nextIndex = selectedItem + change;
-    nextIndex >= count ? 0 : nextIndex < 0  ? count - 1 : nextIndex;
+    nextIndex >= count ? 0 : nextIndex < 0 ? count - 1 : nextIndex;
   };
 
   let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
