@@ -6,4 +6,5 @@
 
 module TextMateScopes = TextMateScopes;
 module TextMateTheme = TextMateTheme;
+module TreeSitterScopes = TreeSitterScopes;
 module Trie = Trie;
