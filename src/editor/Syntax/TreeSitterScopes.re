@@ -37,7 +37,7 @@ module Matcher = {
 module Selector = {
   let firstChildRegex = Str.regexp(".*:first-child$");
   let nthChildRegex = Str.regexp(".*:nth-child(\\([0-9]*\\))$");
-  
+
   let checkChildSelector = (v: string) => {
     let matches = Str.string_match(nthChildRegex, v, 0);
 
@@ -53,24 +53,22 @@ module Selector = {
     switch (String.rindex_opt(v, ':')) {
     | Some(idx) => String.sub(v, 0, idx)
     | _ => v
-    }
+    };
   };
 
   let parse = (v: string) => {
     let childSelector = checkChildSelector(v);
 
-    let v = switch (childSelector) {
-    | Some(_) => removeChildSelector(v)
-    | None => v
-    };
-    
-    let expandedSelectors = v
-      |> Str.split(Str.regexp(" > "))
-      |> List.rev;
+    let v =
+      switch (childSelector) {
+      | Some(_) => removeChildSelector(v)
+      | None => v
+      };
 
-    (expandedSelectors, childSelector)
+    let expandedSelectors = v |> Str.split(Str.regexp(" > ")) |> List.rev;
+
+    (expandedSelectors, childSelector);
   };
-
 };
 
 /*
@@ -93,39 +91,72 @@ module TextMateConverter = {
   };
 
   let create = (selectors: list(scopeSelector)) => {
-      List.fold_left(
-        (prev: t, curr) => {
-          let {byChildSelectors, defaultSelectors} = prev;
-          let (selector, matchers): scopeSelector = curr;
-          
-          let (expandedSelectors, childSelector) = Selector.parse(selector);
+    List.fold_left(
+      (prev: t, curr) => {
+        let {byChildSelectors, defaultSelectors} = prev;
+        let (selector, matchers): scopeSelector = curr;
 
-          let f = _ => Some(matchers);
+        let (expandedSelectors, childSelector) = Selector.parse(selector);
 
-          let (byChildSelectors, defaultSelectors) = switch (childSelector) {
+        let f = _ => Some(matchers);
+
+        let (byChildSelectors, defaultSelectors) =
+          switch (childSelector) {
           // If there is no child selector, just toss it in the default selectors
-          | None => (byChildSelectors, Trie.update(expandedSelectors, f, defaultSelectors))
+          | None => (
+              byChildSelectors,
+              Trie.update(expandedSelectors, f, defaultSelectors),
+            )
           // Otherwise, we'll add an entry to the appropriate by-child selector
-          | Some(childSelectorIndex) => {
-              let byChildSelectors = StringMap.update(childSelectorIndex, (v) => switch(v) {
-              | None => Some(Trie.update(expandedSelectors, f, Trie.empty));
-              | Some(childSelectorTrie) => Some(Trie.update(expandedSelectors, f, childSelectorTrie));
-              }, byChildSelectors);
-              (byChildSelectors, defaultSelectors);
-          }
+          | Some(childSelectorIndex) =>
+            let byChildSelectors =
+              StringMap.update(
+                childSelectorIndex,
+                v =>
+                  switch (v) {
+                  | None =>
+                    Some(Trie.update(expandedSelectors, f, Trie.empty))
+                  | Some(childSelectorTrie) =>
+                    Some(
+                      Trie.update(expandedSelectors, f, childSelectorTrie),
+                    )
+                  },
+                byChildSelectors,
+              );
+            (byChildSelectors, defaultSelectors);
           };
-          
-          { byChildSelectors, defaultSelectors };
-        },
-        empty,
-        selectors,
-      );
+
+        {byChildSelectors, defaultSelectors};
+      },
+      empty,
+      selectors,
+    );
+  };
+
+  let _getTextMateScopeForNonChildSelector = (token, path, v) => {
+    switch (Trie.matches(v.defaultSelectors, path)) {
+    | [] => None
+    | [hd, ..._] =>
+      let (_, matchers) = hd;
+
+      switch (matchers) {
+      | None => None
+      | Some(v) => Matcher.firstMatch(~token, v)
+      };
+    };
   };
 
   let getTextMateScope = (~index=0, ~token="", ~path=[], v: t) => {
-    ignore(index);
-    switch (Trie.matches(v.defaultSelectors, path)) {
-    | [] => None
+    // First, try and see if a child selector matches
+    let matches =
+      switch (StringMap.find_opt(string_of_int(index), v.byChildSelectors)) {
+      | Some(trie) => Trie.matches(trie, path)
+      | None => []
+      };
+
+    switch (matches) {
+    // If not... fall back to the default trie without child-selectors!
+    | [] => _getTextMateScopeForNonChildSelector(token, path, v)
     | [hd, ..._] =>
       let (_, matchers) = hd;
 

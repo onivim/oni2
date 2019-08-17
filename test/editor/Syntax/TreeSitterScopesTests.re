@@ -27,9 +27,15 @@ describe("TreeSitterScopes", ({describe, _}) => {
         true,
       );
     });
-    test("parse", ({expect, _}) => {
-      expect.bool(Selector.parse("pair > string:nth-child(0)") == (["string", "pair"], Some("0"))).toBe(true);
-    });
+    test("parse", ({expect, _}) =>
+      expect.bool(
+        Selector.parse("pair > string:nth-child(0)")
+        == (["string", "pair"], Some("0")),
+      ).
+        toBe(
+        true,
+      )
+    );
   });
   describe("TextMateConverter", ({test, _}) => {
     // Create a simple converter... this is a representation of grammars
@@ -128,6 +134,7 @@ describe("TreeSitterScopes", ({describe, _}) => {
     test("child selector matches descendants", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
+          ~index=0,
           ~path=["string", "pair", "random-scope"],
           simpleConverter,
         );
@@ -142,7 +149,9 @@ describe("TreeSitterScopes", ({describe, _}) => {
           simpleConverter,
         );
 
-      expect.bool(scope == Some("string.quoted.dictionary.key.json")).toBe(true);
+      expect.bool(scope == Some("string.quoted.dictionary.key.json")).toBe(
+        true,
+      );
     });
   });
 });
