@@ -32,7 +32,25 @@ module TextMateConverter = {
         Trie.update([selector], f, prev);
       }, Trie.empty, selectors);
 
-      { defaultSelectors };
+      let ret: t = { 
+        defaultSelectors: defaultSelectors,
+      };
+      ret;
+  };
+
+  let getTextMateScope = (~_index=0, ~_token="", ~path=[], v: t) => {
+    switch (Trie.matches(v.defaultSelectors, path)) {
+    | [] => None
+    | [hd, ..._] => {
+
+      let (_, matchers) = hd;
+
+      switch (matchers) {
+      | Some([Scope(v)]) => Some(v)
+      | _ => None
+      }
+    }
+    }
   };
 };
 
