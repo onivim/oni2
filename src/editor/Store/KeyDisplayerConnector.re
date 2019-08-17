@@ -17,14 +17,14 @@ let start = getTime => {
       KeyDisplayer.setEnabled(true, keyDisplayer)
     | Actions.DisableKeyDisplayer =>
       KeyDisplayer.setEnabled(false, keyDisplayer)
-    | Actions.NotifyKeyPressed(time, key) when keyDisplayer.enabled =>
+    | Actions.NotifyKeyPressed(time, key) when KeyDisplayer.getEnabled(keyDisplayer) =>
       KeyDisplayer.add(time, key, keyDisplayer)
     | _ => keyDisplayer
     };
   };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
-    if (action === Actions.Tick && state.keyDisplayer.enabled) {
+    if (action === Actions.Tick && KeyDisplayer.getActive(state.keyDisplayer)) {
       if (!state.keyDisplayer.active) {
         (state, Isolinear.Effect.none);
       } else {

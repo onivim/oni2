@@ -75,7 +75,7 @@ let createElement = (~children as _, ~state: State.t, ()) => {
           String.concat("", keyGroup.keys |> List.map(f) |> List.rev);
         <keyGroupView uiFont text />;
       },
-      state.keyDisplayer.presses,
+      state.keyDisplayer |> KeyDisplayer.getPresses,
     )
     |> List.rev;
 
