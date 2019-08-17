@@ -7,12 +7,15 @@
 open Oni_Core;
 open Oni_Model;
 
+let minFontSize = 6;
+
 let start = (~getScaleFactor, ()) => {
   let setFont = (dispatch, fontFamily, fontSize) => {
+    let fontSize = max(fontSize, minFontSize);
     let scaleFactor = getScaleFactor();
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    let fontFile = /*Utility.executingDirectory ++*/ fontFamily;
+    let fontFile = Utility.executingDirectory ++ fontFamily;
 
     Log.info("Loading font: " ++ fontFile);
 
@@ -55,11 +58,14 @@ let start = (~getScaleFactor, ()) => {
 
   let synchronizeConfiguration = (configuration: Configuration.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
-      let editorFontFamily =
-        Configuration.getValue(c => c.editorFontFamily, configuration);
+      // TODO
+      /* let editorFontFamily =
+        Configuration.getValue(c => c.editorFontFamily, configuration); */
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
+
+      let editorFontFamily = "FiraCode-Regular.ttf";
 
       setFont(dispatch, editorFontFamily, editorFontSize);
     });
