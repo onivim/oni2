@@ -15,7 +15,6 @@ type groupedPresses = {
 type t = {
   // Enabled is whether or not the key displayer feature is turned on
   enabled: bool,
-
   // Active is whether or not there is a visible key press.
   active: bool,
   presses: list(groupedPresses),
@@ -28,11 +27,8 @@ module Constants = {
   let timeToGroup = 0.3;
 };
 
-let setEnabled = (enabled, v: t) => {
-  {
-    ...v,
-    enabled,
-  }
+let setEnabled = (enabled, _v: t) => {
+  {...empty, enabled};
 };
 
 let update = (time, v: t) => {
@@ -51,7 +47,10 @@ let add = (time, key, v: t) =>
       switch (v.presses) {
       | [] => [{time, exclusive, keys: [key]}]
       | [hd, ...tail] =>
-        if (time -. hd.time <= Constants.timeToGroup && !hd.exclusive && String.length(key) == 1) {
+        if (time
+            -. hd.time <= Constants.timeToGroup
+            && !hd.exclusive
+            && String.length(key) == 1) {
           [
             // The key presses was within the group time,
             // so we'll just add it to an existing group
@@ -59,7 +58,7 @@ let add = (time, key, v: t) =>
             ...tail,
           ];
         } else {
-        let exclusive = String.length(key) > 1;
+          let exclusive = String.length(key) > 1;
           [
             // The time was past the group time..
             // so we'll create a new group

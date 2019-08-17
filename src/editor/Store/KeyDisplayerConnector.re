@@ -13,7 +13,10 @@ module KeyDisplayer = Model.KeyDisplayer;
 let start = getTime => {
   let reducer = (keyDisplayer: Model.KeyDisplayer.t, action: Actions.t) => {
     switch (action) {
-    | Actions.KeyDisplayerSetEnabled(v) => KeyDisplayer.setEnabled(v, keyDisplayer)
+    | Actions.EnableKeyDisplayer =>
+      KeyDisplayer.setEnabled(true, keyDisplayer)
+    | Actions.DisableKeyDisplayer =>
+      KeyDisplayer.setEnabled(false, keyDisplayer)
     | Actions.NotifyKeyPressed(time, key) when keyDisplayer.enabled =>
       KeyDisplayer.add(time, key, keyDisplayer)
     | _ => keyDisplayer
@@ -21,7 +24,6 @@ let start = getTime => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
-
     if (action === Actions.Tick && state.keyDisplayer.enabled) {
       if (!state.keyDisplayer.active) {
         (state, Isolinear.Effect.none);

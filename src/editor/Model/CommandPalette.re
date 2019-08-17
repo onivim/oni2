@@ -49,6 +49,18 @@ let create = (setItems, _, _) => {
       icon: None,
     },
     {
+      category: Some("Input"),
+      name: "Enable Key Displayer",
+      command: () => Actions.EnableKeyDisplayer,
+      icon: None,
+    },
+    {
+      category: Some("Input"),
+      name: "Disable Key Displayer",
+      command: () => Actions.DisableKeyDisplayer,
+      icon: None,
+    },
+    {
       category: Some("View"),
       name: "Rotate Windows (Forwards)",
       command: () => Actions.Command("view.rotateForward"),

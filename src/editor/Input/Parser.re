@@ -14,14 +14,14 @@ let toFriendlyName = (v: string) => {
   | "<ESC>" => Some("Escape")
   | "<TAB>" => Some("Tab")
   | "<CR>" => Some("Enter")
-  |  _ => 
+  | _ =>
     if (len == 0) {
-      None
-    } else if(len == 1) {
-      Some(v)
+      None;
+    } else if (len == 1) {
+      Some(v);
     } else {
-      let firstCharacter = String.get(v, 0); 
-      let lastCharacter = String.get(v, len - 1);
+      let firstCharacter = v.[0];
+      let lastCharacter = v.[len - 1];
 
       if (firstCharacter == '<' && lastCharacter == '>') {
         let hasControl = Str.string_match(cMinus, v, 0);
@@ -29,18 +29,19 @@ let toFriendlyName = (v: string) => {
         let hasAlt = Str.string_match(aMinus, v, 0);
         let hasCommand = Str.string_match(dMinus, v, 0);
 
-        let character = String.get(v, len -2);
+        let character = v.[len - 2];
 
         let ret = hasCommand ? "Command + " : "";
-        let ret = ret ++ (hasControl ? "Control + ": "");
-        let ret = ret ++ (hasAlt ? "Alt + ": "");
+        let ret = ret ++ (hasControl ? "Control + " : "");
+        let ret = ret ++ (hasAlt ? "Alt + " : "");
 
-        let character = !hasShift ? Char.lowercase_ascii(character) : character;
+        let character =
+          !hasShift ? Char.lowercase_ascii(character) : character;
 
         Some(ret ++ String.make(1, character));
       } else {
-        None
-      }
+        None;
+      };
     }
-  }
-}
+  };
+};
