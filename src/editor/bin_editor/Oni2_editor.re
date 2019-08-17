@@ -176,10 +176,6 @@ let init = app => {
      a revery element is focused oni2 should defer to revery
    */
   let keyEventListener = key => {
-    switch (key) {
-    | Some((key, _)) => print_endline ("KEY: " ++ key);
-    | None => ()
-    };
     let time = Time.getTime() |> Time.toSeconds;
     switch (key, Focus.focused) {
     | (None, _) => ()

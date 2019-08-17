@@ -13,22 +13,33 @@ type groupedPresses = {
 };
 
 type t = {
+  // Enabled is whether or not the key displayer feature is turned on
+  enabled: bool,
+
+  // Active is whether or not there is a visible key press.
   active: bool,
   presses: list(groupedPresses),
 };
 
-let empty: t = {active: false, presses: []};
+let empty: t = {active: false, presses: [], enabled: false};
 
 module Constants = {
   let timeToShow = 2.5;
   let timeToGroup = 0.3;
 };
 
+let setEnabled = (enabled, v: t) => {
+  {
+    ...v,
+    enabled,
+  }
+};
+
 let update = (time, v: t) => {
   let f = k => time -. k.time < Constants.timeToShow;
   let presses = List.filter(f, v.presses);
   let active = List.length(presses) > 0;
-  {active, presses};
+  {...v, active, presses};
 };
 
 let add = (time, key, v: t) =>
@@ -59,7 +70,7 @@ let add = (time, key, v: t) =>
         }
       };
 
-    let ret = {active: true, presses};
+    let ret = {...v, active: true, presses};
 
     // Also filter out old key presses, while we're here
     update(time, ret);
