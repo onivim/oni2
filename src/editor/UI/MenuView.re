@@ -12,8 +12,6 @@ let containerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.editorMenuBackground),
     color(theme.colors.editorMenuForeground),
-/*    width(menuWidth),*/
-    /*height(menuHeight),*/
     pointerEvents(`Allow),
     boxShadow(
       ~xOffset=-15.,
@@ -61,7 +59,6 @@ let loseFocusOnClose = isOpen =>
   );
 
 let onClick = () => {
-  print_endline ("Menu onClick");
   GlobalContext.current().dispatch(MenuSelect);
   GlobalContext.current().dispatch(SetInputControlMode(EditorTextFocus));
 };
