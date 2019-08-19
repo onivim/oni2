@@ -103,38 +103,28 @@ let start = _ => {
               let commands =
                 state.Oni_Model.State.buffers
                 |> IntMap.to_seq
-                |> List.of_seq
-                |> List.filter(element => {
+                |> Seq.filter_map(element => {
                      let (_, buffer) = element;
 
                      switch (Buffer.getMetadata(buffer).filePath) {
-                     | Some(_) => true
-                     | None => false
+                     | Some(path) =>
+                       Some({
+                         category: None,
+                         name: getDisplayPath(path, currentDirectory),
+                         command: () => {
+                           Oni_Model.Actions.OpenFileByPath(path, None);
+                         },
+                         icon:
+                           Oni_Model.FileExplorer.getFileIcon(
+                             state.languageInfo,
+                             state.iconTheme,
+                             path,
+                           ),
+                       })
+                     | None => None
                      };
                    })
-                |> List.map(element => {
-                     let (_, buffer) = element;
-
-                     let path =
-                       switch (Buffer.getMetadata(buffer).filePath) {
-                       | Some(e) => e
-                       | None => ""
-                       };
-
-                     {
-                       category: None,
-                       name: getDisplayPath(path, currentDirectory),
-                       command: () => {
-                         Oni_Model.Actions.OpenFileByPath(path, None);
-                       },
-                       icon:
-                         Oni_Model.FileExplorer.getFileIcon(
-                           state.languageInfo,
-                           state.iconTheme,
-                           path,
-                         ),
-                     };
-                   });
+                |> List.of_seq;
 
               setItems(commands);
 
