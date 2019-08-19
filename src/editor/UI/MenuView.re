@@ -6,14 +6,15 @@ open Oni_Model;
 let component = React.component("Menu");
 
 let menuWidth = 400;
-let menuHeight = 350;
+let menuHeight = 360;
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.editorMenuBackground),
     color(theme.colors.editorMenuForeground),
-    width(menuWidth),
-    height(menuHeight),
+/*    width(menuWidth),*/
+    /*height(menuHeight),*/
+    pointerEvents(`Allow),
     boxShadow(
       ~xOffset=-15.,
       ~yOffset=5.,
@@ -23,7 +24,7 @@ let containerStyles = (theme: Theme.t) =>
     ),
   ];
 
-let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50)];
+let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50), cursor(Revery.MouseCursors.pointer)];
 
 let inputStyles = font =>
   Style.[
@@ -60,6 +61,7 @@ let loseFocusOnClose = isOpen =>
   );
 
 let onClick = () => {
+  print_endline ("Menu onClick");
   GlobalContext.current().dispatch(MenuSelect);
   GlobalContext.current().dispatch(SetInputControlMode(EditorTextFocus));
 };
@@ -93,7 +95,7 @@ let createElement =
     React.(
       hooks,
       menu.isOpen
-        ? <View style={containerStyles(theme)}>
+        ?  <View style={containerStyles(theme)}>
             <View style=Style.[width(menuWidth), padding(5)]>
               <OniInput
                 autofocus=true
@@ -104,10 +106,9 @@ let createElement =
                 onKeyDown=handleKeyDown
               />
             </View>
-            <View>
               <FlatList
                 rowHeight=40
-                height={menuHeight - 50}
+                height={menuHeight}
                 width=menuWidth
                 count={Array.length(commands)}
                 render={index => {
@@ -123,8 +124,7 @@ let createElement =
                   />;
                 }}
               />
-            </View>
-          </View>
-        : React.listToElement([]),
+             </View>
+        : React.empty,
     );
   });

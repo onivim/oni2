@@ -88,11 +88,12 @@ let createElement =
 
     let style =
       Style.[
-        position(`Absolute),
+        position(`Relative),
         top(0),
         left(0),
         width(width_),
         height(height_),
+        overflow(`Hidden)
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {

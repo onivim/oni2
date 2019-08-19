@@ -69,10 +69,10 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <EditorView state />
         </View>
         <Overlay>
+          <KeyDisplayerView state />
           <CommandlineView theme command={state.commandline} />
           <WildmenuView theme wildmenu={state.wildmenu} />
           <MenuView theme menu={state.menu} font={state.uiFont} />
-          <KeyDisplayerView state />
         </Overlay>
         statusBar
       </View>,

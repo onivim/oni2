@@ -16,6 +16,7 @@ let createElement = (~children, ()) =>
           alignItems(`Center),
           overflow(`Hidden),
           flexDirection(`Column),
+          pointerEvents(`Ignore),
         ]>
         ...children
       </View>,

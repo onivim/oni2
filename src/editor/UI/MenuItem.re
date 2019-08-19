@@ -9,6 +9,8 @@ let component = React.component("MenuItem");
 
 let menuItemFontSize = 20;
 
+Revery.Draw.DebugDraw.enable();
+
 let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
   Style.[
     fontFamily(uiFont.fontFile),
@@ -82,7 +84,10 @@ let createElement =
 
     (
       hooks,
-      <Clickable onClick>
+      <Clickable 
+          style=Style.[cursor(Revery.MouseCursors.pointer)]
+          componentRef={(ref) => print_endline("CLICKABLE bbox: " ++ Revery.Math.BoundingBox2d.show(ref#getBoundingBox()))}
+      onClick>
         <View
           onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
           iconView
