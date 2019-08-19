@@ -93,7 +93,7 @@ let createElement =
         left(0),
         width(width_),
         height(height_),
-        overflow(`Hidden)
+        overflow(`Hidden),
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {

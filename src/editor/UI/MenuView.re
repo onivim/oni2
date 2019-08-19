@@ -12,7 +12,6 @@ let containerStyles = (theme: Theme.t) =>
   Style.[
     backgroundColor(theme.colors.editorMenuBackground),
     color(theme.colors.editorMenuForeground),
-    pointerEvents(`Allow),
     boxShadow(
       ~xOffset=-15.,
       ~yOffset=5.,
@@ -22,7 +21,12 @@ let containerStyles = (theme: Theme.t) =>
     ),
   ];
 
-let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50), cursor(Revery.MouseCursors.pointer)];
+let menuItemStyle =
+  Style.[
+    fontSize(14),
+    width(menuWidth - 50),
+    cursor(Revery.MouseCursors.pointer),
+  ];
 
 let inputStyles = font =>
   Style.[
@@ -92,7 +96,8 @@ let createElement =
     React.(
       hooks,
       menu.isOpen
-        ?  <View style={containerStyles(theme)}>
+        ? <AllowPointer>
+        <View style={containerStyles(theme)}>
             <View style=Style.[width(menuWidth), padding(5)]>
               <OniInput
                 autofocus=true
@@ -103,25 +108,26 @@ let createElement =
                 onKeyDown=handleKeyDown
               />
             </View>
-              <FlatList
-                rowHeight=40
-                height={menuHeight}
-                width=menuWidth
-                count={Array.length(commands)}
-                render={index => {
-                  let cmd = commands[index];
-                  <MenuItem
-                    onClick
-                    theme
-                    style=menuItemStyle
-                    label={getLabel(cmd)}
-                    icon={cmd.icon}
-                    onMouseOver={_ => onMouseOver(index)}
-                    selected={index == menu.selectedItem}
-                  />;
-                }}
-              />
-             </View>
+            <FlatList
+              rowHeight=40
+              height=menuHeight
+              width=menuWidth
+              count={Array.length(commands)}
+              render={index => {
+                let cmd = commands[index];
+                <MenuItem
+                  onClick
+                  theme
+                  style=menuItemStyle
+                  label={getLabel(cmd)}
+                  icon={cmd.icon}
+                  onMouseOver={_ => onMouseOver(index)}
+                  selected={index == menu.selectedItem}
+                />;
+              }}
+            />
+          </View>
+          </AllowPointer>
         : React.empty,
     );
   });
