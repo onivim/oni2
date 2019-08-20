@@ -80,7 +80,7 @@ let start =
       dispatch(ShowNotification(
         Model.Notification.create(
         ~notificationType,
-        ~title=t,
+        ~title="libvim",
         ~message=msg,
         ()
       )));
