@@ -94,8 +94,8 @@ let createElement =
               boxShadow={Style.BoxShadow.make(
                 ~xOffset=-15.,
                 ~yOffset=5.,
-                ~blurRadius=30.,
-                ~spreadRadius=5.,
+                ~blurRadius=20.,
+                ~spreadRadius=10.,
                 ~color=Color.rgba(0., 0., 0., 0.2),
                 (),
               )}>
