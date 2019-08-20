@@ -1,5 +1,5 @@
 {
-  "checksum": "bbdfac3f16c39e310fe80ff6c4b0076f",
+  "checksum": "5d8d49c4abc581729cf191583f3cf646",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,13 +75,15 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#b473741@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#b473741@d41d8cd9",
+    "revery@0.26.0@d41d8cd9": {
+      "id": "revery@0.26.0@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#b473741",
+      "version": "0.26.0",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#b473741" ]
+        "source": [
+          "archive:https://registry.npmjs.org/revery/-/revery-0.26.0.tgz#sha1:16bf3d61c661f4dcc08dcae3bc11ebe92e330b24"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -791,7 +793,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#b473741@d41d8cd9",
+        "revery@0.26.0@d41d8cd9",
         "rench@github:bryphe/rench#d8ebc99@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#56aa31a@d41d8cd9",

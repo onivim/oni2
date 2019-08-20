@@ -14,6 +14,7 @@ module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
+  let s = s == "\t" ? "TAB" : s;
 
   let s = ctrlKey ? "C-" ++ s : s;
   let s = shiftKey ? "S-" ++ s : s;
