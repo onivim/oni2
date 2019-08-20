@@ -20,19 +20,24 @@ let process = (rgPath, args, callback, completedCallback) => {
   let cp = ChildProcess.spawn(rgPath, args);
 
   let dispose1 =
-    Event.subscribe(cp.stdout.onData, value => {
-      let _ = Thread.create(v => {
+    Event.subscribe(
+      cp.stdout.onData,
+      value => {
+        let _ =
+          Thread.create(
+            v => {
+              let items =
+                Bytes.to_string(v)
+                |> String.trim
+                |> String.split_on_char('\n');
 
-        let items = Bytes.to_string(v)
-        |> String.trim
-        |> String.split_on_char('\n');
-
-        Revery.App.runOnMainThread(() =>
-          callback(items)
-        );
-
-      }, value);
-    });
+              Revery.App.runOnMainThread(() => callback(items));
+            },
+            value,
+          );
+        ();
+      },
+    );
 
   let dispose2 =
     Event.subscribe(
