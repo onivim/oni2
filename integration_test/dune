@@ -6,6 +6,7 @@
            ClipboardNormalModePasteTest
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
+           FontSizeChangeTest
            QuickOpenEventuallyCompletesTest
            QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
@@ -33,6 +34,7 @@
         ClipboardInsertModePasteEmptyTest.exe
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
+        FontSizeChangeTest.exe
         CopyActiveFilepathToClipboardTest.exe
         QuickOpenEventuallyCompletesTest.exe
         QuickOpenDoesntLeakFileDescriptorsTest.exe
