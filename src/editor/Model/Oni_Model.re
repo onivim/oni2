@@ -26,6 +26,7 @@ module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
 module Menu = Menu;
 module MenuJob = MenuJob;
+module Notification = Notification;
 module Reducer = Reducer;
 module SearchHighlights = SearchHighlights;
 module Selection = Selection;

@@ -68,13 +68,22 @@ let start =
   let _ =
     Vim.onMessage((priority, t, msg) => {
       open Vim.Types;
-      let priorityString =
+      let (priorityString, notificationType) =
         switch (priority) {
-        | Error => "ERROR"
-        | Warning => "WARNING"
-        | Info => "INFO"
+        | Error => ("ERROR", Model.Actions.Error)
+        | Warning => ("WARNING", Model.Actions.Warning)
+        | Info => ("INFO", Model.Actions.Info)
         };
+
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+
+      dispatch(ShowNotification(
+        Model.Notification.create(
+        ~notificationType,
+        ~title=t,
+        ~message=msg,
+        ()
+      )));
     });
 
   let _ =

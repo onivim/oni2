@@ -84,5 +84,5 @@ let createElement =
           </BoxShadow>
         </View>,
       )
-      : (hooks, React.listToElement([]));
+      : (hooks, React.empty);
   });

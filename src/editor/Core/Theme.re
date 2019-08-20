@@ -48,6 +48,14 @@ module EditorColors = {
     scrollbarSliderHoverBackground: Color.t,
     sideBarBackground: Color.t,
     sideBarForeground: Color.t,
+    notificationSuccessBackground: Color.t,
+    notificationSuccessForeground: Color.t,
+    notificationInfoBackground: Color.t,
+    notificationInfoForeground: Color.t,
+    notificationWarningBackground: Color.t,
+    notificationWarningForeground: Color.t,
+    notificationErrorForeground: Color.t,
+    notificationErrorBackground: Color.t,
   };
 
   let default: t = {
@@ -91,6 +99,14 @@ module EditorColors = {
     statusBarBackground: Color.hex("#21252b"),
     statusBarForeground: Color.hex("#9da5b4"),
     scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1),
+    notificationSuccessBackground: Color.hex("#23d160"),
+    notificationSuccessForeground: Colors.white,
+    notificationInfoBackground: Color.hex("#209cee"),
+    notificationInfoForeground: Colors.white,
+    notificationWarningBackground: Color.hex("#ffdd57"),
+    notificationWarningForeground: Colors.white,
+    notificationErrorBackground: Color.hex("#ff3860"),
+    notificationErrorForeground: Colors.white,
   };
 };
 
