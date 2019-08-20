@@ -49,35 +49,39 @@ let createElement =
     command.show
       ? (
         hooks,
-        <View
-          style=Style.[
-            width(400),
-            overflow(`Hidden),
-            backgroundColor(theme.colors.editorBackground),
-            flexDirection(`Row),
-            alignItems(`Center),
-            marginBottom(20),
-            paddingVertical(8),
-            boxShadow(
+        <View style=Style.[marginBottom(20)]>
+          <BoxShadow
+            boxShadow={Style.BoxShadow.make(
               ~xOffset=-15.,
               ~yOffset=5.,
               ~blurRadius=30.,
               ~spreadRadius=5.,
               ~color=Color.rgba(0., 0., 0., 0.2),
-            ),
-          ]>
-          <Text
-            style=Style.[marginLeft(10), ...textStyles]
-            text={getFirstC(command.cmdType) ++ startStr}
-          />
-          <View
-            style=Style.[
-              width(2),
-              height(fontSize_),
-              backgroundColor(cmdFontColor),
-            ]
-          />
-          <Text style=textStyles text=endStr />
+              (),
+            )}>
+            <View
+              style=Style.[
+                width(400),
+                overflow(`Hidden),
+                backgroundColor(theme.colors.editorBackground),
+                flexDirection(`Row),
+                alignItems(`Center),
+                paddingVertical(8),
+              ]>
+              <Text
+                style=Style.[marginLeft(10), ...textStyles]
+                text={getFirstC(command.cmdType) ++ startStr}
+              />
+              <View
+                style=Style.[
+                  width(2),
+                  height(fontSize_),
+                  backgroundColor(cmdFontColor),
+                ]
+              />
+              <Text style=textStyles text=endStr />
+            </View>
+          </BoxShadow>
         </View>,
       )
       : (hooks, React.listToElement([]));
