@@ -119,9 +119,6 @@ let init = app => {
     cliOptions.filesToOpen,
   );
 
-  dispatch(Model.Actions.LoadEditorFont("FiraCode-Regular.ttf", 14));
-  runEffects();
-
   let commands = Core.Keybindings.get();
 
   /* Add an updater to handle a KeyboardInput action */

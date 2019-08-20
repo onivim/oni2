@@ -8,6 +8,8 @@ open Oni_Core;
 open Oni_Model;
 
 let minFontSize = 6;
+let defaultFontFamily = "FiraCode-Regular.ttf";
+let defaultFontSize = 14;
 
 let start = (~getScaleFactor, ()) => {
   let setFont = (dispatch, fontFamily, fontSize) => {
@@ -17,13 +19,12 @@ let start = (~getScaleFactor, ()) => {
 
     let fontFile = Utility.executingDirectory ++ fontFamily;
 
-    Log.info("Loading font: " ++ fontFile);
+    Log.info("Loading font: " ++ fontFile ++ " | size: " ++ string_of_int(fontSize));
 
     Fontkit.fk_new_face(
       fontFile,
       adjSize,
       font => {
-        Log.info("Font loaded!");
         open Oni_Model.Actions;
         open Types;
 
@@ -37,16 +38,19 @@ let start = (~getScaleFactor, ()) => {
           float_of_int(fontSize)
           *. float_of_int(metrics.height)
           /. float_of_int(metrics.unitsPerEm);
-
+        
+        let measuredWidth = float_of_int(glyph.advance) /. (64. *. scaleFactor);
+        let measuredHeight = floor(actualHeight +. 0.5);
+        
+        Log.info("Font loaded! Measured width: " ++ string_of_float(measuredWidth) ++ " Measured height: " ++ string_of_float(measuredHeight));
         /* Set editor text based on measurements */
         dispatch(
           SetEditorFont(
             EditorFont.create(
               ~fontFile=fontFamily,
               ~fontSize,
-              ~measuredWidth=
-                float_of_int(glyph.advance) /. (64. *. scaleFactor),
-              ~measuredHeight=floor(actualHeight +. 0.5),
+              ~measuredWidth,
+              ~measuredHeight,
               (),
             ),
           ),
@@ -65,18 +69,17 @@ let start = (~getScaleFactor, ()) => {
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
 
-      let editorFontFamily = "FiraCode-Regular.ttf";
-
-      setFont(dispatch, editorFontFamily, editorFontSize);
+      setFont(dispatch, defaultFontFamily, editorFontSize);
     });
 
   let loadEditorFontEffect = (fontFamily, fontSize) =>
-    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch =>
+    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch => {
       setFont(dispatch, fontFamily, fontSize)
-    );
+    });
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
+    | Actions.Init => (state, loadEditorFontEffect(defaultFontFamily,defaultFontSize));
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,
