@@ -19,7 +19,9 @@ let start = (~getScaleFactor, ()) => {
 
     let fontFile = Utility.executingDirectory ++ fontFamily;
 
-    Log.info("Loading font: " ++ fontFile ++ " | size: " ++ string_of_int(fontSize));
+    Log.info(
+      "Loading font: " ++ fontFile ++ " | size: " ++ string_of_int(fontSize),
+    );
 
     Fontkit.fk_new_face(
       fontFile,
@@ -38,11 +40,17 @@ let start = (~getScaleFactor, ()) => {
           float_of_int(fontSize)
           *. float_of_int(metrics.height)
           /. float_of_int(metrics.unitsPerEm);
-        
-        let measuredWidth = float_of_int(glyph.advance) /. (64. *. scaleFactor);
+
+        let measuredWidth =
+          float_of_int(glyph.advance) /. (64. *. scaleFactor);
         let measuredHeight = floor(actualHeight +. 0.5);
-        
-        Log.info("Font loaded! Measured width: " ++ string_of_float(measuredWidth) ++ " Measured height: " ++ string_of_float(measuredHeight));
+
+        Log.info(
+          "Font loaded! Measured width: "
+          ++ string_of_float(measuredWidth)
+          ++ " Measured height: "
+          ++ string_of_float(measuredHeight),
+        );
         /* Set editor text based on measurements */
         dispatch(
           SetEditorFont(
@@ -73,13 +81,16 @@ let start = (~getScaleFactor, ()) => {
     });
 
   let loadEditorFontEffect = (fontFamily, fontSize) =>
-    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch => {
+    Isolinear.Effect.createWithDispatch(~name="font.loadEditorFont", dispatch =>
       setFont(dispatch, fontFamily, fontSize)
-    });
+    );
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadEditorFontEffect(defaultFontFamily,defaultFontSize));
+    | Actions.Init => (
+        state,
+        loadEditorFontEffect(defaultFontFamily, defaultFontSize),
+      )
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,
