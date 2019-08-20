@@ -21,6 +21,8 @@ let _explodeSelectors = (s: string) => {
   s |> String.split_on_char(',') |> List.map(s => String.trim(s));
 };
 
+let empty = { trie: Trie.empty };
+
 let create = (selectors: list(themeSelector)) => {
   let f = (v: themeSelector) => {
     let (s, style) = v;

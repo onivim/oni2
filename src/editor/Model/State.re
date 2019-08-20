@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Syntax;
 
 type t = {
   mode: Vim.Mode.t,
@@ -17,8 +18,13 @@ type t = {
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
+  // Old-school syntax highlighting from vscode-textmate via Node...
+  // going away soon!
   syntaxHighlighting: SyntaxHighlighting.t,
+  // New-school native syntax highlighting
+  syntaxHighlighting2: SyntaxHighlighting2.t,
   theme: Theme.t,
+  tokenTheme: TextMateTheme.t,
   editorGroups: EditorGroups.t,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
@@ -52,6 +58,7 @@ let create: unit => t =
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
+    syntaxHighlighting2: SyntaxHighlighting2.empty,
     theme: Theme.create(),
     editorGroups: EditorGroups.create(),
     inputControlMode: EditorTextFocus,
@@ -60,6 +67,7 @@ let create: unit => t =
     languageInfo: LanguageInfo.create(),
     searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
+    tokenTheme: TextMateTheme.empty,
     windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
     zenMode: false,

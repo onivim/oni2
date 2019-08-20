@@ -374,12 +374,16 @@ let createElement =
           }
         };
 
+      let tokenColors2 = Oni_Extensions.ColorizedToken.toColorizedToken2s(
+            theme.colors.editorForeground, 
+            defaultBackground, 
+          state.syntaxHighlighting.colorMap,
+            tokenColors);
       let colorizer =
         BufferLineColorizer.create(
           ZedBundled.length(line),
           state.theme,
-          tokenColors,
-          state.syntaxHighlighting.colorMap,
+          tokenColors2,
           selection,
           defaultBackground,
           theme.colors.editorSelectionBackground,

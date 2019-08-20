@@ -5,6 +5,9 @@
 /* From:
  * https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts
  */
+
+open Oni_Core.Types;
+
 let languageId_mask = 0b00000000000000000000000011111111;
 let token_type_mask = 0b00000000000000000000011100000000;
 let font_style_mask = 0b00000000000000000011100000000000;
@@ -42,3 +45,16 @@ let create: (int, int) => t =
   };
 
 let default: t = {index: 0, foregroundColor: 0, backgroundColor: 1};
+
+let toColorizedToken2s = (defaultFg, defaultBg, colorMap: ColorMap.t, v: list(t)) => {
+    let f = (token: t) => {
+      ColorizedToken2.create(
+        ~index=token.index,
+        ~foregroundColor=ColorMap.get(colorMap, token.foregroundColor, defaultFg, defaultBg),
+        ~backgroundColor=ColorMap.get(colorMap, token.backgroundColor, defaultFg, defaultBg),
+        ()
+      );
+    };
+
+    List.map(f, v);
+};

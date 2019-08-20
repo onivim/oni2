@@ -17,6 +17,8 @@ type themeSelector = (string, TokenStyle.t);
  */
 type t;
 
+let empty: t;
+
 /*
    [create] builds a Theme [t] from a list of styles
  */
