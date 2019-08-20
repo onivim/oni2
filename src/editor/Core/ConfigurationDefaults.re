@@ -11,6 +11,8 @@ let getDefaultConfigString = configName =>
       {|
 {
   "editor.detectIndentation": true,
+  "editor.fontFamily": "FiraCode-Regular.ttf",
+  "editor.fontSize": 14,
   "editor.largeFileOptimizations": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,

@@ -44,6 +44,7 @@ let start =
       ~setClipboardText,
       ~getTime,
       ~cliOptions: option(Oni_Core.Cli.t),
+      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);
@@ -86,6 +87,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
+  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
 
   let (storeDispatch, storeStream) =
@@ -97,6 +99,7 @@ let start =
           vimUpdater,
           textmateUpdater,
           /* extHostUpdater, */
+          fontUpdater,
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,
