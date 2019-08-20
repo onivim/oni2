@@ -13,7 +13,7 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1.1, "b")
         |> KeyDisplayer.getPresses;
 
-      expect.bool(v == [{time: 1., exclusive: false, keys: ["b", "a"]}]).
+      expect.bool(v == [{time: 1.1, exclusive: false, keys: ["b", "a"]}]).
         toBe(
         true,
       );
@@ -43,7 +43,7 @@ describe("KeyDisplayer", ({describe, _}) => {
         KeyDisplayer.empty
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.5, "b")
-        |> KeyDisplayer.update(5.1)
+        |> KeyDisplayer.update(3.9)
         |> KeyDisplayer.getPresses;
 
       // "a" should be filtered out

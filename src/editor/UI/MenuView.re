@@ -14,13 +14,6 @@ let containerStyles = (theme: Theme.t) =>
     color(theme.colors.editorMenuForeground),
     width(menuWidth),
     height(menuHeight),
-    boxShadow(
-      ~xOffset=-15.,
-      ~yOffset=5.,
-      ~blurRadius=30.,
-      ~spreadRadius=5.,
-      ~color=Color.rgba(0., 0., 0., 0.2),
-    ),
   ];
 
 let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50)];
@@ -93,38 +86,48 @@ let createElement =
     React.(
       hooks,
       menu.isOpen
-        ? <View style={containerStyles(theme)}>
-            <View style=Style.[width(menuWidth), padding(5)]>
-              <OniInput
-                autofocus=true
-                placeholder="type here to search the menu"
-                cursorColor=Colors.white
-                style={inputStyles(font.fontFile)}
-                onChange=handleChange
-                onKeyDown=handleKeyDown
-              />
+        ? <BoxShadow
+            boxShadow={Style.BoxShadow.make(
+              ~xOffset=-15.,
+              ~yOffset=5.,
+              ~blurRadius=30.,
+              ~spreadRadius=5.,
+              ~color=Color.rgba(0., 0., 0., 0.2),
+              (),
+            )}>
+            <View style={containerStyles(theme)}>
+              <View style=Style.[width(menuWidth), padding(5)]>
+                <OniInput
+                  autofocus=true
+                  placeholder="type here to search the menu"
+                  cursorColor=Colors.white
+                  style={inputStyles(font.fontFile)}
+                  onChange=handleChange
+                  onKeyDown=handleKeyDown
+                />
+              </View>
+              <View>
+                <FlatList
+                  rowHeight=40
+                  height={menuHeight - 50}
+                  width=menuWidth
+                  count={Array.length(commands)}
+                  render={index => {
+                    let cmd = commands[index];
+                    <MenuItem
+                      onClick
+                      theme
+                      style=menuItemStyle
+                      label={getLabel(cmd)}
+                      icon={cmd.icon}
+                      onMouseOver={_ => onMouseOver(index)}
+                      selected={index == menu.selectedItem}
+                    />;
+                  }}
+                />
+              </View>
             </View>
-            <View>
-              <FlatList
-                rowHeight=40
-                height={menuHeight - 50}
-                width=menuWidth
-                count={Array.length(commands)}
-                render={index => {
-                  let cmd = commands[index];
-                  <MenuItem
-                    onClick
-                    theme
-                    style=menuItemStyle
-                    label={getLabel(cmd)}
-                    icon={cmd.icon}
-                    onMouseOver={_ => onMouseOver(index)}
-                    selected={index == menu.selectedItem}
-                  />;
-                }}
-              />
-            </View>
-          </View>
+          </BoxShadow>
         : React.listToElement([]),
     );
   });

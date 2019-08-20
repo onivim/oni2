@@ -68,6 +68,8 @@ _publish/
 _release/
 _staging/
 
+scripts/release.json
+
 .DS_Store
 setup.txt
 setup.json
