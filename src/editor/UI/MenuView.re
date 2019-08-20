@@ -6,7 +6,7 @@ open Oni_Model;
 let component = React.component("Menu");
 
 let menuWidth = 400;
-let menuHeight = 360;
+let menuHeight = 320;
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
@@ -113,7 +113,7 @@ let createElement =
                 <View>
                   <FlatList
                     rowHeight=40
-                    height={menuHeight - 50}
+                    height=menuHeight
                     width=menuWidth
                     count={Array.length(commands)}
                     render={index => {
