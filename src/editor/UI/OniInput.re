@@ -304,15 +304,15 @@ let make =
           ~fontSize=inputFontSize,
           startStr,
         );
-      <View style=Style.[
+      <View
+        style=Style.[
           position(`Absolute),
           marginLeft(dimension.width + inputTextMargin + 1),
           marginTop((defaultHeight - dimension.height) / 2),
-
-      ]>
-      <Opacity opacity=cursorOpacity>
-        <Container width=2 height=inputFontSize color=cursorColor />
-      </Opacity>
+        ]>
+        <Opacity opacity=cursorOpacity>
+          <Container width=2 height=inputFontSize color=cursorColor />
+        </Opacity>
       </View>;
     };
 

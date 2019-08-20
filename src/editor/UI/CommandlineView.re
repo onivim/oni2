@@ -50,37 +50,38 @@ let createElement =
       ? (
         hooks,
         <View style=Style.[marginBottom(20)]>
-        <BoxShadow boxShadow=Style.BoxShadow.make(
+          <BoxShadow
+            boxShadow={Style.BoxShadow.make(
               ~xOffset=-15.,
               ~yOffset=5.,
               ~blurRadius=30.,
               ~spreadRadius=5.,
               ~color=Color.rgba(0., 0., 0., 0.2),
               (),
-        )>
-        <View
-          style=Style.[
-            width(400),
-            overflow(`Hidden),
-            backgroundColor(theme.colors.editorBackground),
-            flexDirection(`Row),
-            alignItems(`Center),
-            paddingVertical(8),
-          ]>
-          <Text
-            style=Style.[marginLeft(10), ...textStyles]
-            text={getFirstC(command.cmdType) ++ startStr}
-          />
-          <View
-            style=Style.[
-              width(2),
-              height(fontSize_),
-              backgroundColor(cmdFontColor),
-            ]
-          />
-          <Text style=textStyles text=endStr />
-        </View>
-        </BoxShadow>
+            )}>
+            <View
+              style=Style.[
+                width(400),
+                overflow(`Hidden),
+                backgroundColor(theme.colors.editorBackground),
+                flexDirection(`Row),
+                alignItems(`Center),
+                paddingVertical(8),
+              ]>
+              <Text
+                style=Style.[marginLeft(10), ...textStyles]
+                text={getFirstC(command.cmdType) ++ startStr}
+              />
+              <View
+                style=Style.[
+                  width(2),
+                  height(fontSize_),
+                  backgroundColor(cmdFontColor),
+                ]
+              />
+              <Text style=textStyles text=endStr />
+            </View>
+          </BoxShadow>
         </View>,
       )
       : (hooks, React.listToElement([]));
