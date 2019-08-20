@@ -10,6 +10,7 @@
            QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
+           RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
            TickTest
@@ -37,6 +38,7 @@
         QuickOpenEventuallyCompletesTest.exe
         QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
+        RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
         SearchShowClearHighlightsTest.exe
