@@ -52,7 +52,7 @@ let initialPendingWork = {
 };
 
 // Constants
-let iterationsPerFrame = 1500;
+let iterationsPerFrame = 500;
 let maxItemsToFilter = 1000;
 
 // TODO: abc -> .*a.*b.*c
