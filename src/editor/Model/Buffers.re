@@ -58,6 +58,9 @@ let setIndentation = indent =>
 let disableSyntaxHighlighting =
   ofBufferOpt(buffer => Buffer.disableSyntaxHighlighting(buffer));
 
+let setModified = modified =>
+  ofBufferOpt(buffer => Buffer.setModified(modified, buffer));
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
@@ -70,6 +73,8 @@ let reduce = (state: t, action: Actions.t) => {
       };
     IntMap.update(metadata.id, f, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
+  | BufferSetModified(id, modified) =>
+    IntMap.update(id, setModified(modified), state)
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
