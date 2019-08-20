@@ -114,6 +114,17 @@ let start =
     });
 
   let _ =
+    Vim.Buffer.onModifiedChanged((id, modified) => {
+      Log.info(
+        "Buffer metadata changed: "
+        ++ string_of_int(id)
+        ++ " | "
+        ++ string_of_bool(modified),
+      );
+      dispatch(Model.Actions.BufferSetModified(id, modified));
+    });
+
+  let _ =
     Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
