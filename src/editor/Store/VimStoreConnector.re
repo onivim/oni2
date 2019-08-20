@@ -114,6 +114,17 @@ let start =
     });
 
   let _ =
+    Vim.Buffer.onModifiedChanged((id, modified) => {
+      Log.info(
+        "Buffer metadata changed: "
+        ++ string_of_int(id)
+        ++ " | "
+        ++ string_of_bool(modified),
+      );
+      dispatch(Model.Actions.BufferSetModified(id, modified));
+    });
+
+  let _ =
     Vim.Cursor.onMoved(newPosition => {
       let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
@@ -383,15 +394,7 @@ let start =
     Isolinear.Effect.create(~name="vim.input", ()
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
-        if (!String.equal(key, "<S-SHIFT>")
-            && !String.equal(key, "<A-SHIFT>")
-            && !String.equal(key, "<D-SHIFT>")
-            && !String.equal(key, "<D->")
-            && !String.equal(key, "<D-S->")
-            && !String.equal(key, "<C->")
-            && !String.equal(key, "<A-C->")
-            && !String.equal(key, "<SHIFT>")
-            && !String.equal(key, "<S-C->")) {
+        if (Oni_Input.Filter.filter(key)) {
           Log.debug("VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
           Log.debug("VimStoreConnector - handled key: " ++ key);

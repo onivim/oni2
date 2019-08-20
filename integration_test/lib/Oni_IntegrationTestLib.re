@@ -12,9 +12,15 @@ type testCallback =
   (dispatchFunction, waitForState, runEffectsFunction) => unit;
 
 let _currentClipboard: ref(option(string)) = ref(None);
+let _currentTime: ref(float) = ref(0.0);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
+
+let setTime = v => _currentTime := v;
+let getTime = () => _currentTime^;
+
+let getScaleFactor = () => 1.0;
 
 let runTest = (~name="AnonymousTest", test: testCallback) => {
   Printexc.record_backtrace(true);
@@ -39,6 +45,8 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
       ~setup,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
+      ~getScaleFactor,
+      ~getTime,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       ~cliOptions=None,

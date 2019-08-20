@@ -44,6 +44,14 @@ let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let isModified = (buffer: t) => buffer.metadata.modified;
 
+let setModified = (modified: bool, buffer: t) => {
+  ...buffer,
+  metadata: {
+    ...buffer.metadata,
+    modified,
+  },
+};
+
 let isSyntaxHighlightingEnabled = (buffer: t) =>
   buffer.syntaxHighlightingEnabled;
 let disableSyntaxHighlighting = (buffer: t) => {

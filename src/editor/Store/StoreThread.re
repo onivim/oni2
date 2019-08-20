@@ -42,7 +42,9 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
+      ~getTime,
       ~cliOptions: option(Oni_Core.Cli.t),
+      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);
@@ -85,6 +87,9 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
+  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
+  let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -94,6 +99,7 @@ let start =
           vimUpdater,
           textmateUpdater,
           /* extHostUpdater, */
+          fontUpdater,
           menuHostUpdater,
           quickOpenUpdater,
           configurationUpdater,
@@ -102,6 +108,7 @@ let start =
           fileExplorerUpdater,
           indentationUpdater,
           windowUpdater,
+          keyDisplayerUpdater,
         ]),
       (),
     );
@@ -175,7 +182,16 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
+    List.iter(
+      e => {
+        open Isolinear.Effect;
+        if (Core.Log.isDebugLoggingEnabled()) {
+          Core.Log.debug("[EFFECT]: " ++ e.name);
+        };
+        Isolinear.Effect.run(e, dispatch);
+      },
+      List.rev(effects),
+    );
   };
 
   let _ =

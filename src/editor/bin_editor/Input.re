@@ -14,6 +14,7 @@ module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
   let s = s == "<" ? "lt" : s;
+  let s = s == "\t" ? "TAB" : s;
 
   let s = ctrlKey ? "C-" ++ s : s;
   let s = shiftKey ? "S-" ++ s : s;
@@ -157,22 +158,25 @@ let getActionsForBinding = (inputKey, commands, state: State.t) => {
 };
 
 /**
-  Handle Input from Oni or Neovim
+  Handle Input from Oni or Vim
  */
-let handle = (~state: State.t, ~commands: Keybindings.t, inputKey) => {
-  switch (state.inputControlMode) {
-  | CommandLineFocus
-  | EditorTextFocus =>
-    switch (getActionsForBinding(inputKey, commands, state)) {
-    | [] =>
-      Log.info("Input::handle - sending raw input: " ++ inputKey);
-      [Actions.KeyboardInput(inputKey)];
-    | actions =>
-      Log.info("Input::handle - sending bound actions.");
-      actions;
-    }
-  | TextInputFocus
-  | MenuFocus
-  | _ => getActionsForBinding(inputKey, commands, state)
-  };
+let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
+  let actions =
+    switch (state.inputControlMode) {
+    | CommandLineFocus
+    | EditorTextFocus =>
+      switch (getActionsForBinding(inputKey, commands, state)) {
+      | [] =>
+        Log.info("Input::handle - sending raw input: " ++ inputKey);
+        [Actions.KeyboardInput(inputKey)];
+      | actions =>
+        Log.info("Input::handle - sending bound actions.");
+        actions;
+      }
+    | TextInputFocus
+    | MenuFocus
+    | _ => getActionsForBinding(inputKey, commands, state)
+    };
+
+  [Actions.NotifyKeyPressed(time, inputKey), ...actions];
 };

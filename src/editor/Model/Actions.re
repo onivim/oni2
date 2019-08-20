@@ -16,18 +16,24 @@ type t =
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
-  | BufferMarkDirty(int)
+  | BufferSetModified(int, bool)
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
+  // LoadEditorFont is the request to load a new font
+  // If successful, a SetEditorFont action will be dispatched.
+  | LoadEditorFont(string, int)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
   | CommandlineShow(Vim.Types.cmdlineType)
   | CommandlineHide
   | CommandlineUpdate(Vim.Types.cmdline)
+  | NotifyKeyPressed(float, string)
+  | DisableKeyDisplayer
+  | EnableKeyDisplayer
   | KeyboardInput(string)
   | WildmenuShow(list(string))
   | WildmenuNext

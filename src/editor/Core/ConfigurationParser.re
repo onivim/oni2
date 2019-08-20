@@ -113,6 +113,11 @@ type configurationTuple = (string, parseFunction);
 
 let configurationParsers: list(configurationTuple) = [
   (
+    "editor.fontFamily",
+    (s, v) => {...s, editorFontFamily: parseString(v)},
+  ),
+  ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
+  (
     "editor.lineNumbers",
     (s, v) => {...s, editorLineNumbers: parseLineNumberSetting(v)},
   ),

@@ -6,12 +6,16 @@
            ClipboardNormalModePasteTest
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
+           FontSizeChangeTest
+           InputIgnoreTest
            QuickOpenEventuallyCompletesTest
            QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
+           RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
+           TickTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -33,13 +37,17 @@
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
+        FontSizeChangeTest.exe
+        InputIgnoreTest.exe
         QuickOpenEventuallyCompletesTest.exe
         QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
+        RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
         SearchShowClearHighlightsTest.exe
         AddRemoveSplitTest.exe
+        TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         ))

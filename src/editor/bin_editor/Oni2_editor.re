@@ -61,6 +61,12 @@ let init = app => {
     update(<Root state />);
   };
 
+  let getScaleFactor = () => {
+    Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
+  };
+
+  let getTime = () => Time.getTime() |> Time.toSeconds;
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -69,8 +75,10 @@ let init = app => {
         () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
       ~setClipboardText=
         text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+      ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
+      ~getScaleFactor,
       ~cliOptions=Some(cliOptions),
       (),
     );
@@ -111,56 +119,6 @@ let init = app => {
     cliOptions.filesToOpen,
   );
 
-  let setFont = (fontFamily, fontSize) => {
-    let scaleFactor =
-      Window.getDevicePixelRatio(w)
-      *. float_of_int(Window.getScaleFactor(w));
-
-    let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
-
-    let fontFile = Core.Utility.executingDirectory ++ fontFamily;
-
-    Log.info("Loading font: " ++ fontFile);
-
-    Fontkit.fk_new_face(
-      fontFile,
-      adjSize,
-      font => {
-        Log.info("Font loaded!");
-        open Oni_Model.Actions;
-        open Oni_Core.Types;
-
-        /* Measure text */
-        let shapedText = Fontkit.fk_shape(font, "H");
-        let firstShape = shapedText[0];
-        let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
-
-        let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight =
-          float_of_int(fontSize)
-          *. float_of_int(metrics.height)
-          /. float_of_int(metrics.unitsPerEm);
-
-        /* Set editor text based on measurements */
-        dispatch(
-          SetEditorFont(
-            EditorFont.create(
-              ~fontFile=fontFamily,
-              ~fontSize,
-              ~measuredWidth=
-                float_of_int(glyph.advance) /. (64. *. scaleFactor),
-              ~measuredHeight=floor(actualHeight +. 0.5),
-              (),
-            ),
-          ),
-        );
-      },
-      _ => Log.error("setFont: Failed to load font " ++ fontFamily),
-    );
-  };
-
-  setFont("FiraCode-Regular.ttf", 14);
-
   let commands = Core.Keybindings.get();
 
   /* Add an updater to handle a KeyboardInput action */
@@ -173,11 +131,14 @@ let init = app => {
      a revery element is focused oni2 should defer to revery
    */
   let keyEventListener = key => {
+    let time = Time.getTime() |> Time.toSeconds;
     switch (key, Focus.focused) {
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, k) |> List.iter(dispatch)
+      inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
+      // Run input effects _immediately_
+      runEffects();
     | (Some((_, false)), {contents: Some(_)}) => ()
     };
   };

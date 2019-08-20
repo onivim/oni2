@@ -11,6 +11,8 @@ let getDefaultConfigString = configName =>
       {|
 {
   "editor.detectIndentation": true,
+  "editor.fontFamily": "FiraCode-Regular.ttf",
+  "editor.fontSize": 14,
   "editor.largeFileOptimizations": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
@@ -43,6 +45,7 @@ let getDefaultConfigString = configName =>
 {
     "bindings": [
         { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-TAB>", "command": "quickOpen.openFiles", "when": [["editorTextFocus"]] },
         { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },

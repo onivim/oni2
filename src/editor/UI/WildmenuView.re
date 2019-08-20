@@ -14,13 +14,6 @@ let containerStyles = (theme: Theme.t) =>
     backgroundColor(theme.colors.editorMenuBackground),
     paddingVertical(20),
     overflow(`Hidden),
-    boxShadow(
-      ~xOffset=-15.,
-      ~yOffset=5.,
-      ~blurRadius=30.,
-      ~spreadRadius=5.,
-      ~color=Color.rgba(0., 0., 0., 0.2),
-    ),
   ];
 
 let createElement =
@@ -28,18 +21,28 @@ let createElement =
   component(hooks => {
     let element =
       wildmenu.show
-        ? <ScrollView style={containerStyles(theme)}>
-            ...{List.mapi(
-              (index, item) =>
-                <MenuItem
-                  theme
-                  label=item
-                  selected={index == wildmenu.selected}
-                  style=Style.[fontSize(16)]
-                />,
-              wildmenu.items,
-            )}
-          </ScrollView>
+        ? <BoxShadow
+            boxShadow={Style.BoxShadow.make(
+              ~xOffset=-15.,
+              ~yOffset=5.,
+              ~blurRadius=30.,
+              ~spreadRadius=5.,
+              ~color=Color.rgba(0., 0., 0., 0.2),
+              (),
+            )}>
+            <ScrollView style={containerStyles(theme)}>
+              ...{List.mapi(
+                (index, item) =>
+                  <MenuItem
+                    theme
+                    label=item
+                    selected={index == wildmenu.selected}
+                    style=Style.[fontSize(16)]
+                  />,
+                wildmenu.items,
+              )}
+            </ScrollView>
+          </BoxShadow>
         : React.listToElement([]);
     (hooks, element);
   });

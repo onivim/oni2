@@ -20,6 +20,8 @@ type vimUseSystemClipboard = {
 [@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
+  editorFontFamily: string,
+  editorFontSize: int,
   editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
   editorMatchBrackets: bool,
@@ -48,6 +50,8 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
+  editorFontFamily: "FiraCode-Regular.ttf",
+  editorFontSize: 14,
   editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
   editorMinimapEnabled: true,

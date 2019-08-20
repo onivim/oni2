@@ -29,6 +29,7 @@ let isSyntaxHighlightingEnabled: t => bool;
 let isIndentationSet: t => bool;
 let setIndentation: (IndentationSettings.t, t) => t;
 let getIndentation: t => option(IndentationSettings.t);
+let setModified: (bool, t) => t;
 let disableSyntaxHighlighting: t => t;
 
 let update: (t, BufferUpdate.t) => t;
