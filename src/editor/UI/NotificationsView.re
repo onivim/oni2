@@ -170,10 +170,7 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            | _ => (notificationInfoBackground, notificationInfoForeground)
            };
 
-          let onClose = () => {
-              print_endline ("Trying to hide: " ++ string_of_int(n.id));
-              GlobalContext.current().hideNotification(n.id);
-          };
+          let onClose = () => GlobalContext.current().hideNotification(n.id);
 
          <notification
            background
