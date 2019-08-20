@@ -15,33 +15,33 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 
   Vim.input("o");
-  Vim.input("a")
+  Vim.input("a");
 
   let validateBufferCondition = (f, state: State.t) => {
     let buffer = Selectors.getBufferById(state, id);
     switch (buffer) {
     | Some(v) => f(v)
     | None => false
-    }
+    };
   };
-  
-  wait(~name="Wait for modified flag to be set", (state: State.t) => {
-    validateBufferCondition((b) => Buffer.isModified(b) == true, state);
-  });
+
+  wait(~name="Wait for modified flag to be set", (state: State.t) =>
+    validateBufferCondition(b => Buffer.isModified(b) == true, state)
+  );
 
   // Save file, should clear modified flag
   Vim.input("<esc>");
-  Vim.command("w")
+  Vim.command("w");
 
-  wait(~name="Wait for modified flag to be set", (state: State.t) => {
-    validateBufferCondition((b) => Buffer.isModified(b) == false, state);
-  });
-  
+  wait(~name="Wait for modified flag to be set", (state: State.t) =>
+    validateBufferCondition(b => Buffer.isModified(b) == false, state)
+  );
+
   // Make another modification, should set it again
   Vim.input("o");
-  Vim.input("a")
-  
-  wait(~name="Wait for modified flag to be set", (state: State.t) => {
-    validateBufferCondition((b) => Buffer.isModified(b) == true, state);
-  });
+  Vim.input("a");
+
+  wait(~name="Wait for modified flag to be set", (state: State.t) =>
+    validateBufferCondition(b => Buffer.isModified(b) == true, state)
+  );
 });

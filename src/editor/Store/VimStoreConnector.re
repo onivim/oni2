@@ -115,7 +115,12 @@ let start =
 
   let _ =
     Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.info("Buffer metadata changed: " ++ string_of_int(id) ++ " | " ++ string_of_bool(modified));
+      Log.info(
+        "Buffer metadata changed: "
+        ++ string_of_int(id)
+        ++ " | "
+        ++ string_of_bool(modified),
+      );
       dispatch(Model.Actions.BufferSetModified(id, modified));
     });
 

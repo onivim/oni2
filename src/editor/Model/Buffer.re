@@ -46,8 +46,8 @@ let setModified = (modified: bool, buffer: t) => {
   ...buffer,
   metadata: {
     ...buffer.metadata,
-    modified
-  }
+    modified,
+  },
 };
 
 let isSyntaxHighlightingEnabled = (buffer: t) =>
