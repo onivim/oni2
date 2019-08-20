@@ -16,7 +16,7 @@ type t =
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
-  | BufferMarkDirty(int)
+  | BufferSetModified(int, bool)
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
