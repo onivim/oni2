@@ -14,13 +14,6 @@ let containerStyles = (theme: Theme.t) =>
     color(theme.colors.editorMenuForeground),
     width(menuWidth),
     height(menuHeight),
-    boxShadow(
-      ~xOffset=-15.,
-      ~yOffset=5.,
-      ~blurRadius=30.,
-      ~spreadRadius=5.,
-      ~color=Color.rgba(0., 0., 0., 0.2),
-    ),
   ];
 
 let menuItemStyle = Style.[fontSize(14), width(menuWidth - 50)];
@@ -93,7 +86,15 @@ let createElement =
     React.(
       hooks,
       menu.isOpen
-        ? <View style={containerStyles(theme)}>
+        ? <BoxShadow boxShadow=Style.BoxShadow.make(
+        ~xOffset=-15.,
+        ~yOffset=5.,
+        ~blurRadius=30.,
+        ~spreadRadius=5.,
+        ~color=Color.rgba(0., 0., 0., 0.2),
+        (),
+          )>
+          <View style={containerStyles(theme)}>
             <View style=Style.[width(menuWidth), padding(5)]>
               <OniInput
                 autofocus=true
@@ -125,6 +126,7 @@ let createElement =
               />
             </View>
           </View>
+          </BoxShadow>
         : React.listToElement([]),
     );
   });

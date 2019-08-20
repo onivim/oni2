@@ -311,7 +311,7 @@ let make =
 
       ]>
       <Opacity opacity=cursorOpacity>
-        <Container width=2 height=inputFontSize color=cursorColor>
+        <Container width=2 height=inputFontSize color=cursorColor />
       </Opacity>
       </View>;
     };

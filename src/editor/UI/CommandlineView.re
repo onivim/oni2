@@ -49,6 +49,15 @@ let createElement =
     command.show
       ? (
         hooks,
+        <View style=Style.[marginBottom(20)]>
+        <BoxShadow boxShadow=Style.BoxShadow.make(
+              ~xOffset=-15.,
+              ~yOffset=5.,
+              ~blurRadius=30.,
+              ~spreadRadius=5.,
+              ~color=Color.rgba(0., 0., 0., 0.2),
+              (),
+        )>
         <View
           style=Style.[
             width(400),
@@ -56,15 +65,7 @@ let createElement =
             backgroundColor(theme.colors.editorBackground),
             flexDirection(`Row),
             alignItems(`Center),
-            marginBottom(20),
             paddingVertical(8),
-            boxShadow(
-              ~xOffset=-15.,
-              ~yOffset=5.,
-              ~blurRadius=30.,
-              ~spreadRadius=5.,
-              ~color=Color.rgba(0., 0., 0., 0.2),
-            ),
           ]>
           <Text
             style=Style.[marginLeft(10), ...textStyles]
@@ -78,6 +79,8 @@ let createElement =
             ]
           />
           <Text style=textStyles text=endStr />
+        </View>
+        </BoxShadow>
         </View>,
       )
       : (hooks, React.listToElement([]));
