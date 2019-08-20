@@ -15,7 +15,7 @@ module type SyntaxHighlight = {
 
   let tick: t => t;
 
-  let getTokenColors: (int, int, int) => list(ColorizedToken2.t);
+  let getTokenColors: (t, int) => list(ColorizedToken2.t);
 
   let update: (BufferUpdate.t, array(string), t) => t;
 };
@@ -30,13 +30,16 @@ module TestSyntaxHighlight: SyntaxHighlight = {
 
   let tick = () => ();
 
-  let getTokenColors = (_, _, _) => [
+  let getTokenColors = (_, _) => [
     ColorizedToken2.create(~index=0,
                       ~backgroundColor=Colors.red, 
-                      ~foregroundColor=Colors.white, ()),
+                      ~foregroundColor=Colors.green, ()),
     ColorizedToken2.create(~index=10,
                       ~backgroundColor=Colors.black,
-                      ~foregroundColor=Colors.white, ())
+                      ~foregroundColor=Colors.red, ()),
+    ColorizedToken2.create(~index=20,
+                      ~backgroundColor=Colors.black,
+                      ~foregroundColor=Colors.blue, ())
   ];
 
   let update = (_, _, _) => ();

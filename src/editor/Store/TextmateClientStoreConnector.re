@@ -52,15 +52,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       if (!String.equal(scope, "source.json")) {
         Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
       } else {
-        let parser = Treesitter.Parser.json();
-        /*let startTime = Unix.gettimeofday();
-        let _ = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
-        let endTime = Unix.gettimeofday();
-        print_endline ("time: " ++ string_of_float(endTime -. startTime));*/
-        let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
-        let node = Treesitter.Tree.getRootNode(tree);
-        print_endline(Treesitter.Node.toString(node));
-        ();
+      ()
       }
     });
 
