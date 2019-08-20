@@ -294,7 +294,6 @@ let createElement =
         ),
         height(iFontHeight),
         width(cursorWidth),
-        opacity(cursorOpacity),
         backgroundColor(Colors.white),
       ];
 
@@ -808,7 +807,9 @@ let createElement =
               };
             }}
           />
-          <View style=cursorStyle />
+          <Opacity opacity=cursorOpacity>
+            <View style=cursorStyle />
+          </Opacity>
           <View style=horizontalScrollBarStyle>
             <EditorHorizontalScrollbar
               editor

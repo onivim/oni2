@@ -33,7 +33,6 @@ let createElement =
         left(scrollMetrics.thumbOffset),
         width(scrollMetrics.thumbSize),
         top(0),
-        opacity(0.5),
         backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
       ];
 
@@ -41,7 +40,7 @@ let createElement =
       switch (scrollMetrics.visible) {
       | false => emptyElement
       | true =>
-        <View style=absoluteStyle> <View style=scrollThumbStyle /> </View>
+        <View style=absoluteStyle> <Opacity opacity=0.5><View style=scrollThumbStyle /></Opacity> </View>
       };
 
     (hooks, elm);

@@ -304,17 +304,16 @@ let make =
           ~fontSize=inputFontSize,
           startStr,
         );
-      <View
-        style=Style.[
-          width(2),
-          marginTop((defaultHeight - dimension.height) / 2),
-          height(inputFontSize),
+      <View style=Style.[
           position(`Absolute),
           marginLeft(dimension.width + inputTextMargin + 1),
-          opacity(cursorOpacity),
-          backgroundColor(cursorColor),
-        ]
-      />;
+          marginTop((defaultHeight - dimension.height) / 2),
+
+      ]>
+      <Opacity opacity=cursorOpacity>
+        <Container width=2 height=inputFontSize color=cursorColor>
+      </Opacity>
+      </View>;
     };
 
     let makeTextComponent = content =>
