@@ -40,7 +40,9 @@ let createElement =
       switch (scrollMetrics.visible) {
       | false => emptyElement
       | true =>
-        <View style=absoluteStyle> <Opacity opacity=0.5><View style=scrollThumbStyle /></Opacity> </View>
+        <View style=absoluteStyle>
+          <Opacity opacity=0.5> <View style=scrollThumbStyle /> </Opacity>
+        </View>
       };
 
     (hooks, elm);

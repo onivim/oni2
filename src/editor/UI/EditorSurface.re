@@ -807,9 +807,7 @@ let createElement =
               };
             }}
           />
-          <Opacity opacity=cursorOpacity>
-            <View style=cursorStyle />
-          </Opacity>
+          <Opacity opacity=cursorOpacity> <View style=cursorStyle /> </Opacity>
           <View style=horizontalScrollBarStyle>
             <EditorHorizontalScrollbar
               editor
