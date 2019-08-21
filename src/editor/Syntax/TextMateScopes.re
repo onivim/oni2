@@ -106,7 +106,12 @@ module ResolvedStyle = {
     italic: bool,
   };
 
-  let default (~foreground, ~background, ()) = {foreground, background, bold: false, italic: false};
+  let default = (~foreground, ~background, ()) => {
+    foreground,
+    background,
+    bold: false,
+    italic: false,
+  };
 };
 
 module Selector = {

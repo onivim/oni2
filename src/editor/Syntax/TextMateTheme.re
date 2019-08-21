@@ -19,7 +19,7 @@ type selectorWithParents = {
 type t = {
   defaultBackground: Color.t,
   defaultForeground: Color.t,
-  trie: Trie.t(selectorWithParents)
+  trie: Trie.t(selectorWithParents),
 };
 
 /* Helper to split the selectors on ',' for groups */
@@ -27,7 +27,8 @@ let _explodeSelectors = (s: string) => {
   s |> String.split_on_char(',') |> List.map(s => String.trim(s));
 };
 
-let create = (~defaultBackground, ~defaultForeground, selectors: list(themeSelector)) => {
+let create =
+    (~defaultBackground, ~defaultForeground, selectors: list(themeSelector)) => {
   let f = (v: themeSelector) => {
     let (s, style) = v;
 
@@ -79,11 +80,7 @@ let create = (~defaultBackground, ~defaultForeground, selectors: list(themeSelec
       selectors,
     );
 
-  let ret: t = {
-    defaultBackground,
-    defaultForeground,
-    trie: trie
-  };
+  let ret: t = {defaultBackground, defaultForeground, trie};
 
   ret;
 };
@@ -119,11 +116,13 @@ let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
 
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
-    let default = ResolvedStyle.default(
-    ~foreground=theme.defaultForeground,
-    ~background=theme.defaultBackground,
-    ());
-    
+  let default =
+    ResolvedStyle.default(
+      ~foreground=theme.defaultForeground,
+      ~background=theme.defaultBackground,
+      (),
+    );
+
   switch (scopes) {
   | [] => default
   | [scope, ...scopeParents] =>

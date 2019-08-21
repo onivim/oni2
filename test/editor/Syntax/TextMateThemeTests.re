@@ -15,26 +15,41 @@ describe("TextMateTheme", ({describe, _}) => {
 
   let simpleTextMateTheme =
     TextMateTheme.create(
-    ~defaultBackground=Colors.black,
-    ~defaultForeground=Colors.white,
-    [
-      ("var", TokenStyle.create(~foreground=Colors.aqua, ())),
-      ("var.identifier", TokenStyle.create(~foreground=Colors.azure, ~bold=true, ())),
-      ("constant", TokenStyle.create(~foreground=Colors.cyan, ~italic=true, ())),
-      ("constant.numeric", TokenStyle.create(~foreground=Colors.crimson, ())),
-      ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
-      ("foo, bar", TokenStyle.create(~foreground=Colors.lavender, ())),
-      ("entity", TokenStyle.create(~bold=true, ())),
-      
-      (
-        "entity.other.attribute-name.foo,entity.other.attribute-name.bar",
-        TokenStyle.create(~foreground=Colors.salmon, ()),
-      ),
-      ("html", TokenStyle.create(~foreground=Colors.slateGray, ())),
-      ("meta html", TokenStyle.create(~foreground=Colors.whiteSmoke, ())),
-      ("source.php string", TokenStyle.create(~foreground=Colors.peachPuff, ())),
-      ("text.html source.php", TokenStyle.create(~foreground=Colors.navy, ())),
-    ]);
+      ~defaultBackground=Colors.black,
+      ~defaultForeground=Colors.white,
+      [
+        ("var", TokenStyle.create(~foreground=Colors.aqua, ())),
+        (
+          "var.identifier",
+          TokenStyle.create(~foreground=Colors.azure, ~bold=true, ()),
+        ),
+        (
+          "constant",
+          TokenStyle.create(~foreground=Colors.cyan, ~italic=true, ()),
+        ),
+        (
+          "constant.numeric",
+          TokenStyle.create(~foreground=Colors.crimson, ()),
+        ),
+        ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
+        ("foo, bar", TokenStyle.create(~foreground=Colors.lavender, ())),
+        ("entity", TokenStyle.create(~bold=true, ())),
+        (
+          "entity.other.attribute-name.foo,entity.other.attribute-name.bar",
+          TokenStyle.create(~foreground=Colors.salmon, ()),
+        ),
+        ("html", TokenStyle.create(~foreground=Colors.slateGray, ())),
+        ("meta html", TokenStyle.create(~foreground=Colors.whiteSmoke, ())),
+        (
+          "source.php string",
+          TokenStyle.create(~foreground=Colors.peachPuff, ()),
+        ),
+        (
+          "text.html source.php",
+          TokenStyle.create(~foreground=Colors.navy, ()),
+        ),
+      ],
+    );
 
   describe("match", ({test, _}) => {
     test(
@@ -108,8 +123,8 @@ describe("TextMateTheme", ({describe, _}) => {
             simpleTextMateTheme,
             "entity.other.attribute-name.foo",
           );
-      expect.bool(style.foreground == Colors.salmon).toBe(true);
-      expect.bool(style.background == Colors.black).toBe(true);
+        expect.bool(style.foreground == Colors.salmon).toBe(true);
+        expect.bool(style.background == Colors.black).toBe(true);
         expect.bool(style.bold).toBe(true);
         expect.bool(style.italic).toBe(false);
 
@@ -118,13 +133,13 @@ describe("TextMateTheme", ({describe, _}) => {
             simpleTextMateTheme,
             "entity.other.attribute-name.bar",
           );
-      expect.bool(style.foreground == Colors.salmon).toBe(true);
-      expect.bool(style.background == Colors.black).toBe(true);
+        expect.bool(style.foreground == Colors.salmon).toBe(true);
+        expect.bool(style.background == Colors.black).toBe(true);
         expect.bool(style.bold).toBe(true);
         expect.bool(style.italic).toBe(false);
       },
     );
-    
+
     test("baz gets default style (no match)", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "baz");
@@ -132,7 +147,7 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.bool(style.background == Colors.black).toBe(true);
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
-    })
+    });
     test("var gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "var");
@@ -160,7 +175,7 @@ describe("TextMateTheme", ({describe, _}) => {
     test("constant gets correct style", ({expect, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(simpleTextMateTheme, "constant");
-      
+
       expect.bool(style.foreground == Colors.cyan).toBe(true);
       expect.bool(style.background == Colors.black).toBe(true);
       expect.bool(style.bold).toBe(false);

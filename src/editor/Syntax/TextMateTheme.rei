@@ -21,7 +21,13 @@ type t;
 /*
    [create] builds a Theme [t] from a list of styles
  */
-let create: (~defaultBackground: Color.t, ~defaultForeground: Color.t, list(themeSelector)) => t;
+let create:
+  (
+    ~defaultBackground: Color.t,
+    ~defaultForeground: Color.t,
+    list(themeSelector)
+  ) =>
+  t;
 
 /*
     [match] returns the resolved style information,
