@@ -62,7 +62,6 @@ let createElement =
               textOverflow(`Ellipsis),
               fontSize(uiFont.fontSize),
               color(theme.colors.editorMenuForeground),
-              backgroundColor(bg),
             ],
           ~target=style,
         )
@@ -82,7 +81,7 @@ let createElement =
 
     (
       hooks,
-      <Clickable onClick>
+      <Clickable style=Style.[cursor(Revery.MouseCursors.pointer)] onClick>
         <View
           onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
           iconView

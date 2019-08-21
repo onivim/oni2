@@ -31,3 +31,7 @@ To save your changes, you can use the `:write` command.
 > __NOTE:__ `:write` can be abbreviated as `:w`
 
 If you want to save to another file, you can use the `:save` command, for example: `:sav ~/my/project/another-file.txt`.
+
+## Navigating in opened windows
+
+By pressing `<C+TAB>` you can access the currently opened windows. Similar to open all files you can navigate through files.

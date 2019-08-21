@@ -51,8 +51,6 @@ let createElement =
     let borderColor =
       active && showHighlight ? modeColor : Colors.transparentBlack;
 
-    let opacityValue = 1.0;
-
     let containerStyle =
       Style.[
         overflow(`Hidden),
@@ -60,7 +58,6 @@ let createElement =
         backgroundColor(theme.colors.editorBackground),
         borderTop(~color=borderColor, ~width=2),
         borderBottom(~color=theme.colors.editorBackground, ~width=2),
-        opacity(opacityValue),
         height(Constants.default.tabHeight),
         minWidth(minWidth_),
         flexDirection(`Row),
