@@ -78,6 +78,28 @@ let create = (selectors: list(themeSelector)) => {
   ret;
 };
 
+let of_yojson = (json: Yojson.Safe.json) => {
+
+  let parseSelector = (selector: Yojson.Safe.json) => {
+    switch (selector) {
+    | `Assoc(_) => {
+      let _scope = Yojson.Safe.Util.member("scope", selector);
+      let _settings = Yojson.Safe.Util.member("settings", selector);
+      []
+    }
+    | _ => []
+    };
+  };
+
+  
+  let selectors = switch (json) {
+  | `List(elems) => List.map(parseSelector, elems) |> List.flatten;
+  | _ => []
+  };
+
+  create(selectors);
+};
+
 let empty = create([]);
 
 let show = (v: t) => {

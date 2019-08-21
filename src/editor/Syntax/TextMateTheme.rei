@@ -23,6 +23,11 @@ type t;
 let create: list(themeSelector) => t;
 
 /*
+   [of_yojson] instantiates a Theme [t] from JSON
+*/
+let of_yojson: Yojson.Safe.json => t;
+
+/*
    [empty] is an empty Theme [t] with no selectors
  */
 let empty: t;
