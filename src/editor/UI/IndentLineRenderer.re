@@ -110,7 +110,7 @@ let render =
         ~y,
         ~width=1.,
         ~height=lineHeight,
-        ~color=theme.colors.editorIndentGuideBackground,
+        ~color=theme.editorIndentGuideBackground,
         (),
       );
 
@@ -187,7 +187,7 @@ let render =
         ~y=topY +. lineHeight,
         ~width=1.,
         ~height=bottomY -. topY -. lineHeight,
-        ~color=theme.colors.editorIndentGuideActiveBackground,
+        ~color=theme.editorIndentGuideActiveBackground,
         (),
       );
     };

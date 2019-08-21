@@ -28,7 +28,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
     let style =
-      editorViewStyle(theme.colors.background, theme.colors.foreground);
+      editorViewStyle(theme.background, theme.foreground);
 
     if (state.zenMode) {
       (

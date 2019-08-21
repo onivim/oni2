@@ -76,7 +76,7 @@ let createElement =
 
     let editorGroup = Selectors.getEditorGroupById(state, editorGroupId);
     let style =
-      editorViewStyle(theme.colors.background, theme.colors.foreground);
+      editorViewStyle(theme.background, theme.foreground);
 
     let isActive =
       switch (editorGroup) {

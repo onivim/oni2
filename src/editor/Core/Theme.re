@@ -6,7 +6,6 @@
 
 open Revery;
 
-module EditorColors = {
   type t = {
     background: Color.t,
     foreground: Color.t,
@@ -92,61 +91,34 @@ module EditorColors = {
     statusBarForeground: Color.hex("#9da5b4"),
     scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1),
   };
-};
 
-module TokenColor = {
-  type fontStyle =
-    | Normal
-    | Bold
-    | Italic;
-
-  type settings = {
-    foreground: option(Color.t),
-    fontStyle: option(fontStyle),
-  };
-
-  type t = {
-    name: string,
-    scope: list(string),
-    settings,
-  };
-};
-
-type t = {
-  colors: EditorColors.t,
-  tokenColors: list(TokenColor.t),
-};
-
-let getTokenColor = (_theme: t, _scopes: list(string)) => Colors.white;
-
-let create: unit => t = () => {colors: EditorColors.default, tokenColors: []};
 
 let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
   let (background, foreground) =
     switch (mode) {
     | Visual => (
-        theme.colors.oniVisualModeBackground,
-        theme.colors.oniVisualModeForeground,
+        theme.oniVisualModeBackground,
+        theme.oniVisualModeForeground,
       )
     | CommandLine => (
-        theme.colors.oniCommandlineModeBackground,
-        theme.colors.oniCommandlineModeForeground,
+        theme.oniCommandlineModeBackground,
+        theme.oniCommandlineModeForeground,
       )
     | Operator => (
-        theme.colors.oniOperatorModeBackground,
-        theme.colors.oniOperatorModeForeground,
+        theme.oniOperatorModeBackground,
+        theme.oniOperatorModeForeground,
       )
     | Insert => (
-        theme.colors.oniInsertModeBackground,
-        theme.colors.oniInsertModeForeground,
+        theme.oniInsertModeBackground,
+        theme.oniInsertModeForeground,
       )
     | Replace => (
-        theme.colors.oniReplaceModeBackground,
-        theme.colors.oniReplaceModeForeground,
+        theme.oniReplaceModeBackground,
+        theme.oniReplaceModeForeground,
       )
     | Normal => (
-        theme.colors.oniNormalModeBackground,
-        theme.colors.oniNormalModeForeground,
+        theme.oniNormalModeBackground,
+        theme.oniNormalModeForeground,
       )
     };
 

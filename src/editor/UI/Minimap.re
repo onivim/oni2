@@ -183,7 +183,7 @@ let createElement =
                 ~height=
                   rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
                 ~width=float_of_int(width),
-                ~color=state.theme.colors.scrollbarSliderHoverBackground,
+                ~color=state.theme.scrollbarSliderHoverBackground,
                 (),
               );
             };
@@ -199,7 +199,7 @@ let createElement =
                 -. scrollY,
               ~height=float_of_int(Constants.default.minimapCharacterHeight),
               ~width=float_of_int(width),
-              ~color=state.theme.colors.editorLineHighlightBackground,
+              ~color=state.theme.editorLineHighlightBackground,
               (),
             );
 
@@ -241,7 +241,7 @@ let createElement =
                   | None => ()
                   | Some(v) =>
                     let selectionColor =
-                      state.theme.colors.editorSelectionBackground;
+                      state.theme.editorSelectionBackground;
                     List.iter(
                       renderRange(~color=selectionColor, ~offset),
                       v,

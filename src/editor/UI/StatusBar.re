@@ -106,11 +106,11 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
     let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
     let toStatusBarElement = (statusBarItem: Item.t) => {
-      <StatusBarItem height backgroundColor={theme.colors.statusBarBackground}>
+      <StatusBarItem height backgroundColor={theme.statusBarBackground}>
         <Text
           style=Style.[
-            backgroundColor(theme.colors.statusBarBackground),
-            color(theme.colors.statusBarForeground),
+            backgroundColor(theme.statusBarBackground),
+            color(theme.statusBarForeground),
             ...textStyle,
           ]
           text={statusBarItem.text}
@@ -158,33 +158,33 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         <StatusBarSection direction=`FlexEnd> ...rightItems </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
           <StatusBarItem
-            height backgroundColor={theme.colors.statusBarBackground}>
+            height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
-                backgroundColor(theme.colors.statusBarBackground),
-                color(theme.colors.statusBarForeground),
+                backgroundColor(theme.statusBarBackground),
+                color(theme.statusBarForeground),
                 ...textStyle,
               ]
               text=indentation
             />
           </StatusBarItem>
           <StatusBarItem
-            height backgroundColor={theme.colors.statusBarBackground}>
+            height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
-                backgroundColor(theme.colors.statusBarBackground),
-                color(theme.colors.statusBarForeground),
+                backgroundColor(theme.statusBarBackground),
+                color(theme.statusBarForeground),
                 ...textStyle,
               ]
               text=fileType
             />
           </StatusBarItem>
           <StatusBarItem
-            height backgroundColor={theme.colors.statusBarBackground}>
+            height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
-                backgroundColor(theme.colors.statusBarBackground),
-                color(theme.colors.statusBarForeground),
+                backgroundColor(theme.statusBarBackground),
+                color(theme.statusBarForeground),
                 ...textStyle,
               ]
               text={convertPositionToString(position)}

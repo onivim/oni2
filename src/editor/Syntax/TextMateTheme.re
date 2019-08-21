@@ -78,6 +78,8 @@ let create = (selectors: list(themeSelector)) => {
   ret;
 };
 
+let empty = create([]);
+
 let show = (v: t) => {
   Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), v.trie);
 };

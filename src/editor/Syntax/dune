@@ -9,7 +9,6 @@
         lwt
         lwt.unix
         Oni2.core
-        Oni2.model
         Rench
         Revery
     ))

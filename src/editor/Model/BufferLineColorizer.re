@@ -76,14 +76,14 @@ let create =
 
     let backgroundColor =
       isSearchHighlight
-        ? theme.colors.editorFindMatchBackground : backgroundColor;
+        ? theme.editorFindMatchBackground : backgroundColor;
 
     let color =
       ColorMap.get(
         colorMap,
         colorIndex.foregroundColor,
-        theme.colors.editorForeground,
-        theme.colors.editorBackground,
+        theme.editorForeground,
+        theme.editorBackground,
       );
     (backgroundColor, color);
   };

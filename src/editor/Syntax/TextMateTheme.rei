@@ -23,6 +23,11 @@ type t;
 let create: list(themeSelector) => t;
 
 /*
+   [empty] is an empty Theme [t] with no selectors
+ */
+let empty: t;
+
+/*
     [match] returns the resolved style information,
     given the scopes [string]. The [scopes] should include
     the full ancestor list, separated by spaces, for example:

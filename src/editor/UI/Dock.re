@@ -18,7 +18,7 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let bg = state.theme.colors.editorLineNumberBackground;
+    let bg = state.theme.editorLineNumberBackground;
     (
       hooks,
       <View
