@@ -87,12 +87,42 @@ let create =
 
 let of_yojson =
     (~defaultBackground, ~defaultForeground, json: Yojson.Safe.json) => {
+
+  let parseSettings: Yojson.Safe.json => TokenStyle.t = (json) => {
+
+    let str = (v) => switch(v) {
+    | `String(s) => Some(Color.hex(s))
+    | _ => None
+    };
+
+    let boo = (v) => switch(v) {
+    | `Bool(s) => Some(s)
+    | _ => None
+    }
+
+    TokenStyle.create(
+      ~foreground=str(Yojson.Safe.Util.member("foreground", json)),
+      ~background=str(Yojson.Safe.Util.member("background", json)),
+      ~bold=boo(Yojson.Safe.Util.member("bold", json)),
+      ~italic=boo(Yojson.Safe.Util.member("italic", json)),
+      ()
+    );
+  };
+
   let parseSelector = (selector: Yojson.Safe.json) => {
     switch (selector) {
     | `Assoc(_) =>
-      let _scope = Yojson.Safe.Util.member("scope", selector);
-      let _settings = Yojson.Safe.Util.member("settings", selector);
-      [];
+      let scope = Yojson.Safe.Util.member("scope", selector);
+      let settings = Yojson.Safe.Util.member("settings", selector);
+      
+      switch ((scope, settings)) {
+      | (`String(v), `Assoc(_)) => {
+          let tokenStyle = parseSettings(settings);
+          let selector = v;
+          [(selector, tokenStyle)]
+      }
+      | _ => []
+      }
     | _ => []
     };
   };

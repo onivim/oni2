@@ -18,35 +18,35 @@ describe("TextMateTheme", ({describe, _}) => {
       ~defaultBackground=Colors.black,
       ~defaultForeground=Colors.white,
       [
-        ("var", TokenStyle.create(~foreground=Colors.aqua, ())),
+        ("var", TokenStyle.create(~foreground=Some(Colors.aqua), ())),
         (
           "var.identifier",
-          TokenStyle.create(~foreground=Colors.azure, ~bold=true, ()),
+          TokenStyle.create(~foreground=Some(Colors.azure), ~bold=Some(true), ()),
         ),
         (
           "constant",
-          TokenStyle.create(~foreground=Colors.cyan, ~italic=true, ()),
+          TokenStyle.create(~foreground=Some(Colors.cyan), ~italic=Some(true), ()),
         ),
         (
           "constant.numeric",
-          TokenStyle.create(~foreground=Colors.crimson, ()),
+          TokenStyle.create(~foreground=Some(Colors.crimson), ()),
         ),
-        ("constant.numeric.hex", TokenStyle.create(~bold=true, ())),
-        ("foo, bar", TokenStyle.create(~foreground=Colors.lavender, ())),
-        ("entity", TokenStyle.create(~bold=true, ())),
+        ("constant.numeric.hex", TokenStyle.create(~bold=Some(true), ())),
+        ("foo, bar", TokenStyle.create(~foreground=Some(Colors.lavender), ())),
+        ("entity", TokenStyle.create(~bold=Some(true), ())),
         (
           "entity.other.attribute-name.foo,entity.other.attribute-name.bar",
-          TokenStyle.create(~foreground=Colors.salmon, ()),
+          TokenStyle.create(~foreground=Some(Colors.salmon), ()),
         ),
-        ("html", TokenStyle.create(~foreground=Colors.slateGray, ())),
-        ("meta html", TokenStyle.create(~foreground=Colors.whiteSmoke, ())),
+        ("html", TokenStyle.create(~foreground=Some(Colors.slateGray), ())),
+        ("meta html", TokenStyle.create(~foreground=Some(Colors.whiteSmoke), ())),
         (
           "source.php string",
-          TokenStyle.create(~foreground=Colors.peachPuff, ()),
+          TokenStyle.create(~foreground=Some(Colors.peachPuff), ()),
         ),
         (
           "text.html source.php",
-          TokenStyle.create(~foreground=Colors.navy, ()),
+          TokenStyle.create(~foreground=Some(Colors.navy), ()),
         ),
       ],
     );
@@ -200,11 +200,59 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.bool(style.italic).toBe(true);
     });
   });
-  describe("of_yojson", ({test, _}) =>
+  describe("of_yojson", ({test, _}) => {
     test("empty array parses", ({expect, _}) => {
       let json = Yojson.Safe.from_string("[]");
-      let _ = TextMateTheme.of_yojson(json);
+      let _ = TextMateTheme.of_yojson(~defaultForeground=Colors.white, ~defaultBackground=Colors.black, json);
       expect.bool(true).toBe(true);
     })
-  );
+    test("resolves to default colors if no match", ({expect, _}) => {
+      let json = Yojson.Safe.from_string("[]");
+      let theme = TextMateTheme.of_yojson(~defaultForeground=Colors.white, ~defaultBackground=Colors.black, json);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.hex");
+      expect.bool(style.foreground == Colors.white).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(false);
+    })
+    test("simple match", ({expect, _}) => {
+      let json = Yojson.Safe.from_string({|
+       [{
+        "name": "Text",
+        "scope": "constant.numeric.hex",
+        "settings": {
+            "foreground": "#bbbbbb",
+            "italic": true
+        }
+       },
+       {
+        "name": "Oct text",
+        "scope": "constant.numeric.oct",
+        "settings": {
+            "foreground": "#0f0",
+            "background": "#f00",
+            "bold": true
+        }
+       }]
+      |});
+      
+      let theme = TextMateTheme.of_yojson(~defaultForeground=Colors.white, ~defaultBackground=Colors.black, json);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.hex");
+      expect.bool(style.foreground == Color.hex("#bbbbbb")).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+      
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.oct");
+      expect.bool(style.foreground == Color.hex("#0f0")).toBe(true);
+      //expect.bool(style.background == Color.hex("#f00")).toBe(true);
+      expect.bool(style.bold).toBe(true);
+      expect.bool(style.italic).toBe(false);
+    })
+  });
 });
