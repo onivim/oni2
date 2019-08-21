@@ -200,14 +200,11 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.bool(style.italic).toBe(true);
     });
   });
-  describe("of_yojson", ({test, _}) => {
-    test(
-      "empty array parses",
-      ({expect, _}) => {
-
+  describe("of_yojson", ({test, _}) =>
+    test("empty array parses", ({expect, _}) => {
       let json = Yojson.Safe.from_string("[]");
       let _ = TextMateTheme.of_yojson(json);
       expect.bool(true).toBe(true);
-    });
-  });
+    })
+  );
 });

@@ -85,29 +85,33 @@ let create =
   ret;
 };
 
-let of_yojson = (json: Yojson.Safe.json) => {
-
+let of_yojson =
+    (~defaultBackground, ~defaultForeground, json: Yojson.Safe.json) => {
   let parseSelector = (selector: Yojson.Safe.json) => {
     switch (selector) {
-    | `Assoc(_) => {
+    | `Assoc(_) =>
       let _scope = Yojson.Safe.Util.member("scope", selector);
       let _settings = Yojson.Safe.Util.member("settings", selector);
-      []
-    }
+      [];
     | _ => []
     };
   };
 
-  
-  let selectors = switch (json) {
-  | `List(elems) => List.map(parseSelector, elems) |> List.flatten;
-  | _ => []
-  };
+  let selectors =
+    switch (json) {
+    | `List(elems) => List.map(parseSelector, elems) |> List.flatten
+    | _ => []
+    };
 
-  create(selectors);
+  create(~defaultBackground, ~defaultForeground, selectors);
 };
 
-let empty = create([]);
+let empty =
+  create(
+    ~defaultBackground=Colors.black,
+    ~defaultForeground=Colors.white,
+    [],
+  );
 
 let show = (v: t) => {
   Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), v.trie);

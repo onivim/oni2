@@ -30,9 +30,15 @@ let create:
   t;
 
 /*
-   [of_yojson] instantiates a Theme [t] from JSON
-*/
-let of_yojson: Yojson.Safe.json => t;
+    [of_yojson] instantiates a Theme [t] from JSON
+ */
+let of_yojson:
+  (
+    ~defaultBackground: Color.t,
+    ~defaultForeground: Color.t,
+    Yojson.Safe.json
+  ) =>
+  t;
 
 /*
    [empty] is an empty Theme [t] with no selectors
