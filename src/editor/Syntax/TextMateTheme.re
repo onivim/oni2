@@ -2,6 +2,8 @@
  TextMateTheme.re
  */
 
+open Revery;
+
 open TextMateScopes;
 
 module TokenStyle = TextMateScopes.TokenStyle;
@@ -14,14 +16,19 @@ type selectorWithParents = {
   parents: list(Selector.t),
 };
 
-type t = {trie: Trie.t(selectorWithParents)};
+type t = {
+  defaultBackground: Color.t,
+  defaultForeground: Color.t,
+  trie: Trie.t(selectorWithParents),
+};
 
 /* Helper to split the selectors on ',' for groups */
 let _explodeSelectors = (s: string) => {
   s |> String.split_on_char(',') |> List.map(s => String.trim(s));
 };
 
-let create = (selectors: list(themeSelector)) => {
+let create =
+    (~defaultBackground, ~defaultForeground, selectors: list(themeSelector)) => {
   let f = (v: themeSelector) => {
     let (s, style) = v;
 
@@ -73,7 +80,7 @@ let create = (selectors: list(themeSelector)) => {
       selectors,
     );
 
-  let ret: t = {trie: trie};
+  let ret: t = {defaultBackground, defaultForeground, trie};
 
   ret;
 };
@@ -133,8 +140,15 @@ let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
 
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
+  let default =
+    ResolvedStyle.default(
+      ~foreground=theme.defaultForeground,
+      ~background=theme.defaultBackground,
+      (),
+    );
+
   switch (scopes) {
-  | [] => ResolvedStyle.default
+  | [] => default
   | [scope, ...scopeParents] =>
     let p = Trie.matches(theme.trie, scope);
 
@@ -176,21 +190,21 @@ let match = (theme: t, scopes: string) => {
     let foreground =
       switch (result.foreground) {
       | Some(v) => v
-      | None => ResolvedStyle.default.foreground
+      | None => default.foreground
       };
 
     let bold =
       switch (result.bold) {
       | Some(v) => v
-      | None => ResolvedStyle.default.bold
+      | None => default.bold
       };
 
     let italic =
       switch (result.italic) {
       | Some(v) => v
-      | None => ResolvedStyle.default.italic
+      | None => default.italic
       };
 
-    {...ResolvedStyle.default, foreground, bold, italic};
+    {...default, foreground, bold, italic};
   };
 };

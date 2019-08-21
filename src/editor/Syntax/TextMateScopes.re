@@ -1,4 +1,5 @@
 /*
+
  TextMateScopes
  */
 
@@ -6,6 +7,8 @@
    [scope] is a list representation of TextMate scopes.
    For example, "source.js" would be represented as ["source", "js"]
  */
+
+open Revery;
 
 module Scope = {
   type t = list(string);
@@ -60,8 +63,8 @@ module Scopes = {
 module TokenStyle = {
   [@deriving show({with_path: false})]
   type t = {
-    foreground: option(int),
-    background: option(int),
+    foreground: option(Color.t),
+    background: option(Color.t),
     bold: option(bool),
     italic: option(bool),
   };
@@ -69,14 +72,14 @@ module TokenStyle = {
   let show = (v: t) => {
     switch (v.foreground) {
     | None => "Foreground: None"
-    | Some(v) => "Foreground: Some(" ++ string_of_int(v) ++ ")"
+    | Some(_) => "Foreground: Some"
     };
   };
 
   let create =
       (
-        ~foreground: option(int)=?,
-        ~background: option(int)=?,
+        ~foreground: option(Color.t)=?,
+        ~background: option(Color.t)=?,
         ~bold: option(bool)=?,
         ~italic: option(bool)=?,
         (),
@@ -97,13 +100,18 @@ module TokenStyle = {
 
 module ResolvedStyle = {
   type t = {
-    foreground: int,
-    background: int,
+    foreground: Color.t,
+    background: Color.t,
     bold: bool,
     italic: bool,
   };
 
-  let default = {foreground: 1, background: 0, bold: false, italic: false};
+  let default = (~foreground, ~background, ()) => {
+    foreground,
+    background,
+    bold: false,
+    italic: false,
+  };
 };
 
 module Selector = {
