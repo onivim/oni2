@@ -147,9 +147,16 @@ let show = (v: t) => {
   Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), v.trie);
 };
 
-let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
+let _applyStyle: (TokenStyle.t, TokenStyle.t) => TokenStyle.t = (prev: TokenStyle.t, style: TokenStyle.t) => {
   let foreground =
     switch (prev.foreground, style.foreground) {
+    | (Some(v), _) => Some(v)
+    | (_, Some(v)) => Some(v)
+    | _ => None
+    };
+  
+  let background =
+    switch (prev.background, style.background) {
     | (Some(v), _) => Some(v)
     | (_, Some(v)) => Some(v)
     | _ => None
@@ -169,7 +176,7 @@ let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
     | _ => None
     };
 
-  {...prev, foreground, bold, italic};
+  { background, foreground, bold, italic};
 };
 
 let match = (theme: t, scopes: string) => {
@@ -239,6 +246,12 @@ let match = (theme: t, scopes: string) => {
       | None => default.italic
       };
 
-    {...default, foreground, bold, italic};
+    let background = 
+      switch (result.background) {
+      | Some(v) => v
+      | None => default.background
+      };
+
+    {background, foreground, bold, italic};
   };
 };

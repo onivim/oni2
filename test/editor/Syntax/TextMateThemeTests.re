@@ -250,7 +250,7 @@ describe("TextMateTheme", ({describe, _}) => {
       let style: ResolvedStyle.t =
         TextMateTheme.match(theme, "constant.numeric.oct");
       expect.bool(style.foreground == Color.hex("#0f0")).toBe(true);
-      //expect.bool(style.background == Color.hex("#f00")).toBe(true);
+      expect.bool(style.background == Color.hex("#f00")).toBe(true);
       expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
     })
