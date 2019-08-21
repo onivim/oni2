@@ -11,9 +11,10 @@ module type SyntaxHighlight = {
 
   let empty: t;
 
-  let create: (array(string)) => t;
+  let hasPendingWork: t => bool;
+  let doChunkOfWork: t => t;
 
-  let tick: t => t;
+  let create: (array(string)) => t;
 
   let getTokenColors: (t, int) => list(ColorizedToken2.t);
 
@@ -28,7 +29,8 @@ module TestSyntaxHighlight: SyntaxHighlight = {
   
   let create= (_) => ();
 
-  let tick = () => ();
+  let hasPendingWork = () => false;
+  let doChunkOfWork = () => ();
 
   let getTokenColors = (_, _) => [
     ColorizedToken2.create(~index=0,
@@ -45,13 +47,20 @@ module TestSyntaxHighlight: SyntaxHighlight = {
   let update = (_, _, _) => ();
 };
 
+type syntaxHighlightStrategy =
+| Test
+| TreeSitter
+| ReasonML
+| TextMate;
 
 module SyntaxHighlights = {
   type t = {
+    strategy: syntaxHighlightStrategy,
     testSyntaxHighlights: TestSyntaxHighlight.t,
   };
 
   let empty = {
+    strategy: Test,
     testSyntaxHighlights: TestSyntaxHighlight.empty,
   };
 };
