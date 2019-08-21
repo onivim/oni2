@@ -33,14 +33,19 @@ module Grammar = {
     treeSitterPath: [@default None] option(string),
   };
 
-  let toAbsolutePath = (path: string, grammar: Grammar.t) => {
-  
+  let toAbsolutePath = (path: string, g: t) => {
     let path = Path.join(path, g.path);
 
     let treeSitterPath = switch(g.treeSitterPath) {
     | Some(v) => Some(Path.join(path, v))
     | None => None;
-    }
+    };
+
+    {
+    ...g,
+    path,
+    treeSitterPath
+    };
   };
 };
 
