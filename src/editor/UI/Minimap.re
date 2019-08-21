@@ -240,8 +240,7 @@ let createElement =
                   switch (Hashtbl.find_opt(selection, item)) {
                   | None => ()
                   | Some(v) =>
-                    let selectionColor =
-                      state.theme.editorSelectionBackground;
+                    let selectionColor = state.theme.editorSelectionBackground;
                     List.iter(
                       renderRange(~color=selectionColor, ~offset),
                       v,

@@ -157,8 +157,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
         <StatusBarSection direction=`Center />
         <StatusBarSection direction=`FlexEnd> ...rightItems </StatusBarSection>
         <StatusBarSection direction=`FlexEnd>
-          <StatusBarItem
-            height backgroundColor={theme.statusBarBackground}>
+          <StatusBarItem height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
                 backgroundColor(theme.statusBarBackground),
@@ -168,8 +167,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
               text=indentation
             />
           </StatusBarItem>
-          <StatusBarItem
-            height backgroundColor={theme.statusBarBackground}>
+          <StatusBarItem height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
                 backgroundColor(theme.statusBarBackground),
@@ -179,8 +177,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
               text=fileType
             />
           </StatusBarItem>
-          <StatusBarItem
-            height backgroundColor={theme.statusBarBackground}>
+          <StatusBarItem height backgroundColor={theme.statusBarBackground}>
             <Text
               style=Style.[
                 backgroundColor(theme.statusBarBackground),

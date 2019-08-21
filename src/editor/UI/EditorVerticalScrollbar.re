@@ -127,10 +127,7 @@ let createElement =
         right(0),
         height(bot - t),
         backgroundColor(
-          Color.multiplyAlpha(
-            0.5,
-            state.theme.editorSelectionBackground,
-          ),
+          Color.multiplyAlpha(0.5, state.theme.editorSelectionBackground),
         ),
       ];
     };

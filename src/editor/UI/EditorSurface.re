@@ -358,8 +358,7 @@ let createElement =
       let isActiveLine = i == cursorLine;
       let defaultBackground =
         isActiveLine
-          ? theme.editorLineHighlightBackground
-          : theme.editorBackground;
+          ? theme.editorLineHighlightBackground : theme.editorBackground;
 
       let matchingPairIndex =
         switch (matchingPairs) {
@@ -648,9 +647,7 @@ let createElement =
                     | None => ()
                     | Some(v) =>
                       List.iter(
-                        renderRange(
-                          ~color=theme.editorSelectionBackground,
-                        ),
+                        renderRange(~color=theme.editorSelectionBackground),
                         v,
                       )
                     };
