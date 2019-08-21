@@ -30,6 +30,7 @@ module Grammar = {
     language: [@default None] option(string),
     scopeName: string,
     path: string,
+    treeSitterPath: [@default None] option(string),
   };
 };
 

@@ -95,6 +95,7 @@ describe("Textmate Service", ({test, _}) => {
         {
           scopeName: "source.reason",
           path: reasonSyntaxPath(setup),
+          treeSitterPath: None,
           language: None,
         },
       ],
@@ -151,6 +152,7 @@ describe("Textmate Service", ({test, _}) => {
         {
           scopeName: "source.reason",
           path: reasonSyntaxPath(setup),
+          treeSitterPath: None,
           language: None,
         },
       ],
@@ -198,6 +200,7 @@ describe("Textmate Service", ({test, _}) => {
         {
           scopeName: "source.reason",
           path: reasonSyntaxPath(setup),
+          treeSitterPath: None,
           language: None,
         },
       ],
