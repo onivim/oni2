@@ -72,7 +72,7 @@ module TokenStyle = {
   let show = (v: t) => {
     switch (v.foreground) {
     | None => "Foreground: None"
-    | Some(v) => "Foreground: Some"
+    | Some(_) => "Foreground: Some"
     };
   };
 
