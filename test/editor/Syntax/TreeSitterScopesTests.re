@@ -5,7 +5,7 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 open TreeSitterScopes;
 
 describe("TreeSitterScopes", ({describe, _}) =>
-  describe("TextMateConverter", ({test, _}) => {
+  describe("TextMateConverter", ({test, describe, _}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
     let simpleConverter =
@@ -120,6 +120,170 @@ describe("TreeSitterScopes", ({describe, _}) =>
       expect.bool(scope == Some("string.quoted.dictionary.key.json")).toBe(
         true,
       );
+    });
+
+    describe("of_yojson", ({test, _}) => {
+      test("empty json dictionary", ({expect, _}) => {
+        let json = Yojson.Safe.from_string({| { } |});
+
+        let converter = TextMateConverter.of_yojson(json);
+        expect.bool(converter == TextMateConverter.empty).toBe(true);
+      });
+      test("single item dictionary", ({expect, _}) => {
+        let json =
+          Yojson.Safe.from_string(
+            {| {
+        "value": "source.json"
+        } |},
+          );
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scope =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["value"],
+            converter,
+          );
+
+        expect.bool(scope == Some("source.json")).toBe(true);
+      });
+      test("multiple item dictionary", ({expect, _}) => {
+        let json =
+          Yojson.Safe.from_string(
+            {| {
+        "value": "source.json",
+        "object": "meta.structure.dictionary.json"
+        } |},
+          );
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scope1 =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["value"],
+            converter,
+          );
+        let scope2 =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["object"],
+            converter,
+          );
+
+        expect.bool(scope1 == Some("source.json")).toBe(true);
+        expect.bool(scope2 == Some("meta.structure.dictionary.json")).toBe(
+          true,
+        );
+      });
+      test("list of matchers", ({expect, _}) => {
+        let json =
+          Yojson.Safe.from_string(
+            {| {
+        "string_content": [
+          {
+            "match": "^http://",
+            "scopes": "markup.underline.link.http.hyperlink"
+          },
+          {
+            "match": "^https://",
+            "scopes": "markup.underline.link.https.hyperlink"
+          }
+        ]
+        } |},
+          );
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scopeNoMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["string_content"],
+            converter,
+          );
+        let scopeHttpMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["string_content"],
+            ~token="http://v2.onivim.io",
+            converter,
+          );
+        let scopeHttpsMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["string_content"],
+            ~token="https://v2.onivim.io",
+            converter,
+          );
+
+        expect.bool(scopeNoMatch == None).toBe(true);
+        expect.bool(
+          scopeHttpMatch == Some("markup.underline.link.http.hyperlink"),
+        ).
+          toBe(
+          true,
+        );
+        expect.bool(
+          scopeHttpsMatch == Some("markup.underline.link.https.hyperlink"),
+        ).
+          toBe(
+          true,
+        );
+      });
+      test("fallback to scope matcher", ({expect, _}) => {
+        let json =
+          Yojson.Safe.from_string(
+            {| {
+        "comment": [
+          {
+            "exact": "// special //",
+            "scopes": "comment.special"
+          },
+          {
+            "match": "^//",
+            "scopes": "comment.line"
+          },
+          "comment.block"
+        ]
+        } |},
+          );
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scopeCommentLineMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="// hello",
+            converter,
+          );
+        let scopeCommentBlockMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="test",
+            converter,
+          );
+
+        let scopeCommentSpecialMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="// special //",
+            converter,
+          );
+
+        expect.bool(scopeCommentLineMatch == Some("comment.line")).toBe(
+          true,
+        );
+        expect.bool(scopeCommentSpecialMatch == Some("comment.special")).toBe(
+          true,
+        );
+        expect.bool(scopeCommentBlockMatch == Some("comment.block")).toBe(
+          true,
+        );
+      });
     });
   })
 );
