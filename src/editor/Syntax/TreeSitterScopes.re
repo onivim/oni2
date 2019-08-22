@@ -135,9 +135,27 @@ module TextMateConverter = {
 
   let of_yojson = (json: Yojson.Safe.json) => {
 
-    let parseSelector = (selectorJson: Yojson.Safe.json) => {
+    let parseSelectorList = (selectorJson: list(Yojson.Safe.json)) => {
+      let f = (json: Yojson.Safe.json) => {
+
+        let match = Yojson.Safe.Util.member("match", json);
+        let scopes = Yojson.Safe.Util.member("scopes", json);
+
+        switch ((match, scopes)) {
+        | (`String(m), `String(s)) => [Matcher.RegExMatch(Str.regexp(m), s)]
+        | _ => []
+        }
+      };
+
+      selectorJson
+      |> List.map(f)
+      |> List.flatten
+    };
+
+    let parseSelectors = (selectorJson: Yojson.Safe.json) => {
       switch (selectorJson) {
       | `String(v) => [Matcher.Scope(v)]
+      | `List(v) => parseSelectorList(v)
       | _ => [];
       }
     };
@@ -148,7 +166,7 @@ module TextMateConverter = {
       dict
       |> List.map(v => {
         let (key, selectorJson) = v;
-        [(key, parseSelector(selectorJson))]
+        [(key, parseSelectors(selectorJson))]
       })
       |> List.flatten;
       create(selectors);

@@ -166,6 +166,44 @@ describe("TreeSitterScopes", ({describe, _}) => {
         expect.bool(scope1 == Some("source.json")).toBe(true);
         expect.bool(scope2 == Some("meta.structure.dictionary.json")).toBe(true);
       });
+      test("list of matchers", ({expect, _}) => {
+        let json = Yojson.Safe.from_string({| { 
+        "string_content": [
+          {
+            "match": "^http://",
+            "scopes": "markup.underline.link.http.hyperlink"
+          },
+          {
+            "match": "^https://",
+            "scopes": "markup.underline.link.https.hyperlink"
+          }
+        ]
+        } |});
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scopeNoMatch = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["string_content"],
+          converter,
+        );
+        let scopeHttpMatch = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["string_content"],
+          ~token="http://v2.onivim.io",
+          converter,
+        );
+        let scopeHttpsMatch = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["string_content"],
+          ~token="https://v2.onivim.io",
+          converter,
+        );
+
+        expect.bool(scopeNoMatch == None).toBe(true);
+        expect.bool(scopeHttpMatch == Some("markup.underline.link.http.hyperlink")).toBe(true);
+        expect.bool(scopeHttpsMatch == Some("markup.underline.link.https.hyperlink")).toBe(true);
+      });
     });
   });
 });
