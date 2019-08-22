@@ -63,7 +63,7 @@ const oneDayAgo = new Date(date.setDate(date.getDate() - 1));
 const oneWeekAgo = new Date(date.setDate(date.getDate() - 7));
 
 const getActivePrsForRepo = async (repo) => {
-    return axios.get(`https://api.github.com/repos/onivim/${repo}/pulls`, { headers: { 'User-Agent': 'onivim2' } })
+    return axios.get(`https://api.github.com/repos/${repo}/pulls`, { headers: { 'User-Agent': 'onivim2' } })
     .then((response) => {
     const body = response.data;
 
@@ -72,7 +72,7 @@ const getActivePrsForRepo = async (repo) => {
     
         return {
             repoName: repo,
-            repoUrl: "https://github.com/onivim/" + repo,
+            repoUrl: "https://github.com/" + repo,
             number: pr.number,
             prUrl: pr.html_url,
             author: pr.user.login,
@@ -136,13 +136,14 @@ const run = async () => {
     console.log(weekReleaseNotes);
 
 
-    const oniPrs = await getActivePrsForRepo("oni2");
-    const libvimPrs = await getActivePrsForRepo("libvim");
-    const reasonLibvimPrs = await getActivePrsForRepo("reason-libvim");
-    const treeSitterPrs = await getActivePrsForRepo("esy-tree-sitter");
-    const reasonTreeSitterPrs = await getActivePrsForRepo("reason-tree-sitter");
+    const oniPrs = await getActivePrsForRepo("onivim/oni2");
+    const libvimPrs = await getActivePrsForRepo("onivim/libvim");
+    const reasonLibvimPrs = await getActivePrsForRepo("onivim/reason-libvim");
+    const treeSitterPrs = await getActivePrsForRepo("onivim/esy-tree-sitter");
+    const reasonTreeSitterPrs = await getActivePrsForRepo("onivim/reason-tree-sitter");
+    const reveryPrs = await getActivePrsForRepo("revery-ui/revery");
 
-    let prs = [].concat(oniPrs).concat(libvimPrs).concat(reasonLibvimPrs).concat(treeSitterPrs).concat(reasonTreeSitterPrs);
+    let prs = [].concat(oniPrs).concat(libvimPrs).concat(reasonLibvimPrs).concat(treeSitterPrs).concat(reasonTreeSitterPrs).concat(reveryPrs);
 
     prs = prs.sort((a, b) => {
         return b.date.getTime() - a.date.getTime();
