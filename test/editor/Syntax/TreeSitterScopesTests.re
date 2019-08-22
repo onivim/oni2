@@ -4,8 +4,8 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 
 open TreeSitterScopes;
 
-describe("TreeSitterScopes", ({describe, _}) =>
-  describe("TextMateConverter", ({test, _}) => {
+describe("TreeSitterScopes", ({describe, _}) => {
+  describe("TextMateConverter", ({test, describe, _}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
     let simpleConverter =
@@ -121,5 +121,51 @@ describe("TreeSitterScopes", ({describe, _}) =>
         true,
       );
     });
-  })
-);
+
+    describe("of_yojson", ({test, _}) => {
+      test("empty json dictionary", ({expect, _}) => {
+        let json = Yojson.Safe.from_string({| { } |});
+
+        let converter = TextMateConverter.of_yojson(json);
+        expect.bool(converter == TextMateConverter.empty).toBe(true);
+      });
+      test("single item dictionary", ({expect, _}) => {
+        let json = Yojson.Safe.from_string({| { 
+        "value": "source.json"
+        } |});
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scope = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["value"],
+          converter,
+        );
+
+        expect.bool(scope == Some("source.json")).toBe(true);
+      });
+      test("multiple item dictionary", ({expect, _}) => {
+        let json = Yojson.Safe.from_string({| { 
+        "value": "source.json",
+        "object": "meta.structure.dictionary.json"
+        } |});
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scope1 = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["value"],
+          converter,
+        );
+        let scope2 = TextMateConverter.getTextMateScope(
+          ~index=1,
+          ~path=["object"],
+          converter,
+        );
+
+        expect.bool(scope1 == Some("source.json")).toBe(true);
+        expect.bool(scope2 == Some("meta.structure.dictionary.json")).toBe(true);
+      });
+    });
+  });
+});

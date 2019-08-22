@@ -133,6 +133,30 @@ module TextMateConverter = {
     );
   };
 
+  let of_yojson = (json: Yojson.Safe.json) => {
+
+    let parseSelector = (selectorJson: Yojson.Safe.json) => {
+      switch (selectorJson) {
+      | `String(v) => [Matcher.Scope(v)]
+      | _ => [];
+      }
+    };
+
+    switch (json) {
+    | `Assoc(dict) => {
+      let selectors = 
+      dict
+      |> List.map(v => {
+        let (key, selectorJson) = v;
+        [(key, parseSelector(selectorJson))]
+      })
+      |> List.flatten;
+      create(selectors);
+    }
+    | _ => empty
+    }
+  };
+
   let _getTextMateScopeForNonChildSelector = (token, path, v) => {
     switch (Trie.matches(v.defaultSelectors, path)) {
     | [] => None

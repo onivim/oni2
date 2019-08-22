@@ -36,6 +36,8 @@ module TextMateConverter: {
    */
   let create: list(scopeSelector) => t;
 
+  let of_yojson: (Yojson.Safe.json) => t;
+
   /*
      [getTextMateScope(~index, ~token, ~path, v)] resolves information from
      the tree-sitter syntax tree into a textmate scope. The information that
