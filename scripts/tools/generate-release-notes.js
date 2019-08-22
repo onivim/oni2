@@ -50,7 +50,7 @@ const getCommitInfo = async (commit) => {
 };
 
 const commitToMarkdown = (commit) => {
-    return `- [#${commit.shortCommitId}](https://github.com/onivim/oni2/commits/${commit.commitId}): ${commit.message} (@[${commit.author}](https://github.com/${commit.author})`;
+    return `- [#${commit.shortCommitId}](https://github.com/onivim/oni2/commit/${commit.commitId}): ${commit.message} (@[${commit.author}](https://github.com/${commit.author}))`;
 };
 
 const commitsToMarkdown = (commits) => {
