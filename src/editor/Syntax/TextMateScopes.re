@@ -78,10 +78,10 @@ module TokenStyle = {
 
   let create =
       (
-        ~foreground: option(Color.t)=?,
-        ~background: option(Color.t)=?,
-        ~bold: option(bool)=?,
-        ~italic: option(bool)=?,
+        ~foreground: option(Color.t)=None,
+        ~background: option(Color.t)=None,
+        ~bold: option(bool)=None,
+        ~italic: option(bool)=None,
         (),
       ) => {
     foreground,

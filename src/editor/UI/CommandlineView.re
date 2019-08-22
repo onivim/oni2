@@ -63,7 +63,7 @@ let createElement =
               style=Style.[
                 width(400),
                 overflow(`Hidden),
-                backgroundColor(theme.colors.editorBackground),
+                backgroundColor(theme.editorBackground),
                 flexDirection(`Row),
                 alignItems(`Center),
                 paddingVertical(8),

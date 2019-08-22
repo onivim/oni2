@@ -55,9 +55,9 @@ let createElement =
       Style.[
         overflow(`Hidden),
         paddingHorizontal(5),
-        backgroundColor(theme.colors.editorBackground),
+        backgroundColor(theme.editorBackground),
         borderTop(~color=borderColor, ~width=2),
-        borderBottom(~color=theme.colors.editorBackground, ~width=2),
+        borderBottom(~color=theme.editorBackground, ~width=2),
         height(Constants.default.tabHeight),
         minWidth(minWidth_),
         flexDirection(`Row),
@@ -72,8 +72,8 @@ let createElement =
         textOverflow(`Ellipsis),
         fontFamily(uiFont.fontFile),
         fontSize(uiFont.fontSize),
-        color(theme.colors.tabActiveForeground),
-        backgroundColor(theme.colors.editorBackground),
+        color(theme.tabActiveForeground),
+        backgroundColor(theme.editorBackground),
         justifyContent(`Center),
         alignItems(`Center),
       ];
@@ -100,7 +100,7 @@ let createElement =
         <FontIcon
           fontFamily="seti.ttf"
           icon={v.fontCharacter}
-          backgroundColor={theme.colors.editorBackground}
+          backgroundColor={theme.editorBackground}
           color={v.fontColor}
           /* TODO: Use 'weight' value from IconTheme font */
           fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
@@ -134,8 +134,8 @@ let createElement =
         <Clickable onClick=onClose style=iconContainerStyle>
           <FontIcon
             icon
-            backgroundColor={theme.colors.editorBackground}
-            color={theme.colors.tabActiveForeground}
+            backgroundColor={theme.editorBackground}
+            color={theme.tabActiveForeground}
             fontSize={modified ? 10 : 12}
           />
         </Clickable>

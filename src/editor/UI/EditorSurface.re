@@ -43,8 +43,8 @@ let renderLineNumber =
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
     isActiveLine
-      ? theme.colors.editorActiveLineNumberForeground
-      : theme.colors.editorLineNumberForeground;
+      ? theme.editorActiveLineNumberForeground
+      : theme.editorLineNumberForeground;
 
   let yF = yOffset;
 
@@ -71,7 +71,7 @@ let renderLineNumber =
     ~transform,
     ~x=lineNumberXOffset,
     ~y=yF,
-    ~backgroundColor=theme.colors.editorLineNumberBackground,
+    ~backgroundColor=theme.editorLineNumberBackground,
     ~color=lineNumberTextColor,
     ~fontFamily,
     ~fontSize,
@@ -106,7 +106,7 @@ let renderSpaces =
       ~y=y +. yOffset,
       ~width=size,
       ~height=size,
-      ~color=theme.colors.editorWhitespaceForeground,
+      ~color=theme.editorWhitespaceForeground,
       (),
     );
 
@@ -159,7 +159,7 @@ let renderTokens =
         ~x=x +. fontWidth /. 4.,
         ~y=y +. fontHeight /. 4.,
         ~backgroundColor,
-        ~color=theme.colors.editorWhitespaceForeground,
+        ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10,
         FontIcon.codeToIcon(0xf30b),
@@ -358,8 +358,7 @@ let createElement =
       let isActiveLine = i == cursorLine;
       let defaultBackground =
         isActiveLine
-          ? theme.colors.editorLineHighlightBackground
-          : theme.colors.editorBackground;
+          ? theme.editorLineHighlightBackground : theme.editorBackground;
 
       let matchingPairIndex =
         switch (matchingPairs) {
@@ -382,7 +381,7 @@ let createElement =
           state.syntaxHighlighting.colorMap,
           selection,
           defaultBackground,
-          theme.colors.editorSelectionBackground,
+          theme.editorSelectionBackground,
           matchingPairIndex,
           searchHighlightRanges,
         );
@@ -398,8 +397,8 @@ let createElement =
 
     let style =
       Style.[
-        backgroundColor(theme.colors.editorBackground),
-        color(theme.colors.editorForeground),
+        backgroundColor(theme.editorBackground),
+        color(theme.editorForeground),
         flexGrow(1),
       ];
 
@@ -446,7 +445,7 @@ let createElement =
           int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
         ),
         width(Constants.default.scrollBarThickness),
-        backgroundColor(theme.colors.scrollbarSliderBackground),
+        backgroundColor(theme.scrollbarSliderBackground),
         bottom(0),
       ];
 
@@ -565,7 +564,7 @@ let createElement =
                   -. editor.scrollY,
                 ~height=fontHeight,
                 ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
-                ~color=theme.colors.editorLineHighlightBackground,
+                ~color=theme.editorLineHighlightBackground,
                 (),
               );
 
@@ -577,7 +576,7 @@ let createElement =
                   ~y=0.0,
                   ~height=float_of_int(metrics.pixelHeight),
                   ~width=float_of_int(1),
-                  ~color=theme.colors.editorRulerForeground,
+                  ~color=theme.editorRulerForeground,
                   (),
                 );
 
@@ -648,15 +647,13 @@ let createElement =
                     | None => ()
                     | Some(v) =>
                       List.iter(
-                        renderRange(
-                          ~color=theme.colors.editorSelectionBackground,
-                        ),
+                        renderRange(~color=theme.editorSelectionBackground),
                         v,
                       )
                     };
 
                     /* Draw match highlights */
-                    let matchColor = theme.colors.editorSelectionBackground;
+                    let matchColor = theme.editorSelectionBackground;
                     switch (matchingPairs) {
                     | None => ()
                     | Some(v) =>
@@ -688,7 +685,7 @@ let createElement =
                         r =>
                           renderRange(
                             ~offset=2.0,
-                            ~color=theme.colors.editorFindMatchBackground,
+                            ~color=theme.editorFindMatchBackground,
                             r,
                           ),
                         v,
@@ -752,7 +749,7 @@ let createElement =
                   ~y=0.,
                   ~width=lineNumberWidth,
                   ~height=float_of_int(height),
-                  ~color=theme.colors.editorLineNumberBackground,
+                  ~color=theme.editorLineNumberBackground,
                   (),
                 );
 

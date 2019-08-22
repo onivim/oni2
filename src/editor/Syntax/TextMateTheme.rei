@@ -30,6 +30,22 @@ let create:
   t;
 
 /*
+    [of_yojson] instantiates a Theme [t] from JSON
+ */
+let of_yojson:
+  (
+    ~defaultBackground: Color.t,
+    ~defaultForeground: Color.t,
+    Yojson.Safe.json
+  ) =>
+  t;
+
+/*
+   [empty] is an empty Theme [t] with no selectors
+ */
+let empty: t;
+
+/*
     [match] returns the resolved style information,
     given the scopes [string]. The [scopes] should include
     the full ancestor list, separated by spaces, for example:

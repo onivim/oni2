@@ -33,7 +33,7 @@ let createElement =
         left(scrollMetrics.thumbOffset),
         width(scrollMetrics.thumbSize),
         top(0),
-        backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
+        backgroundColor(state.theme.scrollbarSliderActiveBackground),
       ];
 
     let elm =
