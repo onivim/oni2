@@ -303,5 +303,77 @@ describe("TextMateTheme", ({describe, _}) => {
       expect.bool(style.bold).toBe(true);
       expect.bool(style.italic).toBe(false);
     });
+    test("compound selector", ({expect, _}) => {
+      let json =
+        Yojson.Safe.from_string(
+          {|
+       [{
+        "name": "Text",
+        "scope": "constant.numeric.hex, constant.numeric.oct",
+        "settings": {
+            "foreground": "#bbbbbb",
+            "italic": true
+        }
+       }]
+      |},
+        );
+
+      let theme =
+        TextMateTheme.of_yojson(
+          ~defaultForeground=Colors.white,
+          ~defaultBackground=Colors.black,
+          json,
+        );
+
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.hex");
+      expect.bool(style.foreground == Color.hex("#bbbbbb")).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.oct");
+      expect.bool(style.foreground == Color.hex("#bbbbbb")).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+    });
+    test("compound array selector", ({expect, _}) => {
+      let json =
+        Yojson.Safe.from_string(
+          {|
+       [{
+        "name": "Text",
+        "scope": ["constant.numeric.hex", "constant.numeric.oct"],
+        "settings": {
+            "foreground": "#bbbbbb",
+            "italic": true
+        }
+       }]
+      |},
+        );
+
+      let theme =
+        TextMateTheme.of_yojson(
+          ~defaultForeground=Colors.white,
+          ~defaultBackground=Colors.black,
+          json,
+        );
+
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.hex");
+      expect.bool(style.foreground == Color.hex("#bbbbbb")).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+
+      let style: ResolvedStyle.t =
+        TextMateTheme.match(theme, "constant.numeric.oct");
+      expect.bool(style.foreground == Color.hex("#bbbbbb")).toBe(true);
+      expect.bool(style.background == Colors.black).toBe(true);
+      expect.bool(style.bold).toBe(false);
+      expect.bool(style.italic).toBe(true);
+    });
   });
 });

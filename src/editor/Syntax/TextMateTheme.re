@@ -110,6 +110,17 @@ let of_yojson =
       );
     };
 
+
+  let parseStringList = (arr: list(Yojson.Safe.json)) => {
+      List.fold_left((prev, curr) => {
+
+        switch (curr) {
+        | `String(v) => [v, ...prev]
+        | _ => prev
+        }
+      }, [], arr);
+  };
+  
   let parseSelector = (selector: Yojson.Safe.json) => {
     switch (selector) {
     | `Assoc(_) =>
@@ -117,6 +128,10 @@ let of_yojson =
       let settings = Yojson.Safe.Util.member("settings", selector);
 
       switch (scope, settings) {
+      | (`List(v), `Assoc(_)) =>
+        let tokenStyle = parseSettings(settings);
+        let selector = parseStringList(v) |> String.concat(",");
+        [(selector, tokenStyle)]
       | (`String(v), `Assoc(_)) =>
         let tokenStyle = parseSettings(settings);
         let selector = v;
