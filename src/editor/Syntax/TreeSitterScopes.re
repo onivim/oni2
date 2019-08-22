@@ -139,13 +139,15 @@ module TextMateConverter = {
         switch (json) {
         | `String(v) => [Matcher.Scope(v)]
         | `Assoc(_) =>
+          let exact = Yojson.Safe.Util.member("exact", json);
           let match = Yojson.Safe.Util.member("match", json);
           let scopes = Yojson.Safe.Util.member("scopes", json);
 
-          switch (match, scopes) {
-          | (`String(m), `String(s)) => [
+          switch (exact, match, scopes) {
+          | (_, `String(m), `String(s)) => [
               Matcher.RegExMatch(Str.regexp(m), s),
             ]
+          | (`String(e), _, `String(s)) => [Matcher.ExactMatch(e, s)]
           | _ => []
           };
         | _ => []

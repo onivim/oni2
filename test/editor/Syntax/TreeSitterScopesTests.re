@@ -237,6 +237,10 @@ describe("TreeSitterScopes", ({describe, _}) =>
             {| {
         "comment": [
           {
+            "exact": "// special //",
+            "scopes": "comment.special"
+          },
+          {
             "match": "^//",
             "scopes": "comment.line"
           },
@@ -262,16 +266,21 @@ describe("TreeSitterScopes", ({describe, _}) =>
             converter,
           );
 
-        expect.bool(
-          scopeCommentLineMatch == Some("comment.line"),
-        ).
-          toBe(
+        let scopeCommentSpecialMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="// special //",
+            converter,
+          );
+
+        expect.bool(scopeCommentLineMatch == Some("comment.line")).toBe(
           true,
         );
-        expect.bool(
-          scopeCommentBlockMatch == Some("comment.block"),
-        ).
-          toBe(
+        expect.bool(scopeCommentSpecialMatch == Some("comment.special")).toBe(
+          true,
+        );
+        expect.bool(scopeCommentBlockMatch == Some("comment.block")).toBe(
           true,
         );
       });
