@@ -231,6 +231,50 @@ describe("TreeSitterScopes", ({describe, _}) =>
           true,
         );
       });
+      test("fallback to scope matcher", ({expect, _}) => {
+        let json =
+          Yojson.Safe.from_string(
+            {| {
+        "comment": [
+          {
+            "match": "^//",
+            "scopes": "comment.line"
+          },
+          "comment.block"
+        ]
+        } |},
+          );
+
+        let converter = TextMateConverter.of_yojson(json);
+
+        let scopeCommentLineMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="// hello",
+            converter,
+          );
+        let scopeCommentBlockMatch =
+          TextMateConverter.getTextMateScope(
+            ~index=1,
+            ~path=["comment"],
+            ~token="test",
+            converter,
+          );
+
+        expect.bool(
+          scopeCommentLineMatch == Some("comment.line"),
+        ).
+          toBe(
+          true,
+        );
+        expect.bool(
+          scopeCommentBlockMatch == Some("comment.block"),
+        ).
+          toBe(
+          true,
+        );
+      });
     });
   })
 );
