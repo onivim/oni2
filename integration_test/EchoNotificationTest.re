@@ -11,21 +11,20 @@ runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
   Vim.command("echo 'hi from test'");
   runEffects();
 
-  wait(~name="notification shows up", (state: State.t) => {
-    
-    if(Notifications.any(state.notifications)) {
-      let notification = List.hd(state.notifications); 
+  wait(~name="notification shows up", (state: State.t) =>
+    if (Notifications.any(state.notifications)) {
+      let notification = List.hd(state.notifications);
       String.equal(notification.message, "hi from test");
     } else {
-      true
+      true;
     }
-  });
+  );
 
   // Escape clears notification
   dispatch(KeyboardInput("<esc>"));
   runEffects();
 
-  wait(~name="Notification is cleared", (state: State.t) => {
-    List.length(state.notifications) == 0;
-  });
+  wait(~name="Notification is cleared", (state: State.t) =>
+    List.length(state.notifications) == 0
+  );
 });
