@@ -61,9 +61,10 @@ let start =
     Vim.onUnhandledEscape(() => {
       let state = getState();
       if (Model.Notifications.any(state.notifications)) {
-        let oldestNotificationId = Model.Notifications.getOldestId(state.notifications);
+        let oldestNotificationId =
+          Model.Notifications.getOldestId(state.notifications);
         dispatch(Model.Actions.HideNotification(oldestNotificationId));
-      }
+      };
     });
 
   let _ =

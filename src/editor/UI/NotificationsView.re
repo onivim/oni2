@@ -187,7 +187,6 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            message={n.message}
          />;
        });
-    
 
   <Positioned bottom=50 right=50> ...notifications </Positioned>;
 };
