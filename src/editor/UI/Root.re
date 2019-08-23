@@ -47,7 +47,7 @@ let statusBarStyle = statusBarHeight =>
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let style = rootStyle(theme.colors.background, theme.colors.foreground);
+    let style = rootStyle(theme.background, theme.foreground);
 
     let statusBarVisible =
       Selectors.getActiveConfigurationValue(state, c =>

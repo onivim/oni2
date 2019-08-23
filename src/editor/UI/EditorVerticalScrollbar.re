@@ -36,7 +36,7 @@ let createElement =
         left(0),
         width(totalWidth),
         height(scrollMetrics.thumbSize),
-        backgroundColor(state.theme.colors.scrollbarSliderActiveBackground),
+        backgroundColor(state.theme.scrollbarSliderActiveBackground),
       ];
 
     let totalPixel =
@@ -64,7 +64,7 @@ let createElement =
         left(0),
         width(totalWidth),
         height(cursorSize),
-        backgroundColor(state.theme.colors.foreground),
+        backgroundColor(state.theme.foreground),
       ];
 
     let diagnosticLines =
@@ -101,7 +101,7 @@ let createElement =
         right(4),
         height(8),
         backgroundColor(
-          state.theme.colors.editorOverviewRulerBracketMatchForeground,
+          state.theme.editorOverviewRulerBracketMatchForeground,
         ),
       ];
 
@@ -127,10 +127,7 @@ let createElement =
         right(0),
         height(bot - t),
         backgroundColor(
-          Color.multiplyAlpha(
-            0.5,
-            state.theme.colors.editorSelectionBackground,
-          ),
+          Color.multiplyAlpha(0.5, state.theme.editorSelectionBackground),
         ),
       ];
     };
@@ -159,7 +156,7 @@ let createElement =
         left(4),
         right(4),
         height(8),
-        backgroundColor(state.theme.colors.editorFindMatchBackground),
+        backgroundColor(state.theme.editorFindMatchBackground),
       ];
 
     let searchHighlightToElement = ((line, _)) => {

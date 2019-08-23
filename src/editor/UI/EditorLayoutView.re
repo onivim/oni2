@@ -27,7 +27,7 @@ let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
     width(w),
     top(0),
     bottom(0),
-    backgroundColor(theme.colors.sideBarBackground),
+    backgroundColor(theme.sideBarBackground),
   ];
 };
 

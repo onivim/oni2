@@ -10,8 +10,8 @@ let menuHeight = 320;
 
 let containerStyles = (theme: Theme.t) =>
   Style.[
-    backgroundColor(theme.colors.editorMenuBackground),
-    color(theme.colors.editorMenuForeground),
+    backgroundColor(theme.editorMenuBackground),
+    color(theme.editorMenuForeground),
   ];
 
 let menuItemStyle =
