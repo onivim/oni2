@@ -57,7 +57,8 @@
       {
         "language": "json",
         "scopeName": "source.json",
-        "path": "./syntaxes/JSON.tmLanguage.json"
+        "path": "./syntaxes/JSON.tmLanguage.json",
+        "treeSitterPath": "./syntaxes/tree-sitter-json.json"
       },
       {
         "language": "jsonc",
@@ -71,5 +72,8 @@
         "url": "http://json-schema.org/draft-07/schema#"
       }
     ]
+  },
+  "dependencies": {
+    "cson": "^5.1.0"
   }
 }

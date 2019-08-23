@@ -75,15 +75,14 @@ let create =
       List.exists(doesSearchIntersect, searchHighlightRanges);
 
     let backgroundColor =
-      isSearchHighlight
-        ? theme.colors.editorFindMatchBackground : backgroundColor;
+      isSearchHighlight ? theme.editorFindMatchBackground : backgroundColor;
 
     let color =
       ColorMap.get(
         colorMap,
         colorIndex.foregroundColor,
-        theme.colors.editorForeground,
-        theme.colors.editorBackground,
+        theme.editorForeground,
+        theme.editorBackground,
       );
     (backgroundColor, color);
   };

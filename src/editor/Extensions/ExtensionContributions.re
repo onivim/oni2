@@ -30,6 +30,19 @@ module Grammar = {
     language: [@default None] option(string),
     scopeName: string,
     path: string,
+    treeSitterPath: [@default None] option(string),
+  };
+
+  let toAbsolutePath = (path: string, g: t) => {
+    let path = Path.join(path, g.path);
+
+    let treeSitterPath =
+      switch (g.treeSitterPath) {
+      | Some(v) => Some(Path.join(path, v))
+      | None => None
+      };
+
+    {...g, path, treeSitterPath};
   };
 };
 
@@ -61,7 +74,7 @@ type t = {
 };
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
-  List.map(g => Grammar.{...g, path: Path.join(path, g.path)}, grammars);
+  List.map(g => Grammar.toAbsolutePath(path, g), grammars);
 };
 
 let _remapThemes = (path: string, themes: list(Theme.t)) => {

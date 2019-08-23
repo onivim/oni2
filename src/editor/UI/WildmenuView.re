@@ -11,7 +11,7 @@ let containerStyles = (theme: Theme.t) =>
   Style.[
     width(400),
     height(300),
-    backgroundColor(theme.colors.editorMenuBackground),
+    backgroundColor(theme.editorMenuBackground),
     paddingVertical(20),
     overflow(`Hidden),
   ];

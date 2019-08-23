@@ -133,6 +133,52 @@ module TextMateConverter = {
     );
   };
 
+  let of_yojson = (json: Yojson.Safe.json) => {
+    let parseSelectorList = (selectorJson: list(Yojson.Safe.json)) => {
+      let f = (json: Yojson.Safe.json) => {
+        switch (json) {
+        | `String(v) => [Matcher.Scope(v)]
+        | `Assoc(_) =>
+          let exact = Yojson.Safe.Util.member("exact", json);
+          let match = Yojson.Safe.Util.member("match", json);
+          let scopes = Yojson.Safe.Util.member("scopes", json);
+
+          switch (exact, match, scopes) {
+          | (_, `String(m), `String(s)) => [
+              Matcher.RegExMatch(Str.regexp(m), s),
+            ]
+          | (`String(e), _, `String(s)) => [Matcher.ExactMatch(e, s)]
+          | _ => []
+          };
+        | _ => []
+        };
+      };
+
+      selectorJson |> List.map(f) |> List.flatten;
+    };
+
+    let parseSelectors = (selectorJson: Yojson.Safe.json) => {
+      switch (selectorJson) {
+      | `String(v) => [Matcher.Scope(v)]
+      | `List(v) => parseSelectorList(v)
+      | _ => []
+      };
+    };
+
+    switch (json) {
+    | `Assoc(dict) =>
+      let selectors =
+        dict
+        |> List.map(v => {
+             let (key, selectorJson) = v;
+             [(key, parseSelectors(selectorJson))];
+           })
+        |> List.flatten;
+      create(selectors);
+    | _ => empty
+    };
+  };
+
   let _getTextMateScopeForNonChildSelector = (token, path, v) => {
     switch (Trie.matches(v.defaultSelectors, path)) {
     | [] => None
