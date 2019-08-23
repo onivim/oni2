@@ -107,6 +107,7 @@ let init = app => {
       dispatch(Model.Actions.EditorScroll(deltaY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
+    hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
     dispatch,
     state: initialState,
   });

@@ -51,6 +51,8 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
+  | ShowNotification(notification)
+  | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
   | MenuSearch(string)
@@ -89,6 +91,17 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
+and notificationType =
+  | Success
+  | Info
+  | Warning
+  | Error
+and notification = {
+  id: int,
+  notificationType,
+  title: string,
+  message: string,
+}
 and editor = {
   editorId: int,
   bufferId: int,

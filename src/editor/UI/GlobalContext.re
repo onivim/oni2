@@ -22,6 +22,7 @@ type t = {
   setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
+  hideNotification: int => unit,
   dispatch: Actions.t => unit,
   getState: unit => State.t,
   state: State.t,
@@ -38,6 +39,7 @@ let default = {
     (~editorGroupId as _, ~width as _, ~height as _, ()) =>
     (),
   editorScroll: (~deltaY as _, ()) => (),
+  hideNotification: _ => (),
   openEditorById: _ => (),
   setActiveWindow: (_, _) => (),
   dispatch: _ => (),

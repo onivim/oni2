@@ -73,6 +73,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <WildmenuView theme wildmenu={state.wildmenu} />
           <MenuView theme menu={state.menu} font={state.uiFont} />
           <KeyDisplayerView state />
+          <NotificationsView state />
         </Overlay>
         statusBar
       </View>,
