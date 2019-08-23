@@ -1,6 +1,3 @@
-open Oni_Core;
-open Oni_Core.Types;
-
 open Actions;
 
 type t = list(Notification.t);
@@ -42,6 +39,17 @@ print_endline ("reducer called");
   };
 };
 
-let getOldestNotificationId = (state: t, action: Actions.t) => {
-  -1;
+let any = (state: t) => {
+  switch (state) {
+  | [] => false
+  | _ => true;
+  }
+};
+
+let getOldestId = (state: t) => {
+  let n = state
+  |> List.rev
+  |> List.hd;
+
+  n.id;
 };

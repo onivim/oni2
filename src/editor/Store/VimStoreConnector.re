@@ -55,6 +55,13 @@ let start =
     };
   });
 
+  /*let _ =
+    // Unhandled escape is called when there is an `<esc>` sent to Vim,
+    // but nothing to escape from (ie, in normal mode with no pending operator)
+    Vim.onUnhandledEscape(() => {
+      print_endline ("Unhandled escape");
+    });*/
+
   let _ =
     Vim.Mode.onChanged(newMode =>
       dispatch(Model.Actions.ChangeMode(newMode))
