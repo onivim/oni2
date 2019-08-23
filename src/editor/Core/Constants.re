@@ -33,6 +33,8 @@ type t = {
    * some features like syntax highlighting will be disabled.
    */
   largeFileLineCountThreshold: int,
+
+  notificationWidth: int,
 };
 
 let default: t = {
@@ -44,6 +46,7 @@ let default: t = {
   minimapMaxColumn: 120,
   maximumExplorerDepth: 1,
   tabHeight: 35,
+  notificationWidth: 300,
 
   /*
    * The threshold we set right now is artificially low,

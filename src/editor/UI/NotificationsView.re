@@ -14,7 +14,7 @@ open Oni_Model;
 let bgc = Color.rgb(0.1, 0.1, 0.1);
 let fgc = Color.rgb(0.9, 0.9, 0.9);
 
-let notificationWidth = 300;
+let notificationWidth = Core.Constants.default.notificationWidth;
 
 let notification =
     (
