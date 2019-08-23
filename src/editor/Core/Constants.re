@@ -6,6 +6,10 @@
  */
 
 type t = {
+
+  fontAwesomeRegularPath: string,
+  fontAwesomeSolidPath: string,
+
   /* Horizontal padding on each side of the minimap */
   minimapPadding: int,
   /*
@@ -38,6 +42,8 @@ type t = {
 };
 
 let default: t = {
+  fontAwesomeRegularPath: "FontAwesome5FreeRegular.otf",
+  fontAwesomeSolidPath: "FontAwesome5FreeSolid.otf",
   minimapPadding: 0,
   minimapCharacterWidth: 1,
   minimapCharacterHeight: 2,

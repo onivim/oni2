@@ -22,6 +22,7 @@ let notification =
       ~onClose,
       ~background,
       ~foreground,
+      ~icon,
       ~uiFont,
       ~message,
       ~title: string,
@@ -57,16 +58,12 @@ let notification =
               ]>
               <Container width=40 height=40>
                 <Center>
-                  <Text
-                    style=Style.[
-                      fontFamily(uiFont),
-                      fontSize(16),
-                      textWrap(TextWrapping.NoWrap),
-                      backgroundColor(background),
-                      color(foreground),
-                      flexGrow(0),
-                    ]
-                    text="!"
+                  <FontIcon
+                      fontFamily=Core.Constants.default.fontAwesomeSolidPath
+                      icon={icon}
+                      fontSize={16}
+                      backgroundColor=background
+                      color=foreground
                   />
                 </Center>
               </Container>
@@ -154,21 +151,24 @@ let createElement = (~children as _, ~state: State.t, ()) => {
   let notifications =
     state.notifications
     |> List.map((n: Notification.t) => {
-         let (background, foreground) =
+         let (icon, background, foreground) =
            switch (n.notificationType) {
            | Actions.Success => (
+               FontAwesome.checkCircle,
                notificationSuccessBackground,
                notificationSuccessForeground,
              )
            | Actions.Warning => (
+               FontAwesome.exclamationTriangle,
                notificationWarningBackground,
                notificationWarningForeground,
              )
            | Actions.Error => (
+               FontAwesome.exclamationCircle,
                notificationErrorBackground,
                notificationErrorForeground,
              )
-           | _ => (notificationInfoBackground, notificationInfoForeground)
+           | _ => (FontAwesome.infoCircle, notificationInfoBackground, notificationInfoForeground)
            };
 
           let onClose = () => GlobalContext.current().hideNotification(n.id);
@@ -178,6 +178,7 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            foreground
            onClose
            uiFont
+           icon
            title={n.title}
            message={n.message}
          />;
