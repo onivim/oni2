@@ -1,5 +1,5 @@
 {
-  "checksum": "b5f3d154ac70600c488bc197c3cee8e0",
+  "checksum": "c707ff14d29ce8d6ccf102dd5760a710",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -93,7 +93,7 @@
         "reason-gl-matrix@0.9.9304@d41d8cd9",
         "reason-fontkit@2.5.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "flex@1.2.2@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
-        "@opam/lwt_ppx@opam:1.2.3@22f5b56c", "@opam/lwt@opam:4.3.0@3f2cb6e0",
+        "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.3.0@3f2cb6e0",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
         "@opam/js_of_ocaml@github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce@d41d8cd9",
@@ -169,7 +169,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "@opam/lwt_ppx@opam:1.2.3@22f5b56c", "@opam/lwt@opam:4.3.0@3f2cb6e0",
+        "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.3.0@3f2cb6e0",
         "@opam/lambda-term@opam:2.0.2@ecff8c4f",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
@@ -296,7 +296,7 @@
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "reason-gl-matrix@0.9.9304@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "esy-glfw@3.2.1010@d41d8cd9",
-        "esy-cmake@0.3.5@d41d8cd9", "@opam/lwt_ppx@opam:1.2.3@22f5b56c",
+        "esy-cmake@0.3.5@d41d8cd9", "@opam/lwt_ppx@opam:1.2.2@ee59a0be",
         "@opam/lwt@opam:4.3.0@3f2cb6e0",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
@@ -1768,20 +1768,20 @@
         "@opam/lwt@opam:4.3.0@3f2cb6e0", "@opam/dune@opam:1.7.3@e23fe0a7"
       ]
     },
-    "@opam/lwt_ppx@opam:1.2.3@22f5b56c": {
-      "id": "@opam/lwt_ppx@opam:1.2.3@22f5b56c",
+    "@opam/lwt_ppx@opam:1.2.2@ee59a0be": {
+      "id": "@opam/lwt_ppx@opam:1.2.2@ee59a0be",
       "name": "@opam/lwt_ppx",
-      "version": "opam:1.2.3",
+      "version": "opam:1.2.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/1a/1a72b5ae4245707c12656632a25fc18c#md5:1a72b5ae4245707c12656632a25fc18c",
-          "archive:https://github.com/ocsigen/lwt/archive/4.3.0.tar.gz#md5:1a72b5ae4245707c12656632a25fc18c"
+          "archive:https://opam.ocaml.org/cache/md5/2c/2ce7827948adc611319f9449e4519070#md5:2ce7827948adc611319f9449e4519070",
+          "archive:https://github.com/ocsigen/lwt/archive/4.2.0.tar.gz#md5:2ce7827948adc611319f9449e4519070"
         ],
         "opam": {
           "name": "lwt_ppx",
-          "version": "1.2.3",
-          "path": "integrationtest.esy.lock/opam/lwt_ppx.1.2.3"
+          "version": "1.2.2",
+          "path": "integrationtest.esy.lock/opam/lwt_ppx.1.2.2"
         }
       },
       "overrides": [],
