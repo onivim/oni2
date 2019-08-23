@@ -31,7 +31,6 @@ let default: t = [
 ];
 
 let reduce = (state: t, action: Actions.t) => {
-print_endline ("reducer called");
   switch (action) {
   | ShowNotification(n) => [n, ...state]
   | HideNotification(id) => List.filter(n => n.id != id, state)
