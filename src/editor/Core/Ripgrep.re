@@ -26,11 +26,13 @@ let process = (rgPath, args, callback, completedCallback) => {
         let _ =
           Thread.create(
             v => {
+              Log.debug("[Ripgrep] Processing bytes: " ++ string_of_int(Bytes.length(v)));
               let items =
                 Bytes.to_string(v)
                 |> String.trim
                 |> String.split_on_char('\n');
-
+              
+              Log.debug("[Ripgrep] Processing bytes completed");
               Revery.App.runOnMainThread(() => callback(items));
             },
             value,

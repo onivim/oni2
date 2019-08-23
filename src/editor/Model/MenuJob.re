@@ -52,7 +52,7 @@ let initialPendingWork = {
 };
 
 // Constants
-let iterationsPerFrame = 500;
+let iterationsPerFrame = 1000;
 let maxItemsToFilter = 1000;
 
 // TODO: abc -> .*a.*b.*c
@@ -121,14 +121,16 @@ let doWork = (p: pendingWork, c: completedWork) => {
       | [hd, ...tail] =>
         // Do a first filter pass to check if the item satisifies the regex
         switch (hd) {
-        | [] => (false, {...p, commandsToFilter: tail }, c)
-        | [innerHd, ...innerTail] => {
+        | [] => (false, {...p, commandsToFilter: tail}, c)
+        | [innerHd, ...innerTail] =>
           let newCompleted =
             Str.string_match(p.regex, getStringToTest(innerHd), 0)
               ? [innerHd, ...c] : c;
-          (false, {...p, commandsToFilter: [innerTail, ...tail]}, newCompleted);
-
-        }
+          (
+            false,
+            {...p, commandsToFilter: [innerTail, ...tail]},
+            newCompleted,
+          );
         }
       };
     pendingWork := newPendingWork;
