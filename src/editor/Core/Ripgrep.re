@@ -38,12 +38,17 @@ module RipgrepThread = {
     let newBytes = switch (pendingWork.bytes) {
     | [] => [] 
     | [hd, ...tail] => 
-              let items =
-                Bytes.to_string(hd)
-                |> String.trim
-                |> String.split_on_char('\n')
-                |> List.filter(isNotDirectory);
+              prerr_endline ("rgt - 1");
+              let items = Bytes.to_string(hd)
+              prerr_endline ("rgt - 2");
+                let items = String.trim(items);
+              prerr_endline ("rgt - 3");
+                let items = String.split_on_char('\n', items);
+              prerr_endline ("rgt - 4");
+                let items = items |> List.filter(isNotDirectory);
+              prerr_endline ("rgt - 5");
               pendingWork.callback(items);
+              prerr_endline ("rgt - 5");
               tail;
     }
 
@@ -117,7 +122,7 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
   Log.info("[Ripgrep] Starting process: " ++ rgPath ++ " with args: |" ++ argsStr ++ "|");
   let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
 
-  let processingThread = RipgrepThread.start(callback);
+  let processingThread = RipgrepThread.start((items) => Revery.App.runOnMainThread(() => callback(items)));
 
   let dispose3 = () => RipgrepThread.stop(processingThread);
 
