@@ -6,10 +6,8 @@
  */
 
 type t = {
-
   fontAwesomeRegularPath: string,
   fontAwesomeSolidPath: string,
-
   /* Horizontal padding on each side of the minimap */
   minimapPadding: int,
   /*
@@ -37,7 +35,6 @@ type t = {
    * some features like syntax highlighting will be disabled.
    */
   largeFileLineCountThreshold: int,
-
   notificationWidth: int,
 };
 

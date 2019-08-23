@@ -84,13 +84,16 @@ let start =
 
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
 
-      dispatch(ShowNotification(
-        Model.Notification.create(
-        ~notificationType,
-        ~title="libvim",
-        ~message=msg,
-        ()
-      )));
+      dispatch(
+        ShowNotification(
+          Model.Notification.create(
+            ~notificationType,
+            ~title="libvim",
+            ~message=msg,
+            (),
+          ),
+        ),
+      );
     });
 
   let _ =

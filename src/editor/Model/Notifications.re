@@ -2,33 +2,7 @@ open Actions;
 
 type t = list(Notification.t);
 
-let default: t = [
-  Notification.create(
-    ~notificationType=Error,
-    ~message="This is a test notification",
-    ~title="Hello",
-    (),
-  ),
-  Notification.create(
-    ~notificationType=Warning,
-    ~message="This is a test notification",
-    ~title="Hello",
-    (),
-  ),
-  Notification.create(
-    ~notificationType=Info,
-    ~message="This is a test notification",
-    ~title="Hello",
-    (),
-  ),
-  Notification.create(
-    ~notificationType=Success,
-    ~message=
-      "This is a test notification2, that is really long, and maybe should've used lorem ipsum text but didn't so here we are",
-    ~title="World",
-    (),
-  ),
-];
+let default: t = [];
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
@@ -41,14 +15,12 @@ let reduce = (state: t, action: Actions.t) => {
 let any = (state: t) => {
   switch (state) {
   | [] => false
-  | _ => true;
-  }
+  | _ => true
+  };
 };
 
 let getOldestId = (state: t) => {
-  let n = state
-  |> List.rev
-  |> List.hd;
+  let n = state |> List.rev |> List.hd;
 
   n.id;
 };

@@ -59,11 +59,11 @@ let notification =
               <Container width=40 height=40>
                 <Center>
                   <FontIcon
-                      fontFamily=Core.Constants.default.fontAwesomeSolidPath
-                      icon={icon}
-                      fontSize={16}
-                      backgroundColor=background
-                      color=foreground
+                    fontFamily={Core.Constants.default.fontAwesomeSolidPath}
+                    icon
+                    fontSize=16
+                    backgroundColor=background
+                    color=foreground
                   />
                 </Center>
               </Container>
@@ -144,7 +144,7 @@ let createElement = (~children as _, ~state: State.t, ()) => {
     notificationWarningForeground,
     notificationErrorBackground,
     notificationErrorForeground,
-    _
+    _,
   }: Core.Theme.t =
     state.theme;
 
@@ -168,10 +168,14 @@ let createElement = (~children as _, ~state: State.t, ()) => {
                notificationErrorBackground,
                notificationErrorForeground,
              )
-           | _ => (FontAwesome.infoCircle, notificationInfoBackground, notificationInfoForeground)
+           | _ => (
+               FontAwesome.infoCircle,
+               notificationInfoBackground,
+               notificationInfoForeground,
+             )
            };
 
-          let onClose = () => GlobalContext.current().hideNotification(n.id);
+         let onClose = () => GlobalContext.current().hideNotification(n.id);
 
          <notification
            background

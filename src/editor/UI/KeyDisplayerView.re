@@ -66,7 +66,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
 
   let anyNotifications = Notifications.any(state.notifications);
 
-  let extraSpacing = anyNotifications ? Core.Constants.default.notificationWidth + 50 : 0;
+  let extraSpacing =
+    anyNotifications ? Core.Constants.default.notificationWidth + 50 : 0;
 
   let groups =
     List.map(
@@ -84,5 +85,5 @@ let createElement = (~children as _, ~state: State.t, ()) => {
     )
     |> List.rev;
 
-  <Positioned bottom=50 right={50+extraSpacing}> ...groups </Positioned>;
+  <Positioned bottom=50 right={50 + extraSpacing}> ...groups </Positioned>;
 };
