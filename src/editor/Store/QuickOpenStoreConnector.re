@@ -78,18 +78,18 @@ let start = (rg: Core.Ripgrep.t) => {
 
     let dispose1 = ref(search("*"));
 
-    let dispose2 =
+    /*let dispose2 =
       Rench.Event.subscribe(
         onQueryChanged,
         newQuery => {
           dispose1^();
           dispose1 := search(ripgrepQueryFromFilter(newQuery));
         },
-      );
+      );*/
 
     let ret = () => {
       let _ = dispose1^();
-      let _ = dispose2();
+      //let _ = dispose2();
       ();
     };
 

@@ -15,9 +15,11 @@ type t = {
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
 
-let process = (rgPath, args, callback, completedCallback) => {
+let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
   incr(_ripGrepRunCount);
-  let cp = ChildProcess.spawn(rgPath, args);
+  let argsStr = String.concat("|", Array.to_list(args));
+  Log.info("[Ripgrep] Starting process: " ++ rgPath ++ " with args: |" ++ argsStr ++ "|");
+  let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
 
   let dispose1 =
     Event.subscribe(
@@ -47,7 +49,7 @@ let process = (rgPath, args, callback, completedCallback) => {
       exitCode => {
         incr(_ripGrepCompletedCount);
         Log.info(
-          "Ripgrep completed - exit code: " ++ string_of_int(exitCode),
+          "[Ripgrep] Completed - exit code: " ++ string_of_int(exitCode),
         );
         completedCallback();
       },
@@ -67,18 +69,11 @@ let process = (rgPath, args, callback, completedCallback) => {
  */
 let search = (path, search, workingDirectory, callback, completedCallback) => {
   process(
+    workingDirectory,
     path,
     [|
       "--smart-case",
       "--files",
-      "-g",
-      search,
-      "-g",
-      "!_esy/*",
-      "-g",
-      "!node_modules/*",
-      "--",
-      workingDirectory,
     |],
     callback,
     completedCallback,
