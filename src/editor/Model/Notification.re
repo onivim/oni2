@@ -1,6 +1,3 @@
-open Oni_Core;
-open Oni_Core.Types;
-
 open Actions;
 
 let nextId = ref(0);

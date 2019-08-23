@@ -41,3 +41,7 @@ print_endline ("reducer called");
   | _ => state
   };
 };
+
+let getOldestNotificationId = (state: t, action: Actions.t) => {
+  -1;
+};

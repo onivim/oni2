@@ -147,8 +147,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
     notificationWarningForeground,
     notificationErrorBackground,
     notificationErrorForeground,
-  }: Core.Theme.EditorColors.t =
-    state.theme.colors;
+  }: Core.Theme.t =
+    state.theme;
 
   let notifications =
     state.notifications
