@@ -186,8 +186,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            title={n.title}
            message={n.message}
          />;
-       })
-    |> List.rev;
+       });
+    
 
   <Positioned bottom=50 right=50> ...notifications </Positioned>;
 };
