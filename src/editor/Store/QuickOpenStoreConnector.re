@@ -39,21 +39,6 @@ let start = (rg: Core.Ripgrep.t) => {
 
     setLoading(true);
 
-    /* Create a hashtable to keep track of dups */
-    let discoveredPaths: Hashtbl.t(string, bool) = Hashtbl.create(1000);
-
-    let filter = item => {
-      switch (Hashtbl.find_opt(discoveredPaths, item)) {
-      | Some(_) => false
-      | None =>
-        Hashtbl.add(discoveredPaths, item, true);
-        switch (!Sys.is_directory(item)) {
-        | exception _ => false
-        | v => v
-        };
-      };
-    };
-
     let search = arg => {
       setLoading(true);
       rg.search(
@@ -62,7 +47,6 @@ let start = (rg: Core.Ripgrep.t) => {
         items => {
           let result =
             items
-            |> List.filter(filter)
             |> List.map(
                  stringToCommand(languageInfo, iconTheme, currentDirectory),
                );

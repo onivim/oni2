@@ -14,6 +14,12 @@ type t = {
   search:
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
+        
+let isNotDirectory = item =>
+  switch (Sys.is_directory(item)) {
+  | exception _ => false
+  | v => !v
+  };
 
 let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
   incr(_ripGrepRunCount);
@@ -32,7 +38,8 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
               let items =
                 Bytes.to_string(v)
                 |> String.trim
-                |> String.split_on_char('\n');
+                |> String.split_on_char('\n')
+                |> List.filter(isNotDirectory);
               
               Log.debug("[Ripgrep] Processing bytes completed");
               Revery.App.runOnMainThread(() => callback(items));
