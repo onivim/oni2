@@ -27,7 +27,7 @@ module RipgrepThreadJob = {
     callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
-  
+
   let pendingWorkPrinter = (p: pendingWork) => {
     "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
   };
@@ -69,28 +69,27 @@ module RipgrepThreadJob = {
 
   let create = (~callback, ()) => {
     let duplicateHash = Hashtbl.create(1000);
-      Job.create(
-        ~f=doWork,
-        ~initialCompletedWork=(),
-        ~name="RipgrepProcessorJob",
-        ~pendingWorkPrinter,
-        {callback, bytes: [], duplicateHash},
-      );
+    Job.create(
+      ~f=doWork,
+      ~initialCompletedWork=(),
+      ~name="RipgrepProcessorJob",
+      ~pendingWorkPrinter,
+      {callback, bytes: [], duplicateHash},
+    );
   };
 
   let queueWork = (bytes: Bytes.t, currentJob: t) => {
-      Job.map(
-        (p, c) => {
-          let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
-          (false, newP, c);
-        },
-        currentJob,
-      );
+    Job.map(
+      (p, c) => {
+        let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
+        (false, newP, c);
+      },
+      currentJob,
+    );
   };
 };
 
 module RipgrepThread = {
-
   type t = {
     mutex: Mutex.t,
     job: ref(RipgrepThreadJob.t),
@@ -142,7 +141,7 @@ module RipgrepThread = {
     Mutex.unlock(v.mutex);
   };
 
-let queueWork = (v: t, bytes: Bytes.t) => {
+  let queueWork = (v: t, bytes: Bytes.t) => {
     Mutex.lock(v.mutex);
     let currentJob = v.job^;
     v.job := RipgrepThreadJob.queueWork(bytes, currentJob);
@@ -169,26 +168,30 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
    */
 
   let processingThread =
-    RipgrepThread.start(items =>
-      Revery.App.runOnMainThread(() => callback(items)),
+    RipgrepThread.start(
+      items => Revery.App.runOnMainThread(() => callback(items)),
       // Previously, we sent the completed callback as soon as the Ripgrep process is done,
       // but that isn't accurate anymore with the RipgrepThreadJob - we're only done once
       // that thread is done processing results!
-      () => Revery.App.runOnMainThread(() => {
-        Log.info("[Ripgrep] Processing thread sending completed callback.");
-        completedCallback();
-      })
+      () =>
+        Revery.App.runOnMainThread(() => {
+          Log.info("[Ripgrep] Processing thread sending completed callback.");
+          completedCallback();
+        }),
     );
 
   let dispose3 = () => RipgrepThread.stop(processingThread);
 
   let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
-  
+
   let dispose1 =
     Event.subscribe(
       cp.stdout.onData,
       value => {
-        Log.debug("[Ripgrep] Queuing work from stdout: " ++ string_of_int(Bytes.length(value)));
+        Log.debug(
+          "[Ripgrep] Queuing work from stdout: "
+          ++ string_of_int(Bytes.length(value)),
+        );
         RipgrepThread.queueWork(processingThread, value);
       },
     );
