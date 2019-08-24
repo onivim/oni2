@@ -125,7 +125,7 @@ module RipgrepThread = {
             if (Log.isDebugLoggingEnabled()) {
               Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
             };
-            Unix.sleepf(0.01);
+            Unix.sleepf(0.1);
           };
           Log.info("[RipgrepThread] Finished...");
           onCompleteCallback();
@@ -141,7 +141,7 @@ module RipgrepThread = {
   let stop = (v: t) => {
     Mutex.lock(v.mutex);
     v.isRunning := false;
-    Condition.signal(v.signal);
+    let () = Condition.signal(v.signal);
     Mutex.unlock(v.mutex);
   };
 
@@ -155,7 +155,7 @@ module RipgrepThread = {
     Mutex.lock(v.mutex);
     let currentJob = v.job^;
     v.job := RipgrepThreadJob.queueWork(bytes, currentJob);
-    Condition.signal(v.signal);
+    let () = Condition.signal(v.signal);
     Mutex.unlock(v.mutex);
   };
 };
@@ -182,9 +182,9 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
     RipgrepThread.start(
       items => Revery.App.runOnMainThread(() => {
       // Amortize the cost of GC across multiple frames
-      Gc.major_slice();
-      callback(items));
-      },
+      Gc.major_slice(0);
+      callback(items);
+      }),
       // Previously, we sent the completed callback as soon as the Ripgrep process is done,
       // but that isn't accurate anymore with the RipgrepThreadJob - we're only done once
       // that thread is done processing results!
