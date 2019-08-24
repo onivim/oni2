@@ -82,7 +82,7 @@ module RipgrepThread = {
   
     let _ = Thread.create(() => {
       Log.info("[RipgrepThread] Starting...");
-      while (isRunning^) {
+      while (isRunning^ || !Job.isComplete(job^)) {
         job := Job.tick(job^);
         if (Log.isDebugLoggingEnabled()) {
           Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
