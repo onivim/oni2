@@ -15,12 +15,6 @@ type t = {
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
 
-let isNotDirectory = item =>
-  switch (Sys.is_directory(item)) {
-  | exception _ => false
-  | v => !v
-  };
-
 module RipgrepThread = {
   type pendingWork = {
     duplicateHash: Hashtbl.t(string, bool),
@@ -36,13 +30,12 @@ module RipgrepThread = {
   };
 
   let dedup = (hash, str) => {
-      switch (Hashtbl.find_opt(hash, str)) {
-      | Some(_) => false
-      | None =>
-          Hashtbl.add(hash, str, true);
-          true
-      }
-
+    switch (Hashtbl.find_opt(hash, str)) {
+    | Some(_) => false
+    | None =>
+      Hashtbl.add(hash, str, true);
+      true;
+    };
   };
 
   let doWork = (pendingWork, c) => {
@@ -50,11 +43,12 @@ module RipgrepThread = {
       switch (pendingWork.bytes) {
       | [] => []
       | [hd, ...tail] =>
-        let items = hd
-        |> Bytes.to_string
-        |> String.trim
-        |> String.split_on_char('\n')
-        |> List.filter(dedup(pendingWork.duplicateHash));
+        let items =
+          hd
+          |> Bytes.to_string
+          |> String.trim
+          |> String.split_on_char('\n')
+          |> List.filter(dedup(pendingWork.duplicateHash));
         pendingWork.callback(items);
         tail;
       };
@@ -99,7 +93,7 @@ module RipgrepThread = {
             if (Log.isDebugLoggingEnabled()) {
               Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
             };
-            Unix.sleepf(0.01);
+            Unix.sleepf(0.001);
           };
           Log.info("[RipgrepThread] Finished...");
         },
@@ -196,6 +190,9 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
    path, modified, created
  */
 let search = (path, search, workingDirectory, callback, completedCallback) => {
+  // TODO: We ignore the search parameter for now because, if we specify a glob filter,
+  // it will override the .gitignore globs - potentially searching in ignored folders.
+  ignore(search);
   process(
     workingDirectory,
     path,
