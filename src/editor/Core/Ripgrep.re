@@ -117,7 +117,7 @@ module RipgrepThread = {
             if (Log.isDebugLoggingEnabled()) {
               Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
             };
-            Unix.sleepf(0.001);
+            Unix.sleepf(0.01);
           };
           Log.info("[RipgrepThread] Finished...");
         },
