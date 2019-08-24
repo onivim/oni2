@@ -33,7 +33,7 @@ let notification =
       <BoxShadow
         boxShadow={Style.BoxShadow.make(
           ~xOffset=-15.,
-          ~yOffset=5.,
+          ~yOffset=-10.,
           ~blurRadius=30.,
           ~spreadRadius=5.,
           ~color=Color.rgba(0., 0., 0., 0.2),

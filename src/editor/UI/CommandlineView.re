@@ -42,6 +42,7 @@ let createElement =
         fontFamily(fontFile),
         fontSize(fontSize_),
         color(cmdFontColor),
+        backgroundColor(theme.editorBackground),
         textWrap(TextWrapping.WhitespaceWrap),
       ];
 
