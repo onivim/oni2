@@ -95,6 +95,7 @@ module RipgrepThread = {
     job: ref(RipgrepThreadJob.t),
     isRunning: ref(bool),
     rgActive: ref(bool),
+    signal: Condition.t,
   };
 
   let start = (callback, onCompleteCallback) => {
@@ -104,12 +105,20 @@ module RipgrepThread = {
     let isRunning = ref(true);
     let job = ref(j);
     let mutex = Mutex.create();
+    let signal = Condition.create();
 
     let _ =
       Thread.create(
         () => {
           Log.info("[RipgrepThread] Starting...");
           while (isRunning^ && (rgActive^ || !Job.isComplete(job^))) {
+
+            if (Job.isComplete(job^)) {
+              Log.debug("[RipgrepThread] Waiting on work...");
+              Condition.wait(signal);
+              Log.debug("[RipgrepThread] Got work!");
+            }
+
             Mutex.lock(mutex);
             job := Job.tick(job^);
             Mutex.unlock(mutex);
@@ -124,7 +133,7 @@ module RipgrepThread = {
         (),
       );
 
-    let ret: t = {mutex, rgActive, isRunning, job};
+    let ret: t = {mutex, rgActive, isRunning, job, signal};
 
     ret;
   };
@@ -132,6 +141,7 @@ module RipgrepThread = {
   let stop = (v: t) => {
     Mutex.lock(v.mutex);
     v.isRunning := false;
+    Condition.signal(v.signal);
     Mutex.unlock(v.mutex);
   };
 
@@ -145,6 +155,7 @@ module RipgrepThread = {
     Mutex.lock(v.mutex);
     let currentJob = v.job^;
     v.job := RipgrepThreadJob.queueWork(bytes, currentJob);
+    Condition.signal(v.signal);
     Mutex.unlock(v.mutex);
   };
 };
@@ -169,7 +180,11 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
 
   let processingThread =
     RipgrepThread.start(
-      items => Revery.App.runOnMainThread(() => callback(items)),
+      items => Revery.App.runOnMainThread(() => {
+      // Amortize the cost of GC across multiple frames
+      Gc.major_slice();
+      callback(items));
+      },
       // Previously, we sent the completed callback as soon as the Ripgrep process is done,
       // but that isn't accurate anymore with the RipgrepThreadJob - we're only done once
       // that thread is done processing results!
