@@ -87,7 +87,7 @@ let start = () => {
     | MenuOpen(menuConstructor) =>
       let state = Menu.create();
       (
-        {...state, isOpen: true },
+        {...state, isOpen: true},
         menuOpenEffect(menuConstructor, state.onQueryChanged),
       );
     | MenuUpdate(update) =>
@@ -104,12 +104,7 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {
-          ...state,
-          filterJob: MenuJob.default,
-          isOpen: false,
-          selectedItem: 0,
-        },
+        {...state, filterJob: MenuJob.default, isOpen: false, selectedItem: 0},
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>

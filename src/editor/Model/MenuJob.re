@@ -23,7 +23,8 @@ type pendingWork = {
 
 let showPendingWork = (v: pendingWork) => {
   "- Pending Work\n"
-  ++ " -- totalCommandCount: " ++ string_of_int(v.totalCommandCount)
+  ++ " -- totalCommandCount: "
+  ++ string_of_int(v.totalCommandCount)
   ++ " -- fullCommands: "
   ++ string_of_int(List.length(v.fullCommands))
   ++ " -- commandsToFilter: "

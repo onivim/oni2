@@ -9,11 +9,10 @@ let _ripGrepCompletedCount = ref(0);
 let getRunCount = () => _ripGrepRunCount^;
 let getCompletedCount = () => _ripGrepCompletedCount^;
 
-type searchFunction('a) = (string => ('a), string, list('a) => unit, unit =>  unit) => disposeFunction;
+type searchFunction('a) =
+  (string => 'a, string, list('a) => unit, unit => unit) => disposeFunction;
 
-type t('a) = {
-  search: searchFunction('a),
-};
+type t('a) = {search: searchFunction('a)};
 
 /**
  RipgrepProcessingJob is the logic for processing a [Bytes.t]
@@ -23,7 +22,6 @@ type t('a) = {
  get a list of files, and send that to the callback.
 */
 module RipgrepProcessingJob = {
-
   type pendingWork('a) = {
     duplicateHash: Hashtbl.t(string, bool),
     itemMapping: string => 'a,
@@ -35,9 +33,9 @@ module RipgrepProcessingJob = {
     "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
   };
 
-   type t('a) = Job.t(pendingWork('a), unit);
+  type t('a) = Job.t(pendingWork('a), unit);
 
-   let dedup = (hash, str) => {
+  let dedup = (hash, str) => {
     switch (Hashtbl.find_opt(hash, str)) {
     | Some(_) => false
     | None =>
@@ -46,7 +44,7 @@ module RipgrepProcessingJob = {
     };
   };
 
-   let doWork = (pendingWork, c) => {
+  let doWork = (pendingWork, c) => {
     let newBytes =
       switch (pendingWork.bytes) {
       | [] => []
@@ -62,28 +60,28 @@ module RipgrepProcessingJob = {
         tail;
       };
 
-     let isDone =
+    let isDone =
       switch (newBytes) {
       | [] => true
       | _ => false
       };
 
-     prerr_endline ("returning new state");
-     (isDone, {...pendingWork, bytes: newBytes}, c);
+    prerr_endline("returning new state");
+    (isDone, {...pendingWork, bytes: newBytes}, c);
   };
 
-   let create = (~mapItems, ~callback, ()) => {
+  let create = (~mapItems, ~callback, ()) => {
     let duplicateHash = Hashtbl.create(1000);
     Job.create(
       ~f=doWork,
       ~initialCompletedWork=(),
       ~name="RipgrepProcessorJob",
       ~pendingWorkPrinter,
-      {callback, bytes: [], duplicateHash, itemMapping:mapItems},
+      {callback, bytes: [], duplicateHash, itemMapping: mapItems},
     );
   };
 
-   let queueWork = (bytes: Bytes.t, currentJob: t('a)) => {
+  let queueWork = (bytes: Bytes.t, currentJob: t('a)) => {
     Job.map(
       (p, c) => {
         let newP: pendingWork('a) = {...p, bytes: [bytes, ...p.bytes]};
@@ -96,7 +94,7 @@ module RipgrepProcessingJob = {
 
 let process = (rgPath, mapItems, args, callback, completedCallback) => {
   incr(_ripGrepRunCount);
- let argsStr = String.concat("|", Array.to_list(args));
+  let argsStr = String.concat("|", Array.to_list(args));
   Log.info(
     "[Ripgrep] Starting process: "
     ++ rgPath
@@ -104,38 +102,43 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
     ++ argsStr
     ++ "|",
   );
-  // Mutex to 
+  // Mutex to
   let jobMutex = Mutex.create();
   let job = ref(RipgrepProcessingJob.create(~mapItems, ~callback, ()));
   let rgDone = ref(false);
   let completed = ref(false);
 
-
   let dispose3 = ref(None);
-  
-  
-  Revery.App.runOnMainThread(() => {
-    dispose3 := Some(Revery.Tick.interval(_ => {
-      if (!Job.isComplete(job^)) {
-        Mutex.lock(jobMutex);
-        job := Job.tick(job^);
-        Mutex.unlock(jobMutex);
-      } else if (rgDone^ && !completed^) {
-        completed := true;
-        completedCallback();
-      }
-    }, Milliseconds(0.)));
-  });
-  
+
+  Revery.App.runOnMainThread(() =>
+    dispose3 :=
+      Some(
+        Revery.Tick.interval(
+          _ =>
+            if (!Job.isComplete(job^)) {
+              Mutex.lock(jobMutex);
+              job := Job.tick(job^);
+              Mutex.unlock(jobMutex);
+            } else if (rgDone^ && ! completed^) {
+              completed := true;
+              completedCallback();
+            },
+          Milliseconds(0.),
+        ),
+      )
+  );
+
   let cp = ChildProcess.spawn(rgPath, args);
 
   let dispose1 =
-    Event.subscribe(cp.stdout.onData, value => {
-      Mutex.lock(jobMutex);
-      // print_endline ("Queuing work");
-      job := RipgrepProcessingJob.queueWork(value, job^);
-      Mutex.unlock(jobMutex);
-    });
+    Event.subscribe(
+      cp.stdout.onData,
+      value => {
+        Mutex.lock(jobMutex);
+        job := RipgrepProcessingJob.queueWork(value, job^);
+        Mutex.unlock(jobMutex);
+      },
+    );
 
   let dispose2 =
     Event.subscribe(
@@ -143,7 +146,8 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
       exitCode => {
         incr(_ripGrepCompletedCount);
         Log.info(
-          "[Ripgrep] Process completed - exit code: " ++ string_of_int(exitCode),
+          "[Ripgrep] Process completed - exit code: "
+          ++ string_of_int(exitCode),
         );
         rgDone := true;
       },
@@ -153,10 +157,10 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
     Log.info("Ripgrep session complete.");
     dispose1();
     dispose2();
-    switch(dispose3^) {
-    |Some(v) => v();
-    | None => ();
-    }
+    switch (dispose3^) {
+    | Some(v) => v()
+    | None => ()
+    };
     cp.kill(Sys.sigkill);
   };
 };
@@ -170,12 +174,7 @@ let search = (path, mapItems, workingDirectory, callback, completedCallback) => 
   process(
     path,
     mapItems,
-    [|
-      "--smart-case",
-      "--files",
-      "--",
-      workingDirectory,
-    |],
+    [|"--smart-case", "--files", "--", workingDirectory|],
     callback,
     completedCallback,
   );

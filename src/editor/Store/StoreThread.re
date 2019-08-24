@@ -183,10 +183,7 @@ let start =
     accumulatedEffects := [];
 
     List.iter(
-      e => {
-        open Isolinear.Effect;
-        Isolinear.Effect.run(e, dispatch);
-      },
+      e => Isolinear.Effect.(Isolinear.Effect.run(e, dispatch)),
       List.rev(effects),
     );
   };

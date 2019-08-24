@@ -89,7 +89,12 @@ let tick: t('p, 'c) => t('p, 'c) =
 
     let endTime = Time.to_float_seconds(Time.getTime());
 
-    Log.info("[Job] " ++ v.name ++ " ran for " ++ string_of_float(endTime -. startTime));
+    Log.info(
+      "[Job] "
+      ++ v.name
+      ++ " ran for "
+      ++ string_of_float(endTime -. startTime),
+    );
 
     if (Log.isDebugLoggingEnabled()) {
       Log.debug("[Job] Detailed report: " ++ show(v));
