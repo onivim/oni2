@@ -111,6 +111,7 @@ let start = () => {
           commands: [],
           isOpen: false,
           selectedItem: 0,
+          isLoading: false,
         },
         disposeMenuEffect(disposeFunction),
       );
@@ -131,7 +132,7 @@ let start = () => {
 
   let updater = (state: Model.State.t, action: Actions.t) =>
     if (action === Actions.Tick) {
-      if (Core.Job.isComplete(state.menu.filterJob)) {
+      if (Core.Job.isComplete(state.menu.filterJob) && !state.menu.isLoading) {
         (state, Isolinear.Effect.none);
       } else {
         let newState = {
