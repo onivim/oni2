@@ -51,14 +51,25 @@ module RipgrepProcessingJob = {
       switch (pendingWork.bytes) {
       | [] => []
       | [hd, ...tail] =>
-        let items =
+          prerr_endline ("!!!! doWork - 1");
+          let items = hd;
+          prerr_endline ("!!!! doWork - 2");
+          let items = Bytes.to_string(items);
+          prerr_endline ("!!!! doWork - 3");
+          let items = String.split_on_char('\n');
+          prerr_endline ("!!!! doWork - 4");
+          let items = List.filter(dedup(pendingWork.duplicateHash), items);
+          prerr_endline ("!!!! doWork - 5");
+          pendingWork.callback(items);
+          prerr_endline ("!!!! doWork - 6");
+          
+        /*let items =
           hd
           |> Bytes.to_string
           |> String.trim
           |> String.split_on_char('\n')
           |> List.filter(dedup(pendingWork.duplicateHash))
-          |> List.map(pendingWork.itemMapping);
-        pendingWork.callback(items);
+          |> List.map(pendingWork.itemMapping);*/
         tail;
       };
 
