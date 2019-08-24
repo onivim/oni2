@@ -15,9 +15,9 @@ type pendingWork = {
   // Full commands is the _complete set_ of unfiltered commands
   // This never gets filtered - it's persisted in case we need
   // the full set again
-  fullCommands: list(list(Actions.menuCommand)),
+  fullCommands: list(Actions.menuCommand),
   // Commands to filter are commands we haven't looked at yet.
-  commandsToFilter: list(list(Actions.menuCommand)),
+  commandsToFilter: list(Actions.menuCommand),
 };
 
 let showPendingWork = (v: pendingWork) => {
@@ -99,8 +99,8 @@ let addItems =
     (items: list(Actions.menuCommand), p: pendingWork, c: completedWork) => {
   let newPendingWork = {
     ...p,
-    fullCommands: [items, ...p.fullCommands],
-    commandsToFilter: [items, ...p.commandsToFilter],
+    fullCommands: List.append(items, p.fullCommands),
+    commandsToFilter: List.append(items, p.commandsToFilter),
   };
 
   (false, newPendingWork, c);
@@ -128,19 +128,14 @@ let doWork = (p: pendingWork, c: completedWork) => {
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
-        // Do a first filter pass to check if the item satisifies the filter
-        switch (hd) {
-        | [] => (false, {...p, commandsToFilter: tail}, c)
-        | [innerHd, ...innerTail] =>
           let newCompleted =
-            matches(p.explodedFilter, getStringToTest(innerHd))
-              ? [innerHd, ...c] : c;
+            matches(p.explodedFilter, getStringToTest(hd))
+              ? [hd, ...c] : c;
           (
             false,
-            {...p, commandsToFilter: [innerTail, ...tail]},
+            {...p, commandsToFilter: tail },
             newCompleted,
           );
-        }
       };
     pendingWork := newPendingWork;
     completedWork := newCompletedWork;
