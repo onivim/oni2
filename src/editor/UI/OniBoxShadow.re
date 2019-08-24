@@ -1,7 +1,6 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
-open Oni_Model;
 
 let createElement =
     (~children, ~theme: Theme.t, ~configuration: Configuration.t, ()) => {
