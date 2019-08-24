@@ -16,7 +16,7 @@ let ripgrepQueryFromFilter = s => {
   "*" ++ b ++ "*";
 };
 
-let start = (rg: Core.Ripgrep.t) => {
+let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
   let getDisplayPath = (fullPath, dir) => {
     let re = Str.regexp_string(dir ++ Filename.dir_sep);
     Str.replace_first(re, "", fullPath);
@@ -42,16 +42,11 @@ let start = (rg: Core.Ripgrep.t) => {
     let search = arg => {
       setLoading(true);
       rg.search(
+        stringToCommand(languageInfo, iconTheme, currentDirectory),
         arg,
         currentDirectory,
         items => {
-          let result =
-            items
-            |> List.map(
-                 stringToCommand(languageInfo, iconTheme, currentDirectory),
-               );
-
-          setItems(result);
+          setItems(items);
         },
         () => {
           setLoading(false);
