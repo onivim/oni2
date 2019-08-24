@@ -77,6 +77,7 @@ let show = (v: t('p, 'c)) => {
 let tick: t('p, 'c) => t('p, 'c) =
   (v: t('p, 'c)) => {
     let budget = Time.to_float_seconds(v.budget);
+    print_endline ("budget is: " ++ string_of_float(budget));
     let startTime = Time.getTime() |> Time.to_float_seconds;
     let current = ref(v);
 

@@ -6,9 +6,12 @@
 
 open Oni_Core;
 
+open CamomileBundled.Camomile;
+module Zed_utf8 = Oni_Core.ZedBundled;
+
 type pendingWork = {
   filter: string,
-  regex: Str.regexp,
+  explodedFilter: list(UChar.t),
   // Full commands is the _complete set_ of unfiltered commands
   // This never gets filtered - it's persisted in case we need
   // the full set again
@@ -46,7 +49,7 @@ type t = Job.t(pendingWork, completedWork);
 let initialCompletedWork = {allFiltered: [], uiFiltered: [||]};
 let initialPendingWork = {
   filter: "",
-  regex: Str.regexp(".*"),
+  explodedFilter: [],
   fullCommands: [],
   commandsToFilter: [],
 };
@@ -54,17 +57,6 @@ let initialPendingWork = {
 // Constants
 let iterationsPerFrame = 250;
 let maxItemsToFilter = 1000;
-
-// TODO: abc -> .*a.*b.*c
-//let regexFromFilter = s => Str.regexp(".*");
-
-let regexFromFilter = s => {
-  let a =
-    s |> String.to_seq |> Seq.map(c => String.make(1, c)) |> List.of_seq;
-  let b = String.concat(".*", a);
-  let c = ".*" ++ b ++ ".*";
-  Str.regexp(c);
-};
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
 let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
@@ -76,13 +68,30 @@ let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
   let newPendingWork = {
     ...p,
     filter: newQuery,
-    regex: regexFromFilter(newQuery),
+    explodedFilter: Zed_utf8.explode(newQuery),
     commandsToFilter: p.fullCommands // Reset the commands to filter
   };
 
   let newCompletedWork = initialCompletedWork;
 
   (false, newPendingWork, newCompletedWork);
+};
+
+let matches = (query: list(UChar.t), str) => {
+  let toMatch = Zed_utf8.explode(str);
+
+  let rec f = (q, m) => {
+  switch ((q, m)) {
+  | ([], _) => true
+  | (_, []) => false
+  | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) => {
+    f(qtail, mtail)
+  }
+  | (q, [mh, ...mtail]) => f(q, mtail)
+  }
+  };
+
+  f(query, toMatch);
 };
 
 /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
@@ -119,12 +128,12 @@ let doWork = (p: pendingWork, c: completedWork) => {
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
-        // Do a first filter pass to check if the item satisifies the regex
+        // Do a first filter pass to check if the item satisifies the filter
         switch (hd) {
         | [] => (false, {...p, commandsToFilter: tail}, c)
         | [innerHd, ...innerTail] =>
           let newCompleted =
-            Str.string_match(p.regex, getStringToTest(innerHd), 0)
+            matches(p.explodedFilter, getStringToTest(innerHd))
               ? [innerHd, ...c] : c;
           (
             false,
