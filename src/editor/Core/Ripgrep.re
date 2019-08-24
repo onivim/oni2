@@ -60,8 +60,9 @@ module RipgrepProcessingJob = {
           prerr_endline ("!!!! doWork - 4");
           let items = List.filter(dedup(pendingWork.duplicateHash), items);
           prerr_endline ("!!!! doWork - 5");
-          pendingWork.callback(items);
+          let items = List.map(pendingWork.itemMapping);
           prerr_endline ("!!!! doWork - 6");
+          pendingWork.callback(items);
           
         /*let items =
           hd
