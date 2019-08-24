@@ -56,7 +56,7 @@ module RipgrepProcessingJob = {
           prerr_endline ("!!!! doWork - 2");
           let items = Bytes.to_string(items);
           prerr_endline ("!!!! doWork - 3");
-          let items = String.split_on_char('\n');
+          let items = String.split_on_char('\n', items);
           prerr_endline ("!!!! doWork - 4");
           let items = List.filter(dedup(pendingWork.duplicateHash), items);
           prerr_endline ("!!!! doWork - 5");
