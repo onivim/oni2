@@ -50,11 +50,11 @@ module RipgrepThread = {
       switch (pendingWork.bytes) {
       | [] => []
       | [hd, ...tail] =>
-        let items = Bytes.to_string(hd);
-        let items = String.trim(items);
-        let items = String.split_on_char('\n', items);
-        let items = items |> List.filter(isNotDirectory);
-        let items  =items |> List.filter(dedup(pendingWork.duplicateHash));
+        let items = hd
+        |> Bytes.to_string
+        |> String.trim
+        |> String.split_on_char('\n')
+        |> List.filter(dedup(pendingWork.duplicateHash));
         pendingWork.callback(items);
         tail;
       };
