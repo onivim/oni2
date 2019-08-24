@@ -167,7 +167,6 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
    3) The lines are sent to the main thread via a callback to be dispatched against the store
    */
 
-  let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
   let processingThread =
     RipgrepThread.start(items =>
       Revery.App.runOnMainThread(() => callback(items))
@@ -175,6 +174,8 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
 
   let dispose3 = () => RipgrepThread.stop(processingThread);
 
+  let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
+  
   let dispose1 =
     Event.subscribe(
       cp.stdout.onData,
