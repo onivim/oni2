@@ -9,7 +9,7 @@ let _ripGrepCompletedCount = ref(0);
 let getRunCount = () => _ripGrepRunCount^;
 let getCompletedCount = () => _ripGrepCompletedCount^;
 
-type searchFunction('a) = (string => ('a), string, string, list('a) => unit, unit =>  unit) => disposeFunction;
+type searchFunction('a) = (string => ('a), string, list('a) => unit, unit =>  unit) => disposeFunction;
 
 type t('a) = {
   search: searchFunction('a),
