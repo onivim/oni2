@@ -17,11 +17,17 @@ let containerStyles = (theme: Theme.t) =>
   ];
 
 let createElement =
-    (~children as _, ~wildmenu: Wildmenu.t, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~wildmenu: Wildmenu.t,
+      ~theme: Theme.t,
+      ~configuration,
+      (),
+    ) =>
   component(hooks => {
     let element =
       wildmenu.show
-        ? <OniBoxShadow>
+        ? <OniBoxShadow theme configuration>
             <ScrollView style={containerStyles(theme)}>
               ...{List.mapi(
                 (index, item) =>

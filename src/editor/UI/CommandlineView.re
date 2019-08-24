@@ -31,7 +31,13 @@ let getFirstC = (t: Vim.Types.cmdlineType) => {
 };
 
 let createElement =
-    (~children as _, ~command: Commandline.t, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~command: Commandline.t,
+      ~configuration: Configuration.t,
+      ~theme: Theme.t,
+      (),
+    ) =>
   component(hooks => {
     let uiFont = State.(GlobalContext.current().state.uiFont);
     let {fontFile, _} = uiFont;
@@ -51,7 +57,7 @@ let createElement =
       ? (
         hooks,
         <View style=Style.[marginBottom(20)]>
-          <OniBoxShadow>
+          <OniBoxShadow configuration theme>
             <View
               style=Style.[
                 width(400),
