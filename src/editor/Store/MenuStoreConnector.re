@@ -141,10 +141,6 @@ let start = () => {
             filterJob: Core.Job.tick(state.menu.filterJob),
           },
         };
-        if (Core.Log.isDebugLoggingEnabled()) {
-          Core.Log.debug(Core.Job.show(state.menu.filterJob));
-        };
-
         (newState, Isolinear.Effect.none);
       };
     } else {
