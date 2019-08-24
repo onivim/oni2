@@ -98,7 +98,7 @@ module RipgrepThread = {
     rgActive: ref(bool),
   };
 
-  let start = callback => {
+  let start = (callback, onCompleteCallback) => {
     let j = RipgrepThreadJob.create(~callback, ());
 
     let rgActive = ref(true);
@@ -120,6 +120,7 @@ module RipgrepThread = {
             Unix.sleepf(0.01);
           };
           Log.info("[RipgrepThread] Finished...");
+          onCompleteCallback();
         },
         (),
       );
@@ -169,7 +170,14 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
 
   let processingThread =
     RipgrepThread.start(items =>
-      Revery.App.runOnMainThread(() => callback(items))
+      Revery.App.runOnMainThread(() => callback(items)),
+      // Previously, we sent the completed callback as soon as the Ripgrep process is done,
+      // but that isn't accurate anymore with the RipgrepThreadJob - we're only done once
+      // that thread is done processing results!
+      () => Revery.App.runOnMainThread(() => {
+        Log.info("[Ripgrep] Processing thread sending completed callback.");
+        completedCallback();
+      })
     );
 
   let dispose3 = () => RipgrepThread.stop(processingThread);
@@ -194,7 +202,6 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
           "[Ripgrep] Completed - exit code: " ++ string_of_int(exitCode),
         );
         RipgrepThread.notifyRipgrepFinished(processingThread);
-        completedCallback();
       },
     );
 
