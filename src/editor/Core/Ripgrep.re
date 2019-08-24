@@ -30,7 +30,8 @@ module RipgrepThread = {
 
   type t = {
     job: ref(Job.t(pendingWork, unit)),
-    isRunning: ref(bool)
+    isRunning: ref(bool),
+    rgActive: ref(bool),
   };
 
   let doWork = (pendingWork, c) => {
@@ -77,12 +78,13 @@ module RipgrepThread = {
               
     
     
+    let rgActive = ref(true);
     let isRunning = ref(true);
     let job = ref(j);
   
     let _ = Thread.create(() => {
       Log.info("[RipgrepThread] Starting...");
-      while (isRunning^ || !Job.isComplete(job^)) {
+      while (isRunning^ && (rgActive^ || !Job.isComplete(job^))) {
         job := Job.tick(job^);
         if (Log.isDebugLoggingEnabled()) {
           Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
@@ -93,6 +95,7 @@ module RipgrepThread = {
     }, ());
 
       let ret: t = {
+        rgActive,
         isRunning,
         job,
       }
@@ -102,6 +105,10 @@ module RipgrepThread = {
 
   let stop = (v: t) => {
     v.isRunning := false;
+  };
+
+  let notifyRipgrepFinished = (v: t) => {
+    v.rgActive := false;
   };
 
   let queueWork = (v: t, bytes: Bytes.t) => {
@@ -142,7 +149,7 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
         Log.info(
           "[Ripgrep] Completed - exit code: " ++ string_of_int(exitCode),
         );
-        dispose3();
+        RipgrepThread.notifyRipgrepFinished(processingThread);
         completedCallback();
       },
     );
