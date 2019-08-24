@@ -72,7 +72,14 @@ let getLabel = (command: Actions.menuCommand) => {
 };
 
 let createElement =
-    (~children as _, ~font: fontT, ~menu: Menu.t, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~font: fontT,
+      ~menu: Menu.t,
+      ~theme: Theme.t,
+      ~configuration: Configuration.t,
+      (),
+    ) =>
   component(hooks => {
     let hooks =
       React.Hooks.effect(
@@ -90,15 +97,7 @@ let createElement =
       hooks,
       menu.isOpen
         ? <AllowPointer>
-            <BoxShadow
-              boxShadow={Style.BoxShadow.make(
-                ~xOffset=-15.,
-                ~yOffset=5.,
-                ~blurRadius=20.,
-                ~spreadRadius=10.,
-                ~color=Color.rgba(0., 0., 0., 0.2),
-                (),
-              )}>
+            <OniBoxShadow configuration theme>
               <View style={containerStyles(theme)}>
                 <View style=Style.[width(menuWidth), padding(5)]>
                   <OniInput
@@ -131,7 +130,7 @@ let createElement =
                   />
                 </View>
               </View>
-            </BoxShadow>
+            </OniBoxShadow>
           </AllowPointer>
         : React.listToElement([]),
     );

@@ -26,19 +26,13 @@ let notification =
       ~uiFont,
       ~message,
       ~title: string,
+      ~theme: Core.Theme.t,
+      ~configuration: Core.Configuration.t,
       (),
     ) => {
   <AllowPointer>
     <Padding padding=16>
-      <BoxShadow
-        boxShadow={Style.BoxShadow.make(
-          ~xOffset=-15.,
-          ~yOffset=5.,
-          ~blurRadius=30.,
-          ~spreadRadius=5.,
-          ~color=Color.rgba(0., 0., 0., 0.2),
-          (),
-        )}>
+      <OniBoxShadow theme configuration>
         <View
           style=Style.[
             width(notificationWidth),
@@ -127,7 +121,7 @@ let notification =
             </View>
           </View>
         </View>
-      </BoxShadow>
+      </OniBoxShadow>
     </Padding>
   </AllowPointer>;
 };
@@ -185,6 +179,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            icon
            title={n.title}
            message={n.message}
+           theme={state.theme}
+           configuration={state.configuration}
          />;
        });
 

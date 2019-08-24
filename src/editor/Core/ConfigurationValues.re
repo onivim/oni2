@@ -44,6 +44,7 @@ type t = {
   workbenchTreeIndent: int,
   filesExclude: list(string),
   vimUseSystemClipboard,
+  uiShadows: bool,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
 };
@@ -72,6 +73,7 @@ let default = {
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
+  uiShadows: true,
   vimUseSystemClipboard: {
     yank: true,
     delete: false,

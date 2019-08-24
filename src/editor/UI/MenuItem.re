@@ -60,6 +60,7 @@ let createElement =
               textOverflow(`Ellipsis),
               fontSize(uiFont.fontSize),
               color(theme.editorMenuForeground),
+              backgroundColor(bg),
             ],
           ~target=style,
         )
