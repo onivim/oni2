@@ -15,6 +15,7 @@ type pendingWork = {
   // This never gets filtered - it's persisted in case we need
   // the full set again
   explodedFilter: list(UChar.t),
+  totalCommandCount: int,
   fullCommands: list(list(Actions.menuCommand)),
   // Commands to filter are commands we haven't looked at yet.
   commandsToFilter: list(list(Actions.menuCommand)),
@@ -22,6 +23,7 @@ type pendingWork = {
 
 let showPendingWork = (v: pendingWork) => {
   "- Pending Work\n"
+  ++ " -- totalCommandCount: " ++ string_of_int(v.totalCommandCount)
   ++ " -- fullCommands: "
   ++ string_of_int(List.length(v.fullCommands))
   ++ " -- commandsToFilter: "
@@ -52,6 +54,7 @@ let initialPendingWork = {
   fullCommands: [],
   explodedFilter: [],
   commandsToFilter: [],
+  totalCommandCount: 0,
 };
 
 // Constants
@@ -150,6 +153,7 @@ let addItems =
   let newPendingWork = {
     ...p,
     fullCommands: [items, ...p.fullCommands],
+    totalCommandCount: p.totalCommandCount + List.length(items),
     commandsToFilter: [items, ...p.fullCommands],
   };
 

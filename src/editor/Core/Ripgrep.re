@@ -142,14 +142,14 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
       exitCode => {
         incr(_ripGrepCompletedCount);
         Log.info(
-          "Ripgrep completed - exit code: " ++ string_of_int(exitCode),
+          "[Ripgrep] Process completed - exit code: " ++ string_of_int(exitCode),
         );
         rgDone := true;
       },
     );
 
   () => {
-    print_endline("!!DISPOSING!!");
+    Log.info("Ripgrep session complete.");
     dispose1();
     dispose2();
     switch(dispose3^) {
