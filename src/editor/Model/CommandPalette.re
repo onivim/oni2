@@ -78,12 +78,6 @@ let create = (setItems, _, _) => {
       command: () => Actions.CopyActiveFilepathToClipboard,
       icon: None,
     },
-    {
-      category: Some("Developer"),
-      name: "Create massive menu",
-      command: () => Actions.Command("developer.massiveMenu"),
-      icon: None,
-    },
   ];
 
   setItems(commands);
