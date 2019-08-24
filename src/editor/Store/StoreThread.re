@@ -190,20 +190,14 @@ let start =
       List.rev(effects),
     );
   };
-  let _ =
-    Tick.interval(
-      _ => {
-        runEffects();
-      },
-      Seconds(0.0),
-    );
-
+  
   let _ =
     Tick.interval(
       _ => {
         dispatch(Model.Actions.Tick);
+        runEffects();
       },
-      Seconds(0.05),
+      Seconds(0.0),
     );
 
   (dispatch, runEffects);
