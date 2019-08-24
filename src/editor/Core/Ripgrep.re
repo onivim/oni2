@@ -165,8 +165,7 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, mapItems, search, workingDirectory, callback, completedCallback) => {
-  ignore(search);
+let search = (path, mapItems, workingDirectory, callback, completedCallback) => {
   process(
     path,
     mapItems,

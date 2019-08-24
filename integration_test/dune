@@ -10,7 +10,6 @@
            FontSizeChangeTest
            InputIgnoreTest
            QuickOpenEventuallyCompletesTest
-           QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionFileModifiedIndicationTest
@@ -42,7 +41,6 @@
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
         QuickOpenEventuallyCompletesTest.exe
-        QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe

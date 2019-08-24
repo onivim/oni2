@@ -33,7 +33,7 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
     };
 
   let createQuickOpen =
-      (languageInfo, iconTheme, setItems, onQueryChanged, setLoading) => {
+      (languageInfo, iconTheme, setItems, _onQueryChanged, setLoading) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
@@ -54,11 +54,10 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
       };
     };
 
-    let search = arg => {
+    let search = () => {
       setLoading(true);
       rg.search(
         stringToCommand(languageInfo, iconTheme, currentDirectory),
-        arg,
         currentDirectory,
         items => setItems(items),
         () => {
@@ -68,7 +67,7 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
       );
     };
 
-    let dispose1 = ref(search("*"));
+    let dispose1 = ref(search());
 
     let ret = () => {
       let _ = dispose1^();
