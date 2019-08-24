@@ -66,7 +66,6 @@ module RipgrepProcessingJob = {
       | _ => false
       };
 
-    prerr_endline("returning new state");
     (isDone, {...pendingWork, bytes: newBytes}, c);
   };
 
