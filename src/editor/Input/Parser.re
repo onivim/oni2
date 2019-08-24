@@ -13,7 +13,7 @@ let toFriendlyName = (v: string) => {
   switch (v) {
   | "<ESC>" => Some("Escape")
   | "<TAB>" => Some("Tab")
-  | "<C-TAB>" => Some("Control + Tab");
+  | "<C-TAB>" => Some("Control + Tab")
   | "<CR>" => Some("Enter")
   | _ =>
     if (len == 0) {
