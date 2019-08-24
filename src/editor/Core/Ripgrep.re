@@ -27,6 +27,10 @@ module RipgrepThreadJob = {
     callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
+  
+  let pendingWorkPrinter = (p: pendingWork) => {
+    "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
+  };
 
   type t = Job.t(pendingWork, unit);
 
@@ -65,7 +69,6 @@ module RipgrepThreadJob = {
 
   let create = (~callback, ()) => {
     let duplicateHash = Hashtbl.create(1000);
-    let j =
       Job.create(
         ~f=doWork,
         ~initialCompletedWork=(),
@@ -95,12 +98,7 @@ module RipgrepThread = {
     rgActive: ref(bool),
   };
 
-  let pendingWorkPrinter = (p: pendingWork) => {
-    "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
-  };
-
   let start = callback => {
-    let duplicateHash = Hashtbl.create(1000);
     let j = RipgrepThreadJob.create(~callback, ());
 
     let rgActive = ref(true);
