@@ -33,7 +33,7 @@ let start = (rg: Core.Ripgrep.t) => {
     };
 
   let createQuickOpen =
-      (languageInfo, iconTheme, setItems, onQueryChanged, setLoading) => {
+      (languageInfo, iconTheme, setItems, _onQueryChanged, setLoading) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
@@ -54,10 +54,9 @@ let start = (rg: Core.Ripgrep.t) => {
       };
     };
 
-    let search = arg => {
+    let search = () => {
       setLoading(true);
       rg.search(
-        arg,
         currentDirectory,
         items => {
           let result =
@@ -76,20 +75,10 @@ let start = (rg: Core.Ripgrep.t) => {
       );
     };
 
-    let dispose1 = ref(search("*"));
-
-    let dispose2 =
-      Rench.Event.subscribe(
-        onQueryChanged,
-        newQuery => {
-          dispose1^();
-          dispose1 := search(ripgrepQueryFromFilter(newQuery));
-        },
-      );
+    let dispose1 = ref(search());
 
     let ret = () => {
       let _ = dispose1^();
-      let _ = dispose2();
       ();
     };
 

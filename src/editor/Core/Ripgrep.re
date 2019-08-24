@@ -11,8 +11,7 @@ let getCompletedCount = () => _ripGrepCompletedCount^;
 
 [@deriving show]
 type t = {
-  search:
-    (string, string, list(string) => unit, unit => unit) => disposeFunction,
+  search: (string, list(string) => unit, unit => unit) => disposeFunction,
 };
 
 let process = (rgPath, args, callback, completedCallback) => {
@@ -53,21 +52,10 @@ let process = (rgPath, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, search, workingDirectory, callback, completedCallback) => {
+let search = (path, workingDirectory, callback, completedCallback) => {
   process(
     path,
-    [|
-      "--smart-case",
-      "--files",
-      "-g",
-      search,
-      "-g",
-      "!_esy/*",
-      "-g",
-      "!node_modules/*",
-      "--",
-      workingDirectory,
-    |],
+    [|"--smart-case", "--files", "--", workingDirectory|],
     callback,
     completedCallback,
   );
