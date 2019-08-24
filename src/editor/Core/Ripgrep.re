@@ -23,6 +23,7 @@ let isNotDirectory = item =>
 
 module RipgrepThread = {
   type pendingWork = {
+    duplicateHash: Hashtbl.t(string, bool),
     callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
@@ -34,6 +35,16 @@ module RipgrepThread = {
     rgActive: ref(bool),
   };
 
+  let dedup = (hash, str) => {
+      switch (Hashtbl.find_opt(hash, str)) {
+      | Some(_) => false
+      | None =>
+          Hashtbl.add(hash, str, true);
+          true
+      }
+
+  };
+
   let doWork = (pendingWork, c) => {
     let newBytes =
       switch (pendingWork.bytes) {
@@ -43,6 +54,7 @@ module RipgrepThread = {
         let items = String.trim(items);
         let items = String.split_on_char('\n', items);
         let items = items |> List.filter(isNotDirectory);
+        let items  =items |> List.filter(dedup(pendingWork.duplicateHash));
         pendingWork.callback(items);
         tail;
       };
@@ -61,13 +73,14 @@ module RipgrepThread = {
   };
 
   let start = callback => {
+    let duplicateHash = Hashtbl.create(1000);
     let j =
       Job.create(
         ~f=doWork,
         ~initialCompletedWork=(),
         ~name="RipgrepProcessorJob",
         ~pendingWorkPrinter,
-        {callback, bytes: []},
+        {callback, bytes: [], duplicateHash},
       );
 
     let rgActive = ref(true);
