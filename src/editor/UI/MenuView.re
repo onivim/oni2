@@ -1,5 +1,6 @@
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
@@ -93,6 +94,18 @@ let createElement =
 
     let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
 
+    
+    let time = Time.getTime() |> Time.to_float_seconds;
+    let loadingSpinner = menu.isLoading ? 
+                  <View style=Style.[height(40), width(menuWidth)]>
+                  <Center>
+    <View style=Style.[width(24), height(24), transform(Transform.[RotateY(Math.Angle.Radians(time))
+                  ])]>
+                  <Image src="logo.png" width=24 height=24 opacity=0.4 />
+    </View>
+    </Center>
+    </View> : React.empty;
+
     React.(
       hooks,
       menu.isOpen
@@ -128,6 +141,7 @@ let createElement =
                       />;
                     }}
                   />
+                  {loadingSpinner}
                 </View>
               </View>
             </OniBoxShadow>
