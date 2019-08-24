@@ -16,19 +16,13 @@ let compareScore =
   ReasonFuzz.compareScores(scoreObj1, scoreObj2);
 };
 
-let formatName = (item, shouldLower) => {
-  let itemName =
-    switch (item.category) {
-    | Some(c) => c ++ item.name
-    | None => item.name
-    };
-
-  if (shouldLower) {
-    String.lowercase_ascii(itemName);
-  } else {
-    itemName;
+let formatName = (item, shouldLower) =>
+  switch (item.category, shouldLower) {
+  | (Some(c), true) => String.lowercase_ascii(c ++ item.name)
+  | (Some(c), false) => c ++ item.name
+  | (None, true) => String.lowercase_ascii(item.name)
+  | (None, false) => item.name
   };
-};
 
 let rank = (query, items) => {
   /* Use smart search for now, add config option though. */
