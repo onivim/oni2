@@ -30,15 +30,7 @@ let notification =
     ) => {
   <AllowPointer>
     <Padding padding=16>
-      <BoxShadow
-        boxShadow={Style.BoxShadow.make(
-          ~xOffset=-15.,
-          ~yOffset=-10.,
-          ~blurRadius=30.,
-          ~spreadRadius=5.,
-          ~color=Color.rgba(0., 0., 0., 0.2),
-          (),
-        )}>
+      <OniBoxShadow>
         <View
           style=Style.[
             width(notificationWidth),
@@ -127,7 +119,7 @@ let notification =
             </View>
           </View>
         </View>
-      </BoxShadow>
+      </OniBoxShadow>
     </Padding>
   </AllowPointer>;
 };

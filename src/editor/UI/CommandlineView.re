@@ -51,15 +51,7 @@ let createElement =
       ? (
         hooks,
         <View style=Style.[marginBottom(20)]>
-          <BoxShadow
-            boxShadow={Style.BoxShadow.make(
-              ~xOffset=-15.,
-              ~yOffset=5.,
-              ~blurRadius=30.,
-              ~spreadRadius=5.,
-              ~color=Color.rgba(0., 0., 0., 0.2),
-              (),
-            )}>
+          <OniBoxShadow>
             <View
               style=Style.[
                 width(400),
@@ -82,7 +74,7 @@ let createElement =
               />
               <Text style=textStyles text=endStr />
             </View>
-          </BoxShadow>
+          </OniBoxShadow>
         </View>,
       )
       : (hooks, React.empty);

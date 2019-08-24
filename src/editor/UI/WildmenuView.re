@@ -21,15 +21,7 @@ let createElement =
   component(hooks => {
     let element =
       wildmenu.show
-        ? <BoxShadow
-            boxShadow={Style.BoxShadow.make(
-              ~xOffset=-15.,
-              ~yOffset=-10.,
-              ~blurRadius=30.,
-              ~spreadRadius=5.,
-              ~color=Color.rgba(0., 0., 0., 0.2),
-              (),
-            )}>
+        ? <OniBoxShadow>
             <ScrollView style={containerStyles(theme)}>
               ...{List.mapi(
                 (index, item) =>
@@ -42,7 +34,7 @@ let createElement =
                 wildmenu.items,
               )}
             </ScrollView>
-          </BoxShadow>
+          </OniBoxShadow>
         : React.listToElement([]);
     (hooks, element);
   });

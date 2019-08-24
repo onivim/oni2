@@ -90,15 +90,7 @@ let createElement =
       hooks,
       menu.isOpen
         ? <AllowPointer>
-            <BoxShadow
-              boxShadow={Style.BoxShadow.make(
-                ~xOffset=-15.,
-                ~yOffset=-10.,
-                ~blurRadius=30.,
-                ~spreadRadius=5.,
-                ~color=Color.rgba(0., 0., 0., 0.2),
-                (),
-              )}>
+            <OniBoxShadow>
               <View style={containerStyles(theme)}>
                 <View style=Style.[width(menuWidth), padding(5)]>
                   <OniInput
@@ -131,7 +123,7 @@ let createElement =
                   />
                 </View>
               </View>
-            </BoxShadow>
+            </OniBoxShadow>
           </AllowPointer>
         : React.listToElement([]),
     );
