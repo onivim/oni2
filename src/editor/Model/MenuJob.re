@@ -81,14 +81,13 @@ let matches = (query: list(UChar.t), str) => {
   let toMatch = Zed_utf8.explode(str);
 
   let rec f = (q, m) => {
-  switch ((q, m)) {
-  | ([], _) => true
-  | (_, []) => false
-  | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) => {
-    f(qtail, mtail)
-  }
-  | (q, [mh, ...mtail]) => f(q, mtail)
-  }
+    switch (q, m) {
+    | ([], _) => true
+    | (_, []) => false
+    | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) =>
+      f(qtail, mtail)
+    | (q, [mh, ...mtail]) => f(q, mtail)
+    };
   };
 
   f(query, toMatch);
@@ -128,14 +127,9 @@ let doWork = (p: pendingWork, c: completedWork) => {
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
-          let newCompleted =
-            matches(p.explodedFilter, getStringToTest(hd))
-              ? [hd, ...c] : c;
-          (
-            false,
-            {...p, commandsToFilter: tail },
-            newCompleted,
-          );
+        let newCompleted =
+          matches(p.explodedFilter, getStringToTest(hd)) ? [hd, ...c] : c;
+        (false, {...p, commandsToFilter: tail}, newCompleted);
       };
     pendingWork := newPendingWork;
     completedWork := newCompletedWork;

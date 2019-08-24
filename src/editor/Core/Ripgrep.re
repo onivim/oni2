@@ -14,7 +14,7 @@ type t = {
   search:
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
-        
+
 let isNotDirectory = item =>
   switch (Sys.is_directory(item)) {
   | exception _ => false
@@ -22,114 +22,126 @@ let isNotDirectory = item =>
   };
 
 module RipgrepThread = {
-
   type pendingWork = {
-    callback: (list(string)) => unit,
+    callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
 
   type t = {
+    mutex: Mutex.t,
     job: ref(Job.t(pendingWork, unit)),
     isRunning: ref(bool),
     rgActive: ref(bool),
   };
 
   let doWork = (pendingWork, c) => {
+    let newBytes =
+      switch (pendingWork.bytes) {
+      | [] => []
+      | [hd, ...tail] =>
+        let items = Bytes.to_string(hd);
+        let items = String.trim(items);
+        let items = String.split_on_char('\n', items);
+        let items = items |> List.filter(isNotDirectory);
+        pendingWork.callback(items);
+        tail;
+      };
 
-    let newBytes = switch (pendingWork.bytes) {
-    | [] => [] 
-    | [hd, ...tail] => 
-              prerr_endline ("rgt - 1");
-              let items = Bytes.to_string(hd)
-              prerr_endline ("rgt - 2");
-                let items = String.trim(items);
-              prerr_endline ("rgt - 3");
-                let items = String.split_on_char('\n', items);
-              prerr_endline ("rgt - 4");
-                let items = items |> List.filter(isNotDirectory);
-              prerr_endline ("rgt - 5");
-              pendingWork.callback(items);
-              prerr_endline ("rgt - 5");
-              tail;
-    }
+    let isDone =
+      switch (newBytes) {
+      | [] => true
+      | _ => false
+      };
 
-    let isDone = switch(newBytes) {
-    | [] => true
-    | _ => false;
-    };
-    
-    (isDone, {...pendingWork, bytes: newBytes }, c);
+    (isDone, {...pendingWork, bytes: newBytes}, c);
   };
 
   let pendingWorkPrinter = (p: pendingWork) => {
     "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
   };
 
-  let start = (callback) => {
+  let start = callback => {
+    let j =
+      Job.create(
+        ~f=doWork,
+        ~initialCompletedWork=(),
+        ~name="RipgrepProcessorJob",
+        ~pendingWorkPrinter,
+        {callback, bytes: []},
+      );
 
-    let j = Job.create(~f=doWork, 
-               ~initialCompletedWork=(),
-               ~name="RipgrepProcessorJob",
-               ~pendingWorkPrinter,
-               {
-                callback,
-                bytes: []
-               });
-              
-    
-    
     let rgActive = ref(true);
     let isRunning = ref(true);
     let job = ref(j);
-  
-    let _ = Thread.create(() => {
-      Log.info("[RipgrepThread] Starting...");
-      while (isRunning^ && (rgActive^ || !Job.isComplete(job^))) {
-        job := Job.tick(job^);
-        if (Log.isDebugLoggingEnabled()) {
-          Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
-        }
-        Unix.sleepf(0.01);
-      }
-      Log.info("[RipgrepThread] Finished...");
-    }, ());
+    let mutex = Mutex.create();
 
-      let ret: t = {
-        rgActive,
-        isRunning,
-        job,
-      }
+    let _ =
+      Thread.create(
+        () => {
+          Log.info("[RipgrepThread] Starting...");
+          while (isRunning^ && (rgActive^ || !Job.isComplete(job^))) {
+            Mutex.lock(mutex);
+            job := Job.tick(job^);
+            Mutex.unlock(mutex);
+            if (Log.isDebugLoggingEnabled()) {
+              Log.debug("[RipgrepThread] Work: " ++ Job.show(job^));
+            };
+            Unix.sleepf(0.01);
+          };
+          Log.info("[RipgrepThread] Finished...");
+        },
+        (),
+      );
 
-      ret;
-    };
+    let ret: t = {mutex, rgActive, isRunning, job};
+
+    ret;
+  };
 
   let stop = (v: t) => {
+    Mutex.lock(v.mutex);
     v.isRunning := false;
+    Mutex.unlock(v.mutex);
   };
 
   let notifyRipgrepFinished = (v: t) => {
+    Mutex.lock(v.mutex);
     v.rgActive := false;
+    Mutex.unlock(v.mutex);
   };
 
   let queueWork = (v: t, bytes: Bytes.t) => {
-    let currentJob = v.job^; 
-    v.job := Job.map((p, c) => {
-      let newP: pendingWork = {
-        ...p,
-        bytes: [bytes, ...p.bytes],
-      };
-      (false, newP, c)
-    }, currentJob);
+    Mutex.lock(v.mutex);
+    let currentJob = v.job^;
+    v.job :=
+      Job.map(
+        (p, c) => {
+          let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
+          (false, newP, c);
+        },
+        currentJob,
+      );
+    Mutex.unlock(v.mutex);
   };
 };
 
 let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
   incr(_ripGrepRunCount);
   let argsStr = String.concat("|", Array.to_list(args));
-  Log.info("[Ripgrep] Starting process: " ++ rgPath ++ " with args: |" ++ argsStr ++ "|");
+  Log.info(
+    "[Ripgrep] Starting process: "
+    ++ rgPath
+    ++ " with args: |"
+    ++ argsStr
+    ++ "|",
+  );
+  /*let bytes = ref([]);
+    let processingThread = ref(None);*/
   let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
-
-  let processingThread = RipgrepThread.start((items) => Revery.App.runOnMainThread(() => callback(items)));
+  let processingThread =
+    RipgrepThread.start(items =>
+      Revery.App.runOnMainThread(() => callback(items))
+    );
 
   let dispose3 = () => RipgrepThread.stop(processingThread);
 
@@ -137,6 +149,9 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
     Event.subscribe(
       cp.stdout.onData,
       value => {
+        prerr_endline(
+          "Queuing work: " ++ string_of_int(Bytes.length(value)),
+        );
         RipgrepThread.queueWork(processingThread, value);
       },
     );
@@ -171,10 +186,7 @@ let search = (path, search, workingDirectory, callback, completedCallback) => {
   process(
     workingDirectory,
     path,
-    [|
-      "--smart-case",
-      "--files",
-    |],
+    [|"--smart-case", "--files", "--block-buffered"|],
     callback,
     completedCallback,
   );

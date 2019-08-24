@@ -77,7 +77,7 @@ let show = (v: t('p, 'c)) => {
 let tick: t('p, 'c) => t('p, 'c) =
   (v: t('p, 'c)) => {
     let budget = Time.to_float_seconds(v.budget);
-    print_endline ("budget is: " ++ string_of_float(budget));
+    print_endline("budget is: " ++ string_of_float(budget));
     let startTime = Time.getTime() |> Time.to_float_seconds;
     let current = ref(v);
 
@@ -88,11 +88,16 @@ let tick: t('p, 'c) => t('p, 'c) =
     };
 
     let endTime = Time.to_float_seconds(Time.getTime());
-    Log.info("[Job] " ++ v.name ++ " ran for " ++ string_of_float(endTime -. startTime));
-    
+    Log.info(
+      "[Job] "
+      ++ v.name
+      ++ " ran for "
+      ++ string_of_float(endTime -. startTime),
+    );
+
     if (Log.isDebugLoggingEnabled()) {
       Log.debug("[Job] Detailed report: " ++ show(v));
-    }
+    };
 
     current^;
   };

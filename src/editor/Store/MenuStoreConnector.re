@@ -132,7 +132,11 @@ let start = () => {
   let updater = (state: Model.State.t, action: Actions.t) =>
     if (action === Actions.Tick) {
       if (Core.Job.isComplete(state.menu.filterJob)) {
-        (state, Isolinear.Effect.none);
+        (
+          //print_endline ("MenuJob: " ++ Core.Job.show(state.menu.filterJob));
+          state,
+          Isolinear.Effect.none,
+        );
       } else {
         let newState = {
           ...state,
