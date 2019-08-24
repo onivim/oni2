@@ -58,24 +58,11 @@ let initialPendingWork = {
 let iterationsPerFrame = 250;
 let maxItemsToFilter = 250;
 
-/* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
-let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
-  // TODO: Optimize - for now, if the query changes, just clear the completed work
-  // However, there are several ways we could improve this:
-  // - If the query is just a stricter version... we could add the filter items back to completed
-  // - If the query is broader, we could keep our current filtered items anyway
-
-  let newPendingWork = {
-    ...p,
-    filter: newQuery,
-    explodedFilter: Zed_utf8.explode(newQuery),
-    commandsToFilter: p.fullCommands // Reset the commands to filter
+let getStringToTest = (v: Actions.menuCommand) =>
+  switch (v.category) {
+  | Some(c) => c ++ v.name
+  | None => v.name
   };
-
-  let newCompletedWork = initialCompletedWork;
-
-  (false, newPendingWork, newCompletedWork);
-};
 
 // Check whether the query matches...
 // Benchmarking showed that this was slightly faster than the recursive version
@@ -96,12 +83,65 @@ let matches = (query: list(UChar.t), str) => {
     | (_, []) =>
       result := false;
       atEnd := true;
-    | ([qh, ...qtail], [mh, ..._]) when UChar.eq(qh, mh) => q := qtail
+    | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) =>
+      q := qtail;
+      m := mtail;
     | (_, [_, ...mtail]) => m := mtail
     };
   };
 
   result^;
+};
+
+/* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
+let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
+  // TODO: Optimize - for now, if the query changes, just clear the completed work
+  // However, there are several ways we could improve this:
+  // - If the query is just a stricter version... we could add the filter items back to completed
+  // - If the query is broader, we could keep our current filtered items anyway
+
+  let newQueryEx = Zed_utf8.explode(newQuery);
+
+  let currentMatches = Utility.firstk(maxItemsToFilter, c.allFiltered);
+
+  // If the new query matches the old one... we can re-use results
+  if (matches(p.explodedFilter, newQuery)
+      && List.length(currentMatches) < maxItemsToFilter) {
+    let {allFiltered, uiFiltered} = c;
+
+    let uiFilteredList = Array.to_list(uiFiltered);
+    let uiFilteredNew =
+      List.filter(
+        i => matches(newQueryEx, getStringToTest(i)),
+        uiFilteredList,
+      );
+
+    let allFilteredNew =
+      List.filter(
+        i => matches(newQueryEx, getStringToTest(i)),
+        allFiltered,
+      );
+
+    let newPendingWork = {...p, filter: newQuery, explodedFilter: newQueryEx};
+
+    let newCompletedWork = {
+      allFiltered: allFilteredNew,
+      uiFiltered: Array.of_list(uiFilteredNew),
+    };
+
+    (false, newPendingWork, newCompletedWork);
+  } else {
+    let newPendingWork = {
+      ...p,
+      filter: newQuery,
+      explodedFilter: newQueryEx,
+      commandsToFilter: p.fullCommands // Reset the commands to filter
+    };
+
+    let newCompletedWork = initialCompletedWork;
+
+    (false, newPendingWork, newCompletedWork);
+  };
 };
 
 /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
@@ -115,12 +155,6 @@ let addItems =
 
   (false, newPendingWork, c);
 };
-
-let getStringToTest = (v: Actions.menuCommand) =>
-  switch (v.category) {
-  | Some(c) => c ++ v.name
-  | None => v.name
-  };
 
 /* [doWork] is run each frame until the work is completed! */
 let doWork = (p: pendingWork, c: completedWork) => {
