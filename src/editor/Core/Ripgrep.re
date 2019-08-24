@@ -179,6 +179,7 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
     Event.subscribe(
       cp.stdout.onData,
       value => {
+        Log.debug("[Ripgrep] Queuing work from stdout: " ++ string_of_int(Bytes.length(value)));
         RipgrepThread.queueWork(processingThread, value);
       },
     );
