@@ -15,19 +15,20 @@ type t = {
     (string, string, list(string) => unit, unit => unit) => disposeFunction,
 };
 
-module RipgrepThread = {
+/**
+ RipgrepThreadJob is the actual logic for processing a [Bytes.t]
+ and sending it to the main thread. Each iteration of work,
+ it will split up a [Bytes.t] (a chunk of ripgrep output) and
+ get a list of files, and send that to the callback
+*/
+module RipgrepThreadJob = {
   type pendingWork = {
     duplicateHash: Hashtbl.t(string, bool),
     callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
 
-  type t = {
-    mutex: Mutex.t,
-    job: ref(Job.t(pendingWork, unit)),
-    isRunning: ref(bool),
-    rgActive: ref(bool),
-  };
+  type t = Job.t(pendingWork, unit);
 
   let dedup = (hash, str) => {
     switch (Hashtbl.find_opt(hash, str)) {
@@ -62,11 +63,7 @@ module RipgrepThread = {
     (isDone, {...pendingWork, bytes: newBytes}, c);
   };
 
-  let pendingWorkPrinter = (p: pendingWork) => {
-    "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
-  };
-
-  let start = callback => {
+  let create = (~callback, ()) => {
     let duplicateHash = Hashtbl.create(1000);
     let j =
       Job.create(
@@ -76,6 +73,35 @@ module RipgrepThread = {
         ~pendingWorkPrinter,
         {callback, bytes: [], duplicateHash},
       );
+  };
+
+  let queueWork = (bytes: Bytes.t, currentJob: t) => {
+      Job.map(
+        (p, c) => {
+          let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
+          (false, newP, c);
+        },
+        currentJob,
+      );
+  };
+};
+
+module RipgrepThread = {
+
+  type t = {
+    mutex: Mutex.t,
+    job: ref(RipgrepThreadJob.t),
+    isRunning: ref(bool),
+    rgActive: ref(bool),
+  };
+
+  let pendingWorkPrinter = (p: pendingWork) => {
+    "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
+  };
+
+  let start = callback => {
+    let duplicateHash = Hashtbl.create(1000);
+    let j = RipgrepThreadJob.create(~callback, ());
 
     let rgActive = ref(true);
     let isRunning = ref(true);
@@ -117,17 +143,10 @@ module RipgrepThread = {
     Mutex.unlock(v.mutex);
   };
 
-  let queueWork = (v: t, bytes: Bytes.t) => {
+let queueWork = (v: t, bytes: Bytes.t) => {
     Mutex.lock(v.mutex);
     let currentJob = v.job^;
-    v.job :=
-      Job.map(
-        (p, c) => {
-          let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
-          (false, newP, c);
-        },
-        currentJob,
-      );
+    v.job := RipgrepThreadJob.queueWork(bytes, currentJob);
     Mutex.unlock(v.mutex);
   };
 };
@@ -142,8 +161,14 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
     ++ argsStr
     ++ "|",
   );
-  /*let bytes = ref([]);
-    let processingThread = ref(None);*/
+
+  /**
+   For processing Ripgrep, we do a few things:
+   1) Run the actual ripgrep process
+   2) The process pipes its data into a [RipgrepThread] which takes the raw [Bytes.t] output and translates it into lines
+   3) The lines are sent to the main thread via a callback to be dispatched against the store
+   */
+
   let cp = ChildProcess.spawn(~cwd=Some(workingDirectory), rgPath, args);
   let processingThread =
     RipgrepThread.start(items =>
@@ -156,9 +181,6 @@ let process = (workingDirectory, rgPath, args, callback, completedCallback) => {
     Event.subscribe(
       cp.stdout.onData,
       value => {
-        prerr_endline(
-          "Queuing work: " ++ string_of_int(Bytes.length(value)),
-        );
         RipgrepThread.queueWork(processingThread, value);
       },
     );
