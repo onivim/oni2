@@ -6,15 +6,18 @@
 
 open Oni_Core;
 
+open CamomileBundled.Camomile;
+module Zed_utf8 = Oni_Core.ZedBundled;
+
 type pendingWork = {
   filter: string,
-  regex: Str.regexp,
   // Full commands is the _complete set_ of unfiltered commands
   // This never gets filtered - it's persisted in case we need
   // the full set again
-  fullCommands: list(Actions.menuCommand),
+  explodedFilter: list(UChar.t),
+  fullCommands: list(list(Actions.menuCommand)),
   // Commands to filter are commands we haven't looked at yet.
-  commandsToFilter: list(Actions.menuCommand),
+  commandsToFilter: list(list(Actions.menuCommand)),
 };
 
 let showPendingWork = (v: pendingWork) => {
@@ -46,25 +49,14 @@ type t = Job.t(pendingWork, completedWork);
 let initialCompletedWork = {allFiltered: [], uiFiltered: [||]};
 let initialPendingWork = {
   filter: "",
-  regex: Str.regexp(".*"),
   fullCommands: [],
+  explodedFilter: [],
   commandsToFilter: [],
 };
 
 // Constants
-let iterationsPerFrame = 1500;
-let maxItemsToFilter = 1000;
-
-// TODO: abc -> .*a.*b.*c
-//let regexFromFilter = s => Str.regexp(".*");
-
-let regexFromFilter = s => {
-  let a =
-    s |> String.to_seq |> Seq.map(c => String.make(1, c)) |> List.of_seq;
-  let b = String.concat(".*", a);
-  let c = ".*" ++ b ++ ".*";
-  Str.regexp(c);
-};
+let iterationsPerFrame = 250;
+let maxItemsToFilter = 250;
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
 let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
@@ -76,7 +68,7 @@ let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
   let newPendingWork = {
     ...p,
     filter: newQuery,
-    regex: regexFromFilter(newQuery),
+    explodedFilter: Zed_utf8.explode(newQuery),
     commandsToFilter: p.fullCommands // Reset the commands to filter
   };
 
@@ -85,13 +77,40 @@ let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
   (false, newPendingWork, newCompletedWork);
 };
 
+// Check whether the query matches...
+// Benchmarking showed that this was slightly faster than the recursive version
+let matches = (query: list(UChar.t), str) => {
+  let toMatch = Zed_utf8.explode(str);
+
+  let q = ref(query);
+  let m = ref(toMatch);
+
+  let atEnd = ref(false);
+  let result = ref(false);
+
+  while (! atEnd^) {
+    switch (q^, m^) {
+    | ([], _) =>
+      result := true;
+      atEnd := true;
+    | (_, []) =>
+      result := false;
+      atEnd := true;
+    | ([qh, ...qtail], [mh, ..._]) when UChar.eq(qh, mh) => q := qtail
+    | (_, [_, ...mtail]) => m := mtail
+    };
+  };
+
+  result^;
+};
+
 /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
 let addItems =
     (items: list(Actions.menuCommand), p: pendingWork, c: completedWork) => {
   let newPendingWork = {
     ...p,
-    fullCommands: List.append(items, p.fullCommands),
-    commandsToFilter: List.append(items, p.commandsToFilter),
+    fullCommands: [items, ...p.fullCommands],
+    commandsToFilter: [items, ...p.fullCommands],
   };
 
   (false, newPendingWork, c);
@@ -119,11 +138,19 @@ let doWork = (p: pendingWork, c: completedWork) => {
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
-        // Do a first filter pass to check if the item satisifies the regex
-        let newCompleted =
-          Str.string_match(p.regex, getStringToTest(hd), 0)
-            ? [hd, ...c] : c;
-        (false, {...p, commandsToFilter: tail}, newCompleted);
+        switch (hd) {
+        | [] => (false, {...p, commandsToFilter: tail}, c)
+        | [innerHd, ...innerTail] =>
+          // Do a first filter pass to check if the item satisifies the regex
+          let newCompleted =
+            matches(p.explodedFilter, getStringToTest(innerHd))
+              ? [innerHd, ...c] : c;
+          (
+            false,
+            {...p, commandsToFilter: [innerTail, ...tail]},
+            newCompleted,
+          );
+        }
       };
     pendingWork := newPendingWork;
     completedWork := newCompletedWork;
