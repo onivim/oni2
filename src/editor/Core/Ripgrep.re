@@ -103,8 +103,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
     ++ argsStr
     ++ "|",
   );
-  let cp = ChildProcess.spawn(rgPath, args);
-
   // Mutex to 
   let jobMutex = Mutex.create();
   let job = ref(RipgrepProcessingJob.create(~mapItems, ~callback, ()));
@@ -127,6 +125,8 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
       }
     }, Milliseconds(0.)));
   });
+  
+  let cp = ChildProcess.spawn(rgPath, args);
 
   let dispose1 =
     Event.subscribe(cp.stdout.onData, value => {
