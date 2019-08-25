@@ -27,8 +27,7 @@ let create:
   (
     int,
     Theme.t,
-    list(ColorizedToken.t),
-    ColorMap.t,
+    list(ColorizedToken2.t),
     option(Range.t),
     Color.t,
     Color.t,
