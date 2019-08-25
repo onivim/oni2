@@ -7,8 +7,6 @@
  * - TextMate grammars
  */
 
-open Rench;
-
 module Core = Oni_Core;
 module Model = Oni_Model;
 
@@ -18,10 +16,8 @@ open Oni_Syntax.SyntaxHighlights;
 
 module Log = Core.Log;
 
-open Treesitter;
-
 let start = (_languageInfo: Model.LanguageInfo.t, _setup: Core.Setup.t) => {
-  let (stream, dispatch) = Isolinear.Stream.create();
+  let (stream, _dispatch) = Isolinear.Stream.create();
   /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
     let node = Treesitter.Tree.getRootNode(tree);
     print_endline(Treesitter.Node.toString(node));*/

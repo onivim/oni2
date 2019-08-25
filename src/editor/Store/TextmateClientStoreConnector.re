@@ -15,8 +15,6 @@ module Extensions = Oni_Extensions;
 
 module Log = Core.Log;
 
-open Treesitter;
-
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
@@ -45,10 +43,8 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.pump(tmClient)
     );
 
-  let notifyBufferUpdateEffect = (scope, buffer, bc) =>
+  let notifyBufferUpdateEffect = (scope, _, bc) =>
     Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () => {
-      print_endline("Scope: " ++ scope);
-
       if (!String.equal(scope, "source.json")) {
         Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc);
       } else {
