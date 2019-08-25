@@ -5,7 +5,6 @@
 open Revery;
 
 open Oni_Core;
-open Oni_Extensions;
 open Oni_Core.Types;
 
 type tokenColor = (Color.t, Color.t);
