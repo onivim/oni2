@@ -104,8 +104,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
   // Mutex to
   let jobMutex = Mutex.create();
   let job = ref(RipgrepProcessingJob.create(~mapItems, ~callback, ()));
-  let rgDone = ref(false);
-  let completed = ref(false);
 
   let dispose3 = ref(None);
 
@@ -118,9 +116,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
               Mutex.lock(jobMutex);
               job := Job.tick(job^);
               Mutex.unlock(jobMutex);
-            } else if (rgDone^ && ! completed^) {
-              completed := true;
-              completedCallback();
             },
           Milliseconds(0.),
         ),
@@ -148,7 +143,7 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
           "[Ripgrep] Process completed - exit code: "
           ++ string_of_int(exitCode),
         );
-        rgDone := true;
+        completedCallback();
       },
     );
 
