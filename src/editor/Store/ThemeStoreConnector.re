@@ -10,7 +10,7 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Syntax;
 
-let start = (languageInfo: LanguageInfo.t, setup: Setup.t) => {
+let start = (setup: Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 

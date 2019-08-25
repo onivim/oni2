@@ -66,7 +66,7 @@ let start =
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
-  let themeUpdater = ThemeStoreConnector.start(languageInfo, setup);
+  let themeUpdater = ThemeStoreConnector.start(setup);
 
   /*
      For our July builds, we won't be including the extension host -
