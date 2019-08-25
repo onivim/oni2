@@ -27,9 +27,13 @@ let _explodeSelectors = (s: string) => {
   s |> String.split_on_char(',') |> List.map(s => String.trim(s));
 };
 
-let default = (~defaultBackground, ~defaultForeground, ()) => {defaultBackground, defaultForeground, trie: Trie.empty };
+let default = (~defaultBackground, ~defaultForeground, ()) => {
+  defaultBackground,
+  defaultForeground,
+  trie: Trie.empty,
+};
 
-let create = 
+let create =
     (~defaultBackground, ~defaultForeground, selectors: list(themeSelector)) => {
   let f = (v: themeSelector) => {
     let (s, style) = v;

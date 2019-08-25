@@ -66,7 +66,7 @@ let start =
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
-  let (syntaxUpdater, syntaxStream) = 
+  let (syntaxUpdater, syntaxStream) =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(setup);
 

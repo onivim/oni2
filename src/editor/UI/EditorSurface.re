@@ -373,18 +373,23 @@ let createElement =
           }
         };
 
-    let tokenColors2 = switch(SyntaxHighlighting2.getTokensForLine(
-    state.syntaxHighlighting2,
-    bufferId, i
-    )) {
-    | [] => Oni_Extensions.ColorizedToken.toColorizedToken2s(
-          state.syntaxHighlighting.colorMap,
-          theme.editorForeground,
-          theme.editorBackground,
-          tokenColors,
-        );
-    | v => v
-    };
+      let tokenColors2 =
+        switch (
+          SyntaxHighlighting2.getTokensForLine(
+            state.syntaxHighlighting2,
+            bufferId,
+            i,
+          )
+        ) {
+        | [] =>
+          Oni_Extensions.ColorizedToken.toColorizedToken2s(
+            state.syntaxHighlighting.colorMap,
+            theme.editorForeground,
+            theme.editorBackground,
+            tokenColors,
+          )
+        | v => v
+        };
 
       let colorizer =
         BufferLineColorizer.create(
