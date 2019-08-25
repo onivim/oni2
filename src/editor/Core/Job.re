@@ -80,10 +80,24 @@ let tick: t('p, 'c) => t('p, 'c) =
     let startTime = Time.getTime() |> Time.to_float_seconds;
     let current = ref(v);
 
+    Log.debug("[Job] Starting " ++ v.name);
     while (Time.to_float_seconds(Time.getTime())
            -. startTime < budget
            && !current^.isComplete) {
       current := doWork(v);
+    };
+
+    let endTime = Time.to_float_seconds(Time.getTime());
+
+    Log.info(
+      "[Job] "
+      ++ v.name
+      ++ " ran for "
+      ++ string_of_float(endTime -. startTime),
+    );
+
+    if (Log.isDebugLoggingEnabled()) {
+      Log.debug("[Job] Detailed report: " ++ show(v));
     };
 
     current^;
