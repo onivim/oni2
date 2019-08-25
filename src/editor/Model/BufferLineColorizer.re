@@ -5,8 +5,8 @@
 open Revery;
 
 open Oni_Core;
-open Oni_Core.Types;
 open Oni_Extensions;
+open Oni_Core.Types;
 
 type tokenColor = (Color.t, Color.t);
 type t = int => tokenColor;
@@ -22,10 +22,11 @@ let create =
       matchingPair: option(int),
       searchHighlightRanges: list(Range.t),
     ) => {
-    let defaultToken2 = ColorizedToken2.create(
+  let defaultToken2 =
+    ColorizedToken2.create(
       ~index=0,
-      ~backgroundColor=theme.editorBackgroundColor,
-      ~foregroundColor=theme.editorForegroundColor,
+      ~backgroundColor=defaultBackgroundColor,
+      ~foregroundColor=theme.editorForeground,
       (),
     );
   let tokenColorArray: array(ColorizedToken2.t) =
@@ -67,7 +68,7 @@ let create =
 
     let backgroundColor =
       i >= selectionStart && i < selectionEnd || i == matchingPair
-        ? selectionColor : defaultBackgroundColor;
+        ? selectionColor : colorIndex.backgroundColor;
 
     let doesSearchIntersect = (range: Range.t) => {
       Range.(
@@ -80,9 +81,9 @@ let create =
       List.exists(doesSearchIntersect, searchHighlightRanges);
 
     let backgroundColor =
-      isSearchHighlight ? theme.editorFindMatchBackground : colorIndex.backgroundColor;
+      isSearchHighlight ? theme.editorFindMatchBackground : backgroundColor;
 
-    let color = colorindex.foregroundColor;
+    let color = colorIndex.foregroundColor;
     (backgroundColor, color);
   };
 };

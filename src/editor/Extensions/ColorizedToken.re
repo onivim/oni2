@@ -46,15 +46,17 @@ let create: (int, int) => t =
 let default: t = {index: 0, foregroundColor: 0, backgroundColor: 1};
 
 let toColorizedToken2 = (colorMap: ColorMap.t, defaultFg, defaultBg, v: t) => {
-
   ColorizedToken2.create(
-    ~index=token.index,
-    ~foregroundColor=ColorMap.get(colorMap, token.foregroundColor, defaultFg, defaultBg),
-    ~backgroundColor=ColorMap.get(colorMap, token.backgroundColor, defaultFg, defaultBg),
-    ()
+    ~index=v.index,
+    ~foregroundColor=
+      ColorMap.get(colorMap, v.foregroundColor, defaultFg, defaultBg),
+    ~backgroundColor=
+      ColorMap.get(colorMap, v.backgroundColor, defaultFg, defaultBg),
+    (),
   );
 };
 
-let toColorizedToken2s = (colorMap: ColorMap.t, defaultFg, defaultBg, tokens: list(t)) => {
+let toColorizedToken2s =
+    (colorMap: ColorMap.t, defaultFg, defaultBg, tokens: list(t)) => {
   List.map(toColorizedToken2(colorMap, defaultFg, defaultBg), tokens);
 };
