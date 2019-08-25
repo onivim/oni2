@@ -5,7 +5,6 @@
 open Revery;
 open Oni_Core;
 open Oni_Core.Types;
-open Oni_Extensions;
 
 /*
  * Type [tokenColor] is a tuple of [(backgroundColor, foregroundColor)]
