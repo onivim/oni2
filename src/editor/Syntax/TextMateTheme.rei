@@ -4,6 +4,7 @@
  Interface for textmate theme matching
  */
 
+open Revery;
 open TextMateScopes;
 
 /*
@@ -22,7 +23,29 @@ let empty: t;
 /*
    [create] builds a Theme [t] from a list of styles
  */
-let create: list(themeSelector) => t;
+let create:
+  (
+    ~defaultBackground: Color.t,
+    ~defaultForeground: Color.t,
+    list(themeSelector)
+  ) =>
+  t;
+
+/*
+    [of_yojson] instantiates a Theme [t] from JSON
+ */
+let of_yojson:
+  (
+    ~defaultBackground: Color.t,
+    ~defaultForeground: Color.t,
+    Yojson.Safe.json
+  ) =>
+  t;
+
+/*
+   [empty] is an empty Theme [t] with no selectors
+ */
+let empty: t;
 
 /*
     [match] returns the resolved style information,

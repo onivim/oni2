@@ -2,6 +2,8 @@
  TextMateTheme.re
  */
 
+open Revery;
+
 open TextMateScopes;
 
 module TokenStyle = TextMateScopes.TokenStyle;
@@ -14,7 +16,11 @@ type selectorWithParents = {
   parents: list(Selector.t),
 };
 
-type t = {trie: Trie.t(selectorWithParents)};
+type t = {
+  defaultBackground: Color.t,
+  defaultForeground: Color.t,
+  trie: Trie.t(selectorWithParents),
+};
 
 /* Helper to split the selectors on ',' for groups */
 let _explodeSelectors = (s: string) => {
@@ -23,7 +29,7 @@ let _explodeSelectors = (s: string) => {
 
 let empty = { trie: Trie.empty };
 
-let create = (selectors: list(themeSelector)) => {
+    (~defaultBackground, ~defaultForeground, selectors: list(themeSelector)) => {
   let f = (v: themeSelector) => {
     let (s, style) = v;
 
@@ -75,44 +81,133 @@ let create = (selectors: list(themeSelector)) => {
       selectors,
     );
 
-  let ret: t = {trie: trie};
+  let ret: t = {defaultBackground, defaultForeground, trie};
 
   ret;
 };
+
+let of_yojson =
+    (~defaultBackground, ~defaultForeground, json: Yojson.Safe.json) => {
+  let parseSettings: Yojson.Safe.json => TokenStyle.t =
+    json => {
+      let str = v =>
+        switch (v) {
+        | `String(s) => Some(Color.hex(s))
+        | _ => None
+        };
+
+      let boo = v =>
+        switch (v) {
+        | `Bool(s) => Some(s)
+        | _ => None
+        };
+
+      TokenStyle.create(
+        ~foreground=str(Yojson.Safe.Util.member("foreground", json)),
+        ~background=str(Yojson.Safe.Util.member("background", json)),
+        ~bold=boo(Yojson.Safe.Util.member("bold", json)),
+        ~italic=boo(Yojson.Safe.Util.member("italic", json)),
+        (),
+      );
+    };
+
+  let parseStringList = (arr: list(Yojson.Safe.json)) => {
+    List.fold_left(
+      (prev, curr) =>
+        switch (curr) {
+        | `String(v) => [v, ...prev]
+        | _ => prev
+        },
+      [],
+      arr,
+    );
+  };
+
+  let parseSelector = (selector: Yojson.Safe.json) => {
+    switch (selector) {
+    | `Assoc(_) =>
+      let scope = Yojson.Safe.Util.member("scope", selector);
+      let settings = Yojson.Safe.Util.member("settings", selector);
+
+      switch (scope, settings) {
+      | (`List(v), `Assoc(_)) =>
+        let tokenStyle = parseSettings(settings);
+        let selector = parseStringList(v) |> String.concat(",");
+        [(selector, tokenStyle)];
+      | (`String(v), `Assoc(_)) =>
+        let tokenStyle = parseSettings(settings);
+        let selector = v;
+        [(selector, tokenStyle)];
+      | _ => []
+      };
+    | _ => []
+    };
+  };
+
+  let selectors =
+    switch (json) {
+    | `List(elems) => List.map(parseSelector, elems) |> List.flatten
+    | _ => []
+    };
+
+  create(~defaultBackground, ~defaultForeground, selectors);
+};
+
+let empty =
+  create(
+    ~defaultBackground=Colors.black,
+    ~defaultForeground=Colors.white,
+    [],
+  );
 
 let show = (v: t) => {
   Trie.show((i: selectorWithParents) => TokenStyle.show(i.style), v.trie);
 };
 
-let _applyStyle = (prev: TokenStyle.t, style: TokenStyle.t) => {
-  let foreground =
-    switch (prev.foreground, style.foreground) {
-    | (Some(v), _) => Some(v)
-    | (_, Some(v)) => Some(v)
-    | _ => None
-    };
+let _applyStyle: (TokenStyle.t, TokenStyle.t) => TokenStyle.t =
+  (prev: TokenStyle.t, style: TokenStyle.t) => {
+    let foreground =
+      switch (prev.foreground, style.foreground) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
 
-  let bold =
-    switch (prev.bold, style.bold) {
-    | (Some(v), _) => Some(v)
-    | (_, Some(v)) => Some(v)
-    | _ => None
-    };
+    let background =
+      switch (prev.background, style.background) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
 
-  let italic =
-    switch (prev.italic, style.italic) {
-    | (Some(v), _) => Some(v)
-    | (_, Some(v)) => Some(v)
-    | _ => None
-    };
+    let bold =
+      switch (prev.bold, style.bold) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
 
-  {...prev, foreground, bold, italic};
-};
+    let italic =
+      switch (prev.italic, style.italic) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    {background, foreground, bold, italic};
+  };
 
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
+  let default =
+    ResolvedStyle.default(
+      ~foreground=theme.defaultForeground,
+      ~background=theme.defaultBackground,
+      (),
+    );
+
   switch (scopes) {
-  | [] => ResolvedStyle.default
+  | [] => default
   | [scope, ...scopeParents] =>
     let p = Trie.matches(theme.trie, scope);
 
@@ -154,21 +249,27 @@ let match = (theme: t, scopes: string) => {
     let foreground =
       switch (result.foreground) {
       | Some(v) => v
-      | None => ResolvedStyle.default.foreground
+      | None => default.foreground
       };
 
     let bold =
       switch (result.bold) {
       | Some(v) => v
-      | None => ResolvedStyle.default.bold
+      | None => default.bold
       };
 
     let italic =
       switch (result.italic) {
       | Some(v) => v
-      | None => ResolvedStyle.default.italic
+      | None => default.italic
       };
 
-    {...ResolvedStyle.default, foreground, bold, italic};
+    let background =
+      switch (result.background) {
+      | Some(v) => v
+      | None => default.background
+      };
+
+    {background, foreground, bold, italic};
   };
 };

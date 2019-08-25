@@ -7,6 +7,7 @@
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Extensions;
+open Oni_Syntax;
 
 type t =
   | Init
@@ -51,6 +52,8 @@ type t =
   | SyntaxHighlightColorMap(ColorMap.t)
   | SyntaxHighlightTokens(TextmateClient.TokenizationResult.t)
   | OpenExplorer(string)
+  | ShowNotification(notification)
+  | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
   | MenuSearch(string)
@@ -79,7 +82,9 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
+  | LoadThemeByPath(string)
   | SetIconTheme(IconTheme.t)
+  | SetTokenTheme(TextMateTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
@@ -89,6 +94,17 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
+and notificationType =
+  | Success
+  | Info
+  | Warning
+  | Error
+and notification = {
+  id: int,
+  notificationType,
+  title: string,
+  message: string,
+}
 and editor = {
   editorId: int,
   bufferId: int,

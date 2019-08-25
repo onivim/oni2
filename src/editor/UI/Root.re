@@ -47,7 +47,8 @@ let statusBarStyle = statusBarHeight =>
 let createElement = (~state: State.t, ~children as _, ()) =>
   component(hooks => {
     let theme = state.theme;
-    let style = rootStyle(theme.colors.background, theme.colors.foreground);
+    let configuration = state.configuration;
+    let style = rootStyle(theme.background, theme.foreground);
 
     let statusBarVisible =
       Selectors.getActiveConfigurationValue(state, c =>
@@ -69,10 +70,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <EditorView state />
         </View>
         <Overlay>
-          <CommandlineView theme command={state.commandline} />
-          <WildmenuView theme wildmenu={state.wildmenu} />
-          <MenuView theme menu={state.menu} font={state.uiFont} />
+          <CommandlineView theme configuration command={state.commandline} />
+          <WildmenuView theme configuration wildmenu={state.wildmenu} />
+          <MenuView
+            theme
+            configuration
+            menu={state.menu}
+            font={state.uiFont}
+          />
           <KeyDisplayerView state />
+          <NotificationsView state />
         </Overlay>
         statusBar
       </View>,

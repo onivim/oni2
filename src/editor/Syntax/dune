@@ -8,6 +8,7 @@
         reglfw
         lwt
         lwt.unix
+        yojson
         Oni2.core
         Rench
         Revery

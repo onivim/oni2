@@ -10,7 +10,6 @@ type t = {
      menu is still populating.
    */
   isLoading: bool,
-  commands: list(Actions.menuCommand),
   selectedItem: int,
   filterJob: MenuJob.t,
   onQueryChanged: Event.t(string),
@@ -21,7 +20,6 @@ let create = () => {
   searchQuery: "",
   isOpen: false,
   isLoading: false,
-  commands: [],
   selectedItem: 0,
   filterJob: MenuJob.create(),
   onQueryChanged: Event.create(),

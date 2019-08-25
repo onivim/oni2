@@ -13,7 +13,7 @@ let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
   Style.[
     fontFamily(uiFont.fontFile),
     fontSize(uiFont.fontSize),
-    color(theme.colors.editorMenuForeground),
+    color(theme.editorMenuForeground),
     backgroundColor(bg),
   ];
 
@@ -48,9 +48,7 @@ let createElement =
 
     let bg: Color.t =
       Theme.(
-        selected
-          ? theme.colors.editorMenuItemSelected
-          : theme.colors.editorMenuBackground
+        selected ? theme.editorMenuItemSelected : theme.editorMenuBackground
       );
 
     let labelStyles =
@@ -61,7 +59,8 @@ let createElement =
               fontFamily(uiFont.fontFile),
               textOverflow(`Ellipsis),
               fontSize(uiFont.fontSize),
-              color(theme.colors.editorMenuForeground),
+              color(theme.editorMenuForeground),
+              backgroundColor(bg),
             ],
           ~target=style,
         )

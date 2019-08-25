@@ -68,6 +68,7 @@ let start =
 
   let (syntaxUpdater, syntaxStream) = 
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
+  let themeUpdater = ThemeStoreConnector.start(setup);
 
   /*
      For our July builds, we won't be including the extension host -
@@ -113,6 +114,7 @@ let start =
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
+          themeUpdater,
         ]),
       (),
     );
@@ -187,16 +189,7 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(
-      e => {
-        open Isolinear.Effect;
-        if (Core.Log.isDebugLoggingEnabled()) {
-          Core.Log.debug("[EFFECT]: " ++ e.name);
-        };
-        Isolinear.Effect.run(e, dispatch);
-      },
-      List.rev(effects),
-    );
+    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
   let _ =

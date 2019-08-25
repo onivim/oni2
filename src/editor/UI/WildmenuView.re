@@ -1,4 +1,3 @@
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
@@ -11,25 +10,23 @@ let containerStyles = (theme: Theme.t) =>
   Style.[
     width(400),
     height(300),
-    backgroundColor(theme.colors.editorMenuBackground),
+    backgroundColor(theme.editorMenuBackground),
     paddingVertical(20),
     overflow(`Hidden),
   ];
 
 let createElement =
-    (~children as _, ~wildmenu: Wildmenu.t, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~wildmenu: Wildmenu.t,
+      ~theme: Theme.t,
+      ~configuration,
+      (),
+    ) =>
   component(hooks => {
     let element =
       wildmenu.show
-        ? <BoxShadow
-            boxShadow={Style.BoxShadow.make(
-              ~xOffset=-15.,
-              ~yOffset=5.,
-              ~blurRadius=30.,
-              ~spreadRadius=5.,
-              ~color=Color.rgba(0., 0., 0., 0.2),
-              (),
-            )}>
+        ? <OniBoxShadow theme configuration>
             <ScrollView style={containerStyles(theme)}>
               ...{List.mapi(
                 (index, item) =>
@@ -42,7 +39,7 @@ let createElement =
                 wildmenu.items,
               )}
             </ScrollView>
-          </BoxShadow>
+          </OniBoxShadow>
         : React.listToElement([]);
     (hooks, element);
   });

@@ -6,6 +6,8 @@
  */
 
 type t = {
+  fontAwesomeRegularPath: string,
+  fontAwesomeSolidPath: string,
   /* Horizontal padding on each side of the minimap */
   minimapPadding: int,
   /*
@@ -33,9 +35,12 @@ type t = {
    * some features like syntax highlighting will be disabled.
    */
   largeFileLineCountThreshold: int,
+  notificationWidth: int,
 };
 
 let default: t = {
+  fontAwesomeRegularPath: "FontAwesome5FreeRegular.otf",
+  fontAwesomeSolidPath: "FontAwesome5FreeSolid.otf",
   minimapPadding: 0,
   minimapCharacterWidth: 1,
   minimapCharacterHeight: 2,
@@ -44,6 +49,7 @@ let default: t = {
   minimapMaxColumn: 120,
   maximumExplorerDepth: 1,
   tabHeight: 35,
+  notificationWidth: 300,
 
   /*
    * The threshold we set right now is artificially low,

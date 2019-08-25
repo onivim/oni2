@@ -8,6 +8,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+module Core = Oni_Core;
 open Oni_Model;
 
 let bgc = Color.rgb(0.1, 0.1, 0.1);
@@ -63,6 +64,11 @@ let keyGroupView = (~children as _, ~uiFont, ~text: string, ()) => {
 let createElement = (~children as _, ~state: State.t, ()) => {
   let uiFont = state.uiFont.fontFile;
 
+  let anyNotifications = Notifications.any(state.notifications);
+
+  let extraSpacing =
+    anyNotifications ? Core.Constants.default.notificationWidth + 50 : 0;
+
   let groups =
     List.map(
       (keyGroup: KeyDisplayer.groupedPresses) => {
@@ -79,5 +85,5 @@ let createElement = (~children as _, ~state: State.t, ()) => {
     )
     |> List.rev;
 
-  <Positioned bottom=50 right=50> ...groups </Positioned>;
+  <Positioned bottom=50 right={50 + extraSpacing}> ...groups </Positioned>;
 };

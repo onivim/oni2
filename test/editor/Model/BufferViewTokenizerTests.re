@@ -5,7 +5,7 @@ open TestFramework;
 
 open Helpers;
 
-let theme = Theme.create();
+let theme = Theme.default;
 
 let indentation = IndentationSettings.default;
 

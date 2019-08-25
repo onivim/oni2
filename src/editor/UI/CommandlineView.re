@@ -31,7 +31,13 @@ let getFirstC = (t: Vim.Types.cmdlineType) => {
 };
 
 let createElement =
-    (~children as _, ~command: Commandline.t, ~theme: Theme.t, ()) =>
+    (
+      ~children as _,
+      ~command: Commandline.t,
+      ~configuration: Configuration.t,
+      ~theme: Theme.t,
+      (),
+    ) =>
   component(hooks => {
     let uiFont = State.(GlobalContext.current().state.uiFont);
     let {fontFile, _} = uiFont;
@@ -42,6 +48,7 @@ let createElement =
         fontFamily(fontFile),
         fontSize(fontSize_),
         color(cmdFontColor),
+        backgroundColor(theme.editorBackground),
         textWrap(TextWrapping.WhitespaceWrap),
       ];
 
@@ -50,20 +57,12 @@ let createElement =
       ? (
         hooks,
         <View style=Style.[marginBottom(20)]>
-          <BoxShadow
-            boxShadow={Style.BoxShadow.make(
-              ~xOffset=-15.,
-              ~yOffset=5.,
-              ~blurRadius=30.,
-              ~spreadRadius=5.,
-              ~color=Color.rgba(0., 0., 0., 0.2),
-              (),
-            )}>
+          <OniBoxShadow configuration theme>
             <View
               style=Style.[
                 width(400),
                 overflow(`Hidden),
-                backgroundColor(theme.colors.editorBackground),
+                backgroundColor(theme.editorBackground),
                 flexDirection(`Row),
                 alignItems(`Center),
                 paddingVertical(8),
@@ -81,8 +80,8 @@ let createElement =
               />
               <Text style=textStyles text=endStr />
             </View>
-          </BoxShadow>
+          </OniBoxShadow>
         </View>,
       )
-      : (hooks, React.listToElement([]));
+      : (hooks, React.empty);
   });
