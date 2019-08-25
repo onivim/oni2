@@ -17,7 +17,6 @@
         reason-jsonrpc
         isolinear
         Oni2.core
-        Oni2.syntax
         Oni2.extensions
         Oni2.input
         Oni2.syntax
