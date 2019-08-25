@@ -99,9 +99,15 @@ let createElement =
     let loadingSpinner = menu.isLoading ? 
                   <View style=Style.[height(40), width(menuWidth)]>
                   <Center>
-    <View style=Style.[width(24), height(24), transform(Transform.[RotateY(Math.Angle.Radians(time))
+    <View style=Style.[transform(Transform.[RotateY(Math.Angle.Radians(time))
                   ])]>
-                  <Image src="logo.png" width=24 height=24 opacity=0.4 />
+                  <FontIcon 
+                    fontFamily={Constants.default.fontAwesomeRegularPath}
+                    icon={FontAwesome.circle} 
+                    fontSize=16
+                    backgroundColor=Colors.red
+                    color=Colors.white
+                    />
     </View>
     </Center>
     </View> : React.empty;
