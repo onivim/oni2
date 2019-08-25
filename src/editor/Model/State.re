@@ -74,7 +74,6 @@ let create: unit => t =
     notifications: Notifications.default,
     searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
-    tokenTheme: TextMateTheme.empty,
     windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
     zenMode: false,
