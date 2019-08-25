@@ -57,6 +57,13 @@ let debug = msg => debugLogging^ ? logCore("[DEBUG] " ++ msg) : ();
 
 let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
 
+let perf = (msg, f) => {
+  let startTime = Unix.gettimeofday();
+  f();
+  let endTime = Unix.gettimeofday();
+  logCore("[PERF] " ++ msg ++ " took " ++ string_of_float(endTime -. startTime) ++ "s");
+};
+
 let () =
   switch (debugLogging^) {
   | false => ()
