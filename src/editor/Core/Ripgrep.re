@@ -76,6 +76,7 @@ module RipgrepProcessingJob = {
       ~initialCompletedWork=(),
       ~name="RipgrepProcessorJob",
       ~pendingWorkPrinter,
+      ~budget=Milliseconds(2.),
       {callback, bytes: [], duplicateHash, itemMapping: mapItems},
     );
   };

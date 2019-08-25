@@ -219,6 +219,7 @@ let create = () => {
     ~completedWorkPrinter=showCompletedWork,
     ~name="MenuJob",
     ~initialCompletedWork,
+    ~budget=Milliseconds(2.),
     ~f=doWork,
     initialPendingWork,
   );
