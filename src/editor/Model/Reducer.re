@@ -38,7 +38,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
-      | SetTokenTheme(tokenTheme) => { ...s, tokenTheme }
+      | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
       | _ => s
       };
     };
