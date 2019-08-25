@@ -169,7 +169,7 @@ let reducer = (action, state) =>
     };
   };
 
-let defaultHeight = 50;
+let defaultHeight = 40;
 let defaultWidth = 200;
 let inputTextMargin = 10;
 
@@ -198,6 +198,7 @@ let make =
       ~placeholderColor,
       ~onChange,
       ~onKeyDown,
+      ~fontSize,
       (),
     ) =>
   component(slots => {
@@ -282,7 +283,7 @@ let make =
       );
 
     let viewStyles = Style.extractViewStyles(allStyles);
-    let inputFontSize = Selector.select(style, FontSize, 18);
+    let inputFontSize = fontSize;
     let inputColor = Selector.select(style, Color, Colors.black);
     let inputFontFamily =
       Selector.select(style, FontFamily, "Roboto-Regular.ttf");
@@ -359,6 +360,7 @@ let createElement =
       ~cursorColor=Colors.black,
       ~autofocus=false,
       ~placeholder="",
+      ~fontSize=14,
       ~onChange=_ => (),
       (),
     ) =>
@@ -367,6 +369,7 @@ let createElement =
     ~placeholder,
     ~autofocus,
     ~cursorColor,
+    ~fontSize,
     ~placeholderColor,
     ~onChange,
     (),

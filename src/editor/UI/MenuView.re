@@ -93,21 +93,21 @@ let createElement =
       );
 
     let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
-
-    
     let time = Time.getTime() |> Time.to_float_seconds;
     let loadingSpinner = menu.isLoading ? 
                   <View style=Style.[height(40), width(menuWidth)]>
                   <Center>
-    <View style=Style.[transform(Transform.[RotateY(Math.Angle.Radians(time))
+    <View style=Style.[transform(Transform.[RotateZ(Math.Angle.Radians(time))
                   ])]>
+                  <Opacity opacity>
                   <FontIcon 
-                    fontFamily={Constants.default.fontAwesomeRegularPath}
-                    icon={FontAwesome.circle} 
-                    fontSize=16
-                    backgroundColor=Colors.red
-                    color=Colors.white
+                    fontFamily={Constants.default.fontAwesomeSolidPath}
+                    icon={FontAwesome.circleNotch} 
+                    fontSize=24
+                    backgroundColor=theme.editorBackground
+                    color=theme.oniNormalModeBackground
                     />
+                  </Opacity>
     </View>
     </Center>
     </View> : React.empty;
