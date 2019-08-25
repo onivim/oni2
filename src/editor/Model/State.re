@@ -25,7 +25,6 @@ type t = {
   syntaxHighlighting: SyntaxHighlighting.t,
   // New-school native syntax highlighting
   syntaxHighlighting2: SyntaxHighlighting2.t,
-  theme: Theme.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
