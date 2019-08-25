@@ -68,7 +68,7 @@ let create =
 
     let backgroundColor =
       i >= selectionStart && i < selectionEnd || i == matchingPair
-        ? selectionColor : colorIndex.backgroundColor;
+        ? selectionColor : defaultBackgroundColor;
 
     let doesSearchIntersect = (range: Range.t) => {
       Range.(

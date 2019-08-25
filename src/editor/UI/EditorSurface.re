@@ -377,7 +377,7 @@ let createElement =
         Oni_Extensions.ColorizedToken.toColorizedToken2s(
           state.syntaxHighlighting.colorMap,
           theme.editorForeground,
-          defaultBackground,
+          theme.editorBackground,
           tokenColors,
         );
 
