@@ -8,8 +8,6 @@ open Oni_Core;
 open Oni_Core.Types;
 open Oni_Syntax;
 
-open Oni_Syntax;
-
 type t = {
   mode: Vim.Mode.t,
   diagnostics: Diagnostics.t,
