@@ -16,30 +16,36 @@ open Oni_Syntax.SyntaxHighlights;
 
 module Log = Core.Log;
 
-let start = (_languageInfo: Model.LanguageInfo.t, _setup: Core.Setup.t) => {
+let start = (languageInfo: Model.LanguageInfo.t, _setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
     let node = Treesitter.Tree.getRootNode(tree);
     print_endline(Treesitter.Node.toString(node));*/
 
+  let getLines = (state: Model.State.t, id: int) => {
+    switch (Model.Buffers.getBuffer(id, state.buffers)) {
+    | None => [||]
+    | Some(v) => Model.Buffer.getLines(v);
+    }
+  };
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     //    | Model.Actions.Tick => (state, pumpEffect)
-    | Model.Actions.BufferEnter(be) =>
-      print_endline("bufferenter: " ++ string_of_int(be.id));
-      (
+    | Model.Actions.BufferUpdate(bu) =>
+      print_endline ("Buffer update: " ++ string_of_int(bu.id));
+        let lines = getLines(state, be.id);
         {
           ...state,
           syntaxHighlighting2:
             Core.IntMap.add(
               be.id,
-              SyntaxHighlights.empty,
+              SyntaxHighlights.create(Treesitter, lines),
               state.syntaxHighlighting2,
             ),
         },
-        Isolinear.Effect.none,
-      );
+      (state, Isolinear.Effect.none)
     | _ => default
     };
   };

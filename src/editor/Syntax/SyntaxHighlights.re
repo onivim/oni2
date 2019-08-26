@@ -96,8 +96,6 @@ type syntaxHighlightStrategy =
   | None;
 
 module SyntaxHighlights = {
-
-  
   type t = {
     strategy: syntaxHighlightStrategy,
     testSyntaxHighlights: TestSyntaxHighlight.t,
@@ -111,19 +109,11 @@ module SyntaxHighlights = {
   let create = (strategy: syntaxHighlightStrategy, lines: array(string)) => {
     switch (strategy) {
     | Test => {
-      ...default,
       strategy: Test,
       testSyntaxHighlights: TestSyntaxHighlight.create(lines),
     }
-    | _ => {
-      default
+    | _ => default
     }
-    }
-  };
-
-  let empty = {
-    strategy: Test,
-    testSyntaxHighlights: TestSyntaxHighlight.empty,
   };
 
   let getTokensForLine = (v: t, line: int) => {
