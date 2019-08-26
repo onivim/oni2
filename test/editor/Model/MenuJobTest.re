@@ -97,25 +97,25 @@ describe("MenuJob", ({describe, _}) => {
       expect.string(second.name).toEqual("abcd");
     });
 
-    let runToCompletion = (j) => {
-      let job = ref(j); 
+    let runToCompletion = j => {
+      let job = ref(j);
 
       while (!Job.isComplete(job^)) {
         job := Job.tick(job^);
-      }
+      };
 
-      job^
+      job^;
     };
 
-    test("regresion test - already filterd items shouldn't get re-added", ({expect, _}) => {
+    test(
+      "regresion test - already filterd items shouldn't get re-added",
+      ({expect, _}) => {
       let job =
         MenuJob.create()
         |> Job.map(MenuJob.addItems([createItem("abcd")]))
         |> Job.map(MenuJob.updateQuery("a"))
         |> Job.tick
-        |> Job.map(
-             MenuJob.addItems([ createItem("a"), ]),
-           )
+        |> Job.map(MenuJob.addItems([createItem("a")]))
         |> Job.map(MenuJob.updateQuery("abc"))
         |> runToCompletion;
 

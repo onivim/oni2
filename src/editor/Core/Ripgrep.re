@@ -37,10 +37,7 @@ module RipgrepProcessingJob = {
 
   let dedup = (hash, str) => {
     switch (Hashtbl.find_opt(hash, str)) {
-    | Some(_) => {
-      print_endline ("DUP: "++str);
-      false
-    }
+    | Some(_) => false
     | None =>
       Hashtbl.add(hash, str, true);
       true;
@@ -52,15 +49,12 @@ module RipgrepProcessingJob = {
       switch (pendingWork.bytes) {
       | [] => []
       | [hd, ...tail] =>
-          let strs = hd
+        let items =
+          hd
           |> Bytes.to_string
           |> String.trim
           |> String.split_on_char('\n')
-          |> List.filter(dedup(pendingWork.duplicateHash));
-
-        //List.iter(print_endline, strs);
-        
-        let items = strs
+          |> List.filter(dedup(pendingWork.duplicateHash))
           |> List.map(pendingWork.itemMapping);
         pendingWork.callback(items);
         tail;
