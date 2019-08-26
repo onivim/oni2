@@ -38,6 +38,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
+### UI
+
+- `ui.shadows` __(_bool_ default: `true`)__ - Use drop-shadows in the rendering of menus, overlays, etc.
+
 ### Vim
 
 - `vim.useSystemClipboard` __(_`true`_|_`false`_|_`["yank", "paste", "delete"]`_ default: `["yank"]`)__ - Whether or not deletes / yanks should integrate with the system clipboard:

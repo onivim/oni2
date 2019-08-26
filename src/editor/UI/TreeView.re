@@ -31,7 +31,7 @@ let headingStyles = (theme: Core.Theme.t) =>
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
-    backgroundColor(theme.colors.sideBarBackground),
+    backgroundColor(theme.sideBarBackground),
     height(Core.Constants.default.tabHeight),
   ];
 
@@ -136,8 +136,8 @@ let createElement =
       UiTree.updateNode(id, tree, ())
       |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
-    let backgroundColor = state.theme.colors.sideBarBackground;
-    let foregroundColor = state.theme.colors.sideBarForeground;
+    let backgroundColor = state.theme.sideBarBackground;
+    let foregroundColor = state.theme.sideBarForeground;
 
     let nodeRenderer =
       itemRenderer(

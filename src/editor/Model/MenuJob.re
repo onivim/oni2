@@ -6,19 +6,25 @@
 
 open Oni_Core;
 
+open CamomileBundled.Camomile;
+module Zed_utf8 = Oni_Core.ZedBundled;
+
 type pendingWork = {
   filter: string,
-  regex: Str.regexp,
   // Full commands is the _complete set_ of unfiltered commands
   // This never gets filtered - it's persisted in case we need
   // the full set again
-  fullCommands: list(Actions.menuCommand),
+  explodedFilter: list(UChar.t),
+  totalCommandCount: int,
+  fullCommands: list(list(Actions.menuCommand)),
   // Commands to filter are commands we haven't looked at yet.
-  commandsToFilter: list(Actions.menuCommand),
+  commandsToFilter: list(list(Actions.menuCommand)),
 };
 
 let showPendingWork = (v: pendingWork) => {
   "- Pending Work\n"
+  ++ " -- totalCommandCount: "
+  ++ string_of_int(v.totalCommandCount)
   ++ " -- fullCommands: "
   ++ string_of_int(List.length(v.fullCommands))
   ++ " -- commandsToFilter: "
@@ -46,43 +52,100 @@ type t = Job.t(pendingWork, completedWork);
 let initialCompletedWork = {allFiltered: [], uiFiltered: [||]};
 let initialPendingWork = {
   filter: "",
-  regex: Str.regexp(".*"),
   fullCommands: [],
+  explodedFilter: [],
   commandsToFilter: [],
+  totalCommandCount: 0,
 };
 
 // Constants
-let iterationsPerFrame = 1500;
-let maxItemsToFilter = 1000;
+let iterationsPerFrame = 250;
+let maxItemsToFilter = 250;
 
-// TODO: abc -> .*a.*b.*c
-//let regexFromFilter = s => Str.regexp(".*");
+let getStringToTest = (v: Actions.menuCommand) =>
+  switch (v.category) {
+  | Some(c) => c ++ v.name
+  | None => v.name
+  };
 
-let regexFromFilter = s => {
-  let a =
-    s |> String.to_seq |> Seq.map(c => String.make(1, c)) |> List.of_seq;
-  let b = String.concat(".*", a);
-  let c = ".*" ++ b ++ ".*";
-  Str.regexp(c);
+// Check whether the query matches...
+// Benchmarking showed that this was slightly faster than the recursive version
+let matches = (query: list(UChar.t), str) => {
+  let toMatch = Zed_utf8.explode(str);
+
+  let q = ref(query);
+  let m = ref(toMatch);
+
+  let atEnd = ref(false);
+  let result = ref(false);
+
+  while (! atEnd^) {
+    switch (q^, m^) {
+    | ([], _) =>
+      result := true;
+      atEnd := true;
+    | (_, []) =>
+      result := false;
+      atEnd := true;
+    | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) =>
+      q := qtail;
+      m := mtail;
+    | (_, [_, ...mtail]) => m := mtail
+    };
+  };
+
+  result^;
 };
 
 /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
-let updateQuery = (newQuery: string, p: pendingWork, _c: completedWork) => {
+let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
   // TODO: Optimize - for now, if the query changes, just clear the completed work
   // However, there are several ways we could improve this:
   // - If the query is just a stricter version... we could add the filter items back to completed
   // - If the query is broader, we could keep our current filtered items anyway
 
-  let newPendingWork = {
-    ...p,
-    filter: newQuery,
-    regex: regexFromFilter(newQuery),
-    commandsToFilter: p.fullCommands // Reset the commands to filter
+  let newQueryEx = Zed_utf8.explode(newQuery);
+
+  let currentMatches = Utility.firstk(maxItemsToFilter, c.allFiltered);
+
+  // If the new query matches the old one... we can re-use results
+  if (matches(p.explodedFilter, newQuery)
+      && List.length(currentMatches) < maxItemsToFilter) {
+    let {allFiltered, uiFiltered} = c;
+
+    let uiFilteredList = Array.to_list(uiFiltered);
+    let uiFilteredNew =
+      List.filter(
+        i => matches(newQueryEx, getStringToTest(i)),
+        uiFilteredList,
+      );
+
+    let allFilteredNew =
+      List.filter(
+        i => matches(newQueryEx, getStringToTest(i)),
+        allFiltered,
+      );
+
+    let newPendingWork = {...p, filter: newQuery, explodedFilter: newQueryEx};
+
+    let newCompletedWork = {
+      allFiltered: allFilteredNew,
+      uiFiltered: Array.of_list(uiFilteredNew),
+    };
+
+    (false, newPendingWork, newCompletedWork);
+  } else {
+    let newPendingWork = {
+      ...p,
+      filter: newQuery,
+      explodedFilter: newQueryEx,
+      commandsToFilter: p.fullCommands // Reset the commands to filter
+    };
+
+    let newCompletedWork = initialCompletedWork;
+
+    (false, newPendingWork, newCompletedWork);
   };
-
-  let newCompletedWork = initialCompletedWork;
-
-  (false, newPendingWork, newCompletedWork);
 };
 
 /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
@@ -90,18 +153,13 @@ let addItems =
     (items: list(Actions.menuCommand), p: pendingWork, c: completedWork) => {
   let newPendingWork = {
     ...p,
-    fullCommands: List.append(items, p.fullCommands),
-    commandsToFilter: List.append(items, p.commandsToFilter),
+    fullCommands: [items, ...p.fullCommands],
+    totalCommandCount: p.totalCommandCount + List.length(items),
+    commandsToFilter: [items, ...p.fullCommands],
   };
 
   (false, newPendingWork, c);
 };
-
-let getStringToTest = (v: Actions.menuCommand) =>
-  switch (v.category) {
-  | Some(c) => c ++ v.name
-  | None => v.name
-  };
 
 /* [doWork] is run each frame until the work is completed! */
 let doWork = (p: pendingWork, c: completedWork) => {
@@ -119,11 +177,19 @@ let doWork = (p: pendingWork, c: completedWork) => {
       switch (p.commandsToFilter) {
       | [] => (true, p, c)
       | [hd, ...tail] =>
-        // Do a first filter pass to check if the item satisifies the regex
-        let newCompleted =
-          Str.string_match(p.regex, getStringToTest(hd), 0)
-            ? [hd, ...c] : c;
-        (false, {...p, commandsToFilter: tail}, newCompleted);
+        switch (hd) {
+        | [] => (false, {...p, commandsToFilter: tail}, c)
+        | [innerHd, ...innerTail] =>
+          // Do a first filter pass to check if the item satisifies the regex
+          let newCompleted =
+            matches(p.explodedFilter, getStringToTest(innerHd))
+              ? [innerHd, ...c] : c;
+          (
+            false,
+            {...p, commandsToFilter: [innerTail, ...tail]},
+            newCompleted,
+          );
+        }
       };
     pendingWork := newPendingWork;
     completedWork := newCompletedWork;
@@ -153,6 +219,7 @@ let create = () => {
     ~completedWorkPrinter=showCompletedWork,
     ~name="MenuJob",
     ~initialCompletedWork,
+    ~budget=Milliseconds(2.),
     ~f=doWork,
     initialPendingWork,
   );

@@ -137,6 +137,41 @@ let start = _ => {
         ]);
       },
     ),
+    /*(
+        "developer.massiveMenu",
+        (state: Oni_Model.State.t) => {
+          multipleActionEffect([
+            MenuOpen(
+              (setItems, _, _) => {
+                let commands =
+                  List.init(1000000, i =>
+                    {
+                      category: None,
+                      name: "Item " ++ string_of_int(i),
+                      command: () =>
+                        Oni_Model.Actions.ShowNotification(
+                          Oni_Model.Notification.create(
+                            ~title="derp",
+                            ~message=string_of_int(i),
+                            (),
+                          ),
+                        ),
+                      icon:
+                        Oni_Model.FileExplorer.getFileIcon(
+                          state.languageInfo,
+                          state.iconTheme,
+                          "txt",
+                        ),
+                    }
+                  );
+                setItems(commands);
+                () => ();
+              },
+            ),
+            SetInputControlMode(TextInputFocus),
+          ]);
+        },
+      ),*/
     (
       "menu.close",
       _ =>

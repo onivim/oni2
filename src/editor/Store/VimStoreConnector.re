@@ -56,6 +56,18 @@ let start =
   });
 
   let _ =
+    // Unhandled escape is called when there is an `<esc>` sent to Vim,
+    // but nothing to escape from (ie, in normal mode with no pending operator)
+    Vim.onUnhandledEscape(() => {
+      let state = getState();
+      if (Model.Notifications.any(state.notifications)) {
+        let oldestNotificationId =
+          Model.Notifications.getOldestId(state.notifications);
+        dispatch(Model.Actions.HideNotification(oldestNotificationId));
+      };
+    });
+
+  let _ =
     Vim.Mode.onChanged(newMode =>
       dispatch(Model.Actions.ChangeMode(newMode))
     );
@@ -68,13 +80,25 @@ let start =
   let _ =
     Vim.onMessage((priority, t, msg) => {
       open Vim.Types;
-      let priorityString =
+      let (priorityString, notificationType) =
         switch (priority) {
-        | Error => "ERROR"
-        | Warning => "WARNING"
-        | Info => "INFO"
+        | Error => ("ERROR", Model.Actions.Error)
+        | Warning => ("WARNING", Model.Actions.Warning)
+        | Info => ("INFO", Model.Actions.Info)
         };
+
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+
+      dispatch(
+        ShowNotification(
+          Model.Notification.create(
+            ~notificationType,
+            ~title="libvim",
+            ~message=msg,
+            (),
+          ),
+        ),
+      );
     });
 
   let _ =

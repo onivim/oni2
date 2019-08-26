@@ -201,6 +201,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.singleFile",
     (s, v) => {...s, zenModeSingleFile: parseBool(v)},
   ),
+  ("ui.shadows", (s, v) => {...s, uiShadows: parseBool(v)}),
   (
     "vim.useSystemClipboard",
     (s, v) => {

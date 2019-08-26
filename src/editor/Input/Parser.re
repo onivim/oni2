@@ -11,8 +11,10 @@ let toFriendlyName = (v: string) => {
   let len = String.length(v);
 
   switch (v) {
+  | " " => Some("Space")
   | "<ESC>" => Some("Escape")
   | "<TAB>" => Some("Tab")
+  | "<C-TAB>" => Some("Control + Tab")
   | "<CR>" => Some("Enter")
   | _ =>
     if (len == 0) {

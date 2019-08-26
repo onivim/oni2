@@ -66,6 +66,8 @@ let start =
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
+  let themeUpdater = ThemeStoreConnector.start(setup);
+
   /*
      For our July builds, we won't be including the extension host -
      but we'll bring this back as we start implementing those features!
@@ -109,6 +111,7 @@ let start =
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
+          themeUpdater,
         ]),
       (),
     );
@@ -182,16 +185,7 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(
-      e => {
-        open Isolinear.Effect;
-        if (Core.Log.isDebugLoggingEnabled()) {
-          Core.Log.debug("[EFFECT]: " ++ e.name);
-        };
-        Isolinear.Effect.run(e, dispatch);
-      },
-      List.rev(effects),
-    );
+    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
   let _ =

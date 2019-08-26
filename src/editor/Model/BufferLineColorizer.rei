@@ -4,7 +4,7 @@
 
 open Revery;
 open Oni_Core;
-open Oni_Extensions;
+open Oni_Core.Types;
 
 /*
  * Type [tokenColor] is a tuple of [(backgroundColor, foregroundColor)]
@@ -27,8 +27,7 @@ let create:
   (
     int,
     Theme.t,
-    list(ColorizedToken.t),
-    ColorMap.t,
+    list(ColorizedToken2.t),
     option(Range.t),
     Color.t,
     Color.t,

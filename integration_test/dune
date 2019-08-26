@@ -6,10 +6,10 @@
            ClipboardNormalModePasteTest
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
+           EchoNotificationTest
            FontSizeChangeTest
            InputIgnoreTest
            QuickOpenEventuallyCompletesTest
-           QuickOpenDoesntLeakFileDescriptorsTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
            RegressionFileModifiedIndicationTest
@@ -37,10 +37,10 @@
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
+        EchoNotificationTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
         QuickOpenEventuallyCompletesTest.exe
-        QuickOpenDoesntLeakFileDescriptorsTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe

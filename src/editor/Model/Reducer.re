@@ -23,6 +23,7 @@ let reduce: (State.t, Actions.t) => State.t =
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
+        notifications: Notifications.reduce(s.notifications, a),
       };
 
       switch (a) {
@@ -37,6 +38,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
+      | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
       | _ => s
       };
     };
