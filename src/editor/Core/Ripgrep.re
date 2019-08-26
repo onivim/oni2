@@ -38,7 +38,7 @@ module RipgrepProcessingJob = {
   let dedup = (hash, str) => {
     switch (Hashtbl.find_opt(hash, str)) {
     | Some(_) => {
-      //print_endline ("DUP: "++str);
+      print_endline ("DUP: "++str);
       false
     }
     | None =>
@@ -114,8 +114,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
 
   let dispose3 = ref(None);
 
-  let oc = open_out("ripgrep.out");
-
   Revery.App.runOnMainThread(() =>
     dispose3 :=
       Some(
@@ -137,7 +135,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
     Event.subscribe(
       cp.stdout.onData,
       value => {
-        //Printf.fprintf(oc, "%s", Bytes.to_string(value));
         Mutex.lock(jobMutex);
         job := RipgrepProcessingJob.queueWork(value, job^);
         Mutex.unlock(jobMutex);
@@ -149,7 +146,6 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
       cp.onClose,
       exitCode => {
         incr(_ripGrepCompletedCount);
-        close_out(oc);
         Log.info(
           "[Ripgrep] Process completed - exit code: "
           ++ string_of_int(exitCode),

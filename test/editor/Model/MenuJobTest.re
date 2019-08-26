@@ -96,6 +96,36 @@ describe("MenuJob", ({describe, _}) => {
       expect.string(head.name).toEqual("abcde");
       expect.string(second.name).toEqual("abcd");
     });
+
+    let runToCompletion = (j) => {
+      let job = ref(j); 
+
+      while (!Job.isComplete(job^)) {
+        job := Job.tick(job^);
+      }
+
+      job^
+    };
+
+    test("regresion test - already filterd items shouldn't get re-added", ({expect, _}) => {
+      let job =
+        MenuJob.create()
+        |> Job.map(MenuJob.addItems([createItem("abcd")]))
+        |> Job.map(MenuJob.updateQuery("a"))
+        |> Job.tick
+        |> Job.map(
+             MenuJob.addItems([ createItem("a"), ]),
+           )
+        |> Job.map(MenuJob.updateQuery("abc"))
+        |> runToCompletion;
+
+      let filtered = Job.getCompletedWork(job).allFiltered;
+      expect.int(List.length(filtered)).toBe(1);
+
+      let head = List.hd(filtered);
+
+      expect.string(head.name).toEqual("abcd");
+    });
   });
   describe("boundary cases", ({test, _}) =>
     test("large amount of items added work", ({expect, _}) => {

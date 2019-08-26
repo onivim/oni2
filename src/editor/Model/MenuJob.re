@@ -155,7 +155,7 @@ let addItems =
     ...p,
     fullCommands: [items, ...p.fullCommands],
     totalCommandCount: p.totalCommandCount + List.length(items),
-    commandsToFilter: [items, ...p.fullCommands],
+    commandsToFilter: [items, ...p.commandsToFilter],
   };
 
   (false, newPendingWork, c);
