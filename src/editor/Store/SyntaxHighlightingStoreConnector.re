@@ -17,7 +17,7 @@ open Oni_Syntax.TreeSitterScopes;
 
 module Log = Core.Log;
 
-let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
+let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
     let node = Treesitter.Tree.getRootNode(tree);

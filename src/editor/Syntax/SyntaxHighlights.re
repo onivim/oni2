@@ -42,7 +42,7 @@ module TreeSitterSyntaxHighlight = {
     let i = ref(0);
 
     let getTokenName = Syntax.createArrayTokenNameResolver(lines);
-    let lineCount = Array.length(lines);
+    //let lineCount = Array.length(lines);
 
     let lineToTokensRef = ref(IntMap.empty);
     while((i^)  < 10) {
@@ -59,7 +59,7 @@ module TreeSitterSyntaxHighlight = {
 
       let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
       print_endline ("Tokens for line: " ++ string_of_int(idx));
-      List.iteri((idx, t) => {
+      List.iter((t) => {
             let (p, scopes, token) = t;
             let tmScope = 
               TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), scopeConverter);
@@ -73,6 +73,11 @@ module TreeSitterSyntaxHighlight = {
 
       incr(i);
     };
+
+    //print_endline ("CONVERTER: " ++ TextMateConverter.show(scopeConverter));
+
+    print_endline ("RESOLVED SCOPE1: " ++ TextMateConverter.getTextMateScope(~token="", ~path=["string", "array"], scopeConverter));
+    print_endline ("RESOLVED SCOPE2: " ++ TextMateConverter.getTextMateScope(~token="", ~path=["string_content", "string", "array"], scopeConverter));
 
 
     {
@@ -109,7 +114,7 @@ module TreeSitterSyntaxHighlight = {
         let tmScope = TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), v.scopeConverter);
         let resolvedColor = TextMateTheme.match(v.theme, tmScope);
 
-        let line = p.line;
+        //let line = p.line;
         let col = p.column;
 
         ColorizedToken2.create(
