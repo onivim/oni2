@@ -5,13 +5,14 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 open TreeSitterScopes;
 
 describe("TreeSitterScopes", ({describe, _}) =>
-  describe("TextMateConverter", ({test, describe, _}) => {
+  describe("TextMateConverter", ({test, /*describe,*/ _}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
     let simpleConverter =
       TextMateConverter.create([
         ("value", [Scope("source.json")]),
         ("object", [Scope("meta.structure.dictionary.json")]),
+        ("string", [Scope("string.quoted.double")]),
         (
           "string_content",
           [
@@ -32,20 +33,37 @@ describe("TreeSitterScopes", ({describe, _}) =>
         ),
       ]);
 
-    test("returns None for non-existent scopes", ({expect, _}) => {
+    test("simple hierarchy", ({expect, _}) => {
+      let scope1 =
+        TextMateConverter.getTextMateScope(
+          ~path=["string", "array"],
+          simpleConverter,
+        );
+
+      expect.string(scope1).toEqual("string.quoted.double");
+      
+      let scope2 =
+        TextMateConverter.getTextMateScope(
+          ~path=["string", "object"],
+          simpleConverter,
+        );
+
+      expect.string(scope2).toEqual("meta.structure.dictionary.json string.quoted.double");
+    });
+    test("returns empty for non-existent scopes", ({expect, _}) => {
       let nonExistentScope =
         TextMateConverter.getTextMateScope(
           ~path=["non-existent-tree-sitter-scope"],
           simpleConverter,
         );
 
-      expect.bool(nonExistentScope == None).toBe(true);
+      expect.bool(nonExistentScope == "").toBe(true);
     });
     test("matches simple scopes", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(~path=["value"], simpleConverter);
 
-      expect.bool(scope == Some("source.json")).toBe(true);
+      expect.string(scope).toEqual("source.json");
     });
     test("matches another simple scope", ({expect, _}) => {
       let scope =
@@ -54,9 +72,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == Some("meta.structure.dictionary.json")).toBe(
-        true,
-      );
+      expect.string(scope).toEqual("meta.structure.dictionary.json");
     });
     test("regex match failure", ({expect, _}) => {
       let scope =
@@ -66,7 +82,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == None).toBe(true);
+      expect.string(scope).toEqual("");
     });
     test("regex match success", ({expect, _}) => {
       let scope =
@@ -76,10 +92,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == Some("markup.underline.link.https.hyperlink")).
-        toBe(
-        true,
-      );
+      expect.string(scope).toEqual("markup.underline.link.https.hyperlink");
     });
     test("child selector", ({expect, _}) => {
       let scope =
@@ -88,7 +101,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == Some("constant.language")).toBe(true);
+      expect.string(scope).toEqual("constant.language");
     });
     test("child selector only matches direct children", ({expect, _}) => {
       let scope =
@@ -97,7 +110,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == None).toBe(true);
+      expect.string(scope).toEqual("string.quoted.double");
     });
     test("child selector matches descendants", ({expect, _}) => {
       let scope =
@@ -107,7 +120,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == Some("constant.language")).toBe(true);
+      expect.string(scope).toEqual("constant.language");
     });
     test("nth-child(1) selector matches", ({expect, _}) => {
       let scope =
@@ -117,9 +130,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           simpleConverter,
         );
 
-      expect.bool(scope == Some("string.quoted.dictionary.key.json")).toBe(
-        true,
-      );
+      expect.string(scope).toEqual("string.quoted.dictionary.key.json");
     });
 
     describe("of_yojson", ({test, _}) => {
@@ -146,7 +157,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
             converter,
           );
 
-        expect.bool(scope == Some("source.json")).toBe(true);
+        expect.string(scope).toEqual("source.json");
       });
       test("multiple item dictionary", ({expect, _}) => {
         let json =
@@ -172,10 +183,8 @@ describe("TreeSitterScopes", ({describe, _}) =>
             converter,
           );
 
-        expect.bool(scope1 == Some("source.json")).toBe(true);
-        expect.bool(scope2 == Some("meta.structure.dictionary.json")).toBe(
-          true,
-        );
+        expect.string(scope1).toEqual("source.json");
+        expect.string(scope2).toEqual("meta.structure.dictionary.json");
       });
       test("list of matchers", ({expect, _}) => {
         let json =
@@ -217,19 +226,9 @@ describe("TreeSitterScopes", ({describe, _}) =>
             converter,
           );
 
-        expect.bool(scopeNoMatch == None).toBe(true);
-        expect.bool(
-          scopeHttpMatch == Some("markup.underline.link.http.hyperlink"),
-        ).
-          toBe(
-          true,
-        );
-        expect.bool(
-          scopeHttpsMatch == Some("markup.underline.link.https.hyperlink"),
-        ).
-          toBe(
-          true,
-        );
+        expect.string(scopeNoMatch).toEqual("");
+        expect.string(scopeHttpMatch).toEqual("markup.underline.link.http.hyperlink");
+        expect.string(scopeHttpsMatch).toEqual("markup.underline.link.https.hyperlink");
       });
       test("fallback to scope matcher", ({expect, _}) => {
         let json =
@@ -274,15 +273,9 @@ describe("TreeSitterScopes", ({describe, _}) =>
             converter,
           );
 
-        expect.bool(scopeCommentLineMatch == Some("comment.line")).toBe(
-          true,
-        );
-        expect.bool(scopeCommentSpecialMatch == Some("comment.special")).toBe(
-          true,
-        );
-        expect.bool(scopeCommentBlockMatch == Some("comment.block")).toBe(
-          true,
-        );
+        expect.string(scopeCommentLineMatch).toEqual("comment.line");
+        expect.string(scopeCommentSpecialMatch).toEqual("comment.special");
+        expect.string(scopeCommentBlockMatch).toEqual("comment.block");
       });
     });
   })

@@ -193,23 +193,42 @@ module TextMateConverter = {
   };
 
   let getTextMateScope = (~index=0, ~token="", ~path=[], v: t) => {
-    // First, try and see if a child selector matches
-    let matches =
-      switch (StringMap.find_opt(string_of_int(index), v.byChildSelectors)) {
-      | Some(trie) => Trie.matches(trie, path)
-      | None => []
-      };
 
-    switch (matches) {
-    // If not... fall back to the default trie without child-selectors!
-    | [] => _getTextMateScopeForNonChildSelector(token, path, v)
-    | [hd, ..._] =>
-      let (_, matchers) = hd;
+    let check = path => {
+      // First, try and see if a child selector matches
+      let matches =
+        switch (StringMap.find_opt(string_of_int(index), v.byChildSelectors)) {
+        | Some(trie) => Trie.matches(trie, path)
+        | None => []
+        };
 
-      switch (matchers) {
-      | None => None
-      | Some(v) => Matcher.firstMatch(~token, v)
+      switch (matches) {
+      // If not... fall back to the default trie without child-selectors!
+      | [] => _getTextMateScopeForNonChildSelector(token, path, v)
+      | [hd, ..._] =>
+        let (_, matchers) = hd;
+
+        switch (matchers) {
+        | None => None
+        | Some(v) => Matcher.firstMatch(~token, v)
+        };
       };
     };
+
+  let paths = [token, ...path];
+
+  let rec f = (p, lists) => {
+    switch (p) {
+    | [] => lists
+    | [hd, ...tail] => 
+      switch (check([hd, ...tail])) {
+      | None => f(tail, lists)
+      | Some(v) => f(tail, [v, ...lists])
+      }
+    }
+  };
+
+    let resolvedScopes = f(paths, []);
+    String.concat(" ", resolvedScopes);
   };
 };
