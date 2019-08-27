@@ -21,10 +21,6 @@ module Log = Core.Log;
 
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
-  /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
-    let node = Treesitter.Tree.getRootNode(tree);
-    print_endline(Treesitter.Node.toString(node));*/
-
   let jsonTreeSitterScopes =
     setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
 
@@ -45,26 +41,22 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   };
 
   let getScopeForBuffer = (state: Model.State.t, id: int) => {
-          switch (Model.Buffers.getBuffer(id, state.buffers)) {
-          | None => None
-          | Some(buffer) =>switch (Model.Buffer.getMetadata(buffer).filePath) {
-          | None => None
-          | Some(v) =>
-            let extension = Path.extname(v);
-            switch (
-              Model.LanguageInfo.getScopeFromExtension(
-                languageInfo,
-                extension,
-              )
-            ) {
-            | None => None
-            | Some(scope) => {
-                Some(scope);
-            }
-            }
+    switch (Model.Buffers.getBuffer(id, state.buffers)) {
+    | None => None
+    | Some(buffer) =>
+      switch (Model.Buffer.getMetadata(buffer).filePath) {
+      | None => None
+      | Some(v) =>
+        let extension = Path.extname(v);
+        switch (
+          Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
+        ) {
+        | None => None
+        | Some(scope) => Some(scope)
+        };
+      }
     };
-    };
-    };
+  };
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
@@ -76,21 +68,21 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       | None => default
       | Some(v) when !NativeSyntaxHighlights.canHandleScope(v) => default
       | Some(v) =>
-      let state = {
-        ...state,
-        syntaxHighlighting2:
-          Core.IntMap.add(
-            bu.id,
-            NativeSyntaxHighlights.create(
-              ~theme=state.tokenTheme,
-              ~getTreeSitterScopeMapper,
-              lines,
+        let state = {
+          ...state,
+          syntaxHighlighting2:
+            Core.IntMap.add(
+              bu.id,
+              NativeSyntaxHighlights.create(
+                ~theme=state.tokenTheme,
+                ~getTreeSitterScopeMapper,
+                lines,
+              ),
+              state.syntaxHighlighting2,
             ),
-            state.syntaxHighlighting2,
-          ),
+        };
+        (state, Isolinear.Effect.none);
       };
-      (state, Isolinear.Effect.none);
-    };
     | _ => default
     };
   };
