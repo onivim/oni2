@@ -1,11 +1,9 @@
 /*
- SyntaxHighlights.re
+ TreeSitterSyntaxHighlighting.re
  */
 
+open Oni_Core;
 open Oni_Core.Types;
-
-module TreeSitterSyntaxHighlight = {
-  open Oni_Core;
   open Treesitter;
   open TreeSitterScopes;
 
@@ -97,29 +95,3 @@ module TreeSitterSyntaxHighlight = {
   };
 
   let update = (_, _, v) => v;
-};
-
-module SyntaxHighlights = {
-  type t =
-    | TreeSitter(TreeSitterSyntaxHighlight.t)
-    | None;
-
-  let default = None;
-
-  let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
-    let ts =
-      TreeSitterSyntaxHighlight.create(
-        ~theme,
-        ~getTreeSitterScopeMapper,
-        lines,
-      );
-    TreeSitter(ts);
-  };
-
-  let getTokensForLine = (v: t, line: int) => {
-    switch (v) {
-    | TreeSitter(ts) => TreeSitterSyntaxHighlight.getTokenColors(ts, line)
-    | _ => []
-    };
-  };
-};

@@ -7,17 +7,19 @@
  * - TextMate grammars
  */
 
+open Rench;
+
 module Core = Oni_Core;
 module Model = Oni_Model;
 
 module Extensions = Oni_Extensions;
 
-open Oni_Syntax.SyntaxHighlights;
 open Oni_Syntax.TreeSitterScopes;
+module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 
 module Log = Core.Log;
 
-let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
+let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
     let node = Treesitter.Tree.getRootNode(tree);
@@ -42,17 +44,45 @@ let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     };
   };
 
+  let getScopeForBuffer = (state: Model.State.t, id: int) => {
+          switch (Model.Buffers.getBuffer(id, state.buffers)) {
+          | None => None
+          | Some(buffer) =>switch (Model.Buffer.getMetadata(buffer).filePath) {
+          | None => None
+          | Some(v) =>
+            let extension = Path.extname(v);
+            switch (
+              Model.LanguageInfo.getScopeFromExtension(
+                languageInfo,
+                extension,
+              )
+            ) {
+            | None => None
+            | Some(scope) => {
+                print_endline ("SCOPE: " ++ scope);
+                Some(scope);
+            }
+            }
+    };
+    };
+    };
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
+      let scope = getScopeForBuffer(state, bu.id);
+      switch (scope) {
+      | None => default
+      | Some(v) when !NativeSyntaxHighlights.canHandleScope(v) => default
+      | Some(v) =>
       let state = {
         ...state,
         syntaxHighlighting2:
           Core.IntMap.add(
             bu.id,
-            SyntaxHighlights.create(
+            NativeSyntaxHighlights.create(
               ~theme=state.tokenTheme,
               ~getTreeSitterScopeMapper,
               lines,
@@ -61,6 +91,7 @@ let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
           ),
       };
       (state, Isolinear.Effect.none);
+    };
     | _ => default
     };
   };

@@ -5,19 +5,14 @@
  */
 open Oni_Core;
 
-open Oni_Syntax.SyntaxHighlights;
-type t = IntMap.t(SyntaxHighlights.t);
+open Oni_Syntax;
+type t = IntMap.t(NativeSyntaxHighlights.t);
 
 let empty = IntMap.empty;
 
 let getTokensForLine = (v: t, bufferId: int, line: int) => {
-  //print_endline ("getTokensForLine: " ++ string_of_int(bufferId));
   switch (IntMap.find_opt(bufferId, v)) {
-  | Some(v) =>
-    switch (v) {
-    | TreeSitter(ts) => TreeSitterSyntaxHighlight.getTokenColors(ts, line)
-    | _ => []
-    }
+  | Some(v) => NativeSyntaxHighlights.getTokensForLine(v, line)
   | None => []
   };
 };
