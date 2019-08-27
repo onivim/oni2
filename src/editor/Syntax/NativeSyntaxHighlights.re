@@ -10,6 +10,8 @@ let default = None;
 
 let canHandleScope = (scope: string) => switch (scope) {
 | "source.json" => true
+| "source.c" => true
+| "source.cpp" => true
 | _ => false;
 };
 

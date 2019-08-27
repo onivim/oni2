@@ -59,7 +59,6 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             ) {
             | None => None
             | Some(scope) => {
-                print_endline ("SCOPE: " ++ scope);
                 Some(scope);
             }
             }
