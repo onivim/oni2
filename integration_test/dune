@@ -19,6 +19,7 @@
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
+           ZenModeSplitTest
     )
     (libraries
         libvim
@@ -50,4 +51,5 @@
         TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
+        ZenModeSplitTest.exe
         ))
