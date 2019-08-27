@@ -45,7 +45,6 @@ let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     | Model.Actions.BufferUpdate(bu) =>
-      print_endline ("Buffer update: " ++ Core.Types.BufferUpdate.show(bu));
 
       let lines = getLines(state, bu.id);
         let state = {

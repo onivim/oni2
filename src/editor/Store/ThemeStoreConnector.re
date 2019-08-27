@@ -24,8 +24,8 @@ let start = (setup: Setup.t) => {
           Yojson.Safe.Util.member("tokenColors", themeJson);
         let tokenTheme =
           TextMateTheme.of_yojson(
-            ~defaultBackground=Colors.black,
-            ~defaultForeground=Colors.white,
+            ~defaultBackground=Theme.default.editorBackground,
+            ~defaultForeground=Theme.default.editorForeground,
             tokenColorsJson,
           );
 

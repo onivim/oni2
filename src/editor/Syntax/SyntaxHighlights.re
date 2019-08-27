@@ -16,7 +16,6 @@ module TreeSitterSyntaxHighlight = {
     tree: Tree.t,
     lastBaseline: ArrayParser.Baseline.t,
     lastLines: array(string),
-    lineToTokens: IntMap.t(list(ColorizedToken2.t)),
     scopeConverter: TextMateConverter.t,
     theme: TextMateTheme.t,
   };
@@ -41,51 +40,11 @@ module TreeSitterSyntaxHighlight = {
 
     let i = ref(0);
 
-    let getTokenName = Syntax.createArrayTokenNameResolver(lines);
-    //let lineCount = Array.length(lines);
-
-    let lineToTokensRef = ref(IntMap.empty);
-    while((i^)  < 10) {
-      let idx = i^;
-      let range = TreeSitter.Types.Range.create(
-          ~startPosition=Treesitter.Types.Position.create(
-              ~line=idx,
-              ~column=0, ()),
-          ~endPosition=Treesitter.Types.Position.create(
-            ~line=idx+1,
-            ~column=0,
-            ()),
-            ());
-
-      let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
-      print_endline ("Tokens for line: " ++ string_of_int(idx));
-      List.iter((t) => {
-            let (p, scopes, token) = t;
-            let tmScope = 
-              TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), scopeConverter);
-            let resolvedColor = TextMateTheme.match(theme, tmScope);
-            print_endline("Position: " 
-              ++ Treesitter.Types.Position.show(p)
-              ++ "\n | Syntax: " ++ Syntax.Token.show(t)
-              ++ "\n | Scope: " ++ tmScope
-            ++ "\n | Foreground" ++ Revery.Color.show(resolvedColor.foreground));
-        }, tokens);
-
-      incr(i);
-    };
-
-    //print_endline ("CONVERTER: " ++ TextMateConverter.show(scopeConverter));
-
-    print_endline ("RESOLVED SCOPE1: " ++ TextMateConverter.getTextMateScope(~token="", ~path=["string", "array"], scopeConverter));
-    print_endline ("RESOLVED SCOPE2: " ++ TextMateConverter.getTextMateScope(~token="", ~path=["string_content", "string", "array"], scopeConverter));
-
-
     {
       parser,
       tree,
       lastBaseline: baseline,
       lastLines: lines,
-      lineToTokens: lineToTokensRef^,
       scopeConverter,
       theme,
     }
@@ -111,7 +70,7 @@ module TreeSitterSyntaxHighlight = {
 
     List.map((curr) => {
         let (p: Treesitter.Types.Position.t, scopes, token) = curr;
-        let tmScope = TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), v.scopeConverter);
+        let tmScope = TextMateConverter.getTextMateScope(~token, ~path=scopes, v.scopeConverter);
         let resolvedColor = TextMateTheme.match(v.theme, tmScope);
 
         //let line = p.line;
