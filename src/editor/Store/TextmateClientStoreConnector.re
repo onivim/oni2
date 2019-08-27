@@ -44,13 +44,13 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     );
 
   let notifyBufferUpdateEffect = (scope, _, bc) =>
-    Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () => {
+    Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
       if (!String.equal(scope, "source.json")) {
         Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc);
       } else {
         ();
-      };
-    });
+      }
+    );
 
   let clearHighlightsEffect = buffer =>
     Isolinear.Effect.create(~name="textmate.clearHighlights", () => {

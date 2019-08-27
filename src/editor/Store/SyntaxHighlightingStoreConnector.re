@@ -22,12 +22,13 @@ let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   /*let (tree, _) = Treesitter.ArrayParser.parse(parser, None, Model.Buffer.getLines(buffer));
     let node = Treesitter.Tree.getRootNode(tree);
     print_endline(Treesitter.Node.toString(node));*/
-  
+
   let jsonTreeSitterScopes =
     setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
 
   let parsedTreeSitterScopes = Yojson.Safe.from_file(jsonTreeSitterScopes);
-  let treeSitterJson = Yojson.Safe.Util.member("scopes", parsedTreeSitterScopes);
+  let treeSitterJson =
+    Yojson.Safe.Util.member("scopes", parsedTreeSitterScopes);
   let treeSitterScopes = TextMateConverter.of_yojson(treeSitterJson);
 
   let getTreeSitterScopeMapper = () => {
@@ -37,29 +38,29 @@ let start = (_languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => [||]
-    | Some(v) => Model.Buffer.getLines(v);
-    }
+    | Some(v) => Model.Buffer.getLines(v)
+    };
   };
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     | Model.Actions.BufferUpdate(bu) =>
-
       let lines = getLines(state, bu.id);
-        let state = {
-          ...state,
-          syntaxHighlighting2:
-            Core.IntMap.add(
-              bu.id,
-              SyntaxHighlights.create(
+      let state = {
+        ...state,
+        syntaxHighlighting2:
+          Core.IntMap.add(
+            bu.id,
+            SyntaxHighlights.create(
               ~theme=state.tokenTheme,
               ~getTreeSitterScopeMapper,
-              lines),
-              state.syntaxHighlighting2,
+              lines,
             ),
-        };
-      (state, Isolinear.Effect.none)
+            state.syntaxHighlighting2,
+          ),
+      };
+      (state, Isolinear.Effect.none);
     | _ => default
     };
   };
