@@ -53,7 +53,6 @@ describe("TreeSitterScopes", ({describe, _}) =>
       );
     });
     test("non-matching child rule doesn't break other rules", ({expect, _}) => {
-
       let stringConverter =
         TextMateConverter.create([
           ("string", [Scope("string.quoted.double")]),
@@ -61,8 +60,8 @@ describe("TreeSitterScopes", ({describe, _}) =>
             "pair > string:nth-child(0)",
             [Scope("string.quoted.dictionary.key.json")],
           ),
-          ]);
-      
+        ]);
+
       let scope1 =
         TextMateConverter.getTextMateScope(
           ~path=["string"],
@@ -70,7 +69,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
         );
 
       expect.string(scope1).toEqual("string.quoted.double");
-      
+
       let scope2 =
         TextMateConverter.getTextMateScope(
           ~path=["string", "array"],
