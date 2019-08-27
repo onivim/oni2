@@ -54,6 +54,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             Core.IntMap.add(
               bu.id,
               SyntaxHighlights.create(
+              ~theme=state.tokenTheme,
               ~getTreeSitterScopeMapper,
               lines),
               state.syntaxHighlighting2,

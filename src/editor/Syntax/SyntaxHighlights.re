@@ -5,24 +5,7 @@
 open Revery;
 open Oni_Core.Types;
 
-module type SyntaxHighlight = {
-  type t;
-
-  type treeSitterScopeMapperFactory = unit => TreeSitterScopes.TextMateConverter.t;
-
-  let hasPendingWork: t => bool;
-  let doChunkOfWork: t => t;
-
-  let create: (~getTreeSitterScopeMapper: treeSitterScopeMapperFactory, array(string)) => t;
-
-  let getTokenColors: (t, int) => list(ColorizedToken2.t);
-
-  let update: (BufferUpdate.t, array(string), t) => t;
-};
-
-Printexc.record_backtrace(true);
-
-module TreeSitterSyntaxHighlight: SyntaxHighlight = {
+module TreeSitterSyntaxHighlight = {
   open Oni_Core;
   open Treesitter;
   open TreeSitterScopes;
@@ -33,11 +16,17 @@ module TreeSitterSyntaxHighlight: SyntaxHighlight = {
     parser: Parser.t,
     tree: Tree.t,
     lastBaseline: ArrayParser.Baseline.t,
+    lastLines: array(string),
     lineToTokens: IntMap.t(list(ColorizedToken2.t)),
     scopeConverter: TextMateConverter.t,
+    theme: TextMateTheme.t,
+  };
+  let someOrNone = v => switch(v) {
+  | Some(v) => v;
+  | None => "";
   };
 
-  let create = (~getTreeSitterScopeMapper, lines: array(string)) =>  {
+  let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) =>  {
     let parser = Parser.json();
     let (tree, baseline) = ArrayParser.parse(parser, None, lines);
 
@@ -48,7 +37,9 @@ module TreeSitterSyntaxHighlight: SyntaxHighlight = {
 
     let getTokenName = Syntax.createArrayTokenNameResolver(lines);
     let lineCount = Array.length(lines);
-    while((i^)  < lineCount) {
+
+    let lineToTokensRef = ref(IntMap.empty);
+    while((i^)  < 10) {
       let idx = i^;
       let range = TreeSitter.Types.Range.create(
           ~startPosition=Treesitter.Types.Position.create(
@@ -61,56 +52,69 @@ module TreeSitterSyntaxHighlight: SyntaxHighlight = {
             ());
 
       let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
-
-      let someOrNone = v => switch(v) {
-      | Some(v) => ("Some(" ++ v ++ ")");
-      | None => ("None");
-      };
       print_endline ("Tokens for line: " ++ string_of_int(idx));
-      List.iter((t) => {
-        let (p, scopes, token) = t;
-        print_endline("Position: " 
-          ++ Treesitter.Types.Position.show(p)
-          ++ "| Syntax: " ++ Syntax.Token.show(t)
-          ++ "| Scope: "
-        ++ someOrNone(TextMateConverter.getTextMateScope(~token, ~path=scopes, scopeConverter)));
-      }, tokens);
+      List.iteri((idx, t) => {
+            let (p, scopes, token) = t;
+            let tmScope = 
+              someOrNone(TextMateConverter.getTextMateScope(~token, ~path=scopes, scopeConverter));
+            let resolvedColor = TextMateTheme.match(theme, tmScope);
+            print_endline("Position: " 
+              ++ Treesitter.Types.Position.show(p)
+              ++ "\n | Syntax: " ++ Syntax.Token.show(t)
+              ++ "\n | Scope: " ++ tmScope
+            ++ "\n | Foreground" ++ Revery.Color.show(resolvedColor.foreground));
+        }, tokens);
 
       incr(i);
     };
+
 
     {
       parser,
       tree,
       lastBaseline: baseline,
-      lineToTokens: IntMap.empty,
+      lastLines: lines,
+      lineToTokens: lineToTokensRef^,
       scopeConverter,
+      theme,
     }
   };
 
   let hasPendingWork = (_) => false;
   let doChunkOfWork = (v) => v;
 
-  let getTokenColors = (_, _) => [
-    ColorizedToken2.create(
-      ~index=0,
-      ~backgroundColor=Colors.red,
-      ~foregroundColor=Colors.red,
-      (),
-    ),
-    ColorizedToken2.create(
-      ~index=10,
-      ~backgroundColor=Colors.black,
-      ~foregroundColor=Colors.white,
-      (),
-    ),
-    ColorizedToken2.create(
-      ~index=20,
-      ~backgroundColor=Colors.black,
-      ~foregroundColor=Colors.blue,
-      (),
-    ),
-  ];
+  let getTokenColors = (v: t, line: int) => {
+      let rootNode = Tree.getRootNode(v.tree);
+      let range = TreeSitter.Types.Range.create(
+          ~startPosition=Treesitter.Types.Position.create(
+              ~line,
+              ~column=0, ()),
+          ~endPosition=Treesitter.Types.Position.create(
+            ~line=line+1,
+            ~column=0,
+            ()),
+            ());
+
+    let getTokenName = Syntax.createArrayTokenNameResolver(v.lastLines);
+    let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
+
+    List.map((curr) => {
+        let (p: Treesitter.Types.Position.t, scopes, token) = curr;
+        let tmScope = 
+          someOrNone(TextMateConverter.getTextMateScope(~token, ~path=scopes, v.scopeConverter));
+        let resolvedColor = TextMateTheme.match(v.theme, tmScope);
+
+        let line = p.line;
+        let col = p.column;
+
+        ColorizedToken2.create(
+          ~index=col,
+          ~backgroundColor=resolvedColor.background,
+          ~foregroundColor=resolvedColor.foreground,
+          ()
+        );
+    }, tokens);
+  };
 
   let update = (_, _, v) => v;
 };
@@ -122,8 +126,8 @@ module SyntaxHighlights = {
 
   let default = None;
 
-  let create = (~getTreeSitterScopeMapper, lines: array(string)) => {
-    let ts = TreeSitterSyntaxHighlight.create(~getTreeSitterScopeMapper, lines);
+  let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
+    let ts = TreeSitterSyntaxHighlight.create(~theme, ~getTreeSitterScopeMapper, lines);
     TreeSitter(ts);
   };
 
