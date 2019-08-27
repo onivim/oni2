@@ -1,1 +1,1 @@
-(ignored_subdirs (node_modules _esy extensions esy.lock bench.esy.lock test.esy.lock))
+(dirs src test integration_test bench assets vendor)
