@@ -5,7 +5,7 @@ module TreeSitterScopes = Oni_Syntax.TreeSitterScopes;
 open TreeSitterScopes;
 
 describe("TreeSitterScopes", ({describe, _}) =>
-  describe("TextMateConverter", ({test, /*describe,*/ _}) => {
+  describe("TextMateConverter", ({test, _ /*describe,*/}) => {
     // Create a simple converter... this is a representation of grammars
     // like: https://github.com/atom/language-json/blob/04f1fbd5eb3aabcfc91b30a2c091a9fc657438ee/grammars/tree-sitter-json.cson#L48
     let simpleConverter =
@@ -41,14 +41,16 @@ describe("TreeSitterScopes", ({describe, _}) =>
         );
 
       expect.string(scope1).toEqual("string.quoted.double");
-      
+
       let scope2 =
         TextMateConverter.getTextMateScope(
           ~path=["string", "object"],
           simpleConverter,
         );
 
-      expect.string(scope2).toEqual("meta.structure.dictionary.json string.quoted.double");
+      expect.string(scope2).toEqual(
+        "meta.structure.dictionary.json string.quoted.double",
+      );
     });
     test("returns empty for non-existent scopes", ({expect, _}) => {
       let nonExistentScope =
@@ -227,8 +229,12 @@ describe("TreeSitterScopes", ({describe, _}) =>
           );
 
         expect.string(scopeNoMatch).toEqual("");
-        expect.string(scopeHttpMatch).toEqual("markup.underline.link.http.hyperlink");
-        expect.string(scopeHttpsMatch).toEqual("markup.underline.link.https.hyperlink");
+        expect.string(scopeHttpMatch).toEqual(
+          "markup.underline.link.http.hyperlink",
+        );
+        expect.string(scopeHttpsMatch).toEqual(
+          "markup.underline.link.https.hyperlink",
+        );
       });
       test("fallback to scope matcher", ({expect, _}) => {
         let json =

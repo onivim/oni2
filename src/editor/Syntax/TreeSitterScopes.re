@@ -193,7 +193,6 @@ module TextMateConverter = {
   };
 
   let getTextMateScope = (~index=0, ~token="", ~path=[], v: t) => {
-
     let check = path => {
       // First, try and see if a child selector matches
       let matches =
@@ -215,18 +214,18 @@ module TextMateConverter = {
       };
     };
 
-  let paths = [token, ...path];
+    let paths = [token, ...path];
 
-  let rec f = (p, lists) => {
-    switch (p) {
-    | [] => lists
-    | [hd, ...tail] => 
-      switch (check([hd, ...tail])) {
-      | None => f(tail, lists)
-      | Some(v) => f(tail, [v, ...lists])
-      }
-    }
-  };
+    let rec f = (p, lists) => {
+      switch (p) {
+      | [] => lists
+      | [hd, ...tail] =>
+        switch (check([hd, ...tail])) {
+        | None => f(tail, lists)
+        | Some(v) => f(tail, [v, ...lists])
+        }
+      };
+    };
 
     let resolvedScopes = f(paths, []);
     String.concat(" ", resolvedScopes);
