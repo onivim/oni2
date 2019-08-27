@@ -2,7 +2,6 @@
  SyntaxHighlights.re
  */
 
-open Revery;
 open Oni_Core.Types;
 
 module TreeSitterSyntaxHighlight = {
@@ -24,6 +23,13 @@ module TreeSitterSyntaxHighlight = {
   let someOrNone = v => switch(v) {
   | Some(v) => v;
   | None => "";
+  };
+
+  let scopesToStrings = (scopes: list(TreeSitter.Syntax.scope)) => {
+    List.map((v) => {
+      let (_, s) = v;
+      s
+    }, scopes);
   };
 
   let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) =>  {
@@ -56,7 +62,7 @@ module TreeSitterSyntaxHighlight = {
       List.iteri((idx, t) => {
             let (p, scopes, token) = t;
             let tmScope = 
-              someOrNone(TextMateConverter.getTextMateScope(~token, ~path=scopes, scopeConverter));
+              TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), scopeConverter);
             let resolvedColor = TextMateTheme.match(theme, tmScope);
             print_endline("Position: " 
               ++ Treesitter.Types.Position.show(p)
@@ -100,8 +106,7 @@ module TreeSitterSyntaxHighlight = {
 
     List.map((curr) => {
         let (p: Treesitter.Types.Position.t, scopes, token) = curr;
-        let tmScope = 
-          someOrNone(TextMateConverter.getTextMateScope(~token, ~path=scopes, v.scopeConverter));
+        let tmScope = TextMateConverter.getTextMateScope(~token, ~path=scopesToStrings(scopes), v.scopeConverter);
         let resolvedColor = TextMateTheme.match(v.theme, tmScope);
 
         let line = p.line;
