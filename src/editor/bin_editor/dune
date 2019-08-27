@@ -1,5 +1,3 @@
-(ignored_subdirs (node_modules _esy))
-
 (executable
     (name Oni2_editor)
     (package Oni2)
