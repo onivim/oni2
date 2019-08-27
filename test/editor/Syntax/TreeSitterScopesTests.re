@@ -31,6 +31,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           "pair > string:nth-child(1)",
           [Scope("string.quoted.dictionary.key.json")],
         ),
+        ("array > \",\"", [Scope("punctuation.separator.array")]),
       ]);
 
     test("simple hierarchy", ({expect, _}) => {
@@ -51,6 +52,14 @@ describe("TreeSitterScopes", ({describe, _}) =>
       expect.string(scope2).toEqual(
         "meta.structure.dictionary.json string.quoted.double",
       );
+
+      let scope3 =
+        TextMateConverter.getTextMateScope(
+          ~path=["\"", "string", "array"],
+          simpleConverter,
+        );
+
+      expect.string(scope3).toEqual("string.quoted.double");
     });
     test("returns empty for non-existent scopes", ({expect, _}) => {
       let nonExistentScope =
