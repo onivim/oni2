@@ -47,44 +47,32 @@ let createElement =
       ~width as width_,
       ~rowHeight: int,
       ~render: renderFunction,
+      ~rowsToRender: int,
       ~count: int,
       ~children as _,
+      ~onScroll,
       (),
     ) =>
   component(hooks => {
-    let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
     let startRowOffset =
       rowHeight > 0 ? int_of_float(scrollY) / rowHeight : 0;
-    let pixelOffset = int_of_float(scrollY) mod rowHeight;
-
-    let i = ref(max(startRowOffset - additionalRowsToRender, 0));
-
+    let i = ref(0);
     let items: ref(list(React.syntheticElement)) = ref([]);
 
-    let len = count;
-
-    while (i^ < rowsToRender
-           + additionalRowsToRender
-           + startRowOffset
-           && i^ < len) {
-      let rowOffset = (i^ - startRowOffset) * rowHeight;
-      let rowContainerStyle =
-        Style.[
-          position(`Absolute),
-          top(rowOffset - pixelOffset),
-          left(0),
-          right(0),
-          height(rowHeight),
-        ];
+    while (i^ < rowsToRender && count > 0) {
+      let rowContainerStyle = Style.[left(0), right(0), height(rowHeight)];
 
       let item = i^;
-      let v = <View style=rowContainerStyle> {render(item)} </View>;
+      let v =
+        <View style=rowContainerStyle>
+          {render(item + startRowOffset)}
+        </View>;
 
       items := List.append([v], items^);
       incr(i);
     };
 
-    let height_ = min(height_, count * rowHeight);
+    let height_ = min(height_, rowsToRender * rowHeight);
 
     items := List.rev(items^);
 
@@ -98,12 +86,5 @@ let createElement =
         overflow(`Hidden),
       ];
 
-    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScrollDelta(
-        ~deltaY=wheelEvent.deltaY *. 25.,
-        (),
-      );
-    };
-
-    (hooks, <View style onMouseWheel=scroll> ...items^ </View>);
+    (hooks, <View style onMouseWheel=onScroll> ...items^ </View>);
   });

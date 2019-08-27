@@ -16,8 +16,8 @@ let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let position = (selectedItem, change, count) => {
-    let nextIndex = selectedItem + change;
-    nextIndex >= count || nextIndex < 0 ? 0 : nextIndex;
+    let nextSelectedItem = count > 0 ? (selectedItem + change) mod count : 0;
+    nextSelectedItem >= 0 ? nextSelectedItem : count;
   };
 
   let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
@@ -63,30 +63,76 @@ let start = () => {
         {...state, selectedItem: index},
         Isolinear.Effect.none,
       )
-    | MenuPreviousItem => (
+    | MenuPreviousItem =>
+      let itemToSelect =
+        position(state.selectedItem, -1, filteredCommandsCount);
+      let nextRowOffset =
+        if (itemToSelect < state.selectedItem
+            && itemToSelect < state.rowOffset
+            && state.rowOffset
+            - 1 > 0) {
+          state.rowOffset - 1;
+        } else if (itemToSelect > state.selectedItem) {
+          filteredCommandsCount - state.maxRows;
+        } else {
+          state.rowOffset;
+        };
+
+      (
         {
           ...state,
-          selectedItem:
-            position(state.selectedItem, -1, filteredCommandsCount),
+          selectedItem: itemToSelect,
+          rowOffset: nextRowOffset,
+          scrollY: float_of_int(nextRowOffset * state.rowHeight),
         },
         Isolinear.Effect.none,
-      )
-    | MenuNextItem => (
+      );
+    | MenuNextItem =>
+      let itemToSelect =
+        position(state.selectedItem, 1, filteredCommandsCount);
+      let nextRowOffset =
+        if (itemToSelect > state.selectedItem
+            && itemToSelect
+            - state.rowOffset > state.maxRows
+            - 1) {
+          state.rowOffset + 1;
+        } else if (itemToSelect < state.selectedItem) {
+          0;
+        } else {
+          state.rowOffset;
+        };
+
+      (
         {
           ...state,
-          selectedItem:
-            position(state.selectedItem, 1, filteredCommandsCount),
+          selectedItem: itemToSelect,
+          rowOffset: nextRowOffset,
+          scrollY: float_of_int(nextRowOffset * state.rowHeight),
         },
         Isolinear.Effect.none,
-      )
+      );
+    | MenuScroll(scrollDeltaY) =>
+      let maxScrollY =
+        filteredCommandsCount
+        * state.rowHeight
+        - state.maxRows
+        * state.rowHeight;
+      let newScrollY =
+        float_of_int(
+          min(
+            maxScrollY,
+            int_of_float(max(0., state.scrollY +. scrollDeltaY)),
+          ),
+        );
+
+      ({...state, scrollY: newScrollY}, Isolinear.Effect.none);
     | MenuSearch(query) => (
         {
           ...state,
           searchQuery: query,
           filterJob:
             Core.Job.mapw(MenuJob.updateQuery(query), state.filterJob),
-          selectedItem:
-            position(state.selectedItem, 0, filteredCommandsCount),
+          selectedItem: 0,
         },
         queryChangedEffect(state.onQueryChanged, query),
       )

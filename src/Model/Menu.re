@@ -13,9 +13,13 @@ type t = {
   isLoading: bool,
   loadingAnimation: Animation.t,
   selectedItem: int,
+  rowOffset: int,
   filterJob: MenuJob.t,
   onQueryChanged: Event.t(string),
   dispose: unit => unit,
+  maxRows: int,
+  rowHeight: int,
+  scrollY: float,
 };
 
 let create = () => {
@@ -25,7 +29,11 @@ let create = () => {
   isOpen: false,
   isLoading: false,
   selectedItem: 0,
+  rowOffset: 0,
+  maxRows: 8,
   filterJob: MenuJob.create(),
   onQueryChanged: Event.create(),
   dispose: () => (),
+  rowHeight: 40,
+  scrollY: 0.0,
 };

@@ -63,6 +63,7 @@ type t =
   | MenuClose
   | MenuSelect
   | MenuNextItem
+  | MenuScroll(float)
   | MenuPreviousItem
   | MenuPosition(int)
   | OpenFileByPath(string, option(WindowTree.direction))
