@@ -134,7 +134,7 @@ let start = getState => {
       }
     | AddSplit(direction, split) => {
         ...s,
-        zenMode:false,
+        zenMode: false,
         windowManager: {
           ...s.windowManager,
           activeWindowId: split.id,
@@ -149,7 +149,7 @@ let start = getState => {
       }
     | RemoveSplit(id) => {
         ...s,
-        zenMode:false,
+        zenMode: false,
         windowManager: {
           ...s.windowManager,
           windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
