@@ -38,10 +38,10 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
   let parser = Parser.json();
   let (tree, baseline) = ArrayParser.parse(parser, None, lines);
 
-  let rootNode = Tree.getRootNode(tree);
+  //let rootNode = Tree.getRootNode(tree);
   let scopeConverter = getTreeSitterScopeMapper();
 
-  let i = ref(0);
+  //let i = ref(0);
 
   {
     parser,
@@ -51,6 +51,27 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
     scopeConverter,
     theme,
   };
+};
+
+let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
+  let { parser, lastBaseline, _ } = v;
+  let delta = TreeSitter.ArrayParser.Delta.create(
+      lastBaseline, 
+      Index.toInt0(bufferUpdate.startLine),
+      Index.toInt0(bufferUpdate.endLine),
+      bufferUpdate.lines,
+  );
+
+  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
+
+  let ret: t = {
+    ...v,
+    parser,
+    tree,
+    lastBaseline: newBaseline,
+    lastLines: lines,
+  };
+  ret;
 };
 
 let hasPendingWork = _ => false;
@@ -93,5 +114,3 @@ let getTokenColors = (v: t, line: int) => {
     tokens,
   );
 };
-
-let update = (_, _, v) => v;

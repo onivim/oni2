@@ -71,13 +71,19 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         let state = {
           ...state,
           syntaxHighlighting2:
-            Core.IntMap.add(
+            Core.IntMap.update(
               bu.id,
-              NativeSyntaxHighlights.create(
+              (current) => switch(current) {
+              | None => Some(NativeSyntaxHighlights.create(
                 ~theme=state.tokenTheme,
                 ~getTreeSitterScopeMapper,
                 lines,
-              ),
+              ))
+              | Some(v) => Some(NativeSyntaxHighlights.update(
+                ~bufferUpdate=bu,
+                ~lines,
+                v))
+              },
               state.syntaxHighlighting2,
             ),
         };
