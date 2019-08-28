@@ -53,26 +53,7 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
   };
 };
 
-let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
-  let { parser, lastBaseline, _ } = v;
-  let delta = TreeSitter.ArrayParser.Delta.create(
-      lastBaseline, 
-      Index.toInt0(bufferUpdate.startLine),
-      Index.toInt0(bufferUpdate.endLine),
-      bufferUpdate.lines,
-  );
-
-  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
-
-  let ret: t = {
-    ...v,
-    parser,
-    tree,
-    lastBaseline: newBaseline,
-    lastLines: lines,
-  };
-  ret;
-};
+Printexc.record_backtrace(true);
 
 let hasPendingWork = _ => false;
 let doChunkOfWork = v => v;
@@ -92,7 +73,7 @@ let getTokenColors = (v: t, line: int) => {
 
   List.map(
     curr => {
-      let (p: Treesitter.Types.Position.t, scopes, token) = curr;
+      let (p: Treesitter.Types.Position.t, _, scopes, token) = curr;
       let tmScope =
         TextMateConverter.getTextMateScope(
           ~token,
@@ -114,3 +95,45 @@ let getTokenColors = (v: t, line: int) => {
     tokens,
   );
 };
+
+let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
+  let { parser, lastBaseline, _ } = v;
+  let delta = TreeSitter.ArrayParser.Delta.create(
+      lastBaseline, 
+      Index.toInt0(bufferUpdate.startLine),
+      Index.toInt0(bufferUpdate.endLine),
+      bufferUpdate.lines,
+  );
+
+  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
+
+
+  let ret: t = {
+    ...v,
+    parser,
+    tree,
+    lastBaseline: newBaseline,
+    lastLines: lines,
+  };
+  let i = ref(0);
+  let len = Array.length(lines);
+  let range = TreeSitter.Types.Range.createi(
+  ~startLine=0,
+  ~startColumn=0,
+  ~endLine=10,
+  ~endColumn=0,
+  ()
+  );
+
+  //let getTokenName = TreeSitter.Syntax.createArrayTokenNameResolver(lines);
+  //let getTokenName = (_) => "";
+  //let tokens = TreeSitter.Syntax.getTokens(getTokenName, range, TreeSitter.Tree.getRootNode(tree));
+  // List.iter(t => print_endline(TreeSitter.Syntax.Token.show(t)), tokens);
+  //while (i^  < min(10,len)) {
+    // print_endline ("Line " ++ string_of_int(i^) ++ ": " ++ Array.get(lines, i^));
+    //let _ = getTokenColors(ret, i^);
+    //incr(i);
+  //};
+  ret;
+};
+
