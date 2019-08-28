@@ -17,14 +17,21 @@ let start = (~getScaleFactor, ()) => {
     let scaleFactor = getScaleFactor();
     let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    let fontFile = Utility.executingDirectory ++ fontFamily;
+    
+    
+    let fullPath = switch (fontFamily) {
+    | None => Utility.executingDirectory ++ defaultFontFamily;
+    | Some(v) => 
+      let descriptor = Revery.Font.find(~mono=true, ~weight=Revery.Font.Weight.Normal, v);
+      descriptor.path
+    };
 
     Log.info(
-      "Loading font: " ++ fontFile ++ " | size: " ++ string_of_int(fontSize),
+      "Loading font: " ++ fullPath ++ " | size: " ++ string_of_int(fontSize),
     );
 
     Fontkit.fk_new_face(
-      fontFile,
+      fullPath,
       adjSize,
       font => {
         open Oni_Model.Actions;
@@ -55,7 +62,7 @@ let start = (~getScaleFactor, ()) => {
         dispatch(
           SetEditorFont(
             EditorFont.create(
-              ~fontFile=fontFamily,
+              ~fontFile=fullPath,
               ~fontSize,
               ~measuredWidth,
               ~measuredHeight,
@@ -64,20 +71,20 @@ let start = (~getScaleFactor, ()) => {
           ),
         );
       },
-      _ => Log.error("setFont: Failed to load font " ++ fontFamily),
+      _ => Log.error("setFont: Failed to load font " ++ fullPath),
     );
   };
 
   let synchronizeConfiguration = (configuration: Configuration.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
       // TODO
-      /* let editorFontFamily =
-         Configuration.getValue(c => c.editorFontFamily, configuration); */
+      let editorFontFamily =
+         Configuration.getValue(c => c.editorFontFamily, configuration);
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
 
-      setFont(dispatch, defaultFontFamily, editorFontSize);
+      setFont(dispatch, editorFontFamily, editorFontSize);
     });
 
   let loadEditorFontEffect = (fontFamily, fontSize) =>
@@ -89,12 +96,12 @@ let start = (~getScaleFactor, ()) => {
     switch (action) {
     | Actions.Init => (
         state,
-        loadEditorFontEffect(defaultFontFamily, defaultFontSize),
+        loadEditorFontEffect(None, defaultFontSize),
       )
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,
-        loadEditorFontEffect(fontFamily, fontSize),
+        loadEditorFontEffect(Some(fontFamily), fontSize),
       )
     | _ => (state, Isolinear.Effect.none)
     };

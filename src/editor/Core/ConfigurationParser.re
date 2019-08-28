@@ -106,6 +106,12 @@ let parseString = json =>
   | _ => ""
   };
 
+let parseStringOption = json =>
+  switch (json) {
+  | `String(v) => Some(v)
+  | _ => None
+  };
+
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.json) => ConfigurationValues.t;
 
@@ -114,7 +120,7 @@ type configurationTuple = (string, parseFunction);
 let configurationParsers: list(configurationTuple) = [
   (
     "editor.fontFamily",
-    (s, v) => {...s, editorFontFamily: parseString(v)},
+    (s, v) => {...s, editorFontFamily: parseStringOption(v)},
   ),
   ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
   (
