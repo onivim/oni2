@@ -61,7 +61,7 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(getState, getClipboardText, setClipboardText);
+    VimStoreConnector.start(languageInfo, getState, getClipboardText, setClipboardText);
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -122,7 +122,7 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}) =>
+      | Model.Actions.BufferEnter({id, _}, _) =>
         let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None

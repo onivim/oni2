@@ -40,17 +40,8 @@ let ofBufferOpt = (f, buffer) => {
   };
 };
 
-let getBufferMetadata = (id, map) =>
-  switch (getBuffer(id, map)) {
-  | None => None
-  | Some(v) => Some(Buffer.getMetadata(v))
-  };
-
 let applyBufferUpdate = bufferUpdate =>
   ofBufferOpt(buffer => Buffer.update(buffer, bufferUpdate));
-
-let updateMetadata = metadata =>
-  ofBufferOpt(buffer => Buffer.updateMetadata(metadata, buffer));
 
 let setIndentation = indent =>
   ofBufferOpt(buffer => Buffer.setIndentation(indent, buffer));
@@ -65,11 +56,20 @@ let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
-  | BufferEnter(metadata) =>
+  | BufferEnter(metadata, fileType) =>
     let f = buffer =>
       switch (buffer) {
-      | Some(v) => Some(v |> Buffer.updateMetadata(metadata))
-      | None => Some(Buffer.ofMetadata(metadata))
+      | Some(v) =>
+        Some(
+          v
+          |> Buffer.setModified(metadata.modified)
+          |> Buffer.setFilePath(metadata.filePath)
+          |> Buffer.setVersion(metadata.version)
+        )
+      | None => Some(
+          Buffer.ofMetadata(metadata)
+          |> Buffer.setFileType(fileType)
+        )
       };
     IntMap.update(metadata.id, f, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
@@ -79,7 +79,7 @@ let reduce = (state: t, action: Actions.t) => {
     IntMap.update(id, setIndentation(indent), state)
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferSaved(metadata) =>
-    IntMap.update(metadata.id, updateMetadata(metadata), state)
+    IntMap.update(metadata.id, setModified(metadata.modified), state)
   | _ => state
   };
 };

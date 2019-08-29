@@ -83,7 +83,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               < Core.Constants.default.largeFileLineCountThreshold
             )
             && Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
-          switch (Model.Buffer.getMetadata(buffer).filePath) {
+          switch (Model.Buffer.getFilePath(buffer)) {
           | None => default
           | Some(v) =>
             let extension = Path.extname(v);

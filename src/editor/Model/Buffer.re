@@ -13,7 +13,6 @@ type t = {
   fileType: option(string),
   modified: bool,
   version: int,
-  metadata: Vim.BufferMetadata.t,
   lines: array(string),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
@@ -38,8 +37,8 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   id: metadata.id,
   version: metadata.version,
   filePath: metadata.filePath,
-  fileType: metadata.fileType,
   modified: metadata.modified,
+  fileType: None,
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
@@ -47,23 +46,29 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
 
 let getFilePath = (buffer: t) => buffer.filePath;
 
+let setFilePath = (filePath: option(string), buffer) => {
+  ...buffer,
+  filePath,
+};
+
 let getFileType = (buffer: t) => buffer.fileType;
 
 let setFileType = (fileType: option(string), buffer: t) => {
   ...buffer,
-  fileType
+  fileType,
 };
 
 let getId = (buffer: t) => buffer.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
+let getVersion = (buffer: t) => buffer.version;
+
+let setVersion = (version: int, buffer: t) => {...buffer, version};
+
 let isModified = (buffer: t) => buffer.modified;
 
-let setModified = (modified: bool, buffer: t) => {
-  modified,
-  ...buffer,
-};
+let setModified = (modified: bool, buffer: t) => {...buffer, modified};
 
 let isSyntaxHighlightingEnabled = (buffer: t) =>
   buffer.syntaxHighlightingEnabled;
@@ -73,14 +78,10 @@ let disableSyntaxHighlighting = (buffer: t) => {
 };
 
 let getUri = (buffer: t) => {
-  let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {
-    switch (metadata.filePath) {
-    | None => Uri.fromMemory(string_of_int(metadata.id))
-    | Some(v) => Uri.fromPath(v)
-    };
+  switch (buffer.filePath) {
+  | None => Uri.fromMemory(string_of_int(buffer.id))
+  | Some(v) => Uri.fromPath(v)
   };
-
-  buffer |> getMetadata |> getUriFromMetadata;
 };
 
 /*
@@ -147,8 +148,9 @@ let getIndentation = buf => buf.indentation;
 
 let update = (buf: t, update: BufferUpdate.t) => {
   let endLine = Index.toInt0(update.endLine);
+  let curVersion = getVersion(buf);
 
-  if (update.version > buf.metadata.version) {
+  if (update.version > curVersion) {
     /***
        When a buffer is first attached it emits an update with
        a startLine of 0 and endLine of -1 in this case we should
@@ -156,16 +158,13 @@ let update = (buf: t, update: BufferUpdate.t) => {
        rather than update it, which would result in duplication
      */
     if (endLine < 0) {
+      {...buf, version: update.version, lines: update.lines};
+    } else {
       {
         ...buf,
         version: update.version,
-        lines: update.lines,
+        lines: applyUpdate(buf.lines, update),
       };
-    } else {
-      {...buf, 
-        version: update.version,
-        modified: update.modified,
-        lines: applyUpdate(buf.lines, update)};
     };
   } else {
     buf;
