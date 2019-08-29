@@ -15,6 +15,50 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Rench;
 
+module MerlinDiscovery = {
+
+  type t = {
+    ocamlMerlinPath: option(string),
+  };
+  
+  let _cache: Hashtbl.t(string, t) = Hashtbl.create(8);
+  let _mutex = Mutex.create();
+
+  
+  let default = {
+    ocamlMerlinPath: Some("C:\\Users\\bryphe\\.esy\\3_\\i\\opam__s__merlin-opam__c__3.2.2-862fb62c\\bin\\ocamlmerlin.exe"),
+  };
+
+  let discover = (workingDirectory: string) => {
+
+    Mutex.lock(_mutex);
+
+    let ret = switch (Hashtbl.find_opt(_cache, workingDirectory)) {
+    | Some(v) => v
+    | None =>
+  
+      let complete = (v: t) => {
+      Hashtbl.add(_cache, workingDirectory, v);
+      v;
+      };
+
+      // Otherwise - is it available in path?
+      let merlinPath = Environment.which("ocamlmerlin.exe");
+      switch (merlinPath) {
+      | Some(v) => 
+          print_endline ("FOUND PATH: " ++ v);
+          complete({ ocamlMerlinPath: Some(v)});
+      | None => 
+          print_endline ("Merlin not found");
+          complete({ ocamlMerlinPath: None});
+      };
+    };
+
+    Mutex.unlock(_mutex);
+    ret;
+  };
+};
+
 module MerlinProtocol = {
 [@deriving yojson({strict: false})]
 type oneBasedLine = int;
@@ -108,23 +152,15 @@ module MerlinProtocolConverter = {
 };
 
 module Merlin = {
-  type t = {
-    ocamlMerlinPath: option(string),
-    ocamlMerlinReasonPath: option(string),
-  };
-  
-  let default = {
-    ocamlMerlinPath: Some("C:\\Users\\bryphe\\.esy\\3_\\i\\opam__s__merlin-opam__c__3.2.2-862fb62c\\bin\\ocamlmerlin.exe"),
-    ocamlMerlinReasonPath: Some("C:\\Users\\bryphe\\.esy\\3_\\i\\esy_ocaml__s__reason-3.4.0-ac7b3839\\bin\\ocamlmerlin-reason.exe"),
-  };
 
   let pendingRequest = ref(false);
 
-  let getErrors = (filePath: string, input: array(string), cb) => {
+  let getErrors = (workingDirectory: string, filePath: string, input: array(string), cb) => {
 
     if (!pendingRequest^) {
 
-    switch (default.ocamlMerlinPath) {
+    let merlin = MerlinDiscovery.discover(workingDirectory);
+    switch (merlin.ocamlMerlinPath) {
     | Some (v) =>
 
       Thread.create(() => {
@@ -142,7 +178,7 @@ module Merlin = {
       
       let pid = Unix.create_process(
         v,
-        [|v, "single", "errors", "-filename", "src/editor/Store/StoreThread.re"|],
+        [|v, "single", "errors", "-filename", filePath|],
         pstdin, pstdout, pstdout
       );
 
@@ -211,9 +247,14 @@ let start =
          Revery.App.runOnMainThread(() => dispatch(Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics)));
          }
         let lines = Model.Buffer.getLines(v);
-        let _ = Merlin.getErrors("test.re", lines, cb);
+        switch (Model.Buffer.getFilePath(v)) {
+        | Some(path) => let _ = Merlin.getErrors(Sys.getcwd(), path, lines, cb);
+        | None => ()
+        };
       }
     );
+
+  
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
