@@ -40,6 +40,8 @@ let getId = (buffer: t) => buffer.metadata.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
+let getLines = (buffer: t) => buffer.lines;
+
 let isModified = (buffer: t) => buffer.metadata.modified;
 
 let setModified = (modified: bool, buffer: t) => {

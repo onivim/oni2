@@ -51,6 +51,8 @@ let start =
 
   let state = Model.State.create();
 
+  let (merlinUpdater, merlinStream) = MerlinStoreConnector.start();
+
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
   let latestState: ref(Model.State.t) = ref(state);
@@ -112,6 +114,7 @@ let start =
           windowUpdater,
           keyDisplayerUpdater,
           themeUpdater,
+          merlinUpdater,
         ]),
       (),
     );
@@ -148,6 +151,7 @@ let start =
   Isolinear.Stream.connect(dispatch, explorerStream);
   Isolinear.Stream.connect(dispatch, lifecycleStream);
   Isolinear.Stream.connect(dispatch, windowStream);
+  Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

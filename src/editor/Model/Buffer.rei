@@ -17,6 +17,7 @@ let ofMetadata: Vim.BufferMetadata.t => t;
 let getFilePath: t => option(string);
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
+let getLines: t => array(string);
 
 let getMetadata: t => Vim.BufferMetadata.t;
 let getUri: t => Uri.t;

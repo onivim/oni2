@@ -11,6 +11,8 @@ let createFromPositions = (~startPosition, ~endPosition, ()) => {
   endPosition,
 };
 
+let ofPositions = createFromPositions;
+
 let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
   createFromPositions(
     ~startPosition=Position.create(startLine, startCharacter),

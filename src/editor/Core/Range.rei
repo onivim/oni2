@@ -15,6 +15,9 @@ type t = {
 let createFromPositions:
   (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
 
+let ofPositions:
+  (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
+
 let create:
   (
     ~startLine: Index.t,
