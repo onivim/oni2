@@ -9,16 +9,15 @@ let rootNode = (new node)();
 let setup = () => ();
 
 let emptyBuffer = Buffer.ofLines([||]);
-let emptyBufferId = Buffer.getMetadata(emptyBuffer).id;
+let emptyBufferId = Buffer.getId(emptyBuffer);
 
 let hundredThousandLineBuffer =
   Buffer.ofLines(Array.make(100000, "This buffer is pretty big"));
-let hundredThousandLineBufferId =
-  Buffer.getMetadata(hundredThousandLineBuffer).id;
+let hundredThousandLineBufferId = Buffer.getId(hundredThousandLineBuffer);
 
 let smallBuffer =
   Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
-let smallBufferId = Buffer.getMetadata(smallBuffer).id;
+let smallBufferId = Buffer.getId(smallBuffer);
 
 let hundredThousandLines = Array.make(100000, "Another big buffer update");
 

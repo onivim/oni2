@@ -5,15 +5,26 @@ open Vim;
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Model.Buffer;
 
-let getOrFail = (v: option(Buffer.t)) => {
+let getFilePathOrFail = (v: option(Buffer.t)) => {
   let failedMsg = "failed - no buffer was specified";
   switch (v) {
   | Some(v) =>
-    let metadata = Buffer.getMetadata(v);
-    switch (metadata.filePath) {
+    switch (Buffer.getFilePath(v)) {
     | Some(path) => path
     | None => failedMsg
-    };
+    }
+  | None => failedMsg
+  };
+};
+
+let getFileTypeOrFail = (v: option(Buffer.t)) => {
+  let failedMsg = "failed - no buffer was specified";
+  switch (v) {
+  | Some(v) =>
+    switch (Buffer.getFileType(v)) {
+    | Some(t) => t
+    | None => failedMsg
+    }
   | None => failedMsg
   };
 };
@@ -27,10 +38,11 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferList,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          None,
         ),
       );
 
-    expect.string(Buffers.getBuffer(0, added) |> getOrFail).toMatch(
+    expect.string(Buffers.getBuffer(0, added) |> getFilePathOrFail).toMatch(
       "/test1.re",
     );
   });
@@ -49,6 +61,7 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferList,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          None,
         ),
       );
     let addedAgain =
@@ -56,10 +69,12 @@ describe("Buffer List Tests", ({test, _}) => {
         added,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
+          None,
         ),
       );
 
-    expect.string(Buffers.getBuffer(0, addedAgain) |> getOrFail).toMatch(
+    expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).
+      toMatch(
       "/test2.re",
     );
   });
@@ -71,10 +86,26 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferList,
         BufferEnter(
           BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          None,
         ),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
-    let path = getOrFail(activeBuffer);
+    let path = getFilePathOrFail(activeBuffer);
     expect.string(path).toMatch("/myfile.js");
+  });
+
+  test("Should set filetype", ({expect}) => {
+    let bufferList = Buffers.empty;
+    let updated =
+      Buffers.reduce(
+        bufferList,
+        BufferEnter(
+          BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          Some("reason"),
+        ),
+      );
+    let activeBuffer = Buffers.getBuffer(4, updated);
+    let fileType = getFileTypeOrFail(activeBuffer);
+    expect.string(fileType).toEqual("reason");
   });
 });
