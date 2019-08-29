@@ -22,7 +22,13 @@ let getTime = () => _currentTime^;
 
 let getScaleFactor = () => 1.0;
 
-let runTest = (~configuration=None, ~cliOptions=None, ~name="AnonymousTest", test: testCallback) => {
+let runTest =
+    (
+      ~configuration=None,
+      ~cliOptions=None,
+      ~name="AnonymousTest",
+      test: testCallback,
+    ) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
@@ -40,16 +46,16 @@ let runTest = (~configuration=None, ~cliOptions=None, ~name="AnonymousTest", tes
 
   logInit("Starting store...");
 
-  let configPath = switch (configuration) {
-  | None => None
-  | Some(v) => {
-    let tempFile = Filename.temp_file("configuration", ".json");
-    let oc = open_out(tempFile);
-    Printf.fprintf(oc,  "%s\n", v);
-    close_out(oc);
-    Some(tempFile);
-    }
-  }
+  let configPath =
+    switch (configuration) {
+    | None => None
+    | Some(v) =>
+      let tempFile = Filename.temp_file("configuration", ".json");
+      let oc = open_out(tempFile);
+      Printf.fprintf(oc, "%s\n", v);
+      close_out(oc);
+      Some(tempFile);
+    };
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -60,7 +66,7 @@ let runTest = (~configuration=None, ~cliOptions=None, ~name="AnonymousTest", tes
       ~getTime,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
-      ~cliOptions=cliOptions,
+      ~cliOptions,
       ~configurationFilePath=configPath,
       (),
     );

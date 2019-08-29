@@ -7,25 +7,24 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
-
+let start =
+    (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
   let defaultConfigurationFileName = "configuration.json";
   let getConfigurationFile = () => {
-
-    let errorLoading = (path) => {
-      Log.error("Error loading configuration file at: " ++ path); 
-      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName); 
+    let errorLoading = path => {
+      Log.error("Error loading configuration file at: " ++ path);
+      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName);
     };
 
     switch (configurationFilePath) {
     | None => Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
-    | Some(v) => 
+    | Some(v) =>
       switch (Sys.file_exists(v)) {
-      | exception _ => errorLoading(v);
+      | exception _ => errorLoading(v)
       | false => errorLoading(v)
-      | true => Ok(v) 
+      | true => Ok(v)
       }
-    }
+    };
   };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
