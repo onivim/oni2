@@ -95,8 +95,8 @@ module MerlinProtocolConverter = {
     let f = (err: MerlinProtocol.errorResultItem) => {
       Model.Diagnostics.Diagnostic.create(
         ~range=Core.Range.ofPositions(
-          ~startPosition=Core.Types.Position.ofInt1(err.startPosition.line, err.startPosition.col),
-          ~endPosition=Core.Types.Position.ofInt1(err.endPosition.line, err.endPosition.col),
+          ~startPosition=Core.Types.Position.ofInt1(err.startPosition.line, err.startPosition.col + 1),
+          ~endPosition=Core.Types.Position.ofInt1(err.endPosition.line, err.endPosition.col + 1),
           ()
         ),
         ()
