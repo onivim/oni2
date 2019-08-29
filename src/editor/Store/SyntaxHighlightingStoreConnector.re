@@ -22,7 +22,7 @@ module Log = Core.Log;
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   let jsonTreeSitterScopes =
-    setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
+    setup.bundledExtensionsPath ++ "/cpp/syntaxes/tree-sitter-c.json";
 
   let parsedTreeSitterScopes = Yojson.Safe.from_file(jsonTreeSitterScopes);
   let treeSitterJson =

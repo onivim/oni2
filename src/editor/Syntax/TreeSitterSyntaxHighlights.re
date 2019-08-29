@@ -35,7 +35,7 @@ let scopesToStrings = (scopes: list(TreeSitter.Syntax.scope)) => {
 };
 
 let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
-  let parser = Parser.json();
+  let parser = Parser.c();
   let (tree, baseline) = ArrayParser.parse(parser, None, lines);
 
   //let rootNode = Tree.getRootNode(tree);
@@ -98,6 +98,7 @@ let getTokenColors = (v: t, line: int) => {
 
 let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   let { parser, lastBaseline, _ } = v;
+  let start1 = Unix.gettimeofday();
   let delta = TreeSitter.ArrayParser.Delta.create(
       lastBaseline, 
       Index.toInt0(bufferUpdate.startLine),
@@ -105,8 +106,16 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
       bufferUpdate.lines,
   );
 
-  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
+  let end1 = Unix.gettimeofday();
 
+  
+  let start2 = Unix.gettimeofday();
+  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
+  let end2 = Unix.gettimeofday();
+
+
+  print_endline ("PERF: Delta creation: " ++ string_of_float(end1 -. start1));
+  print_endline ("PERF: Parse: " ++ string_of_float(end2 -. start2));
 
   let ret: t = {
     ...v,
