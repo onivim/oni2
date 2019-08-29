@@ -15,10 +15,11 @@ let ofLines: array(string) => t;
 let ofMetadata: Vim.BufferMetadata.t => t;
 
 let getFilePath: t => option(string);
+let getFileType: t => option(string);
+let setFileType: (option(string), t) => t;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
 
-let getMetadata: t => Vim.BufferMetadata.t;
 let getUri: t => Uri.t;
 let getId: t => int;
 let getNumberOfLines: t => int;

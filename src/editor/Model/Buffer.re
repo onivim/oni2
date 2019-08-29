@@ -8,6 +8,11 @@ open Oni_Core;
 open Oni_Core.Types;
 
 type t = {
+  id: int,
+  filePath: option(string),
+  fileType: option(string),
+  modified: bool,
+  version: int,
   metadata: Vim.BufferMetadata.t,
   lines: array(string),
   indentation: option(IndentationSettings.t),
@@ -17,7 +22,11 @@ type t = {
 let show = _ => "TODO";
 
 let ofLines = (lines: array(string)) => {
-  metadata: Vim.BufferMetadata.create(),
+  id: 0,
+  version: 0,
+  filePath: None,
+  fileType: None,
+  modified: false,
   lines,
   indentation: None,
   syntaxHighlightingEnabled: true,
@@ -26,28 +35,34 @@ let ofLines = (lines: array(string)) => {
 let empty = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
-  metadata,
+  id: metadata.id,
+  version: metadata.version,
+  filePath: metadata.filePath,
+  fileType: metadata.fileType,
+  modified: metadata.modified,
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
 };
 
-let getFilePath = (buffer: t) => buffer.metadata.filePath;
+let getFilePath = (buffer: t) => buffer.filePath;
 
-let getMetadata = (buffer: t) => buffer.metadata;
+let getFileType = (buffer: t) => buffer.fileType;
 
-let getId = (buffer: t) => buffer.metadata.id;
+let setFileType = (fileType: option(string), buffer: t) => {
+  ...buffer,
+  fileType
+};
+
+let getId = (buffer: t) => buffer.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
-let isModified = (buffer: t) => buffer.metadata.modified;
+let isModified = (buffer: t) => buffer.modified;
 
 let setModified = (modified: bool, buffer: t) => {
+  modified,
   ...buffer,
-  metadata: {
-    ...buffer.metadata,
-    modified,
-  },
 };
 
 let isSyntaxHighlightingEnabled = (buffer: t) =>
@@ -143,21 +158,16 @@ let update = (buf: t, update: BufferUpdate.t) => {
     if (endLine < 0) {
       {
         ...buf,
-        metadata: {
-          ...buf.metadata,
-          version: update.version,
-        },
+        version: update.version,
         lines: update.lines,
       };
     } else {
-      let metadata = {...buf.metadata, version: update.version};
-      {...buf, metadata, lines: applyUpdate(buf.lines, update)};
+      {...buf, 
+        version: update.version,
+        modified: update.modified,
+        lines: applyUpdate(buf.lines, update)};
     };
   } else {
     buf;
   };
-};
-
-let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
-  {...buf, metadata};
 };
