@@ -163,6 +163,7 @@ module Merlin = {
     switch (merlin.ocamlMerlinPath) {
     | Some (v) =>
 
+      print_endline ("Using path: " ++ v);
       Thread.create(() => {
       pendingRequest := true;
       let (pstdin, stdin) = Unix.pipe();
