@@ -22,7 +22,13 @@ let getTime = () => _currentTime^;
 
 let getScaleFactor = () => 1.0;
 
-let runTest = (~name="AnonymousTest", test: testCallback) => {
+let runTest =
+    (
+      ~configuration=None,
+      ~cliOptions=None,
+      ~name="AnonymousTest",
+      test: testCallback,
+    ) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
@@ -36,9 +42,20 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
     currentState := v;
   };
 
-  let logInit = s => Log.debug("[INITILIAZATION] " ++ s);
+  let logInit = s => Log.debug("[INITIALIZATION] " ++ s);
 
   logInit("Starting store...");
+
+  let configPath =
+    switch (configuration) {
+    | None => None
+    | Some(v) =>
+      let tempFile = Filename.temp_file("configuration", ".json");
+      let oc = open_out(tempFile);
+      Printf.fprintf(oc, "%s\n", v);
+      close_out(oc);
+      Some(tempFile);
+    };
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -49,7 +66,8 @@ let runTest = (~name="AnonymousTest", test: testCallback) => {
       ~getTime,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
-      ~cliOptions=None,
+      ~cliOptions,
+      ~configurationFilePath=configPath,
       (),
     );
 
