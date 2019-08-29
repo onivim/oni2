@@ -37,6 +37,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
 
 let start =
     (
+      ~configurationFilePath=None,
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -82,7 +83,7 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
+  let configurationUpdater = ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
