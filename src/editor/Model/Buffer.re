@@ -8,7 +8,11 @@ open Oni_Core;
 open Oni_Core.Types;
 
 type t = {
-  metadata: Vim.BufferMetadata.t,
+  id: int,
+  filePath: option(string),
+  fileType: option(string),
+  modified: bool,
+  version: int,
   lines: array(string),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
@@ -17,7 +21,11 @@ type t = {
 let show = _ => "TODO";
 
 let ofLines = (lines: array(string)) => {
-  metadata: Vim.BufferMetadata.create(),
+  id: 0,
+  version: 0,
+  filePath: None,
+  fileType: None,
+  modified: false,
   lines,
   indentation: None,
   syntaxHighlightingEnabled: true,
@@ -26,17 +34,31 @@ let ofLines = (lines: array(string)) => {
 let empty = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
-  metadata,
+  id: metadata.id,
+  version: metadata.version,
+  filePath: metadata.filePath,
+  modified: metadata.modified,
+  fileType: None,
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
 };
 
-let getFilePath = (buffer: t) => buffer.metadata.filePath;
+let getFilePath = (buffer: t) => buffer.filePath;
 
-let getMetadata = (buffer: t) => buffer.metadata;
+let setFilePath = (filePath: option(string), buffer) => {
+  ...buffer,
+  filePath,
+};
 
-let getId = (buffer: t) => buffer.metadata.id;
+let getFileType = (buffer: t) => buffer.fileType;
+
+let setFileType = (fileType: option(string), buffer: t) => {
+  ...buffer,
+  fileType,
+};
+
+let getId = (buffer: t) => buffer.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
@@ -44,13 +66,13 @@ let getLines = (buffer: t) => buffer.lines;
 
 let isModified = (buffer: t) => buffer.metadata.modified;
 
-let setModified = (modified: bool, buffer: t) => {
-  ...buffer,
-  metadata: {
-    ...buffer.metadata,
-    modified,
-  },
-};
+let getVersion = (buffer: t) => buffer.version;
+
+let setVersion = (version: int, buffer: t) => {...buffer, version};
+
+let isModified = (buffer: t) => buffer.modified;
+
+let setModified = (modified: bool, buffer: t) => {...buffer, modified};
 
 let isSyntaxHighlightingEnabled = (buffer: t) =>
   buffer.syntaxHighlightingEnabled;
@@ -60,14 +82,10 @@ let disableSyntaxHighlighting = (buffer: t) => {
 };
 
 let getUri = (buffer: t) => {
-  let getUriFromMetadata = (metadata: Vim.BufferMetadata.t) => {
-    switch (metadata.filePath) {
-    | None => Uri.fromMemory(string_of_int(metadata.id))
-    | Some(v) => Uri.fromPath(v)
-    };
+  switch (buffer.filePath) {
+  | None => Uri.fromMemory(string_of_int(buffer.id))
+  | Some(v) => Uri.fromPath(v)
   };
-
-  buffer |> getMetadata |> getUriFromMetadata;
 };
 
 /*
@@ -134,8 +152,9 @@ let getIndentation = buf => buf.indentation;
 
 let update = (buf: t, update: BufferUpdate.t) => {
   let endLine = Index.toInt0(update.endLine);
+  let curVersion = getVersion(buf);
 
-  if (update.version > buf.metadata.version) {
+  if (update.version > curVersion) {
     /***
        When a buffer is first attached it emits an update with
        a startLine of 0 and endLine of -1 in this case we should
@@ -143,23 +162,15 @@ let update = (buf: t, update: BufferUpdate.t) => {
        rather than update it, which would result in duplication
      */
     if (endLine < 0) {
+      {...buf, version: update.version, lines: update.lines};
+    } else {
       {
         ...buf,
-        metadata: {
-          ...buf.metadata,
-          version: update.version,
-        },
-        lines: update.lines,
+        version: update.version,
+        lines: applyUpdate(buf.lines, update),
       };
-    } else {
-      let metadata = {...buf.metadata, version: update.version};
-      {...buf, metadata, lines: applyUpdate(buf.lines, update)};
     };
   } else {
     buf;
   };
-};
-
-let updateMetadata = (metadata: Vim.BufferMetadata.t, buf: t) => {
-  {...buf, metadata};
 };

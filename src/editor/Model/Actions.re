@@ -13,7 +13,7 @@ type t =
   | Init
   | Tick
   | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter(Vim.BufferMetadata.t)
+  | BufferEnter(Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
