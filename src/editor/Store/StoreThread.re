@@ -61,7 +61,12 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(languageInfo, getState, getClipboardText, setClipboardText);
+    VimStoreConnector.start(
+      languageInfo,
+      getState,
+      getClipboardText,
+      setClipboardText,
+    );
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);

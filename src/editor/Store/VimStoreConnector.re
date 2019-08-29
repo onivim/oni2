@@ -14,7 +14,12 @@ module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
-    (languageInfo: Model.LanguageInfo.t, getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
+    (
+      languageInfo: Model.LanguageInfo.t,
+      getState: unit => Model.State.t,
+      getClipboardText,
+      setClipboardText,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Vim.Clipboard.setProvider(reg => {
@@ -134,12 +139,14 @@ let start =
          */
         version: 0,
       };
-      
-      let fileType = switch (meta.filePath) {
-      | Some(v) => Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-      | None => None
-      };
-      
+
+      let fileType =
+        switch (meta.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
+
       dispatch(Model.Actions.BufferEnter(meta, fileType));
     });
 
@@ -298,10 +305,12 @@ let start =
          */
         version: 0,
       };
-      let fileType = switch (meta.filePath) {
-      | Some(v) => Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-      | None => None
-      };
+      let fileType =
+        switch (meta.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
       dispatch(Model.Actions.BufferEnter(meta, fileType));
     });
 
@@ -452,11 +461,13 @@ let start =
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
-      
-      let fileType = switch (metadata.filePath) {
-      | Some(v) => Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-      | None => None
-      };
+
+      let fileType =
+        switch (metadata.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
 
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.

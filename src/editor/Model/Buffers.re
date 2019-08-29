@@ -64,12 +64,10 @@ let reduce = (state: t, action: Actions.t) => {
           v
           |> Buffer.setModified(metadata.modified)
           |> Buffer.setFilePath(metadata.filePath)
-          |> Buffer.setVersion(metadata.version)
+          |> Buffer.setVersion(metadata.version),
         )
-      | None => Some(
-          Buffer.ofMetadata(metadata)
-          |> Buffer.setFileType(fileType)
-        )
+      | None =>
+        Some(Buffer.ofMetadata(metadata) |> Buffer.setFileType(fileType))
       };
     IntMap.update(metadata.id, f, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */

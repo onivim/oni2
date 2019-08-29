@@ -38,7 +38,7 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferList,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None
+          None,
         ),
       );
 
@@ -61,7 +61,7 @@ describe("Buffer List Tests", ({test, _}) => {
         bufferList,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None
+          None,
         ),
       );
     let addedAgain =
@@ -69,11 +69,12 @@ describe("Buffer List Tests", ({test, _}) => {
         added,
         BufferEnter(
           BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
-        None
+          None,
         ),
       );
 
-    expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).toMatch(
+    expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).
+      toMatch(
       "/test2.re",
     );
   });
@@ -92,7 +93,7 @@ describe("Buffer List Tests", ({test, _}) => {
     let path = getFilePathOrFail(activeBuffer);
     expect.string(path).toMatch("/myfile.js");
   });
-  
+
   test("Should set filetype", ({expect}) => {
     let bufferList = Buffers.empty;
     let updated =
