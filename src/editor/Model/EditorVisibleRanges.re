@@ -3,9 +3,23 @@ open Oni_Core.Types;
 
 open Actions;
 
-type t = {editorRanges: list(Range.t)};
+type minimapVisibleRanges = {
+  topLine: int,
+  bottomLine: int,
+  width: int,
+};
 
-let default: t = {editorRanges: []};
+type individualRange = {
+  editorRanges: list(Range.t),
+  minimap: minimapVisibleRanges,
+};
+
+type t = {
+  editorRanges: list(list(Range.t)),
+  minimaps: list(minimapVisibleRanges),
+};
+
+let default: t = {editorRanges: [], minimaps: []};
 
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
@@ -13,8 +27,8 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
 
-  let (_, bufferWidthInCharacters) =
-    Editor.getLinesAndColumns(editor, metrics);
+  let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
+    Editor.getLayout(editor, metrics);
 
   let i = ref(topVisibleLine);
   let eRanges = ref([]);
@@ -34,7 +48,27 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
     incr(i);
   };
 
-  {editorRanges: eRanges^};
+  let minimapLineHeight =
+    Constants.default.minimapCharacterHeight
+    + Constants.default.minimapLineSpacing;
+
+  let minimapTopLine =
+    int_of_float(editor.minimapScrollY /. float_of_int(minimapLineHeight));
+  let minimapVisibleLines =
+    int_of_float(
+      float_of_int(metrics.pixelHeight)
+      /. float_of_int(minimapLineHeight)
+      +. 0.5,
+    );
+  let minimapBottomLine =
+    min(minimapTopLine + minimapVisibleLines, editor.viewLines);
+  let minimap = {
+    topLine: minimapTopLine,
+    bottomLine: minimapBottomLine,
+    width: minimapWidthInCharacters,
+  };
+
+  {editorRanges: eRanges^, minimap};
 };
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
@@ -53,8 +87,11 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
          }
        );
 
-  let flatten = (prev: t, curr: t) => {
-    {editorRanges: List.append(prev.editorRanges, curr.editorRanges)};
+  let flatten = (prev: t, curr: individualRange) => {
+    {
+      editorRanges: [curr.editorRanges, ...prev.editorRanges],
+      minimaps: [curr.minimap, ...prev.minimaps],
+    };
   };
 
   editors
