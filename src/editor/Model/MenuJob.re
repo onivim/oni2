@@ -15,6 +15,7 @@ type pendingWork = {
   // This never gets filtered - it's persisted in case we need
   // the full set again
   explodedFilter: list(UChar.t),
+  shouldLower: bool,
   totalCommandCount: int,
   fullCommands: list(list(Actions.menuCommand)),
   // Commands to filter are commands we haven't looked at yet.
@@ -54,6 +55,7 @@ let initialPendingWork = {
   filter: "",
   fullCommands: [],
   explodedFilter: [],
+  shouldLower: false,
   commandsToFilter: [],
   totalCommandCount: 0,
 };
@@ -61,12 +63,6 @@ let initialPendingWork = {
 // Constants
 let iterationsPerFrame = 250;
 let maxItemsToFilter = 250;
-
-let getStringToTest = (v: Actions.menuCommand) =>
-  switch (v.category) {
-  | Some(c) => c ++ v.name
-  | None => v.name
-  };
 
 // Check whether the query matches...
 // Benchmarking showed that this was slightly faster than the recursive version
@@ -105,6 +101,7 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
   // - If the query is broader, we could keep our current filtered items anyway
 
   let newQueryEx = Zed_utf8.explode(newQuery);
+  let shouldLower = newQuery == String.lowercase_ascii(newQuery);
 
   let currentMatches = Utility.firstk(maxItemsToFilter, c.allFiltered);
 
@@ -116,17 +113,22 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
     let uiFilteredList = Array.to_list(uiFiltered);
     let uiFilteredNew =
       List.filter(
-        i => matches(newQueryEx, getStringToTest(i)),
+        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
         uiFilteredList,
       );
 
     let allFilteredNew =
       List.filter(
-        i => matches(newQueryEx, getStringToTest(i)),
+        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
         allFiltered,
       );
 
-    let newPendingWork = {...p, filter: newQuery, explodedFilter: newQueryEx};
+    let newPendingWork = {
+      ...p,
+      filter: newQuery,
+      explodedFilter: newQueryEx,
+      shouldLower,
+    };
 
     let newCompletedWork = {
       allFiltered: allFilteredNew,
@@ -182,7 +184,10 @@ let doWork = (p: pendingWork, c: completedWork) => {
         | [innerHd, ...innerTail] =>
           // Do a first filter pass to check if the item satisifies the regex
           let newCompleted =
-            matches(p.explodedFilter, getStringToTest(innerHd))
+            matches(
+              p.explodedFilter,
+              Filter.formatName(innerHd, p.shouldLower),
+            )
               ? [innerHd, ...c] : c;
           (
             false,
@@ -207,7 +212,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
     let uiFiltered =
       c
       |> Utility.firstk(maxItemsToFilter)
-      |> Filter.menu(p.filter)
+      |> Filter.rank(p.filter)
       |> Array.of_list;
     (completed, p, {allFiltered: c, uiFiltered});
   };
