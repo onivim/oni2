@@ -57,6 +57,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     | Model.Actions.EditorGroupAdd(_)
     | Model.Actions.AddSplit(_)
     | Model.Actions.RemoveSplit(_)
+    | Model.Actions.ViewSetActiveEditor(_)
     | Model.Actions.ViewCloseEditor(_) => {
       let visibleBuffers = Model.EditorVisibleRanges.getVisibleBuffers(state);
       let state = {
