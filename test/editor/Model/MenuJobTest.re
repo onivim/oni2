@@ -19,7 +19,28 @@ describe("MenuJob", ({describe, _}) => {
     ret;
   };
 
+  let runToCompletion = j => {
+    let job = ref(j);
+
+    while (!Job.isComplete(job^)) {
+      job := Job.tick(job^);
+    };
+
+    job^;
+  };
+
   describe("filtering", ({test, _}) => {
+    test("filtering should respect smart casing", ({expect, _}) => {
+      let job =
+        MenuJob.create()
+        |> Job.map(MenuJob.addItems([createItem("Preferences")]))
+        |> Job.map(MenuJob.updateQuery("pref"))
+        |> runToCompletion;
+
+      expect.int(Array.length(Job.getCompletedWork(job).uiFiltered)).toBe(
+        1,
+      );
+    });
     test("updating query should not reset items", ({expect, _}) => {
       let job =
         MenuJob.create()
@@ -96,16 +117,6 @@ describe("MenuJob", ({describe, _}) => {
       expect.string(head.name).toEqual("abcde");
       expect.string(second.name).toEqual("abcd");
     });
-
-    let runToCompletion = j => {
-      let job = ref(j);
-
-      while (!Job.isComplete(job^)) {
-        job := Job.tick(job^);
-      };
-
-      job^;
-    };
 
     test(
       "regresion test - already filterd items shouldn't get re-added",

@@ -129,10 +129,8 @@ let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   };
 };
 
-let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
-  let newScrollX = max(0., newScrollX);
-
-  let layout =
+let getLayout = (view: t, metrics: EditorMetrics.t) => {
+  let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~maxMinimapCharacters=view.minimapMaxColumnWidth,
       ~pixelWidth=float_of_int(metrics.pixelWidth),
@@ -143,6 +141,14 @@ let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
       ~bufferLineCount=view.viewLines,
       (),
     );
+
+  layout;
+};
+
+let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
+  let newScrollX = max(0., newScrollX);
+
+  let layout = getLayout(view, metrics);
 
   let availableScroll =
     max(
@@ -156,20 +162,9 @@ let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
 };
 
 let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
-  open EditorLayout;
-  let {bufferWidthInCharacters, bufferHeightInCharacters, _} =
-    EditorLayout.getLayout(
-      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
-      ~pixelWidth=float_of_int(metrics.pixelWidth),
-      ~pixelHeight=float_of_int(metrics.pixelHeight),
-      ~isMinimapShown=true,
-      ~characterWidth=metrics.characterWidth,
-      ~characterHeight=metrics.lineHeight,
-      ~bufferLineCount=view.viewLines,
-      (),
-    );
-
-  (bufferHeightInCharacters, bufferWidthInCharacters);
+  let layout = getLayout(view, metrics);
+  let ret = (layout.bufferHeightInCharacters, layout.bufferWidthInCharacters);
+  ret;
 };
 
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
