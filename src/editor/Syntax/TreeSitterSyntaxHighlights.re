@@ -105,7 +105,8 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
       bufferUpdate.lines,
   );
 
-  let (tree, newBaseline) = TreeSitter.ArrayParser.parse(parser, Some(delta), lines);
+  let (tree, newBaseline) = 
+  Log.perf("TreeSitter::parse", () => TreeSitter.ArrayParser.parse(parser, Some(delta), lines));
 
 
   let ret: t = {
@@ -115,7 +116,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
     lastBaseline: newBaseline,
     lastLines: lines,
   };
-  let i = ref(0);
+/*  let i = ref(0);
   let len = Array.length(lines);
   let range = TreeSitter.Types.Range.createi(
   ~startLine=0,
@@ -123,7 +124,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   ~endLine=10,
   ~endColumn=0,
   ()
-  );
+  );*/
 
   //let getTokenName = TreeSitter.Syntax.createArrayTokenNameResolver(lines);
   //let getTokenName = (_) => "";

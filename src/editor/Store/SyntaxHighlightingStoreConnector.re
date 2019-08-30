@@ -44,16 +44,9 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => None
     | Some(buffer) =>
-      switch (Model.Buffer.getMetadata(buffer).filePath) {
+      switch (Model.Buffer.getFileType(buffer)) {
       | None => None
-      | Some(v) =>
-        let extension = Path.extname(v);
-        switch (
-          Model.LanguageInfo.getScopeFromExtension(languageInfo, extension)
-        ) {
-        | None => None
-        | Some(scope) => Some(scope)
-        };
+      | Some(v) => Model.LanguageInfo.getScopeFromLanguage(languageInfo, v)
       }
     };
   };
