@@ -97,17 +97,19 @@ let getTokenColors = (v: t, line: int) => {
 };
 
 let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
-  let { parser, lastBaseline, _ } = v;
-  let delta = TreeSitter.ArrayParser.Delta.create(
-      lastBaseline, 
+  let {parser, lastBaseline, _} = v;
+  let delta =
+    TreeSitter.ArrayParser.Delta.create(
+      lastBaseline,
       Index.toInt0(bufferUpdate.startLine),
       Index.toInt0(bufferUpdate.endLine),
       bufferUpdate.lines,
-  );
+    );
 
-  let (tree, newBaseline) = 
-  Log.perf("TreeSitter::parse", () => TreeSitter.ArrayParser.parse(parser, Some(delta), lines));
-
+  let (tree, newBaseline) =
+    Log.perf("TreeSitter::parse", () =>
+      TreeSitter.ArrayParser.parse(parser, Some(delta), lines)
+    );
 
   let ret: t = {
     ...v,
@@ -116,25 +118,24 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
     lastBaseline: newBaseline,
     lastLines: lines,
   };
-/*  let i = ref(0);
-  let len = Array.length(lines);
-  let range = TreeSitter.Types.Range.createi(
-  ~startLine=0,
-  ~startColumn=0,
-  ~endLine=10,
-  ~endColumn=0,
-  ()
-  );*/
+  /*  let i = ref(0);
+      let len = Array.length(lines);
+      let range = TreeSitter.Types.Range.createi(
+      ~startLine=0,
+      ~startColumn=0,
+      ~endLine=10,
+      ~endColumn=0,
+      ()
+      );*/
 
   //let getTokenName = TreeSitter.Syntax.createArrayTokenNameResolver(lines);
   //let getTokenName = (_) => "";
   //let tokens = TreeSitter.Syntax.getTokens(getTokenName, range, TreeSitter.Tree.getRootNode(tree));
   // List.iter(t => print_endline(TreeSitter.Syntax.Token.show(t)), tokens);
   //while (i^  < min(10,len)) {
-    // print_endline ("Line " ++ string_of_int(i^) ++ ": " ++ Array.get(lines, i^));
-    //let _ = getTokenColors(ret, i^);
-    //incr(i);
+  // print_endline ("Line " ++ string_of_int(i^) ++ ": " ++ Array.get(lines, i^));
+  //let _ = getTokenColors(ret, i^);
+  //incr(i);
   //};
   ret;
 };
-

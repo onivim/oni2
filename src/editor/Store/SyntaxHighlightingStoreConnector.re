@@ -56,53 +56,61 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     if (action == Model.Actions.Tick) {
       if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
         //print_endline ("WORK");
-        default
+        default;
       } else {
         //print_endline ("NO WORK");
-        default
-      }
-    } else {
-    switch (action) {
-    // When the view changes, update our list of visible buffers,
-    // so we know which ones might have pending work!
-    | Model.Actions.EditorGroupAdd(_)
-    | Model.Actions.AddSplit(_)
-    | Model.Actions.RemoveSplit(_)
-    | Model.Actions.ViewSetActiveEditor(_)
-    | Model.Actions.BufferEnter(_)
-    | Model.Actions.ViewCloseEditor(_) => {
-      let visibleBuffers = Model.EditorVisibleRanges.getVisibleBuffers(state);
-      print_endline ("New visible buffers: ");
-      List.iter((b) => print_endline(" - " ++ string_of_int(b)), visibleBuffers);
-      let state = {
-      ...state,
-      syntaxHighlighting2: 
-          Model.SyntaxHighlighting2.updateVisibleBuffers(visibleBuffers, state.syntaxHighlighting2),
+        default;
       };
-      (state, Isolinear.Effect.none);
-    }
-    // When there is a buffer update, send it over to the syntax highlight
-    // strategy to handle the parsing.
-    | Model.Actions.BufferUpdate(bu) =>
-      let lines = getLines(state, bu.id);
-      let scope = getScopeForBuffer(state, bu.id);
-      switch (scope) {
-      | None => default
-      | Some(v) when !NativeSyntaxHighlights.canHandleScope(v) => default
-      | Some(v) =>
+    } else {
+      switch (action) {
+      // When the view changes, update our list of visible buffers,
+      // so we know which ones might have pending work!
+      | Model.Actions.EditorGroupAdd(_)
+      | Model.Actions.AddSplit(_)
+      | Model.Actions.RemoveSplit(_)
+      | Model.Actions.ViewSetActiveEditor(_)
+      | Model.Actions.BufferEnter(_)
+      | Model.Actions.ViewCloseEditor(_) =>
+        let visibleBuffers =
+          Model.EditorVisibleRanges.getVisibleBuffers(state);
+        print_endline("New visible buffers: ");
+        List.iter(
+          b => print_endline(" - " ++ string_of_int(b)),
+          visibleBuffers,
+        );
         let state = {
           ...state,
-          syntaxHighlighting2: Model.SyntaxHighlighting2.onBufferUpdate(
+          syntaxHighlighting2:
+            Model.SyntaxHighlighting2.updateVisibleBuffers(
+              visibleBuffers,
+              state.syntaxHighlighting2,
+            ),
+        };
+        (state, Isolinear.Effect.none);
+      // When there is a buffer update, send it over to the syntax highlight
+      // strategy to handle the parsing.
+      | Model.Actions.BufferUpdate(bu) =>
+        let lines = getLines(state, bu.id);
+        let scope = getScopeForBuffer(state, bu.id);
+        switch (scope) {
+        | None => default
+        | Some(v) when !NativeSyntaxHighlights.canHandleScope(v) => default
+        | Some(v) =>
+          let state = {
+            ...state,
+            syntaxHighlighting2:
+              Model.SyntaxHighlighting2.onBufferUpdate(
                 ~getTreeSitterScopeMapper,
                 ~bufferUpdate=bu,
                 ~lines,
                 ~theme=state.tokenTheme,
-                state.syntaxHighlighting2),
+                state.syntaxHighlighting2,
+              ),
+          };
+          (state, Isolinear.Effect.none);
         };
-        (state, Isolinear.Effect.none);
+      | _ => default
       };
-    | _ => default
-    };
     };
   };
 

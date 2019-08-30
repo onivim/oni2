@@ -14,12 +14,12 @@ let default = None;
 let canHandleScope = (scope: string) =>
   switch (scope) {
   | "source.json" => true
-/*  | "source.c" => true
-  | "source.cpp" => true */
+  /*  | "source.c" => true
+      | "source.cpp" => true */
   | _ => false
   };
 
-let anyPendingWork = (_t) => {
+let anyPendingWork = _t => {
   true;
 };
 
@@ -33,17 +33,15 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
   TreeSitter(ts);
 };
 
-let update = (
-  ~bufferUpdate: Core.Types.BufferUpdate.t,
-  ~lines: array(string),
-  v: t) => {
+let update =
+    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), v: t) => {
   switch (v) {
-  | TreeSitter(ts) => 
-    let newTs: TreeSitterSyntaxHighlights.t = 
-    TreeSitterSyntaxHighlights.update(~bufferUpdate, ~lines, ts);
+  | TreeSitter(ts) =>
+    let newTs: TreeSitterSyntaxHighlights.t =
+      TreeSitterSyntaxHighlights.update(~bufferUpdate, ~lines, ts);
     TreeSitter(newTs);
   | _ => v
-  }
+  };
 };
 
 let getTokensForLine = (v: t, line: int) => {
