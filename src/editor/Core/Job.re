@@ -30,13 +30,12 @@ let getCompletedWork = (v: t('p, 'c)) => v.completedWork;
 
 let getPendingWork = (v: t('p, 'c)) => v.pendingWork;
 
-let getProgress = (v: t('p, 'c)) => {
+let getProgress = (v: t('p, 'c)) =>
   if (v.isComplete) {
-    1.0
+    1.0;
   } else {
     v.progressReporter(v.pendingWork, v.completedWork);
   };
-};
 
 let create =
     (
@@ -108,8 +107,11 @@ let tick: t('p, 'c) => t('p, 'c) =
     Log.info(
       "[Job] "
       ++ v.name
-      ++ " ran " ++ string_of_int(iterations^) ++ " iterations for "
-      ++ string_of_float(endTime -. startTime) ++ "s",
+      ++ " ran "
+      ++ string_of_int(iterations^)
+      ++ " iterations for "
+      ++ string_of_float(endTime -. startTime)
+      ++ "s",
     );
 
     if (Log.isDebugLoggingEnabled()) {
