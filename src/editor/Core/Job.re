@@ -98,7 +98,7 @@ let tick: t('p, 'c) => t('p, 'c) =
     while (Time.to_float_seconds(Time.getTime())
            -. startTime < budget
            && !current^.isComplete) {
-      current := doWork(v);
+      current := doWork(current^);
       incr(iterations);
     };
 

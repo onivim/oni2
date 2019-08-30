@@ -30,11 +30,21 @@ type lineInfo('v) = {
 
   // v is the actual completed work from the job
   v: 'v
-  
 };
 
 type completedWork('v) = {
   lines: IntMap.t(lineInfo('v)),
+};
+
+type t('context, 'v) = Job.t(pendingWork('context), completedWork('v));
+
+let getCompletedWork = (line: int, v: t('context, 'v)) => {
+  let cw = Job.getCompletedWork(v);  
+
+  switch (IntMap.find_opt(line, cw.lines)) {
+  | None => None
+  | Some(lineInfo) => Some(lineInfo.v)
+  }
 };
 
 let showPendingWork = (~contextPrinter=(_) => "n/a", v: pendingWork('context)) => {
@@ -52,7 +62,6 @@ let showCompletedWork = (~workPrinter=(_) => "n/a", v: completedWork('v)) => {
   }, "", IntMap.bindings(v.lines));
 };
 
-type t('context, 'v) = Job.t(pendingWork('context), completedWork('v));
 
 let initialCompletedWork = {
   lines: IntMap.empty,
@@ -63,6 +72,23 @@ let initialPendingWork = (context) => {
   remainingRanges: [],
   version: -1,
   context,
+};
+
+let getContext = (v: t('context, 'v)) => {
+  Job.getPendingWork(v).context;
+};
+
+let updateContext = (context: 'context, v: t('context, 'v)) => {
+  let f = (pending, completed) => {
+    (false, {
+      ...pending,
+      context,
+    },
+    completed,
+    );
+  };
+
+  Job.map(f, v);
 };
 
 let notifyBufferUpdate = (version: int, v: t('context, 'v)) => {
@@ -82,7 +108,11 @@ let notifyBufferUpdate = (version: int, v: t('context, 'v)) => {
 
 let setVisibleRanges = (newRanges: list(list(Range.t)), v: t('context, 'v)) => {
   let f = (pending, completed) => {
-    (false, pending, completed);
+    (false, {
+    ...pending,
+    visibleRanges: newRanges,
+    remainingRanges: newRanges
+    }, completed);
   };
 
   Job.map(f, v);
@@ -122,10 +152,15 @@ let doWork = (f, p: pendingWork('context), c: completedWork('v)) => {
           })
           }
         }, c.lines);
+
+        let remainingRanges = switch(tail) {
+        | [] => outerTail
+        | t => [t, ...outerTail];
+        }
         
         let newPendingWork = {
           ...p,
-          remainingRanges: [tail, ...outerTail],
+          remainingRanges,
         };
 
         let newCompletedWork = {
@@ -147,7 +182,7 @@ let create = (~name, ~initialContext, ~f) => {
     ~completedWorkPrinter=showCompletedWork,
     ~name,
     ~initialCompletedWork,
-    ~budget=Milliseconds(1.),
+    ~budget=Milliseconds(2.),
     ~f=doWork(f),
     initialPendingWork(initialContext),
   );

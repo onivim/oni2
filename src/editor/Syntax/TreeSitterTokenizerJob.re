@@ -22,6 +22,21 @@ type output = list(ColorizedToken2.t);
 
 type t = BufferLineJob.t(context, output);
 
+let isComplete = Job.isComplete;
+
+let doWork = Job.doWork;
+
+let noTokens = [];
+let getTokensForLine = (line: int, v: t) => {
+  switch (BufferLineJob.getCompletedWork(line, v)) {
+  | Some(v) => v;
+  | None => noTokens;
+  }
+};
+
+
+let notifyBufferUpdate = BufferLineJob.notifyBufferUpdate;
+
 let doWork = (context: context, line: int) => {
   let rootNode = Tree.getRootNode(context.tree);
   let range =

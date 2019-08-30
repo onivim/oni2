@@ -55,8 +55,12 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     let default = (state, Isolinear.Effect.none);
     if (action == Model.Actions.Tick) {
       if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
-        //print_endline ("WORK");
-        default;
+        let syntaxHighlighting2 = Model.SyntaxHighlighting2.doPendingWork(state.syntaxHighlighting2);
+        print_endline ("doing work");
+        ({
+          ...state,
+          syntaxHighlighting2,
+        }, Isolinear.Effect.none);
       } else {
         //print_endline ("NO WORK");
         default;
