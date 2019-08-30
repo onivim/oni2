@@ -53,13 +53,27 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
+    if (action == Model.Actions.Tick) {
+      if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
+        //print_endline ("WORK");
+        default
+      } else {
+        //print_endline ("NO WORK");
+        default
+      }
+    } else {
     switch (action) {
+    // When the view changes, update our list of visible buffers,
+    // so we know which ones might have pending work!
     | Model.Actions.EditorGroupAdd(_)
     | Model.Actions.AddSplit(_)
     | Model.Actions.RemoveSplit(_)
     | Model.Actions.ViewSetActiveEditor(_)
+    | Model.Actions.BufferEnter(_)
     | Model.Actions.ViewCloseEditor(_) => {
       let visibleBuffers = Model.EditorVisibleRanges.getVisibleBuffers(state);
+      print_endline ("New visible buffers: ");
+      List.iter((b) => print_endline(" - " ++ string_of_int(b)), visibleBuffers);
       let state = {
       ...state,
       syntaxHighlighting2: 
@@ -67,6 +81,8 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       };
       (state, Isolinear.Effect.none);
     }
+    // When there is a buffer update, send it over to the syntax highlight
+    // strategy to handle the parsing.
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
       let scope = getScopeForBuffer(state, bu.id);
@@ -86,6 +102,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         (state, Isolinear.Effect.none);
       };
     | _ => default
+    };
     };
   };
 

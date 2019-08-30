@@ -15,7 +15,25 @@ type t = {
 let empty = {
  visibleBuffers: [],
  highlightsMap: IntMap.empty,
-}
+};
+
+let getVisibleHighlighters = (v: t) => {
+  v.visibleBuffers
+  |> List.map((b) => IntMap.find_opt(b, v.highlightsMap))
+  |> Utility.filterMap(v => v);
+};
+
+let getActiveHighlighters = (v: t) => {
+  getVisibleHighlighters(v)
+  |> List.filter(hl => NativeSyntaxHighlights.anyPendingWork(hl));
+};
+
+let anyPendingWork = (v: t) => {
+  switch (getActiveHighlighters(v)) {
+  | [] => false
+  | _ => true;
+  }
+};
 
 let updateVisibleBuffers = (buffers: list(int), v: t) => {
   ...v,

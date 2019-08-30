@@ -19,6 +19,10 @@ let canHandleScope = (scope: string) =>
   | _ => false
   };
 
+let anyPendingWork = (_t) => {
+  true;
+};
+
 let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
   let ts =
     TreeSitterSyntaxHighlights.create(
