@@ -64,7 +64,7 @@ let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getLines = (buffer: t) => buffer.lines;
 
-let isModified = (buffer: t) => buffer.metadata.modified;
+let isModified = (buffer: t) => buffer.modified;
 
 let getVersion = (buffer: t) => buffer.version;
 
