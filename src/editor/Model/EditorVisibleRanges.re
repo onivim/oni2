@@ -85,9 +85,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
            Some(tup);
          }
        )
-    |> List.filter(((_, editor)) => {
-        editor.bufferId == bufferId
-    });
+    |> List.filter(((_, editor)) => editor.bufferId == bufferId);
 
   let flatten = (prev: t, curr: individualRange) => {
     {
