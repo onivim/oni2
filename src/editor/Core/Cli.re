@@ -10,6 +10,8 @@ type t = {
   filesToOpen: list(string),
 };
 
+let create = (~folder, ~filesToOpen, ()) => {folder, filesToOpen};
+
 let newline = "\n";
 
 let show = (v: t) => {

@@ -25,12 +25,14 @@
 		"grammars": [{
 			"language": "c",
 			"scopeName": "source.c",
-			"path": "./syntaxes/c.tmLanguage.json"
+			"path": "./syntaxes/c.tmLanguage.json",
+			"treeSitterPath": "./syntaxes/tree-sitter-c.json"
 		},
 		{
 			"language": "cpp",
 			"scopeName": "source.cpp",
-			"path": "./syntaxes/cpp.tmLanguage.json"
+			"path": "./syntaxes/cpp.tmLanguage.json",
+			"treeSitterPath": "./syntaxes/tree-sitter-cpp.json"
 		},
 		{
 			"scopeName": "source.c.platform",

@@ -7,8 +7,26 @@
 open Oni_Core;
 open Oni_Model;
 
-let start = (~cliOptions: option(Cli.t)) => {
-  let configurationFileName = "configuration.json";
+let start =
+    (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
+  let defaultConfigurationFileName = "configuration.json";
+  let getConfigurationFile = () => {
+    let errorLoading = path => {
+      Log.error("Error loading configuration file at: " ++ path);
+      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName);
+    };
+
+    switch (configurationFilePath) {
+    | None => Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
+    | Some(v) =>
+      switch (Sys.file_exists(v)) {
+      | exception _ => errorLoading(v)
+      | false => errorLoading(v)
+      | true => Ok(v)
+      }
+    };
+  };
+
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _ =
       Vim.AutoCommands.onDispatch((cmd, buffer) => {
@@ -26,8 +44,7 @@ let start = (~cliOptions: option(Cli.t)) => {
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
-      let configPath =
-        Filesystem.getOrCreateConfigFile(configurationFileName);
+      let configPath = getConfigurationFile();
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString)) {
@@ -40,8 +57,7 @@ let start = (~cliOptions: option(Cli.t)) => {
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
-      let configPath =
-        Filesystem.getOrCreateConfigFile(configurationFileName);
+      let configPath = getConfigurationFile();
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {

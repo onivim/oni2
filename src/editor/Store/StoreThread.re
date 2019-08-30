@@ -37,6 +37,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
 
 let start =
     (
+      ~configurationFilePath=None,
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -61,7 +62,12 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(getState, getClipboardText, setClipboardText);
+    VimStoreConnector.start(
+      languageInfo,
+      getState,
+      getClipboardText,
+      setClipboardText,
+    );
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
@@ -77,7 +83,8 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
+  let configurationUpdater =
+    ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
@@ -122,7 +129,7 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}) =>
+      | Model.Actions.BufferEnter({id, _}, _) =>
         let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None

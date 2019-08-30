@@ -197,20 +197,24 @@ module TextMateConverter = {
       // First, try and see if a child selector matches
       let matches =
         switch (StringMap.find_opt(string_of_int(index), v.byChildSelectors)) {
-        | Some(trie) => Trie.matches(trie, path)
-        | None => []
+        | Some(trie) =>
+          switch (Trie.matches(trie, path)) {
+          | [] => None
+          | [hd, ..._] =>
+            let (_, matchers) = hd;
+
+            switch (matchers) {
+            | None => None
+            | Some(v) => Matcher.firstMatch(~token, v)
+            };
+          }
+        | None => None
         };
 
       switch (matches) {
       // If not... fall back to the default trie without child-selectors!
-      | [] => _getTextMateScopeForNonChildSelector(token, path, v)
-      | [hd, ..._] =>
-        let (_, matchers) = hd;
-
-        switch (matchers) {
-        | None => None
-        | Some(v) => Matcher.firstMatch(~token, v)
-        };
+      | None => _getTextMateScopeForNonChildSelector(token, path, v)
+      | Some(v) => Some(v)
       };
     };
 

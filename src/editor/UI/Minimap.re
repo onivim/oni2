@@ -118,7 +118,7 @@ let createElement =
                 evt => {
                   let scrollTo = getScrollTo(evt.mouseY);
                   let minimapLineSize =
-                    Constants.default.minimapCharacterWidth
+                    Constants.default.minimapLineSpacing
                     + Constants.default.minimapCharacterHeight;
                   let linesInMinimap = metrics.pixelHeight / minimapLineSize;
                   GlobalContext.current().editorScroll(
@@ -148,7 +148,7 @@ let createElement =
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
-        Constants.default.minimapCharacterWidth
+        Constants.default.minimapLineSpacing
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = metrics.pixelHeight / minimapLineSize;
       if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {

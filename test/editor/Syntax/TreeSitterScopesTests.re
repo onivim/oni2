@@ -52,6 +52,32 @@ describe("TreeSitterScopes", ({describe, _}) =>
         "meta.structure.dictionary.json string.quoted.double",
       );
     });
+    test("non-matching child rule doesn't break other rules", ({expect, _}) => {
+      let stringConverter =
+        TextMateConverter.create([
+          ("string", [Scope("string.quoted.double")]),
+          (
+            "pair > string:nth-child(0)",
+            [Scope("string.quoted.dictionary.key.json")],
+          ),
+        ]);
+
+      let scope1 =
+        TextMateConverter.getTextMateScope(
+          ~path=["string"],
+          stringConverter,
+        );
+
+      expect.string(scope1).toEqual("string.quoted.double");
+
+      let scope2 =
+        TextMateConverter.getTextMateScope(
+          ~path=["string", "array"],
+          stringConverter,
+        );
+
+      expect.string(scope2).toEqual("string.quoted.double");
+    });
     test("returns empty for non-existent scopes", ({expect, _}) => {
       let nonExistentScope =
         TextMateConverter.getTextMateScope(

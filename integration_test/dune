@@ -19,6 +19,7 @@
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
+           ZenModeSingleFileModeTest
            ZenModeSplitTest
     )
     (libraries
@@ -51,5 +52,6 @@
         TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
+        ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
         ))
