@@ -20,7 +20,7 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
   let v = {...v, metrics, editors};
 
   switch (action) {
-  | BufferEnter({id, _}) =>
+  | BufferEnter({id, _}, _) =>
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};

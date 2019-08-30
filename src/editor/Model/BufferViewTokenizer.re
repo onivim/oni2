@@ -106,7 +106,7 @@ let getCharacterPositionAndWidth =
     totalOffset := totalOffset^ - viewOffset;
   };
 
-  let width = i < len ? measure(ZedBundled.get(str, i)) : 1;
+  let width = i < len && i >= 0 ? measure(ZedBundled.get(str, i)) : 1;
 
   (totalOffset^, width);
 };
