@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Types;
 
 open Actions;
 
@@ -85,7 +84,10 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
            let tup = (eg.metrics, v);
            Some(tup);
          }
-       );
+       )
+    |> List.filter(((_, editor)) => {
+        editor.bufferId == bufferId
+    });
 
   let flatten = (prev: t, curr: individualRange) => {
     {
