@@ -68,18 +68,16 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       // When the view changes, update our list of visible buffers,
       // so we know which ones might have pending work!
       | Model.Actions.EditorGroupAdd(_)
+      | Model.Actions.EditorScroll(_)
+      | Model.Actions.EditorScrollToLine(_)
+      | Model.Actions.EditorScrollToColumn(_)
       | Model.Actions.AddSplit(_)
       | Model.Actions.RemoveSplit(_)
       | Model.Actions.ViewSetActiveEditor(_)
       | Model.Actions.BufferEnter(_)
       | Model.Actions.ViewCloseEditor(_) =>
         let visibleBuffers =
-          Model.EditorVisibleRanges.getVisibleBuffers(state);
-        print_endline("New visible buffers: ");
-        List.iter(
-          b => print_endline(" - " ++ string_of_int(b)),
-          visibleBuffers,
-        );
+          Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
         let state = {
           ...state,
           syntaxHighlighting2:

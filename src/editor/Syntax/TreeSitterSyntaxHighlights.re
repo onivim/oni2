@@ -57,6 +57,17 @@ let getTokenColors = (v: t, line: int) => {
   TreeSitterTokenizerJob.getTokensForLine(line, v.job);
 };
 
+let updateVisibleRanges = (ranges, v: t) => {
+  let job =
+    v.job
+    |> BufferLineJob.setVisibleRanges([ranges]);
+
+  {
+    ...v,
+    job
+  };
+};
+
 let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   let {parser, lastBaseline, _} = v;
   let delta =
@@ -72,18 +83,6 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
       TreeSitter.ArrayParser.parse(parser, Some(delta), lines)
     );
 
-  let ranges =
-    List.init(500, i => i)
-    |> List.map(i =>
-         Range.ofInt0(
-           ~startLine=i,
-           ~startCharacter=0,
-           ~endLine=i,
-           ~endCharacter=100,
-           (),
-         )
-       );
-
   let job =
     v.job
     |> TreeSitterTokenizerJob.notifyBufferUpdate(bufferUpdate.version)
@@ -91,8 +90,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
          ...BufferLineJob.getContext(v.job),
          tree,
          lines,
-       })
-    |> BufferLineJob.setVisibleRanges([ranges]);
+       });
 
   let ret: t = {
     ...v,
