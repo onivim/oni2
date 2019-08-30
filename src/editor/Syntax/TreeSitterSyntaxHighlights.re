@@ -58,14 +58,9 @@ let getTokenColors = (v: t, line: int) => {
 };
 
 let updateVisibleRanges = (ranges, v: t) => {
-  let job =
-    v.job
-    |> BufferLineJob.setVisibleRanges([ranges]);
+  let job = v.job |> BufferLineJob.setVisibleRanges([ranges]);
 
-  {
-    ...v,
-    job
-  };
+  {...v, job};
 };
 
 let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {

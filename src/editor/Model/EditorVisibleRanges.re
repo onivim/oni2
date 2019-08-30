@@ -2,15 +2,12 @@ open Oni_Core;
 
 open Actions;
 
-
 type individualRange = {
   editorRanges: list(Range.t),
   minimapRanges: list(Range.t),
 };
 
-type t = {
-  ranges: list(Range.t),
-};
+type t = {ranges: list(Range.t)};
 
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
@@ -54,17 +51,19 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   let minimapBottomLine =
     min(minimapTopLine + minimapVisibleLines, editor.viewLines);
 
-  let minimapRanges = List.init(minimapBottomLine - minimapTopLine, (i) => i + minimapTopLine)
-                      |> List.map((i) => Range.ofInt0(
-                      ~startLine=i,
-                      ~startCharacter=0,
-                      ~endLine=i,
-                      ~endCharacter=minimapWidthInCharacters + 1,
-                      ()
-                      ));
+  let minimapRanges =
+    List.init(minimapBottomLine - minimapTopLine, i => i + minimapTopLine)
+    |> List.map(i =>
+         Range.ofInt0(
+           ~startLine=i,
+           ~startCharacter=0,
+           ~endLine=i,
+           ~endCharacter=minimapWidthInCharacters + 1,
+           (),
+         )
+       );
 
-  
-  {editorRanges: eRanges^, minimapRanges: minimapRanges };
+  {editorRanges: eRanges^, minimapRanges};
 };
 
 let getVisibleBuffers = (state: State.t) => {
@@ -93,7 +92,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
     |> List.filter(((_, editor)) => editor.bufferId == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {
-    [curr.editorRanges, curr.minimapRanges, ...prev]
+    [curr.editorRanges, curr.minimapRanges, ...prev];
   };
 
   editors
@@ -107,7 +106,5 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
 let getVisibleBuffersAndRanges = (state: State.t) => {
   let visibleBuffers = getVisibleBuffers(state);
 
-  List.map((b) => {
-    (b, getVisibleRangesForBuffer(b, state))
-  }, visibleBuffers);
+  List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
 };

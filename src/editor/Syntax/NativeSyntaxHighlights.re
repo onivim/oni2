@@ -36,8 +36,9 @@ let doWork = v => {
 let updateVisibleRanges = (ranges, v) => {
   switch (v) {
   | None => v
-  | TreeSitter(ts) => TreeSitter(TreeSitterSyntaxHighlights.updateVisibleRanges(ranges, ts));
-  }
+  | TreeSitter(ts) =>
+    TreeSitter(TreeSitterSyntaxHighlights.updateVisibleRanges(ranges, ts))
+  };
 };
 
 let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {

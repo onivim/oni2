@@ -53,29 +53,35 @@ let doPendingWork = (v: t) => {
 };
 
 let updateVisibleBuffers = (buffers, v: t) => {
+  let visibleBuffers =
+    List.map(
+      v => {
+        let (id, _) = v;
+        id;
+      },
+      buffers,
+    );
 
-  let visibleBuffers = List.map(v => {
-    let (id, _) = v;
-    id;
-  }, buffers);
+  let highlightsMap =
+    List.fold_left(
+      (prev, curr) => {
+        let (bufferId, ranges) = curr;
+        IntMap.update(
+          bufferId,
+          oldV =>
+            switch (oldV) {
+            | None => None
+            | Some(v) =>
+              Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, v))
+            },
+          prev,
+        );
+      },
+      v.highlightsMap,
+      buffers,
+    );
 
-  let highlightsMap = 
-    List.fold_left((prev, curr) => {
-    let (bufferId, ranges) = curr;
-    IntMap.update(bufferId, (oldV) => {
-    switch(oldV) {
-    | None => None
-    | Some(v) => Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, v))
-    }
-    }, prev);
-
-    }, v.highlightsMap, buffers);
-  
-  {
-  ...v,
-  visibleBuffers,
-  highlightsMap,
-  }
+  {...v, visibleBuffers, highlightsMap};
 };
 
 let getTokensForLine = (v: t, bufferId: int, line: int) => {
