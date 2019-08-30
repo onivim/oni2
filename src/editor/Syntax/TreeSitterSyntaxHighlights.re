@@ -39,27 +39,17 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
 
   let scopeConverter = getTreeSitterScopeMapper();
 
-  let job = TreeSitterTokenizerJob.create({
-    tree,
-    lines,
-    theme,
-    scopeConverter,
-  });
+  let job =
+    TreeSitterTokenizerJob.create({tree, lines, theme, scopeConverter});
 
-  {
-    parser,
-    tree,
-    lastBaseline: baseline,
-    lastLines: lines,
-    job,
-  };
+  {parser, tree, lastBaseline: baseline, lastLines: lines, job};
 };
 
-let hasPendingWork = (v) => !TreeSitterTokenizerJob.isComplete(v.job);
-let doWork = (v) => {
-    switch(hasPendingWork(v)) {
+let hasPendingWork = v => !TreeSitterTokenizerJob.isComplete(v.job);
+let doWork = v => {
+  switch (hasPendingWork(v)) {
   | false => v
-  | true => { ...v, job: Job.tick(v.job) }
+  | true => {...v, job: Job.tick(v.job)}
   };
 };
 
@@ -82,24 +72,27 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
       TreeSitter.ArrayParser.parse(parser, Some(delta), lines)
     );
 
-  let ranges = List.init(500, (i) => (i))
-      |> List.map((i) => Range.ofInt0(
-          ~startLine=i, 
-          ~startCharacter=0, 
-          ~endLine=i, 
-          ~endCharacter=100, ()));
+  let ranges =
+    List.init(500, i => i)
+    |> List.map(i =>
+         Range.ofInt0(
+           ~startLine=i,
+           ~startCharacter=0,
+           ~endLine=i,
+           ~endCharacter=100,
+           (),
+         )
+       );
 
-  let job = 
+  let job =
     v.job
     |> TreeSitterTokenizerJob.notifyBufferUpdate(bufferUpdate.version)
     |> BufferLineJob.updateContext({
-      ...BufferLineJob.getContext(v.job),
-      tree,
-      lines,
-    })
-    |> BufferLineJob.setVisibleRanges([
-        ranges
-      ]);
+         ...BufferLineJob.getContext(v.job),
+         tree,
+         lines,
+       })
+    |> BufferLineJob.setVisibleRanges([ranges]);
 
   let ret: t = {
     ...v,

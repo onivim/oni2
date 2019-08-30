@@ -33,17 +33,23 @@ let anyPendingWork = (v: t) => {
 };
 
 let doPendingWork = (v: t) => {
-  let highlightsMap = List.fold_left((prev, curr) => {
-    IntMap.update(curr, (oldV) => switch (oldV) {
-    | None => None
-    | Some(v) => Some(NativeSyntaxHighlights.doWork(v))
-    }, prev);
-  }, v.highlightsMap, v.visibleBuffers);
+  let highlightsMap =
+    List.fold_left(
+      (prev, curr) =>
+        IntMap.update(
+          curr,
+          oldV =>
+            switch (oldV) {
+            | None => None
+            | Some(v) => Some(NativeSyntaxHighlights.doWork(v))
+            },
+          prev,
+        ),
+      v.highlightsMap,
+      v.visibleBuffers,
+    );
 
-  {
-    ...v,
-    highlightsMap
-  }
+  {...v, highlightsMap};
 };
 
 let updateVisibleBuffers = (buffers: list(int), v: t) => {

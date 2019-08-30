@@ -22,15 +22,15 @@ let canHandleScope = (scope: string) =>
 let anyPendingWork = v => {
   switch (v) {
   | None => false
-  | TreeSitter(ts) => TreeSitterSyntaxHighlights.hasPendingWork(ts);
-  }
+  | TreeSitter(ts) => TreeSitterSyntaxHighlights.hasPendingWork(ts)
+  };
 };
 
 let doWork = v => {
   switch (v) {
   | None => v
-  | TreeSitter(ts) => TreeSitter(TreeSitterSyntaxHighlights.doWork(ts));
-  }
+  | TreeSitter(ts) => TreeSitter(TreeSitterSyntaxHighlights.doWork(ts))
+  };
 };
 
 let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {

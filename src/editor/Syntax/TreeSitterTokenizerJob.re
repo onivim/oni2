@@ -1,9 +1,9 @@
-/* 
-  TreesitterTokenizerJob.re
+/*
+   TreesitterTokenizerJob.re
 
-  TreesitterTokenizerJob is a BufferLineJob that figures out tokens
-  per-line.
-*/
+   TreesitterTokenizerJob is a BufferLineJob that figures out tokens
+   per-line.
+ */
 
 open Oni_Core;
 open Oni_Core.Types;
@@ -29,11 +29,10 @@ let doWork = Job.doWork;
 let noTokens = [];
 let getTokensForLine = (line: int, v: t) => {
   switch (BufferLineJob.getCompletedWork(line, v)) {
-  | Some(v) => v;
-  | None => noTokens;
-  }
+  | Some(v) => v
+  | None => noTokens
+  };
 };
-
 
 let notifyBufferUpdate = BufferLineJob.notifyBufferUpdate;
 
@@ -46,36 +45,36 @@ let doWork = (context: context, line: int) => {
         Treesitter.Types.Position.create(~line=line + 1, ~column=0, ()),
       (),
     );
-  
+
   let getTokenName = Syntax.createArrayTokenNameResolver(context.lines);
   let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
 
-    List.map(
-      curr => {
-        let (p: Treesitter.Types.Position.t, _, scopes, token) = curr;
-        let tmScope =
-          TextMateConverter.getTextMateScope(
-            ~token,
-            ~path=scopes,
-            context.scopeConverter,
-          );
-        let resolvedColor = TextMateTheme.match(context.theme, tmScope);
-
-        //let line = p.line;
-        let col = p.column;
-
-        ColorizedToken2.create(
-          ~index=col,
-          ~backgroundColor=resolvedColor.background,
-          ~foregroundColor=resolvedColor.foreground,
-          (),
+  List.map(
+    curr => {
+      let (p: Treesitter.Types.Position.t, _, scopes, token) = curr;
+      let tmScope =
+        TextMateConverter.getTextMateScope(
+          ~token,
+          ~path=scopes,
+          context.scopeConverter,
         );
-      },
-      tokens,
-    );
+      let resolvedColor = TextMateTheme.match(context.theme, tmScope);
+
+      //let line = p.line;
+      let col = p.column;
+
+      ColorizedToken2.create(
+        ~index=col,
+        ~backgroundColor=resolvedColor.background,
+        ~foregroundColor=resolvedColor.foreground,
+        (),
+      );
+    },
+    tokens,
+  );
 };
 
-let create = (context) => {
+let create = context => {
   BufferLineJob.create(
     ~name="TreesitterTokenizerJob",
     ~initialContext=context,
