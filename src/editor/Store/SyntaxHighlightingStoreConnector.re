@@ -54,6 +54,18 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
+    | Model.Actions.EditorGroupAdd(_)
+    | Model.Actions.AddSplit(_)
+    | Model.Actions.RemoveSplit(_)
+    | Model.Actions.ViewCloseEditor(_) => {
+      let visibleBuffers = Model.EditorVisibleRanges.getVisibleBuffers(state);
+      let state = {
+      ...state,
+      syntaxHighlighting2: 
+          Model.SyntaxHighlighting2.updateVisibleBuffers(visibleBuffers, state.syntaxHighlighting2),
+      };
+      (state, Isolinear.Effect.none);
+    }
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
       let scope = getScopeForBuffer(state, bu.id);
@@ -63,22 +75,12 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       | Some(v) =>
         let state = {
           ...state,
-          syntaxHighlighting2:
-            Core.IntMap.update(
-              bu.id,
-              (current) => switch(current) {
-              | None => Some(NativeSyntaxHighlights.create(
-                ~theme=state.tokenTheme,
+          syntaxHighlighting2: Model.SyntaxHighlighting2.onBufferUpdate(
                 ~getTreeSitterScopeMapper,
-                lines,
-              ))
-              | Some(v) => Some(NativeSyntaxHighlights.update(
                 ~bufferUpdate=bu,
                 ~lines,
-                v))
-              },
-              state.syntaxHighlighting2,
-            ),
+                ~theme=state.tokenTheme,
+                state.syntaxHighlighting2),
         };
         (state, Isolinear.Effect.none);
       };

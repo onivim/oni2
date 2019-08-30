@@ -19,6 +19,7 @@ module EditorGroup = EditorGroup;
 module EditorGroups = EditorGroups;
 module EditorLayout = EditorLayout;
 module EditorMetrics = EditorMetrics;
+module EditorVisibleRanges = EditorVisibleRanges;
 module Filter = Filter;
 module KeyDisplayer = KeyDisplayer;
 module IconTheme = IconTheme;

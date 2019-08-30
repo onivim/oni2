@@ -20,6 +20,8 @@ type t = {
 
 let default: t = {editorRanges: [], minimaps: []};
 
+
+
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
@@ -68,6 +70,16 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   };
 
   {editorRanges: eRanges^, minimap};
+};
+
+let getVisibleBuffers = (state: State.t) => {
+    WindowTree.getSplits(state.windowManager.windowTree)
+    |> List.map((split: WindowTree.split) => split.editorGroupId)
+    |> Utility.filterMap(
+         EditorGroups.getEditorGroupById(state.editorGroups),
+       )
+    |> Utility.filterMap(EditorGroup.getActiveEditor)
+    |> List.map(e => e.bufferId);
 };
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
