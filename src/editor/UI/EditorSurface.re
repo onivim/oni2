@@ -588,8 +588,9 @@ let createElement =
                 );
 
               List.iter(renderRuler, rulers);
-              
-              let renderUnderline = (~offset=0., ~color=Colors.black, r: Range.t) =>
+
+              let renderUnderline =
+                  (~offset=0., ~color=Colors.black, r: Range.t) =>
                 {let halfOffset = offset /. 2.0
                  let line = Index.toZeroBasedInt(r.startPosition.line)
                  let start = Index.toZeroBasedInt(r.startPosition.character)
