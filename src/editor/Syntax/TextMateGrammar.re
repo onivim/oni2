@@ -12,7 +12,7 @@ module Capture = {
 
 module ScopeStack = {
   type scope = {
-    ruleName: string,
+    ruleName: option(string),
     scopeName: string,
     line: int,
   };
@@ -20,6 +20,10 @@ module ScopeStack = {
   type t = list(scope);
 
   let empty: t = [];
+
+  let ofToplevelScope = (scopeName) => {
+    [{ ruleName: None, scopeName, line: -1 }]
+  };
 };
 
 module Token = {
@@ -34,12 +38,13 @@ module Token = {
     ~scopeStack: ScopeStack.t,
     ()
   ) => {
-    let scopeNames = List.map((s) => s.scopeName, scopeStack);
+    let scopeNames = List.map((s: ScopeStack.scope) => s.scopeName, scopeStack);
 
-    {
-    position,
-    scopes: [scope, ...scopeStack]
+    let ret: t = {
+    position: position,
+    scopes: [scope, ...scopeNames]
     };
+    ret;
   };
 };
 
@@ -61,6 +66,7 @@ and match = {
 };
 
 type t = {
+  initialScopeStack: ScopeStack.t,
   scopeName: string,
   patterns: list(pattern),
   repository: StringMap.t(list(pattern)),
@@ -77,6 +83,7 @@ let create = (
   }, StringMap.empty, repository);
   
   let ret: t = {
+    initialScopeStack: ScopeStack.ofToplevelScope(scopeName),
     scopeName,
     patterns,
     repository: repositoryMap,
@@ -84,9 +91,9 @@ let create = (
   ret;
 };
 
-let tokenizeLine = (~lineNumber=0, ~scopes=ScopeStack.empty, ~grammar: t, line: string) => {
+let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
   ignore(lineNumber);
   ignore(scopes);
-  ignore(grammar);
-  ([], scopes);
+  ignore(line);
+  ([], grammar.initialScopeStack);
 };

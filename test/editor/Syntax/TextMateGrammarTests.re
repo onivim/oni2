@@ -37,7 +37,7 @@ describe("TextMateGrammar", ({describe, _}) => {
 
     test("simple tokens", ({expect, _}) => {
       let tokens = TextMateGrammar.tokenize(~grammar, "a")
-      expect.int(List.length(tokens)).toBe(1));
+      expect.int(List.length(tokens)).toBe(1);
 
       let firstToken = List.hd(tokens);
       expect.bool(firstToken.scopeStack == ["keyword.letter", "source.abc"]).toBe(true);
