@@ -10,6 +10,39 @@ module Capture = {
   type t = (int, string);
 };
 
+module ScopeStack = {
+  type scope = {
+    ruleName: string,
+    scopeName: string,
+    line: int,
+  };
+
+  type t = list(scope);
+
+  let empty: t = [];
+};
+
+module Token = {
+  type t = {
+    position: int,
+    scopes: list(string),
+  }
+
+  let create = (
+    ~position,
+    ~scope: string,
+    ~scopeStack: ScopeStack.t,
+    ()
+  ) => {
+    let scopeNames = List.map((s) => s.scopeName, scopeStack);
+
+    {
+    position,
+    scopes: [scope, ...scopeStack]
+    };
+  };
+};
+
 type pattern =
 | Include(string)
 | Match(match)
@@ -49,4 +82,11 @@ let create = (
     repository: repositoryMap,
   };
   ret;
+};
+
+let tokenizeLine = (~lineNumber=0, ~scopes=ScopeStack.empty, ~grammar: t, line: string) => {
+  ignore(lineNumber);
+  ignore(scopes);
+  ignore(grammar);
+  ([], scopes);
 };

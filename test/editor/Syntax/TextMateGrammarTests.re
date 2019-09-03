@@ -10,7 +10,7 @@ describe("TextMateGrammar", ({describe, _}) => {
    */
 
 
-  let _simpleGrammar = TextMateGrammar.create(
+  let grammar = TextMateGrammar.create(
     ~scopeName="source.abc",
     ~patterns=[Include("#expression")],
     ~repository=[
@@ -36,7 +36,12 @@ describe("TextMateGrammar", ({describe, _}) => {
   describe("tokenize", ({test, _}) => {
 
     test("simple tokens", ({expect, _}) => {
-      expect.int(0).toBe(1);
+      let tokens = TextMateGrammar.tokenize(~grammar, "a")
+      expect.int(List.length(tokens)).toBe(1));
+
+      let firstToken = List.hd(tokens);
+      expect.bool(firstToken.scopeStack == ["keyword.letter", "source.abc"]).toBe(true);
+      expect.int(firstToken.position).toBe(0);
     });
   });
 
