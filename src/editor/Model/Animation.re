@@ -16,8 +16,7 @@ type t = {
   isActive: bool,
   delay: float,
   duration: float,
-  repeat: float,
-
+  repeat: bool,
   // Actual runtime values
   startTime: float,
   remainingDelay: float,
@@ -26,9 +25,17 @@ type t = {
   iterations: int,
 };
 
-let create = (~enabled=true, ~isActive=true, ~duration=1.0,
-~repeat=false, ~delay=0., ~startTime, ()) => {
-  enabled, 
+let create =
+    (
+      ~enabled=true,
+      ~isActive=true,
+      ~duration=1.0,
+      ~repeat=false,
+      ~delay=0.,
+      ~startTime,
+      (),
+    ) => {
+  enabled,
   isActive,
   startTime,
   delay,
@@ -41,36 +48,27 @@ let create = (~enabled=true, ~isActive=true, ~duration=1.0,
 };
 
 let tick = (deltaT: float, v: t) => {
-  let newCurrentVal = v.currentVal +. (duration /. deltaT);
+  let newCurrentVal = v.currentVal +. v.duration /. deltaT;
 
-  if (v.currentDelay >= 0.) {
-      let newDelay = currentDelay - deltaT;
-      {
-        ...v,
-        // Should disperse remainder into next animation iterations...
-        remainingDelay: max(newDelay, 0.),
-      };
-  } else if (newCurrentVal >= 1.) {
-    if (repeat) {
-      {
-        ...v,
-        newCurrentVal: newCurrentVal -. 1.0,
-        iterations: v.iterations + 1,
-      };
-    } else {
-      {
-        ...v,
-        currentVal: 1.0,
-        isActive: false,
-      };
-    }
-  } else {
+  if (v.remainingDelay >= 0.) {
+    let newDelay = v.remainingDelay -. deltaT;
     {
       ...v,
-      currentVal: newCurrentVal,
+      // Should disperse remainder into next animation iterations...
+      remainingDelay: max(newDelay, 0.),
     };
-  }
+  } else if (newCurrentVal >= 1.) {
+    if (v.repeat) {
+      {...v, currentVal: newCurrentVal -. 1.0, iterations: v.iterations + 1};
+    } else {
+      {...v, currentVal: 1.0, isActive: false};
+    };
+  } else {
+    {...v, currentVal: newCurrentVal};
+  };
 };
+
+let isActive = (v: t) => v.isActive;
 
 let reset = (currentTime: float, v: t) => {
   {
@@ -78,21 +76,10 @@ let reset = (currentTime: float, v: t) => {
     startTime: currentTime,
     currentTime,
     currentVal: 0.,
-    currentDelay: 0.,
-  }
+    remainingDelay: 0.,
+  };
 };
 
-let start = (v: t) => {
-  let v = reset(v);
-  {
-    ...v,
-    isActive: true,
-  }
-}
-
 let stop = (v: t) => {
-  {
-    ...v,
-    isActive: false,
-  }
-}
+  {...v, isActive: false};
+};

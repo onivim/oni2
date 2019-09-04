@@ -104,7 +104,13 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {...state, filterJob: MenuJob.default, isOpen: false, selectedItem: 0, isLoading: false},
+        {
+          ...state,
+          filterJob: MenuJob.default,
+          isOpen: false,
+          selectedItem: 0,
+          isLoading: false,
+        },
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>

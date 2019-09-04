@@ -94,23 +94,36 @@ let createElement =
 
     let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
     let time = Time.getTime() |> Time.to_float_seconds;
-    let loadingSpinner = menu.isLoading ? 
-                  <View style=Style.[height(40), width(menuWidth)]>
-                  <Center>
-    <View style=Style.[transform(Transform.[RotateZ(Math.Angle.Radians(time))
-                  ])]>
-                  <Opacity opacity>
-                  <FontIcon 
+
+    let jobProgress = Job.getProgress(menu.filterJob);
+    print_endline ("PROGRESS: " ++ string_of_float(jobProgress));
+
+    let loadingSpinner =
+      menu.isLoading
+        ? <View style=Style.[height(40), width(menuWidth)]>
+            <Center>
+              <View
+                style=Style.[
+                  transform(Transform.[RotateY(Math.Angle.Radians(time *. 2.))]),
+                ]>
+                <Opacity opacity=1.0>
+                  <FontIcon
                     fontFamily={Constants.default.fontAwesomeSolidPath}
-                    icon={FontAwesome.circleNotch} 
+                    icon=FontAwesome.caretDown
                     fontSize=24
-                    backgroundColor=theme.editorBackground
-                    color=theme.oniNormalModeBackground
-                    />
-                  </Opacity>
-    </View>
-    </Center>
-    </View> : React.empty;
+                    backgroundColor={theme.editorBackground}
+                    color={theme.oniNormalModeBackground}
+                  />
+                </Opacity>
+              </View>
+            </Center>
+          </View>
+
+        : <Opacity opacity=0.5>
+          <View style=Style.[height(2), width(menuWidth)]>
+            <View style=Style.[height(2), width(1 + (int_of_float(float_of_int(menuWidth) *. jobProgress) - 1)), backgroundColor(theme.oniNormalModeBackground)] />
+          </View>
+          </Opacity>
 
     React.(
       hooks,
@@ -147,7 +160,7 @@ let createElement =
                       />;
                     }}
                   />
-                  {loadingSpinner}
+                  loadingSpinner
                 </View>
               </View>
             </OniBoxShadow>
