@@ -45,11 +45,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let notifyBufferUpdateEffect = (scope, _, bc) =>
     Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
-      if (!String.equal(scope, "source.json")) {
-        Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc);
-      } else {
-        ();
-      }
+      Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
 
   let clearHighlightsEffect = buffer =>
@@ -99,7 +95,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             ) {
             | None => default
             | Some(scope) =>
-              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(scope)
+              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(state.configuration, scope)
                 ? (state, Isolinear.Effect.none)
                 : (state, notifyBufferUpdateEffect(scope, buffer, bc))
             };

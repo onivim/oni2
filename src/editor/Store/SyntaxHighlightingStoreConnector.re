@@ -94,7 +94,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         let scope = getScopeForBuffer(state, bu.id);
         switch (scope) {
         | None => default
-        | Some(v) when !NativeSyntaxHighlights.canHandleScope(v) => default
+        | Some(v) when !NativeSyntaxHighlights.canHandleScope(state.configuration, v) => default
         | Some(v) =>
           let state = {
             ...state,

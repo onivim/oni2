@@ -3,7 +3,6 @@
  */
 
 module Core = Oni_Core;
-module Model = Oni_Model;
 
 type t =
   | TreeSitter(TreeSitterSyntaxHighlights.t)
@@ -11,13 +10,22 @@ type t =
 
 let default = None;
 
-let canHandleScope = (scope: string) =>
+let canHandleScope = (configuration: Core.Configuration.t, scope: string) => {
+
+  let treeSitterEnabled = Core.Configuration.getValue((c) => c.experimentalTreeSitter, configuration);
+
+  if (!treeSitterEnabled) {
+    false
+  } else {
+  
   switch (scope) {
   | "source.json" => true
   /*  | "source.c" => true
       | "source.cpp" => true */
   | _ => false
   };
+  }
+};
 
 let anyPendingWork = v => {
   switch (v) {
