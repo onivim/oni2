@@ -17,17 +17,19 @@ let ripgrepQueryFromFilter = s => {
 };
 
 let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
-  let getDisplayPath = (fullPath, dir) => {
-    let re = Str.regexp_string(dir ++ Filename.dir_sep);
+  let currentDirectory = Rench.Environment.getWorkingDirectory();
+  let re = Str.regexp_string(currentDirectory ++ Filename.dir_sep);
+
+  let getDisplayPath = (fullPath) => {
     Str.replace_first(re, "", fullPath);
   };
 
   let stringToCommand:
-    (Model.LanguageInfo.t, Model.IconTheme.t, string, string) =>
+    (Model.LanguageInfo.t, Model.IconTheme.t, string) =>
     Model.Actions.menuCommand =
-    (languageInfo, iconTheme, parentDir, fullPath) => {
+    (languageInfo, iconTheme, fullPath) => {
       category: None,
-      name: getDisplayPath(fullPath, parentDir),
+      name: getDisplayPath(fullPath),
       command: () => Model.Actions.OpenFileByPath(fullPath, None),
       icon: Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
     };
@@ -35,14 +37,13 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
   let createQuickOpen =
       (languageInfo, iconTheme, setItems, _onQueryChanged, setLoading) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
-    let currentDirectory = Rench.Environment.getWorkingDirectory();
 
     setLoading(true);
 
     let search = () => {
       setLoading(true);
       rg.search(
-        stringToCommand(languageInfo, iconTheme, currentDirectory),
+        stringToCommand(languageInfo, iconTheme),
         currentDirectory,
         items => setItems(items),
         () => {

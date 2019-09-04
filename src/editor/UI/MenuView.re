@@ -107,13 +107,7 @@ let createElement =
                   transform(Transform.[RotateY(Math.Angle.Radians(time *. 2.))]),
                 ]>
                 <Opacity opacity=1.0>
-                  <FontIcon
-                    fontFamily={Constants.default.fontAwesomeSolidPath}
-                    icon=FontAwesome.caretDown
-                    fontSize=24
-                    backgroundColor={theme.editorBackground}
-                    color={theme.oniNormalModeBackground}
-                  />
+                  <Container width=16 height=16 color={theme.oniNormalModeBackground} />
                 </Opacity>
               </View>
             </Center>
