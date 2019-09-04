@@ -33,23 +33,6 @@ module ScopeStack = {
   };
 };
 
-module Token = {
-  type t = {
-    position: int,
-    length: int,
-    scopes: list(string),
-  };
-
-  let create =
-      (~position, ~length, ~scope: string, ~scopeStack: ScopeStack.t, ()) => {
-    let scopeNames =
-      List.map((s: ScopeStack.scope) => s.scopeName, scopeStack);
-
-    let ret: t = {length, position, scopes: [scope, ...scopeNames]};
-    ret;
-  };
-};
-
 type pattern =
   | Include(string)
   | Match(match)
@@ -79,7 +62,7 @@ type t = {
 };
 
 let getScope = (scope: string, v: t) =>
-  StringMap.find_opt(scope, v.repository)
+  StringMap.find_opt(scope, v.repository);
 
 let create =
     (
@@ -137,14 +120,16 @@ module Rule = {
   let ofMatchRangeBegin = (matchRange: matchRange) => {
     switch (matchRange.beginRegex) {
     | Error(_) => None
-    | Ok(v) => Some({
-      regex: v,
-      name: matchRange.matchScopeName,
-      captures: matchRange.beginCaptures,
-      popStack: false,
-      pushStack: Some((matchRange.matchScopeName, matchRange.matchRuleName))
-    })
-    }
+    | Ok(v) =>
+      Some({
+        regex: v,
+        name: matchRange.matchScopeName,
+        captures: matchRange.beginCaptures,
+        popStack: false,
+        pushStack:
+          Some((matchRange.matchScopeName, matchRange.matchRuleName)),
+      })
+    };
   };
 
   let rec ofPatterns = (patterns, grammar) => {
@@ -165,15 +150,70 @@ module Rule = {
         | None => prev
         | Some(v) => [v, ...prev]
         }
-      | MatchRange(matchRange) => switch (ofMatchRangeBegin(matchRange)) {
+      | MatchRange(matchRange) =>
+        switch (ofMatchRangeBegin(matchRange)) {
         | None => prev
         | Some(v) => [v, ...prev]
-      }
+        }
       };
     };
 
     let patterns = List.fold_left(f, [], patterns);
     patterns;
+  };
+};
+
+module Token = {
+  type t = {
+    position: int,
+    length: int,
+    scopes: list(string),
+  };
+
+  let create =
+      (~position, ~length, ~scope: string, ~scopeStack: ScopeStack.t, ()) => {
+    let scopeNames =
+      List.map((s: ScopeStack.scope) => s.scopeName, scopeStack);
+
+    let ret: t = {length, position, scopes: [scope, ...scopeNames]};
+    ret;
+  };
+
+  let ofMatch =
+      (
+        ~matches: array(OnigRegExp.Match.t),
+        ~rule: Rule.t,
+        ~scopeStack: ScopeStack.t,
+        (),
+      ) => {
+    switch (rule.captures) {
+    | [] =>
+      let match = matches[0];
+      [
+        create(
+          ~position=match.startPos,
+          ~length=match.length,
+          ~scope=rule.name,
+          ~scopeStack,
+          (),
+        ),
+      ];
+    | v =>
+      List.map(
+        cap => {
+          let (idx, scope) = cap;
+          let match = matches[idx];
+          create(
+            ~position=match.startPos,
+            ~length=match.length,
+            ~scope,
+            ~scopeStack,
+            (),
+          );
+        },
+        v,
+      )
+    };
   };
 };
 
@@ -255,16 +295,9 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
       open Oniguruma.OnigRegExp.Match;
       let (_, matches, rule) = v;
       if (Array.length(matches) > 0) {
-        let match = matches[0];
         tokens :=
           [
-            Token.create(
-              ~position=match.startPos,
-              ~length=match.length,
-              ~scope=rule.name,
-              ~scopeStack=scopeStack^,
-              (),
-            ),
+            Token.ofMatch(~matches, ~rule, ~scopeStack=scopeStack^, ()),
             ...tokens^,
           ];
 
@@ -275,7 +308,8 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
     };
   };
 
-  let retTokens = List.rev(tokens^);
+  let retTokens = tokens^ |> List.rev |> List.flatten;
+
   let scopeStack = scopeStack^;
 
   (retTokens, scopeStack);

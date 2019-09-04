@@ -19,6 +19,7 @@ describe("TextMateGrammar", ({describe, _}) => {
           [
             Include("#letter"),
             Include("#word"),
+            Include("#capture-groups"),
             Include("#paren-expression"),
           ],
         ),
@@ -39,6 +40,19 @@ describe("TextMateGrammar", ({describe, _}) => {
               matchRegex: OnigRegExp.create("def"),
               matchName: "keyword.word",
               captures: [],
+            }),
+          ],
+        ),
+        (
+          "capture-groups",
+          [
+            Match({
+              matchRegex: OnigRegExp.create("(@selector\\()(.*?)(\\))"),
+              matchName: "",
+              captures: [
+                (1, "storage.type.objc"),
+                (3, "storage.type.objc"),
+              ],
             }),
           ],
         ),
@@ -107,6 +121,26 @@ describe("TextMateGrammar", ({describe, _}) => {
       );
       expect.int(thirdToken.position).toBe(6);
       expect.int(thirdToken.length).toBe(1);
+    });
+    test("capture groups", ({expect, _}) => {
+      let (tokens, _) =
+        TextMateGrammar.tokenize(~grammar, "@selector(windowWillClose:)");
+      expect.int(List.length(tokens)).toBe(2);
+      let firstToken = List.hd(tokens);
+      expect.bool(firstToken.scopes == ["storage.type.objc", "source.abc"]).
+        toBe(
+        true,
+      );
+      expect.int(firstToken.position).toBe(0);
+      expect.int(firstToken.length).toBe(10);
+
+      let secondToken = List.nth(tokens, 1);
+      expect.bool(secondToken.scopes == ["storage.type.objc", "source.abc"]).
+        toBe(
+        true,
+      );
+      expect.int(secondToken.position).toBe(26);
+      expect.int(secondToken.length).toBe(1);
     });
   });
 });
