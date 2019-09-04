@@ -36,11 +36,13 @@ module ScopeStack = {
 module Token = {
   type t = {
     position: int,
+    length: int,
     scopes: list(string),
   }
 
   let create = (
     ~position,
+    ~length,
     ~scope: string,
     ~scopeStack: ScopeStack.t,
     ()
@@ -48,6 +50,7 @@ module Token = {
     let scopeNames = List.map((s: ScopeStack.scope) => s.scopeName, scopeStack);
 
     let ret: t = {
+    length: length,
     position: position,
     scopes: [scope, ...scopeNames]
     };
@@ -109,6 +112,10 @@ module Rule {
     pushStack: option((string, string))
   }
 
+  let show = (v: t) => {
+    "Rule " ++ v.name;
+  }
+
   let ofMatch = (match: match) => {
     switch(match.matchRegex) {
     | Error(_) => None
@@ -125,9 +132,15 @@ module Rule {
   let rec ofPatterns = (patterns, grammar) => {
     let f = (prev, pattern) => {
     switch (pattern) {
-    | Include(inc) => switch(getScope(inc, grammar)) {
-    | None => prev
-    | Some(v) => ofPatterns(v, grammar);
+    | Include(inc) => 
+      prerr_endline ("Rule::ofPatterns - processing Include: " ++ inc);
+    switch(getScope(inc, grammar)) {
+    | None => 
+      prerr_endline ("Rule::ofPatterns - inc not found");
+      prev
+    | Some(v) => 
+      prerr_endline ("Rule::ofPatterns - found!");
+      List.concat([ofPatterns(v, grammar), prev])
     }
     | Match(match) => switch(ofMatch(match)) {
       | None => prev
@@ -156,15 +169,79 @@ let _getPatternsToMatchAgainst = (ruleName: option(string), grammar: t) => {
   patterns;
 };
 
+let _getBestRule = (rules: list(Rule.t), str, position) => {
+  List.fold_left((prev, curr: Rule.t) => {
+      let matches = OnigRegExp.search(str, position, curr.regex);
+      let matchPos = Array.length(matches) > 0 ? matches[0].startPos : -1;
+
+      switch (prev) {
+      | None when matchPos == -1 => None
+      | None => Some((matchPos, matches, curr))
+      | Some(v) => {
+        let (oldMatchPos, _, _) = v;
+        if (matchPos < oldMatchPos && matchPos >= position) {
+          Some((matchPos, matches, curr))
+        } else {
+          Some(v)
+        }
+      }
+      };
+  }, None, rules);
+};
+
 let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
   ignore(lineNumber);
   ignore(scopes);
   ignore(line);
   
-  let _patterns = switch (scopes) {
+  let patterns = switch (scopes) {
   | None => grammar.patterns
   | Some(v) => _getPatternsToMatchAgainst(ScopeStack.activeRule(v), grammar)
   };
 
-  ([Token.create(~position=0, ~scope="keyword.letter", ~scopeStack=grammar.initialScopeStack, ())], grammar.initialScopeStack);
+  prerr_endline ("PATTERNS: " ++ string_of_int(List.length(patterns)));
+
+  let rules = Rule.ofPatterns(patterns, grammar);
+  
+  prerr_endline ("RULES: " ++ string_of_int(List.length(patterns)));
+
+  List.iter((r) => prerr_endline("!!" ++ Rule.show(r) ++ "!"), rules);
+  prerr_endline ("---");
+
+  let idx = ref(0);
+  let len = String.length(line);
+
+  let tokens = ref([]);
+
+  let scopeStack = ref(grammar.initialScopeStack);
+
+  while (idx^ < len) {
+    let i = idx^;
+
+    let bestRule = _getBestRule(rules, line, i);
+
+    switch (bestRule) {
+    // No matching rule... just increment position and try again
+    | None => incr(idx)
+    // Got a matching rule!
+    | Some(v) =>
+      open Oniguruma.OnigRegExp.Match;
+      let (_, matches, rule) = v;
+      if (Array.length(matches) > 0) {
+        let match = matches[0];
+        tokens := [Token.create(~position=match.startPos, ~length=match.length, ~scope=rule.name, ~scopeStack=scopeStack^, ()), ...tokens^];
+      
+        idx := matches[0].endPos;
+      } else {
+        incr(idx);
+      }
+    }
+
+  }
+
+  let retTokens = List.rev(tokens^);
+  let scopeStack = scopeStack^;
+  
+  (retTokens, scopeStack)
+
 };
