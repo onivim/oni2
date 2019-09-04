@@ -36,11 +36,11 @@ module ScopeStack = {
     switch (v) {
     | [] => v
     | [_, ...tail] => tail
-    }
+    };
   };
 
   let push = (~ruleName: string, ~scopeName: string, ~line: int, v: t) => {
-    [{ruleName: Some(ruleName), scopeName, line }, ...v]
+    [{ruleName: Some(ruleName), scopeName, line}, ...v];
   };
 };
 
@@ -79,8 +79,8 @@ let getFirstRangeScope = (scope: string, v: t) => {
   switch (getScope(scope, v)) {
   | Some([MatchRange(matchRange), ..._]) => Some(matchRange)
   | _ => None
-  }
-}
+  };
+};
 
 let create =
     (
@@ -160,8 +160,8 @@ module Rule = {
         captures: matchRange.endCaptures,
         popStack: true,
         pushStack: None,
-    });
-  };
+      })
+    };
   };
 
   let rec ofPatterns = (patterns, grammar, scopeStack) => {
@@ -191,20 +191,20 @@ module Rule = {
     };
 
     let patterns = List.fold_left(f, [], patterns);
-    
+
     // If there is an active 'begin'/'end' rule - we need to grab the original range too
-    switch(ScopeStack.activeRule(scopeStack))
-    {
+    switch (ScopeStack.activeRule(scopeStack)) {
     | None => patterns
-    | Some(v) => switch(getFirstRangeScope(v, grammar)) {
+    | Some(v) =>
+      switch (getFirstRangeScope(v, grammar)) {
       | None => patterns
-      | Some(matchRange) => switch(ofMatchRangeEnd(matchRange)) {
-      | None => patterns
-      | Some(v) => {
-          prerr_endline ("Got an end rule to apply!");
-          [v, ...patterns]
+      | Some(matchRange) =>
+        switch (ofMatchRangeEnd(matchRange)) {
+        | None => patterns
+        | Some(v) =>
+          prerr_endline("Got an end rule to apply!");
+          [v, ...patterns];
         }
-      }
       }
     };
   };
@@ -227,9 +227,16 @@ module Token = {
   };
 
   let show = (v: t) => {
-    let scopes = List.fold_left((prev, curr) => prev ++ "." ++ curr, "", v.scopes);
-    "Token(" ++ string_of_int(v.position) ++ "," ++ string_of_int(v.position + v.length) ++ ":" ++ scopes ++ ")"
-  }
+    let scopes =
+      List.fold_left((prev, curr) => prev ++ "." ++ curr, "", v.scopes);
+    "Token("
+    ++ string_of_int(v.position)
+    ++ ","
+    ++ string_of_int(v.position + v.length)
+    ++ ":"
+    ++ scopes
+    ++ ")";
+  };
 
   let ofMatch =
       (
@@ -316,26 +323,30 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
 
   let tokens = ref([]);
 
-  let initialScope = switch(scopes) {
-  | None => grammar.initialScopeStack
-  | Some(v) => v
-  }
+  let initialScope =
+    switch (scopes) {
+    | None => grammar.initialScopeStack
+    | Some(v) => v
+    };
   let scopeStack = ref(initialScope);
 
   while (idx^ < len) {
     let i = idx^;
 
     let currentScopeStack = scopeStack^;
-    let patterns = _getPatternsToMatchAgainst(ScopeStack.activeRule(currentScopeStack), grammar)
+    let patterns =
+      _getPatternsToMatchAgainst(
+        ScopeStack.activeRule(currentScopeStack),
+        grammar,
+      );
 
     let rules = Rule.ofPatterns(patterns, grammar, currentScopeStack);
     let bestRule = _getBestRule(rules, line, i);
-  
-  prerr_endline("PATTERNS: " ++ string_of_int(List.length(patterns)));
-  prerr_endline("RULES: " ++ string_of_int(List.length(patterns)));
-  List.iter(r => prerr_endline("!!" ++ Rule.show(r) ++ "!"), rules);
-  prerr_endline("---");
 
+    prerr_endline("PATTERNS: " ++ string_of_int(List.length(patterns)));
+    prerr_endline("RULES: " ++ string_of_int(List.length(patterns)));
+    List.iter(r => prerr_endline("!!" ++ Rule.show(r) ++ "!"), rules);
+    prerr_endline("---");
 
     switch (bestRule) {
     // No matching rule... just increment position and try again
@@ -348,18 +359,25 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
         switch (rule.pushStack) {
         // If there is nothing to push... nothing to worry about
         | None => ()
-        | Some((scopeName, ruleName)) => scopeStack := ScopeStack.push(~ruleName, ~scopeName, ~line=lineNumber, scopeStack^);
+        | Some((scopeName, ruleName)) =>
+          scopeStack :=
+            ScopeStack.push(
+              ~ruleName,
+              ~scopeName,
+              ~line=lineNumber,
+              scopeStack^,
+            )
         };
-        
+
         tokens :=
           [
             Token.ofMatch(~matches, ~rule, ~scopeStack=scopeStack^, ()),
             ...tokens^,
           ];
-        
+
         if (rule.popStack) {
-          scopeStack := ScopeStack.pop(scopeStack^)
-        }
+          scopeStack := ScopeStack.pop(scopeStack^);
+        };
 
         idx := matches[0].endPos;
       } else {

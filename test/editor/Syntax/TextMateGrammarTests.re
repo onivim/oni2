@@ -77,89 +77,144 @@ describe("TextMateGrammar", ({describe, _}) => {
   describe("tokenize", ({test, describe, _}) => {
     describe("begin / end rules", ({test, _}) => {
       test("multi-line begin/end", ({expect, _}) => {
-        let (line1Token, line1Scope) = TextMateGrammar.tokenize(~grammar, "(");
-        let (line2Token, line2Scope) = TextMateGrammar.tokenize(~grammar, ~scopes=Some(line1Scope), "a");
-        let (line3Token, _) = TextMateGrammar.tokenize(~grammar, ~scopes=Some(line2Scope), ")");
+        let (line1Token, line1Scope) =
+          TextMateGrammar.tokenize(~grammar, "(");
+        let (line2Token, line2Scope) =
+          TextMateGrammar.tokenize(~grammar, ~scopes=Some(line1Scope), "a");
+        let (line3Token, _) =
+          TextMateGrammar.tokenize(~grammar, ~scopes=Some(line2Scope), ")");
         expect.int(List.length(line1Token)).toBe(1);
         expect.int(List.length(line2Token)).toBe(1);
         expect.int(List.length(line3Token)).toBe(1);
-        
+
         let firstToken = List.hd(line1Token);
-        expect.bool(firstToken.scopes == ["punctuation.paren.open", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          firstToken.scopes
+          == ["punctuation.paren.open", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(firstToken.position).toBe(0);
         expect.int(firstToken.length).toBe(1);
 
         let secondToken = List.hd(line2Token);
-        expect.bool(secondToken.scopes == ["keyword.letter", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          secondToken.scopes
+          == ["keyword.letter", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(secondToken.position).toBe(0);
         expect.int(secondToken.length).toBe(1);
 
         let thirdToken = List.hd(line3Token);
-        expect.bool(thirdToken.scopes == ["punctuation.paren.close", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          thirdToken.scopes
+          == ["punctuation.paren.close", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(thirdToken.position).toBe(0);
         expect.int(thirdToken.length).toBe(1);
-        prerr_endline ("!!! END");
-    });
+        prerr_endline("!!! END");
+      });
       test("nested begin/end", ({expect, _}) => {
-        prerr_endline ("!!! BEGIN");
+        prerr_endline("!!! BEGIN");
         let (tokens, _) = TextMateGrammar.tokenize(~grammar, "((a))");
-        List.iter(t => prerr_endline(TextMateGrammar.Token.show(t)), tokens);
+        List.iter(
+          t => prerr_endline(TextMateGrammar.Token.show(t)),
+          tokens,
+        );
         expect.int(List.length(tokens)).toBe(5);
         let firstToken = List.hd(tokens);
-        expect.bool(firstToken.scopes == ["punctuation.paren.open", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          firstToken.scopes
+          == ["punctuation.paren.open", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(firstToken.position).toBe(0);
         expect.int(firstToken.length).toBe(1);
 
         let secondToken = List.nth(tokens, 1);
-        expect.bool(secondToken.scopes == ["punctuation.paren.open", "expression.group", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          secondToken.scopes
+          == [
+               "punctuation.paren.open",
+               "expression.group",
+               "expression.group",
+               "source.abc",
+             ],
+        ).
+          toBe(
           true,
         );
         expect.int(secondToken.position).toBe(1);
         expect.int(secondToken.length).toBe(1);
 
         let thirdToken = List.nth(tokens, 2);
-        expect.bool(thirdToken.scopes == ["keyword.letter", "expression.group", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          thirdToken.scopes
+          == [
+               "keyword.letter",
+               "expression.group",
+               "expression.group",
+               "source.abc",
+             ],
+        ).
+          toBe(
           true,
         );
         expect.int(thirdToken.position).toBe(2);
         expect.int(thirdToken.length).toBe(1);
-        prerr_endline ("!!! END");
-    });
+        prerr_endline("!!! END");
+      });
       test("simple begin/end", ({expect, _}) => {
-        prerr_endline ("!!! BEGIN");
+        prerr_endline("!!! BEGIN");
         let (tokens, _) = TextMateGrammar.tokenize(~grammar, "(a)");
-        List.iter(t => prerr_endline(TextMateGrammar.Token.show(t)), tokens);
+        List.iter(
+          t => prerr_endline(TextMateGrammar.Token.show(t)),
+          tokens,
+        );
         expect.int(List.length(tokens)).toBe(3);
         let firstToken = List.hd(tokens);
-        expect.bool(firstToken.scopes == ["punctuation.paren.open", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          firstToken.scopes
+          == ["punctuation.paren.open", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(firstToken.position).toBe(0);
         expect.int(firstToken.length).toBe(1);
 
         let secondToken = List.nth(tokens, 1);
-        expect.bool(secondToken.scopes == ["keyword.letter", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          secondToken.scopes
+          == ["keyword.letter", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(secondToken.position).toBe(1);
         expect.int(secondToken.length).toBe(1);
 
         let thirdToken = List.nth(tokens, 2);
-        expect.bool(thirdToken.scopes == ["punctuation.paren.close", "expression.group", "source.abc"]).toBe(
+        expect.bool(
+          thirdToken.scopes
+          == ["punctuation.paren.close", "expression.group", "source.abc"],
+        ).
+          toBe(
           true,
         );
         expect.int(thirdToken.position).toBe(2);
         expect.int(thirdToken.length).toBe(1);
-        prerr_endline ("!!! END");
-    });
+        prerr_endline("!!! END");
+      });
     });
     test("simple letter token", ({expect, _}) => {
       let (tokens, _) = TextMateGrammar.tokenize(~grammar, "a");
