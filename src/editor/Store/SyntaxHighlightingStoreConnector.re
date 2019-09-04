@@ -39,6 +39,13 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     | Some(v) => Model.Buffer.getLines(v)
     };
   };
+  
+  let getVersion = (state: Model.State.t, id: int) => {
+    switch (Model.Buffers.getBuffer(id, state.buffers)) {
+    | None => -1
+    | Some(v) => Model.Buffer.getVersion(v)
+    };
+  };
 
   let getScopeForBuffer = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
@@ -51,16 +58,18 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     };
   };
 
+  let isVersionValid = (updateVersion, bufferVersion) => {
+    bufferVersion != -1 && updateVersion == bufferVersion
+  };
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     if (action == Model.Actions.Tick) {
       if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
         let syntaxHighlighting2 =
           Model.SyntaxHighlighting2.doPendingWork(state.syntaxHighlighting2);
-        print_endline("doing work");
         ({...state, syntaxHighlighting2}, Isolinear.Effect.none);
       } else {
-        //print_endline ("NO WORK");
         default;
       };
     } else {
@@ -92,10 +101,11 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       | Model.Actions.BufferUpdate(bu) =>
         let lines = getLines(state, bu.id);
         let scope = getScopeForBuffer(state, bu.id);
+        let version = getVersion(state, bu.id);
         switch (scope) {
         | None => default
         | Some(v) when !NativeSyntaxHighlights.canHandleScope(state.configuration, v) => default
-        | Some(v) =>
+        | Some(v) when isVersionValid(bu.version, version) =>
           let state = {
             ...state,
             syntaxHighlighting2:
@@ -108,6 +118,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               ),
           };
           (state, Isolinear.Effect.none);
+        | Some(_) => default
         };
       | _ => default
       };
