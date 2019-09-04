@@ -225,7 +225,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
-    "reason-tree-sitter": "link:../reason-tree-sitter"
+    "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
