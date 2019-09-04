@@ -98,7 +98,10 @@ describe("TreeSitterScopes", ({describe, _}) =>
     });
     test("matches simple scopes", ({expect, _}) => {
       let scope =
-        TextMateConverter.getTextMateScope(~path=[(0, "value")], simpleConverter);
+        TextMateConverter.getTextMateScope(
+          ~path=[(0, "value")],
+          simpleConverter,
+        );
 
       expect.string(scope).toEqual("source.json");
     });
@@ -246,7 +249,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
           TextMateConverter.getTextMateScope(
             ~path=[(1, "string_content")],
             ~token="http://v2.onivim.io",
-            converter
+            converter,
           );
         let scopeHttpsMatch =
           TextMateConverter.getTextMateScope(

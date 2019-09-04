@@ -104,7 +104,11 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         | None => default
         | Some(scope)
             when
-              !NativeSyntaxHighlights.canHandleScope(state.configuration, scope) => default
+              !
+                NativeSyntaxHighlights.canHandleScope(
+                  state.configuration,
+                  scope,
+                ) => default
         | Some(scope) when isVersionValid(bu.version, version) =>
           ignore(scope);
           let state = {
