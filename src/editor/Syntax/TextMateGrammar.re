@@ -79,6 +79,8 @@ type t = {
   repository: StringMap.t(list(pattern)),
 }
 
+let getScope = (scope: string, v: t) => StringMap.find_opt(scope, v.repository);
+
 let create = (
   ~scopeName: string,
   ~patterns: list(pattern),
@@ -98,15 +100,60 @@ let create = (
   ret;
 };
 
+module Rule {
+  type t = {
+    regex: OnigRegExp.t,
+    name: string,
+    captures: list(Capture.t),
+    popStack: bool,
+    pushStack: option((string, string))
+  }
+
+  let ofMatch = (match: match) => {
+    switch(match.matchRegex) {
+    | Error(_) => None
+    | Ok(v) => Some({
+      regex: v,
+      name: match.matchName,
+      captures: match.captures,
+      popStack: false,
+      pushStack: None,
+    })
+  }
+  };
+
+  let rec ofPatterns = (patterns, grammar) => {
+    let f = (prev, pattern) => {
+    switch (pattern) {
+    | Include(inc) => switch(getScope(inc, grammar)) {
+    | None => prev
+    | Some(v) => ofPatterns(v, grammar);
+    }
+    | Match(match) => switch(ofMatch(match)) {
+      | None => prev
+      | Some(v) => [v, ...prev]
+    }
+    | _ => prev;
+    }
+
+    };
+
+    List.fold_left(f, [], patterns);
+  };
+}
+
+
 let _getPatternsToMatchAgainst = (ruleName: option(string), grammar: t) => {
 
-  switch (ruleName) {
+  let patterns = switch (ruleName) {
   | None => grammar.patterns
   | Some(v) => switch (StringMap.find_opt(v, grammar.repository)) {
     | None => []
     | Some(patterns) => patterns
   }
   }
+
+  patterns;
 };
 
 let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
