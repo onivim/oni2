@@ -75,6 +75,13 @@ type t = {
 let getScope = (scope: string, v: t) =>
   StringMap.find_opt(scope, v.repository);
 
+let getFirstRangeScope = (scope: string, v: t) => {
+  switch (getScope(scope, v)) {
+  | Some([MatchRange(matchRange), ..._]) => Some(matchRange)
+  | _ => None
+  }
+}
+
 let create =
     (
       ~scopeName: string,
@@ -143,7 +150,21 @@ module Rule = {
     };
   };
 
-  let rec ofPatterns = (patterns, grammar) => {
+  let ofMatchRangeEnd = (matchRange: matchRange) => {
+    switch (matchRange.endRegex) {
+    | Error(_) => None
+    | Ok(v) =>
+      Some({
+        regex: v,
+        name: matchRange.matchScopeName,
+        captures: matchRange.endCaptures,
+        popStack: true,
+        pushStack: None,
+    });
+  };
+  };
+
+  let rec ofPatterns = (patterns, grammar, scopeStack) => {
     let f = (prev, pattern) => {
       switch (pattern) {
       | Include(inc) =>
@@ -154,7 +175,7 @@ module Rule = {
           prev;
         | Some(v) =>
           prerr_endline("Rule::ofPatterns - found!");
-          List.concat([ofPatterns(v, grammar), prev]);
+          List.concat([ofPatterns(v, grammar, scopeStack), prev]);
         };
       | Match(match) =>
         switch (ofMatch(match)) {
@@ -170,7 +191,22 @@ module Rule = {
     };
 
     let patterns = List.fold_left(f, [], patterns);
-    patterns;
+    
+    // If there is an active 'begin'/'end' rule - we need to grab the original range too
+    switch(ScopeStack.activeRule(scopeStack))
+    {
+    | None => patterns
+    | Some(v) => switch(getFirstRangeScope(v, grammar)) {
+      | None => patterns
+      | Some(matchRange) => switch(ofMatchRangeEnd(matchRange)) {
+      | None => patterns
+      | Some(v) => {
+          prerr_endline ("Got an end rule to apply!");
+          [v, ...patterns]
+        }
+      }
+      }
+    };
   };
 };
 
@@ -189,6 +225,11 @@ module Token = {
     let ret: t = {length, position, scopes: [scope, ...scopeNames]};
     ret;
   };
+
+  let show = (v: t) => {
+    let scopes = List.fold_left((prev, curr) => prev ++ "." ++ curr, "", v.scopes);
+    "Token(" ++ string_of_int(v.position) ++ "," ++ string_of_int(v.position + v.length) ++ ":" ++ scopes ++ ")"
+  }
 
   let ofMatch =
       (
@@ -233,9 +274,9 @@ let _getPatternsToMatchAgainst = (ruleName: option(string), grammar: t) => {
     switch (ruleName) {
     | None => grammar.patterns
     | Some(v) =>
-      switch (StringMap.find_opt(v, grammar.repository)) {
-      | None => []
-      | Some(patterns) => patterns
+      switch (getFirstRangeScope(v, grammar)) {
+      | None => grammar.patterns
+      | Some(matchRange) => matchRange.patterns
       }
     };
 
@@ -270,33 +311,31 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
   ignore(scopes);
   ignore(line);
 
-  let patterns =
-    switch (scopes) {
-    | None => grammar.patterns
-    | Some(v) =>
-      _getPatternsToMatchAgainst(ScopeStack.activeRule(v), grammar)
-    };
-
-  prerr_endline("PATTERNS: " ++ string_of_int(List.length(patterns)));
-
-  let rules = Rule.ofPatterns(patterns, grammar);
-
-  prerr_endline("RULES: " ++ string_of_int(List.length(patterns)));
-
-  List.iter(r => prerr_endline("!!" ++ Rule.show(r) ++ "!"), rules);
-  prerr_endline("---");
-
   let idx = ref(0);
   let len = String.length(line);
 
   let tokens = ref([]);
 
-  let scopeStack = ref(grammar.initialScopeStack);
+  let initialScope = switch(scopes) {
+  | None => grammar.initialScopeStack
+  | Some(v) => v
+  }
+  let scopeStack = ref(initialScope);
 
   while (idx^ < len) {
     let i = idx^;
 
+    let currentScopeStack = scopeStack^;
+    let patterns = _getPatternsToMatchAgainst(ScopeStack.activeRule(currentScopeStack), grammar)
+
+    let rules = Rule.ofPatterns(patterns, grammar, currentScopeStack);
     let bestRule = _getBestRule(rules, line, i);
+  
+  prerr_endline("PATTERNS: " ++ string_of_int(List.length(patterns)));
+  prerr_endline("RULES: " ++ string_of_int(List.length(patterns)));
+  List.iter(r => prerr_endline("!!" ++ Rule.show(r) ++ "!"), rules);
+  prerr_endline("---");
+
 
     switch (bestRule) {
     // No matching rule... just increment position and try again
@@ -306,23 +345,22 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
       open Oniguruma.OnigRegExp.Match;
       let (_, matches, rule) = v;
       if (Array.length(matches) > 0) {
+        switch (rule.pushStack) {
+        // If there is nothing to push... nothing to worry about
+        | None => ()
+        | Some((scopeName, ruleName)) => scopeStack := ScopeStack.push(~ruleName, ~scopeName, ~line=lineNumber, scopeStack^);
+        };
+        
         tokens :=
           [
             Token.ofMatch(~matches, ~rule, ~scopeStack=scopeStack^, ()),
             ...tokens^,
           ];
-
-
+        
         if (rule.popStack) {
           scopeStack := ScopeStack.pop(scopeStack^)
-        } else {
-          switch (rule.pushStack) {
-          // If there is nothing to push... nothing to worry about
-          | None => ()
-          | Some((scopeName, ruleName)) => scopeStack := ScopeStack.push(~ruleName, ~scopeName, ~line=lineNumber, scopeStack^);
-          }
         }
-        
+
         idx := matches[0].endPos;
       } else {
         incr(idx);
