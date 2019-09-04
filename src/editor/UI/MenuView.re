@@ -96,7 +96,6 @@ let createElement =
     let time = Time.getTime() |> Time.to_float_seconds;
 
     let jobProgress = Job.getProgress(menu.filterJob);
-    print_endline ("PROGRESS: " ++ string_of_float(jobProgress));
 
     let loadingSpinner =
       menu.isLoading
@@ -107,13 +106,13 @@ let createElement =
                   transform(Transform.[RotateY(Math.Angle.Radians(time *. 2.))]),
                 ]>
                 <Opacity opacity=1.0>
-                  <Container width=16 height=16 color={theme.oniNormalModeBackground} />
+                  <Container width=10 height=10 color={theme.oniNormalModeBackground} />
                 </Opacity>
               </View>
             </Center>
           </View>
 
-        : <Opacity opacity=0.5>
+        : <Opacity opacity=0.3>
           <View style=Style.[height(2), width(menuWidth)]>
             <View style=Style.[height(2), width(1 + (int_of_float(float_of_int(menuWidth) *. jobProgress) - 1)), backgroundColor(theme.oniNormalModeBackground)] />
           </View>

@@ -128,24 +128,41 @@ let start = () => {
     };
   };
 
+  let updateJob = (state: Model.State.t) => {
+    if (Core.Job.isComplete(state.menu.filterJob)) {
+      state
+    } else {
+      {
+        ...state,
+        menu: {
+          ...state.menu,
+          filterJob: Core.Job.tick(state.menu.filterJob),
+        },
+      }
+    }
+  };
+
+  let updateAnimation = (state: Model.State.t) => {
+    if (state.menu.isLoading) {
+      {
+        ...state,
+        menu: {
+          ...state.menu,
+          isLoading: true,
+        }
+      }
+    } else {
+      state
+    }
+  };
+
   let updater = (state: Model.State.t, action: Actions.t) =>
     if (action === Actions.Tick) {
-      if (Core.Job.isComplete(state.menu.filterJob) && !state.menu.isLoading) {
-        (state, Isolinear.Effect.none);
-      } else {
-        let newState = {
-          ...state,
-          menu: {
-            ...state.menu,
-            filterJob: Core.Job.tick(state.menu.filterJob),
-          },
-        };
-        if (Core.Log.isDebugLoggingEnabled()) {
-          Core.Log.debug(Core.Job.show(state.menu.filterJob));
-        };
+      let newState =  state
+      |> updateJob
+      |> updateAnimation;
 
-        (newState, Isolinear.Effect.none);
-      };
+      (newState, Isolinear.Effect.none);
     } else {
       let (menuState, menuEffect) = menuUpdater(state.menu, action);
       let state = {...state, menu: menuState};
