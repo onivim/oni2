@@ -241,7 +241,9 @@ let createElement =
                Shapes.drawRect(
                  ~transform,
                  ~x=startX -. 1.0,
-                 ~y=offset +. float_of_int(Constants.default.minimapCharacterHeight),
+                 ~y=
+                   offset
+                   +. float_of_int(Constants.default.minimapCharacterHeight),
                  ~height=1.0,
                  ~width=endX -. startX +. 2.,
                  ~color,
@@ -287,21 +289,16 @@ let createElement =
                     Shapes.drawRect(
                       ~transform,
                       ~x=0.,
-                      ~y=
-                        rowHeight
-                        *. float_of_int(
-                             item,
-                           )
-                        -. scrollY
-                        -. 1.0,
-                      ~height=float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
+                      ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
+                      ~height=
+                        float_of_int(Constants.default.minimapCharacterHeight)
+                        +. 2.0,
                       ~width=float_of_int(width),
                       ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
                       (),
-                    );
+                    )
                   | None => ()
                   };
-              
 
                   renderLine(shouldHighlight, transform, offset, tokens);
                 },
