@@ -7,8 +7,6 @@
  * - TextMate grammars
  */
 
-open Rench;
-
 module Core = Oni_Core;
 module Model = Oni_Model;
 
@@ -104,10 +102,11 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         let version = getVersion(state, bu.id);
         switch (scope) {
         | None => default
-        | Some(v)
+        | Some(scope)
             when
-              !NativeSyntaxHighlights.canHandleScope(state.configuration, v) => default
-        | Some(v) when isVersionValid(bu.version, version) =>
+              !NativeSyntaxHighlights.canHandleScope(state.configuration, scope) => default
+        | Some(scope) when isVersionValid(bu.version, version) =>
+          ignore(scope);
           let state = {
             ...state,
             syntaxHighlighting2:

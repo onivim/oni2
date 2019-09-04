@@ -37,7 +37,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("simple hierarchy", ({expect, _}) => {
       let scope1 =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "array"],
+          ~path=[(0, "string"), (0, "array")],
           simpleConverter,
         );
 
@@ -45,7 +45,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
       let scope2 =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "object"],
+          ~path=[(0, "string"), (0, "object")],
           simpleConverter,
         );
 
@@ -55,7 +55,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
       let scope3 =
         TextMateConverter.getTextMateScope(
-          ~path=["\"", "string", "array"],
+          ~path=[(0, "\""), (0, "string"), (0, "array")],
           simpleConverter,
         );
 
@@ -73,7 +73,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
       let scope1 =
         TextMateConverter.getTextMateScope(
-          ~path=["string"],
+          ~path=[(0, "string")],
           stringConverter,
         );
 
@@ -81,7 +81,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
       let scope2 =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "array"],
+          ~path=[(0, "string"), (0, "array")],
           stringConverter,
         );
 
@@ -90,7 +90,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("returns empty for non-existent scopes", ({expect, _}) => {
       let nonExistentScope =
         TextMateConverter.getTextMateScope(
-          ~path=["non-existent-tree-sitter-scope"],
+          ~path=[(0, "non-existent-tree-sitter-scope")],
           simpleConverter,
         );
 
@@ -98,14 +98,14 @@ describe("TreeSitterScopes", ({describe, _}) =>
     });
     test("matches simple scopes", ({expect, _}) => {
       let scope =
-        TextMateConverter.getTextMateScope(~path=["value"], simpleConverter);
+        TextMateConverter.getTextMateScope(~path=[(0, "value")], simpleConverter);
 
       expect.string(scope).toEqual("source.json");
     });
     test("matches another simple scope", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["object"],
+          ~path=[(0, "object")],
           simpleConverter,
         );
 
@@ -114,7 +114,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("regex match failure", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["string_content"],
+          ~path=[(0, "string_content")],
           ~token="derp",
           simpleConverter,
         );
@@ -124,7 +124,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("regex match success", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["string_content"],
+          ~path=[(0, "string_content")],
           ~token="https://v2.onivim.io",
           simpleConverter,
         );
@@ -134,7 +134,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("child selector", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "pair"],
+          ~path=[(0, "string"), (0, "pair")],
           simpleConverter,
         );
 
@@ -143,7 +143,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("child selector only matches direct children", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~path=["string", "random-scope", "pair"],
+          ~path=[(0, "string"), (0, "random-scope"), (0, "pair")],
           simpleConverter,
         );
 
@@ -152,8 +152,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("child selector matches descendants", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~index=0,
-          ~path=["string", "pair", "random-scope"],
+          ~path=[(0, "string"), (0, "pair"), (0, "random-scope")],
           simpleConverter,
         );
 
@@ -162,8 +161,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
     test("nth-child(1) selector matches", ({expect, _}) => {
       let scope =
         TextMateConverter.getTextMateScope(
-          ~index=1,
-          ~path=["string", "pair", "random-scope"],
+          ~path=[(1, "string"), (1, "pair"), (0, "random-scope")],
           simpleConverter,
         );
 
@@ -189,8 +187,7 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
         let scope =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["value"],
+            ~path=[(1, "value")],
             converter,
           );
 
@@ -209,14 +206,12 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
         let scope1 =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["value"],
+            ~path=[(1, "value")],
             converter,
           );
         let scope2 =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["object"],
+            ~path=[(1, "object")],
             converter,
           );
 
@@ -244,21 +239,18 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
         let scopeNoMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["string_content"],
+            ~path=[(1, "string_content")],
             converter,
           );
         let scopeHttpMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["string_content"],
+            ~path=[(1, "string_content")],
             ~token="http://v2.onivim.io",
-            converter,
+            converter
           );
         let scopeHttpsMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["string_content"],
+            ~path=[(1, "string_content")],
             ~token="https://v2.onivim.io",
             converter,
           );
@@ -293,23 +285,20 @@ describe("TreeSitterScopes", ({describe, _}) =>
 
         let scopeCommentLineMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["comment"],
+            ~path=[(1, "comment")],
             ~token="// hello",
             converter,
           );
         let scopeCommentBlockMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["comment"],
+            ~path=[(1, "comment")],
             ~token="test",
             converter,
           );
 
         let scopeCommentSpecialMatch =
           TextMateConverter.getTextMateScope(
-            ~index=1,
-            ~path=["comment"],
+            ~path=[(1, "comment")],
             ~token="// special //",
             converter,
           );

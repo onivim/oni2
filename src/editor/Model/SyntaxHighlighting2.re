@@ -81,7 +81,7 @@ let updateVisibleBuffers = (buffers, v: t) => {
       buffers,
     );
 
-  {...v, visibleBuffers, highlightsMap};
+  {visibleBuffers, highlightsMap};
 };
 
 let getTokensForLine = (v: t, bufferId: int, line: int) => {

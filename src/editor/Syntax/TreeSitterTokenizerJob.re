@@ -24,8 +24,6 @@ type t = BufferLineJob.t(context, output);
 
 let isComplete = Job.isComplete;
 
-let doWork = Job.doWork;
-
 let noTokens = [];
 let getTokensForLine = (line: int, v: t) => {
   switch (BufferLineJob.getCompletedWork(line, v)) {

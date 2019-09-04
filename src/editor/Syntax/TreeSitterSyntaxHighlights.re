@@ -5,7 +5,6 @@
 open Oni_Core;
 open Oni_Core.Types;
 open Treesitter;
-open TreeSitterScopes;
 
 type treeSitterScopeMapperFactory =
   unit => TreeSitterScopes.TextMateConverter.t;
@@ -88,7 +87,6 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
        });
 
   let ret: t = {
-    ...v,
     parser,
     tree,
     lastBaseline: newBaseline,

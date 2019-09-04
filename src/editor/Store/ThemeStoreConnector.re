@@ -4,8 +4,6 @@
  * This connector handles loading themes and tokenThemes.
  */
 
-open Revery;
-
 open Oni_Core;
 open Oni_Model;
 open Oni_Syntax;
