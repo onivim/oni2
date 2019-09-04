@@ -31,6 +31,17 @@ module ScopeStack = {
     | [] => None
     };
   };
+
+  let pop = (v: t) => {
+    switch (v) {
+    | [] => v
+    | [_, ...tail] => tail
+    }
+  };
+
+  let push = (~ruleName: string, ~scopeName: string, ~line: int, v: t) => {
+    [{ruleName: Some(ruleName), scopeName, line }, ...v]
+  };
 };
 
 type pattern =
@@ -301,6 +312,17 @@ let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
             ...tokens^,
           ];
 
+
+        if (rule.popStack) {
+          scopeStack := ScopeStack.pop(scopeStack^)
+        } else {
+          switch (rule.pushStack) {
+          // If there is nothing to push... nothing to worry about
+          | None => ()
+          | Some((scopeName, ruleName)) => scopeStack := ScopeStack.push(~ruleName, ~scopeName, ~line=lineNumber, scopeStack^);
+          }
+        }
+        
         idx := matches[0].endPos;
       } else {
         incr(idx);
