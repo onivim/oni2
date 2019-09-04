@@ -95,7 +95,10 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
             ) {
             | None => default
             | Some(scope) =>
-              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(state.configuration, scope)
+              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(
+                state.configuration,
+                scope,
+              )
                 ? (state, Isolinear.Effect.none)
                 : (state, notifyBufferUpdateEffect(scope, buffer, bc))
             };

@@ -11,20 +11,19 @@ type t =
 let default = None;
 
 let canHandleScope = (configuration: Core.Configuration.t, scope: string) => {
-
-  let treeSitterEnabled = Core.Configuration.getValue((c) => c.experimentalTreeSitter, configuration);
+  let treeSitterEnabled =
+    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
 
   if (!treeSitterEnabled) {
-    false
+    false;
   } else {
-  
-  switch (scope) {
-  | "source.json" => true
-  /*  | "source.c" => true
-      | "source.cpp" => true */
-  | _ => false
+    switch (scope) {
+    | "source.json" => true
+    /*  | "source.c" => true
+        | "source.cpp" => true */
+    | _ => false
+    };
   };
-  }
 };
 
 let anyPendingWork = v => {

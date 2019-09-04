@@ -39,10 +39,10 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     | Some(v) => Model.Buffer.getLines(v)
     };
   };
-  
+
   let getVersion = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
-    | None => -1
+    | None => (-1)
     | Some(v) => Model.Buffer.getVersion(v)
     };
   };
@@ -59,7 +59,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   };
 
   let isVersionValid = (updateVersion, bufferVersion) => {
-    bufferVersion != -1 && updateVersion == bufferVersion
+    bufferVersion != (-1) && updateVersion == bufferVersion;
   };
 
   let updater = (state: Model.State.t, action) => {
@@ -104,7 +104,9 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         let version = getVersion(state, bu.id);
         switch (scope) {
         | None => default
-        | Some(v) when !NativeSyntaxHighlights.canHandleScope(state.configuration, v) => default
+        | Some(v)
+            when
+              !NativeSyntaxHighlights.canHandleScope(state.configuration, v) => default
         | Some(v) when isVersionValid(bu.version, version) =>
           let state = {
             ...state,

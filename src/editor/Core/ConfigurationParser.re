@@ -211,11 +211,8 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "experimental.treeSitter",
-    (s, v) => {
-      ...s,
-      experimentalTreeSitter: parseBool(v),
-    },
-  )
+    (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

@@ -47,7 +47,6 @@ type t = {
   uiShadows: bool,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
-
   // Experimental feature flags
   // These are 'use-at-your-own-risk' features
   experimentalTreeSitter: bool,
