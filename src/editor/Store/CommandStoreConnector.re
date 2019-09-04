@@ -108,7 +108,7 @@ let start = _ => {
                 |> Seq.filter_map(element => {
                      let (_, buffer) = element;
 
-                     switch (Buffer.getMetadata(buffer).filePath) {
+                     switch (Buffer.getFilePath(buffer)) {
                      | Some(path) =>
                        Some({
                          category: None,

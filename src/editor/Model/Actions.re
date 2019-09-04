@@ -7,12 +7,13 @@
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Extensions;
+open Oni_Syntax;
 
 type t =
   | Init
   | Tick
   | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter(Vim.BufferMetadata.t)
+  | BufferEnter(Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
@@ -81,7 +82,9 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
+  | LoadThemeByPath(string)
   | SetIconTheme(IconTheme.t)
+  | SetTokenTheme(TextMateTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)

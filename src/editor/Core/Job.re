@@ -2,8 +2,11 @@ open Revery;
 
 type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
 type doWork('p, 'c) = mapFn('p, 'c);
+type progressReporter('p, 'c) = ('p, 'c) => float;
 
 type workPrinter('a) = 'a => string;
+
+let defaultProgressReporter = (_, _) => 0.;
 
 type t('p, 'c) = {
   f: doWork('p, 'c),
@@ -12,6 +15,7 @@ type t('p, 'c) = {
   completedWork: 'c,
   budget: Time.t,
   name: string,
+  progressReporter: progressReporter('p, 'c),
   pendingWorkPrinter: workPrinter('p),
   completedWorkPrinter: workPrinter('c),
 };
@@ -26,12 +30,20 @@ let getCompletedWork = (v: t('p, 'c)) => v.completedWork;
 
 let getPendingWork = (v: t('p, 'c)) => v.pendingWork;
 
+let getProgress = (v: t('p, 'c)) =>
+  if (v.isComplete) {
+    1.0;
+  } else {
+    v.progressReporter(v.pendingWork, v.completedWork);
+  };
+
 let create =
     (
       ~f: doWork('p, 'c),
       ~initialCompletedWork: 'c,
       ~name="anonymous",
       ~budget=defaultBudget,
+      ~progressReporter=defaultProgressReporter,
       ~pendingWorkPrinter=noopPrinter,
       ~completedWorkPrinter=noopPrinter,
       pendingWork: 'p,
@@ -43,6 +55,7 @@ let create =
     pendingWork,
     name,
     isComplete: false,
+    progressReporter,
     pendingWorkPrinter,
     completedWorkPrinter,
   };
@@ -77,13 +90,30 @@ let show = (v: t('p, 'c)) => {
 let tick: t('p, 'c) => t('p, 'c) =
   (v: t('p, 'c)) => {
     let budget = Time.to_float_seconds(v.budget);
-    let startTime = Time.getTime() |> Time.to_float_seconds;
+    let startTime = Unix.gettimeofday();
     let current = ref(v);
+    let iterations = ref(0);
 
-    while (Time.to_float_seconds(Time.getTime())
-           -. startTime < budget
-           && !current^.isComplete) {
-      current := doWork(v);
+    Log.debug("[Job] Starting " ++ v.name);
+    while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
+      current := doWork(current^);
+      incr(iterations);
+    };
+
+    let endTime = Unix.gettimeofday();
+
+    Log.info(
+      "[Job] "
+      ++ v.name
+      ++ " ran "
+      ++ string_of_int(iterations^)
+      ++ " iterations for "
+      ++ string_of_float(endTime -. startTime)
+      ++ "s",
+    );
+
+    if (Log.isDebugLoggingEnabled()) {
+      Log.debug("[Job] Detailed report: " ++ show(v));
     };
 
     current^;

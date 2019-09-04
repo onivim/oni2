@@ -14,7 +14,7 @@ Onivim changes several default settings:
 
 - `set nocompatible`
 - `set autoread`
-- `set autoident`
+- `set autoindent`
 
 ## Tabs, Buffers, and Windows
 

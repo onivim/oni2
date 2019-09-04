@@ -16,7 +16,7 @@ If you haven't pre-ordered, you can still try it out by following our [build ins
 
 Nightly builds are published to the [Early Access Portal](https://v2.onivim.io/early-access-portal).
 
-Auto-update is a [work-in-progress](https://github.com/onivim/oni2/issues/559), until it is implemented, you'll need to download the latest build manually from the [Early Access Portal](https://v2.onvim.io/early-access-portal).
+Auto-update is a [work-in-progress](https://github.com/onivim/oni2/issues/559), until it is implemented, you'll need to download the latest build manually from the [Early Access Portal](https://v2.onivim.io/early-access-portal).
 
 ## Licensing
 

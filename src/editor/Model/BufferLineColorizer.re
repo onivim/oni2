@@ -6,7 +6,6 @@ open Revery;
 
 open Oni_Core;
 open Oni_Core.Types;
-open Oni_Extensions;
 
 type tokenColor = (Color.t, Color.t);
 type t = int => tokenColor;
@@ -15,18 +14,24 @@ let create =
     (
       length: int,
       theme: Theme.t,
-      tokenColors: list(ColorizedToken.t),
-      colorMap: ColorMap.t,
+      tokenColors: list(ColorizedToken2.t),
       selection: option(Range.t),
       defaultBackgroundColor: Color.t,
       selectionColor: Color.t,
       matchingPair: option(int),
       searchHighlightRanges: list(Range.t),
     ) => {
-  let tokenColorArray: array(ColorizedToken.t) =
-    Array.make(length, ColorizedToken.default);
+  let defaultToken2 =
+    ColorizedToken2.create(
+      ~index=0,
+      ~backgroundColor=defaultBackgroundColor,
+      ~foregroundColor=theme.editorForeground,
+      (),
+    );
+  let tokenColorArray: array(ColorizedToken2.t) =
+    Array.make(length, defaultToken2);
 
-  let rec f = (tokens: list(ColorizedToken.t), start) =>
+  let rec f = (tokens: list(ColorizedToken2.t), start) =>
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
@@ -77,13 +82,7 @@ let create =
     let backgroundColor =
       isSearchHighlight ? theme.editorFindMatchBackground : backgroundColor;
 
-    let color =
-      ColorMap.get(
-        colorMap,
-        colorIndex.foregroundColor,
-        theme.editorForeground,
-        theme.editorBackground,
-      );
+    let color = colorIndex.foregroundColor;
     (backgroundColor, color);
   };
 };

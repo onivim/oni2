@@ -120,8 +120,7 @@ describe("Buffer", ({describe, _}) =>
         );
       let updatedBuffer = Buffer.update(buffer, update);
       validateBuffer(expect, updatedBuffer, [|"a", "b", "c", "d"|]);
-      let metadata = Buffer.getMetadata(updatedBuffer);
-      expect.int(metadata.version).toBe(5);
+      expect.int(Buffer.getVersion(updatedBuffer)).toBe(5);
     });
 
     test("buffer update with lower version gets rejected", ({expect}) => {
@@ -148,8 +147,7 @@ describe("Buffer", ({describe, _}) =>
       let updatedBuffer = Buffer.update(bufferUpdate1, update);
 
       validateBuffer(expect, updatedBuffer, [|"d"|]);
-      let metadata = Buffer.getMetadata(updatedBuffer);
-      expect.int(metadata.version).toBe(6);
+      expect.int(Buffer.getVersion(updatedBuffer)).toBe(6);
     });
   })
 );

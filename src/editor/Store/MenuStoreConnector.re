@@ -87,17 +87,16 @@ let start = () => {
     | MenuOpen(menuConstructor) =>
       let state = Menu.create();
       (
-        {...state, isOpen: true, commands: []},
+        {...state, isOpen: true},
         menuOpenEffect(menuConstructor, state.onQueryChanged),
       );
     | MenuUpdate(update) =>
-      let commands = List.append(state.commands, update);
       let filterJob =
         Core.Job.mapw(MenuJob.addItems(update), state.filterJob);
       let selectedItem =
         position(state.selectedItem, 0, filteredCommandsCount);
 
-      ({...state, commands, filterJob, selectedItem}, Isolinear.Effect.none);
+      ({...state, filterJob, selectedItem}, Isolinear.Effect.none);
     | MenuSetDispose(dispose) => (
         {...state, dispose},
         Isolinear.Effect.none,
@@ -105,14 +104,7 @@ let start = () => {
     | MenuClose =>
       let disposeFunction = state.dispose;
       (
-        {
-          ...state,
-          filterJob: MenuJob.default,
-          commands: [],
-          isOpen: false,
-          selectedItem: 0,
-          isLoading: false,
-        },
+        {...state, filterJob: MenuJob.default, isOpen: false, selectedItem: 0, isLoading: false},
         disposeMenuEffect(disposeFunction),
       );
     | MenuSelect =>

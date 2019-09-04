@@ -50,6 +50,5 @@ module TextMateConverter: {
      with the resolved textmate scope
    */
   let getTextMateScope:
-    (~index: int=?, ~token: string=?, ~path: list(string)=?, t) =>
-    option(string);
+    (~index: int=?, ~token: string=?, ~path: list(string)=?, t) => string;
 };

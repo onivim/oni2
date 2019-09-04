@@ -126,9 +126,8 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
     let fileType =
       switch (buffer) {
       | Some(v) =>
-        switch (Buffer.getMetadata(v).filePath) {
-        | Some(fp) =>
-          LanguageInfo.getLanguageFromFilePath(state.languageInfo, fp)
+        switch (Buffer.getFileType(v)) {
+        | Some(fp) => fp
         | None => "plaintext"
         }
       | None => "plaintext"

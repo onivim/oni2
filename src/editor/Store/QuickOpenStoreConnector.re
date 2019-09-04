@@ -16,7 +16,7 @@ let ripgrepQueryFromFilter = s => {
   "*" ++ b ++ "*";
 };
 
-let start = (rg: Core.Ripgrep.t) => {
+let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
   let getDisplayPath = (fullPath, dir) => {
     let re = Str.regexp_string(dir ++ Filename.dir_sep);
     Str.replace_first(re, "", fullPath);
@@ -39,35 +39,12 @@ let start = (rg: Core.Ripgrep.t) => {
 
     setLoading(true);
 
-    /* Create a hashtable to keep track of dups */
-    let discoveredPaths: Hashtbl.t(string, bool) = Hashtbl.create(1000);
-
-    let filter = item => {
-      switch (Hashtbl.find_opt(discoveredPaths, item)) {
-      | Some(_) => false
-      | None =>
-        Hashtbl.add(discoveredPaths, item, true);
-        switch (!Sys.is_directory(item)) {
-        | exception _ => false
-        | v => v
-        };
-      };
-    };
-
     let search = () => {
       setLoading(true);
       rg.search(
+        stringToCommand(languageInfo, iconTheme, currentDirectory),
         currentDirectory,
-        items => {
-          let result =
-            items
-            |> List.filter(filter)
-            |> List.map(
-                 stringToCommand(languageInfo, iconTheme, currentDirectory),
-               );
-
-          setItems(result);
-        },
+        items => setItems(items),
         () => {
           setLoading(false);
           Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
