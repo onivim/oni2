@@ -18,9 +18,9 @@ let containerStyles =
     flexGrow(1),
   ];
 
-let titleStyles = (fgColor, bgColor, font) =>
+let titleStyles = (fgColor, bgColor, font, fontS) =>
   Style.[
-    fontSize(14),
+    fontSize(fontS),
     fontFamily(font),
     backgroundColor(bgColor),
     color(fgColor),
@@ -129,6 +129,7 @@ let createElement =
     ) =>
   component(hooks => {
     let itemSize = 12;
+    let fontSize = state.uiFont.fontSize;
     let font = state.uiFont.fontFile;
     let {State.theme, _} = state;
 
@@ -157,7 +158,7 @@ let createElement =
         <View style={headingStyles(theme)}>
           <Text
             text=title
-            style={titleStyles(foregroundColor, backgroundColor, font)}
+            style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
           />
         </View>
         <ScrollView style=containerStyles>
