@@ -158,7 +158,12 @@ let createElement =
         <View style={headingStyles(theme)}>
           <Text
             text=title
-            style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
+            style={titleStyles(
+              foregroundColor,
+              backgroundColor,
+              font,
+              fontSize,
+            )}
           />
         </View>
         <ScrollView style=containerStyles>
