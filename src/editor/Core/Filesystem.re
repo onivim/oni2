@@ -302,6 +302,11 @@ let createConfigIfNecessary = (configDir, file) =>
       )
   );
 
+let getExtensionsFolder = () =>
+  getHomeDirectory()
+  >>= getOniDirectory
+  >>= (dir => getPath(dir, "extensions"));
+
 let getOrCreateConfigFile = filename =>
   /* Get Oni Directory */
   getHomeDirectory()

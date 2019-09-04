@@ -17,15 +17,34 @@ open Oni_Extensions;
 
 let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+  let userExtensions = Core.Filesystem.getExtensionsFolder();
+
   let developmentExtensions =
     switch (setup.developmentExtensionsPath) {
-    | Some(p) =>
-      let ret = ExtensionScanner.scan(p);
-      ret;
+    | Some(p) => ExtensionScanner.scan(p)
     | None => []
     };
 
-  let extensions = [extensions, developmentExtensions] |> List.flatten;
+  Core.Log.debug(
+    "discoverExtensions - discovered "
+    ++ string_of_int(List.length(developmentExtensions))
+    ++ " development extensions.",
+  );
+
+  let userExtensions =
+    switch (userExtensions) {
+    | Ok(p) => ExtensionScanner.scan(p)
+    | Error(_) => []
+    };
+
+  Core.Log.debug(
+    "discoverExtensions - discovered "
+    ++ string_of_int(List.length(userExtensions))
+    ++ " user extensions.",
+  );
+
+  let extensions =
+    [extensions, developmentExtensions, userExtensions] |> List.flatten;
   Core.Log.debug(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
