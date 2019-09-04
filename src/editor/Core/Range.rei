@@ -28,6 +28,16 @@ let create:
   ) =>
   t;
 
+let ofInt0:
+  (
+    ~startLine: int,
+    ~startCharacter: int,
+    ~endLine: int,
+    ~endCharacter: int,
+    unit
+  ) =>
+  t;
+
 let zero: t;
 
 /*

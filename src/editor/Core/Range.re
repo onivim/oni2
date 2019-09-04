@@ -20,6 +20,15 @@ let create = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
     (),
   );
 
+let ofInt0 = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
+  create(
+    ~startLine=ZeroBasedIndex(startLine),
+    ~startCharacter=ZeroBasedIndex(startCharacter),
+    ~endLine=ZeroBasedIndex(endLine),
+    ~endCharacter=ZeroBasedIndex(endCharacter),
+    (),
+  );
+
 let zero =
   create(
     ~startLine=ZeroBasedIndex(0),
