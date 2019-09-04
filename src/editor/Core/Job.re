@@ -90,19 +90,17 @@ let show = (v: t('p, 'c)) => {
 let tick: t('p, 'c) => t('p, 'c) =
   (v: t('p, 'c)) => {
     let budget = Time.to_float_seconds(v.budget);
-    let startTime = Time.getTime() |> Time.to_float_seconds;
+    let startTime = Unix.gettimeofday();
     let current = ref(v);
     let iterations = ref(0);
 
     Log.debug("[Job] Starting " ++ v.name);
-    while (Time.to_float_seconds(Time.getTime())
-           -. startTime < budget
-           && !current^.isComplete) {
+    while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
       current := doWork(current^);
       incr(iterations);
     };
 
-    let endTime = Time.to_float_seconds(Time.getTime());
+    let endTime = Unix.gettimeofday();
 
     Log.info(
       "[Job] "
