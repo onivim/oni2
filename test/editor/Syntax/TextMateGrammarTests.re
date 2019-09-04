@@ -36,13 +36,12 @@ describe("TextMateGrammar", ({describe, _}) => {
   describe("tokenize", ({test, _}) => {
 
     test("simple tokens", ({expect, _}) => {
-      let tokens = TextMateGrammar.tokenize(~grammar, "a")
+      let (tokens, scopeStack) = TextMateGrammar.tokenize(~grammar, "a")
       expect.int(List.length(tokens)).toBe(1);
 
       let firstToken = List.hd(tokens);
-      expect.bool(firstToken.scopeStack == ["keyword.letter", "source.abc"]).toBe(true);
+      expect.bool(firstToken.scopes == ["keyword.letter", "source.abc"]).toBe(true);
       expect.int(firstToken.position).toBe(0);
     });
   });
-
 });

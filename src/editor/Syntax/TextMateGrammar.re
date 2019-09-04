@@ -24,6 +24,13 @@ module ScopeStack = {
   let ofToplevelScope = (scopeName) => {
     [{ ruleName: None, scopeName, line: -1 }]
   };
+
+  let activeRule = (v: t) => {
+    switch (v) {
+    | [hd, ..._] => hd.ruleName
+    | [] => None
+    }
+  };
 };
 
 module Token = {
@@ -91,9 +98,26 @@ let create = (
   ret;
 };
 
+let _getPatternsToMatchAgainst = (ruleName: option(string), grammar: t) => {
+
+  switch (ruleName) {
+  | None => grammar.patterns
+  | Some(v) => switch (StringMap.find_opt(v, grammar.repository)) {
+    | None => []
+    | Some(patterns) => patterns
+  }
+  }
+};
+
 let tokenize = (~lineNumber=0, ~scopes=None, ~grammar: t, line: string) => {
   ignore(lineNumber);
   ignore(scopes);
   ignore(line);
-  ([], grammar.initialScopeStack);
+  
+  let _patterns = switch (scopes) {
+  | None => grammar.patterns
+  | Some(v) => _getPatternsToMatchAgainst(ScopeStack.activeRule(v), grammar)
+  };
+
+  ([Token.create(~position=0, ~scope="keyword.letter", ~scopeStack=grammar.initialScopeStack, ())], grammar.initialScopeStack);
 };
