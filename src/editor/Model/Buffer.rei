@@ -20,6 +20,8 @@ let getFileType: t => option(string);
 let setFileType: (option(string), t) => t;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
+let getLines: t => array(string);
+
 let getVersion: t => int;
 let setVersion: (int, t) => t;
 

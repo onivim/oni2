@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Oni_Core.Types;
-
 open Oni_Syntax;
 
 type t = {
@@ -19,7 +18,11 @@ type t = {
   commandline: Commandline.t,
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
+  // Old-school syntax highlighting from vscode-textmate via Node...
+  // going away soon!
   syntaxHighlighting: SyntaxHighlighting.t,
+  // New-school native syntax highlighting
+  syntaxHighlighting2: SyntaxHighlighting2.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -58,6 +61,7 @@ let create: unit => t =
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.create(),
+    syntaxHighlighting2: SyntaxHighlighting2.empty,
     theme: Theme.default,
     tokenTheme: TextMateTheme.empty,
     editorGroups: EditorGroups.create(),
