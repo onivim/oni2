@@ -74,6 +74,8 @@ let start =
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
+  let (syntaxUpdater, syntaxStream) =
+    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(setup);
 
   /*
@@ -109,6 +111,7 @@ let start =
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           textmateUpdater,
+          syntaxUpdater,
           /* extHostUpdater, */
           fontUpdater,
           menuHostUpdater,
@@ -153,6 +156,7 @@ let start =
   Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
+  Isolinear.Stream.connect(dispatch, syntaxStream);
   /* Isolinear.Stream.connect(dispatch, extHostStream); */
   Isolinear.Stream.connect(dispatch, menuStream);
   Isolinear.Stream.connect(dispatch, explorerStream);

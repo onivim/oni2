@@ -179,8 +179,12 @@ module TextMateConverter = {
     };
   };
 
+  let _pathToStrings = (paths: list((int, string))) => {
+    List.map(snd, paths);
+  };
+
   let _getTextMateScopeForNonChildSelector = (token, path, v) => {
-    switch (Trie.matches(v.defaultSelectors, path)) {
+    switch (Trie.matches(v.defaultSelectors, _pathToStrings(path))) {
     | [] => None
     | [hd, ..._] =>
       let (_, matchers) = hd;
@@ -192,13 +196,14 @@ module TextMateConverter = {
     };
   };
 
-  let getTextMateScope = (~index=0, ~token="", ~path=[], v: t) => {
-    let check = path => {
+  let getTextMateScope = (~token="", ~path=[], v: t) => {
+    let check = paths => {
+      let (index, _) = List.hd(paths);
       // First, try and see if a child selector matches
       let matches =
         switch (StringMap.find_opt(string_of_int(index), v.byChildSelectors)) {
         | Some(trie) =>
-          switch (Trie.matches(trie, path)) {
+          switch (Trie.matches(trie, _pathToStrings(paths))) {
           | [] => None
           | [hd, ..._] =>
             let (_, matchers) = hd;
@@ -213,12 +218,12 @@ module TextMateConverter = {
 
       switch (matches) {
       // If not... fall back to the default trie without child-selectors!
-      | None => _getTextMateScopeForNonChildSelector(token, path, v)
+      | None => _getTextMateScopeForNonChildSelector(token, paths, v)
       | Some(v) => Some(v)
       };
     };
 
-    let paths = [token, ...path];
+    let paths = [(0, token), ...path];
 
     let rec f = (p, lists) => {
       switch (p) {
