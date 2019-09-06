@@ -60,7 +60,10 @@ let start =
       let configPath = getConfigurationFile();
       switch (configPath) {
       | Ok(configPathAsString) =>
-        Log.info("ConfigurationStoreConnector - Loading configuration: " ++ configPathAsString);
+        Log.info(
+          "ConfigurationStoreConnector - Loading configuration: "
+          ++ configPathAsString,
+        );
         switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {
         | (Ok(configuration), Some(cliOptions)) =>
           dispatch(Actions.ConfigurationSet(configuration));
@@ -71,7 +74,8 @@ let start =
           if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
             dispatch(Actions.EnableZenMode);
           };
-        | (Ok(configuration), None) => dispatch(Actions.ConfigurationSet(configuration));
+        | (Ok(configuration), None) =>
+          dispatch(Actions.ConfigurationSet(configuration))
         | (Error(err), _) =>
           Log.error("Error loading configuration file: " ++ err)
         };
