@@ -6,12 +6,12 @@ module Buffer = Oni_Model.Buffer;
 module Diagnostics = Oni_Model.Diagnostics;
 
 let singleDiagnostic = [
-  Diagnostics.Diagnostic.create(~range=Range.zero, ()),
+  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="single error", ()),
 ];
 
 let doubleDiagnostic = [
-  Diagnostics.Diagnostic.create(~range=Range.zero, ()),
-  Diagnostics.Diagnostic.create(~range=Range.zero, ()),
+  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
+  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
 ];
 
 describe("Diagnostics", ({describe, _}) => {
