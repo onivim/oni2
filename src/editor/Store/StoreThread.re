@@ -199,10 +199,13 @@ let start =
     List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
+  let totalTime = ref(0.0);
   let _ =
     Tick.interval(
-      _ => {
-        dispatch(Model.Actions.Tick);
+      deltaT => {
+        let deltaTime = Time.toSeconds(deltaT);
+        totalTime := totalTime^ +. deltaTime;
+        dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
         runEffects();
       },
       Seconds(0.),

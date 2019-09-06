@@ -157,13 +157,16 @@ let start = () => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
-    if (action === Actions.Tick) {
-      let newState =  state
-      |> updateJob
-      |> updateAnimation;
 
-      (newState, Isolinear.Effect.none);
-    } else {
+    switch (action) {
+    | Actions.Tick(_) => {
+        let newState =  state
+        |> updateJob
+        |> updateAnimation;
+
+        (newState, Isolinear.Effect.none);
+    }
+    | action =>
       let (menuState, menuEffect) = menuUpdater(state.menu, action);
       let state = {...state, menu: menuState};
       (state, menuEffect);

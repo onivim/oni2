@@ -64,7 +64,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.Tick => (state, pumpEffect)
+    | Model.Actions.Tick(_) => (state, pumpEffect)
     | Model.Actions.BufferUpdate(bc) =>
       let bufferId = bc.id;
       let buffer = Model.Buffers.getBuffer(bufferId, state.buffers);

@@ -11,7 +11,7 @@ open Oni_Syntax;
 
 type t =
   | Init
-  | Tick
+  | Tick(tick)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter(Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)
@@ -99,7 +99,10 @@ and notificationType =
   | Info
   | Warning
   | Error
-and notification = {
+and tick = {
+  deltaTime: float,
+  totalTime: float,
+} and notification = {
   id: int,
   notificationType,
   title: string,

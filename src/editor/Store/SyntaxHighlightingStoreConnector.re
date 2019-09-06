@@ -62,7 +62,8 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
-    if (action == Model.Actions.Tick) {
+      switch (action) {
+      | Model.Actions.Tick(_) => {
       if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
         let syntaxHighlighting2 =
           Model.SyntaxHighlighting2.doPendingWork(state.syntaxHighlighting2);
@@ -70,8 +71,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       } else {
         default;
       };
-    } else {
-      switch (action) {
+      }
       // When the view changes, update our list of visible buffers,
       // so we know which ones might have pending work!
       | Model.Actions.EditorGroupAdd(_)
@@ -128,7 +128,6 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       | _ => default
       };
     };
-  };
 
   (updater, stream);
 };

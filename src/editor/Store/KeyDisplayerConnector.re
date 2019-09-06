@@ -25,7 +25,8 @@ let start = getTime => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
-    if (action === Actions.Tick) {
+    switch (action) {
+    | Actions.Tick(_) => 
       if (KeyDisplayer.getActive(state.keyDisplayer)) {
         let keyDisplayer = KeyDisplayer.update(getTime(), state.keyDisplayer);
         let newState = {...state, keyDisplayer};
@@ -33,7 +34,7 @@ let start = getTime => {
       } else {
         (state, Isolinear.Effect.none);
       };
-    } else {
+    | action =>
       let keyDisplayer = reducer(state.keyDisplayer, action);
       let state = {...state, keyDisplayer};
       (state, Isolinear.Effect.none);
