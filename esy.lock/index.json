@@ -1,5 +1,5 @@
 {
-  "checksum": "2bc3274742f69aa979df33a7eae46083",
+  "checksum": "b0d032c25674db74e67ff4df0ee54b46",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -264,18 +264,18 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-libvim@github:onivim/reason-libvim#5c86fee@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#5c86fee@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#5c86fee",
+      "version": "github:onivim/reason-libvim#8fc399d",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#5c86fee" ]
+        "source": [ "github:onivim/reason-libvim#8fc399d" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.21@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
+        "libvim@8.10869.22@d41d8cd9", "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
@@ -508,14 +508,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.21@d41d8cd9": {
-      "id": "libvim@8.10869.21@d41d8cd9",
+    "libvim@8.10869.22@d41d8cd9": {
+      "id": "libvim@8.10869.22@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.21",
+      "version": "8.10869.22",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.21.tgz#sha1:9e652a01043dc22fd8bd7ef05476d8ffc36a6ca4"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.22.tgz#sha1:ba7408c5a7ff2c6a99acce04a6083902389166bf"
         ]
       },
       "overrides": [],
@@ -905,7 +905,7 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#5c86fee@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
         "reason-jsonrpc@1.1.0@d41d8cd9", "reason-glfw@3.2.1027@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9", "axios@0.19.0@d41d8cd9",
