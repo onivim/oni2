@@ -83,19 +83,6 @@ let runTest =
 
   wrappedRunEffects();
 
-  logInit("Setting editor font");
-  dispatch(
-    Model.Actions.SetEditorFont(
-      Core.Types.EditorFont.create(
-        ~fontFile="test_font",
-        ~fontSize=14,
-        ~measuredWidth=7.5,
-        ~measuredHeight=10.25,
-        (),
-      ),
-    ),
-  );
-
   let wrappedDispatch = action => {
     dispatch(action);
   };

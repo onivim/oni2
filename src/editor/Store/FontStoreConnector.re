@@ -23,7 +23,6 @@ let loadAndValidateEditorFont =
     fullPath,
     adjSize,
     font => {
-      open Oni_Model.Actions;
       open Types;
 
       /* Measure text */
@@ -138,6 +137,8 @@ let start = (~getScaleFactor, ()) => {
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
+
+      Log.info("FontStoreConnector::synchronizeConfiguration");
 
       setFont(dispatch, editorFontFamily, editorFontSize);
     });
