@@ -37,6 +37,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
 
 let start =
     (
+      ~configurationFilePath=None,
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -61,11 +62,18 @@ let start =
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
-    VimStoreConnector.start(getState, getClipboardText, setClipboardText);
+    VimStoreConnector.start(
+      languageInfo,
+      getState,
+      getClipboardText,
+      setClipboardText,
+    );
 
   let (textmateUpdater, textmateStream) =
     TextmateClientStoreConnector.start(languageInfo, setup);
 
+  let (syntaxUpdater, syntaxStream) =
+    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(setup);
 
   /*
@@ -77,7 +85,8 @@ let start =
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start(~cliOptions);
+  let configurationUpdater =
+    ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
@@ -100,6 +109,7 @@ let start =
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           textmateUpdater,
+          syntaxUpdater,
           /* extHostUpdater, */
           fontUpdater,
           menuHostUpdater,
@@ -122,7 +132,7 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}) =>
+      | Model.Actions.BufferEnter({id, _}, _) =>
         let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None
@@ -143,6 +153,7 @@ let start =
   Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, textmateStream);
+  Isolinear.Stream.connect(dispatch, syntaxStream);
   /* Isolinear.Stream.connect(dispatch, extHostStream); */
   Isolinear.Stream.connect(dispatch, menuStream);
   Isolinear.Stream.connect(dispatch, explorerStream);
@@ -188,10 +199,13 @@ let start =
     List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
+  let totalTime = ref(0.0);
   let _ =
     Tick.interval(
-      _ => {
-        dispatch(Model.Actions.Tick);
+      deltaT => {
+        let deltaTime = Time.toSeconds(deltaT);
+        totalTime := totalTime^ +. deltaTime;
+        dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
         runEffects();
       },
       Seconds(0.),

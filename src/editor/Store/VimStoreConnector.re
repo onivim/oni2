@@ -14,7 +14,12 @@ module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
-    (getState: unit => Model.State.t, getClipboardText, setClipboardText) => {
+    (
+      languageInfo: Model.LanguageInfo.t,
+      getState: unit => Model.State.t,
+      getClipboardText,
+      setClipboardText,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Vim.Clipboard.setProvider(reg => {
@@ -134,7 +139,15 @@ let start =
          */
         version: 0,
       };
-      dispatch(Model.Actions.BufferEnter(meta));
+
+      let fileType =
+        switch (meta.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
+
+      dispatch(Model.Actions.BufferEnter(meta, fileType));
     });
 
   let _ =
@@ -292,7 +305,13 @@ let start =
          */
         version: 0,
       };
-      dispatch(Model.Actions.BufferEnter(meta));
+      let fileType =
+        switch (meta.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
+      dispatch(Model.Actions.BufferEnter(meta, fileType));
     });
 
   let _ =
@@ -443,12 +462,19 @@ let start =
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
 
+      let fileType =
+        switch (metadata.filePath) {
+        | Some(v) =>
+          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+        | None => None
+        };
+
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
       switch (dir) {
-      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata))
+      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata, fileType))
       | None => ()
       };
     });

@@ -57,7 +57,7 @@ let printUnixError = (error, fn, arg) =>
   |> Log.error;
 
 let handleError = (~defaultValue, func) => {
-  try%lwt (func()) {
+  try%lwt(func()) {
   | Unix.Unix_error(error, fn, arg) =>
     printUnixError(error, fn, arg);
     Lwt.return(defaultValue);

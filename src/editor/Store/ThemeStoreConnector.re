@@ -4,8 +4,6 @@
  * This connector handles loading themes and tokenThemes.
  */
 
-open Revery;
-
 open Oni_Core;
 open Oni_Model;
 open Oni_Syntax;
@@ -24,8 +22,8 @@ let start = (setup: Setup.t) => {
           Yojson.Safe.Util.member("tokenColors", themeJson);
         let tokenTheme =
           TextMateTheme.of_yojson(
-            ~defaultBackground=Colors.black,
-            ~defaultForeground=Colors.white,
+            ~defaultBackground=Theme.default.editorBackground,
+            ~defaultForeground=Theme.default.editorForeground,
             tokenColorsJson,
           );
 

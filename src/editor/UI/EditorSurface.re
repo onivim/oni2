@@ -373,12 +373,22 @@ let createElement =
         };
 
       let tokenColors2 =
-        Oni_Extensions.ColorizedToken.toColorizedToken2s(
-          state.syntaxHighlighting.colorMap,
-          theme.editorForeground,
-          theme.editorBackground,
-          tokenColors,
-        );
+        switch (
+          SyntaxHighlighting2.getTokensForLine(
+            state.syntaxHighlighting2,
+            bufferId,
+            i,
+          )
+        ) {
+        | [] =>
+          Oni_Extensions.ColorizedToken.toColorizedToken2s(
+            state.syntaxHighlighting.colorMap,
+            theme.editorForeground,
+            theme.editorBackground,
+            tokenColors,
+          )
+        | v => v
+        };
 
       let colorizer =
         BufferLineColorizer.create(
@@ -589,26 +599,26 @@ let createElement =
               List.iter(renderRuler, rulers);
 
               let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
-                {let halfOffset = offset /. 2.0
-                 let line = Index.toZeroBasedInt(r.startPosition.line)
-                 let start = Index.toZeroBasedInt(r.startPosition.character)
-                 let endC = Index.toZeroBasedInt(r.endPosition.character)
+                {let halfOffset = offset /. 2.0;
+                 let line = Index.toZeroBasedInt(r.startPosition.line);
+                 let start = Index.toZeroBasedInt(r.startPosition.character);
+                 let endC = Index.toZeroBasedInt(r.endPosition.character);
 
-                 let text = Buffer.getLine(buffer, line)
+                 let text = Buffer.getLine(buffer, line);
                  let (startOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
                      ~indentation,
                      ~viewOffset=leftVisibleColumn,
                      text,
                      start,
-                   )
+                   );
                  let (endOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
                      ~indentation,
                      ~viewOffset=leftVisibleColumn,
                      text,
                      endC,
-                   )
+                   );
 
                  Shapes.drawRect(
                    ~transform,

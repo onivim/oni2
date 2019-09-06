@@ -135,8 +135,8 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm) => (state, sendBufferEnterEffect(bm))
-    | Model.Actions.Tick => (state, pumpEffect)
+    | Model.Actions.BufferEnter(bm, _) => (state, sendBufferEnterEffect(bm))
+    | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
 

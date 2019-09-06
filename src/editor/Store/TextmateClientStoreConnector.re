@@ -43,7 +43,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.pump(tmClient)
     );
 
-  let notifyBufferUpdateEffect = (scope, bc) =>
+  let notifyBufferUpdateEffect = (scope, _, bc) =>
     Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
       Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
@@ -64,7 +64,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.Tick => (state, pumpEffect)
+    | Model.Actions.Tick(_) => (state, pumpEffect)
     | Model.Actions.BufferUpdate(bc) =>
       let bufferId = bc.id;
       let buffer = Model.Buffers.getBuffer(bufferId, state.buffers);
@@ -83,7 +83,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               < Core.Constants.default.largeFileLineCountThreshold
             )
             && Model.Buffer.isSyntaxHighlightingEnabled(buffer)) {
-          switch (Model.Buffer.getMetadata(buffer).filePath) {
+          switch (Model.Buffer.getFilePath(buffer)) {
           | None => default
           | Some(v) =>
             let extension = Path.extname(v);
@@ -94,7 +94,13 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               )
             ) {
             | None => default
-            | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+            | Some(scope) =>
+              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(
+                state.configuration,
+                scope,
+              )
+                ? (state, Isolinear.Effect.none)
+                : (state, notifyBufferUpdateEffect(scope, buffer, bc))
             };
           };
         } else {

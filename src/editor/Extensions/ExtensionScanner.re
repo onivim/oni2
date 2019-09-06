@@ -14,7 +14,7 @@ type t = {
 let readFileSync = path => {
   let chan = open_in_bin(path);
   let data = ref("");
-  try (
+  try(
     {
       while (true) {
         data := data^ ++ "\n" ++ input_line(chan);

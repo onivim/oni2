@@ -15,10 +15,16 @@ let ofLines: array(string) => t;
 let ofMetadata: Vim.BufferMetadata.t => t;
 
 let getFilePath: t => option(string);
+let setFilePath: (option(string), t) => t;
+let getFileType: t => option(string);
+let setFileType: (option(string), t) => t;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
+let getLines: t => array(string);
 
-let getMetadata: t => Vim.BufferMetadata.t;
+let getVersion: t => int;
+let setVersion: (int, t) => t;
+
 let getUri: t => Uri.t;
 let getId: t => int;
 let getNumberOfLines: t => int;
@@ -32,6 +38,5 @@ let setModified: (bool, t) => t;
 let disableSyntaxHighlighting: t => t;
 
 let update: (t, BufferUpdate.t) => t;
-let updateMetadata: (Vim.BufferMetadata.t, t) => t;
 
 let empty: t;

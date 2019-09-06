@@ -7,6 +7,7 @@
  */
 
 module Actions = Actions;
+module Animation = Animation;
 module Buffer = Buffer;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
@@ -19,6 +20,7 @@ module EditorGroup = EditorGroup;
 module EditorGroups = EditorGroups;
 module EditorLayout = EditorLayout;
 module EditorMetrics = EditorMetrics;
+module EditorVisibleRanges = EditorVisibleRanges;
 module Filter = Filter;
 module KeyDisplayer = KeyDisplayer;
 module IconTheme = IconTheme;
@@ -35,6 +37,7 @@ module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
+module SyntaxHighlighting2 = SyntaxHighlighting2;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;

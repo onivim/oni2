@@ -215,6 +215,10 @@ let configurationParsers: list(configurationTuple) = [
       vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v),
     },
   ),
+  (
+    "experimental.treeSitter",
+    (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

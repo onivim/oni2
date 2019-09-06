@@ -82,7 +82,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.BufferEnter(bu) => (
+    | Actions.BufferEnter(bu, _) => (
         state,
         checkIndentationEffect(state, bu.id),
       )

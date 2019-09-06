@@ -59,7 +59,7 @@ let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
-  f();
+  let ret = f();
   let endTime = Unix.gettimeofday();
   logCore(
     "[PERF] "
@@ -68,6 +68,7 @@ let perf = (msg, f) => {
     ++ string_of_float(endTime -. startTime)
     ++ "s",
   );
+  ret;
 };
 
 let () =

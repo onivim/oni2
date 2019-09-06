@@ -199,9 +199,9 @@ let start = getState => {
     };
 
   let updater = (state: Model.State.t, action: Model.Actions.t) =>
-    if (action === Model.Actions.Tick) {
-      (state, Isolinear.Effect.none);
-    } else {
+    switch (action) {
+    | Model.Actions.Tick(_) => (state, Isolinear.Effect.none)
+    | action =>
       let state = windowUpdater(state, action);
 
       let effect =
