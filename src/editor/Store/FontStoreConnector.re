@@ -11,37 +11,32 @@ let minFontSize = 6;
 let defaultFontFamily = "FiraCode-Regular.ttf";
 let defaultFontSize = 14;
 
-let start = (~getScaleFactor, ()) => {
-  let setFont = (dispatch, fontFamily, fontSize) => {
-    let fontSize = max(fontSize, minFontSize);
-    let scaleFactor = getScaleFactor();
-    let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
+let loadAndValidateEditorFont =
+    (~onSuccess, ~onError, scaleFactor, fullPath, fontSize) => {
+  Log.info(
+    "Loading font: " ++ fullPath ++ " | size: " ++ string_of_int(fontSize),
+  );
 
-    
-    
-    let fullPath = switch (fontFamily) {
-    | None => Utility.executingDirectory ++ defaultFontFamily;
-    | Some(v) => 
-      let descriptor = Revery.Font.find(~mono=true, ~weight=Revery.Font.Weight.Normal, v);
-      descriptor.path
-    };
+  let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
 
-    Log.info(
-      "Loading font: " ++ fullPath ++ " | size: " ++ string_of_int(fontSize),
-    );
+  Fontkit.fk_new_face(
+    fullPath,
+    adjSize,
+    font => {
+      open Oni_Model.Actions;
+      open Types;
 
-    Fontkit.fk_new_face(
-      fullPath,
-      adjSize,
-      font => {
-        open Oni_Model.Actions;
-        open Types;
+      /* Measure text */
+      let shapedText = Fontkit.fk_shape(font, "Hi");
+      let firstShape = shapedText[0];
+      let secondShape = shapedText[1];
 
-        /* Measure text */
-        let shapedText = Fontkit.fk_shape(font, "H");
-        let firstShape = shapedText[0];
-        let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
+      let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
+      let secondGlyph = Fontkit.renderGlyph(font, secondShape.glyphId);
 
+      if (glyph.advance != secondGlyph.advance) {
+        onError("Not a monospace font.");
+      } else {
         let metrics = Fontkit.fk_get_metrics(font);
         let actualHeight =
           float_of_int(fontSize)
@@ -59,27 +54,87 @@ let start = (~getScaleFactor, ()) => {
           ++ string_of_float(measuredHeight),
         );
         /* Set editor text based on measurements */
-        dispatch(
-          SetEditorFont(
-            EditorFont.create(
-              ~fontFile=fullPath,
-              ~fontSize,
-              ~measuredWidth,
-              ~measuredHeight,
-              (),
-            ),
+        onSuccess(
+          EditorFont.create(
+            ~fontFile=fullPath,
+            ~fontSize,
+            ~measuredWidth,
+            ~measuredHeight,
+            (),
           ),
         );
-      },
-      _ => Log.error("setFont: Failed to load font " ++ fullPath),
-    );
+      };
+    },
+    _ => onError("Unable to load font."),
+  );
+};
+
+let start = (~getScaleFactor, ()) => {
+  let setFont = (dispatch1, fontFamily, fontSize) => {
+    let dispatch = action =>
+      Revery.App.runOnMainThread(() => dispatch1(action));
+
+    let scaleFactor = getScaleFactor();
+
+    // We load the font asynchronously
+    let _ =
+      Thread.create(
+        () => {
+          let fontSize = max(fontSize, minFontSize);
+
+          let (name, fullPath) =
+            switch (fontFamily) {
+            | None => (
+                defaultFontFamily,
+                Utility.executingDirectory ++ defaultFontFamily,
+              )
+            | Some(v) =>
+              let descriptor =
+                Revery.Font.find(
+                  ~mono=true,
+                  ~weight=Revery.Font.Weight.Normal,
+                  v,
+                );
+              (v, descriptor.path);
+            };
+
+          let onSuccess = editorFont => {
+            dispatch(Actions.SetEditorFont(editorFont));
+          };
+
+          let onError = errorMsg => {
+            Log.error("setFont: Failed to load font " ++ fullPath);
+
+            dispatch(
+              ShowNotification(
+                Notification.create(
+                  ~notificationType=Actions.Error,
+                  ~title="Unable to load font",
+                  ~message=name ++ ": " ++ errorMsg,
+                  (),
+                ),
+              ),
+            );
+          };
+
+          loadAndValidateEditorFont(
+            ~onSuccess,
+            ~onError,
+            scaleFactor,
+            fullPath,
+            fontSize,
+          );
+        },
+        (),
+      );
+    ();
   };
 
   let synchronizeConfiguration = (configuration: Configuration.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
       // TODO
       let editorFontFamily =
-         Configuration.getValue(c => c.editorFontFamily, configuration);
+        Configuration.getValue(c => c.editorFontFamily, configuration);
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
@@ -94,10 +149,7 @@ let start = (~getScaleFactor, ()) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (
-        state,
-        loadEditorFontEffect(None, defaultFontSize),
-      )
+    | Actions.Init => (state, loadEditorFontEffect(None, defaultFontSize))
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,
