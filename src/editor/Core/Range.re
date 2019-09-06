@@ -36,9 +36,7 @@ let contains = (v: t, position: Position.t) => {
   let pl = Index.toInt0(position.line);
   let pc = Index.toInt0(position.character);
 
-  ((pl == l0 && pc >= c0) || pl > l0)
-  && ((pl == l1 && pc <= c1) || pl < l1);
-
+  (pl == l0 && pc >= c0 || pl > l0) && (pl == l1 && pc <= c1 || pl < l1);
 };
 
 let zero =
