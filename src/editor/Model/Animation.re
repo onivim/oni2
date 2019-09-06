@@ -4,12 +4,6 @@
  * Model for UI animations
  */
 
-open Oni_Core;
-open Oni_Core.Types;
-open Oni_Extensions;
-
-open Revery;
-
 type t = {
   // Metadata about the animation
   isActive: bool,
