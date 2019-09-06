@@ -84,6 +84,8 @@ let createElement =
       incr(i);
     };
 
+    let height_ = min(height_, count * rowHeight);
+
     items := List.rev(items^);
 
     let style =

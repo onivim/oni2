@@ -218,10 +218,17 @@ let doWork = (p: pendingWork, c: completedWork) => {
   };
 };
 
+let progressReporter = (p: pendingWork, _) => {
+  1.0
+  -. float_of_int(List.length(p.commandsToFilter))
+  /. float_of_int(List.length(p.fullCommands));
+};
+
 let create = () => {
   Job.create(
     ~pendingWorkPrinter=showPendingWork,
     ~completedWorkPrinter=showCompletedWork,
+    ~progressReporter,
     ~name="MenuJob",
     ~initialCompletedWork,
     ~budget=Milliseconds(2.),
