@@ -91,6 +91,11 @@ let getDiagnostics = (instance, buffer) => {
   };
 };
 
+let getDiagnosticsAtPosition = (instance, buffer, position) => {
+    getDiagnostics(instance, buffer)
+    |> List.filter((d: Diagnostic.t) => Range.contains(d.range, position))
+};
+
 let getDiagnosticsMap = (instance, buffer) => {
   getDiagnostics(instance, buffer) |> explodeDiagnostics(buffer);
 };

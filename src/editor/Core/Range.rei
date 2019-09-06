@@ -12,6 +12,8 @@ type t = {
   endPosition: Position.t,
 };
 
+let contains:  (t, Position.t) => bool;
+
 let createFromPositions:
   (~startPosition: Position.t, ~endPosition: Position.t, unit) => t;
 

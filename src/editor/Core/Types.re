@@ -80,6 +80,8 @@ module Position = {
     character: ZeroBasedIndex(character),
   };
 
+  let ofInt0 = createFromZeroBasedIndices;
+
   let createFromOneBasedIndices = (line: int, character: int) => {
     line: OneBasedIndex(line),
     character: OneBasedIndex(character),
