@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontNotMonospaceTest
            EditorFontInvalidTest
+           EditorFontValidTest
            FontSizeChangeTest
            InputIgnoreTest
            QuickOpenEventuallyCompletesTest
@@ -43,6 +44,7 @@
         EchoNotificationTest.exe
         EditorFontNotMonospaceTest.exe
         EditorFontInvalidTest.exe
+        EditorFontValidTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
         QuickOpenEventuallyCompletesTest.exe
