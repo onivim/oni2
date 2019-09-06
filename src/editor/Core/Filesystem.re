@@ -105,35 +105,35 @@ let hasPerm = (perm, st) =>
 
 let getGroupId = () =>
   Unix.(
-    try (getgid() |> return) {
+    try(getgid() |> return) {
     | Not_found => error("No Group ID found")
     }
   );
 
 let getUserId = () =>
   Unix.(
-    try (getuid() |> return) {
+    try(getuid() |> return) {
     | Not_found => error("Cannot find user")
     }
   );
 
 let stat = path =>
   Unix.(
-    try (Some(stat(path)) |> return) {
+    try(Some(stat(path)) |> return) {
     | Unix_error(ENOENT, _, _) => return(None)
     }
   );
 
 let chmod = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
-    try (chmod(path, perm) |> return) {
+    try(chmod(path, perm) |> return) {
     | Unix_error(_, _, _) => error("can't set permissions for '%s'", path)
     }
   );
 
 let chown = (path, uid, gid) =>
   Unix.(
-    try (chown(path, uid, gid) |> return) {
+    try(chown(path, uid, gid) |> return) {
     | Unix_error(err, _, _) =>
       error(
         "can't set uid/gid for '%s' because '%s",
@@ -154,7 +154,7 @@ let chown = (path, uid, gid) =>
 */
 let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
-    try (mkdir(path, perm) |> return) {
+    try(mkdir(path, perm) |> return) {
     | Unix_error(err, _, _) =>
       error(
         "can't create directory '%s' because '%s",
@@ -166,7 +166,7 @@ let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
 
 let rmdir = path =>
   Unix.(
-    try (rmdir(path) |> return) {
+    try(rmdir(path) |> return) {
     | Unix_error(err, _, _) =>
       error(
         "can't remove directory '%s' because: '%s'",
@@ -195,7 +195,7 @@ let getOniDirectory = home =>
 
 let getHomeDirectory = () =>
   Unix.(
-    try (unsafeFindHome() |> return) {
+    try(unsafeFindHome() |> return) {
     | Unix_error(err, _, _) =>
       error("Cannot find home because: '%s'", error_message(err))
     | Failure(reason) => error("The OS could not be identified %s", reason)
@@ -241,7 +241,7 @@ let copyFile = (source, dest) => {
 
 let copy = (source, dest) =>
   Unix.(
-    try (copyFile(source, dest) |> return) {
+    try(copyFile(source, dest) |> return) {
     | Unix_error(err, funcName, argument) =>
       error(
         "Failed to copy from %s to %s, encountered %s, whilst calling %s with %s",
