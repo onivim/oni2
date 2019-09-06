@@ -12,8 +12,11 @@ runTest(~name="TickTest", (dispatch, wait, runEffects) => {
 
   // We'll flush a few rounds of effects
   let i = ref(0);
+  let t = ref(0.);
+  let deltaT = 0.016;
   while (i^ < 5) {
-    dispatch(Tick);
+    t := t^ +. deltaT;
+    dispatch(Tick({deltaTime: deltaT, totalTime: t^}));
     runEffects();
 
     wait(~name="Validate no state update", (state: State.t) => {
@@ -23,7 +26,7 @@ runTest(~name="TickTest", (dispatch, wait, runEffects) => {
     incr(i);
   };
   // But this next round should be the same as before..
-  dispatch(Tick);
+  dispatch(Tick({deltaTime: deltaT, totalTime: t^ +. deltaT}));
   runEffects();
 
   wait(~name="Validate no state update", (state: State.t) =>
