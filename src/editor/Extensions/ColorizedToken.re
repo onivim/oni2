@@ -7,6 +7,7 @@ open Oni_Core.Types;
 /* From:
  * https://github.com/Microsoft/vscode-textmate/blob/master/src/main.ts
  */
+
 let languageId_mask = 0b00000000000000000000000011111111;
 let token_type_mask = 0b00000000000000000000011100000000;
 let font_style_mask = 0b00000000000000000011100000000000;

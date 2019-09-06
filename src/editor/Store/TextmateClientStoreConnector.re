@@ -43,7 +43,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       Extensions.TextmateClient.pump(tmClient)
     );
 
-  let notifyBufferUpdateEffect = (scope, bc) =>
+  let notifyBufferUpdateEffect = (scope, _, bc) =>
     Isolinear.Effect.create(~name="textmate.notifyBufferUpdate", () =>
       Extensions.TextmateClient.notifyBufferUpdate(tmClient, scope, bc)
     );
@@ -94,7 +94,13 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               )
             ) {
             | None => default
-            | Some(scope) => (state, notifyBufferUpdateEffect(scope, bc))
+            | Some(scope) =>
+              Oni_Syntax.NativeSyntaxHighlights.canHandleScope(
+                state.configuration,
+                scope,
+              )
+                ? (state, Isolinear.Effect.none)
+                : (state, notifyBufferUpdateEffect(scope, buffer, bc))
             };
           };
         } else {

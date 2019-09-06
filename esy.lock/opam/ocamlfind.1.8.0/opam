@@ -66,3 +66,4 @@ url {
   checksum: "md5=a710c559667672077a93d34eb6a42e5b"
   mirrors: "http://download2.camlcity.org/download/findlib-1.8.0.tar.gz"
 }
+depopts: ["graphics"]
