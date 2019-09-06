@@ -99,7 +99,13 @@ let runTest =
            -. maxWaitTime < startTime) {
       logWaiter("Iteration: " ++ string_of_int(iteration^));
       incr(iteration);
+      
+      // Flush any queued calls from `Revery.App.runOnMainThread`
+      Revery.App.flushPendingCallbacks();
+      
+      // Flush any pending effects
       wrappedRunEffects();
+      
       Unix.sleepf(0.1);
     };
 
