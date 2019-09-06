@@ -6,13 +6,11 @@ type state = {
   isFocused: bool,
   internalValue: string,
   cursorPosition: int,
-  cursorTimer: Time.t,
 };
 
 type action =
   | CursorLeft
   | CursorRight
-  | CursorTimer
   | SetFocus(bool)
   | DeleteCharacter
   | DeleteLine
@@ -101,72 +99,34 @@ let addCharacter = (word, char, index) => {
 };
 let reducer = (action, state) =>
   switch (action) {
-  | SetFocus(isFocused) => {
-      ...state,
-      cursorTimer: Time.Seconds(0.0),
-      isFocused,
-    }
+  | SetFocus(isFocused) => {...state, isFocused}
   | CursorLeft => {
       ...state,
-      cursorTimer: Time.Seconds(0.0),
       cursorPosition:
         getSafeStringBounds(state.internalValue, state.cursorPosition, -1),
     }
   | CursorRight => {
       ...state,
-      cursorTimer: Time.Seconds(0.0),
       cursorPosition:
         getSafeStringBounds(state.internalValue, state.cursorPosition, 1),
-    }
-  | CursorTimer => {
-      ...state,
-      cursorTimer:
-        state.cursorTimer >= Time.Seconds(1.0)
-          ? Time.Seconds(0.0)
-          : Time.increment(state.cursorTimer, Time.Seconds(0.1)),
     }
   | DeleteWord =>
     let {newString, cursorPosition} =
       deleteWord(state.internalValue, state.cursorPosition);
-    {
-      ...state,
-      cursorTimer: Time.Seconds(0.0),
-      internalValue: newString,
-      cursorPosition,
-    };
-  | DeleteLine => {
-      ...state,
-      cursorTimer: Time.Seconds(0.),
-      internalValue: "",
-      cursorPosition: 0,
-    }
+    {...state, internalValue: newString, cursorPosition};
+  | DeleteLine => {...state, internalValue: "", cursorPosition: 0}
   | DeleteCharacter =>
     let {newString, cursorPosition} =
       removeCharacterAfter(state.internalValue, state.cursorPosition);
-    {
-      ...state,
-      cursorTimer: Time.Seconds(0.0),
-      internalValue: newString,
-      cursorPosition,
-    };
+    {...state, internalValue: newString, cursorPosition};
   | Backspace =>
     let {newString, cursorPosition} =
       removeCharacterBefore(state.internalValue, state.cursorPosition);
-    {
-      ...state,
-      cursorTimer: Time.Seconds(0.0),
-      internalValue: newString,
-      cursorPosition,
-    };
+    {...state, internalValue: newString, cursorPosition};
   | InsertText(t) =>
     let {newString, cursorPosition} =
       addCharacter(state.internalValue, t, state.cursorPosition);
-    {
-      ...state,
-      cursorTimer: Time.Seconds(0.0),
-      internalValue: newString,
-      cursorPosition,
-    };
+    {...state, internalValue: newString, cursorPosition};
   };
 
 let defaultHeight = 50;
@@ -206,7 +166,6 @@ let make =
         ~initialState={
           internalValue: "",
           cursorPosition: 0,
-          cursorTimer: Time.Seconds(0.0),
           isFocused: false,
         },
         reducer,
@@ -221,17 +180,6 @@ let make =
         () => {
           onChange(valueToDisplay);
           None;
-        },
-        slots,
-      );
-
-    let slots =
-      Hooks.effect(
-        OnMount,
-        () => {
-          let clear =
-            Tick.interval(_ => dispatch(CursorTimer), Seconds(0.1));
-          Some(clear);
         },
         slots,
       );
@@ -287,13 +235,7 @@ let make =
     let inputFontFamily =
       Selector.select(style, FontFamily, "Roboto-Regular.ttf");
 
-    let cursorOpacity =
-      state.isFocused
-      |> (
-        fun
-        | true => state.cursorTimer <= Time.Seconds(0.5) ? 1.0 : 0.0
-        | false => 0.0
-      );
+    let cursorOpacity = 1.0;
 
     let cursor = {
       let (startStr, _) =
