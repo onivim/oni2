@@ -38,7 +38,7 @@ let convertUTF8string = str =>
   CamomileBundled.Camomile.(UChar.code(UTF8.get(str, 0)));
 
 let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
-  try (List.fold_left2(fn, accum, list1, list2)) {
+  try(List.fold_left2(fn, accum, list1, list2)) {
   | Invalid_argument(reason) =>
     Log.error("fold_left2 failing because: " ++ reason);
     default;
@@ -60,7 +60,7 @@ let join = paths => {
  */
 let stringContains = (word, substring) => {
   let re = Str.regexp_string_case_fold(substring);
-  try (Str.search_forward(re, word, 0) |> ignore |> (_ => true)) {
+  try(Str.search_forward(re, word, 0) |> ignore |> (_ => true)) {
   | Not_found => false
   };
 };
