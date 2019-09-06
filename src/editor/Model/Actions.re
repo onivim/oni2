@@ -60,7 +60,7 @@ type t =
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool)
+  | MenuSetLoading(bool, float)
   | MenuClose
   | MenuSelect
   | MenuNextItem
@@ -102,7 +102,8 @@ and notificationType =
 and tick = {
   deltaTime: float,
   totalTime: float,
-} and notification = {
+}
+and notification = {
   id: int,
   notificationType,
   title: string,

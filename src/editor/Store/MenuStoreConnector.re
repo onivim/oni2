@@ -8,6 +8,7 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 
 module Actions = Model.Actions;
+module Animation = Model.Animation;
 module Menu = Model.Menu;
 module MenuJob = Model.MenuJob;
 
@@ -22,8 +23,9 @@ let start = () => {
   let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
     Isolinear.Effect.create(~name="menu.construct", () => {
       let setItems = items => dispatch(Actions.MenuUpdate(items));
+      let startTime = Revery.Time.getTime() |> Revery.Time.toSeconds;
       let setLoading = isLoading =>
-        dispatch(Actions.MenuSetLoading(isLoading));
+        dispatch(Actions.MenuSetLoading(isLoading, startTime));
 
       let disposeFunction =
         menuConstructor(setItems, onQueryChangedEvent, setLoading);
@@ -49,8 +51,12 @@ let start = () => {
       Core.Job.getCompletedWork(state.filterJob).uiFiltered;
     let filteredCommandsCount = filteredCommands |> Array.length;
     switch (action) {
-    | MenuSetLoading(isLoading) => (
-        {...state, isLoading},
+    | MenuSetLoading(isLoading, time) => (
+        {
+          ...state,
+          isLoading,
+          loadingAnimation: Animation.start(time, state.loadingAnimation),
+        },
         Isolinear.Effect.none,
       )
     | MenuPosition(index) => (
@@ -110,6 +116,7 @@ let start = () => {
           isOpen: false,
           selectedItem: 0,
           isLoading: false,
+          loadingAnimation: Animation.stop(state.loadingAnimation),
         },
         disposeMenuEffect(disposeFunction),
       );
@@ -128,9 +135,9 @@ let start = () => {
     };
   };
 
-  let updateJob = (state: Model.State.t) => {
+  let updateJob = (state: Model.State.t) =>
     if (Core.Job.isComplete(state.menu.filterJob)) {
-      state
+      state;
     } else {
       {
         ...state,
@@ -138,34 +145,29 @@ let start = () => {
           ...state.menu,
           filterJob: Core.Job.tick(state.menu.filterJob),
         },
-      }
-    }
-  };
+      };
+    };
 
-  let updateAnimation = (state: Model.State.t) => {
+  let updateAnimation = (deltaT: float, state: Model.State.t) =>
     if (state.menu.isLoading) {
       {
         ...state,
         menu: {
           ...state.menu,
-          isLoading: true,
-        }
-      }
+          loadingAnimation:
+            Animation.tick(deltaT, state.menu.loadingAnimation),
+        },
+      };
     } else {
-      state
-    }
-  };
+      state;
+    };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
-
     switch (action) {
-    | Actions.Tick(_) => {
-        let newState =  state
-        |> updateJob
-        |> updateAnimation;
+    | Actions.Tick({deltaTime, _}) =>
+      let newState = state |> updateJob |> updateAnimation(deltaTime);
 
-        (newState, Isolinear.Effect.none);
-    }
+      (newState, Isolinear.Effect.none);
     | action =>
       let (menuState, menuEffect) = menuUpdater(state.menu, action);
       let state = {...state, menu: menuState};

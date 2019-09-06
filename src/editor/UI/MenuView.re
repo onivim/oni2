@@ -97,26 +97,44 @@ let createElement =
 
     let jobProgress = Job.getProgress(menu.filterJob);
 
+    let loadingOpacityAnimation = Animation.getValue(menu.loadingAnimation);
     let loadingSpinner =
       menu.isLoading
         ? <View style=Style.[height(40), width(menuWidth)]>
             <Center>
               <View
                 style=Style.[
-                  transform(Transform.[RotateY(Math.Angle.Radians(time *. 2.))]),
+                  transform(
+                    Transform.[RotateY(Math.Angle.Radians(time *. 2.))],
+                  ),
                 ]>
-                <Opacity opacity=1.0>
-                  <Container width=10 height=10 color={theme.oniNormalModeBackground} />
+                <Opacity opacity=loadingOpacityAnimation>
+                  <Container
+                    width=10
+                    height=10
+                    color={theme.oniNormalModeBackground}
+                  />
                 </Opacity>
               </View>
             </Center>
           </View>
-
         : <Opacity opacity=0.3>
-          <View style=Style.[height(2), width(menuWidth)]>
-            <View style=Style.[height(2), width(1 + (int_of_float(float_of_int(menuWidth) *. jobProgress) - 1)), backgroundColor(theme.oniNormalModeBackground)] />
-          </View>
-          </Opacity>
+            <View style=Style.[height(2), width(menuWidth)]>
+              <View
+                style=Style.[
+                  height(2),
+                  width(
+                    1
+                    + (
+                      int_of_float(float_of_int(menuWidth) *. jobProgress)
+                      - 1
+                    ),
+                  ),
+                  backgroundColor(theme.oniNormalModeBackground),
+                ]
+              />
+            </View>
+          </Opacity>;
 
     React.(
       hooks,

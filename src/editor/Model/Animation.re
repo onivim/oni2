@@ -12,7 +12,6 @@ open Revery;
 
 type t = {
   // Metadata about the animation
-  enabled: bool,
   isActive: bool,
   delay: float,
   duration: float,
@@ -25,32 +24,33 @@ type t = {
   iterations: int,
 };
 
-let create =
-    (
-      ~enabled=true,
-      ~isActive=true,
-      ~duration=1.0,
-      ~repeat=false,
-      ~delay=0.,
-      ~startTime,
-      (),
-    ) => {
-  enabled,
+let create = (~isActive=true, ~duration=1.0, ~repeat=false, ~delay=0., ()) => {
   isActive,
-  startTime,
+  startTime: 0.,
   delay,
   duration,
   repeat,
   remainingDelay: delay,
-  currentTime: startTime,
+  currentTime: 0.,
   currentVal: 0.,
   iterations: 0,
 };
 
-let tick = (deltaT: float, v: t) => {
-  let newCurrentVal = v.currentVal +. v.duration /. deltaT;
+let show = (v: t) => {
+  "Animation startTime: "
+  ++ string_of_float(v.startTime)
+  ++ " isActive: "
+  ++ string_of_bool(v.isActive)
+  ++ " currentVal: "
+  ++ string_of_float(v.currentVal);
+};
 
-  if (v.remainingDelay >= 0.) {
+let getValue = (v: t) => v.currentVal;
+
+let tick = (deltaT: float, v: t) => {
+  let newCurrentVal = v.currentVal +. deltaT /. v.duration;
+
+  if (v.remainingDelay > 0.) {
     let newDelay = v.remainingDelay -. deltaT;
     {
       ...v,
@@ -70,9 +70,10 @@ let tick = (deltaT: float, v: t) => {
 
 let isActive = (v: t) => v.isActive;
 
-let reset = (currentTime: float, v: t) => {
+let start = (currentTime: float, v: t) => {
   {
     ...v,
+    isActive: true,
     startTime: currentTime,
     currentTime,
     currentVal: 0.,

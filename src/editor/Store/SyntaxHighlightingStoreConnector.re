@@ -62,72 +62,67 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
-      switch (action) {
-      | Model.Actions.Tick(_) => {
+    switch (action) {
+    | Model.Actions.Tick(_) =>
       if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
         let syntaxHighlighting2 =
           Model.SyntaxHighlighting2.doPendingWork(state.syntaxHighlighting2);
         ({...state, syntaxHighlighting2}, Isolinear.Effect.none);
       } else {
         default;
-      };
       }
-      // When the view changes, update our list of visible buffers,
-      // so we know which ones might have pending work!
-      | Model.Actions.EditorGroupAdd(_)
-      | Model.Actions.EditorScroll(_)
-      | Model.Actions.EditorScrollToLine(_)
-      | Model.Actions.EditorScrollToColumn(_)
-      | Model.Actions.AddSplit(_)
-      | Model.Actions.RemoveSplit(_)
-      | Model.Actions.ViewSetActiveEditor(_)
-      | Model.Actions.BufferEnter(_)
-      | Model.Actions.ViewCloseEditor(_) =>
-        let visibleBuffers =
-          Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+    // When the view changes, update our list of visible buffers,
+    // so we know which ones might have pending work!
+    | Model.Actions.EditorGroupAdd(_)
+    | Model.Actions.EditorScroll(_)
+    | Model.Actions.EditorScrollToLine(_)
+    | Model.Actions.EditorScrollToColumn(_)
+    | Model.Actions.AddSplit(_)
+    | Model.Actions.RemoveSplit(_)
+    | Model.Actions.ViewSetActiveEditor(_)
+    | Model.Actions.BufferEnter(_)
+    | Model.Actions.ViewCloseEditor(_) =>
+      let visibleBuffers =
+        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+      let state = {
+        ...state,
+        syntaxHighlighting2:
+          Model.SyntaxHighlighting2.updateVisibleBuffers(
+            visibleBuffers,
+            state.syntaxHighlighting2,
+          ),
+      };
+      (state, Isolinear.Effect.none);
+    // When there is a buffer update, send it over to the syntax highlight
+    // strategy to handle the parsing.
+    | Model.Actions.BufferUpdate(bu) =>
+      let lines = getLines(state, bu.id);
+      let scope = getScopeForBuffer(state, bu.id);
+      let version = getVersion(state, bu.id);
+      switch (scope) {
+      | None => default
+      | Some(scope)
+          when
+            !NativeSyntaxHighlights.canHandleScope(state.configuration, scope) => default
+      | Some(scope) when isVersionValid(bu.version, version) =>
+        ignore(scope);
         let state = {
           ...state,
           syntaxHighlighting2:
-            Model.SyntaxHighlighting2.updateVisibleBuffers(
-              visibleBuffers,
+            Model.SyntaxHighlighting2.onBufferUpdate(
+              ~getTreeSitterScopeMapper,
+              ~bufferUpdate=bu,
+              ~lines,
+              ~theme=state.tokenTheme,
               state.syntaxHighlighting2,
             ),
         };
         (state, Isolinear.Effect.none);
-      // When there is a buffer update, send it over to the syntax highlight
-      // strategy to handle the parsing.
-      | Model.Actions.BufferUpdate(bu) =>
-        let lines = getLines(state, bu.id);
-        let scope = getScopeForBuffer(state, bu.id);
-        let version = getVersion(state, bu.id);
-        switch (scope) {
-        | None => default
-        | Some(scope)
-            when
-              !
-                NativeSyntaxHighlights.canHandleScope(
-                  state.configuration,
-                  scope,
-                ) => default
-        | Some(scope) when isVersionValid(bu.version, version) =>
-          ignore(scope);
-          let state = {
-            ...state,
-            syntaxHighlighting2:
-              Model.SyntaxHighlighting2.onBufferUpdate(
-                ~getTreeSitterScopeMapper,
-                ~bufferUpdate=bu,
-                ~lines,
-                ~theme=state.tokenTheme,
-                state.syntaxHighlighting2,
-              ),
-          };
-          (state, Isolinear.Effect.none);
-        | Some(_) => default
-        };
-      | _ => default
+      | Some(_) => default
       };
+    | _ => default
     };
+  };
 
   (updater, stream);
 };
