@@ -14,7 +14,10 @@ let defaultFontSize = 14;
 let loadAndValidateEditorFont =
     (~onSuccess, ~onError, scaleFactor, fullPath, fontSize) => {
   Log.info(
-    "loadAndValidateEditorFont filePath: " ++ fullPath ++ " | size: " ++ string_of_int(fontSize),
+    "loadAndValidateEditorFont filePath: "
+    ++ fullPath
+    ++ " | size: "
+    ++ string_of_int(fontSize),
   );
 
   let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
@@ -74,7 +77,6 @@ let start = (~getScaleFactor, ()) => {
       Revery.App.runOnMainThread(() => dispatch1(action));
 
     let scaleFactor = getScaleFactor();
-  
 
     // We load the font asynchronously
     let _ =
@@ -89,14 +91,19 @@ let start = (~getScaleFactor, ()) => {
                 Utility.executingDirectory ++ defaultFontFamily,
               )
             | Some(v) =>
-              Log.info("FontStoreConnector::setFont - discovering font: " ++ v);
+              Log.info(
+                "FontStoreConnector::setFont - discovering font: " ++ v,
+              );
               let descriptor =
                 Revery.Font.find(
                   ~mono=true,
                   ~weight=Revery.Font.Weight.Normal,
                   v,
                 );
-              Log.info("FontStoreConnector::setFont - discovering font at path: " ++ descriptor.path);
+              Log.info(
+                "FontStoreConnector::setFont - discovering font at path: "
+                ++ descriptor.path,
+              );
               (v, descriptor.path);
             };
 
