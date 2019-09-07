@@ -11,17 +11,18 @@ open Oni_Core.Types;
 
 module Diagnostic = {
   [@deriving show({with_path: false})]
-  type t = {range: Range.t};
-
-  let create = (~range: Range.t, ()) => {
-    let ret: t = {range: range};
-    ret;
+  type t = {
+    range: Range.t,
+    message: string,
   };
+
+  let create = (~range: Range.t, ~message, ()) => {range, message};
 
   let explode = (buffer: Buffer.t, v: t) => {
     let measure = Buffer.getLineLength(buffer);
 
-    Range.explode(measure, v.range) |> List.map(range => create(~range, ()));
+    Range.explode(measure, v.range)
+    |> List.map(range => create(~range, ~message=v.message, ()));
   };
 };
 
@@ -89,6 +90,11 @@ let getDiagnostics = (instance, buffer) => {
   | None => []
   | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
   };
+};
+
+let getDiagnosticsAtPosition = (instance, buffer, position) => {
+  getDiagnostics(instance, buffer)
+  |> List.filter((d: Diagnostic.t) => Range.contains(d.range, position));
 };
 
 let getDiagnosticsMap = (instance, buffer) => {

@@ -8,9 +8,9 @@ open Actions;
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
-    if (a == Actions.Tick) {
-      s;
-    } else {
+    switch (a) {
+    | Actions.Tick(_) => s
+    | a =>
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),

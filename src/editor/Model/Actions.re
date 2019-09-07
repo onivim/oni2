@@ -11,7 +11,7 @@ open Oni_Syntax;
 
 type t =
   | Init
-  | Tick
+  | Tick(tick)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter(Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)
@@ -61,7 +61,7 @@ type t =
   | MenuOpen(menuCreator)
   | MenuUpdate(list(menuCommand))
   | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool)
+  | MenuSetLoading(bool, float)
   | MenuClose
   | MenuSelect
   | MenuNextItem
@@ -100,6 +100,10 @@ and notificationType =
   | Info
   | Warning
   | Error
+and tick = {
+  deltaTime: float,
+  totalTime: float,
+}
 and notification = {
   id: int,
   notificationType,
