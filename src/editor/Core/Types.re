@@ -86,7 +86,7 @@ module Position = {
     line: OneBasedIndex(line),
     character: OneBasedIndex(character),
   };
-
+  
   let ofInt1 = createFromOneBasedIndices;
 };
 

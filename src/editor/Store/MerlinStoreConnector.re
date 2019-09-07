@@ -15,6 +15,28 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Rench;
 
+module Esy = {
+  
+  let _esyPath = ref(None);
+
+  let esyExecutable = switch(Revery.Environment.os) {
+  | Windows => "esy.cmd"
+  | _ => "esy";
+  };
+
+  let getEsyPath = () => {
+    switch (_esyPath^) {
+    | Some(v) => Some(v)
+    | None => {
+
+      let esyPath = Environment.which(esyExecutable);
+      _esyPath := esyPath;
+      esyPath;
+    }
+    }
+  };
+};
+
 module MerlinDiscovery = {
   type t = {ocamlMerlinPath: option(string)};
 
@@ -49,8 +71,22 @@ module MerlinDiscovery = {
           print_endline("FOUND PATH: " ++ v);
           complete({ocamlMerlinPath: Some(v)});
         | None =>
-          print_endline("Merlin not found");
-          complete({ocamlMerlinPath: None});
+          print_endline("Merlin not found in Path... trying esy");
+
+          switch(Esy.getEsyPath()) {
+          | None => 
+            print_endline("Esy not found.");
+            complete({ocamlMerlinPath: None});
+          | Some(v) =>
+            print_endline("Found esy: " ++ v);
+            let result = ChildProcess.spawnSync(
+              ~cwd=Some(workingDirectory),
+              v,
+              [|"where", merlinExecutable|]);
+              let ret = result.stdout |> String.trim;
+              print_endline ("RESULT: " ++ ret);
+             complete({ocamlMerlinPath: Some(ret)});
+          }
         };
       };
 
