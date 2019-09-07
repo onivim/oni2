@@ -21,11 +21,13 @@ module MerlinDiscovery = {
   let _cache: Hashtbl.t(string, t) = Hashtbl.create(8);
   let _mutex = Mutex.create();
 
+  let merlinExecutable = switch(Revery.Environment.os) {
+  | Windows => "ocamlmerlin.exe"
+  | _ => "ocamlmerlin";
+  };
+
   let default = {
-    ocamlMerlinPath:
-      Some(
-        "C:\\Users\\bryphe\\.esy\\3_\\i\\opam__s__merlin-opam__c__3.2.2-862fb62c\\bin\\ocamlmerlin.exe",
-      ),
+    ocamlMerlinPath: None
   };
 
   let discover = (workingDirectory: string) => {
@@ -41,7 +43,7 @@ module MerlinDiscovery = {
         };
 
         // Otherwise - is it available in path?
-        let merlinPath = Environment.which("ocamlmerlin.exe");
+        let merlinPath = Environment.which(merlinExecutable);
         switch (merlinPath) {
         | Some(v) =>
           print_endline("FOUND PATH: " ++ v);
@@ -135,6 +137,7 @@ module MerlinProtocolConverter = {
   let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
     let f = (err: MerlinProtocol.errorResultItem) => {
       Model.Diagnostics.Diagnostic.create(
+        ~message=err.message,
         ~range=
           Core.Range.ofPositions(
             ~startPosition=
@@ -167,7 +170,7 @@ module Merlin = {
       switch (merlin.ocamlMerlinPath) {
       | Some(v) =>
         print_endline("Using path: " ++ v);
-        Thread.create(
+        let _ = Thread.create(
           () => {
             pendingRequest := true;
             let (pstdin, stdin) = Unix.pipe();
