@@ -423,6 +423,13 @@ let start =
       Vim.init();
       let _ = Vim.command("e untitled");
       hasInitialized := true;
+
+      Vim.Options.setAutoClosingPairs(true);
+      Vim.AutoClosingPairs.setPairs([|
+        Vim.Types.AutoClosingPair.create(~opening='[', ~closing=']', ()),
+        Vim.Types.AutoClosingPair.create(~opening='(', ~closing=')', ()),
+        Vim.Types.AutoClosingPair.create(~opening='{', ~closing='}', ()),
+      |]);
     });
 
   /* TODO: Move to init */
