@@ -7,8 +7,9 @@
            ClipboardYankTest
            CopyActiveFilepathToClipboardTest
            EchoNotificationTest
-           EditorFontNotMonospaceTest
+           EditorFontFromPathTest
            EditorFontInvalidTest
+           EditorFontNotMonospaceTest
            EditorFontValidTest
            FontSizeChangeTest
            InputIgnoreTest
@@ -42,8 +43,9 @@
         ClipboardYankTest.exe
         CopyActiveFilepathToClipboardTest.exe
         EchoNotificationTest.exe
-        EditorFontNotMonospaceTest.exe
+        EditorFontFromPathTest.exe
         EditorFontInvalidTest.exe
+        EditorFontNotMonospaceTest.exe
         EditorFontValidTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
