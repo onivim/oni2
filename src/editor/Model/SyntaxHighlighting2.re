@@ -93,6 +93,8 @@ let getTokensForLine = (v: t, bufferId: int, line: int) => {
 
 let onBufferUpdate =
     (
+      ~configuration,
+      ~scope,
       ~getTreeSitterScopeMapper,
       ~bufferUpdate: BufferUpdate.t,
       ~lines: array(string),
@@ -107,7 +109,9 @@ let onBufferUpdate =
         | None =>
           Some(
             NativeSyntaxHighlights.create(
+              ~configuration,
               ~theme,
+              ~scope,
               ~getTreeSitterScopeMapper,
               lines,
             ),

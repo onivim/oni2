@@ -110,6 +110,8 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
           ...state,
           syntaxHighlighting2:
             Model.SyntaxHighlighting2.onBufferUpdate(
+              ~configuration=state.configuration,
+              ~scope,
               ~getTreeSitterScopeMapper,
               ~bufferUpdate=bu,
               ~lines,
