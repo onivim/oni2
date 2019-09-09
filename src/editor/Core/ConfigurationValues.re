@@ -53,7 +53,7 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
-  editorFontFamily: None,
+  editorFontFamily: Some("FiraCode-Regular.ttf"),
   editorFontSize: 14,
   editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
