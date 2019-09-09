@@ -90,21 +90,29 @@ let start = (~getScaleFactor, ()) => {
                 defaultFontFamily,
                 Utility.executingDirectory ++ defaultFontFamily,
               )
+            | Some(v) when v == "FiraCode-Regular.ttf" => (
+              defaultFontFamily,
+              Utility.executingDirectory ++ defaultFontFamily,
+            )
             | Some(v) =>
               Log.info(
                 "FontStoreConnector::setFont - discovering font: " ++ v,
               );
-              let descriptor =
-                Revery.Font.find(
-                  ~mono=true,
-                  ~weight=Revery.Font.Weight.Normal,
-                  v,
+              switch (Rench.Path.isAbsolute(v)) {
+              | true => (v, v)
+              | false =>
+                let descriptor =
+                  Revery.Font.find(
+                    ~mono=true,
+                    ~weight=Revery.Font.Weight.Normal,
+                    v,
+                  );
+                Log.info(
+                  "FontStoreConnector::setFont - discovering font at path: "
+                  ++ descriptor.path,
                 );
-              Log.info(
-                "FontStoreConnector::setFont - discovering font at path: "
-                ++ descriptor.path,
-              );
-              (v, descriptor.path);
+                (v, descriptor.path);
+              }
             };
 
           let onSuccess = editorFont => {
