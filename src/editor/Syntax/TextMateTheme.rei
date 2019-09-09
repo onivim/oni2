@@ -36,7 +36,7 @@ let of_yojson:
   (
     ~defaultBackground: Color.t,
     ~defaultForeground: Color.t,
-    Yojson.Safe.json
+    Yojson.Safe.t
   ) =>
   t;
 
