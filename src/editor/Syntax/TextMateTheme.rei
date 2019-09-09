@@ -33,11 +33,7 @@ let create:
     [of_yojson] instantiates a Theme [t] from JSON
  */
 let of_yojson:
-  (
-    ~defaultBackground: Color.t,
-    ~defaultForeground: Color.t,
-    Yojson.Safe.t
-  ) =>
+  (~defaultBackground: Color.t, ~defaultForeground: Color.t, Yojson.Safe.t) =>
   t;
 
 /*

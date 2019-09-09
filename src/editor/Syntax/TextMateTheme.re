@@ -85,8 +85,7 @@ let create =
   ret;
 };
 
-let of_yojson =
-    (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) => {
+let of_yojson = (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) => {
   let parseSettings: Yojson.Safe.t => TokenStyle.t =
     json => {
       let str = v =>
