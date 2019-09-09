@@ -203,7 +203,8 @@
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "*",
-    "reason-tree-sitter": "*"
+    "reason-tree-sitter": "*",
+    "reason-textmate": "*"
   },
   "resolutions": {
     "@opam/cmdliner": "1.0.2",
@@ -226,7 +227,9 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
-    "@esy-ocaml/reason": "github:facebook/reason#474900e"
+    "@esy-ocaml/reason": "github:facebook/reason#474900e",
+    "reason-textmate": "github:onivim/reason-textmate#1251dea",
+    "reason-oniguruma": "github:onivim/reason-oniguruma#29811c1"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
