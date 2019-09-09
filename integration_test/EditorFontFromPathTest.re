@@ -4,7 +4,7 @@ open Oni_IntegrationTestLib;
 
 let font =
   Sys.getcwd()
-  ++ "/assets/fonts/Inconsolata-Regular.ttf"
+  ++ "/Inconsolata-Regular.ttf"
   |> String.split_on_char('\\')
   |> String.concat("/");
 
