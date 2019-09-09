@@ -38,8 +38,8 @@ let loadAndValidateEditorFont =
 
       if (glyph.advance != secondGlyph.advance) {
         onError("Not a monospace font.");
-      } else if(firstShape.glyphId == secondShape.glyphId) {
-        onError("Unable to load glyphs."); 
+      } else if (firstShape.glyphId == secondShape.glyphId) {
+        onError("Unable to load glyphs.");
       } else {
         let metrics = Fontkit.fk_get_metrics(font);
         let actualHeight =
@@ -93,28 +93,28 @@ let start = (~getScaleFactor, ()) => {
                 Utility.executingDirectory ++ defaultFontFamily,
               )
             | Some(v) when v == "FiraCode-Regular.ttf" => (
-              defaultFontFamily,
-              Utility.executingDirectory ++ defaultFontFamily,
-            )
+                defaultFontFamily,
+                Utility.executingDirectory ++ defaultFontFamily,
+              )
             | Some(v) =>
               Log.info(
                 "FontStoreConnector::setFont - discovering font: " ++ v,
               );
-              switch (Rench.Path.isAbsolute(v)) {
-              | true => (v, v)
-              | false =>
-                let descriptor =
-                  Revery.Font.find(
-                    ~mono=true,
-                    ~weight=Revery.Font.Weight.Normal,
-                    v,
+              Rench.Path.isAbsolute(v)
+                ? (v, v)
+                : {
+                  let descriptor =
+                    Revery.Font.find(
+                      ~mono=true,
+                      ~weight=Revery.Font.Weight.Normal,
+                      v,
+                    );
+                  Log.info(
+                    "FontStoreConnector::setFont - discovering font at path: "
+                    ++ descriptor.path,
                   );
-                Log.info(
-                  "FontStoreConnector::setFont - discovering font at path: "
-                  ++ descriptor.path,
-                );
-                (v, descriptor.path);
-              }
+                  (v, descriptor.path);
+                };
             };
 
           let onSuccess = editorFont => {
