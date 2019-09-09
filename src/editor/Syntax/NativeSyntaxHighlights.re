@@ -11,19 +11,27 @@ type t =
 let default = None;
 
 let canHandleScope = (configuration: Core.Configuration.t, scope: string) => {
-  let treeSitterEnabled =
-    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
 
-  if (!treeSitterEnabled) {
-    false;
+  let nativeHighlightingEnabled = 
+    Core.Configuration.getValue(c => c.experimentalNativeTextMate, configuration);
+
+  if (nativeHighlightingEnabled) {
+    true
   } else {
-    switch (scope) {
-    | "source.json" => true
-    /*  | "source.c" => true
-        | "source.cpp" => true */
-    | _ => false
+    let treeSitterEnabled =
+      Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
+
+    if (!treeSitterEnabled) {
+      false;
+    } else {
+      switch (scope) {
+      | "source.json" => true
+      /*  | "source.c" => true
+          | "source.cpp" => true */
+      | _ => false
+      };
     };
-  };
+  }
 };
 
 let anyPendingWork = v => {

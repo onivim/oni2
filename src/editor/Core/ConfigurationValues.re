@@ -50,6 +50,7 @@ type t = {
   // Experimental feature flags
   // These are 'use-at-your-own-risk' features
   experimentalTreeSitter: bool,
+  experimentalNativeTextMate: bool,
 };
 
 let default = {
@@ -85,4 +86,5 @@ let default = {
   zenModeHideTabs: true,
   zenModeSingleFile: true,
   experimentalTreeSitter: false,
+  experimentalNativeTextMate: false,
 };
