@@ -12,31 +12,33 @@ type t =
 let default = None;
 
 let _hasTreeSitterScope = (configuration, scope: string) => {
-    let treeSitterEnabled =
-      Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
+  let treeSitterEnabled =
+    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
 
-    if (!treeSitterEnabled) {
-      false;
-    } else {
-      switch (scope) {
-      | "source.json" => true
-      /*  | "source.c" => true
-          | "source.cpp" => true */
-      | _ => false
-      };
+  if (!treeSitterEnabled) {
+    false;
+  } else {
+    switch (scope) {
+    | "source.json" => true
+    /*  | "source.c" => true
+        | "source.cpp" => true */
+    | _ => false
     };
+  };
 };
 
 let canHandleScope = (configuration: Core.Configuration.t, scope: string) => {
-
-  let nativeHighlightingEnabled = 
-    Core.Configuration.getValue(c => c.experimentalNativeTextMate, configuration);
+  let nativeHighlightingEnabled =
+    Core.Configuration.getValue(
+      c => c.experimentalNativeTextMate,
+      configuration,
+    );
 
   if (nativeHighlightingEnabled) {
-    true
+    true;
   } else {
     _hasTreeSitterScope(configuration, scope);
-  }
+  };
 };
 
 let anyPendingWork = v => {
@@ -58,37 +60,47 @@ let doWork = v => {
 let updateVisibleRanges = (ranges, v) => {
   switch (v) {
   | None => v
-  | TextMate(tm) => TextMate(TextMateSyntaxHighlights.updateVisibleRanges(ranges, tm))
+  | TextMate(tm) =>
+    TextMate(TextMateSyntaxHighlights.updateVisibleRanges(ranges, tm))
   | TreeSitter(ts) =>
     TreeSitter(TreeSitterSyntaxHighlights.updateVisibleRanges(ranges, ts))
   };
 };
 
-let create = (~configuration, ~scope,  ~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
-  switch (_hasTreeSitterScope(configuration, scope)) {
-  | true =>
-    let ts =
-      TreeSitterSyntaxHighlights.create(
-        ~theme,
-        ~getTreeSitterScopeMapper,
-        lines,
-      );
-    TreeSitter(ts);
-  | false =>
-    let tm = TextMateSyntaxHighlights.create(
+let create =
+    (
+      ~configuration,
+      ~scope,
       ~theme,
-     ~getTextMateGrammar=(_) => (),
-     lines
-    );
-    TextMate(tm);
-  }
+      ~getTreeSitterScopeMapper,
+      lines: array(string),
+    ) => {
+  _hasTreeSitterScope(configuration, scope)
+    ? {
+      let ts =
+        TreeSitterSyntaxHighlights.create(
+          ~theme,
+          ~getTreeSitterScopeMapper,
+          lines,
+        );
+      TreeSitter(ts);
+    }
+    : {
+      let tm =
+        TextMateSyntaxHighlights.create(
+          ~theme,
+          ~getTextMateGrammar=_ => (),
+          lines,
+        );
+      TextMate(tm);
+    };
 };
 
 let update =
     (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), v: t) => {
   switch (v) {
-  | TextMate(tm) => 
-    TextMate(TextMateSyntaxHighlights.update(~bufferUpdate, ~lines, tm));
+  | TextMate(tm) =>
+    TextMate(TextMateSyntaxHighlights.update(~bufferUpdate, ~lines, tm))
   | TreeSitter(ts) =>
     let newTs: TreeSitterSyntaxHighlights.t =
       TreeSitterSyntaxHighlights.update(~bufferUpdate, ~lines, ts);
@@ -99,7 +111,7 @@ let update =
 
 let getTokensForLine = (v: t, line: int) => {
   switch (v) {
-  | TextMate(tm) => TextMateSyntaxHighlights.getTokenColors(tm, line);
+  | TextMate(tm) => TextMateSyntaxHighlights.getTokenColors(tm, line)
   | TreeSitter(ts) => TreeSitterSyntaxHighlights.getTokenColors(ts, line)
   | _ => []
   };
