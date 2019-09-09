@@ -2,9 +2,7 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-let font =
-  Utility.executingDirectory
-  ++ "Inconsolata-Regular.ttf"
+let font = Sys.getcwd() ++ "/assets/fonts/Inconsolata-Regular.ttf"
   |> String.split_on_char('\\')
   |> String.concat("/");
 
