@@ -38,6 +38,8 @@ let loadAndValidateEditorFont =
 
       if (glyph.advance != secondGlyph.advance) {
         onError("Not a monospace font.");
+      } else if(firstShape.glyphId == secondShape.glyphId) {
+        onError("Unable to load glyphs."); 
       } else {
         let metrics = Fontkit.fk_get_metrics(font);
         let actualHeight =
