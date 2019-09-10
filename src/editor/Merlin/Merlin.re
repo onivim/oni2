@@ -8,14 +8,13 @@ let pendingRequest = ref(false);
 
 let getErrors =
     (workingDirectory: string, filePath: string, input: array(string), cb) =>
-  if (! pendingRequest^) {
-    let merlin = MerlinDiscovery.discover(workingDirectory);
-    switch (merlin.ocamlMerlinPath) {
-    | Some(v) =>
-      print_endline("Using path: " ++ v);
-      let _ =
-        Thread.create(
+    if (! pendingRequest^) {
+        let _ = Thread.create(
           () => {
+          let merlin = MerlinDiscovery.discover(workingDirectory);
+          switch (merlin.ocamlMerlinPath) {
+          | Some(v) =>
+            print_endline("Using path: " ++ v);
             pendingRequest := true;
             let (pstdin, stdin) = Unix.pipe();
             let (stdout, pstdout) = Unix.pipe();
@@ -28,10 +27,22 @@ let getErrors =
             Unix.set_close_on_exec(pstderr);
             Unix.set_close_on_exec(stderr);
 
+            let env = Rench.Environment.getEnvironmentVariables();
+            let currentPath = switch(Rench.EnvironmentVariables.getValue(env, "PATH")) {
+            | None => ""
+            | Some(v) => v
+            };
+            
+            let augmentedPath = switch (merlin.ocamlMerlinReasonPath) {
+            | None => currentPath
+            | Some(v) => currentPath ++ Rench.Path.pathSeparator ++ v
+            };
+
             let pid =
-              Unix.create_process(
+              Unix.create_process_env(
                 v,
                 [|v, "single", "errors", "-filename", filePath|],
+                [|"PATH="++augmentedPath|],
                 pstdin,
                 pstdout,
                 pstdout,
@@ -71,13 +82,12 @@ let getErrors =
             };
 
             pendingRequest := false;
+    | None => ();
+          }
           },
           (),
         );
-
       Ok("winning");
-    | None => Error("No merlin instance available")
-    };
   } else {
     Error("other request pending");
   };
