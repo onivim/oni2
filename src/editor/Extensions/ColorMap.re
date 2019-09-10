@@ -13,7 +13,7 @@ type t = array(Color.t);
 
 let create = () => [||];
 
-let ofJson = (v: Yojson.Safe.json) => {
+let ofJson = (v: Yojson.Safe.t) => {
   raw_of_yojson_exn(v) |> List.map(c => Color.hex(c)) |> Array.of_list;
 };
 

@@ -113,7 +113,7 @@ let parseStringOption = json =>
   };
 
 type parseFunction =
-  (ConfigurationValues.t, Yojson.Safe.json) => ConfigurationValues.t;
+  (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
@@ -233,7 +233,7 @@ let keyToParser: Hashtbl.t(string, parseFunction) =
   );
 
 type parseResult = {
-  nestedConfigurations: list((string, Yojson.Safe.json)),
+  nestedConfigurations: list((string, Yojson.Safe.t)),
   configurationValues: ConfigurationValues.t,
 };
 
@@ -256,7 +256,7 @@ let getFiletype = (str: string) => {
   String.sub(str, 1, len - 2);
 };
 
-let parse: list((string, Yojson.Safe.json)) => parseResult =
+let parse: list((string, Yojson.Safe.t)) => parseResult =
   items => {
     List.fold_left(
       (prev, cur) => {
@@ -289,7 +289,7 @@ let parse: list((string, Yojson.Safe.json)) => parseResult =
     );
   };
 
-let parseNested = (json: Yojson.Safe.json, default: ConfigurationValues.t) => {
+let parseNested = (json: Yojson.Safe.t, default: ConfigurationValues.t) => {
   switch (json) {
   | `Assoc(items) =>
     List.fold_left(

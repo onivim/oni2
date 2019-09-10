@@ -133,9 +133,9 @@ module TextMateConverter = {
     );
   };
 
-  let of_yojson = (json: Yojson.Safe.json) => {
-    let parseSelectorList = (selectorJson: list(Yojson.Safe.json)) => {
-      let f = (json: Yojson.Safe.json) => {
+  let of_yojson = (json: Yojson.Safe.t) => {
+    let parseSelectorList = (selectorJson: list(Yojson.Safe.t)) => {
+      let f = (json: Yojson.Safe.t) => {
         switch (json) {
         | `String(v) => [Matcher.Scope(v)]
         | `Assoc(_) =>
@@ -157,7 +157,7 @@ module TextMateConverter = {
       selectorJson |> List.map(f) |> List.flatten;
     };
 
-    let parseSelectors = (selectorJson: Yojson.Safe.json) => {
+    let parseSelectors = (selectorJson: Yojson.Safe.t) => {
       switch (selectorJson) {
       | `String(v) => [Matcher.Scope(v)]
       | `List(v) => parseSelectorList(v)
