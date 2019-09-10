@@ -32,10 +32,12 @@ let getErrors =
             | None => ""
             | Some(v) => v
             };
+
+            print_endline ("USING ADJUSTED PATH: " ++ v);
             
             let augmentedPath = switch (merlin.ocamlMerlinReasonPath) {
             | None => currentPath
-            | Some(v) => currentPath ++ Rench.Path.pathSeparator ++ v
+            | Some(v) => currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
             };
 
             let pid =
