@@ -232,11 +232,11 @@ let createElement =
               {let startX =
                  Index.toZeroBasedInt(range.startPosition.character)
                  * Constants.default.minimapCharacterWidth
-                 |> float_of_int
+                 |> float_of_int;
                let endX =
                  Index.toZeroBasedInt(range.endPosition.character)
                  * Constants.default.minimapCharacterWidth
-                 |> float_of_int
+                 |> float_of_int;
 
                Shapes.drawRect(
                  ~transform,

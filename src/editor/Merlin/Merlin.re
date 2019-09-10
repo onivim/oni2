@@ -4,16 +4,17 @@
  * Core merlin API
  */
 
-  let pendingRequest = ref(false);
+let pendingRequest = ref(false);
 
-  let getErrors =
-      (workingDirectory: string, filePath: string, input: array(string), cb) =>
-    if (! pendingRequest^) {
-      let merlin = MerlinDiscovery.discover(workingDirectory);
-      switch (merlin.ocamlMerlinPath) {
-      | Some(v) =>
-        print_endline("Using path: " ++ v);
-        let _ = Thread.create(
+let getErrors =
+    (workingDirectory: string, filePath: string, input: array(string), cb) =>
+  if (! pendingRequest^) {
+    let merlin = MerlinDiscovery.discover(workingDirectory);
+    switch (merlin.ocamlMerlinPath) {
+    | Some(v) =>
+      print_endline("Using path: " ++ v);
+      let _ =
+        Thread.create(
           () => {
             pendingRequest := true;
             let (pstdin, stdin) = Unix.pipe();
@@ -74,9 +75,9 @@
           (),
         );
 
-        Ok("winning");
-      | None => Error("No merlin instance available")
-      };
-    } else {
-      Error("other request pending");
+      Ok("winning");
+    | None => Error("No merlin instance available")
     };
+  } else {
+    Error("other request pending");
+  };

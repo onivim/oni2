@@ -18,31 +18,32 @@ open Rench;
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let modelChangedEffect =
-      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+      (configuration: Core.Configuration.t, buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        let cb = err => {
-          let modelDiagnostics =
-            MerlinProtocolConverter.toModelDiagnostics(err);
-          print_endline(
-            "Got "
-            ++ string_of_int(List.length(modelDiagnostics))
-            ++ " errors",
-          );
-          Revery.App.runOnMainThread(() =>
-            dispatch(
-              Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics),
-            )
-          );
-        };
         let lines = Model.Buffer.getLines(v);
-        switch (Model.Buffer.getFilePath(v)) {
-        | Some(path) =>
+        let fileType = Model.Buffer.getFileType(v);
+        switch ((fileType, Model.Buffer.getFilePath(v))) {
+        | (Some(ft), Some(path)) when (ft == "reason" || ft == "ocaml") =>
+          let cb = err => {
+            let modelDiagnostics =
+              MerlinProtocolConverter.toModelDiagnostics(err);
+            print_endline(
+              "Got "
+              ++ string_of_int(List.length(modelDiagnostics))
+              ++ " errors",
+            );
+            Revery.App.runOnMainThread(() =>
+              dispatch(
+                Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics),
+              )
+            );
+          };
           let _ = Merlin.getErrors(Sys.getcwd(), path, lines, cb);
           ();
-        | None => ()
+        | _ => ()
         };
       }
     );
@@ -51,7 +52,7 @@ let start = () => {
     switch (action) {
     | Model.Actions.BufferUpdate(bu) => (
         state,
-        modelChangedEffect(state.buffers, bu),
+        modelChangedEffect(state.configuration, state.buffers, bu),
       )
     | _ => (state, Isolinear.Effect.none)
     };
