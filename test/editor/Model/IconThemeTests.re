@@ -51,7 +51,7 @@ let testTheme = {|
 }
 |};
 
-let json: Yojson.Safe.json = Yojson.Safe.from_string(testTheme);
+let json: Yojson.Safe.t = Yojson.Safe.from_string(testTheme);
 
 describe("IconTheme", ({test, _}) => {
   test("gets icon for matching filename", ({expect}) => {
