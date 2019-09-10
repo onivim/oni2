@@ -217,6 +217,10 @@ let configurationParsers: list(configurationTuple) = [
     "experimental.merlin",
     (s, v) => {...s, experimentalMerlin: parseBool(v)},
   ),
+  (
+    "experimental.autoClosingPairs",
+    (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

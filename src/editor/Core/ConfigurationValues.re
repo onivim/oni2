@@ -57,6 +57,7 @@ type t = {
   // Turn on tree-sitter for supported filetypes:
   // - JSON
   experimentalTreeSitter: bool,
+  experimentalAutoClosingPairs: bool,
 };
 
 let default = {
@@ -94,4 +95,5 @@ let default = {
 
   experimentalMerlin: false,
   experimentalTreeSitter: false,
+  experimentalAutoClosingPairs: false,
 };
