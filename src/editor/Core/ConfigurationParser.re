@@ -213,6 +213,10 @@ let configurationParsers: list(configurationTuple) = [
     "experimental.treeSitter",
     (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
   ),
+  (
+    "experimental.autoClosingPairs",
+    (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =
