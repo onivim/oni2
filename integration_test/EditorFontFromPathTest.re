@@ -2,7 +2,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 let font =
-  Revery.Environment.executingDirectory
+  Sys.getcwd()
   ++ "/Inconsolata-Regular.ttf"
   |> String.split_on_char('\\')
   |> String.concat("/");
