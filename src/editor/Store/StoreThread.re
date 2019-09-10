@@ -100,6 +100,7 @@ let start =
 
   let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
+  let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -122,6 +123,7 @@ let start =
           windowUpdater,
           keyDisplayerUpdater,
           themeUpdater,
+          acpUpdater,
         ]),
       (),
     );
