@@ -1,0 +1,23 @@
+(library
+    (name Oni_Merlin)
+    (public_name Oni2.merlin)
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        reglfw
+        libvim
+        lwt
+        lwt.unix
+        Rench
+        Revery
+        yojson
+        ppx_deriving.runtime
+        ppx_deriving_yojson.runtime
+        reason-jsonrpc
+        isolinear
+        Oni2.core
+        Oni2.model
+        ReasonFuzz
+    )
+    (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))
