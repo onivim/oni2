@@ -23,7 +23,7 @@ type tokenizeResult = {
   scopes: list(string),
 };
 
-let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
+let parseTokenizeResultItem = (json: Yojson.Safe.t) => {
   switch (json) {
   | `List([`Int(startIndex), `Int(endIndex), `List(jsonScopes)]) =>
     let scopes = List.map(s => Yojson.Safe.to_string(s), jsonScopes);
@@ -32,7 +32,7 @@ let parseTokenizeResultItem = (json: Yojson.Safe.json) => {
   };
 };
 
-let rec parseColorResult = (json: list(Yojson.Safe.json)) => {
+let rec parseColorResult = (json: list(Yojson.Safe.t)) => {
   switch (json) {
   | [`Int(v1), `Int(v2), ...tail] => [
       ColorizedToken.create(v1, v2),
@@ -56,7 +56,7 @@ module TokenizationResult = {
     lines: list(tokenizationLineResult),
   };
 
-  let parseTokenizationLineResult = (json: Yojson.Safe.json) => {
+  let parseTokenizationLineResult = (json: Yojson.Safe.t) => {
     switch (json) {
     | `Assoc([("line", `Int(line)), ("tokens", `List(tokensJson))]) => {
         line,
@@ -66,7 +66,7 @@ module TokenizationResult = {
     };
   };
 
-  let of_yojson = (json: Yojson.Safe.json) => {
+  let of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
     | `Assoc([
         ("bufferId", `Int(bufferId)),

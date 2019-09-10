@@ -4,7 +4,7 @@
  * Resilient parsing for Configuration
  */
 
-let ofJson: Yojson.Safe.json => result(Configuration.t, string);
+let ofJson: Yojson.Safe.t => result(Configuration.t, string);
 
 let ofString: string => result(Configuration.t, string);
 
