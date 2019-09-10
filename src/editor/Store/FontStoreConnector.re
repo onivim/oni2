@@ -14,7 +14,7 @@ let defaultFontSize = 14;
 let requestId = ref(0);
 
 let loadAndValidateEditorFont =
-    (~onSuccess, ~onError, ~requestId:int, scaleFactor, fullPath, fontSize) => {
+    (~onSuccess, ~onError, ~requestId: int, scaleFactor, fullPath, fontSize) => {
   Log.info(
     "loadAndValidateEditorFont filePath: "
     ++ fullPath
@@ -60,15 +60,16 @@ let loadAndValidateEditorFont =
           ++ string_of_float(measuredHeight),
         );
         /* Set editor text based on measurements */
-        onSuccess(
-          (requestId, EditorFont.create(
+        onSuccess((
+          requestId,
+          EditorFont.create(
             ~fontFile=fullPath,
             ~fontSize,
             ~measuredWidth,
             ~measuredHeight,
             (),
-          )),
-        );
+          ),
+        ));
       };
     },
     _ => onError("Unable to load font."),
@@ -81,7 +82,7 @@ let start = (~getScaleFactor, ()) => {
       Revery.App.runOnMainThread(() => dispatch1(action));
 
     let scaleFactor = getScaleFactor();
-  
+
     incr(requestId);
     let req = requestId^;
 
@@ -122,11 +123,10 @@ let start = (~getScaleFactor, ()) => {
                 };
             };
 
-          let onSuccess = ((reqId, editorFont)) => {
+          let onSuccess = ((reqId, editorFont)) =>
             if (reqId == requestId^) {
               dispatch(Actions.SetEditorFont(editorFont));
-            }
-          };
+            };
 
           let onError = errorMsg => {
             Log.error("setFont: Failed to load font " ++ fullPath);
