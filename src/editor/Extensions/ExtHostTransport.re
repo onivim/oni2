@@ -15,7 +15,7 @@ module Protocol = ExtHostProtocol;
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
-  send: (int, Yojson.Safe.json) => unit,
+  send: (int, Yojson.Safe.t) => unit,
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -24,8 +24,8 @@ type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 
 type messageHandler =
-  (string, string, list(Yojson.Safe.json)) =>
-  result(option(Yojson.Safe.json), string);
+  (string, string, list(Yojson.Safe.t)) =>
+  result(option(Yojson.Safe.t), string);
 let defaultMessageHandler = (_, _, _) => Ok(None);
 
 let start =
@@ -54,7 +54,7 @@ let start =
     queuedCallbacks := [f, ...queuedCallbacks^];
   };
 
-  let send = (msgType, msg: Yojson.Safe.json) => {
+  let send = (msgType, msg: Yojson.Safe.t) => {
     switch (rpcRef^) {
     | None => Log.error("ExtHostClient: RPC not initialized.")
     | Some(v) =>
@@ -72,7 +72,7 @@ let start =
     };
   };
 
-  let sendRequest = (msg: Yojson.Safe.json) => {
+  let sendRequest = (msg: Yojson.Safe.t) => {
     send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
   };
 
@@ -90,7 +90,7 @@ let start =
     };
   };
 
-  let handleMessage = (reqId: int, payload: Yojson.Safe.json) =>
+  let handleMessage = (reqId: int, payload: Yojson.Safe.t) =>
     switch (payload) {
     | `Assoc([
         ("rpcName", `String(scopeName)),
@@ -171,7 +171,7 @@ let send =
     (
       v: t,
       ~msgType=ExtHostProtocol.MessageType.requestJsonArgs,
-      msg: Yojson.Safe.json,
+      msg: Yojson.Safe.t,
     ) => {
   v.send(msgType, msg);
 };
