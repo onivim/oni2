@@ -22,16 +22,6 @@ runTest(
     );
 
     wait(
-      ~name="Font should initially be set to default",
-      ~timeout=10.,
-      (state: State.t) =>
-      String.equal(
-        state.editorFont.fontFile,
-        Utility.executingDirectory ++ "FiraCode-Regular.ttf",
-      )
-    );
-
-    wait(
       ~name="There should be a new font set", ~timeout=10., (state: State.t) =>
       !
         String.equal(
