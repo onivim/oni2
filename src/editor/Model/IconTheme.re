@@ -136,7 +136,7 @@ let getOrEmpty = (v: result(list('a), 'b)) => {
   };
 };
 
-let ofJson = (json: Yojson.Safe.json) => {
+let ofJson = (json: Yojson.Safe.t) => {
   open Yojson.Safe.Util;
   let fonts = json |> member("fonts") |> fonts_of_yojson |> getOrEmpty;
   let icons = json |> member("iconDefinitions") |> to_assoc;
@@ -146,7 +146,7 @@ let ofJson = (json: Yojson.Safe.json) => {
   let languageIdsJson = json |> member("languageIds");
 
   let toIconMap:
-    list((string, Yojson.Safe.json)) => StringMap.t(IconDefinition.t) =
+    list((string, Yojson.Safe.t)) => StringMap.t(IconDefinition.t) =
     icons => {
       List.fold_left(
         (prev, curr) => {

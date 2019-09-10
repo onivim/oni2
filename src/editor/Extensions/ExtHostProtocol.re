@@ -66,7 +66,7 @@ module PackedString = {
     _lower: string,
   };
 
-  let parse = (v: Yojson.Safe.json) => {
+  let parse = (v: Yojson.Safe.t) => {
     json_of_yojson_exn(v) |> (r => r.value);
   };
 };
@@ -324,7 +324,7 @@ module Notification = {
   type requestOrReply = {
     msgType: int,
     reqId: int,
-    payload: Yojson.Safe.json,
+    payload: Yojson.Safe.t,
   };
 
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
@@ -342,7 +342,7 @@ module Notification = {
     | Error
     | Ack(ack);
 
-  let of_yojson = (json: Yojson.Safe.json) => {
+  let of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
     | `Assoc([
         ("type", `Int(t)),
@@ -367,7 +367,7 @@ module Notification = {
     };
   };
 
-  let parse = (json: Yojson.Safe.json) => {
+  let parse = (json: Yojson.Safe.t) => {
     switch (json) {
     | `Assoc([("type", `Int(0)), ..._]) => Initialized
     | `Assoc([("type", `Int(1)), ..._]) => Ready

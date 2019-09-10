@@ -85,9 +85,8 @@ let create =
   ret;
 };
 
-let of_yojson =
-    (~defaultBackground, ~defaultForeground, json: Yojson.Safe.json) => {
-  let parseSettings: Yojson.Safe.json => TokenStyle.t =
+let of_yojson = (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) => {
+  let parseSettings: Yojson.Safe.t => TokenStyle.t =
     json => {
       let str = v =>
         switch (v) {
@@ -110,7 +109,7 @@ let of_yojson =
       );
     };
 
-  let parseStringList = (arr: list(Yojson.Safe.json)) => {
+  let parseStringList = (arr: list(Yojson.Safe.t)) => {
     List.fold_left(
       (prev, curr) =>
         switch (curr) {
@@ -122,7 +121,7 @@ let of_yojson =
     );
   };
 
-  let parseSelector = (selector: Yojson.Safe.json) => {
+  let parseSelector = (selector: Yojson.Safe.t) => {
     switch (selector) {
     | `Assoc(_) =>
       let scope = Yojson.Safe.Util.member("scope", selector);
