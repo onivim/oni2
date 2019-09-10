@@ -11,36 +11,35 @@ module Model = Oni_Model;
 
 module Log = Core.Log;
 
-let start =
-    (
-      languageInfo: Model.LanguageInfo.t,
-    ) => {
+let start = (languageInfo: Model.LanguageInfo.t) => {
   ignore(languageInfo);
 
   let autoClosingPairsEnabled = ref(false);
-  
+
   let syncAutoClosingPairsEffect = (configuration: Core.Configuration.t) =>
     Isolinear.Effect.create(~name="apc.sync", () => {
-      
-      let acp = Core.Configuration.getValue((c) => c.experimentalAutoClosingPairs, configuration);
+      let acp =
+        Core.Configuration.getValue(
+          c => c.experimentalAutoClosingPairs,
+          configuration,
+        );
       if (autoClosingPairsEnabled^ != acp) {
         autoClosingPairsEnabled := acp;
         Log.info("AutoClosingPairs: Setting to " ++ string_of_bool(acp));
 
         switch (acp) {
         | false => Vim.Options.setAutoClosingPairs(false)
-        | true => 
-            Vim.Options.setAutoClosingPairs(true);
-            Vim.AutoClosingPairs.setPairs([|
-              Vim.Types.AutoClosingPair.create(~opening='`', ~closing='`', ()),
-              Vim.Types.AutoClosingPair.create(~opening='"', ~closing='"', ()),
-              Vim.Types.AutoClosingPair.create(~opening='[', ~closing=']', ()),
-              Vim.Types.AutoClosingPair.create(~opening='(', ~closing=')', ()),
-              Vim.Types.AutoClosingPair.create(~opening='{', ~closing='}', ()),
-            |]);
-        }
-        
-      }
+        | true =>
+          Vim.Options.setAutoClosingPairs(true);
+          Vim.AutoClosingPairs.setPairs([|
+            Vim.Types.AutoClosingPair.create(~opening='`', ~closing='`', ()),
+            Vim.Types.AutoClosingPair.create(~opening='"', ~closing='"', ()),
+            Vim.Types.AutoClosingPair.create(~opening='[', ~closing=']', ()),
+            Vim.Types.AutoClosingPair.create(~opening='(', ~closing=')', ()),
+            Vim.Types.AutoClosingPair.create(~opening='{', ~closing='}', ()),
+          |]);
+        };
+      };
     });
 
   let updater = (state: Model.State.t, action) => {
