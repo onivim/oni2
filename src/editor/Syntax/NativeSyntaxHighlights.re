@@ -89,6 +89,7 @@ let create =
     : {
       let tm =
         TextMateSyntaxHighlights.create(
+          ~scope,
           ~theme,
           ~getTextmateGrammar,
           lines,

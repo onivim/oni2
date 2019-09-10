@@ -5,19 +5,24 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-type t = unit;
+open Textmate;
 
-let hasPendingWork = (_v: t) => false;
+type t = TextmateTokenizerJob.t;
 
-let doWork = (v: t) => v;
+let hasPendingWork = (v: t) => !Job.isComplete(v);
+
+let doWork = (v: t) => Job.tick(v);
 
 let updateVisibleRanges = (_ranges, v) => v;
 
-let create = (~theme, ~getTextmateGrammar, lines) => {
-  ignore(getTextmateGrammar);
-  ignore(theme);
-  ignore(lines);
-  ();
+let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {
+  let grammar = getTextmateGrammar(scope);
+  TextmateTokenizerJob.create(
+    ~scope,
+    ~theme,
+    ~grammar,
+    lines,
+  );
 };
 
 let update = (~bufferUpdate, ~lines, v: t) => {
@@ -27,26 +32,5 @@ let update = (~bufferUpdate, ~lines, v: t) => {
 };
 
 let getTokenColors = (v: t, line: int) => {
-  ignore(v);
-  ignore(line);
-  [
-    ColorizedToken2.create(
-      ~index=0,
-      ~backgroundColor=Revery.Colors.black,
-      ~foregroundColor=Revery.Colors.red,
-      (),
-    ),
-    ColorizedToken2.create(
-      ~index=10,
-      ~backgroundColor=Revery.Colors.black,
-      ~foregroundColor=Revery.Colors.green,
-      (),
-    ),
-    ColorizedToken2.create(
-      ~index=20,
-      ~backgroundColor=Revery.Colors.black,
-      ~foregroundColor=Revery.Colors.blue,
-      (),
-    ),
-  ];
+  TextmateTokenizerJob.getTokenColors(line, v);
 };

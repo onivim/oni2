@@ -13,6 +13,7 @@ type t = {
   languages: list(ExtensionContributions.Language.t),
   extToLanguage: StringMap.t(string),
   languageToScope: StringMap.t(string),
+  scopeToGrammarPath: StringMap.t(string),
 };
 
 let getGrammars = (li: t) => {
@@ -47,6 +48,10 @@ let getScopeFromExtension = (li: t, ext: string) => {
   getLanguageFromExtension(li, ext) |> getScopeFromLanguage(li);
 };
 
+let getGrammarPathFromScope = (li: t, scope: string) => {
+  StringMap.find_opt(scope, li.scopeToGrammarPath);
+};
+
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
@@ -64,6 +69,7 @@ let create = () => {
   languages: [],
   extToLanguage: StringMap.empty,
   languageToScope: StringMap.empty,
+  scopeToGrammarPath: StringMap.empty,
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
@@ -93,5 +99,13 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          StringMap.empty,
        );
 
-  {grammars, languages, extToLanguage, languageToScope};
+  let scopeToGrammarPath =
+    grammars
+    |> List.fold_left((prev, curr) => {
+      StringMap.add(curr.scopeName, curr.path, prev);
+    },
+    StringMap.empty,
+    );
+
+  {grammars, languages, extToLanguage, languageToScope, scopeToGrammarPath};
 };

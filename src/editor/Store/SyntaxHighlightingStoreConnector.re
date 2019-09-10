@@ -9,7 +9,6 @@
 
 module Core = Oni_Core;
 module Model = Oni_Model;
-
 module Extensions = Oni_Extensions;
 
 open Oni_Syntax.TreeSitterScopes;
@@ -31,13 +30,18 @@ module GrammarRepository = {
       switch (Hashtbl.find_opt(scopeToGrammar,scope)) {
       | Some(v) => Some(v)
       | None => 
-        let json = Yojson.Safe.from_file("");
-        let grammar = Textmate.Grammar.Json.of_yojson(json);
-        switch (grammar) {
-        | Ok(g) => Hashtbl.add(scopeToGrammar, scope, g);
-          Some(g)
-        | Error(e) => Log.error("Error parsing grammar: " ++ e);
-          None;
+        switch (Model.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)) {
+        | Some(grammarPath) =>
+          Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
+          let json = Yojson.Safe.from_file(grammarPath);
+          let grammar = Textmate.Grammar.Json.of_yojson(json);
+          switch (grammar) {
+          | Ok(g) => Hashtbl.add(scopeToGrammar, scope, g);
+            Some(g)
+          | Error(e) => Log.error("Error parsing grammar: " ++ e);
+            None;
+          }
+        | None => None
         }
       }
       

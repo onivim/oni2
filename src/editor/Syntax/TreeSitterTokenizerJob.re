@@ -56,6 +56,7 @@ let doWork = (context: context, line: int) => {
           ~path=scopes,
           context.scopeConverter,
         );
+        print_endline (tmScope);
       let resolvedColor = TextMateTheme.match(context.theme, tmScope);
 
       //let line = p.line;
