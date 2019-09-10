@@ -11,8 +11,10 @@ let minFontSize = 6;
 let defaultFontFamily = "FiraCode-Regular.ttf";
 let defaultFontSize = 14;
 
+let requestId = ref(0);
+
 let loadAndValidateEditorFont =
-    (~onSuccess, ~onError, scaleFactor, fullPath, fontSize) => {
+    (~onSuccess, ~onError, ~requestId:int, scaleFactor, fullPath, fontSize) => {
   Log.info(
     "loadAndValidateEditorFont filePath: "
     ++ fullPath
@@ -59,13 +61,13 @@ let loadAndValidateEditorFont =
         );
         /* Set editor text based on measurements */
         onSuccess(
-          EditorFont.create(
+          (requestId, EditorFont.create(
             ~fontFile=fullPath,
             ~fontSize,
             ~measuredWidth,
             ~measuredHeight,
             (),
-          ),
+          )),
         );
       };
     },
@@ -79,6 +81,9 @@ let start = (~getScaleFactor, ()) => {
       Revery.App.runOnMainThread(() => dispatch1(action));
 
     let scaleFactor = getScaleFactor();
+  
+    incr(requestId);
+    let req = requestId^;
 
     // We load the font asynchronously
     let _ =
@@ -117,8 +122,10 @@ let start = (~getScaleFactor, ()) => {
                 };
             };
 
-          let onSuccess = editorFont => {
-            dispatch(Actions.SetEditorFont(editorFont));
+          let onSuccess = ((reqId, editorFont)) => {
+            if (reqId == requestId^) {
+              dispatch(Actions.SetEditorFont(editorFont));
+            }
           };
 
           let onError = errorMsg => {
@@ -139,6 +146,7 @@ let start = (~getScaleFactor, ()) => {
           loadAndValidateEditorFont(
             ~onSuccess,
             ~onError,
+            ~requestId=req,
             scaleFactor,
             fullPath,
             fontSize,
