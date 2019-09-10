@@ -101,11 +101,10 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
 
   let scopeToGrammarPath =
     grammars
-    |> List.fold_left((prev, curr) => {
-      StringMap.add(curr.scopeName, curr.path, prev);
-    },
-    StringMap.empty,
-    );
+    |> List.fold_left(
+         (prev, curr) => {StringMap.add(curr.scopeName, curr.path, prev)},
+         StringMap.empty,
+       );
 
   {grammars, languages, extToLanguage, languageToScope, scopeToGrammarPath};
 };

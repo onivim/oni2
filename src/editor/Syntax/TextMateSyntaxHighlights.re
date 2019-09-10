@@ -17,12 +17,7 @@ let updateVisibleRanges = (_ranges, v) => v;
 
 let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {
   let grammar = getTextmateGrammar(scope);
-  TextmateTokenizerJob.create(
-    ~scope,
-    ~theme,
-    ~grammar,
-    lines,
-  );
+  TextmateTokenizerJob.create(~scope, ~theme, ~grammar, lines);
 };
 
 let update = (~bufferUpdate, ~lines, v: t) => {
