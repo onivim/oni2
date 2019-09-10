@@ -8,7 +8,6 @@
            CopyActiveFilepathToClipboardTest
            EchoNotificationTest
            EditorFontFromPathTest
-           EditorFontNotMonospaceTest
            EditorFontValidTest
            FontSizeChangeTest
            InputIgnoreTest
@@ -43,7 +42,6 @@
         CopyActiveFilepathToClipboardTest.exe
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
-        EditorFontNotMonospaceTest.exe
         EditorFontValidTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
