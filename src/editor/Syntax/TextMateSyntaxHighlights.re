@@ -13,8 +13,8 @@ let doWork = (v: t) => v;
 
 let updateVisibleRanges = (_ranges, v) => v;
 
-let create = (~theme, ~getTextMateGrammar, lines) => {
-  ignore(getTextMateGrammar);
+let create = (~theme, ~getTextmateGrammar, lines) => {
+  ignore(getTextmateGrammar);
   ignore(theme);
   ignore(lines);
   ();

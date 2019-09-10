@@ -72,6 +72,7 @@ let create =
       ~configuration,
       ~scope,
       ~theme,
+      ~getTextmateGrammar,
       ~getTreeSitterScopeMapper,
       lines: array(string),
     ) => {
@@ -89,7 +90,7 @@ let create =
       let tm =
         TextMateSyntaxHighlights.create(
           ~theme,
-          ~getTextMateGrammar=_ => (),
+          ~getTextmateGrammar,
           lines,
         );
       TextMate(tm);

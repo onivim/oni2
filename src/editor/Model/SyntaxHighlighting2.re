@@ -96,6 +96,7 @@ let onBufferUpdate =
       ~configuration,
       ~scope,
       ~getTreeSitterScopeMapper,
+      ~getTextmateGrammar,
       ~bufferUpdate: BufferUpdate.t,
       ~lines: array(string),
       ~theme: TextMateTheme.t,
@@ -113,6 +114,7 @@ let onBufferUpdate =
               ~theme,
               ~scope,
               ~getTreeSitterScopeMapper,
+              ~getTextmateGrammar,
               lines,
             ),
           )
