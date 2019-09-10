@@ -6,7 +6,8 @@
   "esy": {
     "build": "refmterr dune build -p Oni2 -j4",
     "install": [
-      "esy-installer Oni2.install"
+      "esy-installer Oni2.install",
+      "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll $cur__bin': 'echo no-op'}\""
     ]
   },
   "build": {
