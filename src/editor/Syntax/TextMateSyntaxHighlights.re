@@ -21,9 +21,7 @@ let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {
 };
 
 let update = (~bufferUpdate, ~lines, v: t) => {
-  ignore(bufferUpdate);
-  ignore(lines);
-  v;
+  TextmateTokenizerJob.onBufferUpdate(bufferUpdate, lines, v);
 };
 
 let getTokenColors = (v: t, line: int) => {

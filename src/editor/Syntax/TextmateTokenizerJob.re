@@ -35,6 +35,17 @@ let getTokenColors = (line: int, v: t) => {
   };
 };
 
+let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
+  let f = (p: pendingWork, c: completedWork) => {
+    (false, 
+      {...p, lines, currentLine: Index.toInt0(bufferUpdate.startLine), currentVersion: bufferUpdate.version },
+      c      
+    );
+   };
+    
+   Job.map(f, v);
+};
+
 let doWork = (pending: pendingWork, completed: completedWork) => {
   let currentLine = pending.currentLine;
 
@@ -47,6 +58,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       | None => Grammar.getScopeStack(grammar)
       | Some(v) => v.scopeStack
       };
+
+    print_endline ("Line " ++ string_of_int(currentLine) ++ " - scopes: " ++ ScopeStack.show(scopes));
 
     // Get new tokens & scopes
     let (tokens, scopes) =
@@ -64,13 +77,13 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
            open Token;
            let scopes = token.scopes |> List.filter(s => s != pending.scope);
            (token.position, scopes);
-         })
-      |> List.filter(scopes =>
+         });
+      /*|> List.filter(scopes =>
            switch (scopes) {
            | (_, []) => false
            | _ => true
            }
-         );
+         );*/
 
     let tokens =
       List.map(
@@ -84,7 +97,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           let resolvedColor = TextMateTheme.match(pending.theme, scopes);
 
           let col = position;
-          //print_endline ("Position: " ++ string_of_int(currentLine) ++ "," ++ string_of_int(col) ++ " Scope: " ++ scopes);
+          print_endline ("-- Token Position: " ++ string_of_int(currentLine) ++ "," ++ string_of_int(col) ++ " Scope: " ++ scopes);
           ColorizedToken2.create(
             ~index=col,
             ~backgroundColor=resolvedColor.background,
