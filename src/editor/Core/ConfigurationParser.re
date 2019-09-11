@@ -214,13 +214,12 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
   ),
   (
-<<<<<<< HEAD
     "experimental.nativeTextMate",
     (s, v) => {...s, experimentalNativeTextMate: parseBool(v)},
-=======
+  ),
+  (
     "experimental.autoClosingPairs",
     (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
->>>>>>> master
   ),
 ];
 
