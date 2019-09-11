@@ -27,10 +27,6 @@ let start = (setup: Setup.t) => {
             tokenColorsJson,
           );
 
-        if (Log.isDebugLoggingEnabled()) {
-          Log.debug("Tokens: " ++ TextMateTheme.show(tokenTheme));
-        };
-
         dispatch(Actions.SetTokenTheme(tokenTheme));
       })
     );

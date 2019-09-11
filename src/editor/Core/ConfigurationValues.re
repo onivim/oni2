@@ -17,10 +17,9 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
-[@deriving show({with_path: false})]
 type t = {
   editorDetectIndentation: bool,
-  editorFontFamily: string,
+  editorFontFamily: option(string),
   editorFontSize: int,
   editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
@@ -55,7 +54,7 @@ type t = {
 
 let default = {
   editorDetectIndentation: true,
-  editorFontFamily: "FiraCode-Regular.ttf",
+  editorFontFamily: Some("FiraCode-Regular.ttf"),
   editorFontSize: 14,
   editorLargeFileOptimizations: true,
   editorMatchBrackets: true,

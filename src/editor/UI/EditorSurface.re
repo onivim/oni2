@@ -228,8 +228,7 @@ let createElement =
 
     let fontHeight = state.editorFont.measuredHeight;
     let fontWidth = state.editorFont.measuredWidth;
-    let fontFamily =
-      Configuration.getValue(c => c.editorFontFamily, state.configuration);
+    let fontFamily = state.editorFont.fontFile;
     let fontSize =
       Configuration.getValue(c => c.editorFontSize, state.configuration);
 

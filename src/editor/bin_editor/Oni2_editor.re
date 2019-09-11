@@ -62,7 +62,7 @@ let init = app => {
   };
 
   let getScaleFactor = () => {
-    Window.getDevicePixelRatio(w) *. float_of_int(Window.getScaleFactor(w));
+    Window.getDevicePixelRatio(w) *. Window.getScaleFactor(w);
   };
 
   let getTime = () => Time.getTime() |> Time.toSeconds;

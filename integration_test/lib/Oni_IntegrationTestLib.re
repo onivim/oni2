@@ -83,19 +83,6 @@ let runTest =
 
   wrappedRunEffects();
 
-  logInit("Setting editor font");
-  dispatch(
-    Model.Actions.SetEditorFont(
-      Core.Types.EditorFont.create(
-        ~fontFile="test_font",
-        ~fontSize=14,
-        ~measuredWidth=7.5,
-        ~measuredHeight=10.25,
-        (),
-      ),
-    ),
-  );
-
   let wrappedDispatch = action => {
     dispatch(action);
   };
@@ -112,7 +99,13 @@ let runTest =
            -. maxWaitTime < startTime) {
       logWaiter("Iteration: " ++ string_of_int(iteration^));
       incr(iteration);
+
+      // Flush any queued calls from `Revery.App.runOnMainThread`
+      Revery.App.flushPendingCallbacks();
+
+      // Flush any pending effects
       wrappedRunEffects();
+
       Unix.sleepf(0.1);
     };
 
