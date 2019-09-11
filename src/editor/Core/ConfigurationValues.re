@@ -51,6 +51,7 @@ type t = {
   // These are 'use-at-your-own-risk' features
   experimentalTreeSitter: bool,
   experimentalNativeTextMate: bool,
+  experimentalAutoClosingPairs: bool,
 };
 
 let default = {
@@ -87,4 +88,5 @@ let default = {
   zenModeSingleFile: true,
   experimentalTreeSitter: false,
   experimentalNativeTextMate: false,
+  experimentalAutoClosingPairs: false,
 };
