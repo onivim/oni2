@@ -228,7 +228,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "reason-textmate": "github:onivim/reason-textmate#1251dea",
+    "reason-textmate": "link:../reason-textmate",
     "reason-oniguruma": "github:onivim/reason-oniguruma#29811c1"
   },
   "devDependencies": {
