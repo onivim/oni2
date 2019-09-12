@@ -38,7 +38,7 @@ let getTokenColors = (line: int, v: t) => {
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   let f = (p: pendingWork, c: completedWork) => {
     (false, 
-      {...p, lines, currentLine: Index.toInt0(bufferUpdate.startLine), currentVersion: bufferUpdate.version },
+      {...p, lines, currentLine: min(Index.toInt0(bufferUpdate.startLine), p.currentLine), currentVersion: bufferUpdate.version },
       c      
     );
    };
@@ -49,6 +49,10 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
 let doWork = (pending: pendingWork, completed: completedWork) => {
   let currentLine = pending.currentLine;
 
+  if (currentLine >= Array.length(pending.lines)) {
+    (true, pending, completed)
+  } else { 
+
   switch (pending.grammar) {
   | None => (true, pending, completed)
   | Some(grammar) =>
@@ -58,8 +62,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       | None => Grammar.getScopeStack(grammar)
       | Some(v) => v.scopeStack
       };
-
-    print_endline ("Line " ++ string_of_int(currentLine) ++ " - scopes: " ++ ScopeStack.show(scopes));
 
     // Get new tokens & scopes
     let (tokens, scopes) =
@@ -85,6 +87,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
            }
          );*/
 
+    List.iter((token) => prerr_endline(Token.show(token)), tokens);
+
     let tokens =
       List.map(
         token => {
@@ -97,7 +101,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           let resolvedColor = TextMateTheme.match(pending.theme, scopes);
 
           let col = position;
-          print_endline ("-- Token Position: " ++ string_of_int(currentLine) ++ "," ++ string_of_int(col) ++ " Scope: " ++ scopes);
           ColorizedToken2.create(
             ~index=col,
             ~backgroundColor=resolvedColor.background,
@@ -129,6 +132,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     let isComplete = nextLine >= Array.length(pending.lines);
 
     (isComplete, {...pending, currentLine: nextLine}, completed);
+  };
   };
 };
 
