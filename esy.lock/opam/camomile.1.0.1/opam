@@ -3,7 +3,7 @@ maintainer: "yoriyuki.y@gmail.com"
 authors: ["Yoriyuki Yamagata"]
 homepage: "https://github.com/yoriyuki/Camomile/wiki"
 bug-reports: "https://github.com/yoriyuki/Camomile/issues"
-license: "LGPL-2+ with OCaml linking exception"
+license: "LGPL-2.1-or-later with OCaml-LGPL-linking-exception"
 dev-repo: "git+https://github.com/yoriyuki/Camomile.git"
 build: [
   ["ocaml" "configure.ml" "--share" "%{share}%/camomile"]
