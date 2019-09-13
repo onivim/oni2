@@ -37,102 +37,108 @@ let getTokenColors = (line: int, v: t) => {
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   let f = (p: pendingWork, c: completedWork) => {
-    (false, 
-      {...p, lines, currentLine: min(Index.toInt0(bufferUpdate.startLine), p.currentLine), currentVersion: bufferUpdate.version },
-      c      
+    (
+      false,
+      {
+        ...p,
+        lines,
+        currentLine:
+          min(Index.toInt0(bufferUpdate.startLine), p.currentLine),
+        currentVersion: bufferUpdate.version,
+      },
+      c,
     );
-   };
-    
-   Job.map(f, v);
+  };
+
+  Job.map(f, v);
 };
 
 let doWork = (pending: pendingWork, completed: completedWork) => {
   let currentLine = pending.currentLine;
 
   if (currentLine >= Array.length(pending.lines)) {
-    (true, pending, completed)
-  } else { 
+    (true, pending, completed);
+  } else {
+    switch (pending.grammar) {
+    | None => (true, pending, completed)
+    | Some(grammar) =>
+      // Check if there are scope stacks from the previous line
+      let scopes =
+        switch (IntMap.find_opt(currentLine - 1, completed)) {
+        | None => Grammar.getScopeStack(grammar)
+        | Some(v) => v.scopeStack
+        };
 
-  switch (pending.grammar) {
-  | None => (true, pending, completed)
-  | Some(grammar) =>
-    // Check if there are scope stacks from the previous line
-    let scopes =
-      switch (IntMap.find_opt(currentLine - 1, completed)) {
-      | None => Grammar.getScopeStack(grammar)
-      | Some(v) => v.scopeStack
+      // Get new tokens & scopes
+      let (tokens, scopes) =
+        Grammar.tokenize(
+          ~lineNumber=currentLine,
+          ~grammar,
+          ~scopes=Some(scopes),
+          pending.lines[currentLine],
+        );
+
+      // Filter tokens and get colors
+      let filteredTokens =
+        tokens
+        |> List.map(token => {
+             open Token;
+             let scopes = token.scopes |> List.filter(s => s != pending.scope);
+             (token.position, scopes);
+           });
+      /*|> List.filter(scopes =>
+          switch (scopes) {
+          | (_, []) => false
+          | _ => true
+          }
+        );*/
+
+      List.iter(token => prerr_endline(Token.show(token)), tokens);
+
+      let tokens =
+        List.map(
+          token => {
+            let (position, scopes) = token;
+            let scopes =
+              scopes
+              |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
+              |> String.trim;
+
+            let resolvedColor = Textmate.Theme.match(pending.theme, scopes);
+
+            let col = position;
+            ColorizedToken2.create(
+              ~index=col,
+              ~backgroundColor=Revery.Color.hex(resolvedColor.background),
+              ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
+              (),
+            );
+          },
+          filteredTokens,
+        );
+
+      let newLineInfo = {
+        tokens,
+        scopeStack: scopes,
+        version: pending.currentVersion,
       };
 
-    // Get new tokens & scopes
-    let (tokens, scopes) =
-      Grammar.tokenize(
-        ~lineNumber=currentLine,
-        ~grammar,
-        ~scopes=Some(scopes),
-        pending.lines[currentLine],
-      );
+      let completed =
+        IntMap.update(
+          currentLine,
+          prev =>
+            switch (prev) {
+            | None => Some(newLineInfo)
+            | Some(_) => Some(newLineInfo)
+            },
+          completed,
+        );
 
-    // Filter tokens and get colors
-    let filteredTokens =
-      tokens
-      |> List.map(token => {
-           open Token;
-           let scopes = token.scopes |> List.filter(s => s != pending.scope);
-           (token.position, scopes);
-         });
-      /*|> List.filter(scopes =>
-           switch (scopes) {
-           | (_, []) => false
-           | _ => true
-           }
-         );*/
+      let nextLine = currentLine + 1;
+      let isComplete = nextLine >= Array.length(pending.lines);
 
-    List.iter((token) => prerr_endline(Token.show(token)), tokens);
-
-    let tokens =
-      List.map(
-        token => {
-          let (position, scopes) = token;
-          let scopes =
-            scopes
-            |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
-            |> String.trim;
-
-          let resolvedColor = Textmate.Theme.match(pending.theme, scopes);
-
-          let col = position;
-          ColorizedToken2.create(
-            ~index=col,
-            ~backgroundColor=Revery.Color.hex(resolvedColor.background),
-            ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-            (),
-          );
-        },
-        filteredTokens,
-      );
-
-    let newLineInfo = {
-      tokens,
-      scopeStack: scopes,
-      version: pending.currentVersion,
+      (isComplete, {...pending, currentLine: nextLine}, completed);
     };
-
-    let completed =
-      IntMap.update(
-        currentLine,
-        prev =>
-          switch (prev) {
-          | None => Some(newLineInfo)
-          | Some(_) => Some(newLineInfo)
-          },
-        completed,
-      );
-
-    let nextLine = currentLine + 1;
-    let isComplete = nextLine >= Array.length(pending.lines);
-
-    (isComplete, {...pending, currentLine: nextLine}, completed);
-  };
   };
 };
 
