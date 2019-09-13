@@ -4,6 +4,8 @@
 
 open Oni_Core;
 
+module Trie = Textmate.Trie;
+
 module Matcher = {
   type t =
     // Just a single scope, like: 'string.quoted.double'

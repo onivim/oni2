@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Oni_Model;
-open Oni_Syntax;
 
 let start = (setup: Setup.t) => {
   let defaultThemePath =

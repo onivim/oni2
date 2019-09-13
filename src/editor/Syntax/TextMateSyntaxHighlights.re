@@ -3,9 +3,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
-
-open Textmate;
 
 type t = TextmateTokenizerJob.t;
 
