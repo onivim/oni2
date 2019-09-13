@@ -24,7 +24,6 @@ module GrammarRepository = {
       Hashtbl.create(32);
 
     let rec f = scope => {
-      prerr_endline ("Searching for grammar: " ++ scope);
       switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
       | Some(v) => Some(v)
       | None =>
