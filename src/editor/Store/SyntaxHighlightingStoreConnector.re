@@ -23,7 +23,8 @@ module GrammarRepository = {
     let scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t) =
       Hashtbl.create(32);
 
-    scope => {
+    let rec f = scope => {
+      prerr_endline ("Searching for grammar: " ++ scope);
       switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
       | Some(v) => Some(v)
       | None =>
@@ -34,8 +35,10 @@ module GrammarRepository = {
           Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
           let json = Yojson.Safe.from_file(grammarPath);
           let grammar = Textmate.Grammar.Json.of_yojson(json);
+
           switch (grammar) {
           | Ok(g) =>
+            let g = Textmate.Grammar.setGrammarRepository(f, g);
             Hashtbl.add(scopeToGrammar, scope, g);
             Some(g);
           | Error(e) =>
@@ -45,7 +48,10 @@ module GrammarRepository = {
         | None => None
         }
       };
+
     };
+
+    f;
   };
 };
 
