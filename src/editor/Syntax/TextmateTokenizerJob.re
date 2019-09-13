@@ -75,7 +75,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           ~lineNumber=currentLine,
           ~grammar,
           ~scopes=Some(scopes),
-          pending.lines[currentLine],
+          pending.lines[currentLine] ++ "\n",
         );
 
       // Filter tokens and get colors
