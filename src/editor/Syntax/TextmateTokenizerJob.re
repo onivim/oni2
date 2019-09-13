@@ -12,7 +12,7 @@ type pendingWork = {
   currentLine: int,
   currentVersion: int,
   grammar: option(Grammar.t),
-  theme: TextMateTheme.t,
+  theme: Textmate.Theme.t,
   scope: string,
 };
 
@@ -95,16 +95,16 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           let (position, scopes) = token;
           let scopes =
             scopes
-            |> List.fold_left((prev, curr) => {prev ++ " " ++ curr}, "")
+            |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
             |> String.trim;
 
-          let resolvedColor = TextMateTheme.match(pending.theme, scopes);
+          let resolvedColor = Textmate.Theme.match(pending.theme, scopes);
 
           let col = position;
           ColorizedToken2.create(
             ~index=col,
-            ~backgroundColor=resolvedColor.background,
-            ~foregroundColor=resolvedColor.foreground,
+            ~backgroundColor=Revery.Color.hex(resolvedColor.background),
+            ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
             (),
           );
         },

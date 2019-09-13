@@ -14,7 +14,7 @@ open TreeSitterScopes;
 type context = {
   tree: Treesitter.Tree.t,
   lines: array(string),
-  theme: TextMateTheme.t,
+  theme: Textmate.Theme.t,
   scopeConverter: TextMateConverter.t,
 };
 
@@ -56,15 +56,15 @@ let doWork = (context: context, line: int) => {
           ~path=scopes,
           context.scopeConverter,
         );
-      let resolvedColor = TextMateTheme.match(context.theme, tmScope);
+      let resolvedColor = Textmate.Theme.match(context.theme, tmScope);
 
       //let line = p.line;
       let col = p.column;
 
       ColorizedToken2.create(
         ~index=col,
-        ~backgroundColor=resolvedColor.background,
-        ~foregroundColor=resolvedColor.foreground,
+        ~backgroundColor=Revery.Color.hex(resolvedColor.background),
+        ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
         (),
       );
     },
