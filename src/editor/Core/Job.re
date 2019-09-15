@@ -1,4 +1,4 @@
-open Revery;
+module Time = Revery.Time;
 
 type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
 type doWork('p, 'c) = mapFn('p, 'c);

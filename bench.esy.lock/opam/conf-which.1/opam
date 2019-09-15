@@ -3,7 +3,7 @@ maintainer: "unixjunkie@sdf.org"
 homepage: "http://www.gnu.org/software/which/"
 authors: "Carlo Wood"
 bug-reports: "https://github.com/ocaml/opam-repository/issues"
-license: "GPL-2+"
+license: "GPL-2.0-or-later"
 build: [["which" "which"]]
 depexts: [
   ["which"] {os-distribution = "centos"}
