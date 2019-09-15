@@ -5,4 +5,5 @@
  */
 
 module NativeSyntaxHighlights = NativeSyntaxHighlights;
+module TokenTheme = TokenTheme;
 module TreeSitterScopes = TreeSitterScopes;

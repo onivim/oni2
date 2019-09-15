@@ -99,7 +99,7 @@ let onBufferUpdate =
       ~getTextmateGrammar,
       ~bufferUpdate: BufferUpdate.t,
       ~lines: array(string),
-      ~theme: Textmate.Theme.t,
+      ~theme: TokenTheme.t,
       v: t,
     ) => {
   let highlightsMap =

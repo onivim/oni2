@@ -19,12 +19,14 @@ let start = (setup: Setup.t) => {
 
         let tokenColorsJson =
           Yojson.Safe.Util.member("tokenColors", themeJson);
-        let tokenTheme =
+        let textMateTheme =
           Textmate.Theme.of_yojson(
             ~defaultBackground="#282C35",
             ~defaultForeground="#ECEFF4",
             tokenColorsJson,
           );
+
+        let tokenTheme = TokenTheme.create(textMateTheme);
 
         dispatch(Actions.SetTokenTheme(tokenTheme));
       })

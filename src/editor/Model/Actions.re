@@ -83,7 +83,7 @@ type t =
   | SetLanguageInfo(LanguageInfo.t)
   | LoadThemeByPath(string)
   | SetIconTheme(IconTheme.t)
-  | SetTokenTheme(Textmate.Theme.t)
+  | SetTokenTheme(TokenTheme.t)
   | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)

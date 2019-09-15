@@ -25,7 +25,7 @@ type t = {
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
-  tokenTheme: Textmate.Theme.t,
+  tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
@@ -62,7 +62,11 @@ let create: unit => t =
     syntaxHighlighting: SyntaxHighlighting.create(),
     syntaxHighlighting2: SyntaxHighlighting2.empty,
     theme: Theme.default,
+<<<<<<< HEAD
     tokenTheme: Textmate.Theme.empty,
+=======
+    tokenTheme: TokenTheme.empty,
+>>>>>>> master
     editorGroups: EditorGroups.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
