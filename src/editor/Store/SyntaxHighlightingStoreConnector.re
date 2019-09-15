@@ -47,7 +47,6 @@ module GrammarRepository = {
         | None => None
         }
       };
-
     };
 
     f;
