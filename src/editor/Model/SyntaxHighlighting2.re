@@ -96,7 +96,7 @@ let onBufferUpdate =
       ~getTreeSitterScopeMapper,
       ~bufferUpdate: BufferUpdate.t,
       ~lines: array(string),
-      ~theme: TextMateTheme.t,
+      ~theme: TokenTheme.t,
       v: t,
     ) => {
   let highlightsMap =

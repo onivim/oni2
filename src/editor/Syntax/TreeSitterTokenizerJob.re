@@ -14,7 +14,7 @@ open TreeSitterScopes;
 type context = {
   tree: Treesitter.Tree.t,
   lines: array(string),
-  theme: TextMateTheme.t,
+  theme: TokenTheme.t,
   scopeConverter: TextMateConverter.t,
 };
 
@@ -56,7 +56,8 @@ let doWork = (context: context, line: int) => {
           ~path=scopes,
           context.scopeConverter,
         );
-      let resolvedColor = TextMateTheme.match(context.theme, tmScope);
+
+      let resolvedColor = TokenTheme.match(context.theme, tmScope);
 
       //let line = p.line;
       let col = p.column;

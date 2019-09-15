@@ -7,5 +7,6 @@
 module NativeSyntaxHighlights = NativeSyntaxHighlights;
 module TextMateScopes = TextMateScopes;
 module TextMateTheme = TextMateTheme;
+module TokenTheme = TokenTheme;
 module TreeSitterScopes = TreeSitterScopes;
 module Trie = Trie;
