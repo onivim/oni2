@@ -6,7 +6,8 @@
 
 open Oni_Core;
 open Oni_Model;
-open Oni_Syntax;
+
+module TextMateTheme = Oni_Syntax.TextMateTheme;
 
 let start = (setup: Setup.t) => {
   let defaultThemePath =

@@ -6,7 +6,8 @@
 
 open Oni_Core;
 open Oni_Core.Types;
-open Oni_Syntax;
+
+module TextMateTheme = Oni_Syntax.TextMateTheme;
 
 type t = {
   mode: Vim.Mode.t,
