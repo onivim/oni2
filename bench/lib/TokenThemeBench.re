@@ -12,17 +12,17 @@ let tmTheme =
     tokenColorsJson,
   );
 
-let themeWithCaching = Theme.create(tmTheme);
-let themeWithoutCaching = Theme.create(~useCache=false, tmTheme);
+let themeWithCaching = TokenTheme.create(tmTheme);
+let themeWithoutCaching = TokenTheme.create(~useCache=false, tmTheme);
 
 let simpleScopeTest = (themeToUse, ()) => {
-  let _ = Theme.match(themeToUse, "source.reason");
+  let _ = TokenTheme.match(themeToUse, "source.reason");
   ();
 };
 
 let largerScopeTest = (themeToUse, ()) => {
   let _ =
-    Theme.match(
+    TokenTheme.match(
       themeToUse,
       "entity.name.filename support.property-value constant.language markup.inserted source.reason",
     );
