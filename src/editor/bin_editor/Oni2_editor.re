@@ -24,6 +24,9 @@ Log.debug("Starting Onivim 2.");
 /* The 'main' function for our app */
 let init = app => {
   Log.debug("Init");
+
+  let _ = Revery.Log.listen((_, msg) => Log.info("[Revery]: " ++ msg));
+
   let w =
     App.createWindow(
       ~createOptions=
