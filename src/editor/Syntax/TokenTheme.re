@@ -16,6 +16,8 @@ let create = (~useCache=true, theme: TextMateTheme.t) => {
   {cache, theme, useCache};
 };
 
+let empty = create(TextMateTheme.empty); 
+
 let match = (v: t, scopes: string) =>
   if (!v.useCache) {
     TextMateTheme.match(v.theme, scopes);

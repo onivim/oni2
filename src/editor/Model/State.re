@@ -6,8 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
-
-module TextMateTheme = Oni_Syntax.TextMateTheme;
+open Oni_Syntax;
 
 type t = {
   mode: Vim.Mode.t,
@@ -27,7 +26,7 @@ type t = {
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
-  tokenTheme: TextMateTheme.t,
+  tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
   inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
@@ -64,7 +63,7 @@ let create: unit => t =
     syntaxHighlighting: SyntaxHighlighting.create(),
     syntaxHighlighting2: SyntaxHighlighting2.empty,
     theme: Theme.default,
-    tokenTheme: TextMateTheme.empty,
+    tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
