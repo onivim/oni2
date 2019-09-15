@@ -86,14 +86,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
              let scopes = token.scopes |> List.filter(s => s != pending.scope);
              (token.position, scopes);
            });
-      /*|> List.filter(scopes =>
-          switch (scopes) {
-          | (_, []) => false
-          | _ => true
-          }
-        );*/
-
-      List.iter(token => prerr_endline(Token.show(token)), tokens);
 
       let tokens =
         List.map(
