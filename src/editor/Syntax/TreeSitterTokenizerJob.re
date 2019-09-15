@@ -56,7 +56,7 @@ let doWork = (context: context, line: int) => {
           ~path=scopes,
           context.scopeConverter,
         );
-      
+
       let resolvedColor = TokenTheme.match(context.theme, tmScope);
 
       //let line = p.line;

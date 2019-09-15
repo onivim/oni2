@@ -6,9 +6,9 @@ let oneDarkThemePath = "extensions/onedark-pro/themes/OneDark-Pro.json";
 let themeJson = Yojson.Safe.from_file(oneDarkThemePath);
 let tokenColorsJson = Yojson.Safe.Util.member("tokenColors", themeJson);
 let tmTheme =
-  TextMateTheme.of_yojson(
-    ~defaultBackground=Revery.Colors.black,
-    ~defaultForeground=Revery.Colors.white,
+  Textmate.Theme.of_yojson(
+    ~defaultBackground="#000",
+    ~defaultForeground="#fff",
     tokenColorsJson,
   );
 

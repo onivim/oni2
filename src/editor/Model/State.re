@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Syntax;
 
 type t = {
   mode: Vim.Mode.t,
@@ -62,11 +63,7 @@ let create: unit => t =
     syntaxHighlighting: SyntaxHighlighting.create(),
     syntaxHighlighting2: SyntaxHighlighting2.empty,
     theme: Theme.default,
-<<<<<<< HEAD
-    tokenTheme: Textmate.Theme.empty,
-=======
     tokenTheme: TokenTheme.empty,
->>>>>>> master
     editorGroups: EditorGroups.create(),
     inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
