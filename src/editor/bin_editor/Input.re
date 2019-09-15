@@ -8,6 +8,7 @@ open Oni_Core;
 open Oni_Model;
 open Reglfw.Glfw;
 open Revery_Core;
+module Log = Oni_Core.Log;
 
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
