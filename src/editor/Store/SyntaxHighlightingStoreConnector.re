@@ -23,7 +23,7 @@ module GrammarRepository = {
     let scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t) =
       Hashtbl.create(32);
 
-    let rec f = scope => {
+    let f = scope => {
       switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
       | Some(v) => Some(v)
       | None =>
