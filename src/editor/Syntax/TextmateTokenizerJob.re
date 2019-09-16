@@ -11,7 +11,7 @@ type pendingWork = {
   lines: array(string),
   currentLine: int,
   currentVersion: int,
-  grammar: option(Grammar.t),
+  tokenizer: Tokenizer.t,
   theme: TokenTheme.t,
   scope: string,
 };
@@ -59,43 +59,42 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
   if (currentLine >= Array.length(pending.lines)) {
     (true, pending, completed);
   } else {
-    switch (pending.grammar) {
-    | None => (true, pending, completed)
-    | Some(grammar) =>
       // Check if there are scope stacks from the previous line
       let scopes =
         switch (IntMap.find_opt(currentLine - 1, completed)) {
-        | None => Grammar.getScopeStack(grammar)
-        | Some(v) => v.scopeStack
+        | None => None
+        | Some(v) => Some(v.scopeStack)
         };
 
       // Get new tokens & scopes
       let (tokens, scopes) =
-        Grammar.tokenize(
+        Tokenizer.tokenize(
           ~lineNumber=currentLine,
-          ~grammar,
-          ~scopes=Some(scopes),
+          ~scopeStack=scopes,
+          ~scope=pending.scope,
+          pending.tokenizer,
           pending.lines[currentLine] ++ "\n",
         );
 
       // Filter tokens and get colors
-      let filteredTokens =
+      /*let filteredTokens =
         tokens
         |> List.map(token => {
              open Token;
              let scopes = token.scopes |> List.filter(s => s != pending.scope);
              (token.position, scopes);
-           });
+           });*/
 
       let tokens =
         List.map(
           token => {
-            let (position, scopes) = token;
+            let {position, scopes, _}: Token.t = token;
             let scopes =
               scopes
               |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
               |> String.trim;
 
+            print_endline ("SCOPE: " ++ scopes);
             let resolvedColor = TokenTheme.match(pending.theme, scopes);
 
             let col = position;
@@ -106,7 +105,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
               (),
             );
           },
-          filteredTokens,
+          tokens,
         );
 
       let newLineInfo = {
@@ -131,15 +130,15 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 
       (isComplete, {...pending, currentLine: nextLine}, completed);
     };
-  };
 };
 
-let create = (~scope, ~theme, ~grammar, lines) => {
+let create = (~scope, ~theme, ~grammarRepository, lines) => {
+  let tokenizer = Tokenizer.create(~repository=grammarRepository, ());
   let p: pendingWork = {
     lines,
     currentLine: 0,
     currentVersion: (-1),
-    grammar,
+    tokenizer,
     theme,
     scope,
   };

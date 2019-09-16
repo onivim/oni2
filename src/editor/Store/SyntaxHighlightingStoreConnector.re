@@ -37,7 +37,6 @@ module GrammarRepository = {
 
           switch (grammar) {
           | Ok(g) =>
-            let g = Textmate.Grammar.setGrammarRepository(f, g);
             Hashtbl.add(scopeToGrammar, scope, g);
             Some(g);
           | Error(e) =>
