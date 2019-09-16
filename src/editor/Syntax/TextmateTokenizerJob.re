@@ -59,67 +59,67 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
   if (currentLine >= Array.length(pending.lines)) {
     (true, pending, completed);
   } else {
-      // Check if there are scope stacks from the previous line
-      let scopes =
-        switch (IntMap.find_opt(currentLine - 1, completed)) {
-        | None => None
-        | Some(v) => Some(v.scopeStack)
-        };
-
-      // Get new tokens & scopes
-      let (tokens, scopes) =
-        Tokenizer.tokenize(
-          ~lineNumber=currentLine,
-          ~scopeStack=scopes,
-          ~scope=pending.scope,
-          pending.tokenizer,
-          pending.lines[currentLine] ++ "\n",
-        );
-
-      let tokens =
-        List.map(
-          token => {
-            let {position, scopes, _}: Token.t = token;
-            let scopes =
-              scopes
-              |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
-              |> String.trim;
-
-            let resolvedColor = TokenTheme.match(pending.theme, scopes);
-
-            let col = position;
-            ColorizedToken2.create(
-              ~index=col,
-              ~backgroundColor=Revery.Color.hex(resolvedColor.background),
-              ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-              (),
-            );
-          },
-          tokens,
-        );
-
-      let newLineInfo = {
-        tokens,
-        scopeStack: scopes,
-        version: pending.currentVersion,
+    // Check if there are scope stacks from the previous line
+    let scopes =
+      switch (IntMap.find_opt(currentLine - 1, completed)) {
+      | None => None
+      | Some(v) => Some(v.scopeStack)
       };
 
-      let completed =
-        IntMap.update(
-          currentLine,
-          prev =>
-            switch (prev) {
-            | None => Some(newLineInfo)
-            | Some(_) => Some(newLineInfo)
-            },
-          completed,
-        );
+    // Get new tokens & scopes
+    let (tokens, scopes) =
+      Tokenizer.tokenize(
+        ~lineNumber=currentLine,
+        ~scopeStack=scopes,
+        ~scope=pending.scope,
+        pending.tokenizer,
+        pending.lines[currentLine] ++ "\n",
+      );
 
-      let nextLine = currentLine + 1;
-      let isComplete = nextLine >= Array.length(pending.lines);
+    let tokens =
+      List.map(
+        token => {
+          let {position, scopes, _}: Token.t = token;
+          let scopes =
+            scopes
+            |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
+            |> String.trim;
 
-      (isComplete, {...pending, currentLine: nextLine}, completed);
+          let resolvedColor = TokenTheme.match(pending.theme, scopes);
+
+          let col = position;
+          ColorizedToken2.create(
+            ~index=col,
+            ~backgroundColor=Revery.Color.hex(resolvedColor.background),
+            ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
+            (),
+          );
+        },
+        tokens,
+      );
+
+    let newLineInfo = {
+      tokens,
+      scopeStack: scopes,
+      version: pending.currentVersion,
     };
+
+    let completed =
+      IntMap.update(
+        currentLine,
+        prev =>
+          switch (prev) {
+          | None => Some(newLineInfo)
+          | Some(_) => Some(newLineInfo)
+          },
+        completed,
+      );
+
+    let nextLine = currentLine + 1;
+    let isComplete = nextLine >= Array.length(pending.lines);
+
+    (isComplete, {...pending, currentLine: nextLine}, completed);
+  };
 };
 
 let create = (~scope, ~theme, ~grammarRepository, lines) => {

@@ -13,7 +13,8 @@ let doWork = (v: t) => Job.tick(v);
 let updateVisibleRanges = (_ranges, v) => v;
 
 let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {
-  let grammarRepository = Textmate.GrammarRepository.create((scope) => getTextmateGrammar(scope));
+  let grammarRepository =
+    Textmate.GrammarRepository.create(scope => getTextmateGrammar(scope));
   TextmateTokenizerJob.create(~scope, ~theme, ~grammarRepository, lines);
 };
 
