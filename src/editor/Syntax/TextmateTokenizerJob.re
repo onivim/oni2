@@ -76,15 +76,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           pending.lines[currentLine] ++ "\n",
         );
 
-      // Filter tokens and get colors
-      /*let filteredTokens =
-        tokens
-        |> List.map(token => {
-             open Token;
-             let scopes = token.scopes |> List.filter(s => s != pending.scope);
-             (token.position, scopes);
-           });*/
-
       let tokens =
         List.map(
           token => {
@@ -94,7 +85,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
               |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
               |> String.trim;
 
-            print_endline ("SCOPE: " ++ scopes);
             let resolvedColor = TokenTheme.match(pending.theme, scopes);
 
             let col = position;
