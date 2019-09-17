@@ -14,6 +14,7 @@ type pendingWork = {
   tokenizer: Tokenizer.t,
   theme: TokenTheme.t,
   scope: string,
+  hasRun: bool,
 };
 
 type lineInfo = {
@@ -118,7 +119,11 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     let nextLine = currentLine + 1;
     let isComplete = nextLine >= Array.length(pending.lines);
 
-    (isComplete, {...pending, currentLine: nextLine}, completed);
+    (
+      isComplete,
+      {...pending, hasRun: true, currentLine: nextLine},
+      completed,
+    );
   };
 };
 
@@ -131,6 +136,7 @@ let create = (~scope, ~theme, ~grammarRepository, lines) => {
     tokenizer,
     theme,
     scope,
+    hasRun: false,
   };
 
   Job.create(
