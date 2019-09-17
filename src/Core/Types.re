@@ -204,10 +204,7 @@ module Input = {
   };
 };
 
-// TEMPORARY representation of token colors, while we are
-// migrating from the legacy node-based strategy to the new
-// native strategy.
-module ColorizedToken2 = {
+module ColorizedToken = {
   type t = {
     index: int,
     backgroundColor: Revery.Color.t,

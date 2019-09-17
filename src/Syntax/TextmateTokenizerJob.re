@@ -17,7 +17,7 @@ type pendingWork = {
 };
 
 type lineInfo = {
-  tokens: list(ColorizedToken2.t),
+  tokens: list(ColorizedToken.t),
   scopeStack: ScopeStack.t,
   version: int,
 };
@@ -88,7 +88,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           let resolvedColor = TokenTheme.match(pending.theme, scopes);
 
           let col = position;
-          ColorizedToken2.create(
+          ColorizedToken.create(
             ~index=col,
             ~backgroundColor=Revery.Color.hex(resolvedColor.background),
             ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),

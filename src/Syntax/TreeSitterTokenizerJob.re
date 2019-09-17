@@ -18,7 +18,7 @@ type context = {
   scopeConverter: TextMateConverter.t,
 };
 
-type output = list(ColorizedToken2.t);
+type output = list(ColorizedToken.t);
 
 type t = BufferLineJob.t(context, output);
 
@@ -62,7 +62,7 @@ let doWork = (context: context, line: int) => {
       //let line = p.line;
       let col = p.column;
 
-      ColorizedToken2.create(
+      ColorizedToken.create(
         ~index=col,
         ~backgroundColor=Revery.Color.hex(resolvedColor.background),
         ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),

@@ -14,7 +14,7 @@ let create =
     (
       length: int,
       theme: Theme.t,
-      tokenColors: list(ColorizedToken2.t),
+      tokenColors: list(ColorizedToken.t),
       selection: option(Range.t),
       defaultBackgroundColor: Color.t,
       selectionColor: Color.t,
@@ -22,16 +22,16 @@ let create =
       searchHighlightRanges: list(Range.t),
     ) => {
   let defaultToken2 =
-    ColorizedToken2.create(
+    ColorizedToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=theme.editorForeground,
       (),
     );
-  let tokenColorArray: array(ColorizedToken2.t) =
+  let tokenColorArray: array(ColorizedToken.t) =
     Array.make(length, defaultToken2);
 
-  let rec f = (tokens: list(ColorizedToken2.t), start) =>
+  let rec f = (tokens: list(ColorizedToken.t), start) =>
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
