@@ -606,45 +606,45 @@ let createElement =
 
                  let lines = Buffer.getNumberOfLines(buffer);
                  if (line <= lines) {
-                 let text = Buffer.getLine(buffer, line);
-                 let (startOffset, _) =
-                   BufferViewTokenizer.getCharacterPositionAndWidth(
-                     ~indentation,
-                     ~viewOffset=leftVisibleColumn,
-                     text,
-                     start,
-                   );
-                 let (endOffset, _) =
-                   BufferViewTokenizer.getCharacterPositionAndWidth(
-                     ~indentation,
-                     ~viewOffset=leftVisibleColumn,
-                     text,
-                     endC,
-                   );
+                   let text = Buffer.getLine(buffer, line);
+                   let (startOffset, _) =
+                     BufferViewTokenizer.getCharacterPositionAndWidth(
+                       ~indentation,
+                       ~viewOffset=leftVisibleColumn,
+                       text,
+                       start,
+                     );
+                   let (endOffset, _) =
+                     BufferViewTokenizer.getCharacterPositionAndWidth(
+                       ~indentation,
+                       ~viewOffset=leftVisibleColumn,
+                       text,
+                       endC,
+                     );
 
-                 Shapes.drawRect(
-                   ~transform,
-                   ~x=
-                     lineNumberWidth
-                     +. float_of_int(startOffset)
-                     *. fontWidth
-                     -. halfOffset,
-                   ~y=
-                     fontHeight
-                     *. float_of_int(
-                          Index.toZeroBasedInt(r.startPosition.line),
-                        )
-                     -. editor.scrollY
-                     -. halfOffset,
-                   ~height=fontHeight +. offset,
-                   ~width=
-                     offset
-                     +. max(float_of_int(endOffset - startOffset), 1.0)
-                     *. fontWidth,
-                   ~color,
-                   (),
-                   
-                 )}};
+                   Shapes.drawRect(
+                     ~transform,
+                     ~x=
+                       lineNumberWidth
+                       +. float_of_int(startOffset)
+                       *. fontWidth
+                       -. halfOffset,
+                     ~y=
+                       fontHeight
+                       *. float_of_int(
+                            Index.toZeroBasedInt(r.startPosition.line),
+                          )
+                       -. editor.scrollY
+                       -. halfOffset,
+                     ~height=fontHeight +. offset,
+                     ~width=
+                       offset
+                       +. max(float_of_int(endOffset - startOffset), 1.0)
+                       *. fontWidth,
+                     ~color,
+                     (),
+                   );
+                 }};
 
               FlatList.render(
                 ~scrollY,
