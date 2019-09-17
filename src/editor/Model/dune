@@ -21,5 +21,6 @@
         Oni2.input
         Oni2.syntax
         ReasonFuzz
+        textmate
     )
     (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

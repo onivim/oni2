@@ -14,6 +14,7 @@
         Oni2.ui
         isolinear
         libvim
+        textmate
         treesitter
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

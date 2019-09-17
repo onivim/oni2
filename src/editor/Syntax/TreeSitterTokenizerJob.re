@@ -64,8 +64,8 @@ let doWork = (context: context, line: int) => {
 
       ColorizedToken2.create(
         ~index=col,
-        ~backgroundColor=resolvedColor.background,
-        ~foregroundColor=resolvedColor.foreground,
+        ~backgroundColor=Revery.Color.hex(resolvedColor.background),
+        ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
         (),
       );
     },

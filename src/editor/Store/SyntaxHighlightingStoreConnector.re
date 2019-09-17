@@ -9,13 +9,48 @@
 
 module Core = Oni_Core;
 module Model = Oni_Model;
-
 module Extensions = Oni_Extensions;
 
 open Oni_Syntax.TreeSitterScopes;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 
 module Log = Core.Log;
+
+module GrammarRepository = {
+  type t = {scopeToGrammar: Core.StringMap.t(Textmate.Grammar.t)};
+
+  let ofLanguageInfo = (languageInfo: Model.LanguageInfo.t) => {
+    let scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t) =
+      Hashtbl.create(32);
+
+    let f = scope => {
+      switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
+      | Some(v) => Some(v)
+      | None =>
+        switch (
+          Model.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)
+        ) {
+        | Some(grammarPath) =>
+          Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
+          let json = Yojson.Safe.from_file(grammarPath);
+          let grammar = Textmate.Grammar.Json.of_yojson(json);
+
+          switch (grammar) {
+          | Ok(g) =>
+            Hashtbl.add(scopeToGrammar, scope, g);
+            Some(g);
+          | Error(e) =>
+            Log.error("Error parsing grammar: " ++ e);
+            None;
+          };
+        | None => None
+        }
+      };
+    };
+
+    f;
+  };
+};
 
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
@@ -30,6 +65,8 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let getTreeSitterScopeMapper = () => {
     treeSitterScopes;
   };
+
+  let getTextmateGrammar = GrammarRepository.ofLanguageInfo(languageInfo);
 
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
@@ -110,6 +147,9 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
           ...state,
           syntaxHighlighting2:
             Model.SyntaxHighlighting2.onBufferUpdate(
+              ~configuration=state.configuration,
+              ~scope,
+              ~getTextmateGrammar,
               ~getTreeSitterScopeMapper,
               ~bufferUpdate=bu,
               ~lines,

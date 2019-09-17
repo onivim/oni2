@@ -93,7 +93,10 @@ let getTokensForLine = (v: t, bufferId: int, line: int) => {
 
 let onBufferUpdate =
     (
+      ~configuration,
+      ~scope,
       ~getTreeSitterScopeMapper,
+      ~getTextmateGrammar,
       ~bufferUpdate: BufferUpdate.t,
       ~lines: array(string),
       ~theme: TokenTheme.t,
@@ -107,8 +110,11 @@ let onBufferUpdate =
         | None =>
           Some(
             NativeSyntaxHighlights.create(
+              ~configuration,
               ~theme,
+              ~scope,
               ~getTreeSitterScopeMapper,
+              ~getTextmateGrammar,
               lines,
             ),
           )

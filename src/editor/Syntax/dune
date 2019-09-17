@@ -12,5 +12,6 @@
         Oni2.core
         Rench
         Revery
+        textmate
         treesitter
     ))

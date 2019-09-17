@@ -1,31 +1,33 @@
 /*
- Theme.re
+ TokenTheme.re
 
  Thin wrapper around TextmateTheme.t that adds cached
  */
 
+open Textmate;
+
 type t = {
   useCache: bool,
-  cache: Hashtbl.t(string, TextMateScopes.ResolvedStyle.t),
-  theme: TextMateTheme.t,
+  cache: Hashtbl.t(string, ThemeScopes.ResolvedStyle.t),
+  theme: Textmate.Theme.t,
 };
 
-let create = (~useCache=true, theme: TextMateTheme.t) => {
+let create = (~useCache=true, theme: Textmate.Theme.t) => {
   let cache = Hashtbl.create(1024);
 
   {cache, theme, useCache};
 };
 
-let empty = create(TextMateTheme.empty);
+let empty = create(Textmate.Theme.empty);
 
 let match = (v: t, scopes: string) =>
   if (!v.useCache) {
-    TextMateTheme.match(v.theme, scopes);
+    Textmate.Theme.match(v.theme, scopes);
   } else {
     switch (Hashtbl.find_opt(v.cache, scopes)) {
     | Some(v) => v
     | None =>
-      let resolvedStyle = TextMateTheme.match(v.theme, scopes);
+      let resolvedStyle = Textmate.Theme.match(v.theme, scopes);
       Hashtbl.add(v.cache, scopes, resolvedStyle);
       resolvedStyle;
     };

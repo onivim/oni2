@@ -1,5 +1,5 @@
 {
-  "checksum": "9751a937878ae7e70a8d88e285e1a826",
+  "checksum": "4ce33a2229fca31b40c1de65a8b8b048",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -267,6 +267,47 @@
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+    },
+    "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9": {
+      "id": "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9",
+      "name": "reason-textmate",
+      "version": "github:onivim/reason-textmate#a64e6fa",
+      "source": {
+        "type": "install",
+        "source": [ "github:onivim/reason-textmate#a64e6fa" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
+        "reason-oniguruma@2.0.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@reason-native/rely@1.3.1@d41d8cd9",
+        "@opam/yojson@opam:1.7.0@7056d985",
+        "@opam/ppx_let@opam:v0.11.0@059b0142",
+        "@opam/ppx_deriving_yojson@opam:3.5.1@78ccf4d4",
+        "@opam/dune@opam:1.7.3@e23fe0a7",
+        "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+    },
+    "reason-oniguruma@2.0.0@d41d8cd9": {
+      "id": "reason-oniguruma@2.0.0@d41d8cd9",
+      "name": "reason-oniguruma",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-2.0.0.tgz#sha1:0df0fba6c7aad8fdcc452ac3ad5d4285db1108d1"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
+        "ocaml@4.7.1004@d41d8cd9", "esy-oniguruma@5.9.1001@d41d8cd9",
+        "@reason-native/rely@1.3.1@d41d8cd9",
+        "@opam/dune@opam:1.7.3@e23fe0a7",
+        "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
+      ],
+      "devDependencies": []
     },
     "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9": {
       "id": "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
@@ -756,6 +797,20 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "esy-oniguruma@5.9.1001@d41d8cd9": {
+      "id": "esy-oniguruma@5.9.1001@d41d8cd9",
+      "name": "esy-oniguruma",
+      "version": "5.9.1001",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/esy-oniguruma/-/esy-oniguruma-5.9.1001.tgz#sha1:f7f9f13497be13e72775d410b515baa02f49f211"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "esy-macdylibbundler@0.4.5@d41d8cd9": {
       "id": "esy-macdylibbundler@0.4.5@d41d8cd9",
       "name": "esy-macdylibbundler",
@@ -929,6 +984,7 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
+        "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
         "reason-jsonrpc@1.2.0@d41d8cd9", "reason-glfw@3.2.1029@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
