@@ -101,10 +101,10 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     | Model.Actions.Tick(_) =>
-      if (Model.SyntaxHighlighting2.anyPendingWork(state.syntaxHighlighting2)) {
-        let syntaxHighlighting2 =
-          Model.SyntaxHighlighting2.doPendingWork(state.syntaxHighlighting2);
-        ({...state, syntaxHighlighting2}, Isolinear.Effect.none);
+      if (Model.SyntaxHighlighting.anyPendingWork(state.syntaxHighlighting)) {
+        let syntaxHighlighting =
+          Model.SyntaxHighlighting.doPendingWork(state.syntaxHighlighting);
+        ({...state, syntaxHighlighting}, Isolinear.Effect.none);
       } else {
         default;
       }
@@ -123,10 +123,10 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
       let state = {
         ...state,
-        syntaxHighlighting2:
-          Model.SyntaxHighlighting2.updateVisibleBuffers(
+        syntaxHighlighting:
+          Model.SyntaxHighlighting.updateVisibleBuffers(
             visibleBuffers,
-            state.syntaxHighlighting2,
+            state.syntaxHighlighting,
           ),
       };
       (state, Isolinear.Effect.none);
@@ -138,15 +138,12 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       let version = getVersion(state, bu.id);
       switch (scope) {
       | None => default
-      | Some(scope)
-          when
-            !NativeSyntaxHighlights.canHandleScope(state.configuration, scope) => default
       | Some(scope) when isVersionValid(bu.version, version) =>
         ignore(scope);
         let state = {
           ...state,
-          syntaxHighlighting2:
-            Model.SyntaxHighlighting2.onBufferUpdate(
+          syntaxHighlighting:
+            Model.SyntaxHighlighting.onBufferUpdate(
               ~configuration=state.configuration,
               ~scope,
               ~getTextmateGrammar,
@@ -154,7 +151,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               ~bufferUpdate=bu,
               ~lines,
               ~theme=state.tokenTheme,
-              state.syntaxHighlighting2,
+              state.syntaxHighlighting,
             ),
         };
         (state, Isolinear.Effect.none);

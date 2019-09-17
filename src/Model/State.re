@@ -19,7 +19,7 @@ type t = {
   wildmenu: Wildmenu.t,
   configuration: Configuration.t,
   // New-school native syntax highlighting
-  syntaxHighlighting2: SyntaxHighlighting2.t,
+  syntaxHighlighting: SyntaxHighlighting.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -57,7 +57,7 @@ let create: unit => t =
       ),
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
-    syntaxHighlighting2: SyntaxHighlighting2.empty,
+    syntaxHighlighting: SyntaxHighlighting.empty,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),

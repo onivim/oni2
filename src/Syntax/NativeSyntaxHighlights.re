@@ -27,20 +27,6 @@ let _hasTreeSitterScope = (configuration, scope: string) => {
   };
 };
 
-let canHandleScope = (configuration: Core.Configuration.t, scope: string) => {
-  let nativeHighlightingEnabled =
-    Core.Configuration.getValue(
-      c => c.experimentalNativeTextMate,
-      configuration,
-    );
-
-  if (nativeHighlightingEnabled) {
-    true;
-  } else {
-    _hasTreeSitterScope(configuration, scope);
-  };
-};
-
 let anyPendingWork = v => {
   switch (v) {
   | None => false

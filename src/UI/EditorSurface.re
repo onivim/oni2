@@ -368,8 +368,8 @@ let createElement =
 
       let tokenColors2 =
         switch (
-          SyntaxHighlighting2.getTokensForLine(
-            state.syntaxHighlighting2,
+          SyntaxHighlighting.getTokensForLine(
+            state.syntaxHighlighting,
             bufferId,
             i,
           )

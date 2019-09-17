@@ -37,7 +37,6 @@ module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;
 module State = State;
 module SyntaxHighlighting = SyntaxHighlighting;
-module SyntaxHighlighting2 = SyntaxHighlighting2;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module Wildmenu = Wildmenu;
 module WindowManager = WindowManager;
