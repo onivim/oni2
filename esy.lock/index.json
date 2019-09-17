@@ -1,5 +1,5 @@
 {
-  "checksum": "4ce33a2229fca31b40c1de65a8b8b048",
+  "checksum": "ddcbd2d9b3844d47f116d42756f018af",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -268,18 +268,20 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9": {
-      "id": "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9",
+    "reason-textmate@1.2.0@d41d8cd9": {
+      "id": "reason-textmate@1.2.0@d41d8cd9",
       "name": "reason-textmate",
-      "version": "github:onivim/reason-textmate#a64e6fa",
+      "version": "1.2.0",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-textmate#a64e6fa" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-1.2.0.tgz#sha1:383ceedf7b148a55e3b7cb7e01203838a06ab21f"
+        ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
-        "reason-oniguruma@2.0.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "reason-oniguruma@2.0.1@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@opam:1.7.0@7056d985",
         "@opam/ppx_let@opam:v0.11.0@059b0142",
@@ -287,16 +289,16 @@
         "@opam/dune@opam:1.7.3@e23fe0a7",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+      "devDependencies": []
     },
-    "reason-oniguruma@2.0.0@d41d8cd9": {
-      "id": "reason-oniguruma@2.0.0@d41d8cd9",
+    "reason-oniguruma@2.0.1@d41d8cd9": {
+      "id": "reason-oniguruma@2.0.1@d41d8cd9",
       "name": "reason-oniguruma",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-2.0.0.tgz#sha1:0df0fba6c7aad8fdcc452ac3ad5d4285db1108d1"
+          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-2.0.1.tgz#sha1:019d4b17e1940750b19a2a7034316c1d41205ea1"
         ]
       },
       "overrides": [],
@@ -984,7 +986,7 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
-        "reason-textmate@github:onivim/reason-textmate#a64e6fa@d41d8cd9",
+        "reason-textmate@1.2.0@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
         "reason-jsonrpc@1.2.0@d41d8cd9", "reason-glfw@3.2.1029@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.0.0@d41d8cd9",
