@@ -604,6 +604,8 @@ let createElement =
                  let start = Index.toZeroBasedInt(r.startPosition.character);
                  let endC = Index.toZeroBasedInt(r.endPosition.character);
 
+                 let lines = Buffer.getNumberOfLines(buffer);
+                 if (line <= lines) {
                  let text = Buffer.getLine(buffer, line);
                  let (startOffset, _) =
                    BufferViewTokenizer.getCharacterPositionAndWidth(
@@ -641,7 +643,8 @@ let createElement =
                      *. fontWidth,
                    ~color,
                    (),
-                 )};
+                   
+                 )}};
 
               FlatList.render(
                 ~scrollY,
