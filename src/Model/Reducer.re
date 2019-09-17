@@ -16,8 +16,6 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: Buffers.reduce(s.buffers, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        syntaxHighlighting:
-          SyntaxHighlighting.reduce(s.syntaxHighlighting, a),
         wildmenu: Wildmenu.reduce(s.wildmenu, a),
         commandline: Commandline.reduce(s.commandline, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),

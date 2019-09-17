@@ -341,12 +341,6 @@ let createElement =
 
     let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
       let line = Buffer.getLine(buffer, i);
-      let tokenColors =
-        SyntaxHighlighting.getTokensForLine(
-          state.syntaxHighlighting,
-          bufferId,
-          i,
-        );
 
       let searchHighlightRanges =
         switch (IntMap.find_opt(i, searchHighlights)) {
@@ -380,13 +374,7 @@ let createElement =
             i,
           )
         ) {
-        | [] =>
-          Oni_Extensions.ColorizedToken.toColorizedToken2s(
-            state.syntaxHighlighting.colorMap,
-            theme.editorForeground,
-            theme.editorBackground,
-            tokenColors,
-          )
+        | [] => []
         | v => v
         };
 
