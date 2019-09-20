@@ -87,34 +87,38 @@ let show = (v: t('p, 'c)) => {
   ++ "\n";
 };
 
-let tick: t('p, 'c) => t('p, 'c) =
-  (v: t('p, 'c)) => {
-    let budget = Time.to_float_seconds(v.budget);
-    let startTime = Unix.gettimeofday();
-    let current = ref(v);
-    let iterations = ref(0);
-
-    Log.debug("[Job] Starting " ++ v.name);
-    while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
-      current := doWork(current^);
-      incr(iterations);
+let tick = (~budget=None, v: t('p, 'c)) => {
+  let budget =
+    switch (budget) {
+    | None => Time.to_float_seconds(v.budget)
+    | Some(v) => v
     };
 
-    let endTime = Unix.gettimeofday();
+  let startTime = Unix.gettimeofday();
+  let current = ref(v);
+  let iterations = ref(0);
 
-    Log.info(
-      "[Job] "
-      ++ v.name
-      ++ " ran "
-      ++ string_of_int(iterations^)
-      ++ " iterations for "
-      ++ string_of_float(endTime -. startTime)
-      ++ "s",
-    );
-
-    if (Log.isDebugLoggingEnabled()) {
-      Log.debug("[Job] Detailed report: " ++ show(v));
-    };
-
-    current^;
+  Log.debug("[Job] Starting " ++ v.name);
+  while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
+    current := doWork(current^);
+    incr(iterations);
   };
+
+  let endTime = Unix.gettimeofday();
+
+  Log.info(
+    "[Job] "
+    ++ v.name
+    ++ " ran "
+    ++ string_of_int(iterations^)
+    ++ " iterations for "
+    ++ string_of_float(endTime -. startTime)
+    ++ "s",
+  );
+
+  if (Log.isDebugLoggingEnabled()) {
+    Log.debug("[Job] Detailed report: " ++ show(v));
+  };
+
+  current^;
+};

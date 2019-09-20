@@ -86,6 +86,6 @@ let default = {
   zenModeHideTabs: true,
   zenModeSingleFile: true,
   experimentalTreeSitter: false,
-  experimentalNativeTextMate: false,
+  experimentalNativeTextMate: true,
   experimentalAutoClosingPairs: false,
 };
