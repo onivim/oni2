@@ -46,16 +46,22 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
       {
         ...p,
         lines,
-        currentLine:
-          min(startPos, p.currentLine),
+        currentLine: min(startPos, p.currentLine),
         currentVersion: bufferUpdate.version,
       },
-      IntMap.shift(~default={(prev) => switch(prev) {
-      | None => None
-      | Some({scopeStack, _}) => Some({tokens: [], scopeStack, version: -1});
-      }}, ~startPos, ~endPos, 
+      IntMap.shift(
+        ~default=
+          prev =>
+            switch (prev) {
+            | None => None
+            | Some({scopeStack, _}) =>
+              Some({tokens: [], scopeStack, version: (-1)})
+            },
+        ~startPos,
+        ~endPos,
         ~delta=Array.length(bufferUpdate.lines),
-      c)
+        c,
+      ),
     );
   };
 
