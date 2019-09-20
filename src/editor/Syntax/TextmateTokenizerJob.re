@@ -54,7 +54,7 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
       | None => None
       | Some({scopeStack, _}) => Some({tokens: [], scopeStack, version: -1});
       }}, ~startPos, ~endPos, 
-        ~delta=Array.length(lines),
+        ~delta=Array.length(bufferUpdate.lines),
       c)
     );
   };
