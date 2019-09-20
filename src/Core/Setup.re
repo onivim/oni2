@@ -11,8 +11,6 @@ type t = {
   /* Camomile runtime files */
   [@key "camomile"]
   camomilePath: string,
-  [@key "textmateService"]
-  textmateServicePath: string,
   [@key "bundledExtensions"]
   bundledExtensionsPath: string,
   [@key "developmentExtensions"]
@@ -33,7 +31,6 @@ let default = () => {
   | Revery.Environment.Windows => {
       nodePath: execDir ++ "node.exe",
       camomilePath: execDir ++ "camomile",
-      textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",
@@ -43,8 +40,6 @@ let default = () => {
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
       camomilePath: execDir ++ "../Resources/camomile",
-      textmateServicePath:
-        execDir ++ "../Resources/textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",
@@ -54,7 +49,6 @@ let default = () => {
   | _ => {
       nodePath: execDir ++ "node",
       camomilePath: execDir ++ "../share/camomile",
-      textmateServicePath: execDir ++ "textmate_service/lib/src/index.js",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       extensionHostPath: "",

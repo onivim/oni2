@@ -35,10 +35,6 @@ let checks = [
     (setup: Setup.t) => Sys.file_exists(setup.rgPath),
   ),
   (
-    "Verify textmate service exists",
-    (setup: Setup.t) => Sys.file_exists(setup.textmateServicePath),
-  ),
-  (
     "Verify bundled extensions exists",
     (setup: Setup.t) => Sys.is_directory(setup.bundledExtensionsPath),
   ),
