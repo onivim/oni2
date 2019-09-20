@@ -203,7 +203,6 @@ module Input = {
     command: string,
   };
 };
-
 // TEMPORARY representation of token colors, while we are
 // migrating from the legacy node-based strategy to the new
 // native strategy.

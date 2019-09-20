@@ -18,7 +18,7 @@ let map = simpleList
 describe("IntMap", ({describe, _}) => {
   describe("shift", ({test, _}) => {
     test("no shift if no add / deletions", ({expect}) => {
-      let newMap = IntMap.shift(map, 1, 1, 0);
+      let newMap = IntMap.shift(~startPos=1, ~endPos=1, ~delta=0, map);
 
       let firstVal = IntMap.find(0, newMap);
       let secondVal = IntMap.find(1, newMap);
@@ -30,7 +30,7 @@ describe("IntMap", ({describe, _}) => {
     });
     
     test("add lines between 1 and 2", ({expect}) => {
-      let newMap = IntMap.shift(~default=Some("f"), map, 1, 1, 2);
+      let newMap = IntMap.shift(~default=(_) => Some("f"), ~startPos=1, ~endPos=1, ~delta=2, map);
 
       let val0 = IntMap.find(0, newMap);
       let val1 =  IntMap.find(1,  newMap);
@@ -46,7 +46,7 @@ describe("IntMap", ({describe, _}) => {
     });
 
     test("remove line", ({expect}) => {
-      let newMap = IntMap.shift(~default=Some("f"), map, 1, 1, -1);
+      let newMap = IntMap.shift(~default=(_) =>Some("f"), ~startPos=1, ~endPos=1, ~delta={-1}, map);
 
       let val0 = IntMap.find(0, newMap);
       let val1 =  IntMap.find(1,  newMap);
