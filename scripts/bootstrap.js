@@ -6,7 +6,7 @@ const rootDir = path.join(__dirname, "..")
 const configPath = path.join(rootDir, "assets", "configuration")
 const vendorPath = path.join(rootDir, "vendor")
 
-console.log("STRINGIFIED: " + JSON.stringify(process.argv));
+console.log("Bootstrap configuration: " + JSON.stringify(process.argv));
 const outputFile = path.join(configPath, "setup.json")
 
 const isMac = process.platform === "darwin"
