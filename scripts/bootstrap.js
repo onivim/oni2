@@ -17,7 +17,7 @@ let nodePath
 let textMateServicePath = path.join(rootDir, "src", "textmate_service", "lib", "src", "index.js")
 let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
 let extensionsPath = path.join(rootDir, "extensions")
-let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
+let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 
 let camomileRoot = process.argv[2];
