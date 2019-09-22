@@ -203,7 +203,6 @@ module Input = {
     command: string,
   };
 };
-
 module ColorizedToken = {
   type t = {
     index: int,
