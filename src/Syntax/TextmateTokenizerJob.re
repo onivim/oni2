@@ -36,6 +36,23 @@ let getTokenColors = (line: int, v: t) => {
   };
 };
 
+let onTheme = (theme: TokenTheme.t, v: t) => {
+  let f = (p: pendingWork, c: completedWork) => {
+
+    let newPendingWork = {
+      ...p,
+      theme,
+      currentLine: 0,
+    };
+
+    let newCompletedWork = initialCompletedWork;
+
+    (false, newPendingWork, newCompletedWork);
+  };
+
+  Job.map(f, v);
+};
+
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   let startPos = Index.toInt0(bufferUpdate.startLine);
   let endPos = Index.toInt0(bufferUpdate.endLine);

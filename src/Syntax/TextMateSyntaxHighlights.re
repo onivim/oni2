@@ -19,6 +19,8 @@ let doWork = (v: t) => {
   };
 };
 
+let updateTheme = (theme, v) => TextmateTokenizerJob.onTheme(theme, v);
+
 let updateVisibleRanges = (_ranges, v) => v;
 
 let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {

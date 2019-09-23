@@ -62,6 +62,7 @@ let start =
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
@@ -74,7 +75,7 @@ let start =
 
   let (syntaxUpdater, syntaxStream) =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
-  let themeUpdater = ThemeStoreConnector.start(setup);
+  let themeUpdater = ThemeStoreConnector.start(themeInfo, setup);
 
   /*
      For our July builds, we won't be including the extension host -

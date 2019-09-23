@@ -78,7 +78,8 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
-  | LoadThemeByPath(string)
+  | ThemeLoadByPath(string)
+  | ThemeShowMenu
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
   | SetInputControlMode(Input.controlMode)
