@@ -16,6 +16,8 @@ module Model = Oni_Model;
 open Oni_Extensions;
 
 let discoverExtensions = (setup: Core.Setup.t) => {
+  
+  let extensions = Core.Log.perf("Discover extensions", () => {
   let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
   let developmentExtensions =
     switch (setup.developmentExtensionsPath) {
@@ -24,9 +26,10 @@ let discoverExtensions = (setup: Core.Setup.t) => {
       ret;
     | None => []
     };
+  [extensions, developmentExtensions] |> List.flatten;
+  });
 
-  let extensions = [extensions, developmentExtensions] |> List.flatten;
-  Core.Log.debug(
+  Core.Log.info(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
     ++ " extensions",
