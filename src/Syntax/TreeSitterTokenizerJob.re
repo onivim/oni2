@@ -36,10 +36,7 @@ let notifyBufferUpdate = BufferLineJob.notifyBufferUpdate;
 
 let updateTheme = (theme: TokenTheme.t, v: t) => {
   let oldContext = BufferLineJob.getContext(v);
-  let newContext = {
-    ...oldContext,
-    theme,
-  };
+  let newContext = {...oldContext, theme};
 
   BufferLineJob.clear(~newContext=Some(newContext), v);
 };

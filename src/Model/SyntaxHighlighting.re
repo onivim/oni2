@@ -33,11 +33,13 @@ let anyPendingWork = (v: t) => {
 };
 
 let updateTheme = (theme, v: t) => {
-  let highlightsMap = IntMap.map((oldV) => {
-    NativeSyntaxHighlights.updateTheme(theme, oldV);
-  }, v.highlightsMap);
+  let highlightsMap =
+    IntMap.map(
+      oldV => {NativeSyntaxHighlights.updateTheme(theme, oldV)},
+      v.highlightsMap,
+    );
 
-  { ...v,  highlightsMap };
+  {...v, highlightsMap};
 };
 
 let doPendingWork = (v: t) => {

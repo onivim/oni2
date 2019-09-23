@@ -46,7 +46,7 @@ let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
 
 let updateTheme = (theme, v) => {
   let job = TreeSitterTokenizerJob.updateTheme(theme, v.job);
-  { ...v, job };
+  {...v, job};
 };
 
 let hasPendingWork = v => !TreeSitterTokenizerJob.isComplete(v.job);

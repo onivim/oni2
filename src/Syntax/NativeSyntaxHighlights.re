@@ -57,8 +57,9 @@ let updateTheme = (theme, v) => {
   switch (v) {
   | None => v
   | TextMate(tm) => TextMate(TextMateSyntaxHighlights.updateTheme(theme, tm))
-  | TreeSitter(ts) => TreeSitter(TreeSitterSyntaxHighlights.updateTheme(theme, ts))
-  }
+  | TreeSitter(ts) =>
+    TreeSitter(TreeSitterSyntaxHighlights.updateTheme(theme, ts))
+  };
 };
 
 let create =

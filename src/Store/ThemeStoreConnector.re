@@ -11,7 +11,7 @@ open Oni_Syntax;
 
 let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
   Log.info(ThemeInfo.show(themeInfo));
-  
+
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
@@ -36,27 +36,27 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
       })
     );
 
-  let showThemeMenuEffect = Isolinear.Effect.createWithDispatch(
-  ~name="theme.showThemeMenu", dispatch => {
+  let showThemeMenuEffect =
+    Isolinear.Effect.createWithDispatch(~name="theme.showThemeMenu", dispatch => {
+      let commands =
+        ThemeInfo.getThemes(themeInfo)
+        |> List.map((theme: ExtensionContributions.Theme.t) => {
+             let ret: Actions.menuCommand = {
+               category: Some("Theme"),
+               name: theme.label,
+               command: () => Actions.ThemeLoadByPath(theme.path),
+               icon: None,
+             };
+             ret;
+           });
 
-    let commands = ThemeInfo.getThemes(themeInfo)
-    |> List.map((theme: ExtensionContributions.Theme.t) => {
-      let ret: Actions.menuCommand = {
-        category: Some("Theme"),
-        name: theme.label,
-        command: () => Actions.ThemeLoadByPath(theme.path),
-        icon: None,
+      let create = (setItems, _, _) => {
+        setItems(commands);
+        () => ();
       };
-      ret
-    });
-    
-    let create = (setItems, _, _) => {
-      setItems(commands);
-      () => ();
-    };
 
-    dispatch(Actions.MenuOpen(create));
-  });
+      dispatch(Actions.MenuOpen(create));
+    });
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {

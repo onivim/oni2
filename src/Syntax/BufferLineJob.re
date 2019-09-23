@@ -47,20 +47,18 @@ let getCompletedWork = (line: int, v: t('context, 'v)) => {
 
 let clear = (~newContext=None, v: t('context, 'v)) => {
   let oldContext = getContext(v);
-  let context = switch(newContext) {
-  | Some(c) => c
-  | None => oldContext
-  };
+  let context =
+    switch (newContext) {
+    | Some(c) => c
+    | None => oldContext
+    };
 
   let f = (p, c) => {
-    let newPendingWork = {
-      ...p,
-      context,
-    };
+    let newPendingWork = {...p, context};
 
     let newCompletedWork = {lines: IntMap.empty};
 
-    (false, newPendingWork, newCompletedWork)
+    (false, newPendingWork, newCompletedWork);
   };
   Job.map(f, v);
 };

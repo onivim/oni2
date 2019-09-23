@@ -17,28 +17,33 @@ let _getThemes = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => v.manifest.contributes.themes) |> List.flatten;
 };
 
-let create = () => {
-  themes: [],
-  nameToTheme: StringMap.empty,
-};
+let create = () => {themes: [], nameToTheme: StringMap.empty};
 
-let getThemes = (v) => v.themes;
+let getThemes = v => v.themes;
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
   let themes = _getThemes(extensions);
 
-  let nameToTheme = List.fold_left((prev, curr: ExtensionContributions.Theme.t) => {
-    StringMap.add(curr.label, curr, prev);
-  }, StringMap.empty, themes);
+  let nameToTheme =
+    List.fold_left(
+      (prev, curr: ExtensionContributions.Theme.t) => {
+        StringMap.add(curr.label, curr, prev)
+      },
+      StringMap.empty,
+      themes,
+    );
 
-  let ret: t = { themes, nameToTheme };
+  let ret: t = {themes, nameToTheme};
   ret;
 };
 
 let show = (v: t) => {
   let themeStr =
-    List.map((t: ExtensionContributions.Theme.t) => " - " ++ t.label, v.themes)
+    List.map(
+      (t: ExtensionContributions.Theme.t) => " - " ++ t.label,
+      v.themes,
+    )
     |> String.concat("\n");
 
-  "Themes: \n" ++ themeStr
+  "Themes: \n" ++ themeStr;
 };
