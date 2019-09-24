@@ -198,7 +198,7 @@
     "esy-macdylibbundler": "*",
     "isolinear": "^2.0.0",
     "ocaml": "~4.7.0",
-    "reason-glfw": "3.2.1029",
+    "reason-sdl2": "*",
     "reason-jsonrpc": "1.2.0",
     "reason-libvim": "8.10869.16004",
     "reasonFuzz": "*",
@@ -227,7 +227,8 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
-    "@esy-ocaml/reason": "github:facebook/reason#474900e"
+    "@esy-ocaml/reason": "github:facebook/reason#474900e",
+    "revery": "github:revery-ui/revery#1c15007"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
