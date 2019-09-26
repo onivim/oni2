@@ -39,6 +39,7 @@ jobs:
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
+  - script: ls /usr/lib/libstdc*
   - script: ls -l /usr/lib/libstdc++.so.6
     displayName: 'Check minor libstdc++ version before update-alternatives'
   - script: sudo apt-get update
