@@ -39,10 +39,11 @@ jobs:
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
-  - script: ls /usr/lib/libstdc*
-  - script: ls -l /usr/lib/libstdc++.so.6
-    displayName: 'Check minor libstdc++ version before update-alternatives'
+  - script: gcc --version
+    displayName: 'Check gcc before'
   - script: sudo apt-get update
+  - script: gcc --version
+    displayName: 'Check gcc after'
   # Use gcc-4.8 to improve the compatibility matrix of our linux builds
   - script: sudo apt-get install gcc-4.8 g++-4.8
   - script: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
