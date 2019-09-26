@@ -85,7 +85,6 @@ let start = _ => {
       _ =>
         multipleActionEffect([
           MenuOpen(CommandPalette.create),
-          SetInputControlMode(TextInputFocus),
         ]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
@@ -133,7 +132,6 @@ let start = _ => {
               () => ();
             },
           ),
-          SetInputControlMode(TextInputFocus),
         ]);
       },
     ),
@@ -177,27 +175,17 @@ let start = _ => {
       _ =>
         multipleActionEffect([
           MenuClose,
-          SetInputControlMode(EditorTextFocus),
-        ]),
-    ),
-    (
-      "menu.open",
-      _ =>
-        multipleActionEffect([
-          MenuClose,
-          SetInputControlMode(EditorTextFocus),
         ]),
     ),
     (
       "menu.next",
       _ =>
-        multipleActionEffect([SetInputControlMode(MenuFocus), MenuNextItem]),
+        multipleActionEffect([MenuNextItem]),
     ),
     (
       "menu.previous",
       _ =>
         multipleActionEffect([
-          SetInputControlMode(MenuFocus),
           MenuPreviousItem,
         ]),
     ),
@@ -206,7 +194,6 @@ let start = _ => {
       _ =>
         multipleActionEffect([
           MenuSelect,
-          SetInputControlMode(EditorTextFocus),
         ]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),

@@ -130,7 +130,7 @@ let start = () => {
       /* Also close menu */
       let (closeState, closeEffect) = menuUpdater(state, MenuClose);
 
-      (closeState, Isolinear.Effect.batch([effect, closeEffect]));
+      (closeState, Isolinear.Effect.batch([closeEffect, effect]));
     | _ => (state, Isolinear.Effect.none)
     };
   };

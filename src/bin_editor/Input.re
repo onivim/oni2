@@ -112,15 +112,24 @@ module Conditions = {
     // Not functional, but we'll use the hashtable for performance
     let ret: t = Hashtbl.create(16);
 
-    Hashtbl.add(ret, state.inputControlMode, true);
+    if (state.commandline.show) {
+      Hashtbl.add(ret, CommandLineFocus, true);
+    }
+    
+    if (state.menu.isOpen) {
+      Hashtbl.add(ret, MenuFocus, true);
+    }
 
     // HACK: Because we don't have AND conditions yet for input
     // (the conditions array are OR's), we are making `insertMode`
     // only true when the editor is insert mode AND we are in the
     // editor (editorTextFocus is set)
-    switch (state.inputControlMode, state.mode) {
-    | (Types.Input.EditorTextFocus, Vim.Types.Insert) =>
+    switch (state.menu.isOpen || state.commandline.show, state.mode) {
+    | (false, Vim.Types.Insert) =>
       Hashtbl.add(ret, Types.Input.InsertMode, true)
+      Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+    | (false, _) =>
+      Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
     | _ => ()
     };
 
@@ -158,14 +167,15 @@ let getActionsForBinding = (inputKey, commands, state: State.t) => {
   );
 };
 
+
+
 /**
   Handle Input from Oni or Vim
  */
 let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
   let actions =
-    switch (state.inputControlMode) {
-    | CommandLineFocus
-    | EditorTextFocus =>
+    switch (state.menu.isOpen) {
+    | false =>
       switch (getActionsForBinding(inputKey, commands, state)) {
       | [] =>
         Log.info("Input::handle - sending raw input: " ++ inputKey);
@@ -174,9 +184,7 @@ let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) =>
         Log.info("Input::handle - sending bound actions.");
         actions;
       }
-    | TextInputFocus
-    | MenuFocus
-    | _ => getActionsForBinding(inputKey, commands, state)
+    | true => getActionsForBinding(inputKey, commands, state)
     };
 
   [Actions.NotifyKeyPressed(time, inputKey), ...actions];

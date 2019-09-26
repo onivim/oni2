@@ -69,7 +69,6 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
       dispatch(
         Model.Actions.MenuOpen(createQuickOpen(languageInfo, iconTheme)),
       );
-      dispatch(Model.Actions.SetInputControlMode(TextInputFocus));
     });
 
   let updater = (state: Model.State.t, action) => {
