@@ -40,12 +40,12 @@ jobs:
 
   steps:
   - script: sudo apt-get update
-  - script: sudo apt-get install -y libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libegl1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
   # Use gcc-4.8 to improve the compatibility matrix of our linux builds
   - script: sudo apt-get install gcc-4.8 g++-4.8
   - script: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
   - script: gcc --version
   - script: g++ --version
+  - script: sudo apt-get install -y libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libegl1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
   - template: .ci/use-node.yml
   #- template: .ci/restore-build-cache.yml
   - template: .ci/esy-build-steps.yml
