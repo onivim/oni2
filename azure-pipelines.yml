@@ -27,6 +27,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Linux
+  displayName: 'Linux - Ubuntu 16.04'
   timeoutInMinutes: 0
   pool:
     vmImage: 'Ubuntu 16.04'
@@ -50,6 +51,24 @@ jobs:
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
   - template: .ci/publish-build-cache.yml
+
+- job: CentOS
+  displayName: 'Linux - CentOS - Docker Image'
+  timeoutInMinutes: 0
+  pool:
+    vmImage: 'Ubuntu 16.04'
+
+  variables:
+    STAGING_DIRECTORY: /home/vsts/STAGING
+    STAGING_DIRECTORY_UNIX: /home/vsts/STAGING
+    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
+    ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
+
+  steps:
+  - script: docker build -t centos scripts/docker
+    displayName: 'docker build'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -a'
 
 - job: MacOS
   timeoutInMinutes: 0
