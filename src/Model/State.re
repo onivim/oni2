@@ -25,7 +25,6 @@ type t = {
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
-  inputControlMode: Input.controlMode,
   iconTheme: IconTheme.t,
   keyDisplayer: KeyDisplayer.t,
   languageInfo: LanguageInfo.t,
@@ -61,7 +60,6 @@ let create: unit => t =
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
-    inputControlMode: EditorTextFocus,
     iconTheme: IconTheme.create(),
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: LanguageInfo.create(),

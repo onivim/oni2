@@ -39,8 +39,6 @@ let handleKeyDown = (event: NodeEvents.keyEventParams) =>
     GlobalContext.current().dispatch(MenuNextItem)
   | {key: Revery.Key.KEY_UP, _} =>
     GlobalContext.current().dispatch(MenuPreviousItem)
-  | {key: Revery.Key.KEY_ESCAPE, _} =>
-    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
   | _ => ()
   };
 
@@ -58,7 +56,6 @@ let loseFocusOnClose = isOpen =>
 
 let onClick = () => {
   GlobalContext.current().dispatch(MenuSelect);
-  GlobalContext.current().dispatch(SetInputControlMode(EditorTextFocus));
 };
 
 let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));

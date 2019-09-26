@@ -31,9 +31,6 @@ let reduce: (State.t, Actions.t) => State.t =
         let ret: State.t = {...s, mode: m};
         ret;
       | SetEditorFont(font) => {...s, editorFont: font}
-      | SetInputControlMode(m) => {...s, inputControlMode: m}
-      | CommandlineShow(_) => {...s, inputControlMode: CommandLineFocus}
-      | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
