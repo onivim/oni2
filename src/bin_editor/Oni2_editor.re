@@ -65,7 +65,7 @@ let init = app => {
   };
 
   let getScaleFactor = () => {
-    Window.getDevicePixelRatio(w) *. Window.getScaleFactor(w);
+    Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
   };
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
@@ -75,9 +75,9 @@ let init = app => {
     Store.StoreThread.start(
       ~setup,
       ~getClipboardText=
-        () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
+        () => Sdl2.Clipboard.getText(),
       ~setClipboardText=
-        text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+        text => Sdl2.Clipboard.setText(text),
       ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
@@ -153,9 +153,9 @@ let init = app => {
   )
   |> ignore;
 
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
+  /*Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
     Input.charToCommand(codepoint, mods) |> keyEventListener
-  );
+  );*/
 };
 
 /* Let's get this party started! */

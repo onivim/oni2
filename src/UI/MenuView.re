@@ -34,13 +34,15 @@ let inputStyles = font =>
 let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
-  switch (event) {
-  | {key: Revery.Key.KEY_DOWN, _} =>
+  switch (event.keycode) {
+// TODONOW
+/*  | v when v == Key.Keycode.down =>
     GlobalContext.current().dispatch(MenuNextItem)
-  | {key: Revery.Key.KEY_UP, _} =>
+  | v when v == Key.Keycode.up =>
     GlobalContext.current().dispatch(MenuPreviousItem)
-  | {key: Revery.Key.KEY_ESCAPE, _} =>
-    GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
+  | v when v == Key.keycode.escape =>
+   GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
+*/
   | _ => ()
   };
 

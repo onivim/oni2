@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 open Reglfw.Glfw;
-open Revery_Core;
+open Revery;
 module Log = Oni_Core.Log;
 
 open CamomileBundled.Camomile;
@@ -46,46 +46,22 @@ let charToCommand = (codepoint: int, mods: Modifier.t) => {
 
 let keyPressToCommand =
     (
-      {shiftKey, altKey, ctrlKey, superKey, key, _}: Events.keyEvent,
-      os: Revery_Core.Environment.os,
+      {keymod, keycode, _}: Key.KeyEvent.t,
+      os: Environment.os,
     ) => {
+  open Revery.Key;
+  let superKey = Keymod.isGuiDown(keymod);
+  let shiftKey = Keymod.isShiftDown(keymod);
+  let altKey = Keymod.isAltDown(keymod);
+  let ctrlKey = Keymod.isControlDown(keymod);
+
   let commandKeyPressed =
     switch (os) {
     | Mac => superKey || ctrlKey
     | _ => ctrlKey
     };
 
-  let keyString =
-    commandKeyPressed
-      ? /**
-        TODO:
-        Revery's toString method returns lower case
-        characters which need to be capitalized. Instead we
-        should use ?derving show (we will need to format out the KEY_ prefix)
-        or convert the return values to uppercase
-       */
-        Some(Revery.Key.toString(key) |> String.capitalize_ascii)
-      : (
-        switch (key) {
-        | KEY_ESCAPE => Some("ESC")
-        | KEY_TAB => Some("TAB")
-        | KEY_ENTER => Some("CR")
-        | KEY_BACKSPACE => Some("C-h")
-        | KEY_DELETE => Some("DELETE")
-        | KEY_LEFT => Some("LEFT")
-        | KEY_RIGHT => Some("RIGHT")
-        | KEY_DOWN => Some("DOWN")
-        | KEY_UP => Some("UP")
-        | KEY_PAGE_UP => Some("PAGEUP")
-        | KEY_PAGE_DOWN => Some("PAGEDOWN")
-        | KEY_HOME => Some("HOME")
-        | KEY_END => Some("END")
-        | KEY_INSERT => Some("INSERT")
-        | KEY_LEFT_SHIFT
-        | KEY_RIGHT_SHIFT => Some("SHIFT")
-        | _ => None
-        }
-      );
+  let keyString = Some(Revery.Key.Keycode.getName(keycode) |> String.capitalize_ascii);
   switch (keyString) {
   | None => None
   | Some(k) =>
