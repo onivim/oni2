@@ -69,6 +69,7 @@ jobs:
   - script: docker build -t centos scripts/docker
     displayName: 'docker build'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -a'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'gcc --version'
 
 - job: MacOS
   timeoutInMinutes: 0
