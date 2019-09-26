@@ -21,6 +21,11 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
       Log.perf("theme.load", () => {
         let themeJson = Yojson.Safe.from_file(themePath);
 
+        let colorsJson = Yojson.Safe.Util.member("colors", themeJson);
+        let theme = Theme.of_yojson(colorsJson);
+
+        dispatch(Actions.SetColorTheme(theme));
+
         let tokenColorsJson =
           Yojson.Safe.Util.member("tokenColors", themeJson);
         let textMateTheme =

@@ -27,6 +27,7 @@ let reduce: (State.t, Actions.t) => State.t =
       switch (a) {
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
+      | SetColorTheme(theme) => { ...s, theme }
       | ChangeMode(m) =>
         let ret: State.t = {...s, mode: m};
         ret;

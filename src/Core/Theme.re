@@ -130,3 +130,43 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
 
   (background, foreground);
 };
+
+type parser = (string, (t, Yojson.Safe.t) => t);
+
+let parseColor: (Color.t, Yojson.Safe.t) => Color.t = (defaultColor, json) => {
+  switch (json) {
+  | `String(c) => 
+    switch(Color.hex(c)) {
+    | exception _ => defaultColor
+    | v => v
+    }
+  | _ => defaultColor
+  }
+};
+
+let parsers: list(parser) = [
+  ("background", (s, v) => {...s, background: parseColor(default.background, v) }),
+  ("foreground", (s, v) => {...s, foreground: parseColor(default.foreground, v) }),
+  ("sideBar.background", (s, v) => {...s, sideBarBackground: parseColor(default.sideBarBackground, v) }),
+  ("sideBar.foreground", (s, v) => {...s, sideBarForeground: parseColor(default.sideBarForeground, v) }),
+  ("editor.background", (s, v) => {...s, editorBackground: parseColor(default.editorBackground, v) }),
+  ("editor.foreground", (s, v) => {...s, editorForeground: parseColor(default.editorForeground, v) }),
+  ("editor.lineHighlightBackground", (s, v) => {...s, editorLineHighlightBackground: parseColor(default.editorLineHighlightBackground, v) }),
+  ("editorLineNumber.background", (s, v) => {...s, editorLineNumberBackground: parseColor(default.editorLineNumberBackground, v) }),
+  ("editorLineNumber.foreground", (s, v) => {...s, editorLineNumberForeground: parseColor(default.editorLineNumberForeground, v) }),
+  ("editorLineNumber.activeForeground", (s, v) => {...s, editorActiveLineNumberForeground: parseColor(default.editorActiveLineNumberForeground, v) }),
+  ("editor.selectionBackground", (s, v) => {...s, editorSelectionBackground: parseColor(default.editorSelectionBackground, v) }),
+  ("statusBar.background", (s, v) => {...s, statusBarBackground: parseColor(default.statusBarBackground, v) }),
+  ("statusBar.foreground", (s, v) => {...s, statusBarForeground: parseColor(default.statusBarForeground, v) }),
+  
+];
+
+let of_yojson = (json: Yojson.Safe.t) => {
+  List.fold_left((prev, curr) => {
+    let (field, parser) = curr;
+
+    let jsonField = Yojson.Safe.Util.member(field, json)
+    parser(prev, jsonField);
+  }, default, parsers);
+};
+

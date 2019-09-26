@@ -82,6 +82,7 @@ type t =
   | ThemeShowMenu
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
+  | SetColorTheme(Theme.t)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
