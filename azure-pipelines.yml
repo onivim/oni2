@@ -41,6 +41,8 @@ jobs:
   steps:
   - script: gcc --version
     displayName: 'Check gcc before'
+  - script: /sbin/ldconfig -p | grep stdc++
+    displayName: 'Look for libstdc++'
   - script: sudo apt-get update
   - script: gcc --version
     displayName: 'Check gcc after'
