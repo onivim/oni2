@@ -51,8 +51,12 @@ jobs:
   - script: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
   - script: gcc --version
   - script: g++ --version
-  - script: ls -l /usr/lib/libstdc++*
-    displayName: 'Check minor libstdc++ version after update-alternatives'
+  - script: /sbin/ldconfig -p | grep stdc++
+    displayName: 'Look for libstdc++ - after upgrade'
+  - script: ls -l /usr/lib/x86_64-linux-gnu/libstdc++*
+    displayName: 'Check minor libstdc++ version (x86_64-linux) after update-alternatives'
+  - script: ls -l /usr/lib32/libstdc++*
+    displayName: 'Check minor libstdc++ version (32) after update-alternatives'
   - script: sudo apt-get install -y libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libegl1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
   - template: .ci/use-node.yml
   #- template: .ci/restore-build-cache.yml
