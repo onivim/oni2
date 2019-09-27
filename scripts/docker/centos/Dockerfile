@@ -2,7 +2,7 @@ FROM centos:6
 
 RUN yum -y update
 
-RUN yum -y install gcc-c++ make
+RUN yum -y install gcc-c++ make sudo
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
 RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils
 
