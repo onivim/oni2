@@ -6,7 +6,9 @@ RUN yum -y install gcc-c++ make sudo
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
 RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils
 
-RUN yum -y install libacl-devel libxrandr-devel libxinerama-devel libxcursor-devel libxi-devel mesa-libEGL-devel ragel gtk3-devel perl-Digest-SHA
+RUN yum -y install libacl-devel libxrandr-devel libxinerama-devel libxcursor-devel libxi-devel mesa-libEGL-devel ragel gtk3-devel
+
+RUN ln -s /usr/bin/sha1sum /usr/bin/shasum
 
 RUN node -v
 RUN npm -v
