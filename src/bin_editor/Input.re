@@ -114,11 +114,11 @@ module Conditions = {
 
     if (state.commandline.show) {
       Hashtbl.add(ret, CommandLineFocus, true);
-    }
-    
+    };
+
     if (state.menu.isOpen) {
       Hashtbl.add(ret, MenuFocus, true);
-    }
+    };
 
     // HACK: Because we don't have AND conditions yet for input
     // (the conditions array are OR's), we are making `insertMode`
@@ -126,10 +126,9 @@ module Conditions = {
     // editor (editorTextFocus is set)
     switch (state.menu.isOpen || state.commandline.show, state.mode) {
     | (false, Vim.Types.Insert) =>
-      Hashtbl.add(ret, Types.Input.InsertMode, true)
-      Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
-    | (false, _) =>
-      Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+      Hashtbl.add(ret, Types.Input.InsertMode, true);
+      Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
+    | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
     | _ => ()
     };
 
@@ -166,8 +165,6 @@ let getActionsForBinding = (inputKey, commands, state: State.t) => {
     )
   );
 };
-
-
 
 /**
   Handle Input from Oni or Vim
