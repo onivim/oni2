@@ -82,6 +82,7 @@ let init = app => {
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
+      ~window=w,
       ~cliOptions=Some(cliOptions),
       (),
     );
@@ -116,6 +117,7 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
+  dispatch(Model.Actions.KeyBindingsSet(Core.KeyBindings.get());
   runEffects();
 
   List.iter(

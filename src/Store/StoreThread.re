@@ -44,6 +44,7 @@ let start =
       ~getClipboardText,
       ~setClipboardText,
       ~getTime,
+      ~window,
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
       (),
@@ -98,6 +99,9 @@ let start =
   let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
+
+  // TODONOW
+  let _ = InputStoreConnector.getState(getState, window);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
