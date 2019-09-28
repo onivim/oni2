@@ -44,9 +44,7 @@ let start =
       window: Revery.Window.t,
       runEffects,
     ) => {
-
   let (stream, dispatch) = Isolinear.Stream.create();
-  let commands = Keybindings.get();
   
   let getActionsForBinding = (inputKey, commands, currentConditions: Handler.Conditions.t) => {
     Keybindings.(
