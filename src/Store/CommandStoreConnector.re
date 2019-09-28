@@ -82,11 +82,7 @@ let start = _ => {
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
       "commandPalette.open",
-      _ =>
-        multipleActionEffect([
-          MenuOpen(CommandPalette.create),
-          SetInputControlMode(TextInputFocus),
-        ]),
+      _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
     (
@@ -133,7 +129,6 @@ let start = _ => {
               () => ();
             },
           ),
-          SetInputControlMode(TextInputFocus),
         ]);
       },
     ),
@@ -172,43 +167,10 @@ let start = _ => {
           ]);
         },
       ),*/
-    (
-      "menu.close",
-      _ =>
-        multipleActionEffect([
-          MenuClose,
-          SetInputControlMode(EditorTextFocus),
-        ]),
-    ),
-    (
-      "menu.open",
-      _ =>
-        multipleActionEffect([
-          MenuClose,
-          SetInputControlMode(EditorTextFocus),
-        ]),
-    ),
-    (
-      "menu.next",
-      _ =>
-        multipleActionEffect([SetInputControlMode(MenuFocus), MenuNextItem]),
-    ),
-    (
-      "menu.previous",
-      _ =>
-        multipleActionEffect([
-          SetInputControlMode(MenuFocus),
-          MenuPreviousItem,
-        ]),
-    ),
-    (
-      "menu.select",
-      _ =>
-        multipleActionEffect([
-          MenuSelect,
-          SetInputControlMode(EditorTextFocus),
-        ]),
-    ),
+    ("menu.close", _ => multipleActionEffect([MenuClose])),
+    ("menu.next", _ => multipleActionEffect([MenuNextItem])),
+    ("menu.previous", _ => multipleActionEffect([MenuPreviousItem])),
+    ("menu.select", _ => multipleActionEffect([MenuSelect])),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),

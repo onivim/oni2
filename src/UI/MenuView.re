@@ -60,7 +60,6 @@ let loseFocusOnClose = isOpen =>
 
 let onClick = () => {
   GlobalContext.current().dispatch(MenuSelect);
-  GlobalContext.current().dispatch(SetInputControlMode(EditorTextFocus));
 };
 
 let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
