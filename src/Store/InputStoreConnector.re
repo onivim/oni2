@@ -39,7 +39,11 @@ let conditionsOfState = (state: State.t) => {
 };
 
 let start =
-    (getState: unit => Model.State.t, window: Revery.Window.t, runEffects) => {
+    (
+      getState: unit => Model.State.t,
+      window: option(Revery.Window.t),
+      runEffects,
+    ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let getActionsForBinding =
@@ -111,16 +115,20 @@ let start =
     };
   };
 
-  Revery.Event.subscribe(window.onKeyDown, keyEvent =>
-    Handler.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
-    |> keyEventListener
-  )
-  |> ignore;
+  switch (window) {
+  | None => Log.info("Input - no window to subscribe to events")
+  | Some(window) =>
+    Revery.Event.subscribe(window.onKeyDown, keyEvent =>
+      Handler.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
+      |> keyEventListener
+    )
+    |> ignore;
 
-  Reglfw.Glfw.glfwSetCharModsCallback(
-    window.glfwWindow, (_w, codepoint, mods) =>
-    Handler.charToCommand(codepoint, mods) |> keyEventListener
-  );
-  // Noop
+    Reglfw.Glfw.glfwSetCharModsCallback(
+      window.glfwWindow, (_w, codepoint, mods) =>
+      Handler.charToCommand(codepoint, mods) |> keyEventListener
+    );
+  };
+
   stream;
 };

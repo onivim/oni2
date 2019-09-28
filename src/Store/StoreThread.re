@@ -44,7 +44,7 @@ let start =
       ~getClipboardText,
       ~setClipboardText,
       ~getTime,
-      ~window,
+      ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
       (),

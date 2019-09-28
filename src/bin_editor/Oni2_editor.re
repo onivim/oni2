@@ -79,7 +79,7 @@ let init = app => {
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
-      ~window=w,
+      ~window=Some(w),
       ~cliOptions=Some(cliOptions),
       (),
     );
