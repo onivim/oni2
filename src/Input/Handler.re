@@ -1,11 +1,10 @@
 /*
- * Input.re
+ * Handler.re
  *
  * Basic input handling for Oni
  */
 
 open Oni_Core;
-open Oni_Model;
 open Reglfw.Glfw;
 open Revery_Core;
 module Log = Oni_Core.Log;
@@ -107,33 +106,32 @@ module Conditions = {
     | None => false
     };
   };
+  /*let ofState = (state: State.t) => {
+      // Not functional, but we'll use the hashtable for performance
+      let ret: t = Hashtbl.create(16);
 
-  let ofState = (state: State.t) => {
-    // Not functional, but we'll use the hashtable for performance
-    let ret: t = Hashtbl.create(16);
+      if (state.commandline.show) {
+        Hashtbl.add(ret, CommandLineFocus, true);
+      };
 
-    if (state.commandline.show) {
-      Hashtbl.add(ret, CommandLineFocus, true);
-    };
+      if (state.menu.isOpen) {
+        Hashtbl.add(ret, MenuFocus, true);
+      };
 
-    if (state.menu.isOpen) {
-      Hashtbl.add(ret, MenuFocus, true);
-    };
+      // HACK: Because we don't have AND conditions yet for input
+      // (the conditions array are OR's), we are making `insertMode`
+      // only true when the editor is insert mode AND we are in the
+      // editor (editorTextFocus is set)
+      switch (state.menu.isOpen || state.commandline.show, state.mode) {
+      | (false, Vim.Types.Insert) =>
+        Hashtbl.add(ret, Types.Input.InsertMode, true);
+        Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
+      | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+      | _ => ()
+      };
 
-    // HACK: Because we don't have AND conditions yet for input
-    // (the conditions array are OR's), we are making `insertMode`
-    // only true when the editor is insert mode AND we are in the
-    // editor (editorTextFocus is set)
-    switch (state.menu.isOpen || state.commandline.show, state.mode) {
-    | (false, Vim.Types.Insert) =>
-      Hashtbl.add(ret, Types.Input.InsertMode, true);
-      Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
-    | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
-    | _ => ()
-    };
-
-    ret;
-  };
+      ret;
+    };*/
 };
 
 /**
@@ -152,37 +150,3 @@ let matchesCondition = (commandConditions, currentConditions, input, key) =>
       commandConditions,
     );
   };
-
-let getActionsForBinding = (inputKey, commands, state: State.t) => {
-  let currentConditions = Conditions.ofState(state);
-  Keybindings.(
-    List.fold_left(
-      (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, currentConditions, inputKey, key)
-          ? [Actions.Command(command)] : defaultAction,
-      [],
-      commands,
-    )
-  );
-};
-
-/**
-  Handle Input from Oni or Vim
- */
-let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
-  let actions =
-    switch (state.menu.isOpen) {
-    | false =>
-      switch (getActionsForBinding(inputKey, commands, state)) {
-      | [] =>
-        Log.info("Input::handle - sending raw input: " ++ inputKey);
-        [Actions.KeyboardInput(inputKey)];
-      | actions =>
-        Log.info("Input::handle - sending bound actions.");
-        actions;
-      }
-    | true => getActionsForBinding(inputKey, commands, state)
-    };
-
-  [Actions.NotifyKeyPressed(time, inputKey), ...actions];
-};
