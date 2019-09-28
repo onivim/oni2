@@ -59,18 +59,20 @@ let start =
   let latestState: ref(Model.State.t) = ref(state);
   let latestDispatch: ref(option(Model.Actions.t => unit)) = ref(None);
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
-  
+
   let getState = () => latestState^;
 
-  let runDispatch = (action) => switch(latestDispatch^) {
-  | Some(v) => v(action)
-  | None => ()
-  };
+  let runDispatch = action =>
+    switch (latestDispatch^) {
+    | Some(v) => v(action)
+    | None => ()
+    };
 
-  let runRunEffects = () => switch(latestRunEffects^) {
-  | Some(v) => v()
-  | None => ();
-  };
+  let runRunEffects = () =>
+    switch (latestRunEffects^) {
+    | Some(v) => v()
+    | None => ()
+    };
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
@@ -113,8 +115,9 @@ let start =
   let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
-  
-  let (inputUpdater, inputStream) = InputStoreConnector.start(getState, window, runRunEffects);
+
+  let (inputUpdater, inputStream) =
+    InputStoreConnector.start(getState, window, runRunEffects);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(

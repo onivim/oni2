@@ -106,17 +106,15 @@ let start =
     switch (key, Revery.UI.Focus.focused) {
     // No key, nothing focused - no-op
     | (None, _) => ()
-    
+
     // We have a key, but Revery has an element focused
     | (Some(k), {contents: Some(_)})
-    | (Some(k), {contents: None}) => {
-      
+    | (Some(k), {contents: None}) =>
       handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
       |> List.iter(dispatch);
 
       // Run input effects _immediately_
       runEffects();
-    }
     };
   };
 
@@ -130,21 +128,34 @@ let start =
   switch (window) {
   | None => Log.info("Input - no window to subscribe to events")
   | Some(window) =>
-    let _ignore = Revery.Event.subscribe(window.onKeyDown, keyEvent => {
-      Log.info("Input - got keydown.");
-      let isTextInputActive = isTextInputActive();
-      Handler.keyPressToCommand(~isTextInputActive, keyEvent, Revery_Core.Environment.os)
-      |> keyEventListener
-    })
+    let _ignore =
+      Revery.Event.subscribe(
+        window.onKeyDown,
+        keyEvent => {
+          Log.info("Input - got keydown.");
+          let isTextInputActive = isTextInputActive();
+          Handler.keyPressToCommand(
+            ~isTextInputActive,
+            keyEvent,
+            Revery_Core.Environment.os,
+          )
+          |> keyEventListener;
+        },
+      );
 
-    let _ignore = Revery.Event.subscribe(window.onTextInputCommit, textEvent => {
-      Log.info("Input - onTextInputCommit: " ++ textEvent.text);
-      keyEventListener(Some(textEvent.text));
-    });
+    let _ignore =
+      Revery.Event.subscribe(
+        window.onTextInputCommit,
+        textEvent => {
+          Log.info("Input - onTextInputCommit: " ++ textEvent.text);
+          keyEventListener(Some(textEvent.text));
+        },
+      );
+    ();
   };
-  
+
   // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,
-  // with the current state of the editor. 
+  // with the current state of the editor.
   // We want 'text input' to be active
   // in the following:
   // - We're in insert mode or commandline mode
@@ -155,7 +166,8 @@ let start =
     Isolinear.Effect.create(~name="input.checkTextInputEffect", () =>
       switch (window) {
       | None => ()
-      | Some(v) => if (!Revery.Window.isTextInputActive(v)) {
+      | Some(v) =>
+        if (!Revery.Window.isTextInputActive(v)) {
           Log.info("input - starting text input");
           Revery.Window.startTextInput(v);
         }
@@ -164,11 +176,8 @@ let start =
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | _ => (
-        state,
-        checkTextInputEffect,
-      )
-    }
+    | _ => (state, checkTextInputEffect)
+    };
   };
 
   (updater, stream);

@@ -199,10 +199,10 @@ let make =
         dispatch(CursorRight);
       // TODONOW:
       /*
-      | v when v == Key.Keycode.h && event.ctrlKey => dispatch(Backspace)
-      | v when v == Key.Keycode.u && event.ctrlKey => dispatch(DeleteLine)
-      | v when v == Key.Keycode.w && event.ctrlKey => dispatch(DeleteWord)
-      */
+       | v when v == Key.Keycode.h && event.ctrlKey => dispatch(Backspace)
+       | v when v == Key.Keycode.u && event.ctrlKey => dispatch(DeleteLine)
+       | v when v == Key.Keycode.w && event.ctrlKey => dispatch(DeleteWord)
+       */
       | v when v == Key.Keycode.delete => dispatch(DeleteCharacter)
       | v when v == Key.Keycode.backspace => dispatch(Backspace)
       | v when v == Key.Keycode.escape =>

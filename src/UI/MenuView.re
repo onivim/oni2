@@ -35,14 +35,14 @@ let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event.keycode) {
-// TODONOW
-/*  | v when v == Key.Keycode.down =>
-    GlobalContext.current().dispatch(MenuNextItem)
-  | v when v == Key.Keycode.up =>
-    GlobalContext.current().dispatch(MenuPreviousItem)
-  | v when v == Key.keycode.escape =>
-   GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
-*/
+  // TODONOW
+  /*  | v when v == Key.Keycode.down =>
+          GlobalContext.current().dispatch(MenuNextItem)
+        | v when v == Key.Keycode.up =>
+          GlobalContext.current().dispatch(MenuPreviousItem)
+        | v when v == Key.keycode.escape =>
+         GlobalContext.current().dispatch(SetInputControlMode(MenuFocus))
+      */
   | _ => ()
   };
 

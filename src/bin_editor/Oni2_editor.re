@@ -71,10 +71,8 @@ let init = app => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~getClipboardText=
-        () => Sdl2.Clipboard.getText(),
-      ~setClipboardText=
-        text => Sdl2.Clipboard.setText(text),
+      ~getClipboardText=() => Sdl2.Clipboard.getText(),
+      ~setClipboardText=text => Sdl2.Clipboard.setText(text),
       ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
