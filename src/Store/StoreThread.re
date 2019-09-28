@@ -101,7 +101,7 @@ let start =
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
   // TODONOW
-  let _ = InputStoreConnector.getState(getState, window);
+  let _ = InputStoreConnector.start(getState, window);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(

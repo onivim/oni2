@@ -117,7 +117,7 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
-  dispatch(Model.Actions.KeyBindingsSet(Core.KeyBindings.get());
+  dispatch(Model.Actions.KeyBindingsSet(Core.Keybindings.get()));
   runEffects();
 
   List.iter(
