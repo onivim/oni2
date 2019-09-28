@@ -104,31 +104,72 @@ let start =
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
     switch (key, Revery.UI.Focus.focused) {
+    // No key, nothing focused - no-op
     | (None, _) => ()
-    | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
+    
+    // We have a key, but Revery has an element focused
+    | (Some(k), {contents: Some(_)})
+    | (Some(k), {contents: None}) => {
+      
       handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
       |> List.iter(dispatch);
+
       // Run input effects _immediately_
       runEffects();
-    | (Some((_, false)), {contents: Some(_)}) => ()
+    }
+    };
+  };
+
+  let isTextInputActive = () => {
+    switch (window) {
+    | None => false
+    | Some(v) => Revery.Window.isTextInputActive(v)
     };
   };
 
   switch (window) {
   | None => Log.info("Input - no window to subscribe to events")
   | Some(window) =>
-    Revery.Event.subscribe(window.onKeyDown, keyEvent =>
-      Handler.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
+    let _ignore = Revery.Event.subscribe(window.onKeyDown, keyEvent => {
+      Log.info("Input - got keydown.");
+      let isTextInputActive = isTextInputActive();
+      Handler.keyPressToCommand(~isTextInputActive, keyEvent, Revery_Core.Environment.os)
       |> keyEventListener
-    )
-    |> ignore;
+    })
 
-    Reglfw.Glfw.glfwSetCharModsCallback(
-      window.glfwWindow, (_w, codepoint, mods) =>
-      Handler.charToCommand(codepoint, mods) |> keyEventListener
+    let _ignore = Revery.Event.subscribe(window.onTextInputCommit, textEvent => {
+      Log.info("Input - onTextInputCommit: " ++ textEvent.text);
+      keyEventListener(Some(textEvent.text));
+    });
+  };
+  
+  // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,
+  // with the current state of the editor. 
+  // We want 'text input' to be active
+  // in the following:
+  // - We're in insert mode or commandline mode
+  // - We have a menu open
+  //
+  // We do not want 'text input' to be active in normal mode, visual mode.
+  let checkTextInputEffect =
+    Isolinear.Effect.create(~name="input.checkTextInputEffect", () =>
+      switch (window) {
+      | None => ()
+      | Some(v) => if (!Revery.Window.isTextInputActive(v)) {
+          Log.info("input - starting text input");
+          Revery.Window.startTextInput(v);
+        }
+      }
     );
+
+  let updater = (state: Model.State.t, action) => {
+    switch (action) {
+    | _ => (
+        state,
+        checkTextInputEffect,
+      )
+    }
   };
 
-  stream;
+  (updater, stream);
 };

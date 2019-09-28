@@ -228,7 +228,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#8e5ab50"
+    "revery": "github:revery-ui/revery#a480976"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

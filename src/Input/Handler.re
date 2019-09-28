@@ -12,39 +12,68 @@ module Log = Oni_Core.Log;
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-let keyPressToString = (~altKey, ~shiftKey, ~ctrlKey, ~superKey, s) => {
-  let s = s == "<" ? "lt" : s;
-  let s = s == "\t" ? "TAB" : s;
-
-  let s = ctrlKey ? "C-" ++ s : s;
-  let s = shiftKey ? "S-" ++ s : s;
-  let s = altKey ? "A-" ++ s : s;
-  let s = superKey ? "D-" ++ s : s;
-
-  let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
-  ret;
+let keyCodeToVimString = (keycode) => {
+  let keyString = Revery.Key.Keycode.getName(keycode);
+  let len = Zed_utf8.length(keyString);
+  switch (keycode) {
+  | v when len == 1 => Some(keyString)
+  | v when v == 13 /* enter */ => Some("CR")
+  | v when v == Revery.Key.Keycode.escape => Some("ESC")
+  | v when v == 1073741912 /*Revery.Key.Keycode.kp_enter*/ => Some("CR")
+  | v when v == 1073742010 /*Revery.Key.Keycode.tab*/ => Some("TAB")
+  | v when v == Revery.Key.Keycode.backspace => Some("BS")
+  | v when v == Revery.Key.Keycode.delete => Some("DEL")
+  | _ => None
+  }
 };
 
-let isOniModifier = (~altKey, ~ctrlKey, ~superKey, ~key) => {
-  let enterPressed = "<CR>" == key;
-  ctrlKey || altKey || superKey || enterPressed;
-};
+let keyPressToString = (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
 
-let charToCommand = (codepoint: int, mods: Modifier.t) => {
-  let char = Zed_utf8.singleton(UChar.of_int(codepoint));
+  let keyString = Revery.Key.Keycode.getName(keycode);
+  Log.info("Input - keyPressToString - processing keycode: " ++ string_of_int(keycode) ++ "|" ++ keyString);
 
-  let altKey = Modifier.isAltPressed(mods);
-  let ctrlKey = Modifier.isControlPressed(mods);
-  let superKey = Modifier.isSuperPressed(mods);
+  let isKeyAllowed = switch (isTextInputActive) {
+  // If text input is active, only allow keys through that have modifiers
+  // like control or command
+  | true => 
+    // Always allow if controlKey or superKey, and the keyString is a single character
+    ((ctrlKey || superKey) && Zed_utf8.length(keyString) == 1)
+    || (
+       keycode == 13 /* enter */ 
+    || keycode == 1073741912 /*Revery.Key.Keycode.kp_enter*/
+    || keycode == 1073742010 /*Revery.Key.Keycode.tab */
+    || keycode == Revery.Key.Keycode.backspace
+    || keycode == Revery.Key.Keycode.delete
+    || keycode == Revery.Key.Keycode.escape
+    );
+  | false => true
+  };
 
-  let key =
-    keyPressToString(~shiftKey=false, ~altKey, ~ctrlKey, ~superKey, char);
-  let shouldOniListen = isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key);
-  Some((key, shouldOniListen));
+  switch (isKeyAllowed) {
+  | false => 
+    Log.info("keyPressToString - key blocked: " ++ keyString);
+    None;
+  | true => switch (keyCodeToVimString(keycode)) {
+    | None => None
+    | Some(s) => 
+      let s = s == "<" ? "lt" : s;
+      let s = s == "\t" ? "TAB" : s;
+
+      let s = ctrlKey ? "C-" ++ s : s;
+      let s = shiftKey ? "S-" ++ s : s;
+      let s = altKey ? "A-" ++ s : s;
+      let s = superKey ? "D-" ++ s : s;
+
+      let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
+      Log.info("keyPressToString - sending key: " ++ ret);
+      Some(ret);
+    }
+  }
 };
 
 let keyPressToCommand =
     (
+      ~isTextInputActive,
       {keymod, keycode, _}: Key.KeyEvent.t,
       os: Environment.os,
     ) => {
@@ -60,17 +89,13 @@ let keyPressToCommand =
     | _ => ctrlKey
     };
 
-  let keyString = Some(Revery.Key.Keycode.getName(keycode) |> String.capitalize_ascii);
-  switch (keyString) {
-  | None => None
-  | Some(k) =>
-    let keyPressString =
-      keyPressToString(~shiftKey, ~altKey, ~ctrlKey, ~superKey, k);
-    let shouldOniListen =
-      isOniModifier(~altKey, ~ctrlKey, ~superKey, ~key=keyPressString);
+  let keyPressString =
+    keyPressToString(~isTextInputActive, ~shiftKey, ~altKey, ~ctrlKey, ~superKey, keycode);
 
-    Some((keyPressString, shouldOniListen));
-  };
+  switch (keyPressString) {
+  | None => None
+  | Some(_) as v => v
+  }
 };
 
 module Conditions = {
@@ -82,32 +107,6 @@ module Conditions = {
     | None => false
     };
   };
-  /*let ofState = (state: State.t) => {
-      // Not functional, but we'll use the hashtable for performance
-      let ret: t = Hashtbl.create(16);
-
-      if (state.commandline.show) {
-        Hashtbl.add(ret, CommandLineFocus, true);
-      };
-
-      if (state.menu.isOpen) {
-        Hashtbl.add(ret, MenuFocus, true);
-      };
-
-      // HACK: Because we don't have AND conditions yet for input
-      // (the conditions array are OR's), we are making `insertMode`
-      // only true when the editor is insert mode AND we are in the
-      // editor (editorTextFocus is set)
-      switch (state.menu.isOpen || state.commandline.show, state.mode) {
-      | (false, Vim.Types.Insert) =>
-        Hashtbl.add(ret, Types.Input.InsertMode, true);
-        Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
-      | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
-      | _ => ()
-      };
-
-      ret;
-    };*/
 };
 
 /**
