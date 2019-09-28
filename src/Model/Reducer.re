@@ -25,6 +25,7 @@ let reduce: (State.t, Actions.t) => State.t =
       };
 
       switch (a) {
+      | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | ChangeMode(m) =>

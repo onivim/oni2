@@ -18,7 +18,9 @@ let start = getTime => {
     | Actions.DisableKeyDisplayer =>
       KeyDisplayer.setEnabled(false, keyDisplayer)
     | Actions.NotifyKeyPressed(time, key)
-        when KeyDisplayer.getEnabled(keyDisplayer) =>
+        when
+          KeyDisplayer.getEnabled(keyDisplayer)
+          && !Oni_Input.Filter.filter(key) =>
       KeyDisplayer.add(time, key, keyDisplayer)
     | _ => keyDisplayer
     };

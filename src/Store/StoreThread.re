@@ -44,6 +44,7 @@ let start =
       ~getClipboardText,
       ~setClipboardText,
       ~getTime,
+      ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
       (),
@@ -54,6 +55,7 @@ let start =
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
+
   let latestState: ref(Model.State.t) = ref(state);
   let getState = () => latestState^;
 
@@ -124,6 +126,27 @@ let start =
       (),
     );
 
+  let dispatch = (action: Model.Actions.t) => {
+    let lastState = latestState^;
+    let (newState, effect) = storeDispatch(action);
+    accumulatedEffects := [effect, ...accumulatedEffects^];
+    latestState := newState;
+
+    if (newState !== lastState) {
+      onStateChanged(newState);
+    };
+  };
+
+  let runEffects = () => {
+    let effects = accumulatedEffects^;
+    accumulatedEffects := [];
+
+    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
+  };
+
+  // TODONOW
+  let inputStream = InputStoreConnector.start(getState, window, runEffects);
+
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
@@ -137,17 +160,7 @@ let start =
       }
     );
 
-  let dispatch = (action: Model.Actions.t) => {
-    let lastState = latestState^;
-    let (newState, effect) = storeDispatch(action);
-    accumulatedEffects := [effect, ...accumulatedEffects^];
-    latestState := newState;
-
-    if (newState !== lastState) {
-      onStateChanged(newState);
-    };
-  };
-
+  Isolinear.Stream.connect(dispatch, inputStream);
   Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, syntaxStream);
@@ -188,13 +201,6 @@ let start =
   };
 
   setIconTheme("vs-seti");
-
-  let runEffects = () => {
-    let effects = accumulatedEffects^;
-    accumulatedEffects := [];
-
-    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
-  };
 
   let totalTime = ref(0.0);
   let _ =
