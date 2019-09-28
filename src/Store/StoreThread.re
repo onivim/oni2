@@ -136,7 +136,7 @@ let start =
       onStateChanged(newState);
     };
   };
-  
+
   let runEffects = () => {
     let effects = accumulatedEffects^;
     accumulatedEffects := [];

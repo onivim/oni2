@@ -39,18 +39,20 @@ let conditionsOfState = (state: State.t) => {
 };
 
 let start =
-    (
-      getState: unit => Model.State.t,
-      window: Revery.Window.t,
-      runEffects,
-    ) => {
+    (getState: unit => Model.State.t, window: Revery.Window.t, runEffects) => {
   let (stream, dispatch) = Isolinear.Stream.create();
-  
-  let getActionsForBinding = (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+
+  let getActionsForBinding =
+      (inputKey, commands, currentConditions: Handler.Conditions.t) => {
     Keybindings.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
-          Handler.matchesCondition(condition, currentConditions, inputKey, key)
+          Handler.matchesCondition(
+            condition,
+            currentConditions,
+            inputKey,
+            key,
+          )
             ? [Actions.Command(command)] : defaultAction,
         [],
         commands,
@@ -61,7 +63,14 @@ let start =
   /**
     Handle Input from Oni or Vim
    */
-  let handle = (~isMenuOpen, ~conditions:  Handler.Conditions.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
+  let handle =
+      (
+        ~isMenuOpen,
+        ~conditions: Handler.Conditions.t,
+        ~time=0.0,
+        ~commands: Keybindings.t,
+        inputKey,
+      ) => {
     let actions =
       switch (isMenuOpen) {
       | false =>
@@ -94,8 +103,8 @@ let start =
     | (None, _) => ()
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
-      handle(~isMenuOpen=state.menu.isOpen,
-          ~conditions, ~time, ~commands, k) |> List.iter(dispatch);
+      handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
+      |> List.iter(dispatch);
       // Run input effects _immediately_
       runEffects();
     | (Some((_, false)), {contents: Some(_)}) => ()
@@ -108,7 +117,8 @@ let start =
   )
   |> ignore;
 
-  Reglfw.Glfw.glfwSetCharModsCallback(window.glfwWindow, (_w, codepoint, mods) =>
+  Reglfw.Glfw.glfwSetCharModsCallback(
+    window.glfwWindow, (_w, codepoint, mods) =>
     Handler.charToCommand(codepoint, mods) |> keyEventListener
   );
   // Noop

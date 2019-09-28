@@ -121,7 +121,6 @@ let init = app => {
     v => dispatch(Model.Actions.OpenFileByPath(v, None)),
     cliOptions.filesToOpen,
   );
-
 };
 
 /* Let's get this party started! */

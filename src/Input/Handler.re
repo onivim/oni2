@@ -106,33 +106,32 @@ module Conditions = {
     | None => false
     };
   };
-
   /*let ofState = (state: State.t) => {
-    // Not functional, but we'll use the hashtable for performance
-    let ret: t = Hashtbl.create(16);
+      // Not functional, but we'll use the hashtable for performance
+      let ret: t = Hashtbl.create(16);
 
-    if (state.commandline.show) {
-      Hashtbl.add(ret, CommandLineFocus, true);
-    };
+      if (state.commandline.show) {
+        Hashtbl.add(ret, CommandLineFocus, true);
+      };
 
-    if (state.menu.isOpen) {
-      Hashtbl.add(ret, MenuFocus, true);
-    };
+      if (state.menu.isOpen) {
+        Hashtbl.add(ret, MenuFocus, true);
+      };
 
-    // HACK: Because we don't have AND conditions yet for input
-    // (the conditions array are OR's), we are making `insertMode`
-    // only true when the editor is insert mode AND we are in the
-    // editor (editorTextFocus is set)
-    switch (state.menu.isOpen || state.commandline.show, state.mode) {
-    | (false, Vim.Types.Insert) =>
-      Hashtbl.add(ret, Types.Input.InsertMode, true);
-      Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
-    | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
-    | _ => ()
-    };
+      // HACK: Because we don't have AND conditions yet for input
+      // (the conditions array are OR's), we are making `insertMode`
+      // only true when the editor is insert mode AND we are in the
+      // editor (editorTextFocus is set)
+      switch (state.menu.isOpen || state.commandline.show, state.mode) {
+      | (false, Vim.Types.Insert) =>
+        Hashtbl.add(ret, Types.Input.InsertMode, true);
+        Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
+      | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+      | _ => ()
+      };
 
-    ret;
-  };*/
+      ret;
+    };*/
 };
 
 /**
@@ -151,4 +150,3 @@ let matchesCondition = (commandConditions, currentConditions, input, key) =>
       commandConditions,
     );
   };
-
