@@ -5,9 +5,6 @@
  */
 
 open Revery;
-open Revery.UI;
-
-open Rench;
 
 open Oni_UI;
 
