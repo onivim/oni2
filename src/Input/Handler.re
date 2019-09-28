@@ -82,6 +82,21 @@ let keyPressToCommand =
   let shiftKey = Keymod.isShiftDown(keymod);
   let altKey = Keymod.isAltDown(keymod);
   let ctrlKey = Keymod.isControlDown(keymod);
+  let altGr = Keymod.isAltGrKeyDown(keymod);
+  
+  let (altGr, ctrlKey, altKey) = switch (Revery.Environment.os) {
+  // On Windows, we need to do some special handling here.
+  // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
+  // https://devblogs.microsoft.com/oldnewthing/?p=40003
+  | Revery.Environment.Windows =>
+    let altGr = altGr
+    || (Keymod.isRightAltDown(keymod) && Keymod.isControlDown(keymod));
+    // If altGr is active, disregard control / alt key
+    let ctrlKey = altGr ? false : ctrlKey;
+    let altKey = altGr ? false : altKey;
+    (altGr, ctrlKey, altKey);
+  | _ => (altGr, ctrlKey, altKey)
+  };
 
   let commandKeyPressed =
     switch (os) {
@@ -89,12 +104,17 @@ let keyPressToCommand =
     | _ => ctrlKey
     };
 
-  let keyPressString =
-    keyPressToString(~isTextInputActive, ~shiftKey, ~altKey, ~ctrlKey, ~superKey, keycode);
+  if (altGr && isTextInputActive) {
+    // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
+    None
+  } else {
+    let keyPressString =
+      keyPressToString(~isTextInputActive, ~shiftKey, ~altKey, ~ctrlKey, ~superKey, keycode);
 
-  switch (keyPressString) {
-  | None => None
-  | Some(_) as v => v
+    switch (keyPressString) {
+    | None => None
+    | Some(_) as v => v
+    }
   }
 };
 
