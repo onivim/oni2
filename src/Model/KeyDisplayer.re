@@ -38,10 +38,7 @@ let update = (time, v: t) => {
   {...v, active, presses};
 };
 
-let add = (time, key, v: t) =>
-  if (!Oni_Input.Filter.filter(key)) {
-    v;
-  } else {
+let add = (time, key, v: t) => {
     let exclusive = String.length(key) > 1;
     let presses =
       switch (v.presses) {

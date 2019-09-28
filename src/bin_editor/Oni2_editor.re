@@ -125,39 +125,6 @@ let init = app => {
     cliOptions.filesToOpen,
   );
 
-  let commands = Core.Keybindings.get();
-
-  /* Add an updater to handle a KeyboardInput action */
-  let inputHandler = Input.handle(~commands);
-
-  /**
-     The key handlers return (keyPressedString, shouldOniListen)
-     i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
-     /respond to commands otherwise if input is alphabetical AND
-     a revery element is focused oni2 should defer to revery
-   */
-  let keyEventListener = key => {
-    let time = Time.getTime() |> Time.toSeconds;
-    switch (key, Focus.focused) {
-    | (None, _) => ()
-    | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
-      // Run input effects _immediately_
-      runEffects();
-    | (Some((_, false)), {contents: Some(_)}) => ()
-    };
-  };
-
-  Event.subscribe(w.onKeyDown, keyEvent =>
-    Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
-    |> keyEventListener
-  )
-  |> ignore;
-
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    Input.charToCommand(codepoint, mods) |> keyEventListener
-  );
 };
 
 /* Let's get this party started! */

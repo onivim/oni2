@@ -1,11 +1,10 @@
 /*
- * Input.re
+ * Handler.re
  *
  * Basic input handling for Oni
  */
 
 open Oni_Core;
-open Oni_Model;
 open Reglfw.Glfw;
 open Revery_Core;
 module Log = Oni_Core.Log;
@@ -108,7 +107,7 @@ module Conditions = {
     };
   };
 
-  let ofState = (state: State.t) => {
+  /*let ofState = (state: State.t) => {
     // Not functional, but we'll use the hashtable for performance
     let ret: t = Hashtbl.create(16);
 
@@ -133,7 +132,7 @@ module Conditions = {
     };
 
     ret;
-  };
+  };*/
 };
 
 /**
@@ -153,36 +152,3 @@ let matchesCondition = (commandConditions, currentConditions, input, key) =>
     );
   };
 
-let getActionsForBinding = (inputKey, commands, state: State.t) => {
-  let currentConditions = Conditions.ofState(state);
-  Keybindings.(
-    List.fold_left(
-      (defaultAction, {key, command, condition}) =>
-        matchesCondition(condition, currentConditions, inputKey, key)
-          ? [Actions.Command(command)] : defaultAction,
-      [],
-      commands,
-    )
-  );
-};
-
-/**
-  Handle Input from Oni or Vim
- */
-let handle = (~state: State.t, ~time=0.0, ~commands: Keybindings.t, inputKey) => {
-  let actions =
-    switch (state.menu.isOpen) {
-    | false =>
-      switch (getActionsForBinding(inputKey, commands, state)) {
-      | [] =>
-        Log.info("Input::handle - sending raw input: " ++ inputKey);
-        [Actions.KeyboardInput(inputKey)];
-      | actions =>
-        Log.info("Input::handle - sending bound actions.");
-        actions;
-      }
-    | true => getActionsForBinding(inputKey, commands, state)
-    };
-
-  [Actions.NotifyKeyPressed(time, inputKey), ...actions];
-};
