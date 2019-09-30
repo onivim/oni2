@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Reglfw.Glfw;
 open Revery;
 module Log = Oni_Core.Log;
 
