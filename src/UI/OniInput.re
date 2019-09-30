@@ -197,12 +197,9 @@ let make =
       | v when v == Key.Keycode.right =>
         onKeyDown(event);
         dispatch(CursorRight);
-      // TODONOW:
-      /*
-       | v when v == Key.Keycode.h && event.ctrlKey => dispatch(Backspace)
-       | v when v == Key.Keycode.u && event.ctrlKey => dispatch(DeleteLine)
-       | v when v == Key.Keycode.w && event.ctrlKey => dispatch(DeleteWord)
-       */
+       | v when v == 104 /*Key.Keycode.h*/ && event.ctrlKey => dispatch(Backspace)
+       | v when v == 117 /*Key.Keycode.u*/ && event.ctrlKey => dispatch(DeleteLine)
+       | v when v == 119 /*Key.Keycode.w*/ && event.ctrlKey => dispatch(DeleteWord)
       | v when v == Key.Keycode.delete => dispatch(DeleteCharacter)
       | v when v == Key.Keycode.backspace => dispatch(Backspace)
       | v when v == Key.Keycode.escape =>
