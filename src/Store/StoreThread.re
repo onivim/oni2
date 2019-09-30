@@ -157,8 +157,6 @@ let start =
 
   latestRunEffects := Some(runEffects);
 
-  // TODONOW
-
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
