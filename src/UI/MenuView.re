@@ -36,9 +36,9 @@ let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
   switch (event.keycode) {
   | v when v == 1073741905 /*Key.Keycode.down*/ =>
-          GlobalContext.current().dispatch(MenuNextItem)
+    GlobalContext.current().dispatch(MenuNextItem)
   | v when v == 1073741906 /*Key.Keycode.up*/ =>
-          GlobalContext.current().dispatch(MenuPreviousItem)
+    GlobalContext.current().dispatch(MenuPreviousItem)
   | _ => ()
   };
 
