@@ -12,17 +12,25 @@ module Log = Oni_Core.Log;
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-let keyCodeToVimString = keycode => {
-  let keyString = Revery.Key.Keycode.getName(keycode);
+let keyCodeToVimString = (keycode, keyString) => {
   let len = Zed_utf8.length(keyString);
   switch (keycode) {
   | v when len == 1 => Some(keyString)
   | v when v == 13 /* enter */ => Some("CR")
   | v when v == Revery.Key.Keycode.escape => Some("ESC")
   | v when v == 1073741912 /*Revery.Key.Keycode.kp_enter*/ => Some("CR")
-  | v when v == 1073742010 /*Revery.Key.Keycode.tab*/ => Some("TAB")
+  | v when v == 9 /*Revery.Key.Keycode.tab*/ => Some("TAB")
   | v when v == Revery.Key.Keycode.backspace => Some("BS")
   | v when v == Revery.Key.Keycode.delete => Some("DEL")
+  | v when v == 1073741897 => Some("INS")
+  | v when v == 1073741898 => Some("HOME")
+  | v when v == 1073741899 => Some("PAGEUP")
+  | v when v == 1073741901 => Some("END")
+  | v when v == 1073741902 => Some("PAGEDOWN")
+  | v when v == 1073741903 => Some("RIGHT")
+  | v when v == 1073741904 => Some("LEFT")
+  | v when v == 1073741905 => Some("DOWN")
+  | v when v == 1073741906 => Some("UP")
   | _ => None
   };
 };
@@ -30,6 +38,13 @@ let keyCodeToVimString = keycode => {
 let keyPressToString =
     (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
   let keyString = Revery.Key.Keycode.getName(keycode);
+
+  let keyString = if (!shiftKey && String.length(keyString) == 1) {
+    String.lowercase_ascii(keyString)
+  } else {
+    keyString
+  }
+
   Log.info(
     "Input - keyPressToString - processing keycode: "
     ++ string_of_int(keycode)
@@ -37,19 +52,19 @@ let keyPressToString =
     ++ keyString,
   );
 
+  let vimString = keyCodeToVimString(keycode, keyString);
+  let vimStringLength = switch(vimString) {
+  | None => 0
+  | Some(v) => Zed_utf8.length(v);
+  };
+
   let isKeyAllowed =
     isTextInputActive
       // If text input is active, only allow keys through that have modifiers
       // like control or command
       // Always allow if controlKey or superKey, and the keyString is a single character
-      ? (ctrlKey || superKey)
-        && Zed_utf8.length(keyString) == 1
-        || keycode == 13  /* enter */
-        || keycode == 1073741912  /*Revery.Key.Keycode.kp_enter*/
-        || keycode == 1073742010  /*Revery.Key.Keycode.tab */
-        || keycode == Revery.Key.Keycode.backspace
-        || keycode == Revery.Key.Keycode.delete
-        || keycode == Revery.Key.Keycode.escape
+      ? ((ctrlKey || superKey)
+        && Zed_utf8.length(keyString) == 1) || vimStringLength > 1
       : true;
 
   switch (isKeyAllowed) {
@@ -57,7 +72,7 @@ let keyPressToString =
     Log.info("keyPressToString - key blocked: " ++ keyString);
     None;
   | true =>
-    switch (keyCodeToVimString(keycode)) {
+    switch (vimString) {
     | None => None
     | Some(s) =>
       let s = s == "<" ? "lt" : s;

@@ -48,6 +48,7 @@ let start =
 
   let getActionsForBinding =
       (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+    let inputKey = String.uppercase_ascii(inputKey);
     Keybindings.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
@@ -75,6 +76,7 @@ let start =
         ~commands: Keybindings.t,
         inputKey,
       ) => {
+     
     let actions =
       switch (isMenuOpen) {
       | false =>
@@ -132,8 +134,8 @@ let start =
       Revery.Event.subscribe(
         window.onKeyDown,
         keyEvent => {
-          Log.info("Input - got keydown.");
           let isTextInputActive = isTextInputActive();
+          Log.info("Input - got keydown - text input:" ++ string_of_bool(isTextInputActive));
           Handler.keyPressToCommand(
             ~isTextInputActive,
             keyEvent,
@@ -154,6 +156,13 @@ let start =
     ();
   };
 
+  let shouldTextInputBeActive = (state: State.t) => {
+    open Vim.Mode;
+    state.menu.isOpen 
+    || (state.mode == Insert) 
+    || (state.mode == CommandLine);
+  };
+
   // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,
   // with the current state of the editor.
   // We want 'text input' to be active
@@ -162,21 +171,28 @@ let start =
   // - We have a menu open
   //
   // We do not want 'text input' to be active in normal mode, visual mode.
-  let checkTextInputEffect =
+  let checkTextInputEffect = (state) =>
     Isolinear.Effect.create(~name="input.checkTextInputEffect", () =>
       switch (window) {
       | None => ()
       | Some(v) =>
-        if (!Revery.Window.isTextInputActive(v)) {
-          Log.info("input - starting text input");
-          Revery.Window.startTextInput(v);
+        let isCurrentlyActive = Revery.Window.isTextInputActive(v);
+        let shouldBeActive = shouldTextInputBeActive(state);
+        if (isCurrentlyActive != shouldBeActive) {
+          if (shouldBeActive) {
+            Log.info("Starting text input");
+            Revery.Window.startTextInput(v);
+          } else {
+            Log.info("Stopping text input");
+            Revery.Window.stopTextInput(v);
+          }
         }
       }
     );
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | _ => (state, checkTextInputEffect)
+    | _ => (state, checkTextInputEffect(state))
     };
   };
 
