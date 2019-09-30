@@ -57,16 +57,9 @@ let start =
     ref([]);
 
   let latestState: ref(Model.State.t) = ref(state);
-  let latestDispatch: ref(option(Model.Actions.t => unit)) = ref(None);
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
 
   let getState = () => latestState^;
-
-  let runDispatch = action =>
-    switch (latestDispatch^) {
-    | Some(v) => v(action)
-    | None => ()
-    };
 
   let runRunEffects = () =>
     switch (latestRunEffects^) {
@@ -116,7 +109,7 @@ let start =
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
-  let (inputUpdater, inputStream) =
+  let inputStream =
     InputStoreConnector.start(getState, window, runRunEffects);
 
   let (storeDispatch, storeStream) =
@@ -125,7 +118,6 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
-          inputUpdater,
           vimUpdater,
           syntaxUpdater,
           /* extHostUpdater, */
@@ -155,8 +147,6 @@ let start =
       onStateChanged(newState);
     };
   };
-
-  latestDispatch := Some(dispatch);
 
   let runEffects = () => {
     let effects = accumulatedEffects^;

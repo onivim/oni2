@@ -46,6 +46,12 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  // We also use 'text input' mode for SDL2.
+  // This enables us to get resolved keyboard events, and IME.
+
+  // For IME: Is this sufficient? Or will we need a way to turn off / toggle IME when switching modes?
+  Sdl2.TextInput.start();
+
   let getActionsForBinding =
       (inputKey, commands, currentConditions: Handler.Conditions.t) => {
     let inputKey = String.uppercase_ascii(inputKey);
@@ -140,8 +146,7 @@ let start =
           );
           Handler.keyPressToCommand(
             ~isTextInputActive,
-            keyEvent,
-            Revery_Core.Environment.os,
+            keyEvent
           )
           |> keyEventListener;
         },
@@ -158,45 +163,5 @@ let start =
     ();
   };
 
-  let shouldTextInputBeActive = (state: State.t) => {
-    true;
-    /*Vim.Mode.(
-      state.menu.isOpen || state.mode == Insert || state.mode == CommandLine
-    );*/
-  };
-
-  // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,
-  // with the current state of the editor.
-  // We want 'text input' to be active
-  // in the following:
-  // - We're in insert mode or commandline mode
-  // - We have a menu open
-  //
-  // We do not want 'text input' to be active in normal mode, visual mode.
-  let checkTextInputEffect = state =>
-    Isolinear.Effect.create(~name="input.checkTextInputEffect", () =>
-      switch (window) {
-      | None => ()
-      | Some(v) =>
-        let isCurrentlyActive = Revery.Window.isTextInputActive(v);
-        let shouldBeActive = shouldTextInputBeActive(state);
-        if (isCurrentlyActive != shouldBeActive) {
-          if (shouldBeActive) {
-            Log.info("Starting text input");
-            Revery.Window.startTextInput(v);
-          } else {
-            Log.info("Stopping text input");
-            Revery.Window.stopTextInput(v);
-          };
-        };
-      }
-    );
-
-  let updater = (state: Model.State.t, action) => {
-    switch (action) {
-    | _ => (state, checkTextInputEffect(state))
-    };
-  };
-
-  (updater, stream);
+  stream;
 };

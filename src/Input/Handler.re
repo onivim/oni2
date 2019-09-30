@@ -8,13 +8,12 @@ open Oni_Core;
 open Revery;
 module Log = Oni_Core.Log;
 
-open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyCodeToVimString = (keycode, keyString) => {
   let len = Zed_utf8.length(keyString);
   switch (keycode) {
-  | v when len == 1 => Some(keyString)
+  | _ when len == 1 => Some(keyString)
   | v when v == 13 /* enter */ => Some("CR")
   | v when v == Revery.Key.Keycode.escape => Some("ESC")
   | v when v == 1073741912 /*Revery.Key.Keycode.kp_enter*/ => Some("CR")
@@ -96,8 +95,7 @@ let keyPressToString =
 let keyPressToCommand =
     (
       ~isTextInputActive,
-      {keymod, keycode, _}: Key.KeyEvent.t,
-      os: Environment.os,
+      {keymod, keycode, _}: Key.KeyEvent.t
     ) => {
   open Revery.Key;
   let superKey = Keymod.isGuiDown(keymod);
@@ -121,12 +119,6 @@ let keyPressToCommand =
       let altKey = altGr ? false : altKey;
       (altGr, ctrlKey, altKey);
     | _ => (altGr, ctrlKey, altKey)
-    };
-
-  let commandKeyPressed =
-    switch (os) {
-    | Mac => superKey || ctrlKey
-    | _ => ctrlKey
     };
 
   if (altGr && isTextInputActive) {
