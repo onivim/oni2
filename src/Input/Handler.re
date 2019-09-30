@@ -39,11 +39,12 @@ let keyPressToString =
     (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
   let keyString = Revery.Key.Keycode.getName(keycode);
 
-  let keyString = if (!shiftKey && String.length(keyString) == 1) {
-    String.lowercase_ascii(keyString)
-  } else {
-    keyString
-  }
+  let keyString =
+    if (!shiftKey && String.length(keyString) == 1) {
+      String.lowercase_ascii(keyString);
+    } else {
+      keyString;
+    };
 
   Log.info(
     "Input - keyPressToString - processing keycode: "
@@ -53,18 +54,20 @@ let keyPressToString =
   );
 
   let vimString = keyCodeToVimString(keycode, keyString);
-  let vimStringLength = switch(vimString) {
-  | None => 0
-  | Some(v) => Zed_utf8.length(v);
-  };
+  let vimStringLength =
+    switch (vimString) {
+    | None => 0
+    | Some(v) => Zed_utf8.length(v)
+    };
 
   let isKeyAllowed =
     isTextInputActive
       // If text input is active, only allow keys through that have modifiers
       // like control or command
       // Always allow if controlKey or superKey, and the keyString is a single character
-      ? ((ctrlKey || superKey)
-        && Zed_utf8.length(keyString) == 1) || vimStringLength > 1
+      ? (ctrlKey || superKey)
+        && Zed_utf8.length(keyString) == 1
+        || vimStringLength > 1
       : true;
 
   switch (isKeyAllowed) {

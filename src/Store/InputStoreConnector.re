@@ -76,7 +76,6 @@ let start =
         ~commands: Keybindings.t,
         inputKey,
       ) => {
-     
     let actions =
       switch (isMenuOpen) {
       | false =>
@@ -135,7 +134,10 @@ let start =
         window.onKeyDown,
         keyEvent => {
           let isTextInputActive = isTextInputActive();
-          Log.info("Input - got keydown - text input:" ++ string_of_bool(isTextInputActive));
+          Log.info(
+            "Input - got keydown - text input:"
+            ++ string_of_bool(isTextInputActive),
+          );
           Handler.keyPressToCommand(
             ~isTextInputActive,
             keyEvent,
@@ -157,10 +159,9 @@ let start =
   };
 
   let shouldTextInputBeActive = (state: State.t) => {
-    open Vim.Mode;
-    state.menu.isOpen 
-    || (state.mode == Insert) 
-    || (state.mode == CommandLine);
+    Vim.Mode.(
+      state.menu.isOpen || state.mode == Insert || state.mode == CommandLine
+    );
   };
 
   // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,
@@ -171,7 +172,7 @@ let start =
   // - We have a menu open
   //
   // We do not want 'text input' to be active in normal mode, visual mode.
-  let checkTextInputEffect = (state) =>
+  let checkTextInputEffect = state =>
     Isolinear.Effect.create(~name="input.checkTextInputEffect", () =>
       switch (window) {
       | None => ()
@@ -185,8 +186,8 @@ let start =
           } else {
             Log.info("Stopping text input");
             Revery.Window.stopTextInput(v);
-          }
-        }
+          };
+        };
       }
     );
 
