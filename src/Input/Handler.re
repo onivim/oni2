@@ -93,10 +93,7 @@ let keyPressToString =
 };
 
 let keyPressToCommand =
-    (
-      ~isTextInputActive,
-      {keymod, keycode, _}: Key.KeyEvent.t
-    ) => {
+    (~isTextInputActive, {keymod, keycode, _}: Key.KeyEvent.t) => {
   open Revery.Key;
   let superKey = Keymod.isGuiDown(keymod);
   let shiftKey = Keymod.isShiftDown(keymod);

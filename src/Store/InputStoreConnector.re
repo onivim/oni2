@@ -144,10 +144,7 @@ let start =
             "Input - got keydown - text input:"
             ++ string_of_bool(isTextInputActive),
           );
-          Handler.keyPressToCommand(
-            ~isTextInputActive,
-            keyEvent
-          )
+          Handler.keyPressToCommand(~isTextInputActive, keyEvent)
           |> keyEventListener;
         },
       );
