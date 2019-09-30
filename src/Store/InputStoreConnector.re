@@ -159,9 +159,10 @@ let start =
   };
 
   let shouldTextInputBeActive = (state: State.t) => {
-    Vim.Mode.(
+    true;
+    /*Vim.Mode.(
       state.menu.isOpen || state.mode == Insert || state.mode == CommandLine
-    );
+    );*/
   };
 
   // The [checkTextInputEffect] synchronizes the 'text input' state of SDL2,

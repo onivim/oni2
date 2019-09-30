@@ -38,6 +38,7 @@ let keyCodeToVimString = (keycode, keyString) => {
 let keyPressToString =
     (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
   let keyString = Revery.Key.Keycode.getName(keycode);
+  Log.info("Input - keyPressToString - key name: " ++ keyString);
 
   let keyString =
     if (!shiftKey && String.length(keyString) == 1) {
