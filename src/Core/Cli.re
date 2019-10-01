@@ -38,7 +38,11 @@ let parse = () => {
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
-      ("--force-device-scale-factor", Float(f => scaleFactor := Some(f)), ""),
+      (
+        "--force-device-scale-factor",
+        Float(f => scaleFactor := Some(f)),
+        "",
+      ),
     ],
     arg => args := [arg, ...args^],
     "",
