@@ -44,6 +44,7 @@ type t = {
   filesExclude: list(string),
   vimUseSystemClipboard,
   uiShadows: bool,
+  uiZoom: float,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
@@ -77,6 +78,7 @@ let default = {
   workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
   uiShadows: true,
+  uiZoom: 1.0,
   vimUseSystemClipboard: {
     yank: true,
     delete: false,
