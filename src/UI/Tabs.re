@@ -10,28 +10,26 @@ open Rench;
 let noop = () => ();
 
 type tabInfo = {
+  editorId: int,
   title: string,
-  active: bool,
   modified: bool,
-  onClick: Tab.tabAction,
-  onClose: Tab.tabAction,
 };
 
 let component = React.component("Tabs");
 
-let toTab = (theme, mode, uiFont, numberOfTabs, active, index, t: tabInfo) =>
+let toTab = (theme, mode, uiFont, numberOfTabs, active, activeEditorId, index, t: tabInfo) =>
   <Tab
     theme
     tabPosition={index + 1}
     numberOfTabs
     title={Path.filename(t.title)}
-    active={t.active}
+    active={Some(t.editorId) == activeEditorId}
     showHighlight=active
     modified={t.modified}
     uiFont
     mode
-    onClick={t.onClick}
-    onClose={t.onClose}
+    onClick={() => GlobalContext.current().openEditorById(t.editorId)}
+    onClose={() => GlobalContext.current().closeEditorById(t.editorId)}
   />;
 
 let measureWidth: option(node) => int = fun
@@ -110,7 +108,7 @@ let createElement =
     let activeEditorChanged = () =>
       switch (activeEditorId) {
         | Some(editorId) => {
-          switch (findIndex(t => t.active, tabs)) {
+          switch (findIndex(t => Some(t.editorId) == activeEditorId, tabs)) {
             | Some(index) =>
               let f = () => {
                 switch (measureChildOffset(index, outerRef)) {
@@ -154,7 +152,7 @@ let createElement =
 
     let tabCount = List.length(tabs);
     let tabComponents =
-      List.mapi(toTab(theme, mode, uiFont, tabCount, active), tabs);
+      List.mapi(toTab(theme, mode, uiFont, tabCount, active, activeEditorId), tabs);
 
     let outerStyle =
       Style.[

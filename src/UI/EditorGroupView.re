@@ -55,11 +55,9 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
       let (modified, title) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
       let ret: Tabs.tabInfo = {
+        editorId: v.editorId,
         title,
         modified,
-        active: EditorGroup.isActiveEditor(editorGroup, v.editorId),
-        onClick: () => GlobalContext.current().openEditorById(v.editorId),
-        onClose: () => GlobalContext.current().closeEditorById(v.editorId),
       };
       Some(ret);
     };
