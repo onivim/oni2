@@ -197,7 +197,6 @@ let make =
       | v when v == Key.Keycode.right =>
         onKeyDown(event);
         dispatch(CursorRight);
-      // TODONOW:
       | v when v == 104 /*Key.Keycode.h*/ && event.ctrlKey =>
         dispatch(Backspace)
       | v when v == 117 /*Key.Keycode.u*/ && event.ctrlKey =>
