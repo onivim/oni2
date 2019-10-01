@@ -8,7 +8,7 @@
     "install": [
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll $cur__bin': 'echo'}\"",
-      "bash -c \"cp #{esy-sdl2.bin}/*.dll $cur__bin\""
+      "bash -c \"cp #{esy-sdl2.bin}/*.dll $cur__bin #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {

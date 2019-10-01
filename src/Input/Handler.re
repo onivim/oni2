@@ -29,6 +29,18 @@ let keyCodeToVimString = (keycode, keyString) => {
   | v when v == 1073741904 => Some("LEFT")
   | v when v == 1073741905 => Some("DOWN")
   | v when v == 1073741906 => Some("UP")
+  | v when v == 1073741882 => Some("F1")
+  | v when v == 1073741883 => Some("F2")
+  | v when v == 1073741884 => Some("F3")
+  | v when v == 1073741885 => Some("F4")
+  | v when v == 1073741886 => Some("F5")
+  | v when v == 1073741887 => Some("F6")
+  | v when v == 1073741888 => Some("F7")
+  | v when v == 1073741889 => Some("F8")
+  | v when v == 1073741890 => Some("F9")
+  | v when v == 1073741891 => Some("F10")
+  | v when v == 1073741892 => Some("F11")
+  | v when v == 1073741893 => Some("F12")
   | _ => None
   };
 };
