@@ -46,8 +46,15 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  // We also use 'text input' mode for SDL2.
+  // This enables us to get resolved keyboard events, and IME.
+
+  // For IME: Is this sufficient? Or will we need a way to turn off / toggle IME when switching modes?
+  Sdl2.TextInput.start();
+
   let getActionsForBinding =
       (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+    let inputKey = String.uppercase_ascii(inputKey);
     Keybindings.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
@@ -104,30 +111,53 @@ let start =
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
     switch (key, Revery.UI.Focus.focused) {
+    // No key, nothing focused - no-op
     | (None, _) => ()
-    | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
+
+    // We have a key, but Revery has an element focused
+    | (Some(k), {contents: Some(_)})
+    | (Some(k), {contents: None}) =>
       handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
       |> List.iter(dispatch);
+
       // Run input effects _immediately_
       runEffects();
-    | (Some((_, false)), {contents: Some(_)}) => ()
+    };
+  };
+
+  let isTextInputActive = () => {
+    switch (window) {
+    | None => false
+    | Some(v) => Revery.Window.isTextInputActive(v)
     };
   };
 
   switch (window) {
   | None => Log.info("Input - no window to subscribe to events")
   | Some(window) =>
-    Revery.Event.subscribe(window.onKeyDown, keyEvent =>
-      Handler.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
-      |> keyEventListener
-    )
-    |> ignore;
+    let _ignore =
+      Revery.Event.subscribe(
+        window.onKeyDown,
+        keyEvent => {
+          let isTextInputActive = isTextInputActive();
+          Log.info(
+            "Input - got keydown - text input:"
+            ++ string_of_bool(isTextInputActive),
+          );
+          Handler.keyPressToCommand(~isTextInputActive, keyEvent)
+          |> keyEventListener;
+        },
+      );
 
-    Reglfw.Glfw.glfwSetCharModsCallback(
-      window.glfwWindow, (_w, codepoint, mods) =>
-      Handler.charToCommand(codepoint, mods) |> keyEventListener
-    );
+    let _ignore =
+      Revery.Event.subscribe(
+        window.onTextInputCommit,
+        textEvent => {
+          Log.info("Input - onTextInputCommit: " ++ textEvent.text);
+          keyEventListener(Some(textEvent.text));
+        },
+      );
+    ();
   };
 
   stream;

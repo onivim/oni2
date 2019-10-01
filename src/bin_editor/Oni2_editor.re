@@ -62,7 +62,7 @@ let init = app => {
   };
 
   let getScaleFactor = () => {
-    Window.getDevicePixelRatio(w) *. Window.getScaleFactor(w);
+    Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
   };
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
@@ -71,10 +71,8 @@ let init = app => {
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~getClipboardText=
-        () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
-      ~setClipboardText=
-        text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+      ~getClipboardText=() => Sdl2.Clipboard.getText(),
+      ~setClipboardText=text => Sdl2.Clipboard.setText(text),
       ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,

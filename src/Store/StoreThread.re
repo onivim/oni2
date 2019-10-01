@@ -57,7 +57,15 @@ let start =
     ref([]);
 
   let latestState: ref(Model.State.t) = ref(state);
+  let latestRunEffects: ref(option(unit => unit)) = ref(None);
+
   let getState = () => latestState^;
+
+  let runRunEffects = () =>
+    switch (latestRunEffects^) {
+    | Some(v) => v()
+    | None => ()
+    };
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
@@ -100,6 +108,9 @@ let start =
   let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
+
+  let inputStream =
+    InputStoreConnector.start(getState, window, runRunEffects);
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -144,8 +155,7 @@ let start =
     List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
   };
 
-  // TODONOW
-  let inputStream = InputStoreConnector.start(getState, window, runEffects);
+  latestRunEffects := Some(runEffects);
 
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
