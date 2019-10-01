@@ -52,13 +52,8 @@ let measureChildOffset: int => option(node) => option((int, int)) = index => fun
         | [(child: node), ..._] when i == index =>
           Some((offset, child#measurements().width))
 
-        | [(child: node), ...rest] => {
-          print_int(child#measurements().width);
-          print_newline();
-          let width = child#measurements().width;
-          loop(i + 1, offset + width, rest);
-
-        }
+        | [(child: node), ...rest] =>
+          loop(i + 1, offset + child#measurements().width, rest);
 
       loop(0, 0, outer#firstChild()#getChildren());
     }
@@ -102,8 +97,6 @@ let createElement =
       Hooks.state(0, hooks);
     let (outerRef: option(Revery_UI.node), setOuterRef, hooks) =
       Hooks.state(None, hooks);
-    let (postRenderQueue: list(unit => unit), setPostRenderQueue, hooks) =
-      Hooks.state([], hooks);
 
     let activeEditorChanged = () =>
       switch (activeEditorId) {
