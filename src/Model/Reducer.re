@@ -25,15 +25,13 @@ let reduce: (State.t, Actions.t) => State.t =
       };
 
       switch (a) {
+      | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | ChangeMode(m) =>
         let ret: State.t = {...s, mode: m};
         ret;
       | SetEditorFont(font) => {...s, editorFont: font}
-      | SetInputControlMode(m) => {...s, inputControlMode: m}
-      | CommandlineShow(_) => {...s, inputControlMode: CommandLineFocus}
-      | CommandlineHide => {...s, inputControlMode: EditorTextFocus}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | SetTokenTheme(tokenTheme) => {...s, tokenTheme}

@@ -5,7 +5,6 @@
     (libraries
         bigarray
         zed_oni
-        reglfw
         lwt
         lwt.unix
         Rench

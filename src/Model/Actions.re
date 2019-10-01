@@ -20,6 +20,7 @@ type t =
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
+  | KeyBindingsSet(Keybindings.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)
@@ -81,7 +82,6 @@ type t =
   | LoadThemeByPath(string)
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
-  | SetInputControlMode(Input.controlMode)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)

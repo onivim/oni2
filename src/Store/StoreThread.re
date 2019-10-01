@@ -44,6 +44,7 @@ let start =
       ~getClipboardText,
       ~setClipboardText,
       ~getTime,
+      ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
       (),
@@ -54,8 +55,17 @@ let start =
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
+
   let latestState: ref(Model.State.t) = ref(state);
+  let latestRunEffects: ref(option(unit => unit)) = ref(None);
+
   let getState = () => latestState^;
+
+  let runRunEffects = () =>
+    switch (latestRunEffects^) {
+    | Some(v) => v()
+    | None => ()
+    };
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
@@ -99,6 +109,9 @@ let start =
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
+  let inputStream =
+    InputStoreConnector.start(getState, window, runRunEffects);
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -124,6 +137,26 @@ let start =
       (),
     );
 
+  let dispatch = (action: Model.Actions.t) => {
+    let lastState = latestState^;
+    let (newState, effect) = storeDispatch(action);
+    accumulatedEffects := [effect, ...accumulatedEffects^];
+    latestState := newState;
+
+    if (newState !== lastState) {
+      onStateChanged(newState);
+    };
+  };
+
+  let runEffects = () => {
+    let effects = accumulatedEffects^;
+    accumulatedEffects := [];
+
+    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
+  };
+
+  latestRunEffects := Some(runEffects);
+
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
@@ -137,17 +170,7 @@ let start =
       }
     );
 
-  let dispatch = (action: Model.Actions.t) => {
-    let lastState = latestState^;
-    let (newState, effect) = storeDispatch(action);
-    accumulatedEffects := [effect, ...accumulatedEffects^];
-    latestState := newState;
-
-    if (newState !== lastState) {
-      onStateChanged(newState);
-    };
-  };
-
+  Isolinear.Stream.connect(dispatch, inputStream);
   Isolinear.Stream.connect(dispatch, vimStream);
   Isolinear.Stream.connect(dispatch, editorEventStream);
   Isolinear.Stream.connect(dispatch, syntaxStream);
@@ -188,13 +211,6 @@ let start =
   };
 
   setIconTheme("vs-seti");
-
-  let runEffects = () => {
-    let effects = accumulatedEffects^;
-    accumulatedEffects := [];
-
-    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
-  };
 
   let totalTime = ref(0.0);
   let _ =

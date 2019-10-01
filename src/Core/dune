@@ -6,7 +6,6 @@
         str
         bigarray
         zed_oni
-        reglfw
         libvim
         lwt
         lwt.unix
