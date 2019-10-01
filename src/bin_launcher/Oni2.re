@@ -17,7 +17,7 @@ let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
   ("--checkhealth", passthrough, ""),
-  ("--force-scale-factor", passthroughFloat, ""),
+  ("--force-device-scale-factor", passthroughFloat, ""),
   ("-version", Arg.Unit(version), ""),
 ];
 

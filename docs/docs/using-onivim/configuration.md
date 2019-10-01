@@ -52,3 +52,17 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
     - _`true`_ - all deletes and yanks, regardless of register used, will be pushed to the system clipboard. Equivalent to `["yank", "paste", "delete"]`.
     - _`["yank", "paste", "delete"]`_ - An array of strings. Each specified operation will always use the system clipboard. For example, `["yank"]` will send all yanks to the system clipboard, but deletes and pastes will require using the `+` or `*` registers. `["delete", "paste"]` means that all deletes will be sent to the system clipboard, and pastes using the unnamed register will come from the system clipboard, but only yanks with register `+` and `*` would be sent to the clipboard.
     - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard. Equivalent to `[]`.
+
+## High-DPI / UI Scaling
+
+Onivim 2 should automatically pick up your scaling settings via the following per-platform strategies:
+
+- __Windows:__ On 8.1+, we use the 'scale factor' of the display device.
+- __OSX:__ - High-DPI / retina displays are automatically detected.
+- __Linux:__ - The `GDK_SCALE` environment variable is used, if available.
+
+If the display scaling is not correct, you can override by using the `--force-device-scale-factor` command-line argument, like:
+
+```
+oni2 --force-device-scale-factor=1.5
+```
