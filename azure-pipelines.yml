@@ -68,11 +68,11 @@ jobs:
   steps:
   - script: docker build -t centos scripts/docker/centos
     displayName: 'docker build'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -a'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -l /usr/lib/libstdc*'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'gcc --version'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -a'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ld --verbose -lsdtc++'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'gcc --version'
 
 - job: MacOS
   timeoutInMinutes: 0
