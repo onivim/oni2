@@ -105,7 +105,9 @@ let start =
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
       let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
       if (zoomValue != zoom^) {
-        Log.info("Configuration - setting zoom: " ++ string_of_float(zoomValue));
+        Log.info(
+          "Configuration - setting zoom: " ++ string_of_float(zoomValue),
+        );
         setZoom(zoomValue);
         zoom := zoomValue;
       };
