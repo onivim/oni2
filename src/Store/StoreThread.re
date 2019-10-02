@@ -95,7 +95,12 @@ let start =
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
   let configurationUpdater =
-    ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions, ~getZoom, ~setZoom);
+    ConfigurationStoreConnector.start(
+      ~configurationFilePath,
+      ~cliOptions,
+      ~getZoom,
+      ~setZoom,
+    );
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);

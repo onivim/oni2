@@ -71,7 +71,7 @@ let init = app => {
     Window.getZoom(w);
   };
 
-  let setZoom = (zoomFactor) => Window.setZoom(w, zoomFactor);
+  let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
 
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =

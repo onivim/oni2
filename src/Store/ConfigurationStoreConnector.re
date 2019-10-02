@@ -8,8 +8,12 @@ open Oni_Core;
 open Oni_Model;
 
 let start =
-    (~configurationFilePath: option(string), ~cliOptions: option(Cli.t),
-      ~getZoom, ~setZoom) => {
+    (
+      ~configurationFilePath: option(string),
+      ~cliOptions: option(Cli.t),
+      ~getZoom,
+      ~setZoom,
+    ) => {
   let defaultConfigurationFileName = "configuration.json";
   let getConfigurationFile = () => {
     let errorLoading = path => {
