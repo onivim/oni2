@@ -34,10 +34,10 @@ let inputStyles = font =>
 let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
 
 let handleKeyDown = (event: NodeEvents.keyEventParams) =>
-  switch (event) {
-  | {key: Revery.Key.KEY_DOWN, _} =>
+  switch (event.keycode) {
+  | v when v == 1073741905 /*Key.Keycode.down*/ =>
     GlobalContext.current().dispatch(MenuNextItem)
-  | {key: Revery.Key.KEY_UP, _} =>
+  | v when v == 1073741906 /*Key.Keycode.up*/ =>
     GlobalContext.current().dispatch(MenuPreviousItem)
   | _ => ()
   };

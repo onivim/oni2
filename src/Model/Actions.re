@@ -20,6 +20,7 @@ type t =
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
+  | KeyBindingsSet(Keybindings.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)

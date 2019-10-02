@@ -82,10 +82,7 @@ let start = _ => {
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
       "commandPalette.open",
-      _ =>
-        multipleActionEffect([
-          MenuOpen(CommandPalette.create),
-        ]),
+      _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
     ),
     ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
     (
@@ -170,32 +167,10 @@ let start = _ => {
           ]);
         },
       ),*/
-    (
-      "menu.close",
-      _ =>
-        multipleActionEffect([
-          MenuClose,
-        ]),
-    ),
-    (
-      "menu.next",
-      _ =>
-        multipleActionEffect([MenuNextItem]),
-    ),
-    (
-      "menu.previous",
-      _ =>
-        multipleActionEffect([
-          MenuPreviousItem,
-        ]),
-    ),
-    (
-      "menu.select",
-      _ =>
-        multipleActionEffect([
-          MenuSelect,
-        ]),
-    ),
+    ("menu.close", _ => multipleActionEffect([MenuClose])),
+    ("menu.next", _ => multipleActionEffect([MenuNextItem])),
+    ("menu.previous", _ => multipleActionEffect([MenuPreviousItem])),
+    ("menu.select", _ => multipleActionEffect([MenuSelect])),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
