@@ -130,7 +130,7 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _ =
+    let _: unit => unit =
       Tick.interval(
         _dt =>
           if (isDirty^) {

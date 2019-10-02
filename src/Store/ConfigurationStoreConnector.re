@@ -39,7 +39,7 @@ let start =
   };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
-    let _ =
+    let _: unit => unit =
       Vim.AutoCommands.onDispatch((cmd, buffer) => {
         let bufferFileName =
           switch (Vim.Buffer.getFilename(buffer)) {
