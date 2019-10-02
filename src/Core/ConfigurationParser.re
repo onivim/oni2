@@ -18,6 +18,12 @@ let parseInt = json =>
   | _ => 0
   };
 
+let parseFloat = json =>
+  switch (json) {
+  | `Float(v) => v
+  | _ => 0.
+  };
+
 let parseStringList = json => {
   switch (json) {
   | `List(items) =>
@@ -208,6 +214,7 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, zenModeSingleFile: parseBool(v)},
   ),
   ("ui.shadows", (s, v) => {...s, uiShadows: parseBool(v)}),
+  ("ui.zoom", (s, v) => {...s, uiZoom: parseFloat(v)}),
   (
     "vim.useSystemClipboard",
     (s, v) => {
