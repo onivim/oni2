@@ -47,9 +47,7 @@ let createElement =
     let uiFont = State.(state.uiFont);
 
     let bg: Color.t =
-      Theme.(
-        selected ? theme.menuSelectionBackground : theme.menuBackground
-      );
+      Theme.(selected ? theme.menuSelectionBackground : theme.menuBackground);
 
     let labelStyles =
       Style.(

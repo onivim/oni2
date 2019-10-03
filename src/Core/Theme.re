@@ -14,17 +14,17 @@ type defaults = {
 };
 
 let light: defaults = {
-  editorBackground: "#FFF", 
+  editorBackground: "#FFF",
   editorForeground: "#000",
   editorIndentGuideBackground: "#D3D3D3",
-  editorIndentGuideActiveBackground: "#939393"
+  editorIndentGuideActiveBackground: "#939393",
 };
 
 let dark: defaults = {
   editorBackground: "#1E1E1E",
   editorForeground: "#D4D4D4",
   editorIndentGuideBackground: "#404040",
-  editorIndentGuideActiveBackground: "#707070"
+  editorIndentGuideActiveBackground: "#707070",
 };
 
 let getDefaults = isDark => isDark ? dark : light;
@@ -162,51 +162,74 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
       defaultForeground,
       ["editorLineNumber.foreground", "editor.foreground", "foreground"],
     );
-  
+
   let editorLineHighlightBackground =
-    getColor(defaultBackground,
-    ["editor.lineHighlightBackground", "editor.background", "background"]);
+    getColor(
+      defaultBackground,
+      ["editor.lineHighlightBackground", "editor.background", "background"],
+    );
 
   let editorIndentGuideBackground =
     getColor(
       defaults.editorIndentGuideBackground,
-      ["editorIndentGuide.background"]);
+      ["editorIndentGuide.background"],
+    );
 
   let editorIndentGuideActiveBackground =
     getColor(
       defaults.editorIndentGuideActiveBackground,
-      ["editorIndentGuide.activeBackground"]);
+      ["editorIndentGuide.activeBackground"],
+    );
 
   let menuBackground =
-    getColor(defaultBackground,
-    ["menu.background", "background", "editor.background"]
-  );
+    getColor(
+      defaultBackground,
+      ["menu.background", "background", "editor.background"],
+    );
 
-  let menuForeground = 
-    getColor(defaultForeground,
-    ["menu.foreground", "foreground", "editor.foreground"]
-  );
+  let menuForeground =
+    getColor(
+      defaultForeground,
+      ["menu.foreground", "foreground", "editor.foreground"],
+    );
 
   let menuSelectionBackground =
-    getColor(defaultBackground,
-    ["menu.selectionBackground", "list.activeSelectionBackground", "list.focusBackground", "list.hoverBackground", "menu.background", "background", "editor.background"]);
+    getColor(
+      defaultBackground,
+      [
+        "menu.selectionBackground",
+        "list.activeSelectionBackground",
+        "list.focusBackground",
+        "list.hoverBackground",
+        "menu.background",
+        "background",
+        "editor.background",
+      ],
+    );
 
   let statusBarBackground =
-    getColor(defaultBackground,
-    ["statusBar.background", "editor.background", "background"]);
+    getColor(
+      defaultBackground,
+      ["statusBar.background", "editor.background", "background"],
+    );
 
   let statusBarForeground =
-    getColor(defaultForeground,
-    ["statusBar.foreground", "editor.foreground", "foreground"]);
-
+    getColor(
+      defaultForeground,
+      ["statusBar.foreground", "editor.foreground", "foreground"],
+    );
 
   let sideBarBackground =
-    getColor(defaultBackground,
-    ["sideBar.background", "editor.background", "background"]);
+    getColor(
+      defaultBackground,
+      ["sideBar.background", "editor.background", "background"],
+    );
 
   let sideBarForeground =
-    getColor(defaultForeground,
-    ["sideBar.foreground", "editor.foreground", "foreground"]);
+    getColor(
+      defaultForeground,
+      ["sideBar.foreground", "editor.foreground", "foreground"],
+    );
 
   {
     ...default,
