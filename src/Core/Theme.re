@@ -162,6 +162,10 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
       defaultForeground,
       ["editorLineNumber.foreground", "editor.foreground", "foreground"],
     );
+  
+  let editorLineHighlightBackground =
+    getColor(defaultBackground,
+    ["editor.lineHighlightBackground", "editor.background", "background"]);
 
   let editorIndentGuideBackground =
     getColor(
@@ -212,6 +216,7 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
     editorForeground,
     editorIndentGuideBackground,
     editorIndentGuideActiveBackground,
+    editorLineHighlightBackground,
     editorLineNumberForeground,
     editorLineNumberBackground,
     menuBackground,
