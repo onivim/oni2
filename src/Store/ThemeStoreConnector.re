@@ -21,6 +21,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
       Log.perf("theme.load", () => {
         let theme = Textmate.Theme.from_file(themePath);
         let _colors = Textmate.Theme.getColors(theme);
+        let isDark = Textmate.Theme.isDark(theme);
         let tokenColors = Textmate.Theme.getTokenColors(theme);
         /*let themeJson = Yojson.Safe.from_file(themePath);
 
@@ -41,6 +42,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
 
         let tokenTheme = TokenTheme.create(tokenColors);
 
+        dispatch(Actions.DarkModeSet(isDark));
         dispatch(Actions.SetTokenTheme(tokenTheme));
       })
     );

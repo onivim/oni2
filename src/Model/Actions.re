@@ -20,6 +20,7 @@ type t =
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
+  | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
