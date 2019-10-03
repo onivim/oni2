@@ -226,7 +226,7 @@
 		{
 			"scope": [
 				"string",
-				"entity.name.operator.custom-literal.string",
+				"entity.name.operator.custom-literal.string"
 			],
 			"settings": {
 				"foreground": "#ce9178"
