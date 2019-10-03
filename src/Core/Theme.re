@@ -230,6 +230,24 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
       defaultForeground,
       ["sideBar.foreground", "editor.foreground", "foreground"],
     );
+  
+  let scrollbarSliderActiveBackground =
+    getColor(
+      defaultBackground,
+      ["scrollbarSlider.activeBackground", "menu.selectionBackground", "list.activeSelectionBackground"],
+    );
+  
+  let scrollbarSliderBackground =
+    getColor(
+      defaultBackground,
+      ["scrollbarSlider.background", "menu.background", "list.background"],
+    );
+
+  let scrollbarSliderHoverBackground =
+    getColor(
+      defaultBackground,
+      ["scrollbarSlider.hoverBackground", "scrollbarSlider.background"],
+    );
 
   {
     ...default,
@@ -245,6 +263,9 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
     menuBackground,
     menuForeground,
     menuSelectionBackground,
+    scrollbarSliderActiveBackground,
+    scrollbarSliderBackground,
+    scrollbarSliderHoverBackground,
     sideBarBackground,
     sideBarForeground,
     statusBarBackground,
