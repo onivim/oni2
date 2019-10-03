@@ -19,23 +19,27 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="theme.loadThemeByPath", dispatch =>
       Log.perf("theme.load", () => {
-        let themeJson = Yojson.Safe.from_file(themePath);
+        let theme = Textmate.Theme.from_file(themePath);
+        let _colors = Textmate.Theme.getColors(theme);
+        let tokenColors = Textmate.Theme.getTokenColors(theme);
+        /*let themeJson = Yojson.Safe.from_file(themePath);
 
         let colorsJson = Yojson.Safe.Util.member("colors", themeJson);
-        let theme = Theme.of_yojson(colorsJson);
+        let theme = Theme.of_yojson(colorsJson);*/
 
-        dispatch(Actions.SetColorTheme(theme));
+        // TODONOW: Convert received colors to token colors
+        //dispatch(Actions.SetColorTheme(colors));
 
-        let tokenColorsJson =
+        /*let tokenColorsJson =
           Yojson.Safe.Util.member("tokenColors", themeJson);
         let textMateTheme =
           Textmate.Theme.of_yojson(
             ~defaultBackground="#2F3440",
             ~defaultForeground="#DCDCDC",
             tokenColorsJson,
-          );
+          );*/
 
-        let tokenTheme = TokenTheme.create(textMateTheme);
+        let tokenTheme = TokenTheme.create(tokenColors);
 
         dispatch(Actions.SetTokenTheme(tokenTheme));
       })

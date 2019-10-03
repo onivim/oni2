@@ -5,13 +5,14 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-open Textmate;
+
+// open Textmate;
 
 type pendingWork = {
   lines: array(string),
   currentLine: int,
   currentVersion: int,
-  tokenizer: Tokenizer.t,
+  tokenizer: Textmate.Tokenizer.t,
   theme: TokenTheme.t,
   scope: string,
   hasRun: bool,
@@ -19,7 +20,7 @@ type pendingWork = {
 
 type lineInfo = {
   tokens: list(ColorizedToken.t),
-  scopeStack: ScopeStack.t,
+  scopeStack: Textmate.ScopeStack.t,
   version: int,
 };
 
@@ -95,7 +96,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 
     // Get new tokens & scopes
     let (tokens, scopes) =
-      Tokenizer.tokenize(
+      Textmate.Tokenizer.tokenize(
         ~lineNumber=currentLine,
         ~scopeStack=scopes,
         ~scope=pending.scope,
@@ -106,7 +107,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     let tokens =
       List.map(
         token => {
-          let {position, scopes, _}: Token.t = token;
+          let {position, scopes, _}: Textmate.Token.t = token;
           let scopes =
             scopes
             |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
@@ -154,7 +155,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 };
 
 let create = (~scope, ~theme, ~grammarRepository, lines) => {
-  let tokenizer = Tokenizer.create(~repository=grammarRepository, ());
+  let tokenizer = Textmate.Tokenizer.create(~repository=grammarRepository, ());
   let p: pendingWork = {
     lines,
     currentLine: 0,

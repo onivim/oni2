@@ -53,7 +53,7 @@ let updateVisibleRanges = (ranges, v) => {
   };
 };
 
-let updateTheme = (theme, v) => {
+let updateTheme = (theme: TokenTheme.t, v) => {
   switch (v) {
   | None => v
   | TextMate(tm) => TextMate(TextMateSyntaxHighlights.updateTheme(theme, tm))
