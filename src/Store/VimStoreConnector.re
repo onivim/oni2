@@ -625,8 +625,28 @@ let start =
       }
     );
 
+  let prevViml = ref([]);
+  let synchronizeViml = configuration => 
+    Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
+
+      let lines = Oni_Core.Configuration.getValue(c => c.experimentalVimL, configuration);
+
+      if (prevViml^ !== lines) {
+        List.iter((l) => {
+          Log.info("Running VimL from config: " ++ l);
+          Vim.command(l);
+          Log.info("VimL command completed.");
+        }, prevViml^);
+        prevViml := lines;
+      }
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.ConfigurationSet(configuration) => (
+        state,
+        synchronizeViml(configuration),
+    )
     | Model.Actions.Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,

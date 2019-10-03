@@ -50,6 +50,7 @@ type t = {
   // These are 'use-at-your-own-risk' features
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
+  experimentalVimL: list(string),
 };
 
 let default = {
@@ -86,4 +87,5 @@ let default = {
   zenModeSingleFile: true,
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
+  experimentalVimL: [],
 };

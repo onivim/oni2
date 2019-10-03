@@ -223,6 +223,10 @@ let configurationParsers: list(configurationTuple) = [
     "experimental.autoClosingPairs",
     (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
   ),
+  (
+    "experimental.viml",
+    (s, v) => {...s, experimentalVimL: parseStringList(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =
