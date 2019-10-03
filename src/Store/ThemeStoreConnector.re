@@ -25,21 +25,21 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
         let tokenColors = Textmate.Theme.getTokenColors(theme);
         let colors = Oni_Core.Theme.ofColorTheme(isDark, colors);
         /*let themeJson = Yojson.Safe.from_file(themePath);
-        
 
-        let colorsJson = Yojson.Safe.Util.member("colors", themeJson);
-        let theme = Theme.of_yojson(colorsJson);*/
+
+          let colorsJson = Yojson.Safe.Util.member("colors", themeJson);
+          let theme = Theme.of_yojson(colorsJson);*/
 
         // TODONOW: Convert received colors to token colors
 
         /*let tokenColorsJson =
-          Yojson.Safe.Util.member("tokenColors", themeJson);
-        let textMateTheme =
-          Textmate.Theme.of_yojson(
-            ~defaultBackground="#2F3440",
-            ~defaultForeground="#DCDCDC",
-            tokenColorsJson,
-          );*/
+            Yojson.Safe.Util.member("tokenColors", themeJson);
+          let textMateTheme =
+            Textmate.Theme.of_yojson(
+              ~defaultBackground="#2F3440",
+              ~defaultForeground="#DCDCDC",
+              tokenColorsJson,
+            );*/
 
         let tokenTheme = TokenTheme.create(tokenColors);
 

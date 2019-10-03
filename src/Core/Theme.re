@@ -11,17 +11,14 @@ type defaults = {
   editorForeground: string,
 };
 
-let light: defaults = {
-  editorBackground: "#FFF",
-  editorForeground: "#000",
-};
+let light: defaults = {editorBackground: "#FFF", editorForeground: "#000"};
 
 let dark: defaults = {
   editorBackground: "#1E1E1E",
   editorForeground: "#D4D4D4",
 };
 
-let getDefaults = (isDark) => isDark ? dark : light;
+let getDefaults = isDark => isDark ? dark : light;
 
 type t = {
   background: Color.t,
@@ -136,17 +133,36 @@ let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
     Color.hex(colorString);
   };
 
-  let background = getColor(defaultBackground, ["background", "editor.background"]);
-  let foreground = getColor(defaultForeground, ["foreground", "editor.foreground"]);
+  let background =
+    getColor(defaultBackground, ["background", "editor.background"]);
+  let foreground =
+    getColor(defaultForeground, ["foreground", "editor.foreground"]);
 
-  let editorBackground = getColor(defaultBackground, ["editor.background", "background"]);
-  let editorForeground = getColor(defaultForeground, ["editor.foreground", "foreground"]);
+  let editorBackground =
+    getColor(defaultBackground, ["editor.background", "background"]);
+  let editorForeground =
+    getColor(defaultForeground, ["editor.foreground", "foreground"]);
 
-  let editorLineNumberBackground = getColor(defaultBackground, ["editorLineNumber.background", "editor.background", "background"]);
-  let editorLineNumberForeground = getColor(defaultForeground, ["editorLineNumber.foreground", "editor.foreground", "foreground"]);
-  
-  
-  { ...default, background, foreground, editorBackground, editorForeground, editorLineNumberForeground, editorLineNumberBackground };
+  let editorLineNumberBackground =
+    getColor(
+      defaultBackground,
+      ["editorLineNumber.background", "editor.background", "background"],
+    );
+  let editorLineNumberForeground =
+    getColor(
+      defaultForeground,
+      ["editorLineNumber.foreground", "editor.foreground", "foreground"],
+    );
+
+  {
+    ...default,
+    background,
+    foreground,
+    editorBackground,
+    editorForeground,
+    editorLineNumberForeground,
+    editorLineNumberBackground,
+  };
 };
 
 let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
@@ -171,4 +187,3 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
 
   (background, foreground);
 };
-

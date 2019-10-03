@@ -36,7 +36,6 @@ type t = {
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   zenMode: bool,
-
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,

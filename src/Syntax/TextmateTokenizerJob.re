@@ -5,7 +5,6 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-
 // open Textmate;
 
 type pendingWork = {
@@ -155,7 +154,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 };
 
 let create = (~scope, ~theme, ~grammarRepository, lines) => {
-  let tokenizer = Textmate.Tokenizer.create(~repository=grammarRepository, ());
+  let tokenizer =
+    Textmate.Tokenizer.create(~repository=grammarRepository, ());
   let p: pendingWork = {
     lines,
     currentLine: 0,
