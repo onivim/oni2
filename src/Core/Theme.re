@@ -6,6 +6,23 @@
 
 open Revery;
 
+type defaults = {
+  editorBackground: string,
+  editorForeground: string,
+};
+
+let light: defaults = {
+  editorBackground: "#FFF",
+  editorForeground: "#000",
+};
+
+let dark: defaults = {
+  editorBackground: "#1E1E1E",
+  editorForeground: "#D4D4D4",
+};
+
+let getDefaults = (isDark) => isDark ? dark : light;
+
 type t = {
   background: Color.t,
   foreground: Color.t,
@@ -108,6 +125,30 @@ let default: t = {
   notificationErrorForeground: Colors.white,
 };
 
+let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
+  open Textmate.ColorTheme;
+  let defaults = getDefaults(isDark);
+  let defaultBackground = defaults.editorBackground;
+  let defaultForeground = defaults.editorForeground;
+
+  let getColor = (default, items) => {
+    let colorString = getFirstOrDefault(~default, items, ct);
+    Color.hex(colorString);
+  };
+
+  let background = getColor(defaultBackground, ["background", "editor.background"]);
+  let foreground = getColor(defaultForeground, ["foreground", "editor.foreground"]);
+
+  let editorBackground = getColor(defaultBackground, ["editor.background", "background"]);
+  let editorForeground = getColor(defaultForeground, ["editor.foreground", "foreground"]);
+
+  let editorLineNumberBackground = getColor(defaultBackground, ["editorLineNumber.background", "editor.background", "background"]);
+  let editorLineNumberForeground = getColor(defaultForeground, ["editorLineNumber.foreground", "editor.foreground", "foreground"]);
+  
+  
+  { ...default, background, foreground, editorBackground, editorForeground, editorLineNumberForeground, editorLineNumberBackground };
+};
+
 let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
   let (background, foreground) =
     switch (mode) {
@@ -129,44 +170,5 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
     };
 
   (background, foreground);
-};
-
-type parser = (string, (t, Yojson.Safe.t) => t);
-
-let parseColor: (Color.t, Yojson.Safe.t) => Color.t = (defaultColor, json) => {
-  switch (json) {
-  | `String(c) => 
-    switch(Color.hex(c)) {
-    | exception _ => defaultColor
-    | v => v
-    }
-  | _ => defaultColor
-  }
-};
-
-let parsers: list(parser) = [
-  ("background", (s, v) => {...s, background: parseColor(default.background, v) }),
-  ("foreground", (s, v) => {...s, foreground: parseColor(default.foreground, v) }),
-  ("sideBar.background", (s, v) => {...s, sideBarBackground: parseColor(default.sideBarBackground, v) }),
-  ("sideBar.foreground", (s, v) => {...s, sideBarForeground: parseColor(default.sideBarForeground, v) }),
-  ("editor.background", (s, v) => {...s, editorBackground: parseColor(default.editorBackground, v) }),
-  ("editor.foreground", (s, v) => {...s, editorForeground: parseColor(default.editorForeground, v) }),
-  ("editor.lineHighlightBackground", (s, v) => {...s, editorLineHighlightBackground: parseColor(default.editorLineHighlightBackground, v) }),
-  ("editorLineNumber.background", (s, v) => {...s, editorLineNumberBackground: parseColor(default.editorLineNumberBackground, v) }),
-  ("editorLineNumber.foreground", (s, v) => {...s, editorLineNumberForeground: parseColor(default.editorLineNumberForeground, v) }),
-  ("editorLineNumber.activeForeground", (s, v) => {...s, editorActiveLineNumberForeground: parseColor(default.editorActiveLineNumberForeground, v) }),
-  ("editor.selectionBackground", (s, v) => {...s, editorSelectionBackground: parseColor(default.editorSelectionBackground, v) }),
-  ("statusBar.background", (s, v) => {...s, statusBarBackground: parseColor(default.statusBarBackground, v) }),
-  ("statusBar.foreground", (s, v) => {...s, statusBarForeground: parseColor(default.statusBarForeground, v) }),
-  
-];
-
-let of_yojson = (json: Yojson.Safe.t) => {
-  List.fold_left((prev, curr) => {
-    let (field, parser) = curr;
-
-    let jsonField = Yojson.Safe.Util.member(field, json)
-    parser(prev, jsonField);
-  }, default, parsers);
 };
 

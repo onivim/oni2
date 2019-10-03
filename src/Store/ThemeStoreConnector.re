@@ -20,16 +20,17 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
       ~name="theme.loadThemeByPath", dispatch =>
       Log.perf("theme.load", () => {
         let theme = Textmate.Theme.from_file(themePath);
-        let _colors = Textmate.Theme.getColors(theme);
+        let colors = Textmate.Theme.getColors(theme);
         let isDark = Textmate.Theme.isDark(theme);
         let tokenColors = Textmate.Theme.getTokenColors(theme);
+        let colors = Oni_Core.Theme.ofColorTheme(isDark, colors);
         /*let themeJson = Yojson.Safe.from_file(themePath);
+        
 
         let colorsJson = Yojson.Safe.Util.member("colors", themeJson);
         let theme = Theme.of_yojson(colorsJson);*/
 
         // TODONOW: Convert received colors to token colors
-        //dispatch(Actions.SetColorTheme(colors));
 
         /*let tokenColorsJson =
           Yojson.Safe.Util.member("tokenColors", themeJson);
@@ -42,6 +43,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
 
         let tokenTheme = TokenTheme.create(tokenColors);
 
+        dispatch(Actions.SetColorTheme(colors));
         dispatch(Actions.DarkModeSet(isDark));
         dispatch(Actions.SetTokenTheme(tokenTheme));
       })
