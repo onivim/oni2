@@ -62,7 +62,7 @@ let measureChildOffset: int => option(node) => option((int, int)) = index => fun
 let findIndex = (predicate, list) => {
   let rec loop = i => fun
     | [] => None
-    | [head, ...tail] when predicate(head) => Some(i)
+    | [head, ..._] when predicate(head) => Some(i)
     | [_, ...tail] => loop(i + 1, tail);
   loop(0, list);
 };
@@ -98,32 +98,28 @@ let createElement =
     let (outerRef: option(Revery_UI.node), setOuterRef, hooks) =
       Hooks.state(None, hooks);
 
-    let activeEditorChanged = () =>
-      switch (activeEditorId) {
-        | Some(editorId) => {
-          switch (findIndex(t => Some(t.editorId) == activeEditorId, tabs)) {
-            | Some(index) =>
-              let f = () => {
-                switch (measureChildOffset(index, outerRef)) {
-                  | Some((offset, width)) =>
-                    let viewportWidth = measureWidth(outerRef);
-                    if (offset < actualScrollLeft) {
-                      // out of view to the left, so align with left edge
-                      setScrollLeft(offset);
-                    } else if (offset + width > actualScrollLeft + viewportWidth) {
-                      // out of view to the right, so align with right edge
-                      setScrollLeft(offset - viewportWidth + width);
-                    }
-                  | None => ()
+    let activeEditorChanged = () => {
+      switch (findIndex(t => Some(t.editorId) == activeEditorId, tabs)) {
+        | Some(index) =>
+          let f = () => {
+            switch (measureChildOffset(index, outerRef)) {
+              | Some((offset, width)) =>
+                let viewportWidth = measureWidth(outerRef);
+                if (offset < actualScrollLeft) {
+                  // out of view to the left, so align with left edge
+                  setScrollLeft(offset);
+                } else if (offset + width > actualScrollLeft + viewportWidth) {
+                  // out of view to the right, so align with right edge
+                  setScrollLeft(offset - viewportWidth + width);
                 }
-              };
-              isPendingRender(outerRef) ? schedulePostRender(f) : f();
-            | None => ()
+              | None => ()
+            }
           };
-          None
-        }
-        | None => None
+          isPendingRender(outerRef) ? schedulePostRender(f) : f();
+        | None => ()
       };
+      None
+    };
 
     let hooks =
       Hooks.effect(If((!=), activeEditorId), activeEditorChanged, hooks);
