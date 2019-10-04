@@ -37,7 +37,7 @@ let getTokenColors = (line: int, v: t) => {
 };
 
 let onTheme = (theme: TokenTheme.t, v: t) => {
-  let f = (p: pendingWork, c: completedWork) => {
+  let f = (p: pendingWork, _c: completedWork) => {
     let newPendingWork = {...p, theme, currentLine: 0};
 
     let newCompletedWork = initialCompletedWork;
