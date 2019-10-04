@@ -27,7 +27,20 @@ let dark: defaults = {
   editorIndentGuideActiveBackground: "#707070",
 };
 
-let getDefaults = isDark => isDark ? dark : light;
+let hcDark: defaults = {
+  editorBackground: "#000",
+  editorForeground: "#FFF",
+  editorIndentGuideBackground: "#FFF",
+  editorIndentGuideActiveBackground: "#FFF",
+};
+
+let getDefaults = uiTheme => switch(uiTheme) {
+| "vs" => light
+| "vs-light" => light
+| "vs-dark" => dark
+| "hc-black" => hcDark
+| _ => dark
+};
 
 type t = {
   background: Color.t,
@@ -131,9 +144,9 @@ let default: t = {
   notificationErrorForeground: Colors.white,
 };
 
-let ofColorTheme = (isDark, ct: Textmate.ColorTheme.t) => {
+let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   open Textmate.ColorTheme;
-  let defaults = getDefaults(isDark);
+  let defaults = getDefaults(uiTheme);
   let defaultBackground = defaults.editorBackground;
   let defaultForeground = defaults.editorForeground;
 

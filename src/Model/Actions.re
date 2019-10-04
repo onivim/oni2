@@ -80,7 +80,7 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
-  | ThemeLoadByPath(string)
+  | ThemeLoadByPath(string, string)
   | ThemeShowMenu
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)

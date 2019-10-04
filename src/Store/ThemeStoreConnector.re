@@ -15,7 +15,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
   let defaultThemePath =
     setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
 
-  let loadThemeByPathEffect = themePath =>
+  let loadThemeByPathEffect = (uiTheme, themePath) =>
     Isolinear.Effect.createWithDispatch(
       ~name="theme.loadThemeByPath", dispatch =>
       Log.perf("theme.load", () => {
@@ -23,7 +23,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
         let colors = Textmate.Theme.getColors(theme);
         let isDark = Textmate.Theme.isDark(theme);
         let tokenColors = Textmate.Theme.getTokenColors(theme);
-        let colors = Oni_Core.Theme.ofColorTheme(isDark, colors);
+        let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
         /*let themeJson = Yojson.Safe.from_file(themePath);
 
 
@@ -57,7 +57,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
              let ret: Actions.menuCommand = {
                category: Some("Theme"),
                name: theme.label,
-               command: () => Actions.ThemeLoadByPath(theme.path),
+               command: () => Actions.ThemeLoadByPath(theme.uiTheme, theme.path),
                icon: None,
              };
              ret;
@@ -73,11 +73,11 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadThemeByPathEffect(defaultThemePath))
+    | Actions.Init => (state, loadThemeByPathEffect("vs-dark", defaultThemePath))
     | Actions.ThemeShowMenu => (state, showThemeMenuEffect)
-    | Actions.ThemeLoadByPath(themePath) => (
+    | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,
-        loadThemeByPathEffect(themePath),
+        loadThemeByPathEffect(uiTheme, themePath),
       )
     | _ => (state, Isolinear.Effect.none)
     };
