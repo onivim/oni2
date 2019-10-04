@@ -57,7 +57,8 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
              let ret: Actions.menuCommand = {
                category: Some("Theme"),
                name: theme.label,
-               command: () => Actions.ThemeLoadByPath(theme.uiTheme, theme.path),
+               command: () =>
+                 Actions.ThemeLoadByPath(theme.uiTheme, theme.path),
                icon: None,
              };
              ret;
@@ -73,7 +74,10 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadThemeByPathEffect("vs-dark", defaultThemePath))
+    | Actions.Init => (
+        state,
+        loadThemeByPathEffect("vs-dark", defaultThemePath),
+      )
     | Actions.ThemeShowMenu => (state, showThemeMenuEffect)
     | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,

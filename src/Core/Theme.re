@@ -34,13 +34,14 @@ let hcDark: defaults = {
   editorIndentGuideActiveBackground: "#FFF",
 };
 
-let getDefaults = uiTheme => switch(uiTheme) {
-| "vs" => light
-| "vs-light" => light
-| "vs-dark" => dark
-| "hc-black" => hcDark
-| _ => dark
-};
+let getDefaults = uiTheme =>
+  switch (uiTheme) {
+  | "vs" => light
+  | "vs-light" => light
+  | "vs-dark" => dark
+  | "hc-black" => hcDark
+  | _ => dark
+  };
 
 type t = {
   background: Color.t,
