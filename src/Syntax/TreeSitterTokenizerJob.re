@@ -34,6 +34,13 @@ let getTokensForLine = (line: int, v: t) => {
 
 let notifyBufferUpdate = BufferLineJob.notifyBufferUpdate;
 
+let updateTheme = (theme: TokenTheme.t, v: t) => {
+  let oldContext = BufferLineJob.getContext(v);
+  let newContext = {...oldContext, theme};
+
+  BufferLineJob.clear(~newContext=Some(newContext), v);
+};
+
 let doWork = (context: context, line: int) => {
   let rootNode = Tree.getRootNode(context.tree);
   let range =

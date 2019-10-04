@@ -1,5 +1,5 @@
 {
-  "checksum": "9efc5eb1dbbbad21d5e8b99a2f26d8d6",
+  "checksum": "d10e8a5df9ebf972303b7845dfef6b8a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -88,10 +88,10 @@
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-sdl2@2.10.3002@d41d8cd9",
+        "reason-sdl2@2.10.3004@d41d8cd9",
         "reason-gl-matrix@0.9.9305@d41d8cd9",
         "reason-fontkit@2.7.0@d41d8cd9",
-        "reason-font-manager@2.0.0@d41d8cd9", "flex@1.2.2@d41d8cd9",
+        "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.3.1@14b6a62e",
         "@opam/js_of_ocaml-lwt@opam:3.4.0@ce99e929",
@@ -265,21 +265,22 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-textmate@1.3.0@d41d8cd9": {
-      "id": "reason-textmate@1.3.0@d41d8cd9",
+    "reason-textmate@2.0.0@d41d8cd9": {
+      "id": "reason-textmate@2.0.0@d41d8cd9",
       "name": "reason-textmate",
-      "version": "1.3.0",
+      "version": "2.0.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-1.3.0.tgz#sha1:3b31c752de8a6116fa6d7f488be3406658f64b3b"
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-2.0.0.tgz#sha1:f5b7a1d336e97186baeb68397d24dd791ee951b5"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
-        "reason-oniguruma@2.0.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "@reason-native/rely@1.3.1@d41d8cd9",
+        "reperf@1.4.0@d41d8cd9",
+        "rench@github:bryphe/rench#4860ef4@d41d8cd9",
+        "refmterr@3.2.2@d41d8cd9", "reason-oniguruma@2.0.2@d41d8cd9",
+        "ocaml@4.7.1004@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@opam:1.7.0@7056d985",
         "@opam/ppx_let@opam:v0.11.0@059b0142",
         "@opam/ppx_deriving_yojson@opam:3.5.1@06a1c37f",
@@ -288,14 +289,14 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@2.10.3002@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3002@d41d8cd9",
+    "reason-sdl2@2.10.3004@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3004@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3002",
+      "version": "2.10.3004",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3002.tgz#sha1:77cf743c9a71a4fbfc351eb727fb3a6f078292b3"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3004.tgz#sha1:2a3717cb9d671cb2bbea12527a7f531ac2b257ec"
         ]
       },
       "overrides": [],
@@ -407,14 +408,14 @@
       ],
       "devDependencies": []
     },
-    "reason-font-manager@2.0.0@d41d8cd9": {
-      "id": "reason-font-manager@2.0.0@d41d8cd9",
+    "reason-font-manager@2.0.1@d41d8cd9": {
+      "id": "reason-font-manager@2.0.1@d41d8cd9",
       "name": "reason-font-manager",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-font-manager/-/reason-font-manager-2.0.0.tgz#sha1:eb59d070fa1f3e5f75864cd1f68ac832e4b4557a"
+          "archive:https://registry.npmjs.org/reason-font-manager/-/reason-font-manager-2.0.1.tgz#sha1:739cd6de54ad836e810a60afd066fba9fbc15950"
         ]
       },
       "overrides": [],
@@ -616,14 +617,14 @@
       ],
       "devDependencies": []
     },
-    "is-buffer@2.0.3@d41d8cd9": {
-      "id": "is-buffer@2.0.3@d41d8cd9",
+    "is-buffer@2.0.4@d41d8cd9": {
+      "id": "is-buffer@2.0.4@d41d8cd9",
       "name": "is-buffer",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/is-buffer/-/is-buffer-2.0.3.tgz#sha1:4ecf3fcf749cbd1e472689e109ac66261a25e725"
+          "archive:https://registry.npmjs.org/is-buffer/-/is-buffer-2.0.4.tgz#sha1:3e572f23c8411a5cfd9557c849e3665e0b290623"
         ]
       },
       "overrides": [],
@@ -962,7 +963,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "is-buffer@2.0.3@d41d8cd9", "follow-redirects@1.5.10@d41d8cd9"
+        "is-buffer@2.0.4@d41d8cd9", "follow-redirects@1.5.10@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -982,7 +983,7 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
-        "reason-textmate@1.3.0@d41d8cd9", "reason-sdl2@2.10.3002@d41d8cd9",
+        "reason-textmate@2.0.0@d41d8cd9", "reason-sdl2@2.10.3004@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
         "reason-jsonrpc@1.2.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "isolinear@2.0.0@d41d8cd9", "esy-sdl2@2.0.10003@d41d8cd9",
