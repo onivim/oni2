@@ -14,7 +14,6 @@ let additionalRowsToRender = 1;
 
 let createElement =
     (
-      ~scrollY=0.,
       ~height as height_,
       ~width as width_,
       ~rowHeight: int,
@@ -24,10 +23,22 @@ let createElement =
       (),
     ) =>
   component(hooks => {
+    let (actualScrollTop, setScrollTop, hooks) =
+      Hooks.state(0, hooks);
+
+    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      let newScrollTop =
+        actualScrollTop + int_of_float(wheelEvent.deltaY) * -25
+        |> max(0)
+        |> min(rowHeight * count - height_);
+
+      setScrollTop(newScrollTop);
+    };
+
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
     let startRowOffset =
-      rowHeight > 0 ? int_of_float(scrollY) / rowHeight : 0;
-    let pixelOffset = int_of_float(scrollY) mod rowHeight;
+      rowHeight > 0 ? actualScrollTop / rowHeight : 0;
+    let pixelOffset = actualScrollTop mod rowHeight;
 
     let i = ref(max(startRowOffset - additionalRowsToRender, 0));
 
@@ -69,13 +80,6 @@ let createElement =
         height(height_),
         overflow(`Hidden),
       ];
-
-    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScrollDelta(
-        ~deltaY=wheelEvent.deltaY *. 25.,
-        (),
-      );
-    };
 
     (hooks, <View style onMouseWheel=scroll> ...items^ </View>);
   });
