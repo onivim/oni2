@@ -80,8 +80,12 @@ let getActive = (v: t) => v.enabled && v.active;
 
 let show = (v: t) => {
   "KeyDisplayer: [\n"
-  ++ " - active: " ++ (v.active ? "true": "false") ++ "\n"
-  ++ " - enabled: " ++ (v.enabled ? "true": "false") ++ "\n"
+  ++ " - active: "
+  ++ (v.active ? "true" : "false")
+  ++ "\n"
+  ++ " - enabled: "
+  ++ (v.enabled ? "true" : "false")
+  ++ "\n"
   ++ String.concat(
        ",\n",
        List.map(
