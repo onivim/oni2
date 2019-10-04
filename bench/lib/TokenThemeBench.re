@@ -7,8 +7,6 @@ let themeJson = Yojson.Safe.from_file(oneDarkThemePath);
 let tokenColorsJson = Yojson.Safe.Util.member("tokenColors", themeJson);
 let tmTheme =
   Textmate.Theme.from_file(oneDarkThemePath)
-    tokenColorsJson,
-  )
   |> Textmate.Theme.getTokenColors;
 
 let themeWithCaching = TokenTheme.create(tmTheme);
