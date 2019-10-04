@@ -19,12 +19,33 @@ let createElement =
       ~rowHeight: int,
       ~render: renderFunction,
       ~count: int,
+      ~selected: option(int),
       ~children as _,
       (),
     ) =>
   component(hooks => {
     let (actualScrollTop, setScrollTop, hooks) =
       Hooks.state(0, hooks);
+    
+    let selectedChanged = () => {
+      switch (selected) {
+      | Some(selectedIndex) =>
+        let offset = selectedIndex * rowHeight;
+        if (offset < actualScrollTop) {
+          // out of view above, so align with top edge
+          setScrollTop(offset);
+        } else if (offset + rowHeight > actualScrollTop + height_) {
+          // out of view below, so align with bottom edge
+          setScrollTop(offset + rowHeight - height_);
+        }
+      | None =>
+        ()
+      };
+      None
+    };
+
+    let hooks =
+      Hooks.effect(If((!=), selected), selectedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let newScrollTop =
@@ -37,7 +58,8 @@ let createElement =
 
     let rowsToRender = rowHeight > 0 ? height_ / rowHeight : 0;
     let startRowOffset =
-      rowHeight > 0 ? actualScrollTop / rowHeight : 0;
+        rowHeight > 0 ? actualScrollTop / rowHeight : 0;
+
     let pixelOffset = actualScrollTop mod rowHeight;
 
     let i = ref(max(startRowOffset - additionalRowsToRender, 0));

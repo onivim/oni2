@@ -133,7 +133,7 @@ let createElement =
             </View>
           </Opacity>;
 
-    React.(
+    (
       hooks,
       menu.isOpen
         ? <AllowPointer>
@@ -155,6 +155,7 @@ let createElement =
                     height=menuHeight
                     width=menuWidth
                     count={Array.length(commands)}
+                    selected=Some(menu.selectedItem)
                     render={index => {
                       let cmd = commands[index];
                       <MenuItem
