@@ -12,42 +12,36 @@ let component = React.component("FlatList");
 
 let additionalRowsToRender = 1;
 
-let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) => {
-  let rowsToRender = rowHeight > 0 ? menuHeight / rowHeight : 0;
-  let startRowOffset =
-      rowHeight > 0 ? scrollTop / rowHeight : 0;
+let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
+  if (rowHeight <= 0) {
+    []
+  } else {
+    let startRow = scrollTop / rowHeight;
+    let startY = scrollTop mod rowHeight;
+    let rowsToRender = min(menuHeight / rowHeight + additionalRowsToRender, count - startRow);
+    let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
-  let pixelOffset = scrollTop mod rowHeight;
+    let itemView = (i) => {
+      let rowY = (i - startRow) * rowHeight;
 
-  let i = ref(max(startRowOffset - additionalRowsToRender, 0));
+      <View
+        style=
+          Style.[
+            position(`Absolute),
+            top(rowY - startY),
+            left(0),
+            right(0),
+            height(rowHeight),
+          ]
+        >
+        {renderItem(i)}
+      </View>
+    };
 
-  let items: ref(list(React.syntheticElement)) = ref([]);
-
-  let len = count;
-
-  while (i^ < rowsToRender
-          + additionalRowsToRender
-          + startRowOffset
-          && i^ < len) {
-    let rowOffset = (i^ - startRowOffset) * rowHeight;
-    let rowContainerStyle =
-      Style.[
-        position(`Absolute),
-        top(rowOffset - pixelOffset),
-        left(0),
-        right(0),
-        height(rowHeight),
-      ];
-
-    let item = i^;
-    let v = <View style=rowContainerStyle> {renderItem(item)} </View>;
-
-    items := List.append([v], items^);
-    incr(i);
+  indicesToRender
+    |> List.map(itemView)
+    |> List.rev
   };
-
-  List.rev(items^);
-};
 
 let createElement =
     (
