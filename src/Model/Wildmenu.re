@@ -27,7 +27,7 @@ let reduce = (s, action) =>
   switch (action) {
   | WildmenuShow(items) => {
       show: true,
-      selected: (-1),
+      selected: 0,
       items,
       count: List.length(items),
     }
@@ -39,7 +39,7 @@ let reduce = (s, action) =>
     }
   | WildmenuPrevious => {
       ...s,
-      selected: s.count > 0 ? (s.selected - 1) mod s.count : 0,
+      selected: s.count > 0 ? (s.selected == 0 ? s.count : s.selected) - 1 : 0,
     }
   | _ => s
   };
