@@ -39,7 +39,7 @@ let update = (time, v: t) => {
 };
 
 let add = (time, key, v: t) => {
-  let exclusive = String.length(key) > 1;
+  let exclusive = String.length(key) > 1 || key == " ";
   let presses =
     switch (v.presses) {
     | [] => [{time, exclusive, keys: [key]}]
@@ -80,6 +80,8 @@ let getActive = (v: t) => v.enabled && v.active;
 
 let show = (v: t) => {
   "KeyDisplayer: [\n"
+  ++ " - active: " ++ (v.active ? "true": "false") ++ "\n"
+  ++ " - enabled: " ++ (v.enabled ? "true": "false") ++ "\n"
   ++ String.concat(
        ",\n",
        List.map(
