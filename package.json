@@ -213,7 +213,6 @@
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
-    "@brisk/brisk-reconciler": "github:briskml/brisk-reconciler#dd933fc",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#63d4056",
     "pesy": "0.4.1",
@@ -230,7 +229,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#a480976"
+    "revery": "github:revery-ui/revery#3f1655e"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
