@@ -46,6 +46,7 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
+  | EditorSetScroll(float)
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | EditorScrollToColumn(int)
