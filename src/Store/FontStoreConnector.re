@@ -35,7 +35,12 @@ let loadAndValidateEditorFont =
       let firstShape = shapedText[0];
       let secondShape = shapedText[1];
 
-      Log.info("Checking font rendering - glyph1: " ++ string_of_int(firstShape.glyphId) ++ " glyph2: " ++ string_of_int(secondShape.glyphId));
+      Log.info(
+        "Checking font rendering - glyph1: "
+        ++ string_of_int(firstShape.glyphId)
+        ++ " glyph2: "
+        ++ string_of_int(secondShape.glyphId),
+      );
 
       let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
       Log.info("Got glyph for firstShape");
