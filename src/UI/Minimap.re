@@ -74,9 +74,7 @@ let getMinimapSize = (view: Editor.t, metrics) => {
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
-type mouseCaptureState = {
-  isCapturing: bool,
-};
+type mouseCaptureState = {isCapturing: bool};
 
 type action =
   | IsCapturing(bool);
@@ -167,10 +165,7 @@ let createElement =
               let scrollTo = scrollTo -. float_of_int(linesInMinimap);
               GlobalContext.current().editorSetScroll(~scrollY=scrollTo, ());
             },
-          ~onMouseUp=
-            _evt => {
-              scrollComplete();
-            },
+          ~onMouseUp=_evt => {scrollComplete()},
           (),
         );
         dispatch(IsCapturing(true));
