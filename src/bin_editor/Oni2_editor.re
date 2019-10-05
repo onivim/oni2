@@ -104,6 +104,8 @@ let init = app => {
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScroll: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
+    editorScroll2: (~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(scrollY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     hideNotification: id => dispatch(Model.Actions.HideNotification(id)),

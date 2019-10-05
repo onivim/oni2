@@ -14,11 +14,13 @@ type notifyWindowTreeSizeChanged = (~width: int, ~height: int, unit) => unit;
 type notifyEditorSizeChanged =
   (~editorGroupId: int, ~width: int, ~height: int, unit) => unit;
 type editorScroll = (~deltaY: float, unit) => unit;
+type editorScroll2 = (~scrollY: float, unit) => unit;
 
 type t = {
   notifyEditorSizeChanged,
   notifyWindowTreeSizeChanged,
   editorScroll,
+  editorScroll2,
   setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
@@ -39,6 +41,7 @@ let default = {
     (~editorGroupId as _, ~width as _, ~height as _, ()) =>
     (),
   editorScroll: (~deltaY as _, ()) => (),
+  editorScroll2: (~scrollY as _, ()) => (),
   hideNotification: _ => (),
   openEditorById: _ => (),
   setActiveWindow: (_, _) => (),

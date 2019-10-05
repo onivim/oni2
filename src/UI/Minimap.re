@@ -58,16 +58,34 @@ let renderLine =
   List.iter(f, tokens);
 };
 
-let component = React.component("Minimap");
-
 let absoluteStyle =
-  Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
+  Style.[position(`Absolute), top(0), bottom(0), left(0), right(0), cursor(MouseCursors.pointer)];
 
 let getMinimapSize = (view: Editor.t, metrics) => {
   let currentViewSize = Editor.getVisibleView(metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
+
+type mouseCaptureState = {
+  shouldCapture: bool,
+  isCapturing: bool,
+};
+
+type action = 
+| StartCapture
+| EndCapture
+| IsCapturing(bool);
+
+let reducer = (action, state) => switch(action) {
+| StartCapture => { ...state, shouldCapture: true }
+| EndCapture => { ...state, shouldCapture: false }
+| IsCapturing(isCapturing) => { ...state, isCapturing }
+}
+
+let initialState = { shouldCapture: false, isCapturing: false };
+
+let component = React.component("Minimap");
 
 let createElement =
     (
@@ -90,7 +108,7 @@ let createElement =
         + Constants.default.minimapLineSpacing,
       );
 
-    let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
+    let (mouseState, dispatch, hooks) = React.Hooks.reducer(initialState, reducer, hooks);
 
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
@@ -103,41 +121,22 @@ let createElement =
     };
 
     let scrollComplete = () => {
-      setActive(false);
+      Mouse.releaseCapture();
+      dispatch(IsCapturing(false));
     };
+
+    let string_of_bool = (v) => v ? "true" : "false";
 
     let hooks =
       React.Hooks.effect(
-        Always,
+        OnMount,
         () => {
-          let isCaptured = isActive;
-          let startPosition = editor.scrollY;
-          if (isCaptured) {
-            Mouse.setCapture(
-              ~onMouseMove=
-                evt => {
-                  let scrollTo = getScrollTo(evt.mouseY);
-                  let minimapLineSize =
-                    Constants.default.minimapLineSpacing
-                    + Constants.default.minimapCharacterHeight;
-                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-                  GlobalContext.current().editorScroll(
-                    ~deltaY=
-                      (startPosition -. scrollTo)
-                      *. (-1.)
-                      -. float_of_int(linesInMinimap),
-                    (),
-                  );
-                },
-              ~onMouseUp=_evt => scrollComplete(),
-              (),
-            );
-          };
           Some(
-            () =>
-              if (isCaptured) {
+            () => {
+              if (mouseState.isCapturing) {
                 Mouse.releaseCapture();
-              },
+              }
+            }
           );
         },
         hooks,
@@ -146,6 +145,7 @@ let createElement =
     let scrollY = editor.minimapScrollY;
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+      Log.info("ONMOUSEDOWN");
       let scrollTo = getScrollTo(evt.mouseY);
       let minimapLineSize =
         Constants.default.minimapLineSpacing
@@ -156,7 +156,37 @@ let createElement =
           ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
           (),
         );
-        setActive(true);
+            Mouse.setCapture(
+              ~onMouseMove=
+                evt => {
+                  let scrollTo = getScrollTo(evt.mouseY);
+                  let minimapLineSize =
+                    Constants.default.minimapLineSpacing
+                    + Constants.default.minimapCharacterHeight;
+                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+                  /*GlobalContext.current().editorScroll(
+                    ~deltaY=
+                      (editor.scrollY -. scrollTo)
+                      *. (-1.)
+                      -. float_of_int(linesInMinimap),
+                    (),
+                  );*/
+                  GlobalContext.current().editorScroll2(
+                    ~scrollY=scrollTo,
+                    (),
+                  );
+                },
+              ~onMouseUp=_evt => {
+                Log.info("onMouseUp");
+                scrollComplete();
+              },
+              ~onMouseLeaveWindow=() => {
+                Log.info("onMouseLeaveWindow");
+                scrollComplete();
+              },
+              (),
+            );
+            dispatch(IsCapturing(true));
       };
     };
 
