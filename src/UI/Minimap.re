@@ -79,7 +79,7 @@ type mouseCaptureState = {isCapturing: bool};
 type action =
   | IsCapturing(bool);
 
-let reducer = (action, state) =>
+let reducer = (action, _state) =>
   switch (action) {
   | IsCapturing(isCapturing) => {isCapturing: isCapturing}
   };
@@ -110,7 +110,7 @@ let createElement =
       );
 
     let (mouseState, dispatch, hooks) =
-      React.Hooks.reducer(initialState, reducer, hooks);
+      React.Hooks.reducer(~initialState, reducer, hooks);
 
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
