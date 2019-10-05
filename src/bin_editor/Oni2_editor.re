@@ -102,9 +102,9 @@ let init = app => {
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorScroll: (~deltaY, ()) =>
+    editorScrollDelta: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
-    editorScroll2: (~scrollY, ()) =>
+    editorSetScroll: (~scrollY, ()) =>
       dispatch(Model.Actions.EditorSetScroll(scrollY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),

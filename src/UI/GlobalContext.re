@@ -13,14 +13,14 @@ open Oni_Model;
 type notifyWindowTreeSizeChanged = (~width: int, ~height: int, unit) => unit;
 type notifyEditorSizeChanged =
   (~editorGroupId: int, ~width: int, ~height: int, unit) => unit;
-type editorScroll = (~deltaY: float, unit) => unit;
-type editorScroll2 = (~scrollY: float, unit) => unit;
+type editorScrollDelta = (~deltaY: float, unit) => unit;
+type editorSetScroll = (~scrollY: float, unit) => unit;
 
 type t = {
   notifyEditorSizeChanged,
   notifyWindowTreeSizeChanged,
-  editorScroll,
-  editorScroll2,
+  editorScrollDelta,
+  editorSetScroll,
   setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
@@ -40,8 +40,8 @@ let default = {
   notifyEditorSizeChanged:
     (~editorGroupId as _, ~width as _, ~height as _, ()) =>
     (),
-  editorScroll: (~deltaY as _, ()) => (),
-  editorScroll2: (~scrollY as _, ()) => (),
+  editorScrollDelta: (~deltaY as _, ()) => (),
+  editorSetScroll: (~scrollY as _, ()) => (),
   hideNotification: _ => (),
   openEditorById: _ => (),
   setActiveWindow: (_, _) => (),
