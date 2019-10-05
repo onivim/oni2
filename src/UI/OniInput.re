@@ -2,25 +2,9 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-type state = {
-  isFocused: bool,
-  internalValue: string,
-  cursorPosition: int,
-};
-
-type action =
-  | CursorLeft
-  | CursorRight
-  | SetFocus(bool)
-  | DeleteCharacter
-  | DeleteLine
-  | DeleteWord
-  | Backspace
-  | InsertText(string);
-
 type textUpdate = {
   newString: string,
-  cursorPosition: int,
+  newCursorPosition: int,
 };
 
 let getStringParts = (index, str) => {
@@ -50,7 +34,7 @@ let removeCharacterBefore = (word, cursorPosition) => {
   let (startStr, endStr) = getStringParts(cursorPosition, word);
   let nextPosition = getSafeStringBounds(startStr, cursorPosition, -1);
   let newString = Str.string_before(startStr, nextPosition) ++ endStr;
-  {newString, cursorPosition: nextPosition};
+  {newString, newCursorPosition: nextPosition};
 };
 
 let removeCharacterAfter = (word, cursorPosition) => {
@@ -63,7 +47,7 @@ let removeCharacterAfter = (word, cursorPosition) => {
       | _ => Str.last_chars(endStr, String.length(endStr) - 1)
       }
     );
-  {newString, cursorPosition};
+  {newString, newCursorPosition: cursorPosition};
 };
 
 let deleteWord = (str, cursorPosition) => {
@@ -87,47 +71,16 @@ let deleteWord = (str, cursorPosition) => {
     } else {
       "";
     };
-  {newString: beforeStr ++ afterStr, cursorPosition: positionToDeleteTo};
+  {newString: beforeStr ++ afterStr, newCursorPosition: positionToDeleteTo};
 };
 
 let addCharacter = (word, char, index) => {
   let (startStr, endStr) = getStringParts(index, word);
   {
     newString: startStr ++ char ++ endStr,
-    cursorPosition: String.length(startStr) + 1,
+    newCursorPosition: String.length(startStr) + 1,
   };
 };
-let reducer = (action, state) =>
-  switch (action) {
-  | SetFocus(isFocused) => {...state, isFocused}
-  | CursorLeft => {
-      ...state,
-      cursorPosition:
-        getSafeStringBounds(state.internalValue, state.cursorPosition, -1),
-    }
-  | CursorRight => {
-      ...state,
-      cursorPosition:
-        getSafeStringBounds(state.internalValue, state.cursorPosition, 1),
-    }
-  | DeleteWord =>
-    let {newString, cursorPosition} =
-      deleteWord(state.internalValue, state.cursorPosition);
-    {...state, internalValue: newString, cursorPosition};
-  | DeleteLine => {...state, internalValue: "", cursorPosition: 0}
-  | DeleteCharacter =>
-    let {newString, cursorPosition} =
-      removeCharacterAfter(state.internalValue, state.cursorPosition);
-    {...state, internalValue: newString, cursorPosition};
-  | Backspace =>
-    let {newString, cursorPosition} =
-      removeCharacterBefore(state.internalValue, state.cursorPosition);
-    {...state, internalValue: newString, cursorPosition};
-  | InsertText(t) =>
-    let {newString, cursorPosition} =
-      addCharacter(state.internalValue, t, state.cursorPosition);
-    {...state, internalValue: newString, cursorPosition};
-  };
 
 let defaultHeight = 40;
 let defaultWidth = 200;
@@ -152,6 +105,7 @@ let component = React.component("Input");
 let make =
     (
       ~style,
+      ~prefix="",
       ~autofocus,
       ~placeholder,
       ~cursorColor,
@@ -159,57 +113,61 @@ let make =
       ~onChange,
       ~onKeyDown,
       ~fontSize,
+      ~cursorPosition,
+      ~text,
       (),
     ) =>
-  component(slots => {
-    let (state, dispatch, slots) =
-      Hooks.reducer(
-        ~initialState={
-          internalValue: "",
-          cursorPosition: 0,
-          isFocused: false,
-        },
-        reducer,
-        slots,
-      );
-
-    let valueToDisplay = state.internalValue;
-
-    let slots =
-      Hooks.effect(
-        If((!=), valueToDisplay),
-        () => {
-          onChange(valueToDisplay);
-          None;
-        },
-        slots,
-      );
+  component(hooks => {
+    let valueToDisplay = prefix ++ text;
+    let showPlaceholder = valueToDisplay == "";
 
     let handleKeyPress = (event: NodeEvents.keyPressEventParams) => {
-      dispatch(InsertText(event.character));
+      let {newString, newCursorPosition} =
+        addCharacter(text, event.character, cursorPosition);
+      onChange(newString, newCursorPosition);
     };
 
     let handleKeyDown = (event: NodeEvents.keyEventParams) => {
       switch (event.key) {
       | Key.KEY_LEFT =>
         onKeyDown(event);
-        dispatch(CursorLeft);
+        onChange(text, getSafeStringBounds(text, cursorPosition, -1));
+
       | Key.KEY_RIGHT =>
         onKeyDown(event);
-        dispatch(CursorRight);
-      | Key.KEY_H when event.ctrlKey => dispatch(Backspace)
-      | Key.KEY_U when event.ctrlKey => dispatch(DeleteLine)
-      | Key.KEY_W when event.ctrlKey => dispatch(DeleteWord)
-      | Key.KEY_DELETE => dispatch(DeleteCharacter)
-      | Key.KEY_BACKSPACE => dispatch(Backspace)
+        onChange(text, getSafeStringBounds(text, cursorPosition, 1));
+
+      | Key.KEY_U when event.ctrlKey =>
+        onChange("", 0);
+
+      | Key.KEY_W when event.ctrlKey =>
+        let {newString, newCursorPosition} =
+          deleteWord(text, cursorPosition);
+        onChange(newString, newCursorPosition);
+
+      | Key.KEY_DELETE =>
+        let {newString, newCursorPosition} =
+          removeCharacterAfter(text, cursorPosition);
+        onChange(newString, newCursorPosition);
+
+      | Key.KEY_H when event.ctrlKey =>
+        let {newString, newCursorPosition} =
+          removeCharacterBefore(text, cursorPosition);
+        onChange(newString, newCursorPosition);
+
+      | Key.KEY_BACKSPACE =>
+        let {newString, newCursorPosition} =
+          removeCharacterBefore(text, cursorPosition);
+        onChange(newString, newCursorPosition);
+
       | Key.KEY_ESCAPE =>
         onKeyDown(event);
         Focus.loseFocus();
-      | _ => onKeyDown(event)
+
+      | _ =>
+        onKeyDown(event)
       };
     };
-
-    let hasPlaceholder = String.length(valueToDisplay) < 1;
 
     /*
        computed styles
@@ -240,7 +198,7 @@ let make =
 
     let cursor = {
       let (startStr, _) =
-        getStringParts(state.cursorPosition, valueToDisplay);
+        getStringParts(cursorPosition + String.length(prefix), valueToDisplay);
       let dimension =
         Revery_Draw.Text.measure(
           ~fontFamily=inputFontFamily,
@@ -263,7 +221,7 @@ let make =
       <Text
         text=content
         style=Style.[
-          color(hasPlaceholder ? placeholderColor : inputColor),
+          color(showPlaceholder ? placeholderColor : inputColor),
           fontFamily(inputFontFamily),
           fontSize(inputFontSize),
           alignItems(`Center),
@@ -272,23 +230,21 @@ let make =
         ]
       />;
 
-    let placeholderText = makeTextComponent(placeholder);
-    let inputText = makeTextComponent(valueToDisplay);
+    let textView =
+        makeTextComponent(showPlaceholder ? placeholder : valueToDisplay);
 
     /*
        component
      */
     (
-      slots,
+      hooks,
       <Clickable
-        onFocus={() => dispatch(SetFocus(true))}
-        onBlur={() => dispatch(SetFocus(false))}
         componentRef={autofocus ? Focus.focus : ignore}
         onKeyDown=handleKeyDown
         onKeyPress=handleKeyPress>
         <View style=viewStyles>
           cursor
-          {hasPlaceholder ? placeholderText : inputText}
+          textView
         </View>
       </Clickable>,
     );
@@ -302,17 +258,23 @@ let createElement =
       ~cursorColor=Colors.black,
       ~autofocus=false,
       ~placeholder="",
+      ~prefix="",
       ~fontSize=14,
-      ~onChange=_ => (),
+      ~onChange=(_, _) => (),
+      ~cursorPosition,
+      ~text,
       (),
     ) =>
   make(
     ~style,
     ~placeholder,
+    ~prefix,
     ~autofocus,
     ~cursorColor,
     ~fontSize,
     ~placeholderColor,
     ~onChange,
+    ~cursorPosition,
+    ~text,
     (),
   );

@@ -4,6 +4,11 @@ open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
+type state = {
+  text: string,
+  cursorPosition: int
+};
+
 let component = React.component("Menu");
 
 let menuWidth = 400;
@@ -30,17 +35,6 @@ let inputStyles = font =>
     color(Colors.white),
     fontFamily(font),
   ];
-
-let handleChange = str => GlobalContext.current().dispatch(MenuSearch(str));
-
-let handleKeyDown = (event: NodeEvents.keyEventParams) =>
-  switch (event) {
-  | {key: Revery.Key.KEY_DOWN, _} =>
-    GlobalContext.current().dispatch(MenuNextItem)
-  | {key: Revery.Key.KEY_UP, _} =>
-    GlobalContext.current().dispatch(MenuPreviousItem)
-  | _ => ()
-  };
 
 let loseFocusOnClose = isOpen =>
   /**
@@ -88,6 +82,24 @@ let createElement =
         },
         hooks,
       );
+
+    let ({ text, cursorPosition }, setState, hooks) =
+      Hooks.state({ text: "", cursorPosition: 0 }, hooks);
+
+    let handleChange = (str, pos) => {
+      setState({ text: str, cursorPosition: pos });
+      GlobalContext.current().dispatch(MenuSearch(str));
+    };
+
+    let handleKeyDown = (event: NodeEvents.keyEventParams) =>
+      switch (event) {
+      | {key: Revery.Key.KEY_DOWN, _} =>
+        GlobalContext.current().dispatch(MenuNextItem)
+      | {key: Revery.Key.KEY_UP, _} =>
+        GlobalContext.current().dispatch(MenuPreviousItem)
+      | _ => ()
+      };
+
 
     let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
     let time = Time.getTime() |> Time.to_float_seconds;
@@ -147,6 +159,8 @@ let createElement =
                     style={inputStyles(font.fontFile)}
                     onChange=handleChange
                     onKeyDown=handleKeyDown
+                    text
+                    cursorPosition
                   />
                 </View>
                 <View>
