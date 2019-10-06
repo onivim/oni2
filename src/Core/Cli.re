@@ -23,7 +23,7 @@ let show = (v: t) => {
 
 let noop = () => ();
 
-let setWorkingDirectory = (s) => {
+let setWorkingDirectory = s => {
   Log.info("--working-directory - chdir: " ++ s);
   Sys.chdir(s);
 };
