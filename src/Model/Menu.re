@@ -15,6 +15,7 @@ type t = {
   selectedItem: int,
   filterJob: MenuJob.t,
   onQueryChanged: Event.t(string),
+  onSelectedItemChanged: Event.t(Actions.menuCommand),
   dispose: unit => unit,
 };
 
@@ -27,5 +28,6 @@ let create = () => {
   selectedItem: 0,
   filterJob: MenuJob.create(),
   onQueryChanged: Event.create(),
+  onSelectedItemChanged: Event.create(),
   dispose: () => (),
 };
