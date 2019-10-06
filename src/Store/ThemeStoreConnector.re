@@ -9,6 +9,8 @@ open Oni_Extensions;
 open Oni_Model;
 open Oni_Syntax;
 
+open Rench;
+
 let configurationWatcher = (configurationSelector: ConfigurationValues.t => 'a, f) => {
   let oldValue: ref(option('a)) = ref(None);
   let configurationWatchEffect = (newValue: 'a) =>
@@ -89,9 +91,14 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
              ret;
            });
 
-      let create = (setItems, _, _, _) => {
+      let create = (setItems, _, _onSelectedItemChanged, _) => {
+        let dispose = Event.subscribe(_onSelectedItemChanged,
+        (item: option(Actions.menuCommand)) => switch(item) {
+        | Some(item) => loadThemeByName(item.name, dispatch)
+        | None => ()
+        });
         setItems(commands);
-        () => ();
+        dispose;
       };
 
       dispatch(Actions.MenuOpen(create));
@@ -102,10 +109,6 @@ let withWatcher = configurationWatcher(c => c.workbenchColorTheme , onChanged);
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-/*    | Actions.Init => (
-        state,
-        loadThemeByPathEffect("vs-dark", defaultThemePath),
-      )*/
     | Actions.ThemeShowMenu => (state, showThemeMenuEffect)
     | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,
