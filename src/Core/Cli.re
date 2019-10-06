@@ -23,6 +23,11 @@ let show = (v: t) => {
 
 let noop = () => ();
 
+let setWorkingDirectory = (s) => {
+  Log.info("--working-directory - chdir: " ++ s);
+  Sys.chdir(s);
+};
+
 let parse = () => {
   let args: ref(list(string)) = ref([]);
 
@@ -31,6 +36,7 @@ let parse = () => {
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
+      ("--working-directory", String(setWorkingDirectory), ""),
     ],
     arg => args := [arg, ...args^],
     "",

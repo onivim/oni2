@@ -16,6 +16,7 @@ let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
   ("--checkhealth", passthrough, ""),
+  ("--working-directory", passthrough, ""),
   ("-version", Arg.Unit(version), ""),
 ];
 
