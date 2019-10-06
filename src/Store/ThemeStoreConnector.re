@@ -89,7 +89,7 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
              ret;
            });
 
-      let create = (setItems, _, _) => {
+      let create = (setItems, _, _, _) => {
         setItems(commands);
         () => ();
       };

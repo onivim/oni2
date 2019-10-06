@@ -20,7 +20,7 @@ let start = () => {
     nextIndex >= count || nextIndex < 0 ? 0 : nextIndex;
   };
 
-  let menuOpenEffect = (menuConstructor, onQueryChangedEvent) =>
+  let menuOpenEffect = (menuConstructor, onQueryChangedEvent, onSelectedItemChangedEvent) =>
     Isolinear.Effect.create(~name="menu.construct", () => {
       let setItems = items => dispatch(Actions.MenuUpdate(items));
       let startTime = Revery.Time.getTime() |> Revery.Time.toSeconds;
@@ -28,7 +28,7 @@ let start = () => {
         dispatch(Actions.MenuSetLoading(isLoading, startTime));
 
       let disposeFunction =
-        menuConstructor(setItems, onQueryChangedEvent, setLoading);
+        menuConstructor(setItems, onQueryChangedEvent, onSelectedItemChangedEvent, setLoading);
       dispatch(Actions.MenuSetDispose(disposeFunction));
     });
 
@@ -36,6 +36,11 @@ let start = () => {
     Isolinear.Effect.create(~name="menu.queryChanged", () =>
       Rench.Event.dispatch(evt, newQuery)
     );
+
+  let selectedItemChangedEffect = (evt, newItem) => 
+    Isolinear.Effect.create(~name="menu.selectedItemChanged", () => {
+      Rench.Event.dispatch(evt, newItem);
+  });
 
   let selectItemEffect = command =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
@@ -49,6 +54,11 @@ let start = () => {
   let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
     let filteredCommands =
       Core.Job.getCompletedWork(state.filterJob).uiFiltered;
+    let getSelectedItem = (idx) => 
+      switch (filteredCommands[idx]) {
+      | exception (Invalid_argument(_)) => None
+      | v => Some(v)
+      };
     let filteredCommandsCount = filteredCommands |> Array.length;
     switch (action) {
     | MenuSetLoading(isLoading, time) => (
@@ -63,22 +73,16 @@ let start = () => {
         {...state, selectedItem: index},
         Isolinear.Effect.none,
       )
-    | MenuPreviousItem => (
-        {
-          ...state,
-          selectedItem:
-            position(state.selectedItem, -1, filteredCommandsCount),
-        },
-        Isolinear.Effect.none,
-      )
-    | MenuNextItem => (
-        {
-          ...state,
-          selectedItem:
-            position(state.selectedItem, 1, filteredCommandsCount),
-        },
-        Isolinear.Effect.none,
-      )
+    | MenuPreviousItem => 
+        let selectedItem = position(state.selectedItem, -1, filteredCommandsCount);
+        let item = getSelectedItem(selectedItem);
+        let effect = selectedItemChangedEffect(state.onSelectedItemChanged, item);
+        ({ ...state, selectedItem }, effect);
+    | MenuNextItem => 
+        let selectedItem = position(state.selectedItem, 1, filteredCommandsCount);
+        let item = getSelectedItem(selectedItem);
+        let effect = selectedItemChangedEffect(state.onSelectedItemChanged, item);
+        ({ ...state, selectedItem }, effect);
     | MenuSearch(query) => (
         {
           ...state,
@@ -94,7 +98,7 @@ let start = () => {
       let state = Menu.create();
       (
         {...state, isOpen: true},
-        menuOpenEffect(menuConstructor, state.onQueryChanged),
+        menuOpenEffect(menuConstructor, state.onQueryChanged, state.onSelectedItemChanged),
       );
     | MenuUpdate(update) =>
       let filterJob =
@@ -122,9 +126,9 @@ let start = () => {
       );
     | MenuSelect =>
       let effect =
-        switch (filteredCommands[state.selectedItem]) {
-        | exception (Invalid_argument(_)) => Isolinear.Effect.none
-        | v => selectItemEffect(v.command)
+        switch (getSelectedItem(state.selectedItem)) {
+        | None => Isolinear.Effect.none
+        | Some(v) => selectItemEffect(v.command)
         };
 
       /* Also close menu */

@@ -15,7 +15,7 @@ type t = {
   selectedItem: int,
   filterJob: MenuJob.t,
   onQueryChanged: Event.t(string),
-  onSelectedItemChanged: Event.t(Actions.menuCommand),
+  onSelectedItemChanged: Event.t(option(Actions.menuCommand)),
   dispose: unit => unit,
 };
 
