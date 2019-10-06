@@ -152,4 +152,10 @@ and menuSetLoading = bool => unit
 and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
 and menuCreator =
-  (menuSetItems, Rench.Event.t(string), Rench.Event.t(option(menuCommand)), menuSetLoading) => menuDisposeFunction;
+  (
+    menuSetItems,
+    Rench.Event.t(string),
+    Rench.Event.t(option(menuCommand)),
+    menuSetLoading
+  ) =>
+  menuDisposeFunction;

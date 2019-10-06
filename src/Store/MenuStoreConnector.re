@@ -20,7 +20,8 @@ let start = () => {
     nextIndex >= count || nextIndex < 0 ? 0 : nextIndex;
   };
 
-  let menuOpenEffect = (menuConstructor, onQueryChangedEvent, onSelectedItemChangedEvent) =>
+  let menuOpenEffect =
+      (menuConstructor, onQueryChangedEvent, onSelectedItemChangedEvent) =>
     Isolinear.Effect.create(~name="menu.construct", () => {
       let setItems = items => dispatch(Actions.MenuUpdate(items));
       let startTime = Revery.Time.getTime() |> Revery.Time.toSeconds;
@@ -28,7 +29,12 @@ let start = () => {
         dispatch(Actions.MenuSetLoading(isLoading, startTime));
 
       let disposeFunction =
-        menuConstructor(setItems, onQueryChangedEvent, onSelectedItemChangedEvent, setLoading);
+        menuConstructor(
+          setItems,
+          onQueryChangedEvent,
+          onSelectedItemChangedEvent,
+          setLoading,
+        );
       dispatch(Actions.MenuSetDispose(disposeFunction));
     });
 
@@ -37,10 +43,10 @@ let start = () => {
       Rench.Event.dispatch(evt, newQuery)
     );
 
-  let selectedItemChangedEffect = (evt, newItem) => 
+  let selectedItemChangedEffect = (evt, newItem) =>
     Isolinear.Effect.create(~name="menu.selectedItemChanged", () => {
-      Rench.Event.dispatch(evt, newItem);
-  });
+      Rench.Event.dispatch(evt, newItem)
+    });
 
   let selectItemEffect = command =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
@@ -54,7 +60,7 @@ let start = () => {
   let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
     let filteredCommands =
       Core.Job.getCompletedWork(state.filterJob).uiFiltered;
-    let getSelectedItem = (idx) => 
+    let getSelectedItem = idx =>
       switch (filteredCommands[idx]) {
       | exception (Invalid_argument(_)) => None
       | v => Some(v)
@@ -73,16 +79,20 @@ let start = () => {
         {...state, selectedItem: index},
         Isolinear.Effect.none,
       )
-    | MenuPreviousItem => 
-        let selectedItem = position(state.selectedItem, -1, filteredCommandsCount);
-        let item = getSelectedItem(selectedItem);
-        let effect = selectedItemChangedEffect(state.onSelectedItemChanged, item);
-        ({ ...state, selectedItem }, effect);
-    | MenuNextItem => 
-        let selectedItem = position(state.selectedItem, 1, filteredCommandsCount);
-        let item = getSelectedItem(selectedItem);
-        let effect = selectedItemChangedEffect(state.onSelectedItemChanged, item);
-        ({ ...state, selectedItem }, effect);
+    | MenuPreviousItem =>
+      let selectedItem =
+        position(state.selectedItem, -1, filteredCommandsCount);
+      let item = getSelectedItem(selectedItem);
+      let effect =
+        selectedItemChangedEffect(state.onSelectedItemChanged, item);
+      ({...state, selectedItem}, effect);
+    | MenuNextItem =>
+      let selectedItem =
+        position(state.selectedItem, 1, filteredCommandsCount);
+      let item = getSelectedItem(selectedItem);
+      let effect =
+        selectedItemChangedEffect(state.onSelectedItemChanged, item);
+      ({...state, selectedItem}, effect);
     | MenuSearch(query) => (
         {
           ...state,
@@ -98,7 +108,11 @@ let start = () => {
       let state = Menu.create();
       (
         {...state, isOpen: true},
-        menuOpenEffect(menuConstructor, state.onQueryChanged, state.onSelectedItemChanged),
+        menuOpenEffect(
+          menuConstructor,
+          state.onQueryChanged,
+          state.onSelectedItemChanged,
+        ),
       );
     | MenuUpdate(update) =>
       let filterJob =
