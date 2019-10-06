@@ -39,8 +39,8 @@ let configurationWatcher = (configurationSelector: ConfigurationValues.t => 'a, 
 let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
   Log.info(ThemeInfo.show(themeInfo));
 
-  let defaultThemePath =
-    setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";
+/*  let defaultThemePath =
+    setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";*/
 
   let loadThemeByPath = (uiTheme, themePath, dispatch) => {
       Log.perf("theme.load", () => {
@@ -102,10 +102,10 @@ let withWatcher = configurationWatcher(c => c.workbenchColorTheme , onChanged);
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (
+/*    | Actions.Init => (
         state,
         loadThemeByPathEffect("vs-dark", defaultThemePath),
-      )
+      )*/
     | Actions.ThemeShowMenu => (state, showThemeMenuEffect)
     | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,
