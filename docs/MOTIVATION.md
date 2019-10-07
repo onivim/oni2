@@ -127,9 +127,9 @@ The above document is optimistic and paints a rosy picture for this new architec
 
 - __Developer Experience__ - The technology stack we're using does not have the rich set of developer tools that Electron has - an integrated debugger, a performance profiler, hot reloading. This could be a potential pain point, at least initially.
 
-- __IME Support__ - The core editor is working `GLFW`, which doesn't have built-in IME support. This would either need to be augmented or contributed back to GLFW. It's a non-trivial challenge to get this work cross-platform.
+- __IME Support__ - The core editor is working with `GLFW`, which doesn't have built-in IME support. This would either need to be augmented or contributed back to GLFW. It's a non-trivial challenge to get this work cross-platform.
 
-- __Incompatibilities with Vim/Neovim__ - With the introductino of features like smooth-scrolling, some Vim features like 'scrolloff' may not behave as predictably.
+- __Incompatibilities with Vim/Neovim__ - With the introduction of features like smooth-scrolling, some Vim features like 'scrolloff' may not behave as predictably.
 
 - __Lack of embedded browser__ - Having a whole browser embedded is a common complaint towards the bloat of Electron, but it's great to have for implementing features like markdown preview (and our integrated browser!) 
 
