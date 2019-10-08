@@ -70,8 +70,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <EditorView state />
         </View>
         <Overlay>
-          <CommandlineView theme configuration command={state.commandline} />
-          <WildmenuView theme configuration wildmenu={state.wildmenu} />
+          <CommandlineView theme configuration command={state.commandline} wildmenu={state.wildmenu}/>
           <MenuView
             theme
             configuration

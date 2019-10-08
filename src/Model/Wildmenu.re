@@ -41,5 +41,9 @@ let reduce = (s, action) =>
       ...s,
       selected: s.count > 0 ? (s.selected == 0 ? s.count : s.selected) - 1 : 0,
     }
+  | WildmenuSelect(selected) => {
+      ...s,
+      selected,
+    }
   | _ => s
   };

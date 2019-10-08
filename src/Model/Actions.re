@@ -39,7 +39,7 @@ type t =
   | WildmenuShow(list(string))
   | WildmenuNext
   | WildmenuPrevious
-  | WildmenuSelect
+  | WildmenuSelect(int)
   | WildmenuHide
   | WindowSetActive(int, int)
   | WindowTreeSetSize(int, int)

@@ -4,25 +4,11 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Core.Types.UiFont;
 
+let menuWidth = 400;
+
 let component = React.component("commandline");
 
-/* let cmdFontSize = 15; */
-let cmdFontColor = Colors.white;
-
-/*
-   TODO: Flow text around a "cursor"
- */
-
-let getStringParts = (index, str) =>
-  switch (index) {
-  | 0 => ("", str)
-  | _ =>
-    let strBeginning = Str.string_before(str, index);
-    let strEnd = Str.string_after(str, index);
-    (strBeginning, strEnd);
-  };
-
-let getFirstC = (t: Vim.Types.cmdlineType) => {
+let getPrefix = (t: Vim.Types.cmdlineType) => {
   switch (t) {
   | SearchForward => "/"
   | SearchReverse => "?"
@@ -34,54 +20,36 @@ let createElement =
     (
       ~children as _,
       ~command: Commandline.t,
+      ~wildmenu: Wildmenu.t,
       ~configuration: Configuration.t,
       ~theme: Theme.t,
       (),
     ) =>
   component(hooks => {
     let uiFont = State.(GlobalContext.current().state.uiFont);
-    let {fontFile, _} = uiFont;
-    let fontSize_ = 14;
 
-    let textStyles =
-      Style.[
-        fontFamily(fontFile),
-        fontSize(fontSize_),
-        color(cmdFontColor),
-        backgroundColor(theme.editorBackground),
-        textWrap(TextWrapping.WhitespaceWrap),
-      ];
+    let items =
+      wildmenu.items
+        |> List.map(name => Actions.{ name, category: None, icon: None, command: () => Noop })
+        |> Array.of_list;
 
-    let (startStr, endStr) = getStringParts(command.position, command.text);
-    command.show
-      ? (
-        hooks,
-        <View style=Style.[marginBottom(20)]>
-          <OniBoxShadow configuration theme>
-            <View
-              style=Style.[
-                width(400),
-                overflow(`Hidden),
-                backgroundColor(theme.editorBackground),
-                flexDirection(`Row),
-                alignItems(`Center),
-                paddingVertical(8),
-              ]>
-              <Text
-                style=Style.[marginLeft(10), ...textStyles]
-                text={getFirstC(command.cmdType) ++ startStr}
-              />
-              <View
-                style=Style.[
-                  width(2),
-                  height(fontSize_),
-                  backgroundColor(cmdFontColor),
-                ]
-              />
-              <Text style=textStyles text=endStr />
-            </View>
-          </OniBoxShadow>
-        </View>,
-      )
-      : (hooks, React.empty);
+    (
+      hooks,
+      command.show ?
+        <QuickMenuView
+          font = uiFont
+          theme = theme
+          configuration = configuration
+          // autofocus=false
+          prefix = getPrefix(command.cmdType)
+          text = command.text
+          cursorPosition = command.position
+          items = Array(items)
+          selected = Some(wildmenu.selected)
+          onInput = ((text, position) => GlobalContext.current().dispatch(KeyboardInput(text.[String.length(text) - 1] |> Char.escaped)))
+          onSelectedChange = (index => GlobalContext.current().dispatch(WildmenuSelect(index)))
+          onSelect = ((_) => ())
+          />
+        : React.empty
+    );
   });

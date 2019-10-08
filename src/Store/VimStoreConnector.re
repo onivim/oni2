@@ -631,14 +631,9 @@ let start =
         state,
         pasteIntoEditorAction,
       )
-    | Model.Actions.WildmenuNext =>
-      let eff =
-        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
-        | None => Isolinear.Effect.none
-        | Some(v) => applyCompletionEffect(v)
-        };
-      (state, eff);
-    | Model.Actions.WildmenuPrevious =>
+    | Model.Actions.WildmenuNext
+    | Model.Actions.WildmenuPrevious
+    | Model.Actions.WildmenuSelect(_) =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
         | None => Isolinear.Effect.none
