@@ -19,7 +19,8 @@ let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="theme.loadThemeByPath", dispatch =>
       Log.perf("theme.load", () => {
-        let theme = Textmate.Theme.from_file(themePath);
+        let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
+        let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
         let colors = Textmate.Theme.getColors(theme);
         let isDark = Textmate.Theme.isDark(theme);
         let tokenColors = Textmate.Theme.getTokenColors(theme);
