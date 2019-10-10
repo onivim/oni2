@@ -43,11 +43,8 @@ let configurationWatcher =
   newUpdater;
 };
 
-let start = (themeInfo: ThemeInfo.t, setup: Setup.t) => {
+let start = (themeInfo: ThemeInfo.t) => {
   Log.info(ThemeInfo.show(themeInfo));
-
-  /*  let defaultThemePath =
-      setup.bundledExtensionsPath ++ "/onedark-pro/themes/OneDark-Pro.json";*/
 
   let loadThemeByPath = (uiTheme, themePath, dispatch) => {
     Log.perf("theme.load", () => {
