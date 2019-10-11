@@ -99,7 +99,7 @@ let createElement =
       ];
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScroll(
+      GlobalContext.current().editorScrollDelta(
         ~deltaY=wheelEvent.deltaY *. 25.,
         (),
       );

@@ -6,6 +6,43 @@
 
 open Revery;
 
+type defaults = {
+  editorBackground: string,
+  editorForeground: string,
+  editorIndentGuideBackground: string,
+  editorIndentGuideActiveBackground: string,
+};
+
+let light: defaults = {
+  editorBackground: "#FFF",
+  editorForeground: "#000",
+  editorIndentGuideBackground: "#D3D3D3",
+  editorIndentGuideActiveBackground: "#939393",
+};
+
+let dark: defaults = {
+  editorBackground: "#1E1E1E",
+  editorForeground: "#D4D4D4",
+  editorIndentGuideBackground: "#404040",
+  editorIndentGuideActiveBackground: "#707070",
+};
+
+let hcDark: defaults = {
+  editorBackground: "#000",
+  editorForeground: "#FFF",
+  editorIndentGuideBackground: "#FFF",
+  editorIndentGuideActiveBackground: "#FFF",
+};
+
+let getDefaults = uiTheme =>
+  switch (uiTheme) {
+  | "vs" => light
+  | "vs-light" => light
+  | "vs-dark" => dark
+  | "hc-black" => hcDark
+  | _ => dark
+  };
+
 type t = {
   background: Color.t,
   foreground: Color.t,
@@ -23,9 +60,9 @@ type t = {
   editorFindMatchHighlightBackground: Color.t,
   editorIndentGuideBackground: Color.t,
   editorIndentGuideActiveBackground: Color.t,
-  editorMenuBackground: Color.t,
-  editorMenuForeground: Color.t,
-  editorMenuItemSelected: Color.t,
+  menuBackground: Color.t,
+  menuForeground: Color.t,
+  menuSelectionBackground: Color.t,
   editorOverviewRulerBracketMatchForeground: Color.t,
   editorRulerForeground: Color.t,
   editorWhitespaceForeground: Color.t,
@@ -77,9 +114,9 @@ let default: t = {
   scrollbarSliderActiveBackground: Color.hex("#2F3440"),
   editorIndentGuideBackground: Color.hex("#3b4048"),
   editorIndentGuideActiveBackground: Color.rgba(0.78, 0.78, 0.78, 0.78),
-  editorMenuBackground: Color.hex("#2F3440"),
-  editorMenuForeground: Color.hex("#FFFFFF"),
-  editorMenuItemSelected: Color.hex("#495162"),
+  menuBackground: Color.hex("#2F3440"),
+  menuForeground: Color.hex("#FFFFFF"),
+  menuSelectionBackground: Color.hex("#495162"),
   editorRulerForeground: Color.rgba(0.78, 0.78, 0.78, 0.78),
   editorWhitespaceForeground: Color.hex("#3b4048"),
   tabActiveForeground: Color.hex("#DCDCDC"),
@@ -106,6 +143,152 @@ let default: t = {
   notificationWarningForeground: Colors.white,
   notificationErrorBackground: Color.hex("#ff3860"),
   notificationErrorForeground: Colors.white,
+};
+
+let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
+  open Textmate.ColorTheme;
+  let defaults = getDefaults(uiTheme);
+  let defaultBackground = defaults.editorBackground;
+  let defaultForeground = defaults.editorForeground;
+
+  let getColor = (default, items) => {
+    let colorString = getFirstOrDefault(~default, items, ct);
+    Color.hex(colorString);
+  };
+
+  let background =
+    getColor(defaultBackground, ["background", "editor.background"]);
+  let foreground =
+    getColor(defaultForeground, ["foreground", "editor.foreground"]);
+
+  let editorBackground =
+    getColor(defaultBackground, ["editor.background", "background"]);
+  let editorForeground =
+    getColor(defaultForeground, ["editor.foreground", "foreground"]);
+
+  let editorLineNumberBackground =
+    getColor(
+      defaultBackground,
+      ["editorLineNumber.background", "editor.background", "background"],
+    );
+  let editorLineNumberForeground =
+    getColor(
+      defaultForeground,
+      ["editorLineNumber.foreground", "editor.foreground", "foreground"],
+    );
+
+  let editorLineHighlightBackground =
+    getColor(
+      defaultBackground,
+      ["editor.lineHighlightBackground", "editor.background", "background"],
+    );
+
+  let editorIndentGuideBackground =
+    getColor(
+      defaults.editorIndentGuideBackground,
+      ["editorIndentGuide.background"],
+    );
+
+  let editorIndentGuideActiveBackground =
+    getColor(
+      defaults.editorIndentGuideActiveBackground,
+      ["editorIndentGuide.activeBackground"],
+    );
+
+  let menuBackground =
+    getColor(
+      defaultBackground,
+      ["menu.background", "background", "editor.background"],
+    );
+
+  let menuForeground =
+    getColor(
+      defaultForeground,
+      ["menu.foreground", "foreground", "editor.foreground"],
+    );
+
+  let menuSelectionBackground =
+    getColor(
+      defaultBackground,
+      [
+        "menu.selectionBackground",
+        "list.activeSelectionBackground",
+        "list.focusBackground",
+        "list.hoverBackground",
+        "menu.background",
+        "background",
+        "editor.background",
+      ],
+    );
+
+  let statusBarBackground =
+    getColor(
+      defaultBackground,
+      ["statusBar.background", "editor.background", "background"],
+    );
+
+  let statusBarForeground =
+    getColor(
+      defaultForeground,
+      ["statusBar.foreground", "editor.foreground", "foreground"],
+    );
+
+  let sideBarBackground =
+    getColor(
+      defaultBackground,
+      ["sideBar.background", "editor.background", "background"],
+    );
+
+  let sideBarForeground =
+    getColor(
+      defaultForeground,
+      ["sideBar.foreground", "editor.foreground", "foreground"],
+    );
+
+  let scrollbarSliderActiveBackground =
+    getColor(
+      defaultBackground,
+      [
+        "scrollbarSlider.activeBackground",
+        "menu.selectionBackground",
+        "list.activeSelectionBackground",
+      ],
+    );
+
+  let scrollbarSliderBackground =
+    getColor(
+      defaultBackground,
+      ["scrollbarSlider.background", "menu.background", "list.background"],
+    );
+
+  let scrollbarSliderHoverBackground =
+    getColor(
+      defaultBackground,
+      ["scrollbarSlider.hoverBackground", "scrollbarSlider.background"],
+    );
+
+  {
+    ...default,
+    background,
+    foreground,
+    editorBackground,
+    editorForeground,
+    editorIndentGuideBackground,
+    editorIndentGuideActiveBackground,
+    editorLineHighlightBackground,
+    editorLineNumberForeground,
+    editorLineNumberBackground,
+    menuBackground,
+    menuForeground,
+    menuSelectionBackground,
+    scrollbarSliderActiveBackground,
+    scrollbarSliderBackground,
+    scrollbarSliderHoverBackground,
+    sideBarBackground,
+    sideBarForeground,
+    statusBarBackground,
+    statusBarForeground,
+  };
 };
 
 let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {

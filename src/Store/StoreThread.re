@@ -16,17 +16,20 @@ module Model = Oni_Model;
 open Oni_Extensions;
 
 let discoverExtensions = (setup: Core.Setup.t) => {
-  let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-  let developmentExtensions =
-    switch (setup.developmentExtensionsPath) {
-    | Some(p) =>
-      let ret = ExtensionScanner.scan(p);
-      ret;
-    | None => []
-    };
+  let extensions =
+    Core.Log.perf("Discover extensions", () => {
+      let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+      let developmentExtensions =
+        switch (setup.developmentExtensionsPath) {
+        | Some(p) =>
+          let ret = ExtensionScanner.scan(p);
+          ret;
+        | None => []
+        };
+      [extensions, developmentExtensions] |> List.flatten;
+    });
 
-  let extensions = [extensions, developmentExtensions] |> List.flatten;
-  Core.Log.debug(
+  Core.Log.info(
     "-- Discovered: "
     ++ string_of_int(List.length(extensions))
     ++ " extensions",
@@ -69,6 +72,7 @@ let start =
 
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
 
   let commandUpdater = CommandStoreConnector.start(getState);
   let (vimUpdater, vimStream) =
@@ -81,7 +85,7 @@ let start =
 
   let (syntaxUpdater, syntaxStream) =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
-  let themeUpdater = ThemeStoreConnector.start(setup);
+  let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   /*
      For our July builds, we won't be including the extension host -

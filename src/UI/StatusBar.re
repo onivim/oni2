@@ -24,8 +24,9 @@ let getTextStyle = uiFont => {
   );
 };
 
-let viewStyle =
+let viewStyle = bgColor =>
   Style.[
+    backgroundColor(bgColor),
     flexDirection(`Row),
     alignItems(`Center),
     flexGrow(1),
@@ -149,7 +150,7 @@ let createElement = (~children as _, ~height, ~state: State.t, ()) =>
 
     (
       hooks,
-      <View style=viewStyle>
+      <View style={viewStyle(theme.statusBarBackground)}>
         <StatusBarSection direction=`FlexStart>
           ...leftItems
         </StatusBarSection>

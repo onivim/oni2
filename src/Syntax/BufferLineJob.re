@@ -32,6 +32,10 @@ type completedWork('v) = {lines: IntMap.t(lineInfo('v))};
 
 type t('context, 'v) = Job.t(pendingWork('context), completedWork('v));
 
+let getContext = (v: t('context, 'v)) => {
+  Job.getPendingWork(v).context;
+};
+
 let getCompletedWork = (line: int, v: t('context, 'v)) => {
   let cw = Job.getCompletedWork(v);
 
@@ -39,6 +43,24 @@ let getCompletedWork = (line: int, v: t('context, 'v)) => {
   | None => None
   | Some(lineInfo) => Some(lineInfo.v)
   };
+};
+
+let clear = (~newContext=None, v: t('context, 'v)) => {
+  let oldContext = getContext(v);
+  let context =
+    switch (newContext) {
+    | Some(c) => c
+    | None => oldContext
+    };
+
+  let f = (p, _c) => {
+    let newPendingWork = {...p, context};
+
+    let newCompletedWork = {lines: IntMap.empty};
+
+    (false, newPendingWork, newCompletedWork);
+  };
+  Job.map(f, v);
 };
 
 let showPendingWork = (~contextPrinter=_ => "n/a", v: pendingWork('context)) => {
@@ -77,10 +99,6 @@ let initialPendingWork = context => {
   remainingRanges: [],
   version: (-1),
   context,
-};
-
-let getContext = (v: t('context, 'v)) => {
-  Job.getPendingWork(v).context;
 };
 
 let updateContext = (context: 'context, v: t('context, 'v)) => {
