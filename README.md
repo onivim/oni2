@@ -14,7 +14,7 @@
 
 ## Introduction
 
-Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of (neo)vim together, in a single package.
+Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of Vim together, in a single package.
 
 Onivim 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 
@@ -69,11 +69,11 @@ The TL;DR is:
 - __Commercial use__ requires the purchase of a license.
 - You may not redistribute source code or binaries under a different license.
 
-You can pre-order a commercial license here (pay-what-you-want): https://v2.onivim.io
+You can pre-order a commercial license here: https://v2.onivim.io
 
-As we get closer to shipping our MVP, we'll increase the minimum required pre-order, until we settle on our full pricing model.
+As we get closer to shipping our MVP, we'll increase the pre-order price, until we settle on our full pricing model.
 
-__Anyone who has contributed financially to the project__ - via BountySource, Patreon, PayPal, or OpenCollective - __will automatically get a free lifetime license__ (we're still working out the logistics, but we got you!). 
+> __NOTE:__ Anyone who contributed financially to Onivim v1 via our past funding sources (BountySource, Patreon, PayPal, OpenCollective) - gets a lifetime license. If you haven't received your license key, and you contributed previously, please contact me at bryphe@outrunlabs.com (or feel free to reach out at [Twitter](https://twitter.com/oni_vim) or our [Discord](https://discord.gg/7maEAxV)). __Thank you for supporting the project!__
 
 Alternatively, you can contribute to the project through [Patreon](https://www.patreon.com/onivim), which helps us with ongoing costs.
 
