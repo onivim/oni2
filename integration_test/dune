@@ -22,6 +22,7 @@
            TypingBatchedTest
            TypingUnbatchedTest
            ZenModeSingleFileModeTest
+           ZenModeSplitTest
     )
     (libraries
         libvim
@@ -56,4 +57,5 @@
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         ZenModeSingleFileModeTest.exe
+        ZenModeSplitTest.exe
         ))

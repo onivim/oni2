@@ -18,7 +18,14 @@ let ripgrepQueryFromFilter = s => {
 
 let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
   let createQuickOpen =
-      (languageInfo, iconTheme, setItems, _onQueryChanged, setLoading) => {
+      (
+        languageInfo,
+        iconTheme,
+        setItems,
+        _onQueryChanged,
+        _onSelectedItemChanged,
+        setLoading,
+      ) => {
     /* TODO: Track 'currentDirectory' in state as part of a workspace type  */
 
     let currentDirectory = Rench.Environment.getWorkingDirectory();

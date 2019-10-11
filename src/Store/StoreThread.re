@@ -85,7 +85,7 @@ let start =
 
   let (syntaxUpdater, syntaxStream) =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
-  let themeUpdater = ThemeStoreConnector.start(themeInfo, setup);
+  let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   /*
      For our July builds, we won't be including the extension host -
