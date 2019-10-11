@@ -48,7 +48,8 @@ let start = (themeInfo: ThemeInfo.t) => {
 
   let loadThemeByPath = (uiTheme, themePath, dispatch) => {
     Log.perf("theme.load", () => {
-      let theme = Textmate.Theme.from_file(themePath);
+        let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
+      let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
       let colors = Textmate.Theme.getColors(theme);
       let isDark = Textmate.Theme.isDark(theme);
       let tokenColors = Textmate.Theme.getTokenColors(theme);
