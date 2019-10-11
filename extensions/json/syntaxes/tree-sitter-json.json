@@ -69,7 +69,7 @@
         "scopes": "markup.underline.link.https.hyperlink"
       }
     ],
-    "pair > string:nth-child(0)": "string.quoted.double.dictionary.key.json",
+    "pair > string:nth-child(0)": "support.type.property-name.json",
     "escape_sequence": "constant.character.escape",
     "number": "constant.numeric",
     "true": "constant.language",

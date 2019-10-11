@@ -17,6 +17,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.detectIndentation` __(_bool_ default: `true`)__ - Allow Onivim to auto-detect indentation settings (tab vs space, indent size)
 
+- `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font. The font may be specified by either the name of the font, or an absolute path to the font file.
+
+- `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
+
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
 - `editor.lineNumbers` __(_"on"|"off"|"relative" _default: `"on"`)__ - Controls how line numbers are rendered on the editor surface
@@ -35,6 +39,8 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
+
+- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 

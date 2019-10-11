@@ -1,0 +1,14 @@
+(library
+    (name Oni_UI)
+    (public_name Oni2.ui)
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Oni2.core
+        Oni2.model
+        Rench
+        Revery
+    ))
