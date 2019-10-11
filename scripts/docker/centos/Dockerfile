@@ -6,7 +6,7 @@ RUN yum -y install gcc-c++ make sudo
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
 RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils
 
-RUN yum -y install libXt libSM libICE ncurses-devel libacl-devel libxrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libEGL-devel ragel gtk3-devel perl-Digest-SHA bzip2 m4 patch which cmake3 git
+RUN yum -y install libXt libSM-devel libICE-devel ncurses-devel libacl-devel libxrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libEGL-devel ragel gtk3-devel perl-Digest-SHA bzip2 m4 patch which cmake3 git
 
 RUN node -v
 RUN npm -v
