@@ -42,22 +42,20 @@ let start =
     ();
   };
 
-  let transformConfigurationEffect = (fileName, transformer) => 
-    Isolinear.Effect.createWithDispatch(~name="configuration.transform", dispatch => {
-
+  let transformConfigurationEffect = (fileName, transformer) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="configuration.transform", dispatch => {
       let configPath = getConfigurationFile();
       switch (configPath) {
-      | Error(msg) => Log.error("Unable to load configuration: " ++ msg);
+      | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
       | Ok(configPath) =>
-          let parsedJson = Yojson.Safe.from_file(configPath);
-            let newJson = transformer(parsedJson);
-            let oc = open_out(configPath)
-            Yojson.Safe.pretty_to_channel(oc, newJson);
-            close_out(oc);
+        let parsedJson = Yojson.Safe.from_file(configPath);
+        let newJson = transformer(parsedJson);
+        let oc = open_out(configPath);
+        Yojson.Safe.pretty_to_channel(oc, newJson);
+        close_out(oc);
       };
     });
-
-  
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
@@ -115,9 +113,9 @@ let start =
     switch (action) {
     | Actions.Init => (state, initConfigurationEffect)
     | Actions.ConfigurationTransform(file, transformer) => (
-      state,
-      transformConfigurationEffect(file, transformer)
-    )
+        state,
+        transformConfigurationEffect(file, transformer),
+      )
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
         Isolinear.Effect.none,
