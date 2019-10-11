@@ -40,6 +40,8 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
+
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
 ### UI
