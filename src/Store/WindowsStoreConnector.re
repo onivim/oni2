@@ -134,6 +134,11 @@ let start = getState => {
       }
     | AddSplit(direction, split) => {
         ...s,
+        // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
+        zenMode:
+          s.zenMode
+          && List.length(WindowTree.getSplits(s.windowManager.windowTree))
+          == 0,
         windowManager: {
           ...s.windowManager,
           activeWindowId: split.id,
@@ -148,6 +153,7 @@ let start = getState => {
       }
     | RemoveSplit(id) => {
         ...s,
+        zenMode: false,
         windowManager: {
           ...s.windowManager,
           windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
