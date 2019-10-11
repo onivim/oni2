@@ -19,6 +19,12 @@ let create = (setItems, _, _) => {
       icon: None,
     },
     {
+      category: Some("Preferences"),
+      name: "Theme Picker",
+      command: () => Actions.ThemeShowMenu,
+      icon: None,
+    },
+    {
       category: Some("View"),
       name: "Close Editor",
       command: () => Actions.Command("view.closeEditor"),

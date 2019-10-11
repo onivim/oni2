@@ -167,6 +167,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
+  timeoutInMinutes: 0
   displayName: "Windows: Validate Release"
   dependsOn: Windows
   pool:

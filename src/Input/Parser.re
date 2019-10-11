@@ -12,6 +12,7 @@ let toFriendlyName = (v: string) => {
 
   switch (v) {
   | " " => Some("Space")
+  | "<BS>" => Some("Backspace")
   | "<ESC>" => Some("Escape")
   | "<TAB>" => Some("Tab")
   | "<C-TAB>" => Some("Control + Tab")

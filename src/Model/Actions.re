@@ -20,6 +20,7 @@ type t =
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
+  | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
@@ -45,6 +46,7 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
+  | EditorSetScroll(float)
   | EditorScroll(float)
   | EditorScrollToLine(int)
   | EditorScrollToColumn(int)
@@ -79,9 +81,11 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
-  | LoadThemeByPath(string)
+  | ThemeLoadByPath(string, string)
+  | ThemeShowMenu
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
+  | SetColorTheme(Theme.t)
   | StatusBarAddItem(StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)

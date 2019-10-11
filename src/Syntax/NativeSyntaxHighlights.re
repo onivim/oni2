@@ -53,6 +53,15 @@ let updateVisibleRanges = (ranges, v) => {
   };
 };
 
+let updateTheme = (theme: TokenTheme.t, v) => {
+  switch (v) {
+  | None => v
+  | TextMate(tm) => TextMate(TextMateSyntaxHighlights.updateTheme(theme, tm))
+  | TreeSitter(ts) =>
+    TreeSitter(TreeSitterSyntaxHighlights.updateTheme(theme, ts))
+  };
+};
+
 let create =
     (
       ~configuration,
