@@ -45,7 +45,7 @@ let highlightRangesToMap = (ranges: list(Range.t)) => {
 let reduce = (action: Actions.t, state: t) => {
   switch (action) {
   | SearchSetMatchingPair(bid, startPos, endPos) =>
-    Log.info("Handling SearchSetMatchingPair");
+    Log.debug("Handling SearchSetMatchingPair");
     IntMap.update(
       bid,
       oldHighlights =>
@@ -56,7 +56,7 @@ let reduce = (action: Actions.t, state: t) => {
       state,
     )
   | SearchSetHighlights(bid, ranges) =>
-    Log.info("Handling SearchSetHighlights");
+    Log.debug("Handling SearchSetHighlights");
     let highlightRanges = highlightRangesToMap(ranges);
     IntMap.update(
       bid,
@@ -69,7 +69,7 @@ let reduce = (action: Actions.t, state: t) => {
     );
   | SearchClearHighlights(bid) => IntMap.update(bid, _ => None, state)
   | SearchClearMatchingPair(bid) =>
-    Log.info("Handling SearchClearMatchingPair");
+    Log.debug("Handling SearchClearMatchingPair");
     IntMap.update(
       bid,
       oldHighlights =>
