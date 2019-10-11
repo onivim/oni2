@@ -14,25 +14,25 @@ module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
 let findHighlightList = () => {
-    let highlights = Vim.Search.getHighlights();
+  let highlights = Vim.Search.getHighlights();
 
-    let sameLineFilter = (range: Vim.Range.t) =>
-      range.startPos.line == range.endPos.line;
+  let sameLineFilter = (range: Vim.Range.t) =>
+    range.startPos.line == range.endPos.line;
 
-    let toOniRange = (range: Vim.Range.t) =>
-      Core.Range.create(
-        ~startLine=OneBasedIndex(range.startPos.line),
-        ~startCharacter=ZeroBasedIndex(range.startPos.column),
-        ~endLine=OneBasedIndex(range.endPos.line),
-        ~endCharacter=ZeroBasedIndex(range.endPos.column),
-        (),
-      );
+  let toOniRange = (range: Vim.Range.t) =>
+    Core.Range.create(
+      ~startLine=OneBasedIndex(range.startPos.line),
+      ~startCharacter=ZeroBasedIndex(range.startPos.column),
+      ~endLine=OneBasedIndex(range.endPos.line),
+      ~endCharacter=ZeroBasedIndex(range.endPos.column),
+      (),
+    );
 
-      highlights
-      |> Array.to_list
-      |> List.filter(sameLineFilter)
-      |> List.map(toOniRange);
-}
+  highlights
+  |> Array.to_list
+  |> List.filter(sameLineFilter)
+  |> List.map(toOniRange);
+};
 
 let start =
     (
@@ -338,7 +338,6 @@ let start =
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
-
 
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
       open Core.Types;

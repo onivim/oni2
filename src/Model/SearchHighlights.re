@@ -54,7 +54,7 @@ let reduce = (action: Actions.t, state: t) => {
         | Some(v) => Some({...v, matchingPair: Some({startPos, endPos})})
         },
       state,
-    )
+    );
   | SearchSetHighlights(bid, ranges) =>
     Log.debug("Handling SearchSetHighlights");
     let highlightRanges = highlightRangesToMap(ranges);
@@ -78,7 +78,7 @@ let reduce = (action: Actions.t, state: t) => {
         | Some(v) => Some({...v, matchingPair: None})
         },
       state,
-    )
+    );
   | _ => state
   };
 };
