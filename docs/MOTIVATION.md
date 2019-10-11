@@ -19,7 +19,7 @@ Some more mixed features:
 - __Integrated Browser__ - Never was too useful in user's flow.
 
 And, there are also areas that Oni fell short, and didn't meet the goals we set out:
-- __Performance__ - as can be attested to by viewing any hacker-news-Oni-thread, the choice of Electron as a technology stack certainly alienated some users. There are still lots of areas we can improve on perf - but we need to decide if its worth investing in our current technology, and fixing the issues, or exploring new technology with the possibility of perfomance improvements.
+- __Performance__ - as can be attested to by viewing any hacker-news-Oni-thread, the choice of Electron as a technology stack certainly alienated some users. There are still lots of areas we can improve on perf - but we need to decide if its worth investing in our current technology, and fixing the issues, or exploring new technology with the possibility of performance improvements.
 - __Language support__ - Although language support worked well in some cases, there was awkwardness with the way the completion model integrated with Neovim. For example, if there were both language server providers and a popupmenu, this could lead to some awkward and problematic UX. In addition, the completion model never worked perfectly with macros or the repeat key, which was a pain point.
 - __Enabling power users__ - Power vim users had trouble integrating functionality from the Vim config to Oni's config, and vice versa. For example, calling Oni commands via Ex mode was challenging in some cases, or not possible in others.
 - __Sustainability__ - Oni is not a financially sustainable project. This is partly a consequence of being so niche, but maybe there are improvements we can make.
@@ -127,9 +127,9 @@ The above document is optimistic and paints a rosy picture for this new architec
 
 - __Developer Experience__ - The technology stack we're using does not have the rich set of developer tools that Electron has - an integrated debugger, a performance profiler, hot reloading. This could be a potential pain point, at least initially.
 
-- __IME Support__ - The core editor is working `GLFW`, which doesn't have built-in IME support. This would either need to be augmented or contributed back to GLFW. It's a non-trivial challenge to get this work cross-platform.
+- __IME Support__ - The core editor is working with `GLFW`, which doesn't have built-in IME support. This would either need to be augmented or contributed back to GLFW. It's a non-trivial challenge to get this work cross-platform.
 
-- __Incompatibilities with Vim/Neovim__ - With the introductino of features like smooth-scrolling, some Vim features like 'scrolloff' may not behave as predictably.
+- __Incompatibilities with Vim/Neovim__ - With the introduction of features like smooth-scrolling, some Vim features like 'scrolloff' may not behave as predictably.
 
 - __Lack of embedded browser__ - Having a whole browser embedded is a common complaint towards the bloat of Electron, but it's great to have for implementing features like markdown preview (and our integrated browser!) 
 
