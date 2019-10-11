@@ -5,7 +5,7 @@
  */
 
 let canPrint = ref(false);
-let debugLogging = ref(true);
+let debugLogging = ref(false);
 
 let enablePrinting = () => {
   canPrint := true;
