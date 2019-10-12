@@ -46,6 +46,7 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
+      ~quit,
       ~getTime,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
@@ -105,7 +106,7 @@ let start =
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
-  let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start();
+  let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
