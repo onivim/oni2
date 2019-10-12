@@ -240,6 +240,7 @@
     "shelljs": "*",
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
-    "rcedit": "2.0.0"
+    "rcedit": "2.0.0",
+    "esy-ragel": "github:esy-packages/esy-ragel#7f949da"
   }
 }
