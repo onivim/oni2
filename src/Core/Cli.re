@@ -8,9 +8,14 @@ open Rench;
 type t = {
   folder: string,
   filesToOpen: list(string),
+  forceScaleFactor: option(float),
 };
 
-let create = (~folder, ~filesToOpen, ()) => {folder, filesToOpen};
+let create = (~folder, ~filesToOpen, ()) => {
+  folder,
+  filesToOpen,
+  forceScaleFactor: None,
+};
 
 let newline = "\n";
 
@@ -31,12 +36,19 @@ let setWorkingDirectory = s => {
 let parse = () => {
   let args: ref(list(string)) = ref([]);
 
+  let scaleFactor = ref(None);
+
   Arg.parse(
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
+      (
+        "--force-device-scale-factor",
+        Float(f => scaleFactor := Some(f)),
+        "",
+      ),
     ],
     arg => args := [arg, ...args^],
     "",
@@ -109,5 +121,5 @@ let parse = () => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {folder, filesToOpen};
+  {folder, filesToOpen, forceScaleFactor: scaleFactor^};
 };
