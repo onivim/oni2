@@ -10,7 +10,7 @@ open Oni_Model;
 let start =
     (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
   let defaultConfigurationFileName = "configuration.json";
-  let getConfigurationFile = (fileName) => {
+  let getConfigurationFile = fileName => {
     let errorLoading = path => {
       Log.error("Error loading configuration file at: " ++ path);
       Filesystem.getOrCreateConfigFile(fileName);
@@ -56,14 +56,19 @@ let start =
             let oc = open_out(configPath);
             Yojson.Safe.pretty_to_channel(oc, newJson);
             close_out(oc);
-          })
+          });
         } else {
-          dispatch(Actions.ShowNotification(Notification.create(
-            ~notificationType=Actions.Error,
-            ~title="Theme",
-            ~message="Unable to save theme selection to configuration; configuration file is modified.",
-            ()
-          )));
+          dispatch(
+            Actions.ShowNotification(
+              Notification.create(
+                ~notificationType=Actions.Error,
+                ~title="Theme",
+                ~message=
+                  "Unable to save theme selection to configuration; configuration file is modified.",
+                (),
+              ),
+            ),
+          );
         }
       };
     });
