@@ -302,11 +302,31 @@ let createConfigIfNecessary = (configDir, file) =>
       )
   );
 
+let getOrCreateConfigFolder = configDir =>
+  stat(configDir)
+  >>= (
+    fun
+    | Some(dirStats) =>
+      /*
+        Check the stats, if its a folder we can stop.
+        If its not, we need to make a folder.
+       */
+      isDir(dirStats)
+      /\/= (_ => mkdir(configDir, ()))
+      >>= (() => return(configDir))
+    | None =>
+      /*
+       No folder was present, lets make one.
+       */
+      mkdir(configDir, ()) >>= (() => return(configDir))
+  );
+
 let getExtensionsFolder = () =>
   getHomeDirectory()
   >>= getOniDirectory
-  >>= (dir => getPath(dir, "extensions"));
-
+  >>= (dir => getPath(dir, "extensions"))
+  >>= getOrCreateConfigFolder;
+  
 let getOrCreateConfigFile = filename =>
   /* Get Oni Directory */
   getHomeDirectory()
