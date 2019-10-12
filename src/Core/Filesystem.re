@@ -326,7 +326,7 @@ let getExtensionsFolder = () =>
   >>= getOniDirectory
   >>= (dir => getPath(dir, "extensions"))
   >>= getOrCreateConfigFolder;
-  
+
 let getOrCreateConfigFile = filename =>
   /* Get Oni Directory */
   getHomeDirectory()
