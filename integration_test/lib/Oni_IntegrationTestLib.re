@@ -22,7 +22,7 @@ let getTime = () => _currentTime^;
 
 let getScaleFactor = () => 1.0;
 
-let quit = (code) => exit(code);
+let quit = code => exit(code);
 
 let runTest =
     (
