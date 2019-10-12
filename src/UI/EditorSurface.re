@@ -834,6 +834,7 @@ let createElement =
           </View>
         </View>
         minimapLayout
+        <HoverView title="testing a much much much longerl ine" theme={state.theme} uiFont={state.uiFont} />
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
