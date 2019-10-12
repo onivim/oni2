@@ -142,8 +142,11 @@ const run = async () => {
     const treeSitterPrs = await getActivePrsForRepo("onivim/esy-tree-sitter");
     const reasonTreeSitterPrs = await getActivePrsForRepo("onivim/reason-tree-sitter");
     const reveryPrs = await getActivePrsForRepo("revery-ui/revery");
+    const onigurumaPrs = await getActivePrsForRepo("onivim/esy-oniguruma");
+    const reasonOnigurumaPrs = await getActivePrsForRepo("onivim/reason-oniguruma");
+    const reasonTextmatePrs = await getActivePrsForRepo("onivim/reason-textmate");
 
-    let prs = [].concat(oniPrs).concat(libvimPrs).concat(reasonLibvimPrs).concat(treeSitterPrs).concat(reasonTreeSitterPrs).concat(reveryPrs);
+    let prs = [].concat(oniPrs).concat(libvimPrs).concat(reasonLibvimPrs).concat(treeSitterPrs).concat(reasonTreeSitterPrs).concat(reveryPrs).concat(onigurumaPrs).concat(reasonOnigurumaPrs).concat(reasonTextmatePrs);
 
     prs = prs.sort((a, b) => {
         return b.date.getTime() - a.date.getTime();

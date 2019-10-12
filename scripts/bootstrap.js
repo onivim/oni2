@@ -6,7 +6,7 @@ const rootDir = path.join(__dirname, "..")
 const configPath = path.join(rootDir, "assets", "configuration")
 const vendorPath = path.join(rootDir, "vendor")
 
-console.log("STRINGIFIED: " + JSON.stringify(process.argv));
+console.log("Bootstrap configuration: " + JSON.stringify(process.argv));
 const outputFile = path.join(configPath, "setup.json")
 
 const isMac = process.platform === "darwin"
@@ -17,7 +17,7 @@ let nodePath
 let textMateServicePath = path.join(rootDir, "src", "textmate_service", "lib", "src", "index.js")
 let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
 let extensionsPath = path.join(rootDir, "extensions")
-let developmentExtensionsPath = path.join(rootDir, "src", "development_extensions");
+let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 
 let camomileRoot = process.argv[2];

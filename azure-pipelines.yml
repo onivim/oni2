@@ -40,10 +40,9 @@ jobs:
 
   steps:
   - script: sudo apt-get update
-  - script: sudo apt-get install -y libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libegl1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
+  - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
-  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: linux
@@ -69,7 +68,6 @@ jobs:
   - script: brew install libpng ragel
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
-  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: darwin
@@ -95,7 +93,6 @@ jobs:
     displayName: 'Validate signtool path'
   - template: .ci/use-node.yml
   - template: .ci/restore-build-cache.yml
-  - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: windows
@@ -147,6 +144,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
+  timeoutInMinutes: 0
   displayName: "Windows: Validate Release"
   dependsOn: Windows
   pool:

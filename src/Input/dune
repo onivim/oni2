@@ -1,0 +1,13 @@
+(library
+    (name Oni_Input)
+    (public_name Oni2.input)
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Oni2.core
+        Rench
+        Revery
+    ))

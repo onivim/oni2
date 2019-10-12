@@ -1,0 +1,18 @@
+(library
+    (name Oni_Extensions)
+    (public_name Oni2.extensions)
+    (libraries
+        str
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Rench
+        Revery
+        yojson
+        ppx_deriving.runtime
+        ppx_deriving_yojson.runtime
+        reason-jsonrpc
+        Oni2.core
+    )
+    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

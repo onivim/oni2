@@ -32,7 +32,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
     ~name="Menu is loading is false",
     ~timeout=longWaitTime,
     (state: State.t) => {
-      dispatch(Tick);
+      dispatch(Tick({deltaTime: 0., totalTime: 0.}));
       runEffects();
       print_endline(
         "Current job state: \n" ++ Core.Job.show(state.menu.filterJob),
