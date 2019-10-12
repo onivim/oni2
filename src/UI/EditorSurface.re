@@ -463,14 +463,14 @@ let createElement =
       ];
 
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScroll(
+      GlobalContext.current().editorScrollDelta(
         ~deltaY=wheelEvent.deltaY *. (-50.),
         (),
       );
     };
 
     let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScroll(
+      GlobalContext.current().editorScrollDelta(
         ~deltaY=wheelEvent.deltaY *. (-150.),
         (),
       );

@@ -237,7 +237,8 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
     }
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
-  | EditorScroll(scrollY) => scroll(view, scrollY, metrics)
+  | EditorSetScroll(scrollY) => scrollTo(view, scrollY, metrics)
+  | EditorScroll(scrollDeltaY) => scroll(view, scrollDeltaY, metrics)
   | EditorScrollToLine(line) => scrollToLine(view, line, metrics)
   | EditorScrollToColumn(column) => scrollToColumn(view, column, metrics)
   | _ => view

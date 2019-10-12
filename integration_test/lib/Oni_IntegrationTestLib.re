@@ -68,6 +68,7 @@ let runTest =
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=configPath,
+      ~window=None,
       (),
     );
 

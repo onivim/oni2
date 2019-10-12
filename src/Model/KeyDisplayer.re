@@ -38,42 +38,39 @@ let update = (time, v: t) => {
   {...v, active, presses};
 };
 
-let add = (time, key, v: t) =>
-  if (!Oni_Input.Filter.filter(key)) {
-    v;
-  } else {
-    let exclusive = String.length(key) > 1;
-    let presses =
-      switch (v.presses) {
-      | [] => [{time, exclusive, keys: [key]}]
-      | [hd, ...tail] =>
-        if (time
-            -. hd.time <= Constants.timeToGroup
-            && !hd.exclusive
-            && String.length(key) == 1) {
-          [
-            // The key presses was within the group time,
-            // so we'll just add it to an existing group
-            {time, exclusive, keys: [key, ...hd.keys]},
-            ...tail,
-          ];
-        } else {
-          let exclusive = String.length(key) > 1;
-          [
-            // The time was past the group time..
-            // so we'll create a new group
-            {time, exclusive, keys: [key]},
-            hd,
-            ...tail,
-          ];
-        }
-      };
+let add = (time, key, v: t) => {
+  let exclusive = String.length(key) > 1 || key == " ";
+  let presses =
+    switch (v.presses) {
+    | [] => [{time, exclusive, keys: [key]}]
+    | [hd, ...tail] =>
+      if (time
+          -. hd.time <= Constants.timeToGroup
+          && !hd.exclusive
+          && String.length(key) == 1) {
+        [
+          // The key presses was within the group time,
+          // so we'll just add it to an existing group
+          {time, exclusive, keys: [key, ...hd.keys]},
+          ...tail,
+        ];
+      } else {
+        let exclusive = String.length(key) > 1;
+        [
+          // The time was past the group time..
+          // so we'll create a new group
+          {time, exclusive, keys: [key]},
+          hd,
+          ...tail,
+        ];
+      }
+    };
 
-    let ret = {...v, active: true, presses};
+  let ret = {...v, active: true, presses};
 
-    // Also filter out old key presses, while we're here
-    update(time, ret);
-  };
+  // Also filter out old key presses, while we're here
+  update(time, ret);
+};
 
 let getPresses = (v: t) => v.presses;
 
@@ -83,6 +80,12 @@ let getActive = (v: t) => v.enabled && v.active;
 
 let show = (v: t) => {
   "KeyDisplayer: [\n"
+  ++ " - active: "
+  ++ (v.active ? "true" : "false")
+  ++ "\n"
+  ++ " - enabled: "
+  ++ (v.enabled ? "true" : "false")
+  ++ "\n"
   ++ String.concat(
        ",\n",
        List.map(
