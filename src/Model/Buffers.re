@@ -33,6 +33,21 @@ let anyModified = (buffers: t) => {
   );
 };
 
+let isModifiedByPath = (buffers: t, filePath: string) => {
+  IntMap.exists(
+    (_id, v) => {
+      let bufferPath = Buffer.getFilePath(v);
+      let isModified = Buffer.isModified(v);
+
+      switch (bufferPath) {
+      | None => false
+      | Some(bp) => String.equal(bp, filePath) && isModified
+      };
+    },
+    buffers,
+  );
+};
+
 let ofBufferOpt = (f, buffer) => {
   switch (buffer) {
   | None => None

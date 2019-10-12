@@ -95,8 +95,16 @@ let start = (themeInfo: ThemeInfo.t) => {
              let ret: Actions.menuCommand = {
                category: Some("Theme"),
                name: theme.label,
-               command: () =>
-                 Actions.ThemeLoadByPath(theme.uiTheme, theme.path),
+               command: () => {
+                 // Persist theme
+                 Actions.ConfigurationTransform(
+                   "configuration.json",
+                   Oni_Core.ConfigurationTransformer.setField(
+                     "workbench.colorTheme",
+                     `String(theme.label),
+                   ),
+                 );
+               },
                icon: None,
              };
              ret;
