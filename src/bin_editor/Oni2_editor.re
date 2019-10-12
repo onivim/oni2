@@ -67,8 +67,8 @@ let init = app => {
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
 
-  let quit = (exitCode) => {
-    App.quit(app, exitCode);
+  let quit = (code) => {
+    App.quit(~code, app);
   };
 
   Log.debug("Startup: Starting StoreThread");
