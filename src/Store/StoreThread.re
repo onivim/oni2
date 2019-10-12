@@ -19,6 +19,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+      let userExtensions = Core.Filesystem.getExtensionsFolder();
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
         | Some(p) =>
@@ -26,7 +27,18 @@ let discoverExtensions = (setup: Core.Setup.t) => {
           ret;
         | None => []
         };
-      [extensions, developmentExtensions] |> List.flatten;
+      let userExtensions =
+        switch (userExtensions) {
+        | Ok(p) => ExtensionScanner.scan(p)
+        | Error(_) => []
+        };
+
+      Core.Log.debug(
+        "discoverExtensions - discovered "
+        ++ string_of_int(List.length(userExtensions))
+        ++ " user extensions.",
+      );
+      [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
 
   Core.Log.info(
