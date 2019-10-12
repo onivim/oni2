@@ -28,6 +28,7 @@ let init = app => {
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
+          ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
           ~icon=Some("logo.png"),
           (),
@@ -73,6 +74,10 @@ let init = app => {
 
   let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
 
+  let quit = code => {
+    App.quit(~code, app);
+  };
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -87,6 +92,7 @@ let init = app => {
       ~setZoom,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
+      ~quit,
       (),
     );
   Log.debug("Startup: StoreThread started!");

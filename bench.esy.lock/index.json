@@ -1,5 +1,5 @@
 {
-  "checksum": "c85586e80eca43ada97bed63212aec33",
+  "checksum": "0c9a352487fea0fbefe26a7864a705df",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,13 +75,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#04442b9@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#04442b9@d41d8cd9",
+    "revery@github:revery-ui/revery#e39b289@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#e39b289@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#04442b9",
+      "version": "github:revery-ui/revery#e39b289",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#04442b9" ]
+        "source": [ "github:revery-ui/revery#e39b289" ]
       },
       "overrides": [],
       "dependencies": [
@@ -995,7 +995,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#04442b9@d41d8cd9",
+        "revery@github:revery-ui/revery#e39b289@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#63d4056@d41d8cd9",
