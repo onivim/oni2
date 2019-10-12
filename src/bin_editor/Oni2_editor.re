@@ -28,6 +28,7 @@ let init = app => {
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
+          ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
           ~icon=Some("logo.png"),
           (),
