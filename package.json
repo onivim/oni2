@@ -206,7 +206,7 @@
     "rench": "1.7.1",
     "revery": "0.27.0",
     "reason-tree-sitter": "*",
-    "reason-textmate": "^2.0.0",
+    "reason-textmate": "^2.1.0",
     "esy-sdl2": "*"
   },
   "resolutions": {
@@ -229,7 +229,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#3f1655e"
+    "revery": "github:revery-ui/revery#04442b9"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

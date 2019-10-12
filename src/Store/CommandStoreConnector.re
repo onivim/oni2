@@ -97,7 +97,7 @@ let start = _ => {
 
         multipleActionEffect([
           MenuOpen(
-            (setItems, _, _) => {
+            (setItems, _, _, _) => {
               let commands =
                 state.Oni_Model.State.buffers
                 |> IntMap.to_seq

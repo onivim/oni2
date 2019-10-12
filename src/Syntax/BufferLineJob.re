@@ -54,7 +54,7 @@ let clear = (~newContext=None, v: t('context, 'v)) => {
     };
 
   let f = (p, _c) => {
-    let newPendingWork = {...p, context};
+    let newPendingWork = {...p, remainingRanges: p.visibleRanges, context};
 
     let newCompletedWork = {lines: IntMap.empty};
 

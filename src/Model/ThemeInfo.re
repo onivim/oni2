@@ -20,6 +20,8 @@ let create = () => {themes: [], nameToTheme: StringMap.empty};
 
 let getThemes = v => v.themes;
 
+let getThemeByName = (v, name) => StringMap.find_opt(name, v.nameToTheme);
+
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
   let themes = _getThemes(extensions);
 
