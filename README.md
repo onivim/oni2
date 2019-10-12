@@ -14,7 +14,7 @@
 
 ## Introduction
 
-Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of (neo)vim together, in a single package.
+Onivim 2 is a reimagination of the [Oni](https://www.onivim.io) editor. Onivim 2 aims to bring the _speed_ of Sublime, the _language integration_ of VSCode, and the _modal editing experience_ of Vim together, in a single package.
 
 Onivim 2 is built in [`reason`](https://reasonml.github.io) using the [`revery`](https://github.com/revery-ui/revery) framework.
 

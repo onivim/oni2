@@ -17,6 +17,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.detectIndentation` __(_bool_ default: `true`)__ - Allow Onivim to auto-detect indentation settings (tab vs space, indent size)
 
+- `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font. The font may be specified by either the name of the font, or an absolute path to the font file.
+
+- `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
+
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
 - `editor.lineNumbers` __(_"on"|"off"|"relative" _default: `"on"`)__ - Controls how line numbers are rendered on the editor surface
@@ -36,6 +40,8 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
+
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
 ### UI
@@ -48,3 +54,19 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
     - _`true`_ - all deletes and yanks, regardless of register used, will be pushed to the system clipboard. Equivalent to `["yank", "paste", "delete"]`.
     - _`["yank", "paste", "delete"]`_ - An array of strings. Each specified operation will always use the system clipboard. For example, `["yank"]` will send all yanks to the system clipboard, but deletes and pastes will require using the `+` or `*` registers. `["delete", "paste"]` means that all deletes will be sent to the system clipboard, and pastes using the unnamed register will come from the system clipboard, but only yanks with register `+` and `*` would be sent to the clipboard.
     - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard. Equivalent to `[]`.
+
+## High-DPI / UI Scaling
+
+Onivim 2 should automatically pick up your scaling settings via the following per-platform strategies:
+
+- __Windows:__ On 8.1+, we use the 'scale factor' of the display device.
+- __OSX:__ - High-DPI / retina displays are automatically detected.
+- __Linux:__ - The `GDK_SCALE` environment variable is used, if available.
+
+If the display scaling is not correct, you can override by using the `--force-device-scale-factor` command-line argument, like:
+
+```
+oni2 --force-device-scale-factor=2.0
+```
+
+> __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported

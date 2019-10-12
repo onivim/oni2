@@ -1,0 +1,22 @@
+(executable
+    (name Oni2_editor)
+    (package Oni2)
+    (public_name Oni2_editor)
+    (libraries
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Rench
+        Revery
+        Oni2.core
+        Oni2.extensions
+        Oni2.model
+        Oni2.store
+        Oni2.ui
+            )
+  (preprocess (
+               pps
+               lwt_ppx
+    ))
+)
