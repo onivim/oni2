@@ -19,6 +19,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+      let userExtensions = Core.Filesystem.getExtensionsFolder();
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
         | Some(p) =>
