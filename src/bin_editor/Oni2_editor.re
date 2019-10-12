@@ -67,7 +67,7 @@ let init = app => {
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
 
-  let quit = (code) => {
+  let quit = code => {
     App.quit(~code, app);
   };
 

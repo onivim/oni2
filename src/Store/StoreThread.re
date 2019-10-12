@@ -106,7 +106,8 @@ let start =
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
-  let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start(quit);
+  let (lifecycleUpdater, lifecycleStream) =
+    LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 

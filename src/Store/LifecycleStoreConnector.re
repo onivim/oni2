@@ -10,7 +10,7 @@ open Revery;
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-let start = (quit) => {
+let start = quit => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitAllEffect = (state: Model.State.t, force) => {
