@@ -66,5 +66,7 @@ Onivim 2 should automatically pick up your scaling settings via the following pe
 If the display scaling is not correct, you can override by using the `--force-device-scale-factor` command-line argument, like:
 
 ```
-oni2 --force-device-scale-factor=1.5
+oni2 --force-device-scale-factor=2.0
 ```
+
+> __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported
