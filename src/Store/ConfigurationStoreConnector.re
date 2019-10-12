@@ -55,7 +55,7 @@ let start =
           let oc = open_out(configPath);
           Yojson.Safe.pretty_to_channel(oc, newJson);
           close_out(oc);
-        });
+        })
       };
     });
 

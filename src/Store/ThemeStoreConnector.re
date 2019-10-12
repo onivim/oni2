@@ -98,9 +98,12 @@ let start = (themeInfo: ThemeInfo.t) => {
                command: () => {
                  // Persist theme
                  Actions.ConfigurationTransform(
-                  "configuration.json",
-                  Oni_Core.ConfigurationTransformer.setField("workbench.colorTheme", `String(theme.label)),
-                 )
+                   "configuration.json",
+                   Oni_Core.ConfigurationTransformer.setField(
+                     "workbench.colorTheme",
+                     `String(theme.label),
+                   ),
+                 );
                },
                icon: None,
              };
