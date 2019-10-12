@@ -5,8 +5,6 @@
  * - Handling quit cleanup
  */
 
-open Revery;
-
 module Core = Oni_Core;
 module Model = Oni_Model;
 
