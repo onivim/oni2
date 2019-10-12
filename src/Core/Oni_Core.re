@@ -9,6 +9,7 @@ module Cli = Cli;
 module Configuration = Configuration;
 module ConfigurationDefaults = ConfigurationDefaults;
 module ConfigurationParser = ConfigurationParser;
+module ConfigurationTransformer = ConfigurationTransfomer;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
 module IntMap = IntMap;
