@@ -49,11 +49,13 @@ let start =
       switch (configPath) {
       | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
       | Ok(configPath) =>
-        let parsedJson = Yojson.Safe.from_file(configPath);
-        let newJson = transformer(parsedJson);
-        let oc = open_out(configPath);
-        Yojson.Safe.pretty_to_channel(oc, newJson);
-        close_out(oc);
+        Log.perf("Apply configuration transform", () => {
+          let parsedJson = Yojson.Safe.from_file(configPath);
+          let newJson = transformer(parsedJson);
+          let oc = open_out(configPath);
+          Yojson.Safe.pretty_to_channel(oc, newJson);
+          close_out(oc);
+        });
       };
     });
 
