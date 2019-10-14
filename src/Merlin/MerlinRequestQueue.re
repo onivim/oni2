@@ -39,10 +39,7 @@ let thread: ref(option(Thread.t)) = ref(None);
 
 let popPendingRequest = (v: t) => {
   switch (v.diagnosticsRequest) {
-  | Some(dr) => (
-      Some(DiagnosticsRequest(dr)),
-      {diagnosticsRequest: None},
-    )
+  | Some(dr) => (Some(DiagnosticsRequest(dr)), {diagnosticsRequest: None})
   | None => (None, v)
   };
 };

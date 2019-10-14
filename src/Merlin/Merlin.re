@@ -68,37 +68,30 @@ let getErrors =
 
     close_out_noerr(stdIn);
 
-     // This is necessary because of merlin issues:
-     // https://github.com/ocaml/merlin/issues/1034
-     // https://github.com/ocaml/merlin/issues/714
-     // On Windows, we can sometimes get an error prelude when there are PPX involved 
-     let handleMerlinResponse = (chan) => {
-       let isJson = ref(false);
-       let isDone = ref(false);
-       let json = ref([]);
+    // This is necessary because of merlin issues:
+    // https://github.com/ocaml/merlin/issues/1034
+    // https://github.com/ocaml/merlin/issues/714
+    // On Windows, we can sometimes get an error prelude when there are PPX involved
+    let handleMerlinResponse = chan => {
+      let isJson = ref(false);
+      let isDone = ref(false);
+      let json = ref([]);
 
-       while (!(isDone^)) {
-          switch(input_line(chan)) {
-          | exception(_) => isDone := true
-          | line => {
-            if (isJson^) {
-              json := [line, ...json^];
-            }
-            else if (String.length(line) > 0 && String.get(line, 0) == '{') {
-              json := [line, ...json^];
-              isJson := true;
-            }
+      while (! isDone^) {
+        switch (input_line(chan)) {
+        | exception _ => isDone := true
+        | line =>
+          if (isJson^) {
+            json := [line, ...json^];
+          } else if (String.length(line) > 0 && line.[0] == '{') {
+            json := [line, ...json^];
+            isJson := true;
           }
-          }
+        };
+      };
 
-
-       }
-
-       json^
-       |> List.rev
-       |> String.concat("");
-     };
-     
+      json^ |> List.rev |> String.concat("");
+    };
 
     let jsonString = handleMerlinResponse(stdout);
     let json = Yojson.Safe.from_string(jsonString);

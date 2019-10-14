@@ -6,7 +6,6 @@
 
 open Rench;
 
-
 let version = (~nodePath, ()) => {
   let ret = ChildProcess.spawnSync(nodePath, [|"--version"|]);
   ret.stdout;
