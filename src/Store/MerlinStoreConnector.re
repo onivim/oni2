@@ -41,7 +41,7 @@ let start = () => {
               )
             );
           };
-          let _ = Merlin.getErrors(Sys.getcwd(), path, lines, cb);
+          let _ = MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
           ();
         | _ => ()
         };
