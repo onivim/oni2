@@ -637,7 +637,6 @@ let start =
   let prevViml = ref([]);
   let synchronizeViml = configuration => 
     Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
-
       let lines = Oni_Core.Configuration.getValue(c => c.experimentalVimL, configuration);
 
       if (prevViml^ !== lines) {
@@ -645,7 +644,7 @@ let start =
           Log.info("Running VimL from config: " ++ l);
           Vim.command(l);
           Log.info("VimL command completed.");
-        }, prevViml^);
+        }, lines);
         prevViml := lines;
       }
     });
