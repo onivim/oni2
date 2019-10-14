@@ -28,6 +28,7 @@ let init = app => {
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
+          ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
           ~icon=Some("logo.png"),
           (),
@@ -67,6 +68,10 @@ let init = app => {
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
 
+  let quit = code => {
+    App.quit(~code, app);
+  };
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -79,6 +84,7 @@ let init = app => {
       ~getScaleFactor,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
+      ~quit,
       (),
     );
   Log.debug("Startup: StoreThread started!");
@@ -102,8 +108,10 @@ let init = app => {
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorScroll: (~deltaY, ()) =>
+    editorScrollDelta: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
+    editorSetScroll: (~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(scrollY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     hideNotification: id => dispatch(Model.Actions.HideNotification(id)),

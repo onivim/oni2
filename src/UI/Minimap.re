@@ -58,16 +58,35 @@ let renderLine =
   List.iter(f, tokens);
 };
 
-let component = React.component("Minimap");
-
 let absoluteStyle =
-  Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
+  Style.[
+    position(`Absolute),
+    top(0),
+    bottom(0),
+    left(0),
+    right(0),
+    cursor(MouseCursors.pointer),
+  ];
 
 let getMinimapSize = (view: Editor.t, metrics) => {
   let currentViewSize = Editor.getVisibleView(metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
+
+type mouseCaptureState = {isCapturing: bool};
+
+type action =
+  | IsCapturing(bool);
+
+let reducer = (action, _state) =>
+  switch (action) {
+  | IsCapturing(isCapturing) => {isCapturing: isCapturing}
+  };
+
+let initialState = {isCapturing: false};
+
+let component = React.component("Minimap");
 
 let createElement =
     (
@@ -90,7 +109,8 @@ let createElement =
         + Constants.default.minimapLineSpacing,
       );
 
-    let (isActive, setActive, hooks) = React.Hooks.state(false, hooks);
+    let (mouseState, dispatch, hooks) =
+      React.Hooks.reducer(~initialState, reducer, hooks);
 
     let getScrollTo = (mouseY: float) => {
       let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
@@ -103,42 +123,20 @@ let createElement =
     };
 
     let scrollComplete = () => {
-      setActive(false);
+      Mouse.releaseCapture();
+      dispatch(IsCapturing(false));
     };
 
     let hooks =
       React.Hooks.effect(
-        Always,
+        OnMount,
         () => {
-          let isCaptured = isActive;
-          let startPosition = editor.scrollY;
-          if (isCaptured) {
-            Mouse.setCapture(
-              ~onMouseMove=
-                evt => {
-                  let scrollTo = getScrollTo(evt.mouseY);
-                  let minimapLineSize =
-                    Constants.default.minimapLineSpacing
-                    + Constants.default.minimapCharacterHeight;
-                  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-                  GlobalContext.current().editorScroll(
-                    ~deltaY=
-                      (startPosition -. scrollTo)
-                      *. (-1.)
-                      -. float_of_int(linesInMinimap),
-                    (),
-                  );
-                },
-              ~onMouseUp=_evt => scrollComplete(),
-              (),
-            );
-          };
           Some(
             () =>
-              if (isCaptured) {
+              if (mouseState.isCapturing) {
                 Mouse.releaseCapture();
               },
-          );
+          )
         },
         hooks,
       );
@@ -152,11 +150,25 @@ let createElement =
         + Constants.default.minimapCharacterHeight;
       let linesInMinimap = metrics.pixelHeight / minimapLineSize;
       if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
-        GlobalContext.current().editorScroll(
+        GlobalContext.current().editorScrollDelta(
           ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
           (),
         );
-        setActive(true);
+        Mouse.setCapture(
+          ~onMouseMove=
+            evt => {
+              let scrollTo = getScrollTo(evt.mouseY);
+              let minimapLineSize =
+                Constants.default.minimapLineSpacing
+                + Constants.default.minimapCharacterHeight;
+              let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+              let scrollTo = scrollTo -. float_of_int(linesInMinimap);
+              GlobalContext.current().editorSetScroll(~scrollY=scrollTo, ());
+            },
+          ~onMouseUp=_evt => {scrollComplete()},
+          (),
+        );
+        dispatch(IsCapturing(true));
       };
     };
 

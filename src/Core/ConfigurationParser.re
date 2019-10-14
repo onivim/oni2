@@ -180,6 +180,10 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, workbenchActivityBarVisible: parseBool(v)},
   ),
   (
+    "workbench.colorTheme",
+    (s, v) => {...s, workbenchColorTheme: parseString(v)},
+  ),
+  (
     "workbench.iconTheme",
     (s, v) => {...s, workbenchIconTheme: parseString(v)},
   ),
