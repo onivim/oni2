@@ -15,24 +15,26 @@ module Zed_utf8 = Core.ZedBundled;
 open Oni_Merlin;
 open Rench;
 
-let runOnMainThread = (cb) => {
-  (arg) => {
-    Revery.App.runOnMainThread(cb(arg));
-  };
+let runOnMainThread = (cb, arg) => {
+  Revery.App.runOnMainThread(cb(arg));
 };
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let modelChangedEffect =
-      (configuration: Core.Configuration.t, buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+      (
+        configuration: Core.Configuration.t,
+        buffers: Model.Buffers.t,
+        bu: Core.Types.BufferUpdate.t,
+      ) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
         let lines = Model.Buffer.getLines(v);
         let fileType = Model.Buffer.getFileType(v);
-        switch ((fileType, Model.Buffer.getFilePath(v))) {
-        | (Some(ft), Some(path)) when (ft == "reason" || ft == "ocaml") =>
+        switch (fileType, Model.Buffer.getFilePath(v)) {
+        | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
           let cb = err => {
             let modelDiagnostics =
               MerlinProtocolConverter.toModelDiagnostics(err);

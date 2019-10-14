@@ -4,83 +4,90 @@
  * Core merlin API
  */
 
+open Oni_Core;
+
 let pendingRequest = ref(false);
+
+let info = msg => Log.info("[Merlin] " ++ msg);
+let error = msg => Log.error("[Merlin] " ++ msg);
 
 let getErrors =
     (workingDirectory: string, filePath: string, input: array(string), cb) => {
-          let merlin = MerlinDiscovery.discover(workingDirectory);
-          switch (merlin.ocamlMerlinPath) {
-          | Some(v) =>
-            print_endline("Using path: " ++ v);
-            pendingRequest := true;
-            let (pstdin, stdin) = Unix.pipe();
-            let (stdout, pstdout) = Unix.pipe();
-            let (stderr, pstderr) = Unix.pipe();
+  let merlin = MerlinDiscovery.discover(workingDirectory);
+  switch (merlin.ocamlMerlinPath) {
+  | Some(v) =>
+    info("Using path: " ++ v);
+    pendingRequest := true;
+    let (pstdin, stdin) = Unix.pipe();
+    let (stdout, pstdout) = Unix.pipe();
+    let (stderr, pstderr) = Unix.pipe();
 
-            Unix.set_close_on_exec(pstdin);
-            Unix.set_close_on_exec(stdin);
-            Unix.set_close_on_exec(pstdout);
-            Unix.set_close_on_exec(stdout);
-            Unix.set_close_on_exec(pstderr);
-            Unix.set_close_on_exec(stderr);
+    Unix.set_close_on_exec(pstdin);
+    Unix.set_close_on_exec(stdin);
+    Unix.set_close_on_exec(pstdout);
+    Unix.set_close_on_exec(stdout);
+    Unix.set_close_on_exec(pstderr);
+    Unix.set_close_on_exec(stderr);
 
-            let env = Rench.Environment.getEnvironmentVariables();
-            let currentPath = switch(Rench.EnvironmentVariables.getValue(env, "PATH")) {
-            | None => ""
-            | Some(v) => v
-            };
+    let env = Rench.Environment.getEnvironmentVariables();
+    let currentPath =
+      switch (Rench.EnvironmentVariables.getValue(env, "PATH")) {
+      | None => ""
+      | Some(v) => v
+      };
 
-            print_endline ("USING ADJUSTED PATH: " ++ v);
-            
-            let augmentedPath = switch (merlin.ocamlMerlinReasonPath) {
-            | None => currentPath
-            | Some(v) => currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
-            };
+    let augmentedPath =
+      switch (merlin.ocamlMerlinReasonPath) {
+      | None => currentPath
+      | Some(v) =>
+        currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
+      };
 
-            let pid =
-              Unix.create_process_env(
-                v,
-                [|v, "single", "errors", "-filename", filePath|],
-                [|"PATH="++augmentedPath|],
-                pstdin,
-                pstdout,
-                pstdout,
-              );
+    //info("Augmented path for environment: " ++ augmentedPath);
 
-            Unix.close(pstdout);
-            Unix.close(pstdin);
-            Unix.close(pstderr);
+    let pid =
+      Unix.create_process_env(
+        v,
+        [|v, "single", "errors", "-filename", filePath|],
+        [|"PATH=" ++ augmentedPath|],
+        pstdin,
+        pstdout,
+        pstdout,
+      );
 
-            let stdIn = Unix.out_channel_of_descr(stdin);
-            let stdout = Unix.in_channel_of_descr(stdout);
+    Unix.close(pstdout);
+    Unix.close(pstdin);
+    Unix.close(pstderr);
 
-            let i = ref(0);
-            let len = Array.length(input);
+    let stdIn = Unix.out_channel_of_descr(stdin);
+    let stdout = Unix.in_channel_of_descr(stdout);
 
-            while (i^ < len) {
-              output_string(stdIn, input[i^] ++ "\n");
-              Thread.yield();
-              incr(i);
-            };
+    let i = ref(0);
+    let len = Array.length(input);
 
-            close_out_noerr(stdIn);
+    while (i^ < len) {
+      output_string(stdIn, input[i^] ++ "\n");
+      Thread.yield();
+      incr(i);
+    };
 
-            let json = Yojson.Safe.from_channel(stdout);
-            let result = MerlinProtocol.parse(json);
+    close_out_noerr(stdIn);
 
-            switch (result) {
-            | Ok(v) =>
-              print_endline("RESULT: " ++ Yojson.Safe.to_string(v));
-              let errors = MerlinProtocol.errorResult_of_yojson(v);
+    let json = Yojson.Safe.from_channel(stdout);
+    let result = MerlinProtocol.parse(json);
 
-              switch (errors) {
-              | Ok(v) => cb(v)
-              | Error(e) => print_endline("ERROR: " ++ e)
-              };
-            | Error(e) => print_endline("ERROR: " ++ e)
-            };
+    switch (result) {
+    | Ok(v) =>
+      let errors = MerlinProtocol.errorResult_of_yojson(v);
 
-            pendingRequest := false;
-    | None => ();
-          }
-}
+      switch (errors) {
+      | Ok(v) => cb(v)
+      | Error(e) => error(e)
+      };
+    | Error(e) => error(e)
+    };
+
+    pendingRequest := false;
+  | None => ()
+  };
+};

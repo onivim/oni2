@@ -13,6 +13,20 @@ type t = {
   ocamlMerlinReasonPath: option(string),
 };
 
+let show = (v: t) => {
+    let omp = switch (v.ocamlMerlinPath) {
+    | Some(v) => v
+    | None => "None"
+    };
+
+    let omrp = switch (v.ocamlMerlinReasonPath) {
+    | Some(v) => v
+    | None => "None"
+    };
+
+    Printf.sprintf("ocamlMerlinPath: %s\n ocamlMerlinReasonPath: %s\n", omp, omrp);
+};
+
 let _cache: Hashtbl.t(string, t) = Hashtbl.create(8);
 let _mutex = Mutex.create();
 
@@ -28,6 +42,12 @@ let merlinReasonExecutable =
   | _ => "ocamlmerlin-reason"
   };
 
+let whichOrWhere =
+  switch (Revery.Environment.os) {
+  | Windows => "where"
+  | _ => "which"
+  }
+
 let default = {ocamlMerlinPath: None, ocamlMerlinReasonPath: None};
 
 let discover = (workingDirectory: string) => {
@@ -41,43 +61,57 @@ let discover = (workingDirectory: string) => {
         Hashtbl.add(_cache, workingDirectory, v);
         v;
       };
-
-      // Otherwise - is it available in path?
-      let merlinPath = Environment.which(merlinExecutable);
-      let merlinReasonPath = Environment.which(merlinReasonExecutable);
-      switch ((merlinPath, merlinReasonPath)) {
-      | (Some(mp), Some(mrp)) =>
-        Log.info("MerlinDiscovery::discover - found both: " ++ mp ++ " | " ++ mrp);
-        complete({ocamlMerlinPath: Some(mp), ocamlMerlinReasonPath: Some(mrp)});
-      | (Some(mp), None) =>
-        complete({ocamlMerlinPath: Some(mp), ocamlMerlinReasonPath: None});
-      | _ =>
-        print_endline("Merlin not found in Path... trying esy");
-
-        switch (Esy.getEsyPath()) {
+        
+        // Try esy first
+        let (ocamlMerlinPath, ocamlMerlinReasonPath) = switch (Esy.getEsyPath()) {
         | None =>
-          print_endline("Esy not found.");
-          complete({ocamlMerlinPath: None, ocamlMerlinReasonPath: None});
+          Log.info("Esy not found.");
+          (None, None)
         | Some(v) =>
-          print_endline("Found esy: " ++ v);
+          Log.info("Found esy: " ++ v);
           switch (Esy.getStatus(workingDirectory)) {
-          
-          | Ok(v) when v == Esy.Status.ReadyForDev => 
-            let merlinExec = Esy.runCommand(workingDirectory, [|"where", merlinExecutable|]);
-            let merlinReasonExec = Esy.runCommand(workingDirectory, [|"where", merlinReasonExecutable|]);
-            switch ((merlinExec, merlinReasonExec)) {
-            | (Ok(mp), Ok(mrp)) => complete({ocamlMerlinPath: Some(mp), ocamlMerlinReasonPath: Some(mrp)})
-            | (Ok(mp), Error(e)) => complete({ocamlMerlinPath: Some(mp), ocamlMerlinReasonPath: None})
-            | (Error(e), _) => 
-              print_endline ("Error resolving esy: " ++ e);
-              complete({ocamlMerlinPath: None, ocamlMerlinReasonPath: None});
-            }
-          | _ => 
-            print_endline ("Esy project not ready");
-            complete({ocamlMerlinPath: None, ocamlMerlinReasonPath: None});
-          }
+          | Ok(v) when v == Esy.Status.ReadyForDev =>
+            let merlinExec =
+              Esy.runCommand(
+                workingDirectory,
+                [|whichOrWhere, merlinExecutable|],
+              );
+            let merlinReasonExec =
+              Esy.runCommand(
+                workingDirectory,
+                [|whichOrWhere, merlinReasonExecutable|],
+              );
+            switch (merlinExec, merlinReasonExec) {
+            | (Ok(mp), Ok(mrp)) =>
+              (Some(mp), Some(mrp))
+            | (Ok(mp), Error(e)) =>
+              (Some(mp), None)
+            | (Error(e), _) =>
+              Log.info("Error resolving esy: " ++ e);
+              (None, None)
+            };
+          | _ =>
+            Log.info("Esy project not ready");
+            (None, None)
+          };
         };
+
+      // If we weren't able to find with 'esy', lets fallback to looking in the environment
+
+      let (ocamlMerlinPath, ocamlMerlinReasonPath) = switch ((ocamlMerlinPath, ocamlMerlinReasonPath)) {
+      | (Some(mp), Some(rmp)) => (Some(mp), Some(rmp))
+      | (Some(mp), None) => (Some(mp), Environment.which(merlinReasonExecutable))
+      | (None, Some(rmp)) => (Environment.which(merlinExecutable), Some(rmp))
+      | (None, None) => (Environment.which(merlinExecutable), Environment.which(merlinReasonExecutable))
       };
+
+      
+      let result = {
+        ocamlMerlinPath,
+        ocamlMerlinReasonPath,
+      };
+      Log.info("Merlin discovery result: " ++ show(result));
+      complete(result);
     };
 
   Mutex.unlock(_mutex);
