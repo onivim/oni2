@@ -31,7 +31,7 @@ through it the first time you open a PR.
 
 To enable us to quickly review and accept your pull requests, follow these guidelines:
 - Always create __one pull request per issue__ and __link the issue in the pull request__. Never merge multiple requests into one.
-- Keep code changes __as small as possible__. Break large PRs or features into smaller, incremental PRs were possible.
+- Keep code changes __as small as possible__. Break large PRs or features into smaller, incremental PRs where possible.
 - Make our maintainer's life easy and keep changes __as simple as possible.__
 - Avoid pure formatting changes for code that has not been otherwise modified.
 - Include tests whenever possible.

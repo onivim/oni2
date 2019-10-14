@@ -5,9 +5,6 @@
  */
 
 open Revery;
-open Revery.UI;
-
-open Rench;
 
 open Oni_UI;
 
@@ -31,6 +28,7 @@ let init = app => {
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
+          ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
           ~icon=Some("logo.png"),
           (),
@@ -65,24 +63,28 @@ let init = app => {
   };
 
   let getScaleFactor = () => {
-    Window.getDevicePixelRatio(w) *. Window.getScaleFactor(w);
+    Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
   };
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
+
+  let quit = code => {
+    App.quit(~code, app);
+  };
 
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
-      ~getClipboardText=
-        () => Reglfw.Glfw.glfwGetClipboardString(w.glfwWindow),
-      ~setClipboardText=
-        text => Reglfw.Glfw.glfwSetClipboardString(w.glfwWindow, text),
+      ~getClipboardText=() => Sdl2.Clipboard.getText(),
+      ~setClipboardText=text => Sdl2.Clipboard.setText(text),
       ~getTime,
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
+      ~window=Some(w),
       ~cliOptions=Some(cliOptions),
+      ~quit,
       (),
     );
   Log.debug("Startup: StoreThread started!");
@@ -106,8 +108,10 @@ let init = app => {
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorScroll: (~deltaY, ()) =>
+    editorScrollDelta: (~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(deltaY)),
+    editorSetScroll: (~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(scrollY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
@@ -116,45 +120,12 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
+  dispatch(Model.Actions.KeyBindingsSet(Core.Keybindings.get()));
   runEffects();
 
   List.iter(
     v => dispatch(Model.Actions.OpenFileByPath(v, None)),
     cliOptions.filesToOpen,
-  );
-
-  let commands = Core.Keybindings.get();
-
-  /* Add an updater to handle a KeyboardInput action */
-  let inputHandler = Input.handle(~commands);
-
-  /**
-     The key handlers return (keyPressedString, shouldOniListen)
-     i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
-     /respond to commands otherwise if input is alphabetical AND
-     a revery element is focused oni2 should defer to revery
-   */
-  let keyEventListener = key => {
-    let time = Time.getTime() |> Time.toSeconds;
-    switch (key, Focus.focused) {
-    | (None, _) => ()
-    | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
-      inputHandler(~state=currentState^, ~time, k) |> List.iter(dispatch);
-      // Run input effects _immediately_
-      runEffects();
-    | (Some((_, false)), {contents: Some(_)}) => ()
-    };
-  };
-
-  Event.subscribe(w.onKeyDown, keyEvent =>
-    Input.keyPressToCommand(keyEvent, Revery_Core.Environment.os)
-    |> keyEventListener
-  )
-  |> ignore;
-
-  Reglfw.Glfw.glfwSetCharModsCallback(w.glfwWindow, (_w, codepoint, mods) =>
-    Input.charToCommand(codepoint, mods) |> keyEventListener
   );
 };
 

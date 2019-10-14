@@ -24,6 +24,7 @@ This project incorporates components from the projects listed below. The origina
 17. janestreet/ppx_let (https://github.com/janestreet/ppx_let)
 18. Inconsolata Font (https://github.com/googlefonts/Inconsolata)
 19. MinCW Runtime License (https://sourceforge.net/p/mingw/mingw-org-wsl/ci/21762bb4a1bd0c88c38eead03f59e8d994349e83/tree/LICENSE)
+20. SDL2 (https://www.libsdl.org)
 
 %% FiraCode NOTICES AND INFORMATION BEGIN HERE
 ==============================================
@@ -2537,6 +2538,26 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ==============================================
 END of MingW Runtime License NOTICES AND INFORMATION
+
+%% SDL 2 NOTICES AND INFORMATION BEGIN HERE
+==============================================
+This software is provided 'as-is', without any express or implied
+warranty.  In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not
+   claim that you wrote the original software. If you use this software
+   in a product, an acknowledgment in the product documentation would be
+   appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+   misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
+==============================================
+END of SDL 2 NOTICES AND INFORMATION
 
 %% <template> NOTICES AND INFORMATION BEGIN HERE
 ==============================================

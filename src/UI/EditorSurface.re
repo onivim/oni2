@@ -68,6 +68,7 @@ let renderLineNumber =
         /. 2.;
 
   Revery.Draw.Text.drawString(
+    ~window=Revery.UI.getActiveWindow(),
     ~transform,
     ~x=lineNumberXOffset,
     ~y=yF,
@@ -144,6 +145,7 @@ let renderTokens =
     switch (token.tokenType) {
     | Text =>
       Revery.Draw.Text.drawString(
+        ~window=Revery.UI.getActiveWindow(),
         ~transform,
         ~x,
         ~y,
@@ -155,6 +157,7 @@ let renderTokens =
       )
     | Tab =>
       Revery.Draw.Text.drawString(
+        ~window=Revery.UI.getActiveWindow(),
         ~transform,
         ~x=x +. fontWidth /. 4.,
         ~y=y +. fontHeight /. 4.,
@@ -463,14 +466,14 @@ let createElement =
       ];
 
     let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScroll(
+      GlobalContext.current().editorScrollDelta(
         ~deltaY=wheelEvent.deltaY *. (-50.),
         (),
       );
     };
 
     let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScroll(
+      GlobalContext.current().editorScrollDelta(
         ~deltaY=wheelEvent.deltaY *. (-150.),
         (),
       );

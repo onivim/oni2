@@ -11,6 +11,8 @@ type keyBindings = {
 [@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type t = list(keyBindings);
 
+let default = [];
+
 [@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 type json_keybindings = {bindings: t};
 

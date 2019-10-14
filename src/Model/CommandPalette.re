@@ -1,4 +1,4 @@
-let create = (setItems, _, _) => {
+let create = (setItems, _, _, _) => {
   let commands: list(Actions.menuCommand) = [
     {
       category: Some("Preferences"),
@@ -16,6 +16,12 @@ let create = (setItems, _, _) => {
       category: Some("Preferences"),
       name: "Reload configuration",
       command: () => Actions.ConfigurationReload,
+      icon: None,
+    },
+    {
+      category: Some("Preferences"),
+      name: "Theme Picker",
+      command: () => Actions.ThemeShowMenu,
       icon: None,
     },
     {

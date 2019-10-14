@@ -26,6 +26,7 @@ type t = {
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
   iconTheme: IconTheme.t,
+  keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
@@ -35,6 +36,9 @@ type t = {
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   zenMode: bool,
+  // [darkMode] describes if the UI is in 'dark' or 'light' mode.
+  // Generally controlled by the theme.
+  darkMode: bool,
 };
 
 let create: unit => t =
@@ -61,6 +65,7 @@ let create: unit => t =
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
+    keyBindings: Keybindings.default,
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: LanguageInfo.create(),
     notifications: Notifications.default,
@@ -69,4 +74,5 @@ let create: unit => t =
     windowManager: WindowManager.create(),
     fileExplorer: FileExplorer.create(),
     zenMode: false,
+    darkMode: true,
   };

@@ -22,6 +22,8 @@ let getTime = () => _currentTime^;
 
 let getScaleFactor = () => 1.0;
 
+let quit = code => exit(code);
+
 let runTest =
     (
       ~configuration=None,
@@ -68,6 +70,8 @@ let runTest =
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=configPath,
+      ~quit,
+      ~window=None,
       (),
     );
 

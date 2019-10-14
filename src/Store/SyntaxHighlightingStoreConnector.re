@@ -100,6 +100,16 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
+    | Model.Actions.SetTokenTheme(tokenTheme) =>
+      let state = {
+        ...state,
+        syntaxHighlighting:
+          Model.SyntaxHighlighting.updateTheme(
+            tokenTheme,
+            state.syntaxHighlighting,
+          ),
+      };
+      (state, Isolinear.Effect.none);
     | Model.Actions.Tick(_) =>
       if (Model.SyntaxHighlighting.anyPendingWork(state.syntaxHighlighting)) {
         let syntaxHighlighting =

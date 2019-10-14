@@ -185,24 +185,27 @@ let make =
         slots,
       );
 
-    let handleKeyPress = (event: NodeEvents.keyPressEventParams) => {
-      dispatch(InsertText(event.character));
+    let handleTextInput = (event: NodeEvents.textInputEventParams) => {
+      dispatch(InsertText(event.text));
     };
 
     let handleKeyDown = (event: NodeEvents.keyEventParams) => {
-      switch (event.key) {
-      | Key.KEY_LEFT =>
+      switch (event.keycode) {
+      | v when v == Key.Keycode.left =>
         onKeyDown(event);
         dispatch(CursorLeft);
-      | Key.KEY_RIGHT =>
+      | v when v == Key.Keycode.right =>
         onKeyDown(event);
         dispatch(CursorRight);
-      | Key.KEY_H when event.ctrlKey => dispatch(Backspace)
-      | Key.KEY_U when event.ctrlKey => dispatch(DeleteLine)
-      | Key.KEY_W when event.ctrlKey => dispatch(DeleteWord)
-      | Key.KEY_DELETE => dispatch(DeleteCharacter)
-      | Key.KEY_BACKSPACE => dispatch(Backspace)
-      | Key.KEY_ESCAPE =>
+      | v when v == 104 /*Key.Keycode.h*/ && event.ctrlKey =>
+        dispatch(Backspace)
+      | v when v == 117 /*Key.Keycode.u*/ && event.ctrlKey =>
+        dispatch(DeleteLine)
+      | v when v == 119 /*Key.Keycode.w*/ && event.ctrlKey =>
+        dispatch(DeleteWord)
+      | v when v == Key.Keycode.delete => dispatch(DeleteCharacter)
+      | v when v == Key.Keycode.backspace => dispatch(Backspace)
+      | v when v == Key.Keycode.escape =>
         onKeyDown(event);
         Focus.loseFocus();
       | _ => onKeyDown(event)
@@ -242,7 +245,8 @@ let make =
       let (startStr, _) =
         getStringParts(state.cursorPosition, valueToDisplay);
       let dimension =
-        Revery_Draw.Text.measure(
+        Revery.Draw.Text.measure(
+          ~window=Revery.UI.getActiveWindow(),
           ~fontFamily=inputFontFamily,
           ~fontSize=inputFontSize,
           startStr,
@@ -285,7 +289,7 @@ let make =
         onBlur={() => dispatch(SetFocus(false))}
         componentRef={autofocus ? Focus.focus : ignore}
         onKeyDown=handleKeyDown
-        onKeyPress=handleKeyPress>
+        onTextInput=handleTextInput>
         <View style=viewStyles>
           cursor
           {hasPlaceholder ? placeholderText : inputText}
