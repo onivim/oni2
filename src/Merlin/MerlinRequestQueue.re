@@ -53,7 +53,8 @@ let _executeNextRequest = () => {
   Mutex.unlock(requestsMutex);
 
   switch (req) {
-  | Some(DiagnosticsRequest(dr)) => print_endline ("Diagnostics request");
+  | Some(DiagnosticsRequest(dr)) => 
+    Merlin.getErrors(dr.workingDirectory, dr.filePath, dr.lines, dr.callback);
   | _ => print_endline ("No request");
   }
 };

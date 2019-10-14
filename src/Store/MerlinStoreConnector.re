@@ -15,6 +15,12 @@ module Zed_utf8 = Core.ZedBundled;
 open Oni_Merlin;
 open Rench;
 
+let runOnMainThread = (cb) => {
+  (arg) => {
+    Revery.App.runOnMainThread(cb(arg));
+  };
+};
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let modelChangedEffect =

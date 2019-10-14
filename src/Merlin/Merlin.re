@@ -7,10 +7,7 @@
 let pendingRequest = ref(false);
 
 let getErrors =
-    (workingDirectory: string, filePath: string, input: array(string), cb) =>
-    if (! pendingRequest^) {
-        let _ = Thread.create(
-          () => {
+    (workingDirectory: string, filePath: string, input: array(string), cb) => {
           let merlin = MerlinDiscovery.discover(workingDirectory);
           switch (merlin.ocamlMerlinPath) {
           | Some(v) =>
@@ -86,10 +83,4 @@ let getErrors =
             pendingRequest := false;
     | None => ();
           }
-          },
-          (),
-        );
-      Ok("winning");
-  } else {
-    Error("other request pending");
-  };
+}
