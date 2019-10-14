@@ -4,6 +4,8 @@
  * Core merlin API
  */
 
+open Oni_Core;
+
 type diagnosticsRequest = {
   filePath: string,
   lines: array(string),
@@ -39,7 +41,7 @@ let popPendingRequest = (v: t) => {
   switch (v.diagnosticsRequest) {
   | Some(dr) => (
       Some(DiagnosticsRequest(dr)),
-      {...v, diagnosticsRequest: None},
+      {diagnosticsRequest: None},
     )
   | None => (None, v)
   };
@@ -54,7 +56,7 @@ let _executeNextRequest = () => {
   switch (req) {
   | Some(DiagnosticsRequest(dr)) =>
     Merlin.getErrors(dr.workingDirectory, dr.filePath, dr.lines, dr.callback)
-  | _ => print_endline("No request")
+  | _ => Log.info("[MerlinRequestQueue] No request")
   };
 };
 
@@ -89,7 +91,6 @@ let getErrors =
   Mutex.lock(requestsMutex);
   requests :=
     {
-      ...requests^,
       diagnosticsRequest:
         Some({workingDirectory, filePath, lines, callback: cb}),
     };

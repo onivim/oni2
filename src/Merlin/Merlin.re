@@ -6,8 +6,6 @@
 
 open Oni_Core;
 
-let pendingRequest = ref(false);
-
 let info = msg => Log.info("[Merlin] " ++ msg);
 let error = msg => Log.error("[Merlin] " ++ msg);
 
@@ -17,7 +15,6 @@ let getErrors =
   switch (merlin.ocamlMerlinPath) {
   | Some(v) =>
     info("Using path: " ++ v);
-    pendingRequest := true;
     let (pstdin, stdin) = Unix.pipe();
     let (stdout, pstdout) = Unix.pipe();
     let (stderr, pstderr) = Unix.pipe();
@@ -43,9 +40,7 @@ let getErrors =
         currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
       };
 
-    //info("Augmented path for environment: " ++ augmentedPath);
-
-    let pid =
+    let _ =
       Unix.create_process_env(
         v,
         [|v, "single", "errors", "-filename", filePath|],
@@ -73,7 +68,41 @@ let getErrors =
 
     close_out_noerr(stdIn);
 
-    let json = Yojson.Safe.from_channel(stdout);
+     // This is necessary because of merlin issues:
+     // https://github.com/ocaml/merlin/issues/1034
+     // https://github.com/ocaml/merlin/issues/714
+     // On Windows, we can sometimes get an error prelude when there are PPX involved 
+     let handleMerlinResponse = (chan) => {
+       let isJson = ref(false);
+       let isDone = ref(false);
+       let json = ref([]);
+
+       while (!(isDone^)) {
+          switch(input_line(chan)) {
+          | exception(_) => isDone := true
+          | line => {
+            if (isJson^) {
+              json := [line, ...json^];
+            }
+            else if (String.length(line) > 0 && String.get(line, 0) == '{') {
+              json := [line, ...json^];
+              isJson := true;
+            }
+          }
+          }
+
+
+       }
+
+       json^
+       |> List.rev
+       |> String.concat("");
+     };
+     
+
+    let jsonString = handleMerlinResponse(stdout);
+    let json = Yojson.Safe.from_string(jsonString);
+
     let result = MerlinProtocol.parse(json);
 
     switch (result) {
@@ -87,7 +116,6 @@ let getErrors =
     | Error(e) => error(e)
     };
 
-    pendingRequest := false;
   | None => ()
   };
 };

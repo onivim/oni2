@@ -297,7 +297,7 @@ let createElement =
 
                   // Draw error highlight
                   switch (IntMap.find_opt(item, diagnostics)) {
-                  | Some(v) =>
+                  | Some(_) =>
                     Shapes.drawRect(
                       ~transform,
                       ~x=0.,

@@ -31,8 +31,6 @@ let ofLines = (lines: array(string)) => {
   syntaxHighlightingEnabled: true,
 };
 
-let getLines = (v: t) => v.lines;
-
 let empty = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
@@ -65,8 +63,6 @@ let getId = (buffer: t) => buffer.id;
 let getLine = (buffer: t, line: int) => buffer.lines[line];
 
 let getLines = (buffer: t) => buffer.lines;
-
-let isModified = (buffer: t) => buffer.modified;
 
 let getVersion = (buffer: t) => buffer.version;
 

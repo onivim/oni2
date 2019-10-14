@@ -13,21 +13,34 @@ module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
 open Oni_Merlin;
-open Rench;
 
 let runOnMainThread = (cb, arg) => {
   Revery.App.runOnMainThread(cb(arg));
 };
 
+let effectIfMerlinEnabled = (effect) => {
+
+  let ret = (configuration: Core.Configuration.t) => {
+    let isMerlinEnabled = Core.Configuration.getValue(c => c.experimentalMerlin, configuration);
+
+    if (isMerlinEnabled) {
+      effect
+    } else {
+      Isolinear.Effect.none
+    }
+  };
+  
+  ret;
+}
+
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let modelChangedEffect =
       (
-        configuration: Core.Configuration.t,
         buffers: Model.Buffers.t,
         bu: Core.Types.BufferUpdate.t,
       ) =>
-    Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
+    effectIfMerlinEnabled(Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
@@ -38,7 +51,7 @@ let start = () => {
           let cb = err => {
             let modelDiagnostics =
               MerlinProtocolConverter.toModelDiagnostics(err);
-            print_endline(
+            Log.info(
               "Got "
               ++ string_of_int(List.length(modelDiagnostics))
               ++ " errors",
@@ -54,13 +67,14 @@ let start = () => {
         | _ => ()
         };
       }
-    );
+    ));
+
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.BufferUpdate(bu) => (
         state,
-        modelChangedEffect(state.configuration, state.buffers, bu),
+        modelChangedEffect(state.buffers, bu, state.configuration),
       )
     | _ => (state, Isolinear.Effect.none)
     };

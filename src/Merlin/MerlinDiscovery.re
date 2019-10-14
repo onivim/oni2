@@ -84,7 +84,7 @@ let discover = (workingDirectory: string) => {
             switch (merlinExec, merlinReasonExec) {
             | (Ok(mp), Ok(mrp)) =>
               (Some(mp), Some(mrp))
-            | (Ok(mp), Error(e)) =>
+            | (Ok(mp), Error(_)) =>
               (Some(mp), None)
             | (Error(e), _) =>
               Log.info("Error resolving esy: " ++ e);
