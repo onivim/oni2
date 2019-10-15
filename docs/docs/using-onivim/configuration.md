@@ -70,3 +70,11 @@ oni2 --force-device-scale-factor=2.0
 ```
 
 > __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported
+
+### Experimental
+
+Experimental features are features that we are working to stabilize and turn on-by-default.
+
+> __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
+
+- `experimental.merlin` - __(_bool_ default: `false`)__ - Use built-in merlin integration. Merlin must be in your `PATH` or included in your `esy` configuration. This is a precursor to more broad language support (ie, VSCode extension host integrations).
