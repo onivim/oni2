@@ -17,23 +17,26 @@ let createElement =
   component(hooks => {
     let {theme, uiFont, hover, _}: Model.State.t = state;
 
-    let outerContainerStyle = Style.[position(`Absolute), top(y), left(x)];
+    let outerPositionStyle = Style.[position(`Absolute), top(y), left(x)];
 
     let opacity = Model.Hover.getOpacity(hover);
 
-    let containerStyle =
+    let innerPositionStyle =
       Style.[
-        border(~color=Colors.white, ~width=1),
         position(`Absolute),
         bottom(0),
         left(0),
+      ];
+
+    let containerStyle = Style.[
+        border(~color=Colors.white, ~width=1),
         backgroundColor(theme.editorBackground),
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
-        minWidth(100),
-        minHeight(25),
-      ];
+        width(250),
+        height(50),
+    ];
 
     let textStyle =
       Style.[
@@ -57,9 +60,13 @@ let createElement =
         );
       (
         hooks,
-        <View style=outerContainerStyle>
-          <View style=containerStyle>
-            <Opacity opacity> ...diags </Opacity>
+        <View style=outerPositionStyle>
+          <View style=innerPositionStyle>
+            <Opacity opacity>
+                <View style=containerStyle>
+                ...diags 
+                </View>
+            </Opacity>
           </View>
         </View>,
       );

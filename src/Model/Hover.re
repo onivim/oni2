@@ -44,19 +44,3 @@ let isAnimationActive = (v: t) =>
   | None => false
   | Some(hover) => Animation.isActive(hover.animation)
   };
-
-/*let get = (~bufferId, ~position: Position.t, state: State.t) => {
-    let buffer = Buffers.getBuffer(bufferId, state.buffers);
-
-    switch (buffer) {
-    | None => None
-    | Some(buf) => {
-      let diagnostics = Diagnostics.getDiagnosticsAtPosition(state.diagnostics, buf, position);
-
-      switch (diagnostics) {
-      | [] => None
-      | _ => Some({ diagnostics: diagnostics });
-      }
-    }
-    }
-  };*/
