@@ -9,8 +9,7 @@ open Oni_Core;
 let info = msg => Log.info("[Merlin] " ++ msg);
 let error = msg => Log.error("[Merlin] " ++ msg);
 
-let getErrors =
-    (workingDirectory: string, filePath: string, input: array(string), cb) => {
+let _runMerlinCommand = (~workingDirectory, ~filePath, ~fileContents, ~args, cb) => {
   let merlin = MerlinDiscovery.discover(workingDirectory);
   switch (merlin.ocamlMerlinPath) {
   | Some(v) =>
@@ -40,16 +39,19 @@ let getErrors =
         currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
       };
 
-    let _ =
-      Unix.create_process_env(
-        v,
-        [|v, "single", "errors", "-filename", filePath|],
-        [|"PATH=" ++ augmentedPath|],
-        pstdin,
-        pstdout,
-        pstdout,
-      );
 
+  let arguments = List.concat([[v, "single"], args, ["-filename", filePath]]) |> Array.of_list;
+    
+  let _ =
+    Unix.create_process_env(
+      v,
+      arguments,
+      [|"PATH=" ++ augmentedPath|],
+      pstdin,
+      pstdout,
+      pstdout,
+    );
+    
     Unix.close(pstdout);
     Unix.close(pstdin);
     Unix.close(pstderr);
@@ -58,10 +60,11 @@ let getErrors =
     let stdout = Unix.in_channel_of_descr(stdout);
 
     let i = ref(0);
-    let len = Array.length(input);
+    let len = Array.length(fileContents);
 
     while (i^ < len) {
-      output_string(stdIn, input[i^] ++ "\r\n");
+      output_string(stdIn, fileContents[i^]);
+      output_string(stdIn, "\n");
       Thread.yield();
       incr(i);
     };
@@ -95,20 +98,28 @@ let getErrors =
 
     let jsonString = handleMerlinResponse(stdout);
     let json = Yojson.Safe.from_string(jsonString);
+    cb(json);
+  | None => ();
+};
+};
 
-    let result = MerlinProtocol.parse(json);
+let getErrors =
+    (workingDirectory: string, filePath: string, fileContents: array(string), cb) => {
 
-    switch (result) {
-    | Ok(v) =>
-      let errors = MerlinProtocol.errorResult_of_yojson(v);
+    let callback = (json) => {
+      let result = MerlinProtocol.parse(json);
+      switch (result) {
+      | Ok(v) =>
+        let errors = MerlinProtocol.errorResult_of_yojson(v);
 
-      switch (errors) {
-      | Ok(v) => cb(v)
+        switch (errors) {
+        | Ok(v) => cb(v)
+        | Error(e) => error(e)
+        };
       | Error(e) => error(e)
       };
-    | Error(e) => error(e)
     };
 
-  | None => ()
-  };
+    
+    _runMerlinCommand(~workingDirectory, ~filePath, ~fileContents, ~args=["errors"], callback);
 };
