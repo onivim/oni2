@@ -111,6 +111,7 @@ let runTest =
       wrappedRunEffects();
 
       Unix.sleepf(0.1);
+      Thread.yield();
     };
 
     let result = waiter(currentState^);

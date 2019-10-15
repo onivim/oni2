@@ -50,11 +50,11 @@ let start = () => {
                 ++ string_of_int(List.length(modelDiagnostics))
                 ++ " errors",
               );
-              Revery.App.runOnMainThread(() =>
+              Revery.App.runOnMainThread(() => {
                 dispatch(
                   Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics),
                 )
-              );
+              });
             };
             let _ =
               MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
