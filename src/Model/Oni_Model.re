@@ -24,6 +24,7 @@ module EditorVisibleRanges = EditorVisibleRanges;
 module Filter = Filter;
 module KeyDisplayer = KeyDisplayer;
 module Hover = Hover;
+module HoverCollector = HoverCollector;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;

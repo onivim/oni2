@@ -55,28 +55,17 @@ let createElement =
         backgroundColor(theme.editorBackground),
       ];
 
-    switch (state.hover) {
-    | None => 
-      (hooks, 
-        <View style=outerContainerStyle>
-        <View style=containerStyle>
-          <View>
-          <Text style=textStyle text={"Empty1"} />
-          </View>
-          <View>
-          <Text style=textStyle text={"Empty2"} />
-          </View>
-          <View>
-          <Text style=textStyle text={"Empty3"} />
-          </View>
-      </View>
-      </View>)
+    let empty = (hooks, React.empty);
+
+    switch (Model.HoverCollector.get(state)) {
+    | None => empty
     | Some(hover) => {
+      let diags = List.map((d: Model.Diagnostics.Diagnostic.t) => <Text style=textStyle text={d.message} />, hover.diagnostics);
       (hooks, 
         <View style=outerContainerStyle>
       <View style=containerStyle>
           <Opacity opacity>
-          <Text style=textStyle text={"Hello"} />
+          ...diags
           </Opacity>
       </View>
       </View>)
