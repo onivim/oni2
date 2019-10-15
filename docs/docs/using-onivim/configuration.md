@@ -40,11 +40,15 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
+
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
 ### UI
 
 - `ui.shadows` __(_bool_ default: `true`)__ - Use drop-shadows in the rendering of menus, overlays, etc.
+
+- `ui.zoom` __(_float_ default: `1.0`)__ - Zoom setting for UI. Factor to scale UI elements. A value of `2.0` will scale the UI by 200%.
 
 ### Vim
 
@@ -52,3 +56,31 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
     - _`true`_ - all deletes and yanks, regardless of register used, will be pushed to the system clipboard. Equivalent to `["yank", "paste", "delete"]`.
     - _`["yank", "paste", "delete"]`_ - An array of strings. Each specified operation will always use the system clipboard. For example, `["yank"]` will send all yanks to the system clipboard, but deletes and pastes will require using the `+` or `*` registers. `["delete", "paste"]` means that all deletes will be sent to the system clipboard, and pastes using the unnamed register will come from the system clipboard, but only yanks with register `+` and `*` would be sent to the clipboard.
     - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard. Equivalent to `[]`.
+
+## High-DPI / UI Scaling
+
+Onivim 2 should automatically pick up your scaling settings via the following per-platform strategies:
+
+- __Windows:__ On 8.1+, we use the 'scale factor' of the display device.
+- __OSX:__ - High-DPI / retina displays are automatically detected.
+- __Linux:__ - The `GDK_SCALE` environment variable is used, if available.
+
+If the display scaling is not correct, you can override by using the `--force-device-scale-factor` command-line argument, like:
+
+```
+oni2 --force-device-scale-factor=2.0
+```
+
+> __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported
+
+### Experimental
+
+Experimental features are features that we are working to stabilize and turn on-by-default.
+
+> __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
+
+- `experimental.merlin` - __(_bool_ default: `false`)__ - Use built-in merlin integration. Merlin must be in your `PATH` or included in your `esy` configuration. This is a precursor to more broad language support (ie, VSCode extension host integrations).
+
+- `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
+
+> __NOTE:__ The full set and scope of VimL compatibility is not currently tested. We are still working to enable test cases in [`libvim`](https://github.com/onivim/libvim/pull/6). Use at your own risk, in the meantime!

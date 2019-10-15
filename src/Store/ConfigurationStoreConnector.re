@@ -8,16 +8,21 @@ open Oni_Core;
 open Oni_Model;
 
 let start =
-    (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
+    (
+      ~configurationFilePath: option(string),
+      ~cliOptions: option(Cli.t),
+      ~getZoom,
+      ~setZoom,
+    ) => {
   let defaultConfigurationFileName = "configuration.json";
-  let getConfigurationFile = () => {
+  let getConfigurationFile = fileName => {
     let errorLoading = path => {
       Log.error("Error loading configuration file at: " ++ path);
-      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName);
+      Filesystem.getOrCreateConfigFile(fileName);
     };
 
     switch (configurationFilePath) {
-    | None => Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
+    | None => Filesystem.getOrCreateConfigFile(fileName)
     | Some(v) =>
       switch (Sys.file_exists(v)) {
       | exception _ => errorLoading(v)
@@ -42,9 +47,40 @@ let start =
     ();
   };
 
+  let transformConfigurationEffect = (fileName, buffers, transformer) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="configuration.transform", dispatch => {
+      let configPath = getConfigurationFile(fileName);
+      switch (configPath) {
+      | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
+      | Ok(configPath) =>
+        if (!Buffers.isModifiedByPath(buffers, configPath)) {
+          Log.perf("Apply configuration transform", () => {
+            let parsedJson = Yojson.Safe.from_file(configPath);
+            let newJson = transformer(parsedJson);
+            let oc = open_out(configPath);
+            Yojson.Safe.pretty_to_channel(oc, newJson);
+            close_out(oc);
+          });
+        } else {
+          dispatch(
+            Actions.ShowNotification(
+              Notification.create(
+                ~notificationType=Actions.Error,
+                ~title="Theme",
+                ~message=
+                  "Unable to save theme selection to configuration; configuration file is modified.",
+                (),
+              ),
+            ),
+          );
+        }
+      };
+    });
+
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
-      let configPath = getConfigurationFile();
+      let configPath = getConfigurationFile(defaultConfigurationFileName);
       switch (configPath) {
       | Ok(configPathAsString) =>
         switch (ConfigurationParser.ofFile(configPathAsString)) {
@@ -57,7 +93,7 @@ let start =
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
-      let configPath = getConfigurationFile();
+      let configPath = getConfigurationFile(defaultConfigurationFileName);
       switch (configPath) {
       | Ok(configPathAsString) =>
         Log.info(
@@ -94,12 +130,30 @@ let start =
       }
     );
 
+  // Synchronize miscellaneous configuration settings
+  let zoom = ref(getZoom());
+  let synchronizeConfigurationEffect = configuration =>
+    Isolinear.Effect.create(~name="configuration.synchronize", () => {
+      let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
+      if (zoomValue != zoom^) {
+        Log.info(
+          "Configuration - setting zoom: " ++ string_of_float(zoomValue),
+        );
+        setZoom(zoomValue);
+        zoom := zoomValue;
+      };
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, initConfigurationEffect)
+    | Actions.ConfigurationTransform(file, transformer) => (
+        state,
+        transformConfigurationEffect(file, state.buffers, transformer),
+      )
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
-        Isolinear.Effect.none,
+        synchronizeConfigurationEffect(configuration),
       )
     | Actions.ConfigurationReload => (state, reloadConfigurationEffect)
     | Actions.OpenConfigFile(path) => (

@@ -13,6 +13,7 @@ type testCallback =
 
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
+let _currentZoom: ref(float) = ref(1.0);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -20,7 +21,12 @@ let getClipboard = () => _currentClipboard^;
 let setTime = v => _currentTime := v;
 let getTime = () => _currentTime^;
 
+let setZoom = v => _currentZoom := v;
+let getZoom = () => _currentZoom^;
+
 let getScaleFactor = () => 1.0;
+
+let quit = code => exit(code);
 
 let runTest =
     (
@@ -64,10 +70,13 @@ let runTest =
       ~setClipboardText=text => setClipboard(Some(text)),
       ~getScaleFactor,
       ~getTime,
+      ~getZoom,
+      ~setZoom,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=configPath,
+      ~quit,
       ~window=None,
       (),
     );
@@ -108,6 +117,7 @@ let runTest =
       wrappedRunEffects();
 
       Unix.sleepf(0.1);
+      Thread.yield();
     };
 
     let result = waiter(currentState^);

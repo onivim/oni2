@@ -13,6 +13,27 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
+let findHighlightList = () => {
+  let highlights = Vim.Search.getHighlights();
+
+  let sameLineFilter = (range: Vim.Range.t) =>
+    range.startPos.line == range.endPos.line;
+
+  let toOniRange = (range: Vim.Range.t) =>
+    Core.Range.create(
+      ~startLine=OneBasedIndex(range.startPos.line),
+      ~startCharacter=ZeroBasedIndex(range.startPos.column),
+      ~endLine=OneBasedIndex(range.endPos.line),
+      ~endCharacter=ZeroBasedIndex(range.endPos.column),
+      (),
+    );
+
+  highlights
+  |> Array.to_list
+  |> List.filter(sameLineFilter)
+  |> List.map(toOniRange);
+};
+
 let start =
     (
       languageInfo: Model.LanguageInfo.t,
@@ -317,6 +338,7 @@ let start =
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
+
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
       open Core.Types;
       let bu =
@@ -329,6 +351,11 @@ let start =
           (),
         );
 
+      let highlightList = findHighlightList();
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      dispatch(SearchSetHighlights(id, highlightList));
       dispatch(Model.Actions.BufferUpdate(bu));
     });
 
@@ -371,28 +398,10 @@ let start =
         isCompleting^ ? () : checkCommandLineCompletions();
       | SearchForward
       | SearchReverse =>
-        let highlights = Vim.Search.getHighlights();
-
-        let sameLineFilter = (range: Vim.Range.t) =>
-          range.startPos.line == range.endPos.line;
-
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
+        let highlightList = findHighlightList();
 
-        let toOniRange = (range: Vim.Range.t) =>
-          Core.Range.create(
-            ~startLine=OneBasedIndex(range.startPos.line),
-            ~startCharacter=ZeroBasedIndex(range.startPos.column),
-            ~endLine=OneBasedIndex(range.endPos.line),
-            ~endCharacter=ZeroBasedIndex(range.endPos.column),
-            (),
-          );
-
-        let highlightList =
-          highlights
-          |> Array.to_list
-          |> List.filter(sameLineFilter)
-          |> List.map(toOniRange);
         dispatch(SearchSetHighlights(id, highlightList));
       | _ => ()
       };
@@ -625,8 +634,34 @@ let start =
       }
     );
 
+  let prevViml = ref([]);
+  let synchronizeViml = configuration =>
+    Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
+      let lines =
+        Oni_Core.Configuration.getValue(
+          c => c.experimentalVimL,
+          configuration,
+        );
+
+      if (prevViml^ !== lines) {
+        List.iter(
+          l => {
+            Log.info("Running VimL from config: " ++ l);
+            Vim.command(l);
+            Log.info("VimL command completed.");
+          },
+          lines,
+        );
+        prevViml := lines;
+      };
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
+    | Model.Actions.ConfigurationSet(configuration) => (
+        state,
+        synchronizeViml(configuration),
+      )
     | Model.Actions.Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,

@@ -20,10 +20,14 @@ type t =
   | Command(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
+  // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
+  // opens the file [fileName] and applies [f] to the loaded JSON.
+  | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
+  | DiagnosticsSet(Buffer.t, string, list(Diagnostics.Diagnostic.t))
   | SelectionChanged(VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
@@ -94,6 +98,8 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
+// [configurationTransformer] is a function that modifies configuration json
+and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
 and notificationType =
   | Success
   | Info
@@ -152,4 +158,10 @@ and menuSetLoading = bool => unit
 and menuCreationFunction = menuSetItems => unit
 and menuDisposeFunction = unit => unit
 and menuCreator =
-  (menuSetItems, Rench.Event.t(string), menuSetLoading) => menuDisposeFunction;
+  (
+    menuSetItems,
+    Rench.Event.t(string),
+    Rench.Event.t(option(menuCommand)),
+    menuSetLoading
+  ) =>
+  menuDisposeFunction;

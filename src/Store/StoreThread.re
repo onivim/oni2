@@ -19,6 +19,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+      let userExtensions = Core.Filesystem.getExtensionsFolder();
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
         | Some(p) =>
@@ -26,7 +27,18 @@ let discoverExtensions = (setup: Core.Setup.t) => {
           ret;
         | None => []
         };
-      [extensions, developmentExtensions] |> List.flatten;
+      let userExtensions =
+        switch (userExtensions) {
+        | Ok(p) => ExtensionScanner.scan(p)
+        | Error(_) => []
+        };
+
+      Core.Log.debug(
+        "discoverExtensions - discovered "
+        ++ string_of_int(List.length(userExtensions))
+        ++ " user extensions.",
+      );
+      [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
 
   Core.Log.info(
@@ -46,6 +58,9 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
+      ~getZoom,
+      ~setZoom,
+      ~quit,
       ~getTime,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
@@ -55,6 +70,8 @@ let start =
   ignore(executingDirectory);
 
   let state = Model.State.create();
+
+  let (merlinUpdater, merlinStream) = MerlinStoreConnector.start();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
@@ -85,7 +102,7 @@ let start =
 
   let (syntaxUpdater, syntaxStream) =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
-  let themeUpdater = ThemeStoreConnector.start(themeInfo, setup);
+  let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   /*
      For our July builds, we won't be including the extension host -
@@ -97,7 +114,12 @@ let start =
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
   let configurationUpdater =
-    ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
+    ConfigurationStoreConnector.start(
+      ~configurationFilePath,
+      ~cliOptions,
+      ~getZoom,
+      ~setZoom,
+    );
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
@@ -105,7 +127,8 @@ let start =
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
-  let (lifecycleUpdater, lifecycleStream) = LifecycleStoreConnector.start();
+  let (lifecycleUpdater, lifecycleStream) =
+    LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
 
@@ -136,6 +159,7 @@ let start =
           windowUpdater,
           keyDisplayerUpdater,
           themeUpdater,
+          merlinUpdater,
           acpUpdater,
         ]),
       (),
@@ -183,6 +207,7 @@ let start =
   Isolinear.Stream.connect(dispatch, explorerStream);
   Isolinear.Stream.connect(dispatch, lifecycleStream);
   Isolinear.Stream.connect(dispatch, windowStream);
+  Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
