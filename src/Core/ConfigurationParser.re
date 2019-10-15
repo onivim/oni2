@@ -36,6 +36,7 @@ let parseStringList = json => {
       [],
       items,
     )
+  | `String(v) => [v]
   | _ => []
   };
 };
@@ -237,6 +238,10 @@ let configurationParsers: list(configurationTuple) = [
   (
     "experimental.autoClosingPairs",
     (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
+  ),
+  (
+    "experimental.viml",
+    (s, v) => {...s, experimentalVimL: parseStringList(v)},
   ),
 ];
 

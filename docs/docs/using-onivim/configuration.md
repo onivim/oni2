@@ -80,3 +80,7 @@ Experimental features are features that we are working to stabilize and turn on-
 > __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
 
 - `experimental.merlin` - __(_bool_ default: `false`)__ - Use built-in merlin integration. Merlin must be in your `PATH` or included in your `esy` configuration. This is a precursor to more broad language support (ie, VSCode extension host integrations).
+
+- `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
+
+> __NOTE:__ The full set and scope of VimL compatibility is not currently tested. We are still working to enable test cases in [`libvim`](https://github.com/onivim/libvim/pull/6). Use at your own risk, in the meantime!

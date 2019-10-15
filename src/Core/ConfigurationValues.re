@@ -57,6 +57,7 @@ type t = {
   // - JSON
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
+  experimentalVimL: list(string),
 };
 
 let default = {
@@ -97,4 +98,5 @@ let default = {
   experimentalMerlin: false,
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
+  experimentalVimL: [],
 };
