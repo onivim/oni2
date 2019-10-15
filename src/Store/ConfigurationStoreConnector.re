@@ -8,7 +8,12 @@ open Oni_Core;
 open Oni_Model;
 
 let start =
-    (~configurationFilePath: option(string), ~cliOptions: option(Cli.t)) => {
+    (
+      ~configurationFilePath: option(string),
+      ~cliOptions: option(Cli.t),
+      ~getZoom,
+      ~setZoom,
+    ) => {
   let defaultConfigurationFileName = "configuration.json";
   let getConfigurationFile = fileName => {
     let errorLoading = path => {
@@ -125,6 +130,20 @@ let start =
       }
     );
 
+  // Synchronize miscellaneous configuration settings
+  let zoom = ref(getZoom());
+  let synchronizeConfigurationEffect = configuration =>
+    Isolinear.Effect.create(~name="configuration.synchronize", () => {
+      let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
+      if (zoomValue != zoom^) {
+        Log.info(
+          "Configuration - setting zoom: " ++ string_of_float(zoomValue),
+        );
+        setZoom(zoomValue);
+        zoom := zoomValue;
+      };
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, initConfigurationEffect)
@@ -134,7 +153,7 @@ let start =
       )
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
-        Isolinear.Effect.none,
+        synchronizeConfigurationEffect(configuration),
       )
     | Actions.ConfigurationReload => (state, reloadConfigurationEffect)
     | Actions.OpenConfigFile(path) => (
