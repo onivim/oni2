@@ -240,6 +240,28 @@ let createElement =
                  (),
                )};
 
+            let renderUnderline = (~color, ~offset, range: Range.t) =>
+              {let startX =
+                 Index.toZeroBasedInt(range.startPosition.character)
+                 * Constants.default.minimapCharacterWidth
+                 |> float_of_int;
+               let endX =
+                 Index.toZeroBasedInt(range.endPosition.character)
+                 * Constants.default.minimapCharacterWidth
+                 |> float_of_int;
+
+               Shapes.drawRect(
+                 ~transform,
+                 ~x=startX -. 1.0,
+                 ~y=
+                   offset
+                   +. float_of_int(Constants.default.minimapCharacterHeight),
+                 ~height=1.0,
+                 ~width=endX -. startX +. 2.,
+                 ~color,
+                 (),
+               )};
+
             FlatList.render(
               ~scrollY,
               ~rowHeight,
@@ -272,6 +294,24 @@ let createElement =
                         && Index.toInt0(r.endPosition.character) >= i,
                       highlightRanges,
                     );
+
+                  // Draw error highlight
+                  switch (IntMap.find_opt(item, diagnostics)) {
+                  | Some(_) =>
+                    Shapes.drawRect(
+                      ~transform,
+                      ~x=0.,
+                      ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
+                      ~height=
+                        float_of_int(Constants.default.minimapCharacterHeight)
+                        +. 2.0,
+                      ~width=float_of_int(width),
+                      ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
+                      (),
+                    )
+                  | None => ()
+                  };
+
                   renderLine(shouldHighlight, transform, offset, tokens);
                 },
               (),
@@ -288,9 +328,9 @@ let createElement =
                   | Some(v) =>
                     List.iter(
                       (d: Diagnostics.Diagnostic.t) =>
-                        renderRange(
+                        renderUnderline(
                           ~offset,
-                          ~color=Color.rgba(1.0, 0., 0., 0.7),
+                          ~color=Color.rgba(1.0, 0., 0., 1.0),
                           d.range,
                         ),
                       v,
