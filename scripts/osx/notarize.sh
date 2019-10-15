@@ -31,8 +31,7 @@ if [ $success -eq 1 ] ; then
 	echo "Stapling and running packaging up"
 	xcrun stapler staple "_release/Onivim2.app"
 	echo "Staple success!"
-
-	echo "Checking gatekeeper conformance"
-	spctl --assess --verbose "_release/Onivim2.app"
-	echo "Complete!"
 fi
+	
+echo "Checking gatekeeper conformance"
+spctl --assess --verbose "_release/Onivim2.app"
