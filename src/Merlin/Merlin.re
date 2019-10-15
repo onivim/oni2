@@ -62,14 +62,11 @@ let getErrors =
 
     while (i^ < len) {
       output_string(stdIn, input[i^] ++ "\r\n");
-      info("SENDING LINE: " ++ input[i^]);
       Thread.yield();
       incr(i);
     };
 
     close_out_noerr(stdIn);
-    
-    info("Command sent; waiting for response");
 
     // This is necessary because of merlin issues:
     // https://github.com/ocaml/merlin/issues/1034
@@ -97,7 +94,6 @@ let getErrors =
     };
 
     let jsonString = handleMerlinResponse(stdout);
-    info("Got response: " ++ jsonString);
     let json = Yojson.Safe.from_string(jsonString);
 
     let result = MerlinProtocol.parse(json);
