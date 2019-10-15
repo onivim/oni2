@@ -14,16 +14,15 @@ let component = React.component("Hover");
 
 let createElement =
     (
-      ~hover: option(Model.Hover.t),
       ~x: int,
       ~y: int,
-      ~theme: Theme.t,
-      ~uiFont: Types.UiFont.t,
+      ~state: Model.State.t,
       ~children as _,
       (),
     ) =>
   component(hooks => {
 
+    let { theme, uiFont, hover, _}: Model.State.t = state;
 
     let outerContainerStyle = Style.[
       position(`Absolute),
@@ -31,6 +30,8 @@ let createElement =
       left(x),
     ];
 
+    let opacity = Model.Hover.getOpacity(hover);
+    
     let containerStyle =
       Style.[
         border(~color=Colors.white, ~width=1),
@@ -54,7 +55,7 @@ let createElement =
         backgroundColor(theme.editorBackground),
       ];
 
-    switch (hover) {
+    switch (state.hover) {
     | None => 
       (hooks, 
         <View style=outerContainerStyle>
@@ -71,8 +72,13 @@ let createElement =
       </View>
       </View>)
     | Some(hover) => {
-      (hooks, <View style=containerStyle>
+      (hooks, 
+        <View style=outerContainerStyle>
+      <View style=containerStyle>
+          <Opacity opacity>
           <Text style=textStyle text={"Hello"} />
+          </Opacity>
+      </View>
       </View>)
     }
     }

@@ -541,11 +541,6 @@ let createElement =
       };
     };
 
-    let hover = Hover.get(
-      ~bufferId, 
-      ~position=editor.cursorPosition,
-      state);
-
     (
       hooks,
       <View
@@ -840,7 +835,7 @@ let createElement =
           </View>
         </View>
         minimapLayout
-        <HoverView x={cursorPixelX} y={cursorPixelY} hover={hover} theme={state.theme} uiFont={state.uiFont} />
+        <HoverView x={cursorPixelX} y={cursorPixelY} state />
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state

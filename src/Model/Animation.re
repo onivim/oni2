@@ -71,7 +71,7 @@ let start = (currentTime: float, v: t) => {
     startTime: currentTime,
     currentTime,
     currentVal: 0.,
-    remainingDelay: 0.,
+    remainingDelay: v.delay,
   };
 };
 

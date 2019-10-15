@@ -46,7 +46,7 @@ let create: unit => t =
   () => {
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
-    hover: Hover.default,
+    hover: Hover.empty,
     mode: Normal,
     menu: Menu.create(),
     commandline: Commandline.create(),
