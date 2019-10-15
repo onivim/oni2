@@ -19,42 +19,38 @@ type t = option(hover);
 let empty: t = None;
 
 let show = (~bufferId, ~position, ~currentTime, ()) => {
-  let animation = Animation.create(~delay=1.0, ()) |> Animation.start(currentTime);
+  let animation =
+    Animation.create(~delay=1.0, ()) |> Animation.start(currentTime);
 
-  Some({
-    bufferId,
-    position,
-    animation,
-  })
+  Some({bufferId, position, animation});
 };
 
 let tick = (deltaTime, v: t) => {
   switch (v) {
   | None => None
-  | Some(hover) => Some({
-    ...hover,
-    animation: Animation.tick(deltaTime, hover.animation),
-  })
-  }
+  | Some(hover) =>
+    Some({...hover, animation: Animation.tick(deltaTime, hover.animation)})
+  };
 };
 
-let getOpacity = (v: t) => switch(v) {
-| None => 0.
-| Some(hover) => Animation.getValue(hover.animation);
-}
+let getOpacity = (v: t) =>
+  switch (v) {
+  | None => 0.
+  | Some(hover) => Animation.getValue(hover.animation)
+  };
 
 /*let get = (~bufferId, ~position: Position.t, state: State.t) => {
-  let buffer = Buffers.getBuffer(bufferId, state.buffers);
+    let buffer = Buffers.getBuffer(bufferId, state.buffers);
 
-  switch (buffer) {
-  | None => None
-  | Some(buf) => {
-    let diagnostics = Diagnostics.getDiagnosticsAtPosition(state.diagnostics, buf, position);
+    switch (buffer) {
+    | None => None
+    | Some(buf) => {
+      let diagnostics = Diagnostics.getDiagnosticsAtPosition(state.diagnostics, buf, position);
 
-    switch (diagnostics) {
-    | [] => None
-    | _ => Some({ diagnostics: diagnostics });
+      switch (diagnostics) {
+      | [] => None
+      | _ => Some({ diagnostics: diagnostics });
+      }
     }
-  }
-  }
-};*/
+    }
+  };*/
