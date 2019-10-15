@@ -39,6 +39,12 @@ let getOpacity = (v: t) =>
   | Some(hover) => Animation.getValue(hover.animation)
   };
 
+let isAnimationActive = (v: t) =>
+  switch (v) {
+  | None => false
+  | Some(hover) => Animation.isActive(hover.animation)
+  };
+
 /*let get = (~bufferId, ~position: Position.t, state: State.t) => {
     let buffer = Buffers.getBuffer(bufferId, state.buffers);
 

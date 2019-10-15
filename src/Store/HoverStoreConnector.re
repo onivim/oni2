@@ -18,10 +18,14 @@ let start = () => {
   let updater = (state: Model.State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Tick({deltaTime, _}) =>
-      let hover = state.hover |> Model.Hover.tick(deltaTime);
-      let newState = {...state, hover};
+      if (Model.Hover.isAnimationActive(state.hover)) {
+        let hover = state.hover |> Model.Hover.tick(deltaTime);
+        let newState = {...state, hover};
 
-      (newState, Isolinear.Effect.none);
+        (newState, Isolinear.Effect.none);
+      } else {
+        (state, Isolinear.Effect.none);
+      }
     | Actions.CursorMove(position) =>
       let newState =
         switch (Model.Selectors.getActiveBuffer(state)) {
