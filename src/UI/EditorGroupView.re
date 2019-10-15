@@ -54,13 +54,7 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     | Some(v) =>
       let (modified, title) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
-      let ret: Tabs.tabInfo = {
-        title,
-        modified,
-        active: EditorGroup.isActiveEditor(editorGroup, v.editorId),
-        onClick: () => GlobalContext.current().openEditorById(v.editorId),
-        onClose: () => GlobalContext.current().closeEditorById(v.editorId),
-      };
+      let ret: Tabs.tabInfo = {editorId: v.editorId, title, modified};
       Some(ret);
     };
   };
@@ -112,7 +106,7 @@ let createElement =
     let children =
       switch (editorGroup) {
       | None => [React.empty]
-      | Some(v) =>
+      | Some((v: EditorGroup.t)) =>
         let editor = Some(v) |> Selectors.getActiveEditor;
         let tabs = toUiTabs(v, state.buffers);
         let uiFont = state.uiFont;
@@ -134,7 +128,14 @@ let createElement =
         switch (showTabs) {
         | false => [editorView]
         | true => [
-            <Tabs active=isActive theme tabs mode uiFont />,
+            <Tabs
+              active=isActive
+              activeEditorId={v.activeEditorId}
+              theme
+              tabs
+              mode
+              uiFont
+            />,
             editorView,
           ]
         };

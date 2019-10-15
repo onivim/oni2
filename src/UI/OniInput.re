@@ -245,7 +245,8 @@ let make =
       let (startStr, _) =
         getStringParts(state.cursorPosition, valueToDisplay);
       let dimension =
-        Revery_Draw.Text.measure(
+        Revery.Draw.Text.measure(
+          ~window=Revery.UI.getActiveWindow(),
           ~fontFamily=inputFontFamily,
           ~fontSize=inputFontSize,
           startStr,

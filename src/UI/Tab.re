@@ -119,7 +119,6 @@ let createElement =
     (
       hooks,
       <View style=containerStyle>
-        <View style=iconContainerStyle> fileIconView </View>
         <Clickable
           onAnyClick
           style=Style.[
@@ -129,6 +128,7 @@ let createElement =
             alignItems(`Center),
             justifyContent(`Center),
           ]>
+          <View style=iconContainerStyle> fileIconView </View>
           <Text style=textStyle text=title />
         </Clickable>
         <Clickable onClick=onClose style=iconContainerStyle>

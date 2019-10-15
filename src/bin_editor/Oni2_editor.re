@@ -68,6 +68,10 @@ let init = app => {
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
 
+  let quit = code => {
+    App.quit(~code, app);
+  };
+
   Log.debug("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -80,6 +84,7 @@ let init = app => {
       ~getScaleFactor,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
+      ~quit,
       (),
     );
   Log.debug("Startup: StoreThread started!");

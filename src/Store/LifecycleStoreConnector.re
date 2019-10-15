@@ -5,12 +5,10 @@
  * - Handling quit cleanup
  */
 
-open Revery;
-
 module Core = Oni_Core;
 module Model = Oni_Model;
 
-let start = () => {
+let start = quit => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitAllEffect = (state: Model.State.t, force) => {
@@ -22,7 +20,7 @@ let start = () => {
     Isolinear.Effect.create(~name="lifecycle.quit", () =>
       if (canClose) {
         List.iter(h => h(), handlers);
-        App.quit(0);
+        quit(0);
       }
     );
   };
