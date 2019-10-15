@@ -30,6 +30,7 @@ let parseStringList = json => {
       [],
       items,
     )
+  | `String(v) => [v]
   | _ => []
   };
 };
