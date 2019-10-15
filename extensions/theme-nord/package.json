@@ -1,0 +1,97 @@
+{
+  "name": "nord-visual-studio-code",
+  "displayName": "Nord",
+  "description": "An arctic, north-bluish clean and elegant Visual Studio Code theme.",
+  "version": "0.12.0",
+  "publisher": "arcticicestudio",
+  "author": {
+    "name": "Arctic Ice Studio",
+    "email": "development@arcticicestudio.com",
+    "url": "https://www.arcticicestudio.com"
+  },
+  "homepage": "https://github.com/arcticicestudio/nord-visual-studio-code",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arcticicestudio/nord-visual-studio-code"
+  },
+  "bugs": {
+    "url": "https://github.com/arcticicestudio/nord-visual-studio-code/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.12.0"
+  },
+  "galleryBanner": {
+    "color": "#2E3440",
+    "theme": "dark"
+  },
+  "icon": "assets/extension-marketplace-icon.png",
+  "markdown": "github",
+  "categories": [
+    "Themes"
+  ],
+  "keywords": [
+    "arctic",
+    "north",
+    "bluish",
+    "clean",
+    "elegant"
+  ],
+  "badges": [
+    {
+      "url": "https://vsmarketplacebadge.apphb.com/version/arcticicestudio.nord-visual-studio-code.svg",
+      "href": "https://marketplace.visualstudio.com/items/arcticicestudio.nord-visual-studio-code",
+      "description": "Extension version"
+    },
+    {
+      "url": "https://vsmarketplacebadge.apphb.com/installs/arcticicestudio.nord-visual-studio-code.svg",
+      "href": "https://marketplace.visualstudio.com/items/arcticicestudio.nord-visual-studio-code",
+      "description": "Extension installs"
+    },
+    {
+      "url": "https://vsmarketplacebadge.apphb.com/rating/arcticicestudio.nord-visual-studio-code.svg",
+      "href": "https://marketplace.visualstudio.com/items/arcticicestudio.nord-visual-studio-code",
+      "description": "Extension Rating"
+    }
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Nord",
+        "uiTheme": "vs-dark",
+        "path": "./themes/nord-color-theme.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "npm-run-all --sequential clean package",
+    "clean": "del *.vsix",
+    "format": "npm-run-all format:pretty format:fix",
+    "format:fix": "eslint --fix --ext .js,.json .",
+    "format:pretty": "prettier --write \"./**/*.{js,json,md,yml}\"",
+    "lint": "npm-run-all lint:*",
+    "lint:js": "eslint --ext .js,.jsx .",
+    "lint:json": "eslint --ext .json .",
+    "lint:md": "remark --no-stdout . \".github/**/*.md\"",
+    "package": "vsce package --out nord-visual-studio-code.vsix"
+  },
+  "devDependencies": {
+    "babel-eslint": "10.0.1",
+    "del-cli": "1.1.0",
+    "eslint": "5.16.0",
+    "eslint-config-arcticicestudio-base": ">=0.5.0 <1.0.0",
+    "eslint-plugin-import": "2.17.3",
+    "eslint-plugin-json": "1.4.0",
+    "eslint-plugin-prettier": "3.1.0",
+    "npm-run-all": "4.1.5",
+    "prettier": "1.17.1",
+    "remark-cli": "6.0.1",
+    "remark-preset-lint-arcticicestudio": ">=0.3.0 <1.0.0",
+    "vsce": "1.62.0"
+  },
+  "__metadata": {
+    "id": "6f35c257-7fd5-4bc2-9cd1-01976589c17a",
+    "publisherDisplayName": "arcticicestudio",
+    "publisherId": "d6e09771-ef61-4944-9f28-44e338818618"
+  }
+}

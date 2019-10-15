@@ -45,10 +45,16 @@ type t = {
   filesExclude: list(string),
   vimUseSystemClipboard,
   uiShadows: bool,
+  uiZoom: float,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
   // These are 'use-at-your-own-risk' features
+  // Turn on merlin integration - the first pass of language integration,
+  // specifically for native Reason / OCaml projects.
+  experimentalMerlin: bool,
+  // Turn on tree-sitter for supported filetypes:
+  // - JSON
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
 };
@@ -79,6 +85,7 @@ let default = {
   workbenchTreeIndent: 2,
   filesExclude: ["node_modules", "_esy"],
   uiShadows: true,
+  uiZoom: 1.0,
   vimUseSystemClipboard: {
     yank: true,
     delete: false,
@@ -86,6 +93,8 @@ let default = {
   },
   zenModeHideTabs: true,
   zenModeSingleFile: true,
+
+  experimentalMerlin: false,
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
 };

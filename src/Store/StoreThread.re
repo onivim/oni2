@@ -58,6 +58,8 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
+      ~getZoom,
+      ~setZoom,
       ~quit,
       ~getTime,
       ~window: option(Revery.Window.t),
@@ -68,6 +70,8 @@ let start =
   ignore(executingDirectory);
 
   let state = Model.State.create();
+
+  let (merlinUpdater, merlinStream) = MerlinStoreConnector.start();
 
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
@@ -110,7 +114,12 @@ let start =
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
   let configurationUpdater =
-    ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
+    ConfigurationStoreConnector.start(
+      ~configurationFilePath,
+      ~cliOptions,
+      ~getZoom,
+      ~setZoom,
+    );
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
   let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
@@ -152,6 +161,7 @@ let start =
           windowUpdater,
           keyDisplayerUpdater,
           themeUpdater,
+          merlinUpdater,
           acpUpdater,
           hoverUpdater,
         ]),
@@ -201,6 +211,7 @@ let start =
   Isolinear.Stream.connect(dispatch, lifecycleStream);
   Isolinear.Stream.connect(dispatch, windowStream);
   Isolinear.Stream.connect(dispatch, hoverStream);
+  Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

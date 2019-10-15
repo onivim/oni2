@@ -587,6 +587,53 @@ let createElement =
 
               List.iter(renderRuler, rulers);
 
+              let renderUnderline =
+                  (~offset=0., ~color=Colors.black, r: Range.t) =>
+                {let halfOffset = offset /. 2.0;
+                 let line = Index.toZeroBasedInt(r.startPosition.line);
+                 let start = Index.toZeroBasedInt(r.startPosition.character);
+                 let endC = Index.toZeroBasedInt(r.endPosition.character);
+
+                 let text = Buffer.getLine(buffer, line);
+                 let (startOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     ~viewOffset=leftVisibleColumn,
+                     text,
+                     start,
+                   );
+                 let (endOffset, _) =
+                   BufferViewTokenizer.getCharacterPositionAndWidth(
+                     ~indentation,
+                     ~viewOffset=leftVisibleColumn,
+                     text,
+                     endC,
+                   );
+
+                 Shapes.drawRect(
+                   ~transform,
+                   ~x=
+                     lineNumberWidth
+                     +. float_of_int(startOffset)
+                     *. fontWidth
+                     -. halfOffset,
+                   ~y=
+                     fontHeight
+                     *. float_of_int(
+                          Index.toZeroBasedInt(r.startPosition.line),
+                        )
+                     -. editor.scrollY
+                     -. halfOffset
+                     +. (fontHeight -. 2.),
+                   ~height=1.,
+                   ~width=
+                     offset
+                     +. max(float_of_int(endOffset - startOffset), 1.0)
+                     *. fontWidth,
+                   ~color,
+                   (),
+                 )};
+
               let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
                 {let halfOffset = offset /. 2.0;
                  let line = Index.toZeroBasedInt(r.startPosition.line);
@@ -643,7 +690,7 @@ let createElement =
                 ~render=
                   (item, _offset) => {
                     let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
-                      renderRange(~color=Colors.red, d.range);
+                      renderUnderline(~color=Colors.red, d.range);
 
                     /* Draw error markers */
                     switch (IntMap.find_opt(item, diagnostics)) {

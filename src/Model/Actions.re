@@ -28,6 +28,7 @@ type t =
   | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
+  | DiagnosticsSet(Buffer.t, string, list(Diagnostics.Diagnostic.t))
   | SelectionChanged(VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
