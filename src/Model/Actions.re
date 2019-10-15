@@ -25,6 +25,7 @@ type t =
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
+  | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
   | SelectionChanged(VisualRange.t)

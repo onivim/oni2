@@ -8,11 +8,37 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-type t = {
-  diagnostics: list(Diagnostics.Diagnostic.t),
+type hover = {
+  bufferId: int,
+  position: Position.t,
+  animation: Animation.t,
 };
 
-let get = (~bufferId, ~position: Position.t, state: State.t) => {
+type t = option(hover);
+
+let empty: t = None;
+
+let show = (~bufferId, ~position, ~currentTime, ()) => {
+  let animation = Animation.create() |> Animation.show(currentTime);
+
+  Some({
+    bufferId,
+    position,
+    animation,
+  })
+};
+
+let tick = (deltaTime, v: t) => {
+  switch (v) {
+  | None => None
+  | Some(hover) => Some({
+    ...hover,
+    animation: Animation.tick(deltaTime, hover.animation),
+  })
+  }
+};
+
+/*let get = (~bufferId, ~position: Position.t, state: State.t) => {
   let buffer = Buffers.getBuffer(bufferId, state.buffers);
 
   switch (buffer) {
@@ -26,4 +52,4 @@ let get = (~bufferId, ~position: Position.t, state: State.t) => {
     }
   }
   }
-};
+};*/

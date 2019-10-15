@@ -41,7 +41,6 @@ let createElement =
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
-        margin(16),
         minWidth(100),
         minHeight(25),
       ];
