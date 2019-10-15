@@ -26,6 +26,10 @@ let reduce: (State.t, Actions.t) => State.t =
 
       switch (a) {
       | DarkModeSet(darkMode) => {...s, darkMode}
+      | DiagnosticsSet(buffer, key, diags) => {
+          ...s,
+          diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
+        }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}

@@ -1,0 +1,19 @@
+# Copyright (C) 2017-present Arctic Ice Studio <development@arcticicestudio.com>
+# Copyright (C) 2017-present Sven Greb <development@svengreb.de>
+#
+# Project:    Nord Visual Studio Code
+# Repository: https://github.com/arcticicestudio/nord-visual-studio-code
+# License:    MIT
+
+# Configuration for the GitHub feature to automatically request reviews from the code owners when a pull request
+# changes any owned files.
+#
+# References:
+#   https://github.com/blog/2392-introducing-code-owners
+#   https://help.github.com/articles/about-codeowners
+
+# +----------------------+
+# + Core Team Code Owner +
+# +----------------------+
+* @arcticicestudio
+* @svengreb

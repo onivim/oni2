@@ -1,5 +1,5 @@
 {
-  "checksum": "cab8871b70f137e4593d05bd26aa158e",
+  "checksum": "a501be450481038bfc13dad9b63786af",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -334,13 +334,13 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#704c3fc@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#704c3fc@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#8fc399d",
+      "version": "github:onivim/reason-libvim#704c3fc",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#8fc399d" ]
+        "source": [ "github:onivim/reason-libvim#704c3fc" ]
       },
       "overrides": [],
       "dependencies": [
@@ -365,7 +365,7 @@
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@opam:1.7.0@7056d985",
-        "@opam/merlin@opam:3.2.2@e3edecdd", "@opam/lwt@opam:4.4.0@0357bb8b",
+        "@opam/merlin@opam:3.3.2@7a364181", "@opam/lwt@opam:4.4.0@0357bb8b",
         "@opam/dune@opam:1.11.4@21d66ccd",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
@@ -1002,7 +1002,7 @@
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
         "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3006@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#8fc399d@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#704c3fc@d41d8cd9",
         "reason-jsonrpc@1.2.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "isolinear@2.1.0@d41d8cd9", "esy-sdl2@2.0.10004@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9", "axios@0.19.0@d41d8cd9",
@@ -1022,7 +1022,7 @@
         "rcedit@2.0.0@d41d8cd9", "plist@3.0.1@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "lodash@4.17.15@d41d8cd9",
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
-        "@opam/merlin@opam:3.2.2@e3edecdd"
+        "@opam/merlin@opam:3.3.2@7a364181"
       ]
     },
     "@reason-native/rely@1.3.1@d41d8cd9": {
@@ -1940,20 +1940,20 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/dune@opam:1.11.4@21d66ccd"
       ]
     },
-    "@opam/merlin@opam:3.2.2@e3edecdd": {
-      "id": "@opam/merlin@opam:3.2.2@e3edecdd",
+    "@opam/merlin@opam:3.3.2@7a364181": {
+      "id": "@opam/merlin@opam:3.3.2@7a364181",
       "name": "@opam/merlin",
-      "version": "opam:3.2.2",
+      "version": "opam:3.3.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/ed/ede35b65f8ac9c440cfade5445662c54#md5:ede35b65f8ac9c440cfade5445662c54",
-          "archive:https://github.com/ocaml/merlin/releases/download/v3.2.2/merlin-v3.2.2.tbz#md5:ede35b65f8ac9c440cfade5445662c54"
+          "archive:https://opam.ocaml.org/cache/sha256/1d/1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801#sha256:1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801",
+          "archive:https://github.com/ocaml/merlin/releases/download/v3.3.2/merlin-v3.3.2.tbz#sha256:1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801"
         ],
         "opam": {
           "name": "merlin",
-          "version": "3.2.2",
-          "path": "integrationtest.esy.lock/opam/merlin.3.2.2"
+          "version": "3.3.2",
+          "path": "integrationtest.esy.lock/opam/merlin.3.3.2"
         }
       },
       "overrides": [],
