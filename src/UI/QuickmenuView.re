@@ -10,10 +10,6 @@ module Constants = {
   let menuHeight = 320;
 };
 
-type items =
-  | Array(array(Actions.menuCommand))
-  | Job(MenuJob.t);
-
 let component = React.component("Menu");
 
 let loseFocusOnClose = isOpen =>
@@ -60,6 +56,17 @@ module Styles = {
     ];
 };
 
+
+let onSelectedChange = index =>
+  GlobalContext.current().dispatch(MenuFocus(index));
+
+let onInput = (text, cursorPosition) =>
+  GlobalContext.current().dispatch(MenuInput({ text, cursorPosition }));
+
+let onSelect = (_) =>
+  GlobalContext.current().dispatch(MenuSelect);
+
+
 let createElement =
     (
       ~children as _,
@@ -67,76 +74,85 @@ let createElement =
       ~theme: Theme.t,
       ~configuration: Configuration.t,
       ~autofocus: bool=true,
-      ~prefix: option(string)=?,
+      ~state: Quickmenu.t,
       ~placeholder: string="type here to search the menu",
-      ~loadingAnimation: Animation.t=Animation.create(~isActive=false, ()),
-      ~text: string,
-      ~cursorPosition: int,
-      ~items: items,
-      ~selected: option(int),
-      ~onInput: (string, int) => unit,
-      ~onSelectedChange: int => unit,
-      ~onSelect: int => unit,
+      ~onInput: (string, int) => unit = onInput,
+      ~onSelectedChange: int => unit = onSelectedChange,
+      ~onSelect: int => unit = onSelect,
       (),
     ) =>
   component(hooks => {
+    let Quickmenu.{source, selected, text, cursorPosition, prefix} = state;
+
+    // TODO: Cam this be removed in favor of NotifyKeyPressed in MenuStoreConnector?
     let handleKeyDown = (event: NodeEvents.keyEventParams) =>
       switch (event) {
       | {key: Revery.Key.KEY_DOWN, _} =>
-        GlobalContext.current().dispatch(MenuNextItem)
+        GlobalContext.current().dispatch(MenuFocusNext)
       | {key: Revery.Key.KEY_UP, _} =>
-        GlobalContext.current().dispatch(MenuPreviousItem)
+        GlobalContext.current().dispatch(MenuFocusPrevious)
       | _ => ()
       };
 
     let (items, jobProgress) =
-      switch (items) {
-        | Array(items) =>
+      switch (source) {
+        | Loading =>
+          ([||], 0.)
+
+        | Progress({ items, progress }) =>
+          (items, progress)
+
+        | Complete(items) =>
           (items, 1.)
-        | Job(job) =>
-          (Job.getCompletedWork(job).uiFiltered, Job.getProgress(job))
       };
 
-    let time = Time.getTime() |> Time.to_float_seconds;
-
-    let loadingOpacityAnimation = Animation.getValue(loadingAnimation);
     let loadingSpinner =
-      Animation.isActive(loadingAnimation)
-        ? <View style=Style.[height(40), width(Constants.menuWidth)]>
-            <Center>
-              <View
-                style=Style.[
-                  transform(
-                    Transform.[RotateY(Math.Angle.Radians(time *. 2.))],
-                  ),
-                ]>
-                <Opacity opacity=loadingOpacityAnimation>
-                  <Container
-                    width=10
-                    height=10
-                    color={theme.oniNormalModeBackground}
-                  />
-                </Opacity>
-              </View>
-            </Center>
-          </View>
-        : <Opacity opacity=0.3>
-            <View style=Style.[height(2), width(Constants.menuWidth)]>
-              <View
-                style=Style.[
-                  height(2),
-                  width(
-                    1
-                    + (
-                      int_of_float(float_of_int(Constants.menuWidth) *. jobProgress)
-                      - 1
-                    ),
-                  ),
-                  backgroundColor(theme.oniNormalModeBackground),
-                ]
-              />
+      if (jobProgress == 0.) {
+        <AnimatedView duration=2.>
+          ...(opacity =>
+            <View style=Style.[height(40), width(Constants.menuWidth)]>
+              <Center>
+                <AnimatedView duration=(2. *. Float.pi) repeat=true>
+                  ...(t =>
+                    <View
+                      style=Style.[
+                        transform(
+                          Transform.[RotateY(Math.Angle.Radians(t *. 2.))],
+                        ),
+                      ]>
+                      <Opacity opacity>
+                        <Container
+                          width=10
+                          height=10
+                          color={theme.oniNormalModeBackground}
+                        />
+                      </Opacity>
+                    </View>
+                  )
+                </AnimatedView>
+              </Center>
             </View>
-          </Opacity>;
+          )
+        </AnimatedView>
+      } else {
+        <Opacity opacity=0.3>
+          <View style=Style.[height(2), width(Constants.menuWidth)]>
+            <View
+              style=Style.[
+                height(2),
+                width(
+                  1
+                  + (
+                    int_of_float(float_of_int(Constants.menuWidth) *. jobProgress)
+                    - 1
+                  ),
+                ),
+                backgroundColor(theme.oniNormalModeBackground),
+              ]
+            />
+          </View>
+        </Opacity>
+      };
 
     (
       hooks,
@@ -172,7 +188,7 @@ let createElement =
                     label=getLabel(item)
                     icon=item.icon
                     onMouseOver={() => onSelectedChange(index)}
-                    selected={Some(index) == selected}
+                    selected={index == selected}
                   />;
                 }}
               />

@@ -16,8 +16,6 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: Buffers.reduce(s.buffers, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        wildmenu: Wildmenu.reduce(s.wildmenu, a),
-        commandline: Commandline.reduce(s.commandline, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
@@ -28,9 +26,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | ChangeMode(m) =>
-        let ret: State.t = {...s, mode: m};
-        ret;
+      | ChangeMode(m) => {...s, mode: m};
       | SetEditorFont(font) => {...s, editorFont: font}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}

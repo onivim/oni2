@@ -14,9 +14,7 @@ type t = {
   buffers: Buffers.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  menu: Menu.t,
-  commandline: Commandline.t,
-  wildmenu: Wildmenu.t,
+  quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   // New-school native syntax highlighting
   syntaxHighlighting: SyntaxHighlighting.t,
@@ -43,9 +41,7 @@ let create: unit => t =
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
     mode: Normal,
-    menu: Menu.create(),
-    commandline: Commandline.create(),
-    wildmenu: Wildmenu.create(),
+    quickmenu: None,
     buffers: Buffers.empty,
     editorFont:
       EditorFont.create(

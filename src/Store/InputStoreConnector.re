@@ -11,23 +11,24 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
+type captureMode =
+  | Normal
+  | Wildmenu
+  | Quickmenu;
+
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
 
-  if (state.commandline.show) {
-    Hashtbl.add(ret, CommandLineFocus, true);
-  };
-
-  if (state.menu.isOpen) {
+  if (state.quickmenu != None) {
     Hashtbl.add(ret, MenuFocus, true);
-  };
+  }
 
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (state.menu.isOpen || state.commandline.show, state.mode) {
+  switch (state.quickmenu != None, state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
@@ -69,24 +70,29 @@ let start =
    */
   let handle =
       (
-        ~isMenuOpen,
+        ~captureMode,
         ~conditions: Handler.Conditions.t,
         ~time=0.0,
         ~commands: Keybindings.t,
         inputKey,
       ) => {
+    let bindingActions =
+      getActionsForBinding(inputKey, commands, conditions);
+
     let actions =
-      switch (isMenuOpen) {
-      | false =>
-        switch (getActionsForBinding(inputKey, commands, conditions)) {
-        | [] =>
-          Log.info("Input::handle - sending raw input: " ++ inputKey);
-          [Actions.KeyboardInput(inputKey)];
-        | actions =>
-          Log.info("Input::handle - sending bound actions.");
-          actions;
-        }
-      | true => getActionsForBinding(inputKey, commands, conditions)
+        switch (captureMode) {
+        | Normal
+        | Wildmenu =>
+          if (bindingActions == []) {
+            Log.info("Input::handle - sending raw input: " ++ inputKey);
+            [Actions.KeyboardInput(inputKey)]
+          } else {
+            Log.info("Input::handle - sending bound actions.");
+            bindingActions
+          };
+
+        | Quickmenu =>
+          bindingActions
       };
 
     [Actions.NotifyKeyPressed(time, inputKey), ...actions];
@@ -103,20 +109,40 @@ let start =
     let commands = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
+
+    let captureMode =
+      switch (state.quickmenu) {
+      | Some({ variant: Wildmenu(_) }) =>
+        Wildmenu
+
+      | Some({ variant: CommandPalette })
+      | Some({ variant: Buffers })
+      | Some({ variant: WorkspaceFiles }) =>
+        Quickmenu
+
+      | None =>
+        Normal
+      };
+
     switch (key, Revery.UI.Focus.focused) {
-    | (None, _) => ()
+    | (None, _) =>
+      ()
+
     | (Some((k, true)), {contents: Some(_)})
     | (Some((k, _)), {contents: None}) =>
-      handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
+      handle(~captureMode, ~conditions, ~time, ~commands, k)
       |> List.iter(dispatch);
-      // Run input effects _immediately_
-      runEffects();
-    | (Some((_, false)), {contents: Some(_)}) => ()
+      runEffects(); // Run input effects _immediately_
+
+    | (Some((_, false)), {contents: Some(_)}) =>
+      ()
     };
   };
 
   switch (window) {
-  | None => Log.info("Input - no window to subscribe to events")
+  | None =>
+    Log.info("Input - no window to subscribe to events")
+
   | Some(window) =>
     Revery.Event.subscribe(window.onKeyDown, keyEvent =>
       Handler.keyPressToCommand(keyEvent, Revery_Core.Environment.os)

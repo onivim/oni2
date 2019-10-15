@@ -1,5 +1,4 @@
-let create = (setItems, _, _) => {
-  let commands: list(Actions.menuCommand) = [
+let commands: array(Actions.menuCommand) = [|
     {
       category: Some("Preferences"),
       name: "Open configuration file",
@@ -84,9 +83,4 @@ let create = (setItems, _, _) => {
         command: () => Actions.Command("developer.massiveMenu"),
         icon: None,
       },*/
-  ];
-
-  setItems(commands);
-
-  () => ();
-};
+  |];

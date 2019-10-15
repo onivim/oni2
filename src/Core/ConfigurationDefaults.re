@@ -44,8 +44,8 @@ let getDefaultConfigString = configName =>
       {|
 {
     "bindings": [
-        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
-        { "key": "<C-TAB>", "command": "quickOpen.openFiles", "when": [["editorTextFocus"]] },
+        { "key": "<C-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
+        { "key": "<C-TAB>", "command": "quickOpen.buffers", "when": [["editorTextFocus"]] },
         { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
@@ -56,12 +56,8 @@ let getDefaultConfigString = configName =>
         { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]]},
         { "key": "<D-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<D-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<C-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<C-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
-        { "key": "<D-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<D-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
-        { "key": "<TAB>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
+        { "key": "<TAB>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
+        { "key": "<S-TAB>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]}
     ]

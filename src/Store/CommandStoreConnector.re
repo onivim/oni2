@@ -80,58 +80,9 @@ let start = _ => {
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
-    (
-      "commandPalette.open",
-      _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
-    ),
-    ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
-    (
-      "quickOpen.openFiles",
-      state => {
-        let currentDirectory = Rench.Environment.getWorkingDirectory();
-
-        let getDisplayPath = (fullPath, dir) => {
-          let re = Str.regexp_string(dir ++ Filename.dir_sep);
-          Str.replace_first(re, "", fullPath);
-        };
-
-        multipleActionEffect([
-          MenuOpen(
-            (setItems, _, _) => {
-              let commands =
-                state.Oni_Model.State.buffers
-                |> IntMap.to_seq
-                |> Seq.filter_map(element => {
-                     let (_, buffer) = element;
-
-                     switch (Buffer.getFilePath(buffer)) {
-                     | Some(path) =>
-                       Some({
-                         category: None,
-                         name: getDisplayPath(path, currentDirectory),
-                         command: () => {
-                           Oni_Model.Actions.OpenFileByPath(path, None);
-                         },
-                         icon:
-                           Oni_Model.FileExplorer.getFileIcon(
-                             state.languageInfo,
-                             state.iconTheme,
-                             path,
-                           ),
-                       })
-                     | None => None
-                     };
-                   })
-                |> List.of_seq;
-
-              setItems(commands);
-
-              () => ();
-            },
-          ),
-        ]);
-      },
-    ),
+    ("commandPalette.open", _ => singleActionEffect(MenuShow(CommandPalette))),
+    ("quickOpen.buffers", _ => singleActionEffect(MenuShow(Buffers))),
+    ("quickOpen.workspaceFiles", _ => singleActionEffect(MenuShow(WorkspaceFiles))),
     /*(
         "developer.massiveMenu",
         (state: Oni_Model.State.t) => {
@@ -168,14 +119,12 @@ let start = _ => {
         },
       ),*/
     ("menu.close", _ => multipleActionEffect([MenuClose])),
-    ("menu.next", _ => multipleActionEffect([MenuNextItem])),
-    ("menu.previous", _ => multipleActionEffect([MenuPreviousItem])),
+    ("menu.next", _ => multipleActionEffect([MenuFocusNext])),
+    ("menu.previous", _ => multipleActionEffect([MenuFocusPrevious])),
     ("menu.select", _ => multipleActionEffect([MenuSelect])),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    ("wildmenu.next", _ => singleActionEffect(WildmenuNext)),
-    ("wildmenu.previous", _ => singleActionEffect(WildmenuPrevious)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),

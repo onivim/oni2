@@ -14,7 +14,7 @@ module Provider = {
     query: string,
     items: list(Actions.menuCommand),
     itemStream: Isolinear.Stream.t(list(Actions.menuCommand)),
-    onUpdate: array(Actions.menuCommand) => action
+    onUpdate: (array(Actions.menuCommand), ~progress: float) => action
   };
 
   type state = {
@@ -62,7 +62,7 @@ module Provider = {
         _ =>
           switch (Hashtbl.find_opt(jobs, id)) {
             | Some({ job }) =>
-              dispatch(onUpdate(Job.getCompletedWork(job).uiFiltered));
+              dispatch(onUpdate(Job.getCompletedWork(job).uiFiltered, Job.getProgress(job)));
 
             | None =>
               Log.error("Unable to pump non-existing MenuJob");

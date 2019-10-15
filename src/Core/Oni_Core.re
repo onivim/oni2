@@ -18,6 +18,7 @@ module Log = Log;
 module Node = Node;
 module Setup = Setup;
 module StringMap = StringMap;
+module Subscription = Subscription;
 module Types = Types;
 module Utility = Utility;
 module Indentation = Indentation;

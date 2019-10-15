@@ -88,7 +88,6 @@ let start =
     ConfigurationStoreConnector.start(~configurationFilePath, ~cliOptions);
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
-  let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
@@ -112,7 +111,6 @@ let start =
           /* extHostUpdater, */
           fontUpdater,
           menuHostUpdater,
-          quickOpenUpdater,
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
@@ -125,8 +123,11 @@ let start =
         ]),
       (),
     );
+  
+  let module MenuSubscriptionRunner = Core.Subscription.Runner({ type action = Model.Actions.t; let id = "menu-subscription" });
+  let (menuSubscriptionsUpdater, menuSubscriptionsStream) = MenuStoreConnector.subscriptions(ripgrep);
 
-  let dispatch = (action: Model.Actions.t) => {
+  let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
@@ -134,8 +135,12 @@ let start =
 
     if (newState !== lastState) {
       onStateChanged(newState);
+
+      // TODO: Wire this up properly
+      let menuSubs = menuSubscriptionsUpdater(newState)
+      MenuSubscriptionRunner.run(dispatch, menuSubs);
     };
-  };
+  }
 
   let runEffects = () => {
     let effects = accumulatedEffects^;
@@ -160,15 +165,23 @@ let start =
       }
     );
 
-  Isolinear.Stream.connect(dispatch, inputStream);
-  Isolinear.Stream.connect(dispatch, vimStream);
-  Isolinear.Stream.connect(dispatch, editorEventStream);
-  Isolinear.Stream.connect(dispatch, syntaxStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, inputStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, vimStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, editorEventStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, syntaxStream);
   /* Isolinear.Stream.connect(dispatch, extHostStream); */
-  Isolinear.Stream.connect(dispatch, menuStream);
-  Isolinear.Stream.connect(dispatch, explorerStream);
-  Isolinear.Stream.connect(dispatch, lifecycleStream);
-  Isolinear.Stream.connect(dispatch, windowStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, menuStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, explorerStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, lifecycleStream);
+  let _ : Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, windowStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

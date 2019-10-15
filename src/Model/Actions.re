@@ -29,18 +29,10 @@ type t =
   | LoadEditorFont(string, int)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(Vim.Types.cmdlineType)
-  | CommandlineHide
-  | CommandlineUpdate(Vim.Types.cmdline)
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WildmenuShow(list(string))
-  | WildmenuNext
-  | WildmenuPrevious
-  | WildmenuSelect(int)
-  | WildmenuHide
   | WindowSetActive(int, int)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
@@ -53,16 +45,17 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-  | MenuSearch(string)
-  | MenuOpen(menuCreator)
-  | MenuUpdate(list(menuCommand))
-  | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool, float)
-  | MenuClose
+
+  // MenuStoreConnector
+  | MenuShow(menuVariant)
+  | MenuInput({ text: string, cursorPosition: int })
+  | MenuUpdateSource(menuSource)
+  | MenuFocus(int)
+  | MenuFocusPrevious
+  | MenuFocusNext
   | MenuSelect
-  | MenuNextItem
-  | MenuPreviousItem
-  | MenuPosition(int)
+  | MenuClose
+
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
@@ -70,7 +63,6 @@ type t =
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
-  | QuickOpen
   | QuitBuffer(Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
@@ -143,9 +135,12 @@ and menuCommand = {
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
 }
-and menuSetItems = list(menuCommand) => unit
-and menuSetLoading = bool => unit
-and menuCreationFunction = menuSetItems => unit
-and menuDisposeFunction = unit => unit
-and menuCreator =
-  (menuSetItems, Rench.Event.t(string), menuSetLoading) => menuDisposeFunction;
+and menuVariant = 
+  | CommandPalette
+  | Buffers
+  | WorkspaceFiles
+  | Wildmenu(Vim.Types.cmdlineType)
+and menuSource =
+  | Loading
+  | Progress({ items: array(menuCommand), progress: float })
+  | Complete(array(menuCommand));
