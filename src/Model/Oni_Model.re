@@ -14,6 +14,7 @@ module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Commandline = Commandline;
 module CommandPalette = CommandPalette;
+module CompletionMeet = CompletionMeet;
 module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;
