@@ -65,12 +65,44 @@ let start = () => {
       ),
     );
 
+  let checkCompletionsEffect = (state, position: Core.Types.Position.t) => 
+    Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
+      switch (Model.Selectors.getActiveBuffer(state)) {
+      | None => ()
+      | Some(buf) =>
+        let lines = Model.Buffer.getLines(buf);
+        let fileType = Model.Buffer.getFileType(buf);
+        switch (fileType, Model.Buffer.getFilePath(buf)) {
+        | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
+        
+        let cb = completions => {
+          let json = MerlinProtocol.completionResult_to_yojson(completions);
+          let str = Yojson.Safe.to_string(json);
+          print_endline ("!!!! " ++ str);
+        };
+
+        let cursorLine = Core.Types.Index.toInt0(position.line);
+
+        if (cursorLine < Array.length(lines)) {
+          let _ = MerlinRequestQueue.getCompletions(Sys.getcwd(),
+              path, lines, lines[cursorLine],
+              position, cb);
+        }
+
+        | _ => ();
+        };
+      }
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu, state.configuration),
       )
+    | Model.Actions.CursorMove(cursorPosition) => (
+      state, checkCompletionsEffect(state, cursorPosition)
+    )
     | _ => (state, Isolinear.Effect.none)
     };
   };

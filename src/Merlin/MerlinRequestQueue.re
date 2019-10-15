@@ -13,15 +13,26 @@ type diagnosticsRequest = {
   callback: MerlinProtocol.errorResult => unit,
 };
 
+type completionRequest = {
+  filePath: string,
+  lines: array(string),
+  workingDirectory: string,
+  prefix: string,
+  position: Types.Position.t,
+  callback: MerlinProtocol.completionResult => unit,
+};
+
 type request =
-  | DiagnosticsRequest(diagnosticsRequest);
+  | DiagnosticsRequest(diagnosticsRequest)
+  | CompletionRequest(completionRequest);
 
 type t = {
   // Pending requests
   diagnosticsRequest: option(diagnosticsRequest),
+  completionRequest: option(completionRequest),
 };
 
-let requests: ref(t) = ref({diagnosticsRequest: None});
+let requests: ref(t) = ref({completionRequest: None, diagnosticsRequest: None});
 
 // Create a mutex to protect the requests' object from race conditions
 let requestsMutex = Mutex.create();
@@ -29,8 +40,9 @@ let requestsMutex = Mutex.create();
 let requestsCondition = Condition.create();
 
 let hasPendingRequest = (v: t) => {
-  switch (v.diagnosticsRequest) {
-  | Some(_) => true
+  switch ((v.completionRequest, v.diagnosticsRequest)) {
+  | (Some(_), _) => true
+  | (_, Some(_)) => true
   | _ => false
   };
 };
@@ -38,9 +50,10 @@ let hasPendingRequest = (v: t) => {
 let thread: ref(option(Thread.t)) = ref(None);
 
 let popPendingRequest = (v: t) => {
-  switch (v.diagnosticsRequest) {
-  | Some(dr) => (Some(DiagnosticsRequest(dr)), {diagnosticsRequest: None})
-  | None => (None, v)
+  switch ((v.completionRequest, v.diagnosticsRequest)) {
+  | (Some(cr), _) => (Some(CompletionRequest(cr)), {...v, completionRequest: None})
+  | (None, Some(dr)) => (Some(DiagnosticsRequest(dr)), {...v, diagnosticsRequest: None})
+  | (None, None) => (None, v)
   };
 };
 
@@ -53,6 +66,14 @@ let _executeNextRequest = () => {
   switch (req) {
   | Some(DiagnosticsRequest(dr)) =>
     Merlin.getErrors(dr.workingDirectory, dr.filePath, dr.lines, dr.callback)
+  | Some(CompletionRequest({workingDirectory, filePath, lines, position, prefix, callback })) =>
+    Merlin.getCompletions(
+      ~workingDirectory,
+      ~filePath,
+      ~fileContents=lines,
+      ~position,
+      ~prefix,
+      callback);
   | _ => Log.info("[MerlinRequestQueue] No request")
   };
 };
@@ -81,17 +102,35 @@ let _initializeThread = () => {
   };
 };
 
-let getErrors =
-    (workingDirectory: string, filePath: string, lines: array(string), cb) => {
+let _makeRequest = (f) => {
   _initializeThread();
 
   Mutex.lock(requestsMutex);
-  requests :=
-    {
-      diagnosticsRequest:
-        Some({workingDirectory, filePath, lines, callback: cb}),
-    };
+  requests := f(requests^);
 
   Condition.signal(requestsCondition);
   Mutex.unlock(requestsMutex);
+
+};
+
+let getErrors =
+    (workingDirectory: string, filePath: string, lines: array(string), cb) => {
+
+  let f = (request) => {
+    ...request,
+    diagnosticsRequest: Some({workingDirectory, filePath, lines, callback: cb})
+  };
+
+  _makeRequest(f);
+};
+
+let getCompletions =
+    (workingDirectory: string, filePath: string, lines: array(string), prefix, position, cb: MerlinProtocol.completionResult => unit) => {
+
+  let f = (request) => {
+    ...request,
+    completionRequest: Some({workingDirectory, filePath, lines, callback: cb, prefix, position})
+  };
+
+  _makeRequest(f);
 };

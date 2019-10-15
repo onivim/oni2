@@ -91,6 +91,7 @@ let _runMerlinCommand = (~workingDirectory, ~filePath, ~fileContents, ~args, cb)
             isJson := true;
           }
         };
+        Thread.yield();
       };
 
       json^ |> List.rev |> String.concat("");
@@ -125,10 +126,16 @@ let getCompletions =
   (~workingDirectory, ~filePath, ~fileContents, ~position: Types.Position.t, ~prefix, cb) => {
     let callback = (json) => {
         let completions = MerlinProtocol.completionResult_of_yojson(json);
-        cb(completions);
+        switch (completions) {
+        | Ok(v) => cb(v)
+        | Error(e) => error(e);
+        }
     };
 
-    let positionString = string_of_int(Types.Index.toInt1(position.line)) ++ ":" ++ string_of_int(Types.Index.toInt1(position.character));
+    let positionString = string_of_int(Types.Index.toInt1(position.line)) ++ ":" ++ string_of_int(Types.Index.toInt0(position.character));
+
+    print_endline ("PREFIX: " ++ prefix);
+    print_endline ("POSITION: " ++ positionString);
 
     _runMerlinCommand(~workingDirectory, ~filePath, ~fileContents,
       ~args=[
@@ -137,6 +144,6 @@ let getCompletions =
         prefix,
         "-position",
         positionString,
-      ], callback);
+       ], callback);
 
   };
