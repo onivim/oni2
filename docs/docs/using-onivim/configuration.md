@@ -48,6 +48,8 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `ui.shadows` __(_bool_ default: `true`)__ - Use drop-shadows in the rendering of menus, overlays, etc.
 
+- `ui.zoom` __(_float_ default: `1.0`)__ - Zoom setting for UI. Factor to scale UI elements. A value of `2.0` will scale the UI by 200%.
+
 ### Vim
 
 - `vim.useSystemClipboard` __(_`true`_|_`false`_|_`["yank", "paste", "delete"]`_ default: `["yank"]`)__ - Whether or not deletes / yanks should integrate with the system clipboard:
@@ -70,3 +72,11 @@ oni2 --force-device-scale-factor=2.0
 ```
 
 > __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported
+
+### Experimental
+
+Experimental features are features that we are working to stabilize and turn on-by-default.
+
+> __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
+
+- `experimental.merlin` - __(_bool_ default: `false`)__ - Use built-in merlin integration. Merlin must be in your `PATH` or included in your `esy` configuration. This is a precursor to more broad language support (ie, VSCode extension host integrations).

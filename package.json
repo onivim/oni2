@@ -233,7 +233,7 @@
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
-    "@opam/merlin": "3.2.2",
+    "@opam/merlin": "^3.3.2",
     "reperf": "^1.3.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
