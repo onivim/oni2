@@ -5,27 +5,31 @@ let configuration = Some({|
 { "experimental.viml": "nnoremap ; :" }
 |});
 
-runTest(~configuration, ~name="Viml Configuration Block", (dispatch, wait, _) => {
-  wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
-  );
+runTest(
+  ~configuration,
+  ~name="Viml Configuration Block",
+  (dispatch, wait, _) => {
+    wait(~name="Initial mode is normal", (state: State.t) =>
+      state.mode == Vim.Types.Normal
+    );
 
-  // Because of our 'experimental.viml' block, the ';' semicolon
-  // is mapped to ':' - so sending it should open the command line.
-  dispatch(KeyboardInput(";"));
+    // Because of our 'experimental.viml' block, the ';' semicolon
+    // is mapped to ':' - so sending it should open the command line.
+    dispatch(KeyboardInput(";"));
 
-  wait(~name="Mode switches to command line", (state: State.t) =>
-    state.mode == Vim.Types.CommandLine
-  );
+    wait(~name="Mode switches to command line", (state: State.t) =>
+      state.mode == Vim.Types.CommandLine
+    );
 
-  dispatch(KeyboardInput("e"));
-  wait(~name="Mode switches to command line", (state: State.t) =>
-    state.commandline.text == "e"
-  );
+    dispatch(KeyboardInput("e"));
+    wait(~name="Mode switches to command line", (state: State.t) =>
+      state.commandline.text == "e"
+    );
 
-  dispatch(KeyboardInput("h"));
+    dispatch(KeyboardInput("h"));
 
-  wait(~name="Mode switches to command line", (state: State.t) =>
-    state.commandline.text == "eh"
-  );
-});
+    wait(~name="Mode switches to command line", (state: State.t) =>
+      state.commandline.text == "eh"
+    );
+  },
+);
