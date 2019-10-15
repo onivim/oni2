@@ -68,6 +68,12 @@ let init = app => {
 
   let getTime = () => Time.getTime() |> Time.toSeconds;
 
+  let getZoom = () => {
+    Window.getZoom(w);
+  };
+
+  let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
+
   let quit = code => {
     App.quit(~code, app);
   };
@@ -82,6 +88,8 @@ let init = app => {
       ~executingDirectory=Core.Utility.executingDirectory,
       ~onStateChanged,
       ~getScaleFactor,
+      ~getZoom,
+      ~setZoom,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
       ~quit,
