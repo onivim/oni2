@@ -280,28 +280,26 @@ let createElement =
 
     let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
 
-    let cursorStyle =
-      Style.[
-        position(`Absolute),
-        top(
-          int_of_float(
+    let cursorPixelY = int_of_float(
             fontHeight
             *. float_of_int(
                  Index.toZeroBasedInt(editor.cursorPosition.line),
                )
             -. editor.scrollY
-            +. 0.5,
-          ),
-        ),
-        left(
-          int_of_float(
+            +. 0.5);
+
+    let cursorPixelX = int_of_float(
             lineNumberWidth
             +. fontWidth
             *. float_of_int(cursorOffset)
             -. editor.scrollX
-            +. 0.5,
-          ),
-        ),
+            +. 0.5);
+
+    let cursorStyle =
+      Style.[
+        position(`Absolute),
+        top(cursorPixelY),
+        left(cursorPixelX),
         height(iFontHeight),
         width(cursorWidth),
         backgroundColor(Colors.white),
@@ -542,6 +540,11 @@ let createElement =
         Vim.Cursor.setPosition(line + 1, col);
       };
     };
+
+    let hover = Hover.get(
+      ~bufferId, 
+      ~position=editor.cursorPosition,
+      state);
 
     (
       hooks,
@@ -837,7 +840,7 @@ let createElement =
           </View>
         </View>
         minimapLayout
-        <HoverView title="testing a much much much longerl ine" theme={state.theme} uiFont={state.uiFont} />
+        <HoverView x={cursorPixelX} y={cursorPixelY} hover={hover} theme={state.theme} uiFont={state.uiFont} />
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state

@@ -10,16 +10,13 @@ open Revery.UI.Components;
 open Oni_Core;
 module Model = Oni_Model;
 
-type tabAction = unit => unit;
-
-let minWidth_ = 125;
-let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
-
 let component = React.component("Hover");
 
 let createElement =
     (
-      ~title,
+      ~hover: option(Model.Hover.t),
+      ~x: int,
+      ~y: int,
       ~theme: Theme.t,
       ~uiFont: Types.UiFont.t,
       ~children as _,
@@ -28,35 +25,56 @@ let createElement =
   component(hooks => {
 
 
+    let outerContainerStyle = Style.[
+      position(`Absolute),
+      top(y),
+      left(x),
+    ];
+
     let containerStyle =
       Style.[
         border(~color=Colors.white, ~width=1),
         position(`Absolute),
-        overflow(`Hidden),
-        paddingHorizontal(5),
+        bottom(0),
+        left(0),
         backgroundColor(theme.editorBackground),
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
-        height(Constants.default.tabHeight),
-        minWidth(minWidth_),
+        margin(16),
+        minWidth(100),
+        minHeight(25),
       ];
 
     let textStyle =
       Style.[
-        textOverflow(`Ellipsis),
+        textWrap(TextWrapping.NoWrap),
         fontFamily(uiFont.fontFile),
         fontSize(uiFont.fontSize),
         color(theme.tabActiveForeground),
         backgroundColor(theme.editorBackground),
-        justifyContent(`Center),
-        alignItems(`Center),
       ];
 
-    (
-      hooks,
-      <View style=containerStyle>
-          <Text style=textStyle text=title />
-      </View>,
-    );
+    switch (hover) {
+    | None => 
+      (hooks, 
+        <View style=outerContainerStyle>
+        <View style=containerStyle>
+          <View>
+          <Text style=textStyle text={"Empty1"} />
+          </View>
+          <View>
+          <Text style=textStyle text={"Empty2"} />
+          </View>
+          <View>
+          <Text style=textStyle text={"Empty3"} />
+          </View>
+      </View>
+      </View>)
+    | Some(hover) => {
+      (hooks, <View style=containerStyle>
+          <Text style=textStyle text={"Hello"} />
+      </View>)
+    }
+    }
   });
