@@ -19,6 +19,9 @@ module Index = {
     };
 
   let toInt1 = toOneBasedInt;
+
+  let ofInt0 = i => ZeroBasedIndex(i);
+  let ofInt1 = i => OneBasedIndex(i);
 };
 
 module EditorSize = {
