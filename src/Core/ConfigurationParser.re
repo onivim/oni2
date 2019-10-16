@@ -129,6 +129,8 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorFontFamily: parseStringOption(v)},
   ),
   ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
+  ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
+  ("editor.hover.enabled", (s, v) => {...s, editorHoverEnabled: parseBool(v)}),
   (
     "editor.lineNumbers",
     (s, v) => {...s, editorLineNumbers: parseLineNumberSetting(v)},
