@@ -38,7 +38,7 @@ let createElement =
       let padding = 8;
       let innerPadding = 1;
 
-      let textStyle = 
+      let textStyle =
         Style.[
           //width(width_),
           //height(height_),
