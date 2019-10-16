@@ -3,9 +3,7 @@
  *
  */
 
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 open Oni_Core;
 module Model = Oni_Model;
@@ -26,7 +24,7 @@ let createElement =
     | None => empty
     | Some(hoverInfo) when hoverEnabled =>
       open Model.HoverCollector;
-      let {theme, editorFont, configuration, hover, _}: Model.State.t = state;
+      let {theme, editorFont, hover, _}: Model.State.t = state;
 
       let outerPositionStyle =
         Style.[position(`Absolute), top(y - 4), left(x + 4)];
@@ -40,7 +38,7 @@ let createElement =
       let padding = 8;
       let innerPadding = 1;
 
-      let textStyle = (width_, height_) =>
+      let textStyle = 
         Style.[
           //width(width_),
           //height(height_),
@@ -81,8 +79,7 @@ let createElement =
 
             let newWidth = max(prevWidth, width + padding);
             let newHeight = height + prevHeight + innerPadding;
-            let newStyle = textStyle(newWidth, height);
-            let newElem = <Text style=newStyle text=message />;
+            let newElem = <Text style=textStyle text=message />;
             let newDiags = [newElem, ...prevDiags];
             (newWidth, newHeight, newDiags);
           },

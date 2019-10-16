@@ -5,7 +5,6 @@
  * for the 'Hover' view
  */
 
-open Oni_Core;
 open Oni_Core.Types;
 
 type hover = {

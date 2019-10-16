@@ -5,9 +5,6 @@
  * based on the current state
  */
 
-open Oni_Core;
-open Oni_Core.Types;
-
 type hoverInfo = {diagnostics: list(Diagnostics.Diagnostic.t)};
 
 type t = option(hoverInfo);
