@@ -19,9 +19,11 @@ let createElement =
   component(hooks => {
     let empty = (hooks, React.empty);
 
+    let hoverEnabled = Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
+
     switch (Model.HoverCollector.get(state)) {
     | None => empty
-    | Some(hoverInfo) =>
+    | Some(hoverInfo) when hoverEnabled =>
       open Model.HoverCollector;
       let {theme, editorFont, configuration, hover, _}: Model.State.t = state;
 
@@ -102,5 +104,6 @@ let createElement =
           </Opacity>
         </View>,
       );
+    | _ => empty
     };
   });
