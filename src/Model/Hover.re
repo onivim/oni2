@@ -18,9 +18,9 @@ type t = option(hover);
 
 let empty: t = None;
 
-let show = (~bufferId, ~position, ~currentTime, ()) => {
+let show = (~bufferId, ~position, ~currentTime, ~delay, ()) => {
   let animation =
-    Animation.create(~duration=0.25, ~delay=1.0, ())
+    Animation.create(~duration=0.25, ~delay, ())
     |> Animation.start(currentTime);
 
   Some({bufferId, position, animation});

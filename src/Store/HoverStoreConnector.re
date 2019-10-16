@@ -32,6 +32,7 @@ let start = () => {
         | None => state
         | Some(buf) =>
           let bufferId = Model.Buffer.getId(buf);
+          let delay = Core.Configuration.getValue(c => c.editorHoverDelay, state.configuration);
           {
             ...state,
             hover:
@@ -39,6 +40,7 @@ let start = () => {
                 ~bufferId,
                 ~position,
                 ~currentTime=Unix.gettimeofday(),
+                ~delay=(float_of_int(delay) /. 1000.),
                 (),
               ),
           };
