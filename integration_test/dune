@@ -22,6 +22,7 @@
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
+           VimlConfigurationTest
            ZenModeSingleFileModeTest
            ZenModeSplitTest
     )
@@ -58,6 +59,7 @@
         TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
+        VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
         ))

@@ -21,6 +21,8 @@ type t = {
   editorDetectIndentation: bool,
   editorFontFamily: option(string),
   editorFontSize: int,
+  editorHoverDelay: int,
+  editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
   editorLineNumbers: LineNumber.setting,
   editorMatchBrackets: bool,
@@ -57,12 +59,15 @@ type t = {
   // - JSON
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
+  experimentalVimL: list(string),
 };
 
 let default = {
   editorDetectIndentation: true,
   editorFontFamily: Some("FiraCode-Regular.ttf"),
   editorFontSize: 14,
+  editorHoverDelay: 1000,
+  editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
   editorMatchBrackets: true,
   editorMinimapEnabled: true,
@@ -97,4 +102,5 @@ let default = {
   experimentalMerlin: false,
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
+  experimentalVimL: [],
 };

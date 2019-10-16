@@ -36,6 +36,7 @@ let parseStringList = json => {
       [],
       items,
     )
+  | `String(v) => [v]
   | _ => []
   };
 };
@@ -129,6 +130,11 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorFontFamily: parseStringOption(v)},
   ),
   ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
+  ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
+  (
+    "editor.hover.enabled",
+    (s, v) => {...s, editorHoverEnabled: parseBool(v)},
+  ),
   (
     "editor.lineNumbers",
     (s, v) => {...s, editorLineNumbers: parseLineNumberSetting(v)},
@@ -237,6 +243,10 @@ let configurationParsers: list(configurationTuple) = [
   (
     "experimental.autoClosingPairs",
     (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
+  ),
+  (
+    "experimental.viml",
+    (s, v) => {...s, experimentalVimL: parseStringList(v)},
   ),
 ];
 
