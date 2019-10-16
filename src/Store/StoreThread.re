@@ -136,6 +136,8 @@ let start =
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
+  let completionUpdater = CompletionStoreConnector.start();
+
   let (hoverUpdater, hoverStream) = HoverStoreConnector.start();
 
   let inputStream =
@@ -164,6 +166,7 @@ let start =
           merlinUpdater,
           acpUpdater,
           hoverUpdater,
+          completionUpdater,
         ]),
       (),
     );
