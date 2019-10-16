@@ -10,64 +10,85 @@ open Revery.UI.Components;
 open Oni_Core;
 module Model = Oni_Model;
 
+module Zed_utf8 = Oni_Core.ZedBundled;
+
 let component = React.component("Hover");
 
 let createElement =
     (~x: int, ~y: int, ~state: Model.State.t, ~children as _, ()) =>
   component(hooks => {
-    let {theme, uiFont, hover, _}: Model.State.t = state;
-
-    let outerPositionStyle = Style.[position(`Absolute), top(y), left(x)];
-
-    let opacity = Model.Hover.getOpacity(hover);
-
-    let innerPositionStyle =
-      Style.[
-        position(`Absolute),
-        bottom(0),
-        left(0),
-      ];
-
-    let containerStyle = Style.[
-        border(~color=Colors.white, ~width=1),
-        backgroundColor(theme.editorBackground),
-        flexDirection(`Column),
-        justifyContent(`Center),
-        alignItems(`Center),
-        width(250),
-        height(50),
-    ];
-
-    let textStyle =
-      Style.[
-        textWrap(TextWrapping.NoWrap),
-        fontFamily(uiFont.fontFile),
-        fontSize(uiFont.fontSize),
-        color(theme.tabActiveForeground),
-        backgroundColor(theme.editorBackground),
-      ];
 
     let empty = (hooks, React.empty);
 
     switch (Model.HoverCollector.get(state)) {
     | None => empty
-    | Some(hover) =>
-      let diags =
-        List.map(
-          (d: Model.Diagnostics.Diagnostic.t) =>
-            <Text style=textStyle text={d.message} />,
-          hover.diagnostics,
-        );
+    | Some(hoverInfo) =>
+    open Model.HoverCollector;
+    let {theme, editorFont, configuration, hover, _}: Model.State.t = state;
+
+    let outerPositionStyle = Style.[position(`Absolute), top(y - 4), left(x + 4)];
+
+    let opacity = Model.Hover.getOpacity(hover);
+
+    let bgColor = theme.editorHoverWidgetBackground;
+    let fgColor = theme.editorForeground;
+    let borderColor = theme.editorHoverWidgetBorder;
+
+    let padding = 8;
+    let innerPadding = 1;
+
+    let textStyle = (width_, height_) =>
+      Style.[
+        //width(width_),
+        //height(height_),
+        //textWrap(TextWrapping.NoWrap),
+        textOverflow(`Ellipsis),
+        fontFamily(editorFont.fontFile),
+        fontSize(editorFont.fontSize),
+        color(fgColor),
+        backgroundColor(bgColor),
+      ];
+
+    let innerPositionStyle = (width_, height_) =>
+      Style.[
+        position(`Absolute),
+        bottom(0),
+        left(0),
+        width(width_),
+        height(height_),
+        flexDirection(`Column),
+        alignItems(`Center),
+        justifyContent(`Center),
+        border(~color=borderColor, ~width=1),
+        backgroundColor(bgColor),
+      ];
+
+      let (_maxWidth, height, diags) = List.fold_left((prev, curr: Model.Diagnostics.Diagnostic.t) => {
+
+        let (prevWidth, prevHeight, prevDiags) = prev;
+        
+        let message = curr.message;
+        let width = Types.EditorFont.measure(~text=message, editorFont) +. 0.5 |> int_of_float;
+        let height = Types.EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
+
+        let newWidth = max(prevWidth, width + padding);
+        let newHeight = height + prevHeight + innerPadding;
+        let newStyle = textStyle(newWidth, height);
+        let newElem = <Text style=newStyle text={message} />
+        let newDiags = [newElem, ...prevDiags];
+        (newWidth, newHeight, newDiags)
+
+      }, (0, 0, []), hoverInfo.diagnostics);
+
+    let diags = List.rev(diags);
       (
         hooks,
         <View style=outerPositionStyle>
-          <View style=innerPositionStyle>
-            <Opacity opacity>
-                <View style=containerStyle>
-                ...diags 
-                </View>
-            </Opacity>
+                <Opacity opacity=opacity>
+          <View style=innerPositionStyle(_maxWidth + (padding * 2), height + (padding * 2))>
+                  ...diags 
           </View>
+                </Opacity>
         </View>,
       );
     };

@@ -20,7 +20,7 @@ let empty: t = None;
 
 let show = (~bufferId, ~position, ~currentTime, ()) => {
   let animation =
-    Animation.create(~delay=1.0, ()) |> Animation.start(currentTime);
+    Animation.create(~duration=0.25, ~delay=1.0, ()) |> Animation.start(currentTime);
 
   Some({bufferId, position, animation});
 };
