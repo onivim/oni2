@@ -61,6 +61,7 @@ let start = () => {
             open Model.CompletionMeet;
             let column = meet.index;
             let _base = meet.base;
+            // Check if our 'meet' position has changed
             if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
               let newMeet = {
                 completionMeetBufferId: bufferId,
@@ -82,7 +83,6 @@ let start = () => {
               Log.info("[Completion] New completion base: " ++ meet.base);
             };
           };
-        // Check if our 'meet' position has changed
         };
       };
     });
@@ -93,8 +93,8 @@ let start = () => {
         state,
         checkCompletionMeet(state),
       )
-    | Actions.CursorMove(position) => (state, checkCompletionMeet(state))
-    | Actions.BufferUpdate(buf) => (state, Isolinear.Effect.none)
+    | Actions.CursorMove(_) => (state, checkCompletionMeet(state))
+    | Actions.BufferUpdate(_) => (state, Isolinear.Effect.none)
     | _ => (state, checkCompletionMeet(state))
     };
   };
