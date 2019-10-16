@@ -21,6 +21,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
+- `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
+
+- `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.
+
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
 - `editor.lineNumbers` __(_"on"|"off"|"relative" _default: `"on"`)__ - Controls how line numbers are rendered on the editor surface

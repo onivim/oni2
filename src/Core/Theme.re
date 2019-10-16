@@ -48,6 +48,8 @@ type t = {
   foreground: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
+  editorHoverWidgetBackground: Color.t,
+  editorHoverWidgetBorder: Color.t,
   editorLineHighlightBackground: Color.t,
   editorLineNumberBackground: Color.t,
   editorLineNumberForeground: Color.t,
@@ -104,6 +106,8 @@ let default: t = {
   editorFindMatchBackground: Color.hex("#42557b"),
   editorFindMatchBorder: Color.hex("#457dff"),
   editorFindMatchHighlightBackground: Color.hex("#314365"),
+  editorHoverWidgetBackground: Color.hex("#FFFFFF"),
+  editorHoverWidgetBorder: Color.hex("#FFFFFF"),
   editorLineHighlightBackground: Color.hex("#495162"),
   editorLineNumberBackground: Color.hex("#2F3440"),
   editorLineNumberForeground: Color.hex("#495162"),
@@ -165,6 +169,18 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(defaultBackground, ["editor.background", "background"]);
   let editorForeground =
     getColor(defaultForeground, ["editor.foreground", "foreground"]);
+
+  let editorHoverWidgetBackground =
+    getColor(
+      defaultBackground,
+      ["editorHoverWidget.background", "editor.background", "background"],
+    );
+
+  let editorHoverWidgetBorder =
+    getColor(
+      defaultForeground,
+      ["editorHoverWidget.border", "editor.foreground", "foreground"],
+    );
 
   let editorLineNumberBackground =
     getColor(
@@ -273,6 +289,8 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     foreground,
     editorBackground,
     editorForeground,
+    editorHoverWidgetBackground,
+    editorHoverWidgetBorder,
     editorIndentGuideBackground,
     editorIndentGuideActiveBackground,
     editorLineHighlightBackground,

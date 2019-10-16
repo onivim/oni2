@@ -136,6 +136,10 @@ let start =
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
+  let completionUpdater = CompletionStoreConnector.start();
+
+  let (hoverUpdater, hoverStream) = HoverStoreConnector.start();
+
   let inputStream =
     InputStoreConnector.start(getState, window, runRunEffects);
 
@@ -161,6 +165,8 @@ let start =
           themeUpdater,
           merlinUpdater,
           acpUpdater,
+          hoverUpdater,
+          completionUpdater,
         ]),
       (),
     );
@@ -207,6 +213,7 @@ let start =
   Isolinear.Stream.connect(dispatch, explorerStream);
   Isolinear.Stream.connect(dispatch, lifecycleStream);
   Isolinear.Stream.connect(dispatch, windowStream);
+  Isolinear.Stream.connect(dispatch, hoverStream);
   Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
