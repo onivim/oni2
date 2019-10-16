@@ -18,6 +18,8 @@ type t =
   | BufferSetIndentation(int, IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Command(string)
+  | CompletionStart(completionMeet)
+  | CompletionBaseChanged(string)
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -99,6 +101,11 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
+and completionMeet = {
+  completionMeetBufferId: int,
+  completionMeetLine: int,
+  completionMeetColumn: int,
+}
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
 and notificationType =

@@ -49,7 +49,7 @@ let getMeetFromLine =
     let c = Zed_utf8.get(line, pos^);
     lastCharacter := Some(c);
 
-    if (matchesTriggerCharacters(c) || Zed_utf8.is_space(c)) {
+    if (matchesTriggerCharacters(c) || (Zed_utf8.is_space(c) && List.length(candidateBase^) > 0)) {
       found := true;
       incr(pos);
     } else {
@@ -72,3 +72,20 @@ let getMeetFromLine =
   | v => Some({index: v, base})
   };
 };
+
+let getMeetFromBufferCursor = 
+  (
+    ~triggerCharacters=defaultTriggerCharacters,
+    ~cursor: Position.t,
+    buffer: Buffer.t
+  ) => {
+    let bufferLines = Buffer.getNumberOfLines(buffer);
+    let line0 = Index.toInt0(cursor.line);
+
+    if (line0 < bufferLines) {
+      let line = Buffer.getLine(buffer, line0);
+      getMeetFromLine(~triggerCharacters, ~cursor=cursor.character, line);
+    } else {
+      None;
+    }
+  };
