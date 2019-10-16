@@ -19,7 +19,8 @@ let createElement =
   component(hooks => {
     let empty = (hooks, React.empty);
 
-    let hoverEnabled = Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
+    let hoverEnabled =
+      Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
 
     switch (Model.HoverCollector.get(state)) {
     | None => empty
