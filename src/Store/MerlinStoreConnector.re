@@ -65,11 +65,12 @@ let start = () => {
       ),
     );
 
-  let checkCompletionsEffect = (state, meet: Core.Actions.completionMeet) => 
+  let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) => 
     Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => ()
       | Some(buf) =>
+        let id = Model.Buffer.getId(buf);
         let lines = Model.Buffer.getLines(buf);
         let fileType = Model.Buffer.getFileType(buf);
         switch (fileType, Model.Buffer.getFilePath(buf)) {
@@ -81,13 +82,13 @@ let start = () => {
           print_endline ("!!!! " ++ str);
         };
 
-        let cursorLine = Core.Types.Index.toInt0(meet.completionMeetLine);
-        let position = meet.completionMeetCursor;
+        let cursorLine = meet.completionMeetLine;
+        let position = meet.completionMeetColumn;
 
-        if (cursorLine < Array.length(lines)) {
+        if (cursorLine < Array.length(lines) && id == meet.completionMeetBufferId) {
           let _ = MerlinRequestQueue.getCompletions(Sys.getcwd(),
               path, lines, lines[cursorLine],
-              position, cb);
+              Core.Types.Position.ofInt0(cursorLine, position), cb);
         }
 
         | _ => ();
@@ -101,7 +102,7 @@ let start = () => {
         state,
         modelChangedEffect(state.buffers, bu, state.configuration),
       )
-    | Model.Actions.CompletionMeet(completionMeet) => (
+    | Model.Actions.CompletionStart(completionMeet) => (
       state, checkCompletionsEffect(state, completionMeet)
     )
     | _ => (state, Isolinear.Effect.none)
