@@ -18,13 +18,12 @@ open Actions;
 type lastCompletionMeet = Actions.completionMeet;
 
 let defaultMeet = {
-    completionMeetBufferId: (-1),
-    completionMeetLine: (-1),
-    completionMeetColumn: (-1),
-  }
+  completionMeetBufferId: (-1),
+  completionMeetLine: (-1),
+  completionMeetColumn: (-1),
+};
 
-let lastMeet =
-  ref(defaultMeet);
+let lastMeet = ref(defaultMeet);
 
 let lastBase = ref("");
 

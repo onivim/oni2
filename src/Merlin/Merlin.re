@@ -9,7 +9,8 @@ open Oni_Core;
 let info = msg => Log.info("[Merlin] " ++ msg);
 let error = msg => Log.error("[Merlin] " ++ msg);
 
-let _runMerlinCommand = (~workingDirectory, ~filePath, ~fileContents, ~args, cb) => {
+let _runMerlinCommand =
+    (~workingDirectory, ~filePath, ~fileContents, ~args, cb) => {
   let merlin = MerlinDiscovery.discover(workingDirectory);
   switch (merlin.ocamlMerlinPath) {
   | Some(v) =>
@@ -39,19 +40,20 @@ let _runMerlinCommand = (~workingDirectory, ~filePath, ~fileContents, ~args, cb)
         currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
       };
 
+    let arguments =
+      List.concat([[v, "single"], args, ["-filename", filePath]])
+      |> Array.of_list;
 
-  let arguments = List.concat([[v, "single"], args, ["-filename", filePath]]) |> Array.of_list;
-    
-  let _ =
-    Unix.create_process_env(
-      v,
-      arguments,
-      [|"PATH=" ++ augmentedPath|],
-      pstdin,
-      pstdout,
-      pstdout,
-    );
-    
+    let _ =
+      Unix.create_process_env(
+        v,
+        arguments,
+        [|"PATH=" ++ augmentedPath|],
+        pstdin,
+        pstdout,
+        pstdout,
+      );
+
     Unix.close(pstdout);
     Unix.close(pstdin);
     Unix.close(pstderr);
@@ -99,51 +101,69 @@ let _runMerlinCommand = (~workingDirectory, ~filePath, ~fileContents, ~args, cb)
 
     let jsonString = handleMerlinResponse(stdout);
     let json = Yojson.Safe.from_string(jsonString);
-      let result = MerlinProtocol.parse(json);
-      switch (result) {
-      | Ok(v) => cb(v);
-      | Error(e) => error(e)
-      };
-  | None => ();
-};
+    let result = MerlinProtocol.parse(json);
+    switch (result) {
+    | Ok(v) => cb(v)
+    | Error(e) => error(e)
+    };
+  | None => ()
+  };
 };
 
 let getErrors =
-    (workingDirectory: string, filePath: string, fileContents: array(string), cb) => {
-
-    let callback = (json) => {
-        let errors = MerlinProtocol.errorResult_of_yojson(json);
-        switch (errors) {
-        | Ok(v) => cb(v)
-        | Error(e) => error(e)
-        };
+    (
+      workingDirectory: string,
+      filePath: string,
+      fileContents: array(string),
+      cb,
+    ) => {
+  let callback = json => {
+    let errors = MerlinProtocol.errorResult_of_yojson(json);
+    switch (errors) {
+    | Ok(v) => cb(v)
+    | Error(e) => error(e)
     };
-    
-    _runMerlinCommand(~workingDirectory, ~filePath, ~fileContents, ~args=["errors"], callback);
+  };
+
+  _runMerlinCommand(
+    ~workingDirectory,
+    ~filePath,
+    ~fileContents,
+    ~args=["errors"],
+    callback,
+  );
 };
 
 let getCompletions =
-  (~workingDirectory, ~filePath, ~fileContents, ~position: Types.Position.t, ~prefix, cb) => {
-    let callback = (json) => {
-        let completions = MerlinProtocol.completionResult_of_yojson(json);
-        switch (completions) {
-        | Ok(v) => cb(v)
-        | Error(e) => error(e);
-        }
+    (
+      ~workingDirectory,
+      ~filePath,
+      ~fileContents,
+      ~position: Types.Position.t,
+      ~prefix,
+      cb,
+    ) => {
+  let callback = json => {
+    let completions = MerlinProtocol.completionResult_of_yojson(json);
+    switch (completions) {
+    | Ok(v) => cb(v)
+    | Error(e) => error(e)
     };
-
-    let positionString = string_of_int(Types.Index.toInt1(position.line)) ++ ":" ++ string_of_int(Types.Index.toInt0(position.character));
-
-    print_endline ("PREFIX: " ++ prefix);
-    print_endline ("POSITION: " ++ positionString);
-
-    _runMerlinCommand(~workingDirectory, ~filePath, ~fileContents,
-      ~args=[
-        "complete-prefix",
-        "-prefix",
-        prefix,
-        "-position",
-        positionString,
-       ], callback);
-
   };
+
+  let positionString =
+    string_of_int(Types.Index.toInt1(position.line))
+    ++ ":"
+    ++ string_of_int(Types.Index.toInt0(position.character));
+
+  print_endline("PREFIX: " ++ prefix);
+  print_endline("POSITION: " ++ positionString);
+
+  _runMerlinCommand(
+    ~workingDirectory,
+    ~filePath,
+    ~fileContents,
+    ~args=["complete-prefix", "-prefix", prefix, "-position", positionString],
+    callback,
+  );
+};

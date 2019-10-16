@@ -65,7 +65,7 @@ let start = () => {
       ),
     );
 
-  let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) => 
+  let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) =>
     Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => ()
@@ -75,23 +75,30 @@ let start = () => {
         let fileType = Model.Buffer.getFileType(buf);
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
-        
-        let cb = completions => {
-          let json = MerlinProtocol.completionResult_to_yojson(completions);
-          let str = Yojson.Safe.to_string(json);
-          print_endline ("!!!! " ++ str);
-        };
+          let cb = completions => {
+            let json = MerlinProtocol.completionResult_to_yojson(completions);
+            let str = Yojson.Safe.to_string(json);
+            print_endline("!!!! " ++ str);
+          };
 
-        let cursorLine = meet.completionMeetLine;
-        let position = meet.completionMeetColumn;
+          let cursorLine = meet.completionMeetLine;
+          let position = meet.completionMeetColumn;
 
-        if (cursorLine < Array.length(lines) && id == meet.completionMeetBufferId) {
-          let _ = MerlinRequestQueue.getCompletions(Sys.getcwd(),
-              path, lines, lines[cursorLine],
-              Core.Types.Position.ofInt0(cursorLine, position), cb);
-        }
+          if (cursorLine < Array.length(lines)
+              && id == meet.completionMeetBufferId) {
+            let _ =
+              MerlinRequestQueue.getCompletions(
+                Sys.getcwd(),
+                path,
+                lines,
+                lines[cursorLine],
+                Core.Types.Position.ofInt0(cursorLine, position),
+                cb,
+              );
+            ();
+          };
 
-        | _ => ();
+        | _ => ()
         };
       }
     });
@@ -103,8 +110,9 @@ let start = () => {
         modelChangedEffect(state.buffers, bu, state.configuration),
       )
     | Model.Actions.CompletionStart(completionMeet) => (
-      state, checkCompletionsEffect(state, completionMeet)
-    )
+        state,
+        checkCompletionsEffect(state, completionMeet),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };
