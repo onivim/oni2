@@ -152,7 +152,7 @@ module BufferUpdate = {
 
 module EditorFont = {
   module Zed_utf8 = ZedBundled;
-  
+
   type t = {
     fontFile: string,
     fontSize: int,

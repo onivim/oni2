@@ -171,10 +171,16 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(defaultForeground, ["editor.foreground", "foreground"]);
 
   let editorHoverWidgetBackground =
-    getColor(defaultBackground, ["editorHoverWidget.background", "editor.background", "background"])
-  
+    getColor(
+      defaultBackground,
+      ["editorHoverWidget.background", "editor.background", "background"],
+    );
+
   let editorHoverWidgetBorder =
-    getColor(defaultForeground, ["editorHoverWidget.border", "editor.foreground", "foreground"])
+    getColor(
+      defaultForeground,
+      ["editorHoverWidget.border", "editor.foreground", "foreground"],
+    );
 
   let editorLineNumberBackground =
     getColor(
