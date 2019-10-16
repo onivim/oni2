@@ -12,7 +12,7 @@ open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
 type completionMeet = {
-  prefix: string,
+  base: string,
   index: int,
 };
 
@@ -46,7 +46,7 @@ let getMeetFromLine = (~triggerCharacters=defaultTriggerCharacters, ~cursor: Ind
 
   switch (pos^) {
   | -1 => None
-  | v => Some({ index: v, prefix: "" })
+  | v => Some({ index: v, base: "" })
   }
 };
 
