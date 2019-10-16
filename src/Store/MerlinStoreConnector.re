@@ -65,7 +65,7 @@ let start = () => {
       ),
     );
 
-  let checkCompletionsEffect = (state, position: Core.Types.Position.t) => 
+  let checkCompletionsEffect = (state, meet: Core.Actions.completionMeet) => 
     Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => ()
@@ -81,7 +81,8 @@ let start = () => {
           print_endline ("!!!! " ++ str);
         };
 
-        let cursorLine = Core.Types.Index.toInt0(position.line);
+        let cursorLine = Core.Types.Index.toInt0(meet.completionMeetLine);
+        let position = meet.completionMeetCursor;
 
         if (cursorLine < Array.length(lines)) {
           let _ = MerlinRequestQueue.getCompletions(Sys.getcwd(),
@@ -100,8 +101,8 @@ let start = () => {
         state,
         modelChangedEffect(state.buffers, bu, state.configuration),
       )
-    | Model.Actions.CursorMove(cursorPosition) => (
-      state, checkCompletionsEffect(state, cursorPosition)
+    | Model.Actions.CompletionMeet(completionMeet) => (
+      state, checkCompletionsEffect(state, completionMeet)
     )
     | _ => (state, Isolinear.Effect.none)
     };
