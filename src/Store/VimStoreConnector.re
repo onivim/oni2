@@ -348,7 +348,14 @@ let start =
       ++ string_of_int(Array.length(completions))
       ++ " completions.",
     );
-    let items = Array.map(name => Model.Actions.{ name, category: None, icon: None, command: () => Noop }, completions);
+    let items = Array.map(
+      name => Model.Actions.{
+        name,
+        category: None,
+        icon: None,
+        command: () => Noop,
+        highlight: []
+      }, completions);
     dispatch(Model.Actions.MenuUpdateSource(Complete(items)));
   };
 

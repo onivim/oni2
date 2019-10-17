@@ -70,6 +70,7 @@ let start = () => {
                   iconTheme,
                   path,
                 ),
+              highlight: []
             })
           | None => None
           };
@@ -244,6 +245,7 @@ let subscriptions = (ripgrep) => {
         command: () => Model.Actions.OpenFileByPath(fullPath, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        highlight: []
       };
 
     RipgrepSubscription.create(

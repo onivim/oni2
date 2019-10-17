@@ -134,6 +134,7 @@ and menuCommand = {
   name: string,
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
+  highlight: list((int, int))
 }
 and menuVariant = 
   | CommandPalette

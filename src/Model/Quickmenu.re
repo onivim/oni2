@@ -41,3 +41,11 @@ let getItems = fun
   | Progress({ items })
   | Complete(items) =>
     items
+
+// TODO: This doesn't really belong here. Find a better home for it.
+let getLabel = (command: menuCommand) => {
+  switch (command.category) {
+  | Some(v) => v ++ ": " ++ command.name
+  | None => command.name
+  };
+};

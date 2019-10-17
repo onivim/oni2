@@ -7,26 +7,45 @@ open Oni_Model;
 
 let component = React.component("MenuItem");
 
-let menuItemFontSize = 20;
+module Constants = {
+  let fontSize = 20;
+}
 
-let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
-  Style.[
-    fontFamily(uiFont.fontFile),
-    fontSize(uiFont.fontSize),
-    color(theme.editorMenuForeground),
-    backgroundColor(bg),
-  ];
+module Styles = {
+  let text = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t) =>
+    Style.[
+      fontFamily(uiFont.fontFile),
+      fontSize(uiFont.fontSize),
+      color(theme.editorMenuForeground),
+      backgroundColor(bg),
+    ];
 
-let containerStyles = (~bg, ()) =>
-  Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
+  let container = (~bg) =>
+    Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
 
-let iconStyles = fgColor =>
-  Style.[
-    fontFamily("seti.ttf"),
-    fontSize(menuItemFontSize),
-    marginRight(10),
-    color(fgColor),
-  ];
+  let icon = fgColor =>
+    Style.[
+      fontFamily("seti.ttf"),
+      fontSize(Constants.fontSize),
+      marginRight(10),
+      color(fgColor),
+    ];
+
+  let label = (~font, ~fg, ~bg, ~custom) =>
+    Style.(
+      merge(
+        ~source=
+          Style.[
+            fontFamily(font),
+            textOverflow(`Ellipsis),
+            fontSize(12),
+            color(fg),
+            backgroundColor(bg),
+          ],
+        ~target=custom,
+      )
+    );
+}
 
 let noop = () => ();
 
@@ -51,40 +70,35 @@ let createElement =
         selected ? theme.editorMenuItemSelected : theme.editorMenuBackground
       );
 
-    let labelStyles =
-      Style.(
-        merge(
-          ~source=
-            Style.[
-              fontFamily(uiFont.fontFile),
-              textOverflow(`Ellipsis),
-              fontSize(12),
-              color(theme.editorMenuForeground),
-              backgroundColor(bg),
-            ],
-          ~target=style,
-        )
-      );
 
     let iconView =
       switch (icon) {
       | Some(v) =>
-        IconTheme.IconDefinition.(
-          <Text
-            style={iconStyles(v.fontColor)}
-            text={FontIcon.codeToIcon(v.fontCharacter)}
-          />
-        )
-      | None => <Text style={iconStyles(Colors.transparentWhite)} text="" />
+        open IconTheme.IconDefinition;
+        <Text
+          style=Styles.icon(v.fontColor)
+          text=FontIcon.codeToIcon(v.fontCharacter)
+        />
+
+      | None =>
+        <Text style=Styles.icon(Colors.transparentWhite) text="" />
+      };
+
+    let labelView = 
+      switch (label) {
+        | `Text(text) =>
+          let style = Styles.label(~font=uiFont.fontFile, ~fg=theme.editorMenuForeground, ~bg, ~custom=style);
+          <Text style text />
+        | `Custom(view) =>
+          view
       };
 
     (
       hooks,
       <Clickable style=Style.[cursor(Revery.MouseCursors.pointer)] onClick>
-        <View
-          onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
+        <View onMouseOver={_ => onMouseOver()} style=Styles.container(~bg)>
           iconView
-          <Text style=labelStyles text=label />
+          labelView
         </View>
       </Clickable>,
     );

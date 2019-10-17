@@ -25,13 +25,6 @@ let loseFocusOnClose = isOpen =>
   );
 
 
-let getLabel = (command: Actions.menuCommand) => {
-  switch (command.category) {
-  | Some(v) => v ++ ": " ++ command.name
-  | None => command.name
-  };
-};
-
 module Styles = {
   let container = (theme: Theme.t) =>
     Style.[
@@ -53,6 +46,15 @@ module Styles = {
       fontSize(14),
       width(Constants.menuWidth - 50),
       cursor(Revery.MouseCursors.pointer),
+    ];
+
+  let label = (~font, ~fg) =>
+    Style.[
+      fontFamily(font),
+      textOverflow(`Ellipsis),
+      fontSize(12),
+      color(fg),
+      textWrap(TextWrapping.NoWrap)
     ];
 };
 
@@ -154,6 +156,57 @@ let createElement =
         </Opacity>
       };
 
+    let renderItem = index => {
+      let item = items[index];
+
+      let labelView = {
+        let font = GlobalContext.current().state.uiFont.fontFile;
+        let normalStyle = Styles.label(~font, ~fg=theme.editorMenuForeground);
+        let highlightedStyle = Styles.label(~font, ~fg=theme.oniNormalModeBackground);
+
+        let highlighted = {
+          let text =
+            Quickmenu.getLabel(item);
+          let textLength =
+            String.length(text);
+
+          // Assumes ranges are sorted low to high
+          let rec highlighter = last => fun
+            | [] =>
+              [ <Text
+                  style=normalStyle
+                  text=String.sub(text, last, textLength - last) />
+              ]
+
+            | [(low, high), ...rest] =>
+              [ <Text
+                  style=normalStyle
+                  text=String.sub(text, last, low - last) />,
+                <Text
+                  style=highlightedStyle
+                  text=String.sub(text, low, high + 1 - low) />,
+                ...highlighter(high + 1, rest)
+              ];
+
+          highlighter(0, item.highlight);
+        };
+
+        <View style= Style.[flexDirection(`Row)]>
+          ...highlighted
+        </View>
+      };
+
+      <MenuItem
+        onClick={() => onSelect(index)}
+        theme
+        style=Styles.menuItem
+        label=`Custom(labelView)
+        icon=item.icon
+        onMouseOver={() => onSelectedChange(index)}
+        selected={index == selected}
+      />;
+    };
+
     (
       hooks,
       <AllowPointer>
@@ -179,18 +232,7 @@ let createElement =
                 width=Constants.menuWidth
                 count={Array.length(items)}
                 selected
-                render={index => {
-                  let item = items[index];
-                  <MenuItem
-                    onClick={() => onSelect(index)}
-                    theme
-                    style=Styles.menuItem
-                    label=getLabel(item)
-                    icon=item.icon
-                    onMouseOver={() => onSelectedChange(index)}
-                    selected={index == selected}
-                  />;
-                }}
+                render=renderItem
               />
               loadingSpinner
             </View>

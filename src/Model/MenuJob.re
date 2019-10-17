@@ -113,13 +113,13 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
     let uiFilteredList = Array.to_list(uiFiltered);
     let uiFilteredNew =
       List.filter(
-        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
+        i => matches(newQueryEx, Filter.formatName(i, ~shouldLower)),
         uiFilteredList,
       );
 
     let allFilteredNew =
       List.filter(
-        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
+        i => matches(newQueryEx, Filter.formatName(i, ~shouldLower)),
         allFiltered,
       );
 
