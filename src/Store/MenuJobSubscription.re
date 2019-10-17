@@ -67,7 +67,7 @@ module Provider = {
             | None =>
               Log.error("Unable to pump non-existing MenuJob");
           },
-        Seconds(0.5),
+        Seconds(0.1),
       );
 
     let dispose = () => {
