@@ -20,7 +20,19 @@ let default: t = {
   meet: None,
   selected: 0,
   filter: None,
-  filteredCompletions: [],
+  filteredCompletions: [{
+    completionLabel: "log",
+    completionKind: CompletionKind.Method,
+    completionDetail: Some("() => ()"),
+  }, {
+    completionLabel: "warn",
+    completionKind: CompletionKind.Method,
+    completionDetail: None,
+  }, {
+    completionLabel: "error",
+    completionKind: CompletionKind.Method,
+    completionDetail: None,
+  }],
   completions: [{
     completionLabel: "log",
     completionKind: CompletionKind.Method,
@@ -36,17 +48,25 @@ let default: t = {
   }],
 }
 
+let isActive = (v: t) => {
+  switch (v.meet) {
+  | None => false
+  | Some(_) => switch(v.filteredCompletions) {
+  | [_hd, ..._tail] => true
+  | _ => false
+  }
+  }
+};
+
 let endCompletions = (v: t) => {
-  ...v,
-  meet: None,
-  filter: None,
-  completions: [],
+  default
 };
 
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
   ...v,
   meet: Some(meet),
-  completions: [],
+  completions: default.completions,
+  filteredCompletions: default.filteredCompletions,
 };
 
 let _applyFilter = (filter: option(string), items: list(Actions.completionItem)) => {

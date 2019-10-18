@@ -885,6 +885,7 @@ let createElement =
         </View>
         minimapLayout
         <HoverView x=cursorPixelX y=cursorPixelY state />
+        <CompletionsView x=cursorPixelX y=cursorPixelY lineHeight=fontHeight state/>
         <View style=verticalScrollBarStyle>
           <EditorVerticalScrollbar
             state
