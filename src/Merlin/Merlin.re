@@ -156,9 +156,6 @@ let getCompletions =
     ++ ":"
     ++ string_of_int(Types.Index.toInt0(position.character));
 
-  print_endline("PREFIX: " ++ prefix);
-  print_endline("POSITION: " ++ positionString);
-
   _runMerlinCommand(
     ~workingDirectory,
     ~filePath,

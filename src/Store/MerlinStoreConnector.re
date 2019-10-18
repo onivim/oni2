@@ -76,9 +76,8 @@ let start = () => {
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
           let cb = completions => {
-            let json = MerlinProtocol.completionResult_to_yojson(completions);
-            let str = Yojson.Safe.to_string(json);
-            print_endline("!!!! " ++ str);
+            // TODO: Show completion UI
+            ();
           };
 
           let cursorLine = meet.completionMeetLine;
