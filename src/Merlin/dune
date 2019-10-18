@@ -16,6 +16,7 @@
         reason-jsonrpc
         isolinear
         Oni2.core
+        Oni2.extensions
         Oni2.model
         ReasonFuzz
     )
