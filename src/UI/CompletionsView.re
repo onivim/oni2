@@ -13,7 +13,7 @@ module Zed_utf8 = Oni_Core.ZedBundled;
 let component = React.component("Hover");
 
 let createElement =
-    (~x: int, ~y: int, ~lineHeight: int, ~state: Model.State.t, ~children as _, ()) =>
+    (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ~children as _, ()) =>
   component(hooks => {
     let empty = (hooks, React.empty);
 
@@ -30,7 +30,7 @@ let createElement =
       let outerPositionStyle =
         Style.[position(`Absolute), top(y - 4), left(x + 4)];
 
-      let opacity = Model.Hover.getOpacity(hover);
+      let opacity = 1.0;
 
       let bgColor = theme.editorHoverWidgetBackground;
       let fgColor = theme.editorForeground;
@@ -103,6 +103,5 @@ let createElement =
           </Opacity>
         </View>,
       );
-    | _ => empty
     };
   });
