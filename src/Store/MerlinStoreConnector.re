@@ -65,11 +65,52 @@ let start = () => {
       ),
     );
 
+  let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) =>
+    Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
+      switch (Model.Selectors.getActiveBuffer(state)) {
+      | None => ()
+      | Some(buf) =>
+        let id = Model.Buffer.getId(buf);
+        let lines = Model.Buffer.getLines(buf);
+        let fileType = Model.Buffer.getFileType(buf);
+        switch (fileType, Model.Buffer.getFilePath(buf)) {
+        | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
+          let cb = _completions => {
+            ();
+              // TODO: Show completion UI
+          };
+
+          let cursorLine = meet.completionMeetLine;
+          let position = meet.completionMeetColumn;
+
+          if (cursorLine < Array.length(lines)
+              && id == meet.completionMeetBufferId) {
+            let _ =
+              MerlinRequestQueue.getCompletions(
+                Sys.getcwd(),
+                path,
+                lines,
+                lines[cursorLine],
+                Core.Types.Position.ofInt0(cursorLine, position),
+                cb,
+              );
+            ();
+          };
+
+        | _ => ()
+        };
+      }
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu, state.configuration),
+      )
+    | Model.Actions.CompletionStart(completionMeet) => (
+        state,
+        checkCompletionsEffect(state, completionMeet),
       )
     | _ => (state, Isolinear.Effect.none)
     };
