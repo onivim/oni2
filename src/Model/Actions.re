@@ -22,6 +22,7 @@ type t =
   | CompletionStart(completionMeet)
   | CompletionSetItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
+  | CompletionEnd
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
