@@ -11,6 +11,7 @@ open Revery_UI_Components;
 type renderFunction = int => React.syntheticElement;
 
 module Constants = {
+  let scrollWheelMultiplier = 25;
   let additionalRowsToRender = 1;
   let scrollBarThickness = 6;
   let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
@@ -96,6 +97,12 @@ let createElement =
     let (actualScrollTop, setScrollTop, hooks) =
       Hooks.state(0, hooks);
 
+    // Make sure we're not scrolled past the items
+    let actualScrollTop =
+      actualScrollTop
+        |> min(rowHeight * count - menuHeight)
+        |> max(0); // TODO: Clamp candidate
+
     let selectedChanged = () => {
       let offset = selected * rowHeight;
       if (offset < actualScrollTop) {
@@ -112,12 +119,10 @@ let createElement =
       Hooks.effect(If((!=), selected), selectedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      let newScrollTop =
-        actualScrollTop + int_of_float(wheelEvent.deltaY) * -25
-        |> max(0)
-        |> min(rowHeight * count - menuHeight);
+      let delta = 
+        int_of_float(wheelEvent.deltaY) * -Constants.scrollWheelMultiplier;
 
-      setScrollTop(newScrollTop);
+      setScrollTop(actualScrollTop + delta);
     };
 
     let scrollbar = {
