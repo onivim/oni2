@@ -27,13 +27,13 @@ let conditionsOfState = (state: State.t) => {
 
   if (Model.Completions.isActive(state.completions)) {
     Hashtbl.add(ret, SuggestWidgetVisible, true);
-  }
+  };
 
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isMenuOpen(state)|| state.commandline.show, state.mode) {
+  switch (isMenuOpen(state) || state.commandline.show, state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);

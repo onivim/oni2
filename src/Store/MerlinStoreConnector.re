@@ -58,9 +58,9 @@ let start = () => {
               });
             };
 
-                let _ =
-                  MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
-                  ();
+            let _ =
+              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
+            ();
           | _ => ()
           };
         }
@@ -78,10 +78,11 @@ let start = () => {
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
           let cb = completions => {
-            let modelCompletions = MerlinProtocolConverter.toModelCompletions(completions);
+            let modelCompletions =
+              MerlinProtocolConverter.toModelCompletions(completions);
             dispatch(CompletionSetItems(meet, modelCompletions));
             ();
-              // TODO: Show completion UI
+            // TODO: Show completion UI
           };
 
           let cursorLine = meet.completionMeetLine;

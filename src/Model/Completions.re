@@ -23,20 +23,21 @@ let default: t = {
   filter: None,
   filteredCompletions: [],
   completions: [],
-}
+};
 
 let isActive = (v: t) => {
   switch (v.meet) {
   | None => false
-  | Some(_) => switch(v.filteredCompletions) {
-  | [_hd, ..._tail] => true
-  | _ => false
-  }
-  }
+  | Some(_) =>
+    switch (v.filteredCompletions) {
+    | [_hd, ..._tail] => true
+    | _ => false
+    }
+  };
 };
 
 let endCompletions = (v: t) => {
-  default
+  default;
 };
 
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
@@ -53,28 +54,34 @@ let getBestCompletion = (v: t) => {
   List.nth_opt(v.filteredCompletions, 0);
 };
 
-let _applyFilter = (filter: option(string), items: list(Actions.completionItem)) => {
+let _applyFilter =
+    (filter: option(string), items: list(Actions.completionItem)) => {
   switch (filter) {
   | None => items
   | Some(filter) =>
-  let re = Str.regexp_string(filter);
-  print_endline ("USING FILTER: " ++ filter);
-  Printf.printf("Length before: %d\n", List.length(items));
-  let ret = List.filter((item: Actions.completionItem) => {
-    switch (Str.search_forward(re, item.completionLabel, 0)) {
-    | exception Not_found => false
-    | _ => !String.equal(item.completionLabel, filter)
-    }
-  }, items);
-  Printf.printf("Length after: %d\n", List.length(ret));
-  ret;
-  }
+    let re = Str.regexp_string(filter);
+    print_endline("USING FILTER: " ++ filter);
+    Printf.printf("Length before: %d\n", List.length(items));
+    let ret =
+      List.filter(
+        (item: Actions.completionItem) => {
+          switch (Str.search_forward(re, item.completionLabel, 0)) {
+          | exception Not_found => false
+          | _ => !String.equal(item.completionLabel, filter)
+          }
+        },
+        items,
+      );
+    Printf.printf("Length after: %d\n", List.length(ret));
+    ret;
+  };
 };
 
 let filter = (filter: string, v: t) => {
   ...v,
   filter: Some(filter),
-  filteredCompletions: _applyFilter(Some(filter), v.completions) |> Utility.firstk(5)
+  filteredCompletions:
+    _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
 };
 
 let setItems = (items: list(Actions.completionItem), v: t) => {
@@ -84,26 +91,28 @@ let setItems = (items: list(Actions.completionItem), v: t) => {
 };
 
 let reduce = (v: t, action: Actions.t) => {
-  let newV = switch (action) {
-  | Actions.ChangeMode(mode) when mode != Vim.Types.Insert => endCompletions(v)
-  | Actions.CompletionStart(meet) => startCompletions(meet, v)
-  | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
-  | Actions.CompletionBaseChanged(base) => filter(base, v)
-  | Actions.CompletionEnd => endCompletions(v)
-  | _ => v
-  }
+  let newV =
+    switch (action) {
+    | Actions.ChangeMode(mode) when mode != Vim.Types.Insert =>
+      endCompletions(v)
+    | Actions.CompletionStart(meet) => startCompletions(meet, v)
+    | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
+    | Actions.CompletionBaseChanged(base) => filter(base, v)
+    | Actions.CompletionEnd => endCompletions(v)
+    | _ => v
+    };
 
   if (isActive(newV)) {
     switch (action) {
-    | Actions.Command("selectNextSuggestion") => 
-      print_endline ("NEXT");
-      newV
-    | Actions.Command("selectPrevSuggestion") => 
-      print_endline ("PREVIOUS");
-      newV
+    | Actions.Command("selectNextSuggestion") =>
+      print_endline("NEXT");
+      newV;
+    | Actions.Command("selectPrevSuggestion") =>
+      print_endline("PREVIOUS");
+      newV;
     | _ => newV
-    }
+    };
   } else {
-    newV
-  }
-}
+    newV;
+  };
+};

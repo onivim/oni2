@@ -13,7 +13,14 @@ module Zed_utf8 = Oni_Core.ZedBundled;
 let component = React.component("Hover");
 
 let createElement =
-    (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ~children as _, ()) =>
+    (
+      ~x: int,
+      ~y: int,
+      ~lineHeight: float,
+      ~state: Model.State.t,
+      ~children as _,
+      (),
+    ) =>
   component(hooks => {
     let empty = (hooks, React.empty);
 
@@ -81,15 +88,15 @@ let createElement =
 
             let newWidth = max(prevWidth, width + padding);
             let newHeight = height + prevHeight + innerPadding;
-            let newElem = 
+            let newElem =
               <View style=Style.[flexDirection(`Row)]>
-              <Text style=textStyle text=message />
+                <Text style=textStyle text=message />
               </View>;
             let newDiags = [newElem, ...prevDiags];
             (newWidth, newHeight, newDiags);
           },
           (0, 0, []),
-          completions.filteredCompletions
+          completions.filteredCompletions,
         );
 
       let diags = List.rev(diags);

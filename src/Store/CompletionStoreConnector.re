@@ -57,20 +57,20 @@ let start = () => {
               buffer,
             );
           switch (meetOpt) {
-          | None => 
-            print_endline ("!!!! " ++ info ++ " MEET BEING RESET");
-            lastMeet := defaultMeet
+          | None =>
+            print_endline("!!!! " ++ info ++ " MEET BEING RESET");
+            lastMeet := defaultMeet;
             dispatch(Actions.CompletionEnd);
           | Some(meet) =>
             open Model.CompletionMeet;
             let column = meet.index;
             let _base = meet.base;
             // Check if our 'meet' position has changed
-              let newMeet = {
-                completionMeetBufferId: bufferId,
-                completionMeetLine: line,
-                completionMeetColumn: column,
-              };
+            let newMeet = {
+              completionMeetBufferId: bufferId,
+              completionMeetLine: line,
+              completionMeetColumn: column,
+            };
             if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
               Log.info(
                 "[Completion] New completion meet: "
@@ -85,7 +85,7 @@ let start = () => {
               dispatch(Actions.CompletionBaseChanged(meet.base));
               Log.info("[Completion] New completion base: " ++ meet.base);
             };
-              lastMeet := newMeet;
+            lastMeet := newMeet;
           };
         };
       };
@@ -97,7 +97,10 @@ let start = () => {
         state,
         checkCompletionMeet("changemode", state),
       )
-    | Actions.BufferUpdate(_) when state.mode == Vim.Types.Insert => (state, checkCompletionMeet("buffer update", state))
+    | Actions.BufferUpdate(_) when state.mode == Vim.Types.Insert => (
+        state,
+        checkCompletionMeet("buffer update", state),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

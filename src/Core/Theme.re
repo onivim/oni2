@@ -210,22 +210,38 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let editorSuggestWidgetBackground =
     getColor(
       defaultBackground,
-      ["editorSuggestWidget.background", "editor.background", "background"]
+      ["editorSuggestWidget.background", "editor.background", "background"],
     );
-  
+
   let editorSuggestWidgetSelectedBackground =
     getColor(
       defaultBackground,
-      ["editorSuggestWidget.selectedBackground", "editor.background", "background"]
+      [
+        "editorSuggestWidget.selectedBackground",
+        "editor.background",
+        "background",
+      ],
     );
-  
+
   let editorSuggestWidgetBorder =
     getColor(
       defaultBackground,
-      ["editorSuggestWidget.border", "editorSuggestWidget.background", "editor.background", "background"]
+      [
+        "editorSuggestWidget.border",
+        "editorSuggestWidget.background",
+        "editor.background",
+        "background",
+      ],
     );
   let editorSuggestWidgetHighlightForeground =
-    getColor(defaultForeground, ["editorSuggestWidget.highlightForeground", "editor.foreground", "foreground"]);
+    getColor(
+      defaultForeground,
+      [
+        "editorSuggestWidget.highlightForeground",
+        "editor.foreground",
+        "foreground",
+      ],
+    );
 
   let editorIndentGuideBackground =
     getColor(

@@ -627,23 +627,26 @@ let start =
 
   let applyCompletion = (state: Model.State.t) =>
     Isolinear.Effect.create(~name="vim.applyCompletion", () => {
-          let completions = state.completions;
-          let bestMatch = Model.Completions.getBestCompletion(completions);
-          let meet = Model.Completions.getMeet(completions);
-          switch ((bestMatch, meet)) {
-          | (Some(completion), Some(meet)) =>
-            let cursorPosition = Vim.Cursor.getPosition();
-            let delta = cursorPosition.column - (meet.completionMeetColumn + 1);
-            
-            let idx = ref(delta);
-            while (idx^ >= 0) {
-              Vim.input("<BS>");
-              decr(idx)
-            }
+      let completions = state.completions;
+      let bestMatch = Model.Completions.getBestCompletion(completions);
+      let meet = Model.Completions.getMeet(completions);
+      switch (bestMatch, meet) {
+      | (Some(completion), Some(meet)) =>
+        let cursorPosition = Vim.Cursor.getPosition();
+        let delta = cursorPosition.column - (meet.completionMeetColumn + 1);
 
-            Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), completion.completionLabel);
-          | _ => ();
-          }
+        let idx = ref(delta);
+        while (idx^ >= 0) {
+          Vim.input("<BS>");
+          decr(idx);
+        };
+
+        Zed_utf8.iter(
+          s => Vim.input(Zed_utf8.singleton(s)),
+          completion.completionLabel,
+        );
+      | _ => ()
+      };
     });
 
   let prevViml = ref([]);
@@ -678,7 +681,10 @@ let start =
         state,
         pasteIntoEditorAction,
       )
-    | Model.Actions.Command("insertBestCompletion") => (state, applyCompletion(state))
+    | Model.Actions.Command("insertBestCompletion") => (
+        state,
+        applyCompletion(state),
+      )
     | Model.Actions.WildmenuNext =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {

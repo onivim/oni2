@@ -40,7 +40,7 @@ let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
       completionKind: CompletionKind.Function,
       completionLabel: cmp.name,
       completionDetail: Some(cmp.desc),
-    }
+    };
     ret;
   };
 
