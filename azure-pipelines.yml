@@ -130,7 +130,7 @@ jobs:
 
 - job: ValidateLinuxRelease
   displayName: "Linux: Validate Release"
-  dependsOn: Linux
+  dependsOn: CentOS
   pool:
     vmImage: 'Ubuntu 16.04'
 
