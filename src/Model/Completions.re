@@ -113,8 +113,9 @@ let reduce = (v: t, action: Actions.t) => {
     | Actions.MenuPreviousItem => 
       print_endline ("PREVIOUS");
       newV
+    | _ => newV
     }
   } else {
-    new
+    newV
   }
 }
