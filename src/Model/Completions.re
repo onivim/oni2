@@ -97,11 +97,24 @@ let setItems = (items: list(Actions.completionItem), v: t) => {
 };
 
 let reduce = (v: t, action: Actions.t) => {
-  switch (action) {
+  let newV = switch (action) {
   | Actions.CompletionStart(meet) => startCompletions(meet, v)
   | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
   | Actions.CompletionBaseChanged(base) => filter(base, v)
   | Actions.CompletionEnd => endCompletions(v)
   | _ => v
+  }
+
+  if (isActive(newV)) {
+    switch (action) {
+    | Actions.MenuNextItem => 
+      print_endline ("NEXT");
+      newV
+    | Actions.MenuPreviousItem => 
+      print_endline ("PREVIOUS");
+      newV
+    }
+  } else {
+    new
   }
 }
