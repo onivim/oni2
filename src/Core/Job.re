@@ -98,7 +98,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   let current = ref(v);
   let iterations = ref(0);
 
-  Log.debug("[Job] Starting " ++ v.name);
+  Log.debug(() => "[Job] Starting " ++ v.name);
   while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
     current := doWork(current^);
     incr(iterations);
@@ -117,7 +117,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   );
 
   if (Log.isDebugLoggingEnabled()) {
-    Log.debug("[Job] Detailed report: " ++ show(v));
+    Log.debug(() => "[Job] Detailed report: " ++ show(v));
   };
 
   current^;

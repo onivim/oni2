@@ -527,12 +527,12 @@ let createElement =
             relX -. lineNumberWidth,
             relY,
           );
-        Log.debug(
+        Log.debug(() =>
           "EditorSurface - editorMouseUp: topVisibleLine is "
           ++ string_of_int(topVisibleLine),
         );
         Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
-        Log.debug(
+        Log.debug(() =>
           "EditorSurface - editorMouseUp: setPosition ("
           ++ string_of_int(line + 1)
           ++ ", "
