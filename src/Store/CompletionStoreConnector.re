@@ -17,12 +17,13 @@ open Actions;
 
 type lastCompletionMeet = Actions.completionMeet;
 
-let lastMeet =
-  ref({
-    completionMeetBufferId: (-1),
-    completionMeetLine: (-1),
-    completionMeetColumn: (-1),
-  });
+let defaultMeet = {
+  completionMeetBufferId: (-1),
+  completionMeetLine: (-1),
+  completionMeetColumn: (-1),
+};
+
+let lastMeet = ref(defaultMeet);
 
 let lastBase = ref("");
 
@@ -56,7 +57,7 @@ let start = () => {
               buffer,
             );
           switch (meetOpt) {
-          | None => ()
+          | None => lastMeet := defaultMeet
           | Some(meet) =>
             open Model.CompletionMeet;
             let column = meet.index;
