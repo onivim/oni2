@@ -51,10 +51,11 @@ let createElement =
           backgroundColor(bgColor),
         ];
 
+      let lineHeight_ = lineHeight;
       let innerPositionStyle = (width_, height_) =>
         Style.[
           position(`Absolute),
-          top(0),
+          top(int_of_float(lineHeight_ +. 0.5)),
           left(0),
           width(width_),
           height(height_),

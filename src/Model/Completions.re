@@ -4,6 +4,7 @@
  * This module is responsible for managing completion state
  */
 
+open Oni_Core;
 open Oni_Core.Types;
 open Oni_Extensions;
 
@@ -13,12 +14,12 @@ type t = {
   completions: list(Actions.completionItem),
   filteredCompletions: list(Actions.completionItem),
   filter: option(string),
-  selected: int,
+  selected: option(int),
 };
 
 let default: t = {
   meet: None,
-  selected: 0,
+  selected: None,
   filter: None,
   filteredCompletions: [{
     completionLabel: "log",
@@ -86,7 +87,7 @@ let _applyFilter = (filter: option(string), items: list(Actions.completionItem))
 let filter = (filter: string, v: t) => {
   ...v,
   filter: Some(filter),
-  filteredCompletions: _applyFilter(Some(filter), v.completions)
+  filteredCompletions: _applyFilter(Some(filter), v.completions) |> Utility.firstk(5)
 };
 
 let setItems = (items: list(Actions.completionItem), v: t) => {
@@ -95,7 +96,7 @@ let setItems = (items: list(Actions.completionItem), v: t) => {
   filteredCompletions: _applyFilter(v.filter, items),
 };
 
-let reducer = (action: Actions.t, v: t) => {
+let reduce = (v: t, action: Actions.t) => {
   switch (action) {
   | Actions.CompletionStart(meet) => startCompletions(meet, v)
   | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
