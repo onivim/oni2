@@ -200,7 +200,7 @@
     "isolinear": "^2.0.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "*",
-    "reason-jsonrpc": "1.2.0",
+    "reason-jsonrpc": "1.3.0",
     "reason-libvim": "8.10869.16004",
     "reasonFuzz": "*",
     "rench": "1.7.1",
