@@ -60,7 +60,7 @@ let createElement =
           width(width_),
           height(height_),
           flexDirection(`Column),
-          alignItems(`Center),
+          alignItems(`FlexStart),
           justifyContent(`Center),
           border(~color=borderColor, ~width=1),
           backgroundColor(bgColor),
@@ -81,7 +81,10 @@ let createElement =
 
             let newWidth = max(prevWidth, width + padding);
             let newHeight = height + prevHeight + innerPadding;
-            let newElem = <Text style=textStyle text=message />;
+            let newElem = 
+              <View style=Style.[flexDirection(`Row)]>
+              <Text style=textStyle text=message />
+              </View>;
             let newDiags = [newElem, ...prevDiags];
             (newWidth, newHeight, newDiags);
           },
