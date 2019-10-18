@@ -75,7 +75,7 @@ let start = () => {
         let fileType = Model.Buffer.getFileType(buf);
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
-          let cb = completions => {
+          let cb = _completions => {
             ();
               // TODO: Show completion UI
           };
