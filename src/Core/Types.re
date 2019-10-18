@@ -207,6 +207,7 @@ module Input = {
     | [@name "textInputFocus"] TextInputFocus
     | [@name "editorTextFocus"] EditorTextFocus
     | [@name "commandLineFocus"] CommandLineFocus
+    | [@name "suggestWidgetVisible"] SuggestWidgetVisible
     // Onivim extensions to the 'when' syntax
     | [@name "insertMode"] InsertMode;
 

@@ -7,6 +7,7 @@
 
 module Core = Oni_Core;
 module Model = Oni_Model;
+open Oni_Extensions;
 
 let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
   let f = (err: MerlinProtocol.errorResultItem) => {
@@ -31,4 +32,17 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
   };
 
   List.map(f, errors);
+};
+
+let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
+  let f = (cmp: MerlinProtocol.completionResultItem) => {
+    let ret: Model.Actions.completionItem = {
+      completionKind: CompletionKind.Function,
+      completionLabel: cmp.name,
+      completionDetail: Some(cmp.desc),
+    }
+    ret;
+  };
+
+  List.map(f, completions.entries);
 };

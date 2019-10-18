@@ -21,32 +21,8 @@ let default: t = {
   meet: None,
   selected: None,
   filter: None,
-  filteredCompletions: [{
-    completionLabel: "log",
-    completionKind: CompletionKind.Method,
-    completionDetail: Some("() => ()"),
-  }, {
-    completionLabel: "warn",
-    completionKind: CompletionKind.Method,
-    completionDetail: None,
-  }, {
-    completionLabel: "error",
-    completionKind: CompletionKind.Method,
-    completionDetail: None,
-  }],
-  completions: [{
-    completionLabel: "log",
-    completionKind: CompletionKind.Method,
-    completionDetail: Some("() => ()"),
-  }, {
-    completionLabel: "warn",
-    completionKind: CompletionKind.Method,
-    completionDetail: None,
-  }, {
-    completionLabel: "error",
-    completionKind: CompletionKind.Method,
-    completionDetail: None,
-  }],
+  filteredCompletions: [],
+  completions: [],
 }
 
 let isActive = (v: t) => {
@@ -66,8 +42,15 @@ let endCompletions = (v: t) => {
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
   ...v,
   meet: Some(meet),
+  filter: None,
   completions: default.completions,
   filteredCompletions: default.filteredCompletions,
+};
+
+let getMeet = (v: t) => v.meet;
+
+let getBestCompletion = (v: t) => {
+  List.nth_opt(v.filteredCompletions, 0);
 };
 
 let _applyFilter = (filter: option(string), items: list(Actions.completionItem)) => {
@@ -75,12 +58,16 @@ let _applyFilter = (filter: option(string), items: list(Actions.completionItem))
   | None => items
   | Some(filter) =>
   let re = Str.regexp_string(filter);
-  List.filter((item: Actions.completionItem) => {
-    switch (Str.search_forward(re, item.completionLabel)) {
+  print_endline ("USING FILTER: " ++ filter);
+  Printf.printf("Length before: %d\n", List.length(items));
+  let ret = List.filter((item: Actions.completionItem) => {
+    switch (Str.search_forward(re, item.completionLabel, 0)) {
     | exception Not_found => false
-    | _ => true
+    | _ => !String.equal(item.completionLabel, filter)
     }
   }, items);
+  Printf.printf("Length after: %d\n", List.length(ret));
+  ret;
   }
 };
 
@@ -93,11 +80,12 @@ let filter = (filter: string, v: t) => {
 let setItems = (items: list(Actions.completionItem), v: t) => {
   ...v,
   completions: items,
-  filteredCompletions: _applyFilter(v.filter, items),
+  filteredCompletions: _applyFilter(v.filter, items) |> Utility.firstk(5),
 };
 
 let reduce = (v: t, action: Actions.t) => {
   let newV = switch (action) {
+  | Actions.ChangeMode(mode) when mode != Vim.Types.Insert => endCompletions(v)
   | Actions.CompletionStart(meet) => startCompletions(meet, v)
   | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
   | Actions.CompletionBaseChanged(base) => filter(base, v)
@@ -107,10 +95,10 @@ let reduce = (v: t, action: Actions.t) => {
 
   if (isActive(newV)) {
     switch (action) {
-    | Actions.MenuNextItem => 
+    | Actions.Command("selectNextSuggestion") => 
       print_endline ("NEXT");
       newV
-    | Actions.MenuPreviousItem => 
+    | Actions.Command("selectPrevSuggestion") => 
       print_endline ("PREVIOUS");
       newV
     | _ => newV

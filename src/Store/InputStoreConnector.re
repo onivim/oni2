@@ -11,7 +11,7 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-let isMenuOpen = (state: State.t) => (state.menu.isOpen || Model.Completions.isActive(state.completions));
+let isMenuOpen = (state: State.t) => state.menu.isOpen;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
@@ -24,6 +24,10 @@ let conditionsOfState = (state: State.t) => {
   if (isMenuOpen(state)) {
     Hashtbl.add(ret, MenuFocus, true);
   };
+
+  if (Model.Completions.isActive(state.completions)) {
+    Hashtbl.add(ret, SuggestWidgetVisible, true);
+  }
 
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`

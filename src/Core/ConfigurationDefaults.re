@@ -63,7 +63,11 @@ let getDefaultConfigString = configName =>
         { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
         { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]},
-        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] }
+        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-P>", "command": "selectPrevSuggestion", "when": [["suggestWidgetVisible"]] },
+        { "key": "<C-N>", "command": "selectNextSuggestion", "when": [["suggestWidgetVisible"]] },
+        { "key": "<CR>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] },
+        { "key": "<TAB>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] }
     ]
 }
 |},

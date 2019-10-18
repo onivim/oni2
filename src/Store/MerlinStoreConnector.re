@@ -31,6 +31,7 @@ let effectIfMerlinEnabled = effect => {
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
   let modelChangedEffect =
       (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     effectIfMerlinEnabled(
@@ -56,9 +57,14 @@ let start = () => {
                 )
               });
             };
-            let _ =
-              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
-            ();
+
+            
+            let _ =Revery.Tick.timeout(() => {
+                print_endline ("EXECUTING TIMEOUT!");
+                let _ =
+                  MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
+                  ();
+              }, Revery.Time.Milliseconds(50.));
           | _ => ()
           };
         }
@@ -75,7 +81,9 @@ let start = () => {
         let fileType = Model.Buffer.getFileType(buf);
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
-          let cb = _completions => {
+          let cb = completions => {
+            let modelCompletions = MerlinProtocolConverter.toModelCompletions(completions);
+            dispatch(CompletionSetItems(meet, modelCompletions));
             ();
               // TODO: Show completion UI
           };
