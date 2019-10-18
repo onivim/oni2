@@ -26,10 +26,10 @@ type lineInfo = {
 type completedWork = IntMap.t(lineInfo);
 let initialCompletedWork = IntMap.empty;
 
-type t = Job.t(pendingWork, completedWork);
+type t = AsyncJob.t(pendingWork, completedWork);
 
 let getTokenColors = (line: int, v: t) => {
-  let completed = Job.getCompletedWork(v);
+  let completed = AsyncJob.getCompletedWork(v);
   switch (IntMap.find_opt(line, completed)) {
   | Some({tokens, _}) => tokens
   | None => []
@@ -45,7 +45,7 @@ let onTheme = (theme: TokenTheme.t, v: t) => {
     (false, newPendingWork, newCompletedWork);
   };
 
-  Job.map(f, v);
+  AsyncJob.map(f, v);
 };
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
@@ -77,7 +77,7 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
     );
   };
 
-  Job.map(f, v);
+  AsyncJob.map(f, v);
 };
 
 let doWork = (pending: pendingWork, completed: completedWork) => {
@@ -166,10 +166,9 @@ let create = (~scope, ~theme, ~grammarRepository, lines) => {
     hasRun: false,
   };
 
-  Job.create(
+  AsyncJob.create(
     ~name="TextmateTokenizerJob",
     ~initialCompletedWork,
-    ~budget=Milliseconds(2.),
     ~f=doWork,
     p,
   );
