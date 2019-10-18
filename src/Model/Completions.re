@@ -49,7 +49,10 @@ let startCompletions = (meet: Actions.completionMeet, v: t) => {
   completions: [],
 };
 
-let _applyFilter = (filter: string, items: list(Actions.completionItem)) => {
+let _applyFilter = (filter: option(string), items: list(Actions.completionItem)) => {
+  switch (filter) {
+  | None => items
+  | Some(filter) =>
   let re = Str.regexp_string(filter);
   List.filter((item: Actions.completionItem) => {
     switch (Str.search_forward(re, item.completionLabel)) {
@@ -57,10 +60,27 @@ let _applyFilter = (filter: string, items: list(Actions.completionItem)) => {
     | _ => true
     }
   }, items);
+  }
 };
 
 let filter = (filter: string, v: t) => {
   ...v,
   filter: Some(filter),
-  filteredCompletions: _applyFilter(filter, v.completions)
+  filteredCompletions: _applyFilter(Some(filter), v.completions)
 };
+
+let setItems = (items: list(Actions.completionItem), v: t) => {
+  ...v,
+  completions: items,
+  filteredCompletions: _applyFilter(v.filter, items),
+};
+
+let reducer = (action: Actions.t, v: t) => {
+  switch (action) {
+  | Actions.CompletionStart(meet) => startCompletions(meet, v)
+  | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
+  | Actions.CompletionBaseChanged(base) => filter(base, v)
+  | Actions.CompletionEnd => endCompletions(v)
+  | _ => v
+  }
+}
