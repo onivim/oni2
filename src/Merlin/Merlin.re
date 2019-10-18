@@ -9,8 +9,8 @@ open Oni_Core;
 let info = msg => Log.info("[Merlin] " ++ msg);
 let error = msg => Log.error("[Merlin] " ++ msg);
 
-let getErrors =
-    (workingDirectory: string, filePath: string, input: array(string), cb) => {
+let _runMerlinCommand =
+    (~workingDirectory, ~filePath, ~fileContents, ~args, cb) => {
   let merlin = MerlinDiscovery.discover(workingDirectory);
   switch (merlin.ocamlMerlinPath) {
   | Some(v) =>
@@ -40,10 +40,14 @@ let getErrors =
         currentPath ++ Rench.Path.pathSeparator ++ Rench.Path.dirname(v)
       };
 
+    let arguments =
+      List.concat([[v, "single"], args, ["-filename", filePath]])
+      |> Array.of_list;
+
     let _ =
       Unix.create_process_env(
         v,
-        [|v, "single", "errors", "-filename", filePath|],
+        arguments,
         [|"PATH=" ++ augmentedPath|],
         pstdin,
         pstdout,
@@ -58,10 +62,11 @@ let getErrors =
     let stdout = Unix.in_channel_of_descr(stdout);
 
     let i = ref(0);
-    let len = Array.length(input);
+    let len = Array.length(fileContents);
 
     while (i^ < len) {
-      output_string(stdIn, input[i^] ++ "\r\n");
+      output_string(stdIn, fileContents[i^]);
+      output_string(stdIn, "\n");
       Thread.yield();
       incr(i);
     };
@@ -88,6 +93,7 @@ let getErrors =
             isJson := true;
           }
         };
+        Thread.yield();
       };
 
       json^ |> List.rev |> String.concat("");
@@ -97,20 +103,66 @@ let getErrors =
     close_in_noerr(stdout);
     Unix.close(stderr);
     let json = Yojson.Safe.from_string(jsonString);
-
     let result = MerlinProtocol.parse(json);
-
     switch (result) {
-    | Ok(v) =>
-      let errors = MerlinProtocol.errorResult_of_yojson(v);
-
-      switch (errors) {
-      | Ok(v) => cb(v)
-      | Error(e) => error(e)
-      };
+    | Ok(v) => cb(v)
     | Error(e) => error(e)
     };
-
   | None => ()
   };
+};
+
+let getErrors =
+    (
+      workingDirectory: string,
+      filePath: string,
+      fileContents: array(string),
+      cb,
+    ) => {
+  let callback = json => {
+    let errors = MerlinProtocol.errorResult_of_yojson(json);
+    switch (errors) {
+    | Ok(v) => cb(v)
+    | Error(e) => error(e)
+    };
+  };
+
+  _runMerlinCommand(
+    ~workingDirectory,
+    ~filePath,
+    ~fileContents,
+    ~args=["errors"],
+    callback,
+  );
+};
+
+let getCompletions =
+    (
+      ~workingDirectory,
+      ~filePath,
+      ~fileContents,
+      ~position: Types.Position.t,
+      ~prefix,
+      cb,
+    ) => {
+  let callback = json => {
+    let completions = MerlinProtocol.completionResult_of_yojson(json);
+    switch (completions) {
+    | Ok(v) => cb(v)
+    | Error(e) => error(e)
+    };
+  };
+
+  let positionString =
+    string_of_int(Types.Index.toInt1(position.line))
+    ++ ":"
+    ++ string_of_int(Types.Index.toInt0(position.character));
+
+  _runMerlinCommand(
+    ~workingDirectory,
+    ~filePath,
+    ~fileContents,
+    ~args=["complete-prefix", "-prefix", prefix, "-position", positionString],
+    callback,
+  );
 };
