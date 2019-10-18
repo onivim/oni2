@@ -76,8 +76,8 @@ let start = () => {
         switch (fileType, Model.Buffer.getFilePath(buf)) {
         | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
           let cb = completions => {
-            // TODO: Show completion UI
             ();
+              // TODO: Show completion UI
           };
 
           let cursorLine = meet.completionMeetLine;
