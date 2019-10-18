@@ -64,7 +64,7 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   } else {
     let startRow = scrollTop / rowHeight;
     let startY = scrollTop mod rowHeight;
-    let rowsToRender = min(menuHeight / rowHeight + Constants.additionalRowsToRender, count - startRow);
+    let rowsToRender = max(0, min(menuHeight / rowHeight + Constants.additionalRowsToRender, count - startRow)); // TODO: Another clamp use case
     let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
     let itemView = (i) => {
