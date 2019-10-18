@@ -5,39 +5,27 @@
  */
 
 open Oni_Core.Types;
+open Oni_Extensions;
 
-type completionInfo = {
-  animation: Animation.t,
+type t = {
+  // The last completion meet we found
+  meet: option(Actions.completionMeet),
+  completions: list(Actions.completionItem),
 };
 
-type t = option(hover);
-
-let empty: t = None;
-
-let show = (~bufferId, ~position, ~currentTime, ~delay, ()) => {
-  let animation =
-    Animation.create(~duration=0.25, ~delay, ())
-    |> Animation.start(currentTime);
-
-  Some({bufferId, position, animation});
-};
-
-let tick = (deltaTime, v: t) => {
-  switch (v) {
-  | None => None
-  | Some(hover) =>
-    Some({...hover, animation: Animation.tick(deltaTime, hover.animation)})
-  };
-};
-
-let getOpacity = (v: t) =>
-  switch (v) {
-  | None => 0.
-  | Some(hover) => Animation.getValue(hover.animation)
-  };
-
-let isAnimationActive = (v: t) =>
-  switch (v) {
-  | None => false
-  | Some(hover) => Animation.isActive(hover.animation)
-  };
+let default: t = {
+  meet: None,
+  completions: [{
+    completionLabel: "error",
+    completionKind: CompletionKind.Method,
+    completionDetail: Some("() => ()"),
+  }, {
+    completionLabel: "error",
+    completionKind: CompletionKind.Method,
+    completionDetail: None,
+  }, {
+    completionLabel: "error",
+    completionKind: CompletionKind.Method,
+    completionDetail: None,
+  }],
+}
