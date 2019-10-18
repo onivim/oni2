@@ -58,13 +58,9 @@ let start = () => {
               });
             };
 
-            
-            let _ =Revery.Tick.timeout(() => {
-                print_endline ("EXECUTING TIMEOUT!");
                 let _ =
                   MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
                   ();
-              }, Revery.Time.Milliseconds(50.));
           | _ => ()
           };
         }
