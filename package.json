@@ -229,8 +229,8 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#86bf216",
-    "reason-oniguruma": "link:../reason-oniguruma"
+    "reason-oniguruma": "link:../reason-oniguruma",
+    "revery": "github:revery-ui/revery#9ef07f3"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
