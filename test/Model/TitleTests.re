@@ -1,6 +1,6 @@
 open TestFramework;
 
-// open Oni_Core.Types;
+open Oni_Core;
 
 module Title = Oni_Model.Title;
 
@@ -24,5 +24,17 @@ describe("Title", ({describe, _}) => {
         [Title.Variable("variable1"), Title.Separator, Title.Variable("variable2")],
       );
     });
-  })
+  });
+
+  describe("toString", ({test, _}) => {
+
+    let simpleMap = [("variable1", "rv1"), ("variable2", "rv2")] |> List.to_seq |> StringMap.of_seq;
+
+    test("basic case", ({expect}) => {
+      let title = Title.ofString("prefix${variable1}${separator}${variable2}postfix");
+      let result = Title.toString(title, simpleMap);
+      expect.string(result).toEqual("prefixrv1 - rv2postfix");
+    });
+  });
+  
 });

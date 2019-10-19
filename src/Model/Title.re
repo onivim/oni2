@@ -4,13 +4,16 @@
  * Model for working with the window title
  */
 
+open Oni_Core;
 
-type t =
+type titleSections =
 | Text(string)
 | Separator
 | Variable(string);
 
-let regexp = Str.regexp("\\${\\([a-z]+\\)}");
+type t = list(titleSections);
+
+let regexp = Str.regexp("\\${\\([a-zA-Z0-9]+\\)}");
 
 let ofString = str => {
   let idx = ref(0);
@@ -39,4 +42,38 @@ let ofString = str => {
   }
 
   result^ |> List.rev;
+};
+
+let _resolve = (v: t, items: StringMap.t(string)) => {
+  
+  let f = (section) => {
+    switch (section) {
+    | Text(sz) => Some(Text(sz))
+    | Separator => Some(Separator)
+    | Variable(sz) => switch (StringMap.find_opt(sz, items)) {
+    | Some(v) => Some(Text(v))
+    | None => None
+    }
+    }
+  };
+  
+  v
+  |> List.map(f)
+  |> Utility.filterMap(v => v);
+};
+
+let toString = (v: t, items: StringMap.t(string)) => {
+  let resolvedItems = _resolve(v, items);
+
+  let rec f = (v: t) => {
+    switch (v) {
+    | [Text(t1), Separator, Text(t2), ...tail] => t1 ++ " - " ++ t2 ++ f(tail);
+    | [Text(t), ...tail] => t ++ f(tail);
+    | [Separator, ...tail] => f(tail);
+    | [Variable(_v), ...tail] => f(tail);
+    | [] => ""
+    }
+  };
+
+  f(resolvedItems);
 };
