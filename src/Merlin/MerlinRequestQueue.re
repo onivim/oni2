@@ -137,16 +137,7 @@ let getErrors =
       Some({workingDirectory, filePath, lines, callback: cb}),
   };
 
-  let _ =
-    Thread.create(
-      () => {
-        // Artificially delay the get errors as a way to 'debounce'
-        Unix.sleepf(0.1);
-        _makeRequest(f);
-      },
-      (),
-    );
-  ();
+  _makeRequest(f);
 };
 
 let getCompletions =
