@@ -58,7 +58,7 @@ let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
       completionLabel: cmp.name,
       // For now, restrict the description length. We had cases where the very-large
       // description was taking significant time to render.
-      completionDetail: descLen > 0 && descLen < 100 ? Some(cmp.desc) : None
+      completionDetail: descLen > 0 && descLen < 100 ? Some(cmp.desc) : None,
     };
   };
 

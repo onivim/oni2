@@ -71,7 +71,7 @@ let _runMerlinCommand =
         output_string(stdIn, "\n");
         Thread.yield();
         incr(i);
-      };
+      }
     });
 
     close_out_noerr(stdIn);
