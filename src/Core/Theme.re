@@ -228,6 +228,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       defaultBackground,
       [
         "editorSuggestWidget.border",
+        "editorHoverWidget.border",
         "editorSuggestWidget.background",
         "editor.background",
         "background",

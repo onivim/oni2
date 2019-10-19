@@ -19,15 +19,17 @@ let createElement =
       ~fontSize=15,
       ~backgroundColor,
       ~color,
+      ~margin=0,
       ~children as _,
       (),
     ) =>
   component(hooks => {
-    let (fontFamily_, fontSize_, backgroundColor_, color_) = (
+    let (fontFamily_, fontSize_, backgroundColor_, color_, margin_) = (
       fontFamily,
       fontSize,
       backgroundColor,
       color,
+      margin
     );
 
     (
@@ -39,6 +41,7 @@ let createElement =
           fontSize(fontSize_),
           color(color_),
           backgroundColor(backgroundColor_),
+          margin(margin_)
         ]
       />,
     );

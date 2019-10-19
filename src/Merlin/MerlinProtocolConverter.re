@@ -34,10 +34,27 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
   List.map(f, errors);
 };
 
+let completionKindConverter = (kind: string) => {
+  print_endline ("Checking kind: " ++ kind);
+  switch (String.lowercase_ascii(kind)) {
+  | "value" => CompletionKind.Method
+  | "variant" => CompletionKind.Enum
+  | "constructor" => CompletionKind.Constructor
+  | "label" => CompletionKind.Property
+  | "module" => CompletionKind.Module
+  | "signature" => CompletionKind.Interface
+  | "type" => CompletionKind.Struct
+  | "method" => CompletionKind.Method
+  | "exn" => CompletionKind.Event 
+  | "class" => CompletionKind.Class
+  | _ => CompletionKind.Method
+  }
+};
+
 let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
   let f = (cmp: MerlinProtocol.completionResultItem) => {
       Model.Actions.{
-        completionKind: CompletionKind.Function,
+        completionKind: completionKindConverter(cmp.kind),
         completionLabel: cmp.name,
         completionDetail: Some(cmp.desc),
       };
