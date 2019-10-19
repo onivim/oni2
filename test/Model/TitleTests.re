@@ -21,20 +21,26 @@ describe("Title", ({describe, _}) => {
       let title = Title.ofString("${variable1}${separator}${variable2}");
       expect.equal(
         title,
-        [Title.Variable("variable1"), Title.Separator, Title.Variable("variable2")],
+        [
+          Title.Variable("variable1"),
+          Title.Separator,
+          Title.Variable("variable2"),
+        ],
       );
     });
   });
 
   describe("toString", ({test, _}) => {
-
-    let simpleMap = [("variable1", "rv1"), ("variable2", "rv2")] |> List.to_seq |> StringMap.of_seq;
+    let simpleMap =
+      [("variable1", "rv1"), ("variable2", "rv2")]
+      |> List.to_seq
+      |> StringMap.of_seq;
 
     test("basic case", ({expect}) => {
-      let title = Title.ofString("prefix${variable1}${separator}${variable2}postfix");
+      let title =
+        Title.ofString("prefix${variable1}${separator}${variable2}postfix");
       let result = Title.toString(title, simpleMap);
       expect.string(result).toEqual("prefixrv1 - rv2postfix");
     });
   });
-  
 });
