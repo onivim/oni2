@@ -188,6 +188,7 @@ let start =
 
     effects
     |> List.filter(e => e != Isolinear.Effect.none)
+    |> List.rev
     |> List.iter(e => {
          Core.Log.debug(() =>
            "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e)

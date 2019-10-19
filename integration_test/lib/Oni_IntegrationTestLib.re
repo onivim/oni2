@@ -48,7 +48,7 @@ let runTest =
     currentState := v;
   };
 
-  let logInit = s => Log.debug(() => "[INITIALIZATION] " ++ s);
+  let logInit = s => Log.debug("[INITIALIZATION] " ++ s);
 
   logInit("Starting store...");
 
