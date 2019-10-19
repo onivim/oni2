@@ -5,8 +5,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
-open Oni_Extensions;
 
 type t = {
   // The last completion meet we found
@@ -29,7 +27,7 @@ let isActive = (v: t) => {
   v.meet != None && v.filteredCompletions != [];
 };
 
-let endCompletions = (v: t) => {
+let endCompletions = (_v: t) => {
   default;
 };
 

@@ -84,7 +84,6 @@ let createElement =
     switch (Model.Completions.isActive(completions)) {
     | false => empty
     | true =>
-      open Model.HoverCollector;
       let {theme, editorFont, completions, _}: Model.State.t = state;
 
       let outerPositionStyle =
@@ -100,7 +99,6 @@ let createElement =
         Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
 
       let padding = 8;
-      let innerPadding = 1;
 
       let textStyle =
         Style.[
@@ -141,18 +139,16 @@ let createElement =
           backgroundColor(bgColor),
         ];
 
-      let (_maxWidth, height, diags) =
+      let (_maxWidth, diags) =
         List.fold_left(
           (prev, curr: Model.Actions.completionItem) => {
-            let (prevWidth, prevHeight, prevDiags) = prev;
+            let (prevWidth, prevDiags) = prev;
 
             let message = curr.completionLabel;
             let width =
               Types.EditorFont.measure(~text=message, editorFont)
               +. 0.5
               |> int_of_float;
-            let height =
-              Types.EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
             let remainingWidth = 400 - width;
 
             let detailElem =
@@ -171,7 +167,6 @@ let createElement =
               };
 
             let newWidth = max(prevWidth, width + padding);
-            let newHeight = height + prevHeight + innerPadding;
             let completionColor =
               completionKindToColor(
                 fgColor,
@@ -204,9 +199,9 @@ let createElement =
                 detailElem
               </View>;
             let newDiags = [newElem, ...prevDiags];
-            (newWidth, newHeight, newDiags);
+            (newWidth, newDiags);
           },
-          (450, 0, []),
+          (450, []),
           completions.filteredCompletions,
         );
 
