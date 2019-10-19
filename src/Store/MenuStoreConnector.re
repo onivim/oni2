@@ -43,6 +43,18 @@ let start = () => {
       dispatch(action);
     });
 
+  let executeVimCommandEffect =
+    Isolinear.Effect.createWithDispatch(~name="menu.executeVimCommand", dispatch => {
+      // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
+      dispatch(Actions.KeyboardInput("<CR>"));
+    });
+
+  let exitModeEffect =
+    Isolinear.Effect.createWithDispatch(~name="menu.exitMode", dispatch => {
+      // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
+      dispatch(Actions.KeyboardInput("<ESC>"));
+    });
+
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
     let currentDirectory = Rench.Environment.getWorkingDirectory();
 
@@ -193,6 +205,9 @@ let start = () => {
 
     | MenuSelect =>
       switch (state) {
+        | Some({ variant: Wildmenu(_) }) =>
+          (None, executeVimCommandEffect)
+
         | Some({ source, selected: Some(selected) }) =>
           let items = Quickmenu.getItems(source);
           switch (items[selected]) {
@@ -208,7 +223,12 @@ let start = () => {
       }
 
     | MenuClose =>
-      (None, Isolinear.Effect.none);
+      switch (state) {
+      | Some({ variant: Wildmenu(_) }) =>
+        (None, exitModeEffect);
+      | _ =>
+        (None, Isolinear.Effect.none);
+      }
 
     | _ => (state, Isolinear.Effect.none)
     };
