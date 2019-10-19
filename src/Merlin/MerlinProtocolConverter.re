@@ -52,10 +52,13 @@ let completionKindConverter = (kind: string) => {
 
 let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
   let f = (cmp: MerlinProtocol.completionResultItem) => {
+    let descLen = String.length(cmp.desc);
     Model.Actions.{
       completionKind: completionKindConverter(cmp.kind),
       completionLabel: cmp.name,
-      completionDetail: Some(cmp.desc),
+      // For now, restrict the description length. We had cases where the very-large
+      // description was taking significant time to render.
+      completionDetail: descLen > 0 && descLen < 100 ? Some(cmp.desc) : None
     };
   };
 

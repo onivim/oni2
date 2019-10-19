@@ -149,7 +149,7 @@ let createElement =
               Types.EditorFont.measure(~text=message, editorFont)
               +. 0.5
               |> int_of_float;
-            let remainingWidth = 400 - width;
+            let remainingWidth = 450 - width;
 
             let detailElem =
               switch (curr.completionDetail) {
