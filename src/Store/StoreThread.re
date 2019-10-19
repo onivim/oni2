@@ -33,10 +33,10 @@ let discoverExtensions = (setup: Core.Setup.t) => {
         | Error(_) => []
         };
 
-      Core.Log.debug(
+      Core.Log.debug(() =>
         "discoverExtensions - discovered "
         ++ string_of_int(List.length(userExtensions))
-        ++ " user extensions.",
+        ++ " user extensions."
       );
       [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
@@ -186,7 +186,15 @@ let start =
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
-    List.iter(e => Isolinear.Effect.run(e, dispatch), List.rev(effects));
+    effects
+    |> List.filter(e => e != Isolinear.Effect.none)
+    |> List.rev
+    |> List.iter(e => {
+         Core.Log.debug(() =>
+           "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e)
+         );
+         Isolinear.Effect.run(e, dispatch);
+       });
   };
 
   latestRunEffects := Some(runEffects);
@@ -204,17 +212,17 @@ let start =
       }
     );
 
-  Isolinear.Stream.connect(dispatch, inputStream);
-  Isolinear.Stream.connect(dispatch, vimStream);
-  Isolinear.Stream.connect(dispatch, editorEventStream);
-  Isolinear.Stream.connect(dispatch, syntaxStream);
+  let _ = Isolinear.Stream.connect(dispatch, inputStream);
+  let _ = Isolinear.Stream.connect(dispatch, vimStream);
+  let _ = Isolinear.Stream.connect(dispatch, editorEventStream);
+  let _ = Isolinear.Stream.connect(dispatch, syntaxStream);
   /* Isolinear.Stream.connect(dispatch, extHostStream); */
-  Isolinear.Stream.connect(dispatch, menuStream);
-  Isolinear.Stream.connect(dispatch, explorerStream);
-  Isolinear.Stream.connect(dispatch, lifecycleStream);
-  Isolinear.Stream.connect(dispatch, windowStream);
-  Isolinear.Stream.connect(dispatch, hoverStream);
-  Isolinear.Stream.connect(dispatch, merlinStream);
+  let _ = Isolinear.Stream.connect(dispatch, menuStream);
+  let _ = Isolinear.Stream.connect(dispatch, explorerStream);
+  let _ = Isolinear.Stream.connect(dispatch, lifecycleStream);
+  let _ = Isolinear.Stream.connect(dispatch, windowStream);
+  let _ = Isolinear.Stream.connect(dispatch, hoverStream);
+  let _ = Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

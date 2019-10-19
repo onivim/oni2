@@ -65,7 +65,7 @@ let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 let init = () => {
   let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
-  Log.debug("Setup: Looking for setupJson at: " ++ setupJsonPath);
+  Log.debug(() => "Setup: Looking for setupJson at: " ++ setupJsonPath);
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);

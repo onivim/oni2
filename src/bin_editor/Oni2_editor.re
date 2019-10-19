@@ -14,13 +14,13 @@ module Store = Oni_Store;
 module Log = Core.Log;
 
 let cliOptions = Core.Cli.parse();
-Log.debug("Startup: Parsing CLI options complete");
+Log.info("Startup: Parsing CLI options complete");
 
-Log.debug("Starting Onivim 2.");
+Log.info("Starting Onivim 2.");
 
 /* The 'main' function for our app */
 let init = app => {
-  Log.debug("Init");
+  Log.info("Init");
 
   let _ = Revery.Log.listen((_, msg) => Log.info("[Revery]: " ++ msg));
 
@@ -37,13 +37,13 @@ let init = app => {
       "Oni2",
     );
 
-  Log.debug("Initializing setup.");
+  Log.info("Initializing setup.");
   let setup = Core.Setup.init();
-  Log.debug("Startup: Parsing CLI options");
+  Log.info("Startup: Parsing CLI options");
 
-  Log.debug("Startup: Changing folder to: " ++ cliOptions.folder);
+  Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
   switch (Sys.chdir(cliOptions.folder)) {
-  | exception (Sys_error(msg)) => Log.debug("Folder does not exist: " ++ msg)
+  | exception (Sys_error(msg)) => Log.error("Folder does not exist: " ++ msg)
   | v => v
   };
 
@@ -78,7 +78,7 @@ let init = app => {
     App.quit(~code, app);
   };
 
-  Log.debug("Startup: Starting StoreThread");
+  Log.info("Startup: Starting StoreThread");
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
@@ -95,7 +95,7 @@ let init = app => {
       ~quit,
       (),
     );
-  Log.debug("Startup: StoreThread started!");
+  Log.info("Startup: StoreThread started!");
 
   GlobalContext.set({
     getState: () => currentState^,
@@ -138,5 +138,5 @@ let init = app => {
 };
 
 /* Let's get this party started! */
-Log.debug("Calling App.start");
+Log.info("Calling App.start");
 App.start(init);

@@ -94,9 +94,8 @@ let start = () => {
         state,
         checkCompletionMeet(state),
       )
-    | Actions.CursorMove(_) => (state, checkCompletionMeet(state))
-    | Actions.BufferUpdate(_) => (state, Isolinear.Effect.none)
-    | _ => (state, checkCompletionMeet(state))
+    | Actions.BufferUpdate(_) => (state, checkCompletionMeet(state))
+    | _ => (state, Isolinear.Effect.none)
     };
   };
 
