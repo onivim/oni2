@@ -67,6 +67,7 @@ let _runMerlinCommand =
     Log.perf("merlin.write", () => {
       while (i^ < len) {
         output_string(stdIn, fileContents[i^]);
+        Thread.yield();
         output_string(stdIn, "\n");
         Thread.yield();
         incr(i);
