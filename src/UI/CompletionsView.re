@@ -11,7 +11,7 @@ module Model = Oni_Model;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-let component = React.component("Hover");
+let component = React.component("Completions");
 
 let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
   switch (v) {
