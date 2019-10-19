@@ -34,7 +34,7 @@ let equals = (~line, ~column, ~bufferId, oldMeet: lastCompletionMeet) => {
 };
 
 let start = () => {
-  let checkCompletionMeet = (info, state: Model.State.t) =>
+  let checkCompletionMeet = (state: Model.State.t) =>
     Isolinear.Effect.createWithDispatch(~name="completion.checkMeet", dispatch => {
       let editor =
         state
@@ -94,11 +94,11 @@ let start = () => {
     switch (action) {
     | Actions.ChangeMode(mode) when mode == Vim.Types.Insert => (
         state,
-        checkCompletionMeet("changemode", state),
+        checkCompletionMeet(state),
       )
     | Actions.BufferUpdate(_) when state.mode == Vim.Types.Insert => (
         state,
-        checkCompletionMeet("buffer update", state),
+        checkCompletionMeet(state),
       )
     | _ => (state, Isolinear.Effect.none)
     };
