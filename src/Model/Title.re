@@ -10,7 +10,7 @@ type t =
 | Separator
 | Variable(string);
 
-let regexp = Str.regexp("\${/([a-z]+/)}");
+let regexp = Str.regexp("\\${\\([a-z]+\\)}");
 
 let ofString = str => {
   let idx = ref(0);
@@ -22,9 +22,15 @@ let ofString = str => {
       result := [Text(String.sub(str, idx^, len - idx^)), ...result^];
       idx := len
     | v => 
-      let group = Str.matched_string(str);
+      let group = Str.matched_group(1, str);
       idx := v + String.length(group);
+      if (String.equal(group, "separator")) {
+      result := [Separator, ...result^];
+      } else {
       result := [Variable(group), ...result^];
+      }
     }
   }
+
+  result^ |> List.rev;
 };
