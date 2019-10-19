@@ -26,7 +26,7 @@ let default: t = {
 };
 
 let isActive = (v: t) => {
-  v.meet != None && v.filteredCompletions != []
+  v.meet != None && v.filteredCompletions != [];
 };
 
 let endCompletions = (v: t) => {

@@ -16,10 +16,10 @@ let component = React.component("Hover");
 let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
   switch (v) {
   | Text => FontAwesome.alignJustify
-  | Method =>FontAwesome.bolt 
+  | Method => FontAwesome.bolt
   | Function => FontAwesome.cog
   | Constructor => FontAwesome.wrench
-  | Module => FontAwesome.cubes 
+  | Module => FontAwesome.cubes
   | Unit => FontAwesome.cubes
   | Struct => FontAwesome.cube
   | File => FontAwesome.file
@@ -31,18 +31,22 @@ let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
   | Interface => FontAwesome.plug
   | Color => FontAwesome.paintBrush
   | _ => FontAwesome.code
-  }
+  };
 };
 
-let completionKindToColor = (default: Revery.Color.t, theme: TokenTheme.t, v: Oni_Extensions.CompletionKind.t) => 
-{
+let completionKindToColor =
+    (
+      default: Revery.Color.t,
+      theme: TokenTheme.t,
+      v: Oni_Extensions.CompletionKind.t,
+    ) => {
   let textColor = TokenTheme.getTextColor(theme);
   let constantColor = TokenTheme.getConstantColor(theme);
   let keywordColor = TokenTheme.getKeywordColor(theme);
   let entityColor = TokenTheme.getEntityColor(theme);
   let functionColor = TokenTheme.getFunctionColor(theme);
   let typeColor = TokenTheme.getTypeColor(theme);
-  
+
   switch (v) {
   | Text => textColor
   | Value => functionColor
@@ -57,11 +61,10 @@ let completionKindToColor = (default: Revery.Color.t, theme: TokenTheme.t, v: On
   | Constant => constantColor
   | Property => entityColor
   | Interface => entityColor
-  | _ => 
-  print_endline ("falling back to default?");
-  default
-
-  }
+  | _ =>
+    print_endline("falling back to default?");
+    default;
+  };
 };
 
 let createElement =
@@ -95,7 +98,8 @@ let createElement =
       let fgColor = theme.editorForeground;
       let borderColor = theme.editorSuggestWidgetBorder;
 
-      let commentColor = Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
+      let commentColor =
+        Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
 
       let padding = 8;
       let innerPadding = 1;
@@ -111,8 +115,8 @@ let createElement =
           color(fgColor),
           backgroundColor(bgColor),
         ];
-      
-      let detailStyle = (width_) =>
+
+      let detailStyle = width_ =>
         Style.[
           width(width_),
           //height(height_),
@@ -123,9 +127,9 @@ let createElement =
           color(commentColor),
           backgroundColor(bgColor),
         ];
-      
+
       let lineHeight_ = lineHeight;
-      let innerPositionStyle = (width_) =>
+      let innerPositionStyle = width_ =>
         Style.[
           position(`Absolute),
           top(int_of_float(lineHeight_ +. 0.5)),
@@ -153,42 +157,53 @@ let createElement =
               Types.EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
             let remainingWidth = 400 - width;
 
-            let detailElem = switch(curr.completionDetail) {
-            | None => React.empty
-            | Some(v) when String.length(v) > 0 => 
-                let detailWidth = Types.EditorFont.measure(~text=v, editorFont)
-                +. 0.5
-                |> int_of_float;
+            let detailElem =
+              switch (curr.completionDetail) {
+              | None => React.empty
+              | Some(v) when String.length(v) > 0 =>
+                let detailWidth =
+                  Types.EditorFont.measure(~text=v, editorFont)
+                  +. 0.5
+                  |> int_of_float;
                 let detailWidth = min(remainingWidth, detailWidth);
                 <View style=Style.[flexGrow(0), margin(4)]>
-                <Text style=detailStyle(detailWidth) text=v />
-                </View>
-            | _ => React.empty
-            };
+                  <Text style={detailStyle(detailWidth)} text=v />
+                </View>;
+              | _ => React.empty
+              };
 
             let newWidth = max(prevWidth, width + padding);
             let newHeight = height + prevHeight + innerPadding;
-            let completionColor = completionKindToColor(fgColor, state.tokenTheme, curr.completionKind);
+            let completionColor =
+              completionKindToColor(
+                fgColor,
+                state.tokenTheme,
+                curr.completionKind,
+              );
             let newElem =
-              <View style=Style.[flexDirection(`Row), justifyContent(`Center)]>
-                <View style=Style.[
-                  flexDirection(`Row),
-                  justifyContent(`Center),
-                  alignItems(`Center),
-                  flexGrow(0), backgroundColor(completionColor), width(25)
+              <View
+                style=Style.[flexDirection(`Row), justifyContent(`Center)]>
+                <View
+                  style=Style.[
+                    flexDirection(`Row),
+                    justifyContent(`Center),
+                    alignItems(`Center),
+                    flexGrow(0),
+                    backgroundColor(completionColor),
+                    width(25),
                   ]>
-                  <FontIcon 
+                  <FontIcon
                     icon={completionKindToIcon(curr.completionKind)}
-                    backgroundColor={completionColor}
+                    backgroundColor=completionColor
                     color=bgColor
                     margin=4
                     fontSize=14
-                    />
+                  />
                 </View>
                 <View style=Style.[flexGrow(1), margin(4)]>
-                <Text style=textStyle text=message />
+                  <Text style=textStyle text=message />
                 </View>
-                {detailElem}
+                detailElem
               </View>;
             let newDiags = [newElem, ...prevDiags];
             (newWidth, newHeight, newDiags);
@@ -202,10 +217,7 @@ let createElement =
         hooks,
         <View style=outerPositionStyle>
           <Opacity opacity>
-            <View
-              style={innerPositionStyle(
-               _maxWidth + padding * 2
-              )}>
+            <View style={innerPositionStyle(_maxWidth + padding * 2)}>
               ...diags
             </View>
           </Opacity>

@@ -35,7 +35,7 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
 };
 
 let completionKindConverter = (kind: string) => {
-  print_endline ("Checking kind: " ++ kind);
+  print_endline("Checking kind: " ++ kind);
   switch (String.lowercase_ascii(kind)) {
   | "value" => CompletionKind.Method
   | "variant" => CompletionKind.Enum
@@ -45,19 +45,19 @@ let completionKindConverter = (kind: string) => {
   | "signature" => CompletionKind.Interface
   | "type" => CompletionKind.Struct
   | "method" => CompletionKind.Method
-  | "exn" => CompletionKind.Event 
+  | "exn" => CompletionKind.Event
   | "class" => CompletionKind.Class
   | _ => CompletionKind.Method
-  }
+  };
 };
 
 let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
   let f = (cmp: MerlinProtocol.completionResultItem) => {
-      Model.Actions.{
-        completionKind: completionKindConverter(cmp.kind),
-        completionLabel: cmp.name,
-        completionDetail: Some(cmp.desc),
-      };
+    Model.Actions.{
+      completionKind: completionKindConverter(cmp.kind),
+      completionLabel: cmp.name,
+      completionDetail: Some(cmp.desc),
+    };
   };
 
   List.map(f, completions.entries);

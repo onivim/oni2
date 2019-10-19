@@ -29,7 +29,7 @@ let createElement =
       fontSize,
       backgroundColor,
       color,
-      margin
+      margin,
     );
 
     (
@@ -41,7 +41,7 @@ let createElement =
           fontSize(fontSize_),
           color(color_),
           backgroundColor(backgroundColor_),
-          margin(margin_)
+          margin(margin_),
         ]
       />,
     );
