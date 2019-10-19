@@ -1,5 +1,5 @@
 {
-  "checksum": "2d728c672fba37e4ef1573b0faea091d",
+  "checksum": "2a39bd0ed389dd1f284fdf7d9c30a240",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -350,14 +350,14 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-jsonrpc@1.2.0@d41d8cd9": {
-      "id": "reason-jsonrpc@1.2.0@d41d8cd9",
+    "reason-jsonrpc@1.3.0@d41d8cd9": {
+      "id": "reason-jsonrpc@1.3.0@d41d8cd9",
       "name": "reason-jsonrpc",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-jsonrpc/-/reason-jsonrpc-1.2.0.tgz#sha1:b00d1987a09a78b462524693350cb6f6138da829"
+          "archive:https://registry.npmjs.org/reason-jsonrpc/-/reason-jsonrpc-1.3.0.tgz#sha1:a77ea25a3d452f29c7e4894b20ce672078b1c4e7"
         ]
       },
       "overrides": [],
@@ -1003,7 +1003,7 @@
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
         "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3007@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#704c3fc@d41d8cd9",
-        "reason-jsonrpc@1.2.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "reason-jsonrpc@1.3.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "isolinear@2.2.0@d41d8cd9", "esy-sdl2@2.0.10004@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9", "axios@0.19.0@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",

@@ -100,6 +100,8 @@ let _runMerlinCommand =
     };
 
     let jsonString = handleMerlinResponse(stdout);
+    close_in_noerr(stdout);
+    Unix.close(stderr);
     let json = Yojson.Safe.from_string(jsonString);
     let result = MerlinProtocol.parse(json);
     switch (result) {
