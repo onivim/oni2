@@ -53,7 +53,9 @@ let logCore = (~error=false, msg) => {
 
 let info = msg => logCore("[INFO] " ++ msg);
 
-let debug = msg => debugLogging^ ? logCore("[DEBUG] " ++ msg) : ();
+// Debug takes a function callback, so that we can avoid
+// very expensive logging in the case debug logging is not enabled.
+let debug = msgF => debugLogging^ ? logCore("[DEBUG] " ++ msgF()) : ();
 
 let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
 
@@ -75,7 +77,7 @@ let () =
   switch (debugLogging^) {
   | false => ()
   | true =>
-    debug("Recording backtraces");
+    debug(() => "Recording backtraces");
     Printexc.record_backtrace(true);
     Printexc.set_uncaught_exception_handler((e, bt) => {
       error(

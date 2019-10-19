@@ -438,9 +438,9 @@ let start =
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (Oni_Input.Filter.filter(key)) {
-          Log.debug("VimStoreConnector - handling key: " ++ key);
+          Log.debug(() => "VimStoreConnector - handling key: " ++ key);
           Vim.input(key);
-          Log.debug("VimStoreConnector - handled key: " ++ key);
+          Log.debug(() => "VimStoreConnector - handled key: " ++ key);
         }
       );
 
