@@ -36,7 +36,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
       Core.Log.debug(() =>
         "discoverExtensions - discovered "
         ++ string_of_int(List.length(userExtensions))
-        ++ " user extensions.",
+        ++ " user extensions."
       );
       [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
@@ -189,9 +189,11 @@ let start =
     effects
     |> List.filter(e => e != Isolinear.Effect.none)
     |> List.iter(e => {
-      Core.Log.debug(() => "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e));
-      Isolinear.Effect.run(e, dispatch)
-    });
+         Core.Log.debug(() =>
+           "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e)
+         );
+         Isolinear.Effect.run(e, dispatch);
+       });
   };
 
   latestRunEffects := Some(runEffects);
