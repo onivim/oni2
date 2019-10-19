@@ -74,6 +74,11 @@ let init = app => {
 
   let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
 
+  let setTitle = (title) => {
+    //Window.setTitle(w, title);
+    print_endline ("Title: " ++ title);
+  };
+
   let quit = code => {
     App.quit(~code, app);
   };
@@ -90,6 +95,7 @@ let init = app => {
       ~getScaleFactor,
       ~getZoom,
       ~setZoom,
+      ~setTitle,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
       ~quit,

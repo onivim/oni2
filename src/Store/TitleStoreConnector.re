@@ -9,13 +9,14 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 
-let start = () => {
+let start = (setTitle) => {
 
   let _lastTitle = ref("");
 
   let updateTitleEffect = (state) => 
     Isolinear.Effect.createWithDispatch(
     ~name="title.update", (dispatch) => {
+    setTitle("Hello");
  ();
     });
 
