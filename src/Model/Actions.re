@@ -50,6 +50,7 @@ type t =
   | WildmenuSelect
   | WildmenuHide
   | WindowSetActive(int, int)
+  | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)

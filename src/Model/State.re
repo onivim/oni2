@@ -76,6 +76,7 @@ let create: unit => t =
     searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
+    windowTitle: "",
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,
