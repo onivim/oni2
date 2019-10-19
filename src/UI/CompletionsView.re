@@ -154,14 +154,14 @@ let createElement =
             let detailElem =
               switch (curr.completionDetail) {
               | None => React.empty
-              | Some(v) when String.length(v) > 0 =>
+              | Some(text) when String.length(text) > 0 =>
                 let detailWidth =
-                  Types.EditorFont.measure(~text=v, editorFont)
+                  Types.EditorFont.measure(~text, editorFont)
                   +. 0.5
-                  |> int_of_float;
-                let detailWidth = min(remainingWidth, detailWidth);
+                  |> int_of_float
+                  |> min(remainingWidth);
                 <View style=Style.[flexGrow(0), margin(4)]>
-                  <Text style={detailStyle(detailWidth)} text=v />
+                  <Text style={detailStyle(detailWidth)} text />
                 </View>;
               | _ => React.empty
               };
