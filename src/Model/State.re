@@ -36,6 +36,8 @@ type t = {
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
+  // [windowTitle] is the title of the window
+  windowTitle: string,
   zenMode: bool,
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.

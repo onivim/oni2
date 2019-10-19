@@ -187,6 +187,7 @@ let configurationParsers: list(configurationTuple) = [
   ),
   ("editor.rulers", (s, v) => {...s, editorRulers: parseIntList(v)}),
   ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
+  ("window.title", (s, v) => { ...s, windowTitle: parseString(v)}),
   (
     "workbench.activityBar.visible",
     (s, v) => {...s, workbenchActivityBarVisible: parseBool(v)},
