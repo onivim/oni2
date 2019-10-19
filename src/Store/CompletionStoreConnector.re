@@ -57,23 +57,24 @@ let start = () => {
               buffer,
             );
           switch (meetOpt) {
-          | None => lastMeet := defaultMeet
+          | None =>
+            lastMeet := defaultMeet;
+            dispatch(Actions.CompletionEnd);
           | Some(meet) =>
             open Model.CompletionMeet;
             let column = meet.index;
             let _base = meet.base;
             // Check if our 'meet' position has changed
+            let newMeet = {
+              completionMeetBufferId: bufferId,
+              completionMeetLine: line,
+              completionMeetColumn: column,
+            };
             if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
-              let newMeet = {
-                completionMeetBufferId: bufferId,
-                completionMeetLine: line,
-                completionMeetColumn: column,
-              };
               Log.info(
                 "[Completion] New completion meet: "
                 ++ Model.CompletionMeet.show(meetOpt),
               );
-              lastMeet := newMeet;
               dispatch(Actions.CompletionStart(newMeet));
             } else if
               // If we're at the same position... but our base is different...
@@ -83,6 +84,7 @@ let start = () => {
               dispatch(Actions.CompletionBaseChanged(meet.base));
               Log.info("[Completion] New completion base: " ++ meet.base);
             };
+            lastMeet := newMeet;
           };
         };
       };
@@ -94,7 +96,10 @@ let start = () => {
         state,
         checkCompletionMeet(state),
       )
-    | Actions.BufferUpdate(_) => (state, checkCompletionMeet(state))
+    | Actions.BufferUpdate(_) when state.mode == Vim.Types.Insert => (
+        state,
+        checkCompletionMeet(state),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

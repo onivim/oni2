@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Extensions;
 open Oni_Syntax;
 
 type t =
@@ -19,7 +20,9 @@ type t =
   | BufferSetModified(int, bool)
   | Command(string)
   | CompletionStart(completionMeet)
+  | CompletionSetItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
+  | CompletionEnd
   | ConfigurationReload
   | ConfigurationSet(Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -105,6 +108,11 @@ and completionMeet = {
   completionMeetBufferId: int,
   completionMeetLine: int,
   completionMeetColumn: int,
+}
+and completionItem = {
+  completionLabel: string,
+  completionKind: CompletionKind.t,
+  completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
