@@ -36,12 +36,11 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
 
 let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
   let f = (cmp: MerlinProtocol.completionResultItem) => {
-    let ret: Model.Actions.completionItem = {
-      completionKind: CompletionKind.Function,
-      completionLabel: cmp.name,
-      completionDetail: Some(cmp.desc),
-    };
-    ret;
+      Model.Actions.{
+        completionKind: CompletionKind.Function,
+        completionLabel: cmp.name,
+        completionDetail: Some(cmp.desc),
+      };
   };
 
   List.map(f, completions.entries);

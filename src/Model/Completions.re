@@ -26,14 +26,7 @@ let default: t = {
 };
 
 let isActive = (v: t) => {
-  switch (v.meet) {
-  | None => false
-  | Some(_) =>
-    switch (v.filteredCompletions) {
-    | [_hd, ..._tail] => true
-    | _ => false
-    }
-  };
+  v.meet != None && v.filteredCompletions != []
 };
 
 let endCompletions = (v: t) => {
