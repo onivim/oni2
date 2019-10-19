@@ -82,16 +82,12 @@ let start =
     let actions =
         switch (captureMode) {
         | Normal
-        | Wildmenu =>
-          if (bindingActions == []) {
-            Log.info("Input::handle - sending raw input: " ++ inputKey);
-            [Actions.KeyboardInput(inputKey)]
-          } else {
-            Log.info("Input::handle - sending bound actions.");
-            bindingActions
-          };
+        | Wildmenu when bindingActions == [] =>
+          Log.info("Input::handle - sending raw input: " ++ inputKey);
+          [Actions.KeyboardInput(inputKey)]
 
-        | Quickmenu =>
+        | _ =>
+          Log.info("Input::handle - sending bound actions.");
           bindingActions
       };
 
@@ -124,19 +120,23 @@ let start =
         Normal
       };
 
-    switch (key, Revery.UI.Focus.focused) {
-    | (None, _) =>
-      ()
+    let actions =
+      switch (key, Revery.UI.Focus.focused) {
+      | (None, _) =>
+        []
 
-    | (Some((k, true)), {contents: Some(_)})
-    | (Some((k, _)), {contents: None}) =>
-      handle(~captureMode, ~conditions, ~time, ~commands, k)
+      | (Some((k, true)), {contents: Some(_)})
+      | (Some((k, _)), {contents: None}) =>
+        handle(~captureMode, ~conditions, ~time, ~commands, k)
+
+      | (Some((k, false)), {contents: Some(_)}) =>
+        getActionsForBinding(k, commands, conditions)
+      };
+
+    actions
       |> List.iter(dispatch);
-      runEffects(); // Run input effects _immediately_
 
-    | (Some((_, false)), {contents: Some(_)}) =>
-      ()
-    };
+    runEffects(); // Run input effects _immediately_
   };
 
   switch (window) {
