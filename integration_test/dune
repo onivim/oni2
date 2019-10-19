@@ -47,7 +47,6 @@
         EditorFontValidTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
-        LanguageReasonMerlinDiagnosticsTest.exe
         QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
