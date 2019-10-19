@@ -106,11 +106,11 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
+          menuHostUpdater,
           vimUpdater,
           syntaxUpdater,
           /* extHostUpdater, */
           fontUpdater,
-          menuHostUpdater,
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,

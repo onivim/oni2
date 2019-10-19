@@ -639,6 +639,8 @@ let start =
         state,
         pasteIntoEditorAction,
       )
+    | NotifyKeyPressed(_, "<UP>")
+    | NotifyKeyPressed(_, "<DOWN>")
     | Model.Actions.MenuFocusNext
     | Model.Actions.MenuFocusPrevious
     | Model.Actions.MenuFocus(_) =>
