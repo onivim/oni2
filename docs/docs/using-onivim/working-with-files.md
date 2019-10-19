@@ -20,7 +20,7 @@ To access the QuickOpen fuzzy-finder, you can use:
 
 ### `:e` command
 
-You can also use Vim's Ex-mode `edit` command to open a file - for example: `:e dit~/my/project/README.md`.
+You can also use Vim's Ex-mode `edit` command to open a file - for example: `:edit ~/my/project/README.md`.
 
 > __NOTE:__ `:edit` can be abbreviated as `:e`.
 
