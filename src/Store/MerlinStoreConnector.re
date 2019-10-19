@@ -68,7 +68,7 @@ let start = () => {
     );
 
   let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) =>
-    Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
+    effectIfMerlinEnabled(Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => ()
       | Some(buf) =>
@@ -105,7 +105,7 @@ let start = () => {
         | _ => ()
         };
       }
-    });
+    }));
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
@@ -115,7 +115,7 @@ let start = () => {
       )
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
-        checkCompletionsEffect(state, completionMeet),
+        checkCompletionsEffect(state, completionMeet, state.configuration),
       )
     | _ => (state, Isolinear.Effect.none)
     };
