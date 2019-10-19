@@ -96,10 +96,10 @@ let reduce = (v: t, action: Actions.t) => {
     switch (action) {
     | Actions.Command("selectNextSuggestion") =>
       // TODO
-      newV;
+      newV
     | Actions.Command("selectPrevSuggestion") =>
       // TODO
-      newV;
+      newV
     | _ => newV
     };
   } else {

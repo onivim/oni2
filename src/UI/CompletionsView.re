@@ -61,8 +61,7 @@ let completionKindToColor =
   | Constant => constantColor
   | Property => entityColor
   | Interface => entityColor
-  | _ =>
-    default;
+  | _ => default
   };
 };
 
