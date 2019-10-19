@@ -645,7 +645,7 @@ let start =
       // IFFY: Depends on the ordering of "updater"s
       let eff =
         switch (state.quickmenu) {
-          | Some({ variant: Wildmenu(_), selected, source }) =>
+          | Some({ variant: Wildmenu(_), selected: Some(selected), source }) =>
             let items = Model.Quickmenu.getItems(source);
             try (applyCompletionEffect(items[selected].name)) {
             | Invalid_argument(_) => Isolinear.Effect.none

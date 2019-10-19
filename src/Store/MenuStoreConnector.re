@@ -85,7 +85,8 @@ let start = () => {
       (
         Some{{
           ...Quickmenu.defaults(CommandPalette),
-          source: Complete(Model.CommandPalette.commands)
+          source: Complete(Model.CommandPalette.commands),
+          selected: Some(0)
         }},
         Isolinear.Effect.none
       );
@@ -94,7 +95,8 @@ let start = () => {
       (
         Some{{
           ...Quickmenu.defaults(Buffers),
-          source: Complete(makeBufferCommands(languageInfo, iconTheme, buffers))
+          source: Complete(makeBufferCommands(languageInfo, iconTheme, buffers)),
+          selected: Some(0)
         }},
         Isolinear.Effect.none
       );
@@ -103,7 +105,8 @@ let start = () => {
       (
         Some{{
           ...Quickmenu.defaults(WorkspaceFiles),
-          source: Loading
+          source: Loading,
+          selected: Some(0)
         }},
         Isolinear.Effect.none
       );
@@ -127,7 +130,7 @@ let start = () => {
       (
         Option.map((state: Quickmenu.t) => {
           let count = Quickmenu.getCount(source);
-          {...state, source, selected: min(count, state.selected)}
+          {...state, source, selected: Option.map(min(count), state.selected)}
         }, state),
         Isolinear.Effect.none
       );
@@ -138,7 +141,7 @@ let start = () => {
 
         {
           ...state,
-          selected: max(0, min(count, index)) // TODO: Could use a clamp function
+          selected: Some(max(0, min(count, index))) // TODO: Could use a clamp function
         }
       }, state),
       Isolinear.Effect.none
@@ -152,13 +155,16 @@ let start = () => {
         {
           ...state,
           selected:
-            if (count == 0) {
-              0
-            } else if (state.selected <= 0) {
-              count - 1 // "roll over" to end of list
-            } else {
-              state.selected - 1
-            }
+            Option.map(selected =>
+              if (count == 0) {
+                0
+              } else if (selected <= 0) {
+                count - 1 // "roll over" to end of list
+              } else {
+                selected - 1
+              }, state.selected)
+            |> Option.value(~default=max(count -1, 0)) // default to end of list
+            |> Option.some
         }
       }, state),
       Isolinear.Effect.none
@@ -172,11 +178,14 @@ let start = () => {
         {
           ...state,
           selected:
-            if (count == 0) {
-              0
-            } else {
-              (state.selected + 1) mod count
-            }
+            Option.map(selected =>
+              if (count == 0) {
+                0
+              } else {
+                (selected + 1) mod count
+              }, state.selected)
+            |> Option.value(~default=0) // default to start of list
+            |> Option.some
         }
       }, state),
       Isolinear.Effect.none
@@ -184,7 +193,7 @@ let start = () => {
 
     | MenuSelect =>
       switch (state) {
-        | Some({ source, selected }) =>
+        | Some({ source, selected: Some(selected) }) =>
           let items = Quickmenu.getItems(source);
           switch (items[selected]) {
           | v =>

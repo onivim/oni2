@@ -203,7 +203,7 @@ let createElement =
         label=`Custom(labelView)
         icon=item.icon
         onMouseOver={() => onSelectedChange(index)}
-        selected={index == selected}
+        selected={Some(index) == selected}
       />;
     };
 

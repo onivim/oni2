@@ -8,6 +8,22 @@ open Revery;
 open Revery.UI;
 open Revery_UI_Components;
 
+
+// TODO: Remove after 4.08 upgrade
+module Option = {
+  let map = f => fun
+    | Some(x) => Some(f(x))
+    | None => None
+
+  let value = (~default) => fun
+    | Some(x) => x
+    | None => default
+
+  let some = x =>
+    Some(x)
+};
+
+
 type renderFunction = int => React.syntheticElement;
 
 module Constants = {
@@ -56,8 +72,8 @@ module Styles = {
     ]
 };
 
-let component = React.component("FlatList");
 
+let component = React.component("FlatList");
 
 let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   if (rowHeight <= 0) {
@@ -89,7 +105,7 @@ let createElement =
       ~rowHeight: int,
       ~render as renderItem: renderFunction,
       ~count: int,
-      ~selected: int,
+      ~selected: option(int),
       ~children as _,
       (),
     ) =>
@@ -104,7 +120,8 @@ let createElement =
         |> max(0); // TODO: Clamp candidate
 
     let selectedChanged = () => {
-      let offset = selected * rowHeight;
+      let offset =
+        Option.value(selected, ~default=0) * rowHeight;
       if (offset < actualScrollTop) {
         // out of view above, so align with top edge
         setScrollTop(offset);

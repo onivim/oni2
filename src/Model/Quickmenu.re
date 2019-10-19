@@ -6,7 +6,7 @@ type t = {
   prefix: option(string),
   cursorPosition: int,
   source: menuSource,
-  selected: int // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
+  selected: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
 }
 
 and variant = Actions.menuVariant =
@@ -20,7 +20,7 @@ let defaults = variant => {
   text: "",
   prefix: None,
   cursorPosition: 0,
-  selected: 0,
+  selected: None,
   source: Loading
 };
 
@@ -41,6 +41,7 @@ let getItems = fun
   | Progress({ items })
   | Complete(items) =>
     items
+
 
 // TODO: This doesn't really belong here. Find a better home for it.
 let getLabel = (command: menuCommand) => {
