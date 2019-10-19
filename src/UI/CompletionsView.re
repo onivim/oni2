@@ -62,7 +62,6 @@ let completionKindToColor =
   | Property => entityColor
   | Interface => entityColor
   | _ =>
-    print_endline("falling back to default?");
     default;
   };
 };

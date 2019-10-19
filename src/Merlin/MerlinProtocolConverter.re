@@ -35,7 +35,6 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
 };
 
 let completionKindConverter = (kind: string) => {
-  print_endline("Checking kind: " ++ kind);
   switch (String.lowercase_ascii(kind)) {
   | "value" => CompletionKind.Method
   | "variant" => CompletionKind.Enum

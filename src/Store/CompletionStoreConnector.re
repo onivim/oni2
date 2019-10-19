@@ -58,7 +58,6 @@ let start = () => {
             );
           switch (meetOpt) {
           | None =>
-            print_endline("!!!! " ++ info ++ " MEET BEING RESET");
             lastMeet := defaultMeet;
             dispatch(Actions.CompletionEnd);
           | Some(meet) =>

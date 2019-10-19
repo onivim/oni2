@@ -53,8 +53,6 @@ let _applyFilter =
   | None => items
   | Some(filter) =>
     let re = Str.regexp_string(filter);
-    print_endline("USING FILTER: " ++ filter);
-    Printf.printf("Length before: %d\n", List.length(items));
     let ret =
       List.filter(
         (item: Actions.completionItem) => {
@@ -65,7 +63,6 @@ let _applyFilter =
         },
         items,
       );
-    Printf.printf("Length after: %d\n", List.length(ret));
     ret;
   };
 };
@@ -98,10 +95,10 @@ let reduce = (v: t, action: Actions.t) => {
   if (isActive(newV)) {
     switch (action) {
     | Actions.Command("selectNextSuggestion") =>
-      print_endline("NEXT");
+      // TODO
       newV;
     | Actions.Command("selectPrevSuggestion") =>
-      print_endline("PREVIOUS");
+      // TODO
       newV;
     | _ => newV
     };
