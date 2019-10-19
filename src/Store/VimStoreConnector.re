@@ -439,7 +439,20 @@ let start =
       =>
         if (Oni_Input.Filter.filter(key)) {
           Log.debug("VimStoreConnector - handling key: " ++ key);
+          //let currentPosition = Vim.Cursor.getPosition();
           Vim.input(key);
+          let resultPosition = Vim.Cursor.getPosition();
+
+          if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
+          Vim.Cursor.setPosition(resultPosition.line + 2, resultPosition.column + 1);
+          Vim.input(key);
+          Vim.Cursor.setPosition(resultPosition.line + 4, resultPosition.column + 2);
+          Vim.input(key);
+
+          Vim.Cursor.setPosition(resultPosition.line, resultPosition.column);
+          }
+
+
           Log.debug("VimStoreConnector - handled key: " ++ key);
         }
       );
