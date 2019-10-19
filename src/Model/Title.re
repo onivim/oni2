@@ -22,8 +22,14 @@ let ofString = str => {
       result := [Text(String.sub(str, idx^, len - idx^)), ...result^];
       idx := len
     | v => 
+      let prev = v - idx^;
+
+      if (prev > 0) {
+        result := [Text(String.sub(str, idx^, prev)), ...result^];
+      }
+
       let group = Str.matched_group(1, str);
-      idx := v + String.length(group);
+      idx := v + String.length(group) + 3;
       if (String.equal(group, "separator")) {
       result := [Separator, ...result^];
       } else {

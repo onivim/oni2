@@ -17,5 +17,12 @@ describe("Title", ({describe, _}) => {
         [Title.Text("abc"), Title.Separator, Title.Text("def")],
       );
     });
+    test("string with variables", ({expect}) => {
+      let title = Title.ofString("${variable1}${separator}${variable2}");
+      expect.equal(
+        title,
+        [Title.Variable("variable1"), Title.Separator, Title.Variable("variable2")],
+      );
+    });
   })
 });
