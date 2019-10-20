@@ -102,26 +102,8 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   };
 
 type action =
-  | SelectedChanged(option(int), int, int)
+  | SelectedChanged
   | SetScrollTop(int);
-
-let reducer = (action, actualScrollTop) =>
-  switch action {
-  | SelectedChanged(selected, rowHeight, menuHeight) =>
-    let offset =
-      Option.value(selected, ~default=0) * rowHeight;
-    if (offset < actualScrollTop) {
-      // out of view above, so align with top edge
-      offset
-    } else if (offset + rowHeight > actualScrollTop + menuHeight) {
-      // out of view below, so align with bottom edge
-      offset + rowHeight - menuHeight
-    } else {
-      actualScrollTop
-    }
-  | SetScrollTop(scrollTop) =>
-    scrollTop
-  }
 
 let createElement =
     (
@@ -133,7 +115,26 @@ let createElement =
       ~selected: option(int),
       ~children as _,
       (),
-    ) =>
+    ) => {
+
+  let reducer = (action, actualScrollTop) =>
+    switch action {
+    | SelectedChanged =>
+      let offset =
+        Option.value(selected, ~default=0) * rowHeight;
+      if (offset < actualScrollTop) {
+        // out of view above, so align with top edge
+        offset
+      } else if (offset + rowHeight > actualScrollTop + menuHeight) {
+        // out of view below, so align with bottom edge
+        offset + rowHeight - menuHeight
+      } else {
+        actualScrollTop
+      }
+    | SetScrollTop(scrollTop) =>
+      scrollTop
+    };
+
   component(hooks => {
     let (actualScrollTop, dispatch, hooks) =
       Hooks.reducer(0, reducer, hooks);
@@ -144,7 +145,7 @@ let createElement =
         |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
     let selectedChanged = () => {
-      dispatch(SelectedChanged(selected, rowHeight, menuHeight))
+      dispatch(SelectedChanged);
       None
     };
 
@@ -209,3 +210,4 @@ let createElement =
       </View>
     );
   });
+};

@@ -56,7 +56,7 @@ module Provider = {
             | None =>
               Log.error("Unable to tick non-existing MenuJob");
           },
-        Seconds(5.),
+        Seconds(0.),
       );
 
     let disposeMessagePump = 
