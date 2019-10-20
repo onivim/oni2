@@ -45,10 +45,10 @@ let getDefaultConfigString = configName =>
 {
     "bindings": [
         { "key": "<C-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
+        { "key": "<D-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
         { "key": "<C-TAB>", "command": "quickOpen.buffers", "when": [["editorTextFocus"]] },
         { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
-        { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
         { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
