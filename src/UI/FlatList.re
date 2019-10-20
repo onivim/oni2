@@ -101,6 +101,28 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
     |> List.rev
   };
 
+type action =
+  | SelectedChanged(option(int), int, int)
+  | SetScrollTop(int);
+
+let reducer = (action, actualScrollTop) =>
+  switch action {
+  | SelectedChanged(selected, rowHeight, menuHeight) =>
+    let offset =
+      Option.value(selected, ~default=0) * rowHeight;
+    if (offset < actualScrollTop) {
+      // out of view above, so align with top edge
+      offset
+    } else if (offset + rowHeight > actualScrollTop + menuHeight) {
+      // out of view below, so align with bottom edge
+      offset + rowHeight - menuHeight
+    } else {
+      actualScrollTop
+    }
+  | SetScrollTop(scrollTop) =>
+    scrollTop
+  }
+
 let createElement =
     (
       ~height as menuHeight,
@@ -113,8 +135,8 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let (actualScrollTop, setScrollTop, hooks) =
-      Hooks.state(0, hooks);
+    let (actualScrollTop, dispatch, hooks) =
+      Hooks.reducer(0, reducer, hooks);
 
     // Make sure we're not scrolled past the items
     let actualScrollTop =
@@ -122,15 +144,7 @@ let createElement =
         |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
     let selectedChanged = () => {
-      let offset =
-        Option.value(selected, ~default=0) * rowHeight;
-      if (offset < actualScrollTop) {
-        // out of view above, so align with top edge
-        setScrollTop(offset);
-      } else if (offset + rowHeight > actualScrollTop + menuHeight) {
-        // out of view below, so align with bottom edge
-        setScrollTop(offset + rowHeight - menuHeight);
-      }
+      dispatch(SelectedChanged(selected, rowHeight, menuHeight))
       None
     };
 
@@ -141,7 +155,7 @@ let createElement =
       let delta = 
         int_of_float(wheelEvent.deltaY) * -Constants.scrollWheelMultiplier;
 
-      setScrollTop(actualScrollTop + delta);
+      dispatch(SetScrollTop(actualScrollTop + delta));
     };
 
     let scrollbar = {
@@ -155,7 +169,7 @@ let createElement =
       if (isVisible) {
         <View style=Styles.slider>
           <Slider
-            onValueChanged={v => setScrollTop(int_of_float(v))}
+            onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
             minimumValue=0.
             maximumValue={float_of_int(maxHeight)}
             sliderLength=menuHeight
