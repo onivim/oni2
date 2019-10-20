@@ -12,16 +12,23 @@ module Constants = {
 }
 
 module Styles = {
-  let text = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t) =>
+  let bg = (~theme: Theme.t, ~selected) =>
+    selected ? theme.editorMenuItemSelected : theme.editorMenuBackground
+
+  let text = (~theme: Theme.t, ~font: UiFont.t, ~selected) =>
     Style.[
-      fontFamily(uiFont.fontFile),
-      fontSize(uiFont.fontSize),
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
       color(theme.editorMenuForeground),
-      backgroundColor(bg),
+      backgroundColor(bg(~theme, ~selected))
     ];
 
-  let container = (~bg) =>
-    Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
+  let container = (~theme, ~selected) =>
+    Style.[
+      padding(10),
+      flexDirection(`Row),
+      backgroundColor(bg(~theme, ~selected))
+    ];
 
   let icon = fgColor =>
     Style.[
@@ -31,20 +38,25 @@ module Styles = {
       color(fgColor),
     ];
 
-  let label = (~font, ~fg, ~bg, ~custom) =>
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~selected, ~custom) =>
     Style.(
       merge(
         ~source=
           Style.[
-            fontFamily(font),
+            fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
             fontSize(12),
-            color(fg),
-            backgroundColor(bg),
+            color(theme.editorMenuForeground),
+            backgroundColor(bg(~theme, ~selected))
           ],
         ~target=custom,
       )
     );
+
+  let clickable =
+    Style.[
+      cursor(Revery.MouseCursors.pointer)
+    ];
 }
 
 let noop = () => ();
@@ -63,13 +75,7 @@ let createElement =
     ) =>
   component(hooks => {
     let state = GlobalContext.current().state;
-    let uiFont = State.(state.uiFont);
-
-    let bg: Color.t =
-      Theme.(
-        selected ? theme.editorMenuItemSelected : theme.editorMenuBackground
-      );
-
+    let font = State.(state.uiFont);
 
     let iconView =
       switch (icon) {
@@ -87,7 +93,7 @@ let createElement =
     let labelView = 
       switch (label) {
         | `Text(text) =>
-          let style = Styles.label(~font=uiFont.fontFile, ~fg=theme.editorMenuForeground, ~bg, ~custom=style);
+          let style = Styles.label(~font, ~theme, ~selected, ~custom=style);
           <Text style text />
         | `Custom(view) =>
           view
@@ -95,8 +101,8 @@ let createElement =
 
     (
       hooks,
-      <Clickable style=Style.[cursor(Revery.MouseCursors.pointer)] onClick>
-        <View onMouseOver={_ => onMouseOver()} style=Styles.container(~bg)>
+      <Clickable style=Styles.clickable onClick>
+        <View onMouseOver={_ => onMouseOver()} style=Styles.container(~theme, ~selected)>
           iconView
           labelView
         </View>

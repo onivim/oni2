@@ -48,12 +48,17 @@ module Styles = {
       cursor(Revery.MouseCursors.pointer),
     ];
 
-  let label = (~font, ~fg) =>
+  let label = (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~selected) =>
     Style.[
-      fontFamily(font),
+      fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
       fontSize(12),
-      color(fg),
+      backgroundColor(
+        selected ? theme.editorMenuItemSelected : theme.editorMenuBackground
+      ),
+      color(
+        highlighted ? theme.oniNormalModeBackground : theme.editorMenuForeground
+      ),
       textWrap(TextWrapping.NoWrap)
     ];
 };
@@ -158,11 +163,10 @@ let createElement =
 
     let renderItem = index => {
       let item = items[index];
+      let selected = Some(index) == selected;
 
       let labelView = {
-        let font = GlobalContext.current().state.uiFont.fontFile;
-        let normalStyle = Styles.label(~font, ~fg=theme.editorMenuForeground);
-        let highlightedStyle = Styles.label(~font, ~fg=theme.oniNormalModeBackground);
+        let style = Styles.label(~font, ~theme, ~selected);
 
         let highlighted = {
           let text =
@@ -174,16 +178,16 @@ let createElement =
           let rec highlighter = last => fun
             | [] =>
               [ <Text
-                  style=normalStyle
+                  style=style(~highlighted=false)
                   text=String.sub(text, last, textLength - last) />
               ]
 
             | [(low, high), ...rest] =>
               [ <Text
-                  style=normalStyle
+                  style=style(~highlighted=false)
                   text=String.sub(text, last, low - last) />,
                 <Text
-                  style=highlightedStyle
+                  style=style(~highlighted=true)
                   text=String.sub(text, low, high + 1 - low) />,
                 ...highlighter(high + 1, rest)
               ];
@@ -203,7 +207,7 @@ let createElement =
         label=`Custom(labelView)
         icon=item.icon
         onMouseOver={() => onSelectedChange(index)}
-        selected={Some(index) == selected}
+        selected
       />;
     };
 
