@@ -26,15 +26,17 @@ module Provider = {
 
   let start = (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
     Log.debug("Starting MenuJob subscription " ++ id);
-    let job = MenuJob.create();
-    let job = Job.mapw(MenuJob.updateQuery(query), job);
-    let job = Job.mapw(MenuJob.addItems(items), job);
+    let job =
+      MenuJob.create()
+        |> Job.map(MenuJob.updateQuery(query))
+        |> Job.map(MenuJob.addItems(items))
+        |> Job.doWork;
 
     let unsubscribeFromItemStream =
       Isolinear.Stream.subscribe(itemStream, items =>
         switch (Hashtbl.find_opt(jobs, id)) {
           | Some({ job } as state) =>
-            let job = Job.mapw(MenuJob.addItems(items), job);
+            let job = Job.map(MenuJob.addItems(items), job) |> Job.doWork;
             Hashtbl.replace(jobs, id, { ...state, job });
 
           | None =>
@@ -84,7 +86,7 @@ module Provider = {
       | Some({ job } as state) =>
         // `MenuJob.updateQuery` checks if `query` has changed, so we don't need to. It would make the commented out log message below less annoying though
         /* Log.debug("Updating MenuJob subscription " ++ id); */
-        let job = Job.mapw(MenuJob.updateQuery(query), job);
+        let job = Job.map(MenuJob.updateQuery(query), job) |> Job.doWork;
         Hashtbl.replace(jobs, id, { ...state, job });
 
       | None =>
