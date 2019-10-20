@@ -19,7 +19,7 @@ type json_keybindings = {bindings: t};
 let getDefaultKeybinds = () => {
   switch (ConfigurationDefaults.getDefaultConfigString("keybindings.json")) {
   | Some(c) => Yojson.Safe.from_string(c) |> json_keybindings_of_yojson
-  | None => Error("Unable to generate config")
+  | None => Error("Unable to generate keybinding config")
   };
 };
 
