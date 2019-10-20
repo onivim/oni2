@@ -177,3 +177,6 @@ let rec firstk = (k, v) =>
   };
 
 external freeConsole: unit => unit = "win32_free_console";
+
+let clamp = (n, ~hi, ~lo) =>
+  max(lo, min(hi, n));

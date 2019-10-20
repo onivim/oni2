@@ -11,6 +11,7 @@ module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module MenuJob = Model.MenuJob;
+module Utility = Core.Utility;
 
 
 // TODO: Remove after 4.08 upgrade
@@ -153,7 +154,7 @@ let start = () => {
 
         {
           ...state,
-          selected: Some(max(0, min(count, index))) // TODO: Could use a clamp function
+          selected: Some(Utility.clamp(index, ~lo=0, ~hi=count))
         }
       }, state),
       Isolinear.Effect.none

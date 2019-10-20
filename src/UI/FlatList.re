@@ -7,6 +7,7 @@
 open Revery;
 open Revery.UI;
 open Revery_UI_Components;
+open Oni_Core;
 
 
 // TODO: Remove after 4.08 upgrade
@@ -81,7 +82,9 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   } else {
     let startRow = scrollTop / rowHeight;
     let startY = scrollTop mod rowHeight;
-    let rowsToRender = max(0, min(menuHeight / rowHeight + Constants.additionalRowsToRender, count - startRow)); // TODO: Another clamp use case
+    let rowsToRender =
+      menuHeight / rowHeight + Constants.additionalRowsToRender
+        |> Utility.clamp(~lo=0, ~hi=count - startRow);
     let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
     let itemView = (i) => {
@@ -116,8 +119,7 @@ let createElement =
     // Make sure we're not scrolled past the items
     let actualScrollTop =
       actualScrollTop
-        |> min(rowHeight * count - menuHeight)
-        |> max(0); // TODO: Clamp candidate
+        |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
     let selectedChanged = () => {
       let offset =
