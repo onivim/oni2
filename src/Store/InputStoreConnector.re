@@ -65,34 +65,6 @@ let start =
     );
   };
 
-  /**
-    Handle Input from Oni or Vim
-   */
-  let handle =
-      (
-        ~captureMode,
-        ~conditions: Handler.Conditions.t,
-        ~time=0.0,
-        ~commands: Keybindings.t,
-        inputKey,
-      ) => {
-    let bindingActions =
-      getActionsForBinding(inputKey, commands, conditions);
-
-    let actions =
-        switch (captureMode) {
-        | Normal
-        | Wildmenu when bindingActions == [] =>
-          Log.info("Input::handle - sending raw input: " ++ inputKey);
-          [Actions.KeyboardInput(inputKey)]
-
-        | _ =>
-          Log.info("Input::handle - sending bound actions.");
-          bindingActions
-      };
-
-    [Actions.NotifyKeyPressed(time, inputKey), ...actions];
-  };
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -120,23 +92,42 @@ let start =
         Normal
       };
 
-    let actions =
-      switch (key, Revery.UI.Focus.focused) {
-      | (None, _) =>
-        []
+    let isUnfocused =
+      Revery.UI.Focus.focused^ == None;
 
-      | (Some((k, true)), {contents: Some(_)})
-      | (Some((k, _)), {contents: None}) =>
-        handle(~captureMode, ~conditions, ~time, ~commands, k)
-
-      | (Some((k, false)), {contents: Some(_)}) =>
-        getActionsForBinding(k, commands, conditions)
+    let shouldListen =
+      switch key {
+      | Some((_, true)) => true
+      | Some((_, false)) when isUnfocused => true
+      | _ => false
       };
 
-    actions
-      |> List.iter(dispatch);
+    switch (key) {
+    | None =>
+      ()
 
-    runEffects(); // Run input effects _immediately_
+    | Some((k, _)) =>
+      let bindingActions =
+        getActionsForBinding(k, commands, conditions);
+
+      let actions = 
+        switch (captureMode) {
+          | Normal
+          | Wildmenu when bindingActions == [] && shouldListen =>
+            Log.info("Input::handle - sending raw input: " ++ k);
+            [Actions.KeyboardInput(k)]
+
+          | _ =>
+            Log.info("Input::handle - sending bound actions.");
+            bindingActions
+        };
+
+      [Actions.NotifyKeyPressed(time, k), ...actions]
+        |> List.iter(dispatch);
+    };
+
+    // Run input effects _immediately_
+    runEffects();
   };
 
   switch (window) {

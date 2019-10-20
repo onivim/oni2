@@ -111,7 +111,7 @@ let make =
       ~cursorColor,
       ~placeholderColor,
       ~onChange,
-      ~onKeyDown,
+      ~onKeyDown=(_=>()),
       ~fontSize,
       ~cursorPosition,
       ~text,

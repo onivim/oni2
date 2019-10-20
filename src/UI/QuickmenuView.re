@@ -91,16 +91,6 @@ let createElement =
   component(hooks => {
     let Quickmenu.{source, selected, text, cursorPosition, prefix} = state;
 
-    // TODO: Cam this be removed in favor of NotifyKeyPressed in MenuStoreConnector?
-    let handleKeyDown = (event: NodeEvents.keyEventParams) =>
-      switch (event) {
-      | {key: Revery.Key.KEY_DOWN, _} =>
-        GlobalContext.current().dispatch(MenuFocusNext)
-      | {key: Revery.Key.KEY_UP, _} =>
-        GlobalContext.current().dispatch(MenuFocusPrevious)
-      | _ => ()
-      };
-
     let (items, jobProgress) =
       switch (source) {
         | Loading =>
@@ -224,7 +214,6 @@ let createElement =
                 cursorColor=Colors.white
                 style={Styles.input(font.fontFile)}
                 onChange=onInput
-                onKeyDown=handleKeyDown
                 text
                 cursorPosition
               />
