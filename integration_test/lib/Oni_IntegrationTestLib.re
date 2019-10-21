@@ -14,12 +14,16 @@ type testCallback =
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
 let _currentZoom: ref(float) = ref(1.0);
+let _currentTitle: ref(string) = ref("");
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
 let setTime = v => _currentTime := v;
 let getTime = () => _currentTime^;
+
+let setTitle = (title) => _currentTitle := title;
+let getTitle = () => _currentTitle^;
 
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
@@ -70,6 +74,7 @@ let runTest =
       ~setClipboardText=text => setClipboard(Some(text)),
       ~getScaleFactor,
       ~getTime,
+      ~setTitle,
       ~getZoom,
       ~setZoom,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
