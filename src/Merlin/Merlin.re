@@ -130,7 +130,6 @@ let getErrors =
     };
   };
 
-  print_endline ("!!! RUNNING MERLIN COMMAND");
   _runMerlinCommand(
     ~workingDirectory,
     ~filePath,

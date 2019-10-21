@@ -14,6 +14,8 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Oni_Merlin;
 
+let diagnosticsDebounceTime = Revery.Time.Seconds(0.3);
+
 let runOnMainThread = (cb, arg) => {
   Revery.App.runOnMainThread(cb(arg));
 };
@@ -63,15 +65,12 @@ let start = () => {
             switch(pendingGetErrorsRequest^) {
             | None => ();
             | Some(p) => 
-              print_endline ("Cancelling previous timeout");
               p();
             }
 
-            print_endline ("QUEINING TIMEOUT");
             pendingGetErrorsRequest := Some(Revery.Tick.timeout(() => {
-              print_endline ("RUNNING TIMEOUT");
               MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb) },
-              Revery.Time.Seconds(0.5)));
+              diagnosticsDebounceTime));
           | _ => ()
           };
         }
