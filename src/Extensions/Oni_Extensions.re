@@ -4,6 +4,7 @@
  * Top-level module for Oni_Extensions.
  */
 
+module CompletionKind = CompletionKind;
 module ExtensionContributions = ExtensionContributions;
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;

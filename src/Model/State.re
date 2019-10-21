@@ -10,6 +10,7 @@ open Oni_Syntax;
 
 type t = {
   mode: Vim.Mode.t,
+  completions: Completions.t,
   diagnostics: Diagnostics.t,
   buffers: Buffers.t,
   editorFont: EditorFont.t,
@@ -47,6 +48,7 @@ type t = {
 
 let create: unit => t =
   () => {
+    completions: Completions.default,
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
     hover: Hover.empty,

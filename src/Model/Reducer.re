@@ -14,6 +14,7 @@ let reduce: (State.t, Actions.t) => State.t =
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),
+        completions: Completions.reduce(s.completions, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         wildmenu: Wildmenu.reduce(s.wildmenu, a),

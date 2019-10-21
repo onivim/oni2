@@ -31,6 +31,7 @@ let effectIfMerlinEnabled = effect => {
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
   let modelChangedEffect =
       (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     effectIfMerlinEnabled(
@@ -56,6 +57,7 @@ let start = () => {
                 )
               });
             };
+
             let _ =
               MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
             ();
@@ -66,41 +68,46 @@ let start = () => {
     );
 
   let checkCompletionsEffect = (state, meet: Model.Actions.completionMeet) =>
-    Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
-      switch (Model.Selectors.getActiveBuffer(state)) {
-      | None => ()
-      | Some(buf) =>
-        let id = Model.Buffer.getId(buf);
-        let lines = Model.Buffer.getLines(buf);
-        let fileType = Model.Buffer.getFileType(buf);
-        switch (fileType, Model.Buffer.getFilePath(buf)) {
-        | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
-          let cb = _completions => {
-            ();
+    effectIfMerlinEnabled(
+      Isolinear.Effect.create(~name="merlin.checkCompletions", () => {
+        switch (Model.Selectors.getActiveBuffer(state)) {
+        | None => ()
+        | Some(buf) =>
+          let id = Model.Buffer.getId(buf);
+          let lines = Model.Buffer.getLines(buf);
+          let fileType = Model.Buffer.getFileType(buf);
+          switch (fileType, Model.Buffer.getFilePath(buf)) {
+          | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
+            let cb = completions => {
+              let modelCompletions =
+                MerlinProtocolConverter.toModelCompletions(completions);
+              dispatch(CompletionSetItems(meet, modelCompletions));
+              ();
               // TODO: Show completion UI
+            };
+
+            let cursorLine = meet.completionMeetLine;
+            let position = meet.completionMeetColumn;
+
+            if (cursorLine < Array.length(lines)
+                && id == meet.completionMeetBufferId) {
+              let _ =
+                MerlinRequestQueue.getCompletions(
+                  Sys.getcwd(),
+                  path,
+                  lines,
+                  lines[cursorLine],
+                  Core.Types.Position.ofInt0(cursorLine, position),
+                  cb,
+                );
+              ();
+            };
+
+          | _ => ()
           };
-
-          let cursorLine = meet.completionMeetLine;
-          let position = meet.completionMeetColumn;
-
-          if (cursorLine < Array.length(lines)
-              && id == meet.completionMeetBufferId) {
-            let _ =
-              MerlinRequestQueue.getCompletions(
-                Sys.getcwd(),
-                path,
-                lines,
-                lines[cursorLine],
-                Core.Types.Position.ofInt0(cursorLine, position),
-                cb,
-              );
-            ();
-          };
-
-        | _ => ()
-        };
-      }
-    });
+        }
+      }),
+    );
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
@@ -110,7 +117,7 @@ let start = () => {
       )
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
-        checkCompletionsEffect(state, completionMeet),
+        checkCompletionsEffect(state, completionMeet, state.configuration),
       )
     | _ => (state, Isolinear.Effect.none)
     };

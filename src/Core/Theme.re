@@ -54,6 +54,10 @@ type t = {
   editorLineNumberBackground: Color.t,
   editorLineNumberForeground: Color.t,
   editorSelectionBackground: Color.t,
+  editorSuggestWidgetBackground: Color.t,
+  editorSuggestWidgetBorder: Color.t,
+  editorSuggestWidgetHighlightForeground: Color.t,
+  editorSuggestWidgetSelectedBackground: Color.t,
   editorActiveLineNumberForeground: Color.t,
   scrollbarSliderBackground: Color.t,
   scrollbarSliderActiveBackground: Color.t,
@@ -111,6 +115,10 @@ let default: t = {
   editorLineHighlightBackground: Color.hex("#495162"),
   editorLineNumberBackground: Color.hex("#2F3440"),
   editorLineNumberForeground: Color.hex("#495162"),
+  editorSuggestWidgetBackground: Color.hex("#282C35"),
+  editorSuggestWidgetBorder: Color.hex("#ECEFF4"),
+  editorSuggestWidgetHighlightForeground: Color.hex("#ECEFF4"),
+  editorSuggestWidgetSelectedBackground: Color.hex("#282C35"),
   editorOverviewRulerBracketMatchForeground: Color.hex("#A0A0A0"),
   editorActiveLineNumberForeground: Color.hex("#737984"),
   editorSelectionBackground: Color.hex("#687595"),
@@ -197,6 +205,43 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(
       defaultBackground,
       ["editor.lineHighlightBackground", "editor.background", "background"],
+    );
+
+  let editorSuggestWidgetBackground =
+    getColor(
+      defaultBackground,
+      ["editorSuggestWidget.background", "editor.background", "background"],
+    );
+
+  let editorSuggestWidgetSelectedBackground =
+    getColor(
+      defaultBackground,
+      [
+        "editorSuggestWidget.selectedBackground",
+        "editor.background",
+        "background",
+      ],
+    );
+
+  let editorSuggestWidgetBorder =
+    getColor(
+      defaultBackground,
+      [
+        "editorSuggestWidget.border",
+        "editorHoverWidget.border",
+        "editorSuggestWidget.background",
+        "editor.background",
+        "background",
+      ],
+    );
+  let editorSuggestWidgetHighlightForeground =
+    getColor(
+      defaultForeground,
+      [
+        "editorSuggestWidget.highlightForeground",
+        "editor.foreground",
+        "foreground",
+      ],
     );
 
   let editorIndentGuideBackground =
@@ -296,6 +341,10 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorLineHighlightBackground,
     editorLineNumberForeground,
     editorLineNumberBackground,
+    editorSuggestWidgetBackground,
+    editorSuggestWidgetBorder,
+    editorSuggestWidgetHighlightForeground,
+    editorSuggestWidgetSelectedBackground,
     menuBackground,
     menuForeground,
     menuSelectionBackground,

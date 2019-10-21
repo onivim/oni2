@@ -64,12 +64,15 @@ let _runMerlinCommand =
     let i = ref(0);
     let len = Array.length(fileContents);
 
-    while (i^ < len) {
-      output_string(stdIn, fileContents[i^]);
-      output_string(stdIn, "\n");
-      Thread.yield();
-      incr(i);
-    };
+    Log.perf("merlin.write", () => {
+      while (i^ < len) {
+        output_string(stdIn, fileContents[i^]);
+        Thread.yield();
+        output_string(stdIn, "\n");
+        Thread.yield();
+        incr(i);
+      }
+    });
 
     close_out_noerr(stdIn);
 

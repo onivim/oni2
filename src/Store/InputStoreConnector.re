@@ -11,6 +11,8 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
+let isMenuOpen = (state: State.t) => state.menu.isOpen;
+
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
@@ -19,15 +21,19 @@ let conditionsOfState = (state: State.t) => {
     Hashtbl.add(ret, CommandLineFocus, true);
   };
 
-  if (state.menu.isOpen) {
+  if (isMenuOpen(state)) {
     Hashtbl.add(ret, MenuFocus, true);
+  };
+
+  if (Model.Completions.isActive(state.completions)) {
+    Hashtbl.add(ret, SuggestWidgetVisible, true);
   };
 
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (state.menu.isOpen || state.commandline.show, state.mode) {
+  switch (isMenuOpen(state) || state.commandline.show, state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
@@ -117,7 +123,7 @@ let start =
     // We have a key, but Revery has an element focused
     | (Some(k), {contents: Some(_)})
     | (Some(k), {contents: None}) =>
-      handle(~isMenuOpen=state.menu.isOpen, ~conditions, ~time, ~commands, k)
+      handle(~isMenuOpen=isMenuOpen(state), ~conditions, ~time, ~commands, k)
       |> List.iter(dispatch);
 
       // Run input effects _immediately_
