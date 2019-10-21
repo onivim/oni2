@@ -62,6 +62,7 @@ let start =
       ~setZoom,
       ~quit,
       ~getTime,
+      ~setTitle,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
@@ -143,6 +144,8 @@ let start =
   let inputStream =
     InputStoreConnector.start(getState, window, runRunEffects);
 
+  let titleUpdater = TitleStoreConnector.start(setTitle);
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -167,6 +170,7 @@ let start =
           acpUpdater,
           hoverUpdater,
           completionUpdater,
+          titleUpdater,
         ]),
       (),
     );

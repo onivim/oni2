@@ -48,6 +48,7 @@ type t = {
   vimUseSystemClipboard,
   uiShadows: bool,
   uiZoom: float,
+  windowTitle: string,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
@@ -96,6 +97,7 @@ let default = {
     delete: false,
     paste: false,
   },
+  windowTitle: "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
   zenModeHideTabs: true,
   zenModeSingleFile: true,
 
