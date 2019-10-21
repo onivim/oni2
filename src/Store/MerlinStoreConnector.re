@@ -32,6 +32,8 @@ let effectIfMerlinEnabled = effect => {
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  let pendingGetErrorsRequest = ref(None);
+
   let modelChangedEffect =
       (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
     effectIfMerlinEnabled(
@@ -58,9 +60,18 @@ let start = () => {
               });
             };
 
-            let _ =
-              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
-            ();
+            switch(pendingGetErrorsRequest^) {
+            | None => ();
+            | Some(p) => 
+              print_endline ("Cancelling previous timeout");
+              p();
+            }
+
+            print_endline ("QUEINING TIMEOUT");
+            pendingGetErrorsRequest := Some(Revery.Tick.timeout(() => {
+              print_endline ("RUNNING TIMEOUT");
+              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb) },
+              Revery.Time.Seconds(0.5)));
           | _ => ()
           };
         }

@@ -102,7 +102,7 @@ let _runMerlinCommand =
       json^ |> List.rev |> String.concat("");
     };
 
-    let jsonString = handleMerlinResponse(stdout);
+    let jsonString = Log.perf("merlin.read", () => handleMerlinResponse(stdout));
     close_in_noerr(stdout);
     Unix.close(stderr);
     let json = Yojson.Safe.from_string(jsonString);
@@ -130,6 +130,7 @@ let getErrors =
     };
   };
 
+  print_endline ("!!! RUNNING MERLIN COMMAND");
   _runMerlinCommand(
     ~workingDirectory,
     ~filePath,
