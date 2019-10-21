@@ -38,6 +38,7 @@ type t = {
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
+  workspace: Workspace.t,
   zenMode: bool,
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
@@ -77,6 +78,7 @@ let create: unit => t =
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",
+    workspace: Workspace.empty,
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,

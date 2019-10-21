@@ -22,6 +22,7 @@ let reduce: (State.t, Actions.t) => State.t =
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
         notifications: Notifications.reduce(s.notifications, a),
+        workspace: Workspace.reduce(s.workspace, a),
       };
 
       switch (a) {
