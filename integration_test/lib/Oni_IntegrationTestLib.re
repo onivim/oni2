@@ -112,6 +112,7 @@ let runTest =
 
       // Flush any queued calls from `Revery.App.runOnMainThread`
       Revery.App.flushPendingCallbacks();
+      Revery.Tick.pump();
 
       // Flush any pending effects
       wrappedRunEffects();
