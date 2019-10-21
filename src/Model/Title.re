@@ -63,16 +63,16 @@ let _resolve = (v: t, items: StringMap.t(string)) => {
 let toString = (v: t, items: StringMap.t(string)) => {
   let resolvedItems = _resolve(v, items);
 
-  let rec f = (v: t) => {
+  let rec f = (v: t, hadText) => {
     switch (v) {
-    | [Text(t1), Separator, Text(t2), ...tail] =>
-      t1 ++ " - " ++ t2 ++ f(tail)
-    | [Text(t), ...tail] => t ++ f(tail)
-    | [Separator, ...tail] => f(tail)
-    | [Variable(_v), ...tail] => f(tail)
+    | [Separator, Text(t2), ...tail] when hadText =>
+      " - " ++ t2 ++ f(tail, true)
+    | [Text(t), ...tail] => t ++ f(tail, true)
+    | [Separator, ...tail] => f(tail, false)
+    | [Variable(_v), ...tail] => f(tail, false)
     | [] => ""
     };
   };
 
-  f(resolvedItems);
+  f(resolvedItems, false);
 };
