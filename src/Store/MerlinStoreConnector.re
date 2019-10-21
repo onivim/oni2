@@ -62,15 +62,25 @@ let start = () => {
               });
             };
 
-            switch(pendingGetErrorsRequest^) {
-            | None => ();
-            | Some(p) => 
-              p();
-            }
+            switch (pendingGetErrorsRequest^) {
+            | None => ()
+            | Some(p) => p()
+            };
 
-            pendingGetErrorsRequest := Some(Revery.Tick.timeout(() => {
-              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb) },
-              diagnosticsDebounceTime));
+            pendingGetErrorsRequest :=
+              Some(
+                Revery.Tick.timeout(
+                  () => {
+                    MerlinRequestQueue.getErrors(
+                      Sys.getcwd(),
+                      path,
+                      lines,
+                      cb,
+                    )
+                  },
+                  diagnosticsDebounceTime,
+                ),
+              );
           | _ => ()
           };
         }
