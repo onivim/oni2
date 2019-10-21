@@ -14,6 +14,8 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Oni_Merlin;
 
+let diagnosticsDebounceTime = Revery.Time.Seconds(0.3);
+
 let runOnMainThread = (cb, arg) => {
   Revery.App.runOnMainThread(cb(arg));
 };
@@ -31,6 +33,8 @@ let effectIfMerlinEnabled = effect => {
 
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let pendingGetErrorsRequest = ref(None);
 
   let modelChangedEffect =
       (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
@@ -58,9 +62,25 @@ let start = () => {
               });
             };
 
-            let _ =
-              MerlinRequestQueue.getErrors(Sys.getcwd(), path, lines, cb);
-            ();
+            switch (pendingGetErrorsRequest^) {
+            | None => ()
+            | Some(p) => p()
+            };
+
+            pendingGetErrorsRequest :=
+              Some(
+                Revery.Tick.timeout(
+                  () => {
+                    MerlinRequestQueue.getErrors(
+                      Sys.getcwd(),
+                      path,
+                      lines,
+                      cb,
+                    )
+                  },
+                  diagnosticsDebounceTime,
+                ),
+              );
           | _ => ()
           };
         }
