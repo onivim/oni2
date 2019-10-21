@@ -170,7 +170,7 @@ let start =
           acpUpdater,
           hoverUpdater,
           completionUpdater,
-          titleUpdater
+          titleUpdater,
         ]),
       (),
     );

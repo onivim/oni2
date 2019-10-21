@@ -74,9 +74,9 @@ let init = app => {
 
   let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
 
-  let setTitle = (title) => {
+  let setTitle = title => {
     //Window.setTitle(w, title);
-    print_endline ("Title: " ++ title);
+    print_endline("Title: " ++ title);
   };
 
   let quit = code => {
