@@ -22,7 +22,7 @@ let getClipboard = () => _currentClipboard^;
 let setTime = v => _currentTime := v;
 let getTime = () => _currentTime^;
 
-let setTitle = (title) => _currentTitle := title;
+let setTitle = title => _currentTitle := title;
 let getTitle = () => _currentTitle^;
 
 let setZoom = v => _currentZoom := v;
