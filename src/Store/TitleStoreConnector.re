@@ -47,7 +47,7 @@ let start = setTitle => {
     };
 
   let updateTitleEffect = state =>
-    Isolinear.Effect.createWithDispatch(~name="title.update", dispatch => {
+    Isolinear.Effect.createWithDispatch(~name="title.update", _dispatch => {
       let templateVariables = getTemplateVariables(state);
       let titleTemplate =
         Core.Configuration.getValue(c => c.windowTitle, state.configuration);
