@@ -15,7 +15,7 @@ let start = (setTitle) => {
 
   let getTemplateVariables: Model.State.t => Core.StringMap.t(string) = (state) => {
 
-    let initialValues = [("appName", "Onivim 2"), ("rootName", "testDir")];
+    let initialValues = [("appName", "Onivim 2")];
 
     let initialValues = switch(Model.Selectors.getActiveBuffer(state)) {
     | None => initialValues
@@ -31,6 +31,11 @@ let start = (setTitle) => {
       | false => ret
       | true => [("dirty", "*"), ...ret];
       }
+    };
+
+    let initialValues = switch(state.workspace) {
+    | None => initialValues
+    | Some(workspace) => [("rootName", workspace.rootName), ...initialValues]
     };
 
     initialValues

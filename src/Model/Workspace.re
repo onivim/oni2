@@ -10,18 +10,18 @@
 
 type workspace = {
   workingDirectory: string,
-  rootDir: string,
+  rootName: string,
 };
 
 type t = option(workspace);
 
-type empty: t = None;
+let empty: t = None;
 
-let reducer = (v: t, a) => {
+let reduce = (v: t, a) => {
   switch (a) {
   | Actions.OpenExplorer(dir) => Some({
     workingDirectory: dir,
-    rootDir: Filename.basename(dir), 
+    rootName: Filename.basename(dir), 
   })
   | _ => v 
   }
