@@ -3,8 +3,9 @@
  *
  * Module to filter & rank items using various strategies.
  */
-open Actions;
 open ReasonFuzz;
+
+module Utility = Oni_Core.Utility;
 
 module Option = {
   let map = f => fun
@@ -12,68 +13,49 @@ module Option = {
     | None => None 
 }
 
-let scoreObject = ((match, menuItem)) =>
-  (
-    Option.map(m => MatchResult.create(m.IndexMatchResult.score), match),
-    menuItem.name
-  );
-
-let compareScore = (x, y) =>
-  compareScores(scoreObject(x), scoreObject(y));
-
-let ranges = indices =>
-  // Assumes the array is sorted low to high
-  Array.fold_left(
-    (acc, i) =>
-      switch acc {
-        | [] =>
-          [(i, i)]
-
-        | [(low, high), ...rest] =>
-          if (high + 1 == i) {
-            [(low, i), ...rest] // Extend current range
-          } else {
-            [(i, i), ...acc] // Add new range
-          }
-      }, [], indices)
-    |> List.rev;
-
-let makeResult = ((maybeMatch, menuItem)) =>
-  switch (maybeMatch) {
-    | Some(match) =>
-      { ...menuItem, highlight: ranges(match.IndexMatchResult.indicies) }
-    | None =>
-      menuItem
-  };
-
-let formatName = (item, ~shouldLower) => {
-  let label =
-    Quickmenu.getLabel(item);
-
-  if (shouldLower) {
-    String.lowercase_ascii(label)
-  } else {
-    label
-  };
+type result('a) = FilterJob.rankResult('a) = {
+  item: 'a,
+  highlight: list((int, int))
 }
 
-let processItem = (pattern, ~shouldLower, item) => {
-  let line =
-    formatName(item, ~shouldLower);
-  let match =
-    pathIndexMatch(~line, ~pattern);
+let makeResult = ((maybeMatch, item)) =>
+  switch (maybeMatch) {
+    | Some(match) =>
+      { item, highlight: Utility.ranges(match.IndexMatchResult.indicies) }
+    | None =>
+      { item, highlight: [] }
+  };
 
-  (match, item)
-};
 
-
-let rank = (query, items) => {
+let rank = (query, format, items) => {
   /* Use smart search for now, add config option though. */
   let shouldLower =
     query == String.lowercase_ascii(query);
+  let format = item =>
+    format(item, ~shouldLower);
+
+  let compareScore = (x, y) => {
+    let scoreObject = ((match, item)) =>
+      (
+        Option.map(m => MatchResult.create(m.IndexMatchResult.score), match),
+        format(item)
+      );
+    compareScores(scoreObject(x), scoreObject(y));
+  };
+
+  let processItem = (pattern, item) => {
+    let line =
+      format(item);
+    let match =
+      pathIndexMatch(~line, ~pattern);
+
+    (match, item)
+  };
+
+
 
   items
-    |> List.map(processItem(query, ~shouldLower))
+    |> List.map(processItem(query))
     |> List.sort(compareScore)
     |> List.map(makeResult);
 };

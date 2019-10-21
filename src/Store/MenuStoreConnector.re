@@ -10,7 +10,6 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
-module MenuJob = Model.MenuJob;
 module Utility = Core.Utility;
 
 
@@ -255,8 +254,10 @@ let subscriptions = (ripgrep) => {
       ~query,
       ~items  = Quickmenu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
-      ~onUpdate=(items, ~progress) =>
+      ~onUpdate=(items, ~progress) => {
+        let items = items |> Array.of_list;
         Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
+      }
     );
   };
 

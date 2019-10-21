@@ -3,9 +3,14 @@ module Model = Oni_Model;
 module Log = Core.Log;
 
 module Actions = Model.Actions;
-module MenuJob = Model.MenuJob;
 module Subscription = Core.Subscription;
 module Job = Core.Job;
+
+module MenuJob = Model.FilterJob.Make({
+  type item = Actions.menuCommand;
+  let rank = Model.Filter.rank;
+  let format = Model.Quickmenu.getLabel;
+});
 
 module Provider = {
   type action = Actions.t;
@@ -14,7 +19,7 @@ module Provider = {
     query: string,
     items: list(Actions.menuCommand),
     itemStream: Isolinear.Stream.t(list(Actions.menuCommand)),
-    onUpdate: (array(Actions.menuCommand), ~progress: float) => action
+    onUpdate: (list(Actions.menuCommand), ~progress: float) => action
   };
 
   type state = {
@@ -64,7 +69,12 @@ module Provider = {
         _ =>
           switch (Hashtbl.find_opt(jobs, id)) {
             | Some({ job }) =>
-              dispatch(onUpdate(Job.getCompletedWork(job).uiFiltered, Job.getProgress(job)));
+              let items =
+                Job.getCompletedWork(job).uiFiltered
+                  |> List.map((Model.FilterJob.{ item, highlight}) => Actions.{ ...item, highlight })
+              let progress =
+                Job.getProgress(job);
+              dispatch(onUpdate(items, progress));
 
             | None =>
               Log.error("Unable to pump non-existing MenuJob");
