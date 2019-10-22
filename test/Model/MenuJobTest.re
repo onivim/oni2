@@ -142,10 +142,10 @@ describe("MenuJob", ({describe, _}) => {
     test("large amount of items added work", ({expect, _}) => {
       let job = MenuJob.create();
 
-      let commands: list(Actions.menuCommand) =
+      let items: list(Actions.menuItem) =
         List.init(1000000, i => createItem("Item " ++ string_of_int(i)));
 
-      let job = Job.map(MenuJob.addItems(commands), job);
+      let job = Job.map(MenuJob.addItems(items), job);
 
       expect.bool(Job.isComplete(job)).toBe(false);
     })

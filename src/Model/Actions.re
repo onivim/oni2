@@ -129,7 +129,7 @@ and editorGroup = {
   reverseTabOrder: list(int),
   metrics: editorMetrics,
 }
-and menuCommand = {
+and menuItem = {
   category: option(string),
   name: string,
   command: unit => t,
@@ -143,5 +143,5 @@ and menuVariant =
   | Wildmenu(Vim.Types.cmdlineType)
 and menuSource =
   | Loading
-  | Progress({ items: array(menuCommand), progress: float })
-  | Complete(array(menuCommand));
+  | Progress({ items: array(menuItem), progress: float })
+  | Complete(array(menuItem));

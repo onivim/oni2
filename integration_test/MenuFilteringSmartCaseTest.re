@@ -7,16 +7,17 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
   );
 
   let createSimpleMenu = (setItems, _, _) => {
-    let commands: list(Actions.menuCommand) = [
+    let items: list(Actions.menuItems) = [
       {
         category: Some("Preferences"),
         name: "Open configuration file",
         command: () => (),
         icon: None,
+        highlight: [||]
       },
     ];
 
-    setItems(commands);
+    setItems(items);
   };
 
   dispatch(MenuOpen(createSimpleMenu));

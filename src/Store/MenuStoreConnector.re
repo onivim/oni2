@@ -37,9 +37,9 @@ let prefixFor : Vim.Types.cmdlineType => string = fun
 let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let selectItemEffect = command =>
+  let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
-      let action = command();
+      let action = item.command();
       dispatch(action);
     });
 
@@ -211,8 +211,8 @@ let start = () => {
         | Some({ source, selected: Some(selected) }) =>
           let items = Quickmenu.getItems(source);
           switch (items[selected]) {
-          | v =>
-            (None, selectItemEffect(v.command))
+          | item =>
+            (None, selectItemEffect(item))
 
           | exception Invalid_argument(_) =>
             (state, Isolinear.Effect.none)
@@ -249,7 +249,7 @@ let subscriptions = (ripgrep) => {
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   let module MenuFilterSubscription = FilterSubscription.Make({
-    type item = Actions.menuCommand;
+    type item = Actions.menuItem;
     let format = Model.Quickmenu.getLabel;
   });
 
@@ -264,7 +264,7 @@ let subscriptions = (ripgrep) => {
           items
             |> List.map(
               (Model.Filter.{ item, highlight }) =>
-                ({ ...item, highlight }: Actions.menuCommand))
+                ({ ...item, highlight }: Actions.menuItem))
             |> Array.of_list;
         Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
       }

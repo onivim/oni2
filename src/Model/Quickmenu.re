@@ -44,9 +44,9 @@ let getItems = fun
 
 
 // TODO: This doesn't really belong here. Find a better home for it.
-let getLabel = (command: menuCommand) => {
-  switch (command.category) {
-  | Some(v) => v ++ ": " ++ command.name
-  | None => command.name
+let getLabel = (item: menuItem) => {
+  switch (item.category) {
+  | Some(v) => v ++ ": " ++ item.name
+  | None => item.name
   };
 };

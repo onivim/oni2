@@ -1,4 +1,4 @@
-let commands: array(Actions.menuCommand) = [|
+let commands: array(Actions.menuItem) = [|
     {
       category: Some("Preferences"),
       name: "Open configuration file",

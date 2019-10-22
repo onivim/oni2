@@ -28,20 +28,20 @@ module Make = (Config: Config) => {
     // the full set again
     explodedFilter: list(UChar.t),
     shouldLower: bool,
-    totalCommandCount: int,
-    fullCommands: list(list(Config.item)),
+    totalItemCount: int,
+    allItems: list(list(Config.item)),
     // Commands to filter are commands we haven't looked at yet.
-    commandsToFilter: list(list(Config.item)),
+    itemsToFilter: list(list(Config.item)),
   };
 
   let showPendingWork = (v: pendingWork) => {
     "- Pending Work\n"
-    ++ " -- totalCommandCount: "
-    ++ string_of_int(v.totalCommandCount)
-    ++ " -- fullCommands: "
-    ++ string_of_int(List.length(v.fullCommands))
-    ++ " -- commandsToFilter: "
-    ++ string_of_int(List.length(v.commandsToFilter));
+    ++ " -- totalItemCount: "
+    ++ string_of_int(v.totalItemCount)
+    ++ " -- allItems: "
+    ++ string_of_int(List.length(v.allItems))
+    ++ " -- itemsToFilter: "
+    ++ string_of_int(List.length(v.itemsToFilter));
   };
 
   type completedWork = {
@@ -65,11 +65,11 @@ module Make = (Config: Config) => {
   let initialCompletedWork = {allFiltered: [], uiFiltered: []};
   let initialPendingWork = {
     filter: "",
-    fullCommands: [],
+    allItems: [],
     explodedFilter: [],
     shouldLower: false,
-    commandsToFilter: [],
-    totalCommandCount: 0,
+    itemsToFilter: [],
+    totalItemCount: 0,
   };
 
   // Constants
@@ -152,7 +152,7 @@ module Make = (Config: Config) => {
         ...p,
         filter: newQuery,
         explodedFilter: newQueryEx,
-        commandsToFilter: p.fullCommands // Reset the commands to filter
+        itemsToFilter: p.allItems // Reset items to filter
       };
 
       let newCompletedWork = initialCompletedWork;
@@ -165,9 +165,9 @@ module Make = (Config: Config) => {
   let addItems = (items: list(Config.item), p: pendingWork, c: completedWork) => {
     let newPendingWork = {
       ...p,
-      fullCommands: [items, ...p.fullCommands],
-      totalCommandCount: p.totalCommandCount + List.length(items),
-      commandsToFilter: [items, ...p.commandsToFilter],
+      allItems: [items, ...p.allItems],
+      totalItemCount: p.totalItemCount + List.length(items),
+      itemsToFilter: [items, ...p.itemsToFilter],
     };
 
     (false, newPendingWork, c);
@@ -176,41 +176,42 @@ module Make = (Config: Config) => {
   /* [doWork] is run each frame until the work is completed! */
   let doWork = (p: pendingWork, c: completedWork) => {
     let i = ref(0);
-    let completed = ref(false);
+    let isCompleted = ref(false);
     let result = ref(None);
 
     let pendingWork = ref(p);
     let completedWork = ref(c.allFiltered);
 
-    while (i^ < iterationsPerFrame && ! completed^) {
+    while (i^ < iterationsPerFrame && !isCompleted^) {
       let p = pendingWork^;
       let c = completedWork^;
-      let (c, newPendingWork, newCompletedWork) =
-        switch (p.commandsToFilter) {
-        | [] => (true, p, c)
-        | [hd, ...tail] =>
-          switch (hd) {
-          | [] => (false, {...p, commandsToFilter: tail}, c)
-          | [innerHd, ...innerTail] =>
-            // Do a first filter pass to check if the item satisifies the regex
-            let newCompleted =
-              matches(
-                p.explodedFilter,
-                format(innerHd, p.shouldLower),
-              )
-                ? [innerHd, ...c] : c;
-            (
-              false,
-              {...p, commandsToFilter: [innerTail, ...tail]},
-              newCompleted,
-            );
-          }
+      let (newIsCompleted, newPendingWork, newCompletedWork) =
+        switch (p.itemsToFilter) {
+        | [] =>
+          (true, p, c)
+
+        | [[], ...tail] =>
+          (false, {...p, itemsToFilter: tail}, c)
+
+        | [[innerHd, ...innerTail], ...tail] =>
+          // Do a first filter pass to check if the item satisifies the regex
+          let name =
+            format(innerHd, p.shouldLower);
+          let newCompleted =
+            if (matches(p.explodedFilter, name)) {
+              [innerHd, ...c];
+            } else {
+              c
+            };
+
+          (false, {...p, itemsToFilter: [innerTail, ...tail]}, newCompleted)
         };
+
       pendingWork := newPendingWork;
       completedWork := newCompletedWork;
       incr(i);
-      completed := c || completed^;
-      result := Some((c, newPendingWork, newCompletedWork));
+      isCompleted := newIsCompleted || isCompleted^;
+      result := Some((newIsCompleted, newPendingWork, newCompletedWork));
     };
 
     switch (result^) {
@@ -227,9 +228,12 @@ module Make = (Config: Config) => {
   };
 
   let progressReporter = (p: pendingWork, _) => {
-    1.0
-    -. float_of_int(List.length(p.commandsToFilter))
-    /. float_of_int(List.length(p.fullCommands));
+    let toFilter =
+      float_of_int(List.length(p.itemsToFilter));
+    let total =
+      float_of_int(List.length(p.allItems));
+
+    1.0 -. toFilter /. total;
   };
 
   let create = () => {
