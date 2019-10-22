@@ -54,10 +54,8 @@ let start = setTitle => {
 
       let titleModel = Model.Title.ofString(titleTemplate);
       let title = Model.Title.toString(titleModel, templateVariables);
-      print_endline("!!! got title: " ++ title);
 
       if (!String.equal(_lastTitle^, title)) {
-        print_endline("!!! TITLE: " ++ title);
         _lastTitle := title;
         setTitle(title);
       };
