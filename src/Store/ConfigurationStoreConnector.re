@@ -132,6 +132,7 @@ let start =
 
   // Synchronize miscellaneous configuration settings
   let zoom = ref(getZoom());
+  let vsync = ref(getVsync());
   let synchronizeConfigurationEffect = configuration =>
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
       let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
@@ -142,7 +143,17 @@ let start =
         setZoom(zoomValue);
         zoom := zoomValue;
       };
+
+      let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
+      if (vsyncValue != vsync^) {
+        Log.info(
+          "Configuration - setting vsync: " ++ string_of_bool(vsyncValue)
+        );
+        setVsync(vsyncValue);
+        vsync = vsyncValue;
+      }
     });
+
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
