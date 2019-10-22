@@ -30,6 +30,7 @@ let init = app => {
         WindowCreateOptions.create(
           ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
+          ~vsync=false,
           ~icon=Some("logo.png"),
           (),
         ),
