@@ -13,7 +13,7 @@ module Option = {
     | None => None 
 }
 
-type result('a) = FilterJob.rankResult('a) = {
+type result('a) = {
   item: 'a,
   highlight: list((int, int))
 }
@@ -51,8 +51,6 @@ let rank = (query, format, items) => {
 
     (match, item)
   };
-
-
 
   items
     |> List.map(processItem(query))

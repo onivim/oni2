@@ -4,20 +4,13 @@
      menu items across multiple frames.
    */
 
-type rankResult('a) = {
-  item: 'a,
-  highlight: list((int, int))
-}
-
 module type Config = {
   type item;
 
   let format : item => string;
-  let rank : (string, (item, ~shouldLower:bool) => string, list(item)) => list(rankResult(item))
 }
 
 module Make = (Config: Config) => {
-
   open Oni_Core;
 
   open CamomileBundled.Camomile;
@@ -56,7 +49,7 @@ module Make = (Config: Config) => {
     // If the allFiltered list is still huge,
     // we take a subset prior to sorting to display in the UI
     // The 'ui' filtered should be the main item for the UI to use
-    uiFiltered: list(rankResult(Config.item)),
+    uiFiltered: list(Filter.result(Config.item)),
   };
 
   let showCompletedWork = (v: completedWork) => {
@@ -131,7 +124,7 @@ module Make = (Config: Config) => {
 
       let uiFilteredNew =
         List.filter(
-          ({ item }) => matches(newQueryEx, format(item, ~shouldLower)),
+          (Filter.{ item }) => matches(newQueryEx, format(item, ~shouldLower)),
           uiFiltered,
         );
 
@@ -227,7 +220,7 @@ module Make = (Config: Config) => {
       let uiFiltered =
         completedWork
         |> Utility.firstk(maxItemsToFilter)
-        |> Config.rank(p.filter, format);
+        |> Filter.rank(p.filter, format);
 
       (isCompleted, pendingWork, {allFiltered: completedWork, uiFiltered});
     };

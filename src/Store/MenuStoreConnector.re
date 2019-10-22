@@ -248,14 +248,24 @@ let subscriptions = (ripgrep) => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
+  let module MenuFilterSubscription = MenuJobSubscription.Make({
+    type item = Actions.menuCommand;
+    let format = Model.Quickmenu.getLabel;
+  });
+
   let filter = (query, source) => {
-    MenuJobSubscription.create(
+    MenuFilterSubscription.create(
       ~id="menu-filter",
       ~query,
       ~items  = Quickmenu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
-        let items = items |> Array.of_list;
+        let items =
+          items
+            |> List.map(
+              (Model.Filter.{ item, highlight }) =>
+                ({ ...item, highlight }: Actions.menuCommand))
+            |> Array.of_list;
         Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
       }
     );
