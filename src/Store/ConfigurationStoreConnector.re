@@ -147,13 +147,12 @@ let start =
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info(
-          "Configuration - setting vsync: " ++ string_of_bool(vsyncValue)
+          "Configuration - setting vsync: " ++ string_of_bool(vsyncValue),
         );
         setVsync(vsyncValue);
         vsync = vsyncValue;
-      }
+      };
     });
-
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
