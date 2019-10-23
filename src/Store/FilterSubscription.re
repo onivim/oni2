@@ -32,14 +32,13 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
       let job =
         FilterJob.create()
           |> Job.map(FilterJob.updateQuery(query))
-          |> Job.map(FilterJob.addItems(items))
-          |> Job.doWork;
+          |> Job.map(FilterJob.addItems(items));
 
       let unsubscribeFromItemStream =
         Isolinear.Stream.subscribe(itemStream, items =>
           switch (Hashtbl.find_opt(jobs, id)) {
             | Some({ job } as state) =>
-              let job = Job.map(FilterJob.addItems(items), job) |> Job.doWork;
+              let job = Job.map(FilterJob.addItems(items), job);
               Hashtbl.replace(jobs, id, { ...state, job });
 
             | None =>
@@ -93,7 +92,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
         | Some({ job } as state) when query != job.pendingWork.filter =>
           // Query changed
           Log.debug("Updating FilterJob subscription " ++ id ++ " with query: " ++ query);
-          let job = Job.map(FilterJob.updateQuery(query), job) |> Job.doWork;
+          let job = Job.map(FilterJob.updateQuery(query), job);
           Hashtbl.replace(jobs, id, { ...state, job });
 
         | Some(_) =>
