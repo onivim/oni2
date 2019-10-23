@@ -257,7 +257,7 @@ let subscriptions = (ripgrep) => {
     MenuFilterSubscription.create(
       ~id="menu-filter",
       ~query,
-      ~items  = Quickmenu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
+      ~items = Quickmenu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
         let items =
