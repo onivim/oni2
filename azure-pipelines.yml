@@ -22,9 +22,9 @@ jobs:
   - script: brew update
   - script: brew install libpng ragel
   - template: .ci/use-node.yml
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - template: .ci/esy-check-hygiene.yml
-  - template: .ci/publish-build-cache.yml
+  # - template: .ci/publish-build-cache.yml
 
 - job: Linux
   displayName: 'Linux - Ubuntu 16.04'
@@ -90,14 +90,14 @@ jobs:
   - script: brew update
   - script: brew install libpng ragel
   - template: .ci/use-node.yml
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: darwin
   - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-osx.yml
-  - template: .ci/publish-build-cache.yml
+  # - template: .ci/publish-build-cache.yml
 
 - job: Windows
   timeoutInMinutes: 0
