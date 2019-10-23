@@ -7,7 +7,7 @@
 open Oni_Core;
 
 type titleSections =
-  | Text(string)
+  | Text(string, bool)
   | Separator
   | Variable(string);
 
@@ -22,13 +22,13 @@ let ofString = str => {
   while (idx^ < len) {
     switch (Str.search_forward(regexp, str, idx^)) {
     | exception Not_found =>
-      result := [Text(String.sub(str, idx^, len - idx^)), ...result^];
+      result := [Text(String.sub(str, idx^, len - idx^), false), ...result^];
       idx := len;
     | v =>
       let prev = v - idx^;
 
       if (prev > 0) {
-        result := [Text(String.sub(str, idx^, prev)), ...result^];
+        result := [Text(String.sub(str, idx^, prev), false), ...result^];
       };
 
       let group = Str.matched_group(1, str);
@@ -47,11 +47,11 @@ let ofString = str => {
 let _resolve = (v: t, items: StringMap.t(string)) => {
   let f = section => {
     switch (section) {
-    | Text(sz) => Some(Text(sz))
+    | Text(sz, fromVariable) => Some(Text(sz, fromVariable))
     | Separator => Some(Separator)
     | Variable(sz) =>
       switch (StringMap.find_opt(sz, items)) {
-      | Some(v) => Some(Text(v))
+      | Some(v) => Some(Text(v, true))
       | None => None
       }
     };
@@ -65,10 +65,11 @@ let toString = (v: t, items: StringMap.t(string)) => {
 
   let rec f = (v: t, hadText) => {
     switch (v) {
-    | [Separator, Text(t2), ...tail] when hadText =>
+    | [Separator, Text(t2, true), ...tail] when hadText =>
       " - " ++ t2 ++ f(tail, true)
-    | [Text(t), ...tail] => t ++ f(tail, true)
-    | [Separator, ...tail] => f(tail, false)
+    | [Text(t, true), ...tail] => t ++ f(tail, true)
+    | [Text(t, false), ...tail] => t ++ f(tail, false)
+    | [Separator, ...tail] => f(tail, hadText)
     | [Variable(_v), ...tail] => f(tail, false)
     | [] => ""
     };
