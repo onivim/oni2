@@ -119,11 +119,11 @@ let executingDirectory = {
 let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
 
 let startProcess = (stdio, stdout, stderr) => {
-  print_endline ("EXECUTING DIRECTORY: " ++ executingDirectory);
-  List.iteri((i, arg) => Printf.printf("arg %d: %s\n", i, arg), args |> Array.to_list);
-  args[0] = executingDirectory ++ executable;
+  let cmdToRun = executingDirectory ++ executable;
+  // The first argument is the executable, so we need to update that to point to 'Oni2_editor'
+  args[0] = cmdToRun;
   Unix.create_process(
-    executingDirectory ++ executable,
+    cmdToRun,
     args,
     stdio,
     stdout,
