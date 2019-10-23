@@ -100,6 +100,9 @@ let executingDirectory = {
       | (Some(v), None) => String.sub(Sys.executable_name, 0, v)
       | _ => Sys.executable_name
       }
+    // For Windows, we need to use Sys.executable_name - Sys.argv is `./` when running
+    // from %PATH% - see onivim/oni#872
+    | Windows => Filename.dirname(Sys.executable_name)
     | _ => Filename.dirname(Sys.argv[0]) ++ Filename.dir_sep
     };
 
