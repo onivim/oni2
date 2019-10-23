@@ -87,7 +87,7 @@ if (process.platform == "linux") {
     "node"
   ];
 
-  const appDirectory = path.join(releaseDirectory, "Onivim2.App");
+  const appDirectory = path.join(releaseDirectory, "Onivim2.app");
   const contentsDirectory = path.join(appDirectory, "Contents");
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
