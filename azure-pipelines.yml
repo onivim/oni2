@@ -185,6 +185,7 @@ jobs:
   - powershell: ./scripts/windows/validate-release.ps1
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+  - script: echo %PATH%
   # The validate-release.ps1 installs Onivim 2 and checks it,
-  # but we need to check from the command prompt, too - for #872
-  - script: D:/a/1/s/Onivim2/Oni2.exe -f --checkhealth 
+  # but we need to check from the command prompt, too via %PATH% - for #872
+  - script: Oni2.exe -f --checkhealth 
