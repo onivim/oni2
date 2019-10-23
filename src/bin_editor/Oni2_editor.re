@@ -30,7 +30,7 @@ let init = app => {
         WindowCreateOptions.create(
           ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
-          ~vsync=false,
+          ~vsync=Vsync.Immediate,
           ~icon=Some("logo.png"),
           (),
         ),
@@ -98,6 +98,7 @@ let init = app => {
       ~getZoom,
       ~setZoom,
       ~setTitle,
+      ~setVsync,
       ~window=Some(w),
       ~cliOptions=Some(cliOptions),
       ~quit,
