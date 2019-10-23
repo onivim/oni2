@@ -29,12 +29,12 @@ let discoverExtensions = (setup: Core.Setup.t) => {
         };
       let userExtensions =
         switch (userExtensions) {
-        | Ok(p) => 
+        | Ok(p) =>
           Core.Log.info("Searching for user extensions in: " ++ p);
-          ExtensionScanner.scan(p)
-        | Error(msg) => 
+          ExtensionScanner.scan(p);
+        | Error(msg) =>
           Core.Log.error("Error discovering user extensions: " ++ msg);
-          []
+          [];
         };
 
       Core.Log.debug(() =>

@@ -122,13 +122,7 @@ let startProcess = (stdio, stdout, stderr) => {
   let cmdToRun = executingDirectory ++ executable;
   // The first argument is the executable, so we need to update that to point to 'Oni2_editor'
   args[0] = cmdToRun;
-  Unix.create_process(
-    cmdToRun,
-    args,
-    stdio,
-    stdout,
-    stderr,
-  );
+  Unix.create_process(cmdToRun, args, stdio, stdout, stderr);
 };
 
 let launch = () =>
