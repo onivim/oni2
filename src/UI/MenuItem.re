@@ -9,7 +9,7 @@ let component = React.component("MenuItem");
 
 module Constants = {
   let fontSize = 20;
-}
+};
 
 module Styles = {
   let bg = (~theme: Theme.t, ~isSelected) =>
@@ -20,14 +20,14 @@ module Styles = {
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       color(theme.menuForeground),
-      backgroundColor(bg(~theme, ~isSelected))
+      backgroundColor(bg(~theme, ~isSelected)),
     ];
 
   let container = (~theme, ~isSelected) =>
     Style.[
       padding(10),
       flexDirection(`Row),
-      backgroundColor(bg(~theme, ~isSelected))
+      backgroundColor(bg(~theme, ~isSelected)),
     ];
 
   let icon = fgColor =>
@@ -47,17 +47,14 @@ module Styles = {
             textOverflow(`Ellipsis),
             fontSize(12),
             color(theme.menuForeground),
-            backgroundColor(bg(~theme, ~isSelected))
+            backgroundColor(bg(~theme, ~isSelected)),
           ],
         ~target=custom,
       )
     );
 
-  let clickable =
-    Style.[
-      cursor(Revery.MouseCursors.pointer)
-    ];
-}
+  let clickable = Style.[cursor(Revery.MouseCursors.pointer)];
+};
 
 let noop = () => ();
 
@@ -80,29 +77,30 @@ let createElement =
     let iconView =
       switch (icon) {
       | Some(v) =>
-        open IconTheme.IconDefinition;
-        <Text
-          style=Styles.icon(v.fontColor)
-          text=FontIcon.codeToIcon(v.fontCharacter)
-        />
+        IconTheme.IconDefinition.(
+          <Text
+            style={Styles.icon(v.fontColor)}
+            text={FontIcon.codeToIcon(v.fontCharacter)}
+          />
+        )
 
-      | None =>
-        <Text style=Styles.icon(Colors.transparentWhite) text="" />
+      | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
       };
 
-    let labelView = 
+    let labelView =
       switch (label) {
-        | `Text(text) =>
-          let style = Styles.label(~font, ~theme, ~isSelected, ~custom=style);
-          <Text style text />
-        | `Custom(view) =>
-          view
+      | `Text(text) =>
+        let style = Styles.label(~font, ~theme, ~isSelected, ~custom=style);
+        <Text style text />;
+      | `Custom(view) => view
       };
 
     (
       hooks,
       <Clickable style=Styles.clickable onClick>
-        <View onMouseOver={_ => onMouseOver()} style=Styles.container(~theme, ~isSelected)>
+        <View
+          onMouseOver={_ => onMouseOver()}
+          style={Styles.container(~theme, ~isSelected)}>
           iconView
           labelView
         </View>

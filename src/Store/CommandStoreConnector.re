@@ -118,7 +118,7 @@ let start = _ => {
                              state.iconTheme,
                              path,
                            ),
-                        highlight: [],
+                         highlight: [],
                        })
                      | None => None
                      };

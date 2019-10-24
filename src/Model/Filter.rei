@@ -6,7 +6,8 @@
 
 type result('a) = {
   item: 'a,
-  highlight: list((int, int))
-}
+  highlight: list((int, int)),
+};
 
-let rank: (string, ('a, ~shouldLower:bool) => string, list('a)) => list(result('a)); 
+let rank:
+  (string, ('a, ~shouldLower: bool) => string, list('a)) => list(result('a));

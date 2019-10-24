@@ -11,12 +11,10 @@ type state = {
 
 let component = React.component("Menu");
 
-
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
 };
-
 
 module Styles = {
   let container = (theme: Theme.t) =>
@@ -41,21 +39,21 @@ module Styles = {
       cursor(Revery.MouseCursors.pointer),
     ];
 
-  let label = (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
+  let label =
+      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
       fontSize(12),
       backgroundColor(
-        isSelected ? theme.menuSelectionBackground : theme.menuBackground
+        isSelected ? theme.menuSelectionBackground : theme.menuBackground,
       ),
       color(
-        highlighted ? theme.oniNormalModeBackground : theme.menuForeground
+        highlighted ? theme.oniNormalModeBackground : theme.menuForeground,
       ),
-      textWrap(TextWrapping.NoWrap)
+      textWrap(TextWrapping.NoWrap),
     ];
 };
-
 
 let loseFocusOnClose = isOpen =>
   /**
@@ -69,8 +67,7 @@ let loseFocusOnClose = isOpen =>
     }
   );
 
-let onSelect = (_) =>
-  GlobalContext.current().dispatch(MenuSelect);
+let onSelect = _ => GlobalContext.current().dispatch(MenuSelect);
 
 let onSelectedChange = index =>
   GlobalContext.current().dispatch(MenuPosition(index));
@@ -155,7 +152,9 @@ let createElement =
                   width(
                     1
                     + (
-                      int_of_float(float_of_int(Constants.menuWidth) *. jobProgress)
+                      int_of_float(
+                        float_of_int(Constants.menuWidth) *. jobProgress,
+                      )
                       - 1
                     ),
                   ),
@@ -173,43 +172,43 @@ let createElement =
         let style = Styles.label(~font, ~theme, ~isSelected);
 
         let highlighted = {
-          let text =
-            MenuJob.getLabel(item);
-          let textLength =
-            String.length(text);
+          let text = MenuJob.getLabel(item);
+          let textLength = String.length(text);
 
           // Assumes ranges are sorted low to high
-          let rec highlighter = last => fun
-            | [] =>
-              [ <Text
-                  style=style(~highlighted=false)
-                  text=String.sub(text, last, textLength - last) />
+          let rec highlighter = last =>
+            fun
+            | [] => [
+                <Text
+                  style={style(~highlighted=false)}
+                  text={String.sub(text, last, textLength - last)}
+                />,
               ]
 
-            | [(low, high), ...rest] =>
-              [ <Text
-                  style=style(~highlighted=false)
-                  text=String.sub(text, last, low - last) />,
+            | [(low, high), ...rest] => [
                 <Text
-                  style=style(~highlighted=true)
-                  text=String.sub(text, low, high + 1 - low) />,
-                ...highlighter(high + 1, rest)
+                  style={style(~highlighted=false)}
+                  text={String.sub(text, last, low - last)}
+                />,
+                <Text
+                  style={style(~highlighted=true)}
+                  text={String.sub(text, low, high + 1 - low)}
+                />,
+                ...highlighter(high + 1, rest),
               ];
 
           highlighter(0, item.highlight);
         };
 
-        <View style= Style.[flexDirection(`Row)]>
-          ...highlighted
-        </View>
+        <View style=Style.[flexDirection(`Row)]> ...highlighted </View>;
       };
 
       <MenuItem
         onClick={() => onSelect(index)}
         theme
         style=Styles.menuItem
-        label=`Custom(labelView)
-        icon=item.icon
+        label={`Custom(labelView)}
+        icon={item.icon}
         onMouseOver={() => onSelectedChange(index)}
         isSelected
       />;

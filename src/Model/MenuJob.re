@@ -15,7 +15,7 @@ let getLabel = (item: Actions.menuCommand) => {
   | Some(category) => category ++ ": " ++ item.name
   | None => item.name
   };
-}; 
+};
 
 let format = (item, ~shouldLower) => {
   let s = getLabel(item);
@@ -186,7 +186,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
   let completedWork = ref(c.allFiltered);
 
   while (i^ < iterationsPerFrame && ! completed^) {
-    let { shouldLower, _ } as p = pendingWork^;
+    let {shouldLower, _} as p = pendingWork^;
     let c = completedWork^;
     let (c, newPendingWork, newCompletedWork) =
       switch (p.commandsToFilter) {
@@ -197,10 +197,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
         | [innerHd, ...innerTail] =>
           // Do a first filter pass to check if the item satisifies the regex
           let newCompleted =
-            matches(
-              p.explodedFilter,
-              format(innerHd, ~shouldLower),
-            )
+            matches(p.explodedFilter, format(innerHd, ~shouldLower))
               ? [innerHd, ...c] : c;
           (
             false,
@@ -226,7 +223,9 @@ let doWork = (p: pendingWork, c: completedWork) => {
       c
       |> Utility.firstk(maxItemsToFilter)
       |> Filter.rank(p.filter, format)
-      |> List.map((Filter.{item, highlight}) => Actions.{...item, highlight})
+      |> List.map((Filter.{item, highlight}) =>
+           Actions.{...item, highlight}
+         )
       |> Array.of_list;
     (completed, p, {allFiltered: c, uiFiltered});
   };

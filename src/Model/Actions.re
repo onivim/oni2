@@ -169,7 +169,7 @@ and menuCommand = {
   name: string,
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
-  highlight: list((int, int))
+  highlight: list((int, int)),
 }
 and menuSetItems = list(menuCommand) => unit
 and menuSetLoading = bool => unit
