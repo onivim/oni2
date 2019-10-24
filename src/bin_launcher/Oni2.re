@@ -100,6 +100,9 @@ let executingDirectory = {
       | (Some(v), None) => String.sub(Sys.executable_name, 0, v)
       | _ => Sys.executable_name
       }
+    // For Windows, we need to use Sys.executable_name - Sys.argv is `./` when running
+    // from %PATH% - see onivim/oni#872
+    | Windows => Filename.dirname(Sys.executable_name)
     | _ => Filename.dirname(Sys.argv[0]) ++ Filename.dir_sep
     };
 
@@ -116,13 +119,10 @@ let executingDirectory = {
 let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
 
 let startProcess = (stdio, stdout, stderr) => {
-  Unix.create_process(
-    executingDirectory ++ executable,
-    args,
-    stdio,
-    stdout,
-    stderr,
-  );
+  let cmdToRun = executingDirectory ++ executable;
+  // The first argument is the executable, so we need to update that to point to 'Oni2_editor'
+  args[0] = cmdToRun;
+  Unix.create_process(cmdToRun, args, stdio, stdout, stderr);
 };
 
 let launch = () =>
