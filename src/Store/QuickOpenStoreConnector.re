@@ -44,6 +44,7 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
         command: () => Model.Actions.OpenFileByPath(fullPath, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        highlight: [],
       };
 
     setLoading(true);
