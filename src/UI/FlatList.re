@@ -60,6 +60,7 @@ module Styles = {
       position(`Absolute),
       top(0),
       left(0),
+      bottom(0),
       right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
     ];
 
