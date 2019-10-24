@@ -52,7 +52,10 @@ let start = (rg: Core.Ripgrep.t) => {
       setLoading(true);
       rg.search(
         currentDirectory,
-        items => setItems(items |> List.map(stringToCommand(languageInfo, iconTheme))),
+        items =>
+          setItems(
+            items |> List.map(stringToCommand(languageInfo, iconTheme)),
+          ),
         () => {
           setLoading(false);
           Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");

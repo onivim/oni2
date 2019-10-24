@@ -53,7 +53,7 @@ module RipgrepProcessingJob = {
           |> Bytes.to_string
           |> String.trim
           |> String.split_on_char('\n')
-          |> List.filter(dedup(pendingWork.duplicateHash))
+          |> List.filter(dedup(pendingWork.duplicateHash));
         pendingWork.callback(items);
         tail;
       };

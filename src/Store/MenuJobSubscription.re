@@ -14,17 +14,18 @@ module Provider = {
     query: string,
     items: list(Actions.menuCommand),
     itemStream: Isolinear.Stream.t(list(Actions.menuCommand)),
-    onUpdate: array(Actions.menuCommand) => action
+    onUpdate: array(Actions.menuCommand) => action,
   };
 
   type state = {
     job: MenuJob.t,
-    dispose: unit => unit
-  }
+    dispose: unit => unit,
+  };
 
   let jobs = Hashtbl.create(10);
 
-  let start = (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
+  let start =
+      (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
     Log.debug(() => "Starting MenuJob subscription " ++ id);
     let job = MenuJob.create();
     let job = Job.mapw(MenuJob.updateQuery(query), job);
@@ -37,12 +38,11 @@ module Provider = {
           let job = Job.mapw(MenuJob.addItems(items), job);
           Hashtbl.replace(jobs, id, {...state, job});
 
-          | None =>
-            Log.error("Unable to add items to non-existing MenuJob");
-        },
+        | None => Log.error("Unable to add items to non-existing MenuJob")
+        }
       );
 
-    let disposeTick = 
+    let disposeTick =
       Revery.Tick.interval(
         _ =>
           switch (Hashtbl.find_opt(jobs, id)) {
@@ -51,21 +51,19 @@ module Provider = {
               Hashtbl.replace(jobs, id, {...state, job: Job.tick(job)});
             }
 
-            | None =>
-              Log.error("Unable to tick non-existing MenuJob");
+          | None => Log.error("Unable to tick non-existing MenuJob")
           },
         Seconds(0.),
       );
 
-    let disposeMessagePump = 
+    let disposeMessagePump =
       Revery.Tick.interval(
         _ =>
           switch (Hashtbl.find_opt(jobs, id)) {
           | Some({job, _}) =>
             dispatch(onUpdate(Job.getCompletedWork(job).uiFiltered))
 
-            | None =>
-              Log.error("Unable to pump non-existing MenuJob");
+          | None => Log.error("Unable to pump non-existing MenuJob")
           },
         Seconds(0.5),
       );
@@ -87,11 +85,9 @@ module Provider = {
       let job = Job.mapw(MenuJob.updateQuery(query), job);
       Hashtbl.replace(jobs, id, {...state, job});
 
-      | Some(_) =>
-        () // Query hasn't changed, so do nothing
+    | Some(_) => () // Query hasn't changed, so do nothing
 
-      | None =>
-        Log.error("Unable to update non-existing MenuJob subscription");
+    | None => Log.error("Unable to update non-existing MenuJob subscription")
     };
 
   let dispose = (~id) => {
@@ -101,11 +97,15 @@ module Provider = {
       dispose();
       Hashtbl.remove(jobs, id);
 
-      | None =>
-        Log.error("Tried to dispose non-existing MenuJob subscription: " ++ id);
+    | None =>
+      Log.error("Tried to dispose non-existing MenuJob subscription: " ++ id)
     };
   };
 };
 
 let create = (~id, ~query, ~items, ~itemStream, ~onUpdate) =>
-  Subscription.create(id, (module Provider), { query, items, itemStream, onUpdate });
+  Subscription.create(
+    id,
+    (module Provider),
+    {query, items, itemStream, onUpdate},
+  );

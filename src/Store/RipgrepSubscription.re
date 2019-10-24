@@ -12,12 +12,17 @@ module Provider = {
     directory: string,
     ripgrep: Ripgrep.t, // TODO: Necessary dependency?
     onUpdate: list(string) => unit, // TODO: Should return action
-    onCompleted: unit => action
+    onCompleted: unit => action,
   };
 
   let jobs = Hashtbl.create(10);
 
-  let start = (~id, ~params as {directory, ripgrep, onUpdate, onCompleted}, ~dispatch:_) => {
+  let start =
+      (
+        ~id,
+        ~params as {directory, ripgrep, onUpdate, onCompleted},
+        ~dispatch: _,
+      ) => {
     Log.info("Starting Ripgrep search subscription " ++ id);
 
     let dispose =
@@ -37,16 +42,19 @@ module Provider = {
 
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
-      | Some(dispose) =>
-        Log.info("Disposing Ripgrep subscription " ++ id);
-        dispose();
-        Hashtbl.remove(jobs, id);
+    | Some(dispose) =>
+      Log.info("Disposing Ripgrep subscription " ++ id);
+      dispose();
+      Hashtbl.remove(jobs, id);
 
-      | None =>
-        Log.error("Tried to dispose non-existing Ripgrep subscription");
+    | None => Log.error("Tried to dispose non-existing Ripgrep subscription")
     };
   };
 };
 
 let create = (~id, ~directory, ~ripgrep, ~onUpdate, ~onCompleted) =>
-  Subscription.create(id, (module Provider), { directory, ripgrep, onUpdate, onCompleted });
+  Subscription.create(
+    id,
+    (module Provider),
+    {directory, ripgrep, onUpdate, onCompleted},
+  );
