@@ -148,7 +148,7 @@ let start =
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info(
-          "Configuration - setting vsync: " ++ Revery.Vsync.show(vsyncValue)
+          "Configuration - setting vsync: " ++ Revery.Vsync.show(vsyncValue),
         );
         setVsync(vsyncValue);
         vsync := vsyncValue;

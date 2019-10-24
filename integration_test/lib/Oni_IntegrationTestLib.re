@@ -31,7 +31,7 @@ let getZoom = () => _currentZoom^;
 
 let getScaleFactor = () => 1.0;
 
-let setVsync = (vsync) => _currentVsync := vsync;
+let setVsync = vsync => _currentVsync := vsync;
 
 let quit = code => exit(code);
 
