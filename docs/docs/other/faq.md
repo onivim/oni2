@@ -6,6 +6,16 @@ sidebar_label: FAQ
 
 ## Downloads & Updates
 
+### What does Early Access mean?
+
+Early Access gives you access to nightly development builds as we're working on build out the editor. It's an opportunity to be involved and give us feedback as we're building it out.
+
+However, there may be bugs or features missing as we are still pushing towards our 'v1'.
+
+### What are the system requirements?
+
+The system requirements are listed [here](https://onivim.github.io/docs/installation.md#system-requirements).
+
 ### Where can I download a build?
 
 Pre-alpha builds are available for users who have pre-ordered via our [Early Access Portal](https://v2.onivim.io/early-access-portal).
@@ -17,6 +27,12 @@ If you haven't pre-ordered, you can still try it out by following our [build ins
 Nightly builds are published to the [Early Access Portal](https://v2.onivim.io/early-access-portal).
 
 Auto-update is a [work-in-progress](https://github.com/onivim/oni2/issues/559), until it is implemented, you'll need to download the latest build manually from the [Early Access Portal](https://v2.onivim.io/early-access-portal).
+
+### Is there a trial version?
+
+Not yet - but once we hit V1, we'll be making a trial / evaluation version available for download.
+
+In the meantime, though, you can [build from source](https://onivim.github.io/docs/for-developers/building) if you want to give it a shot.
 
 ## Licensing
 
