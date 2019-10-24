@@ -15,6 +15,7 @@ describe("MenuJob", ({describe, _}) => {
           Oni_Model.Notification.create(~title="derp", ~message=name, ()),
         ),
       icon: None,
+      highlight: [],
     };
     ret;
   };
