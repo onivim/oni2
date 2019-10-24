@@ -1,3 +1,9 @@
+(ocamllex
+  (modules When_lexer))
+
+(menhir
+  (modules When_parser))
+
 (library
     (name Oni_Input)
     (public_name Oni2.input)
