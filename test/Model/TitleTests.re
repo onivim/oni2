@@ -8,13 +8,17 @@ describe("Title", ({describe, _}) => {
   describe("parse", ({test, _}) => {
     test("plain string", ({expect}) => {
       let title = Title.ofString("abc");
-      expect.equal(title, [Title.Text("abc")]);
+      expect.equal(title, [Title.Text("abc", false)]);
     });
     test("string with separator", ({expect}) => {
       let title = Title.ofString("abc${separator}def");
       expect.equal(
         title,
-        [Title.Text("abc"), Title.Separator, Title.Text("def")],
+        [
+          Title.Text("abc", false),
+          Title.Separator,
+          Title.Text("def", false),
+        ],
       );
     });
     test("string with variables", ({expect}) => {
@@ -39,6 +43,14 @@ describe("Title", ({describe, _}) => {
     test("basic case", ({expect}) => {
       let title =
         Title.ofString("prefix${variable1}${separator}${variable2}postfix");
+      let result = Title.toString(title, simpleMap);
+      expect.string(result).toEqual("prefixrv1 - rv2postfix");
+    });
+    test("nested variable missing case", ({expect}) => {
+      let title =
+        Title.ofString(
+          "prefix${variable1}${separator}${missingVariable}${separator}${variable2}postfix",
+        );
       let result = Title.toString(title, simpleMap);
       expect.string(result).toEqual("prefixrv1 - rv2postfix");
     });
