@@ -180,7 +180,7 @@ external freeConsole: unit => unit = "win32_free_console";
 
 /**
  * Returns `n` bounded by `hi` and `lo`
- *
+ * 
  * E.g.
  *   clamp(0, ~hi=1, ~lo=-1) == 0
  *   clamp(-1, ~hi=1, ~lo=0) == 0
