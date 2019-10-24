@@ -8,6 +8,8 @@ open Revery;
 open Revery.UI;
 open Revery_UI_Components;
 
+module Utility = Oni_Core.Utility;
+
 type renderFunction = int => React.syntheticElement;
 
 module Constants = {
@@ -64,10 +66,10 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
     let startRow = scrollTop / rowHeight;
     let startY = scrollTop mod rowHeight;
     let rowsToRender =
-      min(
-        menuHeight / rowHeight + Constants.additionalRowsToRender,
-        count - startRow,
-      );
+      menuHeight
+      / rowHeight
+      + Constants.additionalRowsToRender
+      |> Utility.clamp(~lo=0, ~hi=count - startRow);
     let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
     let itemView = i => {
