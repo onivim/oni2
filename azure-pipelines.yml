@@ -49,7 +49,8 @@ jobs:
       platform: linux
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
-  - template: .ci/publish-build-cache.yml
+  # Failing with latest build
+  # - template: .ci/publish-build-cache.yml
 
 - job: CentOS
   displayName: 'Linux - CentOS - Docker Image'
