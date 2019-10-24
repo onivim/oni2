@@ -3,46 +3,56 @@
  *
  * Module to filter & rank items using various strategies.
  */
-open Actions;
+open ReasonFuzz;
 
-let compareScore =
-    (
-      item1: (option(ReasonFuzz.MatchResult.t), Actions.menuCommand),
-      item2: (option(ReasonFuzz.MatchResult.t), Actions.menuCommand),
-    ) => {
-  let scoreObj1 = (fst(item1), snd(item1).name);
-  let scoreObj2 = (fst(item2), snd(item2).name);
+module Utility = Oni_Core.Utility;
 
-  ReasonFuzz.compareScores(scoreObj1, scoreObj2);
-};
+module Option = {
+  let map = f => fun
+    | Some(x) => Some(f(x))
+    | None => None 
+}
 
-let formatName = (item, shouldLower) =>
-  switch (item.category, shouldLower) {
-  | (Some(c), true) => String.lowercase_ascii(c ++ item.name)
-  | (Some(c), false) => c ++ item.name
-  | (None, true) => String.lowercase_ascii(item.name)
-  | (None, false) => item.name
+type result('a) = {
+  item: 'a,
+  highlight: list((int, int))
+}
+
+let makeResult = ((maybeMatch, item)) =>
+  switch (maybeMatch) {
+    | Some(match) =>
+      { item, highlight: Utility.ranges(match.IndexMatchResult.indicies) }
+    | None =>
+      { item, highlight: [] }
   };
 
-let rank = (query, items) => {
-  /* Use smart search for now, add config option though. */
-  let shouldLower = query == String.lowercase_ascii(query);
 
-  let scoreList =
-    List.map(
-      item =>
-        (
-          ReasonFuzz.pathFuzzyMatch(
-            ~line=formatName(item, shouldLower),
-            ~pattern=query,
-          ),
-          item,
-        ),
-      items,
-    );
+let rank = (query, format, items) => {
+  let shouldLower =
+    query == String.lowercase_ascii(query);
+  let format = item =>
+    format(item, ~shouldLower);
 
-  let sortedList =
-    List.sort((item1, item2) => compareScore(item1, item2), scoreList);
+  let compareScore = (x, y) => {
+    let scoreObject = ((match, item)) =>
+      (
+        Option.map(m => MatchResult.create(m.IndexMatchResult.score), match),
+        format(item)
+      );
+    compareScores(scoreObject(x), scoreObject(y));
+  };
 
-  List.map(i => snd(i), sortedList);
+  let processItem = (pattern, item) => {
+    let line =
+      format(item);
+    let match =
+      pathIndexMatch(~line, ~pattern);
+
+    (match, item)
+  };
+
+  items
+    |> List.map(processItem(query))
+    |> List.sort(compareScore)
+    |> List.map(makeResult);
 };
