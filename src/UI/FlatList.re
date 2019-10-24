@@ -52,33 +52,34 @@ module Styles = {
       left(0),
       right(0),
       height(rowHeight),
-    ]
+    ];
 };
 
 let component = React.component("FlatList");
 
-
 let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   if (rowHeight <= 0) {
-    []
+    [];
   } else {
     let startRow = scrollTop / rowHeight;
     let startY = scrollTop mod rowHeight;
-    let rowsToRender = min(menuHeight / rowHeight + Constants.additionalRowsToRender, count - startRow);
+    let rowsToRender =
+      min(
+        menuHeight / rowHeight + Constants.additionalRowsToRender,
+        count - startRow,
+      );
     let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
-    let itemView = (i) => {
+    let itemView = i => {
       let rowY = (i - startRow) * rowHeight;
       let offset = rowY - startY;
 
-      <View style=Styles.item(~offset, ~rowHeight)>
+      <View style={Styles.item(~offset, ~rowHeight)}>
         {renderItem(i)}
-      </View>
+      </View>;
     };
 
-  indicesToRender
-    |> List.map(itemView)
-    |> List.rev
+    indicesToRender |> List.map(itemView) |> List.rev;
   };
 
 let createElement =
@@ -93,8 +94,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let (actualScrollTop, setScrollTop, hooks) =
-      Hooks.state(0, hooks);
+    let (actualScrollTop, setScrollTop, hooks) = Hooks.state(0, hooks);
 
     let selectedChanged = () => {
       switch (selected) {
@@ -105,20 +105,22 @@ let createElement =
           setScrollTop(offset);
         } else if (offset + rowHeight > actualScrollTop + menuHeight) {
           // out of view below, so align with bottom edge
-          setScrollTop(offset + rowHeight - menuHeight);
-        }
-      | None =>
-        ()
+          setScrollTop(
+            offset + rowHeight - menuHeight,
+          );
+        };
+      | None => ()
       };
-      None
+      None;
     };
 
-    let hooks =
-      Hooks.effect(If((!=), selected), selectedChanged, hooks);
+    let hooks = Hooks.effect(If((!=), selected), selectedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let newScrollTop =
-        actualScrollTop + int_of_float(wheelEvent.deltaY) * -25
+        actualScrollTop
+        + int_of_float(wheelEvent.deltaY)
+        * (-25)
         |> max(0)
         |> min(rowHeight * count - menuHeight);
 
@@ -126,12 +128,9 @@ let createElement =
     };
 
     let scrollbar = {
-      let maxHeight =
-        (count * rowHeight) - menuHeight;
-      let thumbHeight =
-        menuHeight * menuHeight / max(1, (count * rowHeight));
-      let isVisible = 
-        maxHeight > 0;
+      let maxHeight = count * rowHeight - menuHeight;
+      let thumbHeight = menuHeight * menuHeight / max(1, count * rowHeight);
+      let isVisible = maxHeight > 0;
 
       if (isVisible) {
         <View style=Styles.slider>
@@ -149,30 +148,35 @@ let createElement =
             thumbColor=Constants.scrollThumbColor
             vertical=true
           />
-        </View>
+        </View>;
       } else {
-        React.empty
-      }
+        React.empty;
+      };
     };
 
-    let items = render(
-      ~menuHeight,
-      ~rowHeight,
-      ~count,
-      ~scrollTop = actualScrollTop,
-      ~renderItem
-    );
+    let items =
+      render(
+        ~menuHeight,
+        ~rowHeight,
+        ~count,
+        ~scrollTop=actualScrollTop,
+        ~renderItem,
+      );
     (
       hooks,
       <View
-        style=Styles.container(~width, ~height=min(menuHeight, count * rowHeight))
-        onMouseWheel=scroll >
-
-        <View style=Styles.viewport(~isScrollbarVisible=scrollbar==React.empty)>
+        style={Styles.container(
+          ~width,
+          ~height=min(menuHeight, count * rowHeight),
+        )}
+        onMouseWheel=scroll>
+        <View
+          style={Styles.viewport(
+            ~isScrollbarVisible=scrollbar == React.empty,
+          )}>
           ...items
         </View>
-
         scrollbar
-      </View>
+      </View>,
     );
   });

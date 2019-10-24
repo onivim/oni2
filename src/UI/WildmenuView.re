@@ -27,7 +27,7 @@ let createElement =
               height=menuHeight
               width=menuWidth
               count={Array.length(items)}
-              selected=Some(wildmenu.selected)
+              selected={Some(wildmenu.selected)}
               render={index => {
                 let item = items[index];
                 <MenuItem

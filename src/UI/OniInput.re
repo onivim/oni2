@@ -137,8 +137,7 @@ let make =
         onKeyDown(event);
         onChange(text, getSafeStringBounds(text, cursorPosition, 1));
 
-      | v when v == 117 /*Key.Keycode.u*/ && event.ctrlKey =>
-        onChange("", 0);
+      | v when v == 117 /*Key.Keycode.u*/ && event.ctrlKey => onChange("", 0)
 
       | v when v == 119 /*Key.Keycode.w*/ && event.ctrlKey =>
         let {newString, newCursorPosition} =
@@ -164,8 +163,7 @@ let make =
         onKeyDown(event);
         Focus.loseFocus();
 
-      | _ =>
-        onKeyDown(event)
+      | _ => onKeyDown(event)
       };
     };
 
@@ -198,7 +196,10 @@ let make =
 
     let cursor = {
       let (startStr, _) =
-        getStringParts(cursorPosition + String.length(prefix), valueToDisplay);
+        getStringParts(
+          cursorPosition + String.length(prefix),
+          valueToDisplay,
+        );
       let dimension =
         Revery.Draw.Text.measure(
           ~window=Revery.UI.getActiveWindow(),
@@ -232,7 +233,7 @@ let make =
       />;
 
     let textView =
-        makeTextComponent(showPlaceholder ? placeholder : valueToDisplay);
+      makeTextComponent(showPlaceholder ? placeholder : valueToDisplay);
 
     /*
        component
@@ -243,10 +244,7 @@ let make =
         componentRef={autofocus ? Focus.focus : ignore}
         onKeyDown=handleKeyDown
         onTextInput=handleTextInput>
-        <View style=viewStyles>
-          cursor
-          textView
-        </View>
+        <View style=viewStyles> cursor textView </View>
       </Clickable>,
     );
   });

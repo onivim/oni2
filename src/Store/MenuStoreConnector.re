@@ -19,12 +19,12 @@ let start = () => {
     let nextIndex = selectedItem + change;
 
     if (nextIndex >= count) {
-      0
+      0;
     } else if (nextIndex < 0) {
-      count - 1
+      count - 1;
     } else {
-      nextIndex
-    }
+      nextIndex;
+    };
   };
 
   let menuOpenEffect =

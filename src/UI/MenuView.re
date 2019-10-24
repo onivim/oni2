@@ -6,7 +6,7 @@ open Oni_Model;
 
 type state = {
   text: string,
-  cursorPosition: int
+  cursorPosition: int,
 };
 
 let component = React.component("Menu");
@@ -83,11 +83,11 @@ let createElement =
         hooks,
       );
 
-    let ({ text, cursorPosition }, setState, hooks) =
-      Hooks.state({ text: "", cursorPosition: 0 }, hooks);
+    let ({text, cursorPosition}, setState, hooks) =
+      Hooks.state({text: "", cursorPosition: 0}, hooks);
 
     let handleChange = (str, pos) => {
-      setState({ text: str, cursorPosition: pos });
+      setState({text: str, cursorPosition: pos});
       GlobalContext.current().dispatch(MenuSearch(str));
     };
 
@@ -99,7 +99,6 @@ let createElement =
         GlobalContext.current().dispatch(MenuPreviousItem)
       | _ => ()
       };
-
 
     let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
     let time = Time.getTime() |> Time.to_float_seconds;
@@ -169,7 +168,7 @@ let createElement =
                     height=menuHeight
                     width=menuWidth
                     count={Array.length(commands)}
-                    selected=Some(menu.selectedItem)
+                    selected={Some(menu.selectedItem)}
                     render={index => {
                       let cmd = commands[index];
                       <MenuItem

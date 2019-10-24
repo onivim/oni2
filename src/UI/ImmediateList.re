@@ -27,4 +27,3 @@ let render =
     incr(i);
   };
 };
-
