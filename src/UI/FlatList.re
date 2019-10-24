@@ -10,9 +10,25 @@ open Revery_UI_Components;
 
 module Utility = Oni_Core.Utility;
 
+// TODO: Remove after 4.08 upgrade
+module Option = {
+  let map = f =>
+    fun
+    | Some(x) => Some(f(x))
+    | None => None;
+
+  let value = (~default) =>
+    fun
+    | Some(x) => x
+    | None => default;
+
+  let some = x => Some(x);
+};
+
 type renderFunction = int => React.syntheticElement;
 
 module Constants = {
+  let scrollWheelMultiplier = 25;
   let additionalRowsToRender = 1;
   let scrollBarThickness = 6;
   let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
@@ -84,6 +100,10 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
     indicesToRender |> List.map(itemView) |> List.rev;
   };
 
+type action =
+  | SelectedChanged
+  | SetScrollTop(int);
+
 let createElement =
     (
       ~height as menuHeight,
@@ -94,39 +114,44 @@ let createElement =
       ~selected: option(int),
       ~children as _,
       (),
-    ) =>
+    ) => {
+  let reducer = (action, actualScrollTop) =>
+    switch (action) {
+    | SelectedChanged =>
+      let offset = Option.value(selected, ~default=0) * rowHeight;
+      if (offset < actualScrollTop) {
+        // out of view above, so align with top edge
+        offset;
+      } else if (offset + rowHeight > actualScrollTop + menuHeight) {
+        // out of view below, so align with bottom edge
+        offset + rowHeight - menuHeight;
+      } else {
+        actualScrollTop;
+      };
+    | SetScrollTop(scrollTop) => scrollTop
+    };
+
   component(hooks => {
-    let (actualScrollTop, setScrollTop, hooks) = Hooks.state(0, hooks);
+    let (actualScrollTop, dispatch, hooks) =
+      Hooks.reducer(~initialState=0, reducer, hooks);
+
+    // Make sure we're not scrolled past the items
+    let actualScrollTop =
+      actualScrollTop
+      |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
     let selectedChanged = () => {
-      switch (selected) {
-      | Some(selectedIndex) =>
-        let offset = selectedIndex * rowHeight;
-        if (offset < actualScrollTop) {
-          // out of view above, so align with top edge
-          setScrollTop(offset);
-        } else if (offset + rowHeight > actualScrollTop + menuHeight) {
-          // out of view below, so align with bottom edge
-          setScrollTop(
-            offset + rowHeight - menuHeight,
-          );
-        };
-      | None => ()
-      };
+      dispatch(SelectedChanged);
       None;
     };
 
     let hooks = Hooks.effect(If((!=), selected), selectedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      let newScrollTop =
-        actualScrollTop
-        + int_of_float(wheelEvent.deltaY)
-        * (-25)
-        |> max(0)
-        |> min(rowHeight * count - menuHeight);
+      let delta =
+        int_of_float(wheelEvent.deltaY) * (- Constants.scrollWheelMultiplier);
 
-      setScrollTop(newScrollTop);
+      dispatch(SetScrollTop(actualScrollTop + delta));
     };
 
     let scrollbar = {
@@ -137,7 +162,7 @@ let createElement =
       if (isVisible) {
         <View style=Styles.slider>
           <Slider
-            onValueChanged={v => setScrollTop(int_of_float(v))}
+            onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
             minimumValue=0.
             maximumValue={float_of_int(maxHeight)}
             sliderLength=menuHeight
@@ -182,3 +207,4 @@ let createElement =
       </View>,
     );
   });
+};
