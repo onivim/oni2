@@ -48,6 +48,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
+## Rendering
+
+- `vsync` __(_bool_ default: `false`)__ - Whether rendering should sync with vertical retrace of the monitor. VSync adds input latency, as rendering must sync with the refresh rate of the monitor, but it reduces screen tearing.
+
 ### UI
 
 - `ui.shadows` __(_bool_ default: `true`)__ - Use drop-shadows in the rendering of menus, overlays, etc.

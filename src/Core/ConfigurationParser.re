@@ -234,6 +234,14 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
+    "vsync",
+    (s, v) => {
+      ...s,
+      vsync:
+        parseBool(v) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
+    },
+  ),
+  (
     "experimental.treeSitter",
     (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
   ),

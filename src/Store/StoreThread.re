@@ -67,6 +67,7 @@ let start =
       ~quit,
       ~getTime,
       ~setTitle,
+      ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
@@ -124,6 +125,7 @@ let start =
       ~cliOptions,
       ~getZoom,
       ~setZoom,
+      ~setVsync,
     );
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
