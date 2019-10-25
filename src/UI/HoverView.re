@@ -22,7 +22,7 @@ let createElement =
 
     switch (Model.HoverCollector.get(state)) {
     | None => empty
-    | Some(hoverInfo) when hoverEnabled =>
+    | Some(hoverInfo) when hoverEnabled && state.mode != Vim.Types.Insert =>
       open Model.HoverCollector;
       let {theme, editorFont, hover, _}: Model.State.t = state;
 
