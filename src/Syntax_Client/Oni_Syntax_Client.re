@@ -7,7 +7,6 @@ type t = unit;
 let log = (msg) => print_endline ("[Syntax Client] " ++ msg);
 
 let start = () => {
- log("Hello from syntax client");
     let (pstdin, stdin) = Unix.pipe();
     let (stdout, pstdout) = Unix.pipe();
     let (stderr, pstderr) = Unix.pipe();
@@ -37,7 +36,7 @@ let start = () => {
       while (!shouldClose^) {
         Thread.wait_read(stdout);
          log("Got message");
-         let result: string = Marshal.from_channel(in_channel);
+         let result: Oni_Syntax.Protocol.ServerToClient.t  = Marshal.from_channel(in_channel);
          log("got message from channel: |" ++ result ++ "|");
       }
      }, ());
