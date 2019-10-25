@@ -19,8 +19,12 @@ if (cliOptions.syntaxHighlightService) {
 
   let _readThread = Thread.create(() => {
     while (true) {
-      let msg: string = Marshal.from_channel(Stdlib.stdin);
-      Marshal.to_channel(Stdlib.stdout, "ECHO: " ++ msg, []);
+      let msg: Oni_Syntax.Protocol.ClientToServer.t = Marshal.from_channel(Stdlib.stdin);
+      switch (msg) {
+      | Echo(m) => Marshal.to_channel(Stdlib.stdout, Oni_Syntax.Protocol.ServerToClient.EchoReply(m), []);
+      | _ => ();
+      }
+      //Marshal.to_channel(Stdlib.stdout, "ECHO: " ++ msg, []);
       Stdlib.flush(Stdlib.stdout);
     }
   }, ());

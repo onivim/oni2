@@ -37,7 +37,10 @@ let start = () => {
         Thread.wait_read(stdout);
          log("Got message");
          let result: Oni_Syntax.Protocol.ServerToClient.t  = Marshal.from_channel(in_channel);
-         log("got message from channel: |" ++ result ++ "|");
+         switch (result) {
+         | Oni_Syntax.Protocol.ServerToClient.EchoReply(result) => log("got message from channel: |" ++ result ++ "|");
+         | _ => ();
+         }
       }
      }, ());
 
@@ -46,7 +49,8 @@ let start = () => {
       let count = ref(0);
       while (!shouldClose^) {
        incr(count);
-       Marshal.to_channel(out_channel, "yoyoyo" ++ string_of_int(count^), []);
+       let message = Oni_Syntax.Protocol.ClientToServer.Echo("yoyoyo" ++ string_of_int(count^));
+       Marshal.to_channel(out_channel, message, []);
        Stdlib.flush(out_channel);
        Unix.sleepf(0.5);
 
