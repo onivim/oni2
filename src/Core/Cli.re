@@ -9,12 +9,14 @@ type t = {
   folder: string,
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  syntaxHighlightService: bool,
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
   folder,
   filesToOpen,
   forceScaleFactor: None,
+  syntaxHighlightService: false,
 };
 
 let newline = "\n";
@@ -37,6 +39,7 @@ let parse = () => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
+  let syntaxHighlightService = ref(false);
 
   Arg.parse(
     [
@@ -48,6 +51,11 @@ let parse = () => {
         "--force-device-scale-factor",
         Float(f => scaleFactor := Some(f)),
         "",
+      ),
+      (
+        "--syntax-highlight-service",
+        Unit(() => syntaxHighlightService := true),
+        ""
       ),
     ],
     arg => args := [arg, ...args^],
@@ -121,5 +129,5 @@ let parse = () => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {folder, filesToOpen, forceScaleFactor: scaleFactor^};
+  {folder, filesToOpen, forceScaleFactor: scaleFactor^, syntaxHighlightService: syntaxHighlightService^};
 };
