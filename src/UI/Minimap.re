@@ -262,7 +262,7 @@ let createElement =
                  (),
                )};
 
-            FlatList.render(
+            ImmediateList.render(
               ~scrollY,
               ~rowHeight,
               ~height=float_of_int(height),
@@ -317,7 +317,7 @@ let createElement =
               (),
             );
 
-            FlatList.render(
+            ImmediateList.render(
               ~scrollY,
               ~rowHeight,
               ~height=float_of_int(height),
