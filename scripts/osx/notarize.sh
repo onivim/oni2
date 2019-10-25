@@ -4,13 +4,13 @@ SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
 echo "Code signing certificate specified - notarizing zip"
 
 echo "Uploading to apple to notarize..."
-notarize_uuid=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onivim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.App.zip" 2>&1 | grep RequestUUID | awk '{print $3'})
+notarize_uuid=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onivim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1 | grep RequestUUID | awk '{print $3'})
 # Load cert
 
 if  [ -z "$notarize_uuid" ]
 then
 	echo "Notarization failed; running again to get error message"
-	failure=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onvim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.App.zip" 2>&1)
+	failure=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onvim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1)
 	echo "MESSAGE: $failure"
 	exit 1
 else
