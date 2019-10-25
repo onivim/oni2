@@ -111,12 +111,14 @@ let start = () => {
 
             if (cursorLine < Array.length(lines)
                 && id == meet.completionMeetBufferId) {
+              let prefix = String.length(meet.completionMeetBase)
+                > 0 ? meet.completionMeetBase : String.sub(lines[cursorLine], 0, meet.completionMeetColumn) |> String.trim;
               let _ =
                 MerlinRequestQueue.getCompletions(
                   Sys.getcwd(),
                   path,
                   lines,
-                  lines[cursorLine],
+                  prefix,
                   Core.Types.Position.ofInt0(cursorLine, position),
                   cb,
                 );

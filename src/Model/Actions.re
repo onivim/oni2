@@ -109,6 +109,7 @@ and completionMeet = {
   completionMeetBufferId: int,
   completionMeetLine: int,
   completionMeetColumn: int,
+  completionMeetBase: string,
 }
 and completionItem = {
   completionLabel: string,

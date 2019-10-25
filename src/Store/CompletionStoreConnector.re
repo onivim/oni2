@@ -21,6 +21,7 @@ let defaultMeet = {
   completionMeetBufferId: (-1),
   completionMeetLine: (-1),
   completionMeetColumn: (-1),
+  completionMeetBase: "",
 };
 
 let lastMeet = ref(defaultMeet);
@@ -69,6 +70,7 @@ let start = () => {
               completionMeetBufferId: bufferId,
               completionMeetLine: line,
               completionMeetColumn: column,
+              completionMeetBase: meet.base,
             };
             if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
               Log.info(
