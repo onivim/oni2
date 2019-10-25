@@ -54,6 +54,10 @@ module GrammarRepository = {
 
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
+  let _syntaxClient = Oni_Syntax_Client.start();
+
+  Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
+
   let jsonTreeSitterScopes =
     setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
 

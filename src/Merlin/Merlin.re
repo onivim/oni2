@@ -51,7 +51,7 @@ let _runMerlinCommand =
         [|"PATH=" ++ augmentedPath|],
         pstdin,
         pstdout,
-        pstdout,
+        pstderr,
       );
 
     Unix.close(pstdout);

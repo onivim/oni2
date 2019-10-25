@@ -16,7 +16,14 @@ module Log = Core.Log;
 let cliOptions = Core.Cli.parse();
 
 if (cliOptions.syntaxHighlightService) {
-  print_endline ("syntax highlight service");
+
+  let count = ref(0);
+  while (true) {
+    Marshal.to_channel(Stdlib.stdout, "HEY" ++ string_of_int(count^), []);
+    Stdlib.flush(Stdlib.stdout);
+    incr(count);
+    Unix.sleepf(1.0);
+  }
   let _ = exit(0);
 } else {
   Log.info("Startup: Parsing CLI options complete");
