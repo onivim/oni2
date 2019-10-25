@@ -31,6 +31,7 @@ let start = () => {
      let shouldClose = ref(false);
 
      let in_channel = Unix.in_channel_of_descr(stdout);
+     let out_channel = Unix.out_channel_of_descr(stdin);
 
      let _readThread = Thread.create(() => {
       while (!shouldClose^) {
@@ -38,6 +39,18 @@ let start = () => {
          log("Got message");
          let result: string = Marshal.from_channel(in_channel);
          log("got message from channel: |" ++ result ++ "|");
+      }
+     }, ());
+
+    let _writeThread = Thread.create(() => {
+
+      let count = ref(0);
+      while (!shouldClose^) {
+       incr(count);
+       Marshal.to_channel(out_channel, "yoyoyo" ++ string_of_int(count^), []);
+       Stdlib.flush(out_channel);
+       Unix.sleepf(0.5);
+
       }
      }, ());
  ();

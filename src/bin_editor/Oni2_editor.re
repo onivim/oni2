@@ -17,6 +17,14 @@ let cliOptions = Core.Cli.parse();
 
 if (cliOptions.syntaxHighlightService) {
 
+  let _readThread = Thread.create(() => {
+    while (true) {
+      let msg: string = Marshal.from_channel(Stdlib.stdin);
+      Marshal.to_channel(Stdlib.stdout, "ECHO: " ++ msg, []);
+      Stdlib.flush(Stdlib.stdout);
+    }
+  }, ());
+
   let count = ref(0);
   while (true) {
     Marshal.to_channel(Stdlib.stdout, "HEY" ++ string_of_int(count^), []);
