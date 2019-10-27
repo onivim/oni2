@@ -48,7 +48,8 @@ if (cliOptions.syntaxHighlightService) {
 
     Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
     switch (Sys.chdir(cliOptions.folder)) {
-    | exception (Sys_error(msg)) => Log.error("Folder does not exist: " ++ msg)
+    | exception (Sys_error(msg)) =>
+      Log.error("Folder does not exist: " ++ msg)
     | v => v
     };
 
@@ -153,4 +154,4 @@ if (cliOptions.syntaxHighlightService) {
   /* Let's get this party started! */
   Log.info("Calling App.start");
   App.start(init);
-}
+};

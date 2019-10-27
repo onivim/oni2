@@ -4,16 +4,16 @@
  */
 
 module ServerToClient = {
-	type t =
-	| EchoReply(string)
-	| Log(string);
-	// buffer lines
+  type t =
+    | EchoReply(string)
+    | Log(string);
+  // buffer lines
 };
 
 module ClientToServer = {
-	type t = 
-	| Echo(string)
-	| BufferEnter(int, string, array(string))
-	| BufferLeave(int)
-	| BufferUpdate(Oni_Core.Types.BufferUpdate.t);
+  type t =
+    | Echo(string)
+    | BufferEnter(int, string, array(string))
+    | BufferLeave(int)
+    | BufferUpdate(Oni_Core.Types.BufferUpdate.t);
 };

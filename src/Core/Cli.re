@@ -55,7 +55,7 @@ let parse = () => {
       (
         "--syntax-highlight-service",
         Unit(() => syntaxHighlightService := true),
-        ""
+        "",
       ),
     ],
     arg => args := [arg, ...args^],
@@ -129,5 +129,10 @@ let parse = () => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {folder, filesToOpen, forceScaleFactor: scaleFactor^, syntaxHighlightService: syntaxHighlightService^};
+  {
+    folder,
+    filesToOpen,
+    forceScaleFactor: scaleFactor^,
+    syntaxHighlightService: syntaxHighlightService^,
+  };
 };

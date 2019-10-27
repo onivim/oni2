@@ -54,7 +54,7 @@ module GrammarRepository = {
 
 let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
-  print_endline ("!! starting");
+  print_endline("!! starting");
   let _syntaxClient = Oni_Syntax_Client.start();
 
   Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
@@ -99,15 +99,20 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   };
 
   let bufferEnterEffect = (state: Model.State.t, id: int, fileType) =>
-    Isolinear.Effect.createWithDispatch(~name="syntax.bufferEnter", (_dispatch) => {
+    Isolinear.Effect.createWithDispatch(~name="syntax.bufferEnter", _dispatch => {
       let lines = getLines(state, id);
       switch (fileType) {
       | None => ()
-      | Some(fileType) => 
-      print_endline ("Trying to send message...");
-      Oni_Syntax_Client.notifyBufferEnter(_syntaxClient, id, fileType, lines);
-      ();
-      }
+      | Some(fileType) =>
+        print_endline("Trying to send message...");
+        Oni_Syntax_Client.notifyBufferEnter(
+          _syntaxClient,
+          id,
+          fileType,
+          lines,
+        );
+        ();
+      };
     });
 
   let isVersionValid = (updateVersion, bufferVersion) => {
@@ -135,30 +140,32 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       } else {
         default;
       }
-     | Model.Actions.BufferEnter(metadata, fileType) =>
-      (state, bufferEnterEffect(state, Vim.BufferMetadata.(metadata.id), fileType))
+    | Model.Actions.BufferEnter(metadata, fileType) => (
+        state,
+        bufferEnterEffect(state, Vim.BufferMetadata.(metadata.id), fileType),
+      )
     // When the view changes, update our list of visible buffers,
     // so we know which ones might have pending work!
     /*| Model.Actions.EditorGroupAdd(_)
-    | Model.Actions.EditorScroll(_)
-    | Model.Actions.EditorScrollToLine(_)
-    | Model.Actions.EditorScrollToColumn(_)
-    | Model.Actions.AddSplit(_)
-    | Model.Actions.RemoveSplit(_)
-    | Model.Actions.ViewSetActiveEditor(_)
-    | Model.Actions.BufferEnter(_)
-    | Model.Actions.ViewCloseEditor(_) =>
-      let visibleBuffers =
-        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-      let state = {
-        ...state,
-        syntaxHighlighting:
-          Model.SyntaxHighlighting.updateVisibleBuffers(
-            visibleBuffers,
-            state.syntaxHighlighting,
-          ),
-      };
-      (state, Isolinear.Effect.none);*/
+      | Model.Actions.EditorScroll(_)
+      | Model.Actions.EditorScrollToLine(_)
+      | Model.Actions.EditorScrollToColumn(_)
+      | Model.Actions.AddSplit(_)
+      | Model.Actions.RemoveSplit(_)
+      | Model.Actions.ViewSetActiveEditor(_)
+      | Model.Actions.BufferEnter(_)
+      | Model.Actions.ViewCloseEditor(_) =>
+        let visibleBuffers =
+          Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+        let state = {
+          ...state,
+          syntaxHighlighting:
+            Model.SyntaxHighlighting.updateVisibleBuffers(
+              visibleBuffers,
+              state.syntaxHighlighting,
+            ),
+        };
+        (state, Isolinear.Effect.none);*/
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate(bu) =>
