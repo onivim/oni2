@@ -2,6 +2,8 @@
  Syntax client
  */
 
+open Oni_Syntax;
+
 type t = {
   in_channel: Stdlib.in_channel,
   out_channel: Stdlib.out_channel,
@@ -81,15 +83,23 @@ let start = () => {
   {in_channel, out_channel, readThread /*writeThread*/};
 };
 
+let write = (v: t, msg: Protocol.ClientToServer.t) => {
+  Marshal.to_channel(v.out_channel, msg, []);
+  Stdlib.flush(v.out_channel);
+};
+
 let notifyBufferEnter =
     (v: t, bufferId: int, fileType: string, lines: array(string)) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType, lines);
-  Marshal.to_channel(v.out_channel, message, []);
-  Stdlib.flush(v.out_channel);
-  ();
+  write(v, message);
 };
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
   log("Buffer leave.");
+};
+
+let notifyBufferUpdate = (v: t, bufferUpdate:
+  Oni_Core.Types.BufferUpdate.t) => {
+  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
 };

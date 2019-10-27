@@ -27,6 +27,16 @@ let start = () => {
           ),
         ),
       )
+    | BufferUpdate(bufferUpdate) =>
+      write(
+        Protocol.ServerToClient.Log(
+          Printf.sprintf(
+            "Got buffer update for id: %d with %d lines",
+            bufferUpdate.id,
+            Array.length(bufferUpdate.lines),
+          ),
+        ),
+      )
     | _ => ()
     };
   };

@@ -104,7 +104,6 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       switch (fileType) {
       | None => ()
       | Some(fileType) =>
-        print_endline("Trying to send message...");
         Oni_Syntax_Client.notifyBufferEnter(
           _syntaxClient,
           id,
@@ -114,6 +113,13 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
         ();
       };
     });
+
+    let bufferUpdateEffect = (bufferUpdate: Oni_Core.Types.BufferUpdate.t) => 
+      Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
+        Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient,
+            bufferUpdate
+        );
+      });
 
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
@@ -190,7 +196,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
               state.syntaxHighlighting,
             ),
         };
-        (state, Isolinear.Effect.none);
+        (state, bufferUpdateEffect(bu));
       | Some(_) => default
       };
     | _ => default
