@@ -22,16 +22,19 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let _ = Vim.Buffer.onFiletypeChanged((metadata) => {
-    let Vim.BufferMetadata.{id, fileType, _} = metadata;
+  let _ =
+    Vim.Buffer.onFiletypeChanged(metadata => {
+      let Vim.BufferMetadata.{id, fileType, _} = metadata;
 
-    switch (fileType) {
-    | None => ();
-    | Some(ft) => 
-      Log.info(Printf.sprintf("[Vim] Setting filetype %s for buffer %d", ft, id));
-      dispatch(Model.Actions.BufferSetFileType(id, ft));
-    }
-  });
+      switch (fileType) {
+      | None => ()
+      | Some(ft) =>
+        Log.info(
+          Printf.sprintf("[Vim] Setting filetype %s for buffer %d", ft, id),
+        );
+        dispatch(Model.Actions.BufferSetFileType(id, ft));
+      };
+    });
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
