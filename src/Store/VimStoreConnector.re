@@ -671,14 +671,14 @@ let start =
       };
     });
 
-  let undoEffect = 
+  let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
       Vim.input("<esc>");
       Vim.input("<esc>");
       Vim.input("u");
     });
 
-  let redoEffect = 
+  let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
       Vim.input("<esc>");
       Vim.input("<esc>");
@@ -699,14 +699,8 @@ let start =
         state,
         applyCompletion(state),
       )
-    | Model.Actions.Command("undo") => (
-        state,
-        undoEffect,
-      )
-    | Model.Actions.Command("redo") => (
-        state,
-        redoEffect,
-      )
+    | Model.Actions.Command("undo") => (state, undoEffect)
+    | Model.Actions.Command("redo") => (state, redoEffect)
     | Model.Actions.WildmenuNext =>
       let eff =
         switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
