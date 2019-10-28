@@ -17,6 +17,7 @@ type t =
   | BufferUpdate(BufferUpdate.t)
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
+  | BufferSetFileType(int, string)
   | BufferSetModified(int, bool)
   | Command(string)
   | CompletionStart(completionMeet)

@@ -67,6 +67,9 @@ let disableSyntaxHighlighting =
 let setModified = modified =>
   ofBufferOpt(buffer => Buffer.setModified(modified, buffer));
 
+let setFileType = (fileType: string) =>
+  ofBufferOpt(buffer => Buffer.setFileType(Some(fileType), buffer));
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
@@ -93,6 +96,8 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
   | BufferSaved(metadata) =>
     IntMap.update(metadata.id, setModified(metadata.modified), state)
+  | BufferSetFileType(id, fileType) =>
+    IntMap.update(id, setFileType(fileType), state)
   | _ => state
   };
 };
