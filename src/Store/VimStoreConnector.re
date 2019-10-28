@@ -678,6 +678,13 @@ let start =
       Vim.input("u");
     });
 
+  let redoEffect = 
+    Isolinear.Effect.create(~name="vim.redo", () => {
+      Vim.input("<esc>");
+      Vim.input("<esc>");
+      Vim.input("<c-r>");
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.ConfigurationSet(configuration) => (
@@ -695,6 +702,10 @@ let start =
     | Model.Actions.Command("undo") => (
         state,
         undoEffect,
+      )
+    | Model.Actions.Command("redo") => (
+        state,
+        redoEffect,
       )
     | Model.Actions.WildmenuNext =>
       let eff =
