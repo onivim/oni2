@@ -671,6 +671,13 @@ let start =
       };
     });
 
+  let undoEffect = 
+    Isolinear.Effect.create(~name="vim.undo", () => {
+      Vim.input("<esc>");
+      Vim.input("<esc>");
+      Vim.input("u");
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.ConfigurationSet(configuration) => (
@@ -684,6 +691,10 @@ let start =
     | Model.Actions.Command("insertBestCompletion") => (
         state,
         applyCompletion(state),
+      )
+    | Model.Actions.Command("undo") => (
+        state,
+        undoEffect,
       )
     | Model.Actions.WildmenuNext =>
       let eff =

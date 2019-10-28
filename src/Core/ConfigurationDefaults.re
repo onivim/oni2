@@ -67,7 +67,9 @@ let getDefaultConfigString = configName =>
         { "key": "<C-P>", "command": "selectPrevSuggestion", "when": [["suggestWidgetVisible"]] },
         { "key": "<C-N>", "command": "selectNextSuggestion", "when": [["suggestWidgetVisible"]] },
         { "key": "<CR>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] },
-        { "key": "<TAB>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] }
+        { "key": "<TAB>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] },
+        { "key": "<D-Z>", "command": "undo", "when": [["editorTextFocus"]] },
+        { "key": "<D-S-Z>", "command": "redo", "when": [["editorTextFocus"]] }
     ]
 }
 |},
