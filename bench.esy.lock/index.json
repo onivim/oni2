@@ -1,5 +1,5 @@
 {
-  "checksum": "1a8bc2a9cf74e25d7cc20afc7fc0ba25",
+  "checksum": "e3d605e12c4e2fdf6d6380438921ec26",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,13 +75,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#8554e17@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#8554e17@d41d8cd9",
+    "revery@github:revery-ui/revery#2db8df7@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#2db8df7@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#8554e17",
+      "version": "github:revery-ui/revery#2db8df7",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#8554e17" ]
+        "source": [ "github:revery-ui/revery#2db8df7" ]
       },
       "overrides": [],
       "dependencies": [
@@ -598,7 +598,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "graceful-fs@4.2.2@d41d8cd9" ],
+      "dependencies": [ "graceful-fs@4.2.3@d41d8cd9" ],
       "devDependencies": []
     },
     "isolinear@2.2.0@d41d8cd9": {
@@ -689,14 +689,14 @@
       "dependencies": [ "wrappy@1.0.2@d41d8cd9", "once@1.4.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "graceful-fs@4.2.2@d41d8cd9": {
-      "id": "graceful-fs@4.2.2@d41d8cd9",
+    "graceful-fs@4.2.3@d41d8cd9": {
+      "id": "graceful-fs@4.2.3@d41d8cd9",
       "name": "graceful-fs",
-      "version": "4.2.2",
+      "version": "4.2.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.2.tgz#sha1:6f0952605d0140c1cfdb138ed005775b92d67b02"
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.3.tgz#sha1:4a12ff1b60376ef09862c2093edd908328be8423"
         ]
       },
       "overrides": [],
@@ -748,7 +748,7 @@
       "overrides": [],
       "dependencies": [
         "universalify@0.1.2@d41d8cd9", "jsonfile@4.0.0@d41d8cd9",
-        "graceful-fs@4.2.2@d41d8cd9"
+        "graceful-fs@4.2.3@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -997,7 +997,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#8554e17@d41d8cd9",
+        "revery@github:revery-ui/revery#2db8df7@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
