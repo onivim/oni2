@@ -11,6 +11,7 @@ let createItem = name => {
         Oni_Model.Notification.create(~title="derp", ~message=name, ()),
       ),
     icon: None,
+    highlight: [],
   };
   ret;
 };

@@ -106,6 +106,7 @@ let start = (themeInfo: ThemeInfo.t) => {
                  );
                },
                icon: None,
+               highlight: [],
              };
              ret;
            });

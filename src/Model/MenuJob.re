@@ -9,6 +9,19 @@ open Oni_Core;
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
+// TODO: This doesn't really belong here. Find a better home for it.
+let getLabel = (item: Actions.menuCommand) => {
+  switch (item.category) {
+  | Some(category) => category ++ ": " ++ item.name
+  | None => item.name
+  };
+};
+
+let format = (item, ~shouldLower) => {
+  let s = getLabel(item);
+  shouldLower ? String.lowercase_ascii(s) : s;
+};
+
 type pendingWork = {
   filter: string,
   // Full commands is the _complete set_ of unfiltered commands
@@ -113,13 +126,13 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
     let uiFilteredList = Array.to_list(uiFiltered);
     let uiFilteredNew =
       List.filter(
-        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
+        item => matches(newQueryEx, format(item, ~shouldLower)),
         uiFilteredList,
       );
 
     let allFilteredNew =
       List.filter(
-        i => matches(newQueryEx, Filter.formatName(i, shouldLower)),
+        item => matches(newQueryEx, format(item, ~shouldLower)),
         allFiltered,
       );
 
@@ -173,7 +186,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
   let completedWork = ref(c.allFiltered);
 
   while (i^ < iterationsPerFrame && ! completed^) {
-    let p = pendingWork^;
+    let {shouldLower, _} as p = pendingWork^;
     let c = completedWork^;
     let (c, newPendingWork, newCompletedWork) =
       switch (p.commandsToFilter) {
@@ -184,10 +197,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
         | [innerHd, ...innerTail] =>
           // Do a first filter pass to check if the item satisifies the regex
           let newCompleted =
-            matches(
-              p.explodedFilter,
-              Filter.formatName(innerHd, p.shouldLower),
-            )
+            matches(p.explodedFilter, format(innerHd, ~shouldLower))
               ? [innerHd, ...c] : c;
           (
             false,
@@ -212,7 +222,10 @@ let doWork = (p: pendingWork, c: completedWork) => {
     let uiFiltered =
       c
       |> Utility.firstk(maxItemsToFilter)
-      |> Filter.rank(p.filter)
+      |> Filter.rank(p.filter, format)
+      |> List.map((Filter.{item, highlight}) =>
+           Actions.{...item, highlight}
+         )
       |> Array.of_list;
     (completed, p, {allFiltered: c, uiFiltered});
   };
