@@ -11,6 +11,14 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - Press `Command+Shift+P` (Mac) or `Control+Shift+P` (Windows, Linux) to bring up the command palette
 - Select `Preferences: Open Configuration File`
 
+### Directly editing the configuration
+
+Sometimes, it is necessary to directly edit the configuration in another editor, for example, if a setting is inadvertently set that makes the editor unusable.
+
+The configuration file, `configuration.json` is in the Oni2 directory, whose location varies by operating system:
+- On Unix-like operating systems such as Linux: `$HOME/.config/oni2`
+- On Windows, `%LOCALAPPDATA%\Oni2`
+
 ## Configuration Settings
 
 ### Editor
