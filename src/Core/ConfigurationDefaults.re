@@ -44,12 +44,13 @@ let getDefaultConfigString = configName =>
       {|
 {
     "bindings": [
-        { "key": "<C-TAB>", "command": "quickOpen.openFiles", "when": [["editorTextFocus"]] },
-        { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
-        { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
-        { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-TAB>", "command": "quickOpen.buffers", "when": [["editorTextFocus"]] },
+        { "key": "<C-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
+        { "key": "<D-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
         { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
         { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
+        { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
         { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]]},
@@ -63,7 +64,6 @@ let getDefaultConfigString = configName =>
         { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
         { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
         { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]},
-        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
         { "key": "<C-P>", "command": "selectPrevSuggestion", "when": [["suggestWidgetVisible"]] },
         { "key": "<C-N>", "command": "selectNextSuggestion", "when": [["suggestWidgetVisible"]] },
         { "key": "<CR>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] },

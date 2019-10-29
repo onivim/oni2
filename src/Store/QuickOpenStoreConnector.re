@@ -83,7 +83,7 @@ let start = (rg: Core.Ripgrep.t) => {
 
   let updater = (state: Model.State.t, action) => {
     switch (action) {
-    | Model.Actions.QuickOpen => (
+    | Model.Actions.QuickOpenWorkspaceFiles => (
         state,
         openQuickOpenEffect(state.languageInfo, state.iconTheme),
       )

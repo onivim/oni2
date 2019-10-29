@@ -84,7 +84,7 @@ type t =
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
-  | QuickOpen
+  | QuickOpenWorkspaceFiles
   | QuitBuffer(Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)

@@ -84,9 +84,9 @@ let start = _ => {
       "commandPalette.open",
       _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
     ),
-    ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
+    ("quickOpen.workspaceFiles", _ => singleActionEffect(QuickOpenWorkspaceFiles)),
     (
-      "quickOpen.openFiles",
+      "quickOpen.buffers",
       state => {
         let currentDirectory = Rench.Environment.getWorkingDirectory();
 
