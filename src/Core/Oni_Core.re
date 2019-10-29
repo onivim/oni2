@@ -29,6 +29,7 @@ module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Range = Range;
 module Ripgrep = Ripgrep;
+module Subscription = Subscription;
 module Tokenizer = Tokenizer;
 module Uri = Uri;
 module VisualRange = VisualRange;
