@@ -280,17 +280,23 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) => {
-    let (menuState, menuEffect) =
-      menuUpdater(
-        state.menu,
-        action,
-        state.buffers,
-        state.languageInfo,
-        state.iconTheme,
-        themeInfo,
-      );
-    let state = {...state, menu: menuState};
-    (state, menuEffect);
+    switch (action) {
+    | Tick(_) =>
+      (state, Isolinear.Effect.none)
+  
+    | action =>
+      let (menuState, menuEffect) =
+        menuUpdater(
+          state.menu,
+          action,
+          state.buffers,
+          state.languageInfo,
+          state.iconTheme,
+          themeInfo,
+        );
+
+      ({...state, menu: menuState}, menuEffect);
+    }
   };
 
   (updater, stream);
