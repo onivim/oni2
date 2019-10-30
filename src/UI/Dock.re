@@ -31,11 +31,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
           alignItems(`Center),
         ]>
         <Clickable onClick={toggleExplorer(state)} style=button>
-          <FontIcon
-            backgroundColor=bg
-            color=fg
-            icon=FontAwesome.file
-          />
+          <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
         </Clickable>
       </View>,
     );
