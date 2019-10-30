@@ -25,7 +25,8 @@ let dark: defaults = {
   editorForeground: "#D4D4D4",
   editorIndentGuideBackground: "#404040",
   editorIndentGuideActiveBackground: "#707070",
-}; let hcDark: defaults = {
+};
+let hcDark: defaults = {
   editorBackground: "#000",
   editorForeground: "#FFF",
   editorIndentGuideBackground: "#FFF",
@@ -191,9 +192,12 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       defaultBackground,
       ["activityBar.background", "editor.background", "background"],
     );
-  
+
   let activityBarForeground =
-    getColor(defaultForeground, ["activityBar.foreground", "editor.foreground", "foreground"]);
+    getColor(
+      defaultForeground,
+      ["activityBar.foreground", "editor.foreground", "foreground"],
+    );
 
   let editorHoverWidgetBorder =
     getColor(
