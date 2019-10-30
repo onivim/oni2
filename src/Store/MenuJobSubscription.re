@@ -7,6 +7,11 @@ module MenuJob = Model.MenuJob;
 module Subscription = Core.Subscription;
 module Job = Core.Job;
 
+module FilterJob = Model.MenuJob.Make({
+  type item = Actions.menuCommand;
+  let format = Model.Menu.getLabel;
+});
+
 module Provider = {
   type action = Actions.t;
 
@@ -14,11 +19,11 @@ module Provider = {
     query: string,
     items: list(Actions.menuCommand),
     itemStream: Isolinear.Stream.t(list(Actions.menuCommand)),
-    onUpdate: (list(Actions.menuCommand), ~progress: float) => action,
+    onUpdate: (list(Model.Filter.result(Actions.menuCommand)), ~progress: float) => action,
   };
 
   type state = {
-    job: MenuJob.t,
+    job: FilterJob.t,
     dispose: unit => unit,
   };
 
@@ -26,19 +31,19 @@ module Provider = {
 
   let start =
       (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
-    Log.debug(() => "Starting MenuJob subscription " ++ id);
-    let job = MenuJob.create();
-    let job = Job.map(MenuJob.updateQuery(query), job);
-    let job = Job.map(MenuJob.addItems(items), job);
+    Log.debug(() => "Starting FilterJob subscription " ++ id);
+    let job = FilterJob.create();
+    let job = Job.map(FilterJob.updateQuery(query), job);
+    let job = Job.map(FilterJob.addItems(items), job);
 
     let unsubscribeFromItemStream =
       Isolinear.Stream.subscribe(itemStream, items =>
         switch (Hashtbl.find_opt(jobs, id)) {
         | Some({job, _} as state) =>
-          let job = Job.map(MenuJob.addItems(items), job);
+          let job = Job.map(FilterJob.addItems(items), job);
           Hashtbl.replace(jobs, id, {...state, job});
 
-        | None => Log.error("Unable to add items to non-existing MenuJob")
+        | None => Log.error("Unable to add items to non-existing FilterJob")
         }
       );
 
@@ -51,7 +56,7 @@ module Provider = {
               Hashtbl.replace(jobs, id, {...state, job: Job.tick(job)});
             }
 
-          | None => Log.error("Unable to tick non-existing MenuJob")
+          | None => Log.error("Unable to tick non-existing FilterJob")
           },
         Seconds(0.),
       );
@@ -61,9 +66,11 @@ module Provider = {
         _ =>
           switch (Hashtbl.find_opt(jobs, id)) {
           | Some({job, _}) =>
-            dispatch(onUpdate(Job.getCompletedWork(job).uiFiltered, ~progress=Job.getProgress(job)))
+            let items = Job.getCompletedWork(job).uiFiltered;
+            let progress = Job.getProgress(job);
+            dispatch(onUpdate(items, ~progress))
 
-          | None => Log.error("Unable to pump non-existing MenuJob")
+          | None => Log.error("Unable to pump non-existing FilterJob")
           },
         Seconds(0.5),
       );
@@ -81,24 +88,24 @@ module Provider = {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some({job, _} as state) when query != job.pendingWork.filter =>
       // Query changed
-      Log.debug(() => "Updating MenuJob subscription " ++ id);
-      let job = Job.map(MenuJob.updateQuery(query), job);
+      Log.debug(() => "Updating FilterJob subscription " ++ id);
+      let job = Job.map(FilterJob.updateQuery(query), job);
       Hashtbl.replace(jobs, id, {...state, job});
 
     | Some(_) => () // Query hasn't changed, so do nothing
 
-    | None => Log.error("Unable to update non-existing MenuJob subscription")
+    | None => Log.error("Unable to update non-existing FilterJob subscription")
     };
 
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some({dispose, _}) =>
-      Log.debug(() => "Disposing MenuJob subscription " ++ id);
+      Log.debug(() => "Disposing FilterJob subscription " ++ id);
       dispose();
       Hashtbl.remove(jobs, id);
 
     | None =>
-      Log.error("Tried to dispose non-existing MenuJob subscription: " ++ id)
+      Log.error("Tried to dispose non-existing FilterJob subscription: " ++ id)
     };
   };
 };

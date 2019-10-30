@@ -280,7 +280,12 @@ let subscriptions = (ripgrep) => {
       ~items = Menu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
-        let items = Array.of_list(items);
+        let items =
+          items
+            |> List.map(
+              (Model.Filter.{ item, highlight }) =>
+                ({ ...item, highlight }: Actions.menuCommand))
+            |> Array.of_list;
         Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
       }
     );
