@@ -1,33 +1,53 @@
-module Event = Rench.Event;
+open Actions
 
 type t = {
-  searchQuery: string,
-  isOpen: bool,
-  creationTime: float,
-  /*
-     [isLoading] - whether or not the menu is waiting on some asynchronous actions.
-     As an example, for QuickOpen, the [isLoading] flag would be [true] while the
-     ripgrep process is active. This is used to give a visual indication that the
-     menu is still populating.
-   */
-  isLoading: bool,
-  loadingAnimation: Animation.t,
-  selectedItem: int,
-  filterJob: MenuJob.t,
-  onQueryChanged: Event.t(string),
-  onSelectedItemChanged: Event.t(option(Actions.menuCommand)),
-  dispose: unit => unit,
+  variant: variant,
+  text: string,
+  prefix: option(string),
+  cursorPosition: int,
+  source: menuSource,
+  selected: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
+}
+
+and variant = Actions.menuVariant =
+  | CommandPalette
+  | Buffers
+  | WorkspaceFiles
+  | Wildmenu(Vim.Types.cmdlineType)
+  | Themes
+
+let defaults = variant => {
+  variant,
+  text: "",
+  prefix: None,
+  cursorPosition: 0,
+  selected: None,
+  source: Loading
 };
 
-let create = () => {
-  creationTime: 0.,
-  loadingAnimation: Animation.create(~isActive=false, ~duration=2., ()),
-  searchQuery: "",
-  isOpen: false,
-  isLoading: false,
-  selectedItem: 0,
-  filterJob: MenuJob.create(),
-  onQueryChanged: Event.create(),
-  onSelectedItemChanged: Event.create(),
-  dispose: () => (),
-};
+
+let getCount = fun
+  | Loading =>
+    0
+
+  | Progress({ items })
+  | Complete(items) =>
+    Array.length(items);
+
+
+let getItems = fun
+  | Loading =>
+    [||]
+
+  | Progress({ items })
+  | Complete(items) =>
+    items
+
+
+// TODO: This doesn't really belong here. Find a better home for it.
+let getLabel = (item: menuCommand) => {
+  switch (item.category) {
+  | Some(v) => v ++ ": " ++ item.name
+  | None => item.name
+  };
+}; 

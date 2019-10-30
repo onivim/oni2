@@ -10,194 +10,327 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Menu = Model.Menu;
-module MenuJob = Model.MenuJob;
+module Utility = Core.Utility;
+module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 
-let start = () => {
+
+// TODO: Remove after 4.08 upgrade
+module Option = {
+  let map = f => fun
+    | Some(x) => Some(f(x))
+    | None => None
+
+  let value = (~default) => fun
+    | Some(x) => x
+    | None => default
+
+  let some = x =>
+    Some(x)
+};
+
+
+let prefixFor : Vim.Types.cmdlineType => string = fun 
+  | SearchForward => "/"
+  | SearchReverse => "?"
+  | _ => ":"
+
+
+let start = (themeInfo: Model.ThemeInfo.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let position = (selectedItem, change, count) => {
-    let nextIndex = selectedItem + change;
-
-    if (nextIndex >= count) {
-      0;
-    } else if (nextIndex < 0) {
-      count - 1;
-    } else {
-      nextIndex;
-    };
-  };
-
-  let menuOpenEffect =
-      (menuConstructor, onQueryChangedEvent, onSelectedItemChangedEvent) =>
-    Isolinear.Effect.create(~name="menu.construct", () => {
-      let setItems = items => dispatch(Actions.MenuUpdate(items));
-      let startTime = Revery.Time.getTime() |> Revery.Time.toSeconds;
-      let setLoading = isLoading =>
-        dispatch(Actions.MenuSetLoading(isLoading, startTime));
-
-      let disposeFunction =
-        menuConstructor(
-          setItems,
-          onQueryChangedEvent,
-          onSelectedItemChangedEvent,
-          setLoading,
-        );
-      dispatch(Actions.MenuSetDispose(disposeFunction));
-    });
-
-  let queryChangedEffect = (evt, newQuery) =>
-    Isolinear.Effect.create(~name="menu.queryChanged", () =>
-      Rench.Event.dispatch(evt, newQuery)
-    );
-
-  let selectedItemChangedEffect = (evt, newItem) =>
-    Isolinear.Effect.create(~name="menu.selectedItemChanged", () => {
-      Rench.Event.dispatch(evt, newItem)
-    });
-
-  let selectItemEffect = command =>
+  let selectItemEffect = (item: Actions.menuCommand) =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
-      let action = command();
+      let action = item.command();
       dispatch(action);
     });
 
-  let disposeMenuEffect = dispose =>
-    Isolinear.Effect.create(~name="menu.dispose", dispose);
+  let executeVimCommandEffect =
+    Isolinear.Effect.createWithDispatch(~name="menu.executeVimCommand", dispatch => {
+      // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
+      dispatch(Actions.KeyboardInput("<CR>"));
+    });
 
-  let rec menuUpdater = (state: Menu.t, action: Actions.t) => {
-    let filteredCommands =
-      Core.Job.getCompletedWork(state.filterJob).uiFiltered;
-    let getSelectedItem = idx =>
-      switch (filteredCommands[idx]) {
-      | exception (Invalid_argument(_)) => None
-      | v => Some(v)
-      };
-    let filteredCommandsCount = filteredCommands |> Array.length;
+  let exitModeEffect =
+    Isolinear.Effect.createWithDispatch(~name="menu.exitMode", dispatch => {
+      // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
+      dispatch(Actions.KeyboardInput("<ESC>"));
+    });
+
+  let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
+    let currentDirectory = Rench.Environment.getWorkingDirectory();
+
+    let getDisplayPath = (fullPath, dir) => {
+      let re = Str.regexp_string(dir ++ Filename.dir_sep);
+      Str.replace_first(re, "", fullPath);
+    };
+
+    buffers
+    |> Core.IntMap.to_seq
+    |> Seq.filter_map(element => {
+          let (_, buffer) = element;
+
+          switch (Model.Buffer.getFilePath(buffer)) {
+          | Some(path) =>
+            Some(Actions.{
+              category: None,
+              name: getDisplayPath(path, currentDirectory),
+              command: () => {
+                Oni_Model.Actions.OpenFileByPath(path, None);
+              },
+              icon:
+                Oni_Model.FileExplorer.getFileIcon(
+                  languageInfo,
+                  iconTheme,
+                  path,
+                ),
+              highlight: []
+            })
+          | None => None
+          };
+        })
+    |> Array.of_seq;
+  };
+
+  let menuUpdater = (state: option(Menu.t), action: Actions.t, buffers, languageInfo, iconTheme, themeInfo)
+    : (option(Menu.t), Isolinear.Effect.t(Actions.t)) => {
     switch (action) {
-    | MenuSetLoading(isLoading, time) => (
-        {
-          ...state,
-          isLoading,
-          loadingAnimation: Animation.start(time, state.loadingAnimation),
-        },
-        Isolinear.Effect.none,
-      )
-    | MenuPosition(index) => (
-        {...state, selectedItem: index},
-        Isolinear.Effect.none,
-      )
-    | MenuPreviousItem =>
-      let selectedItem =
-        position(state.selectedItem, -1, filteredCommandsCount);
-      let item = getSelectedItem(selectedItem);
-      let effect =
-        selectedItemChangedEffect(state.onSelectedItemChanged, item);
-      ({...state, selectedItem}, effect);
-    | MenuNextItem =>
-      let selectedItem =
-        position(state.selectedItem, 1, filteredCommandsCount);
-      let item = getSelectedItem(selectedItem);
-      let effect =
-        selectedItemChangedEffect(state.onSelectedItemChanged, item);
-      ({...state, selectedItem}, effect);
-    | MenuSearch(query) => (
-        {
-          ...state,
-          searchQuery: query,
-          filterJob:
-            Core.Job.mapw(MenuJob.updateQuery(query), state.filterJob),
-          selectedItem:
-            position(state.selectedItem, 0, filteredCommandsCount),
-        },
-        queryChangedEffect(state.onQueryChanged, query),
-      )
-    | MenuOpen(menuConstructor) =>
-      let state = Menu.create();
+    | MenuShow(CommandPalette) =>
       (
-        {...state, isOpen: true},
-        menuOpenEffect(
-          menuConstructor,
-          state.onQueryChanged,
-          state.onSelectedItemChanged,
-        ),
+        Some{{
+          ...Menu.defaults(CommandPalette),
+          source: Complete(Model.CommandPalette.commands),
+          selected: Some(0)
+        }},
+        Isolinear.Effect.none
       );
-    | MenuUpdate(update) =>
-      let filterJob =
-        Core.Job.mapw(MenuJob.addItems(update), state.filterJob);
-      let selectedItem =
-        position(state.selectedItem, 0, filteredCommandsCount);
 
-      ({...state, filterJob, selectedItem}, Isolinear.Effect.none);
-    | MenuSetDispose(dispose) => (
-        {...state, dispose},
-        Isolinear.Effect.none,
-      )
-    | MenuClose =>
-      let disposeFunction = state.dispose;
+    | MenuShow(Buffers) =>
       (
+        Some{{
+          ...Menu.defaults(Buffers),
+          source: Complete(makeBufferCommands(languageInfo, iconTheme, buffers)),
+          selected: Some(0)
+        }},
+        Isolinear.Effect.none
+      );
+
+    | MenuShow(WorkspaceFiles) =>
+      (
+        Some{{
+          ...Menu.defaults(WorkspaceFiles),
+          source: Loading,
+          selected: Some(0)
+        }},
+        Isolinear.Effect.none
+      );
+
+    | MenuShow(Wildmenu(cmdType)) =>
+      (
+        Some{{
+          ...Menu.defaults(Wildmenu(cmdType)),
+          prefix: Some(prefixFor(cmdType)),
+        }},
+        Isolinear.Effect.none
+      );
+
+    | MenuShow(Themes) =>
+      let items =
+        Model.ThemeInfo.getThemes(themeInfo)
+        |> List.map((theme: ExtensionContributions.Theme.t) => {
+              Actions.{
+               category: Some("Theme"),
+               name: theme.label,
+               command: () => ThemeLoadByName(theme.label),
+               icon: None,
+               highlight: [],
+             }
+           })
+        |> Array.of_list;
+
+      (
+        Some{{
+          ...Menu.defaults(Themes),
+          source: Complete(items),
+        }},
+        Isolinear.Effect.none
+      );
+
+    | MenuInput({ text, cursorPosition }) =>
+      (
+        Option.map(state => Menu.{ ...state, text, cursorPosition }, state),
+        Isolinear.Effect.none
+      );
+
+    | MenuUpdateSource(source) =>
+      (
+        Option.map((state: Menu.t) => {
+          let count = Menu.getCount(source);
+          {...state, source, selected: Option.map(min(count), state.selected)}
+        }, state),
+        Isolinear.Effect.none
+      );
+
+    | MenuFocus(index) => (
+      Option.map((state: Menu.t) => {
+        let count = Menu.getCount(state.source);
+
         {
           ...state,
-          filterJob: MenuJob.default,
-          isOpen: false,
-          selectedItem: 0,
-          isLoading: false,
-          loadingAnimation: Animation.stop(state.loadingAnimation),
-        },
-        disposeMenuEffect(disposeFunction),
-      );
+          selected: Some(Utility.clamp(index, ~lo=0, ~hi=count))
+        }
+      }, state),
+      Isolinear.Effect.none
+    )
+
+    | NotifyKeyPressed(_, "<UP>")
+    | MenuFocusPrevious => (
+      Option.map((state: Menu.t) => {
+        let count = Menu.getCount(state.source);
+
+        {
+          ...state,
+          selected:
+            Option.map(selected =>
+              if (count == 0) {
+                0
+              } else if (selected <= 0) {
+                count - 1 // "roll over" to end of list
+              } else {
+                selected - 1
+              }, state.selected)
+            |> Option.value(~default=max(count -1, 0)) // default to end of list
+            |> Option.some
+        }
+      }, state),
+      Isolinear.Effect.none
+    )
+
+    | NotifyKeyPressed(_, "<DOWN>")
+    | MenuFocusNext => (
+      Option.map((state: Menu.t) => {
+        let count = Menu.getCount(state.source);
+
+        {
+          ...state,
+          selected:
+            Option.map(selected =>
+              if (count == 0) {
+                0
+              } else {
+                (selected + 1) mod count
+              }, state.selected)
+            |> Option.value(~default=0) // default to start of list
+            |> Option.some
+        }
+      }, state),
+      Isolinear.Effect.none
+    )
+
     | MenuSelect =>
-      let effect =
-        switch (getSelectedItem(state.selectedItem)) {
-        | None => Isolinear.Effect.none
-        | Some(v) => selectItemEffect(v.command)
-        };
+      switch (state) {
+        | Some({ variant: Wildmenu(_) }) =>
+          (None, executeVimCommandEffect)
 
-      /* Also close menu */
-      let (closeState, closeEffect) = menuUpdater(state, MenuClose);
+        | Some({ source, selected: Some(selected) }) =>
+          let items = Menu.getItems(source);
+          switch (items[selected]) {
+          | item =>
+            (None, selectItemEffect(item))
 
-      (closeState, Isolinear.Effect.batch([closeEffect, effect]));
+          | exception Invalid_argument(_) =>
+            (state, Isolinear.Effect.none)
+          }
+
+        | _ =>
+          (state, Isolinear.Effect.none)
+      }
+
+    | MenuClose =>
+      switch (state) {
+      | Some({ variant: Wildmenu(_) }) =>
+        (None, exitModeEffect);
+      | _ =>
+        (None, Isolinear.Effect.none);
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
-  let updateJob = (state: Model.State.t) =>
-    if (Core.Job.isComplete(state.menu.filterJob)) {
-      state;
-    } else {
-      {
-        ...state,
-        menu: {
-          ...state.menu,
-          filterJob: Core.Job.tick(state.menu.filterJob),
-        },
-      };
-    };
-
-  let updateAnimation = (deltaT: float, state: Model.State.t) =>
-    if (state.menu.isLoading) {
-      {
-        ...state,
-        menu: {
-          ...state.menu,
-          loadingAnimation:
-            Animation.tick(deltaT, state.menu.loadingAnimation),
-        },
-      };
-    } else {
-      state;
-    };
-
-  let updater = (state: Model.State.t, action: Actions.t) =>
-    switch (action) {
-    | Actions.Tick({deltaTime, _}) =>
-      let newState = state |> updateJob |> updateAnimation(deltaTime);
-
-      (newState, Isolinear.Effect.none);
-    | action =>
-      let (menuState, menuEffect) = menuUpdater(state.menu, action);
-      let state = {...state, menu: menuState};
-      (state, menuEffect);
-    };
+  let updater = (state: Model.State.t, action: Actions.t) => {
+    let (menuState, menuEffect) = menuUpdater(state.menu, action, state.buffers, state.languageInfo, state.iconTheme, themeInfo);
+    let state = {...state, menu: menuState};
+    (state, menuEffect);
+  };
 
   (updater, stream);
 };
+
+
+let subscriptions = (ripgrep) => {
+  let (stream, dispatch) = Isolinear.Stream.create();
+  let (itemStream, addItems) = Isolinear.Stream.create();
+
+  let module MenuFilterSubscription = MenuJobSubscription;
+
+  let filter = (query, source) => {
+    MenuFilterSubscription.create(
+      ~id="menu-filter",
+      ~query,
+      ~items = Menu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
+      ~itemStream,
+      ~onUpdate=(items, ~progress) => {
+        Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
+      }
+    );
+  };
+
+  let ripgrep = (languageInfo, iconTheme) => {
+    let directory = Rench.Environment.getWorkingDirectory();
+
+    let re = Str.regexp_string(directory ++ Filename.dir_sep);
+
+    let getDisplayPath = fullPath =>
+      Str.replace_first(re, "", fullPath);
+
+    let stringToCommand =
+      (languageInfo, iconTheme, fullPath) => Actions.{
+        category: None,
+        name: getDisplayPath(fullPath),
+        command: () => Model.Actions.OpenFileByPath(fullPath, None),
+        icon:
+          Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        highlight: []
+      };
+
+    RipgrepSubscription.create(
+      ~id="workspace-search",
+      ~directory, ~ripgrep,
+      ~onUpdate=items => List.map(stringToCommand(languageInfo, iconTheme), items) |> addItems,
+      ~onCompleted=() => Noop
+    );
+  };
+
+  let updater = (state: Model.State.t) => {
+    switch (state.menu) {
+      | Some(menu) =>
+        switch (menu.variant) {
+          | CommandPalette
+          | Buffers
+          | Themes =>
+            [filter(menu.text, menu.source)]
+
+          | WorkspaceFiles =>
+            [filter(menu.text, menu.source), ripgrep(state.languageInfo, state.iconTheme)]
+
+          | Wildmenu(_) =>
+            []
+        }
+
+      | None =>
+        []
+    };
+  };
+
+  (updater, stream)
+}

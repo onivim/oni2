@@ -9,16 +9,9 @@ open Oni_Core;
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-// TODO: This doesn't really belong here. Find a better home for it.
-let getLabel = (item: Actions.menuCommand) => {
-  switch (item.category) {
-  | Some(category) => category ++ ": " ++ item.name
-  | None => item.name
-  };
-};
 
 let format = (item, ~shouldLower) => {
-  let s = getLabel(item);
+  let s = Menu.getLabel(item);
   shouldLower ? String.lowercase_ascii(s) : s;
 };
 

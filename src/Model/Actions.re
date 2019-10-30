@@ -41,18 +41,10 @@ type t =
   | LoadEditorFont(string, int)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(Vim.Types.cmdlineType)
-  | CommandlineHide
-  | CommandlineUpdate(Vim.Types.cmdline)
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WildmenuShow(list(string))
-  | WildmenuNext
-  | WildmenuPrevious
-  | WildmenuSelect
-  | WildmenuHide
   | WindowSetActive(int, int)
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
@@ -67,16 +59,18 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
+
+  // MenuStoreConnector
+  | MenuShow(menuVariant)
+  | MenuInput({ text: string, cursorPosition: int })
+  | MenuUpdateSource(menuSource)
+  | MenuFocus(int)
+  | MenuFocusPrevious
+  | MenuFocusNext
   | MenuSearch(string)
-  | MenuOpen(menuCreator)
-  | MenuUpdate(list(menuCommand))
-  | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool, float)
-  | MenuClose
   | MenuSelect
-  | MenuNextItem
-  | MenuPreviousItem
-  | MenuPosition(int)
+  | MenuClose
+
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
@@ -94,7 +88,7 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
   | ThemeLoadByPath(string, string)
-  | ThemeShowMenu
+  | ThemeLoadByName(string)
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
   | SetColorTheme(Theme.t)
@@ -172,15 +166,13 @@ and menuCommand = {
   icon: option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
-and menuSetItems = list(menuCommand) => unit
-and menuSetLoading = bool => unit
-and menuCreationFunction = menuSetItems => unit
-and menuDisposeFunction = unit => unit
-and menuCreator =
-  (
-    menuSetItems,
-    Rench.Event.t(string),
-    Rench.Event.t(option(menuCommand)),
-    menuSetLoading
-  ) =>
-  menuDisposeFunction;
+and menuVariant = 
+  | CommandPalette
+  | Buffers
+  | WorkspaceFiles
+  | Wildmenu(Vim.Types.cmdlineType)
+  | Themes
+and menuSource =
+  | Loading
+  | Progress({ items: array(menuCommand), progress: float })
+  | Complete(array(menuCommand));

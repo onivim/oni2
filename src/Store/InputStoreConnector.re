@@ -11,15 +11,18 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-let isMenuOpen = (state: State.t) => state.menu.isOpen;
+
+type captureMode =
+  | Normal
+  | Wildmenu
+  | Quickmenu;
+
+
+let isMenuOpen = (state: State.t) => state.menu != None;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
-
-  if (state.commandline.show) {
-    Hashtbl.add(ret, CommandLineFocus, true);
-  };
 
   if (isMenuOpen(state)) {
     Hashtbl.add(ret, MenuFocus, true);
@@ -33,7 +36,7 @@ let conditionsOfState = (state: State.t) => {
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isMenuOpen(state) || state.commandline.show, state.mode) {
+  switch (isMenuOpen(state), state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
@@ -78,34 +81,6 @@ let start =
   };
 
   /**
-    Handle Input from Oni or Vim
-   */
-  let handle =
-      (
-        ~isMenuOpen,
-        ~conditions: Handler.Conditions.t,
-        ~time=0.0,
-        ~commands: Keybindings.t,
-        inputKey,
-      ) => {
-    let actions =
-      switch (isMenuOpen) {
-      | false =>
-        switch (getActionsForBinding(inputKey, commands, conditions)) {
-        | [] =>
-          Log.info("Input::handle - sending raw input: " ++ inputKey);
-          [Actions.KeyboardInput(inputKey)];
-        | actions =>
-          Log.info("Input::handle - sending bound actions.");
-          actions;
-        }
-      | true => getActionsForBinding(inputKey, commands, conditions)
-      };
-
-    [Actions.NotifyKeyPressed(time, inputKey), ...actions];
-  };
-
-  /**
      The key handlers return (keyPressedString, shouldOniListen)
      i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
      /respond to commands otherwise if input is alphabetical AND
@@ -116,19 +91,48 @@ let start =
     let commands = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
-    switch (key, Revery.UI.Focus.focused) {
-    // No key, nothing focused - no-op
-    | (None, _) => ()
 
-    // We have a key, but Revery has an element focused
-    | (Some(k), {contents: Some(_)})
-    | (Some(k), {contents: None}) =>
-      handle(~isMenuOpen=isMenuOpen(state), ~conditions, ~time, ~commands, k)
-      |> List.iter(dispatch);
+    let captureMode =
+      switch (state.menu) {
+      | Some({ variant: Wildmenu(_) }) =>
+        Wildmenu
 
-      // Run input effects _immediately_
-      runEffects();
+      | Some({ variant: CommandPalette })
+      | Some({ variant: Buffers })
+      | Some({ variant: WorkspaceFiles })
+      | Some({ variant: Themes }) =>
+        Quickmenu
+
+      | None =>
+        Normal
+      };
+
+    switch (key) {
+    | None =>
+      ()
+
+    | Some(k) =>
+      let bindingActions =
+        getActionsForBinding(k, commands, conditions);
+
+      let actions = 
+        switch (captureMode) {
+          | Normal
+          | Wildmenu when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
+            Log.info("Input::handle - sending raw input: " ++ k);
+            [Actions.KeyboardInput(k)]
+
+          | _ =>
+            Log.info("Input::handle - sending bound actions.");
+            bindingActions
+        };
+
+      [Actions.NotifyKeyPressed(time, k), ...actions]
+        |> List.iter(dispatch);
     };
+
+    // Run input effects _immediately_
+    runEffects();
   };
 
   let isTextInputActive = () => {

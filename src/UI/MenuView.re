@@ -4,17 +4,25 @@ open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
-type state = {
-  text: string,
-  cursorPosition: int,
-};
-
-let component = React.component("Menu");
-
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
 };
+
+let component = React.component("Menu");
+
+let loseFocusOnClose = isOpen =>
+  /**
+   TODO: revery-ui/revery#412 if the menu is hidden abruptly the element is not automatically unfocused
+   as revery is unaware the element is no longer in focus
+ */
+  (
+    switch (Focus.focused, isOpen) {
+    | ({contents: Some(_)}, false) => Focus.loseFocus()
+    | (_, _) => ()
+    }
+  );
+
 
 module Styles = {
   let container = (theme: Theme.t) =>
@@ -39,102 +47,76 @@ module Styles = {
       cursor(Revery.MouseCursors.pointer),
     ];
 
-  let label =
-      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
+  let label = (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
       fontSize(12),
       backgroundColor(
-        isSelected ? theme.menuSelectionBackground : theme.menuBackground,
+        isSelected ? theme.menuSelectionBackground : theme.menuBackground
       ),
       color(
-        highlighted ? theme.oniNormalModeBackground : theme.menuForeground,
+        highlighted ? theme.oniNormalModeBackground : theme.menuForeground
       ),
-      textWrap(TextWrapping.NoWrap),
+      textWrap(TextWrapping.NoWrap)
     ];
 };
 
-let loseFocusOnClose = isOpen =>
-  /**
-   TODO: revery-ui/revery#412 if the menu is hidden abruptly the element is not automatically unfocused
-   as revery is unaware the element is no longer in focus
- */
-  (
-    switch (Focus.focused, isOpen) {
-    | ({contents: Some(_)}, false) => Focus.loseFocus()
-    | (_, _) => ()
-    }
-  );
-
-let onSelect = _ => GlobalContext.current().dispatch(MenuSelect);
 
 let onSelectedChange = index =>
-  GlobalContext.current().dispatch(MenuPosition(index));
+  GlobalContext.current().dispatch(MenuFocus(index));
 
-type fontT = Types.UiFont.t;
+let onInput = (text, cursorPosition) =>
+  GlobalContext.current().dispatch(MenuInput({ text, cursorPosition }));
 
-let getLabel = (command: Actions.menuCommand) => {
-  switch (command.category) {
-  | Some(v) => v ++ ": " ++ command.name
-  | None => command.name
-  };
-};
+let onSelect = (_) =>
+  GlobalContext.current().dispatch(MenuSelect);
+
 
 let createElement =
     (
       ~children as _,
-      ~font: fontT,
-      ~menu: Menu.t,
+      ~font: Types.UiFont.t,
       ~theme: Theme.t,
       ~configuration: Configuration.t,
+      ~autofocus: bool=true,
+      ~state: Menu.t,
+      ~placeholder: string="type here to search the menu",
+      ~onInput: (string, int) => unit = onInput,
+      ~onSelectedChange: int => unit = onSelectedChange,
+      ~onSelect: int => unit = onSelect,
       (),
     ) =>
   component(hooks => {
-    let hooks =
-      React.Hooks.effect(
-        Always,
-        () => {
-          loseFocusOnClose(menu.isOpen);
-          None;
-        },
-        hooks,
-      );
+    let Menu.{source, selected, text, cursorPosition, prefix} = state;
 
-    let ({text, cursorPosition}, setState, hooks) =
-      Hooks.state({text: "", cursorPosition: 0}, hooks);
+    let (items, jobProgress) =
+      switch (source) {
+        | Loading =>
+          ([||], 0.)
 
-    let handleChange = (str, pos) => {
-      setState({text: str, cursorPosition: pos});
-      GlobalContext.current().dispatch(MenuSearch(str));
-    };
+        | Progress({ items, progress }) =>
+          (items, progress)
 
-    let handleKeyDown = (event: NodeEvents.keyEventParams) =>
-      switch (event.keycode) {
-      | v when v == 1073741905 /*Key.Keycode.down*/ =>
-        GlobalContext.current().dispatch(MenuNextItem)
-      | v when v == 1073741906 /*Key.Keycode.up*/ =>
-        GlobalContext.current().dispatch(MenuPreviousItem)
-      | _ => ()
+        | Complete(items) =>
+          (items, 1.)
       };
 
-    let items = Job.getCompletedWork(menu.filterJob).uiFiltered;
-    let time = Time.getTime() |> Time.to_float_seconds;
-
-    let jobProgress = Job.getProgress(menu.filterJob);
-
-    let loadingOpacityAnimation = Animation.getValue(menu.loadingAnimation);
     let loadingSpinner =
-      menu.isLoading
-        ? <View style=Style.[height(40), width(Constants.menuWidth)]>
+      if (jobProgress == 0.) {
+        <AnimatedView duration=2.>
+          ...(opacity =>
+            <View style=Style.[height(40), width(Constants.menuWidth)]>
             <Center>
+                <AnimatedView duration=(2. *. Float.pi) repeat=true>
+                  ...(t =>
               <View
                 style=Style.[
                   transform(
-                    Transform.[RotateY(Math.Angle.Radians(time *. 2.))],
+                          Transform.[RotateY(Math.Angle.Radians(t *. 2.))],
                   ),
                 ]>
-                <Opacity opacity=loadingOpacityAnimation>
+                      <Opacity opacity>
                   <Container
                     width=10
                     height=10
@@ -142,9 +124,14 @@ let createElement =
                   />
                 </Opacity>
               </View>
+                  )
+                </AnimatedView>
             </Center>
           </View>
-        : <Opacity opacity=0.3>
+          )
+        </AnimatedView>
+      } else {
+        <Opacity opacity=0.3>
             <View style=Style.[height(2), width(Constants.menuWidth)]>
               <View
                 style=Style.[
@@ -152,9 +139,7 @@ let createElement =
                   width(
                     1
                     + (
-                      int_of_float(
-                        float_of_int(Constants.menuWidth) *. jobProgress,
-                      )
+                    int_of_float(float_of_int(Constants.menuWidth) *. jobProgress)
                       - 1
                     ),
                   ),
@@ -162,17 +147,18 @@ let createElement =
                 ]
               />
             </View>
-          </Opacity>;
+        </Opacity>
+      };
 
     let renderItem = index => {
       let item = items[index];
-      let isSelected = index == menu.selectedItem;
+      let isSelected = Some(index) == selected;
 
       let labelView = {
         let style = Styles.label(~font, ~theme, ~isSelected);
 
         let highlighted = {
-          let text = MenuJob.getLabel(item);
+          let text = Menu.getLabel(item);
           let textLength = String.length(text);
 
           // Assumes ranges are sorted low to high
@@ -216,18 +202,17 @@ let createElement =
 
     (
       hooks,
-      menu.isOpen
-        ? <AllowPointer>
+      <AllowPointer>
             <OniBoxShadow configuration theme>
               <View style={Styles.container(theme)}>
                 <View style=Style.[width(Constants.menuWidth), padding(5)]>
                   <OniInput
-                    autofocus=true
-                    placeholder="type here to search the menu"
+                autofocus
+                placeholder
+                ?prefix
                     cursorColor=Colors.white
                     style={Styles.input(font.fontFile)}
-                    onChange=handleChange
-                    onKeyDown=handleKeyDown
+                onChange=onInput
                     text
                     cursorPosition
                   />
@@ -238,7 +223,7 @@ let createElement =
                     height=Constants.menuHeight
                     width=Constants.menuWidth
                     count={Array.length(items)}
-                    selected={Some(menu.selectedItem)}
+                selected
                     render=renderItem
                   />
                   loadingSpinner
@@ -246,6 +231,5 @@ let createElement =
               </View>
             </OniBoxShadow>
           </AllowPointer>
-        : React.listToElement([]),
     );
   });

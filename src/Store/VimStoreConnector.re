@@ -334,7 +334,7 @@ let start =
 
   let _ =
     Vim.CommandLine.onEnter(c =>
-      dispatch(Model.Actions.CommandlineShow(c.cmdType))
+      dispatch(Model.Actions.MenuShow(Wildmenu(c.cmdType)))
     );
 
   let lastCompletionMeet = ref(None);
@@ -342,18 +342,26 @@ let start =
 
   let checkCommandLineCompletions = () => {
     Log.info("VimStoreConnector::checkCommandLineCompletions");
-    let completions = Vim.CommandLine.getCompletions() |> Array.to_list;
+    let completions = Vim.CommandLine.getCompletions();
     Log.info(
       "VimStoreConnector::checkCommandLineCompletions - got "
-      ++ string_of_int(List.length(completions))
+      ++ string_of_int(Array.length(completions))
       ++ " completions.",
     );
-    dispatch(Model.Actions.WildmenuShow(completions));
+    let items = Array.map(
+      name => Model.Actions.{
+        name,
+        category: None,
+        icon: None,
+        command: () => Noop,
+        highlight: []
+      }, completions);
+    dispatch(Model.Actions.MenuUpdateSource(Complete(items)));
   };
 
   let _ =
-    Vim.CommandLine.onUpdate(c => {
-      dispatch(Model.Actions.CommandlineUpdate(c));
+    Vim.CommandLine.onUpdate(({ text, position: cursorPosition }) => {
+      dispatch(Model.Actions.MenuInput({ text, cursorPosition }));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
@@ -402,7 +410,7 @@ let start =
     Vim.CommandLine.onLeave(() => {
       lastCompletionMeet := None;
       isCompleting := false;
-      dispatch(Model.Actions.CommandlineHide);
+      dispatch(Model.Actions.MenuClose);
     });
 
   let _ =
@@ -685,20 +693,24 @@ let start =
         state,
         applyCompletion(state),
       )
-    | Model.Actions.WildmenuNext =>
+
+    | NotifyKeyPressed(_, "<UP>")
+    | NotifyKeyPressed(_, "<DOWN>")
+    | Model.Actions.MenuFocusNext
+    | Model.Actions.MenuFocusPrevious
+    | Model.Actions.MenuFocus(_) =>
+      // IFFY: Depends on the ordering of "updater"s>
       let eff =
-        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
-        | None => Isolinear.Effect.none
-        | Some(v) => applyCompletionEffect(v)
+        switch (state.menu) {
+          | Some({ variant: Wildmenu(_), selected: Some(selected), source }) =>
+            let items = Model.Menu.getItems(source);
+            try (applyCompletionEffect(items[selected].name)) {
+            | Invalid_argument(_) => Isolinear.Effect.none
+            }
+          | _ => Isolinear.Effect.none
         };
       (state, eff);
-    | Model.Actions.WildmenuPrevious =>
-      let eff =
-        switch (Model.Wildmenu.getSelectedItem(state.wildmenu)) {
-        | None => Isolinear.Effect.none
-        | Some(v) => applyCompletionEffect(v)
-        };
-      (state, eff);
+
     | Model.Actions.Init => (state, initEffect)
     | Model.Actions.OpenFileByPath(path, direction) => (
         state,

@@ -17,8 +17,6 @@ let reduce: (State.t, Actions.t) => State.t =
         completions: Completions.reduce(s.completions, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        wildmenu: Wildmenu.reduce(s.wildmenu, a),
-        commandline: Commandline.reduce(s.commandline, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
