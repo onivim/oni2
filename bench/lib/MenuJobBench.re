@@ -3,7 +3,7 @@ open Oni_Model;
 open BenchFramework;
 
 let createItem = name => {
-  let ret: Actions.menuCommand = {
+  let ret: Actions.menuItem = {
     category: None,
     name,
     command: () =>

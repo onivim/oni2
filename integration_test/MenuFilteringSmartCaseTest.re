@@ -7,7 +7,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
   );
 
   let createSimpleMenu = (setItems, _, _) => {
-    let commands: list(Actions.menuCommand) = [
+    let items: list(Actions.menuItem) = [
       {
         category: Some("Preferences"),
         name: "Open configuration file",
@@ -16,7 +16,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
       },
     ];
 
-    setItems(commands);
+    setItems(items);
   };
 
   dispatch(MenuOpen(createSimpleMenu));

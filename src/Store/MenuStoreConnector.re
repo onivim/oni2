@@ -38,7 +38,7 @@ let prefixFor : Vim.Types.cmdlineType => string = fun
 let start = (themeInfo: Model.ThemeInfo.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let selectItemEffect = (item: Actions.menuCommand) =>
+  let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
       let action = item.command();
       dispatch(action);
@@ -272,7 +272,7 @@ let subscriptions = (ripgrep) => {
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   let module MenuFilterSubscription = FilterSubscription.Make({
-    type item = Actions.menuCommand;
+    type item = Actions.menuItem;
     let format = Model.Menu.getLabel;
   });
 
@@ -287,7 +287,7 @@ let subscriptions = (ripgrep) => {
           items
             |> List.map(
               (Model.Filter.{ item, highlight }) =>
-                ({ ...item, highlight }: Actions.menuCommand))
+                ({ ...item, highlight }: Actions.menuItem))
             |> Array.of_list;
         Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
       }

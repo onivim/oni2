@@ -45,7 +45,7 @@ let getItems = fun
 
 
 // TODO: This doesn't really belong here. Find a better home for it.
-let getLabel = (item: menuCommand) => {
+let getLabel = (item: menuItem) => {
   switch (item.category) {
   | Some(v) => v ++ ": " ++ item.name
   | None => item.name
