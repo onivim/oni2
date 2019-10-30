@@ -59,10 +59,12 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-
   // MenuStoreConnector
   | MenuShow(menuVariant)
-  | MenuInput({ text: string, cursorPosition: int })
+  | MenuInput({
+      text: string,
+      cursorPosition: int,
+    })
   | MenuUpdateSource(menuSource)
   | MenuFocus(int)
   | MenuFocusPrevious
@@ -70,7 +72,6 @@ type t =
   | MenuSearch(string)
   | MenuSelect
   | MenuClose
-
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
@@ -166,7 +167,7 @@ and menuItem = {
   icon: option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
-and menuVariant = 
+and menuVariant =
   | CommandPalette
   | Buffers
   | WorkspaceFiles
@@ -174,5 +175,8 @@ and menuVariant =
   | Themes
 and menuSource =
   | Loading
-  | Progress({ items: array(menuItem), progress: float })
+  | Progress({
+      items: array(menuItem),
+      progress: float,
+    })
   | Complete(array(menuItem));

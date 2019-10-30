@@ -6,8 +6,8 @@
 module type Config = {
   type item;
 
-  let format : item => string;
-}
+  let format: item => string;
+};
 
 module Make = (Config: Config) => {
   open Oni_Core;
@@ -17,7 +17,7 @@ module Make = (Config: Config) => {
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
-    shouldLower ? String.lowercase_ascii(s) : s
+    shouldLower ? String.lowercase_ascii(s) : s;
   };
 
   type pendingWork = {
@@ -122,7 +122,8 @@ module Make = (Config: Config) => {
 
       let uiFilteredNew =
         List.filter(
-          (Filter.{ item, _ }) => matches(newQueryEx, format(item, ~shouldLower)),
+          (Filter.{item, _}) =>
+            matches(newQueryEx, format(item, ~shouldLower)),
           uiFiltered,
         );
 
@@ -180,29 +181,30 @@ module Make = (Config: Config) => {
     let pendingWork = ref(p);
     let completedWork = ref(c.allFiltered);
 
-    while (i^ < iterationsPerFrame && !isCompleted^) {
+    while (i^ < iterationsPerFrame && ! isCompleted^) {
       let p = pendingWork^;
       let c = completedWork^;
       let (newIsCompleted, newPendingWork, newCompletedWork) =
         switch (p.itemsToFilter) {
-        | [] =>
-          (true, p, c)
+        | [] => (true, p, c)
 
-        | [[], ...tail] =>
-          (false, {...p, itemsToFilter: tail}, c)
+        | [[], ...tail] => (false, {...p, itemsToFilter: tail}, c)
 
         | [[innerHd, ...innerTail], ...tail] =>
           // Do a first filter pass to check if the item satisifies the regex
-          let name =
-            format(innerHd, ~shouldLower=p.shouldLower);
+          let name = format(innerHd, ~shouldLower=p.shouldLower);
           let newCompleted =
             if (matches(p.explodedFilter, name)) {
               [innerHd, ...c];
             } else {
-              c
+              c;
             };
 
-          (false, {...p, itemsToFilter: [innerTail, ...tail]}, newCompleted)
+          (
+            false,
+            {...p, itemsToFilter: [innerTail, ...tail]},
+            newCompleted,
+          );
         };
 
       pendingWork := newPendingWork;
@@ -226,10 +228,8 @@ module Make = (Config: Config) => {
   };
 
   let progressReporter = (p: pendingWork, _) => {
-    let toFilter =
-      float_of_int(List.length(p.itemsToFilter));
-    let total =
-      float_of_int(List.length(p.allItems));
+    let toFilter = float_of_int(List.length(p.itemsToFilter));
+    let total = float_of_int(List.length(p.allItems));
 
     1.0 -. toFilter /. total;
   };
@@ -239,7 +239,7 @@ module Make = (Config: Config) => {
       ~pendingWorkPrinter=showPendingWork,
       ~completedWorkPrinter=showCompletedWork,
       ~progressReporter,
-      ~name="MenuJob",
+      ~name="FilterJob",
       ~initialCompletedWork,
       ~budget=Milliseconds(2.),
       ~f=doWork,
@@ -248,4 +248,4 @@ module Make = (Config: Config) => {
   };
 
   let default = create();
-} 
+};

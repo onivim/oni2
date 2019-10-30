@@ -87,7 +87,7 @@ let start = (themeInfo: ThemeInfo.t) => {
             "workbench.colorTheme",
             `String(name),
           ),
-        )
+        ),
       )
     );
 
@@ -116,13 +116,17 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.MenuFocusPrevious
     | Actions.MenuFocus(_) =>
       switch (state.menu) {
-      | Some({ variant: Themes, selected: Some(selected), source: Complete(items), _ }) =>
-        let focusedItem = Array.get(items, selected);
-        (state, loadThemeByNameEffect(focusedItem.name))
-      | _ =>
-        (state, Isolinear.Effect.none)
+      | Some({
+          variant: Themes,
+          selected: Some(selected),
+          source: Complete(items),
+          _,
+        }) =>
+        let focusedItem = items[selected];
+        (state, loadThemeByNameEffect(focusedItem.name));
+      | _ => (state, Isolinear.Effect.none)
       }
-    
+
     | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,
         loadThemeByPathEffect(uiTheme, themePath),
@@ -132,8 +136,8 @@ let start = (themeInfo: ThemeInfo.t) => {
         state,
         Isolinear.Effect.batch([
           persistThemeEffect(name),
-          loadThemeByNameEffect(name)
-        ])
+          loadThemeByNameEffect(name),
+        ]),
       )
 
     | _ => (state, Isolinear.Effect.none)
@@ -142,4 +146,3 @@ let start = (themeInfo: ThemeInfo.t) => {
 
   updater |> withWatcher;
 };
-

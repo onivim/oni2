@@ -3,14 +3,15 @@ open TestFramework;
 open Oni_Core;
 
 module Actions = Oni_Model.Actions;
-module FilterJob = Oni_Model.FilterJob.Make({
-  type item = Actions.menuItem;
-  let format = Oni_Model.Menu.getLabel;
-});
+module FilterJob =
+  Oni_Model.FilterJob.Make({
+    type item = Actions.menuItem;
+    let format = Oni_Model.Menu.getLabel;
+  });
 
 describe("FilterJob", ({describe, _}) => {
-  let createItem = name => {
-    ({
+  let createItem = name =>
+    Actions.{
       category: None,
       name,
       command: () =>
@@ -19,8 +20,7 @@ describe("FilterJob", ({describe, _}) => {
         ),
       icon: None,
       highlight: [],
-    }: Actions.menuItem);
-  };
+    };
 
   let runToCompletion = j => {
     let job = ref(j);

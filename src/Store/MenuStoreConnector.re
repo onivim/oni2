@@ -13,27 +13,26 @@ module Menu = Model.Menu;
 module Utility = Core.Utility;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 
-
 // TODO: Remove after 4.08 upgrade
 module Option = {
-  let map = f => fun
+  let map = f =>
+    fun
     | Some(x) => Some(f(x))
-    | None => None
+    | None => None;
 
-  let value = (~default) => fun
+  let value = (~default) =>
+    fun
     | Some(x) => x
-    | None => default
+    | None => default;
 
-  let some = x =>
-    Some(x)
+  let some = x => Some(x);
 };
 
-
-let prefixFor : Vim.Types.cmdlineType => string = fun 
+let prefixFor: Vim.Types.cmdlineType => string =
+  fun
   | SearchForward => "/"
   | SearchReverse => "?"
-  | _ => ":"
-
+  | _ => ":";
 
 let start = (themeInfo: Model.ThemeInfo.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
@@ -45,15 +44,20 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     });
 
   let executeVimCommandEffect =
-    Isolinear.Effect.createWithDispatch(~name="menu.executeVimCommand", dispatch => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="menu.executeVimCommand", dispatch => {
       // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
-      dispatch(Actions.KeyboardInput("<CR>"));
+      dispatch(
+        Actions.KeyboardInput("<CR>"),
+      )
     });
 
   let exitModeEffect =
     Isolinear.Effect.createWithDispatch(~name="menu.exitMode", dispatch => {
       // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
-      dispatch(Actions.KeyboardInput("<ESC>"));
+      dispatch(
+        Actions.KeyboardInput("<ESC>"),
+      )
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
@@ -67,77 +71,84 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     buffers
     |> Core.IntMap.to_seq
     |> Seq.filter_map(element => {
-          let (_, buffer) = element;
+         let (_, buffer) = element;
 
-          switch (Model.Buffer.getFilePath(buffer)) {
-          | Some(path) =>
-            Some(Actions.{
-              category: None,
-              name: getDisplayPath(path, currentDirectory),
-              command: () => {
-                Oni_Model.Actions.OpenFileByPath(path, None);
-              },
-              icon:
-                Oni_Model.FileExplorer.getFileIcon(
-                  languageInfo,
-                  iconTheme,
-                  path,
-                ),
-              highlight: []
-            })
-          | None => None
-          };
-        })
+         switch (Model.Buffer.getFilePath(buffer)) {
+         | Some(path) =>
+           Some(
+             Actions.{
+               category: None,
+               name: getDisplayPath(path, currentDirectory),
+               command: () => {
+                 Oni_Model.Actions.OpenFileByPath(path, None);
+               },
+               icon:
+                 Oni_Model.FileExplorer.getFileIcon(
+                   languageInfo,
+                   iconTheme,
+                   path,
+                 ),
+               highlight: [],
+             },
+           )
+         | None => None
+         };
+       })
     |> Array.of_seq;
   };
 
-  let menuUpdater = (state: option(Menu.t), action: Actions.t, buffers, languageInfo, iconTheme, themeInfo)
-    : (option(Menu.t), Isolinear.Effect.t(Actions.t)) => {
-    switch (action) {
-    | MenuShow(CommandPalette) =>
+  let menuUpdater =
       (
-        Some{{
+        state: option(Menu.t),
+        action: Actions.t,
+        buffers,
+        languageInfo,
+        iconTheme,
+        themeInfo,
+      )
+      : (option(Menu.t), Isolinear.Effect.t(Actions.t)) => {
+    switch (action) {
+    | MenuShow(CommandPalette) => (
+        Some({
           ...Menu.defaults(CommandPalette),
           source: Complete(Model.CommandPalette.commands),
-          selected: Some(0)
-        }},
-        Isolinear.Effect.none
-      );
+          selected: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
 
-    | MenuShow(Buffers) =>
-      (
-        Some{{
+    | MenuShow(Buffers) => (
+        Some({
           ...Menu.defaults(Buffers),
-          source: Complete(makeBufferCommands(languageInfo, iconTheme, buffers)),
-          selected: Some(0)
-        }},
-        Isolinear.Effect.none
-      );
+          source:
+            Complete(makeBufferCommands(languageInfo, iconTheme, buffers)),
+          selected: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
 
-    | MenuShow(WorkspaceFiles) =>
-      (
-        Some{{
+    | MenuShow(WorkspaceFiles) => (
+        Some({
           ...Menu.defaults(WorkspaceFiles),
           source: Loading,
-          selected: Some(0)
-        }},
-        Isolinear.Effect.none
-      );
+          selected: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
 
-    | MenuShow(Wildmenu(cmdType)) =>
-      (
-        Some{{
+    | MenuShow(Wildmenu(cmdType)) => (
+        Some({
           ...Menu.defaults(Wildmenu(cmdType)),
           prefix: Some(prefixFor(cmdType)),
-        }},
-        Isolinear.Effect.none
-      );
+        }),
+        Isolinear.Effect.none,
+      )
 
     | MenuShow(Themes) =>
       let items =
         Model.ThemeInfo.getThemes(themeInfo)
         |> List.map((theme: ExtensionContributions.Theme.t) => {
-              Actions.{
+             Actions.{
                category: Some("Theme"),
                name: theme.label,
                command: () => ThemeLoadByName(theme.label),
@@ -148,109 +159,120 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         |> Array.of_list;
 
       (
-        Some{{
-          ...Menu.defaults(Themes),
-          source: Complete(items),
-        }},
-        Isolinear.Effect.none
+        Some({...Menu.defaults(Themes), source: Complete(items)}),
+        Isolinear.Effect.none,
       );
 
-    | MenuInput({ text, cursorPosition }) =>
-      (
-        Option.map(state => Menu.{ ...state, text, cursorPosition }, state),
-        Isolinear.Effect.none
-      );
+    | MenuInput({text, cursorPosition}) => (
+        Option.map(state => Menu.{...state, text, cursorPosition}, state),
+        Isolinear.Effect.none,
+      )
 
-    | MenuUpdateSource(source) =>
-      (
-        Option.map((state: Menu.t) => {
-          let count = Menu.getCount(source);
-          {...state, source, selected: Option.map(min(count), state.selected)}
-        }, state),
-        Isolinear.Effect.none
-      );
+    | MenuUpdateSource(source) => (
+        Option.map(
+          (state: Menu.t) => {
+            let count = Menu.getCount(source);
+            {
+              ...state,
+              source,
+              selected: Option.map(min(count), state.selected),
+            };
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
 
     | MenuFocus(index) => (
-      Option.map((state: Menu.t) => {
-        let count = Menu.getCount(state.source);
+        Option.map(
+          (state: Menu.t) => {
+            let count = Menu.getCount(state.source);
 
-        {
-          ...state,
-          selected: Some(Utility.clamp(index, ~lo=0, ~hi=count))
-        }
-      }, state),
-      Isolinear.Effect.none
-    )
+            {
+              ...state,
+              selected: Some(Utility.clamp(index, ~lo=0, ~hi=count)),
+            };
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
 
     | NotifyKeyPressed(_, "<UP>")
     | MenuFocusPrevious => (
-      Option.map((state: Menu.t) => {
-        let count = Menu.getCount(state.source);
+        Option.map(
+          (state: Menu.t) => {
+            let count = Menu.getCount(state.source);
 
-        {
-          ...state,
-          selected:
-            Option.map(selected =>
-              if (count == 0) {
-                0
-              } else if (selected <= 0) {
-                count - 1 // "roll over" to end of list
-              } else {
-                selected - 1
-              }, state.selected)
-            |> Option.value(~default=max(count -1, 0)) // default to end of list
-            |> Option.some
-        }
-      }, state),
-      Isolinear.Effect.none
-    )
+            {
+              ...state,
+              selected:
+                Option.map(
+                  selected =>
+                    if (count == 0) {
+                      0;
+                    } else if (selected <= 0) {
+                      count - 1; // "roll over" to end of list
+                    } else {
+                      selected - 1;
+                    },
+                  state.selected,
+                )
+                |> Option.value(~default=max(count - 1, 0))  // default to end of list
+                |> Option.some,
+            };
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
 
     | NotifyKeyPressed(_, "<DOWN>")
     | MenuFocusNext => (
-      Option.map((state: Menu.t) => {
-        let count = Menu.getCount(state.source);
+        Option.map(
+          (state: Menu.t) => {
+            let count = Menu.getCount(state.source);
 
-        {
-          ...state,
-          selected:
-            Option.map(selected =>
-              if (count == 0) {
-                0
-              } else {
-                (selected + 1) mod count
-              }, state.selected)
-            |> Option.value(~default=0) // default to start of list
-            |> Option.some
-        }
-      }, state),
-      Isolinear.Effect.none
-    )
+            {
+              ...state,
+              selected:
+                Option.map(
+                  selected =>
+                    if (count == 0) {
+                      0;
+                    } else {
+                      (selected + 1) mod count;
+                    },
+                  state.selected,
+                )
+                |> Option.value(~default=0)  // default to start of list
+                |> Option.some,
+            };
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
 
     | MenuSelect =>
       switch (state) {
-        | Some({ variant: Wildmenu(_), _ }) =>
-          (None, executeVimCommandEffect)
+      | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
-        | Some({ source, selected: Some(selected), _ }) =>
-          let items = Menu.getItems(source);
-          switch (items[selected]) {
-          | item =>
-            (None, selectItemEffect(item))
+      | Some({source, selected: Some(selected), _}) =>
+        let items = Menu.getItems(source);
+        switch (items[selected]) {
+        | item => (None, selectItemEffect(item))
 
-          | exception Invalid_argument(_) =>
-            (state, Isolinear.Effect.none)
-          }
+        | exception (Invalid_argument(_)) => (state, Isolinear.Effect.none)
+        };
 
-        | _ =>
-          (state, Isolinear.Effect.none)
+      | _ => (state, Isolinear.Effect.none)
       }
 
     | MenuClose =>
       switch (state) {
-      | Some({ variant: Wildmenu(_), _ }) =>
-        (None, exitModeEffect);
-      | _ =>
-        (None, Isolinear.Effect.none);
+      | Some({variant: Wildmenu(_), _}) => (None, exitModeEffect)
+      | _ => (None, Isolinear.Effect.none)
       }
 
     | _ => (state, Isolinear.Effect.none)
@@ -258,7 +280,15 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) => {
-    let (menuState, menuEffect) = menuUpdater(state.menu, action, state.buffers, state.languageInfo, state.iconTheme, themeInfo);
+    let (menuState, menuEffect) =
+      menuUpdater(
+        state.menu,
+        action,
+        state.buffers,
+        state.languageInfo,
+        state.iconTheme,
+        themeInfo,
+      );
     let state = {...state, menu: menuState};
     (state, menuEffect);
   };
@@ -266,31 +296,33 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
   (updater, stream);
 };
 
-
-let subscriptions = (ripgrep) => {
+let subscriptions = ripgrep => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
-  let module MenuFilterSubscription = FilterSubscription.Make({
-    type item = Actions.menuItem;
-    let format = Model.Menu.getLabel;
-  });
+  module MenuFilterSubscription =
+    FilterSubscription.Make({
+      type item = Actions.menuItem;
+      let format = Model.Menu.getLabel;
+    });
 
   let filter = (query, source) => {
     MenuFilterSubscription.create(
       ~id="menu-filter",
       ~query,
-      ~items = Menu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
+      ~items=Menu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
         let items =
           items
-            |> List.map(
-              (Model.Filter.{ item, highlight }) =>
-                ({ ...item, highlight }: Actions.menuItem))
-            |> Array.of_list;
-        Actions.MenuUpdateSource(progress == 1. ? Complete(items) : Progress({ items, progress }))
-      }
+          |> List.map((Model.Filter.{item, highlight}) =>
+               ({...item, highlight}: Actions.menuItem)
+             )
+          |> Array.of_list;
+        Actions.MenuUpdateSource(
+          progress == 1. ? Complete(items) : Progress({items, progress}),
+        );
+      },
     );
   };
 
@@ -299,47 +331,50 @@ let subscriptions = (ripgrep) => {
 
     let re = Str.regexp_string(directory ++ Filename.dir_sep);
 
-    let getDisplayPath = fullPath =>
-      Str.replace_first(re, "", fullPath);
+    let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
 
-    let stringToCommand =
-      (languageInfo, iconTheme, fullPath) => Actions.{
+    let stringToCommand = (languageInfo, iconTheme, fullPath) =>
+      Actions.{
         category: None,
         name: getDisplayPath(fullPath),
         command: () => Model.Actions.OpenFileByPath(fullPath, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
-        highlight: []
+        highlight: [],
       };
 
     RipgrepSubscription.create(
       ~id="workspace-search",
-      ~directory, ~ripgrep,
-      ~onUpdate=items => List.map(stringToCommand(languageInfo, iconTheme), items) |> addItems,
-      ~onCompleted=() => Noop
+      ~directory,
+      ~ripgrep,
+      ~onUpdate=
+        items =>
+          items
+          |> List.map(stringToCommand(languageInfo, iconTheme))
+          |> addItems,
+      ~onCompleted=() => Noop,
     );
   };
 
   let updater = (state: Model.State.t) => {
     switch (state.menu) {
-      | Some(menu) =>
-        switch (menu.variant) {
-          | CommandPalette
-          | Buffers
-          | Themes =>
-            [filter(menu.text, menu.source)]
+    | Some(menu) =>
+      switch (menu.variant) {
+      | CommandPalette
+      | Buffers
+      | Themes => [filter(menu.text, menu.source)]
 
-          | WorkspaceFiles =>
-            [filter(menu.text, menu.source), ripgrep(state.languageInfo, state.iconTheme)]
+      | WorkspaceFiles => [
+          filter(menu.text, menu.source),
+          ripgrep(state.languageInfo, state.iconTheme),
+        ]
 
-          | Wildmenu(_) =>
-            []
-        }
+      | Wildmenu(_) => []
+      }
 
-      | None =>
-        []
+    | None => []
     };
   };
 
-  (updater, stream)
-}
+  (updater, stream);
+};

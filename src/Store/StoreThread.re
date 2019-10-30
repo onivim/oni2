@@ -175,8 +175,13 @@ let start =
       (),
     );
 
-  let module MenuSubscriptionRunner = Core.Subscription.Runner({ type action = Model.Actions.t; let id = "menu-subscription" });
-  let (menuSubscriptionsUpdater, _menuSubscriptionsStream) = MenuStoreConnector.subscriptions(ripgrep);
+  module MenuSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "menu-subscription";
+    });
+  let (menuSubscriptionsUpdater, _menuSubscriptionsStream) =
+    MenuStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
@@ -189,7 +194,7 @@ let start =
     };
 
     // TODO: Wire this up properly
-    let menuSubs = menuSubscriptionsUpdater(newState)
+    let menuSubs = menuSubscriptionsUpdater(newState);
     MenuSubscriptionRunner.run(~dispatch, menuSubs);
   };
 
@@ -223,27 +228,27 @@ let start =
       }
     );
 
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, inputStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, syntaxStream);
   let _ : Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, extHostStream);
   let _ : Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, menuStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, lifecycleStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, windowStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, hoverStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));

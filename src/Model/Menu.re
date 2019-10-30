@@ -1,7 +1,7 @@
-open Actions
+open Actions;
 
 type t = {
-  variant: variant,
+  variant,
   text: string,
   prefix: option(string),
   cursorPosition: int,
@@ -9,12 +9,13 @@ type t = {
   selected: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
 }
 
-and variant = Actions.menuVariant =
-  | CommandPalette
-  | Buffers
-  | WorkspaceFiles
-  | Wildmenu(Vim.Types.cmdlineType)
-  | Themes
+and variant =
+  Actions.menuVariant =
+    | CommandPalette
+    | Buffers
+    | WorkspaceFiles
+    | Wildmenu(Vim.Types.cmdlineType)
+    | Themes;
 
 let defaults = variant => {
   variant,
@@ -22,27 +23,22 @@ let defaults = variant => {
   prefix: None,
   cursorPosition: 0,
   selected: None,
-  source: Loading
+  source: Loading,
 };
 
+let getCount =
+  fun
+  | Loading => 0
 
-let getCount = fun
-  | Loading =>
-    0
+  | Progress({items, _})
+  | Complete(items) => Array.length(items);
 
-  | Progress({ items, _ })
-  | Complete(items) =>
-    Array.length(items);
+let getItems =
+  fun
+  | Loading => [||]
 
-
-let getItems = fun
-  | Loading =>
-    [||]
-
-  | Progress({ items, _ })
-  | Complete(items) =>
-    items
-
+  | Progress({items, _})
+  | Complete(items) => items;
 
 // TODO: This doesn't really belong here. Find a better home for it.
 let getLabel = (item: menuItem) => {
@@ -50,4 +46,4 @@ let getLabel = (item: menuItem) => {
   | Some(v) => v ++ ": " ++ item.name
   | None => item.name
   };
-}; 
+};

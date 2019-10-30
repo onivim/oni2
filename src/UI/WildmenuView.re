@@ -1,4 +1,3 @@
-
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
@@ -13,13 +12,15 @@ let createElement =
       ~theme: Theme.t,
       (),
     ) =>
-  component(hooks => (
-    hooks,
-    <MenuView
-      font = GlobalContext.current().state.uiFont
-      theme = theme
-      autofocus = false // We want input to go straight to Vim
-      configuration = configuration
-      state
-      />
-  ));
+  component(hooks =>
+    (
+      hooks,
+      <MenuView
+        font={GlobalContext.current().state.uiFont}
+        theme
+        autofocus=false
+        configuration
+        state
+      />,
+    )
+  );

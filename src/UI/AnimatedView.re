@@ -2,13 +2,13 @@ open Revery;
 open Revery.UI;
 open Oni_Model;
 
-
 type action =
   | Tick(Time.t)
   | Pause
   | Resume;
 
-let reducer = fun
+let reducer =
+  fun
   | Tick(dt) => Animation.tick(Time.toSeconds(dt))
   | Pause => Animation.pause
   | Resume => Animation.resume;
@@ -29,7 +29,7 @@ let createElement =
         ~initialState=
           Animation.create(~isActive, ~duration?, ~repeat?, ~delay?, ()),
         reducer,
-        hooks
+        hooks,
       );
 
     let hooks =
@@ -38,14 +38,17 @@ let createElement =
         () => {
           Printf.printf("-- %b\n%!", isActive);
           dispatch(isActive ? Resume : Pause);
-          None
-        }, hooks);
+          None;
+        },
+        hooks,
+      );
 
     let hooks =
-      Hooks.tick(~tickRate=Time.Seconds(0.), dt => dispatch(Tick(dt)), hooks);
+      Hooks.tick(
+        ~tickRate=Time.Seconds(0.),
+        dt => dispatch(Tick(dt)),
+        hooks,
+      );
 
-    (
-      hooks,
-      renderFunc(Animation.getValue(animation))
-    );
+    (hooks, renderFunc(Animation.getValue(animation)));
   });

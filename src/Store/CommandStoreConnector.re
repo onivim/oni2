@@ -80,9 +80,15 @@ let start = _ => {
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
-    ("commandPalette.open", _ => singleActionEffect(MenuShow(CommandPalette))),
+    (
+      "commandPalette.open",
+      _ => singleActionEffect(MenuShow(CommandPalette)),
+    ),
     ("quickOpen.buffers", _ => singleActionEffect(MenuShow(Buffers))),
-    ("quickOpen.workspaceFiles", _ => singleActionEffect(MenuShow(WorkspaceFiles))),
+    (
+      "quickOpen.workspaceFiles",
+      _ => singleActionEffect(MenuShow(WorkspaceFiles)),
+    ),
     /*(
         "developer.massiveMenu",
         (state: Oni_Model.State.t) => {

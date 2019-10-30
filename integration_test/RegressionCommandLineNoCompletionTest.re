@@ -15,10 +15,8 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
   dispatch(KeyboardInput("e"));
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.menu) {
-    | Some(menuState) =>
-      menuState.text == "e"
-    | None =>
-      false
+    | Some(menuState) => menuState.text == "e"
+    | None => false
     }
   );
 
@@ -26,10 +24,8 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
 
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.menu) {
-    | Some(menuState) =>
-      menuState.text == "eh"
-    | None =>
-      false
+    | Some(menuState) => menuState.text == "eh"
+    | None => false
     }
   );
 });

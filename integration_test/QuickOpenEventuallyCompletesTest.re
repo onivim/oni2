@@ -23,27 +23,24 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   /* Wait for menu 'isLoading' to be true */
   wait(~name="Menu is loading is true", (state: State.t) =>
     switch (state.menu) {
-    | Some(menuState) =>
-      menuState.text == "e"
-    | None =>
-      false
+    | Some(menuState) => menuState.text == "e"
+    | None => false
     }
   );
-
   // TODO: This doesn;t make sense here any more, but should it be tested elsewhere?
   /* let longWaitTime = 10. *. 60.; /* 10 minutes */
 
-  /* Wait for menu 'isLoading' to eventually be false - this means quickopen completed w/o crashing */
-  wait(
-    ~name="Menu is loading is false",
-    ~timeout=longWaitTime,
-    (state: State.t) => {
-      dispatch(Tick({deltaTime: 0., totalTime: 0.}));
-      runEffects();
-      print_endline(
-        "Current job state: \n" ++ Core.Job.show(state.menu.filterJob),
-      );
-      state.menu.isLoading == false;
-    },
-  ); */
+     /* Wait for menu 'isLoading' to eventually be false - this means quickopen completed w/o crashing */
+     wait(
+       ~name="Menu is loading is false",
+       ~timeout=longWaitTime,
+       (state: State.t) => {
+         dispatch(Tick({deltaTime: 0., totalTime: 0.}));
+         runEffects();
+         print_endline(
+           "Current job state: \n" ++ Core.Job.show(state.menu.filterJob),
+         );
+         state.menu.isLoading == false;
+       },
+     ); */
 });

@@ -7,16 +7,18 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
   module Subscription = Core.Subscription;
   module Job = Core.Job;
 
-    module FilterJob = Model.FilterJob.Make(JobConfig);
+  module FilterJob = Model.FilterJob.Make(JobConfig);
 
   module Provider = {
     type action = Actions.t;
 
     type params = {
       query: string,
-        items: list(JobConfig.item),
-        itemStream: Isolinear.Stream.t(list(JobConfig.item)),
-        onUpdate: (list(Model.Filter.result(JobConfig.item)), ~progress: float) => action
+      items: list(JobConfig.item),
+      itemStream: Isolinear.Stream.t(list(JobConfig.item)),
+      onUpdate:
+        (list(Model.Filter.result(JobConfig.item)), ~progress: float) =>
+        action,
     };
 
     type state = {
@@ -29,10 +31,10 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
     let start =
         (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
       Log.debug(() => "Starting FilterJob subscription " ++ id);
-        let job =
-          FilterJob.create()
-            |> Job.map(FilterJob.updateQuery(query))
-            |> Job.map(FilterJob.addItems(items));
+      let job =
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery(query))
+        |> Job.map(FilterJob.addItems(items));
 
       let unsubscribeFromItemStream =
         Isolinear.Stream.subscribe(itemStream, items =>
@@ -66,11 +68,11 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
             | Some({job, _}) =>
               let items = Job.getCompletedWork(job).uiFiltered;
               let progress = Job.getProgress(job);
-              dispatch(onUpdate(items, ~progress))
+              dispatch(onUpdate(items, ~progress));
 
             | None => Log.error("Unable to pump non-existing FilterJob")
             },
-            Seconds(0.1),
+          Seconds(0.1),
         );
 
       let dispose = () => {
@@ -86,13 +88,16 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
       switch (Hashtbl.find_opt(jobs, id)) {
       | Some({job, _} as state) when query != job.pendingWork.filter =>
         // Query changed
-            Log.debug(() => "Updating FilterJob subscription " ++ id ++ " with query: " ++ query);
+        Log.debug(() =>
+          "Updating FilterJob subscription " ++ id ++ " with query: " ++ query
+        );
         let job = Job.map(FilterJob.updateQuery(query), job);
         Hashtbl.replace(jobs, id, {...state, job});
 
       | Some(_) => () // Query hasn't changed, so do nothing
 
-      | None => Log.error("Unable to update non-existing FilterJob subscription")
+      | None =>
+        Log.error("Unable to update non-existing FilterJob subscription")
       };
 
     let dispose = (~id) => {
@@ -103,7 +108,9 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
         Hashtbl.remove(jobs, id);
 
       | None =>
-        Log.error("Tried to dispose non-existing FilterJob subscription: " ++ id)
+        Log.error(
+          "Tried to dispose non-existing FilterJob subscription: " ++ id,
+        )
       };
     };
   };
@@ -114,4 +121,4 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
       (module Provider),
       {query, items, itemStream, onUpdate},
     );
-}
+};

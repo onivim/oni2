@@ -70,22 +70,22 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <EditorView state />
         </View>
         <Overlay>
-        {switch (state.menu) {
-          | None => React.empty
-          | Some(menuState) =>
-            switch (menuState.variant) {
-              | Wildmenu(_) =>
-                <WildmenuView theme configuration state={menuState}/>
+          {switch (state.menu) {
+           | None => React.empty
+           | Some(menuState) =>
+             switch (menuState.variant) {
+             | Wildmenu(_) =>
+               <WildmenuView theme configuration state=menuState />
 
-              | _ =>
-                <MenuView
-                  theme
-                  configuration
-                  state={menuState}
-                  font={state.uiFont}
-                />
-            }
-        }}
+             | _ =>
+               <MenuView
+                 theme
+                 configuration
+                 state=menuState
+                 font={state.uiFont}
+               />
+             }
+           }}
           <KeyDisplayerView state />
           <NotificationsView state />
         </Overlay>

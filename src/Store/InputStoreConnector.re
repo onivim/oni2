@@ -11,12 +11,10 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-
 type captureMode =
   | Normal
   | Wildmenu
   | Quickmenu;
-
 
 let isMenuOpen = (state: State.t) => state.menu != None;
 
@@ -94,41 +92,36 @@ let start =
 
     let captureMode =
       switch (state.menu) {
-      | Some({ variant: Wildmenu(_), _ }) =>
-        Wildmenu
+      | Some({variant: Wildmenu(_), _}) => Wildmenu
 
-      | Some({ variant: CommandPalette, _ })
-      | Some({ variant: Buffers, _ })
-      | Some({ variant: WorkspaceFiles, _ })
-      | Some({ variant: Themes, _ }) =>
-        Quickmenu
+      | Some({variant: CommandPalette, _})
+      | Some({variant: Buffers, _})
+      | Some({variant: WorkspaceFiles, _})
+      | Some({variant: Themes, _}) => Quickmenu
 
-      | None =>
-        Normal
+      | None => Normal
       };
 
     switch (key) {
-    | None =>
-      ()
+    | None => ()
 
     | Some(k) =>
-      let bindingActions =
-        getActionsForBinding(k, commands, conditions);
+      let bindingActions = getActionsForBinding(k, commands, conditions);
 
-      let actions = 
+      let actions =
         switch (captureMode) {
-          | Normal
-          | Wildmenu when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
-            Log.info("Input::handle - sending raw input: " ++ k);
-            [Actions.KeyboardInput(k)]
+        | Normal
+        | Wildmenu
+            when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
+          Log.info("Input::handle - sending raw input: " ++ k);
+          [Actions.KeyboardInput(k)];
 
-          | _ =>
-            Log.info("Input::handle - sending bound actions.");
-            bindingActions
+        | _ =>
+          Log.info("Input::handle - sending bound actions.");
+          bindingActions;
         };
 
-      [Actions.NotifyKeyPressed(time, k), ...actions]
-        |> List.iter(dispatch);
+      [Actions.NotifyKeyPressed(time, k), ...actions] |> List.iter(dispatch);
     };
 
     // Run input effects _immediately_

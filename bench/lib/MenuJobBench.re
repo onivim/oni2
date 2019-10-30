@@ -2,10 +2,11 @@ open Oni_Core;
 open Oni_Model;
 open BenchFramework;
 
-module MenuFilterJob = FilterJob.Make({
-  type item = Actions.menuItem;
-  let format = Menu.getLabel;
-});
+module MenuFilterJob =
+  FilterJob.Make({
+    type item = Actions.menuItem;
+    let format = Menu.getLabel;
+  });
 
 let createItem = name => {
   let ret: Actions.menuItem = {
