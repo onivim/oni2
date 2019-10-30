@@ -28,14 +28,14 @@ module Provider = {
       (~id, ~params as {query, items, itemStream, onUpdate}, ~dispatch) => {
     Log.debug(() => "Starting MenuJob subscription " ++ id);
     let job = MenuJob.create();
-    let job = Job.mapw(MenuJob.updateQuery(query), job);
-    let job = Job.mapw(MenuJob.addItems(items), job);
+    let job = Job.map(MenuJob.updateQuery(query), job);
+    let job = Job.map(MenuJob.addItems(items), job);
 
     let unsubscribeFromItemStream =
       Isolinear.Stream.subscribe(itemStream, items =>
         switch (Hashtbl.find_opt(jobs, id)) {
         | Some({job, _} as state) =>
-          let job = Job.mapw(MenuJob.addItems(items), job);
+          let job = Job.map(MenuJob.addItems(items), job);
           Hashtbl.replace(jobs, id, {...state, job});
 
         | None => Log.error("Unable to add items to non-existing MenuJob")
@@ -82,7 +82,7 @@ module Provider = {
     | Some({job, _} as state) when query != job.pendingWork.filter =>
       // Query changed
       Log.debug(() => "Updating MenuJob subscription " ++ id);
-      let job = Job.mapw(MenuJob.updateQuery(query), job);
+      let job = Job.map(MenuJob.updateQuery(query), job);
       Hashtbl.replace(jobs, id, {...state, job});
 
     | Some(_) => () // Query hasn't changed, so do nothing
