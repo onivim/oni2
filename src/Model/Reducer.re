@@ -38,9 +38,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | SetColorTheme(theme) => {...s, theme}
-      | ChangeMode(m) =>
-        let ret: State.t = {...s, mode: m};
-        ret;
+      | ChangeMode(m) => {...s, mode: m}
       | SetEditorFont(font) => {...s, editorFont: font}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
