@@ -30,7 +30,7 @@ let getCount = fun
   | Loading =>
     0
 
-  | Progress({ items })
+  | Progress({ items, _ })
   | Complete(items) =>
     Array.length(items);
 
@@ -39,7 +39,7 @@ let getItems = fun
   | Loading =>
     [||]
 
-  | Progress({ items })
+  | Progress({ items, _ })
   | Complete(items) =>
     items
 

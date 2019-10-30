@@ -88,7 +88,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let Menu.{source, selected, text, cursorPosition, prefix} = state;
+    let Menu.{source, selected, text, cursorPosition, prefix, _} = state;
 
     let (items, jobProgress) =
       switch (source) {

@@ -5,11 +5,8 @@
  */
 
 open Oni_Core;
-open Oni_Extensions;
 open Oni_Model;
 open Oni_Syntax;
-
-open Rench;
 
 let configurationWatcher =
     (configurationSelector: ConfigurationValues.t => 'a, f) => {
@@ -119,7 +116,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.MenuFocusPrevious
     | Actions.MenuFocus(_) =>
       switch (state.menu) {
-      | Some({ variant: Themes, selected: Some(selected), source: Complete(items) }) =>
+      | Some({ variant: Themes, selected: Some(selected), source: Complete(items), _ }) =>
         let focusedItem = Array.get(items, selected);
         (state, loadThemeByNameEffect(focusedItem.name))
       | _ =>

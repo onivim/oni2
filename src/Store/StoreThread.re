@@ -176,7 +176,7 @@ let start =
     );
 
   let module MenuSubscriptionRunner = Core.Subscription.Runner({ type action = Model.Actions.t; let id = "menu-subscription" });
-  let (menuSubscriptionsUpdater, menuSubscriptionsStream) = MenuStoreConnector.subscriptions(ripgrep);
+  let (menuSubscriptionsUpdater, _menuSubscriptionsStream) = MenuStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
@@ -190,7 +190,7 @@ let start =
 
     // TODO: Wire this up properly
     let menuSubs = menuSubscriptionsUpdater(newState)
-    MenuSubscriptionRunner.run(dispatch, menuSubs);
+    MenuSubscriptionRunner.run(~dispatch, menuSubs);
   };
 
   let runEffects = () => {

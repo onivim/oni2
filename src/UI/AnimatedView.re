@@ -1,6 +1,5 @@
 open Revery;
 open Revery.UI;
-open Oni_Core;
 open Oni_Model;
 
 
@@ -27,7 +26,8 @@ let createElement =
   component(hooks => {
     let (animation, dispatch, hooks) =
       Hooks.reducer(
-        Animation.create(~isActive, ~duration?, ~repeat?, ~delay?, ()),
+        ~initialState=
+          Animation.create(~isActive, ~duration?, ~repeat?, ~delay?, ()),
         reducer,
         hooks
       );

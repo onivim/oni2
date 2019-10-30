@@ -1,9 +1,7 @@
 
-open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
-open Oni_Core.Types.UiFont;
 
 let component = React.component("wildmenu");
 

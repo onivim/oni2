@@ -36,7 +36,7 @@ let prefixFor : Vim.Types.cmdlineType => string = fun
 
 
 let start = (themeInfo: Model.ThemeInfo.t) => {
-  let (stream, dispatch) = Isolinear.Stream.create();
+  let (stream, _dispatch) = Isolinear.Stream.create();
 
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
@@ -228,10 +228,10 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | MenuSelect =>
       switch (state) {
-        | Some({ variant: Wildmenu(_) }) =>
+        | Some({ variant: Wildmenu(_), _ }) =>
           (None, executeVimCommandEffect)
 
-        | Some({ source, selected: Some(selected) }) =>
+        | Some({ source, selected: Some(selected), _ }) =>
           let items = Menu.getItems(source);
           switch (items[selected]) {
           | item =>
@@ -247,7 +247,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | MenuClose =>
       switch (state) {
-      | Some({ variant: Wildmenu(_) }) =>
+      | Some({ variant: Wildmenu(_), _ }) =>
         (None, exitModeEffect);
       | _ =>
         (None, Isolinear.Effect.none);
@@ -268,7 +268,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
 
 let subscriptions = (ripgrep) => {
-  let (stream, dispatch) = Isolinear.Stream.create();
+  let (stream, _dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   let module MenuFilterSubscription = FilterSubscription.Make({

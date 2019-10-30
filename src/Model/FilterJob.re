@@ -122,7 +122,7 @@ module Make = (Config: Config) => {
 
       let uiFilteredNew =
         List.filter(
-          (Filter.{ item }) => matches(newQueryEx, format(item, ~shouldLower)),
+          (Filter.{ item, _ }) => matches(newQueryEx, format(item, ~shouldLower)),
           uiFiltered,
         );
 
@@ -194,7 +194,7 @@ module Make = (Config: Config) => {
         | [[innerHd, ...innerTail], ...tail] =>
           // Do a first filter pass to check if the item satisifies the regex
           let name =
-            format(innerHd, p.shouldLower);
+            format(innerHd, ~shouldLower=p.shouldLower);
           let newCompleted =
             if (matches(p.explodedFilter, name)) {
               [innerHd, ...c];

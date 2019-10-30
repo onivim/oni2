@@ -360,7 +360,7 @@ let start =
   };
 
   let _ =
-    Vim.CommandLine.onUpdate(({ text, position: cursorPosition }) => {
+    Vim.CommandLine.onUpdate(({ text, position: cursorPosition, _ }) => {
       dispatch(Model.Actions.MenuInput({ text, cursorPosition }));
 
       let cmdlineType = Vim.CommandLine.getType();
@@ -702,7 +702,7 @@ let start =
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.menu) {
-          | Some({ variant: Wildmenu(_), selected: Some(selected), source }) =>
+          | Some({ variant: Wildmenu(_), selected: Some(selected), source, _ }) =>
             let items = Model.Menu.getItems(source);
             try (applyCompletionEffect(items[selected].name)) {
             | Invalid_argument(_) => Isolinear.Effect.none

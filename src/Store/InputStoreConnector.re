@@ -94,13 +94,13 @@ let start =
 
     let captureMode =
       switch (state.menu) {
-      | Some({ variant: Wildmenu(_) }) =>
+      | Some({ variant: Wildmenu(_), _ }) =>
         Wildmenu
 
-      | Some({ variant: CommandPalette })
-      | Some({ variant: Buffers })
-      | Some({ variant: WorkspaceFiles })
-      | Some({ variant: Themes }) =>
+      | Some({ variant: CommandPalette, _ })
+      | Some({ variant: Buffers, _ })
+      | Some({ variant: WorkspaceFiles, _ })
+      | Some({ variant: Themes, _ }) =>
         Quickmenu
 
       | None =>
