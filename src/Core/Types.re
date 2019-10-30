@@ -200,7 +200,8 @@ module Input = {
     | [@name "editorTextFocus"] EditorTextFocus
     | [@name "suggestWidgetVisible"] SuggestWidgetVisible
     // Onivim extensions to the 'when' syntax
-    | [@name "insertMode"] InsertMode;
+    | [@name "insertMode"] InsertMode
+    | [@name "menuCursorEnd"] MenuCursorEnd;
 
   [@deriving show({with_path: false})]
   type keyBindings = {

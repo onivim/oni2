@@ -128,6 +128,10 @@ let start = _ => {
     ("menu.next", _ => multipleActionEffect([MenuFocusNext])),
     ("menu.previous", _ => multipleActionEffect([MenuFocusPrevious])),
     ("menu.select", _ => multipleActionEffect([MenuSelect])),
+    (
+      "menu.selectBackground",
+      _ => multipleActionEffect([MenuSelectBackground]),
+    ),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),

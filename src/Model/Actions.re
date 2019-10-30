@@ -71,6 +71,7 @@ type t =
   | MenuFocusNext
   | MenuSearch(string)
   | MenuSelect
+  | MenuSelectBackground
   | MenuClose
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)

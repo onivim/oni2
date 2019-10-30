@@ -28,6 +28,11 @@ let fixedBindings =
       command: "menu.next",
       condition: [MenuFocus, TextInputFocus],
     },
+    {
+      key: "<RIGHT>",
+      command: "menu.selectBackground",
+      condition: [MenuCursorEnd],
+    },
   ];
 
 let isMenuOpen = (state: State.t) => state.menu != None;
@@ -36,8 +41,15 @@ let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
 
-  if (isMenuOpen(state)) {
+  switch (state.menu) {
+  | Some({text, cursorPosition, _}) =>
     Hashtbl.add(ret, MenuFocus, true);
+
+    if (cursorPosition == String.length(text)) {
+      Hashtbl.add(ret, MenuCursorEnd, true);
+    };
+
+  | None => ()
   };
 
   if (Model.Completions.isActive(state.completions)) {

@@ -257,12 +257,23 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
       | Some({source, selected: Some(selected), _}) =>
-        let items = Menu.getItems(source);
-        switch (items[selected]) {
+        switch (Menu.getItems(source)[selected]) {
         | item => (None, selectItemEffect(item))
-
         | exception (Invalid_argument(_)) => (state, Isolinear.Effect.none)
-        };
+        }
+
+      | _ => (state, Isolinear.Effect.none)
+      }
+
+    | MenuSelectBackground =>
+      switch (state) {
+      | Some({source, selected: Some(selected), _}) =>
+        let eff =
+          switch (Menu.getItems(source)[selected]) {
+          | item => selectItemEffect(item)
+          | exception (Invalid_argument(_)) => Isolinear.Effect.none
+          };
+        (state, eff);
 
       | _ => (state, Isolinear.Effect.none)
       }
