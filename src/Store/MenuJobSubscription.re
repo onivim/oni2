@@ -3,11 +3,10 @@ module Model = Oni_Model;
 module Log = Core.Log;
 
 module Actions = Model.Actions;
-module MenuJob = Model.MenuJob;
 module Subscription = Core.Subscription;
 module Job = Core.Job;
 
-module FilterJob = Model.MenuJob.Make({
+module FilterJob = Model.FilterJob.Make({
   type item = Actions.menuCommand;
   let format = Model.Menu.getLabel;
 });

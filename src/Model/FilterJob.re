@@ -1,6 +1,5 @@
-/* MenuJob.re
-
-     MenuJob is a Job.t that describes how to break up the work of filtering
+/* FilterJob.re
+     FilterJob is a Job.t that describes how to break up the work of filtering
      menu items across multiple frames.
    */
 

@@ -11,7 +11,6 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Menu = Model.Menu;
-module MenuJob = Model.MenuJob;
 
 open Actions;
 
