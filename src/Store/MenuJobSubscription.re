@@ -14,7 +14,7 @@ module Provider = {
     query: string,
     items: list(Actions.menuCommand),
     itemStream: Isolinear.Stream.t(list(Actions.menuCommand)),
-    onUpdate: (array(Actions.menuCommand), ~progress: float) => action,
+    onUpdate: (list(Actions.menuCommand), ~progress: float) => action,
   };
 
   type state = {

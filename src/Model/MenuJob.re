@@ -9,7 +9,6 @@ open Oni_Core;
 open CamomileBundled.Camomile;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-
 let format = (item, ~shouldLower) => {
   let s = Menu.getLabel(item);
   shouldLower ? String.lowercase_ascii(s) : s;
@@ -43,7 +42,7 @@ type completedWork = {
   // If the allFiltered list is still huge,
   // we take a subset prior to sorting to display in the UI
   // The 'ui' filtered should be the main item for the UI to use
-  uiFiltered: array(Actions.menuCommand),
+  uiFiltered: list(Actions.menuCommand),
 };
 
 let showCompletedWork = (v: completedWork) => {
@@ -51,12 +50,12 @@ let showCompletedWork = (v: completedWork) => {
   ++ " -- allFiltered: "
   ++ string_of_int(List.length(v.allFiltered))
   ++ " -- uiFiltered: "
-  ++ string_of_int(Array.length(v.uiFiltered));
+  ++ string_of_int(List.length(v.uiFiltered));
 };
 
 type t = Job.t(pendingWork, completedWork);
 
-let initialCompletedWork = {allFiltered: [], uiFiltered: [||]};
+let initialCompletedWork = {allFiltered: [], uiFiltered: []};
 let initialPendingWork = {
   filter: "",
   fullCommands: [],
@@ -116,11 +115,10 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
       && List.length(currentMatches) < maxItemsToFilter) {
     let {allFiltered, uiFiltered} = c;
 
-    let uiFilteredList = Array.to_list(uiFiltered);
     let uiFilteredNew =
       List.filter(
         item => matches(newQueryEx, format(item, ~shouldLower)),
-        uiFilteredList,
+        uiFiltered,
       );
 
     let allFilteredNew =
@@ -138,7 +136,7 @@ let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
 
     let newCompletedWork = {
       allFiltered: allFilteredNew,
-      uiFiltered: Array.of_list(uiFilteredNew),
+      uiFiltered: uiFilteredNew,
     };
 
     (false, newPendingWork, newCompletedWork);
@@ -218,8 +216,7 @@ let doWork = (p: pendingWork, c: completedWork) => {
       |> Filter.rank(p.filter, format)
       |> List.map((Filter.{item, highlight}) =>
            Actions.{...item, highlight}
-         )
-      |> Array.of_list;
+         );
     (completed, p, {allFiltered: c, uiFiltered});
   };
 };
