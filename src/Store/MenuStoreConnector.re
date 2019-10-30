@@ -281,9 +281,8 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
   let updater = (state: Model.State.t, action: Actions.t) => {
     switch (action) {
-    | Tick(_) =>
-      (state, Isolinear.Effect.none)
-  
+    | Tick(_) => (state, Isolinear.Effect.none)
+
     | action =>
       let (menuState, menuEffect) =
         menuUpdater(
@@ -296,7 +295,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         );
 
       ({...state, menu: menuState}, menuEffect);
-    }
+    };
   };
 
   (updater, stream);
