@@ -19,16 +19,13 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   /* Launch quick open */
   dispatch(MenuShow(WorkspaceFiles));
   runEffects();
-
+/* 
   /* Wait for menu 'isLoading' to be true */
   wait(~name="Menu is loading is true", (state: State.t) =>
-    switch (state.menu) {
-    | Some(menuState) => menuState.text == "e"
-    | None => false
-    }
+    state.menu.isLoading == true
   );
   // TODO: This doesn;t make sense here any more, but should it be tested elsewhere?
-  /* let longWaitTime = 10. *. 60.; /* 10 minutes */
+  let longWaitTime = 10. *. 60.; /* 10 minutes */
 
      /* Wait for menu 'isLoading' to eventually be false - this means quickopen completed w/o crashing */
      wait(
