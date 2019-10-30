@@ -19,6 +19,7 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
     let bg = state.theme.editorLineNumberBackground;
+    let fg = state.theme.editorForeground;
     (
       hooks,
       <View
@@ -32,7 +33,7 @@ let createElement = (~children as _, ~state: State.t, ()) =>
         <Clickable onClick={toggleExplorer(state)} style=button>
           <FontIcon
             backgroundColor=bg
-            color=Colors.white
+            color=fg
             icon=FontAwesome.file
           />
         </Clickable>
