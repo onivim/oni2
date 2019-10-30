@@ -271,7 +271,7 @@ let subscriptions = (ripgrep) => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
-  let module MenuFilterSubscription = MenuJobSubscription.Make({
+  let module MenuFilterSubscription = FilterSubscription.Make({
     type item = Actions.menuCommand;
     let format = Model.Menu.getLabel;
   });
