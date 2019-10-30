@@ -16,6 +16,20 @@ type captureMode =
   | Wildmenu
   | Quickmenu;
 
+let fixedBindings =
+  Keybindings.[
+    {
+      key: "<UP>",
+      command: "menu.previous",
+      condition: [MenuFocus, TextInputFocus],
+    },
+    {
+      key: "<DOWN>",
+      command: "menu.next",
+      condition: [MenuFocus, TextInputFocus],
+    },
+  ];
+
 let isMenuOpen = (state: State.t) => state.menu != None;
 
 let conditionsOfState = (state: State.t) => {
@@ -60,7 +74,7 @@ let start =
   Sdl2.TextInput.start();
 
   let getActionsForBinding =
-      (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+      (inputKey, bindings, currentConditions: Handler.Conditions.t) => {
     let inputKey = String.uppercase_ascii(inputKey);
     Keybindings.(
       List.fold_left(
@@ -73,7 +87,7 @@ let start =
           )
             ? [Actions.Command(command)] : defaultAction,
         [],
-        commands,
+        fixedBindings @ bindings,
       )
     );
   };
@@ -86,7 +100,7 @@ let start =
    */
   let keyEventListener = key => {
     let state = getState();
-    let commands = state.keyBindings;
+    let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
 
@@ -106,7 +120,7 @@ let start =
     | None => ()
 
     | Some(k) =>
-      let bindingActions = getActionsForBinding(k, commands, conditions);
+      let bindingActions = getActionsForBinding(k, bindings, conditions);
 
       let actions =
         switch (captureMode) {

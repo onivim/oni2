@@ -198,7 +198,6 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | NotifyKeyPressed(_, "<UP>")
     | MenuFocusPrevious => (
         Option.map(
           (state: Menu.t) => {
@@ -227,7 +226,6 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | NotifyKeyPressed(_, "<DOWN>")
     | MenuFocusNext => (
         Option.map(
           (state: Menu.t) => {

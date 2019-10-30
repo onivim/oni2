@@ -110,8 +110,6 @@ let start = (themeInfo: ThemeInfo.t) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | NotifyKeyPressed(_, "<UP>")
-    | NotifyKeyPressed(_, "<DOWN>")
     | Actions.MenuFocusNext
     | Actions.MenuFocusPrevious
     | Actions.MenuFocus(_) =>

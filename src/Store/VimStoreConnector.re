@@ -698,8 +698,6 @@ let start =
         applyCompletion(state),
       )
 
-    | NotifyKeyPressed(_, "<UP>")
-    | NotifyKeyPressed(_, "<DOWN>")
     | Model.Actions.MenuFocusNext
     | Model.Actions.MenuFocusPrevious
     | Model.Actions.MenuFocus(_) =>
