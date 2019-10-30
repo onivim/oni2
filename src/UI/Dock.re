@@ -18,8 +18,8 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
 
 let createElement = (~children as _, ~state: State.t, ()) =>
   component(hooks => {
-    let bg = state.theme.editorLineNumberBackground;
-    let fg = state.theme.editorForeground;
+    let bg = state.theme.activityBarBackground;
+    let fg = state.theme.activityBarForeground;
     (
       hooks,
       <View
