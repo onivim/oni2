@@ -2,10 +2,13 @@ open TestFramework;
 
 open Oni_Core;
 
-module MenuJob = Oni_Model.MenuJob;
 module Actions = Oni_Model.Actions;
+module FilterJob = Oni_Model.FilterJob.Make({
+  type item = Actions.menuItem;
+  let format = Oni_Model.Menu.getLabel;
+});
 
-describe("MenuJob", ({describe, _}) => {
+describe("FilterJob", ({describe, _}) => {
   let createItem = name => {
     ({
       category: None,
@@ -32,30 +35,30 @@ describe("MenuJob", ({describe, _}) => {
   describe("filtering", ({test, _}) => {
     test("filtering should respect smart casing", ({expect, _}) => {
       let job =
-        MenuJob.create()
-        |> Job.map(MenuJob.addItems([createItem("Preferences")]))
-        |> Job.map(MenuJob.updateQuery("pref"))
+        FilterJob.create()
+        |> Job.map(FilterJob.addItems([createItem("Preferences")]))
+        |> Job.map(FilterJob.updateQuery("pref"))
         |> runToCompletion;
 
-      expect.int(Array.length(Job.getCompletedWork(job).uiFiltered)).toBe(
+      expect.int(List.length(Job.getCompletedWork(job).uiFiltered)).toBe(
         1,
       );
     });
     test("updating query should not reset items", ({expect, _}) => {
       let job =
-        MenuJob.create()
-        |> Job.map(MenuJob.updateQuery("abc"))
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery("abc"))
         // Add 4 items, separately
-        |> Job.map(MenuJob.addItems([createItem("a")]))
-        |> Job.map(MenuJob.addItems([createItem("abcd")]))
-        |> Job.map(MenuJob.addItems([createItem("b")]))
-        |> Job.map(MenuJob.addItems([createItem("abcde")]))
+        |> Job.map(FilterJob.addItems([createItem("a")]))
+        |> Job.map(FilterJob.addItems([createItem("abcd")]))
+        |> Job.map(FilterJob.addItems([createItem("b")]))
+        |> Job.map(FilterJob.addItems([createItem("abcde")]))
         // Tick 4 times
         |> Job.doWork
         |> Job.doWork
         |> Job.doWork
         |> Job.doWork
-        |> Job.map(MenuJob.updateQuery("abce"));
+        |> Job.map(FilterJob.updateQuery("abce"));
 
       // We should have results without needing to do another iteration of work
       let filtered = Job.getCompletedWork(job).allFiltered;
@@ -67,13 +70,13 @@ describe("MenuJob", ({describe, _}) => {
     });
     test("items batched separately get filtered", ({expect, _}) => {
       let job =
-        MenuJob.create()
-        |> Job.map(MenuJob.updateQuery("abc"))
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery("abc"))
         // Add 4 items, separately
-        |> Job.map(MenuJob.addItems([createItem("a")]))
-        |> Job.map(MenuJob.addItems([createItem("abcd")]))
-        |> Job.map(MenuJob.addItems([createItem("b")]))
-        |> Job.map(MenuJob.addItems([createItem("abcde")]))
+        |> Job.map(FilterJob.addItems([createItem("a")]))
+        |> Job.map(FilterJob.addItems([createItem("abcd")]))
+        |> Job.map(FilterJob.addItems([createItem("b")]))
+        |> Job.map(FilterJob.addItems([createItem("abcde")]))
         // Tick 4 times
         |> Job.doWork
         |> Job.doWork
@@ -91,11 +94,11 @@ describe("MenuJob", ({describe, _}) => {
     });
     test("items batched together get filtered", ({expect, _}) => {
       let job =
-        MenuJob.create()
-        |> Job.map(MenuJob.updateQuery("abc"))
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery("abc"))
         // Add 4 items, separately
         |> Job.map(
-             MenuJob.addItems([
+             FilterJob.addItems([
                createItem("a"),
                createItem("abcd"),
                createItem("b"),
@@ -122,12 +125,12 @@ describe("MenuJob", ({describe, _}) => {
       "regresion test - already filterd items shouldn't get re-added",
       ({expect, _}) => {
       let job =
-        MenuJob.create()
-        |> Job.map(MenuJob.addItems([createItem("abcd")]))
-        |> Job.map(MenuJob.updateQuery("a"))
+        FilterJob.create()
+        |> Job.map(FilterJob.addItems([createItem("abcd")]))
+        |> Job.map(FilterJob.updateQuery("a"))
         |> Job.tick
-        |> Job.map(MenuJob.addItems([createItem("a")]))
-        |> Job.map(MenuJob.updateQuery("abc"))
+        |> Job.map(FilterJob.addItems([createItem("a")]))
+        |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
       let filtered = Job.getCompletedWork(job).allFiltered;
@@ -140,12 +143,12 @@ describe("MenuJob", ({describe, _}) => {
   });
   describe("boundary cases", ({test, _}) =>
     test("large amount of items added work", ({expect, _}) => {
-      let job = MenuJob.create();
+      let job = FilterJob.create();
 
-      let item: list(Actions.menuItem) =
+      let items: list(Actions.menuItem) =
         List.init(1000000, i => createItem("Item " ++ string_of_int(i)));
 
-      let job = Job.map(MenuJob.addItems(items), job);
+      let job = Job.map(FilterJob.addItems(items), job);
 
       expect.bool(Job.isComplete(job)).toBe(false);
     })
