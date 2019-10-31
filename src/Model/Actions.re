@@ -65,7 +65,8 @@ type t =
       text: string,
       cursorPosition: int,
     })
-  | MenuUpdateSource(menuSource)
+  | MenuUpdateRipgrepProgress(progress)
+  | MenuUpdateFilterProgress(array(menuItem), progress)
   | MenuFocus(int)
   | MenuFocusPrevious
   | MenuFocusNext
@@ -174,10 +175,7 @@ and menuVariant =
   | WorkspaceFiles
   | Wildmenu(Vim.Types.cmdlineType)
   | Themes
-and menuSource =
+and progress =
   | Loading
-  | Progress({
-      items: array(menuItem),
-      progress: float,
-    })
-  | Complete(array(menuItem));
+  | InProgress(float)
+  | Complete;

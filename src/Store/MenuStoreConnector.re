@@ -111,7 +111,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuShow(CommandPalette) => (
         Some({
           ...Menu.defaults(CommandPalette),
-          source: Complete(Model.CommandPalette.commands),
+          items: Model.CommandPalette.commands,
           selected: Some(0),
         }),
         Isolinear.Effect.none,
@@ -120,8 +120,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuShow(Buffers) => (
         Some({
           ...Menu.defaults(Buffers),
-          source:
-            Complete(makeBufferCommands(languageInfo, iconTheme, buffers)),
+          items: makeBufferCommands(languageInfo, iconTheme, buffers),
           selected: Some(0),
         }),
         Isolinear.Effect.none,
@@ -130,7 +129,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuShow(WorkspaceFiles) => (
         Some({
           ...Menu.defaults(WorkspaceFiles),
-          source: Loading,
+          ripgrepProgress: Loading,
           selected: Some(0),
         }),
         Isolinear.Effect.none,
@@ -158,23 +157,29 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            })
         |> Array.of_list;
 
-      (
-        Some({...Menu.defaults(Themes), source: Complete(items)}),
-        Isolinear.Effect.none,
-      );
+      (Some({...Menu.defaults(Themes), items}), Isolinear.Effect.none);
 
     | MenuInput({text, cursorPosition}) => (
         Option.map(state => Menu.{...state, text, cursorPosition}, state),
         Isolinear.Effect.none,
       )
 
-    | MenuUpdateSource(source) => (
+    | MenuUpdateRipgrepProgress(progress) => (
+        Option.map(
+          (state: Menu.t) => {...state, ripgrepProgress: progress},
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
+    | MenuUpdateFilterProgress(items, progress) => (
         Option.map(
           (state: Menu.t) => {
-            let count = Menu.getCount(source);
+            let count = Array.length(items);
             {
               ...state,
-              source,
+              items,
+              filterProgress: progress,
               selected: Option.map(min(count), state.selected),
             };
           },
@@ -186,7 +191,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuFocus(index) => (
         Option.map(
           (state: Menu.t) => {
-            let count = Menu.getCount(state.source);
+            let count = Array.length(state.items);
 
             {
               ...state,
@@ -201,7 +206,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuFocusPrevious => (
         Option.map(
           (state: Menu.t) => {
-            let count = Menu.getCount(state.source);
+            let count = Array.length(state.items);
 
             {
               ...state,
@@ -229,7 +234,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | MenuFocusNext => (
         Option.map(
           (state: Menu.t) => {
-            let count = Menu.getCount(state.source);
+            let count = Array.length(state.items);
 
             {
               ...state,
@@ -256,8 +261,8 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
-      | Some({source, selected: Some(selected), _}) =>
-        switch (Menu.getItems(source)[selected]) {
+      | Some({items, selected: Some(selected), _}) =>
+        switch (items[selected]) {
         | item => (None, selectItemEffect(item))
         | exception (Invalid_argument(_)) => (state, Isolinear.Effect.none)
         }
@@ -267,9 +272,9 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | MenuSelectBackground =>
       switch (state) {
-      | Some({source, selected: Some(selected), _}) =>
+      | Some({items, selected: Some(selected), _}) =>
         let eff =
-          switch (Menu.getItems(source)[selected]) {
+          switch (items[selected]) {
           | item => selectItemEffect(item)
           | exception (Invalid_argument(_)) => Isolinear.Effect.none
           };
@@ -311,7 +316,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 };
 
 let subscriptions = ripgrep => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
+  let (stream, dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
   module MenuFilterSubscription =
@@ -320,11 +325,11 @@ let subscriptions = ripgrep => {
       let format = Model.Menu.getLabel;
     });
 
-  let filter = (query, source) => {
+  let filter = (query, items) => {
     MenuFilterSubscription.create(
       ~id="menu-filter",
       ~query,
-      ~items=Menu.getItems(source) |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
+      ~items=items |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
       ~onUpdate=(items, ~progress) => {
         let items =
@@ -333,8 +338,9 @@ let subscriptions = ripgrep => {
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;
-        Actions.MenuUpdateSource(
-          progress == 1. ? Complete(items) : Progress({items, progress}),
+        Actions.MenuUpdateFilterProgress(
+          items,
+          progress == 1. ? Complete : InProgress(progress),
         );
       },
     );
@@ -362,11 +368,14 @@ let subscriptions = ripgrep => {
       ~directory,
       ~ripgrep,
       ~onUpdate=
-        items =>
+        items => {
           items
           |> List.map(stringToCommand(languageInfo, iconTheme))
-          |> addItems,
-      ~onCompleted=() => Noop,
+          |> addItems;
+
+          dispatch(Actions.MenuUpdateRipgrepProgress(Loading));
+        },
+      ~onCompleted=() => Actions.MenuUpdateRipgrepProgress(Complete),
     );
   };
 
@@ -376,10 +385,10 @@ let subscriptions = ripgrep => {
       switch (menu.variant) {
       | CommandPalette
       | Buffers
-      | Themes => [filter(menu.text, menu.source)]
+      | Themes => [filter(menu.text, menu.items)]
 
       | WorkspaceFiles => [
-          filter(menu.text, menu.source),
+          filter(menu.text, menu.items),
           ripgrep(state.languageInfo, state.iconTheme),
         ]
 

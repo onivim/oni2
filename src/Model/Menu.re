@@ -5,7 +5,9 @@ type t = {
   text: string,
   prefix: option(string),
   cursorPosition: int,
-  source: menuSource,
+  items: array(menuItem),
+  filterProgress: progress,
+  ripgrepProgress: progress,
   selected: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
 }
 
@@ -23,22 +25,10 @@ let defaults = variant => {
   prefix: None,
   cursorPosition: 0,
   selected: None,
-  source: Loading,
+  items: [||],
+  filterProgress: Complete,
+  ripgrepProgress: Complete,
 };
-
-let getCount =
-  fun
-  | Loading => 0
-
-  | Progress({items, _})
-  | Complete(items) => Array.length(items);
-
-let getItems =
-  fun
-  | Loading => [||]
-
-  | Progress({items, _})
-  | Complete(items) => items;
 
 // TODO: This doesn't really belong here. Find a better home for it.
 let getLabel = (item: menuItem) => {

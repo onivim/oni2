@@ -360,7 +360,7 @@ let start =
           },
         completions,
       );
-    dispatch(Model.Actions.MenuUpdateSource(Complete(items)));
+    dispatch(Model.Actions.MenuUpdateFilterProgress(items, Complete));
   };
 
   let _ =
@@ -704,11 +704,10 @@ let start =
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.menu) {
-        | Some({variant: Wildmenu(_), selected: Some(selected), source, _}) =>
-          let items = Model.Menu.getItems(source);
+        | Some({variant: Wildmenu(_), selected: Some(selected), items, _}) =>
           try(applyCompletionEffect(items[selected].name)) {
           | Invalid_argument(_) => Isolinear.Effect.none
-          };
+          }
         | _ => Isolinear.Effect.none
         };
       (state, eff);

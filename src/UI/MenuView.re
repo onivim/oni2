@@ -1,6 +1,5 @@
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
@@ -60,6 +59,17 @@ module Styles = {
       ),
       textWrap(TextWrapping.NoWrap),
     ];
+
+  let progressBarTrack =
+    Style.[height(2), width(Constants.menuWidth), overflow(`Hidden)];
+
+  let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
+    Style.[
+      height(2),
+      width(barWidth),
+      transform(Transform.[TranslateX(offset)]),
+      backgroundColor(theme.oniNormalModeBackground),
+    ];
 };
 
 let onSelectedChange = index =>
@@ -69,6 +79,28 @@ let onInput = (text, cursorPosition) =>
   GlobalContext.current().dispatch(MenuInput({text, cursorPosition}));
 
 let onSelect = _ => GlobalContext.current().dispatch(MenuSelect);
+
+let progressBar = (~children as _, ~progress=?, ~theme, ()) => {
+  let indicatorWidth = 100.;
+  let menuWidth = float_of_int(Constants.menuWidth);
+  let trackWidth = menuWidth +. indicatorWidth;
+  <AnimatedView duration=1.5 repeat=true>
+    ...{t => {
+      let (width, offset) =
+        switch (progress) {
+        | Some(progress) => (int_of_float(menuWidth *. progress), 0.)
+        | None => (
+            int_of_float(indicatorWidth),
+            trackWidth *. t -. indicatorWidth,
+          )
+        };
+
+      <View style=Styles.progressBarTrack>
+        <View style={Styles.progressBarIndicator(~width, ~offset, ~theme)} />
+      </View>;
+    }}
+  </AnimatedView>;
+};
 
 let createElement =
     (
@@ -85,66 +117,31 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let Menu.{source, selected, text, cursorPosition, prefix, _} = state;
+    let Menu.{
+          items,
+          filterProgress,
+          ripgrepProgress,
+          selected,
+          text,
+          cursorPosition,
+          prefix,
+          _,
+        } = state;
 
-    let (items, jobProgress) =
-      switch (source) {
-      | Loading => ([||], 0.)
+    let progress =
+      Actions.(
+        switch (filterProgress, ripgrepProgress) {
+        | (Loading, _)
+        | (_, Loading) => Loading
 
-      | Progress({items, progress}) => (items, progress)
+        | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
 
-      | Complete(items) => (items, 1.)
-      };
+        | (InProgress(value), _)
+        | (_, InProgress(value)) => InProgress(value)
 
-    let loadingSpinner =
-      if (jobProgress == 0.) {
-        <AnimatedView duration=2.>
-          ...{opacity =>
-            <View style=Style.[height(40), width(Constants.menuWidth)]>
-              <Center>
-                <AnimatedView duration={2. *. Float.pi} repeat=true>
-                  ...{t =>
-                    <View
-                      style=Style.[
-                        transform(
-                          Transform.[RotateY(Math.Angle.Radians(t *. 2.))],
-                        ),
-                      ]>
-                      <Opacity opacity>
-                        <Container
-                          width=10
-                          height=10
-                          color={theme.oniNormalModeBackground}
-                        />
-                      </Opacity>
-                    </View>
-                  }
-                </AnimatedView>
-              </Center>
-            </View>
-          }
-        </AnimatedView>;
-      } else {
-        <Opacity opacity=0.3>
-          <View style=Style.[height(2), width(Constants.menuWidth)]>
-            <View
-              style=Style.[
-                height(2),
-                width(
-                  1
-                  + (
-                    int_of_float(
-                      float_of_int(Constants.menuWidth) *. jobProgress,
-                    )
-                    - 1
-                  ),
-                ),
-                backgroundColor(theme.oniNormalModeBackground),
-              ]
-            />
-          </View>
-        </Opacity>;
-      };
+        | (Complete, Complete) => Complete
+        }
+      );
 
     let renderItem = index => {
       let item = items[index];
@@ -222,7 +219,11 @@ let createElement =
                 selected
                 render=renderItem
               />
-              loadingSpinner
+              {switch (progress) {
+               | Complete => React.empty
+               | InProgress(progress) => <progressBar progress theme />
+               | Loading => <progressBar theme />
+               }}
             </View>
           </View>
         </OniBoxShadow>

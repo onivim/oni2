@@ -114,12 +114,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.MenuFocusPrevious
     | Actions.MenuFocus(_) =>
       switch (state.menu) {
-      | Some({
-          variant: Themes,
-          selected: Some(selected),
-          source: Complete(items),
-          _,
-        }) =>
+      | Some({variant: Themes, selected: Some(selected), items, _}) =>
         let focusedItem = items[selected];
         (state, loadThemeByNameEffect(focusedItem.name));
       | _ => (state, Isolinear.Effect.none)
