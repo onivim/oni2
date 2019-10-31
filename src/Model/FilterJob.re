@@ -151,7 +151,8 @@ module Make = (Config: Config) => {
         ...p,
         filter: newQuery,
         explodedFilter: newQueryEx,
-        itemsToFilter: p.allItems // Reset items to filter
+        itemsToFilter: p.allItems, // Reset items to filter
+        shouldLower,
       };
 
       let newCompletedWork = initialCompletedWork;
