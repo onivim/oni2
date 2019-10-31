@@ -8,7 +8,7 @@ let checks = [
     _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
   ),
   (
-    "Verify camomile:charmpdir",
+    "Verify camomile:charmapdir",
     _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
   ),
   (
@@ -31,11 +31,11 @@ let checks = [
     },
   ),
   (
-    "Verify rg executable",
+    "Verify ripgrep (rg) executable",
     (setup: Setup.t) => Sys.file_exists(setup.rgPath),
   ),
   (
-    "Verify bundled extensions exists",
+    "Verify bundled extensions path exists",
     (setup: Setup.t) => Sys.is_directory(setup.bundledExtensionsPath),
   ),
   (
