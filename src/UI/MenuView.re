@@ -88,10 +88,15 @@ let progressBar = (~children as _, ~progress=?, ~theme, ()) => {
     ...{t => {
       let (width, offset) =
         switch (progress) {
-        | Some(progress) => (int_of_float(menuWidth *. progress), 0.)
-        | None => (
+        | Some(progress) =>
+          // Determinate
+          (int_of_float(menuWidth *. progress), 0.)
+
+        | None =>
+          // Indeterminate
+          (
             int_of_float(indicatorWidth),
-            trackWidth *. t -. indicatorWidth,
+            trackWidth *. Easing.easeInOut(t) -. indicatorWidth,
           )
         };
 
