@@ -20,6 +20,7 @@ let parseInt = json =>
 
 let parseFloat = json =>
   switch (json) {
+  | `Int(v) => float_of_int(v)
   | `Float(v) => v
   | _ => 0.
   };
