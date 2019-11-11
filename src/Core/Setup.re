@@ -67,6 +67,10 @@ let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
+let getNodeHealthCheckPath = (v: t) => {
+  v.nodeScriptPath ++ "/check-health.js"
+};
+
 let init = () => {
   let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
