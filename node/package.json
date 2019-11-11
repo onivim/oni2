@@ -1,0 +1,24 @@
+{
+  "name": "onivim2-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "vscode-exthost": "1.33.3"
+  },
+  "jest": {
+      "testRegex": "./lib/test/*.*"
+  },
+  "author": "",
+  "license": "SEE LICENSE IN README.md",
+  "devDependencies": {
+    "@types/node": "^11.9.5",
+    "typescript": "^3.3.3333",
+    "jest": "*",
+    "@types/jest": "*"
+  }
+}
