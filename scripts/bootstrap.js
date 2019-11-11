@@ -31,7 +31,7 @@ const getCygwinPath = inputPath => {
 
 if (isWindows) {
     nodePath = getCygwinPath(path.join(vendorPath, "node-v10.15.1", "win-x64", "node.exe"))
-    nodeScriptPath = getCygwinPath(textMateServicePath)
+    nodeScriptPath = getCygwinPath(nodeScriptPath)
     extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
