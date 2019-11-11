@@ -14,8 +14,8 @@ const isWindows = process.platform === "win32"
 const isLinux = !isMac && !isWindows
 
 let nodePath
-let textMateServicePath = path.join(rootDir, "src", "textmate_service", "lib", "src", "index.js")
-let extensionHostPath = path.join(rootDir, "src", "textmate_service", "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
+let nodeScriptPath = path.join(rootDir, "node");
+let extensionHostPath = path.join(nodeScriptPath, "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
@@ -31,7 +31,7 @@ const getCygwinPath = inputPath => {
 
 if (isWindows) {
     nodePath = getCygwinPath(path.join(vendorPath, "node-v10.15.1", "win-x64", "node.exe"))
-    textMateServicePath = getCygwinPath(textMateServicePath)
+    nodeScriptPath = getCygwinPath(textMateServicePath)
     extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
@@ -50,7 +50,7 @@ if (isWindows) {
 const config = {
     node: nodePath,
     camomile: camomilePath,
-    textmateService: textMateServicePath,
+    nodeScript: nodeScriptPath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,
     extensionHost: extensionHostPath,
