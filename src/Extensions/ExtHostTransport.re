@@ -43,7 +43,12 @@ let start =
   ];
 
   let process =
-    NodeProcess.start(~args, ~env, setup, Setup.getNodeExtensionHostPath(setup));
+    NodeProcess.start(
+      ~args,
+      ~env,
+      setup,
+      Setup.getNodeExtensionHostPath(setup),
+    );
 
   let lastReqId = ref(0);
   let rpcRef = ref(None);

@@ -111,7 +111,7 @@ let start =
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostUpdater, extHostStream) =
-     ExtensionClientStoreConnector.start(extensions, setup); 
+    ExtensionClientStoreConnector.start(extensions, setup);
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 

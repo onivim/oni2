@@ -94,7 +94,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        Log.perf("exthost.bufferUpdate", () => {
+        Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Protocol.ModelContentChange.ofBufferUpdate(
               bu,
@@ -116,7 +116,7 @@ let start = (extensions, setup: Core.Setup.t) => {
             true,
             extHostClient,
           );
-        });
+        })
       }
     );
 
