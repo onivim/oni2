@@ -15,8 +15,6 @@ type t = {
   bundledExtensionsPath: string,
   [@key "developmentExtensions"]
   developmentExtensionsPath: [@default None] option(string),
-  [@key "extensionHost"]
-  extensionHostPath: string,
   [@key "nodeScript"]
   nodeScriptPath: string,
   [@key "rg"]
@@ -36,7 +34,6 @@ let default = () => {
       camomilePath: execDir ++ "camomile",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
-      extensionHostPath: "",
       rgPath: execDir ++ "rg.exe",
       version,
     }
@@ -46,7 +43,6 @@ let default = () => {
       camomilePath: execDir ++ "../Resources/camomile",
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
-      extensionHostPath: "",
       rgPath: execDir ++ "rg",
       version,
     }
@@ -56,7 +52,6 @@ let default = () => {
       camomilePath: execDir ++ "../share/camomile",
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
-      extensionHostPath: "",
       rgPath: execDir ++ "rg",
       version,
     }
@@ -69,6 +64,10 @@ let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
 let getNodeHealthCheckPath = (v: t) => {
   v.nodeScriptPath ++ "/check-health.js";
+};
+
+let getNodeExtensionHostPath = (v: t) => {
+  v.nodeScriptPath ++ "/node_modules/vscode-exthost/out/bootstrap-fork.js";
 };
 
 let init = () => {

@@ -15,7 +15,6 @@ const isLinux = !isMac && !isWindows
 
 let nodePath
 let nodeScriptPath = path.join(rootDir, "node");
-let extensionHostPath = path.join(nodeScriptPath, "node_modules", "vscode-exthost", "out", "bootstrap-fork.js");
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
@@ -32,7 +31,6 @@ const getCygwinPath = inputPath => {
 if (isWindows) {
     nodePath = getCygwinPath(path.join(vendorPath, "node-v10.15.1", "win-x64", "node.exe"))
     nodeScriptPath = getCygwinPath(nodeScriptPath)
-    extensionHostPath = getCygwinPath(extensionHostPath);
     extensionsPath = getCygwinPath(extensionsPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
@@ -53,7 +51,6 @@ const config = {
     nodeScript: nodeScriptPath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,
-    extensionHost: extensionHostPath,
     rg: rgPath,
 }
 const oniConfig = JSON.stringify(config)
