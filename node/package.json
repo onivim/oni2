@@ -8,7 +8,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "vscode-exthost": "1.33.3"
+    "vscode-exthost": "1.33.3",
+    "sudo-prompt": "^9.0.0"
   },
   "jest": {
       "testRegex": "./lib/test/*.*"
