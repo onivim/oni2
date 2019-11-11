@@ -110,12 +110,8 @@ let start =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  /*
-     For our July builds, we won't be including the extension host -
-     but we'll bring this back as we start implementing those features!
-   */
-  /* let (extHostUpdater, extHostStream) =
-     ExtensionClientStoreConnector.start(extensions, setup); */
+  let (extHostUpdater, extHostStream) =
+     ExtensionClientStoreConnector.start(extensions, setup); 
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
@@ -160,7 +156,7 @@ let start =
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           syntaxUpdater,
-          /* extHostUpdater, */
+          extHostUpdater,
           fontUpdater,
           menuHostUpdater,
           quickOpenUpdater,
@@ -226,7 +222,7 @@ let start =
   let _ = Isolinear.Stream.connect(dispatch, vimStream);
   let _ = Isolinear.Stream.connect(dispatch, editorEventStream);
   let _ = Isolinear.Stream.connect(dispatch, syntaxStream);
-  /* Isolinear.Stream.connect(dispatch, extHostStream); */
+  let _ = Isolinear.Stream.connect(dispatch, extHostStream);
   let _ = Isolinear.Stream.connect(dispatch, menuStream);
   let _ = Isolinear.Stream.connect(dispatch, explorerStream);
   let _ = Isolinear.Stream.connect(dispatch, lifecycleStream);
