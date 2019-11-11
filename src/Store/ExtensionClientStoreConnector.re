@@ -94,27 +94,29 @@ let start = (extensions, setup: Core.Setup.t) => {
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        let modelContentChange =
-          Protocol.ModelContentChange.ofBufferUpdate(
-            bu,
-            Protocol.Eol.default,
-          );
-        let modelChangedEvent =
-          Protocol.ModelChangedEvent.create(
-            ~changes=[modelContentChange],
-            ~eol=Protocol.Eol.default,
-            ~versionId=bu.version,
-            (),
-          );
+        Log.perf("exthost.bufferUpdate", () => {
+          let modelContentChange =
+            Protocol.ModelContentChange.ofBufferUpdate(
+              bu,
+              Protocol.Eol.default,
+            );
+          let modelChangedEvent =
+            Protocol.ModelChangedEvent.create(
+              ~changes=[modelContentChange],
+              ~eol=Protocol.Eol.default,
+              ~versionId=bu.version,
+              (),
+            );
 
-        let uri = Model.Buffer.getUri(v);
+          let uri = Model.Buffer.getUri(v);
 
-        ExtHostClient.updateDocument(
-          uri,
-          modelChangedEvent,
-          true,
-          extHostClient,
-        );
+          ExtHostClient.updateDocument(
+            uri,
+            modelChangedEvent,
+            true,
+            extHostClient,
+          );
+        });
       }
     );
 
