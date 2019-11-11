@@ -178,6 +178,7 @@
   "scripts": {
     "bootstrap": "esy node ./scripts/bootstrap.js #{@opam/camomile.install}",
     "format": "esy dune build @fmt --auto-promote",
+    "checkhealth": "esy x Oni2 -f --checkhealth",
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js #{@opam/camomile.install}",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",

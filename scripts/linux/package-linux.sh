@@ -44,6 +44,7 @@ cp -r $CAMOMILE_PATH _release/Onivim2.AppDir/usr/share
 ls _release/Onivim2.AppDir/usr/share
 
 cp -r extensions/ _release/Onivim2.AppDir/usr/bin
+cp -r node/ _release/Onivim2.AppDir/usr/share
 # cp -r src/textmate_service/ _release/Onivim2.AppDir/usr/bin
 
 rm _release/Onivim2.AppDir/usr/bin/setup.json
