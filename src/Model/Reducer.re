@@ -34,7 +34,7 @@ let reduce: (State.t, Actions.t) => State.t =
         }
       | DiagnosticsClear(key) => {
           ...s,
-          diagnostics: Diagnostics.clear(key),
+          diagnostics: Diagnostics.clear(s.diagnostics, key),
         }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}

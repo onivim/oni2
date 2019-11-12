@@ -30,8 +30,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onDiagnosticsChangeMany =
       (diagCollection: Protocol.DiagnosticsCollection.t) => {
-    let protocolDiagToDiag:
-      Protocol.Diagnostic.t => Model.Diagnostic.t =
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
       d => {
         let range = Protocol.OneBasedRange.toRange(d.range);
         let message = d.message;
