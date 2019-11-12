@@ -16,6 +16,7 @@ module Commandline = Commandline;
 module CommandPalette = CommandPalette;
 module Completions = Completions;
 module CompletionMeet = CompletionMeet;
+module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;

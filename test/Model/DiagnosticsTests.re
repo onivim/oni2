@@ -4,10 +4,11 @@ open Oni_Core;
 open Oni_Core.Types;
 
 module Buffer = Oni_Model.Buffer;
+module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 
 let singleDiagnostic = [
-  Diagnostics.Diagnostic.create(
+  Diagnostic.create(
     ~range=Range.zero,
     ~message="single error",
     (),
@@ -15,8 +16,8 @@ let singleDiagnostic = [
 ];
 
 let doubleDiagnostic = [
-  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
-  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
+  Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
+  Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
 ];
 
 describe("Diagnostics", ({describe, _}) => {
@@ -34,7 +35,7 @@ describe("Diagnostics", ({describe, _}) => {
   describe("getDiagnosticsAtPosition", ({test, _}) =>
     test("simple diagnostic", ({expect}) => {
       let singleDiagnostic = [
-        Diagnostics.Diagnostic.create(
+        Diagnostic.create(
           ~range=
             Range.ofInt0(
               ~startLine=1,

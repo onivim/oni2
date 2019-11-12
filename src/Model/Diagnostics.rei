@@ -9,16 +9,6 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-module Diagnostic: {
-  [@deriving show({with_path: false})]
-  type t = {
-    range: Range.t,
-    message: string,
-  };
-
-  let create: (~range: Range.t, ~message: string, unit) => t;
-};
-
 type t;
 
 /*

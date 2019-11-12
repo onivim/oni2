@@ -5,7 +5,7 @@
  * based on the current state
  */
 
-type hoverInfo = {diagnostics: list(Diagnostics.Diagnostic.t)};
+type hoverInfo = {diagnostics: list(Diagnostic.t)};
 
 type t = option(hoverInfo);
 
