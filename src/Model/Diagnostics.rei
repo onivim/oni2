@@ -22,6 +22,11 @@ let create: unit => t;
 let change: (t, Buffer.t, string, list(Diagnostic.t)) => t;
 
 /*
+ * [clear(diagnostics, key)] removes diagnostics with the key named [key] across all buffers
+ */
+let clear: (t, string) => t;
+
+/*
  * Get all diagnostics for a buffer
  */
 let getDiagnostics: (t, Buffer.t) => list(Diagnostic.t);

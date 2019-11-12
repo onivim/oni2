@@ -51,6 +51,14 @@ let explodeDiagnostics = (buffer, diagnostics) => {
   |> List.fold_left(f, IntMap.empty);
 };
 
+let clear = (instance, key) => {
+  let f = identifierMap => {
+    StringMap.remove(key, identifierMap);
+  };
+
+  StringMap.map(f, instance);
+};
+
 let change = (instance, buffer, diagKey, diagnostics) => {
   let bufferKey = getKeyForBuffer(buffer);
 

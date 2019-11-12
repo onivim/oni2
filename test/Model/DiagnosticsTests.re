@@ -99,6 +99,31 @@ describe("Diagnostics", ({describe, _}) => {
       expect.int(List.length(diags)).toBe(0);
     })
   );
+  describe("clear", ({test, _}) => {
+    test("single diagnostic", ({expect}) => {
+      let buffer = Buffer.ofLines([||]);
+
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.clear(v, "test_key1");
+
+      let diagnostics = Diagnostics.getDiagnostics(v, buffer);
+
+      expect.int(List.length(diagnostics)).toBe(0);
+    });
+    test("doesn't remove other keys", ({expect}) => {
+      let buffer = Buffer.ofLines([||]);
+
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.clear(v, "test_key1");
+
+      let diagnostics = Diagnostics.getDiagnostics(v, buffer);
+
+      expect.int(List.length(diagnostics)).toBe(2);
+    });
+  });
 
   describe("change", ({test, _}) => {
     test("simple diagnostic add", ({expect}) => {
