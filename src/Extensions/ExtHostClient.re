@@ -42,16 +42,9 @@ let start =
     switch (scope, method, args) {
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
-      print_endline(
-        "MAINTHREADDIAG - changeMany - args: "
-        ++ Yojson.Safe.to_string(`List(args)),
-      );
       Ok(None);
     | ("MainThreadDiagnostics", "$clear", args) =>
       In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
-      print_endline(
-        "MAINTHREADDIAG - clear: " ++ Yojson.Safe.to_string(`List(args)),
-      );
       Ok(None);
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       Log.info(eventName ++ ":" ++ Yojson.Safe.to_string(json));

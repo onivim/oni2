@@ -25,11 +25,26 @@ let start = (extensions, setup: Core.Setup.t) => {
        );
 
   let onDiagnosticsClear = owner => {
-    print_endline("!! onDiagnosticsClear: " ++ owner);
+    dispatch(Model.Actions.DiagnosticsClear(owner));
   };
 
-  let onDiagnosticsChangeMany = _ => {
-    print_endline("!! onDiagnosticsChangeMany: " ++ "[NONE]");
+  let onDiagnosticsChangeMany = (diagCollection: Protocol.DiagnosticsCollection.t) => {
+
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostics.Diagnostic.t = (d) => {
+      let range = Protocol.OneBasedRange.toRange(d.range);
+      let message = d.message;
+      Model.Diagnostics.Diagnostic.create(~range, ~message, ());
+    };
+
+    let f = (d: Protocol.Diagnostics.t) => {
+      let diagnostics = List.map(protocolDiagToDiag, snd(d)); 
+      let _uri = fst(d);
+      let buffer = Model.Buffer.ofLines([||]);
+      Model.Actions.DiagnosticsSet(buffer, diagCollection.name, diagnostics);
+    };
+
+   let _actions =  List.map(f, diagCollection.perFileDiagnostics);
+   ();
   };
 
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
