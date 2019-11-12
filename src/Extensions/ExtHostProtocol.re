@@ -128,11 +128,12 @@ module OneBasedRange = {
 
   let toRange = (v: t) => {
     Range.ofInt1(
-    ~startLine=v.startLineNumber,
-    ~endLine=v.endLineNumber,
-    ~startCharacter=v.startColumn,
-    ~endCharacter=v.endColumn,
-    ());
+      ~startLine=v.startLineNumber,
+      ~endLine=v.endLineNumber,
+      ~startCharacter=v.startColumn,
+      ~endCharacter=v.endColumn,
+      (),
+    );
   };
 };
 
@@ -263,8 +264,10 @@ module DiagnosticsCollection = {
   let of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
     | `List([`String(name), `List(perFileDiagnostics)]) =>
-      let perFileDiagnostics = List.map(Diagnostics.of_yojson, perFileDiagnostics) |> Utility.filterMap(Utility.resultToOption);
-      Some({name, perFileDiagnostics})
+      let perFileDiagnostics =
+        List.map(Diagnostics.of_yojson, perFileDiagnostics)
+        |> Utility.filterMap(Utility.resultToOption);
+      Some({name, perFileDiagnostics});
     | _ => None
     };
   };

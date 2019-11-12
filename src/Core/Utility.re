@@ -106,11 +106,11 @@ let filterMap = (f, l) => {
 };
 
 // TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
-let resultToOption = (r) => {
+let resultToOption = r => {
   switch (r) {
   | Ok(v) => Some(v)
   | Error(_) => None
-  }
+  };
 };
 
 type commandLineCompletionMeet = {

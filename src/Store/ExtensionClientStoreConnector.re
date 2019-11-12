@@ -28,23 +28,26 @@ let start = (extensions, setup: Core.Setup.t) => {
     dispatch(Model.Actions.DiagnosticsClear(owner));
   };
 
-  let onDiagnosticsChangeMany = (diagCollection: Protocol.DiagnosticsCollection.t) => {
-
-    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostics.Diagnostic.t = (d) => {
-      let range = Protocol.OneBasedRange.toRange(d.range);
-      let message = d.message;
-      Model.Diagnostics.Diagnostic.create(~range, ~message, ());
-    };
+  let onDiagnosticsChangeMany =
+      (diagCollection: Protocol.DiagnosticsCollection.t) => {
+    let protocolDiagToDiag:
+      Protocol.Diagnostic.t => Model.Diagnostics.Diagnostic.t =
+      d => {
+        let range = Protocol.OneBasedRange.toRange(d.range);
+        let message = d.message;
+        Model.Diagnostics.Diagnostic.create(~range, ~message, ());
+      };
 
     let f = (d: Protocol.Diagnostics.t) => {
-      let diagnostics = List.map(protocolDiagToDiag, snd(d)); 
+      let diagnostics = List.map(protocolDiagToDiag, snd(d));
       let _uri = fst(d);
       let buffer = Model.Buffer.ofLines([||]);
       Model.Actions.DiagnosticsSet(buffer, diagCollection.name, diagnostics);
     };
 
-   let _actions =  List.map(f, diagCollection.perFileDiagnostics);
-   ();
+    diagCollection.perFileDiagnostics
+    |> List.map(f)
+    |> List.iter(a => dispatch(a));
   };
 
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
