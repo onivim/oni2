@@ -31,18 +31,17 @@ let start = (extensions, setup: Core.Setup.t) => {
   let onDiagnosticsChangeMany =
       (diagCollection: Protocol.DiagnosticsCollection.t) => {
     let protocolDiagToDiag:
-      Protocol.Diagnostic.t => Model.Diagnostics.Diagnostic.t =
+      Protocol.Diagnostic.t => Model.Diagnostic.t =
       d => {
         let range = Protocol.OneBasedRange.toRange(d.range);
         let message = d.message;
-        Model.Diagnostics.Diagnostic.create(~range, ~message, ());
+        Model.Diagnostic.create(~range, ~message, ());
       };
 
     let f = (d: Protocol.Diagnostics.t) => {
       let diagnostics = List.map(protocolDiagToDiag, snd(d));
-      let _uri = fst(d);
-      let buffer = Model.Buffer.ofLines([||]);
-      Model.Actions.DiagnosticsSet(buffer, diagCollection.name, diagnostics);
+      let uri = fst(d);
+      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
     };
 
     diagCollection.perFileDiagnostics

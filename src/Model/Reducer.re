@@ -32,6 +32,10 @@ let reduce: (State.t, Actions.t) => State.t =
           ...s,
           diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
         }
+      | DiagnosticsClear(key) => {
+          ...s,
+          diagnostics: Diagnostics.clear(key),
+        }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
