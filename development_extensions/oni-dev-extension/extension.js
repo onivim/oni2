@@ -35,8 +35,6 @@ function activate(context) {
         //     type: "workspace.onDidOpenTextDocument",
         //     filename: e.fileName,
         // });
-
-        item.text="HERE";
     });
 
     let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
@@ -49,20 +47,17 @@ function activate(context) {
         //     fullText: e.document.getText(),
         // });
 
-		vscode.window.showInformationMessage('YO HELLO');
+		//vscode.window.showInformationMessage('Changed!');
         const document = e.document;
         if (document && path.basename(document.uri.fsPath) == "test.oni-dev") {
-        item.text = "BEFORE2";
-           collection.clear(document.uri);
            collection.set(document.uri, [{
                 code: '', 
                 message: "diag 1",
-                range: new vscode.Range(new vscode.Position(3, 4), new vscode.Position(3, 10)),
+                range: new vscode.Range(new vscode.Position(0, 4), new vscode.Position(0, 10)),
                 severity: vscode.DiagnosticSeverity.Error,
                 source: '',
                 relatedInformation: []
            }]);
-        item.text = "BEFORE3";
         }
     });
 
