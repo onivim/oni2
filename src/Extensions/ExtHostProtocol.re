@@ -205,6 +205,21 @@ module IncomingNotifications = {
       };
     };
   };
+
+  module Diagnostics = {
+    let parseClear = args => switch(args) {
+    | [`String(owner)] => Some(owner)
+    | _ => None
+    };
+
+    let parseChangeMany = args => switch(args) {
+    | [`String(owner), `List([uri, markers])] => 
+      print_endline ("!! PARSING URI: " ++ Yojson.Safe.to_string(uri));
+      print_endline ("!! PARSING MARKERS: " ++ Yojson.Safe.to_string(uri));
+      None;
+    | _ => None
+    };
+  };
 };
 
 module OutgoingNotifications = {
