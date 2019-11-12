@@ -38,6 +38,9 @@ let start =
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
+    | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
+      Log.info(eventName ++ ":" ++ Yojson.Safe.to_string(json));
+      Ok(None);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);
