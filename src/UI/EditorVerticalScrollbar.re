@@ -20,7 +20,7 @@ let createElement =
       ~editor: Editor.t,
       ~height as totalHeight,
       ~width as totalWidth,
-      ~diagnostics: IntMap.t(list(Diagnostics.Diagnostic.t)),
+      ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
       ~children as _,
       (),

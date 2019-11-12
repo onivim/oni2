@@ -33,7 +33,7 @@ type t =
   | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
-  | DiagnosticsSet(Buffer.t, string, list(Diagnostics.Diagnostic.t))
+  | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged(VisualRange.t)
   // LoadEditorFont is the request to load a new font
