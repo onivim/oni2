@@ -8,11 +8,7 @@ module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 
 let singleDiagnostic = [
-  Diagnostic.create(
-    ~range=Range.zero,
-    ~message="single error",
-    (),
-  ),
+  Diagnostic.create(~range=Range.zero, ~message="single error", ()),
 ];
 
 let doubleDiagnostic = [
