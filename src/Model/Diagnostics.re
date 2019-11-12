@@ -11,7 +11,7 @@ open Oni_Core.Types;
 
 /*
  * The type for diagnostics is a nested map:
- * - First level: Buffer Path
+ * - First level: URI
  * - Second level: Diagnostic identifier / key.
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
@@ -19,6 +19,10 @@ open Oni_Core.Types;
 type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 
 let create = () => StringMap.empty;
+
+let getKeyForUri = (uri: Uri.t) => {
+  uri |> Uri.toString;
+};
 
 let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
@@ -59,8 +63,8 @@ let clear = (instance, key) => {
   StringMap.map(f, instance);
 };
 
-let change = (instance, buffer, diagKey, diagnostics) => {
-  let bufferKey = getKeyForBuffer(buffer);
+let change = (instance, uri, diagKey, diagnostics) => {
+  let bufferKey = getKeyForUri(uri);
 
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {

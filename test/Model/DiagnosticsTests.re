@@ -16,6 +16,9 @@ let doubleDiagnostic = [
   Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
 ];
 
+let buffer = Buffer.ofLines([||]);
+let uri = Buffer.getUri(buffer);
+
 describe("Diagnostics", ({describe, _}) => {
   describe("getDiagnostics", ({test, _}) =>
     test("no diagnostics", ({expect}) => {
@@ -45,10 +48,9 @@ describe("Diagnostics", ({describe, _}) => {
         ),
       ];
 
-      let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
       let diags =
         Diagnostics.getDiagnosticsAtPosition(
@@ -104,7 +106,7 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
 
       let v = Diagnostics.create();
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
       let v = Diagnostics.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
@@ -115,8 +117,8 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
 
       let v = Diagnostics.create();
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
       let v = Diagnostics.clear(v, "test_key1");
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
@@ -130,7 +132,7 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -141,8 +143,8 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -155,9 +157,9 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key1", []);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", []);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 

@@ -19,7 +19,7 @@ let create: unit => t;
 /*
  * Change diagnostics for a buffer+diagnostic key pair
  */
-let change: (t, Buffer.t, string, list(Diagnostic.t)) => t;
+let change: (t, Uri.t, string, list(Diagnostic.t)) => t;
 
 /*
  * [clear(diagnostics, key)] removes diagnostics with the key named [key] across all buffers
