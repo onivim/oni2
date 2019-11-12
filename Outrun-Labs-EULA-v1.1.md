@@ -26,7 +26,7 @@ The Software may include various third-party software components or software ser
 
 __1.4 Restrictions on Use.__ 
 
-You shall use the Software strictly in accordance with the terms of the this Agreements and shall not: (a) distribute the Software (b) make the Software available over a network or other environment permitting access or use by multiple users at the same time; (c) violate any applicable laws, rules, or regulations in connection with Your access or use of the Software; (d) use the Software for any revenue generating endeavor, commercial enterprise, employment, or other purpose for which it is not designed or intended; (e) remove proprietary notices from the Software or the Documentation.
+You shall use the Software strictly in accordance with the terms of this Agreement and shall not: (a) distribute the Software (b) make the Software available over a network or other environment permitting access or use by multiple users at the same time; (c) violate any applicable laws, rules, or regulations in connection with Your access or use of the Software; (d) use the Software for any revenue generating endeavor, commercial enterprise, employment, or other purpose for which it is not designed or intended; (e) remove proprietary notices from the Software or the Documentation.
 
 __1.5 Reservation of Rights.__ 
 
