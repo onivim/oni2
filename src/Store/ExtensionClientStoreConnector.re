@@ -24,6 +24,14 @@ let start = (extensions, setup: Core.Setup.t) => {
          Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
+  let onDiagnosticsClear = owner => {
+    print_endline("!! onDiagnosticsClear: " ++ owner);
+  };
+
+  let onDiagnosticsChangeMany = _ => {
+    print_endline("!! onDiagnosticsChangeMany: " ++ "[NONE]");
+  };
+
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
       Model.Actions.StatusBarAddItem(
@@ -44,6 +52,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
+      ~onDiagnosticsClear,
+      ~onDiagnosticsChangeMany,
       setup,
     );
 
