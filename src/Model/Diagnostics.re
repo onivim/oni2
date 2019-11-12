@@ -38,7 +38,9 @@ type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 let create = () => StringMap.empty;
 
 let getKeyForBuffer = (b: Buffer.t) => {
-  b |> Buffer.getUri |> Uri.toString;
+  let ret = b |> Buffer.getUri |> Uri.toString;
+  print_endline("getKeyForBuffer: " ++ ret);
+  ret;
 };
 
 let updateDiagnosticsMap =
