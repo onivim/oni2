@@ -22,6 +22,7 @@ function activate(context) {
                 item.text = "got to here";
                 return [
                     vscode.CompletionItem('Hello World'),
+                    vscode.CompletionItem('Hello Again'),
                 ];
             }
         }

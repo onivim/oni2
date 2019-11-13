@@ -288,6 +288,19 @@ module DiagnosticsCollection = {
   };
 };
 
+module SuggestionItem = {
+  [@deriving yojson({strict: false})]
+  type t = {
+    label: string,
+    insertText: string,
+  };
+};
+
+module Suggestions = {
+  [@deriving yojson({strict: false})]
+  type t = list(SuggestionItem.t);
+};
+
 module CancellationToken = {
   type t = Yojson.Safe.t;
 
