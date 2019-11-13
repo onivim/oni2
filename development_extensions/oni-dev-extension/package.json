@@ -17,7 +17,13 @@
 				"command": "developer.oni.helloWorld",
 				"title": "Hello World"
 			}
-		]
+		],
+		"languages": [{
+			"id": "oni-dev",
+			"extensions": [
+				".oni-dev"
+			]
+		}]
 	},
 	"scripts": {
 		"postinstall": "node ./node_modules/vscode/bin/install"
