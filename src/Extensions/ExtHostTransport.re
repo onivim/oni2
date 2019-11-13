@@ -137,7 +137,8 @@ let start =
       Protocol.Notification.(
         switch (parse(json)) {
         | Request(req) => handleMessage(req.reqId, req.payload)
-        | Reply(_) => ()
+        | Reply(reply) => 
+          prerr_endline("GOT UNHANDLED REPLY: " ++ Yojson.Safe.to_string(reply.payload));
         | Ack(_) => ()
         | Error => ()
         | Ready => _sendInitData()
