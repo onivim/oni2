@@ -7,6 +7,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+module Time = Revery_Core.Time;
+
 type pendingWork('context) = {
   // List of ranges that are visible
   visibleRanges: list(list(Range.t)),
@@ -191,7 +193,7 @@ let create = (~name, ~initialContext, ~f) => {
     ~completedWorkPrinter=showCompletedWork,
     ~name,
     ~initialCompletedWork,
-    ~budget=Milliseconds(2.),
+    ~budget=Time.ms(2),
     ~f=doWork(f),
     initialPendingWork(initialContext),
   );

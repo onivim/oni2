@@ -1,5 +1,5 @@
 {
-  "checksum": "5035d3a2cea2396d058d3466b39a8d89",
+  "checksum": "7bc6b7c0c1cb74d26afe22bacfb92cec",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -93,7 +93,6 @@
         "reason-fontkit@2.7.0@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9",
         "flex@github:jordwalke/flex#7ca8f51@d41d8cd9",
-        "brisk-reconciler@0.0.2@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.4.0@0357bb8b",

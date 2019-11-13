@@ -115,7 +115,7 @@ let start =
     let state = getState();
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
-    let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
+    let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
 
     let captureMode =
       switch (state.quickmenu) {

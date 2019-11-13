@@ -1,5 +1,7 @@
 open Rench;
 
+module Time = Revery_Core.Time;
+
 type disposeFunction = unit => unit;
 
 /* Internal counters used for tracking */
@@ -74,7 +76,7 @@ module RipgrepProcessingJob = {
       ~initialCompletedWork=(),
       ~name="RipgrepProcessorJob",
       ~pendingWorkPrinter,
-      ~budget=Milliseconds(2.),
+      ~budget=Time.ms(2),
       {callback, bytes: [], duplicateHash},
     );
   };
@@ -116,7 +118,7 @@ let process = (rgPath, args, callback, completedCallback) => {
               job := Job.tick(job^);
               Mutex.unlock(jobMutex);
             },
-          Milliseconds(0.),
+          Time.zero,
         ),
       )
   );

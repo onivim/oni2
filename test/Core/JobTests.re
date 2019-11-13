@@ -15,7 +15,7 @@ describe("Job", ({describe, _}) =>
         Job.create(
           ~f,
           ~initialCompletedWork=0,
-          ~budget=Milliseconds(8.),
+          ~budget=Time.ms(8),
           (),
         );
 
