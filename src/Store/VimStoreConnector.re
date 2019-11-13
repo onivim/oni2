@@ -22,6 +22,8 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  let bufferToIgnore = ref(1);
+
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -297,26 +299,30 @@ let start =
 
   let _ =
     Vim.Buffer.onEnter(buf => {
-      let meta = {
-        ...Vim.BufferMetadata.ofBuffer(buf),
-        /*
-             Set version to 0 so that a buffer update is processed.
-             If not - we'd ignore the first buffer update that came through!
-         */
-        version: 0,
-      };
-      let fileType =
-        switch (meta.filePath) {
-        | Some(v) =>
-          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
+      if (Vim.Buffer.getId(buf) != bufferToIgnore^) {
+        print_endline ("ONENTER: " ++ string_of_int(Vim.Buffer.getId(buf)));
+        let meta = {
+          ...Vim.BufferMetadata.ofBuffer(buf),
+          /*
+               Set version to 0 so that a buffer update is processed.
+               If not - we'd ignore the first buffer update that came through!
+           */
+          version: 0,
         };
-      dispatch(Model.Actions.BufferEnter(meta, fileType));
+        let fileType =
+          switch (meta.filePath) {
+          | Some(v) =>
+            Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          | None => None
+          };
+        dispatch(Model.Actions.BufferEnter(meta, fileType));
+      }
     });
 
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
+      if (update.id != bufferToIgnore^) {
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
       open Core.Types;
       let bu =
@@ -330,6 +336,7 @@ let start =
         );
 
       dispatch(Model.Actions.BufferUpdate(bu));
+      }
     });
 
   let _ =
@@ -421,7 +428,8 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e untitled");
+      //let _ = Vim.command("e untitled");
+      bufferToIgnore := Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
       hasInitialized := true;
     });
 

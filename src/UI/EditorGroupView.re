@@ -7,6 +7,7 @@
  */
 
 open Revery.UI;
+open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 module Model = Oni_Model;
@@ -105,7 +106,7 @@ let createElement =
 
     let children =
       switch (editorGroup) {
-      | None => [React.empty]
+      | None => [<Container width=100 height=100 color=Revery.Colors.red />]
       | Some((v: EditorGroup.t)) =>
         let editor = Some(v) |> Selectors.getActiveEditor;
         let tabs = toUiTabs(v, state.buffers);
@@ -123,8 +124,8 @@ let createElement =
               editor=v
               state
             />
-          | None => React.empty
-          };
+          | None => <Container width=100 height=100 color=Revery.Colors.red />
+          }
         switch (showTabs) {
         | false => [editorView]
         | true => [
