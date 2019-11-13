@@ -1,6 +1,8 @@
 open Oni_Core;
 open TestFramework;
 
+module Time = Revery_Core.Time;
+
 describe("Job", ({describe, _}) =>
   describe("tick", ({test, _}) =>
     test("does multiple iterations of work", ({expect}) => {
