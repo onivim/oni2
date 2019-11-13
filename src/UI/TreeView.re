@@ -6,8 +6,6 @@ open Revery.UI.Components;
 
 module Core = Oni_Core;
 
-let component = React.component("TreeView");
-
 let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
 let containerStyles =
@@ -116,59 +114,47 @@ let itemRenderer =
   </Clickable>;
 };
 
-let createElement =
+let make =
     (
       ~title,
-      ~children as _,
       ~tree: UiTree.t,
       ~onNodeClick,
       ~state: State.t,
       ~primaryRootIcon=FontAwesome.caretRight,
       ~secondaryRootIcon=FontAwesome.caretDown,
       (),
-    ) =>
-  component(hooks => {
-    let itemSize = 12;
-    let fontSize = state.uiFont.fontSize;
-    let font = state.uiFont.fontFile;
-    let {State.theme, _} = state;
+    ) => {
+  let itemSize = 12;
+  let fontSize = state.uiFont.fontSize;
+  let font = state.uiFont.fontFile;
+  let {State.theme, _} = state;
 
-    let onClick = id =>
-      UiTree.updateNode(id, tree, ())
-      |> (({updated, tree, _}) => onNodeClick(updated, tree));
+  let onClick = id =>
+    UiTree.updateNode(id, tree, ())
+    |> (({updated, tree, _}) => onNodeClick(updated, tree));
 
-    let backgroundColor = state.theme.sideBarBackground;
-    let foregroundColor = state.theme.sideBarForeground;
+  let backgroundColor = state.theme.sideBarBackground;
+  let foregroundColor = state.theme.sideBarForeground;
 
-    let nodeRenderer =
-      itemRenderer(
-        ~onClick,
-        ~primaryRootIcon,
-        ~secondaryRootIcon,
-        ~font,
-        ~itemSize,
-        ~backgroundColor,
-        ~foregroundColor,
-        ~state,
-      );
-
-    (
-      hooks,
-      <View style=Style.[flexGrow(1)]>
-        <View style={headingStyles(theme)}>
-          <Text
-            text=title
-            style={titleStyles(
-              foregroundColor,
-              backgroundColor,
-              font,
-              fontSize,
-            )}
-          />
-        </View>
-        <ScrollView style=containerStyles>
-          <Tree tree nodeRenderer />
-        </ScrollView>
-      </View>,
+  let nodeRenderer =
+    itemRenderer(
+      ~onClick,
+      ~primaryRootIcon,
+      ~secondaryRootIcon,
+      ~font,
+      ~itemSize,
+      ~backgroundColor,
+      ~foregroundColor,
+      ~state,
     );
-  });
+
+  <View style=Style.[flexGrow(1)]>
+    <View style={headingStyles(theme)}>
+      <Text
+        text=title
+        style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
+      />
+    </View>
+    <ScrollView style=containerStyles> <Tree tree nodeRenderer /> </ScrollView>
+  </View>;
+};

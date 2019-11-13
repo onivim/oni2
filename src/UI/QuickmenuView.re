@@ -8,8 +8,6 @@ module Constants = {
   let menuHeight = 320;
 };
 
-let component = React.component("Quickmenu");
-
 module Styles = {
   let container = (theme: Theme.t) =>
     Style.[
@@ -68,7 +66,7 @@ let onInput = (text, cursorPosition) =>
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
-let progressBar = (~children as _, ~progress=?, ~theme, ()) => {
+let progressBar = (~progress=?, ~theme, ()) => {
   let indicatorWidth = 100.;
   let menuWidth = float_of_int(Constants.menuWidth);
   let trackWidth = menuWidth +. indicatorWidth;
@@ -95,9 +93,8 @@ let progressBar = (~children as _, ~progress=?, ~theme, ()) => {
   </AnimatedView>;
 };
 
-let createElement =
+let make =
     (
-      ~children as _,
       ~font: Types.UiFont.t,
       ~theme: Theme.t,
       ~configuration: Configuration.t,
@@ -108,118 +105,114 @@ let createElement =
       ~onFocusedChange: int => unit=onFocusedChange,
       ~onSelect: int => unit=onSelect,
       (),
-    ) =>
-  component(hooks => {
-    let Quickmenu.{
-          items,
-          filterProgress,
-          ripgrepProgress,
-          focused,
-          query,
-          cursorPosition,
-          prefix,
-          _,
-        } = state;
+    ) => {
+  let Quickmenu.{
+        items,
+        filterProgress,
+        ripgrepProgress,
+        focused,
+        query,
+        cursorPosition,
+        prefix,
+        _,
+      } = state;
 
-    let progress =
-      Actions.(
-        switch (filterProgress, ripgrepProgress) {
-        | (Loading, _)
-        | (_, Loading) => Loading
+  let progress =
+    Actions.(
+      switch (filterProgress, ripgrepProgress) {
+      | (Loading, _)
+      | (_, Loading) => Loading
 
-        | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
+      | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
 
-        | (InProgress(value), _)
-        | (_, InProgress(value)) => InProgress(value)
+      | (InProgress(value), _)
+      | (_, InProgress(value)) => InProgress(value)
 
-        | (Complete, Complete) => Complete
-        }
-      );
+      | (Complete, Complete) => Complete
+      }
+    );
 
-    let renderItem = index => {
-      let item = items[index];
-      let isFocused = Some(index) == focused;
+  let renderItem = index => {
+    let item = items[index];
+    let isFocused = Some(index) == focused;
 
-      let labelView = {
-        let style = Styles.label(~font, ~theme, ~isFocused);
+    let labelView = {
+      let style = Styles.label(~font, ~theme, ~isFocused);
 
-        let highlighted = {
-          let text = Quickmenu.getLabel(item);
-          let textLength = String.length(text);
+      let highlighted = {
+        let text = Quickmenu.getLabel(item);
+        let textLength = String.length(text);
 
-          // Assumes ranges are sorted low to high
-          let rec highlighter = last =>
-            fun
-            | [] => [
-                <Text
-                  style={style(~highlighted=false)}
-                  text={String.sub(text, last, textLength - last)}
-                />,
-              ]
+        // Assumes ranges are sorted low to high
+        let rec highlighter = last =>
+          fun
+          | [] => [
+              <Text
+                style={style(~highlighted=false)}
+                text={String.sub(text, last, textLength - last)}
+              />,
+            ]
 
-            | [(low, high), ...rest] => [
-                <Text
-                  style={style(~highlighted=false)}
-                  text={String.sub(text, last, low - last)}
-                />,
-                <Text
-                  style={style(~highlighted=true)}
-                  text={String.sub(text, low, high + 1 - low)}
-                />,
-                ...highlighter(high + 1, rest),
-              ];
+          | [(low, high), ...rest] => [
+              <Text
+                style={style(~highlighted=false)}
+                text={String.sub(text, last, low - last)}
+              />,
+              <Text
+                style={style(~highlighted=true)}
+                text={String.sub(text, low, high + 1 - low)}
+              />,
+              ...highlighter(high + 1, rest),
+            ];
 
-          highlighter(0, item.highlight);
-        };
-
-        <View style=Style.[flexDirection(`Row)]> ...highlighted </View>;
+        highlighter(0, item.highlight) |> React.listToElement;
       };
 
-      <MenuItem
-        onClick={() => onSelect(index)}
-        theme
-        style=Styles.menuItem
-        label={`Custom(labelView)}
-        icon={item.icon}
-        onMouseOver={() => onFocusedChange(index)}
-        isFocused
-      />;
+      <View style=Style.[flexDirection(`Row)]> highlighted </View>;
     };
 
-    (
-      hooks,
-      <AllowPointer>
-        <OniBoxShadow configuration theme>
-          <View style={Styles.container(theme)}>
-            <View style=Style.[width(Constants.menuWidth), padding(5)]>
-              <OniInput
-                autofocus
-                placeholder
-                ?prefix
-                cursorColor=Colors.white
-                style={Styles.input(font.fontFile)}
-                onChange=onInput
-                text=query
-                cursorPosition
-              />
-            </View>
-            <View>
-              <FlatList
-                rowHeight=40
-                height=Constants.menuHeight
-                width=Constants.menuWidth
-                count={Array.length(items)}
-                focused
-                render=renderItem
-              />
-              {switch (progress) {
-               | Complete => React.empty
-               | InProgress(progress) => <progressBar progress theme />
-               | Loading => <progressBar theme />
-               }}
-            </View>
-          </View>
-        </OniBoxShadow>
-      </AllowPointer>,
-    );
-  });
+    <MenuItem
+      onClick={() => onSelect(index)}
+      theme
+      style=Styles.menuItem
+      label={`Custom(labelView)}
+      icon={item.icon}
+      onMouseOver={() => onFocusedChange(index)}
+      isFocused
+    />;
+  };
+
+  <AllowPointer>
+    <OniBoxShadow configuration theme>
+      <View style={Styles.container(theme)}>
+        <View style=Style.[width(Constants.menuWidth), padding(5)]>
+          <OniInput
+            autofocus
+            placeholder
+            ?prefix
+            cursorColor=Colors.white
+            style={Styles.input(font.fontFile)}
+            onChange=onInput
+            text=query
+            cursorPosition
+          />
+        </View>
+        <View>
+          <FlatList
+            rowHeight=40
+            height=Constants.menuHeight
+            width=Constants.menuWidth
+            count={Array.length(items)}
+            focused
+            render=renderItem
+          />
+          {switch (progress) {
+           | Complete => React.empty
+           | InProgress(progress) => <progressBar progress theme />
+           | Loading => <progressBar theme />
+           }}
+        </View>
+      </View>
+    </OniBoxShadow>
+  </AllowPointer>;
+};

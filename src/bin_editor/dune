@@ -12,9 +12,10 @@
         Oni2.model
         Oni2.store
         Oni2.ui
-            )
-  (preprocess (
-               pps
-               lwt_ppx
+    )
+    (preprocess (
+        pps
+        lwt_ppx
+        brisk-reconciler.ppx
     ))
 )

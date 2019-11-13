@@ -18,7 +18,7 @@ type docks =
   | MainDock;
 
 [@deriving show({with_path: false})]
-type componentCreator = unit => React.syntheticElement;
+type componentCreator = unit => React.element(React.node);
 
 [@deriving show({with_path: false})]
 type dockPosition =

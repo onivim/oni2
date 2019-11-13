@@ -12,12 +12,7 @@ describe("Job", ({describe, _}) =>
         };
 
       let job =
-        Job.create(
-          ~f,
-          ~initialCompletedWork=0,
-          ~budget=Time.ms(8),
-          (),
-        );
+        Job.create(~f, ~initialCompletedWork=0, ~budget=Time.ms(8), ());
 
       // Tick will run the job for 8 ms.
       // That should be plenty of time to do a few iterations of [f]...
