@@ -24,6 +24,30 @@ let start = (extensions, setup: Core.Setup.t) => {
          Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
+  let onDiagnosticsClear = owner => {
+    dispatch(Model.Actions.DiagnosticsClear(owner));
+  };
+
+  let onDiagnosticsChangeMany =
+      (diagCollection: Protocol.DiagnosticsCollection.t) => {
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
+      d => {
+        let range = Protocol.OneBasedRange.toRange(d.range);
+        let message = d.message;
+        Model.Diagnostic.create(~range, ~message, ());
+      };
+
+    let f = (d: Protocol.Diagnostics.t) => {
+      let diagnostics = List.map(protocolDiagToDiag, snd(d));
+      let uri = fst(d);
+      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
+    };
+
+    diagCollection.perFileDiagnostics
+    |> List.map(f)
+    |> List.iter(a => dispatch(a));
+  };
+
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
       Model.Actions.StatusBarAddItem(
@@ -44,6 +68,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
+      ~onDiagnosticsClear,
+      ~onDiagnosticsChangeMany,
       setup,
     );
 

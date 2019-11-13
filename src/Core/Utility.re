@@ -90,6 +90,7 @@ let escapeSpaces = str => {
   Str.global_replace(whitespace, "\\ ", str);
 };
 
+// TODO: Remove / replace when upgraded to OCaml 4.08
 let filterMap = (f, l) => {
   let rec inner = l =>
     switch (l) {
@@ -102,6 +103,14 @@ let filterMap = (f, l) => {
     };
 
   inner(l);
+};
+
+// TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
+let resultToOption = r => {
+  switch (r) {
+  | Ok(v) => Some(v)
+  | Error(_) => None
+  };
 };
 
 type commandLineCompletionMeet = {

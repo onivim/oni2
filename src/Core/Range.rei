@@ -40,6 +40,16 @@ let ofInt0:
   ) =>
   t;
 
+let ofInt1:
+  (
+    ~startLine: int,
+    ~startCharacter: int,
+    ~endLine: int,
+    ~endCharacter: int,
+    unit
+  ) =>
+  t;
+
 let zero: t;
 
 /*
