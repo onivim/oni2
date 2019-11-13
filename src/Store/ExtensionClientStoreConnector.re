@@ -142,6 +142,13 @@ let start = (extensions, setup: Core.Setup.t) => {
             true,
             extHostClient,
           );
+
+          Protocol.OutgoingNotifications.LanguageFeatures.provideCompletionItems(
+            0,
+            uri,
+            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=1, ()),
+          )
+          |> ExtHostClient.send(extHostClient)
         })
       }
     );

@@ -15,6 +15,19 @@ function activate(context) {
     item.text = "Developer";
     item.show();
 
+    // Add a completion provider for oni-dev files
+    let provider1 = vscode.languages.registerCompletionItemProvider('oni-dev',
+        {
+            provideCompletionItems: (document, position, token, context) => {
+                item.text = "got to here";
+                return [
+                    vscode.CompletionItem('Hello World'),
+                ];
+            }
+        }
+    );
+
+    context.subscriptions.push(provider1);
 
     const collection = vscode.languages.createDiagnosticCollection('test');
 
