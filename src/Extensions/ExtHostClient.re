@@ -122,7 +122,8 @@ let updateDocument = (uri, modelChange, dirty, v) => {
 };
 
 let send = (client, v) => {
-  ExtHostTransport.send(client.transport, v);
+  let _ = ExtHostTransport.send(client.transport, v);
+  ();
 };
 
 let pump = (v: t) => ExtHostTransport.pump(v.transport);
