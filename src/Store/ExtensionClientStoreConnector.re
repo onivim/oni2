@@ -143,12 +143,20 @@ let start = (extensions, setup: Core.Setup.t) => {
             extHostClient,
           );
 
-          Protocol.OutgoingNotifications.LanguageFeatures.provideCompletionItems(
-            0,
-            uri,
-            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=1, ()),
-          )
-          |> ExtHostClient.send(extHostClient);
+          if (Model.Buffer.getId(v) > 1) {
+            let _: Lwt.t(unit) =
+              ExtHostClient.getCompletions(
+                0,
+                uri,
+                Protocol.OneBasedPosition.ofInt1(
+                  ~lineNumber=1,
+                  ~column=1,
+                  (),
+                ),
+                extHostClient,
+              );
+            ();
+          };
         })
       }
     );

@@ -121,6 +121,21 @@ let updateDocument = (uri, modelChange, dirty, v) => {
   );
 };
 
+let getCompletions = (id, uri, position, v) => {
+  let f = (json: Yojson.Safe.t) => {
+    prerr_endline("! Got completions: " ++ Yojson.Safe.to_string(json));
+    ();
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      v.transport,
+      Out.LanguageFeatures.provideCompletionItems(id, uri, position),
+      f,
+    );
+  promise;
+};
+
 let send = (client, v) => {
   let _ = ExtHostTransport.send(client.transport, v);
   ();
