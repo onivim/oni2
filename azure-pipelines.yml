@@ -89,7 +89,9 @@ jobs:
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/vsts/.esy/source/i
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
-  steps:
+  steps: 
+  - script: xcode-select --print-path
+    displayName: XCode: Check active version
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libpng ragel
