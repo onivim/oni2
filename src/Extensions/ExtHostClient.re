@@ -45,7 +45,9 @@ let start =
       // selector: [{"$serialized: true", "language": "plaintext"}]
       // triggerCharacters: []
       // false (supportsResolveDetails)
-      print_endline ("!!! Suggest features: " ++ Yojson.Safe.to_string(`List(args)));
+      print_endline(
+        "!!! Suggest features: " ++ Yojson.Safe.to_string(`List(args)),
+      );
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);

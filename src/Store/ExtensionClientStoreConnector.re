@@ -148,7 +148,7 @@ let start = (extensions, setup: Core.Setup.t) => {
             uri,
             Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=1, ()),
           )
-          |> ExtHostClient.send(extHostClient)
+          |> ExtHostClient.send(extHostClient);
         })
       }
     );

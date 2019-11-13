@@ -114,10 +114,7 @@ module OneBasedPosition = {
     column: p.character |> Index.toOneBasedInt,
   };
 
-  let ofInt1 = (~lineNumber, ~column, ()) => {
-    lineNumber,
-    column,
-  };
+  let ofInt1 = (~lineNumber, ~column, ()) => {lineNumber, column};
 };
 
 module OneBasedRange = {
@@ -419,16 +416,21 @@ module OutgoingNotifications = {
   };
 
   module LanguageFeatures = {
-    let provideCompletionItems = (
-        handle: int, resource: Uri.t, position: OneBasedPosition.t) => 
+    let provideCompletionItems =
+        (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
       // TODO: CompletionContext ?
       // TODO: CancelationToken
       _buildNotification(
         "ExtHostLanguageFeatures",
         "$provideCompletionItems",
-        `List([`Int(handle), Uri.to_yojson(resource), OneBasedPosition.to_yojson(position), 
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
           `Assoc([]),
-          CancellationToken.none]));
+          CancellationToken.none,
+        ]),
+      );
   };
 
   module Workspace = {
