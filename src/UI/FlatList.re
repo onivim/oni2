@@ -137,7 +137,7 @@ let%component make =
     actualScrollTop
     |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
-  let%hook hooks =
+  let%hook () =
     Hooks.effect(
       If((!=), focused),
       () => {
