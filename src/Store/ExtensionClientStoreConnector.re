@@ -144,13 +144,13 @@ let start = (extensions, setup: Core.Setup.t) => {
           );
 
           if (Model.Buffer.getId(v) > 1) {
-            let _: Lwt.t(unit) =
+            let _: Lwt.t(option(Protocol.Suggestions.t)) =
               ExtHostClient.getCompletions(
                 0,
                 uri,
                 Protocol.OneBasedPosition.ofInt1(
                   ~lineNumber=1,
-                  ~column=1,
+                  ~column=2,
                   (),
                 ),
                 extHostClient,
