@@ -22,7 +22,12 @@ let evaluate = (v: t, getValue) => {
     };
 
   let ret = f(v);
-  Oni_Core.Log.info(
-    Printf.sprintf("Expression %s evaluated to: %s", show(v), ret ? "true" : "false"));
-    ret;
+  Oni_Core.Log.debug(() =>
+    Printf.sprintf(
+      "Expression %s evaluated to: %s",
+      show(v),
+      ret ? "true" : "false",
+    )
+  );
+  ret;
 };

@@ -60,25 +60,18 @@ let start =
 
   let getActionsForBinding =
       (inputKey, commands, currentConditions: Hashtbl.t(string, bool)) => {
-    print_endline ("GET ACTIONS FOR CONDITION");
     let inputKey = String.uppercase_ascii(inputKey);
 
-    let getValue = (v) => switch(Hashtbl.find_opt(currentConditions, v)) {
-    | Some(variableValue) => variableValue
-    | None => false;
-    };
-
-  print_endline ("COMMAND LENGTH: " ++ string_of_int(List.length(commands)));
+    let getValue = v =>
+      switch (Hashtbl.find_opt(currentConditions, v)) {
+      | Some(variableValue) => variableValue
+      | None => false
+      };
 
     Keybindings.Keybinding.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
-          Handler.matchesCondition(
-            condition,
-            inputKey,
-            key,
-            getValue,
-          )
+          Handler.matchesCondition(condition, inputKey, key, getValue)
             ? [Actions.Command(command)] : defaultAction,
         [],
         commands,

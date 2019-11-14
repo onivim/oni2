@@ -52,8 +52,6 @@ let get = () => {
   | Ok(b) => b.bindings
   | Error(e) =>
     Log.error("Error parsing keybindings file ------- " ++ e);
-    // TODO: Remove
-    failwith(e);
     [];
   };
 };

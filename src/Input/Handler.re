@@ -159,6 +159,5 @@ let matchesCondition = (commandConditions, input, key, getValue) =>
   if (input != key) {
     false;
   } else {
-    print_endline ("!!HERE");
     Expression.evaluate(commandConditions, getValue);
   };
