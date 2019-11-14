@@ -16,7 +16,7 @@ let ripgrepQueryFromFilter = s => {
   "*" ++ b ++ "*";
 };
 
-let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
+let start = (rg: Core.Ripgrep.t) => {
   let createQuickOpen =
       (
         languageInfo,
@@ -44,6 +44,7 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
         command: () => Model.Actions.OpenFileByPath(fullPath, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        highlight: [],
       };
 
     setLoading(true);
@@ -51,9 +52,11 @@ let start = (rg: Core.Ripgrep.t(Model.Actions.menuCommand)) => {
     let search = () => {
       setLoading(true);
       rg.search(
-        stringToCommand(languageInfo, iconTheme),
         currentDirectory,
-        items => setItems(items),
+        items =>
+          setItems(
+            items |> List.map(stringToCommand(languageInfo, iconTheme)),
+          ),
         () => {
           setLoading(false);
           Core.Log.info("[QuickOpenStoreConnector] Ripgrep completed.");

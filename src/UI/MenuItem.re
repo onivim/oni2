@@ -7,26 +7,54 @@ open Oni_Model;
 
 let component = React.component("MenuItem");
 
-let menuItemFontSize = 20;
+module Constants = {
+  let fontSize = 20;
+};
 
-let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
-  Style.[
-    fontFamily(uiFont.fontFile),
-    fontSize(uiFont.fontSize),
-    color(theme.menuForeground),
-    backgroundColor(bg),
-  ];
+module Styles = {
+  let bg = (~theme: Theme.t, ~isSelected) =>
+    isSelected ? theme.menuSelectionBackground : theme.menuBackground;
 
-let containerStyles = (~bg, ()) =>
-  Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
+  let text = (~theme: Theme.t, ~font: UiFont.t, ~isSelected) =>
+    Style.[
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
+      color(theme.menuForeground),
+      backgroundColor(bg(~theme, ~isSelected)),
+    ];
 
-let iconStyles = fgColor =>
-  Style.[
-    fontFamily("seti.ttf"),
-    fontSize(menuItemFontSize),
-    marginRight(10),
-    color(fgColor),
-  ];
+  let container = (~theme, ~isSelected) =>
+    Style.[
+      padding(10),
+      flexDirection(`Row),
+      backgroundColor(bg(~theme, ~isSelected)),
+    ];
+
+  let icon = fgColor =>
+    Style.[
+      fontFamily("seti.ttf"),
+      fontSize(Constants.fontSize),
+      marginRight(10),
+      color(fgColor),
+    ];
+
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~isSelected, ~custom) =>
+    Style.(
+      merge(
+        ~source=
+          Style.[
+            fontFamily(font.fontFile),
+            textOverflow(`Ellipsis),
+            fontSize(12),
+            color(theme.menuForeground),
+            backgroundColor(bg(~theme, ~isSelected)),
+          ],
+        ~target=custom,
+      )
+    );
+
+  let clickable = Style.[cursor(Revery.MouseCursors.pointer)];
+};
 
 let noop = () => ();
 
@@ -36,7 +64,7 @@ let createElement =
       ~style=[],
       ~icon=None,
       ~label,
-      ~selected,
+      ~isSelected,
       ~theme,
       ~onClick=noop,
       ~onMouseOver=noop,
@@ -44,45 +72,37 @@ let createElement =
     ) =>
   component(hooks => {
     let state = GlobalContext.current().state;
-    let uiFont = State.(state.uiFont);
-
-    let bg: Color.t =
-      Theme.(selected ? theme.menuSelectionBackground : theme.menuBackground);
-
-    let labelStyles =
-      Style.(
-        merge(
-          ~source=
-            Style.[
-              fontFamily(uiFont.fontFile),
-              textOverflow(`Ellipsis),
-              fontSize(12),
-              color(theme.menuForeground),
-              backgroundColor(bg),
-            ],
-          ~target=style,
-        )
-      );
+    let font = State.(state.uiFont);
 
     let iconView =
       switch (icon) {
       | Some(v) =>
         IconTheme.IconDefinition.(
           <Text
-            style={iconStyles(v.fontColor)}
+            style={Styles.icon(v.fontColor)}
             text={FontIcon.codeToIcon(v.fontCharacter)}
           />
         )
-      | None => <Text style={iconStyles(Colors.transparentWhite)} text="" />
+
+      | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
+      };
+
+    let labelView =
+      switch (label) {
+      | `Text(text) =>
+        let style = Styles.label(~font, ~theme, ~isSelected, ~custom=style);
+        <Text style text />;
+      | `Custom(view) => view
       };
 
     (
       hooks,
-      <Clickable style=Style.[cursor(Revery.MouseCursors.pointer)] onClick>
+      <Clickable style=Styles.clickable onClick>
         <View
-          onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
+          onMouseOver={_ => onMouseOver()}
+          style={Styles.container(~theme, ~isSelected)}>
           iconView
-          <Text style=labelStyles text=label />
+          labelView
         </View>
       </Clickable>,
     );

@@ -10,7 +10,7 @@ build: [
 ]
 depends: [
   "ocaml" {>= "4.02.3"}
-  "jbuilder" {build}
+  "jbuilder"
 ]
 synopsis:
   "High-level and functional interface to the Format module of the OCaml standard library"

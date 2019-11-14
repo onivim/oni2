@@ -30,6 +30,8 @@ let start =
       ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
+      ~onDiagnosticsChangeMany=defaultOneArgCallback,
+      ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
@@ -38,6 +40,15 @@ let start =
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
+    | ("MainThreadDiagnostics", "$changeMany", args) =>
+      In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
+      Ok(None);
+    | ("MainThreadDiagnostics", "$clear", args) =>
+      In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
+      Ok(None);
+    | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
+      Log.info(eventName ++ ":" ++ Yojson.Safe.to_string(json));
+      Ok(None);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);
