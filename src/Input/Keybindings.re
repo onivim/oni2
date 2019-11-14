@@ -22,7 +22,7 @@ module Keybinding = {
     switch (Json.of_yojson(json)) {
     | Error(err) => Error(err)
     | Ok(v) =>
-      switch (When.parse(v.condition)) {
+      switch (Expression.parse(v.condition)) {
       | Error(err) => Error(err)
       | Ok(condition) => Ok({key: v.key, command: v.command, condition})
       }

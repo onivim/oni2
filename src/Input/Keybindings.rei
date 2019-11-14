@@ -1,5 +1,3 @@
-open Oni_Core.Types.Input;
-
 module Keybinding: {
   type t = {
     key: string,
