@@ -208,30 +208,33 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       // This is my configuration
       { "editor.rulers": [120, 80] }
     |};
-    
+
     let commentInObject = {|
-      { 
+      {
         // This is a setting
-        "editor.rulers": [120, 80] 
+        "editor.rulers": [120, 80]
       }
     |};
 
     let cases = [
-      trailingCommaInObject, 
-      trailingCommaInArray, 
-      commentBeforeEverything, 
-      commentInObject
+      trailingCommaInObject,
+      trailingCommaInArray,
+      commentBeforeEverything,
+      commentInObject,
     ];
 
-    List.iter((case) => {
-      switch (ConfigurationParser.ofString(case)) {
-      | Ok(v) =>
-        expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-          80,
-          120,
-        ])
-      | Error(_) => expect.bool(false).toBe(true)
-      };
-    }, cases);
+    List.iter(
+      case => {
+        switch (ConfigurationParser.ofString(case)) {
+        | Ok(v) =>
+          expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
+            80,
+            120,
+          ])
+        | Error(_) => expect.bool(false).toBe(true)
+        }
+      },
+      cases,
+    );
   });
 });
