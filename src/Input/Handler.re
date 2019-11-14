@@ -4,7 +4,6 @@
  * Basic input handling for Oni
  */
 
-open Oni_Core;
 open Revery;
 module Log = Oni_Core.Log;
 
