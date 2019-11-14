@@ -25,7 +25,6 @@ module Indentation = Indentation;
 module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module Theme = Theme;
-module Keybindings = Keybindings;
 module Filesystem = Filesystem;
 module Range = Range;
 module Ripgrep = Ripgrep;
