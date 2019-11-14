@@ -9,10 +9,10 @@ let _ripGrepCompletedCount = ref(0);
 let getRunCount = () => _ripGrepRunCount^;
 let getCompletedCount = () => _ripGrepCompletedCount^;
 
-type searchFunction('a) =
-  (string => 'a, string, list('a) => unit, unit => unit) => disposeFunction;
+type searchFunction =
+  (string, list(string) => unit, unit => unit) => disposeFunction;
 
-type t('a) = {search: searchFunction('a)};
+type t = {search: searchFunction};
 
 /**
  RipgrepProcessingJob is the logic for processing a [Bytes.t]
@@ -22,18 +22,17 @@ type t('a) = {search: searchFunction('a)};
  get a list of files, and send that to the callback.
 */
 module RipgrepProcessingJob = {
-  type pendingWork('a) = {
+  type pendingWork = {
     duplicateHash: Hashtbl.t(string, bool),
-    itemMapping: string => 'a,
-    callback: list('a) => unit,
+    callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
 
-  let pendingWorkPrinter = (p: pendingWork('a)) => {
+  let pendingWorkPrinter = (p: pendingWork) => {
     "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
   };
 
-  type t('a) = Job.t(pendingWork('a), unit);
+  type t = Job.t(pendingWork, unit);
 
   let dedup = (hash, str) => {
     switch (Hashtbl.find_opt(hash, str)) {
@@ -54,8 +53,7 @@ module RipgrepProcessingJob = {
           |> Bytes.to_string
           |> String.trim
           |> String.split_on_char('\n')
-          |> List.filter(dedup(pendingWork.duplicateHash))
-          |> List.map(pendingWork.itemMapping);
+          |> List.filter(dedup(pendingWork.duplicateHash));
         pendingWork.callback(items);
         tail;
       };
@@ -69,7 +67,7 @@ module RipgrepProcessingJob = {
     (isDone, {...pendingWork, bytes: newBytes}, c);
   };
 
-  let create = (~mapItems, ~callback, ()) => {
+  let create = (~callback, ()) => {
     let duplicateHash = Hashtbl.create(1000);
     Job.create(
       ~f=doWork,
@@ -77,14 +75,14 @@ module RipgrepProcessingJob = {
       ~name="RipgrepProcessorJob",
       ~pendingWorkPrinter,
       ~budget=Milliseconds(2.),
-      {callback, bytes: [], duplicateHash, itemMapping: mapItems},
+      {callback, bytes: [], duplicateHash},
     );
   };
 
-  let queueWork = (bytes: Bytes.t, currentJob: t('a)) => {
+  let queueWork = (bytes: Bytes.t, currentJob: t) => {
     Job.map(
       (p, c) => {
-        let newP: pendingWork('a) = {...p, bytes: [bytes, ...p.bytes]};
+        let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
         (false, newP, c);
       },
       currentJob,
@@ -92,7 +90,7 @@ module RipgrepProcessingJob = {
   };
 };
 
-let process = (rgPath, mapItems, args, callback, completedCallback) => {
+let process = (rgPath, args, callback, completedCallback) => {
   incr(_ripGrepRunCount);
   let argsStr = String.concat("|", Array.to_list(args));
   Log.info(
@@ -104,7 +102,7 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
   );
   // Mutex to
   let jobMutex = Mutex.create();
-  let job = ref(RipgrepProcessingJob.create(~mapItems, ~callback, ()));
+  let job = ref(RipgrepProcessingJob.create(~callback, ()));
 
   let dispose3 = ref(None);
 
@@ -165,10 +163,9 @@ let process = (rgPath, mapItems, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, mapItems, workingDirectory, callback, completedCallback) => {
+let search = (path, workingDirectory, callback, completedCallback) => {
   process(
     path,
-    mapItems,
     [|"--smart-case", "--files", "--", workingDirectory|],
     callback,
     completedCallback,

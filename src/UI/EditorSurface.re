@@ -691,7 +691,7 @@ let createElement =
                 ~count,
                 ~render=
                   (item, _offset) => {
-                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                    let renderDiagnostics = (d: Diagnostic.t) =>
                       renderUnderline(~color=Colors.red, d.range);
 
                     /* Draw error markers */

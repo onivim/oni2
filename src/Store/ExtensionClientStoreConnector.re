@@ -24,6 +24,30 @@ let start = (extensions, setup: Core.Setup.t) => {
          Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
+  let onDiagnosticsClear = owner => {
+    dispatch(Model.Actions.DiagnosticsClear(owner));
+  };
+
+  let onDiagnosticsChangeMany =
+      (diagCollection: Protocol.DiagnosticsCollection.t) => {
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
+      d => {
+        let range = Protocol.OneBasedRange.toRange(d.range);
+        let message = d.message;
+        Model.Diagnostic.create(~range, ~message, ());
+      };
+
+    let f = (d: Protocol.Diagnostics.t) => {
+      let diagnostics = List.map(protocolDiagToDiag, snd(d));
+      let uri = fst(d);
+      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
+    };
+
+    diagCollection.perFileDiagnostics
+    |> List.map(f)
+    |> List.iter(a => dispatch(a));
+  };
+
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
       Model.Actions.StatusBarAddItem(
@@ -44,6 +68,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
+      ~onDiagnosticsClear,
+      ~onDiagnosticsChangeMany,
       setup,
     );
 
@@ -94,27 +120,29 @@ let start = (extensions, setup: Core.Setup.t) => {
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        let modelContentChange =
-          Protocol.ModelContentChange.ofBufferUpdate(
-            bu,
-            Protocol.Eol.default,
-          );
-        let modelChangedEvent =
-          Protocol.ModelChangedEvent.create(
-            ~changes=[modelContentChange],
-            ~eol=Protocol.Eol.default,
-            ~versionId=bu.version,
-            (),
-          );
+        Core.Log.perf("exthost.bufferUpdate", () => {
+          let modelContentChange =
+            Protocol.ModelContentChange.ofBufferUpdate(
+              bu,
+              Protocol.Eol.default,
+            );
+          let modelChangedEvent =
+            Protocol.ModelChangedEvent.create(
+              ~changes=[modelContentChange],
+              ~eol=Protocol.Eol.default,
+              ~versionId=bu.version,
+              (),
+            );
 
-        let uri = Model.Buffer.getUri(v);
+          let uri = Model.Buffer.getUri(v);
 
-        ExtHostClient.updateDocument(
-          uri,
-          modelChangedEvent,
-          true,
-          extHostClient,
-        );
+          ExtHostClient.updateDocument(
+            uri,
+            modelChangedEvent,
+            true,
+            extHostClient,
+          );
+        })
       }
     );
 

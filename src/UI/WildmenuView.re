@@ -31,8 +31,8 @@ let createElement =
                 let item = items[index];
                 <MenuItem
                   theme
-                  label=item
-                  selected={index == wildmenu.selected}
+                  label={`Text(item)}
+                  isSelected={index == wildmenu.selected}
                   style=Style.[fontSize(16)]
                 />;
               }}

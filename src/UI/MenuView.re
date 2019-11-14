@@ -11,30 +11,49 @@ type state = {
 
 let component = React.component("Menu");
 
-let menuWidth = 400;
-let menuHeight = 320;
+module Constants = {
+  let menuWidth = 400;
+  let menuHeight = 320;
+};
 
-let containerStyles = (theme: Theme.t) =>
-  Style.[
-    backgroundColor(theme.menuBackground),
-    color(theme.menuForeground),
-  ];
+module Styles = {
+  let container = (theme: Theme.t) =>
+    Style.[
+      backgroundColor(theme.menuBackground),
+      color(theme.menuForeground),
+    ];
 
-let menuItemStyle =
-  Style.[
-    fontSize(14),
-    width(menuWidth - 50),
-    cursor(Revery.MouseCursors.pointer),
-  ];
+  let input = font =>
+    Style.[
+      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+      width(Constants.menuWidth - 10),
+      color(Colors.white),
+      fontFamily(font),
+    ];
 
-let inputStyles = font =>
-  Style.[
-    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    width(menuWidth - 10),
-    color(Colors.white),
-    fontFamily(font),
-  ];
+  let menuItem =
+    Style.[
+      fontSize(14),
+      width(Constants.menuWidth - 50),
+      cursor(Revery.MouseCursors.pointer),
+    ];
+
+  let label =
+      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
+    Style.[
+      fontFamily(font.fontFile),
+      textOverflow(`Ellipsis),
+      fontSize(12),
+      backgroundColor(
+        isSelected ? theme.menuSelectionBackground : theme.menuBackground,
+      ),
+      color(
+        highlighted ? theme.oniNormalModeBackground : theme.menuForeground,
+      ),
+      textWrap(TextWrapping.NoWrap),
+    ];
+};
 
 let loseFocusOnClose = isOpen =>
   /**
@@ -48,11 +67,10 @@ let loseFocusOnClose = isOpen =>
     }
   );
 
-let onClick = () => {
-  GlobalContext.current().dispatch(MenuSelect);
-};
+let onSelect = _ => GlobalContext.current().dispatch(MenuSelect);
 
-let onMouseOver = pos => GlobalContext.current().dispatch(MenuPosition(pos));
+let onSelectedChange = index =>
+  GlobalContext.current().dispatch(MenuPosition(index));
 
 type fontT = Types.UiFont.t;
 
@@ -100,7 +118,7 @@ let createElement =
       | _ => ()
       };
 
-    let commands = Job.getCompletedWork(menu.filterJob).uiFiltered;
+    let items = Job.getCompletedWork(menu.filterJob).uiFiltered;
     let time = Time.getTime() |> Time.to_float_seconds;
 
     let jobProgress = Job.getProgress(menu.filterJob);
@@ -108,7 +126,7 @@ let createElement =
     let loadingOpacityAnimation = Animation.getValue(menu.loadingAnimation);
     let loadingSpinner =
       menu.isLoading
-        ? <View style=Style.[height(40), width(menuWidth)]>
+        ? <View style=Style.[height(40), width(Constants.menuWidth)]>
             <Center>
               <View
                 style=Style.[
@@ -127,14 +145,16 @@ let createElement =
             </Center>
           </View>
         : <Opacity opacity=0.3>
-            <View style=Style.[height(2), width(menuWidth)]>
+            <View style=Style.[height(2), width(Constants.menuWidth)]>
               <View
                 style=Style.[
                   height(2),
                   width(
                     1
                     + (
-                      int_of_float(float_of_int(menuWidth) *. jobProgress)
+                      int_of_float(
+                        float_of_int(Constants.menuWidth) *. jobProgress,
+                      )
                       - 1
                     ),
                   ),
@@ -144,18 +164,68 @@ let createElement =
             </View>
           </Opacity>;
 
+    let renderItem = index => {
+      let item = items[index];
+      let isSelected = index == menu.selectedItem;
+
+      let labelView = {
+        let style = Styles.label(~font, ~theme, ~isSelected);
+
+        let highlighted = {
+          let text = MenuJob.getLabel(item);
+          let textLength = String.length(text);
+
+          // Assumes ranges are sorted low to high
+          let rec highlighter = last =>
+            fun
+            | [] => [
+                <Text
+                  style={style(~highlighted=false)}
+                  text={String.sub(text, last, textLength - last)}
+                />,
+              ]
+
+            | [(low, high), ...rest] => [
+                <Text
+                  style={style(~highlighted=false)}
+                  text={String.sub(text, last, low - last)}
+                />,
+                <Text
+                  style={style(~highlighted=true)}
+                  text={String.sub(text, low, high + 1 - low)}
+                />,
+                ...highlighter(high + 1, rest),
+              ];
+
+          highlighter(0, item.highlight);
+        };
+
+        <View style=Style.[flexDirection(`Row)]> ...highlighted </View>;
+      };
+
+      <MenuItem
+        onClick={() => onSelect(index)}
+        theme
+        style=Styles.menuItem
+        label={`Custom(labelView)}
+        icon={item.icon}
+        onMouseOver={() => onSelectedChange(index)}
+        isSelected
+      />;
+    };
+
     (
       hooks,
       menu.isOpen
         ? <AllowPointer>
             <OniBoxShadow configuration theme>
-              <View style={containerStyles(theme)}>
-                <View style=Style.[width(menuWidth), padding(5)]>
+              <View style={Styles.container(theme)}>
+                <View style=Style.[width(Constants.menuWidth), padding(5)]>
                   <OniInput
                     autofocus=true
                     placeholder="type here to search the menu"
                     cursorColor=Colors.white
-                    style={inputStyles(font.fontFile)}
+                    style={Styles.input(font.fontFile)}
                     onChange=handleChange
                     onKeyDown=handleKeyDown
                     text
@@ -165,22 +235,11 @@ let createElement =
                 <View>
                   <FlatList
                     rowHeight=40
-                    height=menuHeight
-                    width=menuWidth
-                    count={Array.length(commands)}
+                    height=Constants.menuHeight
+                    width=Constants.menuWidth
+                    count={Array.length(items)}
                     selected={Some(menu.selectedItem)}
-                    render={index => {
-                      let cmd = commands[index];
-                      <MenuItem
-                        onClick
-                        theme
-                        style=menuItemStyle
-                        label={getLabel(cmd)}
-                        icon={cmd.icon}
-                        onMouseOver={_ => onMouseOver(index)}
-                        selected={index == menu.selectedItem}
-                      />;
-                    }}
+                    render=renderItem
                   />
                   loadingSpinner
                 </View>

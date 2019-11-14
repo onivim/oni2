@@ -9,16 +9,6 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-module Diagnostic: {
-  [@deriving show({with_path: false})]
-  type t = {
-    range: Range.t,
-    message: string,
-  };
-
-  let create: (~range: Range.t, ~message: string, unit) => t;
-};
-
 type t;
 
 /*
@@ -29,7 +19,12 @@ let create: unit => t;
 /*
  * Change diagnostics for a buffer+diagnostic key pair
  */
-let change: (t, Buffer.t, string, list(Diagnostic.t)) => t;
+let change: (t, Uri.t, string, list(Diagnostic.t)) => t;
+
+/*
+ * [clear(diagnostics, key)] removes diagnostics with the key named [key] across all buffers
+ */
+let clear: (t, string) => t;
 
 /*
  * Get all diagnostics for a buffer

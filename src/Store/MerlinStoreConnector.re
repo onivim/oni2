@@ -45,6 +45,7 @@ let start = () => {
         | Some(v) =>
           let lines = Model.Buffer.getLines(v);
           let fileType = Model.Buffer.getFileType(v);
+          let uri = Model.Buffer.getUri(v);
           switch (fileType, Model.Buffer.getFilePath(v)) {
           | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
             let cb = err => {
@@ -57,7 +58,11 @@ let start = () => {
               );
               Revery.App.runOnMainThread(() => {
                 dispatch(
-                  Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics),
+                  Model.Actions.DiagnosticsSet(
+                    uri,
+                    "merlin",
+                    modelDiagnostics,
+                  ),
                 )
               });
             };
