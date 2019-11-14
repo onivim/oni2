@@ -15,18 +15,18 @@ let isMenuOpen = (state: State.t) => state.menu.isOpen;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
-  let ret: Handler.Conditions.t = Hashtbl.create(16);
+  let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   if (state.commandline.show) {
-    Hashtbl.add(ret, CommandLineFocus, true);
+    Hashtbl.add(ret, "commandLineFocus", true);
   };
 
   if (isMenuOpen(state)) {
-    Hashtbl.add(ret, MenuFocus, true);
+    Hashtbl.add(ret, "menuFocus", true);
   };
 
   if (Model.Completions.isActive(state.completions)) {
-    Hashtbl.add(ret, SuggestWidgetVisible, true);
+    Hashtbl.add(ret, "suggestWidgetVisible", true);
   };
 
   // HACK: Because we don't have AND conditions yet for input
@@ -35,9 +35,9 @@ let conditionsOfState = (state: State.t) => {
   // editor (editorTextFocus is set)
   switch (isMenuOpen(state) || state.commandline.show, state.mode) {
   | (false, Vim.Types.Insert) =>
-    Hashtbl.add(ret, Types.Input.InsertMode, true);
-    Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
-  | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+    Hashtbl.add(ret, "insertMode", true);
+    Hashtbl.add(ret, "editorTextFocus", true);
+  | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | _ => ()
   };
 
@@ -59,16 +59,25 @@ let start =
   Sdl2.TextInput.start();
 
   let getActionsForBinding =
-      (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+      (inputKey, commands, currentConditions: Hashtbl.t(string, bool)) => {
+    print_endline ("GET ACTIONS FOR CONDITION");
     let inputKey = String.uppercase_ascii(inputKey);
+
+    let getValue = (v) => switch(Hashtbl.find_opt(currentConditions, v)) {
+    | Some(variableValue) => variableValue
+    | None => false;
+    };
+
+  print_endline ("COMMAND LENGTH: " ++ string_of_int(List.length(commands)));
+
     Keybindings.Keybinding.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
           Handler.matchesCondition(
             condition,
-            currentConditions,
             inputKey,
             key,
+            getValue,
           )
             ? [Actions.Command(command)] : defaultAction,
         [],
@@ -83,7 +92,7 @@ let start =
   let handle =
       (
         ~isMenuOpen,
-        ~conditions: Handler.Conditions.t,
+        ~conditions: Hashtbl.t(string, bool),
         ~time=0.0,
         ~commands: Keybindings.t,
         inputKey,

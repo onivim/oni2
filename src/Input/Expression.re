@@ -12,16 +12,6 @@ let rec show = (v: t) =>
   | Not(v) => "!" ++ show(v)
   };
 
-let parse = str => {
-  let lexbuf = Lexing.from_string(str /*"abc && (def || !ghi)"*/);
-  switch (When_parser.main(When_lexer.token, lexbuf)) {
-  | exception When_lexer.Error => Error("Error parsing when binding: " ++ str)
-  | exception When_parser.Error =>
-    Error("Error parsing when binding: " ++ str)
-  | v => Ok(v)
-  };
-};
-
 let evaluate = (v: t, getValue) => {
   let rec f = v =>
     switch (v) {
@@ -31,5 +21,8 @@ let evaluate = (v: t, getValue) => {
     | Not(e) => !f(e)
     };
 
-  f(v);
+  let ret = f(v);
+  Oni_Core.Log.info(
+    Printf.sprintf("Expression %s evaluated to: %s", show(v), ret ? "true" : "false"));
+    ret;
 };

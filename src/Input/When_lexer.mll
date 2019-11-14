@@ -7,7 +7,7 @@
 rule token = parse
 | [' ' '\t' '\n']
     { token lexbuf }
-| ['a' - 'z']+ as i
+| ['a' - 'z' 'A' - 'Z']+ as i
     { VAR (i) }
 | '&' '&'
     { AND }

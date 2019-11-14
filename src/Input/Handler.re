@@ -151,24 +151,14 @@ let keyPressToCommand =
   };
 };
 
-module Conditions = {
-  type t = Hashtbl.t(Types.Input.controlMode, bool);
-
-  let getBooleanCondition = (v: t, condition: Types.Input.controlMode) => {
-    switch (Hashtbl.find_opt(v, condition)) {
-    | Some(v) => v
-    | None => false
-    };
-  };
-};
-
 /**
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (commandConditions, _currentConditions, input, key) =>
+let matchesCondition = (commandConditions, input, key, getValue) =>
   if (input != key) {
     false;
   } else {
-    Expression.evaluate(commandConditions, _ => false);
+    print_endline ("!!HERE");
+    Expression.evaluate(commandConditions, getValue);
   };

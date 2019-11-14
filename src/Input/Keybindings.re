@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Types.Input;
 
 module Keybinding = {
   type t = {
@@ -22,14 +21,14 @@ module Keybinding = {
     switch (Json.of_yojson(json)) {
     | Error(err) => Error(err)
     | Ok(v) =>
-      switch (Expression.parse(v.condition)) {
+      switch (When.parse(v.condition)) {
       | Error(err) => Error(err)
       | Ok(condition) => Ok({key: v.key, command: v.command, condition})
       }
     };
   };
 
-  let to_yojson = (v: t) => {
+  let to_yojson = (_v: t) => {
     failwith("Not implemented");
   };
 };
@@ -53,6 +52,8 @@ let get = () => {
   | Ok(b) => b.bindings
   | Error(e) =>
     Log.error("Error parsing keybindings file ------- " ++ e);
+    // TODO: Remove
+    failwith(e);
     [];
   };
 };
