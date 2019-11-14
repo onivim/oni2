@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Input;
 open Oni_Extensions;
 open Oni_Syntax;
 

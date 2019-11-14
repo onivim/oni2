@@ -9,6 +9,7 @@ open Revery;
 open Oni_UI;
 
 module Core = Oni_Core;
+module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
@@ -133,7 +134,7 @@ let init = app => {
   });
 
   dispatch(Model.Actions.Init);
-  dispatch(Model.Actions.KeyBindingsSet(Core.Keybindings.get()));
+  dispatch(Model.Actions.KeyBindingsSet(Input.Keybindings.get()));
   runEffects();
 
   List.iter(

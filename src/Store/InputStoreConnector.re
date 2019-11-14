@@ -61,7 +61,7 @@ let start =
   let getActionsForBinding =
       (inputKey, commands, currentConditions: Handler.Conditions.t) => {
     let inputKey = String.uppercase_ascii(inputKey);
-    Keybindings.(
+    Keybindings.Keybinding.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
           Handler.matchesCondition(

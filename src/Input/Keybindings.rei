@@ -1,6 +1,6 @@
-open Types.Input;
+open Oni_Core.Types.Input;
 
-module Keybinding = {
+module Keybinding: {
   type t = {
     key: string,
     command: string,
@@ -12,4 +12,7 @@ type t = list(Keybinding.t);
 
 let default: t;
 
-let getDefaultConfig: unit => t;
+/*
+  [get] reads the keybindings from the file system
+ */
+let get: unit => t;

@@ -16,4 +16,5 @@
         Oni2.core
         Rench
         Revery
-    ))
+    )
+    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

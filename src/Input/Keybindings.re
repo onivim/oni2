@@ -1,38 +1,45 @@
-open Types.Input;
+open Oni_Core;
+open Oni_Core.Types.Input;
 
 module Keybinding = {
   type t = {
     key: string,
     command: string,
-    when: Expression.t,
+    condition: Expression.t,
   };
 
-  [@deriving yojson({strict: false, exn: false})]
-  type json = {
-    key: string,
-    command: string,
-    when: string,
+  module Json = {
+    [@deriving yojson({strict: false, exn: false})]
+    type t = {
+      key: string,
+      command: string,
+      [@key "when"]
+      condition: string,
+    };
   };
 
-  let of_yojson = (json: Yojson.Safe.json) => {
-    switch (json_of_yjson(json)) {
+  let of_yojson = (json: Yojson.Safe.t) => {
+    switch (Json.of_yojson(json)) {
     | Error(err) => Error(err)
     | Ok(v) =>
-      switch (When.parse(v.when)) {
+      switch (When.parse(v.condition)) {
       | Error(err) => Error(err)
-      | Ok(v) => Ok(v)
+      | Ok(condition) => Ok({key: v.key, command: v.command, condition})
       }
-    }
+    };
+  };
+
+  let to_yojson = (v: t) => {
+    failwith("Not implemented");
   };
 };
 
 [@deriving yojson({strict: false, exn: false})]
-type json_keybindings = {bindings: list(Keybinding.json)};
+type json_keybindings = {bindings: list(Keybinding.t)};
 
 let default = [];
 
-[@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
-type json_keybindings = {bindings: t};
+type t = list(Keybinding.t);
 
 let getDefaultConfig = () => {
   switch (ConfigurationDefaults.getDefaultConfigString("keybindings.json")) {

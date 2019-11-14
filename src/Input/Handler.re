@@ -166,15 +166,9 @@ module Conditions = {
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (commandConditions, currentConditions, input, key) =>
+let matchesCondition = (commandConditions, _currentConditions, input, key) =>
   if (input != key) {
     false;
   } else {
-    List.fold_left(
-      (prevMatch, condition) =>
-        prevMatch
-        || Conditions.getBooleanCondition(currentConditions, condition),
-      false,
-      commandConditions,
-    );
+    Expression.evaluate(commandConditions, _ => false);
   };
