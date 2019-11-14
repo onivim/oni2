@@ -15,6 +15,7 @@ let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
 let _currentZoom: ref(float) = ref(1.0);
 let _currentTitle: ref(string) = ref("");
+let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -29,6 +30,8 @@ let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
 let getScaleFactor = () => 1.0;
+
+let setVsync = vsync => _currentVsync := vsync;
 
 let quit = code => exit(code);
 
@@ -77,6 +80,7 @@ let runTest =
       ~setTitle,
       ~getZoom,
       ~setZoom,
+      ~setVsync,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       ~cliOptions,

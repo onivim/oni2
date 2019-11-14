@@ -22,7 +22,7 @@ let createElement =
 
     switch (Model.HoverCollector.get(state)) {
     | None => empty
-    | Some(hoverInfo) when hoverEnabled =>
+    | Some(hoverInfo) when hoverEnabled && state.mode != Vim.Types.Insert =>
       open Model.HoverCollector;
       let {theme, editorFont, hover, _}: Model.State.t = state;
 
@@ -66,7 +66,7 @@ let createElement =
 
       let (_maxWidth, height, diags) =
         List.fold_left(
-          (prev, curr: Model.Diagnostics.Diagnostic.t) => {
+          (prev, curr: Model.Diagnostic.t) => {
             let (prevWidth, prevHeight, prevDiags) = prev;
 
             let message = curr.message;

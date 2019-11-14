@@ -14,6 +14,7 @@ const releaseDirectory = path.join(process.cwd(), "_release");
 fs.removeSync(releaseDirectory);
 fs.mkdirpSync(releaseDirectory);
 
+const nodeScriptSourceDirectory = path.join(process.cwd(), "node");
 const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 // const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
 
@@ -87,7 +88,7 @@ if (process.platform == "linux") {
     "node"
   ];
 
-  const appDirectory = path.join(releaseDirectory, "Onivim2.App");
+  const appDirectory = path.join(releaseDirectory, "Onivim2.app");
   const contentsDirectory = path.join(appDirectory, "Contents");
   const resourcesDirectory = path.join(contentsDirectory, "Resources");
   const binaryDirectory = path.join(contentsDirectory, "MacOS");
@@ -121,6 +122,7 @@ if (process.platform == "linux") {
   copy("scripts/osx/run.sh", "_release/run.sh");
 
   copy(extensionsSourceDirectory, resourcesDirectory);
+  copy(nodeScriptSourceDirectory, resourcesDirectory);
   copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
@@ -195,6 +197,7 @@ if (process.platform == "linux") {
 } else {
   const platformReleaseDirectory = path.join(releaseDirectory, process.platform);
   const extensionsDestDirectory = path.join(platformReleaseDirectory, "extensions");
+  const nodeScriptDestDirectory = path.join(platformReleaseDirectory, "node");
   fs.mkdirpSync(platformReleaseDirectory);
 
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
@@ -207,6 +210,7 @@ if (process.platform == "linux") {
   fs.copySync(thirdPartyFile, path.join(platformReleaseDirectory, "ThirdPartyLicenses.txt"));
   fs.copySync(curBin, platformReleaseDirectory, { deference: true});
   fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, {deference: true});
+  fs.copySync(nodeScriptSourceDirectory, nodeScriptDestDirectory, {deference: true});
   fs.removeSync(path.join(platformReleaseDirectory, "setup.json"));
 
   // Now that we've copied set the app icon up correctly.

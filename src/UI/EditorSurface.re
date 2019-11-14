@@ -684,14 +684,14 @@ let createElement =
                    );
                  }};
 
-              FlatList.render(
+              ImmediateList.render(
                 ~scrollY,
                 ~rowHeight,
                 ~height=float_of_int(height),
                 ~count,
                 ~render=
                   (item, _offset) => {
-                    let renderDiagnostics = (d: Diagnostics.Diagnostic.t) =>
+                    let renderDiagnostics = (d: Diagnostic.t) =>
                       renderUnderline(~color=Colors.red, d.range);
 
                     /* Draw error markers */
@@ -752,7 +752,7 @@ let createElement =
                 (),
               );
 
-              FlatList.render(
+              ImmediateList.render(
                 ~scrollY,
                 ~rowHeight,
                 ~height=float_of_int(height),
@@ -810,7 +810,7 @@ let createElement =
                   (),
                 );
 
-                FlatList.render(
+                ImmediateList.render(
                   ~scrollY,
                   ~rowHeight,
                   ~height=float_of_int(height),

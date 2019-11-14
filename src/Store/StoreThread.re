@@ -67,6 +67,7 @@ let start =
       ~quit,
       ~getTime,
       ~setTitle,
+      ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       ~getScaleFactor,
@@ -109,12 +110,8 @@ let start =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  /*
-     For our July builds, we won't be including the extension host -
-     but we'll bring this back as we start implementing those features!
-   */
-  /* let (extHostUpdater, extHostStream) =
-     ExtensionClientStoreConnector.start(extensions, setup); */
+  let (extHostUpdater, extHostStream) =
+    ExtensionClientStoreConnector.start(extensions, setup);
 
   let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
 
@@ -124,6 +121,7 @@ let start =
       ~cliOptions,
       ~getZoom,
       ~setZoom,
+      ~setVsync,
     );
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
@@ -158,7 +156,7 @@ let start =
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           syntaxUpdater,
-          /* extHostUpdater, */
+          extHostUpdater,
           fontUpdater,
           menuHostUpdater,
           quickOpenUpdater,
@@ -224,7 +222,7 @@ let start =
   let _ = Isolinear.Stream.connect(dispatch, vimStream);
   let _ = Isolinear.Stream.connect(dispatch, editorEventStream);
   let _ = Isolinear.Stream.connect(dispatch, syntaxStream);
-  /* Isolinear.Stream.connect(dispatch, extHostStream); */
+  let _ = Isolinear.Stream.connect(dispatch, extHostStream);
   let _ = Isolinear.Stream.connect(dispatch, menuStream);
   let _ = Isolinear.Stream.connect(dispatch, explorerStream);
   let _ = Isolinear.Stream.connect(dispatch, lifecycleStream);

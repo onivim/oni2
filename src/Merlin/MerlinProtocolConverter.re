@@ -11,7 +11,7 @@ open Oni_Extensions;
 
 let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
   let f = (err: MerlinProtocol.errorResultItem) => {
-    Model.Diagnostics.Diagnostic.create(
+    Model.Diagnostic.create(
       ~message=err.message,
       ~range=
         Core.Range.ofPositions(

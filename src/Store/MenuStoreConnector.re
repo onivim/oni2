@@ -17,7 +17,14 @@ let start = () => {
 
   let position = (selectedItem, change, count) => {
     let nextIndex = selectedItem + change;
-    nextIndex >= count || nextIndex < 0 ? 0 : nextIndex;
+
+    if (nextIndex >= count) {
+      0;
+    } else if (nextIndex < 0) {
+      count - 1;
+    } else {
+      nextIndex;
+    };
   };
 
   let menuOpenEffect =

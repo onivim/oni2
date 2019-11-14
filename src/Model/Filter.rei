@@ -4,5 +4,10 @@
  * Module to filter & rank items using various strategies.
  */
 
-let rank: (string, list(Actions.menuCommand)) => list(Actions.menuCommand);
-let formatName: (Actions.menuCommand, bool) => string;
+type result('a) = {
+  item: 'a,
+  highlight: list((int, int)),
+};
+
+let rank:
+  (string, ('a, ~shouldLower: bool) => string, list('a)) => list(result('a));

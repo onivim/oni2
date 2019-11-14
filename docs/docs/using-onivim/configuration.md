@@ -11,6 +11,14 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - Press `Command+Shift+P` (Mac) or `Control+Shift+P` (Windows, Linux) to bring up the command palette
 - Select `Preferences: Open Configuration File`
 
+### Directly editing the configuration
+
+Sometimes, it is necessary to directly edit the configuration in another editor, for example, if a setting is inadvertently set that makes the editor unusable.
+
+The configuration file, `configuration.json` is in the Oni2 directory, whose location varies by operating system:
+- On Unix-like operating systems such as Linux: `$HOME/.config/oni2`
+- On Windows, `%LOCALAPPDATA%\Oni2`
+
 ## Configuration Settings
 
 ### Editor
@@ -47,6 +55,10 @@ Onivim's configuration is designed to be mostly compatible with [VSCode's User S
 - `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+
+## Rendering
+
+- `vsync` __(_bool_ default: `false`)__ - Whether rendering should sync with vertical retrace of the monitor. VSync adds input latency, as rendering must sync with the refresh rate of the monitor, but it reduces screen tearing.
 
 ### UI
 

@@ -20,6 +20,7 @@ let parseInt = json =>
 
 let parseFloat = json =>
   switch (json) {
+  | `Int(v) => float_of_int(v)
   | `Float(v) => v
   | _ => 0.
   };
@@ -231,6 +232,14 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {
       ...s,
       vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v),
+    },
+  ),
+  (
+    "vsync",
+    (s, v) => {
+      ...s,
+      vsync:
+        parseBool(v) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
     },
   ),
   (

@@ -10,7 +10,7 @@ open Revery.UI;
 
 open Oni_Core;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
-module Diagnostics = Oni_Model.Diagnostics;
+module Diagnostic = Oni_Model.Diagnostic;
 module Editor = Oni_Model.Editor;
 module Selectors = Oni_Model.Selectors;
 module State = Oni_Model.State;
@@ -262,7 +262,7 @@ let createElement =
                  (),
                )};
 
-            FlatList.render(
+            ImmediateList.render(
               ~scrollY,
               ~rowHeight,
               ~height=float_of_int(height),
@@ -317,7 +317,7 @@ let createElement =
               (),
             );
 
-            FlatList.render(
+            ImmediateList.render(
               ~scrollY,
               ~rowHeight,
               ~height=float_of_int(height),
@@ -327,7 +327,7 @@ let createElement =
                   switch (IntMap.find_opt(item, diagnostics)) {
                   | Some(v) =>
                     List.iter(
-                      (d: Diagnostics.Diagnostic.t) =>
+                      (d: Diagnostic.t) =>
                         renderUnderline(
                           ~offset,
                           ~color=Color.rgba(1.0, 0., 0., 1.0),

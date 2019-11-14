@@ -34,7 +34,8 @@ type t =
   | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
-  | DiagnosticsSet(Buffer.t, string, list(Diagnostics.Diagnostic.t))
+  | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
+  | DiagnosticsClear(string)
   | SelectionChanged(VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
@@ -170,6 +171,7 @@ and menuCommand = {
   name: string,
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
+  highlight: list((int, int)),
 }
 and menuSetItems = list(menuCommand) => unit
 and menuSetLoading = bool => unit

@@ -4,20 +4,20 @@ open Oni_Core;
 open Oni_Core.Types;
 
 module Buffer = Oni_Model.Buffer;
+module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 
 let singleDiagnostic = [
-  Diagnostics.Diagnostic.create(
-    ~range=Range.zero,
-    ~message="single error",
-    (),
-  ),
+  Diagnostic.create(~range=Range.zero, ~message="single error", ()),
 ];
 
 let doubleDiagnostic = [
-  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
-  Diagnostics.Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
+  Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
+  Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
 ];
+
+let buffer = Buffer.ofLines([||]);
+let uri = Buffer.getUri(buffer);
 
 describe("Diagnostics", ({describe, _}) => {
   describe("getDiagnostics", ({test, _}) =>
@@ -34,7 +34,7 @@ describe("Diagnostics", ({describe, _}) => {
   describe("getDiagnosticsAtPosition", ({test, _}) =>
     test("simple diagnostic", ({expect}) => {
       let singleDiagnostic = [
-        Diagnostics.Diagnostic.create(
+        Diagnostic.create(
           ~range=
             Range.ofInt0(
               ~startLine=1,
@@ -48,10 +48,9 @@ describe("Diagnostics", ({describe, _}) => {
         ),
       ];
 
-      let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
       let diags =
         Diagnostics.getDiagnosticsAtPosition(
@@ -102,13 +101,38 @@ describe("Diagnostics", ({describe, _}) => {
       expect.int(List.length(diags)).toBe(0);
     })
   );
+  describe("clear", ({test, _}) => {
+    test("single diagnostic", ({expect}) => {
+      let buffer = Buffer.ofLines([||]);
+
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.clear(v, "test_key1");
+
+      let diagnostics = Diagnostics.getDiagnostics(v, buffer);
+
+      expect.int(List.length(diagnostics)).toBe(0);
+    });
+    test("doesn't remove other keys", ({expect}) => {
+      let buffer = Buffer.ofLines([||]);
+
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.clear(v, "test_key1");
+
+      let diagnostics = Diagnostics.getDiagnostics(v, buffer);
+
+      expect.int(List.length(diagnostics)).toBe(2);
+    });
+  });
 
   describe("change", ({test, _}) => {
     test("simple diagnostic add", ({expect}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -119,8 +143,8 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -133,9 +157,9 @@ describe("Diagnostics", ({describe, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
-      let v = Diagnostics.change(v, buffer, "test_key1", singleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key2", doubleDiagnostic);
-      let v = Diagnostics.change(v, buffer, "test_key1", []);
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      let v = Diagnostics.change(v, uri, "test_key1", []);
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
