@@ -41,14 +41,12 @@ let start =
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
+      // TODO: Type and store this
       // handle: number
       // selector: [{"$serialized: true", "language": "plaintext"}]
       // triggerCharacters: []
       // false (supportsResolveDetails)
-      print_endline(
-        "!!! Suggest features: " ++ Yojson.Safe.to_string(`List(args)),
-      );
-      Ok(None);
+      Ok(None)
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
       Ok(None);

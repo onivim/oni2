@@ -340,14 +340,14 @@ module IncomingNotifications = {
 
   module LanguageFeatures = {
     let parseProvideCompletionsResponse = json => {
-
       switch (Yojson.Safe.Util.member("suggestions", json)) {
-      | `List(_) as items => switch(Suggestions.of_yojson(items)) {
-      | Ok(v) => Some(v)
-      | Error(_) => None
-      }
+      | `List(_) as items =>
+        switch (Suggestions.of_yojson(items)) {
+        | Ok(v) => Some(v)
+        | Error(_) => None
+        }
       | _ => None
-      }
+      };
     };
   };
 };
