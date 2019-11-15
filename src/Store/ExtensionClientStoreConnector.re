@@ -180,7 +180,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~name="exthost.checkCompletions", dispatch => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
-        (buf, fileType) => {
+        (buf, _fileType) => {
           let uri = Model.Buffer.getUri(buf);
           let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
             ExtHostClient.getCompletions(
