@@ -211,6 +211,8 @@
     "esy-sdl2": "*"
   },
   "resolutions": {
+    "flex": "github:jordwalke/flex#7ca8f51",
+    "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "github:ocsigen/js_of_ocaml:js_of_ocaml.opam#db257ce",
     "@opam/js_of_ocaml-compiler": "github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce",
