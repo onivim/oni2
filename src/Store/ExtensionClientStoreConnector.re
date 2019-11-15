@@ -62,6 +62,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onMessage = (msg) => {
+    Core.Log.info("[ExtHost]: " ++ msg);
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
@@ -70,6 +74,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
+      ~onMessage,
       setup,
     );
 
