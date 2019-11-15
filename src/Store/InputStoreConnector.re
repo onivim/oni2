@@ -42,11 +42,11 @@ let conditionsOfState = (state: State.t) => {
   let ret: Handler.Conditions.t = Hashtbl.create(16);
 
   switch (state.quickmenu) {
-  | Some({text, cursorPosition, _}) =>
+  | Some({query, cursorPosition, _}) =>
     Hashtbl.add(ret, ListFocus, true);
     Hashtbl.add(ret, InQuickOpen, true);
 
-    if (cursorPosition == String.length(text)) {
+    if (cursorPosition == String.length(query)) {
       Hashtbl.add(ret, QuickmenuCursorEnd, true);
     };
 

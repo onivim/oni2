@@ -127,7 +127,7 @@ let createElement =
           filterProgress,
           ripgrepProgress,
           focused,
-          text,
+          query,
           cursorPosition,
           prefix,
           _,
@@ -211,7 +211,7 @@ let createElement =
                 cursorColor=Colors.white
                 style={Styles.input(font.fontFile)}
                 onChange=onInput
-                text
+                text=query
                 cursorPosition
               />
             </View>

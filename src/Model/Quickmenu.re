@@ -2,7 +2,7 @@ open Actions;
 
 type t = {
   variant,
-  text: string,
+  query: string,
   prefix: option(string),
   cursorPosition: int,
   items: array(menuItem),
@@ -21,7 +21,7 @@ and variant =
 
 let defaults = variant => {
   variant,
-  text: "",
+  query: "",
   prefix: None,
   cursorPosition: 0,
   focused: None,

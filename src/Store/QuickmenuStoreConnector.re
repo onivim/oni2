@@ -164,7 +164,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | QuickmenuInput({text, cursorPosition}) => (
         Option.map(
-          state => Quickmenu.{...state, text, cursorPosition},
+          state => Quickmenu.{...state, query: text, cursorPosition},
           state,
         ),
         Isolinear.Effect.none,
@@ -391,10 +391,10 @@ let subscriptions = ripgrep => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(quickmenu.text, quickmenu.items)]
+      | ThemesPicker => [filter(quickmenu.query, quickmenu.items)]
 
       | FilesPicker => [
-          filter(quickmenu.text, quickmenu.items),
+          filter(quickmenu.query, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme),
         ]
 
