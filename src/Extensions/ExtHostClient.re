@@ -42,14 +42,6 @@ let start =
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
-      // TODO: Type and store this
-      // handle: number
-      // selector: [{"$serialized: true", "language": "plaintext"}]
-      // triggerCharacters: []
-      // false (supportsResolveDetails)
-      prerr_endline(
-        "$registerSuggestSupport: " ++ Yojson.Safe.to_string(`List(args)),
-      );
       In.LanguageFeatures.parseRegisterSuggestSupport(args)
       |> apply(onRegisterSuggestProvider);
       Ok(None);
@@ -127,7 +119,6 @@ let updateDocument = (uri, modelChange, dirty, v) => {
 
 let getCompletions = (id, uri, position, v) => {
   let f = (json: Yojson.Safe.t) => {
-    prerr_endline("! Got completions: " ++ Yojson.Safe.to_string(json));
     In.LanguageFeatures.parseProvideCompletionsResponse(json);
   };
 

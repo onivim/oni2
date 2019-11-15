@@ -192,9 +192,8 @@ let start = (extensions, setup: Core.Setup.t) => {
 
             let _ = Lwt.bind(completionPromise, (completions) => {
               switch (completions) {
-              | None => prerr_endline ("NO COMPLETIONS");
+              | None => Core.Log.info("No completions for provider"); 
               | Some(completions) => 
-                prerr_endline ("COMPLETION COUNT: " ++ string_of_int(List.length(completions)));
                 let completionItems = suggestionsToCompletionItems(completions);
                 dispatch(Model.Actions.CompletionSetItems(completionMeet, completionItems));
               };
