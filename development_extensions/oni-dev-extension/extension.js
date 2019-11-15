@@ -15,6 +15,11 @@ function activate(context) {
     item.text = "Developer";
     item.show();
 
+    const output = vscode.window.createOutputChannel("oni-dev");
+    output.appendLine("Hello output channel!");
+
+    const output2 = vscode.window.createOutputChannel("oni-dev2");
+    output2.append("Hello output channel!");
 
     const collection = vscode.languages.createDiagnosticCollection('test');
 
