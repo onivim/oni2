@@ -81,12 +81,12 @@ let start = _ => {
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
-      "commandPalette.open",
+      "workbench.action.showCommands",
       _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("quickOpen.buffers", _ => singleActionEffect(QuickmenuShow(Buffers))),
+    ("workbench.action.openNextRecentlyUsedEditorInGroup", _ => singleActionEffect(QuickmenuShow(Buffers))),
     (
-      "quickOpen.workspaceFiles",
+      "workbench.action.quickOpen",
       _ => singleActionEffect(QuickmenuShow(WorkspaceFiles)),
     ),
     /*(

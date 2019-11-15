@@ -44,11 +44,11 @@ let getDefaultConfigString = configName =>
       {|
 {
     "bindings": [
-        { "key": "<C-TAB>", "command": "quickOpen.buffers", "when": [["editorTextFocus"]] },
-        { "key": "<C-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
-        { "key": "<D-P>", "command": "quickOpen.workspaceFiles", "when": [["editorTextFocus"]] },
-        { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
-        { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
+        { "key": "<C-TAB>", "command": "workbench.action.openNextRecentlyUsedEditorInGroup", "when": [["editorTextFocus"]] },
+        { "key": "<C-P>", "command": "workbench.action.quickOpen", "when": [["editorTextFocus"]] },
+        { "key": "<D-P>", "command": "workbench.action.quickOpen", "when": [["editorTextFocus"]] },
+        { "key": "<S-C-P>", "command": "workbench.action.showCommands", "when": [["editorTextFocus"]] },
+        { "key": "<D-S-P>", "command": "workbench.action.showCommands", "when": [["editorTextFocus"]] },
         { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
         { "key": "<ESC>", "command": "workbench.action.closeQuickOpen", "when": [["menuFocus"]] },
