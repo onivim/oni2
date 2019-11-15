@@ -62,7 +62,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onMessage = msg => {
+  let onOutput = msg => {
     Core.Log.info("[ExtHost]: " ++ msg);
   };
 
@@ -74,7 +74,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
-      ~onMessage,
+      ~onOutput,
       setup,
     );
 
