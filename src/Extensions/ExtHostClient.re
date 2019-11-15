@@ -34,6 +34,7 @@ let start =
       ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
+      ~onRegisterSuggestProvider=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
@@ -46,7 +47,12 @@ let start =
       // selector: [{"$serialized: true", "language": "plaintext"}]
       // triggerCharacters: []
       // false (supportsResolveDetails)
-      Ok(None)
+      prerr_endline(
+        "$registerSuggestSupport: " ++ Yojson.Safe.to_string(`List(args)),
+      );
+      In.LanguageFeatures.parseRegisterSuggestSupport(args)
+      |> apply(onRegisterSuggestProvider);
+      Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
       Ok(None);

@@ -18,6 +18,12 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onExtHostClosed = () => Core.Log.info("ext host closed");
 
+  // Keep track of the available language features
+  // TODO: Keep track of this in the application state / store,
+  // if needed more globally?
+
+  let languageFeatures = ref(LanguageFeatures.create());
+
   let extensionInfo =
     extensions
     |> List.map(ext =>
@@ -62,6 +68,14 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
+    Core.Log.info(
+      "Registered suggest provider with ID: " ++ string_of_int(sp.id),
+    );
+    languageFeatures :=
+      LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
@@ -70,6 +84,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
+      ~onRegisterSuggestProvider,
       setup,
     );
 

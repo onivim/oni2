@@ -307,6 +307,8 @@ module CancellationToken = {
   let none = `Null;
 };
 
+module LF = LanguageFeatures;
+
 module IncomingNotifications = {
   module StatusBar = {
     let parseSetEntry = args => {
@@ -346,6 +348,20 @@ module IncomingNotifications = {
         | Ok(v) => Some(v)
         | Error(_) => None
         }
+      | _ => None
+      };
+    };
+
+    let parseRegisterSuggestSupport = json => {
+      switch (json) {
+      | [`Int(id), _documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+        // TODO: Finish parsing
+        Some(
+          LF.SuggestProvider.create(
+            ~selector=DocumentSelector.create("oni-dev"),
+            id,
+          ),
+        )
       | _ => None
       };
     };
