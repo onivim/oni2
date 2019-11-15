@@ -62,7 +62,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onMessage = (msg) => {
+  let onMessage = msg => {
     Core.Log.info("[ExtHost]: " ++ msg);
   };
 
@@ -78,7 +78,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+  let _bufferMetadataToModelAddedDelta =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Core.Log.info("Creating model for filetype: " ++ ft);
@@ -91,7 +92,7 @@ let start = (extensions, setup: Core.Setup.t) => {
           ~isDirty=true,
           (),
         ),
-      )
+      );
     | _ => None
     };
 
@@ -100,7 +101,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+  let sendBufferEnterEffect =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
@@ -157,7 +159,10 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (state, sendBufferEnterEffect(bm, fileTypeOpt))
+    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
+        state,
+        sendBufferEnterEffect(bm, fileTypeOpt),
+      )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };

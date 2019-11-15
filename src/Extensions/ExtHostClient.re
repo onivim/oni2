@@ -44,8 +44,8 @@ let start =
     switch (scope, method, args) {
     | ("MainThreadOutputService", "$register", _) =>
       // TODO: No-op
-      Ok(None);
-    | ("MainThreadOutputService", "$append" , [_, `String(msg)]) =>
+      Ok(None)
+    | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onMessage(msg);
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
