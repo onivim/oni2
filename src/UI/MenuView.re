@@ -73,12 +73,12 @@ module Styles = {
 };
 
 let onSelectedChange = index =>
-  GlobalContext.current().dispatch(MenuFocus(index));
+  GlobalContext.current().dispatch(ListFocus(index));
 
 let onInput = (text, cursorPosition) =>
   GlobalContext.current().dispatch(MenuInput({text, cursorPosition}));
 
-let onSelect = _ => GlobalContext.current().dispatch(MenuSelect);
+let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
 let progressBar = (~children as _, ~progress=?, ~theme, ()) => {
   let indicatorWidth = 100.;

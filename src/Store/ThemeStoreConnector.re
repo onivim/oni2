@@ -110,9 +110,9 @@ let start = (themeInfo: ThemeInfo.t) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.MenuFocusNext
-    | Actions.MenuFocusPrevious
-    | Actions.MenuFocus(_) =>
+    | Actions.ListFocusUp
+    | Actions.ListFocusDown
+    | Actions.ListFocus(_) =>
       switch (state.menu) {
       | Some({variant: Themes, selected: Some(selected), items, _}) =>
         let focusedItem = items[selected];

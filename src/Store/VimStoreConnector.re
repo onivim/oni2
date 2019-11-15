@@ -698,9 +698,9 @@ let start =
         applyCompletion(state),
       )
 
-    | Model.Actions.MenuFocusNext
-    | Model.Actions.MenuFocusPrevious
-    | Model.Actions.MenuFocus(_) =>
+    | Model.Actions.ListFocusUp
+    | Model.Actions.ListFocusDown
+    | Model.Actions.ListFocus(_) =>
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.menu) {

@@ -20,17 +20,17 @@ let fixedBindings =
   Keybindings.[
     {
       key: "<UP>",
-      command: "menu.previous",
+      command: "list.focusUp",
       condition: [MenuFocus, TextInputFocus],
     },
     {
       key: "<DOWN>",
-      command: "menu.next",
+      command: "list.focusDown",
       condition: [MenuFocus, TextInputFocus],
     },
     {
       key: "<RIGHT>",
-      command: "menu.selectBackground",
+      command: "list.selectBackground",
       condition: [MenuCursorEnd],
     },
   ];

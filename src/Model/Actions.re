@@ -59,7 +59,6 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-  // MenuStoreConnector
   | MenuShow(menuVariant)
   | MenuInput({
       text: string,
@@ -67,12 +66,12 @@ type t =
     })
   | MenuUpdateRipgrepProgress(progress)
   | MenuUpdateFilterProgress(array(menuItem), progress)
-  | MenuFocus(int)
-  | MenuFocusPrevious
-  | MenuFocusNext
+  | ListFocus(int)
+  | ListFocusUp
+  | ListFocusDown
+  | ListSelect
+  | ListSelectBackground
   | MenuSearch(string)
-  | MenuSelect
-  | MenuSelectBackground
   | MenuClose
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)

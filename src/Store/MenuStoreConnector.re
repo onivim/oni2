@@ -188,7 +188,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | MenuFocus(index) => (
+    | ListFocus(index) => (
         Option.map(
           (state: Menu.t) => {
             let count = Array.length(state.items);
@@ -203,7 +203,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | MenuFocusPrevious => (
+    | ListFocusUp => (
         Option.map(
           (state: Menu.t) => {
             let count = Array.length(state.items);
@@ -231,7 +231,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | MenuFocusNext => (
+    | ListFocusDown => (
         Option.map(
           (state: Menu.t) => {
             let count = Array.length(state.items);
@@ -257,7 +257,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | MenuSelect =>
+    | ListSelect =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
@@ -270,7 +270,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | MenuSelectBackground =>
+    | ListSelectBackground =>
       switch (state) {
       | Some({items, selected: Some(selected), _}) =>
         let eff =

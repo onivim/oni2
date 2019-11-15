@@ -124,13 +124,13 @@ let start = _ => {
           ]);
         },
       ),*/
-    ("menu.close", _ => multipleActionEffect([MenuClose])),
-    ("menu.next", _ => multipleActionEffect([MenuFocusNext])),
-    ("menu.previous", _ => multipleActionEffect([MenuFocusPrevious])),
-    ("menu.select", _ => multipleActionEffect([MenuSelect])),
+    ("workbench.action.closeQuickOpen", _ => multipleActionEffect([MenuClose])),
+    ("list.focusDown", _ => multipleActionEffect([ListFocusDown])),
+    ("list.focusUp", _ => multipleActionEffect([ListFocusUp])),
+    ("list.select", _ => multipleActionEffect([ListSelect])),
     (
-      "menu.selectBackground",
-      _ => multipleActionEffect([MenuSelectBackground]),
+      "list.selectBackground",
+      _ => multipleActionEffect([ListSelectBackground]),
     ),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
