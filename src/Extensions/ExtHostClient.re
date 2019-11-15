@@ -44,7 +44,7 @@ let start =
       print_endline("OUTPUT: " ++ Yojson.Safe.to_string(`List(args)));
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
-      print_endline ("DIAGS: " ++ Yojson.Safe.to_string(`List(args)));
+      print_endline("DIAGS: " ++ Yojson.Safe.to_string(`List(args)));
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
       Ok(None);
     | ("MainThreadDiagnostics", "$clear", args) =>

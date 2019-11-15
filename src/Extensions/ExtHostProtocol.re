@@ -264,18 +264,30 @@ module DiagnosticsCollection = {
   let of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
     | `List([`String(name), `List(perFileDiagnostics)]) =>
-      print_endline ("DIAG BEFORE PARSING for " ++ name ++ string_of_int(List.length(perFileDiagnostics)));
+      print_endline(
+        "DIAG BEFORE PARSING for "
+        ++ name
+        ++ string_of_int(List.length(perFileDiagnostics)),
+      );
       let perFileDiagnostics =
         List.map(Diagnostics.of_yojson, perFileDiagnostics);
 
-      List.iter((v) => switch(v) {
-      | Ok(_) => ()
-      | Error(msg) => print_endline ("ERROR: " ++ msg);
-      }, perFileDiagnostics);
+      List.iter(
+        v =>
+          switch (v) {
+          | Ok(_) => ()
+          | Error(msg) => print_endline("ERROR: " ++ msg)
+          },
+        perFileDiagnostics,
+      );
 
-       let perFileDiagnostics = perFileDiagnostics
-        |> Utility.filterMap(Utility.resultToOption);
-      print_endline ("DIAG AFTER PARSING for " ++ name ++ string_of_int(List.length(perFileDiagnostics)));
+      let perFileDiagnostics =
+        perFileDiagnostics |> Utility.filterMap(Utility.resultToOption);
+      print_endline(
+        "DIAG AFTER PARSING for "
+        ++ name
+        ++ string_of_int(List.length(perFileDiagnostics)),
+      );
       Some({name, perFileDiagnostics});
     | _ => None
     };
@@ -404,9 +416,7 @@ module OutgoingNotifications = {
   };
 
   module Workspace = {
-    [@deriving
-      yojson({strict: false, exn: true})
-    ]
+    [@deriving yojson({strict: false, exn: true})]
     type workspaceInfo = {
       id: string,
       name: string,
