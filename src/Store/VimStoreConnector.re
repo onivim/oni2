@@ -703,7 +703,7 @@ let start =
     | Model.Actions.ListFocus(_) =>
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
-        switch (state.menu) {
+        switch (state.quickmenu) {
         | Some({variant: Wildmenu(_), focused: Some(focused), items, _}) =>
           try(applyCompletionEffect(items[focused].name)) {
           | Invalid_argument(_) => Isolinear.Effect.none

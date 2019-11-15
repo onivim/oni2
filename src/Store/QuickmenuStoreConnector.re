@@ -306,7 +306,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | action =>
       let (menuState, menuEffect) =
         menuUpdater(
-          state.menu,
+          state.quickmenu,
           action,
           state.buffers,
           state.languageInfo,
@@ -314,7 +314,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
           themeInfo,
         );
 
-      ({...state, menu: menuState}, menuEffect);
+      ({...state, quickmenu: menuState}, menuEffect);
     };
   };
 
@@ -386,7 +386,7 @@ let subscriptions = ripgrep => {
   };
 
   let updater = (state: Model.State.t) => {
-    switch (state.menu) {
+    switch (state.quickmenu) {
     | Some(menu) =>
       switch (menu.variant) {
       | CommandPalette

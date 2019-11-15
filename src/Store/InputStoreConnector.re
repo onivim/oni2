@@ -35,13 +35,13 @@ let fixedBindings =
     },
   ];
 
-let isMenuOpen = (state: State.t) => state.menu != None;
+let isMenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
 
-  switch (state.menu) {
+  switch (state.quickmenu) {
   | Some({text, cursorPosition, _}) =>
     Hashtbl.add(ret, MenuFocus, true);
 
@@ -117,7 +117,7 @@ let start =
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
 
     let captureMode =
-      switch (state.menu) {
+      switch (state.quickmenu) {
       | Some({variant: Wildmenu(_), _}) => Wildmenu
 
       | Some({variant: CommandPalette, _})

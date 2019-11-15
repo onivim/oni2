@@ -113,7 +113,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.ListFocusUp
     | Actions.ListFocusDown
     | Actions.ListFocus(_) =>
-      switch (state.menu) {
+      switch (state.quickmenu) {
       | Some({variant: ThemesPicker, focused: Some(focused), items, _}) =>
         let focusedItem = items[focused];
         (state, loadThemeByNameEffect(focusedItem.name));

@@ -22,7 +22,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
 
   /* Wait for menu 'isLoading' to be true */
   wait(~name="Menu is loading is true", (state: State.t) =>
-    switch (state.menu) {
+    switch (state.quickmenu) {
     | Some({filterProgress: InProgress(_), _}) => true
     | _ => false
     }
@@ -37,7 +37,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
     (state: State.t) => {
       dispatch(Tick({deltaTime: 0., totalTime: 0.}));
       runEffects();
-      switch (state.menu) {
+      switch (state.quickmenu) {
       | Some({filterProgress: Complete, _}) => true
       | _ => false
       };

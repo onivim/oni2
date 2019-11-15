@@ -70,7 +70,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
           <EditorView state />
         </View>
         <Overlay>
-          {switch (state.menu) {
+          {switch (state.quickmenu) {
            | None => React.empty
            | Some(menuState) =>
              switch (menuState.variant) {
