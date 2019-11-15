@@ -125,7 +125,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(v: Protocol.ModelAddedDelta.t) => 
+      | Some((v: Protocol.ModelAddedDelta.t)) =>
         ExtHostClient.addDocument(v, extHostClient)
       }
     );
@@ -158,50 +158,61 @@ let start = (extensions, setup: Core.Setup.t) => {
             true,
             extHostClient,
           );
-        });
+        })
       }
     );
 
-  let suggestionItemToCompletionItem: Protocol.SuggestionItem.t => Model.Actions.completionItem = (suggestion) => {
+  let suggestionItemToCompletionItem:
+    Protocol.SuggestionItem.t => Model.Actions.completionItem =
+    suggestion => {
       {
-      completionLabel: suggestion.label,
-      completionKind: CompletionKind.Text,
-      completionDetail: None,
+        completionLabel: suggestion.label,
+        completionKind: CompletionKind.Text,
+        completionDetail: None,
       };
-  };
+    };
 
-  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) => 
+  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
     List.map(suggestionItemToCompletionItem, suggestions);
 
   let checkCompletionsEffect = (completionMeet, state) =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.checkCompletions", dispatch => {
-          Model.Selectors.withActiveBufferAndFileType(state, (buf, fileType) => {
-            let uri = Model.Buffer.getUri(buf);
-            let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
-              ExtHostClient.getCompletions(
-                0,
-                uri,
-                Protocol.OneBasedPosition.ofInt1(
-                  ~lineNumber=1,
-                  ~column=2,
-                  (),
-                ),
-                extHostClient,
-              );
+      Model.Selectors.withActiveBufferAndFileType(
+        state,
+        (buf, fileType) => {
+          let uri = Model.Buffer.getUri(buf);
+          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
+            ExtHostClient.getCompletions(
+              0,
+              uri,
+              Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ()),
+              extHostClient,
+            );
 
-            let _ = Lwt.bind(completionPromise, (completions) => {
-              switch (completions) {
-              | None => Core.Log.info("No completions for provider"); 
-              | Some(completions) => 
-                let completionItems = suggestionsToCompletionItems(completions);
-                dispatch(Model.Actions.CompletionSetItems(completionMeet, completionItems));
-              };
-              Lwt.return(());
-            });
-            
-          });
-      });
+          let _ =
+            Lwt.bind(
+              completionPromise,
+              completions => {
+                switch (completions) {
+                | None => Core.Log.info("No completions for provider")
+                | Some(completions) =>
+                  let completionItems =
+                    suggestionsToCompletionItems(completions);
+                  dispatch(
+                    Model.Actions.CompletionSetItems(
+                      completionMeet,
+                      completionItems,
+                    ),
+                  );
+                };
+                Lwt.return();
+              },
+            );
+          ();
+        },
+      )
+    });
 
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
@@ -222,9 +233,9 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     | Model.Actions.BufferEnter(bm, _) => (state, sendBufferEnterEffect(bm))
     | Model.Actions.CompletionStart(completionMeet) => (
-      state,
-      checkCompletionsEffect(completionMeet, state)
-    )
+        state,
+        checkCompletionsEffect(completionMeet, state),
+      )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };

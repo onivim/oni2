@@ -63,14 +63,13 @@ let withActiveBufferAndFileType = (state: State.t, f) => {
 
   switch (buffer) {
   | None => ()
-  | Some(buf) => {
+  | Some(buf) =>
     let fileType = Buffer.getFileType(buf);
     switch (fileType) {
     | None => ()
-    | Some(ft) => f(buf, ft);
-    }
-  }
-  }
+    | Some(ft) => f(buf, ft)
+    };
+  };
 };
 
 let getActiveConfigurationValue = (state: State.t, f) => {
