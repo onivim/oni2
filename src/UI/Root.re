@@ -72,16 +72,16 @@ let createElement = (~state: State.t, ~children as _, ()) =>
         <Overlay>
           {switch (state.quickmenu) {
            | None => React.empty
-           | Some(menuState) =>
-             switch (menuState.variant) {
+           | Some(quickmenu) =>
+             switch (quickmenu.variant) {
              | Wildmenu(_) =>
-               <WildmenuView theme configuration state=menuState />
+               <WildmenuView theme configuration state=quickmenu />
 
              | _ =>
                <QuickmenuView
                  theme
                  configuration
-                 state=menuState
+                 state=quickmenu
                  font={state.uiFont}
                />
              }

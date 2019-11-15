@@ -181,7 +181,7 @@ let start =
       type action = Model.Actions.t;
       let id = "quickmenu-subscription";
     });
-  let (menuSubscriptionsUpdater, _menuSubscriptionsStream) =
+  let (quickmenuSubscriptionsUpdater, _menuSubscriptionsStream) =
     QuickmenuStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
@@ -195,8 +195,8 @@ let start =
     };
 
     // TODO: Wire this up properly
-    let menuSubs = menuSubscriptionsUpdater(newState);
-    QuickmenuSubscriptionRunner.run(~dispatch, menuSubs);
+    let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
+    QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
   };
 
   let runEffects = () => {

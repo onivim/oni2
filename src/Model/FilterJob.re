@@ -1,6 +1,6 @@
 /* FilterJob.re
      FilterJob is a Job.t that describes how to break up the work of filtering
-     menu items across multiple frames.
+     items across multiple frames.
    */
 
 module type Config = {
@@ -218,7 +218,7 @@ module Make = (Config: Config) => {
     switch (result^) {
     | None => (true, p, c)
     | Some((isCompleted, pendingWork, completedWork)) =>
-      /* As a last pass, run the menu filter to sort / score filtered items if under a certain length */
+      /* As a last pass, run the filter to sort / score filtered items if under a certain length */
       let uiFiltered =
         completedWork
         |> Utility.firstk(maxItemsToFilter)

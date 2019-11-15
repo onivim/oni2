@@ -38,14 +38,14 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
   let selectItemEffect = (item: Actions.menuItem) =>
-    Isolinear.Effect.createWithDispatch(~name="menu.selectItem", dispatch => {
+    Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
       dispatch(action);
     });
 
   let executeVimCommandEffect =
     Isolinear.Effect.createWithDispatch(
-      ~name="menu.executeVimCommand", dispatch => {
+      ~name="quickmenu.executeVimCommand", dispatch => {
       // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
         Actions.KeyboardInput("<CR>"),
@@ -53,7 +53,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     });
 
   let exitModeEffect =
-    Isolinear.Effect.createWithDispatch(~name="menu.exitMode", dispatch => {
+    Isolinear.Effect.createWithDispatch(~name="quickmenu.exitMode", dispatch => {
       // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
         Actions.KeyboardInput("<ESC>"),
@@ -387,14 +387,14 @@ let subscriptions = ripgrep => {
 
   let updater = (state: Model.State.t) => {
     switch (state.quickmenu) {
-    | Some(menu) =>
-      switch (menu.variant) {
+    | Some(quickmenu) =>
+      switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(menu.text, menu.items)]
+      | ThemesPicker => [filter(quickmenu.text, quickmenu.items)]
 
       | FilesPicker => [
-          filter(menu.text, menu.items),
+          filter(quickmenu.text, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme),
         ]
 

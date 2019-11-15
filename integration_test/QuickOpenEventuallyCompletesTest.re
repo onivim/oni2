@@ -20,8 +20,8 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   dispatch(QuickmenuShow(FilesPicker));
   runEffects();
 
-  /* Wait for menu 'isLoading' to be true */
-  wait(~name="Menu is loading is true", (state: State.t) =>
+  /* Wait for quickmenu 'isLoading' to be true */
+  wait(~name="Quickmenu is loading is true", (state: State.t) =>
     switch (state.quickmenu) {
     | Some({filterProgress: InProgress(_), _}) => true
     | _ => false
@@ -30,9 +30,9 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
 
   let longWaitTime = 10. *. 60.; /* 10 minutes */
 
-  /* Wait for menu 'isLoading' to eventually be false - this means quickopen completed w/o crashing */
+  /* Wait for quickmenu 'isLoading' to eventually be false - this means quickopen completed w/o crashing */
   wait(
-    ~name="Menu is loading is false",
+    ~name="Quickmenu is loading is false",
     ~timeout=longWaitTime,
     (state: State.t) => {
       dispatch(Tick({deltaTime: 0., totalTime: 0.}));
