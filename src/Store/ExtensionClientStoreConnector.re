@@ -125,7 +125,8 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(v) => ExtHostClient.addDocument(v, extHostClient)
+      | Some(v: Protocol.ModelAddedDelta.t) => 
+        ExtHostClient.addDocument(v, extHostClient)
       }
     );
 
@@ -157,9 +158,27 @@ let start = (extensions, setup: Core.Setup.t) => {
             true,
             extHostClient,
           );
+        });
+      }
+    );
 
-          if (Model.Buffer.getId(v) > 1) {
-            let _: Lwt.t(option(Protocol.Suggestions.t)) =
+  let suggestionItemToCompletionItem: Protocol.SuggestionItem.t => Model.Actions.completionItem = (suggestion) => {
+      {
+      completionLabel: suggestion.label,
+      completionKind: CompletionKind.Text,
+      completionDetail: None,
+      };
+  };
+
+  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) => 
+    List.map(suggestionItemToCompletionItem, suggestions);
+
+  let checkCompletionsEffect = (completionMeet, state) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.checkCompletions", dispatch => {
+          Model.Selectors.withActiveBufferAndFileType(state, (buf, fileType) => {
+            let uri = Model.Buffer.getUri(buf);
+            let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
               ExtHostClient.getCompletions(
                 0,
                 uri,
@@ -170,11 +189,20 @@ let start = (extensions, setup: Core.Setup.t) => {
                 ),
                 extHostClient,
               );
-            ();
-          };
-        })
-      }
-    );
+
+            let _ = Lwt.bind(completionPromise, (completions) => {
+              switch (completions) {
+              | None => prerr_endline ("NO COMPLETIONS");
+              | Some(completions) => 
+                prerr_endline ("COMPLETION COUNT: " ++ string_of_int(List.length(completions)));
+                let completionItems = suggestionsToCompletionItems(completions);
+                dispatch(Model.Actions.CompletionSetItems(completionMeet, completionItems));
+              };
+              Lwt.return(());
+            });
+            
+          });
+      });
 
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
@@ -194,6 +222,10 @@ let start = (extensions, setup: Core.Setup.t) => {
         modelChangedEffect(state.buffers, bu),
       )
     | Model.Actions.BufferEnter(bm, _) => (state, sendBufferEnterEffect(bm))
+    | Model.Actions.CompletionStart(completionMeet) => (
+      state,
+      checkCompletionsEffect(completionMeet, state)
+    )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
