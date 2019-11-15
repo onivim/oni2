@@ -157,10 +157,16 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            })
         |> Array.of_list;
 
-      (Some({...Quickmenu.defaults(ThemesPicker), items}), Isolinear.Effect.none);
+      (
+        Some({...Quickmenu.defaults(ThemesPicker), items}),
+        Isolinear.Effect.none,
+      );
 
     | QuickmenuInput({text, cursorPosition}) => (
-        Option.map(state => Quickmenu.{...state, text, cursorPosition}, state),
+        Option.map(
+          state => Quickmenu.{...state, text, cursorPosition},
+          state,
+        ),
         Isolinear.Effect.none,
       )
 

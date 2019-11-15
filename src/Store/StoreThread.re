@@ -237,7 +237,7 @@ let start =
     Isolinear.Stream.connect(dispatch, editorEventStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, syntaxStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, extHostStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, quickmenuStream);

@@ -84,7 +84,10 @@ let start = _ => {
       "workbench.action.showCommands",
       _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("workbench.action.openNextRecentlyUsedEditorInGroup", _ => singleActionEffect(QuickmenuShow(EditorsPicker))),
+    (
+      "workbench.action.openNextRecentlyUsedEditorInGroup",
+      _ => singleActionEffect(QuickmenuShow(EditorsPicker)),
+    ),
     (
       "workbench.action.quickOpen",
       _ => singleActionEffect(QuickmenuShow(FilesPicker)),
@@ -124,7 +127,10 @@ let start = _ => {
           ]);
         },
       ),*/
-    ("workbench.action.closeQuickOpen", _ => multipleActionEffect([QuickmenuClose])),
+    (
+      "workbench.action.closeQuickOpen",
+      _ => multipleActionEffect([QuickmenuClose]),
+    ),
     ("list.focusDown", _ => multipleActionEffect([ListFocusDown])),
     ("list.focusUp", _ => multipleActionEffect([ListFocusUp])),
     ("list.select", _ => multipleActionEffect([ListSelect])),
