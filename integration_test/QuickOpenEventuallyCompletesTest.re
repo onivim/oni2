@@ -17,7 +17,7 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   };
 
   /* Launch quick open */
-  dispatch(MenuShow(WorkspaceFiles));
+  dispatch(QuickmenuShow(FilesPicker));
   runEffects();
 
   /* Wait for menu 'isLoading' to be true */

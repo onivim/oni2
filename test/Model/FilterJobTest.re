@@ -6,7 +6,7 @@ module Actions = Oni_Model.Actions;
 module FilterJob =
   Oni_Model.FilterJob.Make({
     type item = Actions.menuItem;
-    let format = Oni_Model.Menu.getLabel;
+    let format = Oni_Model.Quickmenu.getLabel;
   });
 
 describe("FilterJob", ({describe, _}) => {

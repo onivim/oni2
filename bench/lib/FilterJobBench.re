@@ -5,7 +5,7 @@ open BenchFramework;
 module MenuFilterJob =
   FilterJob.Make({
     type item = Actions.menuItem;
-    let format = Menu.getLabel;
+    let format = Quickmenu.getLabel;
   });
 
 let createItem = name => {
