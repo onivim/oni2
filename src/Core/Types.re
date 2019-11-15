@@ -195,13 +195,14 @@ module Input = {
   // bindings. Need to decouple these.
   type controlMode =
     // VSCode-compatible when parameters
-    | [@name "menuFocus"] MenuFocus
+    | [@name "listFocus"] ListFocus
     | [@name "textInputFocus"] TextInputFocus
+    | [@name "inQuickOpen"] InQuickOpen
     | [@name "editorTextFocus"] EditorTextFocus
     | [@name "suggestWidgetVisible"] SuggestWidgetVisible
     // Onivim extensions to the 'when' syntax
     | [@name "insertMode"] InsertMode
-    | [@name "menuCursorEnd"] MenuCursorEnd;
+    | [@name "quickmenuCursorEnd"] QuickmenuCursorEnd;
 
   [@deriving show({with_path: false})]
   type keyBindings = {

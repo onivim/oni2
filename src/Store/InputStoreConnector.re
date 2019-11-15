@@ -21,21 +21,21 @@ let fixedBindings =
     {
       key: "<UP>",
       command: "list.focusUp",
-      condition: [MenuFocus, TextInputFocus],
+      condition: [ListFocus, TextInputFocus],
     },
     {
       key: "<DOWN>",
       command: "list.focusDown",
-      condition: [MenuFocus, TextInputFocus],
+      condition: [ListFocus, TextInputFocus],
     },
     {
       key: "<RIGHT>",
       command: "list.selectBackground",
-      condition: [MenuCursorEnd],
+      condition: [QuickmenuCursorEnd],
     },
   ];
 
-let isMenuOpen = (state: State.t) => state.quickmenu != None;
+let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
@@ -43,10 +43,11 @@ let conditionsOfState = (state: State.t) => {
 
   switch (state.quickmenu) {
   | Some({text, cursorPosition, _}) =>
-    Hashtbl.add(ret, MenuFocus, true);
+    Hashtbl.add(ret, ListFocus, true);
+    Hashtbl.add(ret, InQuickOpen, true);
 
     if (cursorPosition == String.length(text)) {
-      Hashtbl.add(ret, MenuCursorEnd, true);
+      Hashtbl.add(ret, QuickmenuCursorEnd, true);
     };
 
   | None => ()
@@ -60,7 +61,7 @@ let conditionsOfState = (state: State.t) => {
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isMenuOpen(state), state.mode) {
+  switch (isQuickmenuOpen(state), state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
