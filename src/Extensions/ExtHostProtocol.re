@@ -395,9 +395,7 @@ module OutgoingNotifications = {
   };
 
   module Workspace = {
-    [@deriving
-      yojson({strict: false, exn: true})
-    ]
+    [@deriving yojson({strict: false, exn: true})]
     type workspaceInfo = {
       id: string,
       name: string,

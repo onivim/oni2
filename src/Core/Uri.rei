@@ -1,4 +1,4 @@
-module Scheme {
+module Scheme: {
   type t;
 
   let file: t;
