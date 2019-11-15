@@ -84,10 +84,10 @@ let start = _ => {
       "workbench.action.showCommands",
       _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("workbench.action.openNextRecentlyUsedEditorInGroup", _ => singleActionEffect(QuickmenuShow(Buffers))),
+    ("workbench.action.openNextRecentlyUsedEditorInGroup", _ => singleActionEffect(QuickmenuShow(EditorsPicker))),
     (
       "workbench.action.quickOpen",
-      _ => singleActionEffect(QuickmenuShow(WorkspaceFiles)),
+      _ => singleActionEffect(QuickmenuShow(FilesPicker)),
     ),
     /*(
         "developer.massiveMenu",

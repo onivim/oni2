@@ -121,9 +121,9 @@ let start =
       | Some({variant: Wildmenu(_), _}) => Wildmenu
 
       | Some({variant: CommandPalette, _})
-      | Some({variant: Buffers, _})
-      | Some({variant: WorkspaceFiles, _})
-      | Some({variant: Themes, _}) => Quickmenu
+      | Some({variant: EditorsPicker, _})
+      | Some({variant: FilesPicker, _})
+      | Some({variant: ThemesPicker, _}) => Quickmenu
 
       | None => Normal
       };

@@ -117,18 +117,18 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(Buffers) => (
+    | QuickmenuShow(EditorsPicker) => (
         Some({
-          ...Quickmenu.defaults(Buffers),
+          ...Quickmenu.defaults(EditorsPicker),
           items: makeBufferCommands(languageInfo, iconTheme, buffers),
           selected: Some(0),
         }),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(WorkspaceFiles) => (
+    | QuickmenuShow(FilesPicker) => (
         Some({
-          ...Quickmenu.defaults(WorkspaceFiles),
+          ...Quickmenu.defaults(FilesPicker),
           ripgrepProgress: Loading,
           selected: Some(0),
         }),
@@ -143,7 +143,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(Themes) =>
+    | QuickmenuShow(ThemesPicker) =>
       let items =
         Model.ThemeInfo.getThemes(themeInfo)
         |> List.map((theme: ExtensionContributions.Theme.t) => {
@@ -157,7 +157,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            })
         |> Array.of_list;
 
-      (Some({...Quickmenu.defaults(Themes), items}), Isolinear.Effect.none);
+      (Some({...Quickmenu.defaults(ThemesPicker), items}), Isolinear.Effect.none);
 
     | QuickmenuInput({text, cursorPosition}) => (
         Option.map(state => Quickmenu.{...state, text, cursorPosition}, state),
@@ -384,10 +384,10 @@ let subscriptions = ripgrep => {
     | Some(menu) =>
       switch (menu.variant) {
       | CommandPalette
-      | Buffers
-      | Themes => [filter(menu.text, menu.items)]
+      | EditorsPicker
+      | ThemesPicker => [filter(menu.text, menu.items)]
 
-      | WorkspaceFiles => [
+      | FilesPicker => [
           filter(menu.text, menu.items),
           ripgrep(state.languageInfo, state.iconTheme),
         ]

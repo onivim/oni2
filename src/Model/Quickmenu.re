@@ -14,10 +14,10 @@ type t = {
 and variant =
   Actions.quickmenuVariant =
     | CommandPalette
-    | Buffers
-    | WorkspaceFiles
+    | EditorsPicker
+    | FilesPicker
     | Wildmenu(Vim.Types.cmdlineType)
-    | Themes;
+    | ThemesPicker;
 
 let defaults = variant => {
   variant,

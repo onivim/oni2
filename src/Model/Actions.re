@@ -169,10 +169,10 @@ and menuItem = {
 }
 and quickmenuVariant =
   | CommandPalette
-  | Buffers
-  | WorkspaceFiles
+  | EditorsPicker
+  | FilesPicker
   | Wildmenu(Vim.Types.cmdlineType)
-  | Themes
+  | ThemesPicker
 and progress =
   | Loading
   | InProgress(float)
