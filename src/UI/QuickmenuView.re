@@ -8,7 +8,7 @@ module Constants = {
   let menuHeight = 320;
 };
 
-let component = React.component("Menu");
+let component = React.component("Quickmenu");
 
 let loseFocusOnClose = isOpen =>
   /**
@@ -76,7 +76,7 @@ let onSelectedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
 let onInput = (text, cursorPosition) =>
-  GlobalContext.current().dispatch(MenuInput({text, cursorPosition}));
+  GlobalContext.current().dispatch(QuickmenuInput({text, cursorPosition}));
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
@@ -114,7 +114,7 @@ let createElement =
       ~theme: Theme.t,
       ~configuration: Configuration.t,
       ~autofocus: bool=true,
-      ~state: Menu.t,
+      ~state: Quickmenu.t,
       ~placeholder: string="type here to search the menu",
       ~onInput: (string, int) => unit=onInput,
       ~onSelectedChange: int => unit=onSelectedChange,
@@ -122,7 +122,7 @@ let createElement =
       (),
     ) =>
   component(hooks => {
-    let Menu.{
+    let Quickmenu.{
           items,
           filterProgress,
           ripgrepProgress,
@@ -156,7 +156,7 @@ let createElement =
         let style = Styles.label(~font, ~theme, ~isSelected);
 
         let highlighted = {
-          let text = Menu.getLabel(item);
+          let text = Quickmenu.getLabel(item);
           let textLength = String.length(text);
 
           // Assumes ranges are sorted low to high

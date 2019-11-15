@@ -82,12 +82,12 @@ let start = _ => {
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
       "commandPalette.open",
-      _ => singleActionEffect(MenuShow(CommandPalette)),
+      _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("quickOpen.buffers", _ => singleActionEffect(MenuShow(Buffers))),
+    ("quickOpen.buffers", _ => singleActionEffect(QuickmenuShow(Buffers))),
     (
       "quickOpen.workspaceFiles",
-      _ => singleActionEffect(MenuShow(WorkspaceFiles)),
+      _ => singleActionEffect(QuickmenuShow(WorkspaceFiles)),
     ),
     /*(
         "developer.massiveMenu",
@@ -124,7 +124,7 @@ let start = _ => {
           ]);
         },
       ),*/
-    ("workbench.action.closeQuickOpen", _ => multipleActionEffect([MenuClose])),
+    ("workbench.action.closeQuickOpen", _ => multipleActionEffect([QuickmenuClose])),
     ("list.focusDown", _ => multipleActionEffect([ListFocusDown])),
     ("list.focusUp", _ => multipleActionEffect([ListFocusUp])),
     ("list.select", _ => multipleActionEffect([ListSelect])),

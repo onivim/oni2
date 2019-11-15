@@ -12,7 +12,7 @@ type t = {
 }
 
 and variant =
-  Actions.menuVariant =
+  Actions.quickmenuVariant =
     | CommandPalette
     | Buffers
     | WorkspaceFiles

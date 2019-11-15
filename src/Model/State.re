@@ -16,7 +16,7 @@ type t = {
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   hover: Hover.t,
-  menu: option(Menu.t),
+  menu: option(Quickmenu.t),
   configuration: Configuration.t,
   // New-school native syntax highlighting
   syntaxHighlighting: SyntaxHighlighting.t,

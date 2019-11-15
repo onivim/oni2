@@ -113,7 +113,8 @@ let start =
   let (extHostUpdater, extHostStream) =
     ExtensionClientStoreConnector.start(extensions, setup);
 
-  let (menuHostUpdater, menuStream) = MenuStoreConnector.start(themeInfo);
+  let (quickmenuUpdater, quickmenuStream) =
+    QuickmenuStoreConnector.start(themeInfo);
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -157,7 +158,7 @@ let start =
           syntaxUpdater,
           extHostUpdater,
           fontUpdater,
-          menuHostUpdater,
+          quickmenuUpdater,
           configurationUpdater,
           commandUpdater,
           lifecycleUpdater,
@@ -175,13 +176,13 @@ let start =
       (),
     );
 
-  module MenuSubscriptionRunner =
+  module QuickmenuSubscriptionRunner =
     Core.Subscription.Runner({
       type action = Model.Actions.t;
-      let id = "menu-subscription";
+      let id = "quickmenu-subscription";
     });
   let (menuSubscriptionsUpdater, _menuSubscriptionsStream) =
-    MenuStoreConnector.subscriptions(ripgrep);
+    QuickmenuStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
@@ -195,7 +196,7 @@ let start =
 
     // TODO: Wire this up properly
     let menuSubs = menuSubscriptionsUpdater(newState);
-    MenuSubscriptionRunner.run(~dispatch, menuSubs);
+    QuickmenuSubscriptionRunner.run(~dispatch, menuSubs);
   };
 
   let runEffects = () => {
@@ -238,8 +239,8 @@ let start =
     Isolinear.Stream.connect(dispatch, syntaxStream);
   let _ : Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, extHostStream);
-  let _ : Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, menuStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
   let _: Isolinear.Stream.unsubscribeFunc =

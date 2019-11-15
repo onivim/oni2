@@ -334,7 +334,7 @@ let start =
 
   let _ =
     Vim.CommandLine.onEnter(c =>
-      dispatch(Model.Actions.MenuShow(Wildmenu(c.cmdType)))
+      dispatch(Model.Actions.QuickmenuShow(Wildmenu(c.cmdType)))
     );
 
   let lastCompletionMeet = ref(None);
@@ -360,12 +360,12 @@ let start =
           },
         completions,
       );
-    dispatch(Model.Actions.MenuUpdateFilterProgress(items, Complete));
+    dispatch(Model.Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 
   let _ =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
-      dispatch(Model.Actions.MenuInput({text, cursorPosition}));
+      dispatch(Model.Actions.QuickmenuInput({text, cursorPosition}));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
@@ -414,7 +414,7 @@ let start =
     Vim.CommandLine.onLeave(() => {
       lastCompletionMeet := None;
       isCompleting := false;
-      dispatch(Model.Actions.MenuClose);
+      dispatch(Model.Actions.QuickmenuClose);
     });
 
   let _ =

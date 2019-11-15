@@ -1,7 +1,7 @@
 /*
- * MenuStoreConnector.re
+ * QuickmenuStoreConnector.re
  *
- * This implements an updater (reducer + side effects) for the Menu
+ * This implements an updater (reducer + side effects) for the Quickmenu
  */
 
 module Core = Oni_Core;
@@ -9,7 +9,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Animation = Model.Animation;
-module Menu = Model.Menu;
+module Quickmenu = Model.Quickmenu;
 module Utility = Core.Utility;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 
@@ -99,51 +99,51 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
   let menuUpdater =
       (
-        state: option(Menu.t),
+        state: option(Quickmenu.t),
         action: Actions.t,
         buffers,
         languageInfo,
         iconTheme,
         themeInfo,
       )
-      : (option(Menu.t), Isolinear.Effect.t(Actions.t)) => {
+      : (option(Quickmenu.t), Isolinear.Effect.t(Actions.t)) => {
     switch (action) {
-    | MenuShow(CommandPalette) => (
+    | QuickmenuShow(CommandPalette) => (
         Some({
-          ...Menu.defaults(CommandPalette),
+          ...Quickmenu.defaults(CommandPalette),
           items: Model.CommandPalette.commands,
           selected: Some(0),
         }),
         Isolinear.Effect.none,
       )
 
-    | MenuShow(Buffers) => (
+    | QuickmenuShow(Buffers) => (
         Some({
-          ...Menu.defaults(Buffers),
+          ...Quickmenu.defaults(Buffers),
           items: makeBufferCommands(languageInfo, iconTheme, buffers),
           selected: Some(0),
         }),
         Isolinear.Effect.none,
       )
 
-    | MenuShow(WorkspaceFiles) => (
+    | QuickmenuShow(WorkspaceFiles) => (
         Some({
-          ...Menu.defaults(WorkspaceFiles),
+          ...Quickmenu.defaults(WorkspaceFiles),
           ripgrepProgress: Loading,
           selected: Some(0),
         }),
         Isolinear.Effect.none,
       )
 
-    | MenuShow(Wildmenu(cmdType)) => (
+    | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
-          ...Menu.defaults(Wildmenu(cmdType)),
+          ...Quickmenu.defaults(Wildmenu(cmdType)),
           prefix: Some(prefixFor(cmdType)),
         }),
         Isolinear.Effect.none,
       )
 
-    | MenuShow(Themes) =>
+    | QuickmenuShow(Themes) =>
       let items =
         Model.ThemeInfo.getThemes(themeInfo)
         |> List.map((theme: ExtensionContributions.Theme.t) => {
@@ -157,24 +157,24 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            })
         |> Array.of_list;
 
-      (Some({...Menu.defaults(Themes), items}), Isolinear.Effect.none);
+      (Some({...Quickmenu.defaults(Themes), items}), Isolinear.Effect.none);
 
-    | MenuInput({text, cursorPosition}) => (
-        Option.map(state => Menu.{...state, text, cursorPosition}, state),
+    | QuickmenuInput({text, cursorPosition}) => (
+        Option.map(state => Quickmenu.{...state, text, cursorPosition}, state),
         Isolinear.Effect.none,
       )
 
-    | MenuUpdateRipgrepProgress(progress) => (
+    | QuickmenuUpdateRipgrepProgress(progress) => (
         Option.map(
-          (state: Menu.t) => {...state, ripgrepProgress: progress},
+          (state: Quickmenu.t) => {...state, ripgrepProgress: progress},
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | MenuUpdateFilterProgress(items, progress) => (
+    | QuickmenuUpdateFilterProgress(items, progress) => (
         Option.map(
-          (state: Menu.t) => {
+          (state: Quickmenu.t) => {
             let count = Array.length(items);
             {
               ...state,
@@ -190,7 +190,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListFocus(index) => (
         Option.map(
-          (state: Menu.t) => {
+          (state: Quickmenu.t) => {
             let count = Array.length(state.items);
 
             {
@@ -205,7 +205,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListFocusUp => (
         Option.map(
-          (state: Menu.t) => {
+          (state: Quickmenu.t) => {
             let count = Array.length(state.items);
 
             {
@@ -233,7 +233,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListFocusDown => (
         Option.map(
-          (state: Menu.t) => {
+          (state: Quickmenu.t) => {
             let count = Array.length(state.items);
 
             {
@@ -283,7 +283,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | MenuClose =>
+    | QuickmenuClose =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, exitModeEffect)
       | _ => (None, Isolinear.Effect.none)
@@ -319,15 +319,15 @@ let subscriptions = ripgrep => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let (itemStream, addItems) = Isolinear.Stream.create();
 
-  module MenuFilterSubscription =
+  module QuickmenuFilterSubscription =
     FilterSubscription.Make({
       type item = Actions.menuItem;
-      let format = Model.Menu.getLabel;
+      let format = Model.Quickmenu.getLabel;
     });
 
   let filter = (query, items) => {
-    MenuFilterSubscription.create(
-      ~id="menu-filter",
+    QuickmenuFilterSubscription.create(
+      ~id="quickmenu-filter",
       ~query,
       ~items=items |> Array.to_list, // TODO: This doesn't seem very efficient. Can Array.to_list be removed?
       ~itemStream,
@@ -338,7 +338,7 @@ let subscriptions = ripgrep => {
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;
-        Actions.MenuUpdateFilterProgress(
+        Actions.QuickmenuUpdateFilterProgress(
           items,
           progress == 1. ? Complete : InProgress(progress),
         );
@@ -373,9 +373,9 @@ let subscriptions = ripgrep => {
           |> List.map(stringToCommand(languageInfo, iconTheme))
           |> addItems;
 
-          dispatch(Actions.MenuUpdateRipgrepProgress(Loading));
+          dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
-      ~onCompleted=() => Actions.MenuUpdateRipgrepProgress(Complete),
+      ~onCompleted=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
     );
   };
 

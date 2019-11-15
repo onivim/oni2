@@ -7,7 +7,7 @@ let component = React.component("wildmenu");
 let createElement =
     (
       ~children as _,
-      ~state: Menu.t,
+      ~state: Quickmenu.t,
       ~configuration: Configuration.t,
       ~theme: Theme.t,
       (),
@@ -15,7 +15,7 @@ let createElement =
   component(hooks =>
     (
       hooks,
-      <MenuView
+      <QuickmenuView
         font={GlobalContext.current().state.uiFont}
         theme
         autofocus=false

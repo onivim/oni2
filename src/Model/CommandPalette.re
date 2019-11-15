@@ -25,7 +25,7 @@ let commands =
       {
         category: Some("Preferences"),
         name: "Theme Picker",
-        command: () => MenuShow(Themes),
+        command: () => QuickmenuShow(Themes),
         icon: None,
         highlight: [],
       },

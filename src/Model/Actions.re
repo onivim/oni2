@@ -59,20 +59,20 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-  | MenuShow(menuVariant)
-  | MenuInput({
+  | QuickmenuShow(quickmenuVariant)
+  | QuickmenuInput({
       text: string,
       cursorPosition: int,
     })
-  | MenuUpdateRipgrepProgress(progress)
-  | MenuUpdateFilterProgress(array(menuItem), progress)
+  | QuickmenuUpdateRipgrepProgress(progress)
+  | QuickmenuUpdateFilterProgress(array(menuItem), progress)
+  | QuickmenuSearch(string)
+  | QuickmenuClose
   | ListFocus(int)
   | ListFocusUp
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | MenuSearch(string)
-  | MenuClose
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
@@ -167,7 +167,7 @@ and menuItem = {
   icon: option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
-and menuVariant =
+and quickmenuVariant =
   | CommandPalette
   | Buffers
   | WorkspaceFiles

@@ -78,7 +78,7 @@ let createElement = (~state: State.t, ~children as _, ()) =>
                <WildmenuView theme configuration state=menuState />
 
              | _ =>
-               <MenuView
+               <QuickmenuView
                  theme
                  configuration
                  state=menuState
