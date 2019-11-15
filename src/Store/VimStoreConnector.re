@@ -704,8 +704,8 @@ let start =
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.menu) {
-        | Some({variant: Wildmenu(_), selected: Some(selected), items, _}) =>
-          try(applyCompletionEffect(items[selected].name)) {
+        | Some({variant: Wildmenu(_), focused: Some(focused), items, _}) =>
+          try(applyCompletionEffect(items[focused].name)) {
           | Invalid_argument(_) => Isolinear.Effect.none
           }
         | _ => Isolinear.Effect.none

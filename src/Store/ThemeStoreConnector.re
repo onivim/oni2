@@ -114,8 +114,8 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.ListFocusDown
     | Actions.ListFocus(_) =>
       switch (state.menu) {
-      | Some({variant: ThemesPicker, selected: Some(selected), items, _}) =>
-        let focusedItem = items[selected];
+      | Some({variant: ThemesPicker, focused: Some(focused), items, _}) =>
+        let focusedItem = items[focused];
         (state, loadThemeByNameEffect(focusedItem.name));
       | _ => (state, Isolinear.Effect.none)
       }

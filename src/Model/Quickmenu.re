@@ -8,7 +8,7 @@ type t = {
   items: array(menuItem),
   filterProgress: progress,
   ripgrepProgress: progress,
-  selected: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
+  focused: option(int) // TODO: Might not be a great idea to use an index to refer to a specific item in an array that changes over time
 }
 
 and variant =
@@ -24,7 +24,7 @@ let defaults = variant => {
   text: "",
   prefix: None,
   cursorPosition: 0,
-  selected: None,
+  focused: None,
   items: [||],
   filterProgress: Complete,
   ripgrepProgress: Complete,

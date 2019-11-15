@@ -112,7 +112,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Some({
           ...Quickmenu.defaults(CommandPalette),
           items: Model.CommandPalette.commands,
-          selected: Some(0),
+          focused: Some(0),
         }),
         Isolinear.Effect.none,
       )
@@ -121,7 +121,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Some({
           ...Quickmenu.defaults(EditorsPicker),
           items: makeBufferCommands(languageInfo, iconTheme, buffers),
-          selected: Some(0),
+          focused: Some(0),
         }),
         Isolinear.Effect.none,
       )
@@ -130,7 +130,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Some({
           ...Quickmenu.defaults(FilesPicker),
           ripgrepProgress: Loading,
-          selected: Some(0),
+          focused: Some(0),
         }),
         Isolinear.Effect.none,
       )
@@ -180,7 +180,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
               ...state,
               items,
               filterProgress: progress,
-              selected: Option.map(min(count), state.selected),
+              focused: Option.map(min(count), state.focused),
             };
           },
           state,
@@ -195,7 +195,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
             {
               ...state,
-              selected: Some(Utility.clamp(index, ~lo=0, ~hi=count)),
+              focused: Some(Utility.clamp(index, ~lo=0, ~hi=count)),
             };
           },
           state,
@@ -210,17 +210,17 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
             {
               ...state,
-              selected:
+              focused:
                 Option.map(
-                  selected =>
+                  focused =>
                     if (count == 0) {
                       0;
-                    } else if (selected <= 0) {
+                    } else if (focused <= 0) {
                       count - 1; // "roll over" to end of list
                     } else {
-                      selected - 1;
+                      focused - 1;
                     },
-                  state.selected,
+                  state.focused,
                 )
                 |> Option.value(~default=max(count - 1, 0))  // default to end of list
                 |> Option.some,
@@ -238,15 +238,15 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
             {
               ...state,
-              selected:
+              focused:
                 Option.map(
-                  selected =>
+                  focused =>
                     if (count == 0) {
                       0;
                     } else {
-                      (selected + 1) mod count;
+                      (focused + 1) mod count;
                     },
-                  state.selected,
+                  state.focused,
                 )
                 |> Option.value(~default=0)  // default to start of list
                 |> Option.some,
@@ -261,8 +261,8 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
-      | Some({items, selected: Some(selected), _}) =>
-        switch (items[selected]) {
+      | Some({items, focused: Some(focused), _}) =>
+        switch (items[focused]) {
         | item => (None, selectItemEffect(item))
         | exception (Invalid_argument(_)) => (state, Isolinear.Effect.none)
         }
@@ -272,9 +272,9 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListSelectBackground =>
       switch (state) {
-      | Some({items, selected: Some(selected), _}) =>
+      | Some({items, focused: Some(focused), _}) =>
         let eff =
-          switch (items[selected]) {
+          switch (items[focused]) {
           | item => selectItemEffect(item)
           | exception (Invalid_argument(_)) => Isolinear.Effect.none
           };

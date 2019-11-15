@@ -46,13 +46,13 @@ module Styles = {
     ];
 
   let label =
-      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isSelected) =>
+      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
       fontSize(12),
       backgroundColor(
-        isSelected ? theme.menuSelectionBackground : theme.menuBackground,
+        isFocused ? theme.menuSelectionBackground : theme.menuBackground,
       ),
       color(
         highlighted ? theme.oniNormalModeBackground : theme.menuForeground,
@@ -72,7 +72,7 @@ module Styles = {
     ];
 };
 
-let onSelectedChange = index =>
+let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
 let onInput = (text, cursorPosition) =>
@@ -117,7 +117,7 @@ let createElement =
       ~state: Quickmenu.t,
       ~placeholder: string="type here to search the menu",
       ~onInput: (string, int) => unit=onInput,
-      ~onSelectedChange: int => unit=onSelectedChange,
+      ~onFocusedChange: int => unit=onFocusedChange,
       ~onSelect: int => unit=onSelect,
       (),
     ) =>
@@ -126,7 +126,7 @@ let createElement =
           items,
           filterProgress,
           ripgrepProgress,
-          selected,
+          focused,
           text,
           cursorPosition,
           prefix,
@@ -150,10 +150,10 @@ let createElement =
 
     let renderItem = index => {
       let item = items[index];
-      let isSelected = Some(index) == selected;
+      let isFocused = Some(index) == focused;
 
       let labelView = {
-        let style = Styles.label(~font, ~theme, ~isSelected);
+        let style = Styles.label(~font, ~theme, ~isFocused);
 
         let highlighted = {
           let text = Quickmenu.getLabel(item);
@@ -193,8 +193,8 @@ let createElement =
         style=Styles.menuItem
         label={`Custom(labelView)}
         icon={item.icon}
-        onMouseOver={() => onSelectedChange(index)}
-        isSelected
+        onMouseOver={() => onFocusedChange(index)}
+        isFocused
       />;
     };
 
@@ -221,7 +221,7 @@ let createElement =
                 height=Constants.menuHeight
                 width=Constants.menuWidth
                 count={Array.length(items)}
-                selected
+                focused
                 render=renderItem
               />
               {switch (progress) {
