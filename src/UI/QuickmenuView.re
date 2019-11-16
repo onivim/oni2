@@ -10,18 +10,6 @@ module Constants = {
 
 let component = React.component("Quickmenu");
 
-let loseFocusOnClose = isOpen =>
-  /**
-   TODO: revery-ui/revery#412 if the menu is hidden abruptly the element is not automatically unfocused
-   as revery is unaware the element is no longer in focus
- */
-  (
-    switch (Focus.focused, isOpen) {
-    | ({contents: Some(_)}, false) => Focus.loseFocus()
-    | (_, _) => ()
-    }
-  );
-
 module Styles = {
   let container = (theme: Theme.t) =>
     Style.[
