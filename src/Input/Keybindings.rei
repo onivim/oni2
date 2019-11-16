@@ -8,12 +8,7 @@ module Keybinding: {
 
 type t = list(Keybinding.t);
 
-let default: t;
-
-/*
-  [get] reads the keybindings from the file system
- */
-let get: unit => t;
+let empty: t;
 
 /*
    [of_yojson_with_errors] parses the keybindings,

@@ -124,6 +124,7 @@ let start =
       ~setZoom,
       ~setVsync,
     );
+  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
 
@@ -160,6 +161,7 @@ let start =
           fontUpdater,
           quickmenuUpdater,
           configurationUpdater,
+          keyBindingsUpdater,
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
