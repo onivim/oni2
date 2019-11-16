@@ -275,7 +275,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         }
 
       | _ => (state, Isolinear.Effect.none)
-      }
+      };
 
     | ListSelectBackground =>
       switch (state) {
@@ -295,7 +295,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, exitModeEffect)
       | _ => (None, Isolinear.Effect.none)
-      }
+      };
 
     | _ => (state, Isolinear.Effect.none)
     };
