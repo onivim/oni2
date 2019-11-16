@@ -31,6 +31,8 @@ type t =
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
+  // Reload keybindings from configuration
+  | KeyBindingsReload
   | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)

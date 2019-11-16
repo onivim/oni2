@@ -43,26 +43,10 @@ let getDefaultConfigString = configName =>
     Some(
       {|
 [
-    { "key": "<C-TAB>", "command": "workbench.action.openNextRecentlyUsedEditorInGroup", "when": "editorTextFocus" },
-    { "key": "<C-P>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" },
-    { "key": "<D-P>", "command": "workbench.action.quickOpen", "when": "editorTextFocus" },
-    { "key": "<S-C-P>", "command": "workbench.action.showCommands", "when": "editorTextFocus" },
-    { "key": "<D-S-P>", "command": "workbench.action.showCommands", "when": "editorTextFocus" },
-    { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": "insertMode" },
-    { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": "insertMode" },
-    { "key": "<ESC>", "command": "workbench.action.closeQuickOpen", "when": "inQuickOpen" },
-    { "key": "<C-N>", "command": "list.focusDown", "when": "listFocus || textInputFocus" },
-    { "key": "<C-P>", "command": "list.focusUp", "when": "listFocus || textInputFocus" },
-    { "key": "<D-N>", "command": "list.focusDown", "when": "listFocus || textInputFocus" },
-    { "key": "<D-P>", "command": "list.focusUp", "when": "listFocus || textInputFocus" },
-    { "key": "<TAB>", "command": "list.focusDown", "when": "listFocus || textInputFocus" },
-    { "key": "<S-TAB>", "command": "list.focusUp", "when": "listFocus || textInputFocus" },
-    { "key": "<CR>", "command": "list.select", "when": "listFocus || textInputFocus" },
-    { "key": "<S-C-B>", "command": "explorer.toggle", "when": "editorTextFocus"},
-    { "key": "<C-P>", "command": "selectPrevSuggestion", "when": "suggestWidgetVisible" },
-    { "key": "<C-N>", "command": "selectNextSuggestion", "when": "suggestWidgetVisible" },
-    { "key": "<CR>", "command": "insertBestCompletion", "when": "suggestWidgetVisible" },
-    { "key": "<TAB>", "command": "insertBestCompletion", "when": "suggestWidgetVisible" }
+  // See the onivim documentation for details on the format:
+  // https://onivim.github.io/docs/configuration/key-bindings
+  // Add key bindings here:
+  { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
 ]
 |},
     )
