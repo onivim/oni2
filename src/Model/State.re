@@ -69,7 +69,7 @@ let create: unit => t =
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
-    keyBindings: Keybindings.default,
+    keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: LanguageInfo.create(),
     notifications: Notifications.default,

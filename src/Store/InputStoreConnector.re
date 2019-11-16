@@ -16,27 +16,6 @@ type captureMode =
   | Wildmenu
   | Quickmenu;
 
-let fixedBindings =
-  Keybindings.Keybinding.[
-    {
-      key: "<UP>",
-      command: "list.focusUp",
-      condition:
-        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
-    },
-    {
-      key: "<DOWN>",
-      command: "list.focusDown",
-      condition:
-        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
-    },
-    {
-      key: "<RIGHT>",
-      command: "list.selectBackground",
-      condition: Expression.(Variable("quickmenuCursorEnd")),
-    },
-  ];
-
 let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
@@ -104,7 +83,7 @@ let start =
           Handler.matchesCondition(condition, inputKey, key, getValue)
             ? [Actions.Command(command)] : defaultAction,
         [],
-        fixedBindings @ bindings,
+        bindings,
       )
     );
   };
