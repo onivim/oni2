@@ -2,8 +2,14 @@ open Oni_Core;
 open Oni_Model;
 open BenchFramework;
 
+module MenuFilterJob =
+  FilterJob.Make({
+    type item = Actions.menuItem;
+    let format = Quickmenu.getLabel;
+  });
+
 let createItem = name => {
-  let ret: Actions.menuCommand = {
+  let ret: Actions.menuItem = {
     category: None,
     name,
     command: () =>
@@ -24,13 +30,13 @@ let largeAmountOfItems =
   );
 
 let job =
-  MenuJob.create()
-  |> Job.map(MenuJob.updateQuery("item 1"))
-  |> Job.map(MenuJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuJob.addItems(largeAmountOfItems));
+  MenuFilterJob.create()
+  |> Job.map(MenuFilterJob.updateQuery("item 1"))
+  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
+  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
+  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
+  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
+  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems));
 
 let runJob = () => {
   let _ = Job.doWork(job);
@@ -41,4 +47,4 @@ let setup = () => ();
 
 let options = Reperf.Options.create(~iterations=1000, ());
 
-bench(~name="MenuJob: doWork atom", ~setup, ~options, ~f=runJob, ());
+bench(~name="FilterJob: doWork atom", ~setup, ~options, ~f=runJob, ());

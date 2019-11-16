@@ -44,7 +44,9 @@ let getValue = (v: t) => v.currentVal;
 let tick = (deltaT: float, v: t) => {
   let newCurrentVal = v.currentVal +. deltaT /. v.duration;
 
-  if (v.remainingDelay > 0.) {
+  if (!v.isActive) {
+    v;
+  } else if (v.remainingDelay > 0.) {
     let newDelay = v.remainingDelay -. deltaT;
     {
       ...v,
@@ -71,10 +73,14 @@ let start = (currentTime: float, v: t) => {
     startTime: currentTime,
     currentTime,
     currentVal: 0.,
-    remainingDelay: v.delay,
+    remainingDelay: 0.,
   };
 };
 
 let stop = (v: t) => {
   {...v, isActive: false};
 };
+
+let pause = (v: t) => {...v, isActive: false};
+
+let resume = (v: t) => {...v, isActive: true};

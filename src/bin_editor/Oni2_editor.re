@@ -56,9 +56,8 @@ let init = app => {
 
   let update = UI.start(w, <Root state=currentState^ />);
 
-  let onStateChanged = v => {
-    currentState := v;
-    let state = currentState^;
+  let onStateChanged = state => {
+    currentState := state;
     GlobalContext.set({...GlobalContext.current(), state});
 
     update(<Root state />);

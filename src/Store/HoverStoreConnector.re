@@ -9,8 +9,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Animation = Model.Animation;
-module Menu = Model.Menu;
-module MenuJob = Model.MenuJob;
+module Quickmenu = Model.Quickmenu;
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();

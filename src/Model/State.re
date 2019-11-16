@@ -17,9 +17,7 @@ type t = {
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   hover: Hover.t,
-  menu: Menu.t,
-  commandline: Commandline.t,
-  wildmenu: Wildmenu.t,
+  quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   // New-school native syntax highlighting
   syntaxHighlighting: SyntaxHighlighting.t,
@@ -54,9 +52,7 @@ let create: unit => t =
     diagnostics: Diagnostics.create(),
     hover: Hover.empty,
     mode: Normal,
-    menu: Menu.create(),
-    commandline: Commandline.create(),
-    wildmenu: Wildmenu.create(),
+    quickmenu: None,
     buffers: Buffers.empty,
     editorFont:
       EditorFont.create(

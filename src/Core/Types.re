@@ -186,14 +186,6 @@ module UiFont = {
   let create = (~fontFile, ~fontSize, ()) => {fontFile, fontSize};
 };
 
-/* [@deriving show({with_path: false})] */
-type commandline = {
-  text: string,
-  cmdType: Vim.Types.cmdlineType,
-  position: int,
-  show: bool,
-};
-
 module Input = {
   [@deriving
     (show({with_path: false}), yojson({strict: false, exn: false}))
@@ -203,13 +195,14 @@ module Input = {
   // bindings. Need to decouple these.
   type controlMode =
     // VSCode-compatible when parameters
-    | [@name "menuFocus"] MenuFocus
+    | [@name "listFocus"] ListFocus
     | [@name "textInputFocus"] TextInputFocus
+    | [@name "inQuickOpen"] InQuickOpen
     | [@name "editorTextFocus"] EditorTextFocus
-    | [@name "commandLineFocus"] CommandLineFocus
     | [@name "suggestWidgetVisible"] SuggestWidgetVisible
     // Onivim extensions to the 'when' syntax
-    | [@name "insertMode"] InsertMode;
+    | [@name "insertMode"] InsertMode
+    | [@name "quickmenuCursorEnd"] QuickmenuCursorEnd;
 
   [@deriving show({with_path: false})]
   type keyBindings = {

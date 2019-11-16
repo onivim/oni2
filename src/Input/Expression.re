@@ -16,12 +16,13 @@ let evaluate = (v: t, getValue) => {
   let rec eval = v =>
     switch (v) {
     | Variable(s) => getValue(s)
-    | And(e1, e2) => f(e1) && f(e2)
-    | Or(e1, e2) => f(e1) || f(e2)
-    | Not(e) => !f(e)
+    | And(e1, e2) => eval(e1) && eval(e2)
+    | Or(e1, e2) => eval(e1) || eval(e2)
+    | Not(e) => !eval(e)
     };
 
-  let ret = f(v);
+  let ret = eval(v);
+
   Oni_Core.Log.debug(() =>
     Printf.sprintf(
       "Expression %s evaluated to: %s",
