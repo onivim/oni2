@@ -264,6 +264,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       )
 
     | ListSelect =>
+      Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
@@ -290,6 +291,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       }
 
     | QuickmenuClose =>
+      Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, exitModeEffect)
       | _ => (None, Isolinear.Effect.none)
