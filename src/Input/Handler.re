@@ -4,7 +4,6 @@
  * Basic input handling for Oni
  */
 
-open Oni_Core;
 open Revery;
 module Log = Oni_Core.Log;
 
@@ -151,30 +150,13 @@ let keyPressToCommand =
   };
 };
 
-module Conditions = {
-  type t = Hashtbl.t(Types.Input.controlMode, bool);
-
-  let getBooleanCondition = (v: t, condition: Types.Input.controlMode) => {
-    switch (Hashtbl.find_opt(v, condition)) {
-    | Some(v) => v
-    | None => false
-    };
-  };
-};
-
 /**
    Search if any of the matching "when" conditions in the Keybindings.json
    match the current condition in state
  */
-let matchesCondition = (commandConditions, currentConditions, input, key) =>
+let matchesCondition = (commandConditions, input, key, getValue) =>
   if (input != key) {
     false;
   } else {
-    List.fold_left(
-      (prevMatch, condition) =>
-        prevMatch
-        || Conditions.getBooleanCondition(currentConditions, condition),
-      false,
-      commandConditions,
-    );
+    Expression.evaluate(commandConditions, getValue);
   };

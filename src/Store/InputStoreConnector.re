@@ -17,21 +17,23 @@ type captureMode =
   | Quickmenu;
 
 let fixedBindings =
-  Keybindings.[
+  Keybindings.Keybinding.[
     {
       key: "<UP>",
       command: "list.focusUp",
-      condition: [ListFocus, TextInputFocus],
+      condition:
+        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
     },
     {
       key: "<DOWN>",
       command: "list.focusDown",
-      condition: [ListFocus, TextInputFocus],
+      condition:
+        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
     },
     {
       key: "<RIGHT>",
       command: "list.selectBackground",
-      condition: [QuickmenuCursorEnd],
+      condition: Expression.(Variable("quickmenuCursorEnd")),
     },
   ];
 
@@ -39,22 +41,22 @@ let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
-  let ret: Handler.Conditions.t = Hashtbl.create(16);
+  let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   switch (state.quickmenu) {
   | Some({query, cursorPosition, _}) =>
-    Hashtbl.add(ret, ListFocus, true);
-    Hashtbl.add(ret, InQuickOpen, true);
+    Hashtbl.add(ret, "listFocus", true);
+    Hashtbl.add(ret, "inQuickOpen", true);
 
     if (cursorPosition == String.length(query)) {
-      Hashtbl.add(ret, QuickmenuCursorEnd, true);
+      Hashtbl.add(ret, "quickmenuCursorEnd", true);
     };
 
   | None => ()
   };
 
   if (Model.Completions.isActive(state.completions)) {
-    Hashtbl.add(ret, SuggestWidgetVisible, true);
+    Hashtbl.add(ret, "suggestWidgetVisible", true);
   };
 
   // HACK: Because we don't have AND conditions yet for input
@@ -63,9 +65,9 @@ let conditionsOfState = (state: State.t) => {
   // editor (editorTextFocus is set)
   switch (isQuickmenuOpen(state), state.mode) {
   | (false, Vim.Types.Insert) =>
-    Hashtbl.add(ret, Types.Input.InsertMode, true);
-    Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
-  | (false, _) => Hashtbl.add(ret, Types.Input.EditorTextFocus, true)
+    Hashtbl.add(ret, "insertMode", true);
+    Hashtbl.add(ret, "editorTextFocus", true);
+  | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | _ => ()
   };
 
@@ -87,17 +89,19 @@ let start =
   Sdl2.TextInput.start();
 
   let getActionsForBinding =
-      (inputKey, bindings, currentConditions: Handler.Conditions.t) => {
+      (inputKey, bindings, currentConditions: Hashtbl.t(string, bool)) => {
     let inputKey = String.uppercase_ascii(inputKey);
-    Keybindings.(
+
+    let getValue = v =>
+      switch (Hashtbl.find_opt(currentConditions, v)) {
+      | Some(variableValue) => variableValue
+      | None => false
+      };
+
+    Keybindings.Keybinding.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
-          Handler.matchesCondition(
-            condition,
-            currentConditions,
-            inputKey,
-            key,
-          )
+          Handler.matchesCondition(condition, inputKey, key, getValue)
             ? [Actions.Command(command)] : defaultAction,
         [],
         fixedBindings @ bindings,
