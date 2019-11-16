@@ -11,18 +11,46 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-let isMenuOpen = (state: State.t) => state.menu.isOpen;
+type captureMode =
+  | Normal
+  | Wildmenu
+  | Quickmenu;
+
+let fixedBindings =
+  Keybindings.[
+    {
+      key: "<UP>",
+      command: "list.focusUp",
+      condition: [ListFocus, TextInputFocus],
+    },
+    {
+      key: "<DOWN>",
+      command: "list.focusDown",
+      condition: [ListFocus, TextInputFocus],
+    },
+    {
+      key: "<RIGHT>",
+      command: "list.selectBackground",
+      condition: [QuickmenuCursorEnd],
+    },
+  ];
+
+let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
   // Not functional, but we'll use the hashtable for performance
   let ret: Handler.Conditions.t = Hashtbl.create(16);
 
-  if (state.commandline.show) {
-    Hashtbl.add(ret, CommandLineFocus, true);
-  };
+  switch (state.quickmenu) {
+  | Some({query, cursorPosition, _}) =>
+    Hashtbl.add(ret, ListFocus, true);
+    Hashtbl.add(ret, InQuickOpen, true);
 
-  if (isMenuOpen(state)) {
-    Hashtbl.add(ret, MenuFocus, true);
+    if (cursorPosition == String.length(query)) {
+      Hashtbl.add(ret, QuickmenuCursorEnd, true);
+    };
+
+  | None => ()
   };
 
   if (Model.Completions.isActive(state.completions)) {
@@ -33,7 +61,7 @@ let conditionsOfState = (state: State.t) => {
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isMenuOpen(state) || state.commandline.show, state.mode) {
+  switch (isQuickmenuOpen(state), state.mode) {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, Types.Input.InsertMode, true);
     Hashtbl.add(ret, Types.Input.EditorTextFocus, true);
@@ -59,7 +87,7 @@ let start =
   Sdl2.TextInput.start();
 
   let getActionsForBinding =
-      (inputKey, commands, currentConditions: Handler.Conditions.t) => {
+      (inputKey, bindings, currentConditions: Handler.Conditions.t) => {
     let inputKey = String.uppercase_ascii(inputKey);
     Keybindings.(
       List.fold_left(
@@ -72,37 +100,9 @@ let start =
           )
             ? [Actions.Command(command)] : defaultAction,
         [],
-        commands,
+        fixedBindings @ bindings,
       )
     );
-  };
-
-  /**
-    Handle Input from Oni or Vim
-   */
-  let handle =
-      (
-        ~isMenuOpen,
-        ~conditions: Handler.Conditions.t,
-        ~time=0.0,
-        ~commands: Keybindings.t,
-        inputKey,
-      ) => {
-    let actions =
-      switch (isMenuOpen) {
-      | false =>
-        switch (getActionsForBinding(inputKey, commands, conditions)) {
-        | [] =>
-          Log.info("Input::handle - sending raw input: " ++ inputKey);
-          [Actions.KeyboardInput(inputKey)];
-        | actions =>
-          Log.info("Input::handle - sending bound actions.");
-          actions;
-        }
-      | true => getActionsForBinding(inputKey, commands, conditions)
-      };
-
-    [Actions.NotifyKeyPressed(time, inputKey), ...actions];
   };
 
   /**
@@ -113,22 +113,46 @@ let start =
    */
   let keyEventListener = key => {
     let state = getState();
-    let commands = state.keyBindings;
+    let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.getTime() |> Revery.Time.toSeconds;
-    switch (key, Revery.UI.Focus.focused) {
-    // No key, nothing focused - no-op
-    | (None, _) => ()
 
-    // We have a key, but Revery has an element focused
-    | (Some(k), {contents: Some(_)})
-    | (Some(k), {contents: None}) =>
-      handle(~isMenuOpen=isMenuOpen(state), ~conditions, ~time, ~commands, k)
-      |> List.iter(dispatch);
+    let captureMode =
+      switch (state.quickmenu) {
+      | Some({variant: Wildmenu(_), _}) => Wildmenu
 
-      // Run input effects _immediately_
-      runEffects();
+      | Some({variant: CommandPalette, _})
+      | Some({variant: EditorsPicker, _})
+      | Some({variant: FilesPicker, _})
+      | Some({variant: ThemesPicker, _}) => Quickmenu
+
+      | None => Normal
+      };
+
+    switch (key) {
+    | None => ()
+
+    | Some(k) =>
+      let bindingActions = getActionsForBinding(k, bindings, conditions);
+
+      let actions =
+        switch (captureMode) {
+        | Normal
+        | Wildmenu
+            when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
+          Log.info("Input::handle - sending raw input: " ++ k);
+          [Actions.KeyboardInput(k)];
+
+        | _ =>
+          Log.info("Input::handle - sending bound actions.");
+          bindingActions;
+        };
+
+      [Actions.NotifyKeyPressed(time, k), ...actions] |> List.iter(dispatch);
     };
+
+    // Run input effects _immediately_
+    runEffects();
   };
 
   let isTextInputActive = () => {

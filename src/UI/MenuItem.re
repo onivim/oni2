@@ -12,22 +12,22 @@ module Constants = {
 };
 
 module Styles = {
-  let bg = (~theme: Theme.t, ~isSelected) =>
-    isSelected ? theme.menuSelectionBackground : theme.menuBackground;
+  let bg = (~theme: Theme.t, ~isFocused) =>
+    isFocused ? theme.menuSelectionBackground : theme.menuBackground;
 
-  let text = (~theme: Theme.t, ~font: UiFont.t, ~isSelected) =>
+  let text = (~theme: Theme.t, ~font: UiFont.t, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       color(theme.menuForeground),
-      backgroundColor(bg(~theme, ~isSelected)),
+      backgroundColor(bg(~theme, ~isFocused)),
     ];
 
-  let container = (~theme, ~isSelected) =>
+  let container = (~theme, ~isFocused) =>
     Style.[
       padding(10),
       flexDirection(`Row),
-      backgroundColor(bg(~theme, ~isSelected)),
+      backgroundColor(bg(~theme, ~isFocused)),
     ];
 
   let icon = fgColor =>
@@ -38,7 +38,7 @@ module Styles = {
       color(fgColor),
     ];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~isSelected, ~custom) =>
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused, ~custom) =>
     Style.(
       merge(
         ~source=
@@ -47,7 +47,7 @@ module Styles = {
             textOverflow(`Ellipsis),
             fontSize(12),
             color(theme.menuForeground),
-            backgroundColor(bg(~theme, ~isSelected)),
+            backgroundColor(bg(~theme, ~isFocused)),
           ],
         ~target=custom,
       )
@@ -64,7 +64,7 @@ let createElement =
       ~style=[],
       ~icon=None,
       ~label,
-      ~isSelected,
+      ~isFocused,
       ~theme,
       ~onClick=noop,
       ~onMouseOver=noop,
@@ -90,7 +90,7 @@ let createElement =
     let labelView =
       switch (label) {
       | `Text(text) =>
-        let style = Styles.label(~font, ~theme, ~isSelected, ~custom=style);
+        let style = Styles.label(~font, ~theme, ~isFocused, ~custom=style);
         <Text style text />;
       | `Custom(view) => view
       };
@@ -100,7 +100,7 @@ let createElement =
       <Clickable style=Styles.clickable onClick>
         <View
           onMouseOver={_ => onMouseOver()}
-          style={Styles.container(~theme, ~isSelected)}>
+          style={Styles.container(~theme, ~isFocused)}>
           iconView
           labelView
         </View>

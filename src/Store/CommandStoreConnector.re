@@ -81,57 +81,16 @@ let start = _ => {
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
-      "commandPalette.open",
-      _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
+      "workbench.action.showCommands",
+      _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
     (
-      "quickOpen.openFiles",
-      state => {
-        let currentDirectory = Rench.Environment.getWorkingDirectory();
-
-        let getDisplayPath = (fullPath, dir) => {
-          let re = Str.regexp_string(dir ++ Filename.dir_sep);
-          Str.replace_first(re, "", fullPath);
-        };
-
-        multipleActionEffect([
-          MenuOpen(
-            (setItems, _, _, _) => {
-              let commands =
-                state.Oni_Model.State.buffers
-                |> IntMap.to_seq
-                |> Seq.filter_map(element => {
-                     let (_, buffer) = element;
-
-                     switch (Buffer.getFilePath(buffer)) {
-                     | Some(path) =>
-                       Some({
-                         category: None,
-                         name: getDisplayPath(path, currentDirectory),
-                         command: () => {
-                           Oni_Model.Actions.OpenFileByPath(path, None);
-                         },
-                         icon:
-                           Oni_Model.FileExplorer.getFileIcon(
-                             state.languageInfo,
-                             state.iconTheme,
-                             path,
-                           ),
-                         highlight: [],
-                       })
-                     | None => None
-                     };
-                   })
-                |> List.of_seq;
-
-              setItems(commands);
-
-              () => ();
-            },
-          ),
-        ]);
-      },
+      "workbench.action.openNextRecentlyUsedEditorInGroup",
+      _ => singleActionEffect(QuickmenuShow(EditorsPicker)),
+    ),
+    (
+      "workbench.action.quickOpen",
+      _ => singleActionEffect(QuickmenuShow(FilesPicker)),
     ),
     /*(
         "developer.massiveMenu",
@@ -168,15 +127,20 @@ let start = _ => {
           ]);
         },
       ),*/
-    ("menu.close", _ => multipleActionEffect([MenuClose])),
-    ("menu.next", _ => multipleActionEffect([MenuNextItem])),
-    ("menu.previous", _ => multipleActionEffect([MenuPreviousItem])),
-    ("menu.select", _ => multipleActionEffect([MenuSelect])),
+    (
+      "workbench.action.closeQuickOpen",
+      _ => multipleActionEffect([QuickmenuClose]),
+    ),
+    ("list.focusDown", _ => multipleActionEffect([ListFocusDown])),
+    ("list.focusUp", _ => multipleActionEffect([ListFocusUp])),
+    ("list.select", _ => multipleActionEffect([ListSelect])),
+    (
+      "list.selectBackground",
+      _ => multipleActionEffect([ListSelectBackground]),
+    ),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    ("wildmenu.next", _ => singleActionEffect(WildmenuNext)),
-    ("wildmenu.previous", _ => singleActionEffect(WildmenuPrevious)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),

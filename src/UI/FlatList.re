@@ -102,7 +102,7 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   };
 
 type action =
-  | SelectedChanged
+  | FocusedChanged
   | SetScrollTop(int);
 
 let createElement =
@@ -112,14 +112,14 @@ let createElement =
       ~rowHeight: int,
       ~render as renderItem: renderFunction,
       ~count: int,
-      ~selected: option(int),
+      ~focused: option(int),
       ~children as _,
       (),
     ) => {
   let reducer = (action, actualScrollTop) =>
     switch (action) {
-    | SelectedChanged =>
-      let offset = Option.value(selected, ~default=0) * rowHeight;
+    | FocusedChanged =>
+      let offset = Option.value(focused, ~default=0) * rowHeight;
       if (offset < actualScrollTop) {
         // out of view above, so align with top edge
         offset;
@@ -141,12 +141,12 @@ let createElement =
       actualScrollTop
       |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
-    let selectedChanged = () => {
-      dispatch(SelectedChanged);
+    let focusedChanged = () => {
+      dispatch(FocusedChanged);
       None;
     };
 
-    let hooks = Hooks.effect(If((!=), selected), selectedChanged, hooks);
+    let hooks = Hooks.effect(If((!=), focused), focusedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let delta =
