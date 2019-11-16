@@ -17,8 +17,6 @@ let reduce: (State.t, Actions.t) => State.t =
         completions: Completions.reduce(s.completions, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        wildmenu: Wildmenu.reduce(s.wildmenu, a),
-        commandline: Commandline.reduce(s.commandline, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         fileExplorer: FileExplorer.reduce(s.fileExplorer, a),
@@ -32,13 +30,15 @@ let reduce: (State.t, Actions.t) => State.t =
           ...s,
           diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
         }
+      | DiagnosticsClear(key) => {
+          ...s,
+          diagnostics: Diagnostics.clear(s.diagnostics, key),
+        }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | SetColorTheme(theme) => {...s, theme}
-      | ChangeMode(m) =>
-        let ret: State.t = {...s, mode: m};
-        ret;
+      | ChangeMode(m) => {...s, mode: m}
       | SetEditorFont(font) => {...s, editorFont: font}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}

@@ -31,6 +31,17 @@ let checks = [
     },
   ),
   (
+    "Verify node dependencies",
+    (setup: Setup.t) => {
+      let ret =
+        Rench.ChildProcess.spawnSync(
+          setup.nodePath,
+          [|Setup.getNodeHealthCheckPath(setup)|],
+        );
+      ret.stdout |> String.trim |> String.equal("Success!");
+    },
+  ),
+  (
     "Verify ripgrep (rg) executable",
     (setup: Setup.t) => Sys.file_exists(setup.rgPath),
   ),

@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+const path = require('path');
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -9,6 +10,18 @@ function activate(context) {
     let showData = (val) => {
         vscode.window.showInformationMessage(JSON.stringify(val));
     }
+    // Create a simple status bar
+    let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
+    item.text = "Developer";
+    item.show();
+
+    const output = vscode.window.createOutputChannel("oni-dev");
+    output.appendLine("Hello output channel!");
+
+    const output2 = vscode.window.createOutputChannel("oni-dev2");
+    output2.append("Hello output channel!");
+
+    const collection = vscode.languages.createDiagnosticCollection('test');
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -38,12 +51,20 @@ function activate(context) {
         //     contentChanges: e.contentChanges,
         //     fullText: e.document.getText(),
         // });
-    });
 
-    // Create a simple status bar
-    let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
-    item.text = "Developer";
-    item.show();
+		//vscode.window.showInformationMessage('Changed!');
+        const document = e.document;
+        if (document && path.basename(document.uri.fsPath) == "test.oni-dev") {
+           collection.set(document.uri, [{
+                code: '', 
+                message: "diag 1",
+                range: new vscode.Range(new vscode.Position(0, 4), new vscode.Position(0, 10)),
+                severity: vscode.DiagnosticSeverity.Error,
+                source: '',
+                relatedInformation: []
+           }]);
+        }
+    });
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);

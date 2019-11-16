@@ -10,7 +10,7 @@ build: [
 ]
 depends: [
   "ocaml" {>= "4.04.1"}
-  "jbuilder" {build & >= "1.0+beta18.1"}
+  "jbuilder" {>= "1.0+beta18.1"}
 ]
 conflicts: [
   "sexplib" { < "v0.11"}
