@@ -6,12 +6,13 @@ type t =
   | True
   | False;
 
-let rec show = (v: t) =>
+let rec toString = (v: t) =>
   switch (v) {
   | Variable(s) => Printf.sprintf("Variable(%s)", s)
-  | And(v1, v2) => Printf.sprintf("And(%s, %s)", show(v1), show(v2))
-  | Or(v1, v2) => Printf.sprintf("Or(%s, %s)", show(v1), show(v2))
-  | Not(v) => "!" ++ show(v)
+  | And(v1, v2) =>
+    Printf.sprintf("And(%s, %s)", toString(v1), toString(v2))
+  | Or(v1, v2) => Printf.sprintf("Or(%s, %s)", toString(v1), toString(v2))
+  | Not(v) => "!" ++ toString(v)
   | True => "true"
   | False => "false"
   };
@@ -38,11 +39,18 @@ let evaluate = (v: t, getValue) => {
     };
 
   let ret = eval(v);
+  prerr_endline(
+    Printf.sprintf(
+      "Expression %s evaluated to: %s",
+      toString(v),
+      ret ? "true" : "false",
+    ),
+  );
 
   Oni_Core.Log.debug(() =>
     Printf.sprintf(
       "Expression %s evaluated to: %s",
-      show(v),
+      toString(v),
       ret ? "true" : "false",
     )
   );

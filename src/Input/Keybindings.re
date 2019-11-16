@@ -7,16 +7,6 @@ module Keybinding = {
     condition: Expression.t,
   };
 
-  module Json = {
-    [@deriving yojson({strict: false, exn: false})]
-    type t = {
-      key: string,
-      command: string,
-      [@key "when"]
-      condition: string,
-    };
-  };
-
   let condition_of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
     | `String(v) =>
@@ -33,7 +23,7 @@ module Keybinding = {
     let key = Yojson.Safe.Util.member("key", json);
     let command = Yojson.Safe.Util.member("command", json);
     let condition =
-      Yojson.Safe.Util.member("condition", json) |> condition_of_yojson;
+      Yojson.Safe.Util.member("when", json) |> condition_of_yojson;
 
     switch (condition) {
     | Ok(condition) =>
@@ -121,8 +111,11 @@ let getDefaultConfig = () => {
 };
 
 let get = () => {
+  prerr_endline("KEYBINDINGS::GET!!!");
   switch (getDefaultConfig()) {
-  | Ok(b) => b
+  | Ok(b) =>
+    prerr_endline("Got " ++ string_of_int(List.length(b)) ++ " bindings");
+    b;
   | Error(e) =>
     Log.error("Error parsing keybindings file ------- " ++ e);
     [];
