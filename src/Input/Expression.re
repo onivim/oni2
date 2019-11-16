@@ -39,14 +39,6 @@ let evaluate = (v: t, getValue) => {
     };
 
   let ret = eval(v);
-  prerr_endline(
-    Printf.sprintf(
-      "Expression %s evaluated to: %s",
-      toString(v),
-      ret ? "true" : "false",
-    ),
-  );
-
   Oni_Core.Log.debug(() =>
     Printf.sprintf(
       "Expression %s evaluated to: %s",

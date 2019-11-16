@@ -111,11 +111,8 @@ let getDefaultConfig = () => {
 };
 
 let get = () => {
-  prerr_endline("KEYBINDINGS::GET!!!");
   switch (getDefaultConfig()) {
-  | Ok(b) =>
-    prerr_endline("Got " ++ string_of_int(List.length(b)) ++ " bindings");
-    b;
+  | Ok(b) => b
   | Error(e) =>
     Log.error("Error parsing keybindings file ------- " ++ e);
     [];
