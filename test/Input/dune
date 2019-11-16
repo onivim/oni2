@@ -1,5 +1,5 @@
 (library
-    (name Oni_Core_Test)
+    (name Oni_Input_Test)
     (library_flags (-linkall -g))
     (modules (:standard))
-    (libraries Oni2.core rely.lib))
+    (libraries Oni2.input rely.lib))

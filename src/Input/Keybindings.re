@@ -27,30 +27,28 @@ module Keybinding = {
       }
     };
   };
-
-  let to_yojson = (_v: t) => {
-    failwith("Not implemented");
-  };
 };
 
 let default = [];
 
 type t = list(Keybinding.t);
 
-let of_json_with_errors  = (json) => {
+let of_json_with_errors:
+  (Yojson.Safe.t) => result((list(Keybinding.t), list(string)), string)
+  = (json) => {
   let bindingsJson = switch (json) {
   // Current format:
   // [ ...bindings ]
   | `List(bindingsJson) => Ok(bindingsJson)
   // Legacy format:
   // { bindings: [ ..bindings. ] }
-  | `Assoc("bindings", [`List(bindingsJson)]) => Ok(bindingsJson)
+  | `Assoc([("bindings", `List(bindingsJson))]) => Ok(bindingsJson)
   | _ => Error("Unable to parse keybindings - not a JSON array.");
   }
 
   switch (bindingsJson) {
   | Error(msg) => Error(msg)
-  | OK(bindings) =>
+  | Ok(bindings) =>
 
     let parsedBindings = bindings
     // Parse each binding
@@ -58,14 +56,14 @@ let of_json_with_errors  = (json) => {
 
     // Get errors from individual keybindings, but don't let them stop parsing
     let errors = Utility.filterMap(keyBinding => switch(keyBinding) {
-    | Ok(v) => None
+    | Ok(_) => None
     | Error(msg) => Some(msg)
     }, parsedBindings);
 
     // Get valid bindings now
     let bindings = Utility.filterMap(keyBinding => switch(keyBinding) {
     | Ok(v) => Some(v)
-    | Error(msg) => None
+    | Error(_) => None
     }, parsedBindings);
 
     Ok((bindings, errors));
@@ -76,7 +74,10 @@ let of_json_with_errors  = (json) => {
 let getDefaultConfig = () => {
   switch (ConfigurationDefaults.getDefaultConfigString("keybindings.json")) {
   | Some(c) => 
-    let parsedBindings = of_json_with_errors(c);
+    let parsedBindings = 
+      Yojson.Safe.from_string(c)
+      |> of_json_with_errors;
+
     switch (parsedBindings) {
     | Error(msg) => Error(msg)
     // TODO: Bubble up individual key errors as notifications
