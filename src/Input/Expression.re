@@ -13,7 +13,7 @@ let rec show = (v: t) =>
   };
 
 let evaluate = (v: t, getValue) => {
-  let rec f = v =>
+  let rec eval = v =>
     switch (v) {
     | Variable(s) => getValue(s)
     | And(e1, e2) => f(e1) && f(e2)
