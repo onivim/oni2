@@ -21,20 +21,19 @@ let fixedBindings =
     {
       key: "<UP>",
       command: "list.focusUp",
-      condition: 
-        Expression.(Or(Variable("listFocus"), Variable("textInputFocus")))
+      condition:
+        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
     },
     {
       key: "<DOWN>",
       command: "list.focusDown",
-      condition: 
-        Expression.(Or(Variable("listFocus"), Variable("textInputFocus")))
+      condition:
+        Expression.(Or(Variable("listFocus"), Variable("textInputFocus"))),
     },
     {
       key: "<RIGHT>",
       command: "list.selectBackground",
-      condition: 
-        Expression.(Variable("quickmenuCursorEnd"))
+      condition: Expression.(Variable("quickmenuCursorEnd")),
     },
   ];
 
