@@ -1,17 +1,17 @@
 ---
-id: configuration
-title: Configuration
-sidebar_label: Configuration
+id: settings
+title: Settings
+sidebar_label: Settings
 ---
 
-Onivim's configuration is designed to be mostly compatible with [VSCode's User Settings](https://code.visualstudio.com/docs/getstarted/settings).
+Onivim's settings are designed to be mostly compatible with [VSCode's User Settings](https://code.visualstudio.com/docs/getstarted/settings).
 
-## Editing the user configuration
+## Editing the user settings
 
 - Press `Command+Shift+P` (Mac) or `Control+Shift+P` (Windows, Linux) to bring up the command palette
 - Select `Preferences: Open Configuration File`
 
-### Directly editing the configuration
+### Directly editing the user settings
 
 Sometimes, it is necessary to directly edit the configuration in another editor, for example, if a setting is inadvertently set that makes the editor unusable.
 
