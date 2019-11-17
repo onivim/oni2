@@ -113,7 +113,8 @@ let start =
   let (extHostUpdater, extHostStream) =
     ExtensionClientStoreConnector.start(extensions, setup);
 
-  let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
+  let (quickmenuUpdater, quickmenuStream) =
+    QuickmenuStoreConnector.start(themeInfo);
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -123,9 +124,9 @@ let start =
       ~setZoom,
       ~setVsync,
     );
+  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let ripgrep = Core.Ripgrep.make(setup.rgPath);
-  let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
@@ -158,9 +159,9 @@ let start =
           syntaxUpdater,
           extHostUpdater,
           fontUpdater,
-          menuHostUpdater,
-          quickOpenUpdater,
+          quickmenuUpdater,
           configurationUpdater,
+          keyBindingsUpdater,
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
@@ -177,7 +178,15 @@ let start =
       (),
     );
 
-  let dispatch = (action: Model.Actions.t) => {
+  module QuickmenuSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "quickmenu-subscription";
+    });
+  let (quickmenuSubscriptionsUpdater, _menuSubscriptionsStream) =
+    QuickmenuStoreConnector.subscriptions(ripgrep);
+
+  let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
@@ -186,6 +195,10 @@ let start =
     if (newState !== lastState) {
       onStateChanged(newState);
     };
+
+    // TODO: Wire this up properly
+    let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
+    QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
   };
 
   let runEffects = () => {
@@ -218,17 +231,28 @@ let start =
       }
     );
 
-  let _ = Isolinear.Stream.connect(dispatch, inputStream);
-  let _ = Isolinear.Stream.connect(dispatch, vimStream);
-  let _ = Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _ = Isolinear.Stream.connect(dispatch, syntaxStream);
-  let _ = Isolinear.Stream.connect(dispatch, extHostStream);
-  let _ = Isolinear.Stream.connect(dispatch, menuStream);
-  let _ = Isolinear.Stream.connect(dispatch, explorerStream);
-  let _ = Isolinear.Stream.connect(dispatch, lifecycleStream);
-  let _ = Isolinear.Stream.connect(dispatch, windowStream);
-  let _ = Isolinear.Stream.connect(dispatch, hoverStream);
-  let _ = Isolinear.Stream.connect(dispatch, merlinStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, inputStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, vimStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, editorEventStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, syntaxStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, extHostStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, explorerStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, lifecycleStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, windowStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, hoverStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, merlinStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
