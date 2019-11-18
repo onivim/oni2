@@ -86,261 +86,244 @@ let reducer = (action, _state) =>
 
 let initialState = {isCapturing: false};
 
-let component = React.component("Minimap");
-
-let createElement =
-    (
-      ~state: State.t,
-      ~editor: Editor.t,
-      ~width: int,
-      ~height: int,
-      ~count,
-      ~diagnostics,
-      ~getTokensForLine: int => list(BufferViewTokenizer.t),
-      ~selection: Hashtbl.t(int, list(Range.t)),
-      ~metrics,
-      ~children as _,
-      (),
-    ) =>
-  component(hooks => {
-    let rowHeight =
-      float_of_int(
-        Constants.default.minimapCharacterHeight
-        + Constants.default.minimapLineSpacing,
-      );
-
-    let (mouseState, dispatch, hooks) =
-      React.Hooks.reducer(~initialState, reducer, hooks);
-
-    let getScrollTo = (mouseY: float) => {
-      let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
-      let visibleHeight: int = metrics.pixelHeight;
-      let offsetMouseY: int =
-        int_of_float(mouseY) - Constants.default.tabHeight;
-      float_of_int(offsetMouseY)
-      /. float_of_int(visibleHeight)
-      *. float_of_int(totalHeight);
-    };
-
-    let scrollComplete = () => {
-      Mouse.releaseCapture();
-      dispatch(IsCapturing(false));
-    };
-
-    let hooks =
-      React.Hooks.effect(
-        OnMount,
-        () => {
-          Some(
-            () =>
-              if (mouseState.isCapturing) {
-                Mouse.releaseCapture();
-              },
-          )
-        },
-        hooks,
-      );
-
-    let scrollY = editor.minimapScrollY;
-
-    let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-      let scrollTo = getScrollTo(evt.mouseY);
-      let minimapLineSize =
-        Constants.default.minimapLineSpacing
-        + Constants.default.minimapCharacterHeight;
-      let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-      if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
-        GlobalContext.current().editorScrollDelta(
-          ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
-          (),
-        );
-        Mouse.setCapture(
-          ~onMouseMove=
-            evt => {
-              let scrollTo = getScrollTo(evt.mouseY);
-              let minimapLineSize =
-                Constants.default.minimapLineSpacing
-                + Constants.default.minimapCharacterHeight;
-              let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-              let scrollTo = scrollTo -. float_of_int(linesInMinimap);
-              GlobalContext.current().editorSetScroll(~scrollY=scrollTo, ());
-            },
-          ~onMouseUp=_evt => {scrollComplete()},
-          (),
-        );
-        dispatch(IsCapturing(true));
-      };
-    };
-
-    (
-      hooks,
-      <View style=absoluteStyle onMouseDown>
-        <OpenGL
-          style=absoluteStyle
-          render={(transform, _) => {
-            if (Configuration.getValue(
-                  c => c.editorMinimapShowSlider,
-                  state.configuration,
-                )) {
-              /* Draw current view */
-              Shapes.drawRect(
-                ~transform,
-                ~x=0.,
-                ~y=
-                  rowHeight
-                  *. float_of_int(
-                       Editor.getTopVisibleLine(editor, metrics) - 1,
-                     )
-                  -. scrollY,
-                ~height=
-                  rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
-                ~width=float_of_int(width),
-                ~color=state.theme.scrollbarSliderHoverBackground,
+let%component make =
+              (
+                ~state: State.t,
+                ~editor: Editor.t,
+                ~width: int,
+                ~height: int,
+                ~count,
+                ~diagnostics,
+                ~getTokensForLine: int => list(BufferViewTokenizer.t),
+                ~selection: Hashtbl.t(int, list(Range.t)),
+                ~metrics,
                 (),
-              );
-            };
-            /* Draw cursor line */
-            Shapes.drawRect(
-              ~transform,
-              ~x=0.,
-              ~y=
-                rowHeight
-                *. float_of_int(
-                     Index.toZeroBasedInt(editor.cursorPosition.line),
-                   )
-                -. scrollY,
-              ~height=float_of_int(Constants.default.minimapCharacterHeight),
-              ~width=float_of_int(width),
-              ~color=state.theme.editorLineHighlightBackground,
-              (),
-            );
-
-            let searchHighlights =
-              Selectors.getSearchHighlights(state, editor.bufferId);
-
-            let renderRange = (~color, ~offset, range: Range.t) =>
-              {let startX =
-                 Index.toZeroBasedInt(range.startPosition.character)
-                 * Constants.default.minimapCharacterWidth
-                 |> float_of_int;
-               let endX =
-                 Index.toZeroBasedInt(range.endPosition.character)
-                 * Constants.default.minimapCharacterWidth
-                 |> float_of_int;
-
-               Shapes.drawRect(
-                 ~transform,
-                 ~x=startX -. 1.0,
-                 ~y=offset -. 1.0,
-                 ~height=
-                   float_of_int(Constants.default.minimapCharacterHeight)
-                   +. 2.0,
-                 ~width=endX -. startX +. 2.,
-                 ~color,
-                 (),
-               )};
-
-            let renderUnderline = (~color, ~offset, range: Range.t) =>
-              {let startX =
-                 Index.toZeroBasedInt(range.startPosition.character)
-                 * Constants.default.minimapCharacterWidth
-                 |> float_of_int;
-               let endX =
-                 Index.toZeroBasedInt(range.endPosition.character)
-                 * Constants.default.minimapCharacterWidth
-                 |> float_of_int;
-
-               Shapes.drawRect(
-                 ~transform,
-                 ~x=startX -. 1.0,
-                 ~y=
-                   offset
-                   +. float_of_int(Constants.default.minimapCharacterHeight),
-                 ~height=1.0,
-                 ~width=endX -. startX +. 2.,
-                 ~color,
-                 (),
-               )};
-
-            ImmediateList.render(
-              ~scrollY,
-              ~rowHeight,
-              ~height=float_of_int(height),
-              ~count,
-              ~render=
-                (item, offset) => {
-                  open Range;
-                  /* draw selection */
-                  switch (Hashtbl.find_opt(selection, item)) {
-                  | None => ()
-                  | Some(v) =>
-                    let selectionColor = state.theme.editorSelectionBackground;
-                    List.iter(
-                      renderRange(~color=selectionColor, ~offset),
-                      v,
-                    );
-                  };
-
-                  let tokens = getTokensForLine(item);
-                  let highlightRanges =
-                    switch (IntMap.find_opt(item, searchHighlights)) {
-                    | Some(v) => v
-                    | None => []
-                    };
-                  let shouldHighlight = i =>
-                    List.exists(
-                      r =>
-                        Index.toInt0(r.startPosition.character) <= i
-                        && Index.toInt0(r.endPosition.character) >= i,
-                      highlightRanges,
-                    );
-
-                  // Draw error highlight
-                  switch (IntMap.find_opt(item, diagnostics)) {
-                  | Some(_) =>
-                    Shapes.drawRect(
-                      ~transform,
-                      ~x=0.,
-                      ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
-                      ~height=
-                        float_of_int(Constants.default.minimapCharacterHeight)
-                        +. 2.0,
-                      ~width=float_of_int(width),
-                      ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
-                      (),
-                    )
-                  | None => ()
-                  };
-
-                  renderLine(shouldHighlight, transform, offset, tokens);
-                },
-              (),
-            );
-
-            ImmediateList.render(
-              ~scrollY,
-              ~rowHeight,
-              ~height=float_of_int(height),
-              ~count,
-              ~render=
-                (item, offset) =>
-                  switch (IntMap.find_opt(item, diagnostics)) {
-                  | Some(v) =>
-                    List.iter(
-                      (d: Diagnostic.t) =>
-                        renderUnderline(
-                          ~offset,
-                          ~color=Color.rgba(1.0, 0., 0., 1.0),
-                          d.range,
-                        ),
-                      v,
-                    )
-                  | None => ()
-                  },
-              (),
-            );
-          }}
-        />
-      </View>,
+              ) => {
+  let rowHeight =
+    float_of_int(
+      Constants.default.minimapCharacterHeight
+      + Constants.default.minimapLineSpacing,
     );
-  });
+
+  let%hook (mouseState, dispatch) =
+    React.Hooks.reducer(~initialState, reducer);
+
+  let getScrollTo = (mouseY: float) => {
+    let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
+    let visibleHeight: int = metrics.pixelHeight;
+    let offsetMouseY: int =
+      int_of_float(mouseY) - Constants.default.tabHeight;
+    float_of_int(offsetMouseY)
+    /. float_of_int(visibleHeight)
+    *. float_of_int(totalHeight);
+  };
+
+  let scrollComplete = () => {
+    Mouse.releaseCapture();
+    dispatch(IsCapturing(false));
+  };
+
+  let%hook () =
+    React.Hooks.effect(OnMount, () => {
+      Some(
+        () =>
+          if (mouseState.isCapturing) {
+            Mouse.releaseCapture();
+          },
+      )
+    });
+
+  let scrollY = editor.minimapScrollY;
+
+  let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    let scrollTo = getScrollTo(evt.mouseY);
+    let minimapLineSize =
+      Constants.default.minimapLineSpacing
+      + Constants.default.minimapCharacterHeight;
+    let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+    if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+      GlobalContext.current().editorScrollDelta(
+        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
+        (),
+      );
+      Mouse.setCapture(
+        ~onMouseMove=
+          evt => {
+            let scrollTo = getScrollTo(evt.mouseY);
+            let minimapLineSize =
+              Constants.default.minimapLineSpacing
+              + Constants.default.minimapCharacterHeight;
+            let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+            let scrollTo = scrollTo -. float_of_int(linesInMinimap);
+            GlobalContext.current().editorSetScroll(~scrollY=scrollTo, ());
+          },
+        ~onMouseUp=_evt => {scrollComplete()},
+        (),
+      );
+      dispatch(IsCapturing(true));
+    };
+  };
+
+  <View style=absoluteStyle onMouseDown>
+    <OpenGL
+      style=absoluteStyle
+      render={(transform, _) => {
+        if (Configuration.getValue(
+              c => c.editorMinimapShowSlider,
+              state.configuration,
+            )) {
+          /* Draw current view */
+          Shapes.drawRect(
+            ~transform,
+            ~x=0.,
+            ~y=
+              rowHeight
+              *. float_of_int(Editor.getTopVisibleLine(editor, metrics) - 1)
+              -. scrollY,
+            ~height=
+              rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
+            ~width=float_of_int(width),
+            ~color=state.theme.scrollbarSliderHoverBackground,
+            (),
+          );
+        };
+        /* Draw cursor line */
+        Shapes.drawRect(
+          ~transform,
+          ~x=0.,
+          ~y=
+            rowHeight
+            *. float_of_int(
+                 Index.toZeroBasedInt(editor.cursorPosition.line),
+               )
+            -. scrollY,
+          ~height=float_of_int(Constants.default.minimapCharacterHeight),
+          ~width=float_of_int(width),
+          ~color=state.theme.editorLineHighlightBackground,
+          (),
+        );
+
+        let searchHighlights =
+          Selectors.getSearchHighlights(state, editor.bufferId);
+
+        let renderRange = (~color, ~offset, range: Range.t) =>
+          {let startX =
+             Index.toZeroBasedInt(range.startPosition.character)
+             * Constants.default.minimapCharacterWidth
+             |> float_of_int;
+           let endX =
+             Index.toZeroBasedInt(range.endPosition.character)
+             * Constants.default.minimapCharacterWidth
+             |> float_of_int;
+
+           Shapes.drawRect(
+             ~transform,
+             ~x=startX -. 1.0,
+             ~y=offset -. 1.0,
+             ~height=
+               float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
+             ~width=endX -. startX +. 2.,
+             ~color,
+             (),
+           )};
+
+        let renderUnderline = (~color, ~offset, range: Range.t) =>
+          {let startX =
+             Index.toZeroBasedInt(range.startPosition.character)
+             * Constants.default.minimapCharacterWidth
+             |> float_of_int;
+           let endX =
+             Index.toZeroBasedInt(range.endPosition.character)
+             * Constants.default.minimapCharacterWidth
+             |> float_of_int;
+
+           Shapes.drawRect(
+             ~transform,
+             ~x=startX -. 1.0,
+             ~y=
+               offset
+               +. float_of_int(Constants.default.minimapCharacterHeight),
+             ~height=1.0,
+             ~width=endX -. startX +. 2.,
+             ~color,
+             (),
+           )};
+
+        ImmediateList.render(
+          ~scrollY,
+          ~rowHeight,
+          ~height=float_of_int(height),
+          ~count,
+          ~render=
+            (item, offset) => {
+              open Range;
+              /* draw selection */
+              switch (Hashtbl.find_opt(selection, item)) {
+              | None => ()
+              | Some(v) =>
+                let selectionColor = state.theme.editorSelectionBackground;
+                List.iter(renderRange(~color=selectionColor, ~offset), v);
+              };
+
+              let tokens = getTokensForLine(item);
+              let highlightRanges =
+                switch (IntMap.find_opt(item, searchHighlights)) {
+                | Some(v) => v
+                | None => []
+                };
+              let shouldHighlight = i =>
+                List.exists(
+                  r =>
+                    Index.toInt0(r.startPosition.character) <= i
+                    && Index.toInt0(r.endPosition.character) >= i,
+                  highlightRanges,
+                );
+
+              // Draw error highlight
+              switch (IntMap.find_opt(item, diagnostics)) {
+              | Some(_) =>
+                Shapes.drawRect(
+                  ~transform,
+                  ~x=0.,
+                  ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
+                  ~height=
+                    float_of_int(Constants.default.minimapCharacterHeight)
+                    +. 2.0,
+                  ~width=float_of_int(width),
+                  ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
+                  (),
+                )
+              | None => ()
+              };
+
+              renderLine(shouldHighlight, transform, offset, tokens);
+            },
+          (),
+        );
+
+        ImmediateList.render(
+          ~scrollY,
+          ~rowHeight,
+          ~height=float_of_int(height),
+          ~count,
+          ~render=
+            (item, offset) =>
+              switch (IntMap.find_opt(item, diagnostics)) {
+              | Some(v) =>
+                List.iter(
+                  (d: Diagnostic.t) =>
+                    renderUnderline(
+                      ~offset,
+                      ~color=Color.rgba(1.0, 0., 0., 1.0),
+                      d.range,
+                    ),
+                  v,
+                )
+              | None => ()
+              },
+          (),
+        );
+      }}
+    />
+  </View>;
+};

@@ -67,7 +67,7 @@ let init = app => {
     Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
   };
 
-  let getTime = () => Time.getTime() |> Time.toSeconds;
+  let getTime = () => Time.now() |> Time.toFloatSeconds;
 
   let getZoom = () => {
     Window.getZoom(w);

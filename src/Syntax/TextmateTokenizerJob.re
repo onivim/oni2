@@ -5,6 +5,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+module Time = Revery_Core.Time;
+
 // open Textmate;
 
 type pendingWork = {
@@ -169,7 +171,7 @@ let create = (~scope, ~theme, ~grammarRepository, lines) => {
   Job.create(
     ~name="TextmateTokenizerJob",
     ~initialCompletedWork,
-    ~budget=Milliseconds(2.),
+    ~budget=Time.ms(2),
     ~f=doWork,
     p,
   );

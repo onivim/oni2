@@ -14,6 +14,7 @@ module Make = (Config: Config) => {
 
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
+  module Time = Revery_Core.Time;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
@@ -242,7 +243,7 @@ module Make = (Config: Config) => {
       ~progressReporter,
       ~name="FilterJob",
       ~initialCompletedWork,
-      ~budget=Milliseconds(2.),
+      ~budget=Time.ms(2),
       ~f=doWork,
       initialPendingWork,
     );
