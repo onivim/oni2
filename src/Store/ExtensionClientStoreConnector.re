@@ -74,8 +74,8 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
     languageFeatures :=
       LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
-   };
-   
+  };
+
   let onOutput = msg => {
     Core.Log.info("[ExtHost]: " ++ msg);
   };
@@ -230,6 +230,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
         checkCompletionsEffect(completionMeet, state),
+      )
     | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),

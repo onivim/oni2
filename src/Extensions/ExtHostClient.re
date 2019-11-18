@@ -46,6 +46,7 @@ let start =
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       In.LanguageFeatures.parseRegisterSuggestSupport(args)
       |> apply(onRegisterSuggestProvider);
+      Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
