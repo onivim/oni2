@@ -45,8 +45,8 @@ let getDefaultConfigString = configName =>
 [
   // See the onivim documentation for details on the format:
   // https://onivim.github.io/docs/configuration/key-bindings
-  // Add key bindings here:
-  { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
+  // Add key bindings here, ie:
+  // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
 ]
 |},
     )
