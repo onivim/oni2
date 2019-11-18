@@ -72,7 +72,7 @@ module PackedString = {
 };
 
 module ModelAddedDelta = {
-  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  [@deriving yojson({strict: false})]
   type t = {
     uri: Uri.t,
     versionId: int,
@@ -347,7 +347,7 @@ module OutgoingNotifications = {
 
   module DocumentsAndEditors = {
     module DocumentsAndEditorsDelta = {
-      [@deriving (show({with_path: false}), yojson({strict: false}))]
+      [@deriving yojson({strict: false})]
       type t = {
         removedDocuments: list(Uri.t),
         addedDocuments: list(ModelAddedDelta.t),
@@ -395,9 +395,7 @@ module OutgoingNotifications = {
   };
 
   module Workspace = {
-    [@deriving
-      (show({with_path: false}), yojson({strict: false, exn: true}))
-    ]
+    [@deriving yojson({strict: false, exn: true})]
     type workspaceInfo = {
       id: string,
       name: string,
