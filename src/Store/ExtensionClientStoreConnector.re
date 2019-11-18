@@ -74,6 +74,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
     languageFeatures :=
       LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
+   };
+   
+  let onOutput = msg => {
+    Core.Log.info("[ExtHost]: " ++ msg);
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -85,34 +89,25 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
       ~onRegisterSuggestProvider,
+      ~onOutput,
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t) =>
-    switch (bm.filePath, bm.fileType) {
-    | (Some(fp), Some(_)) =>
+  let _bufferMetadataToModelAddedDelta =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+    switch (bm.filePath, fileType) {
+    | (Some(fp), Some(ft)) =>
+      Core.Log.info("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
-          ~modeId="plaintext",
+          ~modeId=ft,
           ~isDirty=true,
           (),
         ),
-      )
-    /* TODO: filetype detection */
-    | (Some(fp), _) =>
-      Some(
-        Protocol.ModelAddedDelta.create(
-          ~uri=Core.Uri.fromPath(fp),
-          ~versionId=bm.version,
-          ~lines=[""],
-          ~modeId="plaintext",
-          ~isDirty=true,
-          (),
-        ),
-      )
+      );
     | _ => None
     };
 
@@ -121,9 +116,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtHostClient.pump(extHostClient)
     );
 
-  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t) =>
+  let sendBufferEnterEffect =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (_bufferMetadataToModelAddedDelta(bm)) {
+      switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
       | Some((v: Protocol.ModelAddedDelta.t)) =>
         ExtHostClient.addDocument(v, extHostClient)
@@ -231,10 +227,12 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm, _) => (state, sendBufferEnterEffect(bm))
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
         checkCompletionsEffect(completionMeet, state),
+    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
+        state,
+        sendBufferEnterEffect(bm, fileTypeOpt),
       )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)

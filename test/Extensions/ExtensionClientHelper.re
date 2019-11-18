@@ -98,10 +98,13 @@ let withExtensionClient =
       setup,
     );
 
-  Oni_Core.Utility.waitForCondition(() => {
-    ExtHostClient.pump(v);
-    initialized^;
-  });
+  Oni_Core.Utility.waitForCondition(
+    ~timeout=30.0,
+    () => {
+      ExtHostClient.pump(v);
+      initialized^;
+    },
+  );
 
   if (! initialized^) {
     failwith("extension host client did not initialize successfully");

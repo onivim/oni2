@@ -33,6 +33,8 @@ let start =
       ~onDiagnosticsChangeMany=defaultOneArgCallback,
       ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
+      ~onTelemetry=defaultOneArgCallback,
+      ~onOutput=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
       ~onRegisterSuggestProvider=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
@@ -44,6 +46,8 @@ let start =
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       In.LanguageFeatures.parseRegisterSuggestSupport(args)
       |> apply(onRegisterSuggestProvider);
+    | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
+      onOutput(msg);
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
@@ -52,7 +56,7 @@ let start =
       In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
       Ok(None);
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
-      Log.info(eventName ++ ":" ++ Yojson.Safe.to_string(json));
+      onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);

@@ -19,16 +19,32 @@ function activate(context) {
     let provider1 = vscode.languages.registerCompletionItemProvider('oni-dev',
         {
             provideCompletionItems: (document, position, token, context) => {
-                item.text = "got to here";
                 return [
-                    vscode.CompletionItem('Hello World'),
-                    vscode.CompletionItem('Hello Again'),
+                    vscode.CompletionItem('HelloWorld'),
+                    vscode.CompletionItem('HelloAgain'),
+                ];
+            }
+        }
+    );
+    
+    let provider2 = vscode.languages.registerCompletionItemProvider('oni-dev',
+        {
+            provideCompletionItems: (document, position, token, context) => {
+                return [
+                    vscode.CompletionItem('ReasonML'),
+                    vscode.CompletionItem('OCaml'),
                 ];
             }
         }
     );
 
     context.subscriptions.push(provider1);
+
+    const output = vscode.window.createOutputChannel("oni-dev");
+    output.appendLine("Hello output channel!");
+
+    const output2 = vscode.window.createOutputChannel("oni-dev2");
+    output2.append("Hello output channel!");
 
     const collection = vscode.languages.createDiagnosticCollection('test');
 

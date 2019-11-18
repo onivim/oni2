@@ -4,8 +4,6 @@ open Revery.UI.Components;
 
 open Oni_Model;
 
-let component = React.component("Dock");
-
 let button = Style.[marginVertical(24)];
 
 let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
@@ -16,26 +14,19 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   GlobalContext.current().dispatch(action);
 };
 
-let createElement = (~children as _, ~state: State.t, ()) =>
-  component(hooks => {
-    let bg = state.theme.editorLineNumberBackground;
-    (
-      hooks,
-      <View
-        style=Style.[
-          flexGrow(1),
-          top(0),
-          bottom(0),
-          backgroundColor(bg),
-          alignItems(`Center),
-        ]>
-        <Clickable onClick={toggleExplorer(state)} style=button>
-          <FontIcon
-            backgroundColor=bg
-            color=Colors.white
-            icon=FontAwesome.file
-          />
-        </Clickable>
-      </View>,
-    );
-  });
+let make = (~state: State.t, ()) => {
+  let bg = state.theme.editorLineNumberBackground;
+
+  <View
+    style=Style.[
+      flexGrow(1),
+      top(0),
+      bottom(0),
+      backgroundColor(bg),
+      alignItems(`Center),
+    ]>
+    <Clickable onClick={toggleExplorer(state)} style=button>
+      <FontIcon backgroundColor=bg color=Colors.white icon=FontAwesome.file />
+    </Clickable>
+  </View>;
+};

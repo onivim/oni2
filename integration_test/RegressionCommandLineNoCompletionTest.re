@@ -14,12 +14,18 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
 
   dispatch(KeyboardInput("e"));
   wait(~name="Mode switches to command line", (state: State.t) =>
-    state.commandline.text == "e"
+    switch (state.quickmenu) {
+    | Some(quickmenu) => quickmenu.query == "e"
+    | None => false
+    }
   );
 
   dispatch(KeyboardInput("h"));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
-    state.commandline.text == "eh"
+    switch (state.quickmenu) {
+    | Some(quickmenu) => quickmenu.query == "eh"
+    | None => false
+    }
   );
 });

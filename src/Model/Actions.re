@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Input;
 open Oni_Extensions;
 open Oni_Syntax;
 
@@ -30,6 +31,8 @@ type t =
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
   | KeyBindingsSet(Keybindings.t)
+  // Reload keybindings from configuration
+  | KeyBindingsReload
   | HoverShow
   | ChangeMode(Vim.Mode.t)
   | CursorMove(Position.t)
@@ -41,18 +44,10 @@ type t =
   | LoadEditorFont(string, int)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(Vim.Types.cmdlineType)
-  | CommandlineHide
-  | CommandlineUpdate(Vim.Types.cmdline)
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WildmenuShow(list(string))
-  | WildmenuNext
-  | WildmenuPrevious
-  | WildmenuSelect
-  | WildmenuHide
   | WindowSetActive(int, int)
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
@@ -67,16 +62,20 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-  | MenuSearch(string)
-  | MenuOpen(menuCreator)
-  | MenuUpdate(list(menuCommand))
-  | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool, float)
-  | MenuClose
-  | MenuSelect
-  | MenuNextItem
-  | MenuPreviousItem
-  | MenuPosition(int)
+  | QuickmenuShow(quickmenuVariant)
+  | QuickmenuInput({
+      text: string,
+      cursorPosition: int,
+    })
+  | QuickmenuUpdateRipgrepProgress(progress)
+  | QuickmenuUpdateFilterProgress(array(menuItem), progress)
+  | QuickmenuSearch(string)
+  | QuickmenuClose
+  | ListFocus(int)
+  | ListFocusUp
+  | ListFocusDown
+  | ListSelect
+  | ListSelectBackground
   | OpenFileByPath(string, option(WindowTree.direction))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
@@ -84,7 +83,6 @@ type t =
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
-  | QuickOpen
   | QuitBuffer(Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
@@ -94,7 +92,7 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
   | ThemeLoadByPath(string, string)
-  | ThemeShowMenu
+  | ThemeLoadByName(string)
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
   | SetColorTheme(Theme.t)
@@ -165,22 +163,20 @@ and editorGroup = {
   reverseTabOrder: list(int),
   metrics: editorMetrics,
 }
-and menuCommand = {
+and menuItem = {
   category: option(string),
   name: string,
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
-and menuSetItems = list(menuCommand) => unit
-and menuSetLoading = bool => unit
-and menuCreationFunction = menuSetItems => unit
-and menuDisposeFunction = unit => unit
-and menuCreator =
-  (
-    menuSetItems,
-    Rench.Event.t(string),
-    Rench.Event.t(option(menuCommand)),
-    menuSetLoading
-  ) =>
-  menuDisposeFunction;
+and quickmenuVariant =
+  | CommandPalette
+  | EditorsPicker
+  | FilesPicker
+  | Wildmenu(Vim.Types.cmdlineType)
+  | ThemesPicker
+and progress =
+  | Loading
+  | InProgress(float)
+  | Complete;
