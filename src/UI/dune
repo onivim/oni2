@@ -1,6 +1,7 @@
 (library
     (name Oni_UI)
     (public_name Oni2.ui)
+    (preprocess (pps brisk-reconciler.ppx))
     (libraries 
         str
         bigarray

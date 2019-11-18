@@ -8,8 +8,6 @@ open Revery;
 open Revery.UI;
 open Oni_Model;
 
-let component = React.component("Root");
-
 let rootStyle = (background, foreground) =>
   Style.[
     backgroundColor(background),
@@ -44,52 +42,45 @@ let statusBarStyle = statusBarHeight =>
     alignItems(`Center),
   ];
 
-let createElement = (~state: State.t, ~children as _, ()) =>
-  component(hooks => {
-    let theme = state.theme;
-    let configuration = state.configuration;
-    let style = rootStyle(theme.background, theme.foreground);
+let make = (~state: State.t, ()) => {
+  let theme = state.theme;
+  let configuration = state.configuration;
+  let style = rootStyle(theme.background, theme.foreground);
 
-    let statusBarVisible =
-      Selectors.getActiveConfigurationValue(state, c =>
-        c.workbenchStatusBarVisible
-      )
-      && !state.zenMode;
-    let statusBarHeight = statusBarVisible ? 25 : 0;
-    let statusBar =
-      statusBarVisible
-        ? <View style={statusBarStyle(statusBarHeight)}>
-            <StatusBar height=statusBarHeight state />
-          </View>
-        : React.empty;
-
-    (
-      hooks,
-      <View style>
-        <View style={surfaceStyle(statusBarHeight)}>
-          <EditorView state />
+  let statusBarVisible =
+    Selectors.getActiveConfigurationValue(state, c =>
+      c.workbenchStatusBarVisible
+    )
+    && !state.zenMode;
+  let statusBarHeight = statusBarVisible ? 25 : 0;
+  let statusBar =
+    statusBarVisible
+      ? <View style={statusBarStyle(statusBarHeight)}>
+          <StatusBar height=statusBarHeight state />
         </View>
-        <Overlay>
-          {switch (state.quickmenu) {
-           | None => React.empty
-           | Some(quickmenu) =>
-             switch (quickmenu.variant) {
-             | Wildmenu(_) =>
-               <WildmenuView theme configuration state=quickmenu />
+      : React.empty;
 
-             | _ =>
-               <QuickmenuView
-                 theme
-                 configuration
-                 state=quickmenu
-                 font={state.uiFont}
-               />
-             }
-           }}
-          <KeyDisplayerView state />
-          <NotificationsView state />
-        </Overlay>
-        statusBar
-      </View>,
-    );
-  });
+  <View style>
+    <View style={surfaceStyle(statusBarHeight)}> <EditorView state /> </View>
+    <Overlay>
+      {switch (state.quickmenu) {
+       | None => React.empty
+       | Some(quickmenu) =>
+         switch (quickmenu.variant) {
+         | Wildmenu(_) => <WildmenuView theme configuration state=quickmenu />
+
+         | _ =>
+           <QuickmenuView
+             theme
+             configuration
+             state=quickmenu
+             font={state.uiFont}
+           />
+         }
+       }}
+      <KeyDisplayerView state />
+      <NotificationsView state />
+    </Overlay>
+    statusBar
+  </View>;
+};

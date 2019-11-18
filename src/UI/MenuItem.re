@@ -5,8 +5,6 @@ open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
 
-let component = React.component("MenuItem");
-
 module Constants = {
   let fontSize = 20;
 };
@@ -58,9 +56,8 @@ module Styles = {
 
 let noop = () => ();
 
-let createElement =
+let make =
     (
-      ~children as _,
       ~style=[],
       ~icon=None,
       ~label,
@@ -69,41 +66,37 @@ let createElement =
       ~onClick=noop,
       ~onMouseOver=noop,
       (),
-    ) =>
-  component(hooks => {
-    let state = GlobalContext.current().state;
-    let font = State.(state.uiFont);
+    ) => {
+  let state = GlobalContext.current().state;
+  let font = State.(state.uiFont);
 
-    let iconView =
-      switch (icon) {
-      | Some(v) =>
-        IconTheme.IconDefinition.(
-          <Text
-            style={Styles.icon(v.fontColor)}
-            text={FontIcon.codeToIcon(v.fontCharacter)}
-          />
-        )
+  let iconView =
+    switch (icon) {
+    | Some(v) =>
+      IconTheme.IconDefinition.(
+        <Text
+          style={Styles.icon(v.fontColor)}
+          text={FontIcon.codeToIcon(v.fontCharacter)}
+        />
+      )
 
-      | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
-      };
+    | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
+    };
 
-    let labelView =
-      switch (label) {
-      | `Text(text) =>
-        let style = Styles.label(~font, ~theme, ~isFocused, ~custom=style);
-        <Text style text />;
-      | `Custom(view) => view
-      };
+  let labelView =
+    switch (label) {
+    | `Text(text) =>
+      let style = Styles.label(~font, ~theme, ~isFocused, ~custom=style);
+      <Text style text />;
+    | `Custom(view) => view
+    };
 
-    (
-      hooks,
-      <Clickable style=Styles.clickable onClick>
-        <View
-          onMouseOver={_ => onMouseOver()}
-          style={Styles.container(~theme, ~isFocused)}>
-          iconView
-          labelView
-        </View>
-      </Clickable>,
-    );
-  });
+  <Clickable style=Styles.clickable onClick>
+    <View
+      onMouseOver={_ => onMouseOver()}
+      style={Styles.container(~theme, ~isFocused)}>
+      iconView
+      labelView
+    </View>
+  </Clickable>;
+};

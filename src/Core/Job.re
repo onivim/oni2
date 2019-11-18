@@ -20,7 +20,7 @@ type t('p, 'c) = {
   completedWorkPrinter: workPrinter('c),
 };
 
-let defaultBudget = Time.Milliseconds(1.);
+let defaultBudget = Time.ms(1);
 
 let isComplete = (v: t('p, 'c)) => v.isComplete;
 
@@ -85,7 +85,7 @@ let show = (v: t('p, 'c)) => {
 let tick = (~budget=None, v: t('p, 'c)) => {
   let budget =
     switch (budget) {
-    | None => Time.to_float_seconds(v.budget)
+    | None => Time.toFloatSeconds(v.budget)
     | Some(v) => v
     };
 

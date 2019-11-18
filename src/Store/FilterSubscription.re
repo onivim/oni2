@@ -6,6 +6,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
   module Actions = Model.Actions;
   module Subscription = Core.Subscription;
   module Job = Core.Job;
+  module Time = Revery_Core.Time;
 
   module FilterJob = Model.FilterJob.Make(JobConfig);
 
@@ -58,7 +59,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
 
             | None => Log.error("Unable to tick non-existing FilterJob")
             },
-          Seconds(0.),
+          Time.zero,
         );
 
       let disposeMessagePump =
@@ -72,7 +73,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
 
             | None => Log.error("Unable to pump non-existing FilterJob")
             },
-          Seconds(0.1),
+          Time.ms(100),
         );
 
       let dispose = () => {

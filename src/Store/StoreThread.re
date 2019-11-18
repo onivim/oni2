@@ -290,12 +290,12 @@ let start =
   let _ =
     Tick.interval(
       deltaT => {
-        let deltaTime = Time.toSeconds(deltaT);
+        let deltaTime = Time.toFloatSeconds(deltaT);
         totalTime := totalTime^ +. deltaTime;
         dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
         runEffects();
       },
-      Seconds(0.),
+      Time.zero,
     );
 
   (dispatch, runEffects);

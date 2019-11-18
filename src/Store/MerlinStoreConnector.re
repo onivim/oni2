@@ -14,7 +14,7 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Oni_Merlin;
 
-let diagnosticsDebounceTime = Revery.Time.Seconds(0.3);
+let diagnosticsDebounceTime = Revery.Time.ms(300);
 
 let runOnMainThread = (cb, arg) => {
   Revery.App.runOnMainThread(cb(arg));
