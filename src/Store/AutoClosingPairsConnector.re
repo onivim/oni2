@@ -31,13 +31,13 @@ let start = (languageInfo: Model.LanguageInfo.t) => {
         | false => Vim.Options.setAutoClosingPairs(false)
         | true =>
           Vim.Options.setAutoClosingPairs(true);
-          Vim.AutoClosingPairs.setPairs([|
-            Vim.Types.AutoClosingPair.create(~opening='`', ~closing='`', ()),
-            Vim.Types.AutoClosingPair.create(~opening='"', ~closing='"', ()),
-            Vim.Types.AutoClosingPair.create(~opening='[', ~closing=']', ()),
-            Vim.Types.AutoClosingPair.create(~opening='(', ~closing=')', ()),
-            Vim.Types.AutoClosingPair.create(~opening='{', ~closing='}', ()),
-          |]);
+          Vim.AutoClosingPairs.create(Vim.AutoClosingPairs.[
+            AutoClosingPair.create(~opening="`", ~closing="`", ()),
+            AutoClosingPair.create(~opening={|"|}, ~closing={|"|}, ()),
+            AutoClosingPair.create(~opening="[", ~closing="]", ()),
+            AutoClosingPair.create(~opening="(", ~closing=")", ()),
+            AutoClosingPair.create(~opening="{", ~closing="}", ()),
+          ]) |> Vim.AutoClosingPairs.setPairs;
         };
       };
     });
