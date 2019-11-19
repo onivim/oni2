@@ -33,6 +33,7 @@ let start =
       ~onDiagnosticsChangeMany=defaultOneArgCallback,
       ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
+      ~onExtensionActivationFailed=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
@@ -59,6 +60,10 @@ let start =
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
+      Ok(None);
+    | ("MainThreadExtensionService", "$onExtensionActivationFailed", [v, ..._]) =>
+      let id = Protocol.PackedString.parse(v);
+      onExtensionActivationFailed(id);
       Ok(None);
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
