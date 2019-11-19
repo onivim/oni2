@@ -15,8 +15,6 @@ open Oni_Model;
 
 open Types;
 
-let empty = React.listToElement([]);
-
 /* Set up some styles */
 let textHeaderStyle =
   Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];
@@ -184,723 +182,704 @@ let renderTokens =
   tokens |> WhitespaceTokenFilter.filter(whitespaceSetting) |> List.iter(f);
 };
 
-let component = React.component("EditorSurface");
+let%component make =
+              (
+                ~state: State.t,
+                ~isActiveSplit: bool,
+                ~editorGroupId: int,
+                ~metrics: EditorMetrics.t,
+                ~editor: Editor.t,
+                (),
+              ) => {
+  let theme = state.theme;
 
-let createElement =
-    (
-      ~state: State.t,
-      ~isActiveSplit: bool,
-      ~editorGroupId: int,
-      ~metrics: EditorMetrics.t,
-      ~editor: Editor.t,
-      ~children as _,
-      (),
-    ) =>
-  component(hooks => {
-    let theme = state.theme;
+  let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
 
-    let (elementRef, setElementRef, hooks) = React.Hooks.ref(None, hooks);
+  let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
-    let activeBuffer = Selectors.getBufferForEditor(state, editor);
-
-    let buffer =
-      switch (activeBuffer) {
-      | Some(buffer) => buffer
-      | None => Buffer.empty
-      };
-
-    let bufferId = Buffer.getId(buffer);
-    let lineCount = Buffer.getNumberOfLines(buffer);
-
-    let rulers =
-      Configuration.getValue(c => c.editorRulers, state.configuration);
-
-    let showLineNumbers =
-      Configuration.getValue(
-        c => c.editorLineNumbers != LineNumber.Off,
-        state.configuration,
-      );
-    let lineNumberWidth =
-      showLineNumbers
-        ? LineNumber.getLineNumberPixelWidth(
-            ~lines=lineCount,
-            ~fontPixelWidth=state.editorFont.measuredWidth,
-            (),
-          )
-        : 0.0;
-
-    let fontHeight = state.editorFont.measuredHeight;
-    let fontWidth = state.editorFont.measuredWidth;
-    let fontFamily = state.editorFont.fontFile;
-    let fontSize =
-      Configuration.getValue(c => c.editorFontSize, state.configuration);
-
-    let iFontHeight = int_of_float(fontHeight +. 0.5);
-    let indentation =
-      switch (Buffer.getIndentation(buffer)) {
-      | Some(v) => v
-      | None => IndentationSettings.default
-      };
-
-    let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
-    let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
-    let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
-
-    let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
-
-    let (cursorOffset, cursorCharacterWidth) =
-      if (lineCount > 0 && cursorLine < lineCount) {
-        let cursorStr = Buffer.getLine(buffer, cursorLine);
-
-        let (cursorOffset, width) =
-          BufferViewTokenizer.getCharacterPositionAndWidth(
-            ~indentation,
-            cursorStr,
-            Index.toZeroBasedInt(editor.cursorPosition.character),
-          );
-        (cursorOffset, width);
-      } else {
-        (0, 1);
-      };
-
-    let bufferPositionToPixel = (line, char) => {
-      let x =
-        float_of_int(char) *. fontWidth -. editor.scrollX +. lineNumberWidth;
-      let y = float_of_int(line) *. fontHeight -. editor.scrollY;
-      (x, y);
+  let buffer =
+    switch (activeBuffer) {
+    | Some(buffer) => buffer
+    | None => Buffer.empty
     };
 
-    let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
+  let bufferId = Buffer.getId(buffer);
+  let lineCount = Buffer.getNumberOfLines(buffer);
 
-    let cursorWidth =
-      switch (state.mode, isActiveSplit) {
-      | (Insert, true) => 2
-      | _ => fullCursorWidth
-      };
+  let rulers =
+    Configuration.getValue(c => c.editorRulers, state.configuration);
 
-    let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
+  let showLineNumbers =
+    Configuration.getValue(
+      c => c.editorLineNumbers != LineNumber.Off,
+      state.configuration,
+    );
+  let lineNumberWidth =
+    showLineNumbers
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=lineCount,
+          ~fontPixelWidth=state.editorFont.measuredWidth,
+          (),
+        )
+      : 0.0;
 
-    let cursorPixelY =
-      int_of_float(
-        fontHeight
-        *. float_of_int(Index.toZeroBasedInt(editor.cursorPosition.line))
-        -. editor.scrollY
-        +. 0.5,
-      );
+  let fontHeight = state.editorFont.measuredHeight;
+  let fontWidth = state.editorFont.measuredWidth;
+  let fontFamily = state.editorFont.fontFile;
+  let fontSize =
+    Configuration.getValue(c => c.editorFontSize, state.configuration);
 
-    let cursorPixelX =
-      int_of_float(
-        lineNumberWidth
-        +. fontWidth
-        *. float_of_int(cursorOffset)
-        -. editor.scrollX
-        +. 0.5,
-      );
+  let iFontHeight = int_of_float(fontHeight +. 0.5);
+  let indentation =
+    switch (Buffer.getIndentation(buffer)) {
+    | Some(v) => v
+    | None => IndentationSettings.default
+    };
 
-    let cursorStyle =
-      Style.[
-        position(`Absolute),
-        top(cursorPixelY),
-        left(cursorPixelX),
-        height(iFontHeight),
-        width(cursorWidth),
-        backgroundColor(Colors.white),
-      ];
+  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
+  let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
+  let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
-    let searchHighlights =
-      Selectors.getSearchHighlights(state, editor.bufferId);
+  let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
 
-    let isMinimapShown =
-      Configuration.getValue(
-        c => c.editorMinimapEnabled,
-        state.configuration,
-      );
+  let (cursorOffset, cursorCharacterWidth) =
+    if (lineCount > 0 && cursorLine < lineCount) {
+      let cursorStr = Buffer.getLine(buffer, cursorLine);
 
-    let layout =
-      EditorLayout.getLayout(
-        ~showLineNumbers,
-        ~maxMinimapCharacters=
-          Configuration.getValue(
-            c => c.editorMinimapMaxColumn,
-            state.configuration,
-          ),
-        ~pixelWidth=float_of_int(metrics.pixelWidth),
-        ~pixelHeight=float_of_int(metrics.pixelHeight),
-        ~isMinimapShown,
-        ~characterWidth=state.editorFont.measuredWidth,
-        ~characterHeight=state.editorFont.measuredHeight,
-        ~bufferLineCount=lineCount,
-        (),
-      );
-
-    let matchingPairsEnabled =
-      Selectors.getConfigurationValue(state, buffer, c =>
-        c.editorMatchBrackets
-      );
-
-    let matchingPairs =
-      !matchingPairsEnabled
-        ? None : Selectors.getMatchingPairs(state, editor.bufferId);
-
-    let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
-      let line = Buffer.getLine(buffer, i);
-
-      let searchHighlightRanges =
-        switch (IntMap.find_opt(i, searchHighlights)) {
-        | Some(v) => v
-        | None => []
-        };
-
-      let isActiveLine = i == cursorLine;
-      let defaultBackground =
-        isActiveLine
-          ? theme.editorLineHighlightBackground : theme.editorBackground;
-
-      let matchingPairIndex =
-        switch (matchingPairs) {
-        | None => None
-        | Some(v) =>
-          if (Index.toInt0(v.startPos.line) == i) {
-            Some(Index.toInt0(v.startPos.character));
-          } else if (Index.toInt0(v.endPos.line) == i) {
-            Some(Index.toInt0(v.endPos.character));
-          } else {
-            None;
-          }
-        };
-
-      let tokenColors2 =
-        switch (
-          SyntaxHighlighting.getTokensForLine(
-            state.syntaxHighlighting,
-            bufferId,
-            i,
-          )
-        ) {
-        | [] => []
-        | v => v
-        };
-
-      let colorizer =
-        BufferLineColorizer.create(
-          ZedBundled.length(line),
-          state.theme,
-          tokenColors2,
-          selection,
-          defaultBackground,
-          theme.editorSelectionBackground,
-          matchingPairIndex,
-          searchHighlightRanges,
+      let (cursorOffset, width) =
+        BufferViewTokenizer.getCharacterPositionAndWidth(
+          ~indentation,
+          cursorStr,
+          Index.toZeroBasedInt(editor.cursorPosition.character),
         );
-
-      BufferViewTokenizer.tokenize(
-        ~startIndex,
-        ~endIndex,
-        line,
-        IndentationSettings.default,
-        colorizer,
-      );
+      (cursorOffset, width);
+    } else {
+      (0, 1);
     };
 
-    let style =
-      Style.[
-        backgroundColor(theme.editorBackground),
-        color(theme.editorForeground),
-        flexGrow(1),
-      ];
+  let bufferPositionToPixel = (line, char) => {
+    let x =
+      float_of_int(char) *. fontWidth -. editor.scrollX +. lineNumberWidth;
+    let y = float_of_int(line) *. fontHeight -. editor.scrollY;
+    (x, y);
+  };
 
-    let onDimensionsChanged =
-        ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-      GlobalContext.current().notifyEditorSizeChanged(
-        ~editorGroupId,
-        ~width,
-        ~height,
-        (),
-      );
+  let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
+
+  let cursorWidth =
+    switch (state.mode, isActiveSplit) {
+    | (Insert, true) => 2
+    | _ => fullCursorWidth
     };
 
-    let bufferPixelWidth =
-      layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
+  let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
 
-    let bufferViewStyle =
-      Style.[
-        position(`Absolute),
-        top(0),
-        left(0),
-        width(int_of_float(bufferPixelWidth)),
-        bottom(0),
-        overflow(`Hidden),
-      ];
+  let cursorPixelY =
+    int_of_float(
+      fontHeight
+      *. float_of_int(Index.toZeroBasedInt(editor.cursorPosition.line))
+      -. editor.scrollY
+      +. 0.5,
+    );
 
-    let minimapPixelWidth =
-      layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
-    let minimapViewStyle =
-      Style.[
-        position(`Absolute),
-        overflow(`Hidden),
-        top(0),
-        left(int_of_float(bufferPixelWidth)),
-        width(minimapPixelWidth),
-        bottom(0),
-      ];
+  let cursorPixelX =
+    int_of_float(
+      lineNumberWidth
+      +. fontWidth
+      *. float_of_int(cursorOffset)
+      -. editor.scrollX
+      +. 0.5,
+    );
 
-    let verticalScrollBarStyle =
-      Style.[
-        position(`Absolute),
-        top(0),
-        left(
-          int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
+  let cursorStyle =
+    Style.[
+      position(`Absolute),
+      top(cursorPixelY),
+      left(cursorPixelX),
+      height(iFontHeight),
+      width(cursorWidth),
+      backgroundColor(Colors.white),
+    ];
+
+  let searchHighlights =
+    Selectors.getSearchHighlights(state, editor.bufferId);
+
+  let isMinimapShown =
+    Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
+
+  let layout =
+    EditorLayout.getLayout(
+      ~showLineNumbers,
+      ~maxMinimapCharacters=
+        Configuration.getValue(
+          c => c.editorMinimapMaxColumn,
+          state.configuration,
         ),
-        width(Constants.default.scrollBarThickness),
-        backgroundColor(theme.scrollbarSliderBackground),
-        bottom(0),
-      ];
+      ~pixelWidth=float_of_int(metrics.pixelWidth),
+      ~pixelHeight=float_of_int(metrics.pixelHeight),
+      ~isMinimapShown,
+      ~characterWidth=state.editorFont.measuredWidth,
+      ~characterHeight=state.editorFont.measuredHeight,
+      ~bufferLineCount=lineCount,
+      (),
+    );
 
-    let horizontalScrollBarStyle =
-      Style.[
-        position(`Absolute),
-        bottom(0),
-        left(int_of_float(layout.lineNumberWidthInPixels)),
-        height(Constants.default.scrollBarThickness),
-        width(int_of_float(layout.bufferWidthInPixels)),
-      ];
+  let matchingPairsEnabled =
+    Selectors.getConfigurationValue(state, buffer, c => c.editorMatchBrackets);
 
-    let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScrollDelta(
-        ~deltaY=wheelEvent.deltaY *. (-50.),
-        (),
-      );
-    };
+  let matchingPairs =
+    !matchingPairsEnabled
+      ? None : Selectors.getMatchingPairs(state, editor.bufferId);
 
-    let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      GlobalContext.current().editorScrollDelta(
-        ~deltaY=wheelEvent.deltaY *. (-150.),
-        (),
-      );
-    };
+  let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
+    let line = Buffer.getLine(buffer, i);
 
-    let diagnostics =
-      switch (activeBuffer) {
-      | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
-      | None => IntMap.empty
+    let searchHighlightRanges =
+      switch (IntMap.find_opt(i, searchHighlights)) {
+      | Some(v) => v
+      | None => []
       };
-    let ranges = Selection.getRanges(editor.selection, buffer);
-    let selectionRanges = Range.toHash(ranges);
 
-    let minimapLayout =
-      isMinimapShown
-        ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
-            <Minimap
-              state
-              editor
-              width={layout.minimapWidthInPixels}
-              height={metrics.pixelHeight}
-              count=lineCount
-              diagnostics
-              metrics
-              getTokensForLine={getTokensForLine(
-                0,
-                layout.bufferWidthInCharacters,
-              )}
-              selection=selectionRanges
-            />
-          </View>
-        : React.empty;
+    let isActiveLine = i == cursorLine;
+    let defaultBackground =
+      isActiveLine
+        ? theme.editorLineHighlightBackground : theme.editorBackground;
 
-    /* TODO: Selection! */
-    /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-      };*/
-
-    let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-      switch (elementRef) {
-      | None => ()
-      | Some(r) =>
-        let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
-
-        let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
-        let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
-
-        let (line, col) =
-          Editor.pixelPositionToLineColumn(
-            editor,
-            metrics,
-            relX -. lineNumberWidth,
-            relY,
-          );
-        Log.debug(() =>
-          "EditorSurface - editorMouseUp: topVisibleLine is "
-          ++ string_of_int(topVisibleLine)
-        );
-        Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
-        Log.debug(() =>
-          "EditorSurface - editorMouseUp: setPosition ("
-          ++ string_of_int(line + 1)
-          ++ ", "
-          ++ string_of_int(col)
-          ++ ")"
-        );
-        Vim.Cursor.setPosition(line + 1, col);
+    let matchingPairIndex =
+      switch (matchingPairs) {
+      | None => None
+      | Some(v) =>
+        if (Index.toInt0(v.startPos.line) == i) {
+          Some(Index.toInt0(v.startPos.character));
+        } else if (Index.toInt0(v.endPos.line) == i) {
+          Some(Index.toInt0(v.endPos.character));
+        } else {
+          None;
+        }
       };
+
+    let tokenColors2 =
+      switch (
+        SyntaxHighlighting.getTokensForLine(
+          state.syntaxHighlighting,
+          bufferId,
+          i,
+        )
+      ) {
+      | [] => []
+      | v => v
+      };
+
+    let colorizer =
+      BufferLineColorizer.create(
+        ZedBundled.length(line),
+        state.theme,
+        tokenColors2,
+        selection,
+        defaultBackground,
+        theme.editorSelectionBackground,
+        matchingPairIndex,
+        searchHighlightRanges,
+      );
+
+    BufferViewTokenizer.tokenize(
+      ~startIndex,
+      ~endIndex,
+      line,
+      IndentationSettings.default,
+      colorizer,
+    );
+  };
+
+  let style =
+    Style.[
+      backgroundColor(theme.editorBackground),
+      color(theme.editorForeground),
+      flexGrow(1),
+    ];
+
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    GlobalContext.current().notifyEditorSizeChanged(
+      ~editorGroupId,
+      ~width,
+      ~height,
+      (),
+    );
+  };
+
+  let bufferPixelWidth =
+    layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
+
+  let bufferViewStyle =
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      width(int_of_float(bufferPixelWidth)),
+      bottom(0),
+      overflow(`Hidden),
+    ];
+
+  let minimapPixelWidth =
+    layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
+  let minimapViewStyle =
+    Style.[
+      position(`Absolute),
+      overflow(`Hidden),
+      top(0),
+      left(int_of_float(bufferPixelWidth)),
+      width(minimapPixelWidth),
+      bottom(0),
+    ];
+
+  let verticalScrollBarStyle =
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(
+        int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
+      ),
+      width(Constants.default.scrollBarThickness),
+      backgroundColor(theme.scrollbarSliderBackground),
+      bottom(0),
+    ];
+
+  let horizontalScrollBarStyle =
+    Style.[
+      position(`Absolute),
+      bottom(0),
+      left(int_of_float(layout.lineNumberWidthInPixels)),
+      height(Constants.default.scrollBarThickness),
+      width(int_of_float(layout.bufferWidthInPixels)),
+    ];
+
+  let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    GlobalContext.current().editorScrollDelta(
+      ~deltaY=wheelEvent.deltaY *. (-50.),
+      (),
+    );
+  };
+
+  let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    GlobalContext.current().editorScrollDelta(
+      ~deltaY=wheelEvent.deltaY *. (-150.),
+      (),
+    );
+  };
+
+  let diagnostics =
+    switch (activeBuffer) {
+    | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
+    | None => IntMap.empty
     };
+  let ranges = Selection.getRanges(editor.selection, buffer);
+  let selectionRanges = Range.toHash(ranges);
 
-    (
-      hooks,
-      <View
-        style ref={node => setElementRef(Some(node))} onDimensionsChanged>
-        <View
-          style=bufferViewStyle
-          onMouseUp=editorMouseUp
-          onMouseWheel=scrollSurface>
-          <OpenGL
-            style=bufferViewStyle
-            render={(transform, _ctx) => {
-              let count = lineCount;
-              let height = metrics.pixelHeight;
-              let rowHeight = metrics.lineHeight;
-              let scrollY = editor.scrollY;
-
-              /* Draw background for cursor line */
-              Shapes.drawRect(
-                ~transform,
-                ~x=lineNumberWidth,
-                ~y=
-                  fontHeight
-                  *. float_of_int(
-                       Index.toZeroBasedInt(editor.cursorPosition.line),
-                     )
-                  -. editor.scrollY,
-                ~height=fontHeight,
-                ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
-                ~color=theme.editorLineHighlightBackground,
-                (),
-              );
-
-              /* Draw configured rulers */
-              let renderRuler = ruler =>
-                Shapes.drawRect(
-                  ~transform,
-                  ~x=fst(bufferPositionToPixel(0, ruler)),
-                  ~y=0.0,
-                  ~height=float_of_int(metrics.pixelHeight),
-                  ~width=float_of_int(1),
-                  ~color=theme.editorRulerForeground,
-                  (),
-                );
-
-              List.iter(renderRuler, rulers);
-
-              let renderUnderline =
-                  (~offset=0., ~color=Colors.black, r: Range.t) =>
-                {let halfOffset = offset /. 2.0;
-                 let line = Index.toZeroBasedInt(r.startPosition.line);
-                 let start = Index.toZeroBasedInt(r.startPosition.character);
-                 let endC = Index.toZeroBasedInt(r.endPosition.character);
-
-                 let text = Buffer.getLine(buffer, line);
-                 let (startOffset, _) =
-                   BufferViewTokenizer.getCharacterPositionAndWidth(
-                     ~indentation,
-                     ~viewOffset=leftVisibleColumn,
-                     text,
-                     start,
-                   );
-                 let (endOffset, _) =
-                   BufferViewTokenizer.getCharacterPositionAndWidth(
-                     ~indentation,
-                     ~viewOffset=leftVisibleColumn,
-                     text,
-                     endC,
-                   );
-
-                 Shapes.drawRect(
-                   ~transform,
-                   ~x=
-                     lineNumberWidth
-                     +. float_of_int(startOffset)
-                     *. fontWidth
-                     -. halfOffset,
-                   ~y=
-                     fontHeight
-                     *. float_of_int(
-                          Index.toZeroBasedInt(r.startPosition.line),
-                        )
-                     -. editor.scrollY
-                     -. halfOffset
-                     +. (fontHeight -. 2.),
-                   ~height=1.,
-                   ~width=
-                     offset
-                     +. max(float_of_int(endOffset - startOffset), 1.0)
-                     *. fontWidth,
-                   ~color,
-                   (),
-                 )};
-
-              let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
-                {let halfOffset = offset /. 2.0;
-                 let line = Index.toZeroBasedInt(r.startPosition.line);
-                 let start = Index.toZeroBasedInt(r.startPosition.character);
-                 let endC = Index.toZeroBasedInt(r.endPosition.character);
-
-                 let lines = Buffer.getNumberOfLines(buffer);
-                 if (line <= lines) {
-                   let text = Buffer.getLine(buffer, line);
-                   let (startOffset, _) =
-                     BufferViewTokenizer.getCharacterPositionAndWidth(
-                       ~indentation,
-                       ~viewOffset=leftVisibleColumn,
-                       text,
-                       start,
-                     );
-                   let (endOffset, _) =
-                     BufferViewTokenizer.getCharacterPositionAndWidth(
-                       ~indentation,
-                       ~viewOffset=leftVisibleColumn,
-                       text,
-                       endC,
-                     );
-
-                   Shapes.drawRect(
-                     ~transform,
-                     ~x=
-                       lineNumberWidth
-                       +. float_of_int(startOffset)
-                       *. fontWidth
-                       -. halfOffset,
-                     ~y=
-                       fontHeight
-                       *. float_of_int(
-                            Index.toZeroBasedInt(r.startPosition.line),
-                          )
-                       -. editor.scrollY
-                       -. halfOffset,
-                     ~height=fontHeight +. offset,
-                     ~width=
-                       offset
-                       +. max(float_of_int(endOffset - startOffset), 1.0)
-                       *. fontWidth,
-                     ~color,
-                     (),
-                   );
-                 }};
-
-              ImmediateList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height=float_of_int(height),
-                ~count,
-                ~render=
-                  (item, _offset) => {
-                    let renderDiagnostics = (d: Diagnostic.t) =>
-                      renderUnderline(~color=Colors.red, d.range);
-
-                    /* Draw error markers */
-                    switch (IntMap.find_opt(item, diagnostics)) {
-                    | None => ()
-                    | Some(v) => List.iter(renderDiagnostics, v)
-                    };
-
-                    switch (Hashtbl.find_opt(selectionRanges, item)) {
-                    | None => ()
-                    | Some(v) =>
-                      List.iter(
-                        renderRange(~color=theme.editorSelectionBackground),
-                        v,
-                      )
-                    };
-
-                    /* Draw match highlights */
-                    let matchColor = theme.editorSelectionBackground;
-                    switch (matchingPairs) {
-                    | None => ()
-                    | Some(v) =>
-                      renderRange(
-                        ~offset=0.0,
-                        ~color=matchColor,
-                        Range.createFromPositions(
-                          ~startPosition=v.startPos,
-                          ~endPosition=v.startPos,
-                          (),
-                        ),
-                      );
-                      renderRange(
-                        ~offset=0.0,
-                        ~color=matchColor,
-                        Range.createFromPositions(
-                          ~startPosition=v.endPos,
-                          ~endPosition=v.endPos,
-                          (),
-                        ),
-                      );
-                    };
-
-                    /* Draw search highlights */
-                    switch (IntMap.find_opt(item, searchHighlights)) {
-                    | None => ()
-                    | Some(v) =>
-                      List.iter(
-                        r =>
-                          renderRange(
-                            ~offset=2.0,
-                            ~color=theme.editorFindMatchBackground,
-                            r,
-                          ),
-                        v,
-                      )
-                    };
-                  },
-                (),
-              );
-
-              ImmediateList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height=float_of_int(height),
-                ~count,
-                ~render=
-                  (item, offset) => {
-                    let selectionRange =
-                      switch (Hashtbl.find_opt(selectionRanges, item)) {
-                      | None => None
-                      | Some(v) =>
-                        switch (List.length(v)) {
-                        | 0 => None
-                        | _ => Some(List.hd(v))
-                        }
-                      };
-                    let tokens =
-                      getTokensForLine(
-                        ~selection=selectionRange,
-                        leftVisibleColumn,
-                        leftVisibleColumn + layout.bufferWidthInCharacters,
-                        item,
-                      );
-
-                    let _ =
-                      renderTokens(
-                        fontFamily,
-                        fontSize,
-                        fontWidth,
-                        fontHeight,
-                        lineNumberWidth,
-                        theme,
-                        tokens,
-                        editor.scrollX,
-                        offset,
-                        transform,
-                        Configuration.getValue(
-                          c => c.editorRenderWhitespace,
-                          state.configuration,
-                        ),
-                      );
-                    ();
-                  },
-                (),
-              );
-
-              /* Draw background for line numbers */
-              if (showLineNumbers) {
-                Shapes.drawRect(
-                  ~transform,
-                  ~x=0.,
-                  ~y=0.,
-                  ~width=lineNumberWidth,
-                  ~height=float_of_int(height),
-                  ~color=theme.editorLineNumberBackground,
-                  (),
-                );
-
-                ImmediateList.render(
-                  ~scrollY,
-                  ~rowHeight,
-                  ~height=float_of_int(height),
-                  ~count,
-                  ~render=
-                    (item, offset) => {
-                      let _ =
-                        renderLineNumber(
-                          fontFamily,
-                          fontSize,
-                          fontWidth,
-                          item,
-                          lineNumberWidth,
-                          theme,
-                          Configuration.getValue(
-                            c => c.editorLineNumbers,
-                            state.configuration,
-                          ),
-                          cursorLine,
-                          offset,
-                          transform,
-                        );
-                      ();
-                    },
-                  (),
-                );
-              };
-
-              let renderIndentGuides =
-                Configuration.getValue(
-                  c => c.editorRenderIndentGuides,
-                  state.configuration,
-                );
-              let showActive =
-                Configuration.getValue(
-                  c => c.editorHighlightActiveIndentGuide,
-                  state.configuration,
-                );
-
-              if (renderIndentGuides) {
-                switch (activeBuffer) {
-                | None => ()
-                | Some(buffer) =>
-                  IndentLineRenderer.render(
-                    ~transform,
-                    ~buffer,
-                    ~startLine=topVisibleLine - 1,
-                    ~endLine=bottomVisibleLine + 1,
-                    ~lineHeight=fontHeight,
-                    ~fontWidth,
-                    ~cursorLine=
-                      Index.toZeroBasedInt(editor.cursorPosition.line),
-                    ~theme=state.theme,
-                    ~indentationSettings=indentation,
-                    ~bufferPositionToPixel,
-                    ~showActive,
-                    (),
-                  )
-                };
-              };
-            }}
-          />
-          <Opacity opacity=cursorOpacity> <View style=cursorStyle /> </Opacity>
-          <View style=horizontalScrollBarStyle>
-            <EditorHorizontalScrollbar
-              editor
-              state
-              metrics
-              width={int_of_float(layout.bufferWidthInPixels)}
-            />
-          </View>
-        </View>
-        minimapLayout
-        <HoverView x=cursorPixelX y=cursorPixelY state />
-        <CompletionsView
-          x=cursorPixelX
-          y=cursorPixelY
-          lineHeight=fontHeight
-          state
-        />
-        <View style=verticalScrollBarStyle>
-          <EditorVerticalScrollbar
+  let minimapLayout =
+    isMinimapShown
+      ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
+          <Minimap
             state
             editor
-            metrics
-            width={Constants.default.scrollBarThickness}
+            width={layout.minimapWidthInPixels}
             height={metrics.pixelHeight}
+            count=lineCount
             diagnostics
+            metrics
+            getTokensForLine={getTokensForLine(
+              0,
+              layout.bufferWidthInCharacters,
+            )}
+            selection=selectionRanges
           />
         </View>
-      </View>,
-    );
-  });
+      : React.empty;
+
+  /* TODO: Selection! */
+  /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    };*/
+
+  let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
+    switch (elementRef) {
+    | None => ()
+    | Some(r) =>
+      let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
+
+      let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
+      let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
+
+      let (line, col) =
+        Editor.pixelPositionToLineColumn(
+          editor,
+          metrics,
+          relX -. lineNumberWidth,
+          relY,
+        );
+      Log.debug(() =>
+        "EditorSurface - editorMouseUp: topVisibleLine is "
+        ++ string_of_int(topVisibleLine)
+      );
+      Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
+      Log.debug(() =>
+        "EditorSurface - editorMouseUp: setPosition ("
+        ++ string_of_int(line + 1)
+        ++ ", "
+        ++ string_of_int(col)
+        ++ ")"
+      );
+      Vim.Cursor.setPosition(line + 1, col);
+    };
+  };
+
+  <View style ref={node => setElementRef(Some(node))} onDimensionsChanged>
+    <View
+      style=bufferViewStyle onMouseUp=editorMouseUp onMouseWheel=scrollSurface>
+      <OpenGL
+        style=bufferViewStyle
+        render={(transform, _ctx) => {
+          let count = lineCount;
+          let height = metrics.pixelHeight;
+          let rowHeight = metrics.lineHeight;
+          let scrollY = editor.scrollY;
+
+          /* Draw background for cursor line */
+          Shapes.drawRect(
+            ~transform,
+            ~x=lineNumberWidth,
+            ~y=
+              fontHeight
+              *. float_of_int(
+                   Index.toZeroBasedInt(editor.cursorPosition.line),
+                 )
+              -. editor.scrollY,
+            ~height=fontHeight,
+            ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
+            ~color=theme.editorLineHighlightBackground,
+            (),
+          );
+
+          /* Draw configured rulers */
+          let renderRuler = ruler =>
+            Shapes.drawRect(
+              ~transform,
+              ~x=fst(bufferPositionToPixel(0, ruler)),
+              ~y=0.0,
+              ~height=float_of_int(metrics.pixelHeight),
+              ~width=float_of_int(1),
+              ~color=theme.editorRulerForeground,
+              (),
+            );
+
+          List.iter(renderRuler, rulers);
+
+          let renderUnderline = (~offset=0., ~color=Colors.black, r: Range.t) =>
+            {let halfOffset = offset /. 2.0;
+             let line = Index.toZeroBasedInt(r.startPosition.line);
+             let start = Index.toZeroBasedInt(r.startPosition.character);
+             let endC = Index.toZeroBasedInt(r.endPosition.character);
+
+             let text = Buffer.getLine(buffer, line);
+             let (startOffset, _) =
+               BufferViewTokenizer.getCharacterPositionAndWidth(
+                 ~indentation,
+                 ~viewOffset=leftVisibleColumn,
+                 text,
+                 start,
+               );
+             let (endOffset, _) =
+               BufferViewTokenizer.getCharacterPositionAndWidth(
+                 ~indentation,
+                 ~viewOffset=leftVisibleColumn,
+                 text,
+                 endC,
+               );
+
+             Shapes.drawRect(
+               ~transform,
+               ~x=
+                 lineNumberWidth
+                 +. float_of_int(startOffset)
+                 *. fontWidth
+                 -. halfOffset,
+               ~y=
+                 fontHeight
+                 *. float_of_int(Index.toZeroBasedInt(r.startPosition.line))
+                 -. editor.scrollY
+                 -. halfOffset
+                 +. (fontHeight -. 2.),
+               ~height=1.,
+               ~width=
+                 offset
+                 +. max(float_of_int(endOffset - startOffset), 1.0)
+                 *. fontWidth,
+               ~color,
+               (),
+             )};
+
+          let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
+            {let halfOffset = offset /. 2.0;
+             let line = Index.toZeroBasedInt(r.startPosition.line);
+             let start = Index.toZeroBasedInt(r.startPosition.character);
+             let endC = Index.toZeroBasedInt(r.endPosition.character);
+
+             let lines = Buffer.getNumberOfLines(buffer);
+             if (line <= lines) {
+               let text = Buffer.getLine(buffer, line);
+               let (startOffset, _) =
+                 BufferViewTokenizer.getCharacterPositionAndWidth(
+                   ~indentation,
+                   ~viewOffset=leftVisibleColumn,
+                   text,
+                   start,
+                 );
+               let (endOffset, _) =
+                 BufferViewTokenizer.getCharacterPositionAndWidth(
+                   ~indentation,
+                   ~viewOffset=leftVisibleColumn,
+                   text,
+                   endC,
+                 );
+
+               Shapes.drawRect(
+                 ~transform,
+                 ~x=
+                   lineNumberWidth
+                   +. float_of_int(startOffset)
+                   *. fontWidth
+                   -. halfOffset,
+                 ~y=
+                   fontHeight
+                   *. float_of_int(
+                        Index.toZeroBasedInt(r.startPosition.line),
+                      )
+                   -. editor.scrollY
+                   -. halfOffset,
+                 ~height=fontHeight +. offset,
+                 ~width=
+                   offset
+                   +. max(float_of_int(endOffset - startOffset), 1.0)
+                   *. fontWidth,
+                 ~color,
+                 (),
+               );
+             }};
+
+          ImmediateList.render(
+            ~scrollY,
+            ~rowHeight,
+            ~height=float_of_int(height),
+            ~count,
+            ~render=
+              (item, _offset) => {
+                let renderDiagnostics = (d: Diagnostic.t) =>
+                  renderUnderline(~color=Colors.red, d.range);
+
+                /* Draw error markers */
+                switch (IntMap.find_opt(item, diagnostics)) {
+                | None => ()
+                | Some(v) => List.iter(renderDiagnostics, v)
+                };
+
+                switch (Hashtbl.find_opt(selectionRanges, item)) {
+                | None => ()
+                | Some(v) =>
+                  List.iter(
+                    renderRange(~color=theme.editorSelectionBackground),
+                    v,
+                  )
+                };
+
+                /* Draw match highlights */
+                let matchColor = theme.editorSelectionBackground;
+                switch (matchingPairs) {
+                | None => ()
+                | Some(v) =>
+                  renderRange(
+                    ~offset=0.0,
+                    ~color=matchColor,
+                    Range.createFromPositions(
+                      ~startPosition=v.startPos,
+                      ~endPosition=v.startPos,
+                      (),
+                    ),
+                  );
+                  renderRange(
+                    ~offset=0.0,
+                    ~color=matchColor,
+                    Range.createFromPositions(
+                      ~startPosition=v.endPos,
+                      ~endPosition=v.endPos,
+                      (),
+                    ),
+                  );
+                };
+
+                /* Draw search highlights */
+                switch (IntMap.find_opt(item, searchHighlights)) {
+                | None => ()
+                | Some(v) =>
+                  List.iter(
+                    r =>
+                      renderRange(
+                        ~offset=2.0,
+                        ~color=theme.editorFindMatchBackground,
+                        r,
+                      ),
+                    v,
+                  )
+                };
+              },
+            (),
+          );
+
+          ImmediateList.render(
+            ~scrollY,
+            ~rowHeight,
+            ~height=float_of_int(height),
+            ~count,
+            ~render=
+              (item, offset) => {
+                let selectionRange =
+                  switch (Hashtbl.find_opt(selectionRanges, item)) {
+                  | None => None
+                  | Some(v) =>
+                    switch (List.length(v)) {
+                    | 0 => None
+                    | _ => Some(List.hd(v))
+                    }
+                  };
+                let tokens =
+                  getTokensForLine(
+                    ~selection=selectionRange,
+                    leftVisibleColumn,
+                    leftVisibleColumn + layout.bufferWidthInCharacters,
+                    item,
+                  );
+
+                let _ =
+                  renderTokens(
+                    fontFamily,
+                    fontSize,
+                    fontWidth,
+                    fontHeight,
+                    lineNumberWidth,
+                    theme,
+                    tokens,
+                    editor.scrollX,
+                    offset,
+                    transform,
+                    Configuration.getValue(
+                      c => c.editorRenderWhitespace,
+                      state.configuration,
+                    ),
+                  );
+                ();
+              },
+            (),
+          );
+
+          /* Draw background for line numbers */
+          if (showLineNumbers) {
+            Shapes.drawRect(
+              ~transform,
+              ~x=0.,
+              ~y=0.,
+              ~width=lineNumberWidth,
+              ~height=float_of_int(height),
+              ~color=theme.editorLineNumberBackground,
+              (),
+            );
+
+            ImmediateList.render(
+              ~scrollY,
+              ~rowHeight,
+              ~height=float_of_int(height),
+              ~count,
+              ~render=
+                (item, offset) => {
+                  let _ =
+                    renderLineNumber(
+                      fontFamily,
+                      fontSize,
+                      fontWidth,
+                      item,
+                      lineNumberWidth,
+                      theme,
+                      Configuration.getValue(
+                        c => c.editorLineNumbers,
+                        state.configuration,
+                      ),
+                      cursorLine,
+                      offset,
+                      transform,
+                    );
+                  ();
+                },
+              (),
+            );
+          };
+
+          let renderIndentGuides =
+            Configuration.getValue(
+              c => c.editorRenderIndentGuides,
+              state.configuration,
+            );
+          let showActive =
+            Configuration.getValue(
+              c => c.editorHighlightActiveIndentGuide,
+              state.configuration,
+            );
+
+          if (renderIndentGuides) {
+            switch (activeBuffer) {
+            | None => ()
+            | Some(buffer) =>
+              IndentLineRenderer.render(
+                ~transform,
+                ~buffer,
+                ~startLine=topVisibleLine - 1,
+                ~endLine=bottomVisibleLine + 1,
+                ~lineHeight=fontHeight,
+                ~fontWidth,
+                ~cursorLine=Index.toZeroBasedInt(editor.cursorPosition.line),
+                ~theme=state.theme,
+                ~indentationSettings=indentation,
+                ~bufferPositionToPixel,
+                ~showActive,
+                (),
+              )
+            };
+          };
+        }}
+      />
+      <Opacity opacity=cursorOpacity> <View style=cursorStyle /> </Opacity>
+      <View style=horizontalScrollBarStyle>
+        <EditorHorizontalScrollbar
+          editor
+          state
+          metrics
+          width={int_of_float(layout.bufferWidthInPixels)}
+        />
+      </View>
+    </View>
+    minimapLayout
+    <HoverView x=cursorPixelX y=cursorPixelY state />
+    <CompletionsView
+      x=cursorPixelX
+      y=cursorPixelY
+      lineHeight=fontHeight
+      state
+    />
+    <View style=verticalScrollBarStyle>
+      <EditorVerticalScrollbar
+        state
+        editor
+        metrics
+        width={Constants.default.scrollBarThickness}
+        height={metrics.pixelHeight}
+        diagnostics
+      />
+    </View>
+  </View>;
+};

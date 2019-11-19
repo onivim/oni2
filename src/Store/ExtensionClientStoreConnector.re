@@ -62,6 +62,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onOutput = msg => {
+    Core.Log.info("[ExtHost]: " ++ msg);
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
@@ -70,34 +74,25 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
+      ~onOutput,
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t) =>
-    switch (bm.filePath, bm.fileType) {
-    | (Some(fp), Some(_)) =>
+  let _bufferMetadataToModelAddedDelta =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+    switch (bm.filePath, fileType) {
+    | (Some(fp), Some(ft)) =>
+      Core.Log.info("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
-          ~modeId="css",
+          ~modeId=ft,
           ~isDirty=true,
           (),
         ),
-      )
-    /* TODO: filetype detection */
-    | (Some(fp), _) =>
-      Some(
-        Protocol.ModelAddedDelta.create(
-          ~uri=Core.Uri.fromPath(fp),
-          ~versionId=bm.version,
-          ~lines=[""],
-          ~modeId="css",
-          ~isDirty=true,
-          (),
-        ),
-      )
+      );
     | _ => None
     };
 
@@ -123,7 +118,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let sendBufferEnterEffect =
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (_bufferMetadataToModelAddedDelta(bm)) {
+      switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
       | Some(v) =>
         activateFileType(fileType);
@@ -180,9 +175,9 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm, ft) => (
+    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
-        sendBufferEnterEffect(bm, ft),
+        sendBufferEnterEffect(bm, fileTypeOpt),
       )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)

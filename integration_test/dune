@@ -11,7 +11,6 @@
            EditorFontValidTest
            FontSizeChangeTest
            InputIgnoreTest
-           LanguageReasonMerlinDiagnosticsTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
@@ -48,7 +47,6 @@
         EditorFontValidTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
-        LanguageReasonMerlinDiagnosticsTest.exe
         QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe

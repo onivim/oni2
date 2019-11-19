@@ -5,7 +5,13 @@ open Helpers;
 
 open Revery.UI;
 
-let rootNode = (new node)();
+let rootNode =
+  React.RenderedElement.{
+    node: (new node)(),
+    insertNode: React.insertNode,
+    deleteNode: React.deleteNode,
+    moveNode: React.moveNode,
+  };
 
 let setup = () => ();
 

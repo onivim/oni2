@@ -11,8 +11,6 @@ open Oni_Model;
 open WindowManager;
 open WindowTree;
 
-let component = React.component("EditorSplits");
-
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
@@ -65,48 +63,49 @@ let renderTree = (state, tree) => {
       tree,
     );
 
-  List.map(
-    (item: WindowTreeLayout.t) =>
-      <View
-        style=Style.[
-          position(`Absolute),
-          top(item.y),
-          left(item.x),
-          width(item.width),
-          height(item.height),
-        ]>
-        <EditorGroupView
-          state
-          windowId={item.split.id}
-          editorGroupId={item.split.editorGroupId}
-        />
-      </View>,
-    items,
-  );
+  items
+  |> List.map((item: WindowTreeLayout.t) =>
+       <View
+         style=Style.[
+           position(`Absolute),
+           top(item.y),
+           left(item.x),
+           width(item.width),
+           height(item.height),
+         ]>
+         <EditorGroupView
+           state
+           windowId={item.split.id}
+           editorGroupId={item.split.editorGroupId}
+         />
+       </View>
+     )
+  |> React.listToElement;
 };
-let createElement = (~children as _, ~state: State.t, ()) =>
-  component(hooks => {
-    let {State.windowManager, _} = state;
-    let {windowTree, leftDock, rightDock, _} = windowManager;
 
-    let children = renderTree(state, windowTree);
+let make = (~state: State.t, ()) => {
+  let {State.windowManager, _} = state;
+  let {windowTree, leftDock, rightDock, _} = windowManager;
 
-    let splits =
-      renderDock(leftDock, state)
-      @ [
-        <View
-          onDimensionsChanged={dim =>
-            GlobalContext.current().notifyWindowTreeSizeChanged(
-              ~width=dim.width,
-              ~height=dim.height,
-              (),
-            )
-          }
-          style=Style.[flexGrow(1)]>
-          ...children
-        </View>,
-      ]
-      @ renderDock(rightDock, state);
+  let children = renderTree(state, windowTree);
 
-    (hooks, <View style=splitContainer> ...splits </View>);
-  });
+  let splits =
+    renderDock(leftDock, state)
+    @ [
+      <View
+        onDimensionsChanged={dim =>
+          GlobalContext.current().notifyWindowTreeSizeChanged(
+            ~width=dim.width,
+            ~height=dim.height,
+            (),
+          )
+        }
+        style=Style.[flexGrow(1)]>
+        children
+      </View>,
+    ]
+    @ renderDock(rightDock, state)
+    |> React.listToElement;
+
+  <View style=splitContainer> splits </View>;
+};

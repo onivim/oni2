@@ -15,8 +15,6 @@ type tabInfo = {
   modified: bool,
 };
 
-let component = React.component("Tabs");
-
 let toTab =
     (
       theme,
@@ -97,85 +95,80 @@ let postRender = _ => {
 
 let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 
-let createElement =
-    (
-      ~children as _,
-      ~theme,
-      ~tabs: list(tabInfo),
-      ~activeEditorId: option(int),
-      ~mode: Vim.Mode.t,
-      ~uiFont,
-      ~active,
-      (),
-    ) =>
-  component(hooks => {
-    let (actualScrollLeft, setScrollLeft, hooks) = Hooks.state(0, hooks);
-    let (outerRef: option(Revery_UI.node), setOuterRef, hooks) =
-      Hooks.state(None, hooks);
+let%component make =
+              (
+                ~theme,
+                ~tabs: list(tabInfo),
+                ~activeEditorId: option(int),
+                ~mode: Vim.Mode.t,
+                ~uiFont,
+                ~active,
+                (),
+              ) => {
+  let%hook (actualScrollLeft, setScrollLeft) = Hooks.state(0);
+  let%hook (outerRef: option(Revery_UI.node), setOuterRef) =
+    Hooks.state(None);
 
-    let activeEditorChanged = () => {
-      switch (findIndex(t => Some(t.editorId) == activeEditorId, tabs)) {
-      | Some(index) =>
-        let f = () => {
-          switch (measureChildOffset(index, outerRef)) {
-          | Some((offset, width)) =>
-            let viewportWidth = measureWidth(outerRef);
-            if (offset < actualScrollLeft) {
-              // out of view to the left, so align with left edge
-              setScrollLeft(
-                offset,
-              );
-            } else if (offset + width > actualScrollLeft + viewportWidth) {
-              // out of view to the right, so align with right edge
-              setScrollLeft(
-                offset - viewportWidth + width,
-              );
-            };
-          | None => ()
+  let activeEditorChanged = () => {
+    switch (findIndex(t => Some(t.editorId) == activeEditorId, tabs)) {
+    | Some(index) =>
+      let f = () => {
+        switch (measureChildOffset(index, outerRef)) {
+        | Some((offset, width)) =>
+          let viewportWidth = measureWidth(outerRef);
+          if (offset < actualScrollLeft) {
+            // out of view to the left, so align with left edge
+            setScrollLeft(_ =>
+              offset
+            );
+          } else if (offset + width > actualScrollLeft + viewportWidth) {
+            // out of view to the right, so align with right edge
+            setScrollLeft(_ =>
+              offset - viewportWidth + width
+            );
           };
+        | None => ()
         };
-        isPendingRender(outerRef) ? schedulePostRender(f) : f();
-      | None => ()
       };
-      None;
+      isPendingRender(outerRef) ? schedulePostRender(f) : f();
+    | None => ()
     };
+    None;
+  };
 
-    let hooks =
-      Hooks.effect(If((!=), activeEditorId), activeEditorChanged, hooks);
+  let%hook () = Hooks.effect(If((!=), activeEditorId), activeEditorChanged);
 
-    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-      let maxOffset = measureOverflow(outerRef);
+  let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    let maxOffset = measureOverflow(outerRef);
 
+    setScrollLeft(actualScrollLeft => {
       let newScrollLeft =
         actualScrollLeft - int_of_float(wheelEvent.deltaY *. 25.);
 
-      let clampedScrollLeft = newScrollLeft |> max(0) |> min(maxOffset);
+      newScrollLeft |> max(0) |> min(maxOffset);
+    });
+  };
 
-      setScrollLeft(clampedScrollLeft);
-    };
+  let tabCount = List.length(tabs);
+  let tabComponents =
+    tabs
+    |> List.mapi(
+         toTab(theme, mode, uiFont, tabCount, active, activeEditorId),
+       )
+    |> React.listToElement;
 
-    let tabCount = List.length(tabs);
-    let tabComponents =
-      List.mapi(
-        toTab(theme, mode, uiFont, tabCount, active, activeEditorId),
-        tabs,
-      );
+  let outerStyle = Style.[flexDirection(`Row), overflow(`Scroll)];
 
-    let outerStyle = Style.[flexDirection(`Row), overflow(`Scroll)];
+  let innerViewTransform =
+    Transform.[TranslateX((-1.) *. float_of_int(actualScrollLeft))];
 
-    let innerViewTransform =
-      Transform.[TranslateX((-1.) *. float_of_int(actualScrollLeft))];
+  let innerStyle =
+    Style.[flexDirection(`Row), transform(innerViewTransform)];
 
-    let innerStyle =
-      Style.[flexDirection(`Row), transform(innerViewTransform)];
-
-    (
-      hooks,
-      <View
-        onMouseWheel=scroll ref={r => setOuterRef(Some(r))} style=outerStyle>
-        <View onDimensionsChanged=postRender style=innerStyle>
-          ...tabComponents
-        </View>
-      </View>,
-    );
-  });
+  <View
+    onMouseWheel=scroll ref={r => setOuterRef(_ => Some(r))} style=outerStyle>
+    <View onDimensionsChanged=postRender style=innerStyle>
+      tabComponents
+    </View>
+  </View>;
+};

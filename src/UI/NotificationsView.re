@@ -18,7 +18,6 @@ let notificationWidth = Core.Constants.default.notificationWidth;
 
 let notification =
     (
-      ~children as _,
       ~onClose,
       ~background,
       ~foreground,
@@ -126,7 +125,7 @@ let notification =
   </AllowPointer>;
 };
 
-let createElement = (~children as _, ~state: State.t, ()) => {
+let make = (~state: State.t, ()) => {
   let uiFont = state.uiFont.fontFile;
 
   let {
@@ -182,7 +181,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
            theme={state.theme}
            configuration={state.configuration}
          />;
-       });
+       })
+    |> React.listToElement;
 
-  <Positioned bottom=50 right=50> ...notifications </Positioned>;
+  <Positioned bottom=50 right=50> notifications </Positioned>;
 };

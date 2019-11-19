@@ -1,6 +1,8 @@
 open Oni_Core;
 open TestFramework;
 
+module Time = Revery_Core.Time;
+
 describe("Job", ({describe, _}) =>
   describe("tick", ({test, _}) =>
     test("does multiple iterations of work", ({expect}) => {
@@ -12,12 +14,7 @@ describe("Job", ({describe, _}) =>
         };
 
       let job =
-        Job.create(
-          ~f,
-          ~initialCompletedWork=0,
-          ~budget=Milliseconds(8.),
-          (),
-        );
+        Job.create(~f, ~initialCompletedWork=0, ~budget=Time.ms(8), ());
 
       // Tick will run the job for 8 ms.
       // That should be plenty of time to do a few iterations of [f]...
