@@ -80,7 +80,7 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (s, m, _a) =>
-      Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+      Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | " ++ Yojson.Safe.to_string(`List(_a)));
       Ok(None);
     };
   };
