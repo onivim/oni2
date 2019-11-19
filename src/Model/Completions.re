@@ -28,17 +28,15 @@ let isActive = (v: t) => {
 };
 
 let endCompletions = (_v: t) => {
-  print_endline ("-- end completions");
   default;
 };
 
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
-  print_endline ("-- start completions");
   {
-  ...v,
-  meet: Some(meet),
-  completions: default.completions,
-  filteredCompletions: default.filteredCompletions,
+    ...v,
+    meet: Some(meet),
+    completions: default.completions,
+    filteredCompletions: default.filteredCompletions,
   };
 };
 
@@ -51,11 +49,8 @@ let getBestCompletion = (v: t) => {
 let _applyFilter =
     (filter: option(string), items: list(Actions.completionItem)) => {
   switch (filter) {
-  | None => 
-    print_endline ("Filter is: " ++ "NONE");
-    items
+  | None => items
   | Some(filter) =>
-    print_endline ("Filter is: " ++ filter);
     let re = Str.regexp_string(filter);
     let ret =
       List.filter(
@@ -72,13 +67,12 @@ let _applyFilter =
 };
 
 let filter = (filter: string, v: t) => {
-  print_endline ("-- set filter:" ++ filter);
   {
-  ...v,
-  filter: Some(filter),
-  filteredCompletions:
-    _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
-    };
+    ...v,
+    filter: Some(filter),
+    filteredCompletions:
+      _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+  };
 };
 
 let addItems = (items: list(Actions.completionItem), v: t) => {
