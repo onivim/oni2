@@ -21,9 +21,9 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   runEffects();
 
   /* Wait for quickmenu 'isLoading' to be true */
-  wait(~name="Quickmenu is loading is true", (state: State.t) =>
+  wait(~name="Quickmenu is open", (state: State.t) =>
     switch (state.quickmenu) {
-    | Some({filterProgress: InProgress(_), _}) => true
+    | Some(_) => true
     | _ => false
     }
   );
