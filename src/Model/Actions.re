@@ -30,6 +30,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | ExtensionActivated(string)
   | KeyBindingsSet(Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload

@@ -80,6 +80,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     Core.Log.info("[ExtHost]: " ++ msg);
   };
 
+  let onDidActivateExtension = id => {
+    dispatch(Model.Actions.ExtensionActivated(id));
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
@@ -88,6 +92,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
+      ~onDidActivateExtension,
       ~onRegisterSuggestProvider,
       ~onOutput,
       setup,
@@ -210,8 +215,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   };
 
   let checkCompletionsEffect = (completionMeet, state) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="exthost.checkCompletions", dispatch => {
+    Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
         (buf, fileType) => {

@@ -230,3 +230,27 @@ let ranges = indices =>
     indices,
   )
   |> List.rev;
+
+// TODO: Remove after 4.08 upgrade
+module Option = {
+  let map = f =>
+    fun
+    | Some(x) => Some(f(x))
+    | None => None;
+
+  let value = (~default) =>
+    fun
+    | Some(x) => x
+    | None => default;
+
+  let some = x => Some(x);
+
+  let bind = f =>
+    fun
+    | Some(x) =>
+      switch (f(x)) {
+      | None => None
+      | Some(_) as v => v
+      }
+    | None => None;
+};

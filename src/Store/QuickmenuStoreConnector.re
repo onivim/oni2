@@ -5,6 +5,7 @@
  */
 
 module Core = Oni_Core;
+module Option = Oni_Core.Utility.Option;
 module Model = Oni_Model;
 
 module Actions = Model.Actions;
@@ -12,21 +13,6 @@ module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module Utility = Core.Utility;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
-
-// TODO: Remove after 4.08 upgrade
-module Option = {
-  let map = f =>
-    fun
-    | Some(x) => Some(f(x))
-    | None => None;
-
-  let value = (~default) =>
-    fun
-    | Some(x) => x
-    | None => default;
-
-  let some = x => Some(x);
-};
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun

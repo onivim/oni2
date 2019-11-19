@@ -62,8 +62,11 @@ let start =
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);
-    | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
+    | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ...args]) =>
       let id = Protocol.PackedString.parse(v);
+      prerr_endline(
+        "ACTIVATION: " ++ Yojson.Safe.to_string(`List([v, ...args])),
+      );
       onDidActivateExtension(id);
       Ok(None);
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
