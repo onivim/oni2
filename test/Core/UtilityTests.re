@@ -22,7 +22,7 @@ describe("dropLast", ({test, _}) => {
   );
 
   test("one", ({expect}) =>
-    expect.list(dropLast([1])).toEqual([])
+    expect.list(dropLast([1])).toEqual([42])
   );
 
   test("many", ({expect}) => {
