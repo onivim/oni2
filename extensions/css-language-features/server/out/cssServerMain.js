@@ -61,6 +61,8 @@ connection.onInitialize((params) => {
     }
     const snippetSupport = !!getClientCapability('textDocument.completion.completionItem.snippetSupport', false);
     scopedSettingsSupport = !!getClientCapability('workspace.configuration', false);
+    // ONIVIM HACK: Need to support configuration settings!
+    scopedSettingsSupport = false; 
     foldingRangeLimit = getClientCapability('textDocument.foldingRange.rangeLimit', Number.MAX_VALUE);
     languageServices.css = vscode_css_languageservice_1.getCSSLanguageService({ customDataProviders });
     languageServices.scss = vscode_css_languageservice_1.getSCSSLanguageService({ customDataProviders });
