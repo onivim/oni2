@@ -56,12 +56,24 @@ let init = app => {
 
   let update = UI.start(w, <Root state=currentState^ />);
 
+  let isDirty = ref(false);
   let onStateChanged = state => {
     currentState := state;
+    isDirty := true;
     GlobalContext.set({...GlobalContext.current(), state});
-
     update(<Root state />);
   };
+
+  let _ = Tick.interval((_dt) => {
+
+
+    if (isDirty^) {
+    let state = currentState^;
+    GlobalContext.set({...GlobalContext.current(), state});
+    update(<Root state />);
+    isDirty := false;
+    }
+    }, Time.seconds(0));
 
   let getScaleFactor = () => {
     Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
