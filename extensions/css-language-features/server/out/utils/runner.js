@@ -47,5 +47,5 @@ function runSafe(func, errorVal, errorMessage, token) {
 exports.runSafe = runSafe;
 function cancelValue() {
     return new vscode_languageserver_1.ResponseError(vscode_languageserver_1.ErrorCodes.RequestCancelled, 'Request cancelled');
-}
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/utils/runner.js.map
+}
+//# sourceMappingURL=runner.js.map

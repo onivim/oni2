@@ -69,5 +69,5 @@ function getLanguageModelCache(maxEntries, cleanupIntervalTimeInSec, parse) {
         }
     };
 }
-exports.getLanguageModelCache = getLanguageModelCache;
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/languageModelCache.js.map
+exports.getLanguageModelCache = getLanguageModelCache;
+//# sourceMappingURL=languageModelCache.js.map

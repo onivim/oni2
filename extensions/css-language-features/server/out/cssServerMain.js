@@ -12,11 +12,6 @@ const pathCompletion_1 = require("./pathCompletion");
 const runner_1 = require("./utils/runner");
 const documentContext_1 = require("./utils/documentContext");
 const customData_1 = require("./customData");
-
-const log = (msg) => {
-	require("fs").appendFileSync("/Users/bryphe/LOGGY.txt", "DATA");
-};
-
 // Create a connection for the server.
 const connection = vscode_languageserver_1.createConnection();
 console.log = connection.console.log.bind(connection.console);
@@ -44,7 +39,6 @@ const languageServices = {};
 // After the server has started the client sends an initialize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilities.
 connection.onInitialize((params) => {
-console.log("cssServer: Initialized - params: " + JSON.stringify(params));
     workspaceFolders = params.workspaceFolders;
     if (!Array.isArray(workspaceFolders)) {
         workspaceFolders = [];
@@ -133,7 +127,6 @@ const validationDelayMs = 500;
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-    console.log("ON DID CHANGE CONTENT");
     triggerValidation(change.document);
 });
 // a document has closed: clear all diagnostics
@@ -159,12 +152,9 @@ function validateTextDocument(textDocument) {
     const settingsPromise = getDocumentSettings(textDocument);
     settingsPromise.then(settings => {
         const stylesheet = stylesheets.get(textDocument);
-	console.log("SETTINGS: " + JSON.stringify(settings));
-        const diagnostics = getLanguageService(textDocument).doValidation(textDocument, stylesheet, {});
-	console.log("DIAGNOSTICS: " + JSON.stringify(diagnostics));
+        const diagnostics = getLanguageService(textDocument).doValidation(textDocument, stylesheet, settings);
         // Send the computed diagnostics to VSCode.
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
-	console.log("URI: " + JSON.stringify(textDocument.uri));
     }, e => {
         connection.console.error(runner_1.formatError(`Error while validating ${textDocument.uri}`, e));
     });
@@ -310,5 +300,5 @@ connection.onRequest('$/textDocument/selectionRanges', async (params, token) => 
     }, null, `Error while computing selection ranges for ${params.textDocument.uri}`, token);
 });
 // Listen on the connection
-connection.listen();
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/cssServerMain.js.map
+connection.listen();
+//# sourceMappingURL=cssServerMain.js.map

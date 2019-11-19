@@ -33,5 +33,5 @@ function getDocumentContext(documentUri, workspaceFolders) {
         },
     };
 }
-exports.getDocumentContext = getDocumentContext;
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/utils/documentContext.js.map
+exports.getDocumentContext = getDocumentContext;
+//# sourceMappingURL=documentContext.js.map

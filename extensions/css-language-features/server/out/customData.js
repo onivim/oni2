@@ -45,5 +45,5 @@ function parseCSSData(source) {
         pseudoClasses: rawData.pseudoClasses || [],
         pseudoElements: rawData.pseudoElements || []
     };
-}
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/customData.js.map
+}
+//# sourceMappingURL=customData.js.map

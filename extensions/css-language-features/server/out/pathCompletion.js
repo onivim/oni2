@@ -188,5 +188,5 @@ function shiftRange(range, startOffset, endOffset) {
     const start = shiftPosition(range.start, startOffset);
     const end = shiftPosition(range.end, endOffset);
     return vscode_languageserver_types_1.Range.create(start, end);
-}
-//# sourceMappingURL=https://ticino.blob.core.windows.net/sourcemaps/0e4914e21e8fd9d3eb22a61780ef74692ab25bdc/extensions/css-language-features/server/out/pathCompletion.js.map
+}
+//# sourceMappingURL=pathCompletion.js.map
