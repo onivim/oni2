@@ -21,7 +21,8 @@ module Styles = {
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
       width(Constants.menuWidth - 10),
       color(Colors.white),
-      fontFamily(font), ];
+      fontFamily(font),
+    ];
 
   let menuItem =
     Style.[
@@ -30,7 +31,8 @@ module Styles = {
       cursor(Revery.MouseCursors.pointer),
     ];
 
-  let label = (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
+  let label =
+      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
