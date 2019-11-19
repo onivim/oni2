@@ -171,40 +171,60 @@ let start = (extensions, setup: Core.Setup.t) => {
   let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
     List.map(suggestionItemToCompletionItem, suggestions);
 
+  let getAndDispatchCompletions =
+      (~fileType, ~uri, ~completionMeet, ~position, ()) => {
+    let providers =
+      LanguageFeatures.getSuggestProviders(fileType, languageFeatures^);
+
+    providers
+    |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+         let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
+           ExtHostClient.getCompletions(
+             provider.id,
+             uri,
+             position,
+             extHostClient,
+           );
+
+         let _ =
+           Lwt.bind(
+             completionPromise,
+             completions => {
+               switch (completions) {
+               | None => Core.Log.info("No completions for provider")
+               | Some(completions) =>
+                 let completionItems =
+                   suggestionsToCompletionItems(completions);
+                 dispatch(
+                   Model.Actions.CompletionAddItems(
+                     completionMeet,
+                     completionItems,
+                   ),
+                 );
+               };
+               Lwt.return();
+             },
+           );
+         ();
+       });
+  };
+
   let checkCompletionsEffect = (completionMeet, state) =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.checkCompletions", dispatch => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
-        (buf, _fileType) => {
+        (buf, fileType) => {
           let uri = Model.Buffer.getUri(buf);
-          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
-            ExtHostClient.getCompletions(
-              0,
-              uri,
-              Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ()),
-              extHostClient,
-            );
-
-          let _ =
-            Lwt.bind(
-              completionPromise,
-              completions => {
-                switch (completions) {
-                | None => Core.Log.info("No completions for provider")
-                | Some(completions) =>
-                  let completionItems =
-                    suggestionsToCompletionItems(completions);
-                  dispatch(
-                    Model.Actions.CompletionSetItems(
-                      completionMeet,
-                      completionItems,
-                    ),
-                  );
-                };
-                Lwt.return();
-              },
-            );
+          let position =
+            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+          getAndDispatchCompletions(
+            ~fileType,
+            ~uri,
+            ~completionMeet,
+            ~position,
+            (),
+          );
           ();
         },
       )

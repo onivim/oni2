@@ -21,7 +21,7 @@ type t =
   | BufferSetModified(int, bool)
   | Command(string)
   | CompletionStart(completionMeet)
-  | CompletionSetItems(completionMeet, list(completionItem))
+  | CompletionAddItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
