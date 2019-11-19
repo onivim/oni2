@@ -9,7 +9,10 @@
   },
   "icon": "icons/css.png",
   "activationEvents": [
-    "*"
+    "onLanguage:css",
+    "onLanguage:less",
+    "onLanguage:scss",
+    "onCommand:_css.applyCodeAction"
   ],
   "main": "./client/out/cssMain",
   "enableProposedApi": true,
