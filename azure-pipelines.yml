@@ -13,7 +13,7 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3____________________________________________________________________/i
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
@@ -80,7 +80,7 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3____________________________________________________________________/i
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
