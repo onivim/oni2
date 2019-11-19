@@ -30,8 +30,7 @@ module Styles = {
       cursor(Revery.MouseCursors.pointer),
     ];
 
-  let label =
-      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
+  let label = (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
