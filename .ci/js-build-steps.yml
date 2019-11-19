@@ -1,17 +1,15 @@
 # Cross-platform set of build steps for building esy projects	
 
 steps:	
-  - script: node install.js	
-    displayName: 'js deps: npm install'	
-    workingDirectory: node
-  - script: npm run build	
-    displayName: 'js deps: npm build'	
-    workingDirectory: node
+#  - script: node install-node-deps.js	
+#    displayName: 'js deps: install'	
+#  - script: npm run build	
+#    #displayName: 'js deps: npm build'	
+#    workingDirectory: node
 #  - script: npm run test	
 #    displayName: 'textmate: npm test'	
 #    workingDirectory: src/textmate_service	
-  - script: rimraf node/node_modules
-    displayName: 'js deps: remove developer node_modules'	
-  - script: node install.js --prod	
-    workingDirectory: node
+#  - script: rimraf node/node_modules
+#    displayName: 'js deps: remove developer node_modules'	
+  - script: node install-node-deps.js --prod	
     displayName: 'js deps: npm install --prod'
