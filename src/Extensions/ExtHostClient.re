@@ -62,7 +62,7 @@ let start =
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
       onShowMessage(s);
       Ok(None);
-    | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ...args]) =>
+    | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
