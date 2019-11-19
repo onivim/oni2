@@ -108,24 +108,26 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
-  let activateFileType = (fileType: option(string)) => switch(fileType) {
-  | None => ()
-  | Some(ft) => switch (Hashtbl.find_opt(activatedFileTypes, ft)) {
-  | None => 
-    print_endline ("ACTIVATING: " ++ ft);
-    ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient)
-    Hashtbl.add(activatedFileTypes, ft, true)
-  | Some(_) => ();
-    }
+  let activateFileType = (fileType: option(string)) =>
+    switch (fileType) {
+    | None => ()
+    | Some(ft) =>
+      switch (Hashtbl.find_opt(activatedFileTypes, ft)) {
+      | None =>
+        ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
+        Hashtbl.add(activatedFileTypes, ft, true);
+      | Some(_) => ()
+      }
     };
 
-  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+  let sendBufferEnterEffect =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm)) {
       | None => ()
-      | Some(v) => 
+      | Some(v) =>
         activateFileType(fileType);
-        ExtHostClient.addDocument(v, extHostClient)
+        ExtHostClient.addDocument(v, extHostClient);
       }
     );
 
@@ -178,7 +180,10 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm, ft) => (state, sendBufferEnterEffect(bm, ft))
+    | Model.Actions.BufferEnter(bm, ft) => (
+        state,
+        sendBufferEnterEffect(bm, ft),
+      )
     | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };

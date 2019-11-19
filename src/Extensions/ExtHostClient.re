@@ -41,11 +41,8 @@ let start =
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
-    | ("MainThreadOutputService", "$append", args) =>
-      print_endline("OUTPUT: " ++ Yojson.Safe.to_string(`List(args)));
-      Ok(None);
+    | ("MainThreadOutputService", "$append", args) => Ok(None)
     | ("MainThreadDiagnostics", "$changeMany", args) =>
-      print_endline("DIAGS: " ++ Yojson.Safe.to_string(`List(args)));
       In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
       Ok(None);
     | ("MainThreadDiagnostics", "$clear", args) =>
@@ -61,7 +58,11 @@ let start =
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
-    | ("MainThreadExtensionService", "$onExtensionActivationFailed", [v, ..._]) =>
+    | (
+        "MainThreadExtensionService",
+        "$onExtensionActivationFailed",
+        [v, ..._],
+      ) =>
       let id = Protocol.PackedString.parse(v);
       onExtensionActivationFailed(id);
       Ok(None);
