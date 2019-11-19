@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core.Utility;
 
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
@@ -59,17 +60,13 @@ let getActiveBuffer = (state: State.t) => {
 };
 
 let withActiveBufferAndFileType = (state: State.t, f) => {
-  let buffer = getActiveBuffer(state);
-
-  switch (buffer) {
-  | None => ()
-  | Some(buf) =>
-    let fileType = Buffer.getFileType(buf);
-    switch (fileType) {
-    | None => ()
-    | Some(ft) => f(buf, ft)
-    };
-  };
+  let () =
+    getActiveBuffer(state)
+    |> Option.bind(buf =>
+         Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
+       )
+    |> Option.iter(((buf, ft)) => f(buf, ft));
+  ();
 };
 
 let getActiveConfigurationValue = (state: State.t, f) => {

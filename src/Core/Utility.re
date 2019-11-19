@@ -243,6 +243,11 @@ module Option = {
     | Some(x) => x
     | None => default;
 
+  let iter = f =>
+    fun
+    | Some(x) => f(x)
+    | None => ();
+
   let some = x => Some(x);
 
   let bind = f =>
