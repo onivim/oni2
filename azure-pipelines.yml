@@ -40,9 +40,9 @@ jobs:
 
   steps:
   - bash: |
-      STDIR = $STAGING_DIRECTORY
+      STDIR=$STAGING_DIRECTORY
       if [ "$AGENT_OS" == "Windows_NT" ]; then
-        STDIR=$( cygpath --mixed ---absolute "$STAGING_DIRECTORY")
+        STDIR=$( cygpath --mixed --absolute "$STAGING_DIRECTORY")
       fi
       echo "STDIR: $STDIR"
   - template: .ci/use-node.yml
@@ -117,9 +117,9 @@ jobs:
 
   steps:
   - bash: |
-      STDIR = $STAGING_DIRECTORY
+      STDIR=$STAGING_DIRECTORY
       if [ "$AGENT_OS" == "Windows_NT" ]; then
-        STDIR=$( cygpath --mixed ---absolute "$STAGING_DIRECTORY")
+        STDIR=$( cygpath --mixed --absolute "$STAGING_DIRECTORY")
       fi
       echo "STDIR: $STDIR"
     displayName: "test"
