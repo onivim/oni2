@@ -369,7 +369,7 @@ module IncomingNotifications = {
         // TODO: Finish parsing
         Some(
           LF.SuggestProvider.create(
-            ~selector=DocumentSelector.create("oni-dev"),
+            ~selector=DocumentSelector.create("css"),
             id,
           ),
         )

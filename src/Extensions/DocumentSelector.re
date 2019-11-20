@@ -11,7 +11,15 @@ type item = {language: string};
 type t = list(item);
 
 let matches = (v: t, fileType: string) => {
-  List.exists(item => item.language == fileType, v);
+  List.exists(item => String.equal(item.language, fileType), v);
+};
+
+let toString = (v: t) => {
+  "DocumentSelector("++ 
+  List.fold_left((prev, curr) => {
+    prev ++ "," ++ curr.language
+    }, "", v)
+    ++")";
 };
 
 let create = language => {

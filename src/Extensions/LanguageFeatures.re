@@ -25,8 +25,11 @@ type t = {suggestProviders: list(SuggestProvider.t)};
 let create = () => {suggestProviders: []};
 
 let getSuggestProviders = (fileType: string, v: t) => {
-  let filter = (sp: SuggestProvider.t) =>
+  print_endline("COUNT: " ++ string_of_int(List.length(v.suggestProviders)));
+  let filter = (sp: SuggestProvider.t) => {
+    print_endline ("Check selector: " ++ DocumentSelector.toString(sp.selector));
     DocumentSelector.matches(sp.selector, fileType);
+    };
   List.filter(filter, v.suggestProviders);
 };
 
