@@ -112,6 +112,7 @@ jobs:
   steps:
   - bash: |
       echo "hi"
+    displayName: "test"
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
