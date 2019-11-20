@@ -39,12 +39,6 @@ jobs:
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
-  - bash: |
-      STDIR=$STAGING_DIRECTORY
-      if [ "$AGENT_OS" == "Windows_NT" ]; then
-        STDIR=$( cygpath --mixed --absolute "$STAGING_DIRECTORY")
-      fi
-      echo "STDIR: $STDIR"
   - template: .ci/use-node.yml
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
@@ -116,13 +110,6 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
-  - bash: |
-      STDIR=$STAGING_DIRECTORY
-      if [ "$AGENT_OS" == "Windows_NT" ]; then
-        STDIR=$( cygpath --mixed --absolute "$STAGING_DIRECTORY")
-      fi
-      echo "STDIR: $STDIR"
-    displayName: "test"
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
