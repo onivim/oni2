@@ -110,7 +110,8 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
-  - bash: echo "hi"
+  - bash: |
+      echo "hi"
     displayName: "test"
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
@@ -130,7 +131,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: ValidateLinuxRelease
- displayName: "Linux: Validate Release"
+  displayName: "Linux: Validate Release"
   dependsOn: CentOS
   pool:
     vmImage: 'Ubuntu 16.04'
