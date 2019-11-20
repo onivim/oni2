@@ -5,6 +5,7 @@
  */
 
 module CompletionKind = CompletionKind;
+module LanguageFeatures = LanguageFeatures;
 module ExtensionContributions = ExtensionContributions;
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;
