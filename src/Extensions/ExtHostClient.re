@@ -36,15 +36,17 @@ let start =
       ~onTelemetry=defaultOneArgCallback,
       ~onOutput=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
+      ~onRegisterSuggestProvider=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
-    | ("MainThreadOutputService", "$register", _) =>
-      // TODO: No-op
-      Ok(None)
+    | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
+      In.LanguageFeatures.parseRegisterSuggestSupport(args)
+      |> apply(onRegisterSuggestProvider);
+      Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
@@ -118,6 +120,25 @@ let updateDocument = (uri, modelChange, dirty, v) => {
     v.transport,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
   );
+};
+
+let getCompletions = (id, uri, position, v) => {
+  let f = (json: Yojson.Safe.t) => {
+    In.LanguageFeatures.parseProvideCompletionsResponse(json);
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      v.transport,
+      Out.LanguageFeatures.provideCompletionItems(id, uri, position),
+      f,
+    );
+  promise;
+};
+
+let send = (client, v) => {
+  let _ = ExtHostTransport.send(client.transport, v);
+  ();
 };
 
 let pump = (v: t) => ExtHostTransport.pump(v.transport);
