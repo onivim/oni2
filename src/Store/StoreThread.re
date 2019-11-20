@@ -133,6 +133,8 @@ let start =
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
 
+  let (searchUpdater, searchStream) = SearchStoreConnector.start();
+
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
@@ -167,6 +169,7 @@ let start =
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
+          searchUpdater,
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
@@ -247,6 +250,8 @@ let start =
     Isolinear.Stream.connect(dispatch, quickmenuStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, lifecycleStream);
   let _: Isolinear.Stream.unsubscribeFunc =
