@@ -110,8 +110,12 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
-  - bash: |
-      echo "hi"
+  - bash: |	
+      STDIR = $STAGING_DIRECTORY	
+      if [ "$AGENT_OS" == "Windows_NT" ]; then	
+        STDIR=$( cygpath --mixed ---absolute "$STAGING_DIRECTORY")	
+      fi	
+      echo "STDIR: $STDIR"
     displayName: "test"
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
