@@ -125,7 +125,7 @@ jobs:
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
-  # - template: .ci/publish-build-cache.yml
+# - template: .ci/publish-build-cache.yml
 
 - job: ValidateLinuxRelease
   displayName: "Linux: Validate Release"
