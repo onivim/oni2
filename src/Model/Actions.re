@@ -21,7 +21,7 @@ type t =
   | BufferSetModified(int, bool)
   | Command(string)
   | CompletionStart(completionMeet)
-  | CompletionSetItems(completionMeet, list(completionItem))
+  | CompletionAddItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -30,6 +30,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | ExtensionActivated(string)
   | KeyBindingsSet(Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload

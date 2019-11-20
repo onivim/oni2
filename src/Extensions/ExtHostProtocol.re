@@ -102,6 +102,21 @@ module ModelAddedDelta = {
   };
 };
 
+module OneBasedPosition = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition = (p: Position.t) => {
+    lineNumber: p.line |> Index.toOneBasedInt,
+    column: p.character |> Index.toOneBasedInt,
+  };
+
+  let ofInt1 = (~lineNumber, ~column, ()) => {lineNumber, column};
+};
+
 module OneBasedRange = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t = {
@@ -284,6 +299,27 @@ module DiagnosticsCollection = {
   };
 };
 
+module SuggestionItem = {
+  [@deriving yojson({strict: false})]
+  type t = {
+    label: string,
+    insertText: string,
+  };
+};
+
+module Suggestions = {
+  [@deriving yojson({strict: false})]
+  type t = list(SuggestionItem.t);
+};
+
+module CancellationToken = {
+  type t = Yojson.Safe.t;
+
+  let none = `Null;
+};
+
+module LF = LanguageFeatures;
+
 module IncomingNotifications = {
   module StatusBar = {
     let parseSetEntry = args => {
@@ -313,6 +349,33 @@ module IncomingNotifications = {
 
     let parseChangeMany = args =>
       DiagnosticsCollection.of_yojson(`List(args));
+  };
+
+  module LanguageFeatures = {
+    let parseProvideCompletionsResponse = json => {
+      switch (Yojson.Safe.Util.member("suggestions", json)) {
+      | `List(_) as items =>
+        switch (Suggestions.of_yojson(items)) {
+        | Ok(v) => Some(v)
+        | Error(_) => None
+        }
+      | _ => None
+      };
+    };
+
+    let parseRegisterSuggestSupport = json => {
+      switch (json) {
+      | [`Int(id), _documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+        // TODO: Finish parsing
+        Some(
+          LF.SuggestProvider.create(
+            ~selector=DocumentSelector.create("oni-dev"),
+            id,
+          ),
+        )
+      | _ => None
+      };
+    };
   };
 };
 
@@ -403,6 +466,24 @@ module OutgoingNotifications = {
         `List([`String(event)]),
       );
     };
+  };
+
+  module LanguageFeatures = {
+    let provideCompletionItems =
+        (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
+      // TODO: CompletionContext ?
+      // TODO: CancelationToken
+      _buildNotification(
+        "ExtHostLanguageFeatures",
+        "$provideCompletionItems",
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `Assoc([]),
+          CancellationToken.none,
+        ]),
+      );
   };
 
   module Workspace = {

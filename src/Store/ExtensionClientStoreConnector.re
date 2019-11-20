@@ -18,6 +18,12 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onExtHostClosed = () => Core.Log.info("ext host closed");
 
+  // Keep track of the available language features
+  // TODO: Keep track of this in the application state / store,
+  // if needed more globally?
+
+  let languageFeatures = ref(LanguageFeatures.create());
+
   let extensionInfo =
     extensions
     |> List.map(ext =>
@@ -62,8 +68,20 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
+    Core.Log.info(
+      "Registered suggest provider with ID: " ++ string_of_int(sp.id),
+    );
+    languageFeatures :=
+      LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
+  };
+
   let onOutput = msg => {
     Core.Log.info("[ExtHost]: " ++ msg);
+  };
+
+  let onDidActivateExtension = id => {
+    dispatch(Model.Actions.ExtensionActivated(id));
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -74,6 +92,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onStatusBarSetEntry,
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
+      ~onDidActivateExtension,
+      ~onRegisterSuggestProvider,
       ~onOutput,
       setup,
     );
@@ -120,7 +140,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
-      | Some(v) =>
+      | Some((v: Protocol.ModelAddedDelta.t)) =>
         activateFileType(fileType);
         ExtHostClient.addDocument(v, extHostClient);
       }
@@ -158,6 +178,77 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
+  let suggestionItemToCompletionItem:
+    Protocol.SuggestionItem.t => Model.Actions.completionItem =
+    suggestion => {
+      {
+        completionLabel: suggestion.label,
+        completionKind: CompletionKind.Text,
+        completionDetail: None,
+      };
+    };
+
+  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
+    List.map(suggestionItemToCompletionItem, suggestions);
+
+  let getAndDispatchCompletions =
+      (~fileType, ~uri, ~completionMeet, ~position, ()) => {
+    let providers =
+      LanguageFeatures.getSuggestProviders(fileType, languageFeatures^);
+
+    providers
+    |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+         let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
+           ExtHostClient.getCompletions(
+             provider.id,
+             uri,
+             position,
+             extHostClient,
+           );
+
+         let _ =
+           Lwt.bind(
+             completionPromise,
+             completions => {
+               switch (completions) {
+               | None => Core.Log.info("No completions for provider")
+               | Some(completions) =>
+                 let completionItems =
+                   suggestionsToCompletionItems(completions);
+                 dispatch(
+                   Model.Actions.CompletionAddItems(
+                     completionMeet,
+                     completionItems,
+                   ),
+                 );
+               };
+               Lwt.return();
+             },
+           );
+         ();
+       });
+  };
+
+  let checkCompletionsEffect = (completionMeet, state) =>
+    Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
+      Model.Selectors.withActiveBufferAndFileType(
+        state,
+        (buf, fileType) => {
+          let uri = Model.Buffer.getUri(buf);
+          let position =
+            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+          getAndDispatchCompletions(
+            ~fileType,
+            ~uri,
+            ~completionMeet,
+            ~position,
+            (),
+          );
+          ();
+        },
+      )
+    });
+
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.registerQuitCleanup", dispatch =>
@@ -174,6 +265,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
+      )
+    | Model.Actions.CompletionStart(completionMeet) => (
+        state,
+        checkCompletionsEffect(completionMeet, state),
       )
     | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,

@@ -12,20 +12,19 @@ jobs:
     vmImage: 'macOS 10.13'
 
   variables:
-    STAGING_DIRECTORY: /Users/vsts/STAGING
-    STAGING_DIRECTORY_UNIX: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /Users/vsts/.esy/3____________________________________________________________________/i
-    ESY__CACHE_SOURCE_TARBALL_PATH: /Users/vsts/.esy/source/i
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
+    ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libpng ragel
-  # - template: .ci/restore-build-cache.yml
+  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
-  # - template: .ci/publish-build-cache.yml
+  - template: .ci/publish-build-cache.yml
 
 - job: Linux
   displayName: 'Linux - Ubuntu 16.04'
@@ -34,8 +33,7 @@ jobs:
     vmImage: 'Ubuntu 16.04'
 
   variables:
-    STAGING_DIRECTORY: /home/vsts/STAGING
-    STAGING_DIRECTORY_UNIX: $(Build.StagingDirectory)
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
@@ -51,8 +49,7 @@ jobs:
       platform: linux
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
-  # Failing with latest build
-  # - template: .ci/publish-build-cache.yml
+  - template: .ci/publish-build-cache.yml
 
 - job: CentOS
   displayName: 'Linux - CentOS - Docker Image'
@@ -61,8 +58,7 @@ jobs:
     vmImage: 'Ubuntu 16.04'
 
   variables:
-    STAGING_DIRECTORY: /home/vsts/STAGING
-    STAGING_DIRECTORY_UNIX: $(Build.StagingDirectory)
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
@@ -83,17 +79,16 @@ jobs:
     vmImage: 'macOS 10.13'
 
   variables:
-    STAGING_DIRECTORY: /Users/vsts/STAGING
-    STAGING_DIRECTORY_UNIX: /Users/vsts/STAGING
-    ESY__CACHE_INSTALL_PATH: /Users/vsts/.esy/3____________________________________________________________________/i
-    ESY__CACHE_SOURCE_TARBALL_PATH: /Users/vsts/.esy/source/i
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
+    ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libpng ragel
-  # - template: .ci/restore-build-cache.yml
+  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
@@ -101,7 +96,7 @@ jobs:
   - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-osx.yml
-  # - template: .ci/publish-build-cache.yml
+  - template: .ci/publish-build-cache.yml
 
 - job: Windows
   timeoutInMinutes: 0
@@ -109,8 +104,7 @@ jobs:
     vmImage: 'vs2017-win2016'
 
   variables:
-    STAGING_DIRECTORY: C:\Users\VssAdministrator\STAGING
-    STAGING_DIRECTORY_UNIX: /C/Users/VssAdministrator/STAGING
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3_/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy

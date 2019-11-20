@@ -32,11 +32,12 @@ let endCompletions = (_v: t) => {
 };
 
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
-  ...v,
-  meet: Some(meet),
-  filter: None,
-  completions: default.completions,
-  filteredCompletions: default.filteredCompletions,
+  {
+    ...v,
+    meet: Some(meet),
+    completions: default.completions,
+    filteredCompletions: default.filteredCompletions,
+  };
 };
 
 let getMeet = (v: t) => v.meet;
@@ -66,16 +67,22 @@ let _applyFilter =
 };
 
 let filter = (filter: string, v: t) => {
-  ...v,
-  filter: Some(filter),
-  filteredCompletions:
-    _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+  {
+    ...v,
+    filter: Some(filter),
+    filteredCompletions:
+      _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+  };
 };
 
-let setItems = (items: list(Actions.completionItem), v: t) => {
-  ...v,
-  completions: items,
-  filteredCompletions: _applyFilter(v.filter, items) |> Utility.firstk(5),
+let addItems = (items: list(Actions.completionItem), v: t) => {
+  let newItems = List.concat([items, v.completions]);
+  {
+    ...v,
+    completions: newItems,
+    filteredCompletions:
+      _applyFilter(v.filter, newItems) |> Utility.firstk(5),
+  };
 };
 
 let reduce = (v: t, action: Actions.t) => {
@@ -84,7 +91,7 @@ let reduce = (v: t, action: Actions.t) => {
     | Actions.ChangeMode(mode) when mode != Vim.Types.Insert =>
       endCompletions(v)
     | Actions.CompletionStart(meet) => startCompletions(meet, v)
-    | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
+    | Actions.CompletionAddItems(_meet, items) => addItems(items, v)
     | Actions.CompletionBaseChanged(base) => filter(base, v)
     | Actions.CompletionEnd => endCompletions(v)
     | _ => v
