@@ -26,6 +26,7 @@ type t = {
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
+  extensions: Extensions.t,
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
@@ -62,6 +63,7 @@ let create: unit => t =
         ~measuredHeight=1.,
         (),
       ),
+    extensions: Extensions.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.empty,

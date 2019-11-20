@@ -33,7 +33,6 @@ let%component make =
     Hooks.effect(
       If((!=), isActive),
       () => {
-        Printf.printf("-- %b\n%!", isActive);
         dispatch(isActive ? Resume : Pause);
         None;
       },

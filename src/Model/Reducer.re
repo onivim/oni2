@@ -16,6 +16,7 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: Buffers.reduce(s.buffers, a),
         completions: Completions.reduce(s.completions, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
+        extensions: Extensions.reduce(a, s.extensions),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
