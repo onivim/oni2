@@ -37,6 +37,7 @@ module FilterJob = FilterJob;
 module Notification = Notification;
 module Notifications = Notifications;
 module Reducer = Reducer;
+module Search = Search;
 module SearchHighlights = SearchHighlights;
 module Selection = Selection;
 module Selectors = Selectors;
