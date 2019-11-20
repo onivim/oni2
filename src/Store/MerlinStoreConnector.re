@@ -106,7 +106,7 @@ let start = () => {
             let cb = completions => {
               let modelCompletions =
                 MerlinProtocolConverter.toModelCompletions(completions);
-              dispatch(CompletionSetItems(meet, modelCompletions));
+              dispatch(CompletionAddItems(meet, modelCompletions));
               ();
               // TODO: Show completion UI
             };
