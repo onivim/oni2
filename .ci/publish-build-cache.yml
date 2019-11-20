@@ -10,7 +10,7 @@ steps:
       pwd
       STDIR=$STAGING_DIRECTORY
       if [ "$AGENT_OS" == "Windows_NT" ]; then
-        STDIR=$( cygpath --mixed --absolute "$STAGING_DIRECTORY")
+        STDIR=$( cygpath --unix --absolute "$STAGING_DIRECTORY")
       fi
       echo "STDIR: $STDIR"
       tar -czf "$STDIR/esy-cache.tar" .
