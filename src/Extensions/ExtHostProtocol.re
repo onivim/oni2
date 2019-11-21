@@ -301,12 +301,6 @@ module Suggestions = {
   type t = list(SuggestionItem.t);
 };
 
-module CancellationToken = {
-  type t = Yojson.Safe.t;
-
-  let none = `Null;
-};
-
 module LF = LanguageFeatures;
 
 module IncomingNotifications = {
@@ -470,7 +464,6 @@ module OutgoingNotifications = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           `Assoc([]),
-          CancellationToken.none,
         ]),
       );
   };
