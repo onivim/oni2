@@ -683,6 +683,20 @@ let start =
       };
     });
 
+  let undoEffect =
+    Isolinear.Effect.create(~name="vim.undo", () => {
+      Vim.input("<esc>");
+      Vim.input("<esc>");
+      Vim.input("u");
+    });
+
+  let redoEffect =
+    Isolinear.Effect.create(~name="vim.redo", () => {
+      Vim.input("<esc>");
+      Vim.input("<esc>");
+      Vim.input("<c-r>");
+    });
+
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Model.Actions.ConfigurationSet(configuration) => (
@@ -697,7 +711,8 @@ let start =
         state,
         applyCompletion(state),
       )
-
+    | Model.Actions.Command("undo") => (state, undoEffect)
+    | Model.Actions.Command("redo") => (state, redoEffect)
     | Model.Actions.ListFocusUp
     | Model.Actions.ListFocusDown
     | Model.Actions.ListFocus(_) =>
