@@ -49,6 +49,7 @@ let start =
       |> apply(onRegisterSuggestProvider);
       Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
+      prerr_endline("APPEND: " ++ msg);
       onOutput(msg);
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
@@ -58,9 +59,11 @@ let start =
       In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
       Ok(None);
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
+      prerr_endline("PUBLICLOG: " ++ Yojson.Safe.to_string(json));
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
+      prerr_endline("SHOW MESSAGE: " ++ s);
       onShowMessage(s);
       Ok(None);
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
@@ -145,6 +148,7 @@ let getCompletions = (id, uri, position, v) => {
 
   let promise =
     ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
       v.transport,
       Out.LanguageFeatures.provideCompletionItems(id, uri, position),
       f,

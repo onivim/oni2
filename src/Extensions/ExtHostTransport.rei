@@ -40,7 +40,7 @@ let pump: t => unit;
 /*
   [send] sends a notification that does not require a response from the extension host
  */
-let send: (t, Yojson.Safe.t) => unit;
+let send: (~msgType: MessageType.t=?, t, Yojson.Safe.t) => unit;
 
 /*
   [request] sends a request that does require a response from the extension host.
@@ -49,7 +49,9 @@ let send: (t, Yojson.Safe.t) => unit;
   and, upon response, will run the [jsonToResponse] function to transform from JSON
   to a strongly typed value.
  */
-let request: (t, Yojson.Safe.t, Yojson.Safe.t => 'a) => Lwt.t('a);
+let request:
+  (~msgType: MessageType.t=?, t, Yojson.Safe.t, Yojson.Safe.t => 'a) =>
+  Lwt.t('a);
 
 /*
   [close] closes the extension host and disposes of the running process

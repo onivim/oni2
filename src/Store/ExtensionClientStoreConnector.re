@@ -196,7 +196,12 @@ let start = (extensions, setup: Core.Setup.t) => {
     let providers =
       LanguageFeatures.getSuggestProviders(fileType, languageFeatures^);
 
-    print_endline("FOUND " ++ string_of_int(List.length(providers)) ++ " suggest providers for filetype: " ++ fileType);
+    print_endline(
+      "FOUND "
+      ++ string_of_int(List.length(providers))
+      ++ " suggest providers for filetype: "
+      ++ fileType,
+    );
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {

@@ -22,8 +22,7 @@ let useProductionDeps = process.argv.filter((i) => i.indexOf("-prod") >= 0).leng
 
 console.log(`-- Production: ${useProductionDeps}`);
 
-let args = [yarnScript, "install"];
-let args2 = useProductionDeps ? [...args, "--production=true"] : args;
+let args = [yarnScript, "install", "--flat", "--production=true"];
 
 const packagesToInstall = [
     "node",
@@ -33,7 +32,7 @@ const packagesToInstall = [
 packagesToInstall.forEach((pkg) => {
     const fullPath = path.join(rootDir, pkg);
     console.log("Installing packages at: " + fullPath);
-    cp.spawnSync(nodeBinaryPath, args2, {stdio: "inherit", cwd: fullPath});
+    cp.spawnSync(nodeBinaryPath, args, {stdio: "inherit", cwd: fullPath});
 });
 
 console.log("Node dependencies successfully installed.");

@@ -15,11 +15,9 @@ let matches = (v: t, fileType: string) => {
 };
 
 let toString = (v: t) => {
-  "DocumentSelector("++ 
-  List.fold_left((prev, curr) => {
-    prev ++ "," ++ curr.language
-    }, "", v)
-    ++")";
+  "DocumentSelector("
+  ++ List.fold_left((prev, curr) => {prev ++ "," ++ curr.language}, "", v)
+  ++ ")";
 };
 
 let create = language => {

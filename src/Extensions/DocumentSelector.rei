@@ -16,4 +16,4 @@ let to_yojson: t => Yojson.Safe.t;
  */
 let create: string => t;
 
-let toString: t=> string;
+let toString: t => string;
