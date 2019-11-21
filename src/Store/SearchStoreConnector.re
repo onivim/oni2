@@ -47,3 +47,37 @@ let start = () => {
 
   (updater, stream);
 };
+
+// SUBSCRIPTIONS
+
+let subscriptions = ripgrep => {
+  let (stream, dispatch) = Isolinear.Stream.create();
+
+  let search = query => {
+    let directory = Rench.Environment.getWorkingDirectory();
+
+    SearchSubscription.create(
+      ~id="workspace-search",
+      ~query,
+      ~directory,
+      ~ripgrep,
+      ~onUpdate=
+        items => {
+          Printf.printf("-- adding %n items\n%!", List.length(items));
+          dispatch(SearchUpdate(items));
+        },
+      ~onCompleted=() => SearchComplete,
+    );
+  };
+
+  let updater = (state: Model.State.t) => {
+    switch (state.searchPane) {
+    | None
+    | Some({query: "", _}) => []
+
+    | Some({query, _}) => [search(query)]
+    };
+  };
+
+  (updater, stream);
+};

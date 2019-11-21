@@ -188,8 +188,16 @@ let start =
       type action = Model.Actions.t;
       let id = "quickmenu-subscription";
     });
-  let (quickmenuSubscriptionsUpdater, _menuSubscriptionsStream) =
+  let (quickmenuSubscriptionsUpdater, quickmenuSubscriptionsStream) =
     QuickmenuStoreConnector.subscriptions(ripgrep);
+
+  module SearchSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "search-subscription";
+    });
+  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
+    SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
@@ -204,6 +212,8 @@ let start =
     // TODO: Wire this up properly
     let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
     QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
+    let searchSubs = searchSubscriptionsUpdater(newState);
+    SearchSubscriptionRunner.run(~dispatch, searchSubs);
   };
 
   let runEffects = () => {
@@ -260,6 +270,10 @@ let start =
     Isolinear.Stream.connect(dispatch, hoverStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, merlinStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
