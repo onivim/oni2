@@ -49,7 +49,6 @@ let start =
       |> apply(onRegisterSuggestProvider);
       Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
-      prerr_endline("APPEND: " ++ msg);
       onOutput(msg);
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
@@ -59,11 +58,9 @@ let start =
       In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
       Ok(None);
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
-      prerr_endline("PUBLICLOG: " ++ Yojson.Safe.to_string(json));
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
     | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
-      prerr_endline("SHOW MESSAGE: " ++ s);
       onShowMessage(s);
       Ok(None);
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
@@ -86,12 +83,8 @@ let start =
       Ok(None);
     | (s, m, _a) =>
       Log.error(
-        "Unhandled message - "
-        ++ s
-        ++ ":"
-        ++ m
-        ++ " | "
-        ++ Yojson.Safe.to_string(`List(_a)),
+        Printf.sprintf("[ExtHostClient] Unhandled message - [%s:%s]: %s", s, m,
+        Yojson.Safe.to_string(`List(_a)))
       );
       Ok(None);
     };

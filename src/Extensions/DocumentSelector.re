@@ -16,7 +16,7 @@ let matches = (v: t, fileType: string) => {
 
 let toString = (v: t) => {
   "DocumentSelector("
-  ++ List.fold_left((prev, curr) => {prev ++ "," ++ curr.language}, "", v)
+  ++ (v |> List.map(x => x.language) |> String.concat(","))
   ++ ")";
 };
 

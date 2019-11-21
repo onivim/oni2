@@ -31,8 +31,7 @@ let fromMemory = (path: string) => {scheme: Scheme.memory, path};
 let fromPath = (path: string) => {scheme: Scheme.file, path};
 
 let toString = (uri: t) => {
-  //Scheme.toString(uri.scheme) ++ "://" ++ uri.path;
-  "file://" ++ uri.path;
+  Scheme.toString(uri.scheme) ++ "://" ++ uri.path;
 };
 
 let getScheme = (uri: t) => uri.scheme;
