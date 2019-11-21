@@ -8,15 +8,15 @@ const vscode_languageserver_1 = require("vscode-languageserver");
 function formatError(message, err) {
     if (err instanceof Error) {
         let error = err;
-        return `${message}: ${error.message}\n${error.stack}`;
+        return `DERP ${message}: ${error.message}\n${error.stack}`;
     }
     else if (typeof err === 'string') {
-        return `${message}: ${err}`;
+        return `DERP ${message}: ${err}`;
     }
     else if (err) {
-        return `${message}: ${err.toString()}`;
+        return `DERP ${message}: ${err.toString()}`;
     }
-    return message;
+    return "DER: " + message;
 }
 exports.formatError = formatError;
 function runSafe(func, errorVal, errorMessage, token) {
