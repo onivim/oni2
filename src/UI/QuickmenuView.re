@@ -19,7 +19,6 @@ module Styles = {
     Style.[
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      width(Constants.menuWidth - 10),
       color(Colors.white),
       fontFamily(font),
       fontSize(14),
@@ -28,7 +27,6 @@ module Styles = {
   let menuItem =
     Style.[
       fontSize(14),
-      width(Constants.menuWidth - 50),
       cursor(Revery.MouseCursors.pointer),
     ];
 
@@ -48,7 +46,7 @@ module Styles = {
     ];
 
   let progressBarTrack =
-    Style.[height(2), width(Constants.menuWidth), overflow(`Hidden)];
+    Style.[height(2), overflow(`Hidden)];
 
   let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
     Style.[
@@ -202,7 +200,6 @@ let make =
           <FlatList
             rowHeight=40
             height=Constants.menuHeight
-            width=Constants.menuWidth
             count={Array.length(items)}
             focused
             render=renderItem

@@ -36,12 +36,11 @@ module Constants = {
 };
 
 module Styles = {
-  let container = (~width as w, ~height as h) =>
+  let container = (~height as h) =>
     Style.[
       position(`Relative),
       top(0),
       left(0),
-      width(w),
       height(h),
       overflow(`Hidden),
     ];
@@ -106,7 +105,6 @@ type action =
 let%component make =
               (
                 ~height as menuHeight,
-                ~width,
                 ~rowHeight: int,
                 ~render as renderItem: renderFunction,
                 ~count: int,
@@ -192,7 +190,6 @@ let%component make =
 
   <View
     style={Styles.container(
-      ~width,
       ~height=min(menuHeight, count * rowHeight),
     )}
     onMouseWheel=scroll>
