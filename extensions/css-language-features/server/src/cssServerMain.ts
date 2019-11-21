@@ -80,6 +80,8 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 	}
 	const snippetSupport = !!getClientCapability('textDocument.completion.completionItem.snippetSupport', false);
 	scopedSettingsSupport = !!getClientCapability('workspace.configuration', false);
+	// TODO - ONIVIM - Support workspace configuration!
+	scopedSettingsSupport = false;
 	foldingRangeLimit = getClientCapability('textDocument.foldingRange.rangeLimit', Number.MAX_VALUE);
 
 	languageServices.css = getCSSLanguageService({ customDataProviders });

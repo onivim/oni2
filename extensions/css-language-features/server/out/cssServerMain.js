@@ -19,9 +19,6 @@ console.error = connection.console.error.bind(connection.console);
 process.on('unhandledRejection', (e) => {
     connection.console.error(runner_1.formatError(`Unhandled exception`, e));
 });
-const superLog = (msg) => require("fs").appendFileSync("/Users/bryphe/server.log", msg + "\n");
-superLog("yo");
-console.log("HELLO FROM CSS LANG");
 // Create a simple text document manager. The text document manager
 // supports full document sync only
 const documents = new vscode_languageserver_1.TextDocuments();
@@ -64,8 +61,8 @@ connection.onInitialize((params) => {
     }
     const snippetSupport = !!getClientCapability('textDocument.completion.completionItem.snippetSupport', false);
     scopedSettingsSupport = !!getClientCapability('workspace.configuration', false);
-    // ONIVIM HACK: Need to support configuration settings!
-    scopedSettingsSupport = false; 
+    // TODO - ONIVIM - Support workspace configuration!
+    scopedSettingsSupport = false;
     foldingRangeLimit = getClientCapability('textDocument.foldingRange.rangeLimit', Number.MAX_VALUE);
     languageServices.css = vscode_css_languageservice_1.getCSSLanguageService({ customDataProviders });
     languageServices.scss = vscode_css_languageservice_1.getSCSSLanguageService({ customDataProviders });
@@ -103,7 +100,6 @@ documents.onDidClose(e => {
     delete documentSettings[e.document.uri];
 });
 function getDocumentSettings(textDocument) {
-    superLog("getDocumentSettings");
     if (scopedSettingsSupport) {
         let promise = documentSettings[textDocument.uri];
         if (!promise) {
@@ -166,18 +162,11 @@ function validateTextDocument(textDocument) {
     });
 }
 connection.onCompletion((textDocumentPosition, token) => {
-    var textDocumentPosition = textDocumentPosition[0];
-    superLog("onCompletion: " + JSON.stringify(textDocumentPosition));
-    superLog("onCompletion - token: " + JSON.stringify(token));
-    superLog("onCompletion - textDocumentPosition.textDocument.uri: " + textDocumentPosition.textDocument.uri);
     return runner_1.runSafe(() => {
-	superLog("runSafe inner");
-        connection.console.log("TEXTDOCUMENTPOSITION: " + JSON.stringify(textDocumentPosition));
         const document = documents.get(textDocumentPosition.textDocument.uri);
         if (!document) {
             return null;
         }
-	
         const cssLS = getLanguageService(document);
         const pathCompletionList = {
             isIncomplete: false,
