@@ -43,6 +43,7 @@ module Styles = {
       left(0),
       height(h),
       overflow(`Hidden),
+      flexGrow(1),
     ];
 
   let slider =
@@ -104,13 +105,23 @@ type action =
 
 let%component make =
               (
-                ~height as menuHeight,
                 ~rowHeight: int,
+                ~initialRowsToRender=20,
                 ~render as renderItem: renderFunction,
                 ~count: int,
                 ~focused: option(int),
                 (),
               ) => {
+  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+
+  let menuHeight =
+    switch (outerRef) {
+    | Some(node) =>
+      let dimensions: Dimensions.t = node#measurements();
+      dimensions.height;
+    | None => rowHeight * initialRowsToRender
+    };
+
   let reducer = (action, actualScrollTop) =>
     switch (action) {
     | FocusedChanged =>
@@ -189,9 +200,8 @@ let%component make =
     |> React.listToElement;
 
   <View
-    style={Styles.container(
-      ~height=min(menuHeight, count * rowHeight),
-    )}
+    style={Styles.container(~height=min(menuHeight, count * rowHeight))}
+    ref={r => setOuterRef(Some(r))}
     onMouseWheel=scroll>
     <View
       style={Styles.viewport(~isScrollbarVisible=scrollbar == React.empty)}>

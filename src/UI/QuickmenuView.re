@@ -24,6 +24,12 @@ module Styles = {
       fontSize(14),
     ];
 
+  let dropdown =
+    Style.[
+      height(Constants.menuHeight),
+      overflow(`Hidden),
+    ];
+
   let menuItem =
     Style.[
       fontSize(14),
@@ -196,10 +202,9 @@ let make =
             cursorPosition
           />
         </View>
-        <View>
+        <View style=Styles.dropdown>
           <FlatList
             rowHeight=40
-            height=Constants.menuHeight
             count={Array.length(items)}
             focused
             render=renderItem
