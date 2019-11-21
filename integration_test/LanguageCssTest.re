@@ -1,3 +1,4 @@
+open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -13,7 +14,7 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
   Vim.command("new test.css");
 
   // Wait for the CSS filetype
-  /*wait(
+  wait(
       ~timeout=30.0,
       ~name="Validate we have a CSS filetype",
       (state: State.t) => {
@@ -27,24 +28,24 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
         | _ => false
         };
       },
-    );*/
+    );
 
   // Wait until the extension is activated
   // Give some time for the exthost to start
   wait(
     ~timeout=30.0,
     ~name="Validate the 'css-language-features' extension gets activated",
-    (_state: State.t)
-    /*List.exists(
+    (state: State.t) =>
+    List.exists(
         id => id == "css-language-features",
         state.extensions.activatedIds,
-      )*/
-    => true);
+      )
+    );
 
   // Enter some text
   Vim.input("i");
 
-  Vim.input("abc");
+  Vim.input("a");
 
   // Should get an error diagnostic
   wait(
@@ -59,6 +60,40 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
         let diags =
           Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
+      | _ => false
+      };
+    },
+  );
+
+ // Should've also gotten some completions...
+  wait(
+    ~timeout=30.0,
+    ~name=
+      "Validate we also got some completions",
+    (state: State.t) => {
+      Model.Completions.getCompletions(state.completions)
+      |> (comp) => List.length(comp) > 0;
+    },
+  );
+
+  // Finish input, clear diagnostics
+  Vim.input(" ");
+  Vim.input("{");
+  Vim.input("color:red");
+  Vim.input("}");
+
+  wait(
+    ~timeout=30.0,
+    ~name=
+      "Validate no diagnostics now",
+    (state: State.t) => {
+      let bufferOpt = Selectors.getActiveBuffer(state);
+
+      switch (bufferOpt) {
+      | Some(buffer) =>
+        let diags =
+          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        List.length(diags) == 0;
       | _ => false
       };
     },
