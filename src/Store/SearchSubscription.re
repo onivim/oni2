@@ -37,14 +37,25 @@ module Provider = {
         },
       );
 
-    Hashtbl.add(jobs, id, dispose);
+    Hashtbl.replace(jobs, id, (query, dispose));
   };
 
-  let update = (~id as _, ~params as _, ~dispatch as _) => (); // Nothing to update
+  let update = (~id, ~params, ~dispatch) => {
+    switch (Hashtbl.find_opt(jobs, id)) {
+    | Some((currentQuery, dispose)) =>
+      if (currentQuery != params.query) {
+        Log.info("Updating Search subscription " ++ id);
+        dispose();
+        start(~id, ~params, ~dispatch);
+      }
+
+    | None => Log.error("Tried to dispose non-existing Search subscription")
+    };
+  }
 
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
-    | Some(dispose) =>
+    | Some((_, dispose)) =>
       Log.info("Disposing Search subscription " ++ id);
       dispose();
       Hashtbl.remove(jobs, id);

@@ -18,7 +18,7 @@ module List = {
 
     aux([]);
   };
-}
+};
 
 type disposeFunction = unit => unit;
 
@@ -42,42 +42,49 @@ module Match = {
   };
 
   let fromJsonString = str => {
-    open Yojson.Basic.Util;
+    Yojson.Basic.Util.(
+      try({
+        let json = Yojson.Basic.from_string(str);
 
-    try {
-      let json = Yojson.Basic.from_string(str);
+        if (member("type", json) == `String("match")) {
+          let data = member("data", json);
 
-      if (member("type", json) == `String("match")) {
-        let data = member("data", json);
+          let submatches = data |> member("submatches") |> to_list;
 
-        let submatches = data |> member("submatches") |> to_list;
+          let matches =
+            submatches
+            |> List.map(submatch =>
+                 {
+                   file:
+                     data |> member("path") |> member("text") |> to_string,
+                   text:
+                     data |> member("lines") |> member("text") |> to_string,
+                   lineNumber: data |> member("line_number") |> to_int,
+                   charStart: submatch |> member("start") |> to_int,
+                   charEnd: submatch |> member("end") |> to_int,
+                 }
+               );
 
-        let matches =
-          submatches
-          |> List.map(submatch => {
-            file: data |> member("path") |> member("text") |> to_string,
-            text: data |> member("lines") |> member("text") |> to_string,
-            lineNumber: data |> member("line_number") |> to_int,
-            charStart: submatch |> member("start") |> to_int,
-            charEnd: submatch |> member("end") |> to_int,
-          });
-
-        Some(matches);
-      } else {
-        print_endline("-- not match")
-        None
-      };
-    } {
-      | Type_error(e, _) => 
-        print_endline("-- error " ++ e)
-        None
-    }
+          Some(matches);
+        } else {
+          None; // Not a "match" message
+        };
+      }) {
+      | Type_error(message, _) =>
+        Log.error("[Ripgrep.Match] Error decoding JSON: " ++ message);
+        None;
+      | Yojson.Json_error(message) =>
+        Log.error("[Ripgrep.Match] Error parsing JSON: " ++ message);
+        None;
+      }
+    );
   };
 };
 
 type t = {
   search: searchFunction,
-  findInFiles: (string, string, list(Match.t) => unit, unit => unit) => disposeFunction
+  findInFiles:
+    (string, string, list(Match.t) => unit, unit => unit) => disposeFunction,
 };
 
 /**
@@ -237,6 +244,7 @@ let search = (path, workingDirectory, callback, completedCallback) => {
     completedCallback,
   );
 };
+
 module RipgrepJsonProcessingJob = {
   type pendingWork = {
     callback: list(Match.t) => unit,
@@ -373,7 +381,4 @@ let findInFiles = (path, workingDirectory, query, callback, completedCallback) =
   );
 };
 
-let make = path => {
-  search: search(path),
-  findInFiles: findInFiles(path)
-};
+let make = path => {search: search(path), findInFiles: findInFiles(path)};
