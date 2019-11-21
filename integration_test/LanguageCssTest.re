@@ -15,20 +15,20 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
 
   // Wait for the CSS filetype
   wait(
-      ~timeout=30.0,
-      ~name="Validate we have a CSS filetype",
-      (state: State.t) => {
-        let fileType =
-          Some(state)
-          |> Option.bind(Selectors.getActiveBuffer)
-          |> Option.bind(Buffer.getFileType);
+    ~timeout=30.0,
+    ~name="Validate we have a CSS filetype",
+    (state: State.t) => {
+      let fileType =
+        Some(state)
+        |> Option.bind(Selectors.getActiveBuffer)
+        |> Option.bind(Buffer.getFileType);
 
-        switch (fileType) {
-        | Some("css") => true
-        | _ => false
-        };
-      },
-    );
+      switch (fileType) {
+      | Some("css") => true
+      | _ => false
+      };
+    },
+  );
 
   // Wait until the extension is activated
   // Give some time for the exthost to start
@@ -37,10 +37,10 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
     ~name="Validate the 'css-language-features' extension gets activated",
     (state: State.t) =>
     List.exists(
-        id => id == "css-language-features",
-        state.extensions.activatedIds,
-      )
-    );
+      id => id == "css-language-features",
+      state.extensions.activatedIds,
+    )
+  );
 
   // Enter some text
   Vim.input("i");
@@ -65,16 +65,14 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
     },
   );
 
- // Should've also gotten some completions...
+  // Should've also gotten some completions...
   wait(
     ~timeout=30.0,
-    ~name=
-      "Validate we also got some completions",
+    ~name="Validate we also got some completions",
     (state: State.t) => {
-      Model.Completions.getCompletions(state.completions)
-      |> (comp) => List.length(comp) > 0;
-    },
-  );
+    Model.Completions.getCompletions(state.completions)
+    |> (comp => List.length(comp) > 0)
+  });
 
   // Finish input, clear diagnostics
   Vim.input(" ");
@@ -84,8 +82,7 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
 
   wait(
     ~timeout=30.0,
-    ~name=
-      "Validate no diagnostics now",
+    ~name="Validate no diagnostics now",
     (state: State.t) => {
       let bufferOpt = Selectors.getActiveBuffer(state);
 
