@@ -15,6 +15,31 @@ function activate(context) {
     item.text = "Developer";
     item.show();
 
+    // Add a completion provider for oni-dev files
+    let provider1 = vscode.languages.registerCompletionItemProvider('oni-dev',
+        {
+            provideCompletionItems: (document, position, token, context) => {
+                return [
+                    vscode.CompletionItem('HelloWorld'),
+                    vscode.CompletionItem('HelloAgain'),
+                ];
+            }
+        }
+    );
+    
+    let provider2 = vscode.languages.registerCompletionItemProvider('oni-dev',
+        {
+            provideCompletionItems: (document, position, token, context) => {
+                return [
+                    vscode.CompletionItem('ReasonML'),
+                    vscode.CompletionItem('OCaml'),
+                ];
+            }
+        }
+    );
+
+    context.subscriptions.push(provider1);
+
     const output = vscode.window.createOutputChannel("oni-dev");
     output.appendLine("Hello output channel!");
 

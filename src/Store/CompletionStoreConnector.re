@@ -75,6 +75,7 @@ let start = () => {
                 ++ Model.CompletionMeet.show(meetOpt),
               );
               dispatch(Actions.CompletionStart(newMeet));
+              dispatch(Actions.CompletionBaseChanged(meet.base));
             } else if
               // If we're at the same position... but our base is different...
               // fire a base change
