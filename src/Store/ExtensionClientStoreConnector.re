@@ -7,6 +7,7 @@
  */
 
 module Core = Oni_Core;
+open Oni_Core.Utility;
 module Model = Oni_Model;
 
 open Oni_Extensions;
@@ -124,16 +125,18 @@ let start = (extensions, setup: Core.Setup.t) => {
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   let activateFileType = (fileType: option(string)) =>
-    switch (fileType) {
-    | None => ()
-    | Some(ft) =>
-      switch (Hashtbl.find_opt(activatedFileTypes, ft)) {
-      | None =>
-        ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
-        Hashtbl.add(activatedFileTypes, ft, true);
-      | Some(_) => ()
-      }
-    };
+    fileType
+    |> Option.iter(ft =>
+         Hashtbl.find_opt(activatedFileTypes, ft)
+         // If no entry, we haven't activated yet
+         |> Option.iter_none(() => {
+              ExtHostClient.activateByEvent(
+                "onLanguage:" ++ ft,
+                extHostClient,
+              );
+              Hashtbl.add(activatedFileTypes, ft, true);
+            })
+       );
 
   let sendBufferEnterEffect =
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
