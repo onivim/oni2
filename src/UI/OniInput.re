@@ -147,9 +147,6 @@ let reducer = (action, state) =>
   };
 
 module Constants = {
-  let defaultHeight = 50;
-  let defaultWidth = 200;
-  let textMargin = 10;
   let cursorWidth = 2;
 };
 
@@ -160,13 +157,9 @@ module Styles = {
   let default =
     Style.[
       color(Colors.black),
-      width(Constants.defaultWidth),
-      height(Constants.defaultHeight),
-      border(
-        // The default border width should be 5% of the full input height
-        ~width=float_of_int(Constants.defaultHeight) *. 0.05 |> int_of_float,
-        ~color=Colors.black,
-      ),
+      paddingVertical(8),
+      paddingHorizontal(12),
+      border(~width=1, ~color=Colors.black),
       backgroundColor(Colors.transparentWhite),
     ];
 };
@@ -231,8 +224,6 @@ let%component make =
       flexDirection(`Row),
       alignItems(`Center),
       justifyContent(`FlexStart),
-      marginLeft(Constants.textMargin),
-      marginRight(Constants.textMargin),
       flexGrow(1),
     ];
 
