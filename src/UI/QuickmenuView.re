@@ -22,6 +22,7 @@ module Styles = {
       width(Constants.menuWidth - 10),
       color(Colors.white),
       fontFamily(font),
+      fontSize(14),
     ];
 
   let menuItem =
@@ -193,7 +194,7 @@ let make =
             cursorColor=Colors.white
             style={Styles.input(font.fontFile)}
             onChange=onInput
-            text=query
+            value=query
             cursorPosition
           />
         </View>
