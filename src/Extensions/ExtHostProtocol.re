@@ -272,10 +272,9 @@ module DiagnosticsCollection = {
         List.map(Diagnostics.of_yojson, perFileDiagnostics);
 
       List.iter(
-          fun
-          | Ok(_) => ()
-          | Error(msg) => Log.error(msg)
-          ,
+        fun
+        | Ok(_) => ()
+        | Error(msg) => Log.error(msg),
         perFileDiagnostics,
       );
 

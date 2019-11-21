@@ -83,8 +83,12 @@ let start =
       Ok(None);
     | (s, m, _a) =>
       Log.error(
-        Printf.sprintf("[ExtHostClient] Unhandled message - [%s:%s]: %s", s, m,
-        Yojson.Safe.to_string(`List(_a)))
+        Printf.sprintf(
+          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
+          s,
+          m,
+          Yojson.Safe.to_string(`List(_a)),
+        ),
       );
       Ok(None);
     };
