@@ -624,7 +624,7 @@ let%component make =
              let endC = Index.toZeroBasedInt(r.endPosition.character);
 
              let lines = Buffer.getNumberOfLines(buffer);
-             if (line <= lines) {
+             if (line < lines) {
                let text = Buffer.getLine(buffer, line);
                let (startOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(

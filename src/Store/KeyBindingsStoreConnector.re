@@ -133,6 +133,16 @@ let start = () => {
         command: "insertBestCompletion",
         condition: "suggestWidgetVisible" |> parseExp,
       },
+      {
+        key: "<D-Z>",
+        command: "undo",
+        condition: "editorTextFocus" |> parseExp,
+      },
+      {
+        key: "<D-S-Z>",
+        command: "redo",
+        condition: "editorTextFocus" |> parseExp,
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
