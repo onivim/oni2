@@ -259,3 +259,43 @@ module Option = {
       }
     | None => None;
 };
+
+module StringUtil = {
+  let isSpace = fun
+    | ' ' | '\012' | '\n' | '\r' | '\t' => true
+    | _ => false;
+
+  let trimLeft = str => {
+    let length = String.length(str);
+
+    let rec aux = i =>
+      if (i >= length) {
+        ""
+      } else if (isSpace(str.[i])) {
+        aux(i + 1);
+      } else if (i == 0) {
+        str
+      } else {
+        String.sub(str, i, length - i);
+      };
+
+    aux(0);
+  };
+
+  let trimRight = str => {
+    let length = String.length(str);
+
+    let rec aux = j =>
+      if (j <= 0) {
+        ""
+      } else if (isSpace(str.[j])) {
+        aux(j - 1);
+      } else if (j == length - 1) {
+        str
+      } else {
+        String.sub(str, 0, j + 1);
+      };
+
+    aux(length - 1);
+  };
+}
