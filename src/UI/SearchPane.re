@@ -82,11 +82,13 @@ let%component make =
     let re = Str.regexp_string(directory ++ Filename.dir_sep);
     let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
 
-    <Clickable
-      style=Styles.clickable
-      onClick={() =>
-        GlobalContext.current().dispatch(SearchSelectResult(match))
-      }>
+    let onClick = () => {
+      GlobalContext.current().dispatch(OpenFileByPath(match.file, None))
+      GlobalContext.current().dispatch(EditorScrollToLine(match.lineNumber))
+      // GlobalContext.current().dispatch(EditorScrollToColumn(match.charStart))
+    };
+
+    <Clickable style=Styles.clickable onClick>
       <View
         style={Styles.result(~theme, ~isHovered=hovered == i)}
         onMouseOver

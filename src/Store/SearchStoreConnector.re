@@ -14,15 +14,15 @@ let start = () => {
         cursorPosition,
       }
 
-    | SearchStart => {...state, query: state.queryInput,hits: []}
+    | SearchStart => {...state, query: state.queryInput, hits: []}
 
     | SearchUpdate(items) => {...state, hits: state.hits @ items}
 
     // | SearchComplete
 
-    | SearchSelectResult(match) =>
-      print_endline("!! SELECT: " ++ match.file);
-      state
+    // | SearchSelectResult(match) =>
+    //   print_endline("!! SELECT: " ++ match.file);
+    //   state;
 
     | _ => state
     };
