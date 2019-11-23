@@ -22,7 +22,7 @@ module Styles = {
       alignItems(`Stretch),
     ];
 
-  let surface = statusBarHeight => Style.[flexGrow(1)];
+  let surface = Style.[flexGrow(1)];
 
   let statusBar = statusBarHeight =>
     Style.[
@@ -59,7 +59,7 @@ let make = (~state: State.t, ()) => {
     };
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style={Styles.surface(statusBarHeight)}>
+    <View style={Styles.surface}>
       <EditorView state />
       searchPane
     </View>

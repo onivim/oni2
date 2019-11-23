@@ -31,18 +31,28 @@ module Styles = {
       ),
     ];
 
-  let fileText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
+  let locationText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       color(theme.editorActiveLineNumberForeground),
+      textWrap(TextWrapping.NoWrap),
     ];
 
-  let lineText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
+  let matchText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       color(theme.editorForeground),
+      textWrap(TextWrapping.NoWrap),
+    ];
+
+  let highlight = (~font: Types.UiFont.t, ~theme: Theme.t) =>
+    Style.[
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
+      color(theme.oniNormalModeBackground),
+      textWrap(TextWrapping.NoWrap),
     ];
 
   let row =
@@ -88,23 +98,57 @@ let%component make =
       // GlobalContext.current().dispatch(EditorScrollToColumn(match.charStart))
     };
 
-    <Clickable style=Styles.clickable onClick>
-      <View
-        style={Styles.result(~theme, ~isHovered=hovered == i)}
-        onMouseOver
-        onMouseOut>
+    let location = () =>
         <Text
-          style={Styles.fileText(~font, ~theme)}
+        style={Styles.locationText(~font, ~theme)}
           text={Printf.sprintf(
             "%s:%n - ",
             getDisplayPath(match.file),
             match.lineNumber,
           )}
-        />
-        <Text
-          style={Styles.lineText(~font, ~theme)}
-          text={String.trim(match.text)}
-        />
+      />;
+
+    let highlightedText = () =>
+      try(
+        {
+      open Utility.StringUtil;
+
+        let maxLength = 1000;
+        let Ripgrep.Match.{text, charStart, charEnd, _} = match;
+        let (text, charStart, charEnd) = 
+          extractSnippet(~maxLength, ~charStart, ~charEnd, text);
+        let before = String.sub(text, 0, charStart) |> trimLeft;
+        let matchedText = String.sub(text, charStart, charEnd - charStart);
+          let after =
+            String.sub(text, charEnd, String.length(text) - charEnd)
+            |> trimRight;
+
+        <View style=Style.[flexDirection(`Row)]>
+          <Text style={Styles.matchText(~font, ~theme)} text=before />
+          <Text style={Styles.highlight(~font, ~theme)} text=matchedText />
+          <Text style={Styles.matchText(~font, ~theme)} text=after />
+          </View>;
+        }
+      ) {
+        | Invalid_argument(message) =>
+        Log.error(
+          Printf.sprintf(
+            "[SearchPane.highlightedText] \"%s\" - (%n, %n)\n%!",
+            message,
+            match.charStart,
+            match.charEnd,
+          ),
+        );
+        <View />;
+    };
+
+    <Clickable style=Styles.clickable onClick>
+      <View
+        style={Styles.result(~theme, ~isHovered=hovered == i)}
+        onMouseOver
+        onMouseOut>
+        <location />
+        <highlightedText />
       </View>
     </Clickable>;
   };
