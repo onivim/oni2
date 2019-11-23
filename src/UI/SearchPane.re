@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
+open Types;
 open Oni_Model;
 
 module Styles = {
@@ -93,44 +94,53 @@ let%component make =
     let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
 
     let onClick = () => {
-      GlobalContext.current().dispatch(OpenFileByPath(match.file, None))
-      GlobalContext.current().dispatch(EditorScrollToLine(match.lineNumber))
-      // GlobalContext.current().dispatch(EditorScrollToColumn(match.charStart))
+      GlobalContext.current().dispatch(
+        OpenFileByPath(
+          match.file,
+          None,
+          Some(
+            Position.{
+              line: Index.ofInt1(match.lineNumber),
+              character: Index.ofInt1(match.charStart),
+            },
+          ),
+        ),
+      );
     };
 
     let location = () =>
-        <Text
+      <Text
         style={Styles.locationText(~font, ~theme)}
-          text={Printf.sprintf(
-            "%s:%n - ",
-            getDisplayPath(match.file),
-            match.lineNumber,
-          )}
+        text={Printf.sprintf(
+          "%s:%n - ",
+          getDisplayPath(match.file),
+          match.lineNumber,
+        )}
       />;
 
     let highlightedText = () =>
       try(
         {
-      open Utility.StringUtil;
+          open Utility.StringUtil;
 
-        let maxLength = 1000;
-        let Ripgrep.Match.{text, charStart, charEnd, _} = match;
-        let (text, charStart, charEnd) = 
-          extractSnippet(~maxLength, ~charStart, ~charEnd, text);
-        let before = String.sub(text, 0, charStart) |> trimLeft;
-        let matchedText = String.sub(text, charStart, charEnd - charStart);
+          let maxLength = 1000;
+          let Ripgrep.Match.{text, charStart, charEnd, _} = match;
+          let (text, charStart, charEnd) =
+            extractSnippet(~maxLength, ~charStart, ~charEnd, text);
+          let before = String.sub(text, 0, charStart) |> trimLeft;
+          let matchedText = String.sub(text, charStart, charEnd - charStart);
           let after =
             String.sub(text, charEnd, String.length(text) - charEnd)
             |> trimRight;
 
-        <View style=Style.[flexDirection(`Row)]>
-          <Text style={Styles.matchText(~font, ~theme)} text=before />
-          <Text style={Styles.highlight(~font, ~theme)} text=matchedText />
-          <Text style={Styles.matchText(~font, ~theme)} text=after />
+          <View style=Style.[flexDirection(`Row)]>
+            <Text style={Styles.matchText(~font, ~theme)} text=before />
+            <Text style={Styles.highlight(~font, ~theme)} text=matchedText />
+            <Text style={Styles.matchText(~font, ~theme)} text=after />
           </View>;
         }
       ) {
-        | Invalid_argument(message) =>
+      | Invalid_argument(message) =>
         Log.error(
           Printf.sprintf(
             "[SearchPane.highlightedText] \"%s\" - (%n, %n)\n%!",
@@ -140,7 +150,7 @@ let%component make =
           ),
         );
         <View />;
-    };
+      };
 
     <Clickable style=Styles.clickable onClick>
       <View

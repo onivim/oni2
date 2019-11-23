@@ -13,6 +13,8 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
+open Core.Types;
+
 let start =
     (
       languageInfo: Model.LanguageInfo.t,
@@ -240,11 +242,7 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(
-            buf,
-            Some(Model.WindowTree.Vertical),
-            None,
-          )
+          Model.Actions.OpenFileByPath(buf, Some(Model.WindowTree.Vertical), None)
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
@@ -492,7 +490,7 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (filePath, dir, position) =>
+  let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       /* If a split was requested, create that first! */
       switch (dir) {
@@ -519,7 +517,7 @@ let start =
       open Oni_Core.Utility;
       open Oni_Core.Types;
       let () =
-        position
+        location
         |> Option.iter((pos: Position.t) => {
              open Position;
              let cursor =
@@ -550,6 +548,12 @@ let start =
       switch (dir) {
       | Some(_) => dispatch(Model.Actions.BufferEnter(metadata, fileType))
       | None => ()
+      };
+
+      switch (location) {
+        | Some(Position.{line, character}) =>
+          Vim.Cursor.setPosition(Index.toInt1(line), Index.toInt1(character));
+        | None => ()
       };
     });
 
@@ -796,9 +800,9 @@ let start =
       (state, eff);
 
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path, direction, position) => (
+    | Model.Actions.OpenFileByPath(path, direction, location) => (
         state,
-        openFileByPathEffect(path, direction, position),
+        openFileByPathEffect(path, direction, location),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)
