@@ -32,6 +32,7 @@ module HoverCollector = HoverCollector;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageInfo = LanguageInfo;
+module LocationListItem = LocationListItem;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module Notification = Notification;

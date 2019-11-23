@@ -21,41 +21,6 @@ module Styles = {
 
   let resultsPane = Style.[flexGrow(1)];
 
-  let result = (~theme: Theme.t, ~isHovered) =>
-    Style.[
-      flexDirection(`Row),
-      overflow(`Hidden),
-      paddingVertical(4),
-      paddingHorizontal(8),
-      backgroundColor(
-        isHovered ? theme.menuSelectionBackground : Colors.transparentWhite,
-      ),
-    ];
-
-  let locationText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      color(theme.editorActiveLineNumberForeground),
-      textWrap(TextWrapping.NoWrap),
-    ];
-
-  let matchText = (~font: Types.UiFont.t, ~theme: Theme.t) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      color(theme.editorForeground),
-      textWrap(TextWrapping.NoWrap),
-    ];
-
-  let highlight = (~font: Types.UiFont.t, ~theme: Theme.t) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      color(theme.oniNormalModeBackground),
-      textWrap(TextWrapping.NoWrap),
-    ];
-
   let row =
     Style.[flexDirection(`Row), alignItems(`Center), marginHorizontal(8)];
 
@@ -81,90 +46,21 @@ module Styles = {
   let clickable = Style.[cursor(Revery.MouseCursors.pointer)];
 };
 
-let%component make =
-              (~theme: Theme.t, ~font: Types.UiFont.t, ~state: Search.t, ()) => {
-  let%hook (hovered, setHovered) = Hooks.state(-1);
-
-  let result = (i, match: Ripgrep.Match.t) => {
-    let onMouseOver = _ => setHovered(_ => i);
-    let onMouseOut = _ => setHovered(hovered => i == hovered ? (-1) : hovered);
-
-    let directory = Rench.Environment.getWorkingDirectory();
-    let re = Str.regexp_string(directory ++ Filename.dir_sep);
-    let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
-
-    let onClick = () => {
-      GlobalContext.current().dispatch(
-        OpenFileByPath(
-          match.file,
-          None,
-          Some(
-            Position.{
-              line: Index.ofInt1(match.lineNumber),
-              character: Index.ofInt1(match.charStart),
-            },
-          ),
-        ),
-      );
-    };
-
-    let location = () =>
-      <Text
-        style={Styles.locationText(~font, ~theme)}
-        text={Printf.sprintf(
-          "%s:%n - ",
-          getDisplayPath(match.file),
-          match.lineNumber,
-        )}
-      />;
-
-    let highlightedText = () =>
-      try(
-        {
-          open Utility.StringUtil;
-
-          let maxLength = 1000;
-          let Ripgrep.Match.{text, charStart, charEnd, _} = match;
-          let (text, charStart, charEnd) =
-            extractSnippet(~maxLength, ~charStart, ~charEnd, text);
-          let before = String.sub(text, 0, charStart) |> trimLeft;
-          let matchedText = String.sub(text, charStart, charEnd - charStart);
-          let after =
-            String.sub(text, charEnd, String.length(text) - charEnd)
-            |> trimRight;
-
-          <View style=Style.[flexDirection(`Row)]>
-            <Text style={Styles.matchText(~font, ~theme)} text=before />
-            <Text style={Styles.highlight(~font, ~theme)} text=matchedText />
-            <Text style={Styles.matchText(~font, ~theme)} text=after />
-          </View>;
-        }
-      ) {
-      | Invalid_argument(message) =>
-        Log.error(
-          Printf.sprintf(
-            "[SearchPane.highlightedText] \"%s\" - (%n, %n)\n%!",
-            message,
-            match.charStart,
-            match.charEnd,
-          ),
-        );
-        <View />;
-      };
-
-    <Clickable style=Styles.clickable onClick>
-      <View
-        style={Styles.result(~theme, ~isHovered=hovered == i)}
-        onMouseOver
-        onMouseOut>
-        <location />
-        <highlightedText />
-      </View>
-    </Clickable>;
+let matchToLocListItem = (hit: Ripgrep.Match.t) =>
+  LocationListItem.{
+    file: hit.file,
+    location:
+      Position.create(
+        Index.ofInt1(hit.lineNumber),
+        Index.ofInt1(hit.charStart),
+      ),
+    text: hit.text,
+    highlight:
+      Some((Index.ofInt1(hit.charStart), Index.ofInt1(hit.charEnd))),
   };
 
-  let results = state.hits |> Array.of_list;
-  let renderResult = i => result(i, results[i]);
+let make = (~theme: Theme.t, ~font: Types.UiFont.t, ~state: Search.t, ()) => {
+  let items = state.hits |> List.map(matchToLocListItem) |> Array.of_list;
 
   <View style={Styles.searchPane(~theme)}>
     <View style={Styles.queryPane(~theme)}>
@@ -194,12 +90,7 @@ let%component make =
         style={Styles.title(~font)}
         text={Printf.sprintf("%n results", List.length(state.hits))}
       />
-      <FlatList
-        rowHeight=20
-        count={Array.length(results)}
-        focused=None
-        render=renderResult
-      />
+      <LocationListView theme font items />
     </View>
   </View>;
 };
