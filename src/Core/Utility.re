@@ -298,4 +298,40 @@ module StringUtil = {
 
     aux(length - 1);
   };
+
+  let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => 
+    if (String.length(text) > maxLength) {
+      let (offset, length) = 
+        if (charStart > maxLength) {
+          let remainingLength = String.length(text) - charStart;
+          if (remainingLength < maxLength) {
+            (charStart, remainingLength);
+          } else {
+            (charStart, maxLength);
+          }
+        } else {
+          let matchLength = charEnd - charStart;
+          if (matchLength >= maxLength) {
+            (charStart, maxLength);
+          } else if (charEnd > maxLength) {
+            (charEnd - maxLength, maxLength)
+          } else {
+            (0, maxLength)
+          }
+        };
+
+      if (offset > 0) {
+        ("..." ++ String.sub(text, offset, length),
+        3 + charStart - offset,
+        3 + min(length, charEnd - offset)
+        );
+      } else {
+        (String.sub(text, offset, length),
+        charStart - offset,
+        min(length, charEnd - offset)
+        );
+      }
+    } else {
+      (text, charStart, charEnd)
+    };
 }
