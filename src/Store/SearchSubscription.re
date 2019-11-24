@@ -51,7 +51,7 @@ module Provider = {
 
     | None => Log.error("Tried to dispose non-existing Search subscription")
     };
-  }
+  };
 
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {

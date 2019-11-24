@@ -224,17 +224,17 @@ let%component make =
 
   let measureTextWidth = text =>
     switch (Revery_UI.getActiveWindow()) {
-      | Some(window) =>
-        let dimensions =
-          Revery_Draw.Text.measure(
-            ~window,
-            ~fontFamily=Styles.fontFamily,
-            ~fontSize=Styles.fontSize,
-            text,
-          );
+    | Some(window) =>
+      let dimensions =
+        Revery_Draw.Text.measure(
+          ~window,
+          ~fontFamily=Styles.fontFamily,
+          ~fontSize=Styles.fontSize,
+          text,
+        );
 
-        dimensions.width;
-      | None => Styles.fontSize
+      dimensions.width;
+    | None => Styles.fontSize
     };
 
   let%hook (cursorOpacity, resetCursor) =
@@ -242,7 +242,7 @@ let%component make =
 
   let () = {
     let cursorOffset =
-        measureTextWidth(String.sub(value, 0, cursorPosition));
+      measureTextWidth(String.sub(value, 0, cursorPosition));
 
     switch (Option.bind(r => r#getParent(), textRef)) {
     | Some(containerNode) =>
@@ -254,7 +254,7 @@ let%component make =
       } else if (cursorOffset - scrollOffset^ > container.width) {
         // out of view to the right, so align with right edge
         scrollOffset := cursorOffset - container.width;
-      }
+      };
 
     | None => ()
     };
@@ -359,7 +359,8 @@ let%component make =
   };
 
   let cursor = () => {
-    let (startStr, _) = getStringParts(cursorPosition + String.length(prefix), value);
+    let (startStr, _) =
+      getStringParts(cursorPosition + String.length(prefix), value);
     let textWidth = measureTextWidth(startStr);
 
     let offset = textWidth - scrollOffset^;
@@ -396,4 +397,4 @@ let%component make =
       </View>
     </View>
   </Clickable>;
-}
+};

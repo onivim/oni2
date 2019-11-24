@@ -70,15 +70,16 @@ let item =
 
   let locationWidth =
     switch (Revery.UI.getActiveWindow()) {
-      | Some(window) =>
-        Revery.Draw.Text.measure(
-          ~window,
-          ~fontSize=uiFont.fontSize,
-          ~fontFamily=uiFont.fontFile,
-          locationText,
-        ).width;
-      | None => String.length(locationText) * uiFont.fontSize;
-    }
+    | Some(window) =>
+      Revery.Draw.Text.measure(
+        ~window,
+        ~fontSize=uiFont.fontSize,
+        ~fontFamily=uiFont.fontFile,
+        locationText,
+      ).
+        width
+    | None => String.length(locationText) * uiFont.fontSize
+    };
 
   let location = () =>
     <Text

@@ -24,17 +24,9 @@ module Styles = {
       fontSize(14),
     ];
 
-  let dropdown =
-    Style.[
-      height(Constants.menuHeight),
-      overflow(`Hidden),
-    ];
+  let dropdown = Style.[height(Constants.menuHeight), overflow(`Hidden)];
 
-  let menuItem =
-    Style.[
-      fontSize(14),
-      cursor(Revery.MouseCursors.pointer),
-    ];
+  let menuItem = Style.[fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
   let label =
       (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
@@ -51,8 +43,7 @@ module Styles = {
       textWrap(TextWrapping.NoWrap),
     ];
 
-  let progressBarTrack =
-    Style.[height(2), overflow(`Hidden)];
+  let progressBarTrack = Style.[height(2), overflow(`Hidden)];
 
   let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
     Style.[

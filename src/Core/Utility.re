@@ -265,8 +265,13 @@ module Option = {
 };
 
 module StringUtil = {
-  let isSpace = fun
-    | ' ' | '\012' | '\n' | '\r' | '\t' => true
+  let isSpace =
+    fun
+    | ' '
+    | '\012'
+    | '\n'
+    | '\r'
+    | '\t' => true
     | _ => false;
 
   let trimLeft = str => {
@@ -274,11 +279,11 @@ module StringUtil = {
 
     let rec aux = i =>
       if (i >= length) {
-        ""
+        "";
       } else if (isSpace(str.[i])) {
         aux(i + 1);
       } else if (i == 0) {
-        str
+        str;
       } else {
         String.sub(str, i, length - i);
       };
@@ -291,11 +296,11 @@ module StringUtil = {
 
     let rec aux = j =>
       if (j <= 0) {
-        ""
+        "";
       } else if (isSpace(str.[j])) {
         aux(j - 1);
       } else if (j == length - 1) {
-        str
+        str;
       } else {
         String.sub(str, 0, j + 1);
       };
@@ -303,39 +308,41 @@ module StringUtil = {
     aux(length - 1);
   };
 
-  let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => 
+  let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) =>
     if (String.length(text) > maxLength) {
-      let (offset, length) = 
+      let (offset, length) =
         if (charStart > maxLength) {
           let remainingLength = String.length(text) - charStart;
           if (remainingLength < maxLength) {
             (charStart, remainingLength);
           } else {
             (charStart, maxLength);
-          }
+          };
         } else {
           let matchLength = charEnd - charStart;
           if (matchLength >= maxLength) {
             (charStart, maxLength);
           } else if (charEnd > maxLength) {
-            (charEnd - maxLength, maxLength)
+            (charEnd - maxLength, maxLength);
           } else {
-            (0, maxLength)
-          }
+            (0, maxLength);
+          };
         };
 
       if (offset > 0) {
-        ("..." ++ String.sub(text, offset, length),
-        3 + charStart - offset,
-        3 + min(length, charEnd - offset)
+        (
+          "..." ++ String.sub(text, offset, length),
+          3 + charStart - offset,
+          3 + min(length, charEnd - offset),
         );
       } else {
-        (String.sub(text, offset, length),
-        charStart - offset,
-        min(length, charEnd - offset)
+        (
+          String.sub(text, offset, length),
+          charStart - offset,
+          min(length, charEnd - offset),
         );
-      }
+      };
     } else {
-      (text, charStart, charEnd)
+      (text, charStart, charEnd);
     };
-}
+};

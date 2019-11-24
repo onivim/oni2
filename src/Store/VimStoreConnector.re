@@ -242,7 +242,11 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(buf, Some(Model.WindowTree.Vertical), None)
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowTree.Vertical),
+            None,
+          )
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
@@ -551,9 +555,9 @@ let start =
       };
 
       switch (location) {
-        | Some(Position.{line, character}) =>
-          Vim.Cursor.setPosition(Index.toInt1(line), Index.toInt1(character));
-        | None => ()
+      | Some(Position.{line, character}) =>
+        Vim.Cursor.setPosition(Index.toInt1(line), Index.toInt1(character))
+      | None => ()
       };
     });
 

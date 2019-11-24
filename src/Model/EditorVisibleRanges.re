@@ -79,9 +79,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
     WindowTree.getSplits(state.windowManager.windowTree)
     |> List.map((split: WindowTree.split) => split.editorGroupId)
-    |> List.filter_map(
-         EditorGroups.getEditorGroupById(state.editorGroups),
-       )
+    |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
     |> List.filter_map(eg =>
          switch (EditorGroup.getActiveEditor(eg)) {
          | None => None

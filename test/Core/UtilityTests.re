@@ -70,7 +70,6 @@ describe("StringUtil", ({describe, _}) => {
     );
   });
 
-
   describe("extractSnippet", ({test, _}) => {
     let text = "0123456789";
 
@@ -93,25 +92,33 @@ describe("StringUtil", ({describe, _}) => {
       expect.int(charEnd).toBe(0);
     });
 
-    test("maxLength > length && charStart > charEnd | ~maxLength=10, ~charStart=1, ~charEnd=0", ({expect}) => {
-      let (snippet, charStart, charEnd) =
-        extractSnippet(~maxLength=10, ~charStart=1, ~charEnd=0, text);
+    test(
+      "maxLength > length && charStart > charEnd | ~maxLength=10, ~charStart=1, ~charEnd=0",
+      ({expect}) => {
+        let (snippet, charStart, charEnd) =
+          extractSnippet(~maxLength=10, ~charStart=1, ~charEnd=0, text);
 
-      expect.string(snippet).toEqual(text);
-      expect.int(charStart).toBe(1);
-      expect.int(charEnd).toBe(0);
-    });
+        expect.string(snippet).toEqual(text);
+        expect.int(charStart).toBe(1);
+        expect.int(charEnd).toBe(0);
+      },
+    );
 
-    test("maxLength < length && charStart > charEnd | ~maxLength=10, ~charStart=1, ~charEnd=0", ({expect}) => {
-      let (snippet, charStart, charEnd) =
-        extractSnippet(~maxLength=2, ~charStart=1, ~charEnd=0, text);
+    test(
+      "maxLength < length && charStart > charEnd | ~maxLength=10, ~charStart=1, ~charEnd=0",
+      ({expect}) => {
+        let (snippet, charStart, charEnd) =
+          extractSnippet(~maxLength=2, ~charStart=1, ~charEnd=0, text);
 
-      expect.string(snippet).toEqual("01");
-      expect.int(charStart).toBe(1);
-      expect.int(charEnd).toBe(0);
-    });
+        expect.string(snippet).toEqual("01");
+        expect.int(charStart).toBe(1);
+        expect.int(charEnd).toBe(0);
+      },
+    );
 
-    test("charStart > charEnd | ~maxLength=1, ~charStart=1, ~charEnd=0", ({expect}) => {
+    test(
+      "charStart > charEnd | ~maxLength=1, ~charStart=1, ~charEnd=0",
+      ({expect}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=1, ~charStart=1, ~charEnd=0, text);
 
@@ -120,7 +127,9 @@ describe("StringUtil", ({describe, _}) => {
       expect.int(charEnd).toBe(0);
     });
 
-    test("charEnd < maxLength | ~maxLength=4, ~charStart=1, ~charEnd=3", ({expect}) => {
+    test(
+      "charEnd < maxLength | ~maxLength=4, ~charStart=1, ~charEnd=3",
+      ({expect}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=4, ~charStart=1, ~charEnd=3, text);
 
@@ -129,7 +138,9 @@ describe("StringUtil", ({describe, _}) => {
       expect.int(charEnd).toBe(3);
     });
 
-    test("charEnd > maxLength | ~maxLength=2, ~charStart=1, ~charEnd=3", ({expect}) => {
+    test(
+      "charEnd > maxLength | ~maxLength=2, ~charStart=1, ~charEnd=3",
+      ({expect}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=2, ~charStart=1, ~charEnd=3, text);
 
@@ -147,7 +158,9 @@ describe("StringUtil", ({describe, _}) => {
       expect.int(charEnd).toBe(7);
     });
 
-    test("match does not fit | ~maxLength=4, ~charStart=2, ~charEnd=8", ({expect}) => {
+    test(
+      "match does not fit | ~maxLength=4, ~charStart=2, ~charEnd=8",
+      ({expect}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=4, ~charStart=3, ~charEnd=6, text);
 
