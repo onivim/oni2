@@ -34,7 +34,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{theme, configuration, uiFont, editorFont} = state;
+  let State.{theme, configuration, uiFont, editorFont, _} = state;
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
