@@ -59,17 +59,17 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
       Some((Index.ofInt1(hit.charStart), Index.ofInt1(hit.charEnd))),
   };
 
-let make = (~theme: Theme.t, ~font: Types.UiFont.t, ~state: Search.t, ()) => {
+let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {
   let items = state.hits |> List.map(matchToLocListItem) |> Array.of_list;
 
   <View style={Styles.searchPane(~theme)}>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
-        <Text style={Styles.title(~font)} text="Find in Files" />
+        <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
       </View>
       <View style=Styles.row>
         <OniInput
-          style={Styles.input(~font)}
+          style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
           cursorPosition={state.cursorPosition}
           value={state.queryInput}
@@ -87,10 +87,10 @@ let make = (~theme: Theme.t, ~font: Types.UiFont.t, ~state: Search.t, ()) => {
     </View>
     <View style=Styles.resultsPane>
       <Text
-        style={Styles.title(~font)}
+        style={Styles.title(~font=uiFont)}
         text={Printf.sprintf("%n results", List.length(state.hits))}
       />
-      <LocationListView theme font items />
+      <LocationListView theme uiFont editorFont items />
     </View>
   </View>;
 };

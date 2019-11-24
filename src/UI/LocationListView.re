@@ -27,17 +27,12 @@ module Styles = {
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let matchText = (~font: Types.UiFont.t, ~theme: Theme.t) => [
+  let snippet = (~font: Types.EditorFont.t, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(theme.editorForeground),
-    textWrap(TextWrapping.NoWrap),
-  ];
-
-  let highlight = (~font: Types.UiFont.t, ~theme: Theme.t) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
-    color(theme.oniNormalModeBackground),
+    color(
+      isHighlighted ? theme.oniNormalModeBackground : theme.editorForeground,
+    ),
     textWrap(TextWrapping.NoWrap),
   ];
 };
@@ -45,7 +40,8 @@ module Styles = {
 let item =
     (
       ~theme,
-      ~font,
+      ~uiFont,
+      ~editorFont,
       ~onMouseOver,
       ~onMouseOut,
       ~isHovered,
@@ -64,7 +60,7 @@ let item =
 
   let location = () =>
     <Text
-      style={Styles.locationText(~font, ~theme)}
+      style={Styles.locationText(~font=uiFont, ~theme)}
       text={Printf.sprintf(
         "%s:%n - ",
         getDisplayPath(item.file),
@@ -72,7 +68,19 @@ let item =
       )}
     />;
 
-  let highlightedText = () =>
+  let highlightedText = () => {
+    let snippet = (~text, ()) =>
+      <Text
+        style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=false)}
+        text
+      />;
+
+    let highlight = (~text, ()) =>
+      <Text
+        style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=true)}
+        text
+      />;
+
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       open Utility.StringUtil;
@@ -83,16 +91,14 @@ let item =
       try({
         let (text, charStart, charEnd) =
           extractSnippet(~maxLength, ~charStart, ~charEnd, item.text);
-        let before = String.sub(text, 0, charStart) |> trimLeft;
+        let before = String.sub(text, 0, charStart);
         let matchedText = String.sub(text, charStart, charEnd - charStart);
-        let after =
-          String.sub(text, charEnd, String.length(text) - charEnd)
-          |> trimRight;
+        let after = String.sub(text, charEnd, String.length(text) - charEnd);
 
         <View style=Style.[flexDirection(`Row)]>
-          <Text style={Styles.matchText(~font, ~theme)} text=before />
-          <Text style={Styles.highlight(~font, ~theme)} text=matchedText />
-          <Text style={Styles.matchText(~font, ~theme)} text=after />
+          <snippet text={trimLeft(before)} />
+          <highlight text=matchedText />
+          <snippet text={trimRight(after)} />
         </View>;
       }) {
       | Invalid_argument(message) =>
@@ -104,11 +110,11 @@ let item =
             charEnd,
           ),
         );
-        <Text style={Styles.matchText(~font, ~theme)} text={item.text} />;
+        <snippet text={item.text} />;
       };
-    | None =>
-      <Text style={Styles.matchText(~font, ~theme)} text={item.text} />
+    | None => <snippet text={item.text} />
     };
+  };
 
   <Clickable style=Styles.clickable onClick>
     <View style={Styles.result(~theme, ~isHovered)} onMouseOver onMouseOut>
@@ -121,11 +127,14 @@ let item =
 let%component make =
               (
                 ~theme: Theme.t,
-                ~font: Types.UiFont.t,
+                ~uiFont: Types.UiFont.t,
+                ~editorFont: Types.EditorFont.t,
                 ~items: array(LocationListItem.t),
                 (),
               ) => {
   let%hook (hovered, setHovered) = Hooks.state(-1);
+
+  let editorFont = {...editorFont, fontSize: uiFont.fontSize};
 
   let renderItem = i => {
     let onMouseOver = _ => setHovered(_ => i);
@@ -133,7 +142,8 @@ let%component make =
 
     <item
       theme
-      font
+      uiFont
+      editorFont
       onMouseOver
       onMouseOut
       isHovered={hovered == i}

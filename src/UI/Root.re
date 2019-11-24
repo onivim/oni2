@@ -34,8 +34,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let theme = state.theme;
-  let configuration = state.configuration;
+  let State.{theme, configuration, uiFont, editorFont} = state;
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -53,16 +52,13 @@ let make = (~state: State.t, ()) => {
   let searchPane =
     switch (state.searchPane) {
     | Some(searchPane) =>
-      <SearchPane state=searchPane font={state.uiFont} theme />
+      <SearchPane state=searchPane uiFont editorFont theme />
 
     | None => React.empty
     };
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style={Styles.surface}>
-      <EditorView state />
-      searchPane
-    </View>
+    <View style=Styles.surface> <EditorView state /> searchPane </View>
     <Overlay>
       {switch (state.quickmenu) {
        | None => React.empty
@@ -71,12 +67,7 @@ let make = (~state: State.t, ()) => {
          | Wildmenu(_) => <WildmenuView theme configuration state=quickmenu />
 
          | _ =>
-           <QuickmenuView
-             theme
-             configuration
-             state=quickmenu
-             font={state.uiFont}
-           />
+           <QuickmenuView theme configuration state=quickmenu font=uiFont />
          }
        }}
       <KeyDisplayerView state />
