@@ -72,18 +72,19 @@ let item =
     );
   };
 
-  let locationText = Printf.sprintf(
-        "%s:%n - ",
-        getDisplayPath(item.file),
-        Index.toInt1(item.location.line),
-      );
+  let locationText =
+    Printf.sprintf(
+      "%s:%n - ",
+      getDisplayPath(item.file),
+      Index.toInt1(item.location.line),
+    );
 
   let locationWidth =
     Revery.Draw.Text.measure(
       ~window=Revery.UI.getActiveWindow(),
       ~fontSize=uiFont.fontSize,
       ~fontFamily=uiFont.fontFile,
-      locationText
+      locationText,
     ).width;
 
   let location = () =>
@@ -110,7 +111,8 @@ let item =
       open Utility.StringUtil;
 
       let availableWidth = float(width - locationWidth);
-      let maxLength = int_of_float(availableWidth /. editorFont.measuredWidth);
+      let maxLength =
+        int_of_float(availableWidth /. editorFont.measuredWidth);
       let charStart = Index.toInt1(indexStart);
       let charEnd = Index.toInt1(indexEnd);
 
@@ -162,7 +164,18 @@ let%component make =
   let%hook (outerRef, setOuterRef) = Hooks.ref(None);
   let%hook (hovered, setHovered) = Hooks.state(-1);
 
-  let editorFont = {...editorFont, fontSize: uiFont.fontSize};
+  let editorFont = {
+    ...editorFont,
+    fontSize: uiFont.fontSize,
+    // TODO: This scaling is probably not very accurate
+    measuredWidth:
+      editorFont.measuredWidth
+      *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
+    measuredHeight:
+      editorFont.measuredHeight
+      *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
+  };
+
   let width =
     outerRef
     |> Option.map(node => node#measurements().Dimensions.width)
