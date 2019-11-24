@@ -92,14 +92,14 @@ let item =
       text=locationText
     />;
 
-  let highlightedText = () => {
-    let snippet = (~text, ()) =>
+  let content = () => {
+    let unstyled = (~text, ()) =>
       <Text
         style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=false)}
         text
       />;
 
-    let highlight = (~text, ()) =>
+    let highlighted = (~text, ()) =>
       <Text
         style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=true)}
         text
@@ -108,6 +108,7 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       open Utility.StringUtil;
+
       let availableWidth = float(width - locationWidth);
       let maxLength = int_of_float(availableWidth /. editorFont.measuredWidth);
       let charStart = Index.toInt1(indexStart);
@@ -121,12 +122,13 @@ let item =
         let after = String.sub(text, charEnd, String.length(text) - charEnd);
 
         <View style=Style.[flexDirection(`Row)]>
-          <snippet text={trimLeft(before)} />
-          <highlight text=matchedText />
-          <snippet text={trimRight(after)} />
+          <unstyled text={trimLeft(before)} />
+          <highlighted text=matchedText />
+          <unstyled text={trimRight(after)} />
         </View>;
       }) {
       | Invalid_argument(message) =>
+        // TODO: This shouldn't happen, but you never know. Consider a sane implementation of `String.sub` instead, to avoid this
         Log.error(
           Printf.sprintf(
             "[SearchPane.highlightedText] \"%s\" - (%n, %n)\n%!",
@@ -135,16 +137,16 @@ let item =
             charEnd,
           ),
         );
-        <snippet text={item.text} />;
+        <unstyled text={item.text} />;
       };
-    | None => <snippet text={item.text} />
+    | None => <unstyled text={item.text} />
     };
   };
 
   <Clickable style=Styles.clickable onClick>
     <View style={Styles.result(~theme, ~isHovered)} onMouseOver onMouseOut>
       <location />
-      <highlightedText />
+      <content />
     </View>
   </Clickable>;
 };
