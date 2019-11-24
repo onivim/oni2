@@ -90,21 +90,6 @@ let escapeSpaces = str => {
   Str.global_replace(whitespace, "\\ ", str);
 };
 
-// TODO: Remove / replace when upgraded to OCaml 4.08
-let filterMap = (f, l) => {
-  let rec inner = l =>
-    switch (l) {
-    | [] => []
-    | [hd, ...tail] =>
-      switch (f(hd)) {
-      | Some(v) => [v, ...inner(tail)]
-      | None => inner(tail)
-      }
-    };
-
-  inner(l);
-};
-
 // TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
 let resultToOption = r => {
   switch (r) {
@@ -230,6 +215,24 @@ let ranges = indices =>
     indices,
   )
   |> List.rev;
+
+// TODO: Remove after 4.08 upgrade
+module List = {
+  include List;
+
+  let filter_map = f => {
+    let rec aux = accu =>
+      fun
+      | [] => List.rev(accu)
+      | [x, ...l] =>
+        switch (f(x)) {
+        | None => aux(accu, l)
+        | Some(v) => aux([v, ...accu], l)
+        };
+
+    aux([]);
+  };
+};
 
 // TODO: Remove after 4.08 upgrade
 module Option = {

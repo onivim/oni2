@@ -8,6 +8,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+module List = Utility.List;
+
 module MessageType = {
   let initialized = 0;
   let ready = 1;
@@ -287,8 +289,9 @@ module DiagnosticsCollection = {
     switch (json) {
     | `List([`String(name), `List(perFileDiagnostics)]) =>
       let perFileDiagnostics =
-        List.map(Diagnostics.of_yojson, perFileDiagnostics)
-        |> Utility.filterMap(Utility.resultToOption);
+        perFileDiagnostics
+        |> List.map(Diagnostics.of_yojson)
+        |> List.filter_map(Utility.resultToOption);
       Some({name, perFileDiagnostics});
     | _ => None
     };

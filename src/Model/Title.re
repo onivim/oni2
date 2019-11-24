@@ -6,6 +6,8 @@
 
 open Oni_Core;
 
+module List = Utility.List;
+
 type titleSections =
   | Text(string, bool)
   | Separator
@@ -57,7 +59,7 @@ let _resolve = (v: t, items: StringMap.t(string)) => {
     };
   };
 
-  v |> List.map(f) |> Utility.filterMap(v => v);
+  v |> List.map(f) |> List.filter_map(v => v);
 };
 
 let toString = (v: t, items: StringMap.t(string)) => {

@@ -2,23 +2,7 @@ open Rench;
 
 module Time = Revery_Core.Time;
 
-// TODO: remove after 4.08
-module List = {
-  include List;
-
-  let filter_map = f => {
-    let rec aux = accu =>
-      fun
-      | [] => List.rev(accu)
-      | [x, ...l] =>
-        switch (f(x)) {
-        | None => aux(accu, l)
-        | Some(v) => aux([v, ...accu], l)
-        };
-
-    aux([]);
-  };
-};
+module List = Utility.List;
 
 type disposeFunction = unit => unit;
 
