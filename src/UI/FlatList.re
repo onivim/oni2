@@ -110,9 +110,14 @@ let%component make =
                 ~render as renderItem: renderFunction,
                 ~count: int,
                 ~focused: option(int),
+                ~ref as onRef=_ => (),
                 (),
               ) => {
   let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+  let setOuterRef = ref => {
+    setOuterRef(Some(ref));
+    onRef(ref);
+  };
 
   let menuHeight =
     switch (outerRef) {
@@ -201,7 +206,7 @@ let%component make =
 
   <View
     style={Styles.container(~height=min(menuHeight, count * rowHeight))}
-    ref={r => setOuterRef(Some(r))}
+    ref=setOuterRef
     onMouseWheel=scroll>
     <View
       style={Styles.viewport(~isScrollbarVisible=scrollbar == React.empty)}>

@@ -5,6 +5,19 @@ open Oni_Core;
 open Types;
 open Oni_Model;
 
+// TODO: Remove with 4.08
+module Option = {
+  let map = f =>
+    fun
+    | Some(x) => Some(f(x))
+    | None => None;
+
+  let value = (~default) =>
+    fun
+    | Some(x) => x
+    | None => default;
+};
+
 module Styles = {
   open Style;
 
@@ -40,10 +53,11 @@ module Styles = {
 let item =
     (
       ~theme,
-      ~uiFont,
+      ~uiFont: UiFont.t,
       ~editorFont,
       ~onMouseOver,
       ~onMouseOut,
+      ~width,
       ~isHovered,
       ~item: LocationListItem.t,
       (),
@@ -58,14 +72,24 @@ let item =
     );
   };
 
-  let location = () =>
-    <Text
-      style={Styles.locationText(~font=uiFont, ~theme)}
-      text={Printf.sprintf(
+  let locationText = Printf.sprintf(
         "%s:%n - ",
         getDisplayPath(item.file),
         Index.toInt1(item.location.line),
-      )}
+      );
+
+  let locationWidth =
+    Revery.Draw.Text.measure(
+      ~window=Revery.UI.getActiveWindow(),
+      ~fontSize=uiFont.fontSize,
+      ~fontFamily=uiFont.fontFile,
+      locationText
+    ).width;
+
+  let location = () =>
+    <Text
+      style={Styles.locationText(~font=uiFont, ~theme)}
+      text=locationText
     />;
 
   let highlightedText = () => {
@@ -84,7 +108,8 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       open Utility.StringUtil;
-      let maxLength = 1000;
+      let availableWidth = float(width - locationWidth);
+      let maxLength = int_of_float(availableWidth /. editorFont.measuredWidth);
       let charStart = Index.toInt1(indexStart);
       let charEnd = Index.toInt1(indexEnd);
 
@@ -132,9 +157,19 @@ let%component make =
                 ~items: array(LocationListItem.t),
                 (),
               ) => {
+  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
   let%hook (hovered, setHovered) = Hooks.state(-1);
 
   let editorFont = {...editorFont, fontSize: uiFont.fontSize};
+  let width =
+    outerRef
+    |> Option.map(node => node#measurements().Dimensions.width)
+    |> Option.value(
+         ~default=
+           Revery.UI.getActiveWindow()
+           |> Option.map((window: Window.t) => window.metrics.size.width)
+           |> Option.value(~default=4000),
+       );
 
   let renderItem = i => {
     let onMouseOver = _ => setHovered(_ => i);
@@ -146,6 +181,7 @@ let%component make =
       editorFont
       onMouseOver
       onMouseOut
+      width
       isHovered={hovered == i}
       item={Array.get(items, i)}
     />;
@@ -156,5 +192,6 @@ let%component make =
     count={Array.length(items)}
     focused=None
     render=renderItem
+    ref={ref => setOuterRef(Some(ref))}
   />;
 };
