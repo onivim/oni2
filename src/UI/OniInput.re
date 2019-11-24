@@ -2,7 +2,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-open Oni_Core.Utility;
+module Option = Oni_Core.Utility.Option;
 
 module Cursor = {
   type state = {
@@ -44,30 +44,6 @@ module Cursor = {
 
     (cursorOpacity, () => dispatch(Reset));
   };
-};
-
-// TODO: remove after 4.08
-module Option = {
-  let value = (~default) =>
-    fun
-    | Some(x) => x
-    | None => default;
-
-  let bind = (o, f) =>
-    switch (o) {
-    | Some(x) => f(x)
-    | None => None
-    };
-
-  let map = f =>
-    fun
-    | Some(x) => Some(f(x))
-    | None => None;
-
-  let join =
-    fun
-    | Some(x) => x
-    | None => None;
 };
 
 type state = {
@@ -268,7 +244,7 @@ let%component make =
     let cursorOffset =
         measureTextWidth(String.sub(value, 0, cursorPosition));
 
-    switch (Option.bind(textRef, r => r#getParent())) {
+    switch (Option.bind(r => r#getParent(), textRef)) {
     | Some(containerNode) =>
       let container: Dimensions.t = containerNode#measurements();
 

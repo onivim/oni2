@@ -5,18 +5,7 @@ open Oni_Core;
 open Types;
 open Oni_Model;
 
-// TODO: Remove with 4.08
-module Option = {
-  let map = f =>
-    fun
-    | Some(x) => Some(f(x))
-    | None => None;
-
-  let value = (~default) =>
-    fun
-    | Some(x) => x
-    | None => default;
-};
+module Option = Utility.Option;
 
 module Styles = {
   open Style;
@@ -80,12 +69,16 @@ let item =
     );
 
   let locationWidth =
-    Revery.Draw.Text.measure(
-      ~window=Revery.UI.getActiveWindow(),
-      ~fontSize=uiFont.fontSize,
-      ~fontFamily=uiFont.fontFile,
-      locationText,
-    ).width;
+    switch (Revery.UI.getActiveWindow()) {
+      | Some(window) =>
+        Revery.Draw.Text.measure(
+          ~window,
+          ~fontSize=uiFont.fontSize,
+          ~fontFamily=uiFont.fontFile,
+          locationText,
+        ).width;
+      | None => String.length(locationText) * uiFont.fontSize;
+    }
 
   let location = () =>
     <Text

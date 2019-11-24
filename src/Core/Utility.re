@@ -252,11 +252,12 @@ module Option = {
 
   let bind = f =>
     fun
-    | Some(x) =>
-      switch (f(x)) {
-      | None => None
-      | Some(_) as v => v
-      }
+    | Some(x) => f(x)
+    | None => None;
+
+  let join =
+    fun
+    | Some(x) => x
     | None => None;
 };
 
