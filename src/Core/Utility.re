@@ -310,7 +310,8 @@ module StringUtil = {
 
   let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
     let originalLength = String.length(text);
-    let indent = {
+
+    let indentation = {
       let rec aux = i =>
         if (i >= originalLength) {
           originalLength;
@@ -323,40 +324,81 @@ module StringUtil = {
       aux(0);
     };
 
-    let remainingLength = originalLength - indent;
+    let remainingLength = originalLength - indentation;
     let matchLength = charEnd - charStart;
 
     if (remainingLength > maxLength) {
+      // too long
+
       let (offset, length) =
         if (matchLength >= maxLength) {
+          // match is lonegr than allowed
           (charStart, maxLength);
-        } else if (charEnd > maxLength) {
+        } else if (charEnd - indentation > maxLength) {
+          // match ends out of bounds
           (charEnd - maxLength, maxLength);
         } else {
-          (indent, maxLength);
+          // match is within bounds
+          (indentation, maxLength);
         };
 
-      if (offset > indent) {
+      if (offset > indentation) {
+        // We're cutting non-indentation from the start, so add ellipsis
+
+        let ellipsis = "...";
+        let ellipsisLength = String.length(ellipsis);
+
+        // adjust for ellipsis
+        let (offset, length) = {
+          let availableEnd = length - (charEnd - offset);
+
+          if (ellipsisLength > length) {
+            // ellipsis won't even fit... not much to do then I guess
+            (offset, length)
+          } else if (ellipsisLength <= availableEnd) {
+            // fits at the end, so take it from there
+            (offset, length - ellipsisLength)
+          } else {
+            // won't fit at the end
+            let remainder = ellipsisLength - availableEnd;
+
+            if (remainder < charStart - offset) {
+              // remainder will fit at start
+              (offset + remainder, length - ellipsisLength)
+            } else {
+              // won't fit anywhere, so just chop it off the end
+              (offset, length - ellipsisLength)
+            }
+          }
+        };
+
         (
-          "..." ++ String.sub(text, offset, length),
-          3 + charStart - offset,
-          3 + min(length, charEnd - offset),
+          ellipsis ++ String.sub(text, offset, length),
+          ellipsisLength + charStart - offset,
+          ellipsisLength + min(length, charEnd - offset),
         );
       } else {
+        // We're only cutting indentation from the start
         (
           String.sub(text, offset, length),
           charStart - offset,
-          min(length, charEnd - offset),
+          min(length , charEnd - offset),
         );
       };
-    } else if (indent > 0) {
-      let offset = indent > charStart ? charStart : indent;
+    } else if (indentation > 0) {
+      // not too long, but there's indentation
+
+      // do not remove indentation included in match
+      let offset = indentation > charStart ? charStart : indentation;
+      let length = min(maxLength, originalLength - offset);
+
       (
-        String.sub(text, offset, min(maxLength, originalLength - offset)),
+        String.sub(text, offset, length),
         charStart - offset,
         charEnd - offset,
       );
     } else {
+      // not too long, no indentation
       (text, charStart, charEnd);
     };
   };
