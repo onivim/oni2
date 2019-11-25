@@ -11,13 +11,15 @@ module Option = Utility.Option;
 let getFontAdvance = (fontFile, fontSize) => {
   open Revery.Draw;
 
-  let scaledFontSize = Text._getScaledFontSizeFromWindow(Revery.UI.getActiveWindow(), fontSize);
+  let scaledFontSize =
+    Text._getScaledFontSizeFromWindow(Revery.UI.getActiveWindow(), fontSize);
   let font = FontCache.load(fontFile, scaledFontSize);
   let shapedText = FontRenderer.shape(font, "x");
-  let Fontkit.{advance, _} = FontRenderer.getGlyph(font, shapedText[0].glyphId);
-  
+  let Fontkit.{advance, _} =
+    FontRenderer.getGlyph(font, shapedText[0].glyphId);
+
   float(advance) /. 64.;
-}
+};
 
 module Styles = {
   open Style;

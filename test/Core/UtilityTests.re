@@ -182,7 +182,9 @@ describe("StringUtil", ({describe, _}) => {
       expect.int(charEnd).toBe(7);
     });
 
-    test("match fits, but not ellipsis | ~maxLength=4, ~charStart=3, ~charEnd=6", ({expect}) => {
+    test(
+      "match fits, but not ellipsis | ~maxLength=4, ~charStart=3, ~charEnd=6",
+      ({expect}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=4, ~charStart=3, ~charEnd=6, text);
 
@@ -207,10 +209,11 @@ describe("StringUtil", ({describe, _}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=68, ~charStart=69, ~charEnd=76, text);
 
-      expect.string(snippet).toEqual("... JS-based solution and consumes fewer resources. Repeated testing");
+      expect.string(snippet).toEqual(
+        "... JS-based solution and consumes fewer resources. Repeated testing",
+      );
       expect.int(charStart).toBe(61);
       expect.int(charEnd).toBe(68);
     });
-    
   });
 });

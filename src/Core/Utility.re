@@ -332,14 +332,23 @@ module StringUtil = {
 
       let (offset, length) =
         if (matchLength >= maxLength) {
-          // match is lonegr than allowed
-          (charStart, maxLength);
+          (
+            // match is lonegr than allowed
+            charStart,
+            maxLength,
+          );
         } else if (charEnd - indentation > maxLength) {
-          // match ends out of bounds
-          (charEnd - maxLength, maxLength);
+          (
+            // match ends out of bounds
+            charEnd - maxLength,
+            maxLength,
+          );
         } else {
-          // match is within bounds
-          (indentation, maxLength);
+          (
+            // match is within bounds
+            indentation,
+            maxLength,
+          );
         };
 
       if (offset > indentation) {
@@ -353,23 +362,35 @@ module StringUtil = {
           let availableEnd = length - (charEnd - offset);
 
           if (ellipsisLength > length) {
-            // ellipsis won't even fit... not much to do then I guess
-            (offset, length)
+            (
+              // ellipsis won't even fit... not much to do then I guess
+              offset,
+              length,
+            );
           } else if (ellipsisLength <= availableEnd) {
-            // fits at the end, so take it from there
-            (offset, length - ellipsisLength)
+            (
+              // fits at the end, so take it from there
+              offset,
+              length - ellipsisLength,
+            );
           } else {
             // won't fit at the end
             let remainder = ellipsisLength - availableEnd;
 
             if (remainder < charStart - offset) {
-              // remainder will fit at start
-              (offset + remainder, length - ellipsisLength)
+              (
+                // remainder will fit at start
+                offset + remainder,
+                length - ellipsisLength,
+              );
             } else {
-              // won't fit anywhere, so just chop it off the end
-              (offset, length - ellipsisLength)
-            }
-          }
+              (
+                // won't fit anywhere, so just chop it off the end
+                offset,
+                length - ellipsisLength,
+              );
+            };
+          };
         };
 
         (
@@ -378,11 +399,11 @@ module StringUtil = {
           ellipsisLength + min(length, charEnd - offset),
         );
       } else {
-        // We're only cutting indentation from the start
         (
+          // We're only cutting indentation from the start
           String.sub(text, offset, length),
           charStart - offset,
-          min(length , charEnd - offset),
+          min(length, charEnd - offset),
         );
       };
     } else if (indentation > 0) {
@@ -398,8 +419,12 @@ module StringUtil = {
         charEnd - offset,
       );
     } else {
-      // not too long, no indentation
-      (text, charStart, charEnd);
+      (
+        // not too long, no indentation
+        text,
+        charStart,
+        charEnd,
+      );
     };
   };
 };
