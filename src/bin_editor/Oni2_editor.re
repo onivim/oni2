@@ -60,8 +60,6 @@ let init = app => {
   let onStateChanged = state => {
     currentState := state;
     isDirty := true;
-    GlobalContext.set({...GlobalContext.current(), state});
-    update(<Root state />);
   };
 
   let _ =
