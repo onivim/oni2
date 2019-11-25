@@ -245,7 +245,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let executeContributedCommandEffect = cmd =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
-      ExtHostClient.executeContributedCommand(cmd, extHostClient)
+      ExtHostClient.executeContributedCommand(cmd, extHostClient);
     });
 
   let registerQuitCleanupEffect =
