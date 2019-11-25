@@ -7,6 +7,18 @@ open Oni_Model;
 
 module Option = Utility.Option;
 
+// TODO: move to Revery
+let getFontAdvance = (fontFile, fontSize) => {
+  open Revery.Draw;
+
+  let scaledFontSize = Text._getScaledFontSizeFromWindow(Revery.UI.getActiveWindow(), fontSize);
+  let font = FontCache.load(fontFile, scaledFontSize);
+  let shapedText = FontRenderer.shape(font, "x");
+  let Fontkit.{advance, _} = FontRenderer.getGlyph(font, shapedText[0].glyphId);
+  
+  float(advance) /. 64.;
+}
+
 module Styles = {
   open Style;
 
@@ -161,13 +173,10 @@ let%component make =
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.fontSize,
-    // TODO: This scaling is probably not very accurate
-    measuredWidth:
-      editorFont.measuredWidth
-      *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
-    measuredHeight:
-      editorFont.measuredHeight
-      *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
+    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize),
+    // measuredHeight:
+    //   editorFont.measuredHeight
+    //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
   };
 
   let width =
