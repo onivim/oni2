@@ -308,28 +308,35 @@ module StringUtil = {
     aux(length - 1);
   };
 
-  let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) =>
-    if (String.length(text) > maxLength) {
-      let (offset, length) =
-        if (charStart > maxLength) {
-          let remainingLength = String.length(text) - charStart;
-          if (remainingLength < maxLength) {
-            (charStart, remainingLength);
-          } else {
-            (charStart, maxLength);
-          };
+  let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
+    let originalLength = String.length(text);
+    let indent = {
+      let rec aux = i =>
+        if (i >= originalLength) {
+          originalLength;
+        } else if (isSpace(text.[i])) {
+          aux(i + 1);
         } else {
-          let matchLength = charEnd - charStart;
-          if (matchLength >= maxLength) {
-            (charStart, maxLength);
-          } else if (charEnd > maxLength) {
-            (charEnd - maxLength, maxLength);
-          } else {
-            (0, maxLength);
-          };
+          i;
         };
 
-      if (offset > 0) {
+      aux(0);
+    };
+
+    let remainingLength = originalLength - indent;
+    let matchLength = charEnd - charStart;
+
+    if (remainingLength > maxLength) {
+      let (offset, length) =
+        if (matchLength >= maxLength) {
+          (charStart, maxLength);
+        } else if (charEnd > maxLength) {
+          (charEnd - maxLength, maxLength);
+        } else {
+          (indent, maxLength);
+        };
+
+      if (offset > indent) {
         (
           "..." ++ String.sub(text, offset, length),
           3 + charStart - offset,
@@ -342,7 +349,15 @@ module StringUtil = {
           min(length, charEnd - offset),
         );
       };
+    } else if (indent > 0) {
+      let offset = indent > charStart ? charStart : indent;
+      (
+        String.sub(text, offset, min(maxLength, originalLength - offset)),
+        charStart - offset,
+        charEnd - offset,
+      );
     } else {
       (text, charStart, charEnd);
     };
+  };
 };

@@ -118,7 +118,7 @@ let item =
         let after = String.sub(text, charEnd, String.length(text) - charEnd);
 
         <View style=Style.[flexDirection(`Row)]>
-          <unstyled text={trimLeft(before)} />
+          <unstyled text=before />
           <highlighted text=matchedText />
           <unstyled text={trimRight(after)} />
         </View>;
