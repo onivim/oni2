@@ -98,7 +98,7 @@ let createDefaultCommands = getState => {
   );
 };
 
-let start = getState => {
+let start = (getState, contributedCommands) => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
@@ -248,7 +248,7 @@ let start = getState => {
 
   let setInitialCommands =
     Isolinear.Effect.createWithDispatch(~name="commands.setInitial", dispatch => {
-      let commands = createDefaultCommands(getState);
+      let commands = createDefaultCommands(getState) @ contributedCommands;
       dispatch(CommandsRegister(commands));
     });
 
