@@ -10,6 +10,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 type t = {
+  commands: Commands.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
@@ -48,6 +49,7 @@ type t = {
 
 let create: unit => t =
   () => {
+    commands: Commands.empty,
     completions: Completions.default,
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),

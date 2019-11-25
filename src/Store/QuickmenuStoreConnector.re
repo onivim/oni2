@@ -91,13 +91,14 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         languageInfo,
         iconTheme,
         themeInfo,
+        commands,
       )
       : (option(Quickmenu.t), Isolinear.Effect.t(Actions.t)) => {
     switch (action) {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Model.CommandPalette.commands,
+          items: Model.Commands.toQuickMenu(commands) |> Array.of_list,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -300,6 +301,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
           state.languageInfo,
           state.iconTheme,
           themeInfo,
+          state.commands,
         );
 
       ({...state, quickmenu: menuState}, menuEffect);

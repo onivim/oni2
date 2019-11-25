@@ -20,6 +20,7 @@ type t =
   | BufferSetIndentation(int, IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Command(string)
+  | CommandsRegister(list(command))
   | CompletionStart(completionMeet)
   | CompletionAddItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
@@ -105,6 +106,13 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | Noop
+and command = {
+  commandCategory: option(string),
+  commandName: string,
+  commandAction: t,
+  commandEnabled: unit => bool,
+  commandIcon: option(IconTheme.IconDefinition.t),
+}
 and completionMeet = {
   completionMeetBufferId: int,
   completionMeetLine: int,
