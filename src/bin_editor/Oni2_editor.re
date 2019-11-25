@@ -64,16 +64,17 @@ let init = app => {
     update(<Root state />);
   };
 
-  let _ = Tick.interval((_dt) => {
-
-
-    if (isDirty^) {
-    let state = currentState^;
-    GlobalContext.set({...GlobalContext.current(), state});
-    update(<Root state />);
-    isDirty := false;
-    }
-    }, Time.seconds(0));
+  let _ =
+    Tick.interval(
+      _dt =>
+        if (isDirty^) {
+          let state = currentState^;
+          GlobalContext.set({...GlobalContext.current(), state});
+          update(<Root state />);
+          isDirty := false;
+        },
+      Time.seconds(0),
+    );
 
   let getScaleFactor = () => {
     Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
