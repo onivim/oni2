@@ -84,6 +84,14 @@ let start = (extensions, setup: Core.Setup.t) => {
     dispatch(Model.Actions.ExtensionActivated(id));
   };
 
+  let onShowMessage = message => {
+    dispatch(
+      Oni_Model.Actions.ShowNotification(
+        Oni_Model.Notification.create(~title="Extension", ~message, ()),
+      ),
+    );
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
@@ -94,6 +102,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDiagnosticsChangeMany,
       ~onDidActivateExtension,
       ~onRegisterSuggestProvider,
+      ~onShowMessage,
       ~onOutput,
       setup,
     );
@@ -234,6 +243,11 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     });
 
+  let executeContributedCommandEffect = cmd =>
+    Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
+      ExtHostClient.executeContributedCommand(cmd, extHostClient);
+    });
+
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.registerQuitCleanup", dispatch =>
@@ -250,6 +264,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
+      )
+    | Model.Actions.CommandExecuteContributed(cmd) => (
+        state,
+        executeContributedCommandEffect(cmd),
       )
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
