@@ -421,69 +421,60 @@ let start =
   let currentBufferId: ref(option(int)) = ref(None);
 
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", ()
-      /* TODO: Fix these keypaths in libvim to not be blocking */
-      =>
-        if (Oni_Input.Filter.filter(key)) {
-          open Oni_Core.Types;
-          open Oni_Core.Utility;
+    Isolinear.Effect.create(~name="vim.input", () =>
+      if (Oni_Input.Filter.filter(key)) {
+        open Oni_Core.Types;
+        open Oni_Core.Utility;
 
-          // Set cursors based on current editor
-          let editor =
-            getState()
-            |> Model.Selectors.getActiveEditorGroup
-            |> Model.Selectors.getActiveEditor;
+        // Set cursors based on current editor
+        let editor =
+          getState()
+          |> Model.Selectors.getActiveEditorGroup
+          |> Model.Selectors.getActiveEditor;
 
-          let cursors =
-            editor
-            |> Option.map(Model.Editor.getCursors)
-            |> (
-              fun
-              | Some(v) => v
-              | None => []
-            );
+        let cursors =
+          editor
+          |> Option.map(Model.Editor.getCursors)
+          |> Option.value(~default=[]);
 
-          let () =
-            editor
-            |> Core.Utility.Option.iter(e => {
-                 let topLine =
-                   Core.Types.Index.toInt1(e |> Model.Editor.getTopLine);
-                 let leftCol =
-                   Core.Types.Index.toInt0(e |> Model.Editor.getLeftCol);
-                 Vim.Window.setTopLeft(topLine, leftCol);
-               });
+        let () =
+          editor
+          |> Core.Utility.Option.iter(e => {
+               let topLine =
+                 Core.Types.Index.toInt1(e |> Model.Editor.getTopLine);
+               let leftCol =
+                 Core.Types.Index.toInt0(e |> Model.Editor.getLeftCol);
+               Vim.Window.setTopLeft(topLine, leftCol);
+             });
 
-          switch (cursors) {
-          | [hd, ..._] => Vim.Cursor.set(hd)
-          | _ => ()
-          };
+        switch (cursors) {
+        | [hd, ..._] => Vim.Cursor.set(hd)
+        | _ => ()
+        };
 
-          let _ = Vim.input(~cursors, key);
+        let _ = Vim.input(~cursors, key);
 
-          let newTopLine = Vim.Window.getTopLine();
-          let newLeftColumn = Vim.Window.getLeftColumn();
-          let cursor = Vim.Cursor.getPosition();
-          let cursorPos =
-            Position.createFromOneBasedIndices(
-              cursor.line,
-              cursor.column + 1,
-            );
+        let newTopLine = Vim.Window.getTopLine();
+        let newLeftColumn = Vim.Window.getLeftColumn();
+        let cursor = Vim.Cursor.getPosition();
+        let cursorPos =
+          Position.createFromOneBasedIndices(cursor.line, cursor.column + 1);
 
-          let () =
-            editor
-            |> Option.map(Model.Editor.getId)
-            |> Option.iter(id => {
-                 dispatch(Model.Actions.EditorCursorMove(id, cursorPos));
-                 dispatch(
-                   Model.Actions.EditorScrollToLine(id, newTopLine - 1),
-                 );
-                 dispatch(
-                   Model.Actions.EditorScrollToColumn(id, newLeftColumn),
-                 );
-               });
-          Log.debug(() => "VimStoreConnector - handled key: " ++ key);
-        }
-      );
+        let () =
+          editor
+          |> Option.map(Model.Editor.getId)
+          |> Option.iter(id => {
+               dispatch(Model.Actions.EditorCursorMove(id, cursorPos));
+               dispatch(
+                 Model.Actions.EditorScrollToLine(id, newTopLine - 1),
+               );
+               dispatch(
+                 Model.Actions.EditorScrollToColumn(id, newLeftColumn),
+               );
+             });
+        Log.debug(() => "VimStoreConnector - handled key: " ++ key);
+      }
+    );
 
   let openFileByPathEffect = (filePath, dir) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
