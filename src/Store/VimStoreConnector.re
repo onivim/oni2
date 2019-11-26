@@ -447,11 +447,6 @@ let start =
                Vim.Window.setTopLeft(topLine, leftCol);
              });
 
-        switch (cursors) {
-        | [hd, ..._] => Vim.Cursor.set(hd)
-        | _ => ()
-        };
-
         let _ = Vim.input(~cursors, key);
 
         let newTopLine = Vim.Window.getTopLine();
