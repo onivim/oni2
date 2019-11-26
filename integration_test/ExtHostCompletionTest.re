@@ -43,9 +43,9 @@ runTest(~name="ExtHostCompletionTest", (_dispatch, wait, _runEffects) => {
   );
 
   // Enter some text
-  Vim.input("i");
+  let _ = Vim.input("i");
 
-  Vim.input("H");
+  let _ = Vim.input("H");
 
   // Should get completions
   wait(

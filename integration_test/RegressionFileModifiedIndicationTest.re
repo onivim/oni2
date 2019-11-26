@@ -14,8 +14,8 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
 
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 
-  Vim.input("o");
-  Vim.input("a");
+  let _ = Vim.input("o");
+  let _ = Vim.input("a");
 
   let validateBufferCondition = (f, state: State.t) => {
     let buffer = Selectors.getBufferById(state, id);
@@ -30,7 +30,7 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
   );
 
   // Save file, should clear modified flag
-  Vim.input("<esc>");
+  let _ = Vim.input("<esc>");
   Vim.command("w");
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
@@ -38,8 +38,8 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
   );
 
   // Make another modification, should set it again
-  Vim.input("o");
-  Vim.input("a");
+  let _ = Vim.input("o");
+  let _ = Vim.input("a");
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
     validateBufferCondition(b => Buffer.isModified(b) == true, state)
