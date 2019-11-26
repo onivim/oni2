@@ -163,12 +163,12 @@ let start =
 
   let _ =
     Vim.Cursor.onMoved(newPosition => {
-      let cursorPos =
+      /*let cursorPos =
         Core.Types.Position.createFromOneBasedIndices(
           newPosition.line,
           newPosition.column + 1,
-        );
-      dispatch(Model.Actions.CursorMove(cursorPos));
+        );*/
+      //  dispatch(Model.Actions.CursorMove(cursorPos));
 
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
@@ -417,17 +417,17 @@ let start =
       dispatch(Model.Actions.QuickmenuClose);
     });
 
-  let _ =
-    Vim.Window.onTopLineChanged(t => {
-      Log.info("onTopLineChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToLine(t - 1));
-    });
+  /*let _ =
+      Vim.Window.onTopLineChanged(t => {
+        Log.info("onTopLineChanged: " ++ string_of_int(t));
+      });
 
-  let _ =
-    Vim.Window.onLeftColumnChanged(t => {
-      Log.info("onLeftColumnChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToColumn(t));
-    });
+    let _ =
+      Vim.Window.onLeftColumnChanged(t => {
+        Log.info("onLeftColumnChanged: " ++ string_of_int(t));
+        dispatch(Model.Actions.EditorScrollToLine(t - 1));
+        dispatch(Model.Actions.EditorScrollToColumn(t));
+      });*/
 
   let hasInitialized = ref(false);
   let initEffect =
@@ -437,21 +437,54 @@ let start =
       hasInitialized := true;
     });
 
-  /* TODO: Move to init */
-  /* let metadata = Vim.Buffer.getCurrent() */
-  /* |> Vim.BufferMetadata.ofBuffer; */
-  /* dispatch(Model.Actions.BufferEnter(metadata)); */
-
   let currentBufferId: ref(option(int)) = ref(None);
-  let currentEditorId: ref(option(int)) = ref(None);
 
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", ()
       /* TODO: Fix these keypaths in libvim to not be blocking */
       =>
         if (Oni_Input.Filter.filter(key)) {
+          open Oni_Core.Types;
+
+          // Set cursors based on current editor
+          let editor =
+            getState()
+            |> Model.Selectors.getActiveEditorGroup
+            |> Model.Selectors.getActiveEditor;
+
+          let cursors =
+            editor
+            |> Core.Utility.Option.map(Model.Editor.getCursors)
+            |> (
+              fun
+              | Some(v) => v
+              | None => []
+            );
+
+          let () =
+            editor
+            |> Core.Utility.Option.iter(e => {
+                 let topLine =
+                   Core.Types.Index.toInt1(e |> Model.Editor.getTopLine);
+                 let leftCol =
+                   Core.Types.Index.toInt0(e |> Model.Editor.getLeftCol);
+                 Vim.Window.setTopLeft(topLine, leftCol);
+               });
+
           Log.debug(() => "VimStoreConnector - handling key: " ++ key);
-          Vim.input(key);
+          let _ = Vim.input(~cursors, key);
+          let newTopLine = Vim.Window.getTopLine();
+          let newLeftColumn = Vim.Window.getLeftColumn();
+
+          let cursor = Vim.Cursor.getPosition();
+          let cursorPos =
+            Position.createFromOneBasedIndices(
+              cursor.line,
+              cursor.column + 1,
+            );
+          dispatch(Model.Actions.CursorMove(cursorPos));
+          dispatch(Model.Actions.EditorScrollToLine(newTopLine - 1));
+          dispatch(Model.Actions.EditorScrollToColumn(newLeftColumn));
           Log.debug(() => "VimStoreConnector - handled key: " ++ key);
         }
       );
@@ -500,12 +533,18 @@ let start =
           isCompleting := true;
           let currentPos = ref(Vim.CommandLine.getPosition());
           while (currentPos^ > position) {
-            Vim.input("<bs>");
+            let _ = Vim.input(~cursors=[], "<bs>");
             currentPos := Vim.CommandLine.getPosition();
           };
 
           let completion = Core.Utility.trimTrailingSlash(completion);
-          String.iter(c => Vim.input(String.make(1, c)), completion);
+          String.iter(
+            c => {
+              let _ = Vim.input(~cursors=[], String.make(1, c));
+              ();
+            },
+            completion,
+          );
           isCompleting := false;
         }
       )
@@ -588,14 +627,9 @@ let start =
         | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
         | _ => ()
         };
-
-        /* Update the cursor position and the scroll (top line, left column) -
-         * ensure these are in sync with libvim's model */
-        let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
-          Vim.Cursor.setPosition(
-            Core.Types.Index.toInt1(editor.cursorPosition.line),
-            Core.Types.Index.toInt0(editor.cursorPosition.character),
-          );
+      /* Update the scroll (top line, left column) -
+       * ensure these are in sync with libvim's model */
+      /*let synchronizeScroll = (editor: Model.Editor.t) => {
           Vim.Window.setTopLeft(
             Core.Types.Index.toInt1(editor.lastTopLine),
             Core.Types.Index.toInt0(editor.lastLeftCol),
@@ -605,13 +639,13 @@ let start =
         /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
         switch (editor, currentEditorId^) {
         | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeCursorAndScroll(e);
+          synchronizeScroll(e);
           currentEditorId := Some(e.editorId);
         | (Some(e), None) =>
-          synchronizeCursorAndScroll(e);
+          synchronizeScroll(e);
           currentEditorId := Some(e.editorId);
         | _ => ()
-        };
+        };*/
       }
     );
 
@@ -621,7 +655,13 @@ let start =
         switch (getClipboardText()) {
         | Some(text) =>
           Vim.command("set paste");
-          Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), text);
+          Zed_utf8.iter(
+            s => {
+              let _ = Vim.input(~cursors=[], Zed_utf8.singleton(s));
+              ();
+            },
+            text,
+          );
 
           Vim.command("set nopaste");
         | None => ()
@@ -649,12 +689,14 @@ let start =
 
         let idx = ref(delta);
         while (idx^ >= 0) {
-          Vim.input("<BS>");
+          let _ = Vim.input("<BS>");
           decr(idx);
         };
 
         Zed_utf8.iter(
-          s => Vim.input(Zed_utf8.singleton(s)),
+          s => {
+            let _ = Vim.input(Zed_utf8.singleton(s))
+          },
           completion.completionLabel,
         );
       | _ => ()
@@ -685,16 +727,18 @@ let start =
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
-      Vim.input("<esc>");
-      Vim.input("<esc>");
-      Vim.input("u");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("u");
+      ();
     });
 
   let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
-      Vim.input("<esc>");
-      Vim.input("<esc>");
-      Vim.input("<c-r>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<c-r>");
+      ();
     });
 
   let updater = (state: Model.State.t, action) => {

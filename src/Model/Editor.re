@@ -45,6 +45,18 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
+let getCursors = (v: t) => {
+  [
+    Vim.Cursor.create(
+      ~line=v.cursorPosition.line |> Index.toInt1,
+      ~column=v.cursorPosition.character |> Index.toInt0,
+      (),
+    ),
+  ];
+};
+
+let getId = v => v.editorId;
+
 let pixelPositionToLineColumn =
     (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
   let line = int_of_float((pixelY +. view.scrollY) /. metrics.lineHeight);
@@ -128,6 +140,9 @@ let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
     lastTopLine: Index.ZeroBasedIndex(line),
   };
 };
+
+let getTopLine = (v: t) => v.lastTopLine;
+let getLeftCol = (v: t) => v.lastLeftCol;
 
 let getLayout = (view: t, metrics: EditorMetrics.t) => {
   let layout: EditorLayout.t =
