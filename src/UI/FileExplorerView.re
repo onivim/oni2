@@ -1,6 +1,7 @@
 open Oni_Model;
 open Revery_UI;
 open Oni_Core.Constants;
+open Oni_Core.Types;
 
 let%component make = (~state: State.t, ()) => {
   let%hook () =
@@ -20,7 +21,7 @@ let%component make = (~state: State.t, ()) => {
       | Node({data: FileSystemNode({isDirectory: false, path, _}), _}, _) =>
         GlobalContext.current().dispatch(SetExplorerTree(tree));
         /* Only open files not directories */
-        GlobalContext.current().dispatch(OpenFileByPath(path, None));
+        GlobalContext.current().dispatch(OpenFileByPath(path, None, Some(Position.ofInt0(10, 10))));
       /*
        * If the depth of the clicked node is at the maximum depth its children
        * will have no content so we call the update action which will populate
