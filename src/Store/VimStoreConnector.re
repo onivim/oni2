@@ -13,8 +13,6 @@ module Model = Oni_Model;
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
-open Core.Types;
-
 let start =
     (
       languageInfo: Model.LanguageInfo.t,
@@ -496,6 +494,9 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      open Oni_Core.Utility;
+      open Oni_Core.Types;
+
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
@@ -518,8 +519,7 @@ let start =
           Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-      open Oni_Core.Utility;
-      open Oni_Core.Types;
+
       let () =
         location
         |> Option.iter((pos: Position.t) => {
@@ -551,12 +551,6 @@ let start =
        */
       switch (dir) {
       | Some(_) => dispatch(Model.Actions.BufferEnter(metadata, fileType))
-      | None => ()
-      };
-
-      switch (location) {
-      | Some(Position.{line, character}) =>
-        Vim.Cursor.setPosition(Index.toInt1(line), Index.toInt1(character))
       | None => ()
       };
     });

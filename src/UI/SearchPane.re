@@ -51,7 +51,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
     location:
       Position.create(
         Index.ofInt1(hit.lineNumber),
-        Index.ofInt1(hit.charStart),
+        Index.ofInt0(hit.charStart),
       ),
     text: hit.text,
     highlight:
