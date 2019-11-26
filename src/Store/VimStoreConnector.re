@@ -447,7 +447,9 @@ let start =
                Vim.Window.setTopLeft(topLine, leftCol);
              });
 
-        let _ = Vim.input(~cursors, key);
+        // TODO: Get cursors and use those to send the event,
+        // instead of querying again for the position
+        let _cursors = Vim.input(~cursors, key);
 
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();
