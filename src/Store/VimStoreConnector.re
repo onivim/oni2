@@ -445,10 +445,6 @@ let start =
 
           let () =
             editor
-            |> Option.iter(ed => print_endline(Model.Editor.toString(ed)));
-
-          let () =
-            editor
             |> Core.Utility.Option.iter(e => {
                  let topLine =
                    Core.Types.Index.toInt1(e |> Model.Editor.getTopLine);
