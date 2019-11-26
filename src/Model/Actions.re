@@ -56,7 +56,7 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorCursorMove(EditorId.t, Position.t)
+  | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
   | EditorSetScroll(EditorId.t, float)
   | EditorScroll(EditorId.t, float)
   | EditorScrollToLine(EditorId.t, int)
@@ -157,7 +157,7 @@ and editor = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursorPosition: Position.t,
+  cursors: list(Vim.Cursor.t),
   selection: VisualRange.t,
 }
 and editorMetrics = {

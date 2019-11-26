@@ -49,10 +49,11 @@ let start = () => {
         switch (bufferOpt) {
         | None => ()
         | Some(buffer) =>
-          let line = Index.toInt0(ed.cursorPosition.line);
+          let cursorPosition = Model.Editor.getPrimaryCursor(ed);
+          let line = Index.toInt0(cursorPosition.line);
           let meetOpt =
             Model.CompletionMeet.getMeetFromBufferCursor(
-              ~cursor=ed.cursorPosition,
+              ~cursor=cursorPosition,
               buffer,
             );
           switch (meetOpt) {

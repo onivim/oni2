@@ -6,7 +6,8 @@ open Oni_IntegrationTestLib;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, the buffer received by the extension host
 // is in sync with the buffer in the main process
-runTestWithInput(~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
+runTestWithInput(
+  ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );

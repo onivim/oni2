@@ -241,7 +241,9 @@ let%component make =
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
-  let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
+  let cursorPosition = Editor.getPrimaryCursor(editor);
+
+  let cursorLine = Index.toZeroBasedInt(cursorPosition.line);
 
   let (cursorOffset, cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
@@ -251,7 +253,7 @@ let%component make =
         BufferViewTokenizer.getCharacterPositionAndWidth(
           ~indentation,
           cursorStr,
-          Index.toZeroBasedInt(editor.cursorPosition.character),
+          Index.toZeroBasedInt(cursorPosition.character),
         );
       (cursorOffset, width);
     } else {
@@ -278,7 +280,7 @@ let%component make =
   let cursorPixelY =
     int_of_float(
       fontHeight
-      *. float_of_int(Index.toZeroBasedInt(editor.cursorPosition.line))
+      *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
       -. editor.scrollY
       +. 0.5,
     );
@@ -556,9 +558,7 @@ let%component make =
             ~x=lineNumberWidth,
             ~y=
               fontHeight
-              *. float_of_int(
-                   Index.toZeroBasedInt(editor.cursorPosition.line),
-                 )
+              *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
               -. editor.scrollY,
             ~height=fontHeight,
             ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
@@ -849,7 +849,7 @@ let%component make =
                 ~endLine=bottomVisibleLine + 1,
                 ~lineHeight=fontHeight,
                 ~fontWidth,
-                ~cursorLine=Index.toZeroBasedInt(editor.cursorPosition.line),
+                ~cursorLine=Index.toZeroBasedInt(cursorPosition.line),
                 ~theme=state.theme,
                 ~indentationSettings=indentation,
                 ~bufferPositionToPixel,

@@ -148,12 +148,15 @@ let runTest =
 };
 
 let runTestWithInput = (~name, f) => {
-   runTest(~name, (dispatch, wait, runEffects) => {
-      let input = (key) => {
+  runTest(
+    ~name,
+    (dispatch, wait, runEffects) => {
+      let input = key => {
         dispatch(Model.Actions.KeyboardInput(key));
         runEffects();
       };
 
       f(input, dispatch, wait, runEffects);
-   })
+    },
+  );
 };

@@ -193,15 +193,15 @@ let%component make =
             (),
           );
         };
+
+        let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
         Shapes.drawRect(
           ~transform,
           ~x=0.,
           ~y=
             rowHeight
-            *. float_of_int(
-                 Index.toZeroBasedInt(editor.cursorPosition.line),
-               )
+            *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
             -. scrollY,
           ~height=float_of_int(Constants.default.minimapCharacterHeight),
           ~width=float_of_int(width),

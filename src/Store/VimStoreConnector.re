@@ -420,6 +420,19 @@ let start =
 
   let currentBufferId: ref(option(int)) = ref(None);
 
+  let updateActiveEditorCursors = cursors => {
+    open Oni_Core.Utility;
+    let () =
+      getState()
+      |> Model.Selectors.getActiveEditorGroup
+      |> Model.Selectors.getActiveEditor
+      |> Option.map(Model.Editor.getId)
+      |> Option.iter(id => {
+           dispatch(Model.Actions.EditorCursorMove(id, cursors))
+         });
+    ();
+  };
+
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
@@ -434,7 +447,7 @@ let start =
 
         let cursors =
           editor
-          |> Option.map(Model.Editor.getCursors)
+          |> Option.map(Model.Editor.getVimCursors)
           |> Option.value(~default=[]);
 
         let () =
@@ -449,19 +462,16 @@ let start =
 
         // TODO: Get cursors and use those to send the event,
         // instead of querying again for the position
-        let _cursors = Vim.input(~cursors, key);
+        let cursors = Vim.input(~cursors, key);
 
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();
-        let cursor = Vim.Cursor.getPosition();
-        let cursorPos =
-          Position.createFromOneBasedIndices(cursor.line, cursor.column + 1);
 
         let () =
           editor
           |> Option.map(Model.Editor.getId)
           |> Option.iter(id => {
-               dispatch(Model.Actions.EditorCursorMove(id, cursorPos));
+               dispatch(Model.Actions.EditorCursorMove(id, cursors));
                dispatch(
                  Model.Actions.EditorScrollToLine(id, newTopLine - 1),
                );
@@ -522,13 +532,15 @@ let start =
           };
 
           let completion = Core.Utility.trimTrailingSlash(completion);
+          let latestCursors = ref([]);
           String.iter(
             c => {
-              let _ = Vim.input(~cursors=[], String.make(1, c));
+              latestCursors := Vim.input(~cursors=[], String.make(1, c));
               ();
             },
             completion,
           );
+          updateActiveEditorCursors(latestCursors^);
           isCompleting := false;
         }
       )
@@ -557,7 +569,7 @@ let start =
    This allows us to keep the buffer management in Onivim 2,
    and treat vim as an entity for manipulating a singular buffer.
    */
-   // TODO: Remove remaining 'synchronization'
+  // TODO: Remove remaining 'synchronization'
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
       switch (hasInitialized^) {
@@ -621,13 +633,16 @@ let start =
         switch (getClipboardText()) {
         | Some(text) =>
           Vim.command("set paste");
+          let latestCursors = ref([]);
           Zed_utf8.iter(
             s => {
-              let _ = Vim.input(~cursors=[], Zed_utf8.singleton(s));
+              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
               ();
             },
             text,
           );
+
+          updateActiveEditorCursors(latestCursors^);
 
           Vim.command("set nopaste");
         | None => ()
@@ -696,7 +711,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let _ = Vim.input("u");
+      let cursors = Vim.input("u");
+      updateActiveEditorCursors(cursors);
       ();
     });
 
@@ -704,7 +720,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let _ = Vim.input("<c-r>");
+      let cursors = Vim.input("<c-r>");
+      updateActiveEditorCursors(cursors);
       ();
     });
 

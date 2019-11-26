@@ -26,16 +26,19 @@ let create = (~bufferId=0, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursorPosition: Position.createFromZeroBasedIndices(0, 0),
+    cursors: [Vim.Cursor.create(~line=1, ~column=0, ())],
     selection: VisualRange.create(),
   };
   ret;
 };
 
 let toString = (v: t) => {
+  let cursors =
+    v.cursors |> List.map(Vim.Cursor.show) |> String.concat(", ");
+
   Printf.sprintf(
-    "Cursor: %s Topline: %s Leftcol: %s",
-    Position.show(v.cursorPosition),
+    "Cursors: %s Topline: %s Leftcol: %s",
+    cursors,
     Index.show(v.lastTopLine),
     Index.show(v.lastLeftCol),
   );
@@ -54,15 +57,16 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
-let getCursors = (v: t) => {
-  [
-    Vim.Cursor.create(
-      ~line=v.cursorPosition.line |> Index.toInt1,
-      ~column=v.cursorPosition.character |> Index.toInt0,
-      (),
-    ),
-  ];
-};
+let getVimCursors = v => v.cursors;
+
+let getPrimaryCursor = v =>
+  switch (v.cursors) {
+  | [hd, ..._] =>
+    let line = Index.ofInt1(hd.line);
+    let character = Index.ofInt0(hd.column);
+    Position.create(line, character);
+  | [] => Position.ofInt0(0, 0)
+  };
 
 let getId = v => v.editorId;
 
@@ -80,13 +84,17 @@ let getVisibleView = (metrics: EditorMetrics.t) =>
 let getTotalSizeInPixels = (view: t, metrics: EditorMetrics.t) =>
   int_of_float(float_of_int(view.viewLines) *. metrics.lineHeight);
 
-let getCursorPixelLine = (view: t, metrics: EditorMetrics.t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.line))
+let getCursorPixelLine = (view: t, metrics: EditorMetrics.t) => {
+  let cursorPosition = getPrimaryCursor(view);
+  float_of_int(Index.toZeroBasedInt(cursorPosition.line))
   *. metrics.lineHeight;
+};
 
-let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.character))
+let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) => {
+  let cursorPosition = getPrimaryCursor(view);
+  float_of_int(Index.toZeroBasedInt(cursorPosition.character))
   *. metrics.characterWidth;
+};
 
 let getVerticalScrollbarMetrics =
     (view: t, scrollBarHeight: int, metrics: EditorMetrics.t) => {
@@ -254,12 +262,12 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
-  | EditorCursorMove(id, b) when EditorId.equals(view.editorId, id) =>
+  | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) =>
     /* If the cursor moved, make sure we're snapping to the top line */
     /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
     {
       ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
-      cursorPosition: b,
+      cursors,
     }
   | EditorSetScroll(id, scrollY) when EditorId.equals(view.editorId, id) =>
     scrollTo(view, scrollY, metrics)

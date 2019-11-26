@@ -5,7 +5,8 @@ open Oni_IntegrationTestLib;
 // https://github.com/onivim/oni2/issues/600
 //
 // Verify some simple cases around the file modified flag
-runTestWithInput(~name="RegressionFileModifiedIndication", (input, _, wait, _) => {
+runTestWithInput(
+  ~name="RegressionFileModifiedIndication", (input, _, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
