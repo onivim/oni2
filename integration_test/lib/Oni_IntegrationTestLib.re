@@ -135,7 +135,7 @@ let runTest =
     logWaiter("Finished - result: " ++ string_of_bool(result));
 
     if (!result) {
-      logWaiter("FAILED");
+      logWaiter("FAILED: " ++ Sys.executable_name);
       assert(false == true);
     };
   };
