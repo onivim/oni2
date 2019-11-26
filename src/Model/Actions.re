@@ -21,6 +21,8 @@ type t =
   | BufferSetModified(int, bool)
   | Command(string)
   | CommandsRegister(list(command))
+  // Execute a contribute command, from an extension
+  | CommandExecuteContributed(string)
   | CompletionStart(completionMeet)
   | CompletionAddItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)

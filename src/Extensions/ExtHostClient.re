@@ -59,7 +59,11 @@ let start =
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
-    | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
+    | (
+        "MainThreadMessageService",
+        "$showMessage",
+        [_level, `String(s), _extInfo, ..._],
+      ) =>
       onShowMessage(s);
       Ok(None);
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
