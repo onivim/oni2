@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const path = require('path');
+const os = require('os');
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -70,7 +71,7 @@ function activate(context) {
         // });
 
         if (e.document) {
-           latestText = e.document.getText().split("\n").join("|");
+           latestText = e.document.getText().split(os.EOL).join("|");
         }
 
 		//vscode.window.showInformationMessage('Changed!');
