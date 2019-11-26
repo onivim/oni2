@@ -3,14 +3,105 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-let start = _ => {
+let createDefaultCommands = getState => {
+  State.(
+    Actions.[
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Open configuration file",
+        ~action=OpenConfigFile("configuration.json"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Open keybindings file",
+        ~action=OpenConfigFile("keybindings.json"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Reload configuration",
+        ~action=ConfigurationReload,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Theme Picker",
+        ~action=QuickmenuShow(ThemesPicker),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Close Editor",
+        ~action=Command("view.closeEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Split Editor Vertically",
+        ~action=Command("view.splitVertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Split Editor Horizontally",
+        ~action=Command("view.splitHorizontal"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Enable Zen Mode",
+        ~enabled=() => !getState().zenMode,
+        ~action=EnableZenMode,
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Disable Zen Mode",
+        ~enabled=() => getState().zenMode,
+        ~action=DisableZenMode,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Input"),
+        ~name="Disable Key Displayer",
+        ~enabled=() => KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~action=DisableKeyDisplayer,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Input"),
+        ~name="Enable Key Displayer",
+        ~enabled=() => !KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~action=EnableKeyDisplayer,
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Rotate Windows (Forwards)",
+        ~action=Command("view.rotateForward"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Rotate Windows (Backwards)",
+        ~action=Command("view.rotateBackward"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Editor"),
+        ~name="Copy Active Filepath to Clipboard",
+        ~action=CopyActiveFilepathToClipboard,
+        (),
+      ),
+    ]
+  );
+};
+
+let start = getState => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
-    );
-  let multipleActionEffect = (actions, name) =>
-    Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
-      List.iter(v => dispatch(v), actions)
     );
 
   let closeEditorEffect = (state, _) =>
@@ -129,15 +220,12 @@ let start = _ => {
       ),*/
     (
       "workbench.action.closeQuickOpen",
-      _ => multipleActionEffect([QuickmenuClose]),
+      _ => singleActionEffect(QuickmenuClose),
     ),
-    ("list.focusDown", _ => multipleActionEffect([ListFocusDown])),
-    ("list.focusUp", _ => multipleActionEffect([ListFocusUp])),
-    ("list.select", _ => multipleActionEffect([ListSelect])),
-    (
-      "list.selectBackground",
-      _ => multipleActionEffect([ListSelectBackground]),
-    ),
+    ("list.focusDown", _ => singleActionEffect(ListFocusDown)),
+    ("list.focusUp", _ => singleActionEffect(ListFocusUp)),
+    ("list.select", _ => singleActionEffect(ListSelect)),
+    ("list.selectBackground", _ => singleActionEffect(ListSelectBackground)),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
@@ -158,8 +246,15 @@ let start = _ => {
       commands,
     );
 
+  let setInitialCommands =
+    Isolinear.Effect.createWithDispatch(~name="commands.setInitial", dispatch => {
+      let commands = createDefaultCommands(getState);
+      dispatch(CommandsRegister(commands));
+    });
+
   let updater = (state: State.t, action) => {
     switch (action) {
+    | Init => (state, setInitialCommands)
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
