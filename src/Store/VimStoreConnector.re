@@ -557,6 +557,7 @@ let start =
    This allows us to keep the buffer management in Onivim 2,
    and treat vim as an entity for manipulating a singular buffer.
    */
+   // TODO: Remove remaining 'synchronization'
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
       switch (hasInitialized^) {
@@ -611,25 +612,6 @@ let start =
         | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
         | _ => ()
         };
-      /* Update the scroll (top line, left column) -
-       * ensure these are in sync with libvim's model */
-      /*let synchronizeScroll = (editor: Model.Editor.t) => {
-          Vim.Window.setTopLeft(
-            Core.Types.Index.toInt1(editor.lastTopLine),
-            Core.Types.Index.toInt0(editor.lastLeftCol),
-          );
-        };
-
-        /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
-        switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeScroll(e);
-          currentEditorId := Some(e.editorId);
-        | (Some(e), None) =>
-          synchronizeScroll(e);
-          currentEditorId := Some(e.editorId);
-        | _ => ()
-        };*/
       }
     );
 
