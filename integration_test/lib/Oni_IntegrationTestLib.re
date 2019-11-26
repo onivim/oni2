@@ -146,3 +146,14 @@ let runTest =
 
   dispatch(Model.Actions.Quit(true));
 };
+
+let runTestWithInput = (~name, f) => {
+   runTest(~name, (dispatch, wait, runEffects) => {
+      let input = (key) => {
+        dispatch(Model.Actions.KeyboardInput(key));
+        runEffects();
+      };
+
+      f(input, dispatch, wait, runEffects);
+   })
+};

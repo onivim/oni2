@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTest(~name="ExtHostCompletionTest", (_dispatch, wait, _runEffects) => {
+runTestWithInput(~name="ExtHostCompletionTest", (input, _dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
@@ -43,9 +43,9 @@ runTest(~name="ExtHostCompletionTest", (_dispatch, wait, _runEffects) => {
   );
 
   // Enter some text
-  let _ = Vim.input("i");
+  input("i");
 
-  let _ = Vim.input("H");
+  input("H");
 
   // Should get completions
   wait(
