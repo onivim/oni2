@@ -25,7 +25,8 @@ let start = () => {
       } else {
         (state, Isolinear.Effect.none);
       }
-    | Actions.CursorMove(position) when state.mode != Vim.Types.Insert =>
+    | Actions.EditorCursorMove(_, position)
+        when state.mode != Vim.Types.Insert =>
       let newState =
         switch (Model.Selectors.getActiveBuffer(state)) {
         | None => state

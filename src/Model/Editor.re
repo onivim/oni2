@@ -32,6 +32,15 @@ let create = (~bufferId=0, ()) => {
   ret;
 };
 
+let toString = (v: t) => {
+  Printf.sprintf(
+    "Cursor: %s Topline: %s Leftcol: %s",
+    Position.show(v.cursorPosition),
+    Index.show(v.lastTopLine),
+    Index.show(v.lastLeftCol),
+  );
+};
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -243,18 +252,22 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) =>
+  | SelectionChanged(selection) => {...view, selection}
+  | RecalculateEditorView(buffer) => recalculate(view, buffer)
+  | EditorCursorMove(id, b) when EditorId.equals(view.editorId, id) =>
     /* If the cursor moved, make sure we're snapping to the top line */
     /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
     {
       ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
       cursorPosition: b,
     }
-  | SelectionChanged(selection) => {...view, selection}
-  | RecalculateEditorView(buffer) => recalculate(view, buffer)
-  | EditorSetScroll(scrollY) => scrollTo(view, scrollY, metrics)
-  | EditorScroll(scrollDeltaY) => scroll(view, scrollDeltaY, metrics)
-  | EditorScrollToLine(line) => scrollToLine(view, line, metrics)
-  | EditorScrollToColumn(column) => scrollToColumn(view, column, metrics)
+  | EditorSetScroll(id, scrollY) when EditorId.equals(view.editorId, id) =>
+    scrollTo(view, scrollY, metrics)
+  | EditorScroll(id, scrollDeltaY) when EditorId.equals(view.editorId, id) =>
+    scroll(view, scrollDeltaY, metrics)
+  | EditorScrollToLine(id, line) when EditorId.equals(view.editorId, id) =>
+    scrollToLine(view, line, metrics)
+  | EditorScrollToColumn(id, column) when EditorId.equals(view.editorId, id) =>
+    scrollToColumn(view, column, metrics)
   | _ => view
   };

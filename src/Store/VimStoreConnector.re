@@ -163,13 +163,6 @@ let start =
 
   let _ =
     Vim.Cursor.onMoved(newPosition => {
-      /*let cursorPos =
-        Core.Types.Position.createFromOneBasedIndices(
-          newPosition.line,
-          newPosition.column + 1,
-        );*/
-      //  dispatch(Model.Actions.CursorMove(cursorPos));
-
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
 
@@ -417,18 +410,6 @@ let start =
       dispatch(Model.Actions.QuickmenuClose);
     });
 
-  /*let _ =
-      Vim.Window.onTopLineChanged(t => {
-        Log.info("onTopLineChanged: " ++ string_of_int(t));
-      });
-
-    let _ =
-      Vim.Window.onLeftColumnChanged(t => {
-        Log.info("onLeftColumnChanged: " ++ string_of_int(t));
-        dispatch(Model.Actions.EditorScrollToLine(t - 1));
-        dispatch(Model.Actions.EditorScrollToColumn(t));
-      });*/
-
   let hasInitialized = ref(false);
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
@@ -445,6 +426,7 @@ let start =
       =>
         if (Oni_Input.Filter.filter(key)) {
           open Oni_Core.Types;
+          open Oni_Core.Utility;
 
           // Set cursors based on current editor
           let editor =
@@ -454,12 +436,16 @@ let start =
 
           let cursors =
             editor
-            |> Core.Utility.Option.map(Model.Editor.getCursors)
+            |> Option.map(Model.Editor.getCursors)
             |> (
               fun
               | Some(v) => v
               | None => []
             );
+
+          let () =
+            editor
+            |> Option.iter(ed => print_endline(Model.Editor.toString(ed)));
 
           let () =
             editor
@@ -471,20 +457,34 @@ let start =
                  Vim.Window.setTopLeft(topLine, leftCol);
                });
 
-          Log.debug(() => "VimStoreConnector - handling key: " ++ key);
+          switch (cursors) {
+          | [hd, ..._] => Vim.Cursor.set(hd)
+          | _ => ()
+          };
+
           let _ = Vim.input(~cursors, key);
+
           let newTopLine = Vim.Window.getTopLine();
           let newLeftColumn = Vim.Window.getLeftColumn();
-
           let cursor = Vim.Cursor.getPosition();
           let cursorPos =
             Position.createFromOneBasedIndices(
               cursor.line,
               cursor.column + 1,
             );
-          dispatch(Model.Actions.CursorMove(cursorPos));
-          dispatch(Model.Actions.EditorScrollToLine(newTopLine - 1));
-          dispatch(Model.Actions.EditorScrollToColumn(newLeftColumn));
+
+          let () =
+            editor
+            |> Option.map(Model.Editor.getId)
+            |> Option.iter(id => {
+                 dispatch(Model.Actions.EditorCursorMove(id, cursorPos));
+                 dispatch(
+                   Model.Actions.EditorScrollToLine(id, newTopLine - 1),
+                 );
+                 dispatch(
+                   Model.Actions.EditorScrollToColumn(id, newLeftColumn),
+                 );
+               });
           Log.debug(() => "VimStoreConnector - handled key: " ++ key);
         }
       );
@@ -695,7 +695,8 @@ let start =
 
         Zed_utf8.iter(
           s => {
-            let _ = Vim.input(Zed_utf8.singleton(s))
+            let _ = Vim.input(Zed_utf8.singleton(s));
+            ();
           },
           completion.completionLabel,
         );

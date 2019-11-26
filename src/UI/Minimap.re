@@ -105,6 +105,7 @@ let%component make =
       + Constants.default.minimapLineSpacing,
     );
 
+  let editorId = Editor.getId(editor);
   let%hook (mouseState, dispatch) =
     React.Hooks.reducer(~initialState, reducer);
 
@@ -143,6 +144,7 @@ let%component make =
     let linesInMinimap = metrics.pixelHeight / minimapLineSize;
     if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
       GlobalContext.current().editorScrollDelta(
+        ~editorId,
         ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
         (),
       );
@@ -155,7 +157,11 @@ let%component make =
               + Constants.default.minimapCharacterHeight;
             let linesInMinimap = metrics.pixelHeight / minimapLineSize;
             let scrollTo = scrollTo -. float_of_int(linesInMinimap);
-            GlobalContext.current().editorSetScroll(~scrollY=scrollTo, ());
+            GlobalContext.current().editorSetScroll(
+              ~editorId,
+              ~scrollY=scrollTo,
+              (),
+            );
           },
         ~onMouseUp=_evt => {scrollComplete()},
         (),

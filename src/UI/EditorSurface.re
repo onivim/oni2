@@ -197,6 +197,7 @@ let%component make =
 
   let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
+  let editorId = Editor.getId(editor);
   let buffer =
     switch (activeBuffer) {
     | Some(buffer) => buffer
@@ -455,17 +456,23 @@ let%component make =
     ];
 
   let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    GlobalContext.current().editorScrollDelta(
-      ~deltaY=wheelEvent.deltaY *. (-50.),
-      (),
-    );
+    let () =
+      GlobalContext.current().editorScrollDelta(
+        ~editorId,
+        ~deltaY=wheelEvent.deltaY *. (-50.),
+        (),
+      );
+    ();
   };
 
   let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    GlobalContext.current().editorScrollDelta(
-      ~deltaY=wheelEvent.deltaY *. (-150.),
-      (),
-    );
+    let () =
+      GlobalContext.current().editorScrollDelta(
+        ~editorId,
+        ~deltaY=wheelEvent.deltaY *. (-150.),
+        (),
+      );
+    ();
   };
 
   let diagnostics =
