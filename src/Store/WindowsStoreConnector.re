@@ -206,12 +206,10 @@ let start = getState => {
 
   // This effect 'steals' focus from Revery. When we're selecting an active editor,
   // we want to be sure the editor has focus, not a Revery UI component.
-  let getFocusEffect = Isolinear.Effect.create(
-    ~name="windows.getFocus",
-    () => {
-      Revery.UI.Focus.loseFocus();
-    }
-  );
+  let getFocusEffect =
+    Isolinear.Effect.create(~name="windows.getFocus", () => {
+      Revery.UI.Focus.loseFocus()
+    });
 
   let updater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {

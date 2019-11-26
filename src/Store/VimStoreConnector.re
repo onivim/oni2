@@ -240,7 +240,11 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(buf, Some(Model.WindowTree.Vertical), None)
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowTree.Vertical),
+            None,
+          )
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
@@ -512,29 +516,32 @@ let start =
           Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-
       open Oni_Core.Utility;
       open Oni_Core.Types;
-      let () = position
-      |> Option.iter((pos: Position.t) => {
-        open Position;
-        let cursor =
-        Vim.Cursor.create(
-          ~line=Index.toInt1(pos.line), 
-          ~column=Index.toInt0(pos.character),
-          (),
-        );
-        let () = updateActiveEditorCursors([cursor]);
+      let () =
+        position
+        |> Option.iter((pos: Position.t) => {
+             open Position;
+             let cursor =
+               Vim.Cursor.create(
+                 ~line=Index.toInt1(pos.line),
+                 ~column=Index.toInt0(pos.character),
+                 (),
+               );
+             let () = updateActiveEditorCursors([cursor]);
 
-        let topLine: int = max(Index.toInt0(pos.line) - 10, 0);
+             let topLine: int = max(Index.toInt0(pos.line) - 10, 0);
 
-        let () = getState()
-        |> Model.Selectors.getActiveEditorGroup
-        |> Model.Selectors.getActiveEditor
-        |> Option.map(Model.Editor.getId)
-        |> Option.iter(id => dispatch(Model.Actions.EditorScrollToLine(id, topLine)));
-        ();
-      });
+             let () =
+               getState()
+               |> Model.Selectors.getActiveEditorGroup
+               |> Model.Selectors.getActiveEditor
+               |> Option.map(Model.Editor.getId)
+               |> Option.iter(id =>
+                    dispatch(Model.Actions.EditorScrollToLine(id, topLine))
+                  );
+             ();
+           });
 
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.

@@ -1,7 +1,6 @@
 open Oni_Model;
 open Revery_UI;
 open Oni_Core.Constants;
-open Oni_Core.Types;
 
 let%component make = (~state: State.t, ()) => {
   let%hook () =
