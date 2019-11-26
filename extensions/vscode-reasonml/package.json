@@ -22,24 +22,6 @@
   "activationEvents": ["onLanguage:ocaml", "onLanguage:reason"],
   "main": "./out/src/extension",
   "contributes": {
-    "commands": [
-      {
-        "command": "reason.caseSplit",
-        "title": "Reason: Case Split"
-      },
-      {
-        "command": "reason.showMerlinFiles",
-        "title": "Reason: Show Merlin Files"
-      },
-      {
-        "command": "reason.showAvailableLibraries",
-        "title": "Reason: Show Libraries Available via Dependencies"
-      },
-      {
-        "command": "reason.showProjectEnv",
-        "title": "Reason: Show Environment"
-      }
-    ],
     "configuration": {
       "type": "object",
       "title": "Reason configuration",

@@ -169,14 +169,21 @@ module ModelContentChange = {
   };
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
-    let isInsert =
-      Index.toZeroBasedInt(bu.endLine) == Index.toZeroBasedInt(bu.startLine);
+    let newLines = Array.length(bu.lines);
+    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
-    let startLine = Index.toZeroBasedInt(bu.startLine);
-    let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
+    let isDelete = newLines == 0;
+
+    let startLine = Index.toInt0(bu.startLine);
+    let endLine = Index.toInt0(bu.endLine);
+
+    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
 
     let endLine = max(endLine, startLine);
-    let endCharacter = isInsert ? 0 : 2147483647;
+    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
+    //    let endCharacter = 0;
+
+    let endLine = isDelete ? endLine + 1 : endLine;
 
     let range =
       Range.create(
