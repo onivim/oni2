@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const path = require('path');
+const os = require('os');
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -48,16 +49,6 @@ function activate(context) {
 
     const collection = vscode.languages.createDiagnosticCollection('test');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('developer.oni.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World!');
-	});
-
     let disposable2 = vscode.workspace.onDidOpenTextDocument((e) => {
         // TODO:
         // Add command / option to toggle this
@@ -66,6 +57,8 @@ function activate(context) {
         //     filename: e.fileName,
         // });
     });
+
+    let latestText = "";
 
     let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
         // TODO:
@@ -76,6 +69,10 @@ function activate(context) {
         //     contentChanges: e.contentChanges,
         //     fullText: e.document.getText(),
         // });
+
+        if (e.document) {
+           latestText = e.document.getText().split(os.EOL).join("|");
+        }
 
 		//vscode.window.showInformationMessage('Changed!');
         const document = e.document;
@@ -91,9 +88,26 @@ function activate(context) {
         }
     });
 
-	context.subscriptions.push(disposable);
+	// The command has been defined in the package.json file
+	// Now provide the implementation of the command with  registerCommand
+	// The commandId parameter must match the command field in package.json
+	let disposable4 = vscode.commands.registerCommand('developer.oni.showNotification', () => {
+		// The code you place here will be executed every time your command is executed
+
+		// Display a message box to the user
+		vscode.window.showInformationMessage('Hello from extension!');
+	});
+
+    // Helper command to show buffer text
+    // This helps us create a test case to validate buffer manipulations
+	let disposable5 = vscode.commands.registerCommand('developer.oni.getBufferText', () => {
+		vscode.window.showInformationMessage("fulltext:" + latestText);
+	});
+
 	context.subscriptions.push(disposable2);
 	context.subscriptions.push(disposable3);
+	context.subscriptions.push(disposable4);
+	context.subscriptions.push(disposable5);
 }
 
 // this method is called when your extension is deactivated

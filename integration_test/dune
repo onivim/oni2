@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            FontSizeChangeTest
            InputIgnoreTest
@@ -46,6 +47,7 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe

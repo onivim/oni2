@@ -14,8 +14,12 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "developer.oni.helloWorld",
-				"title": "Hello World"
+				"command": "developer.oni.showNotification",
+				"title": "Onivim - Developer: Show Notification"
+			},
+			{
+				"command": "developer.oni.getBufferText",
+				"title": "Onivim - Developer: Buffer Text"
 			}
 		],
 		"languages": [{
