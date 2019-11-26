@@ -169,7 +169,6 @@ module ModelContentChange = {
   };
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
-    prerr_endline("BUFFER UPDATE: " ++ BufferUpdate.show(bu));
     let newLines = Array.length(bu.lines);
     let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
@@ -201,9 +200,6 @@ module ModelContentChange = {
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
     let (isInsert, range) = getRangeFromEdit(bu);
     let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
-
-    prerr_endline("ISINSERT: " ++ (isInsert ? "true" : "false"));
-    prerr_endline("RANGE: " ++ Range.show(range));
 
     let text = isInsert ? text ++ Eol.toString(eol) : text;
 
