@@ -171,21 +171,18 @@ module ModelContentChange = {
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
     prerr_endline("BUFFER UPDATE: " ++ BufferUpdate.show(bu));
     let newLines = Array.length(bu.lines);
-    let isInsert =
-      Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
+    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
-    let isDelete =
-      newLines == 0;
+    let isDelete = newLines == 0;
 
     let startLine = Index.toInt0(bu.startLine);
     let endLine = Index.toInt0(bu.endLine);
 
-    let endLine = endLine <= -1 ? 2147483647 : endLine - 1;
-
+    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
 
     let endLine = max(endLine, startLine);
-    let endCharacter = (isInsert || isDelete) ? 0 : 2147483647;
-//    let endCharacter = 0;
+    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
+    //    let endCharacter = 0;
 
     let endLine = isDelete ? endLine + 1 : endLine;
 
@@ -205,8 +202,8 @@ module ModelContentChange = {
     let (isInsert, range) = getRangeFromEdit(bu);
     let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
 
-    prerr_endline ("ISINSERT: " ++ (isInsert ? "true": "false"));
-    prerr_endline ("RANGE: " ++ Range.show(range));
+    prerr_endline("ISINSERT: " ++ (isInsert ? "true" : "false"));
+    prerr_endline("RANGE: " ++ Range.show(range));
 
     let text = isInsert ? text ++ Eol.toString(eol) : text;
 
