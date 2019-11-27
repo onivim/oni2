@@ -34,10 +34,7 @@ let toString = (v: t) => {
   let cursors =
     v.cursors |> List.map(Vim.Cursor.show) |> String.concat(", ");
 
-  Printf.sprintf(
-    "Cursors: %s",
-    cursors,
-  );
+  Printf.sprintf("Cursors: %s", cursors);
 };
 
 type scrollbarMetrics = {
@@ -249,8 +246,7 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
-  | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) =>
-    {
+  | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
       ...view,
       cursors,
     }

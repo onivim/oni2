@@ -452,17 +452,18 @@ let start =
         let () =
           editor
           |> Core.Utility.Option.iter(e => {
-
-               let () = getState()
-               |> Model.Selectors.getActiveEditorGroup
-               |> Option.map(Model.EditorGroup.getMetrics)
-               |> Option.iter(metrics => {
-                 let topLine =
-                   Model.Editor.getTopVisibleLine(e, metrics);
-                 let leftCol =
-                   Model.Editor.getLeftVisibleColumn(e, metrics);
-                 Vim.Window.setTopLeft(topLine, leftCol);
-               });
+               let () =
+                 getState()
+                 |> Model.Selectors.getActiveEditorGroup
+                 |> Option.map(Model.EditorGroup.getMetrics)
+                 |> Option.iter(metrics => {
+                      let topLine =
+                        Model.Editor.getTopVisibleLine(e, metrics);
+                      let leftCol =
+                        Model.Editor.getLeftVisibleColumn(e, metrics);
+                      Vim.Window.setTopLeft(topLine, leftCol);
+                    });
+               ();
              });
 
         let cursors = Vim.input(~cursors, key);
