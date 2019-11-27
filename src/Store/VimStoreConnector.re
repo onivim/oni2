@@ -678,13 +678,15 @@ let start =
           decr(idx);
         };
 
+        let latestCursors = ref([]);
         Zed_utf8.iter(
           s => {
-            let _ = Vim.input(Zed_utf8.singleton(s));
+            latestCursors := Vim.input(Zed_utf8.singleton(s));
             ();
           },
           completion.completionLabel,
         );
+        updateActiveEditorCursors(latestCursors^);
       | _ => ()
       };
     });
