@@ -22,7 +22,7 @@ module SuggestProvider = {
 
 type t = {suggestProviders: list(SuggestProvider.t)};
 
-let create = () => {suggestProviders: []};
+let empty = {suggestProviders: []};
 
 let getSuggestProviders = (fileType: string, v: t) => {
   let filter = (sp: SuggestProvider.t) => {

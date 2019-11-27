@@ -19,12 +19,6 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onExtHostClosed = () => Core.Log.info("ext host closed");
 
-  // Keep track of the available language features
-  // TODO: Keep track of this in the application state / store,
-  // if needed more globally?
-
-  let languageFeatures = ref(LanguageFeatures.create());
-
   let extensionInfo =
     extensions
     |> List.map(ext =>
@@ -73,8 +67,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Core.Log.info(
       "Registered suggest provider with ID: " ++ string_of_int(sp.id),
     );
-    languageFeatures :=
-      LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
+    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
   };
 
   let onOutput = msg => {
@@ -204,9 +197,9 @@ let start = (extensions, setup: Core.Setup.t) => {
     List.map(suggestionItemToCompletionItem, suggestions);
 
   let getAndDispatchCompletions =
-      (~fileType, ~uri, ~completionMeet, ~position, ()) => {
+      (~languageFeatures, ~fileType, ~uri, ~completionMeet, ~position, ()) => {
     let providers =
-      LanguageFeatures.getSuggestProviders(fileType, languageFeatures^);
+      LanguageFeatures.getSuggestProviders(fileType, languageFeatures);
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
@@ -249,6 +242,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         (buf, fileType) => {
           let uri = Model.Buffer.getUri(buf);
+          let languageFeatures = state.languageFeatures;
           let position =
             Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
           Core.Log.info(
@@ -257,6 +251,7 @@ let start = (extensions, setup: Core.Setup.t) => {
             Protocol.OneBasedPosition.show(position))
           );
           getAndDispatchCompletions(
+            ~languageFeatures,
             ~fileType,
             ~uri,
             ~completionMeet,

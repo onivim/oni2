@@ -66,6 +66,7 @@ type t =
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
+  | LanguageFeatureRegisterSuggestProvider(LanguageFeatures.SuggestProvider.t)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
