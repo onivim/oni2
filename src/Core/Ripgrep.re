@@ -233,7 +233,7 @@ let search = (path, workingDirectory, callback, completedCallback) => {
 let findInFiles = (path, workingDirectory, query, callback, completedCallback) => {
   process(
     path,
-    [|"--smart-case", "--json", "--", query, workingDirectory|],
+    [|"--smart-case", "--hidden", "--json", "--", query, workingDirectory|],
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
