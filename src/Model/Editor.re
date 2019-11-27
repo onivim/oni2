@@ -16,8 +16,6 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
-    lastTopLine: Index.ZeroBasedIndex(0),
-    lastLeftCol: Index.OneBasedIndex(0),
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -37,10 +35,8 @@ let toString = (v: t) => {
     v.cursors |> List.map(Vim.Cursor.show) |> String.concat(", ");
 
   Printf.sprintf(
-    "Cursors: %s Topline: %s Leftcol: %s",
+    "Cursors: %s",
     cursors,
-    Index.show(v.lastTopLine),
-    Index.show(v.lastLeftCol),
   );
 };
 
@@ -152,14 +148,8 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  {
-    ...scrollTo(view, scrollAmount, metrics),
-    lastTopLine: Index.ZeroBasedIndex(line),
-  };
+  scrollTo(view, scrollAmount, metrics);
 };
-
-let getTopLine = (v: t) => v.lastTopLine;
-let getLeftCol = (v: t) => v.lastLeftCol;
 
 let getLayout = (view: t, metrics: EditorMetrics.t) => {
   let layout: EditorLayout.t =
@@ -201,10 +191,7 @@ let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
 
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
-  {
-    ...scrollToHorizontal(view, scrollAmount, metrics),
-    lastLeftCol: Index.ZeroBasedIndex(column),
-  };
+  scrollToHorizontal(view, scrollAmount, metrics);
 };
 
 let scroll = (view: t, scrollDeltaY, metrics) => {
@@ -263,10 +250,8 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) =>
-    /* If the cursor moved, make sure we're snapping to the top line */
-    /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
     {
-      ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
+      ...view,
       cursors,
     }
   | EditorSetScroll(id, scrollY) when EditorId.equals(view.editorId, id) =>

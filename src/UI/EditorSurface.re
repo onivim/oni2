@@ -538,12 +538,12 @@ let%component make =
       );
       let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
 
-      GlobalContext.current().dispatch(
+      /*GlobalContext.current().dispatch(
         Actions.EditorScrollToLine(editorId, topVisibleLine),
       );
       GlobalContext.current().dispatch(
         Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
-      );
+      );*/
       GlobalContext.current().dispatch(
         Actions.EditorCursorMove(editorId, [cursor]),
       );
