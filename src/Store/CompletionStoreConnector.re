@@ -52,7 +52,7 @@ let start = () => {
           print_endline("EDITOR: " ++ Model.Editor.toString(ed));
           let cursorPosition = Model.Editor.getPrimaryCursor(ed);
           let line = Index.toInt0(cursorPosition.line);
-          print_endline ("!!POSITION: " ++ Position.show(cursorPosition));
+          print_endline("!!POSITION: " ++ Position.show(cursorPosition));
           let meetOpt =
             Model.CompletionMeet.getMeetFromBufferCursor(
               ~cursor=cursorPosition,
