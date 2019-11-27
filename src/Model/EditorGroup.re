@@ -42,6 +42,8 @@ let getEditorById = (id: int, v: t) => {
   IntMap.find_opt(id, v.editors);
 };
 
+let getMetrics = (v: t) => v.metrics;
+
 let getActiveEditor = (v: t) => {
   switch (v.activeEditorId) {
   | Some(id) =>

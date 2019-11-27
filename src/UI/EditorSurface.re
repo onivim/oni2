@@ -197,6 +197,7 @@ let%component make =
 
   let activeBuffer = Selectors.getBufferForEditor(state, editor);
 
+  let editorId = Editor.getId(editor);
   let buffer =
     switch (activeBuffer) {
     | Some(buffer) => buffer
@@ -240,7 +241,9 @@ let%component make =
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
-  let cursorLine = Index.toZeroBasedInt(editor.cursorPosition.line);
+  let cursorPosition = Editor.getPrimaryCursor(editor);
+
+  let cursorLine = Index.toZeroBasedInt(cursorPosition.line);
 
   let (cursorOffset, cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
@@ -250,7 +253,7 @@ let%component make =
         BufferViewTokenizer.getCharacterPositionAndWidth(
           ~indentation,
           cursorStr,
-          Index.toZeroBasedInt(editor.cursorPosition.character),
+          Index.toZeroBasedInt(cursorPosition.character),
         );
       (cursorOffset, width);
     } else {
@@ -277,7 +280,7 @@ let%component make =
   let cursorPixelY =
     int_of_float(
       fontHeight
-      *. float_of_int(Index.toZeroBasedInt(editor.cursorPosition.line))
+      *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
       -. editor.scrollY
       +. 0.5,
     );
@@ -455,17 +458,23 @@ let%component make =
     ];
 
   let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    GlobalContext.current().editorScrollDelta(
-      ~deltaY=wheelEvent.deltaY *. (-50.),
-      (),
-    );
+    let () =
+      GlobalContext.current().editorScrollDelta(
+        ~editorId,
+        ~deltaY=wheelEvent.deltaY *. (-50.),
+        (),
+      );
+    ();
   };
 
   let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    GlobalContext.current().editorScrollDelta(
-      ~deltaY=wheelEvent.deltaY *. (-150.),
-      (),
-    );
+    let () =
+      GlobalContext.current().editorScrollDelta(
+        ~editorId,
+        ~deltaY=wheelEvent.deltaY *. (-150.),
+        (),
+      );
+    ();
   };
 
   let diagnostics =
@@ -520,7 +529,6 @@ let%component make =
         "EditorSurface - editorMouseUp: topVisibleLine is "
         ++ string_of_int(topVisibleLine)
       );
-      Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
       Log.debug(() =>
         "EditorSurface - editorMouseUp: setPosition ("
         ++ string_of_int(line + 1)
@@ -528,7 +536,17 @@ let%component make =
         ++ string_of_int(col)
         ++ ")"
       );
-      Vim.Cursor.setPosition(line + 1, col);
+      let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
+
+      /*GlobalContext.current().dispatch(
+          Actions.EditorScrollToLine(editorId, topVisibleLine),
+        );
+        GlobalContext.current().dispatch(
+          Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
+        );*/
+      GlobalContext.current().dispatch(
+        Actions.EditorCursorMove(editorId, [cursor]),
+      );
     };
   };
 
@@ -549,9 +567,7 @@ let%component make =
             ~x=lineNumberWidth,
             ~y=
               fontHeight
-              *. float_of_int(
-                   Index.toZeroBasedInt(editor.cursorPosition.line),
-                 )
+              *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
               -. editor.scrollY,
             ~height=fontHeight,
             ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
@@ -842,7 +858,7 @@ let%component make =
                 ~endLine=bottomVisibleLine + 1,
                 ~lineHeight=fontHeight,
                 ~fontWidth,
-                ~cursorLine=Index.toZeroBasedInt(editor.cursorPosition.line),
+                ~cursorLine=Index.toZeroBasedInt(cursorPosition.line),
                 ~theme=state.theme,
                 ~indentationSettings=indentation,
                 ~bufferPositionToPixel,

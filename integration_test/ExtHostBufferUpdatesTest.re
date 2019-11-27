@@ -6,7 +6,8 @@ open Oni_IntegrationTestLib;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, the buffer received by the extension host
 // is in sync with the buffer in the main process
-runTest(~name="ExtHostBufferUpdates", (dispatch, wait, _runEffects) => {
+runTestWithInput(
+  ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
@@ -44,16 +45,16 @@ runTest(~name="ExtHostBufferUpdates", (dispatch, wait, _runEffects) => {
   );
 
   // Enter some text
-  Vim.input("i");
+  input("i");
 
-  Vim.input("a");
-  Vim.input("<CR>");
+  input("a");
+  input("<CR>");
 
-  Vim.input("b");
-  Vim.input("<CR>");
+  input("b");
+  input("<CR>");
 
-  Vim.input("c");
-  Vim.input("<esc>");
+  input("c");
+  input("<esc>");
 
   // Helper function to wait for the buffer text to match
   // The extension maps newlines -> |
@@ -76,20 +77,20 @@ runTest(~name="ExtHostBufferUpdates", (dispatch, wait, _runEffects) => {
   waitForTextToMatch("a|b|c");
 
   // Now, delete a line - we had some bugs where deletes were not sync'd properly
-  Vim.input("gg");
-  Vim.input("j");
-  Vim.input("dd");
+  input("gg");
+  input("j");
+  input("dd");
 
   waitForTextToMatch("a|c");
 
   // Undo the change - we also had bugs here!
-  Vim.input("u");
+  input("u");
 
   waitForTextToMatch("a|b|c");
 
   // Finally, modify a single line
-  Vim.input("gg");
-  Vim.input("Iabc");
+  input("gg");
+  input("Iabc");
 
   waitForTextToMatch("abca|b|c");
 });

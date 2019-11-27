@@ -39,7 +39,6 @@ type t =
   | KeyBindingsReload
   | HoverShow
   | ChangeMode(Vim.Mode.t)
-  | CursorMove(Position.t)
   | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged(VisualRange.t)
@@ -57,10 +56,11 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorSetScroll(float)
-  | EditorScroll(float)
-  | EditorScrollToLine(int)
-  | EditorScrollToColumn(int)
+  | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
+  | EditorSetScroll(EditorId.t, float)
+  | EditorScroll(EditorId.t, float)
+  | EditorScrollToLine(EditorId.t, int)
+  | EditorScrollToColumn(EditorId.t, int)
   | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
@@ -143,12 +143,10 @@ and notification = {
   message: string,
 }
 and editor = {
-  editorId: int,
+  editorId: EditorId.t,
   bufferId: int,
   scrollX: float,
   scrollY: float,
-  lastTopLine: Index.t,
-  lastLeftCol: Index.t,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -157,7 +155,7 @@ and editor = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursorPosition: Position.t,
+  cursors: list(Vim.Cursor.t),
   selection: VisualRange.t,
 }
 and editorMetrics = {
