@@ -87,7 +87,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let padding = 8;
 
-    let textStyle =
+    let textStyle = (~highlighted) =>
       Style.[
         //width(width_),
         //height(height_),
@@ -95,7 +95,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
         fontSize(editorFont.fontSize),
-        color(fgColor),
+        color(highlighted ? theme.oniNormalModeBackground : fgColor),
         backgroundColor(bgColor),
       ];
 
@@ -160,6 +160,9 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
               state.tokenTheme,
               curr.item.completionKind,
             );
+
+          let normalStyle = textStyle(~highlighted=false);
+          let highlightStyle = textStyle(~highlighted=true);
           let newElem =
             <View
               style=Style.[flexDirection(`Row), justifyContent(`Center)]>
@@ -181,7 +184,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                 />
               </View>
               <View style=Style.[flexGrow(1), margin(4)]>
-                <Text style=textStyle text=message />
+                <HighlightText highlights={curr.highlight} style=normalStyle highlightStyle=highlightStyle text=message />
               </View>
               detailElem
             </View>;
