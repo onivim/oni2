@@ -49,9 +49,7 @@ describe("ExtHostTransport", ({test, _}) => {
     });
     expect.bool(initialized^).toBe(true);
     ExtHostTransport.close(extClient);
-    Oni_Core.Utility.waitForCondition(() => {
-      closed^;
-    });
+    Oni_Core.Utility.waitForCondition(() => {closed^});
     expect.bool(closed^).toBe(false);
   });
   test("basic extension activation", _ => {

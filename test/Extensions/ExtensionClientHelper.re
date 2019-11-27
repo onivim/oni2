@@ -52,7 +52,7 @@ module Waiters = {
   let wait = (f, _client: ExtHostClient.t) => {
     Oni_Core.Utility.waitForCondition(
       ~timeout=10.0,
-      () => { 
+      () => {
         Revery.App.flushPendingCallbacks();
         f();
       },
