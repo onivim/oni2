@@ -15,7 +15,7 @@ let rank:
   (string, ('a, ~shouldLower: bool) => string, list('a)) => list(result('a));
 
 /*
- [fuzzyMatches(query, str)] returns [true] if each [UChar.t] in the [query] is present
- sequentially in the string [str].
-*/
+  [fuzzyMatches(query, str)] returns [true] if each [UChar.t] in the [query] is present
+  sequentially in the string [str].
+ */
 let fuzzyMatches: (list(UChar.t), string) => bool;

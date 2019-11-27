@@ -51,9 +51,7 @@ let getBestCompletion = (v: t) => {
 };
 
 let _toFilterResult = (items: list(Actions.completionItem)) => {
-  open Filter;
-  items
-  |> List.map((item) => { item, highlight: [] });
+  Filter.(items |> List.map(item => {item, highlight: []}));
 };
 
 let _applyFilter =
@@ -61,16 +59,16 @@ let _applyFilter =
   switch (filter) {
   | None => items |> _toFilterResult
   | Some(filter) =>
-     open Actions;
+    open Actions;
 
     let query = Zed_utf8.explode(filter);
 
     let toString = (item, ~shouldLower) => {
-      item.completionLabel 
+      item.completionLabel;
     };
 
     items
-    |> List.filter((item) => Filter.fuzzyMatches(query, item.completionLabel))
+    |> List.filter(item => Filter.fuzzyMatches(query, item.completionLabel))
     |> Filter.rank(filter, toString);
   };
 };

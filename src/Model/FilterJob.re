@@ -101,7 +101,8 @@ module Make = (Config: Config) => {
 
       let allFilteredNew =
         List.filter(
-          item => Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
+          item =>
+            Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
           allFiltered,
         );
 
