@@ -263,14 +263,12 @@ let%component make =
   let handleFocus = () => {
     resetCursor();
     onFocus();
-    Sdl2.TextInput.start();
     dispatch(Focus);
   };
 
   let handleBlur = () => {
     resetCursor();
     onBlur();
-    Sdl2.TextInput.stop();
     dispatch(Blur);
   };
 
