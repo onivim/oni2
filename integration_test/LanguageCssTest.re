@@ -5,13 +5,14 @@ open Oni_IntegrationTestLib;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
+runTestWithInput(
+  ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
 
   // Create a buffer
-  Vim.command("new test.css");
+  dispatch(Actions.OpenFileByPath("test.css", None));
 
   // Wait for the CSS filetype
   wait(
@@ -43,9 +44,9 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
   );
 
   // Enter some text
-  Vim.input("i");
+  input("i");
 
-  Vim.input("a");
+  input("a");
 
   // Should get an error diagnostic
   wait(
@@ -65,9 +66,11 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
     },
   );
 
+  input("b");
+
   // Should've also gotten some completions...
   wait(
-    ~timeout=30.0,
+    ~timeout=5.0,
     ~name="Validate we also got some completions",
     (state: State.t) => {
     Model.Completions.getCompletions(state.completions)
@@ -75,10 +78,10 @@ runTest(~name="LanguageCssTest", (_dispatch, wait, _runEffects) => {
   });
 
   // Finish input, clear diagnostics
-  Vim.input(" ");
-  Vim.input("{");
-  Vim.input("color:red");
-  Vim.input("}");
+  input(" ");
+  input("{");
+  input("color:red");
+  input("}");
 
   wait(
     ~timeout=30.0,

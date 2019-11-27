@@ -210,6 +210,8 @@ let start = (extensions, setup: Core.Setup.t) => {
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+         Core.Log.info("[Exthost] Completions - getting completions for suggest provider: "
+          ++ string_of_int(provider.id));
          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
            ExtHostClient.getCompletions(
              provider.id,
@@ -249,6 +251,11 @@ let start = (extensions, setup: Core.Setup.t) => {
           let uri = Model.Buffer.getUri(buf);
           let position =
             Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+          Core.Log.info(
+            Printf.sprintf("[Exthost] Completions - requesting at %s for %s",
+            Core.Uri.toString(uri),
+            Protocol.OneBasedPosition.show(position))
+          );
           getAndDispatchCompletions(
             ~fileType,
             ~uri,
