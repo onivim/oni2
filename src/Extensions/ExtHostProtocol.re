@@ -7,6 +7,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Core.Utility;
 
 module LogLevel = {
   let trace = 0;
@@ -353,14 +354,17 @@ module IncomingNotifications = {
 
     let parseRegisterSuggestSupport = json => {
       switch (json) {
-      | [`Int(id), _documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
         // TODO: Finish parsing
-        Some(
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map((selector) => {
           LF.SuggestProvider.create(
-            ~selector=DocumentSelector.create("css"),
+            ~selector,
             id,
-          ),
-        )
+          )
+        });
       | _ => None
       };
     };

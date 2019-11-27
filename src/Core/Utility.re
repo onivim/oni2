@@ -264,3 +264,9 @@ module Option = {
       }
     | None => None;
 };
+
+module Result = {
+  let to_option = fun
+  | Ok(v) => Some(v)
+  | Error(_) => None;
+};
