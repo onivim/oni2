@@ -79,11 +79,8 @@ let make = (~height, ~state: State.t, ()) => {
   let theme = state.theme;
   let editor =
     Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-  let position =
-    switch (editor) {
-    | Some(v) => Some(v.cursorPosition)
-    | None => None
-    };
+
+  let position = editor |> Utility.Option.map(Editor.getPrimaryCursor);
 
   let textStyle = getTextStyle(state.uiFont);
 

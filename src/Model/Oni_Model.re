@@ -21,6 +21,7 @@ module Diagnostics = Diagnostics;
 module Editor = Editor;
 module EditorGroup = EditorGroup;
 module EditorGroups = EditorGroups;
+module EditorId = EditorId;
 module EditorLayout = EditorLayout;
 module EditorMetrics = EditorMetrics;
 module EditorVisibleRanges = EditorVisibleRanges;

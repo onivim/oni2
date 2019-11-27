@@ -47,10 +47,10 @@ let make =
     );
   };
 
+  let cursorPosition = Editor.getPrimaryCursor(editor);
+
   let cursorPosition =
-    bufferLineToScrollbarPixel(
-      Index.toZeroBasedInt(editor.cursorPosition.line),
-    );
+    bufferLineToScrollbarPixel(Index.toZeroBasedInt(cursorPosition.line));
   let cursorSize = 2;
 
   let scrollCursorStyle =

@@ -5,7 +5,8 @@ open Oni_IntegrationTestLib;
 // https://github.com/onivim/oni2/issues/600
 //
 // Verify some simple cases around the file modified flag
-runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
+runTestWithInput(
+  ~name="RegressionFileModifiedIndication", (input, _, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
@@ -14,8 +15,8 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
 
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 
-  Vim.input("o");
-  Vim.input("a");
+  let _ = input("o");
+  let _ = input("a");
 
   let validateBufferCondition = (f, state: State.t) => {
     let buffer = Selectors.getBufferById(state, id);
@@ -30,7 +31,7 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
   );
 
   // Save file, should clear modified flag
-  Vim.input("<esc>");
+  let _ = input("<esc>");
   Vim.command("w");
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
@@ -38,8 +39,8 @@ runTest(~name="RegressionFileModifiedIndication", (_, wait, _) => {
   );
 
   // Make another modification, should set it again
-  Vim.input("o");
-  Vim.input("a");
+  let _ = input("o");
+  let _ = input("a");
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
     validateBufferCondition(b => Buffer.isModified(b) == true, state)
