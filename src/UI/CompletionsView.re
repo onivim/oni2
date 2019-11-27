@@ -184,7 +184,12 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                 />
               </View>
               <View style=Style.[flexGrow(1), margin(4)]>
-                <HighlightText highlights={curr.highlight} style=normalStyle highlightStyle=highlightStyle text=message />
+                <HighlightText
+                  highlights={curr.highlight}
+                  style=normalStyle
+                  highlightStyle
+                  text=message
+                />
               </View>
               detailElem
             </View>;
