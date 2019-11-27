@@ -29,20 +29,25 @@ let start = () => {
   };
 
   let updater = (state: Model.State.t, action) => {
-    let searchPane =
-      switch (action) {
-      | SearchShow => Some(Model.Search.initial)
+    switch (action) {
+    | Tick(_) => (state, Isolinear.Effect.none)
 
-      | SearchHide => None
+    | SearchShow => (
+        {...state, searchPane: Some(Model.Search.initial)},
+        Isolinear.Effect.none,
+      )
 
-      | _ =>
-        switch (state.searchPane) {
-        | Some(searchPane) => Some(searchUpdater(searchPane, action))
-        | None => None
-        }
-      };
+    | SearchHide => ({...state, searchPane: None}, Isolinear.Effect.none)
 
-    ({...state, searchPane}, Isolinear.Effect.none);
+    | _ =>
+      switch (state.searchPane) {
+      | Some(searchPane) => (
+          {...state, searchPane: Some(searchUpdater(searchPane, action))},
+          Isolinear.Effect.none,
+        )
+      | None => (state, Isolinear.Effect.none)
+      }
+    };
   };
 
   (updater, stream);
