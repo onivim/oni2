@@ -29,7 +29,7 @@ module Provider = {
       ripgrep.Ripgrep.search(
         ~directory,
         ~onUpdate,
-        ~onComplete = () => {
+        ~onComplete=() => {
           Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
           dispatch(onCompleted());
         },

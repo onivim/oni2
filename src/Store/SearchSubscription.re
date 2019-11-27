@@ -31,7 +31,7 @@ module Provider = {
         ~directory,
         ~query,
         ~onUpdate,
-        ~onComplete = () => {
+        ~onComplete=() => {
           Log.info("Ripgrep completed.");
           dispatch(onCompleted());
         },
