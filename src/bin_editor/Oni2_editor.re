@@ -151,7 +151,7 @@ let init = app => {
   runEffects();
 
   List.iter(
-    v => dispatch(Model.Actions.OpenFileByPath(v, None)),
+    v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
     cliOptions.filesToOpen,
   );
 };

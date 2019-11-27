@@ -81,7 +81,7 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction))
+  | OpenFileByPath(string, option(WindowTree.direction), option(Position.t))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
