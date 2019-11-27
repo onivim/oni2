@@ -7,3 +7,6 @@
 
 # Hide lockfile updates
 *esy.lock/* linguist-generated
+
+# Hide vendored extension code
+extensions/css-language-features/* linguist-generated

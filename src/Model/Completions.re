@@ -54,6 +54,8 @@ let _toFilterResult = (items: list(Actions.completionItem)) => {
   Filter.(items |> List.map(item => {item, highlight: []}));
 };
 
+let getCompletions = (v: t) => v.filteredCompletions;
+
 let _applyFilter =
     (filter: option(string), items: list(Actions.completionItem)) => {
   switch (filter) {

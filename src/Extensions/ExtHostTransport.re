@@ -15,8 +15,8 @@ module Protocol = ExtHostProtocol;
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
-  send: (int, Yojson.Safe.t) => unit,
-  sendRequest: Yojson.Safe.t => Lwt.t(Yojson.Safe.t),
+  send: (MessageType.t, Yojson.Safe.t) => unit,
+  sendRequest: (MessageType.t, Yojson.Safe.t) => Lwt.t(Yojson.Safe.t),
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -62,7 +62,7 @@ let start =
     queuedCallbacks := [f, ...queuedCallbacks^];
   };
 
-  let send = (msgType, msg: Yojson.Safe.t) => {
+  let send = (msgType: MessageType.t, msg: Yojson.Safe.t) => {
     switch (rpcRef^) {
     | None =>
       Log.error("ExtHostClient: RPC not initialized.");
@@ -73,7 +73,7 @@ let start =
 
       let request =
         `Assoc([
-          ("type", `Int(msgType)),
+          ("type", `Int(msgType |> MessageType.toInt)),
           ("reqId", `Int(reqId)),
           ("payload", msg),
         ]);
@@ -84,12 +84,12 @@ let start =
   };
 
   let sendNotification = (msg: Yojson.Safe.t) => {
-    let _ = send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
+    let _ = send(MessageType.requestJsonArgs, msg);
     ();
   };
 
-  let sendRequest = (msg: Yojson.Safe.t) => {
-    let reqId = send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
+  let sendRequest = (msgType, msg: Yojson.Safe.t) => {
+    let reqId = send(msgType, msg);
     let (promise, resolver) = Lwt.task();
 
     Hashtbl.add(replyIdToResolver, reqId, resolver);
@@ -147,10 +147,7 @@ let start =
 
   let _sendInitData = () => {
     let _: int =
-      send(
-        Protocol.MessageType.initData,
-        ExtHostInitData.to_yojson(initData),
-      );
+      send(MessageType.initData, ExtHostInitData.to_yojson(initData));
     ();
   };
 
@@ -212,16 +209,17 @@ let start =
 
 let pump = (v: t) => Rpc.pump(v.rpc);
 
-let send = (v: t, msg: Yojson.Safe.t) => {
-  let _ = v.send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
+let send = (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t) => {
+  let _ = v.send(msgType, msg);
   ();
 };
 
-let request = (v: t, msg: Yojson.Safe.t, f) => {
-  let promise = v.sendRequest(msg);
+let request =
+    (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t, f) => {
+  let promise = v.sendRequest(msgType, msg);
   Lwt.map(f, promise);
 };
 
 let close = (v: t) => {
-  v.send(ExtHostProtocol.MessageType.terminate, `Assoc([]));
+  v.send(MessageType.terminate, `Assoc([]));
 };
