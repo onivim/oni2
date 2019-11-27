@@ -76,35 +76,6 @@ module Make = (Config: Config) => {
   let iterationsPerFrame = 250;
   let maxItemsToFilter = 250;
 
-  // Check whether the query matches...
-  // Benchmarking showed that this was slightly faster than the recursive version
-  let matches = (query: list(UChar.t), str) => {
-    let toMatch = Zed_utf8.explode(str);
-
-    let q = ref(query);
-    let m = ref(toMatch);
-
-    let atEnd = ref(false);
-    let result = ref(false);
-
-    while (! atEnd^) {
-      switch (q^, m^) {
-      | ([], _) =>
-        result := true;
-        atEnd := true;
-      | (_, []) =>
-        result := false;
-        atEnd := true;
-      | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) =>
-        q := qtail;
-        m := mtail;
-      | (_, [_, ...mtail]) => m := mtail
-      };
-    };
-
-    result^;
-  };
-
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
   let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
     // TODO: Optimize - for now, if the query changes, just clear the completed work
@@ -117,20 +88,20 @@ module Make = (Config: Config) => {
     let currentMatches = Utility.firstk(maxItemsToFilter, c.allFiltered);
 
     // If the new query matches the old one... we can re-use results
-    if (matches(p.explodedFilter, newQuery)
+    if (Filter.fuzzyMatches(p.explodedFilter, newQuery)
         && List.length(currentMatches) < maxItemsToFilter) {
       let {allFiltered, uiFiltered} = c;
 
       let uiFilteredNew =
         List.filter(
           (Filter.{item, _}) =>
-            matches(newQueryEx, format(item, ~shouldLower)),
+            Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
           uiFiltered,
         );
 
       let allFilteredNew =
         List.filter(
-          item => matches(newQueryEx, format(item, ~shouldLower)),
+          item => Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
           allFiltered,
         );
 
@@ -196,7 +167,7 @@ module Make = (Config: Config) => {
           // Do a first filter pass to check if the item satisifies the regex
           let name = format(innerHd, ~shouldLower=p.shouldLower);
           let newCompleted =
-            if (matches(p.explodedFilter, name)) {
+            if (Filter.fuzzyMatches(p.explodedFilter, name)) {
               [innerHd, ...c];
             } else {
               c;

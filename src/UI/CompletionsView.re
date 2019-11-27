@@ -128,10 +128,10 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let (_maxWidth, diags) =
       List.fold_left(
-        (prev, curr: Model.Actions.completionItem) => {
-          let (prevWidth, prevDiags) = prev;
+        (acc, curr: Model.Filter.result(Model.Actions.completionItem)) => {
+          let (prevWidth, prevDiags) = acc;
 
-          let message = curr.completionLabel;
+          let message = curr.item.completionLabel;
           let width =
             Types.EditorFont.measure(~text=message, editorFont)
             +. 0.5
@@ -139,7 +139,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
           let remainingWidth = 450 - width;
 
           let detailElem =
-            switch (curr.completionDetail) {
+            switch (curr.item.completionDetail) {
             | None => React.empty
             | Some(text) when String.length(text) > 0 =>
               let detailWidth =
@@ -158,7 +158,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
             completionKindToColor(
               fgColor,
               state.tokenTheme,
-              curr.completionKind,
+              curr.item.completionKind,
             );
           let newElem =
             <View
@@ -173,7 +173,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                   width(25),
                 ]>
                 <FontIcon
-                  icon={completionKindToIcon(curr.completionKind)}
+                  icon={completionKindToIcon(curr.item.completionKind)}
                   backgroundColor=completionColor
                   color=bgColor
                   margin=4
