@@ -36,7 +36,7 @@ let textStyle = uiFont => {
   ];
 };
 
-let keyGroupView = (~children as _, ~uiFont, ~text: string, ()) => {
+let keyGroupView = (~uiFont, ~text: string, ()) => {
   <View
     style=Style.[
       backgroundColor(bgc),
@@ -61,7 +61,7 @@ let keyGroupView = (~children as _, ~uiFont, ~text: string, ()) => {
   </View>;
 };
 
-let createElement = (~children as _, ~state: State.t, ()) => {
+let make = (~state: State.t, ()) => {
   let uiFont = state.uiFont.fontFile;
 
   let anyNotifications = Notifications.any(state.notifications);
@@ -83,7 +83,8 @@ let createElement = (~children as _, ~state: State.t, ()) => {
       },
       state.keyDisplayer |> KeyDisplayer.getPresses,
     )
-    |> List.rev;
+    |> List.rev
+    |> React.listToElement;
 
-  <Positioned bottom=50 right={50 + extraSpacing}> ...groups </Positioned>;
+  <Positioned bottom=50 right={50 + extraSpacing}> groups </Positioned>;
 };

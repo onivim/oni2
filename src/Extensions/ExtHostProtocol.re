@@ -7,6 +7,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Core.Utility;
 
 module MessageType = {
   let initialized = 0;
@@ -72,7 +73,7 @@ module PackedString = {
 };
 
 module ModelAddedDelta = {
-  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  [@deriving yojson({strict: false})]
   type t = {
     uri: Uri.t,
     versionId: int,
@@ -102,6 +103,21 @@ module ModelAddedDelta = {
   };
 };
 
+module OneBasedPosition = {
+  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition = (p: Position.t) => {
+    lineNumber: p.line |> Index.toOneBasedInt,
+    column: p.character |> Index.toOneBasedInt,
+  };
+
+  let ofInt1 = (~lineNumber, ~column, ()) => {lineNumber, column};
+};
+
 module OneBasedRange = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t = {
@@ -125,6 +141,16 @@ module OneBasedRange = {
     startColumn: r.startPosition.character |> Index.toOneBasedInt,
     endColumn: r.endPosition.character |> Index.toOneBasedInt,
   };
+
+  let toRange = (v: t) => {
+    Range.ofInt1(
+      ~startLine=v.startLineNumber,
+      ~endLine=v.endLineNumber,
+      ~startCharacter=v.startColumn,
+      ~endCharacter=v.endColumn,
+      (),
+    );
+  };
 };
 
 module ModelContentChange = {
@@ -144,14 +170,21 @@ module ModelContentChange = {
   };
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
-    let isInsert =
-      Index.toZeroBasedInt(bu.endLine) == Index.toZeroBasedInt(bu.startLine);
+    let newLines = Array.length(bu.lines);
+    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
-    let startLine = Index.toZeroBasedInt(bu.startLine);
-    let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
+    let isDelete = newLines == 0;
+
+    let startLine = Index.toInt0(bu.startLine);
+    let endLine = Index.toInt0(bu.endLine);
+
+    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
 
     let endLine = max(endLine, startLine);
-    let endCharacter = isInsert ? 0 : 2147483647;
+    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
+    //    let endCharacter = 0;
+
+    let endLine = isDelete ? endLine + 1 : endLine;
 
     let range =
       Range.create(
@@ -186,6 +219,99 @@ module ModelChangedEvent = {
   let create = (~changes, ~eol, ~versionId, ()) => {changes, eol, versionId};
 };
 
+module Diagnostic = {
+  [@deriving yojson({strict: false})]
+  type json = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+    message: string,
+    source: string,
+    code: string,
+    severity: int,
+    // TODO:
+    // relatedInformation: DiagnosticRelatedInformation.t,
+  };
+
+  type t = {
+    range: OneBasedRange.t,
+    message: string,
+    source: string,
+    code: string,
+    severity: int,
+    // TODO:
+    // relatedInformation: DiagnosticRelatedInformation.t,
+  };
+
+  let of_yojson = json => {
+    switch (json_of_yojson(json)) {
+    | Ok(ret) =>
+      let range =
+        OneBasedRange.create(
+          ~startLineNumber=ret.startLineNumber,
+          ~startColumn=ret.startColumn,
+          ~endLineNumber=ret.endLineNumber,
+          ~endColumn=ret.endColumn,
+          (),
+        );
+
+      Ok({
+        range,
+        message: ret.message,
+        source: ret.source,
+        code: ret.code,
+        severity: ret.severity,
+      });
+    | Error(msg) => Error(msg)
+    };
+  };
+
+  let to_yojson = _ => {
+    // TODO:
+    failwith("Not used");
+  };
+};
+
+module Diagnostics = {
+  [@deriving yojson({strict: false})]
+  type t = (Uri.t, list(Diagnostic.t));
+};
+
+module DiagnosticsCollection = {
+  type t = {
+    name: string,
+    perFileDiagnostics: list(Diagnostics.t),
+  };
+
+  let of_yojson = (json: Yojson.Safe.t) => {
+    switch (json) {
+    | `List([`String(name), `List(perFileDiagnostics)]) =>
+      let perFileDiagnostics =
+        perFileDiagnostics
+        |> List.map(Diagnostics.of_yojson)
+        |> List.filter_map(Utility.resultToOption);
+      Some({name, perFileDiagnostics});
+    | _ => None
+    };
+  };
+};
+
+module SuggestionItem = {
+  [@deriving yojson({strict: false})]
+  type t = {
+    label: string,
+    insertText: string,
+  };
+};
+
+module Suggestions = {
+  [@deriving yojson({strict: false})]
+  type t = list(SuggestionItem.t);
+};
+
+module LF = LanguageFeatures;
+
 module IncomingNotifications = {
   module StatusBar = {
     let parseSetEntry = args => {
@@ -201,6 +327,42 @@ module IncomingNotifications = {
           `Int(priority),
         ] =>
         Some((id, text, alignment, priority))
+      | _ => None
+      };
+    };
+  };
+
+  module Diagnostics = {
+    let parseClear = args =>
+      switch (args) {
+      | [`String(owner)] => Some(owner)
+      | _ => None
+      };
+
+    let parseChangeMany = args =>
+      DiagnosticsCollection.of_yojson(`List(args));
+  };
+
+  module LanguageFeatures = {
+    let parseProvideCompletionsResponse = json => {
+      switch (Yojson.Safe.Util.member("suggestions", json)) {
+      | `List(_) as items =>
+        switch (Suggestions.of_yojson(items)) {
+        | Ok(v) => Some(v)
+        | Error(_) => None
+        }
+      | _ => None
+      };
+    };
+
+    let parseRegisterSuggestSupport = json => {
+      switch (json) {
+      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+        // TODO: Finish parsing
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
       | _ => None
       };
     };
@@ -249,7 +411,7 @@ module OutgoingNotifications = {
 
   module DocumentsAndEditors = {
     module DocumentsAndEditorsDelta = {
-      [@deriving (show({with_path: false}), yojson({strict: false}))]
+      [@deriving yojson({strict: false})]
       type t = {
         removedDocuments: list(Uri.t),
         addedDocuments: list(ModelAddedDelta.t),
@@ -296,10 +458,25 @@ module OutgoingNotifications = {
     };
   };
 
+  module LanguageFeatures = {
+    let provideCompletionItems =
+        (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
+      // TODO: CompletionContext ?
+      // TODO: CancelationToken
+      _buildNotification(
+        "ExtHostLanguageFeatures",
+        "$provideCompletionItems",
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `Assoc([]),
+        ]),
+      );
+  };
+
   module Workspace = {
-    [@deriving
-      (show({with_path: false}), yojson({strict: false, exn: true}))
-    ]
+    [@deriving yojson({strict: false, exn: true})]
     type workspaceInfo = {
       id: string,
       name: string,

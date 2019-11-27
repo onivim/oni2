@@ -42,34 +42,12 @@ let getDefaultConfigString = configName =>
   | "keybindings.json" =>
     Some(
       {|
-{
-    "bindings": [
-        { "key": "<C-TAB>", "command": "quickOpen.openFiles", "when": [["editorTextFocus"]] },
-        { "key": "<C-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
-        { "key": "<D-V>", "command": "editor.action.clipboardPasteAction", "when": [["insertMode"]] },
-        { "key": "<D-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
-        { "key": "<S-C-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
-        { "key": "<D-S-P>", "command": "commandPalette.open", "when": [["editorTextFocus"]] },
-        { "key": "<ESC>", "command": "menu.close", "when": [["menuFocus"]] },
-        { "key": "<C-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<C-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]]},
-        { "key": "<D-N>", "command": "menu.next", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<D-P>", "command": "menu.previous", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<C-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<C-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
-        { "key": "<D-N>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<D-P>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
-        { "key": "<TAB>", "command": "wildmenu.next", "when": [["commandLineFocus"]] },
-        { "key": "<S-TAB>", "command": "wildmenu.previous", "when": [["commandLineFocus"]] },
-        { "key": "<CR>", "command": "menu.select", "when": [["menuFocus"], ["textInputFocus"]] },
-        { "key": "<S-C-B>", "command": "explorer.toggle", "when": [["editorTextFocus"]]},
-        { "key": "<C-P>", "command": "quickOpen.open", "when": [["editorTextFocus"]] },
-        { "key": "<C-P>", "command": "selectPrevSuggestion", "when": [["suggestWidgetVisible"]] },
-        { "key": "<C-N>", "command": "selectNextSuggestion", "when": [["suggestWidgetVisible"]] },
-        { "key": "<CR>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] },
-        { "key": "<TAB>", "command": "insertBestCompletion", "when": [["suggestWidgetVisible"]] }
-    ]
-}
+[
+  // See the onivim documentation for details on the format:
+  // https://onivim.github.io/docs/configuration/key-bindings
+  // Add key bindings here, ie:
+  // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
+]
 |},
     )
   | _ => None

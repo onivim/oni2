@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Input;
 open Oni_Extensions;
 open Oni_Syntax;
 
@@ -19,8 +20,11 @@ type t =
   | BufferSetIndentation(int, IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Command(string)
+  | CommandsRegister(list(command))
+  // Execute a contribute command, from an extension
+  | CommandExecuteContributed(string)
   | CompletionStart(completionMeet)
-  | CompletionSetItems(completionMeet, list(completionItem))
+  | CompletionAddItems(completionMeet, list(completionItem))
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -29,61 +33,61 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | ExtensionActivated(string)
   | KeyBindingsSet(Keybindings.t)
+  // Reload keybindings from configuration
+  | KeyBindingsReload
   | HoverShow
   | ChangeMode(Vim.Mode.t)
-  | CursorMove(Position.t)
-  | DiagnosticsSet(Buffer.t, string, list(Diagnostics.Diagnostic.t))
+  | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
+  | DiagnosticsClear(string)
   | SelectionChanged(VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
   | LoadEditorFont(string, int)
   | SetEditorFont(EditorFont.t)
   | RecalculateEditorView(option(Buffer.t))
-  | CommandlineShow(Vim.Types.cmdlineType)
-  | CommandlineHide
-  | CommandlineUpdate(Vim.Types.cmdline)
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WildmenuShow(list(string))
-  | WildmenuNext
-  | WildmenuPrevious
-  | WildmenuSelect
-  | WildmenuHide
   | WindowSetActive(int, int)
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorSetScroll(float)
-  | EditorScroll(float)
-  | EditorScrollToLine(int)
-  | EditorScrollToColumn(int)
+  | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
+  | EditorSetScroll(EditorId.t, float)
+  | EditorScroll(EditorId.t, float)
+  | EditorScrollToLine(EditorId.t, int)
+  | EditorScrollToColumn(EditorId.t, int)
   | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
-  | MenuSearch(string)
-  | MenuOpen(menuCreator)
-  | MenuUpdate(list(menuCommand))
-  | MenuSetDispose(unit => unit)
-  | MenuSetLoading(bool, float)
-  | MenuClose
-  | MenuSelect
-  | MenuNextItem
-  | MenuPreviousItem
-  | MenuPosition(int)
-  | OpenFileByPath(string, option(WindowTree.direction))
+  | LanguageFeatureRegisterSuggestProvider(LanguageFeatures.SuggestProvider.t)
+  | QuickmenuShow(quickmenuVariant)
+  | QuickmenuInput({
+      text: string,
+      cursorPosition: int,
+    })
+  | QuickmenuUpdateRipgrepProgress(progress)
+  | QuickmenuUpdateFilterProgress(array(menuItem), progress)
+  | QuickmenuSearch(string)
+  | QuickmenuClose
+  | ListFocus(int)
+  | ListFocusUp
+  | ListFocusDown
+  | ListSelect
+  | ListSelectBackground
+  | OpenFileByPath(string, option(WindowTree.direction), option(Position.t))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
-  | QuickOpen
   | QuitBuffer(Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
@@ -93,7 +97,7 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo(LanguageInfo.t)
   | ThemeLoadByPath(string, string)
-  | ThemeShowMenu
+  | ThemeLoadByName(string)
   | SetIconTheme(IconTheme.t)
   | SetTokenTheme(TokenTheme.t)
   | SetColorTheme(Theme.t)
@@ -104,11 +108,25 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SearchShow
+  | SearchHide
+  | SearchInput(string, int)
+  | SearchStart
+  | SearchUpdate(list(Ripgrep.Match.t))
+  | SearchComplete
+  | SearchSelectResult(Ripgrep.Match.t)
   | Noop
+and command = {
+  commandCategory: option(string),
+  commandName: string,
+  commandAction: t,
+  commandEnabled: unit => bool,
+  commandIcon: option(IconTheme.IconDefinition.t),
+}
 and completionMeet = {
   completionMeetBufferId: int,
-  completionMeetLine: int,
-  completionMeetColumn: int,
+  completionMeetLine: Index.t,
+  completionMeetColumn: Index.t,
 }
 and completionItem = {
   completionLabel: string,
@@ -133,12 +151,10 @@ and notification = {
   message: string,
 }
 and editor = {
-  editorId: int,
+  editorId: EditorId.t,
   bufferId: int,
   scrollX: float,
   scrollY: float,
-  lastTopLine: Index.t,
-  lastLeftCol: Index.t,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -147,7 +163,7 @@ and editor = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursorPosition: Position.t,
+  cursors: list(Vim.Cursor.t),
   selection: VisualRange.t,
 }
 and editorMetrics = {
@@ -164,22 +180,20 @@ and editorGroup = {
   reverseTabOrder: list(int),
   metrics: editorMetrics,
 }
-and menuCommand = {
+and menuItem = {
   category: option(string),
   name: string,
   command: unit => t,
   icon: option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
-and menuSetItems = list(menuCommand) => unit
-and menuSetLoading = bool => unit
-and menuCreationFunction = menuSetItems => unit
-and menuDisposeFunction = unit => unit
-and menuCreator =
-  (
-    menuSetItems,
-    Rench.Event.t(string),
-    Rench.Event.t(option(menuCommand)),
-    menuSetLoading
-  ) =>
-  menuDisposeFunction;
+and quickmenuVariant =
+  | CommandPalette
+  | EditorsPicker
+  | FilesPicker
+  | Wildmenu(Vim.Types.cmdlineType)
+  | ThemesPicker
+and progress =
+  | Loading
+  | InProgress(float)
+  | Complete;

@@ -28,7 +28,22 @@ esy bootstrap
 esy build
 ```
 
-### Run
+### Install node dependencies
+
+```sh
+node install-node-deps.js
+```
+
+> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
+
+### Run health-check
+
+> The `--checkhealth` argument validates all dependencies are available and working.
+
+- `esy run -f --checkhealth`
+
+
+### Run Onivim 2
 
 - `esy run`
 

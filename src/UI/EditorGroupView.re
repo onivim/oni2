@@ -13,9 +13,9 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
-let noop = () => ();
+module List = Utility.List;
 
-let component = React.component("EditorGroupView");
+let noop = () => ();
 
 let editorViewStyle = (background, foreground) =>
   Style.[
@@ -59,97 +59,91 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     };
   };
 
-  Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
+  List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let createElement =
-    (~state: State.t, ~windowId: int, ~editorGroupId: int, ~children as _, ()) =>
-  component(hooks => {
-    let theme = state.theme;
-    let mode = state.mode;
+let make = (~state: State.t, ~windowId: int, ~editorGroupId: int, ()) => {
+  let theme = state.theme;
+  let mode = state.mode;
 
-    let editorGroup = Selectors.getEditorGroupById(state, editorGroupId);
-    let style = editorViewStyle(theme.background, theme.foreground);
+  let editorGroup = Selectors.getEditorGroupById(state, editorGroupId);
+  let style = editorViewStyle(theme.background, theme.foreground);
 
-    let isActive =
-      switch (editorGroup) {
-      | None => false
-      | Some(v) => v.editorGroupId == state.editorGroups.activeId
-      };
-
-    let overlayStyle =
-      Style.[
-        position(`Absolute),
-        top(0),
-        left(0),
-        right(0),
-        bottom(0),
-        pointerEvents(`Ignore),
-        backgroundColor(
-          Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1),
-        ),
-      ];
-
-    let absoluteStyle =
-      Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
-
-    let showTabs =
-      if (state.zenMode) {
-        Configuration.getValue(c => !c.zenModeHideTabs, state.configuration);
-      } else {
-        Configuration.getValue(
-          c => c.workbenchEditorShowTabs,
-          state.configuration,
-        );
-      };
-
-    let children =
-      switch (editorGroup) {
-      | None => [React.empty]
-      | Some((v: EditorGroup.t)) =>
-        let editor = Some(v) |> Selectors.getActiveEditor;
-        let tabs = toUiTabs(v, state.buffers);
-        let uiFont = state.uiFont;
-
-        let metrics = v.metrics;
-
-        let editorView =
-          switch (editor) {
-          | Some(v) =>
-            <EditorSurface
-              isActiveSplit=isActive
-              editorGroupId
-              metrics
-              editor=v
-              state
-            />
-          | None => React.empty
-          };
-        switch (showTabs) {
-        | false => [editorView]
-        | true => [
-            <Tabs
-              active=isActive
-              activeEditorId={v.activeEditorId}
-              theme
-              tabs
-              mode
-              uiFont
-            />,
-            editorView,
-          ]
-        };
-      };
-
-    let onMouseDown = _ => {
-      GlobalContext.current().setActiveWindow(windowId, editorGroupId);
+  let isActive =
+    switch (editorGroup) {
+    | None => false
+    | Some(v) => v.editorGroupId == state.editorGroups.activeId
     };
 
-    (
-      hooks,
-      <View onMouseDown style>
-        <View style=absoluteStyle> ...children </View>
-        <View style=overlayStyle />
-      </View>,
-    );
-  });
+  let overlayStyle =
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      right(0),
+      bottom(0),
+      pointerEvents(`Ignore),
+      backgroundColor(Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1)),
+    ];
+
+  let absoluteStyle =
+    Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
+
+  let showTabs =
+    if (state.zenMode) {
+      Configuration.getValue(c => !c.zenModeHideTabs, state.configuration);
+    } else {
+      Configuration.getValue(
+        c => c.workbenchEditorShowTabs,
+        state.configuration,
+      );
+    };
+
+  let children =
+    switch (editorGroup) {
+    | None => React.empty
+    | Some((v: EditorGroup.t)) =>
+      let editor = Some(v) |> Selectors.getActiveEditor;
+      let tabs = toUiTabs(v, state.buffers);
+      let uiFont = state.uiFont;
+
+      let metrics = v.metrics;
+
+      let editorView =
+        switch (editor) {
+        | Some(v) =>
+          <EditorSurface
+            isActiveSplit=isActive
+            editorGroupId
+            metrics
+            editor=v
+            state
+          />
+        | None => React.empty
+        };
+      switch (showTabs) {
+      | false => editorView
+      | true =>
+        React.listToElement([
+          <Tabs
+            active=isActive
+            activeEditorId={v.activeEditorId}
+            theme
+            tabs
+            mode
+            uiFont
+          />,
+          editorView,
+        ])
+      };
+    };
+
+  let onMouseDown = _ => {
+    GlobalContext.current().setActiveWindow(windowId, editorGroupId);
+  };
+
+  <View onMouseDown style>
+    <View style=absoluteStyle> children </View>
+    <View style=overlayStyle />
+  </View>;
+};

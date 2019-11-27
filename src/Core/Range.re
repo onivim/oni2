@@ -29,6 +29,15 @@ let ofInt0 = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
     (),
   );
 
+let ofInt1 = (~startLine, ~startCharacter, ~endLine, ~endCharacter, ()) =>
+  create(
+    ~startLine=OneBasedIndex(startLine),
+    ~startCharacter=OneBasedIndex(startCharacter),
+    ~endLine=OneBasedIndex(endLine),
+    ~endCharacter=OneBasedIndex(endCharacter),
+    (),
+  );
+
 let contains = (v: t, position: Position.t) => {
   let l0 = Index.toInt0(v.startPosition.line);
   let c0 = Index.toInt0(v.startPosition.character);

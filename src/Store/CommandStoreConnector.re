@@ -3,14 +3,105 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-let start = _ => {
+let createDefaultCommands = getState => {
+  State.(
+    Actions.[
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Open configuration file",
+        ~action=OpenConfigFile("configuration.json"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Open keybindings file",
+        ~action=OpenConfigFile("keybindings.json"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Reload configuration",
+        ~action=ConfigurationReload,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Preferences"),
+        ~name="Theme Picker",
+        ~action=QuickmenuShow(ThemesPicker),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Close Editor",
+        ~action=Command("view.closeEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Split Editor Vertically",
+        ~action=Command("view.splitVertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Split Editor Horizontally",
+        ~action=Command("view.splitHorizontal"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Enable Zen Mode",
+        ~enabled=() => !getState().zenMode,
+        ~action=EnableZenMode,
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Disable Zen Mode",
+        ~enabled=() => getState().zenMode,
+        ~action=DisableZenMode,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Input"),
+        ~name="Disable Key Displayer",
+        ~enabled=() => KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~action=DisableKeyDisplayer,
+        (),
+      ),
+      Command.create(
+        ~category=Some("Input"),
+        ~name="Enable Key Displayer",
+        ~enabled=() => !KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~action=EnableKeyDisplayer,
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Rotate Windows (Forwards)",
+        ~action=Command("view.rotateForward"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Rotate Windows (Backwards)",
+        ~action=Command("view.rotateBackward"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Editor"),
+        ~name="Copy Active Filepath to Clipboard",
+        ~action=CopyActiveFilepathToClipboard,
+        (),
+      ),
+    ]
+  );
+};
+
+let start = (getState, contributedCommands) => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
-    );
-  let multipleActionEffect = (actions, name) =>
-    Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
-      List.iter(v => dispatch(v), actions)
     );
 
   let closeEditorEffect = (state, _) =>
@@ -81,57 +172,16 @@ let start = _ => {
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
-      "commandPalette.open",
-      _ => multipleActionEffect([MenuOpen(CommandPalette.create)]),
+      "workbench.action.showCommands",
+      _ => singleActionEffect(QuickmenuShow(CommandPalette)),
     ),
-    ("quickOpen.open", _ => singleActionEffect(QuickOpen)),
     (
-      "quickOpen.openFiles",
-      state => {
-        let currentDirectory = Rench.Environment.getWorkingDirectory();
-
-        let getDisplayPath = (fullPath, dir) => {
-          let re = Str.regexp_string(dir ++ Filename.dir_sep);
-          Str.replace_first(re, "", fullPath);
-        };
-
-        multipleActionEffect([
-          MenuOpen(
-            (setItems, _, _, _) => {
-              let commands =
-                state.Oni_Model.State.buffers
-                |> IntMap.to_seq
-                |> Seq.filter_map(element => {
-                     let (_, buffer) = element;
-
-                     switch (Buffer.getFilePath(buffer)) {
-                     | Some(path) =>
-                       Some({
-                         category: None,
-                         name: getDisplayPath(path, currentDirectory),
-                         command: () => {
-                           Oni_Model.Actions.OpenFileByPath(path, None);
-                         },
-                         icon:
-                           Oni_Model.FileExplorer.getFileIcon(
-                             state.languageInfo,
-                             state.iconTheme,
-                             path,
-                           ),
-                         highlight: [],
-                       })
-                     | None => None
-                     };
-                   })
-                |> List.of_seq;
-
-              setItems(commands);
-
-              () => ();
-            },
-          ),
-        ]);
-      },
+      "workbench.action.openNextRecentlyUsedEditorInGroup",
+      _ => singleActionEffect(QuickmenuShow(EditorsPicker)),
+    ),
+    (
+      "workbench.action.quickOpen",
+      _ => singleActionEffect(QuickmenuShow(FilesPicker)),
     ),
     /*(
         "developer.massiveMenu",
@@ -168,15 +218,17 @@ let start = _ => {
           ]);
         },
       ),*/
-    ("menu.close", _ => multipleActionEffect([MenuClose])),
-    ("menu.next", _ => multipleActionEffect([MenuNextItem])),
-    ("menu.previous", _ => multipleActionEffect([MenuPreviousItem])),
-    ("menu.select", _ => multipleActionEffect([MenuSelect])),
+    (
+      "workbench.action.closeQuickOpen",
+      _ => singleActionEffect(QuickmenuClose),
+    ),
+    ("list.focusDown", _ => singleActionEffect(ListFocusDown)),
+    ("list.focusUp", _ => singleActionEffect(ListFocusUp)),
+    ("list.select", _ => singleActionEffect(ListSelect)),
+    ("list.selectBackground", _ => singleActionEffect(ListSelectBackground)),
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    ("wildmenu.next", _ => singleActionEffect(WildmenuNext)),
-    ("wildmenu.previous", _ => singleActionEffect(WildmenuPrevious)),
     ("explorer.toggle", state => toggleExplorerEffect(state)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
@@ -194,8 +246,15 @@ let start = _ => {
       commands,
     );
 
+  let setInitialCommands =
+    Isolinear.Effect.createWithDispatch(~name="commands.setInitial", dispatch => {
+      let commands = createDefaultCommands(getState) @ contributedCommands;
+      dispatch(CommandsRegister(commands));
+    });
+
   let updater = (state: State.t, action) => {
     switch (action) {
+    | Init => (state, setInitialCommands)
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))

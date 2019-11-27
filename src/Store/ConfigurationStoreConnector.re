@@ -126,7 +126,7 @@ let start =
     Isolinear.Effect.createWithDispatch(
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
-      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None))
+      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
       | Error(e) => Log.error(e)
       }
     );
@@ -149,7 +149,8 @@ let start =
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info(
-          "Configuration - setting vsync: " ++ Revery.Vsync.show(vsyncValue),
+          "Configuration - setting vsync: "
+          ++ Revery.Vsync.toString(vsyncValue),
         );
         setVsync(vsyncValue);
         vsync := vsyncValue;

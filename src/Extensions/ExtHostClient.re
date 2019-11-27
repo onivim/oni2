@@ -30,20 +30,54 @@ let start =
       ~initData=ExtHostInitData.create(),
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
+      ~onDiagnosticsChangeMany=defaultOneArgCallback,
+      ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
+      ~onExtensionActivationFailed=defaultOneArgCallback,
+      ~onTelemetry=defaultOneArgCallback,
+      ~onOutput=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
+      ~onRegisterSuggestProvider=defaultOneArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
-    | ("MainThreadMessageService", "$showMessage", [_, `String(s), ..._]) =>
+    | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
+      In.LanguageFeatures.parseRegisterSuggestSupport(args)
+      |> apply(onRegisterSuggestProvider);
+      Ok(None);
+    | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
+      onOutput(msg);
+      Ok(None);
+    | ("MainThreadDiagnostics", "$changeMany", args) =>
+      In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
+      Ok(None);
+    | ("MainThreadDiagnostics", "$clear", args) =>
+      In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
+      Ok(None);
+    | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
+      onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
+      Ok(None);
+    | (
+        "MainThreadMessageService",
+        "$showMessage",
+        [_level, `String(s), _extInfo, ..._],
+      ) =>
       onShowMessage(s);
       Ok(None);
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
+      Ok(None);
+    | (
+        "MainThreadExtensionService",
+        "$onExtensionActivationFailed",
+        [v, ..._],
+      ) =>
+      let id = Protocol.PackedString.parse(v);
+      onExtensionActivationFailed(id);
       Ok(None);
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
@@ -52,7 +86,14 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (s, m, _a) =>
-      Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+      Log.error(
+        Printf.sprintf(
+          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
+          s,
+          m,
+          Yojson.Safe.to_string(`List(_a)),
+        ),
+      );
       Ok(None);
     };
   };
@@ -99,6 +140,26 @@ let updateDocument = (uri, modelChange, dirty, v) => {
     v.transport,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
   );
+};
+
+let getCompletions = (id, uri, position, v) => {
+  let f = (json: Yojson.Safe.t) => {
+    In.LanguageFeatures.parseProvideCompletionsResponse(json);
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      v.transport,
+      Out.LanguageFeatures.provideCompletionItems(id, uri, position),
+      f,
+    );
+  promise;
+};
+
+let send = (client, v) => {
+  let _ = ExtHostTransport.send(client.transport, v);
+  ();
 };
 
 let pump = (v: t) => ExtHostTransport.pump(v.transport);

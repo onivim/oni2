@@ -16,8 +16,6 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
-    lastTopLine: Index.ZeroBasedIndex(0),
-    lastLeftCol: Index.OneBasedIndex(0),
     minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
@@ -26,10 +24,17 @@ let create = (~bufferId=0, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursorPosition: Position.createFromZeroBasedIndices(0, 0),
+    cursors: [Vim.Cursor.create(~line=1, ~column=0, ())],
     selection: VisualRange.create(),
   };
   ret;
+};
+
+let toString = (v: t) => {
+  let cursors =
+    v.cursors |> List.map(Vim.Cursor.show) |> String.concat(", ");
+
+  Printf.sprintf("Cursors: %s", cursors);
 };
 
 type scrollbarMetrics = {
@@ -45,6 +50,19 @@ type scrollbarMetrics = {
 /*   pixelHeight: int, */
 /* }; */
 
+let getVimCursors = v => v.cursors;
+
+let getPrimaryCursor = v =>
+  switch (v.cursors) {
+  | [hd, ..._] =>
+    let line = Index.ofInt1(hd.line);
+    let character = Index.ofInt0(hd.column);
+    Position.create(line, character);
+  | [] => Position.ofInt0(0, 0)
+  };
+
+let getId = v => v.editorId;
+
 let pixelPositionToLineColumn =
     (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
   let line = int_of_float((pixelY +. view.scrollY) /. metrics.lineHeight);
@@ -59,13 +77,17 @@ let getVisibleView = (metrics: EditorMetrics.t) =>
 let getTotalSizeInPixels = (view: t, metrics: EditorMetrics.t) =>
   int_of_float(float_of_int(view.viewLines) *. metrics.lineHeight);
 
-let getCursorPixelLine = (view: t, metrics: EditorMetrics.t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.line))
+let getCursorPixelLine = (view: t, metrics: EditorMetrics.t) => {
+  let cursorPosition = getPrimaryCursor(view);
+  float_of_int(Index.toZeroBasedInt(cursorPosition.line))
   *. metrics.lineHeight;
+};
 
-let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) =>
-  float_of_int(Index.toZeroBasedInt(view.cursorPosition.character))
+let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) => {
+  let cursorPosition = getPrimaryCursor(view);
+  float_of_int(Index.toZeroBasedInt(cursorPosition.character))
   *. metrics.characterWidth;
+};
 
 let getVerticalScrollbarMetrics =
     (view: t, scrollBarHeight: int, metrics: EditorMetrics.t) => {
@@ -123,10 +145,7 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
 
 let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
-  {
-    ...scrollTo(view, scrollAmount, metrics),
-    lastTopLine: Index.ZeroBasedIndex(line),
-  };
+  scrollTo(view, scrollAmount, metrics);
 };
 
 let getLayout = (view: t, metrics: EditorMetrics.t) => {
@@ -169,10 +188,7 @@ let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
 
 let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
-  {
-    ...scrollToHorizontal(view, scrollAmount, metrics),
-    lastLeftCol: Index.ZeroBasedIndex(column),
-  };
+  scrollToHorizontal(view, scrollAmount, metrics);
 };
 
 let scroll = (view: t, scrollDeltaY, metrics) => {
@@ -228,18 +244,19 @@ let recalculate = (view: t, buffer: option(Buffer.t)) =>
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
-  | CursorMove(b) =>
-    /* If the cursor moved, make sure we're snapping to the top line */
-    /* This fixes a bug where, if the user scrolls, the cursor and topline are out of sync */
-    {
-      ...scrollToLine(view, Index.toInt0(view.lastTopLine), metrics),
-      cursorPosition: b,
-    }
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
-  | EditorSetScroll(scrollY) => scrollTo(view, scrollY, metrics)
-  | EditorScroll(scrollDeltaY) => scroll(view, scrollDeltaY, metrics)
-  | EditorScrollToLine(line) => scrollToLine(view, line, metrics)
-  | EditorScrollToColumn(column) => scrollToColumn(view, column, metrics)
+  | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
+      ...view,
+      cursors,
+    }
+  | EditorSetScroll(id, scrollY) when EditorId.equals(view.editorId, id) =>
+    scrollTo(view, scrollY, metrics)
+  | EditorScroll(id, scrollDeltaY) when EditorId.equals(view.editorId, id) =>
+    scroll(view, scrollDeltaY, metrics)
+  | EditorScrollToLine(id, line) when EditorId.equals(view.editorId, id) =>
+    scrollToLine(view, line, metrics)
+  | EditorScrollToColumn(id, column) when EditorId.equals(view.editorId, id) =>
+    scrollToColumn(view, column, metrics)
   | _ => view
   };

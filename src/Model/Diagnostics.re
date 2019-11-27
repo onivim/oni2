@@ -9,26 +9,9 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-module Diagnostic = {
-  [@deriving show({with_path: false})]
-  type t = {
-    range: Range.t,
-    message: string,
-  };
-
-  let create = (~range: Range.t, ~message, ()) => {range, message};
-
-  let explode = (buffer: Buffer.t, v: t) => {
-    let measure = Buffer.getLineLength(buffer);
-
-    Range.explode(measure, v.range)
-    |> List.map(range => create(~range, ~message=v.message, ()));
-  };
-};
-
 /*
  * The type for diagnostics is a nested map:
- * - First level: Buffer Path
+ * - First level: URI
  * - Second level: Diagnostic identifier / key.
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
@@ -36,6 +19,10 @@ module Diagnostic = {
 type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
 
 let create = () => StringMap.empty;
+
+let getKeyForUri = (uri: Uri.t) => {
+  uri |> Uri.toString;
+};
 
 let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
@@ -68,8 +55,16 @@ let explodeDiagnostics = (buffer, diagnostics) => {
   |> List.fold_left(f, IntMap.empty);
 };
 
-let change = (instance, buffer, diagKey, diagnostics) => {
-  let bufferKey = getKeyForBuffer(buffer);
+let clear = (instance, key) => {
+  let f = identifierMap => {
+    StringMap.remove(key, identifierMap);
+  };
+
+  StringMap.map(f, instance);
+};
+
+let change = (instance, uri, diagKey, diagnostics) => {
+  let bufferKey = getKeyForUri(uri);
 
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
