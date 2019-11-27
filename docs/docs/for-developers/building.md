@@ -28,14 +28,13 @@ esy bootstrap
 esy build
 ```
 
-### Build the back-end
+### Install node dependencies
 
 ```sh
-cd node
-node install.js
+node install-node-deps.js
 ```
 
-> __NOTE:__ The non-standard `node install.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary - and the native dependencies for the textmate service rely on being built with the same version of node that it uses at runtime.
+> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
 
 ### Run health-check
 

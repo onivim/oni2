@@ -13,6 +13,7 @@
            ExtHostCompletionTest
            FontSizeChangeTest
            InputIgnoreTest
+           LanguageCssTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
@@ -51,6 +52,7 @@
         ExtHostCompletionTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
+        LanguageCssTest.exe
         QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe

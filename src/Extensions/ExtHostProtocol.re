@@ -7,8 +7,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
-
-module List = Utility.List;
+open Oni_Core.Utility;
 
 module MessageType = {
   let initialized = 0;
@@ -311,12 +310,6 @@ module Suggestions = {
   type t = list(SuggestionItem.t);
 };
 
-module CancellationToken = {
-  type t = Yojson.Safe.t;
-
-  let none = `Null;
-};
-
 module LF = LanguageFeatures;
 
 module IncomingNotifications = {
@@ -364,14 +357,12 @@ module IncomingNotifications = {
 
     let parseRegisterSuggestSupport = json => {
       switch (json) {
-      | [`Int(id), _documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
         // TODO: Finish parsing
-        Some(
-          LF.SuggestProvider.create(
-            ~selector=DocumentSelector.create("oni-dev"),
-            id,
-          ),
-        )
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
       | _ => None
       };
     };
@@ -480,7 +471,6 @@ module OutgoingNotifications = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           `Assoc([]),
-          CancellationToken.none,
         ]),
       );
   };

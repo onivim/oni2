@@ -22,11 +22,12 @@ module SuggestProvider = {
 
 type t = {suggestProviders: list(SuggestProvider.t)};
 
-let create = () => {suggestProviders: []};
+let empty = {suggestProviders: []};
 
 let getSuggestProviders = (fileType: string, v: t) => {
-  let filter = (sp: SuggestProvider.t) =>
+  let filter = (sp: SuggestProvider.t) => {
     DocumentSelector.matches(sp.selector, fileType);
+  };
   List.filter(filter, v.suggestProviders);
 };
 

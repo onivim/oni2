@@ -46,6 +46,8 @@ let getBestCompletion = (v: t) => {
   List.nth_opt(v.filteredCompletions, 0);
 };
 
+let getCompletions = (v: t) => v.filteredCompletions;
+
 let _applyFilter =
     (filter: option(string), items: list(Actions.completionItem)) => {
   switch (filter) {
