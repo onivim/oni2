@@ -33,11 +33,6 @@ let start:
   t;
 
 /*
-  [pump] is called to run all pending messages on the main thread
- */
-let pump: t => unit;
-
-/*
   [send] sends a notification that does not require a response from the extension host
  */
 let send: (t, Yojson.Safe.t) => unit;

@@ -125,11 +125,6 @@ let start = (extensions, setup: Core.Setup.t) => {
     | _ => None
     };
 
-  let pumpEffect =
-    Isolinear.Effect.create(~name="exthost.pump", () =>
-      ExtHostClient.pump(extHostClient)
-    );
-
   let sendBufferEnterEffect =
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
@@ -283,7 +278,6 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
-    | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
 
