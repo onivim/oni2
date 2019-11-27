@@ -63,13 +63,12 @@ let _applyFilter =
 
     let query = Zed_utf8.explode(filter);
 
-    let toString = (item, ~shouldLower) => {
+    let toString = (item, ~shouldLower) =>
       if (shouldLower) {
-      item.completionLabel |> String.lowercase_ascii; 
+        item.completionLabel |> String.lowercase_ascii;
       } else {
-      item.completionLabel;
-      }
-    };
+        item.completionLabel;
+      };
 
     items
     |> List.filter(item => Filter.fuzzyMatches(query, item.completionLabel))
