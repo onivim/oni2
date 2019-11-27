@@ -18,7 +18,8 @@ let reduce: (State.t, Actions.t) => State.t =
         completions: Completions.reduce(s.completions, a),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         extensions: Extensions.reduce(a, s.extensions),
-        languageFeatures: LanguageFeaturesReducer.reduce(a, s.languageFeatures),
+        languageFeatures:
+          LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
