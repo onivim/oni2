@@ -13,7 +13,7 @@ runTestWithInput(
   );
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.css", None));
+  dispatch(Actions.OpenFileByPath("test.css", None, None));
 
   // Wait for the CSS filetype
   wait(
