@@ -119,7 +119,6 @@ let start = (extensions, setup: Core.Setup.t) => {
     | _ => None
     };
 
-
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   let activateFileType = (fileType: option(string)) =>
