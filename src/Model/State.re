@@ -86,5 +86,5 @@ let create: unit => t =
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,
-    searchPane: Some(Search.initial),
+    searchPane: None,
   };
