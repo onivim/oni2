@@ -28,10 +28,10 @@ module Provider = {
 
     let dispose =
       ripgrep.Ripgrep.findInFiles(
-        directory,
-        query,
-        onUpdate,
-        () => {
+        ~directory,
+        ~query,
+        ~onUpdate,
+        ~onComplete = () => {
           Log.info("Ripgrep completed.");
           dispatch(onCompleted());
         },

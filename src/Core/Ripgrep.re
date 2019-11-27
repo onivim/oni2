@@ -4,18 +4,6 @@ module Time = Revery_Core.Time;
 
 module List = Utility.List;
 
-type disposeFunction = unit => unit;
-
-/* Internal counters used for tracking */
-let _ripGrepRunCount = ref(0);
-let _ripGrepCompletedCount = ref(0);
-
-let getRunCount = () => _ripGrepRunCount^;
-let getCompletedCount = () => _ripGrepCompletedCount^;
-
-type searchFunction =
-  (string, list(string) => unit, unit => unit) => disposeFunction;
-
 module Match = {
   type t = {
     file: string,
@@ -65,11 +53,32 @@ module Match = {
   };
 };
 
+/* Internal counters used for tracking */
+let _ripGrepRunCount = ref(0);
+let _ripGrepCompletedCount = ref(0);
+
+let getRunCount = () => _ripGrepRunCount^;
+let getCompletedCount = () => _ripGrepCompletedCount^;
+
 type t = {
-  search: searchFunction,
+  search:
+    (
+      ~directory: string,
+      ~onUpdate: list(string) => unit,
+      ~onComplete: unit => unit
+    ) =>
+    dispose,
   findInFiles:
-    (string, string, list(Match.t) => unit, unit => unit) => disposeFunction,
-};
+    (
+      ~directory: string,
+      ~query: string,
+      ~onUpdate: list(Match.t) => unit,
+      ~onComplete: unit => unit
+    ) =>
+    dispose,
+}
+
+and dispose = unit => unit;
 
 /**
  RipgrepProcessingJob is the logic for processing a [Bytes.t]
@@ -208,7 +217,7 @@ let process = (rgPath, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, workingDirectory, callback, completedCallback) => {
+let search = (~executablePath, ~directory, ~onUpdate, ~onComplete) => {
   let dedup = {
     let seen = Hashtbl.create(1000);
 
@@ -223,25 +232,29 @@ let search = (path, workingDirectory, callback, completedCallback) => {
   };
 
   process(
-    path,
-    [|"--smart-case", "--files", "--", workingDirectory|],
-    items => items |> dedup |> callback,
-    completedCallback,
+    executablePath,
+    [|"--smart-case", "--files", "--", directory|],
+    items => items |> dedup |> onUpdate,
+    onComplete,
   );
 };
 
-let findInFiles = (path, workingDirectory, query, callback, completedCallback) => {
+let findInFiles =
+    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete) => {
   process(
-    path,
-    [|"--smart-case", "--hidden", "--json", "--", query, workingDirectory|],
+    executablePath,
+    [|"--smart-case", "--hidden", "--json", "--", query, directory|],
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
       |> List.concat
-      |> callback
+      |> onUpdate
     },
-    completedCallback,
+    onComplete,
   );
 };
 
-let make = path => {search: search(path), findInFiles: findInFiles(path)};
+let make = (~executablePath) => {
+  search: search(~executablePath),
+  findInFiles: findInFiles(~executablePath),
+};
