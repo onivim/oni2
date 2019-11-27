@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module List = Utility.List;
+
 module Keybinding = {
   type t = {
     key: string,
@@ -67,7 +69,7 @@ let of_yojson_with_errors:
 
       // Get errors from individual keybindings, but don't let them stop parsing
       let errors =
-        Utility.filterMap(
+        List.filter_map(
           keyBinding =>
             switch (keyBinding) {
             | Ok(_) => None
@@ -78,7 +80,7 @@ let of_yojson_with_errors:
 
       // Get valid bindings now
       let bindings =
-        Utility.filterMap(
+        List.filter_map(
           keyBinding =>
             switch (keyBinding) {
             | Ok(v) => Some(v)

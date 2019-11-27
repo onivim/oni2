@@ -492,8 +492,11 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (filePath, dir, position) =>
+  let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      open Oni_Core.Utility;
+      open Oni_Core.Types;
+
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
@@ -516,10 +519,9 @@ let start =
           Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-      open Oni_Core.Utility;
-      open Oni_Core.Types;
+
       let () =
-        position
+        location
         |> Option.iter((pos: Position.t) => {
              open Position;
              let cursor =
@@ -796,9 +798,9 @@ let start =
       (state, eff);
 
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path, direction, position) => (
+    | Model.Actions.OpenFileByPath(path, direction, location) => (
         state,
-        openFileByPathEffect(path, direction, position),
+        openFileByPathEffect(path, direction, location),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)

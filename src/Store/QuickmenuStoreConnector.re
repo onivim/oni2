@@ -344,9 +344,7 @@ let subscriptions = ripgrep => {
 
   let ripgrep = (languageInfo, iconTheme) => {
     let directory = Rench.Environment.getWorkingDirectory();
-
     let re = Str.regexp_string(directory ++ Filename.dir_sep);
-
     let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
 
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>

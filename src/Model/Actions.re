@@ -107,6 +107,13 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SearchShow
+  | SearchHide
+  | SearchInput(string, int)
+  | SearchStart
+  | SearchUpdate(list(Ripgrep.Match.t))
+  | SearchComplete
+  | SearchSelectResult(Ripgrep.Match.t)
   | Noop
 and command = {
   commandCategory: option(string),

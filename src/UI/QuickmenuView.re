@@ -19,17 +19,14 @@ module Styles = {
     Style.[
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      width(Constants.menuWidth - 10),
       color(Colors.white),
       fontFamily(font),
+      fontSize(14),
     ];
 
-  let menuItem =
-    Style.[
-      fontSize(14),
-      width(Constants.menuWidth - 50),
-      cursor(Revery.MouseCursors.pointer),
-    ];
+  let dropdown = Style.[height(Constants.menuHeight), overflow(`Hidden)];
+
+  let menuItem = Style.[fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
   let label =
       (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
@@ -46,8 +43,7 @@ module Styles = {
       textWrap(TextWrapping.NoWrap),
     ];
 
-  let progressBarTrack =
-    Style.[height(2), width(Constants.menuWidth), overflow(`Hidden)];
+  let progressBarTrack = Style.[height(2), overflow(`Hidden)];
 
   let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
     Style.[
@@ -193,15 +189,13 @@ let make =
             cursorColor=Colors.white
             style={Styles.input(font.fontFile)}
             onChange=onInput
-            text=query
+            value=query
             cursorPosition
           />
         </View>
-        <View>
+        <View style=Styles.dropdown>
           <FlatList
             rowHeight=40
-            height=Constants.menuHeight
-            width=Constants.menuWidth
             count={Array.length(items)}
             focused
             render=renderItem

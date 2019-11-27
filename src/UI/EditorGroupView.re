@@ -13,6 +13,8 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
+module List = Utility.List;
+
 let noop = () => ();
 
 let editorViewStyle = (background, foreground) =>
@@ -57,7 +59,7 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     };
   };
 
-  Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
+  List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
 let make = (~state: State.t, ~windowId: int, ~editorGroupId: int, ()) => {

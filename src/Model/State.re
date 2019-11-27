@@ -45,6 +45,7 @@ type t = {
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,
+  searchPane: option(Search.t),
 };
 
 let create: unit => t =
@@ -85,4 +86,5 @@ let create: unit => t =
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,
+    searchPane: None,
   };

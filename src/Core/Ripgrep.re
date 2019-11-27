@@ -2,19 +2,76 @@ open Rench;
 
 module Time = Revery_Core.Time;
 
-type disposeFunction = unit => unit;
+module List = Utility.List;
 
-/* Internal counters used for tracking */
-let _ripGrepRunCount = ref(0);
-let _ripGrepCompletedCount = ref(0);
+module Match = {
+  type t = {
+    file: string,
+    text: string,
+    lineNumber: int,
+    charStart: int,
+    charEnd: int,
+  };
 
-let getRunCount = () => _ripGrepRunCount^;
-let getCompletedCount = () => _ripGrepCompletedCount^;
+  let fromJsonString = str => {
+    Yojson.Basic.Util.(
+      try({
+        let json = Yojson.Basic.from_string(str);
 
-type searchFunction =
-  (string, list(string) => unit, unit => unit) => disposeFunction;
+        if (member("type", json) == `String("match")) {
+          let data = member("data", json);
 
-type t = {search: searchFunction};
+          let submatches = data |> member("submatches") |> to_list;
+
+          let matches =
+            submatches
+            |> List.map(submatch =>
+                 {
+                   file:
+                     data |> member("path") |> member("text") |> to_string,
+                   text:
+                     data |> member("lines") |> member("text") |> to_string,
+                   lineNumber: data |> member("line_number") |> to_int,
+                   charStart: submatch |> member("start") |> to_int,
+                   charEnd: submatch |> member("end") |> to_int,
+                 }
+               );
+
+          Some(matches);
+        } else {
+          None; // Not a "match" message
+        };
+      }) {
+      | Type_error(message, _) =>
+        Log.error("[Ripgrep.Match] Error decoding JSON: " ++ message);
+        None;
+      | Yojson.Json_error(message) =>
+        Log.error("[Ripgrep.Match] Error parsing JSON: " ++ message);
+        None;
+      }
+    );
+  };
+};
+
+type t = {
+  search:
+    (
+      ~directory: string,
+      ~onUpdate: list(string) => unit,
+      ~onComplete: unit => unit
+    ) =>
+    dispose,
+  findInFiles:
+    (
+      ~directory: string,
+      ~query: string,
+      ~onUpdate: list(Match.t) => unit,
+      ~onComplete: unit => unit
+    ) =>
+    dispose,
+}
+
+and dispose = unit => unit;
 
 /**
  RipgrepProcessingJob is the logic for processing a [Bytes.t]
@@ -25,7 +82,6 @@ type t = {search: searchFunction};
 */
 module RipgrepProcessingJob = {
   type pendingWork = {
-    duplicateHash: Hashtbl.t(string, bool),
     callback: list(string) => unit,
     bytes: list(Bytes.t),
   };
@@ -36,26 +92,13 @@ module RipgrepProcessingJob = {
 
   type t = Job.t(pendingWork, unit);
 
-  let dedup = (hash, str) => {
-    switch (Hashtbl.find_opt(hash, str)) {
-    | Some(_) => false
-    | None =>
-      Hashtbl.add(hash, str, true);
-      true;
-    };
-  };
-
   let doWork = (pendingWork, c) => {
     let newBytes =
       switch (pendingWork.bytes) {
       | [] => []
       | [hd, ...tail] =>
         let items =
-          hd
-          |> Bytes.to_string
-          |> String.trim
-          |> String.split_on_char('\n')
-          |> List.filter(dedup(pendingWork.duplicateHash));
+          hd |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
         pendingWork.callback(items);
         tail;
       };
@@ -70,14 +113,13 @@ module RipgrepProcessingJob = {
   };
 
   let create = (~callback, ()) => {
-    let duplicateHash = Hashtbl.create(1000);
     Job.create(
       ~f=doWork,
       ~initialCompletedWork=(),
-      ~name="RipgrepProcessorJob",
+      ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {callback, bytes: [], duplicateHash},
+      {callback, bytes: []},
     );
   };
 
@@ -93,7 +135,6 @@ module RipgrepProcessingJob = {
 };
 
 let process = (rgPath, args, callback, completedCallback) => {
-  incr(_ripGrepRunCount);
   let argsStr = String.concat("|", Array.to_list(args));
   Log.info(
     "[Ripgrep] Starting process: "
@@ -102,14 +143,15 @@ let process = (rgPath, args, callback, completedCallback) => {
     ++ argsStr
     ++ "|",
   );
+
   // Mutex to
   let jobMutex = Mutex.create();
   let job = ref(RipgrepProcessingJob.create(~callback, ()));
 
-  let dispose3 = ref(None);
+  let disposeTick = ref(None);
 
   Revery.App.runOnMainThread(() =>
-    dispose3 :=
+    disposeTick :=
       Some(
         Revery.Tick.interval(
           _ =>
@@ -123,11 +165,11 @@ let process = (rgPath, args, callback, completedCallback) => {
       )
   );
 
-  let cp = ChildProcess.spawn(rgPath, args);
+  let childProcess = ChildProcess.spawn(rgPath, args);
 
-  let dispose1 =
+  let disposeOnData =
     Event.subscribe(
-      cp.stdout.onData,
+      childProcess.stdout.onData,
       value => {
         Mutex.lock(jobMutex);
         job := RipgrepProcessingJob.queueWork(value, job^);
@@ -135,11 +177,10 @@ let process = (rgPath, args, callback, completedCallback) => {
       },
     );
 
-  let dispose2 =
+  let disposeOnClose =
     Event.subscribe(
-      cp.onClose,
+      childProcess.onClose,
       exitCode => {
-        incr(_ripGrepCompletedCount);
         Log.info(
           "[Ripgrep] Process completed - exit code: "
           ++ string_of_int(exitCode),
@@ -148,16 +189,18 @@ let process = (rgPath, args, callback, completedCallback) => {
       },
     );
 
-  () => {
+  let dispose = () => {
     Log.info("Ripgrep session complete.");
-    dispose1();
-    dispose2();
-    switch (dispose3^) {
+    disposeOnData();
+    disposeOnClose();
+    switch (disposeTick^) {
     | Some(v) => v()
     | None => ()
     };
-    cp.kill(Sys.sigkill);
+    childProcess.kill(Sys.sigkill);
   };
+
+  dispose;
 };
 
 /**
@@ -165,13 +208,44 @@ let process = (rgPath, args, callback, completedCallback) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (path, workingDirectory, callback, completedCallback) => {
+let search = (~executablePath, ~directory, ~onUpdate, ~onComplete) => {
+  let dedup = {
+    let seen = Hashtbl.create(1000);
+
+    List.filter(str => {
+      switch (Hashtbl.find_opt(seen, str)) {
+      | Some(_) => false
+      | None =>
+        Hashtbl.add(seen, str, true);
+        true;
+      }
+    });
+  };
+
   process(
-    path,
-    [|"--smart-case", "--files", "--", workingDirectory|],
-    callback,
-    completedCallback,
+    executablePath,
+    [|"--smart-case", "--files", "--", directory|],
+    items => items |> dedup |> onUpdate,
+    onComplete,
   );
 };
 
-let make = path => {search: search(path)};
+let findInFiles =
+    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete) => {
+  process(
+    executablePath,
+    [|"--smart-case", "--hidden", "--json", "--", query, directory|],
+    items => {
+      items
+      |> List.filter_map(Match.fromJsonString)
+      |> List.concat
+      |> onUpdate
+    },
+    onComplete,
+  );
+};
+
+let make = (~executablePath) => {
+  search: search(~executablePath),
+  findInFiles: findInFiles(~executablePath),
+};
