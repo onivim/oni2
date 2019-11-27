@@ -436,7 +436,6 @@ let start =
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
-        open Oni_Core.Types;
         open Oni_Core.Utility;
 
         // Set cursors based on current editor
@@ -460,8 +459,6 @@ let start =
                Vim.Window.setTopLeft(topLine, leftCol);
              });
 
-        // TODO: Get cursors and use those to send the event,
-        // instead of querying again for the position
         let cursors = Vim.input(~cursors, key);
 
         let newTopLine = Vim.Window.getTopLine();
