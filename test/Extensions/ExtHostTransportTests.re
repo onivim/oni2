@@ -12,7 +12,7 @@ describe("ExtHostTransport", ({test, _}) => {
       let onInitialized = () => initialized := true;
       let extClient = ExtHostTransport.start(~onInitialized, setup);
       Oni_Core.Utility.waitForCondition(() => {
-        ExtHostTransport.pump(extClient);
+        Revery.App.flushPendingCallbacks();
         initialized^;
       });
       expect.bool(initialized^).toBe(true);
@@ -25,9 +25,9 @@ describe("ExtHostTransport", ({test, _}) => {
     let closed = ref(false);
     let onClosed = () => closed := true;
     let onInitialized = () => initialized := true;
-    let extClient = ExtHostTransport.start(~onInitialized, ~onClosed, setup);
+    let _extClient = ExtHostTransport.start(~onInitialized, ~onClosed, setup);
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(extClient);
+      Revery.App.flushPendingCallbacks();
       initialized^;
     });
     expect.bool(initialized^).toBe(true);
@@ -44,13 +44,12 @@ describe("ExtHostTransport", ({test, _}) => {
     let onInitialized = () => initialized := true;
     let extClient = ExtHostTransport.start(~onInitialized, ~onClosed, setup);
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(extClient);
+      Revery.App.flushPendingCallbacks();
       initialized^;
     });
     expect.bool(initialized^).toBe(true);
     ExtHostTransport.close(extClient);
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(extClient);
       closed^;
     });
     expect.bool(closed^).toBe(false);
@@ -80,11 +79,11 @@ describe("ExtHostTransport", ({test, _}) => {
     let initData = ExtHostInitData.create(~extensions, ());
     let extClient = ExtHostTransport.start(~initData, ~onMessage, setup);
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(extClient);
+      Revery.App.flushPendingCallbacks();
       gotWillActivateMessage^;
     });
     Oni_Core.Utility.waitForCondition(() => {
-      ExtHostTransport.pump(extClient);
+      Revery.App.flushPendingCallbacks();
       gotDidActivateMessage^;
     });
     ExtHostTransport.close(extClient);

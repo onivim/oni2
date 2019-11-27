@@ -49,11 +49,11 @@ let isStringValueInList = (r: ref(list(string)), match: string) => {
 };
 
 module Waiters = {
-  let wait = (f, client: ExtHostClient.t) => {
+  let wait = (f, _client: ExtHostClient.t) => {
     Oni_Core.Utility.waitForCondition(
       ~timeout=10.0,
-      () => {
-        ExtHostClient.pump(client);
+      () => { 
+        Revery.App.flushPendingCallbacks();
         f();
       },
     );
@@ -101,7 +101,7 @@ let withExtensionClient =
   Oni_Core.Utility.waitForCondition(
     ~timeout=30.0,
     () => {
-      ExtHostClient.pump(v);
+      Revery.App.flushPendingCallbacks();
       initialized^;
     },
   );
