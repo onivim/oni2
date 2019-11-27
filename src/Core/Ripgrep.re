@@ -96,10 +96,7 @@ module RipgrepProcessingJob = {
       | [] => []
       | [hd, ...tail] =>
         let items =
-          hd
-          |> Bytes.to_string
-          |> String.trim
-          |> String.split_on_char('\n');
+          hd |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
         pendingWork.callback(items);
         tail;
       };
@@ -206,7 +203,6 @@ let process = (rgPath, args, callback, completedCallback) => {
   dispose;
 };
 
-
 /**
    Search through files of the directory passed in and sort the results in
    order of the last time they were accessed, alternative sort order includes
@@ -222,7 +218,7 @@ let search = (path, workingDirectory, callback, completedCallback) => {
       | None =>
         Hashtbl.add(seen, str, true);
         true;
-      };
+      }
     });
   };
 
@@ -240,9 +236,9 @@ let findInFiles = (path, workingDirectory, query, callback, completedCallback) =
     [|"--smart-case", "--json", "--", query, workingDirectory|],
     items => {
       items
-        |> List.filter_map(Match.fromJsonString)
-        |> List.concat
-        |> callback;
+      |> List.filter_map(Match.fromJsonString)
+      |> List.concat
+      |> callback
     },
     completedCallback,
   );
