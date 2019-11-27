@@ -359,12 +359,7 @@ module IncomingNotifications = {
         documentSelector
         |> DocumentSelector.of_yojson
         |> Result.to_option
-        |> Option.map((selector) => {
-          LF.SuggestProvider.create(
-            ~selector,
-            id,
-          )
-        });
+        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
       | _ => None
       };
     };

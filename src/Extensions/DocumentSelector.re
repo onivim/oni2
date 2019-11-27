@@ -25,7 +25,5 @@ let create = language => {
 };
 
 let toString = (v: t) => {
-  v
-  |> List.map((item) => item.language)
-  |> String.concat(", ");
+  v |> List.map(item => item.language) |> String.concat(", ");
 };
