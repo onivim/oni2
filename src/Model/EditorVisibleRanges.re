@@ -1,6 +1,7 @@
 open Oni_Core;
-
 open Actions;
+
+module List = Utility.List;
 
 type individualRange = {
   editorRanges: list(Range.t),
@@ -69,8 +70,8 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
 let getVisibleBuffers = (state: State.t) => {
   WindowTree.getSplits(state.windowManager.windowTree)
   |> List.map((split: WindowTree.split) => split.editorGroupId)
-  |> Utility.filterMap(EditorGroups.getEditorGroupById(state.editorGroups))
-  |> Utility.filterMap(EditorGroup.getActiveEditor)
+  |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
+  |> List.filter_map(EditorGroup.getActiveEditor)
   |> List.map(e => e.bufferId);
 };
 
@@ -78,10 +79,8 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
     WindowTree.getSplits(state.windowManager.windowTree)
     |> List.map((split: WindowTree.split) => split.editorGroupId)
-    |> Utility.filterMap(
-         EditorGroups.getEditorGroupById(state.editorGroups),
-       )
-    |> Utility.filterMap(eg =>
+    |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
+    |> List.filter_map(eg =>
          switch (EditorGroup.getActiveEditor(eg)) {
          | None => None
          | Some(v) =>

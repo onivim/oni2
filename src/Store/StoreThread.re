@@ -128,10 +128,12 @@ let start =
     );
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
-  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+  let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
+
+  let (searchUpdater, searchStream) = SearchStoreConnector.start();
 
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
@@ -167,6 +169,7 @@ let start =
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
+          searchUpdater,
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
@@ -185,8 +188,16 @@ let start =
       type action = Model.Actions.t;
       let id = "quickmenu-subscription";
     });
-  let (quickmenuSubscriptionsUpdater, _menuSubscriptionsStream) =
+  let (quickmenuSubscriptionsUpdater, quickmenuSubscriptionsStream) =
     QuickmenuStoreConnector.subscriptions(ripgrep);
+
+  module SearchSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "search-subscription";
+    });
+  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
+    SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
@@ -201,6 +212,8 @@ let start =
     // TODO: Wire this up properly
     let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
     QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
+    let searchSubs = searchSubscriptionsUpdater(newState);
+    SearchSubscriptionRunner.run(~dispatch, searchSubs);
   };
 
   let runEffects = () => {
@@ -248,6 +261,8 @@ let start =
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
   let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, lifecycleStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, windowStream);
@@ -255,6 +270,10 @@ let start =
     Isolinear.Stream.connect(dispatch, hoverStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, merlinStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

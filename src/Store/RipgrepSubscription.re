@@ -27,9 +27,9 @@ module Provider = {
 
     let dispose =
       ripgrep.Ripgrep.search(
-        directory,
-        onUpdate,
-        () => {
+        ~directory,
+        ~onUpdate,
+        ~onComplete=() => {
           Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
           dispatch(onCompleted());
         },

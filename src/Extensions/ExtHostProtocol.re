@@ -9,6 +9,17 @@ open Oni_Core;
 open Oni_Core.Types;
 open Oni_Core.Utility;
 
+module MessageType = {
+  let initialized = 0;
+  let ready = 1;
+  let initData = 2;
+  let terminate = 3;
+  let requestJsonArgs = 4;
+  let acknowledged = 8;
+  let replyOkJson = 12;
+  let replyErrError = 13;
+};
+
 module LogLevel = {
   let trace = 0;
   let debug = 1;
@@ -277,17 +288,9 @@ module DiagnosticsCollection = {
     switch (json) {
     | `List([`String(name), `List(perFileDiagnostics)]) =>
       let perFileDiagnostics =
-        List.map(Diagnostics.of_yojson, perFileDiagnostics);
-
-      List.iter(
-        fun
-        | Ok(_) => ()
-        | Error(msg) => Log.error(msg),
-        perFileDiagnostics,
-      );
-
-      let perFileDiagnostics =
-        perFileDiagnostics |> Utility.filterMap(Utility.resultToOption);
+        perFileDiagnostics
+        |> List.map(Diagnostics.of_yojson)
+        |> List.filter_map(Utility.resultToOption);
       Some({name, perFileDiagnostics});
     | _ => None
     };

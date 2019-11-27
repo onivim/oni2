@@ -14,6 +14,11 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   GlobalContext.current().dispatch(action);
 };
 
+let toggleSearch = ({searchPane, _}: State.t, _) => {
+  let action = searchPane == None ? Actions.SearchShow : Actions.SearchHide;
+  GlobalContext.current().dispatch(action);
+};
+
 let make = (~state: State.t, ()) => {
   let bg = state.theme.editorLineNumberBackground;
 
@@ -27,6 +32,13 @@ let make = (~state: State.t, ()) => {
     ]>
     <Clickable onClick={toggleExplorer(state)} style=button>
       <FontIcon backgroundColor=bg color=Colors.white icon=FontAwesome.file />
+    </Clickable>
+    <Clickable onClick={toggleSearch(state)} style=button>
+      <FontIcon
+        backgroundColor=bg
+        color=Colors.white
+        icon=FontAwesome.search
+      />
     </Clickable>
   </View>;
 };
