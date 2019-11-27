@@ -66,7 +66,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
                category: None,
                name: getDisplayPath(path, currentDirectory),
                command: () => {
-                 Oni_Model.Actions.OpenFileByPath(path, None);
+                 Oni_Model.Actions.OpenFileByPath(path, None, None);
                },
                icon:
                  Oni_Model.FileExplorer.getFileIcon(
@@ -353,7 +353,7 @@ let subscriptions = ripgrep => {
       Actions.{
         category: None,
         name: getDisplayPath(fullPath),
-        command: () => Model.Actions.OpenFileByPath(fullPath, None),
+        command: () => Model.Actions.OpenFileByPath(fullPath, None, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
         highlight: [],

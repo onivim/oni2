@@ -204,6 +204,13 @@ let start = getState => {
     | _ => s
     };
 
+  // This effect 'steals' focus from Revery. When we're selecting an active editor,
+  // we want to be sure the editor has focus, not a Revery UI component.
+  let getFocusEffect =
+    Isolinear.Effect.create(~name="windows.getFocus", () => {
+      Revery.UI.Focus.loseFocus()
+    });
+
   let updater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | Model.Actions.Tick(_) => (state, Isolinear.Effect.none)
@@ -214,6 +221,8 @@ let start = getState => {
         switch (action) {
         | Init => initializeDefaultViewEffect(state)
         | ConfigurationSet(c) => synchronizeConfiguration(c)
+        // When opening a file, ensure that the active editor is getting focus
+        | OpenFileByPath(_) => getFocusEffect
         | ViewCloseEditor(_) =>
           if (List.length(
                 WindowTree.getSplits(state.windowManager.windowTree),
