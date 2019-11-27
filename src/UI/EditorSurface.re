@@ -529,7 +529,6 @@ let%component make =
         "EditorSurface - editorMouseUp: topVisibleLine is "
         ++ string_of_int(topVisibleLine)
       );
-      Vim.Window.setTopLeft(topVisibleLine, leftVisibleColumn);
       Log.debug(() =>
         "EditorSurface - editorMouseUp: setPosition ("
         ++ string_of_int(line + 1)
@@ -537,7 +536,17 @@ let%component make =
         ++ string_of_int(col)
         ++ ")"
       );
-      Vim.Cursor.setPosition(line + 1, col);
+      let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
+
+      GlobalContext.current().dispatch(
+        Actions.EditorScrollToLine(editorId, topVisibleLine),
+      );
+      GlobalContext.current().dispatch(
+        Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
+      );
+      GlobalContext.current().dispatch(
+        Actions.EditorCursorMove(editorId, [cursor]),
+      );
     };
   };
 
