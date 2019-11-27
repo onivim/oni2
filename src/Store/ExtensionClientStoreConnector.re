@@ -243,10 +243,15 @@ let start = (extensions, setup: Core.Setup.t) => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
         (buf, fileType) => {
+          open Model.Actions;
+          open Oni_Core.Types;
           let uri = Model.Buffer.getUri(buf);
-          let languageFeatures = state.languageFeatures;
           let position =
-            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+            Protocol.OneBasedPosition.ofInt1(
+              ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
+              ~column=completionMeet.completionMeetColumn |> Index.toInt1,
+              (),
+            );
           Core.Log.info(
             Printf.sprintf(
               "[Exthost] Completions - requesting at %s for %s",
@@ -254,6 +259,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               Protocol.OneBasedPosition.show(position),
             ),
           );
+          let languageFeatures = state.languageFeatures;
           getAndDispatchCompletions(
             ~languageFeatures,
             ~fileType,

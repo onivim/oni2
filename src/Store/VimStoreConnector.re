@@ -698,28 +698,31 @@ let start =
       let completions = state.completions;
       let bestMatch = Model.Completions.getBestCompletion(completions);
       let meet = Model.Completions.getMeet(completions);
-      switch (bestMatch, meet) {
-      | (Some(completion), Some(meet)) =>
-        let cursorPosition = Vim.Cursor.getPosition();
-        let delta = cursorPosition.column - (meet.completionMeetColumn + 1);
+      Oni_Core.Types.(
+        switch (bestMatch, meet) {
+        | (Some(completion), Some(meet)) =>
+          let cursorPosition = Vim.Cursor.getPosition();
+          let delta =
+            cursorPosition.column - Index.toInt1(meet.completionMeetColumn);
 
-        let idx = ref(delta);
-        while (idx^ >= 0) {
-          let _ = Vim.input("<BS>");
-          decr(idx);
-        };
+          let idx = ref(delta);
+          while (idx^ >= 0) {
+            let _ = Vim.input("<BS>");
+            decr(idx);
+          };
 
-        let latestCursors = ref([]);
-        Zed_utf8.iter(
-          s => {
-            latestCursors := Vim.input(Zed_utf8.singleton(s));
-            ();
-          },
-          completion.completionLabel,
-        );
-        updateActiveEditorCursors(latestCursors^);
-      | _ => ()
-      };
+          let latestCursors = ref([]);
+          Zed_utf8.iter(
+            s => {
+              latestCursors := Vim.input(Zed_utf8.singleton(s));
+              ();
+            },
+            completion.completionLabel,
+          );
+          updateActiveEditorCursors(latestCursors^);
+        | _ => ()
+        }
+      );
     });
 
   let prevViml = ref([]);

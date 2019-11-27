@@ -43,7 +43,7 @@ runTestWithInput(
       state.extensions.activatedIds,
     )
   );
-  
+
   // Also, wait for suggest providers to be registered
   wait(
     ~timeout=30.0,
@@ -51,7 +51,7 @@ runTestWithInput(
     (state: State.t) =>
     state.languageFeatures
     |> LanguageFeatures.getSuggestProviders("css")
-    |> (providers) => List.length(providers) > 0
+    |> (providers => List.length(providers) > 0)
   );
 
   // Enter some text
