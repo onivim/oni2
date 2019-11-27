@@ -22,6 +22,8 @@ module Index = {
 
   let ofInt0 = i => ZeroBasedIndex(i);
   let ofInt1 = i => OneBasedIndex(i);
+
+  let equals = (a: t, b: t) => toInt0(a) == toInt0(b);
 };
 
 module EditorSize = {
@@ -91,6 +93,10 @@ module Position = {
   };
 
   let ofInt1 = createFromOneBasedIndices;
+
+  let equals = (a: t, b: t) => {
+    Index.equals(a.line, b.line) && Index.equals(a.character, b.character);
+  };
 };
 
 module BufferUpdate = {
