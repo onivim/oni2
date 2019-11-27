@@ -68,7 +68,6 @@ let subscriptions = ripgrep => {
       ~ripgrep,
       ~onUpdate=
         items => {
-          Printf.printf("-- adding %n items\n%!", List.length(items));
           dispatch(SearchUpdate(items));
         },
       ~onCompleted=() => SearchComplete,
