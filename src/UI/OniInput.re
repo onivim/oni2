@@ -2,6 +2,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+open Oni_Core.Utility;
+
 type textUpdate = {
   newString: string,
   newCursorPosition: int,
@@ -194,23 +196,28 @@ let make =
   let cursor = {
     let (startStr, _) =
       getStringParts(cursorPosition + String.length(prefix), valueToDisplay);
-    let dimension =
-      Revery.Draw.Text.measure(
-        ~window=Revery.UI.getActiveWindow(),
-        ~fontFamily=inputFontFamily,
-        ~fontSize=inputFontSize,
-        startStr,
-      );
-    <View
-      style=Style.[
-        position(`Absolute),
-        marginLeft(dimension.width + inputTextMargin + 1),
-        marginTop((defaultHeight - dimension.height) / 2),
-      ]>
-      <Opacity opacity=cursorOpacity>
-        <Container width=2 height=inputFontSize color=cursorColor />
-      </Opacity>
-    </View>;
+
+    Revery.UI.getActiveWindow()
+    |> Option.map(window => {
+         let dimension =
+           Revery.Draw.Text.measure(
+             ~window,
+             ~fontFamily=inputFontFamily,
+             ~fontSize=inputFontSize,
+             startStr,
+           );
+         <View
+           style=Style.[
+             position(`Absolute),
+             marginLeft(dimension.width + inputTextMargin + 1),
+             marginTop((defaultHeight - dimension.height) / 2),
+           ]>
+           <Opacity opacity=cursorOpacity>
+             <Container width=2 height=inputFontSize color=cursorColor />
+           </Opacity>
+         </View>;
+       })
+    |> Option.value(~default=React.empty);
   };
 
   let makeTextComponent = content =>
