@@ -110,9 +110,9 @@ let start = () => {
               ();
               // TODO: Show completion UI
             };
-
-            let cursorLine = meet.completionMeetLine;
-            let position = meet.completionMeetColumn;
+            open Oni_Core.Types;
+            let cursorLine = meet.completionMeetLine |> Index.toInt0;
+            let position = meet.completionMeetColumn |> Index.toInt0;
 
             if (cursorLine < Array.length(lines)
                 && id == meet.completionMeetBufferId) {

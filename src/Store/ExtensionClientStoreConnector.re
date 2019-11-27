@@ -229,8 +229,14 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         (buf, fileType) => {
           let uri = Model.Buffer.getUri(buf);
+          open Model.Actions;
+          open Oni_Core.Types;
           let position =
-            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+            Protocol.OneBasedPosition.ofInt1(
+              ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
+              ~column=completionMeet.completionMeetColumn |> Index.toInt1,
+              (),
+            );
           getAndDispatchCompletions(
             ~fileType,
             ~uri,

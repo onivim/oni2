@@ -117,8 +117,8 @@ and command = {
 }
 and completionMeet = {
   completionMeetBufferId: int,
-  completionMeetLine: int,
-  completionMeetColumn: int,
+  completionMeetLine: Index.t,
+  completionMeetColumn: Index.t,
 }
 and completionItem = {
   completionLabel: string,

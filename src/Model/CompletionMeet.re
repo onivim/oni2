@@ -12,8 +12,10 @@ open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
 type completionMeet = {
+  // Base is the prefix string
   base: string,
-  index: int,
+  // Meet is the position where we request completions
+  meet: Position.t,
 };
 
 type t = option(completionMeet);
@@ -21,14 +23,16 @@ type t = option(completionMeet);
 let show = (v: t) =>
   switch (v) {
   | None => "(None)"
-  | Some(m) => Printf.sprintf("Base: |%s| Meet: %d", m.base, m.index)
+  | Some(m) =>
+    Printf.sprintf("Base: |%s| Meet: %s", m.base, m.meet |> Position.show)
   };
 
 let defaultTriggerCharacters = [UChar.of_char('.')];
 
-let getMeetFromLine =
+let createFromLine =
     (
       ~triggerCharacters=defaultTriggerCharacters,
+      ~lineNumber=0,
       ~cursor: Index.t,
       line: string,
     ) => {
@@ -67,15 +71,15 @@ let getMeetFromLine =
   switch (pos^) {
   | (-1) =>
     if (baseLength == Index.toInt0(cursor) && baseLength > 0) {
-      Some({index: 0, base});
+      Some({meet: Position.ofInt0(lineNumber, 0), base});
     } else {
       None;
     }
-  | v => Some({index: v, base})
+  | v => Some({meet: Position.ofInt0(lineNumber, v), base})
   };
 };
 
-let getMeetFromBufferCursor =
+let createFromBufferCursor =
     (
       ~triggerCharacters=defaultTriggerCharacters,
       ~cursor: Position.t,
@@ -86,7 +90,12 @@ let getMeetFromBufferCursor =
 
   if (line0 < bufferLines) {
     let line = Buffer.getLine(buffer, line0);
-    getMeetFromLine(~triggerCharacters, ~cursor=cursor.character, line);
+    createFromLine(
+      ~lineNumber=line0,
+      ~triggerCharacters,
+      ~cursor=cursor.character,
+      line,
+    );
   } else {
     None;
   };
