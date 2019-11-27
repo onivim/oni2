@@ -99,10 +99,6 @@ let start = () => {
         state,
         checkCompletionMeet(state),
       )
-    | Actions.BufferUpdate(_) when state.mode == Vim.Types.Insert => (
-        state,
-        checkCompletionMeet(state),
-      )
     | Actions.EditorCursorMove(_) when state.mode == Vim.Types.Insert => (
         state,
         checkCompletionMeet(state),
