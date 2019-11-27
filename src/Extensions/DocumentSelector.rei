@@ -15,3 +15,5 @@ let to_yojson: t => Yojson.Safe.t;
   [create(fileType)] creates a document selector that matches a single filetype
  */
 let create: string => t;
+
+let toString: t => string;

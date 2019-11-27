@@ -251,6 +251,11 @@ module Option = {
     | Some(x) => f(x)
     | None => ();
 
+  let iter_none = f =>
+    fun
+    | Some(_) => ()
+    | None => f();
+
   let some = x => Some(x);
 
   let bind = f =>
@@ -262,6 +267,13 @@ module Option = {
     fun
     | Some(x) => x
     | None => None;
+};
+
+module Result = {
+  let to_option =
+    fun
+    | Ok(v) => Some(v)
+    | Error(_) => None;
 };
 
 module StringUtil = {
