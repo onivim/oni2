@@ -274,7 +274,7 @@ module Result = {
     fun
     | Ok(v) => Some(v)
     | Error(_) => None;
-}
+};
 
 module StringUtil = {
   let isSpace =
