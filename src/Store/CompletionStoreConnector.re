@@ -49,10 +49,8 @@ let start = () => {
         switch (bufferOpt) {
         | None => ()
         | Some(buffer) =>
-          print_endline("EDITOR: " ++ Model.Editor.toString(ed));
           let cursorPosition = Model.Editor.getPrimaryCursor(ed);
           let line = Index.toInt0(cursorPosition.line);
-          print_endline("!!POSITION: " ++ Position.show(cursorPosition));
           let meetOpt =
             Model.CompletionMeet.getMeetFromBufferCursor(
               ~cursor=cursorPosition,
