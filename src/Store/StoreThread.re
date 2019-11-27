@@ -128,7 +128,7 @@ let start =
     );
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
-  let ripgrep = Core.Ripgrep.make(setup.rgPath);
+  let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();

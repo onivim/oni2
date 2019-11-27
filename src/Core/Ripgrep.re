@@ -53,13 +53,6 @@ module Match = {
   };
 };
 
-/* Internal counters used for tracking */
-let _ripGrepRunCount = ref(0);
-let _ripGrepCompletedCount = ref(0);
-
-let getRunCount = () => _ripGrepRunCount^;
-let getCompletedCount = () => _ripGrepCompletedCount^;
-
 type t = {
   search:
     (
@@ -142,7 +135,6 @@ module RipgrepProcessingJob = {
 };
 
 let process = (rgPath, args, callback, completedCallback) => {
-  incr(_ripGrepRunCount);
   let argsStr = String.concat("|", Array.to_list(args));
   Log.info(
     "[Ripgrep] Starting process: "
@@ -189,7 +181,6 @@ let process = (rgPath, args, callback, completedCallback) => {
     Event.subscribe(
       childProcess.onClose,
       exitCode => {
-        incr(_ripGrepCompletedCount);
         Log.info(
           "[Ripgrep] Process completed - exit code: "
           ++ string_of_int(exitCode),
