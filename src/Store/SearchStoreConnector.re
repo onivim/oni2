@@ -66,10 +66,7 @@ let subscriptions = ripgrep => {
       ~query,
       ~directory,
       ~ripgrep,
-      ~onUpdate=
-        items => {
-          dispatch(SearchUpdate(items));
-        },
+      ~onUpdate=items => {dispatch(SearchUpdate(items))},
       ~onCompleted=() => SearchComplete,
     );
   };
