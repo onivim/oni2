@@ -198,26 +198,25 @@ let make =
       getStringParts(cursorPosition + String.length(prefix), valueToDisplay);
 
     Revery.UI.getActiveWindow()
-    |> Option.map((window) => {
-    
-      let dimension =
-        Revery.Draw.Text.measure(
-          ~window,
-          ~fontFamily=inputFontFamily,
-          ~fontSize=inputFontSize,
-          startStr,
-        );
-      <View
-        style=Style.[
-          position(`Absolute),
-          marginLeft(dimension.width + inputTextMargin + 1),
-          marginTop((defaultHeight - dimension.height) / 2),
-        ]>
-        <Opacity opacity=cursorOpacity>
-          <Container width=2 height=inputFontSize color=cursorColor />
-        </Opacity>
-      </View>
-      })
+    |> Option.map(window => {
+         let dimension =
+           Revery.Draw.Text.measure(
+             ~window,
+             ~fontFamily=inputFontFamily,
+             ~fontSize=inputFontSize,
+             startStr,
+           );
+         <View
+           style=Style.[
+             position(`Absolute),
+             marginLeft(dimension.width + inputTextMargin + 1),
+             marginTop((defaultHeight - dimension.height) / 2),
+           ]>
+           <Opacity opacity=cursorOpacity>
+             <Container width=2 height=inputFontSize color=cursorColor />
+           </Opacity>
+         </View>;
+       })
     |> Option.value(~default=React.empty);
   };
 
