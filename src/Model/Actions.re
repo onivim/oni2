@@ -56,6 +56,7 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
+  | EditorCursorAdd(EditorId.t, Vim.Cursor.t)
   | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
   | EditorSetScroll(EditorId.t, float)
   | EditorScroll(EditorId.t, float)

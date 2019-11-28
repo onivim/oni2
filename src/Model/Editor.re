@@ -246,6 +246,10 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
   switch (action) {
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
+  | EditorCursorAdd(id, cursor) when EditorId.equals(view.editorId, id) => {
+      ...view,
+      cursors: [cursor, ...view.cursors],
+    }
   | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
       ...view,
       cursors,

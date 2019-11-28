@@ -545,7 +545,7 @@ let%component make =
           Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
         );*/
       GlobalContext.current().dispatch(
-        Actions.EditorCursorMove(editorId, [cursor]),
+        Actions.EditorCursorAdd(editorId, cursor),
       );
     };
   };
