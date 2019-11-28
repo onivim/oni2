@@ -1,17 +1,31 @@
 open Oni_Core;
 open Oni_Core.Types;
 
-open Actions;
-
 let lastId = ref(0);
 
-type t = Actions.editor;
+type t =
+  Actions.editor = {
+    editorId: EditorId.t,
+    bufferId: int,
+    scrollX: float,
+    scrollY: float,
+    minimapMaxColumnWidth: int,
+    minimapScrollY: float,
+    /*
+     * The maximum line visible in the view.
+     * TODO: This will be dependent on line-wrap settings.
+     */
+    maxLineLength: int,
+    viewLines: int,
+    cursors: list(Vim.Cursor.t),
+    selection: VisualRange.t,
+  };
 
 let create = (~bufferId=0, ()) => {
   let id = lastId^;
   incr(lastId);
 
-  let ret: t = {
+  {
     editorId: id,
     bufferId,
     scrollX: 0.,
@@ -27,14 +41,6 @@ let create = (~bufferId=0, ()) => {
     cursors: [Vim.Cursor.create(~line=1, ~column=0, ())],
     selection: VisualRange.create(),
   };
-  ret;
-};
-
-let toString = (v: t) => {
-  let cursors =
-    v.cursors |> List.map(Vim.Cursor.show) |> String.concat(", ");
-
-  Printf.sprintf("Cursors: %s", cursors);
 };
 
 type scrollbarMetrics = {
@@ -43,17 +49,10 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-/* type viewport = { */
-/*   pixelX: int, */
-/*   pixelY: int, */
-/*   pixelWidth: int, */
-/*   pixelHeight: int, */
-/* }; */
+let getVimCursors = model => model.cursors;
 
-let getVimCursors = v => v.cursors;
-
-let getPrimaryCursor = v =>
-  switch (v.cursors) {
+let getPrimaryCursor = model =>
+  switch (model.cursors) {
   | [hd, ..._] =>
     let line = Index.ofInt1(hd.line);
     let character = Index.ofInt0(hd.column);
@@ -61,36 +60,25 @@ let getPrimaryCursor = v =>
   | [] => Position.ofInt0(0, 0)
   };
 
-let getId = v => v.editorId;
+let getId = model => model.editorId;
 
 let pixelPositionToLineColumn =
-    (view: t, metrics: EditorMetrics.t, pixelX: float, pixelY: float) => {
+    (view, metrics: EditorMetrics.t, pixelX, pixelY) => {
   let line = int_of_float((pixelY +. view.scrollY) /. metrics.lineHeight);
   let column =
     int_of_float((pixelX +. view.scrollX) /. metrics.characterWidth);
+
   (line, column);
 };
 
 let getVisibleView = (metrics: EditorMetrics.t) =>
   int_of_float(float_of_int(metrics.pixelHeight) /. metrics.lineHeight);
 
-let getTotalSizeInPixels = (view: t, metrics: EditorMetrics.t) =>
+let getTotalSizeInPixels = (view, metrics: EditorMetrics.t) =>
   int_of_float(float_of_int(view.viewLines) *. metrics.lineHeight);
 
-let getCursorPixelLine = (view: t, metrics: EditorMetrics.t) => {
-  let cursorPosition = getPrimaryCursor(view);
-  float_of_int(Index.toZeroBasedInt(cursorPosition.line))
-  *. metrics.lineHeight;
-};
-
-let getCursorPixelColumn = (view: t, metrics: EditorMetrics.t) => {
-  let cursorPosition = getPrimaryCursor(view);
-  float_of_int(Index.toZeroBasedInt(cursorPosition.character))
-  *. metrics.characterWidth;
-};
-
 let getVerticalScrollbarMetrics =
-    (view: t, scrollBarHeight: int, metrics: EditorMetrics.t) => {
+    (view, scrollBarHeight, metrics: EditorMetrics.t) => {
   let totalViewSizeInPixels =
     float_of_int(getTotalSizeInPixels(view, metrics) + metrics.pixelHeight);
   let thumbPercentage =
@@ -105,7 +93,7 @@ let getVerticalScrollbarMetrics =
 };
 
 let getHorizontalScrollbarMetrics =
-    (view: t, availableWidth: int, metrics: EditorMetrics.t) => {
+    (view, availableWidth, metrics: EditorMetrics.t) => {
   let totalViewWidthInPixels =
     float_of_int(view.maxLineLength) *. metrics.characterWidth;
   let availableWidthF = float_of_int(availableWidth);
@@ -123,7 +111,7 @@ let getHorizontalScrollbarMetrics =
     };
 };
 
-let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
+let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
   let newScrollY = max(0., newScrollY);
   let availableScroll =
     max(float_of_int(view.viewLines - 1), 0.) *. metrics.lineHeight;
@@ -143,12 +131,12 @@ let scrollTo = (view: t, newScrollY, metrics: EditorMetrics.t) => {
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
-let scrollToLine = (view: t, line: int, metrics: EditorMetrics.t) => {
+let scrollToLine = (view, line, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(line) *. metrics.lineHeight;
   scrollTo(view, scrollAmount, metrics);
 };
 
-let getLayout = (view: t, metrics: EditorMetrics.t) => {
+let getLayout = (view, metrics: EditorMetrics.t) => {
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~maxMinimapCharacters=view.minimapMaxColumnWidth,
@@ -164,7 +152,7 @@ let getLayout = (view: t, metrics: EditorMetrics.t) => {
   layout;
 };
 
-let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
+let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
   let newScrollX = max(0., newScrollX);
 
   let layout = getLayout(view, metrics);
@@ -177,21 +165,22 @@ let scrollToHorizontal = (view: t, newScrollX, metrics: EditorMetrics.t) => {
       -. layout.bufferWidthInPixels,
     );
   let scrollX = min(newScrollX, availableScroll);
+
   {...view, scrollX};
 };
 
-let getLinesAndColumns = (view: t, metrics: EditorMetrics.t) => {
+let getLinesAndColumns = (view, metrics: EditorMetrics.t) => {
   let layout = getLayout(view, metrics);
-  let ret = (layout.bufferHeightInCharacters, layout.bufferWidthInCharacters);
-  ret;
+
+  (layout.bufferHeightInCharacters, layout.bufferWidthInCharacters);
 };
 
-let scrollToColumn = (view: t, column: int, metrics: EditorMetrics.t) => {
+let scrollToColumn = (view, column, metrics: EditorMetrics.t) => {
   let scrollAmount = float_of_int(column) *. metrics.characterWidth;
   scrollToHorizontal(view, scrollAmount, metrics);
 };
 
-let scroll = (view: t, scrollDeltaY, metrics) => {
+let scroll = (view, scrollDeltaY, metrics) => {
   let newScrollY = view.scrollY +. scrollDeltaY;
   scrollTo(view, newScrollY, metrics);
 };
@@ -209,6 +198,7 @@ let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
       (view.scrollY +. float_of_int(metrics.pixelHeight))
       /. metrics.lineHeight,
     );
+
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
@@ -232,18 +222,18 @@ let _getMaxLineLength = (buffer: Buffer.t) => {
   max^;
 };
 
-let recalculate = (view: t, buffer: option(Buffer.t)) =>
-  switch (buffer) {
-  | Some(b) => {
+let recalculate = (view, maybeBuffer) =>
+  switch (maybeBuffer) {
+  | Some(buffer) => {
       ...view,
-      viewLines: Buffer.getNumberOfLines(b),
-      maxLineLength: _getMaxLineLength(b),
+      viewLines: Buffer.getNumberOfLines(buffer),
+      maxLineLength: _getMaxLineLength(buffer),
     }
   | None => view
   };
 
 let reduce = (view, action, metrics: EditorMetrics.t) =>
-  switch (action) {
+  switch ((action: Actions.t)) {
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
   | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
