@@ -41,6 +41,6 @@ let%component make = (~state: State.t, ()) => {
 
   switch (state.fileExplorer.directory) {
   | Empty => React.empty
-  | Node(_, _) as tree => <TreeView state onNodeClick title="Explorer" tree />
+  | Node(_, _) as tree => <FileTreeView state onNodeClick title="Explorer" tree />
   };
 };
