@@ -32,6 +32,7 @@ let init = app => {
           ~forceScaleFactor=cliOptions.forceScaleFactor,
           ~maximized=false,
           ~vsync=Vsync.Immediate,
+          ~titlebarStyle=WindowStyles.Transparent,
           ~icon=Some("logo.png"),
           (),
         ),
