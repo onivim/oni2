@@ -186,7 +186,7 @@ let%component make =
               (
                 ~state: State.t,
                 ~isActiveSplit: bool,
-                ~editorGroupId: int,
+                ~editorGroup: EditorGroup.t,
                 ~metrics: EditorMetrics.t,
                 ~editor: Editor.t,
                 (),
@@ -404,7 +404,7 @@ let%component make =
   let onDimensionsChanged =
       ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
     GlobalContext.current().notifyEditorSizeChanged(
-      ~editorGroupId,
+      ~editorGroupId=editorGroup.editorGroupId,
       ~width,
       ~height,
       (),

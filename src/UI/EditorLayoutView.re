@@ -73,11 +73,16 @@ let renderTree = (state, tree) => {
            width(item.width),
            height(item.height),
          ]>
-         <EditorGroupView
-           state
-           windowId={item.split.id}
-           editorGroupId={item.split.editorGroupId}
-         />
+         {switch (
+            EditorGroups.getEditorGroupById(
+              state.editorGroups,
+              item.split.editorGroupId,
+            )
+          ) {
+          | Some(editorGroup) =>
+            <EditorGroupView state windowId={item.split.id} editorGroup />
+          | None => React.empty
+          }}
        </View>
      )
   |> React.listToElement;
