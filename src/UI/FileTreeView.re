@@ -36,7 +36,7 @@ let headingStyles = (theme: Core.Theme.t) =>
 let toIcon = (~character, ~color) =>
   IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
 
-let itemRenderer =
+let node =
     (
       ~font,
       ~indent,
@@ -47,7 +47,8 @@ let itemRenderer =
       ~foregroundColor,
       ~backgroundColor,
       ~state: State.t,
-      {data, status, id}: itemContent,
+      ~item as {data, status, id}: itemContent,
+      (),
     ) => {
   let bgColor = backgroundColor;
 
@@ -130,18 +131,6 @@ let make =
   let backgroundColor = state.theme.sideBarBackground;
   let foregroundColor = state.theme.sideBarForeground;
 
-  let nodeRenderer =
-    itemRenderer(
-      ~onClick,
-      ~primaryRootIcon,
-      ~secondaryRootIcon,
-      ~font,
-      ~itemSize,
-      ~backgroundColor,
-      ~foregroundColor,
-      ~state,
-    );
-
   <View style=Style.[flexGrow(1)]>
     <View style={headingStyles(theme)}>
       <Text
@@ -149,6 +138,23 @@ let make =
         style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
       />
     </View>
-    <ScrollView style=containerStyles> <TreeView tree nodeRenderer /> </ScrollView>
+    <ScrollView style=containerStyles>
+      <TreeView tree>
+        ...{(~indent, item) =>
+          <node
+            onClick
+            primaryRootIcon
+            secondaryRootIcon
+            font
+            itemSize
+            backgroundColor
+            foregroundColor
+            state
+            indent
+            item
+          />
+        }
+      </TreeView>
+    </ScrollView>
   </View>;
 };

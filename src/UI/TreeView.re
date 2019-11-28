@@ -6,28 +6,6 @@ open Oni_Model.UiTree;
 
 let defaultNodeStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
-let rec findNode = (nodeID, tr) =>
-  switch (tr) {
-  | Empty => None
-  | Node({id, _} as x, _) when nodeID == id => Some(x)
-  | Node(_, []) => None
-  | Node(_, [n, ...rest]) =>
-    let found = findNode(nodeID, n);
-    switch (found) {
-    | Some(n) => Some(n)
-    | None =>
-      List.fold_left(
-        (accum, item) =>
-          switch (accum) {
-          | Some(a) => Some(a)
-          | None => findNode(nodeID, item)
-          },
-        None,
-        rest,
-      )
-    };
-  };
-
 let default = (~indent, {data, status, _}) => {
   let isOpen =
     switch (status) {
@@ -91,7 +69,7 @@ let rec renderTree = (~indent=0, ~nodeRenderer, ~emptyRenderer, t) => {
    narrow down the type signature of the "tree" to whaterver type the
    default takes making it no longer generalisable
  */
-let make = (~tree, ~nodeRenderer, ~emptyRenderer=None, ()) => {
+let make = (~children as nodeRenderer, ~tree, ~emptyRenderer=None, ()) => {
   let componentTree = renderTree(tree, ~nodeRenderer, ~emptyRenderer);
   <View> {componentTree |> React.listToElement} </View>;
 };
