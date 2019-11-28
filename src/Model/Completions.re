@@ -8,13 +8,13 @@ open Oni_Core;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-type filteredCompletions = Filter.result(Actions.completionItem);
+type filteredCompletion = Filter.result(Actions.completionItem);
 
 type t = {
   // The last completion meet we found
   meet: option(Actions.completionMeet),
   completions: list(Actions.completionItem),
-  filteredCompletions: list(filteredCompletions),
+  filteredCompletions: list(filteredCompletion),
   filter: option(string),
   selected: option(int),
 };
