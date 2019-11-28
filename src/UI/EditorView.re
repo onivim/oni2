@@ -24,11 +24,15 @@ let make = (~state: State.t, ()) => {
 
   if (state.zenMode) {
     <View style>
-      <EditorGroupView
-        state
-        windowId={state.windowManager.activeWindowId}
-        editorGroupId={state.editorGroups.activeId}
-      />
+      {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+       | Some(editorGroup) =>
+         <EditorGroupView
+           state
+           windowId={state.windowManager.activeWindowId}
+           editorGroup
+         />
+       | None => React.empty
+       }}
     </View>;
   } else {
     <View style> <EditorLayoutView state /> </View>;
