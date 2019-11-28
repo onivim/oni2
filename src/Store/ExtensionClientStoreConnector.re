@@ -119,11 +119,6 @@ let start = (extensions, setup: Core.Setup.t) => {
     | _ => None
     };
 
-  let pumpEffect =
-    Isolinear.Effect.create(~name="exthost.pump", () =>
-      ExtHostClient.pump(extHostClient)
-    );
-
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   let activateFileType = (fileType: option(string)) =>
@@ -307,7 +302,6 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
-    | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
 

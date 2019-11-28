@@ -190,6 +190,7 @@ let start =
       ~onNotification,
       ~onRequest,
       ~onClose=onClosed,
+      ~scheduler=Revery.App.runOnMainThread,
       process.stdout,
       process.stdin,
     );
@@ -206,8 +207,6 @@ let start =
 
   {process, rpc, send: wrappedSend, sendRequest};
 };
-
-let pump = (v: t) => Rpc.pump(v.rpc);
 
 let send = (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t) => {
   let _ = v.send(msgType, msg);

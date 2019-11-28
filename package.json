@@ -211,6 +211,7 @@
     "esy-sdl2": "*"
   },
   "resolutions": {
+    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
     "flex": "github:jordwalke/flex#7ca8f51",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",

@@ -162,6 +162,4 @@ let send = (client, v) => {
   ();
 };
 
-let pump = (v: t) => ExtHostTransport.pump(v.transport);
-
 let close = (v: t) => ExtHostTransport.close(v.transport);
