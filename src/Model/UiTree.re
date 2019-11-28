@@ -1,4 +1,25 @@
-include Revery.UI.Components.Tree;
+// Tree from Revery
+
+type status =
+  | Open
+  | Closed;
+
+type content('a) = {
+  data: 'a,
+  id: int,
+  status,
+};
+
+/*
+   A multiway tree, each node can have a variable number of siblings
+   each of which can have a variable number of siblings etc.
+   more info: https://ocaml.org/learn/tutorials/99problems.html#Multiway-Trees
+ */
+type tree('a) =
+  | Empty
+  | Node(content('a), list(tree('a)));
+
+// End Tree
 
 type fsNode('a) = {
   displayName: string,

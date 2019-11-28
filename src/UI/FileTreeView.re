@@ -149,6 +149,6 @@ let make =
         style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
       />
     </View>
-    <ScrollView style=containerStyles> <Tree tree nodeRenderer /> </ScrollView>
+    <ScrollView style=containerStyles> <TreeView tree nodeRenderer /> </ScrollView>
   </View>;
 };
