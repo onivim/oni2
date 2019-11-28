@@ -87,7 +87,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let padding = 8;
 
-    let textStyle =
+    let textStyle = (~highlighted) =>
       Style.[
         //width(width_),
         //height(height_),
@@ -95,7 +95,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
         fontSize(editorFont.fontSize),
-        color(fgColor),
+        color(highlighted ? theme.oniNormalModeBackground : fgColor),
         backgroundColor(bgColor),
       ];
 
@@ -128,10 +128,10 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let (_maxWidth, diags) =
       List.fold_left(
-        (prev, curr: Model.Actions.completionItem) => {
-          let (prevWidth, prevDiags) = prev;
+        (acc, curr: Model.Filter.result(Model.Actions.completionItem)) => {
+          let (prevWidth, prevDiags) = acc;
 
-          let message = curr.completionLabel;
+          let message = curr.item.completionLabel;
           let width =
             Types.EditorFont.measure(~text=message, editorFont)
             +. 0.5
@@ -139,7 +139,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
           let remainingWidth = 450 - width;
 
           let detailElem =
-            switch (curr.completionDetail) {
+            switch (curr.item.completionDetail) {
             | None => React.empty
             | Some(text) when String.length(text) > 0 =>
               let detailWidth =
@@ -158,8 +158,11 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
             completionKindToColor(
               fgColor,
               state.tokenTheme,
-              curr.completionKind,
+              curr.item.completionKind,
             );
+
+          let normalStyle = textStyle(~highlighted=false);
+          let highlightStyle = textStyle(~highlighted=true);
           let newElem =
             <View
               style=Style.[flexDirection(`Row), justifyContent(`Center)]>
@@ -173,7 +176,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                   width(25),
                 ]>
                 <FontIcon
-                  icon={completionKindToIcon(curr.completionKind)}
+                  icon={completionKindToIcon(curr.item.completionKind)}
                   backgroundColor=completionColor
                   color=bgColor
                   margin=4
@@ -181,7 +184,12 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                 />
               </View>
               <View style=Style.[flexGrow(1), margin(4)]>
-                <Text style=textStyle text=message />
+                <HighlightText
+                  highlights={curr.highlight}
+                  style=normalStyle
+                  highlightStyle
+                  text=message
+                />
               </View>
               detailElem
             </View>;
