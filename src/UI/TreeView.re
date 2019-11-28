@@ -49,12 +49,6 @@ let itemRenderer =
       ~state: State.t,
       {data, status, id}: itemContent,
     ) => {
-  let isOpen =
-    switch (status) {
-    | Open => true
-    | Closed => false
-    };
-
   let bgColor = backgroundColor;
 
   let textStyles =
@@ -77,13 +71,13 @@ let itemRenderer =
     switch (data) {
     | FileSystemNode({icon, secondaryIcon, _}) =>
       let makeIcon = toIcon(~color=foregroundColor);
-      switch (icon, secondaryIcon, isOpen) {
-      | (Some(_), Some(secondary), true) => secondary
-      | (Some(primary), Some(_), false) => primary
+      switch (icon, secondaryIcon, status) {
+      | (Some(_), Some(secondary), Open) => secondary
+      | (Some(primary), Some(_), Closed) => primary
       | (Some(primary), None, _) => primary
       | (None, Some(secondary), _) => secondary
-      | (None, None, false) => makeIcon(~character=primaryRootIcon)
-      | (None, None, true) => makeIcon(~character=secondaryRootIcon)
+      | (None, None, Closed) => makeIcon(~character=primaryRootIcon)
+      | (None, None, Open) => makeIcon(~character=secondaryRootIcon)
       };
     };
 
