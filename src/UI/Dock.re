@@ -1,4 +1,3 @@
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
@@ -20,7 +19,8 @@ let toggleSearch = ({searchPane, _}: State.t, _) => {
 };
 
 let make = (~state: State.t, ()) => {
-  let bg = state.theme.editorLineNumberBackground;
+  let bg = state.theme.activityBarBackground;
+  let fg = state.theme.activityBarForeground;
 
   <View
     style=Style.[
@@ -31,14 +31,10 @@ let make = (~state: State.t, ()) => {
       alignItems(`Center),
     ]>
     <Clickable onClick={toggleExplorer(state)} style=button>
-      <FontIcon backgroundColor=bg color=Colors.white icon=FontAwesome.file />
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
     </Clickable>
     <Clickable onClick={toggleSearch(state)} style=button>
-      <FontIcon
-        backgroundColor=bg
-        color=Colors.white
-        icon=FontAwesome.search
-      />
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
     </Clickable>
   </View>;
 };
