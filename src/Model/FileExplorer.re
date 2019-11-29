@@ -2,17 +2,12 @@ open Revery;
 open Oni_Core;
 
 type t = {
-  directory: UiTree.t,
+  directory: option(UiTree.t),
   isOpen: bool,
 };
 
 module ExplorerId =
   UniqueId.Make({});
-
-let toFsNode = node =>
-  switch (node) {
-  | UiTree.FileSystemNode(n) => n
-  };
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
@@ -25,8 +20,7 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode =
-    (~children, ~depth, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
+let createFsNode = (~depth, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
   /**
      TODO: Find an icon theme with folders and use those icons
      Fallbacks are used for the directory icons. FontAwesome is not
@@ -34,15 +28,14 @@ let createFsNode =
    */
   let (primary, secondary) = isDirectory ? (None, None) : (fileIcon, None);
 
-  UiTree.FileSystemNode({
+  UiTree.{
     path,
     depth,
     displayName,
-    children,
     isDirectory,
     icon: primary,
     secondaryIcon: secondary,
-  });
+  };
 };
 
 let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
@@ -64,6 +57,18 @@ let handleError = (~defaultValue, func) => {
   | Failure(e) =>
     Log.error(e);
     Lwt.return(defaultValue);
+  };
+};
+
+let sortByLoweredDisplayName = (a: UiTree.t, b: UiTree.t) => {
+  switch (a.data.isDirectory, b.data.isDirectory) {
+  | (true, false) => (-1)
+  | (false, true) => 1
+  | _ =>
+    compare(
+      a.data.displayName |> String.lowercase_ascii,
+      b.data.displayName |> String.lowercase_ascii,
+    )
   };
 };
 
@@ -94,26 +99,32 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
               let path = Filename.concat(cwd, file);
               let isDirectory = isDir(path);
               let nextDepth = depth + 1;
+              let parentId = ExplorerId.getUniqueId();
 
               /**
                  If resolving children for a particular directory fails
                  log the error but carry on processing other directories
                */
               let%lwt children =
-                isDirectory && nextDepth < maxDepth
-                  ? attempt(() =>
-                      getDirContent(~depth=nextDepth, path, getIcon)
-                    )
-                  : Lwt.return([]);
+                if (isDirectory && nextDepth < maxDepth) {
+                  attempt(() =>
+                    getDirContent(~depth=nextDepth, path, getIcon)
+                  )
+                  |> Lwt.map(List.sort(sortByLoweredDisplayName));
+                } else {
+                  Lwt.return([]);
+                };
 
-              createFsNode(
-                ~path,
-                ~children,
-                ~isDirectory,
-                ~depth=nextDepth,
-                ~displayName=file,
-                ~fileIcon=getIcon(path),
-              )
+              let parent =
+                createFsNode(
+                  ~path,
+                  ~isDirectory,
+                  ~depth=nextDepth,
+                  ~displayName=file,
+                  ~fileIcon=getIcon(path),
+                );
+
+              UiTree.{id: parentId, data: parent, isOpen: false, children}
               |> Lwt.return;
             },
             files,
@@ -125,87 +136,36 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
   attempt(() => getDirContent(~depth=0, cwd, getIcon));
 };
 
-let rec listToTree = (~status, nodes, parent) => {
-  open UiTree;
-  let parentId = ExplorerId.getUniqueId();
-  let sortByLoweredDisplayName = (a, b) => {
-    switch (a.isDirectory, b.isDirectory) {
-    | (true, false) => (-1)
-    | (false, true) => 1
-    | _ =>
-      compare(
-        a.displayName |> String.lowercase_ascii,
-        b.displayName |> String.lowercase_ascii,
-      )
-    };
-  };
-  let children =
-    nodes
-    |> List.map(toFsNode)
-    |> List.sort(sortByLoweredDisplayName)
-    |> List.map(fsNode => {
-         let descendantNodes = List.map(toFsNode, fsNode.children);
-         let descendants =
-           List.map(
-             descendant =>
-               listToTree(
-                 ~status=Closed,
-                 descendant.children,
-                 FileSystemNode(descendant),
-               ),
-             descendantNodes,
-           );
-
-         let id = ExplorerId.getUniqueId();
-         Node(
-           {id, data: FileSystemNode(fsNode), status: Closed},
-           descendants,
-         );
-       });
-
-  Node({id: parentId, data: parent, status}, children);
-};
-
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
+  let parentId = ExplorerId.getUniqueId();
   let getIcon = getFileIcon(languageInfo, iconTheme);
   let maxDepth = Constants.default.maximumExplorerDepth;
-  let directory =
-    getFilesAndFolders(~maxDepth, ~ignored, cwd, getIcon) |> Lwt_main.run;
+  let children =
+    getFilesAndFolders(~maxDepth, ~ignored, cwd, getIcon)
+    |> Lwt_main.run
+    |> List.sort(sortByLoweredDisplayName);
 
-  createFsNode(
-    ~depth=0,
-    ~path=cwd,
-    ~displayName=Filename.basename(cwd),
-    ~isDirectory=true,
-    ~children=directory,
-    ~fileIcon=getIcon(cwd),
-  )
-  |> listToTree(~status=Open, directory);
+  let parent =
+    createFsNode(
+      ~depth=0,
+      ~path=cwd,
+      ~displayName=Filename.basename(cwd),
+      ~isDirectory=true,
+      ~fileIcon=getIcon(cwd),
+    );
+
+  UiTree.{id: parentId, data: parent, isOpen: true, children};
 };
 
-let getNodePath = node => {
-  UiTree.(
-    switch (node) {
-    | Node({data: FileSystemNode({path, _}), _}, _) => Some(path)
-    | Empty => None
-    }
-  );
-};
+let getNodePath = (node: UiTree.t) => node.data.path;
 
-let getNodeId = node => {
-  UiTree.(
-    switch (node) {
-    | Node({id, _}, _) => Some(id)
-    | Empty => None
-    }
-  );
-};
+let getNodeId = (node: UiTree.t) => node.id;
 
-let create = () => {directory: UiTree.Empty, isOpen: true};
+let create = () => {directory: None, isOpen: true};
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
-  | SetExplorerTree(tree) => {directory: tree, isOpen: true}
+  | SetExplorerTree(tree) => {directory: Some(tree), isOpen: true}
   | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}
   | _ => state
   };

@@ -1,6 +1,5 @@
 open Oni_Model;
 
-open UiTree;
 open Revery.UI;
 open Revery.UI.Components;
 
@@ -47,7 +46,7 @@ let node =
       ~foregroundColor,
       ~backgroundColor,
       ~state: State.t,
-      ~item as {data, status, id}: itemContent,
+      ~item: UiTree.t,
       (),
     ) => {
   let bgColor = backgroundColor;
@@ -69,32 +68,24 @@ let node =
   let indentStr = String.make(indent * explorerIndent, ' ');
 
   let icon =
-    switch (data) {
-    | FileSystemNode({icon, secondaryIcon, _}) =>
+    switch (item.data) {
+    | {icon, secondaryIcon, _} =>
       let makeIcon = toIcon(~color=foregroundColor);
-      switch (icon, secondaryIcon, status) {
-      | (Some(_), Some(secondary), Open) => secondary
-      | (Some(primary), Some(_), Closed) => primary
+      switch (icon, secondaryIcon, item.isOpen) {
+      | (Some(_), Some(secondary), true) => secondary
+      | (Some(primary), Some(_), false) => primary
       | (Some(primary), None, _) => primary
       | (None, Some(secondary), _) => secondary
-      | (None, None, Closed) => makeIcon(~character=primaryRootIcon)
-      | (None, None, Open) => makeIcon(~character=secondaryRootIcon)
+      | (None, None, false) => makeIcon(~character=primaryRootIcon)
+      | (None, None, true) => makeIcon(~character=secondaryRootIcon)
       };
     };
 
   let fontFamily =
-    switch (data) {
-    | FileSystemNode({isDirectory: true, _}) => "FontAwesome5FreeSolid.otf"
-    | FileSystemNode({isDirectory: false, _}) => "seti.ttf"
-    };
-
-  let label =
-    switch (data) {
-    | FileSystemNode({displayName, _}) => displayName
-    };
+    item.data.isDirectory ? "FontAwesome5FreeSolid.otf" : "seti.ttf";
 
   <Clickable
-    onClick={() => onClick(id)}
+    onClick={() => onClick(item)}
     style=Style.[cursor(Revery.MouseCursors.pointer)]>
     <View style=itemStyles>
       <Text text=indentStr style=textStyles />
@@ -104,7 +95,10 @@ let node =
         icon={icon.fontCharacter}
         backgroundColor
       />
-      <Text text=label style=Style.[marginLeft(10), ...textStyles] />
+      <Text
+        text={item.data.displayName}
+        style=Style.[marginLeft(10), ...textStyles]
+      />
     </View>
   </Clickable>;
 };
@@ -124,10 +118,6 @@ let make =
   let font = state.uiFont.fontFile;
   let {State.theme, _} = state;
 
-  let onClick = id =>
-    UiTree.updateNode(id, tree, ())
-    |> (({updated, tree, _}) => onNodeClick(updated, tree));
-
   let backgroundColor = state.theme.sideBarBackground;
   let foregroundColor = state.theme.sideBarForeground;
 
@@ -142,7 +132,7 @@ let make =
       <TreeView tree>
         ...{(~indent, item) =>
           <node
-            onClick
+            onClick=onNodeClick
             primaryRootIcon
             secondaryRootIcon
             font

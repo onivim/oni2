@@ -1,80 +1,35 @@
-// Tree from Revery
-
-type status =
-  | Open
-  | Closed;
-
 type content('a) = {
   data: 'a,
   id: int,
-  status,
+  isOpen: bool,
+  children: list(content('a)),
 };
 
-/*
-   A multiway tree, each node can have a variable number of siblings
-   each of which can have a variable number of siblings etc.
-   more info: https://ocaml.org/learn/tutorials/99problems.html#Multiway-Trees
- */
-type tree('a) =
-  | Empty
-  | Node(content('a), list(tree('a)));
-
-// End Tree
-
-type fsNode('a) = {
+type fsNode = {
   displayName: string,
   depth: int,
   path: string,
   isDirectory: bool,
-  children: list('a),
   icon: option(IconTheme.IconDefinition.t),
   secondaryIcon: option(IconTheme.IconDefinition.t),
 };
 
-type treeItem =
-  | FileSystemNode(fsNode(treeItem));
-
-type t = tree(treeItem);
-type itemContent = content(treeItem);
+type t = content(fsNode);
 
 type treeUpdate = {
   updated: t,
   tree: t,
 };
 
-let toggleStatus = status =>
-  switch (status) {
-  | Open => Closed
-  | Closed => Open
-  };
-
-let toggleNodeStatus = node => {
-  switch (node) {
-  | Node(content, children) =>
-    Node({...content, status: toggleStatus(content.status)}, children)
-  | Empty => Empty
-  };
-};
+let toggleNodeStatus = node => {...node, isOpen: !node.isOpen};
 
 let updateNode = (nodeId, tree, ~updater=toggleNodeStatus, ()) => {
-  let updatedNode = ref(Empty);
-
-  let rec update = (nodeId, tree) => {
+  let rec update = tree => {
     switch (tree) {
-    | Node({id, _}, _) as x when id == nodeId =>
-      let node = updater(x);
-      /*
-       Store a reference to the located/updated node
-       TODO: find a solution that doesn't require a ref
-       */
-      updatedNode := node;
-      node;
-    | Node(data, children) =>
-      let newChildren = List.map(update(nodeId), children);
-      Node(data, newChildren);
-    | Empty => Empty
+    | {id, _} as node when id == nodeId => updater(node)
+    | node => {...node, children: List.map(update, node.children)}
     };
   };
 
-  {updated: updatedNode^, tree: update(nodeId, tree)};
+  update(tree);
 };

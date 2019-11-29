@@ -6,12 +6,7 @@ open Oni_Model.UiTree;
 
 let defaultNodeStyles = Style.[flexDirection(`Row), marginVertical(5)];
 
-let default = (~indent, {data, status, _}) => {
-  let isOpen =
-    switch (status) {
-    | Open => true
-    | Closed => false
-    };
+let default = (~indent, {data, isOpen, _}) => {
   open Style;
   let textStyles = [fontSize(10), color(Colors.black)];
   let indentStr = String.make(indent * 2, ' ');
@@ -35,22 +30,13 @@ let default = (~indent, {data, status, _}) => {
  * @param ~renderer is a function which determines how each node is rendered
  * @param t The tree to convert to a tree of JSX elements.
  */
-let rec renderTree = (~indent=0, ~nodeRenderer, ~emptyRenderer, t) => {
+let rec renderTree = (~indent=0, ~nodeRenderer, tree) => {
   let drawNode = nodeRenderer(~indent);
-  let empty =
-    switch (emptyRenderer) {
-    | Some(r) => [r(indent)]
-    | None => []
-    };
-  let createSubtree =
-    renderTree(~indent=indent + 1, ~nodeRenderer, ~emptyRenderer);
-  switch (t) {
-  | Empty => empty
-  /* If the node is closed OR has no children
-     only draw the parent do not render its children */
-  | Node({status: Open, _} as x, [])
-  | Node({status: Closed, _} as x, _) => [drawNode(x)]
-  | Node(current, siblings) =>
+  let createSubtree = renderTree(~indent=indent + 1, ~nodeRenderer);
+  switch (tree) {
+  | {isOpen: true, children: [], _} as x
+  | {isOpen: false, _} as x => [drawNode(x)]
+  | current =>
     let renderedSiblings =
       List.fold_left(
         (accum, next) => {
@@ -58,7 +44,7 @@ let rec renderTree = (~indent=0, ~nodeRenderer, ~emptyRenderer, t) => {
           List.concat([accum, grandChild]);
         },
         [],
-        siblings,
+        current.children,
       );
     [drawNode(current), ...renderedSiblings];
   };
@@ -69,7 +55,7 @@ let rec renderTree = (~indent=0, ~nodeRenderer, ~emptyRenderer, t) => {
    narrow down the type signature of the "tree" to whaterver type the
    default takes making it no longer generalisable
  */
-let make = (~children as nodeRenderer, ~tree, ~emptyRenderer=None, ()) => {
-  let componentTree = renderTree(tree, ~nodeRenderer, ~emptyRenderer);
+let make = (~children as nodeRenderer, ~tree, ()) => {
+  let componentTree = renderTree(tree, ~nodeRenderer);
   <View> {componentTree |> React.listToElement} </View>;
 };

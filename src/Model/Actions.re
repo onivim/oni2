@@ -66,7 +66,7 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | SetExplorerTree([@opaque] UiTree.t)
-  | UpdateExplorerNode([@opaque] UiTree.t, [@opaque] UiTree.t)
+  | ExplorerNodeClicked([@opaque] UiTree.t)
   | LanguageFeatureRegisterSuggestProvider(
       [@opaque] LanguageFeatures.SuggestProvider.t,
     )
