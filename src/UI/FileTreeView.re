@@ -33,7 +33,10 @@ module Styles = {
     height(Core.Constants.default.tabHeight),
   ];
 
-  let item = [flexDirection(`Row)];
+  let item = [
+    flexDirection(`Row),
+    paddingLeft(5),
+  ];
 
   let text = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
     fontSize(font.fontSize),
@@ -56,6 +59,19 @@ let nodeView = (~font, ~fg, ~bg, ~state: State.t, ~node: UiTree.t, ()) => {
         backgroundColor=bg
       />
     | None => React.empty
+    };
+
+  // TODO: Since the icon theme does not have a folder icon (yet), verride it
+  // here in order to use FontAwesome. Remove when a better icon theme has been found.
+  let icon = () =>
+    if (node.data.isDirectory) {
+      <FontIcon
+        color=fg
+        icon={node.isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
+        backgroundColor=bg
+      />
+    } else {
+      <icon />
     };
 
   <View style=Styles.item>

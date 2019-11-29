@@ -13,7 +13,7 @@ let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
 let make =
     (
       ~icon,
-      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontFamily=FontAwesome.fontFamily,
       ~fontSize=15,
       ~backgroundColor,
       ~color,
