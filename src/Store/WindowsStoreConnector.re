@@ -34,12 +34,10 @@ let start = getState => {
 
   let initializeDefaultViewEffect = (state: State.t) =>
     Isolinear.Effect.create(~name="windows.init", () => {
-      open WindowManager;
-      open WindowTree;
       open Oni_UI;
 
       let dock =
-        registerDock(
+        WindowManager.registerDock(
           ~order=1,
           ~width=50,
           ~id=MainDock,
@@ -47,12 +45,14 @@ let start = getState => {
           (),
         );
 
-      let editorGroupId = state.editorGroups.activeId;
-
-      let editor = createSplit(~editorGroupId, ());
+      let editor =
+        WindowTree.createSplit(
+          ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
+          (),
+        );
 
       let explorer =
-        registerDock(
+        WindowManager.registerDock(
           ~order=2,
           ~width=225,
           ~id=ExplorerDock,

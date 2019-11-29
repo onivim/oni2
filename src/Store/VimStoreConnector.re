@@ -719,7 +719,7 @@ let start =
               latestCursors := Vim.input(Zed_utf8.singleton(s));
               ();
             },
-            completion.completionLabel,
+            completion.item.completionLabel,
           );
           updateActiveEditorCursors(latestCursors^);
         | _ => ()

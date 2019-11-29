@@ -26,7 +26,6 @@ let dark: defaults = {
   editorIndentGuideBackground: "#404040",
   editorIndentGuideActiveBackground: "#707070",
 };
-
 let hcDark: defaults = {
   editorBackground: "#000",
   editorForeground: "#FFF",
@@ -46,6 +45,8 @@ let getDefaults = uiTheme =>
 type t = {
   background: Color.t,
   foreground: Color.t,
+  activityBarBackground: Color.t,
+  activityBarForeground: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
   editorHoverWidgetBackground: Color.t,
@@ -105,6 +106,8 @@ let default: t = {
   foreground: Color.hex("#ECEFF4"),
   sideBarBackground: Color.hex("#21252b"),
   sideBarForeground: Color.hex("#ECEFF4"),
+  activityBarBackground: Color.hex("#2F3440"),
+  activityBarForeground: Color.hex("#DCDCDC"),
   editorBackground: Color.hex("#2F3440"),
   editorForeground: Color.hex("#DCDCDC"),
   editorFindMatchBackground: Color.hex("#42557b"),
@@ -182,6 +185,18 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(
       defaultBackground,
       ["editorHoverWidget.background", "editor.background", "background"],
+    );
+
+  let activityBarBackground =
+    getColor(
+      defaultBackground,
+      ["activityBar.background", "editor.background", "background"],
+    );
+
+  let activityBarForeground =
+    getColor(
+      defaultForeground,
+      ["activityBar.foreground", "editor.foreground", "foreground"],
     );
 
   let editorHoverWidgetBorder =
@@ -332,6 +347,8 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     ...default,
     background,
     foreground,
+    activityBarBackground,
+    activityBarForeground,
     editorBackground,
     editorForeground,
     editorHoverWidgetBackground,

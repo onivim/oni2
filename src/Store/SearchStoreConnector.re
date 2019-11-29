@@ -66,11 +66,7 @@ let subscriptions = ripgrep => {
       ~query,
       ~directory,
       ~ripgrep,
-      ~onUpdate=
-        items => {
-          Printf.printf("-- adding %n items\n%!", List.length(items));
-          dispatch(SearchUpdate(items));
-        },
+      ~onUpdate=items => {dispatch(SearchUpdate(items))},
       ~onCompleted=() => SearchComplete,
     );
   };
