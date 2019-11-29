@@ -35,7 +35,7 @@ module Styles = {
 
   let item = [
     flexDirection(`Row),
-    paddingLeft(5),
+    alignItems(`Center),
   ];
 
   let text = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
@@ -44,19 +44,42 @@ module Styles = {
     color(fg),
     backgroundColor(bg),
     marginLeft(10),
+    marginVertical(2),
     textWrap(TextWrapping.NoWrap),
   ];
 };
 
-let nodeView = (~font, ~fg, ~bg, ~state: State.t, ~node: UiTree.t, ()) => {
+let setiIcon =
+    (
+      ~icon,
+      ~fontSize as size,
+      ~bg,
+      ~fg,
+      (),
+    ) => {
+  <Text
+    text={FontIcon.codeToIcon(icon)}
+    style=Style.[
+      fontFamily("seti.ttf"),
+      fontSize(int_of_float(float(size) *. 2.)),
+      color(fg),
+      backgroundColor(bg),
+      width(int_of_float(float(size) *. 1.5)),
+      height(int_of_float(float(size) *. 1.75)),
+      textWrap(TextWrapping.NoWrap),
+    ]
+  />;
+};
+
+let nodeView = (~font: Core.Types.UiFont.t, ~fg, ~bg, ~state: State.t, ~node: UiTree.t, ()) => {
   let icon = () =>
     switch (node.data.icon) {
     | Some(icon) =>
-      <FontIcon
-        fontFamily="seti.ttf"
-        color={icon.fontColor}
+      <setiIcon
+        fontSize=font.fontSize
+        fg={icon.fontColor}
         icon={icon.fontCharacter}
-        backgroundColor=bg
+        bg
       />
     | None => React.empty
     };
