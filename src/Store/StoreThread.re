@@ -18,7 +18,11 @@ open Oni_Extensions;
 let discoverExtensions = (setup: Core.Setup.t) => {
   let extensions =
     Core.Log.perf("Discover extensions", () => {
-      let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
+      let extensions = ExtensionScanner.scan(
+      // The extension host assumes bundled extensions start with 'vscode.'
+      ~prefix=Some("vscode"),
+      setup.bundledExtensionsPath
+      );
       let userExtensions = Core.Filesystem.getExtensionsFolder();
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {

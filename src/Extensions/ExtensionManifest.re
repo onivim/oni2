@@ -39,3 +39,10 @@ let remapPaths = (rootPath: string, manifest: t) => {
   contributes:
     ExtensionContributions.remapPaths(rootPath, manifest.contributes),
 };
+
+let updateName = (nameSetter, manifest: t) => {
+  ...manifest,
+  name: nameSetter(manifest.name),
+};
+
+

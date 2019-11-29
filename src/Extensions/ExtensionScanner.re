@@ -6,6 +6,8 @@
 
 open Rench;
 
+module Option = Oni_Core.Utility.Option;
+
 type t = {
   manifest: ExtensionManifest.t,
   path: string,
@@ -38,7 +40,7 @@ let remapManifest = (directory: string, manifest: ExtensionManifest.t) => {
   ExtensionManifest.remapPaths(directory, m);
 };
 
-let scan = (directory: string) => {
+let scan = (~prefix=None, directory: string) => {
   let items = Sys.readdir(directory) |> Array.to_list;
 
   let isDirectory = Sys.is_directory;
@@ -49,9 +51,18 @@ let scan = (directory: string) => {
   let loadPackageJson = pkg => {
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
     let path = Path.dirname(pkg);
+    
+    let manifest = json
+      |> ExtensionManifest.of_yojson_exn
+      |> remapManifest(path)
+      |> ExtensionManifest.updateName((prevName) => 
+        prefix
+        |> Option.map((somePrefix) => somePrefix ++ "." ++ prevName)
+        |> Option.value(~default=prevName)
+      );
 
     {
-      manifest: ExtensionManifest.of_yojson_exn(json) |> remapManifest(path),
+      manifest,
       path,
     };
   };
