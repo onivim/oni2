@@ -94,7 +94,7 @@ let create =
 };
 
 let update =
-    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), v: t) => {
+    (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), v: t) => {
   switch (v) {
   | TextMate(tm) =>
     TextMate(TextMateSyntaxHighlights.update(~bufferUpdate, ~lines, tm))

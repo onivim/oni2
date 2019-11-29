@@ -6,6 +6,8 @@ open Oni_Core;
 open Oni_Core.Types;
 open Treesitter;
 
+module BufferUpdate = Oni_Core.BufferUpdate;
+
 type treeSitterScopeMapperFactory =
   unit => TreeSitterScopes.TextMateConverter.t;
 
@@ -73,7 +75,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
     TreeSitter.ArrayParser.Delta.create(
       lastBaseline,
       Index.toInt0(bufferUpdate.startLine),
-      Index.toInt0(bufferUpdate.endLine),
+      Index.toInt0(bufferUpdate.oldEndLine),
       bufferUpdate.lines,
     );
 

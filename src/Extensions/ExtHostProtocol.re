@@ -170,39 +170,40 @@ module ModelContentChange = {
   };
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
-    let newLines = Array.length(bu.lines);
-    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
+    //let newLines = Array.length(bu.lines);
+    //let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
-    let isDelete = newLines == 0;
+    /*let isDelete = newLines == 0;
 
-    let startLine = Index.toInt0(bu.startLine);
-    let endLine = Index.toInt0(bu.endLine);
+      let startLine = Index.toInt0(bu.startLine);
+      let endLine = Index.toInt0(bu.endLine);
 
-    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
+      let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
 
-    let endLine = max(endLine, startLine);
-    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
-    //    let endCharacter = 0;
+      let endLine = max(endLine, startLine);
+      let endCharacter = isInsert || isDelete ? 0 : 2147483647;
+      //    let endCharacter = 0;
 
-    let endLine = isDelete ? endLine + 1 : endLine;
+      let endLine = isDelete ? endLine + 1 : endLine;*/
 
     let range =
       Range.create(
-        ~startLine=ZeroBasedIndex(startLine),
-        ~endLine=ZeroBasedIndex(endLine),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(endCharacter),
+        ~startLine=bu.startLine,
+        ~endLine=bu.oldEndLine,
+        ~startCharacter=bu.startCharacter,
+        ~endCharacter=bu.oldEndCharacter,
         (),
       );
 
-    (isInsert, range);
+    range;
+    //(isInsert, range);
   };
 
   let ofBufferUpdate = (bu: BufferUpdate.t, eol: Eol.t) => {
-    let (isInsert, range) = getRangeFromEdit(bu);
+    let range = getRangeFromEdit(bu);
     let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
 
-    let text = isInsert ? text ++ Eol.toString(eol) : text;
+    //let text = isInsert ? text ++ Eol.toString(eol) : text;
 
     {range: OneBasedRange.ofRange(range), text};
   };

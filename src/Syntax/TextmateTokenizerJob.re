@@ -52,7 +52,7 @@ let onTheme = (theme: TokenTheme.t, v: t) => {
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   let startPos = Index.toInt0(bufferUpdate.startLine);
-  let endPos = Index.toInt0(bufferUpdate.endLine);
+  let endPos = Index.toInt0(bufferUpdate.oldEndLine);
 
   let f = (p: pendingWork, c: completedWork) => {
     (

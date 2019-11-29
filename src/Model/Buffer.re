@@ -116,7 +116,7 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   let updateLines = update.lines;
   let startLine = update.startLine |> Index.toZeroBasedInt;
-  let endLine = update.endLine |> Index.toZeroBasedInt;
+  let endLine = (update.oldEndLine |> Index.toZeroBasedInt) + 1;
   if (Array.length(lines) == 0) {
     updateLines;
   } else if (startLine >= Array.length(lines)) {
@@ -149,7 +149,7 @@ let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
 let getIndentation = buf => buf.indentation;
 
 let update = (buf: t, update: BufferUpdate.t) => {
-  let endLine = Index.toInt0(update.endLine);
+  let endLine = Index.toInt0(update.oldEndLine);
   let curVersion = getVersion(buf);
 
   if (update.version > curVersion) {

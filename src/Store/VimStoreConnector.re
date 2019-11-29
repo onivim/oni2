@@ -7,8 +7,11 @@
  */
 
 module Core = Oni_Core;
+module Utility = Core.Utility;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
+
+module Buffer = Model.Buffer;
 
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
@@ -312,22 +315,83 @@ let start =
       dispatch(Model.Actions.BufferEnter(meta, fileType));
     });
 
+  Printexc.record_backtrace(true);
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
+      Log.info("Vim - Buffer update: " ++ Vim.BufferUpdate.show(update));
       open Core.Types;
-      let bu =
-        Core.Types.BufferUpdate.create(
-          ~id=update.id,
-          ~startLine=Index.OneBasedIndex(update.startLine),
-          ~endLine=Index.OneBasedIndex(update.endLine),
-          ~lines=update.lines,
-          ~version=update.version,
-          (),
-        );
 
-      dispatch(Model.Actions.BufferUpdate(bu));
+      let buffers = getState().buffers;
+
+      Model.Buffers.getBuffer(update.id, buffers)
+      |> Utility.Option.iter(buf => {
+           let totalLines = Buffer.getNumberOfLines(buf);
+
+           prerr_endline("TOTAL LINES: " ++ string_of_int(totalLines));
+           prerr_endline(
+             "UPDATE ENDLINE: " ++ string_of_int(update.endLine),
+           );
+           prerr_endline(
+             "UPDATE LINES : " ++ string_of_int(Array.length(update.lines)),
+           );
+
+           // If the endline coming from Vim is -1,
+           // that means the entire buffer has been updated
+           let oldEndLine =
+             if (update.endLine == (-1)) {
+               Index.OneBasedIndex(totalLines);
+             } else {
+               Index.OneBasedIndex(
+                 max(update.endLine - 1, update.startLine),
+               );
+             };
+
+           prerr_endline(
+             "OLD END LINE: " ++ string_of_int(oldEndLine |> Index.toInt0),
+           );
+
+           let oldEndCharacter =
+             if (totalLines === 0) {
+               Index.ZeroBasedIndex(0);
+             } else {
+               let endline0 = Index.toInt0(oldEndLine);
+               if (endline0 >= totalLines) {
+                 Index.zero;
+               } else {
+                 Index.ZeroBasedIndex(
+                   Buffer.getLineLength(buf, oldEndLine |> Index.toInt0),
+                 );
+               };
+             };
+
+           let newLinesCount = Array.length(update.lines);
+           let newEndLine = Index.OneBasedIndex(update.startLine + newLinesCount);
+           let newEndCharacter = if(newLinesCount >= 1) {
+           Index.OneBasedIndex(String.length(update.lines[newLinesCount - 1]));
+           } else {
+            Index.OneBasedIndex(1);
+           }
+           let bu =
+             Core.BufferUpdate.create(
+               ~id=update.id,
+               ~startCharacter=Index.zero,
+               ~startLine=Index.OneBasedIndex(update.startLine),
+               ~oldEndLine,
+               ~oldEndCharacter,
+               ~newEndLine,
+               ~newEndCharacter,
+               ~lines=update.lines,
+               ~version=update.version,
+               (),
+             );
+
+           Log.info(Core.BufferUpdate.toString(bu));
+           //Log.debug(() => Core.BufferUpdate.toString(bu));
+
+           dispatch(Model.Actions.BufferUpdate(bu));
+         });
     });
 
   let _ =

@@ -4,6 +4,8 @@ module Index = {
     | ZeroBasedIndex(int)
     | OneBasedIndex(int);
 
+  let zero = ZeroBasedIndex(0);
+
   let toZeroBasedInt = (pos: t) =>
     switch (pos) {
     | ZeroBasedIndex(n) => n
@@ -96,66 +98,6 @@ module Position = {
 
   let equals = (a: t, b: t) => {
     Index.equals(a.line, b.line) && Index.equals(a.character, b.character);
-  };
-};
-
-module BufferUpdate = {
-  [@deriving show({with_path: false})]
-  type t = {
-    id: int,
-    startLine: Index.t,
-    endLine: Index.t,
-    lines: array(string),
-    version: int,
-  };
-
-  [@deriving
-    (show({with_path: false}), yojson({strict: false, exn: false}))
-  ]
-  type jsont = {
-    id: int,
-    startLine: int,
-    endLine: int,
-    lines: array(string),
-    version: int,
-  };
-
-  let to_yojson = (v: t) => {
-    let jsonr: jsont = {
-      id: v.id,
-      startLine: v.startLine |> Index.toZeroBasedInt,
-      endLine: v.endLine |> Index.toZeroBasedInt,
-      lines: v.lines,
-      version: v.version,
-    };
-    jsont_to_yojson(jsonr);
-  };
-
-  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
-    let ret: t = {id, startLine, endLine, lines, version};
-    ret;
-  };
-  let createFromZeroBasedIndices =
-      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
-    let ret: t = {
-      id,
-      startLine: Index.ZeroBasedIndex(startLine),
-      endLine: Index.ZeroBasedIndex(endLine),
-      lines,
-      version,
-    };
-    ret;
-  };
-  let createFromOneBasedIndices =
-      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
-    let ret: t = {
-      id,
-      startLine: Index.OneBasedIndex(startLine),
-      endLine: Index.OneBasedIndex(endLine),
-      lines,
-      version,
-    };
-    ret;
   };
 };
 
