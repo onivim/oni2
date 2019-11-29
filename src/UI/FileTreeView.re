@@ -1,30 +1,31 @@
 open Oni_Model;
 
+open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
 module Core = Oni_Core;
 
-let itemStyles = Style.[flexDirection(`Row), marginVertical(5)];
+module Styles = {
+  open Style;
 
-let containerStyles =
-  Style.[
+  let container = [flexGrow(1)];
+
+  let treeContainer = [
     paddingLeft(16),
     paddingVertical(8),
     overflow(`Hidden),
     flexGrow(1),
   ];
 
-let titleStyles = (fgColor, bgColor, font, fontS) =>
-  Style.[
-    fontSize(fontS),
-    fontFamily(font),
-    backgroundColor(bgColor),
-    color(fgColor),
+  let title = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
+    fontSize(font.fontSize),
+    fontFamily(font.fontFile),
+    backgroundColor(bg),
+    color(fg),
   ];
 
-let headingStyles = (theme: Core.Theme.t) =>
-  Style.[
+  let heading = (theme: Core.Theme.t) => [
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
@@ -32,118 +33,50 @@ let headingStyles = (theme: Core.Theme.t) =>
     height(Core.Constants.default.tabHeight),
   ];
 
-let toIcon = (~character, ~color) =>
-  IconTheme.IconDefinition.{fontCharacter: character, fontColor: color};
+  let item = [flexDirection(`Row)];
 
-let node =
-    (
-      ~font,
-      ~indent,
-      ~onClick,
-      ~primaryRootIcon,
-      ~secondaryRootIcon,
-      ~itemSize,
-      ~foregroundColor,
-      ~backgroundColor,
-      ~state: State.t,
-      ~item: UiTree.t,
-      (),
-    ) => {
-  let bgColor = backgroundColor;
-
-  let textStyles =
-    Style.[
-      fontSize(itemSize),
-      fontFamily(font),
-      color(foregroundColor),
-      backgroundColor(bgColor),
-    ];
-
-  let explorerIndent =
-    Core.Configuration.getValue(
-      c => c.workbenchTreeIndent,
-      state.configuration,
-    );
-
-  let indentStr = String.make(indent * explorerIndent, ' ');
-
-  let icon =
-    switch (item.data) {
-    | {icon, secondaryIcon, _} =>
-      let makeIcon = toIcon(~color=foregroundColor);
-      switch (icon, secondaryIcon, item.isOpen) {
-      | (Some(_), Some(secondary), true) => secondary
-      | (Some(primary), Some(_), false) => primary
-      | (Some(primary), None, _) => primary
-      | (None, Some(secondary), _) => secondary
-      | (None, None, false) => makeIcon(~character=primaryRootIcon)
-      | (None, None, true) => makeIcon(~character=secondaryRootIcon)
-      };
-    };
-
-  let fontFamily =
-    item.data.isDirectory ? "FontAwesome5FreeSolid.otf" : "seti.ttf";
-
-  <Clickable
-    onClick={() => onClick(item)}
-    style=Style.[cursor(Revery.MouseCursors.pointer)]>
-    <View style=itemStyles>
-      <Text text=indentStr style=textStyles />
-      <FontIcon
-        fontFamily
-        color={icon.fontColor}
-        icon={icon.fontCharacter}
-        backgroundColor
-      />
-      <Text
-        text={item.data.displayName}
-        style=Style.[marginLeft(10), ...textStyles]
-      />
-    </View>
-  </Clickable>;
+  let text = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
+    fontSize(font.fontSize),
+    fontFamily(font.fontFile),
+    color(fg),
+    backgroundColor(bg),
+    marginLeft(10),
+    textWrap(TextWrapping.NoWrap),
+  ];
 };
 
-let make =
-    (
-      ~title,
-      ~tree: UiTree.t,
-      ~onNodeClick,
-      ~state: State.t,
-      ~primaryRootIcon=FontAwesome.caretRight,
-      ~secondaryRootIcon=FontAwesome.caretDown,
-      (),
-    ) => {
-  let itemSize = 12;
-  let fontSize = state.uiFont.fontSize;
-  let font = state.uiFont.fontFile;
-  let {State.theme, _} = state;
-
-  let backgroundColor = state.theme.sideBarBackground;
-  let foregroundColor = state.theme.sideBarForeground;
-
-  <View style=Style.[flexGrow(1)]>
-    <View style={headingStyles(theme)}>
-      <Text
-        text=title
-        style={titleStyles(foregroundColor, backgroundColor, font, fontSize)}
+let nodeView = (~font, ~fg, ~bg, ~state: State.t, ~node: UiTree.t, ()) => {
+  let icon = () =>
+    switch (node.data.icon) {
+    | Some(icon) =>
+      <FontIcon
+        fontFamily="seti.ttf"
+        color={icon.fontColor}
+        icon={icon.fontCharacter}
+        backgroundColor=bg
       />
+    | None => React.empty
+    };
+
+  <View style=Styles.item>
+    <icon />
+    <Text text={node.data.displayName} style={Styles.text(~fg, ~bg, ~font)} />
+  </View>;
+};
+
+let make = (~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) => {
+  let State.{theme, uiFont as font, _} = state;
+
+  let bg = state.theme.sideBarBackground;
+  let fg = state.theme.sideBarForeground;
+
+  <View style=Styles.container>
+    <View style={Styles.heading(theme)}>
+      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
-    <ScrollView style=containerStyles>
-      <TreeView tree>
-        ...{(~indent, item) =>
-          <node
-            onClick=onNodeClick
-            primaryRootIcon
-            secondaryRootIcon
-            font
-            itemSize
-            backgroundColor
-            foregroundColor
-            state
-            indent
-            item
-          />
-        }
+    <ScrollView style=Styles.treeContainer>
+      <TreeView tree onClick=onNodeClick>
+        ...{node => <nodeView font bg fg state node />}
       </TreeView>
     </ScrollView>
   </View>;
