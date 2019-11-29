@@ -11,7 +11,6 @@ type fsNode = {
   path: string,
   isDirectory: bool,
   icon: option(IconTheme.IconDefinition.t),
-  secondaryIcon: option(IconTheme.IconDefinition.t),
 };
 
 type t = content(fsNode);

@@ -20,21 +20,13 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode = (~depth, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
-  /**
-     TODO: Find an icon theme with folders and use those icons
-     Fallbacks are used for the directory icons. FontAwesome is not
-     accessible here so we specify no icons for directories.
-   */
-  let (primary, secondary) = isDirectory ? (None, None) : (fileIcon, None);
-
+let createFsNode = (~depth, ~path, ~displayName, ~fileIcon as icon, ~isDirectory) => {
   UiTree.{
     path,
     depth,
     displayName,
     isDirectory,
-    icon: primary,
-    secondaryIcon: secondary,
+    icon
   };
 };
 
