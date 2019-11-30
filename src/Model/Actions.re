@@ -4,6 +4,7 @@
  * Encapsulates actions that can impact the editor state
  */
 
+open Revery;
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Input;
@@ -19,7 +20,7 @@ type t =
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
   | BufferSetModified(int, bool)
-  | BufferYank(int, Vim.Yank.yankOperator, VisualRange.t)
+  | BufferYank(int, Vim.Yank.yankOperator, list(Range.t), Time.t)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension

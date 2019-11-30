@@ -4,6 +4,8 @@
  * In-memory text buffer representation
  */
 
+module Time = Revery.Time;
+
 open Oni_Core;
 open Oni_Core.Types;
 
@@ -18,7 +20,7 @@ type t = {
   lines: array(string),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
-  highlights: list(highlight),
+  highlights: BufferHighlights.t,
 };
 
 let show = _ => "TODO";
@@ -32,7 +34,7 @@ let ofLines = (lines: array(string)) => {
   lines,
   indentation: None,
   syntaxHighlightingEnabled: true,
-  highlights: [],
+  highlights: BufferHighlights.empty,
 };
 
 let empty = ofLines([||]);
@@ -46,7 +48,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
-  highlights: [],
+  highlights: BufferHighlights.empty,
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
@@ -84,11 +86,11 @@ let disableSyntaxHighlighting = (buffer: t) => {
   syntaxHighlightingEnabled: false,
 };
 
-let getHighlights = (buffer: t) => buffer.highlights;
+let getHighlights = (time, buffer: t) => BufferHighlights.getActive(time, buffer.highlights);
 
-let addHighlight = (highlight, buffer) => {
+let addHighlights = (time, highlights, buffer) => {
   ...buffer,
-  highlights: [highlight, ...buffer.highlights],
+  highlights: BufferHighlights.add(time, highlights, buffer.highlights),
 };
 
 let getUri = (buffer: t) => {

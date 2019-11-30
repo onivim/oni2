@@ -4,6 +4,8 @@
  * In-memory text buffer representation
  */
 
+module Time = Revery.Time;
+
 open Oni_Core;
 open Oni_Core.Types;
 
@@ -23,9 +25,9 @@ let setFileType: (option(string), t) => t;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
 let getLines: t => array(string);
-let getHighlights: t => list(highlight);
 
-let addHighlight: (highlight, t) => t;
+let getHighlights: (Time.t, t) => list(BufferHighlights.highlight);
+let addHighlights: (Time.t, list(BufferHighlights.highlight), t) => t;
 
 let getVersion: t => int;
 let setVersion: (int, t) => t;

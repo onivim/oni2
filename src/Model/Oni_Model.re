@@ -10,6 +10,7 @@ module Actions = Actions;
 module Animation = Animation;
 module Buffer = Buffer;
 module Buffers = Buffers;
+module BufferHighlights = BufferHighlights;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Command = Command;

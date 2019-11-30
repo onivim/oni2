@@ -258,6 +258,12 @@ module Option = {
 
   let some = x => Some(x);
 
+  let map2 = (f, a, b) => 
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => Some(f(aVal, bVal))
+    | _ => None;
+    }
+
   let bind = f =>
     fun
     | Some(x) => f(x)

@@ -67,8 +67,12 @@ let disableSyntaxHighlighting =
 let setModified = modified =>
   ofBufferOpt(buffer => Buffer.setModified(modified, buffer));
 
-let addHighlight = highlight =>
-  ofBufferOpt(buffer => Buffer.addHighlight(highlight, buffer));
+let addHighlights = (time, highlights) =>
+  ofBufferOpt(buffer => Buffer.addHighlights(time, highlights, buffer));
+
+let _yankToHighlightType: Vim.Yank.yankOperator => BufferHighlights.highlightType = fun
+| Vim.Yank.Delete => BufferHighlights.Insert
+| Vim.Yank.Yank => BufferHighlights.Yank;
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
@@ -94,8 +98,17 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-  | BufferYank(id, _, highlight) => 
-    IntMap.update(id, addHighlight(highlight), state)
+  | BufferYank(id, yankType, highlights, time) => 
+
+    let highlightType = _yankToHighlightType(yankType);
+    let bufferHighlights = highlights |> List.map((range) => {
+      BufferHighlights.{
+        range,
+        highlightType,
+      };
+    });
+
+    IntMap.update(id, addHighlights(time, bufferHighlights), state)
   | BufferSaved(metadata) =>
     IntMap.update(metadata.id, setModified(metadata.modified), state)
   | _ => state

@@ -9,6 +9,9 @@
 module Core = Oni_Core;
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
+module Selectors = Model.Selectors;
+
+module Option = Core.Utility.Option;
 
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
@@ -25,7 +28,7 @@ let start =
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
-      Model.Selectors.getActiveConfigurationValue(state, c =>
+      Selectors.getActiveConfigurationValue(state, c =>
         c.vimUseSystemClipboard
       );
 
@@ -116,7 +119,7 @@ let start =
     lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
-        Model.Selectors.getActiveConfigurationValue(state, c =>
+        Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard
         );
 
@@ -138,7 +141,14 @@ let start =
         (),
       );
 
-      dispatch(Model.Actions.BufferYank(id, operator, visualRange));
+      let reportYank = (buffer) => {
+        let ranges = Model.Selection.getRanges(visualRange, buffer); 
+        dispatch(Model.Actions.BufferYank(id, operator, ranges, Revery.Time.now()));
+      };
+      
+      let () = state
+      |> Selectors.getActiveBuffer
+      |> Option.iter(reportYank);
 
       let allYanks = yankConfig.yank;
       let allDeletes = yankConfig.delete;
@@ -456,8 +466,8 @@ let start =
     open Oni_Core.Utility;
     let () =
       getState()
-      |> Model.Selectors.getActiveEditorGroup
-      |> Model.Selectors.getActiveEditor
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
       |> Option.map(Model.Editor.getId)
       |> Option.iter(id => {
            dispatch(Model.Actions.EditorCursorMove(id, cursors))
@@ -473,8 +483,8 @@ let start =
         // Set cursors based on current editor
         let editor =
           getState()
-          |> Model.Selectors.getActiveEditorGroup
-          |> Model.Selectors.getActiveEditor;
+          |> Selectors.getActiveEditorGroup
+          |> Selectors.getActiveEditor;
 
         let cursors =
           editor
@@ -486,7 +496,7 @@ let start =
           |> Core.Utility.Option.iter(e => {
                let () =
                  getState()
-                 |> Model.Selectors.getActiveEditorGroup
+                 |> Selectors.getActiveEditorGroup
                  |> Option.map(Model.EditorGroup.getMetrics)
                  |> Option.iter(metrics => {
                       let topLine =
@@ -563,8 +573,8 @@ let start =
 
              let () =
                getState()
-               |> Model.Selectors.getActiveEditorGroup
-               |> Model.Selectors.getActiveEditor
+               |> Selectors.getActiveEditorGroup
+               |> Selectors.getActiveEditor
                |> Option.map(Model.Editor.getId)
                |> Option.iter(id =>
                     dispatch(Model.Actions.EditorScrollToLine(id, topLine))
@@ -639,12 +649,12 @@ let start =
       switch (hasInitialized^) {
       | false => ()
       | true =>
-        let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-        let editor = Model.Selectors.getActiveEditor(editorGroup);
+        let editorGroup = Selectors.getActiveEditorGroup(state);
+        let editor = Selectors.getActiveEditor(editorGroup);
 
         /* If the editor / buffer in Onivim changed,
          * let libvim know about it and set it as the current buffer */
-        let editorBuffer = Model.Selectors.getActiveBuffer(state);
+        let editorBuffer = Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
           let id = Model.Buffer.getId(editorBuffer);

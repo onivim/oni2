@@ -867,15 +867,15 @@ let%component make =
               )
             };
           };
+          let time = Time.now();
 
           switch(activeBuffer) {
           | None => ()
           | Some(buf) => {
-            let highlights = Buffer.getHighlights(buf);
+            let highlights = Buffer.getHighlights(time, buf);
 
             let () = highlights
-            |> List.map((h) => Selection.getRanges(h, buf))
-            |> List.flatten
+            |> List.map((h: BufferHighlights.highlight) => h.range)
             |> List.iter((range) => {
                   renderRange(
                     ~offset=0.0,
