@@ -1,5 +1,5 @@
 {
-  "checksum": "71e19d4f43e9e3456555fdccf26c75c3",
+  "checksum": "ebf742c0925d96b516aca9b6a1a5d014",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -75,13 +75,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#18dc1b0@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#18dc1b0@d41d8cd9",
+    "revery@github:revery-ui/revery#78591f2@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#78591f2@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#18dc1b0",
+      "version": "github:revery-ui/revery#78591f2",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#18dc1b0" ]
+        "source": [ "github:revery-ui/revery#78591f2" ]
       },
       "overrides": [],
       "dependencies": [
@@ -341,12 +341,12 @@
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/merlin@opam:3.3.2@7a364181", "@opam/lwt@opam:4.4.0@0357bb8b",
+        "@opam/merlin@opam:3.3.3@d653b06a", "@opam/lwt@opam:4.4.0@0357bb8b",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/merlin@opam:3.3.2@7a364181"
+        "ocaml@4.7.1004@d41d8cd9", "@opam/merlin@opam:3.3.3@d653b06a"
       ]
     },
     "reason-gl-matrix@0.9.9306@d41d8cd9": {
@@ -954,7 +954,7 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#18dc1b0@d41d8cd9",
+        "revery@github:revery-ui/revery#78591f2@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
@@ -979,7 +979,7 @@
         "rcedit@2.0.0@d41d8cd9", "plist@3.0.1@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "lodash@4.17.15@d41d8cd9",
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
-        "@opam/merlin@opam:3.3.2@7a364181"
+        "@opam/merlin@opam:3.3.3@d653b06a"
       ]
     },
     "@reason-native/rely@1.3.1@d41d8cd9": {
@@ -1897,20 +1897,20 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae"
       ]
     },
-    "@opam/merlin@opam:3.3.2@7a364181": {
-      "id": "@opam/merlin@opam:3.3.2@7a364181",
+    "@opam/merlin@opam:3.3.3@d653b06a": {
+      "id": "@opam/merlin@opam:3.3.3@d653b06a",
       "name": "@opam/merlin",
-      "version": "opam:3.3.2",
+      "version": "opam:3.3.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/1d/1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801#sha256:1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801",
-          "archive:https://github.com/ocaml/merlin/releases/download/v3.3.2/merlin-v3.3.2.tbz#sha256:1d1c71e663b1e58acf19069cebd1e8d18f7dbe513c6065347d162cdd2c2de801"
+          "archive:https://opam.ocaml.org/cache/sha256/72/72909ef47eea1f6fca13b4109a34dccf8fe3923a3c026f1ed1db9eb5ee9aae15#sha256:72909ef47eea1f6fca13b4109a34dccf8fe3923a3c026f1ed1db9eb5ee9aae15",
+          "archive:https://github.com/ocaml/merlin/releases/download/v3.3.3/merlin-v3.3.3.tbz#sha256:72909ef47eea1f6fca13b4109a34dccf8fe3923a3c026f1ed1db9eb5ee9aae15"
         ],
         "opam": {
           "name": "merlin",
-          "version": "3.3.2",
-          "path": "integrationtest.esy.lock/opam/merlin.3.3.2"
+          "version": "3.3.3",
+          "path": "integrationtest.esy.lock/opam/merlin.3.3.3"
         }
       },
       "overrides": [],
