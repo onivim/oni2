@@ -126,7 +126,7 @@ let start =
     Isolinear.Effect.createWithDispatch(
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
-      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None))
+      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
       | Error(e) => Log.error(e)
       }
     );
@@ -136,7 +136,8 @@ let start =
   let vsync = ref(Revery.Vsync.Immediate);
   let synchronizeConfigurationEffect = configuration =>
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
-      let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
+      let zoomValue =
+        max(1.0, Configuration.getValue(c => c.uiZoom, configuration));
       if (zoomValue != zoom^) {
         Log.info(
           "Configuration - setting zoom: " ++ string_of_float(zoomValue),
@@ -148,7 +149,8 @@ let start =
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info(
-          "Configuration - setting vsync: " ++ Revery.Vsync.show(vsyncValue),
+          "Configuration - setting vsync: "
+          ++ Revery.Vsync.toString(vsyncValue),
         );
         setVsync(vsyncValue);
         vsync := vsyncValue;

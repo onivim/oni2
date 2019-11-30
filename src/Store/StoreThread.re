@@ -96,8 +96,10 @@ let start =
   let extensions = discoverExtensions(setup);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
+  let contributedCommands = Model.Commands.ofExtensions(extensions);
 
-  let commandUpdater = CommandStoreConnector.start(getState);
+  let commandUpdater =
+    CommandStoreConnector.start(getState, contributedCommands);
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
       languageInfo,
@@ -110,14 +112,11 @@ let start =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  /*
-     For our July builds, we won't be including the extension host -
-     but we'll bring this back as we start implementing those features!
-   */
-  /* let (extHostUpdater, extHostStream) =
-     ExtensionClientStoreConnector.start(extensions, setup); */
+  let (extHostUpdater, extHostStream) =
+    ExtensionClientStoreConnector.start(extensions, setup);
 
-  let (menuHostUpdater, menuStream) = MenuStoreConnector.start();
+  let (quickmenuUpdater, quickmenuStream) =
+    QuickmenuStoreConnector.start(themeInfo);
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -127,12 +126,14 @@ let start =
       ~setZoom,
       ~setVsync,
     );
+  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
-  let ripgrep = Core.Ripgrep.make(setup.rgPath);
-  let quickOpenUpdater = QuickOpenStoreConnector.start(ripgrep);
+  let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
   let (fileExplorerUpdater, explorerStream) =
     FileExplorerStoreConnector.start();
+
+  let (searchUpdater, searchStream) = SearchStoreConnector.start();
 
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
@@ -160,14 +161,15 @@ let start =
           Isolinear.Updater.ofReducer(Model.Reducer.reduce),
           vimUpdater,
           syntaxUpdater,
-          /* extHostUpdater, */
+          extHostUpdater,
           fontUpdater,
-          menuHostUpdater,
-          quickOpenUpdater,
+          quickmenuUpdater,
           configurationUpdater,
+          keyBindingsUpdater,
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
+          searchUpdater,
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
@@ -181,7 +183,23 @@ let start =
       (),
     );
 
-  let dispatch = (action: Model.Actions.t) => {
+  module QuickmenuSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "quickmenu-subscription";
+    });
+  let (quickmenuSubscriptionsUpdater, quickmenuSubscriptionsStream) =
+    QuickmenuStoreConnector.subscriptions(ripgrep);
+
+  module SearchSubscriptionRunner =
+    Core.Subscription.Runner({
+      type action = Model.Actions.t;
+      let id = "search-subscription";
+    });
+  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
+    SearchStoreConnector.subscriptions(ripgrep);
+
+  let rec dispatch = (action: Model.Actions.t) => {
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
@@ -190,6 +208,12 @@ let start =
     if (newState !== lastState) {
       onStateChanged(newState);
     };
+
+    // TODO: Wire this up properly
+    let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
+    QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
+    let searchSubs = searchSubscriptionsUpdater(newState);
+    SearchSubscriptionRunner.run(~dispatch, searchSubs);
   };
 
   let runEffects = () => {
@@ -222,17 +246,34 @@ let start =
       }
     );
 
-  let _ = Isolinear.Stream.connect(dispatch, inputStream);
-  let _ = Isolinear.Stream.connect(dispatch, vimStream);
-  let _ = Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _ = Isolinear.Stream.connect(dispatch, syntaxStream);
-  /* Isolinear.Stream.connect(dispatch, extHostStream); */
-  let _ = Isolinear.Stream.connect(dispatch, menuStream);
-  let _ = Isolinear.Stream.connect(dispatch, explorerStream);
-  let _ = Isolinear.Stream.connect(dispatch, lifecycleStream);
-  let _ = Isolinear.Stream.connect(dispatch, windowStream);
-  let _ = Isolinear.Stream.connect(dispatch, hoverStream);
-  let _ = Isolinear.Stream.connect(dispatch, merlinStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, inputStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, vimStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, editorEventStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, syntaxStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, extHostStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, explorerStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, lifecycleStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, windowStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, hoverStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, merlinStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
+  let _: Isolinear.Stream.unsubscribeFunc =
+    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
@@ -270,12 +311,12 @@ let start =
   let _ =
     Tick.interval(
       deltaT => {
-        let deltaTime = Time.toSeconds(deltaT);
+        let deltaTime = Time.toFloatSeconds(deltaT);
         totalTime := totalTime^ +. deltaTime;
         dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
         runEffects();
       },
-      Seconds(0.),
+      Time.zero,
     );
 
   (dispatch, runEffects);

@@ -14,7 +14,7 @@ module Zed_utf8 = Core.ZedBundled;
 
 open Oni_Merlin;
 
-let diagnosticsDebounceTime = Revery.Time.Seconds(0.3);
+let diagnosticsDebounceTime = Revery.Time.ms(300);
 
 let runOnMainThread = (cb, arg) => {
   Revery.App.runOnMainThread(cb(arg));
@@ -45,6 +45,7 @@ let start = () => {
         | Some(v) =>
           let lines = Model.Buffer.getLines(v);
           let fileType = Model.Buffer.getFileType(v);
+          let uri = Model.Buffer.getUri(v);
           switch (fileType, Model.Buffer.getFilePath(v)) {
           | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
             let cb = err => {
@@ -57,7 +58,11 @@ let start = () => {
               );
               Revery.App.runOnMainThread(() => {
                 dispatch(
-                  Model.Actions.DiagnosticsSet(v, "merlin", modelDiagnostics),
+                  Model.Actions.DiagnosticsSet(
+                    uri,
+                    "merlin",
+                    modelDiagnostics,
+                  ),
                 )
               });
             };
@@ -101,13 +106,13 @@ let start = () => {
             let cb = completions => {
               let modelCompletions =
                 MerlinProtocolConverter.toModelCompletions(completions);
-              dispatch(CompletionSetItems(meet, modelCompletions));
+              dispatch(CompletionAddItems(meet, modelCompletions));
               ();
               // TODO: Show completion UI
             };
-
-            let cursorLine = meet.completionMeetLine;
-            let position = meet.completionMeetColumn;
+            open Oni_Core.Types;
+            let cursorLine = meet.completionMeetLine |> Index.toInt0;
+            let position = meet.completionMeetColumn |> Index.toInt0;
 
             if (cursorLine < Array.length(lines)
                 && id == meet.completionMeetBufferId) {

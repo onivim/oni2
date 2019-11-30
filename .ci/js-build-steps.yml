@@ -1,0 +1,5 @@
+# Cross-platform set of build steps for building esy projects	
+
+steps:	
+  - script: node install-node-deps.js --prod	
+    displayName: 'js deps: npm install --prod'

@@ -11,8 +11,6 @@ module Model = Oni_Model;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
-let component = React.component("Completions");
-
 let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
   switch (v) {
   | Text => FontAwesome.alignJustify
@@ -65,156 +63,151 @@ let completionKindToColor =
   };
 };
 
-let createElement =
-    (
-      ~x: int,
-      ~y: int,
-      ~lineHeight: float,
-      ~state: Model.State.t,
-      ~children as _,
-      (),
-    ) =>
-  component(hooks => {
-    let empty = (hooks, React.empty);
+let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => {
+  /*let hoverEnabled =
+    Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
 
-    /*let hoverEnabled =
-      Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
+  let completions = state.completions;
+  switch (Model.Completions.isActive(completions)) {
+  | false => React.empty
+  | true =>
+    let {theme, editorFont, completions, _}: Model.State.t = state;
 
-    let completions = state.completions;
-    switch (Model.Completions.isActive(completions)) {
-    | false => empty
-    | true =>
-      let {theme, editorFont, completions, _}: Model.State.t = state;
+    let outerPositionStyle =
+      Style.[position(`Absolute), top(y - 4), left(x + 4)];
 
-      let outerPositionStyle =
-        Style.[position(`Absolute), top(y - 4), left(x + 4)];
+    let opacity = 1.0;
 
-      let opacity = 1.0;
+    let bgColor = theme.editorSuggestWidgetBackground;
+    let fgColor = theme.editorForeground;
+    let borderColor = theme.editorSuggestWidgetBorder;
 
-      let bgColor = theme.editorSuggestWidgetBackground;
-      let fgColor = theme.editorForeground;
-      let borderColor = theme.editorSuggestWidgetBorder;
+    let commentColor =
+      Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
 
-      let commentColor =
-        Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
+    let padding = 8;
 
-      let padding = 8;
+    let textStyle = (~highlighted) =>
+      Style.[
+        //width(width_),
+        //height(height_),
+        textWrap(Revery.TextWrapping.NoWrap),
+        textOverflow(`Ellipsis),
+        fontFamily(editorFont.fontFile),
+        fontSize(editorFont.fontSize),
+        color(highlighted ? theme.oniNormalModeBackground : fgColor),
+        backgroundColor(bgColor),
+      ];
 
-      let textStyle =
-        Style.[
-          //width(width_),
-          //height(height_),
-          textWrap(Revery.TextWrapping.NoWrap),
-          textOverflow(`Ellipsis),
-          fontFamily(editorFont.fontFile),
-          fontSize(editorFont.fontSize),
-          color(fgColor),
-          backgroundColor(bgColor),
-        ];
+    let detailStyle = width_ =>
+      Style.[
+        width(width_),
+        //height(height_),
+        textWrap(Revery.TextWrapping.NoWrap),
+        textOverflow(`Ellipsis),
+        fontFamily(editorFont.fontFile),
+        fontSize(editorFont.fontSize),
+        color(commentColor),
+        backgroundColor(bgColor),
+      ];
 
-      let detailStyle = width_ =>
-        Style.[
-          width(width_),
-          //height(height_),
-          textWrap(Revery.TextWrapping.NoWrap),
-          textOverflow(`Ellipsis),
-          fontFamily(editorFont.fontFile),
-          fontSize(editorFont.fontSize),
-          color(commentColor),
-          backgroundColor(bgColor),
-        ];
+    let lineHeight_ = lineHeight;
+    let innerPositionStyle = width_ =>
+      Style.[
+        position(`Absolute),
+        top(int_of_float(lineHeight_ +. 0.5)),
+        left(0),
+        width(width_),
+        //height(height_),
+        flexDirection(`Column),
+        alignItems(`FlexStart),
+        justifyContent(`Center),
+        border(~color=borderColor, ~width=1),
+        backgroundColor(bgColor),
+      ];
 
-      let lineHeight_ = lineHeight;
-      let innerPositionStyle = width_ =>
-        Style.[
-          position(`Absolute),
-          top(int_of_float(lineHeight_ +. 0.5)),
-          left(0),
-          width(width_),
-          //height(height_),
-          flexDirection(`Column),
-          alignItems(`FlexStart),
-          justifyContent(`Center),
-          border(~color=borderColor, ~width=1),
-          backgroundColor(bgColor),
-        ];
+    let (_maxWidth, diags) =
+      List.fold_left(
+        (acc, curr: Model.Filter.result(Model.Actions.completionItem)) => {
+          let (prevWidth, prevDiags) = acc;
 
-      let (_maxWidth, diags) =
-        List.fold_left(
-          (prev, curr: Model.Actions.completionItem) => {
-            let (prevWidth, prevDiags) = prev;
+          let message = curr.item.completionLabel;
+          let width =
+            Types.EditorFont.measure(~text=message, editorFont)
+            +. 0.5
+            |> int_of_float;
+          let remainingWidth = 450 - width;
 
-            let message = curr.completionLabel;
-            let width =
-              Types.EditorFont.measure(~text=message, editorFont)
-              +. 0.5
-              |> int_of_float;
-            let remainingWidth = 450 - width;
-
-            let detailElem =
-              switch (curr.completionDetail) {
-              | None => React.empty
-              | Some(text) when String.length(text) > 0 =>
-                let detailWidth =
-                  Types.EditorFont.measure(~text, editorFont)
-                  +. 0.5
-                  |> int_of_float
-                  |> min(remainingWidth);
-                <View style=Style.[flexGrow(0), margin(4)]>
-                  <Text style={detailStyle(detailWidth)} text />
-                </View>;
-              | _ => React.empty
-              };
-
-            let newWidth = max(prevWidth, width + padding);
-            let completionColor =
-              completionKindToColor(
-                fgColor,
-                state.tokenTheme,
-                curr.completionKind,
-              );
-            let newElem =
-              <View
-                style=Style.[flexDirection(`Row), justifyContent(`Center)]>
-                <View
-                  style=Style.[
-                    flexDirection(`Row),
-                    justifyContent(`Center),
-                    alignItems(`Center),
-                    flexGrow(0),
-                    backgroundColor(completionColor),
-                    width(25),
-                  ]>
-                  <FontIcon
-                    icon={completionKindToIcon(curr.completionKind)}
-                    backgroundColor=completionColor
-                    color=bgColor
-                    margin=4
-                    fontSize=14
-                  />
-                </View>
-                <View style=Style.[flexGrow(1), margin(4)]>
-                  <Text style=textStyle text=message />
-                </View>
-                detailElem
+          let detailElem =
+            switch (curr.item.completionDetail) {
+            | None => React.empty
+            | Some(text) when String.length(text) > 0 =>
+              let detailWidth =
+                Types.EditorFont.measure(~text, editorFont)
+                +. 0.5
+                |> int_of_float
+                |> min(remainingWidth);
+              <View style=Style.[flexGrow(0), margin(4)]>
+                <Text style={detailStyle(detailWidth)} text />
               </View>;
-            let newDiags = [newElem, ...prevDiags];
-            (newWidth, newDiags);
-          },
-          (450, []),
-          completions.filteredCompletions,
-        );
+            | _ => React.empty
+            };
 
-      let diags = List.rev(diags);
-      (
-        hooks,
-        <View style=outerPositionStyle>
-          <Opacity opacity>
-            <View style={innerPositionStyle(_maxWidth + padding * 2)}>
-              ...diags
-            </View>
-          </Opacity>
-        </View>,
+          let newWidth = max(prevWidth, width + padding);
+          let completionColor =
+            completionKindToColor(
+              fgColor,
+              state.tokenTheme,
+              curr.item.completionKind,
+            );
+
+          let normalStyle = textStyle(~highlighted=false);
+          let highlightStyle = textStyle(~highlighted=true);
+          let newElem =
+            <View
+              style=Style.[flexDirection(`Row), justifyContent(`Center)]>
+              <View
+                style=Style.[
+                  flexDirection(`Row),
+                  justifyContent(`Center),
+                  alignItems(`Center),
+                  flexGrow(0),
+                  backgroundColor(completionColor),
+                  width(25),
+                ]>
+                <FontIcon
+                  icon={completionKindToIcon(curr.item.completionKind)}
+                  backgroundColor=completionColor
+                  color=bgColor
+                  margin=4
+                  fontSize=14
+                />
+              </View>
+              <View style=Style.[flexGrow(1), margin(4)]>
+                <HighlightText
+                  highlights={curr.highlight}
+                  style=normalStyle
+                  highlightStyle
+                  text=message
+                />
+              </View>
+              detailElem
+            </View>;
+          let newDiags = [newElem, ...prevDiags];
+          (newWidth, newDiags);
+        },
+        (450, []),
+        completions.filteredCompletions,
       );
-    };
-  });
+
+    let diags = List.rev(diags) |> React.listToElement;
+
+    <View style=outerPositionStyle>
+      <Opacity opacity>
+        <View style={innerPositionStyle(_maxWidth + padding * 2)}>
+          diags
+        </View>
+      </Opacity>
+    </View>;
+  };
+};

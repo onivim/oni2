@@ -18,101 +18,110 @@ let create = () => {
   let defaultGroup = EditorGroup.create();
   let activeId = defaultGroup.editorGroupId;
   let idToGroup = IntMap.add(activeId, defaultGroup, IntMap.empty);
+
   {idToGroup, activeId, lastEditorFont: None};
 };
 
-let getEditorGroupById = (v: t, id) => {
-  IntMap.find_opt(id, v.idToGroup);
-};
+let activeGroupId = model => model.activeId;
 
-let getActiveEditorGroup = (v: t) => {
-  getEditorGroupById(v, v.activeId);
-};
+let getEditorGroupById = (model, id) => IntMap.find_opt(id, model.idToGroup);
 
-let applyToAllEditorGroups =
-    (editors: IntMap.t(EditorGroup.t), action: Actions.t) => {
-  IntMap.map(eg => EditorGroupReducer.reduce(eg, action), editors);
-};
+let getActiveEditorGroup = model => getEditorGroupById(model, model.activeId);
+
+let isActive = (model, group: EditorGroup.t) =>
+  group.editorGroupId == model.activeId;
+
+let applyToAllEditorGroups = (editors, action: Actions.t) =>
+  IntMap.map(group => EditorGroupReducer.reduce(group, action), editors);
 
 /* Validate 'activeId' is set to a valid editor group,
    otherwise move to the first valid */
-let ensureActiveId = (v: t) => {
-  switch (IntMap.find_opt(v.activeId, v.idToGroup)) {
-  | Some(_) => v
+let ensureActiveId = model => {
+  switch (IntMap.find_opt(model.activeId, model.idToGroup)) {
+  | Some(_) => model
   | None =>
-    switch (IntMap.min_binding_opt(v.idToGroup)) {
-    | Some((key, _)) => {...v, activeId: key}
-    | _ => v
+    switch (IntMap.min_binding_opt(model.idToGroup)) {
+    | Some((key, _)) => {...model, activeId: key}
+    | _ => model
     }
   };
 };
 
-let isEmpty = (id: int, v: t) => {
-  switch (IntMap.find_opt(id, v.idToGroup)) {
+let isEmpty = (id, model) => {
+  switch (IntMap.find_opt(id, model.idToGroup)) {
   | None => true
-  | Some(v) => EditorGroup.isEmpty(v)
+  | Some(group) => EditorGroup.isEmpty(group)
   };
 };
 
-let removeEmptyEditorGroups = (v: t) => {
+let removeEmptyEditorGroups = model => {
   let idToGroup =
-    IntMap.filter((_, v) => !EditorGroup.isEmpty(v), v.idToGroup);
+    IntMap.filter(
+      (_, group) => !EditorGroup.isEmpty(group),
+      model.idToGroup,
+    );
 
-  {...v, idToGroup};
+  {...model, idToGroup};
 };
 
-let reduce = (v: t, action: Actions.t) => {
+let reduce = (model, action: Actions.t) => {
   switch (action) {
-  | SetEditorFont(ef) => {
-      ...v,
-      idToGroup: applyToAllEditorGroups(v.idToGroup, action),
-      lastEditorFont: Some(ef),
+  | SetEditorFont(font) => {
+      ...model,
+      idToGroup: applyToAllEditorGroups(model.idToGroup, action),
+      lastEditorFont: Some(font),
     }
-  | WindowSetActive(_, editorGroupId) => {...v, activeId: editorGroupId}
+
+  | WindowSetActive(_, editorGroupId) => {...model, activeId: editorGroupId}
+
   | EditorGroupAdd(editorGroup) =>
     let editorGroup =
-      switch (v.lastEditorFont) {
-      | Some(ef) => EditorGroupReducer.reduce(editorGroup, SetEditorFont(ef))
+      switch (model.lastEditorFont) {
+      | Some(font) =>
+        EditorGroupReducer.reduce(editorGroup, SetEditorFont(font))
       | None => editorGroup
       };
 
     {
-      ...v,
+      ...model,
       activeId: editorGroup.editorGroupId,
       idToGroup:
-        IntMap.add(editorGroup.editorGroupId, editorGroup, v.idToGroup),
+        IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
     };
+
   | EditorGroupSetSize(editorGroupId, _) =>
     let idToGroup =
       IntMap.update(
         editorGroupId,
         editorGroup =>
           switch (editorGroup) {
-          | Some(eg) => Some(EditorGroupReducer.reduce(eg, action))
+          | Some(group) => Some(EditorGroupReducer.reduce(group, action))
           | None => None
           },
-        v.idToGroup,
+        model.idToGroup,
       );
 
-    {...v, idToGroup};
+    {...model, idToGroup};
+
   | action =>
-    let ret =
-      switch (getActiveEditorGroup(v)) {
-      | Some(eg) => {
-          ...v,
+    let newModel =
+      switch (getActiveEditorGroup(model)) {
+      | Some(group) => {
+          ...model,
           idToGroup:
             IntMap.add(
-              v.activeId,
-              EditorGroupReducer.reduce(eg, action),
-              v.idToGroup,
+              model.activeId,
+              EditorGroupReducer.reduce(group, action),
+              model.idToGroup,
             ),
         }
-      | None => v
+      | None => model
       };
 
     switch (action) {
-    | ViewCloseEditor(_) => ret |> removeEmptyEditorGroups |> ensureActiveId
-    | _ => ret
+    | ViewCloseEditor(_) =>
+      newModel |> removeEmptyEditorGroups |> ensureActiveId
+    | _ => newModel
     };
   };
 };

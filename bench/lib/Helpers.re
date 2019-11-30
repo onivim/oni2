@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Model;
 
+module Option = Utility.Option;
+
 let metrics = EditorMetrics.create();
 
 /* Create a state with some editor size */
@@ -10,7 +12,7 @@ let simpleState = {
   Reducer.reduce(
     state,
     Actions.EditorGroupSetSize(
-      state.editorGroups.activeId,
+      EditorGroups.activeGroupId(state.editorGroups),
       Types.EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
     ),
   );
@@ -31,7 +33,9 @@ let simpleState =
   );
 
 let simpleEditor = Editor.create();
-let editorGroupId = simpleState.editorGroups.activeId;
+let editorGroup =
+  EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
+  |> Option.value(~default=EditorGroup.create());
 
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");

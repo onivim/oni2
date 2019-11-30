@@ -14,10 +14,20 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "developer.oni.helloWorld",
-				"title": "Hello World"
+				"command": "developer.oni.showNotification",
+				"title": "Onivim - Developer: Show Notification"
+			},
+			{
+				"command": "developer.oni.getBufferText",
+				"title": "Onivim - Developer: Buffer Text"
 			}
-		]
+		],
+		"languages": [{
+			"id": "oni-dev",
+			"extensions": [
+				".oni-dev"
+			]
+		}]
 	},
 	"scripts": {
 		"postinstall": "node ./node_modules/vscode/bin/install"

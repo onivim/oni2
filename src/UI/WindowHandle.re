@@ -4,8 +4,6 @@ open WindowTree;
 
 module Core = Oni_Core;
 
-let component = React.component("Spacer");
-
 let _isLastItem = (splits, index) => List.length(splits) == index + 1;
 let spacerColor = Revery.Color.rgba(0., 0., 0., 0.1);
 
@@ -33,6 +31,5 @@ let spacer = (direction: direction) => {
   };
 };
 
-let createElement =
-    (~children as _, ~theme as _: Core.Theme.t, ~direction: direction, ()) =>
-  component(hooks => (hooks, <View style={spacer(direction)} />));
+let make = (~theme as _: Core.Theme.t, ~direction: direction, ()) =>
+  <View style={spacer(direction)} />;

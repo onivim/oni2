@@ -135,7 +135,7 @@ let runTest =
     logWaiter("Finished - result: " ++ string_of_bool(result));
 
     if (!result) {
-      logWaiter("FAILED");
+      logWaiter("FAILED: " ++ Sys.executable_name);
       assert(false == true);
     };
   };
@@ -145,4 +145,18 @@ let runTest =
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));
+};
+
+let runTestWithInput = (~name, f) => {
+  runTest(
+    ~name,
+    (dispatch, wait, runEffects) => {
+      let input = key => {
+        dispatch(Model.Actions.KeyboardInput(key));
+        runEffects();
+      };
+
+      f(input, dispatch, wait, runEffects);
+    },
+  );
 };

@@ -6,11 +6,15 @@
 
 open Oni_Core;
 
+module Zed_utf8 = Oni_Core.ZedBundled;
+
+type filteredCompletion = Filter.result(Actions.completionItem);
+
 type t = {
   // The last completion meet we found
   meet: option(Actions.completionMeet),
   completions: list(Actions.completionItem),
-  filteredCompletions: list(Actions.completionItem),
+  filteredCompletions: list(filteredCompletion),
   filter: option(string),
   selected: option(int),
 };
@@ -32,11 +36,12 @@ let endCompletions = (_v: t) => {
 };
 
 let startCompletions = (meet: Actions.completionMeet, v: t) => {
-  ...v,
-  meet: Some(meet),
-  filter: None,
-  completions: default.completions,
-  filteredCompletions: default.filteredCompletions,
+  {
+    ...v,
+    meet: Some(meet),
+    completions: default.completions,
+    filteredCompletions: default.filteredCompletions,
+  };
 };
 
 let getMeet = (v: t) => v.meet;
@@ -45,37 +50,51 @@ let getBestCompletion = (v: t) => {
   List.nth_opt(v.filteredCompletions, 0);
 };
 
+let _toFilterResult = (items: list(Actions.completionItem)) => {
+  Filter.(items |> List.map(item => {item, highlight: []}));
+};
+
+let getCompletions = (v: t) => v.filteredCompletions;
+
 let _applyFilter =
     (filter: option(string), items: list(Actions.completionItem)) => {
   switch (filter) {
-  | None => items
+  | None => items |> _toFilterResult
   | Some(filter) =>
-    let re = Str.regexp_string(filter);
-    let ret =
-      List.filter(
-        (item: Actions.completionItem) => {
-          switch (Str.search_forward(re, item.completionLabel, 0)) {
-          | exception Not_found => false
-          | _ => !String.equal(item.completionLabel, filter)
-          }
-        },
-        items,
-      );
-    ret;
+    open Actions;
+
+    let query = Zed_utf8.explode(filter);
+
+    let toString = (item, ~shouldLower) =>
+      if (shouldLower) {
+        item.completionLabel |> String.lowercase_ascii;
+      } else {
+        item.completionLabel;
+      };
+
+    items
+    |> List.filter(item => Filter.fuzzyMatches(query, item.completionLabel))
+    |> Filter.rank(filter, toString);
   };
 };
 
 let filter = (filter: string, v: t) => {
-  ...v,
-  filter: Some(filter),
-  filteredCompletions:
-    _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+  {
+    ...v,
+    filter: Some(filter),
+    filteredCompletions:
+      _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+  };
 };
 
-let setItems = (items: list(Actions.completionItem), v: t) => {
-  ...v,
-  completions: items,
-  filteredCompletions: _applyFilter(v.filter, items) |> Utility.firstk(5),
+let addItems = (items: list(Actions.completionItem), v: t) => {
+  let newItems = List.concat([items, v.completions]);
+  {
+    ...v,
+    completions: newItems,
+    filteredCompletions:
+      _applyFilter(v.filter, newItems) |> Utility.firstk(5),
+  };
 };
 
 let reduce = (v: t, action: Actions.t) => {
@@ -84,7 +103,7 @@ let reduce = (v: t, action: Actions.t) => {
     | Actions.ChangeMode(mode) when mode != Vim.Types.Insert =>
       endCompletions(v)
     | Actions.CompletionStart(meet) => startCompletions(meet, v)
-    | Actions.CompletionSetItems(_meet, items) => setItems(items, v)
+    | Actions.CompletionAddItems(_meet, items) => addItems(items, v)
     | Actions.CompletionBaseChanged(base) => filter(base, v)
     | Actions.CompletionEnd => endCompletions(v)
     | _ => v

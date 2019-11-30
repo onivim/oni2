@@ -9,8 +9,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Animation = Model.Animation;
-module Menu = Model.Menu;
-module MenuJob = Model.MenuJob;
+module Quickmenu = Model.Quickmenu;
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
@@ -26,7 +25,7 @@ let start = () => {
       } else {
         (state, Isolinear.Effect.none);
       }
-    | Actions.CursorMove(position) when state.mode != Vim.Types.Insert =>
+    | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
       let newState =
         switch (Model.Selectors.getActiveBuffer(state)) {
         | None => state
@@ -37,6 +36,16 @@ let start = () => {
               c => c.editorHoverDelay,
               state.configuration,
             );
+
+          let position =
+            switch (cursors) {
+            | [hd, ..._] =>
+              open Oni_Core.Types;
+              let line = Index.ofInt1(hd.line);
+              let character = Index.ofInt0(hd.column);
+              Position.create(line, character);
+            | [] => Core.Types.Position.ofInt0(0, 0)
+            };
           {
             ...state,
             hover:

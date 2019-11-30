@@ -5,85 +5,98 @@ open Oni_Core;
 open Oni_Core.Types;
 open Oni_Model;
 
-let component = React.component("MenuItem");
+module Constants = {
+  let fontSize = 20;
+};
 
-let menuItemFontSize = 20;
+module Styles = {
+  let bg = (~theme: Theme.t, ~isFocused) =>
+    isFocused ? theme.menuSelectionBackground : theme.menuBackground;
 
-let textStyles = (~theme: Theme.t, ~uiFont: UiFont.t, ~bg: Color.t, ()) =>
-  Style.[
-    fontFamily(uiFont.fontFile),
-    fontSize(uiFont.fontSize),
-    color(theme.menuForeground),
-    backgroundColor(bg),
-  ];
+  let text = (~theme: Theme.t, ~font: UiFont.t, ~isFocused) =>
+    Style.[
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
+      color(theme.menuForeground),
+      backgroundColor(bg(~theme, ~isFocused)),
+    ];
 
-let containerStyles = (~bg, ()) =>
-  Style.[padding(10), flexDirection(`Row), backgroundColor(bg)];
+  let container = (~theme, ~isFocused) =>
+    Style.[
+      padding(10),
+      flexDirection(`Row),
+      backgroundColor(bg(~theme, ~isFocused)),
+    ];
 
-let iconStyles = fgColor =>
-  Style.[
-    fontFamily("seti.ttf"),
-    fontSize(menuItemFontSize),
-    marginRight(10),
-    color(fgColor),
-  ];
+  let icon = fgColor =>
+    Style.[
+      fontFamily("seti.ttf"),
+      fontSize(Constants.fontSize),
+      marginRight(10),
+      color(fgColor),
+    ];
+
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused, ~custom) =>
+    Style.(
+      merge(
+        ~source=
+          Style.[
+            fontFamily(font.fontFile),
+            textOverflow(`Ellipsis),
+            fontSize(12),
+            color(theme.menuForeground),
+            backgroundColor(bg(~theme, ~isFocused)),
+          ],
+        ~target=custom,
+      )
+    );
+
+  let clickable = Style.[cursor(Revery.MouseCursors.pointer)];
+};
 
 let noop = () => ();
 
-let createElement =
+let make =
     (
-      ~children as _,
       ~style=[],
       ~icon=None,
       ~label,
-      ~selected,
+      ~isFocused,
       ~theme,
       ~onClick=noop,
       ~onMouseOver=noop,
       (),
-    ) =>
-  component(hooks => {
-    let state = GlobalContext.current().state;
-    let uiFont = State.(state.uiFont);
+    ) => {
+  let state = GlobalContext.current().state;
+  let font = State.(state.uiFont);
 
-    let bg: Color.t =
-      Theme.(selected ? theme.menuSelectionBackground : theme.menuBackground);
+  let iconView =
+    switch (icon) {
+    | Some(v) =>
+      IconTheme.IconDefinition.(
+        <Text
+          style={Styles.icon(v.fontColor)}
+          text={FontIcon.codeToIcon(v.fontCharacter)}
+        />
+      )
 
-    let labelStyles =
-      Style.(
-        merge(
-          ~source=
-            Style.[
-              fontFamily(uiFont.fontFile),
-              textOverflow(`Ellipsis),
-              fontSize(12),
-              color(theme.menuForeground),
-              backgroundColor(bg),
-            ],
-          ~target=style,
-        )
-      );
+    | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
+    };
 
-    let iconView =
-      switch (icon) {
-      | Some(v) =>
-        IconTheme.IconDefinition.(
-          <Text
-            style={iconStyles(v.fontColor)}
-            text={FontIcon.codeToIcon(v.fontCharacter)}
-          />
-        )
-      | None => <Text style={iconStyles(Colors.transparentWhite)} text="" />
-      };
+  let labelView =
+    switch (label) {
+    | `Text(text) =>
+      let style = Styles.label(~font, ~theme, ~isFocused, ~custom=style);
+      <Text style text />;
+    | `Custom(view) => view
+    };
 
-    (
-      hooks,
-      <Clickable style=Style.[cursor(Revery.MouseCursors.pointer)] onClick>
-        <View
-          onMouseOver={_ => onMouseOver()} style={containerStyles(~bg, ())}>
-          iconView
-          <Text style=labelStyles text=label />
-        </View>
-      </Clickable>,
-    );
-  });
+  <Clickable style=Styles.clickable onClick>
+    <View
+      onMouseOver={_ => onMouseOver()}
+      style={Styles.container(~theme, ~isFocused)}>
+      iconView
+      labelView
+    </View>
+  </Clickable>;
+};

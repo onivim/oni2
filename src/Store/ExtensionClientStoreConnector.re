@@ -7,6 +7,7 @@
  */
 
 module Core = Oni_Core;
+open Oni_Core.Utility;
 module Model = Oni_Model;
 
 open Oni_Extensions;
@@ -24,6 +25,30 @@ let start = (extensions, setup: Core.Setup.t) => {
          Extensions.ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
        );
 
+  let onDiagnosticsClear = owner => {
+    dispatch(Model.Actions.DiagnosticsClear(owner));
+  };
+
+  let onDiagnosticsChangeMany =
+      (diagCollection: Protocol.DiagnosticsCollection.t) => {
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
+      d => {
+        let range = Protocol.OneBasedRange.toRange(d.range);
+        let message = d.message;
+        Model.Diagnostic.create(~range, ~message, ());
+      };
+
+    let f = (d: Protocol.Diagnostics.t) => {
+      let diagnostics = List.map(protocolDiagToDiag, snd(d));
+      let uri = fst(d);
+      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
+    };
+
+    diagCollection.perFileDiagnostics
+    |> List.map(f)
+    |> List.iter(a => dispatch(a));
+  };
+
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
       Model.Actions.StatusBarAddItem(
@@ -38,53 +63,86 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
+    Core.Log.info(
+      "Registered suggest provider with ID: " ++ string_of_int(sp.id),
+    );
+    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
+  };
+
+  let onOutput = msg => {
+    Core.Log.info("[ExtHost]: " ++ msg);
+  };
+
+  let onDidActivateExtension = id => {
+    dispatch(Model.Actions.ExtensionActivated(id));
+  };
+
+  let onShowMessage = message => {
+    dispatch(
+      Oni_Model.Actions.ShowNotification(
+        Oni_Model.Notification.create(~title="Extension", ~message, ()),
+      ),
+    );
+  };
+
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
+      ~onDiagnosticsClear,
+      ~onDiagnosticsChangeMany,
+      ~onDidActivateExtension,
+      ~onRegisterSuggestProvider,
+      ~onShowMessage,
+      ~onOutput,
       setup,
     );
 
-  let _bufferMetadataToModelAddedDelta = (bm: Vim.BufferMetadata.t) =>
-    switch (bm.filePath, bm.fileType) {
-    | (Some(fp), Some(_)) =>
+  let _bufferMetadataToModelAddedDelta =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+    switch (bm.filePath, fileType) {
+    | (Some(fp), Some(ft)) =>
+      Core.Log.info("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
-          ~modeId="plaintext",
+          ~modeId=ft,
           ~isDirty=true,
           (),
         ),
-      )
-    /* TODO: filetype detection */
-    | (Some(fp), _) =>
-      Some(
-        Protocol.ModelAddedDelta.create(
-          ~uri=Core.Uri.fromPath(fp),
-          ~versionId=bm.version,
-          ~lines=[""],
-          ~modeId="plaintext",
-          ~isDirty=true,
-          (),
-        ),
-      )
+      );
     | _ => None
     };
 
-  let pumpEffect =
-    Isolinear.Effect.create(~name="exthost.pump", () =>
-      ExtHostClient.pump(extHostClient)
-    );
+  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
-  let sendBufferEnterEffect = (bm: Vim.BufferMetadata.t) =>
+  let activateFileType = (fileType: option(string)) =>
+    fileType
+    |> Option.iter(ft =>
+         Hashtbl.find_opt(activatedFileTypes, ft)
+         // If no entry, we haven't activated yet
+         |> Option.iter_none(() => {
+              ExtHostClient.activateByEvent(
+                "onLanguage:" ++ ft,
+                extHostClient,
+              );
+              Hashtbl.add(activatedFileTypes, ft, true);
+            })
+       );
+
+  let sendBufferEnterEffect =
+      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (_bufferMetadataToModelAddedDelta(bm)) {
+      switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
-      | Some(v) => ExtHostClient.addDocument(v, extHostClient)
+      | Some((v: Protocol.ModelAddedDelta.t)) =>
+        activateFileType(fileType);
+        ExtHostClient.addDocument(v, extHostClient);
       }
     );
 
@@ -94,29 +152,126 @@ let start = (extensions, setup: Core.Setup.t) => {
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        let modelContentChange =
-          Protocol.ModelContentChange.ofBufferUpdate(
-            bu,
-            Protocol.Eol.default,
-          );
-        let modelChangedEvent =
-          Protocol.ModelChangedEvent.create(
-            ~changes=[modelContentChange],
-            ~eol=Protocol.Eol.default,
-            ~versionId=bu.version,
-            (),
-          );
+        Core.Log.perf("exthost.bufferUpdate", () => {
+          let modelContentChange =
+            Protocol.ModelContentChange.ofBufferUpdate(
+              bu,
+              Protocol.Eol.default,
+            );
+          let modelChangedEvent =
+            Protocol.ModelChangedEvent.create(
+              ~changes=[modelContentChange],
+              ~eol=Protocol.Eol.default,
+              ~versionId=bu.version,
+              (),
+            );
 
-        let uri = Model.Buffer.getUri(v);
+          let uri = Model.Buffer.getUri(v);
 
-        ExtHostClient.updateDocument(
-          uri,
-          modelChangedEvent,
-          true,
-          extHostClient,
-        );
+          ExtHostClient.updateDocument(
+            uri,
+            modelChangedEvent,
+            true,
+            extHostClient,
+          );
+        })
       }
     );
+
+  let suggestionItemToCompletionItem:
+    Protocol.SuggestionItem.t => Model.Actions.completionItem =
+    suggestion => {
+      {
+        completionLabel: suggestion.label,
+        completionKind: CompletionKind.Text,
+        completionDetail: None,
+      };
+    };
+
+  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
+    List.map(suggestionItemToCompletionItem, suggestions);
+
+  let getAndDispatchCompletions =
+      (~languageFeatures, ~fileType, ~uri, ~completionMeet, ~position, ()) => {
+    let providers =
+      LanguageFeatures.getSuggestProviders(fileType, languageFeatures);
+
+    providers
+    |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+         Core.Log.info(
+           "[Exthost] Completions - getting completions for suggest provider: "
+           ++ string_of_int(provider.id),
+         );
+         let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
+           ExtHostClient.getCompletions(
+             provider.id,
+             uri,
+             position,
+             extHostClient,
+           );
+
+         let _ =
+           Lwt.bind(
+             completionPromise,
+             completions => {
+               switch (completions) {
+               | None => Core.Log.info("No completions for provider")
+               | Some(completions) =>
+                 let completionItems =
+                   suggestionsToCompletionItems(completions);
+                 dispatch(
+                   Model.Actions.CompletionAddItems(
+                     completionMeet,
+                     completionItems,
+                   ),
+                 );
+               };
+               Lwt.return();
+             },
+           );
+         ();
+       });
+  };
+
+  let checkCompletionsEffect = (completionMeet, state) =>
+    Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
+      Model.Selectors.withActiveBufferAndFileType(
+        state,
+        (buf, fileType) => {
+          open Model.Actions;
+          open Oni_Core.Types;
+          let uri = Model.Buffer.getUri(buf);
+          let position =
+            Protocol.OneBasedPosition.ofInt1(
+              ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
+              ~column=completionMeet.completionMeetColumn |> Index.toInt1,
+              (),
+            );
+          Core.Log.info(
+            Printf.sprintf(
+              "[Exthost] Completions - requesting at %s for %s",
+              Core.Uri.toString(uri),
+              Protocol.OneBasedPosition.show(position),
+            ),
+          );
+          let languageFeatures = state.languageFeatures;
+          getAndDispatchCompletions(
+            ~languageFeatures,
+            ~fileType,
+            ~uri,
+            ~completionMeet,
+            ~position,
+            (),
+          );
+          ();
+        },
+      )
+    });
+
+  let executeContributedCommandEffect = cmd =>
+    Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
+      ExtHostClient.executeContributedCommand(cmd, extHostClient)
+    });
 
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
@@ -135,8 +290,18 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.BufferEnter(bm, _) => (state, sendBufferEnterEffect(bm))
-    | Model.Actions.Tick(_) => (state, pumpEffect)
+    | Model.Actions.CommandExecuteContributed(cmd) => (
+        state,
+        executeContributedCommandEffect(cmd),
+      )
+    | Model.Actions.CompletionStart(completionMeet) => (
+        state,
+        checkCompletionsEffect(completionMeet, state),
+      )
+    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
+        state,
+        sendBufferEnterEffect(bm, fileTypeOpt),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
 

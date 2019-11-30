@@ -7,6 +7,8 @@ open Oni_Core;
 open Oni_Core.Types;
 open Oni_Syntax;
 
+module List = Utility.List;
+
 type t = {
   visibleBuffers: list(int),
   highlightsMap: IntMap.t(NativeSyntaxHighlights.t),
@@ -17,7 +19,7 @@ let empty = {visibleBuffers: [], highlightsMap: IntMap.empty};
 let getVisibleHighlighters = (v: t) => {
   v.visibleBuffers
   |> List.map(b => IntMap.find_opt(b, v.highlightsMap))
-  |> Utility.filterMap(v => v);
+  |> List.filter_map(v => v);
 };
 
 let getActiveHighlighters = (v: t) => {

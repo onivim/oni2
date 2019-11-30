@@ -5,11 +5,8 @@
  */
 
 open Oni_Core;
-open Oni_Extensions;
 open Oni_Model;
 open Oni_Syntax;
-
-open Rench;
 
 let configurationWatcher =
     (configurationSelector: ConfigurationValues.t => 'a, f) => {
@@ -81,50 +78,30 @@ let start = (themeInfo: ThemeInfo.t) => {
     };
   };
 
+  let persistThemeEffect = name =>
+    Isolinear.Effect.createWithDispatch(~name="theme.persistTheme", dispatch =>
+      dispatch(
+        Actions.ConfigurationTransform(
+          "configuration.json",
+          Oni_Core.ConfigurationTransformer.setField(
+            "workbench.colorTheme",
+            `String(name),
+          ),
+        ),
+      )
+    );
+
   let loadThemeByPathEffect = (uiTheme, themePath) =>
     Isolinear.Effect.createWithDispatch(
       ~name="theme.loadThemeByPath", dispatch =>
       loadThemeByPath(uiTheme, themePath, dispatch)
     );
 
-  let showThemeMenuEffect =
-    Isolinear.Effect.createWithDispatch(~name="theme.showThemeMenu", dispatch => {
-      let commands =
-        ThemeInfo.getThemes(themeInfo)
-        |> List.map((theme: ExtensionContributions.Theme.t) => {
-             let ret: Actions.menuCommand = {
-               category: Some("Theme"),
-               name: theme.label,
-               command: () => {
-                 // Persist theme
-                 Actions.ConfigurationTransform(
-                   "configuration.json",
-                   Oni_Core.ConfigurationTransformer.setField(
-                     "workbench.colorTheme",
-                     `String(theme.label),
-                   ),
-                 );
-               },
-               icon: None,
-             };
-             ret;
-           });
-
-      let create = (setItems, _, _onSelectedItemChanged, _) => {
-        let dispose =
-          Event.subscribe(
-            _onSelectedItemChanged, (item: option(Actions.menuCommand)) =>
-            switch (item) {
-            | Some(item) => loadThemeByName(item.name, dispatch)
-            | None => ()
-            }
-          );
-        setItems(commands);
-        dispose;
-      };
-
-      dispatch(Actions.MenuOpen(create));
-    });
+  let loadThemeByNameEffect = name =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="theme.loadThemeByName", dispatch =>
+      loadThemeByName(name, dispatch)
+    );
 
   let onChanged = (newTheme, dispatch) =>
     loadThemeByName(newTheme, dispatch);
@@ -133,11 +110,29 @@ let start = (themeInfo: ThemeInfo.t) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.ThemeShowMenu => (state, showThemeMenuEffect)
+    | Actions.ListFocusUp
+    | Actions.ListFocusDown
+    | Actions.ListFocus(_) =>
+      switch (state.quickmenu) {
+      | Some({variant: ThemesPicker, focused: Some(focused), items, _}) =>
+        let focusedItem = items[focused];
+        (state, loadThemeByNameEffect(focusedItem.name));
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | Actions.ThemeLoadByPath(uiTheme, themePath) => (
         state,
         loadThemeByPathEffect(uiTheme, themePath),
       )
+
+    | Actions.ThemeLoadByName(name) => (
+        state,
+        Isolinear.Effect.batch([
+          persistThemeEffect(name),
+          loadThemeByNameEffect(name),
+        ]),
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

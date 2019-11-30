@@ -9,6 +9,8 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
+  - script: esy build-env
+    displayName: "Esy: show build env"
   - script: esy @test install
     displayName: 'Test: install'
   - script: esy @test run-ci

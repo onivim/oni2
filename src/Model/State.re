@@ -6,9 +6,12 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Extensions;
+open Oni_Input;
 open Oni_Syntax;
 
 type t = {
+  commands: Commands.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
@@ -16,9 +19,7 @@ type t = {
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   hover: Hover.t,
-  menu: Menu.t,
-  commandline: Commandline.t,
-  wildmenu: Wildmenu.t,
+  quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   // New-school native syntax highlighting
   syntaxHighlighting: SyntaxHighlighting.t,
@@ -27,9 +28,11 @@ type t = {
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
+  extensions: Extensions.t,
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
+  languageFeatures: LanguageFeatures.t,
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
@@ -44,18 +47,18 @@ type t = {
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,
+  searchPane: option(Search.t),
 };
 
 let create: unit => t =
   () => {
+    commands: Commands.empty,
     completions: Completions.default,
     configuration: Configuration.default,
     diagnostics: Diagnostics.create(),
     hover: Hover.empty,
     mode: Normal,
-    menu: Menu.create(),
-    commandline: Commandline.create(),
-    wildmenu: Wildmenu.create(),
+    quickmenu: None,
     buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
@@ -65,6 +68,8 @@ let create: unit => t =
         ~measuredHeight=1.,
         (),
       ),
+    extensions: Extensions.empty,
+    languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.empty,
@@ -72,7 +77,7 @@ let create: unit => t =
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
-    keyBindings: Keybindings.default,
+    keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: LanguageInfo.create(),
     notifications: Notifications.default,
@@ -84,4 +89,5 @@ let create: unit => t =
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,
+    searchPane: None,
   };

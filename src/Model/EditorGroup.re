@@ -5,61 +5,48 @@
  */
 
 open Oni_Core;
-open Actions;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});
 
-type t = Actions.editorGroup;
+type t =
+  Actions.editorGroup = {
+    editorGroupId: int,
+    activeEditorId: option(int),
+    editors: IntMap.t(Editor.t),
+    bufferIdToEditorId: IntMap.t(int),
+    reverseTabOrder: list(int),
+    metrics: EditorMetrics.t,
+  };
 
 let create: unit => t =
   () => {
-    {
-      editorGroupId: EditorGroupId.getUniqueId(),
-      editors: IntMap.empty,
-      bufferIdToEditorId: IntMap.empty,
-      activeEditorId: None,
-      reverseTabOrder: [],
-      metrics: EditorMetrics.create(),
-    };
+    editorGroupId: EditorGroupId.getUniqueId(),
+    editors: IntMap.empty,
+    bufferIdToEditorId: IntMap.empty,
+    activeEditorId: None,
+    reverseTabOrder: [],
+    metrics: EditorMetrics.create(),
   };
 
-let show = (v: t) => {
-  IntMap.fold(
-    (key, v: Editor.t, prev) =>
-      prev
-      ++ " |Editor: "
-      ++ string_of_int(key)
-      ++ " (buffer: "
-      ++ string_of_int(v.bufferId)
-      ++ ")|",
-    v.editors,
-    "",
-  );
-};
+let getEditorById = (id, model) => IntMap.find_opt(id, model.editors);
 
-let getEditorById = (id: int, v: t) => {
-  IntMap.find_opt(id, v.editors);
-};
+let getMetrics = model => model.metrics;
 
-let getActiveEditor = (v: t) => {
-  switch (v.activeEditorId) {
-  | Some(id) =>
-    switch (getEditorById(id, v)) {
-    | Some(v) => Some(v)
-    | None => None
-    }
+let getActiveEditor = model =>
+  switch (model.activeEditorId) {
+  | Some(id) => getEditorById(id, model)
   | None => None
   };
+
+let setActiveEditor = (model, editorId) => {
+  ...model,
+  activeEditorId: Some(editorId),
 };
 
-let setActiveEditor = (v: t, editorId: int) => {
-  {...v, activeEditorId: Some(editorId)};
-};
-
-let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
+let getOrCreateEditorForBuffer = (state, bufferId) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
-  | Some(v) => (state, v)
+  | Some(editor) => (state, editor)
   | None =>
     let newEditor = Editor.create(~bufferId, ());
     let newState = {
@@ -73,15 +60,14 @@ let getOrCreateEditorForBuffer = (state: t, bufferId: int) => {
   };
 };
 
-let rec getIndexOfElement = (l, elem) => {
-  switch (l) {
+// TODO: Just use List.find_opt?
+let rec _getIndexOfElement = elem =>
+  fun
   | [] => (-1)
-  | [hd, ...tl] => hd === elem ? 0 : getIndexOfElement(tl, elem) + 1
-  };
-};
+  | [hd, ...tl] => hd === elem ? 0 : _getIndexOfElement(elem, tl) + 1;
 
 let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
-  switch (getIndexOfElement(reverseTabOrder, editor)) {
+  switch (_getIndexOfElement(editor, reverseTabOrder)) {
   | (-1) => None
   | idx =>
     switch (
@@ -95,22 +81,13 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
-let isEmpty = v => {
-  IntMap.is_empty(v.editors);
-};
-
-let isActiveEditor = (state, editorId) => {
-  switch (state.activeEditorId) {
-  | None => false
-  | Some(v) => v == editorId
-  };
-};
+let isEmpty = model => IntMap.is_empty(model.editors);
 
 let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
-  | Some(v) =>
-    let bufferId = v.bufferId;
+  | Some(editor) =>
+    let bufferId = editor.bufferId;
     let filteredTabList =
       List.filter(t => editorId != t, state.reverseTabOrder);
     let bufferIdToEditorId =
@@ -131,20 +108,12 @@ let removeEditorById = (state, editorId) => {
         }
       };
 
-    let ret: t = {
+    {
       ...state,
       activeEditorId: newActiveEditorId,
       editors,
       bufferIdToEditorId,
       reverseTabOrder: filteredTabList,
     };
-    ret;
-  };
-};
-
-let removeEditorsForBuffer = (state, bufferId) => {
-  switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
-  | None => state
-  | Some(v) => removeEditorById(state, v)
   };
 };

@@ -1,5 +1,5 @@
 /*
- * ExtHostClient.re
+ * ExtHostTransport.re
  *
  * This is a client-side API for integrating with our VSCode extension host API.
  *
@@ -15,7 +15,8 @@ module Protocol = ExtHostProtocol;
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
-  send: (int, Yojson.Safe.t) => unit,
+  send: (MessageType.t, Yojson.Safe.t) => unit,
+  sendRequest: (MessageType.t, Yojson.Safe.t) => Lwt.t(Yojson.Safe.t),
 };
 
 let emptyJsonValue = `Assoc([]);
@@ -43,37 +44,57 @@ let start =
   ];
 
   let process =
-    NodeProcess.start(~args, ~env, setup, setup.extensionHostPath);
+    NodeProcess.start(
+      ~args,
+      ~env,
+      setup,
+      Setup.getNodeExtensionHostPath(setup),
+    );
 
   let lastReqId = ref(0);
   let rpcRef = ref(None);
   let initialized = ref(false);
   let queuedCallbacks = ref([]);
+  let replyIdToResolver: Hashtbl.t(int, Lwt.u(Yojson.Safe.t)) =
+    Hashtbl.create(128);
 
   let queue = f => {
     queuedCallbacks := [f, ...queuedCallbacks^];
   };
 
-  let send = (msgType, msg: Yojson.Safe.t) => {
+  let send = (msgType: MessageType.t, msg: Yojson.Safe.t) => {
     switch (rpcRef^) {
-    | None => Log.error("ExtHostClient: RPC not initialized.")
+    | None =>
+      Log.error("ExtHostClient: RPC not initialized.");
+      (-1);
     | Some(v) =>
       incr(lastReqId);
       let reqId = lastReqId^;
 
       let request =
         `Assoc([
-          ("type", `Int(msgType)),
+          ("type", `Int(msgType |> MessageType.toInt)),
           ("reqId", `Int(reqId)),
           ("payload", msg),
         ]);
 
       Rpc.sendNotification(v, "ext/msg", request);
+      reqId;
     };
   };
 
-  let sendRequest = (msg: Yojson.Safe.t) => {
-    send(ExtHostProtocol.MessageType.requestJsonArgs, msg);
+  let sendNotification = (msg: Yojson.Safe.t) => {
+    let _ = send(MessageType.requestJsonArgs, msg);
+    ();
+  };
+
+  let sendRequest = (msgType, msg: Yojson.Safe.t) => {
+    let reqId = send(msgType, msg);
+    let (promise, resolver) = Lwt.task();
+
+    Hashtbl.add(replyIdToResolver, reqId, resolver);
+
+    promise;
   };
 
   let sendResponse = (msgType, reqId, msg) => {
@@ -108,8 +129,26 @@ let start =
       )
     };
 
+  let handleReply = (reqId: int, payload: Yojson.Safe.t) => {
+    Log.debug(() =>
+      Printf.sprintf(
+        "Reply ID: %d payload: %s\n",
+        reqId,
+        Yojson.Safe.to_string(payload),
+      )
+    );
+    switch (Hashtbl.find_opt(replyIdToResolver, reqId)) {
+    | Some(resolver) =>
+      Lwt.wakeup(resolver, payload);
+      Hashtbl.remove(replyIdToResolver, reqId);
+    | None => Log.error("Unmatched reply: " ++ string_of_int(reqId))
+    };
+  };
+
   let _sendInitData = () => {
-    send(Protocol.MessageType.initData, ExtHostInitData.to_yojson(initData));
+    let _: int =
+      send(MessageType.initData, ExtHostInitData.to_yojson(initData));
+    ();
   };
 
   let _handleInitialization = () => {
@@ -117,9 +156,9 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration() |> sendRequest;
+    Configuration.initializeConfiguration() |> sendNotification;
     Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-    |> sendRequest;
+    |> sendNotification;
 
     initialized := true;
 
@@ -132,7 +171,7 @@ let start =
       Protocol.Notification.(
         switch (parse(json)) {
         | Request(req) => handleMessage(req.reqId, req.payload)
-        | Reply(_) => ()
+        | Reply(reply) => handleReply(reply.reqId, reply.payload)
         | Ack(_) => ()
         | Error => ()
         | Ready => _sendInitData()
@@ -151,6 +190,7 @@ let start =
       ~onNotification,
       ~onRequest,
       ~onClose=onClosed,
+      ~scheduler=Revery.App.runOnMainThread,
       process.stdout,
       process.stdin,
     );
@@ -158,24 +198,27 @@ let start =
   rpcRef := Some(rpc);
 
   let wrappedSend = (msgType, msg) => {
-    let f = () => send(msgType, msg);
+    let f = () => {
+      let _: int = send(msgType, msg);
+      ();
+    };
     initialized^ ? f() : queue(f);
   };
 
-  {process, rpc, send: wrappedSend};
+  {process, rpc, send: wrappedSend, sendRequest};
 };
 
-let pump = (v: t) => Rpc.pump(v.rpc);
+let send = (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t) => {
+  let _ = v.send(msgType, msg);
+  ();
+};
 
-let send =
-    (
-      v: t,
-      ~msgType=ExtHostProtocol.MessageType.requestJsonArgs,
-      msg: Yojson.Safe.t,
-    ) => {
-  v.send(msgType, msg);
+let request =
+    (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t, f) => {
+  let promise = v.sendRequest(msgType, msg);
+  Lwt.map(f, promise);
 };
 
 let close = (v: t) => {
-  v.send(ExtHostProtocol.MessageType.terminate, `Assoc([]));
+  v.send(MessageType.terminate, `Assoc([]));
 };

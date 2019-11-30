@@ -9,12 +9,12 @@ open Revery;
 open Oni_UI;
 
 module Core = Oni_Core;
+module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 
 let cliOptions = Core.Cli.parse();
-
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start();
 } else {
@@ -60,19 +60,29 @@ if (cliOptions.syntaxHighlightService) {
 
     let update = UI.start(w, <Root state=currentState^ />);
 
-    let onStateChanged = v => {
-      currentState := v;
-      let state = currentState^;
-      GlobalContext.set({...GlobalContext.current(), state});
-
-      update(<Root state />);
+    let isDirty = ref(false);
+    let onStateChanged = state => {
+      currentState := state;
+      isDirty := true;
     };
+
+    let _ =
+      Tick.interval(
+        _dt =>
+          if (isDirty^) {
+            let state = currentState^;
+            GlobalContext.set({...GlobalContext.current(), state});
+            update(<Root state />);
+            isDirty := false;
+          },
+        Time.seconds(0),
+      );
 
     let getScaleFactor = () => {
       Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
     };
 
-    let getTime = () => Time.getTime() |> Time.toSeconds;
+    let getTime = () => Time.now() |> Time.toFloatSeconds;
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -130,10 +140,10 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      editorScrollDelta: (~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(deltaY)),
-      editorSetScroll: (~scrollY, ()) =>
-        dispatch(Model.Actions.EditorSetScroll(scrollY)),
+      editorScrollDelta: (~editorId, ~deltaY, ()) =>
+        dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
+      editorSetScroll: (~editorId, ~scrollY, ()) =>
+        dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       setActiveWindow: (splitId, editorGroupId) =>
         dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
@@ -142,11 +152,10 @@ if (cliOptions.syntaxHighlightService) {
     });
 
     dispatch(Model.Actions.Init);
-    dispatch(Model.Actions.KeyBindingsSet(Core.Keybindings.get()));
     runEffects();
 
     List.iter(
-      v => dispatch(Model.Actions.OpenFileByPath(v, None)),
+      v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
       cliOptions.filesToOpen,
     );
   };

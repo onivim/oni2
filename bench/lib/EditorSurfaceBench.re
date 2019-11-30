@@ -5,7 +5,13 @@ open Helpers;
 
 open Revery.UI;
 
-let rootNode = (new node)();
+let rootNode =
+  React.RenderedElement.{
+    node: (new node)(),
+    insertNode: React.insertNode,
+    deleteNode: React.deleteNode,
+    moveNode: React.moveNode,
+  };
 
 let setup = () => ();
 
@@ -15,7 +21,7 @@ let editorSurfaceMinimalState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroupId
+        editorGroup
         editor=simpleEditor
         state=simpleState
         metrics
@@ -30,7 +36,7 @@ let editorSurfaceThousandLineState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroupId
+        editorGroup
         editor=simpleEditor
         state=thousandLineState
         metrics
@@ -45,7 +51,7 @@ let editorSurfaceThousandLineStateWithIndents = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroupId
+        editorGroup
         editor=simpleEditor
         state=thousandLineStateWithIndents
         metrics
@@ -60,7 +66,7 @@ let editorSurfaceHundredThousandLineState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroupId
+        editorGroup
         editor=simpleEditor
         state=hundredThousandLineState
         metrics
@@ -81,7 +87,7 @@ let setupSurfaceThousandLineLayout = () => {
     container,
     <EditorSurface
       isActiveSplit=true
-      editorGroupId
+      editorGroup
       editor=simpleEditor
       state=thousandLineState
       metrics

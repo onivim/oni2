@@ -114,12 +114,10 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
       };
     });
 
-    let bufferUpdateEffect = (bufferUpdate: Oni_Core.Types.BufferUpdate.t) => 
-      Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-        Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient,
-            bufferUpdate
-        );
-      });
+  let bufferUpdateEffect = (bufferUpdate: Oni_Core.Types.BufferUpdate.t) =>
+    Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
+      Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate)
+    });
 
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;

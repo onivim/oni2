@@ -19,7 +19,7 @@ runTest(~name="TickTest", (dispatch, wait, runEffects) => {
     dispatch(Tick({deltaTime: deltaT, totalTime: t^}));
     runEffects();
 
-    wait(~name="Validate no state update", (state: State.t) => {
+    wait(~name="State update", (state: State.t) => {
       oldState := Some(state);
       true;
     });
