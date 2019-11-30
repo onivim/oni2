@@ -277,22 +277,25 @@ let%component make =
 
   let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
 
-  let cursorPixelY =
-    int_of_float(
+  let cursorPixelYF =
       fontHeight
       *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
       -. editor.scrollY
-      +. 0.5,
-    );
+      +. 0.5;
 
-  let cursorPixelX =
-    int_of_float(
+  let cursorPixelXF =
       lineNumberWidth
       +. fontWidth
       *. float_of_int(cursorOffset)
       -. editor.scrollX
-      +. 0.5,
-    );
+      +. 0.5;
+
+  let%hook (animatedCursorX) = Hooks.spring(cursorPixelXF, Spring.Options.create(~stiffness=400., ~damping=24., ~initialValue=0., ()));
+  let%hook (animatedCursorY) = Hooks.spring(cursorPixelYF, Spring.Options.create(~stiffness=400., ~damping=24., ~initialValue=0., ()));
+
+  let cursorPixelX = animatedCursorX |> int_of_float;
+  let cursorPixelY = animatedCursorY |> int_of_float;
+
 
   let cursorStyle =
     Style.[
