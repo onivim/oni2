@@ -33,10 +33,7 @@ module Styles = {
     height(Core.Constants.default.tabHeight),
   ];
 
-  let item = [
-    flexDirection(`Row),
-    alignItems(`Center),
-  ];
+  let item = [flexDirection(`Row), alignItems(`Center)];
 
   let text = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
     fontSize(font.fontSize),
@@ -49,14 +46,7 @@ module Styles = {
   ];
 };
 
-let setiIcon =
-    (
-      ~icon,
-      ~fontSize as size,
-      ~bg,
-      ~fg,
-      (),
-    ) => {
+let setiIcon = (~icon, ~fontSize as size, ~bg, ~fg, ()) => {
   <Text
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
@@ -72,12 +62,20 @@ let setiIcon =
   />;
 };
 
-let nodeView = (~font: Core.Types.UiFont.t, ~fg, ~bg, ~state: State.t, ~node: UiTree.t, ()) => {
+let nodeView =
+    (
+      ~font: Core.Types.UiFont.t,
+      ~fg,
+      ~bg,
+      ~state: State.t,
+      ~node: UiTree.t,
+      (),
+    ) => {
   let icon = () =>
     switch (node.data.icon) {
     | Some(icon) =>
       <setiIcon
-        fontSize=font.fontSize
+        fontSize={font.fontSize}
         fg={icon.fontColor}
         icon={icon.fontCharacter}
         bg
@@ -93,9 +91,9 @@ let nodeView = (~font: Core.Types.UiFont.t, ~fg, ~bg, ~state: State.t, ~node: Ui
         color=fg
         icon={node.isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
         backgroundColor=bg
-      />
+      />;
     } else {
-      <icon />
+      <icon />;
     };
 
   <View style=Styles.item>

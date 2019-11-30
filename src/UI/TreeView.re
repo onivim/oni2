@@ -6,8 +6,8 @@ open Oni_Model.UiTree;
 
 module Constants = {
   let arrowSize = 15;
-  let indentSize = 12.
-}
+  let indentSize = 12.;
+};
 
 module Styles = {
   open Style;
@@ -40,7 +40,12 @@ let rec nodeView = (~renderContent, ~onClick, ~node, ()) => {
         backgroundColor=Colors.transparentWhite
       />;
     } else {
-      <View style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)] />
+      <View
+        style=Style.[
+          width(Constants.arrowSize),
+          height(Constants.arrowSize),
+        ]
+      />;
     };
 
   <View>

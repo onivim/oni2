@@ -20,14 +20,9 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode = (~depth, ~path, ~displayName, ~fileIcon as icon, ~isDirectory) => {
-  UiTree.{
-    path,
-    depth,
-    displayName,
-    isDirectory,
-    icon
-  };
+let createFsNode =
+    (~depth, ~path, ~displayName, ~fileIcon as icon, ~isDirectory) => {
+  UiTree.{path, depth, displayName, isDirectory, icon};
 };
 
 let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
