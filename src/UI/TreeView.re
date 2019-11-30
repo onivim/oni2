@@ -6,6 +6,7 @@ open Oni_Model.UiTree;
 
 module Constants = {
   let arrowSize = 15;
+  let indentSize = 12.
 }
 
 module Styles = {
@@ -16,7 +17,7 @@ module Styles = {
     flexDirection(`Row),
     marginVertical(3),
   ];
-  let children = [transform(Transform.[TranslateX(10.)])];
+  let children = [transform(Transform.[TranslateX(Constants.indentSize)])];
 };
 
 let rec nodeView = (~renderContent, ~onClick, ~node, ()) => {
