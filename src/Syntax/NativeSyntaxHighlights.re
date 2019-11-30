@@ -7,7 +7,7 @@ module ColorizedToken = Core.Types.ColorizedToken;
 module Range = Core.Range;
 
 module type SyntaxHighlighter = {
-  type t; 
+  type t;
 
   let hasPendingWork: t => bool;
   let doWork: t => t;
@@ -22,11 +22,12 @@ module type SyntaxHighlighter = {
 
 type highlighter('a) = (module SyntaxHighlighter with type t = 'a);
 
-type t  =
-| Highlighter({
-    highlighter: highlighter('a),
-    state: 'a
-  }) : t;
+type t =
+  | Highlighter({
+      highlighter: highlighter('a),
+      state: 'a,
+    })
+    : t;
 
 let _hasTreeSitterScope = (configuration, scope: string) => {
   let treeSitterEnabled =
@@ -54,30 +55,21 @@ let doWork = hl => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.doWork(state);
-  Highlighter({
-    highlighter: (module SyntaxHighlighter),
-    state: newState,
-  })
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let updateVisibleRanges = (ranges, hl) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.updateVisibleRanges(ranges, state);
-  Highlighter({
-    highlighter: (module SyntaxHighlighter),
-    state: newState,
-  });
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let updateTheme = (theme, hl) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.updateTheme(theme, state);
-  Highlighter({
-    highlighter: (module SyntaxHighlighter),
-    state: newState,
-  });
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let create =
@@ -99,8 +91,8 @@ let create =
         );
       Highlighter({
         highlighter: (module TreeSitterSyntaxHighlights),
-        state: ts
-      })
+        state: ts,
+      });
     }
     : {
       let tm =
@@ -112,7 +104,7 @@ let create =
         );
       Highlighter({
         highlighter: (module TextMateSyntaxHighlights),
-        state: tm
+        state: tm,
       });
     };
 };
@@ -122,10 +114,7 @@ let update =
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);
-  Highlighter({
-    highlighter: (module SyntaxHighlighter),
-    state: newState,
-  });
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let getTokensForLine = (hl: t, line: int) => {
