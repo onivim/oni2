@@ -8,14 +8,14 @@ open Oni_Core;
 open Oni_Core.Types;
 
 type highlightType =
-| Insert
-| Delete
-| Yank;
+  | Insert
+  | Delete
+  | Yank;
 
 type highlight = {
- range: Range.t,
- highlightType: highlightType,
-}
+  range: Range.t,
+  highlightType,
+};
 
 type t;
 

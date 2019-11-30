@@ -110,13 +110,20 @@ let start =
     });
 
   let _ =
-    Vim.onYank(({
-    yankType,
-    startLine,
-    startColumn,
-    endLine,
-    endColumn,
-    lines, register, operator, _}) => {
+    Vim.onYank(
+      (
+        {
+          yankType,
+          startLine,
+          startColumn,
+          endLine,
+          endColumn,
+          lines,
+          register,
+          operator,
+          _,
+        },
+      ) => {
       let state = getState();
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
@@ -126,29 +133,31 @@ let start =
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
 
-      let mode = switch(yankType) {
-      | Vim.Yank.Block => Vim.Types.Block
-      | Vim.Yank.Line => Vim.Types.Line
-      | Vim.Yank.Char => Vim.Types.Character
+      let mode =
+        switch (yankType) {
+        | Vim.Yank.Block => Vim.Types.Block
+        | Vim.Yank.Line => Vim.Types.Line
+        | Vim.Yank.Char => Vim.Types.Character
+        };
+
+      let visualRange =
+        Core.VisualRange.create(
+          ~startLine,
+          ~startColumn,
+          ~endLine,
+          ~endColumn,
+          ~mode,
+          (),
+        );
+
+      let reportYank = buffer => {
+        let ranges = Model.Selection.getRanges(visualRange, buffer);
+        dispatch(
+          Model.Actions.BufferYank(id, operator, ranges, Revery.Time.now()),
+        );
       };
 
-      let visualRange = Core.VisualRange.create(
-        ~startLine,
-        ~startColumn,
-        ~endLine,
-        ~endColumn,
-        ~mode,
-        (),
-      );
-
-      let reportYank = (buffer) => {
-        let ranges = Model.Selection.getRanges(visualRange, buffer); 
-        dispatch(Model.Actions.BufferYank(id, operator, ranges, Revery.Time.now()));
-      };
-      
-      let () = state
-      |> Selectors.getActiveBuffer
-      |> Option.iter(reportYank);
+      let () = state |> Selectors.getActiveBuffer |> Option.iter(reportYank);
 
       let allYanks = yankConfig.yank;
       let allDeletes = yankConfig.delete;

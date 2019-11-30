@@ -869,23 +869,23 @@ let%component make =
           };
           let time = Time.now();
 
-          switch(activeBuffer) {
+          switch (activeBuffer) {
           | None => ()
-          | Some(buf) => {
+          | Some(buf) =>
             let highlights = Buffer.getHighlights(time, buf);
 
-            let () = highlights
-            |> List.map((h: BufferHighlights.highlight) => h.range)
-            |> List.iter((range) => {
-                  renderRange(
-                    ~offset=0.0,
-                    ~color=Color.rgba(1.0, 0.0, 0.0, 0.25),
-                    range
-                    )
-            });
-
-          }
-          }
+            let () =
+              highlights
+              |> List.map((h: BufferHighlights.highlight) => h.range)
+              |> List.iter(range => {
+                   renderRange(
+                     ~offset=0.0,
+                     ~color=Color.rgba(1.0, 0.0, 0.0, 0.25),
+                     range,
+                   )
+                 });
+            ();
+          };
         }}
       />
       <Opacity opacity=cursorOpacity> <View style=cursorStyle /> </Opacity>

@@ -86,7 +86,8 @@ let disableSyntaxHighlighting = (buffer: t) => {
   syntaxHighlightingEnabled: false,
 };
 
-let getHighlights = (time, buffer: t) => BufferHighlights.getActive(time, buffer.highlights);
+let getHighlights = (time, buffer: t) =>
+  BufferHighlights.getActive(time, buffer.highlights);
 
 let addHighlights = (time, highlights, buffer) => {
   ...buffer,
