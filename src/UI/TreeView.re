@@ -4,6 +4,10 @@ open Revery.UI.Components;
 
 open Oni_Model.UiTree;
 
+module Constants = {
+  let arrowSize = 15;
+}
+
 module Styles = {
   open Style;
 
@@ -29,14 +33,13 @@ let rec nodeView = (~renderContent, ~onClick, ~node, ()) => {
   let arrow = () =>
     if (node.data.isDirectory) {
       <FontIcon
-        fontFamily="FontAwesome5FreeSolid.otf"
-        fontSize=15
+        fontSize=Constants.arrowSize
         color=Colors.white
         icon={node.isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
         backgroundColor=Colors.transparentWhite
       />;
     } else {
-      React.empty;
+      <View style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)] />
     };
 
   <View>

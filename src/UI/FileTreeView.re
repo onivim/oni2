@@ -67,6 +67,7 @@ let setiIcon =
       width(int_of_float(float(size) *. 1.5)),
       height(int_of_float(float(size) *. 1.75)),
       textWrap(TextWrapping.NoWrap),
+      marginLeft(-4),
     ]
   />;
 };
