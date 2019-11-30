@@ -113,7 +113,7 @@ let make = (~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) => {
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
     <ScrollView style=Styles.treeContainer>
-      <TreeView tree onClick=onNodeClick>
+      <TreeView model=(module UiTree.Model) tree onClick=onNodeClick>
         ...{node => <nodeView font bg fg state node />}
       </TreeView>
     </ScrollView>

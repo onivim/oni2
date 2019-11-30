@@ -32,3 +32,14 @@ let updateNode = (nodeId, tree, ~updater=toggleNodeStatus, ()) => {
 
   update(tree);
 };
+
+module Model = {
+  type nonrec t = t;
+  let children = node => `Loaded(node.children);
+  let kind = node =>
+    switch (node.data.isDirectory, node.isOpen) {
+    | (true, true) => `Node(`Open)
+    | (true, false) => `Node(`Closed)
+    | (false, _) => `Leaf
+    };
+};
