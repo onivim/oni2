@@ -20,11 +20,6 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode =
-    (~depth, ~path, ~displayName, ~fileIcon as icon, ~isDirectory) => {
-  UiTree.{path, depth, displayName, isDirectory, icon};
-};
-
 let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
 
 let printUnixError = (error, fn, arg) =>
@@ -48,13 +43,13 @@ let handleError = (~defaultValue, func) => {
 };
 
 let sortByLoweredDisplayName = (a: UiTree.t, b: UiTree.t) => {
-  switch (a.data.isDirectory, b.data.isDirectory) {
-  | (true, false) => (-1)
-  | (false, true) => 1
+  switch (a.kind, b.kind) {
+  | (Directory(_), File) => (-1)
+  | (File, Directory(_)) => 1
   | _ =>
     compare(
-      a.data.displayName |> String.lowercase_ascii,
-      b.data.displayName |> String.lowercase_ascii,
+      a.displayName |> String.lowercase_ascii,
+      b.displayName |> String.lowercase_ascii,
     )
   };
 };
@@ -86,33 +81,43 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
               let path = Filename.concat(cwd, file);
               let isDirectory = isDir(path);
               let nextDepth = depth + 1;
-              let parentId = ExplorerId.getUniqueId();
+              let id = ExplorerId.getUniqueId();
 
               /**
                  If resolving children for a particular directory fails
                  log the error but carry on processing other directories
                */
-              let%lwt children =
-                if (isDirectory && nextDepth < maxDepth) {
-                  attempt(() =>
-                    getDirContent(~depth=nextDepth, path, getIcon)
-                  )
-                  |> Lwt.map(List.sort(sortByLoweredDisplayName));
+              let%lwt kind =
+                if (isDirectory) {
+                  let%lwt children =
+                    if (nextDepth < maxDepth) {
+                      let%lwt children =
+                        attempt(() =>
+                          getDirContent(~depth=nextDepth, path, getIcon)
+                        );
+
+                      children
+                      |> List.sort(sortByLoweredDisplayName)
+                      |> (children => `Loaded(children) |> Lwt.return);
+                    } else {
+                      Lwt.return(`Loading);
+                    };
+
+                  Lwt.return(UiTree.Directory({isOpen: false, children}));
                 } else {
-                  Lwt.return([]);
+                  Lwt.return(UiTree.File);
                 };
 
-              let parent =
-                createFsNode(
-                  ~path,
-                  ~isDirectory,
-                  ~depth=nextDepth,
-                  ~displayName=file,
-                  ~fileIcon=getIcon(path),
-                );
-
-              UiTree.{id: parentId, data: parent, isOpen: false, children}
-              |> Lwt.return;
+              Lwt.return(
+                UiTree.{
+                  id,
+                  path,
+                  displayName: file,
+                  depth: nextDepth,
+                  icon: getIcon(path),
+                  kind,
+                },
+              );
             },
             files,
           )
@@ -124,7 +129,7 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
-  let parentId = ExplorerId.getUniqueId();
+  let id = ExplorerId.getUniqueId();
   let getIcon = getFileIcon(languageInfo, iconTheme);
   let maxDepth = Constants.default.maximumExplorerDepth;
   let children =
@@ -132,19 +137,17 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
-  let parent =
-    createFsNode(
-      ~depth=0,
-      ~path=cwd,
-      ~displayName=Filename.basename(cwd),
-      ~isDirectory=true,
-      ~fileIcon=getIcon(cwd),
-    );
-
-  UiTree.{id: parentId, data: parent, isOpen: true, children};
+  UiTree.{
+    id,
+    path: cwd,
+    displayName: Filename.basename(cwd),
+    icon: getIcon(cwd),
+    depth: 0,
+    kind: Directory({isOpen: true, children: `Loaded(children)}),
+  };
 };
 
-let getNodePath = (node: UiTree.t) => node.data.path;
+let getNodePath = (node: UiTree.t) => node.path;
 
 let getNodeId = (node: UiTree.t) => node.id;
 

@@ -20,7 +20,7 @@ let start = () => {
   let updateFolderEffect =
       (~folder, ~nodeId, ~languageInfo, ~iconTheme, ~ignored, ~tree) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.update", dispatch => {
-      let updatedFolder =
+      let updater = _ =>
         FileExplorer.getDirectoryTree(
           folder,
           languageInfo,
@@ -28,9 +28,7 @@ let start = () => {
           ignored,
         );
 
-      let updater = _ => updatedFolder;
-
-      let tree = UiTree.updateNode(nodeId, tree, ~updater, ());
+      let tree = UiTree.updateNode(nodeId, tree, ~updater);
       dispatch(Actions.SetExplorerTree(tree));
     });
   };
@@ -62,25 +60,14 @@ let start = () => {
 
     | ExplorerNodeClicked(node) =>
       switch (node) {
-      | {data: {isDirectory: false, path, _}, _} =>
-        /* Only open files not directories */
-        (state, openFileByPathEffect(path))
+      | {kind: File, path, _} => (state, openFileByPathEffect(path))
 
-      /*
-       * If the depth of the clicked node is at the maximum depth its children
-       * will have no content so we call the update action which will populate
-       * the child node and attach it to the tree
-
-       * NOTE: that we match specifically on a Node with an empty list of children
-       * so this action is not recalled if the Node has already been populated
-       */
-      | {data: {isDirectory: true, depth, _}, children: [], _}
-          when depth == Constants.default.maximumExplorerDepth => (
+      | {kind: Directory({children: `Loading}), _} => (
           state,
           switch (state.fileExplorer.directory) {
           | Some(tree) =>
             updateFolderEffect(
-              ~folder=node.data.path,
+              ~folder=node.path,
               ~nodeId=node.id,
               ~languageInfo=state.languageInfo,
               ~iconTheme=state.iconTheme,
@@ -95,10 +82,10 @@ let start = () => {
           },
         )
 
-      | {id, data: {isDirectory: true, _}, _} =>
+      | _ =>
         switch (state.fileExplorer.directory) {
         | Some(tree) =>
-          let tree = UiTree.updateNode(id, tree, ());
+          let tree = UiTree.toggleOpenState(node.id, tree);
           (state, setExplorerTreeEffect(tree));
         | None => (state, Isolinear.Effect.none)
         }

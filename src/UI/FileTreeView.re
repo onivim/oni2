@@ -72,7 +72,7 @@ let nodeView =
       (),
     ) => {
   let icon = () =>
-    switch (node.data.icon) {
+    switch (node.icon) {
     | Some(icon) =>
       <setiIcon
         fontSize={font.fontSize}
@@ -86,19 +86,19 @@ let nodeView =
   // TODO: Since the icon theme does not have a folder icon (yet), verride it
   // here in order to use FontAwesome. Remove when a better icon theme has been found.
   let icon = () =>
-    if (node.data.isDirectory) {
+    switch (node.kind) {
+    | Directory({isOpen, _}) =>
       <FontIcon
         color=fg
-        icon={node.isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
+        icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
         backgroundColor=bg
-      />;
-    } else {
-      <icon />;
+      />
+    | _ => <icon />
     };
 
   <View style=Styles.item>
     <icon />
-    <Text text={node.data.displayName} style={Styles.text(~fg, ~bg, ~font)} />
+    <Text text={node.displayName} style={Styles.text(~fg, ~bg, ~font)} />
   </View>;
 };
 
