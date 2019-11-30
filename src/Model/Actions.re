@@ -19,6 +19,7 @@ type t =
   | BufferSaved(Vim.BufferMetadata.t)
   | BufferSetIndentation(int, IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | BufferYank(int, Vim.Yank.yankOperator, VisualRange.t)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension

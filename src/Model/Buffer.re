@@ -7,6 +7,8 @@
 open Oni_Core;
 open Oni_Core.Types;
 
+type highlight = VisualRange.t;
+
 type t = {
   id: int,
   filePath: option(string),
@@ -16,6 +18,7 @@ type t = {
   lines: array(string),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
+  highlights: list(highlight),
 };
 
 let show = _ => "TODO";
@@ -29,6 +32,7 @@ let ofLines = (lines: array(string)) => {
   lines,
   indentation: None,
   syntaxHighlightingEnabled: true,
+  highlights: [],
 };
 
 let empty = ofLines([||]);
@@ -42,6 +46,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
+  highlights: [],
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
@@ -77,6 +82,13 @@ let isSyntaxHighlightingEnabled = (buffer: t) =>
 let disableSyntaxHighlighting = (buffer: t) => {
   ...buffer,
   syntaxHighlightingEnabled: false,
+};
+
+let getHighlights = (buffer: t) => buffer.highlights;
+
+let addHighlight = (highlight, buffer) => {
+  ...buffer,
+  highlights: [highlight, ...buffer.highlights],
 };
 
 let getUri = (buffer: t) => {

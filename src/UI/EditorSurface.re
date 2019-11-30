@@ -851,6 +851,25 @@ let%component make =
               )
             };
           };
+
+          switch(activeBuffer) {
+          | None => ()
+          | Some(buf) => {
+            let highlights = Buffer.getHighlights(buf);
+
+            let () = highlights
+            |> List.map((h) => Selection.getRanges(h, buf))
+            |> List.flatten
+            |> List.iter((range) => {
+                  renderRange(
+                    ~offset=0.0,
+                    ~color=Color.rgba(1.0, 0.0, 0.0, 0.25),
+                    range
+                    )
+            });
+
+          }
+          }
         }}
       />
       <Opacity opacity=cursorOpacity> <View style=cursorStyle /> </Opacity>

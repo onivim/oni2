@@ -107,12 +107,39 @@ let start =
     });
 
   let _ =
-    Vim.onYank(({lines, register, operator, _}) => {
+    Vim.onYank(({
+    yankType,
+    startLine,
+    startColumn,
+    endLine,
+    endColumn,
+    lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
         Model.Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard
         );
+
+      let buffer = Vim.Buffer.getCurrent();
+      let id = Vim.Buffer.getId(buffer);
+
+      let mode = switch(yankType) {
+      | Vim.Yank.Block => Vim.Types.Block
+      | Vim.Yank.Line => Vim.Types.Line
+      | Vim.Yank.Char => Vim.Types.Character
+      };
+
+      let visualRange = Core.VisualRange.create(
+        ~startLine,
+        ~startColumn,
+        ~endLine,
+        ~endColumn,
+        ~mode,
+        (),
+      );
+
+      dispatch(Model.Actions.BufferYank(id, operator, visualRange));
+
       let allYanks = yankConfig.yank;
       let allDeletes = yankConfig.delete;
       let isClipboardRegister = register == '*' || register == '+';

@@ -67,6 +67,9 @@ let disableSyntaxHighlighting =
 let setModified = modified =>
   ofBufferOpt(buffer => Buffer.setModified(modified, buffer));
 
+let addHighlight = highlight =>
+  ofBufferOpt(buffer => Buffer.addHighlight(highlight, buffer));
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
@@ -91,6 +94,8 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
+  | BufferYank(id, _, highlight) => 
+    IntMap.update(id, addHighlight(highlight), state)
   | BufferSaved(metadata) =>
     IntMap.update(metadata.id, setModified(metadata.modified), state)
   | _ => state

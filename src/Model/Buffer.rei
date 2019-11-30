@@ -9,6 +9,8 @@ open Oni_Core.Types;
 
 type t;
 
+type highlight = VisualRange.t;
+
 let show: t => string;
 
 let ofLines: array(string) => t;
@@ -21,6 +23,9 @@ let setFileType: (option(string), t) => t;
 let getLine: (t, int) => string;
 let getLineLength: (t, int) => int;
 let getLines: t => array(string);
+let getHighlights: t => list(highlight);
+
+let addHighlight: (highlight, t) => t;
 
 let getVersion: t => int;
 let setVersion: (int, t) => t;
