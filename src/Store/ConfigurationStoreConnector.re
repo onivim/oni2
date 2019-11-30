@@ -126,7 +126,7 @@ let start =
     Isolinear.Effect.createWithDispatch(
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
-      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None))
+      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
       | Error(e) => Log.error(e)
       }
     );

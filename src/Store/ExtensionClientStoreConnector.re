@@ -7,6 +7,7 @@
  */
 
 module Core = Oni_Core;
+open Oni_Core.Utility;
 module Model = Oni_Model;
 
 open Oni_Extensions;
@@ -17,12 +18,6 @@ let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let onExtHostClosed = () => Core.Log.info("ext host closed");
-
-  // Keep track of the available language features
-  // TODO: Keep track of this in the application state / store,
-  // if needed more globally?
-
-  let languageFeatures = ref(LanguageFeatures.create());
 
   let extensionInfo =
     extensions
@@ -72,8 +67,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Core.Log.info(
       "Registered suggest provider with ID: " ++ string_of_int(sp.id),
     );
-    languageFeatures :=
-      LanguageFeatures.registerSuggestProvider(sp, languageFeatures^);
+    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
   };
 
   let onOutput = msg => {
@@ -125,10 +119,21 @@ let start = (extensions, setup: Core.Setup.t) => {
     | _ => None
     };
 
-  let pumpEffect =
-    Isolinear.Effect.create(~name="exthost.pump", () =>
-      ExtHostClient.pump(extHostClient)
-    );
+  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
+
+  let activateFileType = (fileType: option(string)) =>
+    fileType
+    |> Option.iter(ft =>
+         Hashtbl.find_opt(activatedFileTypes, ft)
+         // If no entry, we haven't activated yet
+         |> Option.iter_none(() => {
+              ExtHostClient.activateByEvent(
+                "onLanguage:" ++ ft,
+                extHostClient,
+              );
+              Hashtbl.add(activatedFileTypes, ft, true);
+            })
+       );
 
   let sendBufferEnterEffect =
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
@@ -136,7 +141,8 @@ let start = (extensions, setup: Core.Setup.t) => {
       switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
       | Some((v: Protocol.ModelAddedDelta.t)) =>
-        ExtHostClient.addDocument(v, extHostClient)
+        activateFileType(fileType);
+        ExtHostClient.addDocument(v, extHostClient);
       }
     );
 
@@ -186,12 +192,16 @@ let start = (extensions, setup: Core.Setup.t) => {
     List.map(suggestionItemToCompletionItem, suggestions);
 
   let getAndDispatchCompletions =
-      (~fileType, ~uri, ~completionMeet, ~position, ()) => {
+      (~languageFeatures, ~fileType, ~uri, ~completionMeet, ~position, ()) => {
     let providers =
-      LanguageFeatures.getSuggestProviders(fileType, languageFeatures^);
+      LanguageFeatures.getSuggestProviders(fileType, languageFeatures);
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+         Core.Log.info(
+           "[Exthost] Completions - getting completions for suggest provider: "
+           ++ string_of_int(provider.id),
+         );
          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
            ExtHostClient.getCompletions(
              provider.id,
@@ -228,10 +238,25 @@ let start = (extensions, setup: Core.Setup.t) => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
         (buf, fileType) => {
+          open Model.Actions;
+          open Oni_Core.Types;
           let uri = Model.Buffer.getUri(buf);
           let position =
-            Protocol.OneBasedPosition.ofInt1(~lineNumber=1, ~column=2, ());
+            Protocol.OneBasedPosition.ofInt1(
+              ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
+              ~column=completionMeet.completionMeetColumn |> Index.toInt1,
+              (),
+            );
+          Core.Log.info(
+            Printf.sprintf(
+              "[Exthost] Completions - requesting at %s for %s",
+              Core.Uri.toString(uri),
+              Protocol.OneBasedPosition.show(position),
+            ),
+          );
+          let languageFeatures = state.languageFeatures;
           getAndDispatchCompletions(
+            ~languageFeatures,
             ~fileType,
             ~uri,
             ~completionMeet,
@@ -277,7 +302,6 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
-    | Model.Actions.Tick(_) => (state, pumpEffect)
     | _ => (state, Isolinear.Effect.none)
     };
 

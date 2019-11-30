@@ -1,4 +1,3 @@
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
@@ -14,8 +13,14 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   GlobalContext.current().dispatch(action);
 };
 
+let toggleSearch = ({searchPane, _}: State.t, _) => {
+  let action = searchPane == None ? Actions.SearchShow : Actions.SearchHide;
+  GlobalContext.current().dispatch(action);
+};
+
 let make = (~state: State.t, ()) => {
-  let bg = state.theme.editorLineNumberBackground;
+  let bg = state.theme.activityBarBackground;
+  let fg = state.theme.activityBarForeground;
 
   <View
     style=Style.[
@@ -26,7 +31,10 @@ let make = (~state: State.t, ()) => {
       alignItems(`Center),
     ]>
     <Clickable onClick={toggleExplorer(state)} style=button>
-      <FontIcon backgroundColor=bg color=Colors.white icon=FontAwesome.file />
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
+    </Clickable>
+    <Clickable onClick={toggleSearch(state)} style=button>
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
     </Clickable>
   </View>;
 };

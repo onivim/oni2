@@ -14,11 +14,7 @@ let editorViewStyle = (background, foreground) =>
   Style.[
     backgroundColor(background),
     color(foreground),
-    position(`Absolute),
-    top(0),
-    left(0),
-    right(0),
-    bottom(0),
+    flexGrow(1),
     flexDirection(`Column),
   ];
 
@@ -28,11 +24,15 @@ let make = (~state: State.t, ()) => {
 
   if (state.zenMode) {
     <View style>
-      <EditorGroupView
-        state
-        windowId={state.windowManager.activeWindowId}
-        editorGroupId={state.editorGroups.activeId}
-      />
+      {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+       | Some(editorGroup) =>
+         <EditorGroupView
+           state
+           windowId={state.windowManager.activeWindowId}
+           editorGroup
+         />
+       | None => React.empty
+       }}
     </View>;
   } else {
     <View style> <EditorLayoutView state /> </View>;

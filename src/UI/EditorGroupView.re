@@ -13,6 +13,8 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
+module List = Utility.List;
+
 let noop = () => ();
 
 let editorViewStyle = (background, foreground) =>
@@ -57,21 +59,16 @@ let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
     };
   };
 
-  Utility.filterMap(f, editorGroup.reverseTabOrder) |> List.rev;
+  List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make = (~state: State.t, ~windowId: int, ~editorGroupId: int, ()) => {
+let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
   let theme = state.theme;
   let mode = state.mode;
 
-  let editorGroup = Selectors.getEditorGroupById(state, editorGroupId);
   let style = editorViewStyle(theme.background, theme.foreground);
 
-  let isActive =
-    switch (editorGroup) {
-    | None => false
-    | Some(v) => v.editorGroupId == state.editorGroups.activeId
-    };
+  let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
   let overlayStyle =
     Style.[
@@ -81,7 +78,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroupId: int, ()) => {
       right(0),
       bottom(0),
       pointerEvents(`Ignore),
-      backgroundColor(Revery.Color.rgba(0.0, 0., 0., isActive ? 0.0 : 0.1)),
+      backgroundColor(Revery.Color.rgba(0., 0., 0., isActive ? 0. : 0.1)),
     ];
 
   let absoluteStyle =
@@ -97,47 +94,48 @@ let make = (~state: State.t, ~windowId: int, ~editorGroupId: int, ()) => {
       );
     };
 
-  let children =
-    switch (editorGroup) {
-    | None => React.empty
-    | Some((v: EditorGroup.t)) =>
-      let editor = Some(v) |> Selectors.getActiveEditor;
-      let tabs = toUiTabs(v, state.buffers);
-      let uiFont = state.uiFont;
+  let children = {
+    let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
+    let tabs = toUiTabs(editorGroup, state.buffers);
+    let uiFont = state.uiFont;
 
-      let metrics = v.metrics;
+    let metrics = editorGroup.metrics;
 
-      let editorView =
-        switch (editor) {
-        | Some(v) =>
-          <EditorSurface
-            isActiveSplit=isActive
-            editorGroupId
-            metrics
-            editor=v
-            state
-          />
-        | None => React.empty
-        };
-      switch (showTabs) {
-      | false => editorView
-      | true =>
-        React.listToElement([
-          <Tabs
-            active=isActive
-            activeEditorId={v.activeEditorId}
-            theme
-            tabs
-            mode
-            uiFont
-          />,
-          editorView,
-        ])
+    let editorView =
+      switch (maybeEditor) {
+      | Some(editor) =>
+        <EditorSurface
+          isActiveSplit=isActive
+          editorGroup
+          metrics
+          editor
+          state
+        />
+      | None => React.empty
       };
+
+    switch (showTabs) {
+    | false => editorView
+    | true =>
+      React.listToElement([
+        <Tabs
+          active=isActive
+          activeEditorId={editorGroup.activeEditorId}
+          theme
+          tabs
+          mode
+          uiFont
+        />,
+        editorView,
+      ])
     };
+  };
 
   let onMouseDown = _ => {
-    GlobalContext.current().setActiveWindow(windowId, editorGroupId);
+    GlobalContext.current().setActiveWindow(
+      windowId,
+      editorGroup.editorGroupId,
+    );
   };
 
   <View onMouseDown style>

@@ -7,6 +7,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Core.Utility;
 
 module MessageType = {
   let initialized = 0;
@@ -169,14 +170,21 @@ module ModelContentChange = {
   };
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
-    let isInsert =
-      Index.toZeroBasedInt(bu.endLine) == Index.toZeroBasedInt(bu.startLine);
+    let newLines = Array.length(bu.lines);
+    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
 
-    let startLine = Index.toZeroBasedInt(bu.startLine);
-    let endLine = Index.toZeroBasedInt(bu.endLine) - 1;
+    let isDelete = newLines == 0;
+
+    let startLine = Index.toInt0(bu.startLine);
+    let endLine = Index.toInt0(bu.endLine);
+
+    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
 
     let endLine = max(endLine, startLine);
-    let endCharacter = isInsert ? 0 : 2147483647;
+    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
+    //    let endCharacter = 0;
+
+    let endLine = isDelete ? endLine + 1 : endLine;
 
     let range =
       Range.create(
@@ -280,8 +288,9 @@ module DiagnosticsCollection = {
     switch (json) {
     | `List([`String(name), `List(perFileDiagnostics)]) =>
       let perFileDiagnostics =
-        List.map(Diagnostics.of_yojson, perFileDiagnostics)
-        |> Utility.filterMap(Utility.resultToOption);
+        perFileDiagnostics
+        |> List.map(Diagnostics.of_yojson)
+        |> List.filter_map(Utility.resultToOption);
       Some({name, perFileDiagnostics});
     | _ => None
     };
@@ -299,12 +308,6 @@ module SuggestionItem = {
 module Suggestions = {
   [@deriving yojson({strict: false})]
   type t = list(SuggestionItem.t);
-};
-
-module CancellationToken = {
-  type t = Yojson.Safe.t;
-
-  let none = `Null;
 };
 
 module LF = LanguageFeatures;
@@ -354,14 +357,12 @@ module IncomingNotifications = {
 
     let parseRegisterSuggestSupport = json => {
       switch (json) {
-      | [`Int(id), _documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
         // TODO: Finish parsing
-        Some(
-          LF.SuggestProvider.create(
-            ~selector=DocumentSelector.create("oni-dev"),
-            id,
-          ),
-        )
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
       | _ => None
       };
     };
@@ -470,7 +471,6 @@ module OutgoingNotifications = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           `Assoc([]),
-          CancellationToken.none,
         ]),
       );
   };

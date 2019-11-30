@@ -33,6 +33,7 @@ let start =
       ~onDiagnosticsChangeMany=defaultOneArgCallback,
       ~onDiagnosticsClear=defaultOneArgCallback,
       ~onDidActivateExtension=defaultOneArgCallback,
+      ~onExtensionActivationFailed=defaultOneArgCallback,
       ~onTelemetry=defaultOneArgCallback,
       ~onOutput=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
@@ -70,6 +71,14 @@ let start =
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
+    | (
+        "MainThreadExtensionService",
+        "$onExtensionActivationFailed",
+        [v, ..._],
+      ) =>
+      let id = Protocol.PackedString.parse(v);
+      onExtensionActivationFailed(id);
+      Ok(None);
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
       Ok(None);
@@ -77,7 +86,14 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (s, m, _a) =>
-      Log.error("Unhandled message - " ++ s ++ ":" ++ m ++ " | ");
+      Log.error(
+        Printf.sprintf(
+          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
+          s,
+          m,
+          Yojson.Safe.to_string(`List(_a)),
+        ),
+      );
       Ok(None);
     };
   };
@@ -133,6 +149,7 @@ let getCompletions = (id, uri, position, v) => {
 
   let promise =
     ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
       v.transport,
       Out.LanguageFeatures.provideCompletionItems(id, uri, position),
       f,
@@ -144,7 +161,5 @@ let send = (client, v) => {
   let _ = ExtHostTransport.send(client.transport, v);
   ();
 };
-
-let pump = (v: t) => ExtHostTransport.pump(v.transport);
 
 let close = (v: t) => ExtHostTransport.close(v.transport);

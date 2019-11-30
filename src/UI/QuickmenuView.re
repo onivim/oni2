@@ -19,17 +19,14 @@ module Styles = {
     Style.[
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      width(Constants.menuWidth - 10),
       color(Colors.white),
       fontFamily(font),
+      fontSize(14),
     ];
 
-  let menuItem =
-    Style.[
-      fontSize(14),
-      width(Constants.menuWidth - 50),
-      cursor(Revery.MouseCursors.pointer),
-    ];
+  let dropdown = Style.[height(Constants.menuHeight), overflow(`Hidden)];
+
+  let menuItem = Style.[fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
   let label =
       (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
@@ -46,8 +43,7 @@ module Styles = {
       textWrap(TextWrapping.NoWrap),
     ];
 
-  let progressBarTrack =
-    Style.[height(2), width(Constants.menuWidth), overflow(`Hidden)];
+  let progressBarTrack = Style.[height(2), overflow(`Hidden)];
 
   let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
     Style.[
@@ -136,40 +132,13 @@ let make =
     let item = items[index];
     let isFocused = Some(index) == focused;
 
-    let labelView = {
-      let style = Styles.label(~font, ~theme, ~isFocused);
-
-      let highlighted = {
-        let text = Quickmenu.getLabel(item);
-        let textLength = String.length(text);
-
-        // Assumes ranges are sorted low to high
-        let rec highlighter = last =>
-          fun
-          | [] => [
-              <Text
-                style={style(~highlighted=false)}
-                text={String.sub(text, last, textLength - last)}
-              />,
-            ]
-
-          | [(low, high), ...rest] => [
-              <Text
-                style={style(~highlighted=false)}
-                text={String.sub(text, last, low - last)}
-              />,
-              <Text
-                style={style(~highlighted=true)}
-                text={String.sub(text, low, high + 1 - low)}
-              />,
-              ...highlighter(high + 1, rest),
-            ];
-
-        highlighter(0, item.highlight) |> React.listToElement;
-      };
-
-      <View style=Style.[flexDirection(`Row)]> highlighted </View>;
-    };
+    let style = Styles.label(~font, ~theme, ~isFocused);
+    let text = Quickmenu.getLabel(item);
+    let highlights = item.highlight;
+    let normalStyle = style(~highlighted=false);
+    let highlightStyle = style(~highlighted=true);
+    let labelView =
+      <HighlightText style=normalStyle highlightStyle text highlights />;
 
     <MenuItem
       onClick={() => onSelect(index)}
@@ -193,15 +162,13 @@ let make =
             cursorColor=Colors.white
             style={Styles.input(font.fontFile)}
             onChange=onInput
-            text=query
+            value=query
             cursorPosition
           />
         </View>
-        <View>
+        <View style=Styles.dropdown>
           <FlatList
             rowHeight=40
-            height=Constants.menuHeight
-            width=Constants.menuWidth
             count={Array.length(items)}
             focused
             render=renderItem

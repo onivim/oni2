@@ -190,13 +190,6 @@ let start =
 
   let _ =
     Vim.Cursor.onMoved(newPosition => {
-      let cursorPos =
-        Core.Types.Position.createFromOneBasedIndices(
-          newPosition.line,
-          newPosition.column + 1,
-        );
-      dispatch(Model.Actions.CursorMove(cursorPos));
-
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
 
@@ -274,13 +267,18 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(buf, Some(Model.WindowTree.Vertical))
+          Model.Actions.OpenFileByPath(
+            buf,
+            Some(Model.WindowTree.Vertical),
+            None,
+          )
         | Vim.Types.Horizontal =>
           Model.Actions.OpenFileByPath(
             buf,
             Some(Model.WindowTree.Horizontal),
+            None,
           )
-        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None)
+        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
     });
@@ -444,18 +442,6 @@ let start =
       dispatch(Model.Actions.QuickmenuClose);
     });
 
-  let _ =
-    Vim.Window.onTopLineChanged(t => {
-      Log.info("onTopLineChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToLine(t - 1));
-    });
-
-  let _ =
-    Vim.Window.onLeftColumnChanged(t => {
-      Log.info("onLeftColumnChanged: " ++ string_of_int(t));
-      dispatch(Model.Actions.EditorScrollToColumn(t));
-    });
-
   let hasInitialized = ref(false);
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
@@ -464,27 +450,80 @@ let start =
       hasInitialized := true;
     });
 
-  /* TODO: Move to init */
-  /* let metadata = Vim.Buffer.getCurrent() */
-  /* |> Vim.BufferMetadata.ofBuffer; */
-  /* dispatch(Model.Actions.BufferEnter(metadata)); */
-
   let currentBufferId: ref(option(int)) = ref(None);
-  let currentEditorId: ref(option(int)) = ref(None);
+
+  let updateActiveEditorCursors = cursors => {
+    open Oni_Core.Utility;
+    let () =
+      getState()
+      |> Model.Selectors.getActiveEditorGroup
+      |> Model.Selectors.getActiveEditor
+      |> Option.map(Model.Editor.getId)
+      |> Option.iter(id => {
+           dispatch(Model.Actions.EditorCursorMove(id, cursors))
+         });
+    ();
+  };
 
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", ()
-      /* TODO: Fix these keypaths in libvim to not be blocking */
-      =>
-        if (Oni_Input.Filter.filter(key)) {
-          Log.debug(() => "VimStoreConnector - handling key: " ++ key);
-          Vim.input(key);
-          Log.debug(() => "VimStoreConnector - handled key: " ++ key);
-        }
-      );
+    Isolinear.Effect.create(~name="vim.input", () =>
+      if (Oni_Input.Filter.filter(key)) {
+        open Oni_Core.Utility;
 
-  let openFileByPathEffect = (filePath, dir) =>
+        // Set cursors based on current editor
+        let editor =
+          getState()
+          |> Model.Selectors.getActiveEditorGroup
+          |> Model.Selectors.getActiveEditor;
+
+        let cursors =
+          editor
+          |> Option.map(Model.Editor.getVimCursors)
+          |> Option.value(~default=[]);
+
+        let () =
+          editor
+          |> Core.Utility.Option.iter(e => {
+               let () =
+                 getState()
+                 |> Model.Selectors.getActiveEditorGroup
+                 |> Option.map(Model.EditorGroup.getMetrics)
+                 |> Option.iter(metrics => {
+                      let topLine =
+                        Model.Editor.getTopVisibleLine(e, metrics);
+                      let leftCol =
+                        Model.Editor.getLeftVisibleColumn(e, metrics);
+                      Vim.Window.setTopLeft(topLine, leftCol);
+                    });
+               ();
+             });
+
+        let cursors = Vim.input(~cursors, key);
+
+        let newTopLine = Vim.Window.getTopLine();
+        let newLeftColumn = Vim.Window.getLeftColumn();
+
+        let () =
+          editor
+          |> Option.map(Model.Editor.getId)
+          |> Option.iter(id => {
+               dispatch(Model.Actions.EditorCursorMove(id, cursors));
+               dispatch(
+                 Model.Actions.EditorScrollToLine(id, newTopLine - 1),
+               );
+               dispatch(
+                 Model.Actions.EditorScrollToColumn(id, newLeftColumn),
+               );
+             });
+        Log.debug(() => "VimStoreConnector - handled key: " ++ key);
+      }
+    );
+
+  let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      open Oni_Core.Utility;
+      open Oni_Core.Types;
+
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
@@ -508,6 +547,31 @@ let start =
         | None => None
         };
 
+      let () =
+        location
+        |> Option.iter((pos: Position.t) => {
+             open Position;
+             let cursor =
+               Vim.Cursor.create(
+                 ~line=Index.toInt1(pos.line),
+                 ~column=Index.toInt0(pos.character),
+                 (),
+               );
+             let () = updateActiveEditorCursors([cursor]);
+
+             let topLine: int = max(Index.toInt0(pos.line) - 10, 0);
+
+             let () =
+               getState()
+               |> Model.Selectors.getActiveEditorGroup
+               |> Model.Selectors.getActiveEditor
+               |> Option.map(Model.Editor.getId)
+               |> Option.iter(id =>
+                    dispatch(Model.Actions.EditorScrollToLine(id, topLine))
+                  );
+             ();
+           });
+
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
@@ -527,12 +591,20 @@ let start =
           isCompleting := true;
           let currentPos = ref(Vim.CommandLine.getPosition());
           while (currentPos^ > position) {
-            Vim.input("<bs>");
+            let _ = Vim.input(~cursors=[], "<bs>");
             currentPos := Vim.CommandLine.getPosition();
           };
 
           let completion = Core.Utility.trimTrailingSlash(completion);
-          String.iter(c => Vim.input(String.make(1, c)), completion);
+          let latestCursors = ref([]);
+          String.iter(
+            c => {
+              latestCursors := Vim.input(~cursors=[], String.make(1, c));
+              ();
+            },
+            completion,
+          );
+          updateActiveEditorCursors(latestCursors^);
           isCompleting := false;
         }
       )
@@ -561,6 +633,7 @@ let start =
    This allows us to keep the buffer management in Onivim 2,
    and treat vim as an entity for manipulating a singular buffer.
    */
+  // TODO: Remove remaining 'synchronization'
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
       switch (hasInitialized^) {
@@ -615,30 +688,6 @@ let start =
         | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
         | _ => ()
         };
-
-        /* Update the cursor position and the scroll (top line, left column) -
-         * ensure these are in sync with libvim's model */
-        let synchronizeCursorAndScroll = (editor: Model.Editor.t) => {
-          Vim.Cursor.setPosition(
-            Core.Types.Index.toInt1(editor.cursorPosition.line),
-            Core.Types.Index.toInt0(editor.cursorPosition.character),
-          );
-          Vim.Window.setTopLeft(
-            Core.Types.Index.toInt1(editor.lastTopLine),
-            Core.Types.Index.toInt0(editor.lastLeftCol),
-          );
-        };
-
-        /* If the editor changed, we need to synchronize various aspects, like the cursor position, topline, and leftcol */
-        switch (editor, currentEditorId^) {
-        | (Some(e), Some(v)) when e.editorId != v =>
-          synchronizeCursorAndScroll(e);
-          currentEditorId := Some(e.editorId);
-        | (Some(e), None) =>
-          synchronizeCursorAndScroll(e);
-          currentEditorId := Some(e.editorId);
-        | _ => ()
-        };
       }
     );
 
@@ -648,7 +697,16 @@ let start =
         switch (getClipboardText()) {
         | Some(text) =>
           Vim.command("set paste");
-          Zed_utf8.iter(s => Vim.input(Zed_utf8.singleton(s)), text);
+          let latestCursors = ref([]);
+          Zed_utf8.iter(
+            s => {
+              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
+              ();
+            },
+            text,
+          );
+
+          updateActiveEditorCursors(latestCursors^);
 
           Vim.command("set nopaste");
         | None => ()
@@ -669,23 +727,31 @@ let start =
       let completions = state.completions;
       let bestMatch = Model.Completions.getBestCompletion(completions);
       let meet = Model.Completions.getMeet(completions);
-      switch (bestMatch, meet) {
-      | (Some(completion), Some(meet)) =>
-        let cursorPosition = Vim.Cursor.getPosition();
-        let delta = cursorPosition.column - (meet.completionMeetColumn + 1);
+      Oni_Core.Types.(
+        switch (bestMatch, meet) {
+        | (Some(completion), Some(meet)) =>
+          let cursorPosition = Vim.Cursor.getPosition();
+          let delta =
+            cursorPosition.column - Index.toInt1(meet.completionMeetColumn);
 
-        let idx = ref(delta);
-        while (idx^ >= 0) {
-          Vim.input("<BS>");
-          decr(idx);
-        };
+          let idx = ref(delta);
+          while (idx^ >= 0) {
+            let _ = Vim.input("<BS>");
+            decr(idx);
+          };
 
-        Zed_utf8.iter(
-          s => Vim.input(Zed_utf8.singleton(s)),
-          completion.completionLabel,
-        );
-      | _ => ()
-      };
+          let latestCursors = ref([]);
+          Zed_utf8.iter(
+            s => {
+              latestCursors := Vim.input(Zed_utf8.singleton(s));
+              ();
+            },
+            completion.item.completionLabel,
+          );
+          updateActiveEditorCursors(latestCursors^);
+        | _ => ()
+        }
+      );
     });
 
   let prevViml = ref([]);
@@ -712,16 +778,20 @@ let start =
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
-      Vim.input("<esc>");
-      Vim.input("<esc>");
-      Vim.input("u");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let cursors = Vim.input("u");
+      updateActiveEditorCursors(cursors);
+      ();
     });
 
   let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
-      Vim.input("<esc>");
-      Vim.input("<esc>");
-      Vim.input("<c-r>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let cursors = Vim.input("<c-r>");
+      updateActiveEditorCursors(cursors);
+      ();
     });
 
   let updater = (state: Model.State.t, action) => {
@@ -755,9 +825,9 @@ let start =
       (state, eff);
 
     | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path, direction) => (
+    | Model.Actions.OpenFileByPath(path, direction, location) => (
         state,
-        openFileByPathEffect(path, direction),
+        openFileByPathEffect(path, direction, location),
       )
     | Model.Actions.BufferEnter(_)
     | Model.Actions.SetEditorFont(_)

@@ -40,7 +40,6 @@ type t =
   | KeyBindingsReload
   | HoverShow
   | ChangeMode(Vim.Mode.t)
-  | CursorMove(Position.t)
   | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged(VisualRange.t)
@@ -58,15 +57,17 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorSetScroll(float)
-  | EditorScroll(float)
-  | EditorScrollToLine(int)
-  | EditorScrollToColumn(int)
+  | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
+  | EditorSetScroll(EditorId.t, float)
+  | EditorScroll(EditorId.t, float)
+  | EditorScrollToLine(EditorId.t, int)
+  | EditorScrollToColumn(EditorId.t, int)
   | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
   | SetExplorerTree(UiTree.t)
   | UpdateExplorerNode(UiTree.t, UiTree.t)
+  | LanguageFeatureRegisterSuggestProvider(LanguageFeatures.SuggestProvider.t)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
@@ -81,7 +82,7 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction))
+  | OpenFileByPath(string, option(WindowTree.direction), option(Position.t))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
@@ -108,6 +109,13 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SearchShow
+  | SearchHide
+  | SearchInput(string, int)
+  | SearchStart
+  | SearchUpdate(list(Ripgrep.Match.t))
+  | SearchComplete
+  | SearchSelectResult(Ripgrep.Match.t)
   | Noop
 and command = {
   commandCategory: option(string),
@@ -118,8 +126,8 @@ and command = {
 }
 and completionMeet = {
   completionMeetBufferId: int,
-  completionMeetLine: int,
-  completionMeetColumn: int,
+  completionMeetLine: Index.t,
+  completionMeetColumn: Index.t,
 }
 and completionItem = {
   completionLabel: string,
@@ -144,12 +152,10 @@ and notification = {
   message: string,
 }
 and editor = {
-  editorId: int,
+  editorId: EditorId.t,
   bufferId: int,
   scrollX: float,
   scrollY: float,
-  lastTopLine: Index.t,
-  lastLeftCol: Index.t,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -158,7 +164,7 @@ and editor = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursorPosition: Position.t,
+  cursors: list(Vim.Cursor.t),
   selection: VisualRange.t,
 }
 and editorMetrics = {

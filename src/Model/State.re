@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Core.Types;
+open Oni_Extensions;
 open Oni_Input;
 open Oni_Syntax;
 
@@ -31,6 +32,7 @@ type t = {
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
+  languageFeatures: LanguageFeatures.t,
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
@@ -45,6 +47,7 @@ type t = {
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,
+  searchPane: option(Search.t),
 };
 
 let create: unit => t =
@@ -66,6 +69,7 @@ let create: unit => t =
         (),
       ),
     extensions: Extensions.empty,
+    languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.empty,
@@ -85,4 +89,5 @@ let create: unit => t =
     fileExplorer: FileExplorer.create(),
     zenMode: false,
     darkMode: true,
+    searchPane: None,
   };

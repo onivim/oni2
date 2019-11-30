@@ -9,9 +9,11 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            FontSizeChangeTest
            InputIgnoreTest
+           LanguageCssTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
@@ -46,9 +48,11 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
+        LanguageCssTest.exe
         QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe

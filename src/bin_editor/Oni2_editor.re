@@ -136,10 +136,10 @@ let init = app => {
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorScrollDelta: (~deltaY, ()) =>
-      dispatch(Model.Actions.EditorScroll(deltaY)),
-    editorSetScroll: (~scrollY, ()) =>
-      dispatch(Model.Actions.EditorSetScroll(scrollY)),
+    editorScrollDelta: (~editorId, ~deltaY, ()) =>
+      dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
+    editorSetScroll: (~editorId, ~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
     setActiveWindow: (splitId, editorGroupId) =>
       dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
@@ -151,7 +151,7 @@ let init = app => {
   runEffects();
 
   List.iter(
-    v => dispatch(Model.Actions.OpenFileByPath(v, None)),
+    v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
     cliOptions.filesToOpen,
   );
 };
