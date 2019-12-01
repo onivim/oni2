@@ -1,3 +1,4 @@
+[@deriving show]
 type t = int;
 
 let equals = (a, b) => a == b;

@@ -10,14 +10,15 @@ open Oni_Input;
 open Oni_Extensions;
 open Oni_Syntax;
 
+[@deriving show]
 type t =
   | Init
   | Tick(tick)
   | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter(Vim.BufferMetadata.t, option(string))
+  | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)
-  | BufferSaved(Vim.BufferMetadata.t)
-  | BufferSetIndentation(int, IndentationSettings.t)
+  | BufferSaved([@opaque] Vim.BufferMetadata.t)
+  | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Command(string)
   | CommandsRegister(list(command))
@@ -28,25 +29,25 @@ type t =
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
-  | ConfigurationSet(Configuration.t)
+  | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
   | ExtensionActivated(string)
-  | KeyBindingsSet(Keybindings.t)
+  | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
   | HoverShow
-  | ChangeMode(Vim.Mode.t)
+  | ChangeMode([@opaque] Vim.Mode.t)
   | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
   | DiagnosticsClear(string)
-  | SelectionChanged(VisualRange.t)
+  | SelectionChanged([@opaque] VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
   | LoadEditorFont(string, int)
-  | SetEditorFont(EditorFont.t)
-  | RecalculateEditorView(option(Buffer.t))
+  | SetEditorFont([@opaque] EditorFont.t)
+  | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
@@ -56,7 +57,7 @@ type t =
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(editorGroup)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorCursorMove(EditorId.t, list(Vim.Cursor.t))
+  | EditorCursorMove(EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(EditorId.t, float)
   | EditorScroll(EditorId.t, float)
   | EditorScrollToLine(EditorId.t, int)
@@ -64,9 +65,9 @@ type t =
   | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
-  | SetExplorerTree(UiTree.t)
-  | UpdateExplorerNode(UiTree.t, UiTree.t)
-  | LanguageFeatureRegisterSuggestProvider(LanguageFeatures.SuggestProvider.t)
+  | SetExplorerTree([@opaque] UiTree.t)
+  | UpdateExplorerNode([@opaque] UiTree.t,[@opaque]  UiTree.t)
+  | LanguageFeatureRegisterSuggestProvider([@opaque] LanguageFeatures.SuggestProvider.t)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
@@ -88,20 +89,20 @@ type t =
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
-  | QuitBuffer(Vim.Buffer.t, bool)
+  | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Position.t, Position.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo(LanguageInfo.t)
+  | SetLanguageInfo([@opaque] LanguageInfo.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
-  | SetIconTheme(IconTheme.t)
-  | SetTokenTheme(TokenTheme.t)
-  | SetColorTheme(Theme.t)
-  | StatusBarAddItem(StatusBarModel.Item.t)
+  | SetIconTheme([@opaque] IconTheme.t)
+  | SetTokenTheme([@opaque] TokenTheme.t)
+  | SetColorTheme([@opaque] Theme.t)
+  | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
@@ -121,7 +122,7 @@ and command = {
   commandName: string,
   commandAction: t,
   commandEnabled: unit => bool,
-  commandIcon: option(IconTheme.IconDefinition.t),
+  commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
 }
 and completionMeet = {
   completionMeetBufferId: int,
@@ -163,8 +164,8 @@ and editor = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursors: list(Vim.Cursor.t),
-  selection: VisualRange.t,
+  cursors: [@opaque] list(Vim.Cursor.t),
+  selection: [@opaque] VisualRange.t,
 }
 and editorMetrics = {
   pixelWidth: int,
@@ -175,8 +176,8 @@ and editorMetrics = {
 and editorGroup = {
   editorGroupId: int,
   activeEditorId: option(int),
-  editors: IntMap.t(editor),
-  bufferIdToEditorId: IntMap.t(int),
+  editors: [@opaque] IntMap.t(editor),
+  bufferIdToEditorId: [@opaque] IntMap.t(int),
   reverseTabOrder: list(int),
   metrics: editorMetrics,
 }
@@ -184,14 +185,14 @@ and menuItem = {
   category: option(string),
   name: string,
   command: unit => t,
-  icon: option(IconTheme.IconDefinition.t),
+  icon: [@opaque] option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
 and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
-  | Wildmenu(Vim.Types.cmdlineType)
+  | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker
 and progress =
   | Loading
