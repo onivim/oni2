@@ -10,7 +10,7 @@ open Oni_Input;
 open Oni_Extensions;
 open Oni_Syntax;
 
-[@deriving show]
+[@deriving show({with_path: false})]
 type t =
   | Init
   | Tick(tick)
@@ -66,15 +66,17 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | SetExplorerTree([@opaque] UiTree.t)
-  | UpdateExplorerNode([@opaque] UiTree.t,[@opaque]  UiTree.t)
-  | LanguageFeatureRegisterSuggestProvider([@opaque] LanguageFeatures.SuggestProvider.t)
+  | UpdateExplorerNode([@opaque] UiTree.t, [@opaque] UiTree.t)
+  | LanguageFeatureRegisterSuggestProvider(
+      [@opaque] LanguageFeatures.SuggestProvider.t,
+    )
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
       cursorPosition: int,
     })
   | QuickmenuUpdateRipgrepProgress(progress)
-  | QuickmenuUpdateFilterProgress(array(menuItem), progress)
+  | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
   | QuickmenuSearch(string)
   | QuickmenuClose
   | ListFocus(int)
