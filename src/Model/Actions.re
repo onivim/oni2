@@ -115,9 +115,9 @@ type t =
   | SearchHide
   | SearchInput(string, int)
   | SearchStart
-  | SearchUpdate(list(Ripgrep.Match.t))
+  | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
-  | SearchSelectResult(Ripgrep.Match.t)
+  | SearchSelectResult([@opaque] Ripgrep.Match.t)
   | Noop
 and command = {
   commandCategory: option(string),
