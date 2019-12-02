@@ -61,4 +61,16 @@ module Model = {
     | Directory({isOpen: false, _}) => `Node(`Closed)
     | File => `Leaf
     };
+
+  let rec expandedSubtreeSize = node =>
+    switch (node.kind) {
+    | Directory({isOpen: true, children: `Loaded(children)}) =>
+      List.fold_left(
+        (acc, child) => acc + expandedSubtreeSize(child),
+        1,
+        children,
+      )
+
+    | _ => 1
+    };
 };

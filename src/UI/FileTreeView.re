@@ -11,13 +11,6 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  let treeContainer = [
-    paddingLeft(16),
-    paddingVertical(8),
-    overflow(`Hidden),
-    flexGrow(1),
-  ];
-
   let title = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
@@ -102,6 +95,8 @@ let nodeView =
   </View>;
 };
 
+module TreeView = TreeView.Make(UiTree.Model);
+
 let make = (~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) => {
   let State.{theme, uiFont as font, _} = state;
 
@@ -112,10 +107,8 @@ let make = (~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) => {
     <View style={Styles.heading(theme)}>
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
-    <ScrollView style=Styles.treeContainer>
-      <TreeView model=(module UiTree.Model) tree onClick=onNodeClick>
-        ...{node => <nodeView font bg fg state node />}
-      </TreeView>
-    </ScrollView>
+    <TreeView tree itemHeight=20 onClick=onNodeClick>
+      ...{node => <nodeView font bg fg state node />}
+    </TreeView>
   </View>;
 };
