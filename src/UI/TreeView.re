@@ -85,54 +85,61 @@ module Make = (Model: TreeModel) => {
           (
             ~renderContent,
             ~itemHeight,
-            ~visibleRange as (lo, hi),
+            ~clipRange as (clipStart, clipEnd),
             ~onClick,
             ~node,
             (),
           ) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
 
-    let rec renderChildren = (count, elements, children) =>
-      switch (children) {
-      | [child, ...rest] =>
-        let element =
-          <nodeView
-            renderContent
-            itemHeight
-            visibleRange=(lo - count, hi - count)
-            onClick
-            node=child
-          />;
+    let placeholder = (~size, ()) =>
+      <View style={Styles.placeholder(~height=subtreeSize * itemHeight)} />;
 
-        renderChildren(
-          count + Model.expandedSubtreeSize(child),
-          [element, ...elements],
-          rest,
-        );
+    let item = (~arrow, ()) =>
+      <Clickable onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
+        <arrow />
+        {renderContent(node)}
+      </Clickable>;
 
-      | [] => elements |> List.rev |> React.listToElement
-      };
+    let renderChildren = children => {
+      let rec loop = (count, elements, children) =>
+        switch (children) {
+        | [child, ...rest] =>
+          let element =
+            <nodeView
+              renderContent
+              itemHeight
+              clipRange=(clipStart - count, clipEnd - count)
+              onClick
+              node=child
+            />;
 
-    if (subtreeSize < lo || hi < 0) {
-      <View
-        // If the entire node is out of view, just render a placeholder with the appropriate height
-        style={Styles.placeholder(~height=subtreeSize * itemHeight)}
-      />;
+          loop(
+            count + Model.expandedSubtreeSize(child),
+            [element, ...elements],
+            rest,
+          );
+
+        | [] => elements |> List.rev |> React.listToElement
+        };
+
+      loop(1, [], children);
+    };
+
+    if (subtreeSize < clipStart || clipEnd < 0) {
+      // If the entire node is out of view, render a placeholder with the appropriate height
+      <placeholder size={subtreeSize * itemHeight} />;
     } else {
       switch (Model.kind(node)) {
       | `Node(state) =>
         <View>
-          <Clickable
-            onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
-            <arrow isOpen={state == `Open} />
-            {renderContent(node)}
-          </Clickable>
+          <item arrow={arrow(~isOpen=state == `Open)} />
           <View style=Styles.children>
             {switch (state) {
              | `Open =>
                switch (Model.children(node)) {
                | `Loading => <Text text="Loading..." style=Styles.loading />
-               | `Loaded(children) => renderChildren(1, [], children)
+               | `Loaded(children) => renderChildren(children)
                }
 
              | `Closed => React.empty
@@ -141,11 +148,7 @@ module Make = (Model: TreeModel) => {
         </View>
 
       | `Leaf =>
-        <Clickable
-          onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
-          <noArrow />
-          {renderContent(node)}
-        </Clickable>
+        <item arrow=noArrow />
       };
     };
   };
@@ -208,7 +211,7 @@ module Make = (Model: TreeModel) => {
       </View>;
     };
 
-    let visibleRange = (
+    let clipRange = (
       scrollTop / itemHeight,
       (scrollTop + menuHeight) / itemHeight,
     );
@@ -219,7 +222,7 @@ module Make = (Model: TreeModel) => {
       onMouseWheel=scroll>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
-          <nodeView renderContent itemHeight visibleRange onClick node=tree />
+          <nodeView renderContent itemHeight clipRange onClick node=tree />
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}
