@@ -22,9 +22,7 @@ let discoverExtensions = (setup: Core.Setup.t) => {
       let userExtensions = Core.Filesystem.getExtensionsFolder();
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
-        | Some(p) =>
-          let ret = ExtensionScanner.scan(p);
-          ret;
+        | Some(p) => ExtensionScanner.scan(p)
         | None => []
         };
       let userExtensions =
@@ -130,8 +128,7 @@ let start =
 
   let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
-  let (fileExplorerUpdater, explorerStream) =
-    FileExplorerStore.start();
+  let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
 
   let (searchUpdater, searchStream) = SearchStoreConnector.start();
 

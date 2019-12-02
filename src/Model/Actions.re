@@ -62,11 +62,9 @@ type t =
   | EditorScroll(EditorId.t, float)
   | EditorScrollToLine(EditorId.t, int)
   | EditorScrollToColumn(EditorId.t, int)
-  | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
-  | SetExplorerTree([@opaque] FsTreeNode.t)
-  | ExplorerNodeClicked([@opaque] FsTreeNode.t)
+  | FileExplorer(FileExplorer.action)
   | LanguageFeatureRegisterSuggestProvider(
       [@opaque] LanguageFeatures.SuggestProvider.t,
     )
@@ -118,6 +116,9 @@ type t =
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
   | SearchSelectResult([@opaque] Ripgrep.Match.t)
+  | VimDirectoryChanged(string)
+  // "Internal" effect action, see TitleStoreConnector
+  | SetTitle(string)
   | Noop
 and command = {
   commandCategory: option(string),

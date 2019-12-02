@@ -23,9 +23,7 @@ let reduce: (State.t, Actions.t) => State.t =
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
-        fileExplorer: FileExplorerStore.reduce(s.fileExplorer, a),
         notifications: Notifications.reduce(s.notifications, a),
-        workspace: Workspace.reduce(s.workspace, a),
       };
 
       switch (a) {

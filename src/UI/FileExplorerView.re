@@ -3,21 +3,13 @@ open Revery_UI;
 
 module Option = Oni_Core.Utility.Option;
 
-let%component make = (~state: State.t, ()) => {
-  let%hook () =
-    React.Hooks.effect(
-      OnMount,
-      () => {
-        let cwd = Rench.Environment.getWorkingDirectory();
-        GlobalContext.current().dispatch(OpenExplorer(cwd));
-        None;
-      },
+let make = (~state: State.t, ()) => {
+  let onNodeClick = node =>
+    GlobalContext.current().dispatch(
+      FileExplorer(FileExplorer.NodeClicked(node)),
     );
 
-  let onNodeClick = node =>
-    GlobalContext.current().dispatch(ExplorerNodeClicked(node));
-
-  switch (state.fileExplorer.directory) {
+  switch (state.fileExplorer.tree) {
   | None => React.empty
   | Some(tree) => <FileTreeView state onNodeClick title="Explorer" tree />
   };

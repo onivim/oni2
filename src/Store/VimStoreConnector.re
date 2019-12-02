@@ -79,7 +79,7 @@ let start =
 
   let _ =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Model.Actions.OpenExplorer(newDir))
+      dispatch(Model.Actions.VimDirectoryChanged(newDir))
     );
 
   let _ =
@@ -826,6 +826,29 @@ let start =
         state,
         copyActiveFilepathToClipboardEffect,
       )
+
+    | Model.Actions.VimDirectoryChanged(directory) =>
+      let newState = {
+        ...state,
+        workspace:
+          Some({
+            workingDirectory: directory,
+            rootName: Filename.basename(directory),
+          }),
+      };
+      (
+        newState,
+        Isolinear.Effect.batch([
+          FileExplorerStore.Effects.load(
+            directory,
+            state.languageInfo,
+            state.iconTheme,
+            state.configuration,
+          ),
+          TitleStoreConnector.Effects.updateTitle(newState),
+        ]),
+      );
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

@@ -26,7 +26,7 @@ let create:
   ) =>
   t;
 let update: (~tree: t, ~updater: t => t, int) => t;
-let toggleOpenState: (~tree: t, int) => t;
+let toggleOpenState: t => t;
 
 module Model: {
   type nonrec t = t;

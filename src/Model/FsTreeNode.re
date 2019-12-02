@@ -58,15 +58,12 @@ let update = (~tree, ~updater, nodeId) => {
 };
 
 let toggleOpenState =
-  update(
-    ~updater=
-      fun
-      | {kind: Directory({isOpen, children})} as node => {
-          ...node,
-          kind: Directory({isOpen: !isOpen, children}),
-        }
-      | node => node,
-  );
+  fun
+  | {kind: Directory({isOpen, children})} as node => {
+      ...node,
+      kind: Directory({isOpen: !isOpen, children}),
+    }
+  | node => node;
 
 module Model = {
   type nonrec t = t;

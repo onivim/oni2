@@ -2,9 +2,15 @@ open Revery;
 open Oni_Core;
 
 type t = {
-  directory: option(FsTreeNode.t),
+  tree: option(FsTreeNode.t),
   isOpen: bool,
 };
+
+[@deriving show]
+type action =
+  | TreeUpdated([@opaque] FsTreeNode.t)
+  | NodeUpdated(int, [@opaque] FsTreeNode.t)
+  | NodeClicked([@opaque] FsTreeNode.t);
 
 module ExplorerId =
   UniqueId.Make({});
@@ -103,7 +109,9 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
                       Lwt.return(`Loading);
                     };
 
-                  Lwt.return(FsTreeNode.Directory({isOpen: false, children}));
+                  Lwt.return(
+                    FsTreeNode.Directory({isOpen: false, children}),
+                  );
                 } else {
                   Lwt.return(FsTreeNode.File);
                 };
@@ -145,4 +153,4 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   );
 };
 
-let create = () => {directory: None, isOpen: true};
+let initial = {tree: None, isOpen: true};
