@@ -15,5 +15,7 @@ module ClientToServer = {
     | Echo(string)
     | BufferEnter(int, string, array(string))
     | BufferLeave(int)
-    | BufferUpdate(Oni_Core.Types.BufferUpdate.t);
+    | BufferUpdate(Oni_Core.Types.BufferUpdate.t)
+    | SetLanguageInfo(LanguageInfo.t)
+    | ThemeChanged(TokenTheme.t);
 };

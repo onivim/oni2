@@ -99,19 +99,17 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   };
 
   let bufferEnterEffect = (state: Model.State.t, id: int, fileType) =>
-    Isolinear.Effect.createWithDispatch(~name="syntax.bufferEnter", _dispatch => {
+    Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       let lines = getLines(state, id);
-      switch (fileType) {
-      | None => ()
-      | Some(fileType) =>
+      fileType
+      |> Option.iter((fileType) => 
         Oni_Syntax_Client.notifyBufferEnter(
           _syntaxClient,
           id,
           fileType,
           lines,
         );
-        ();
-      };
+      )
     });
 
   let bufferUpdateEffect = (bufferUpdate: Oni_Core.Types.BufferUpdate.t) =>
@@ -136,14 +134,14 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
           ),
       };
       (state, Isolinear.Effect.none);
-    | Model.Actions.Tick(_) =>
+    /*| Model.Actions.Tick(_) =>
       if (Model.SyntaxHighlighting.anyPendingWork(state.syntaxHighlighting)) {
         let syntaxHighlighting =
           Model.SyntaxHighlighting.doPendingWork(state.syntaxHighlighting);
         ({...state, syntaxHighlighting}, Isolinear.Effect.none);
       } else {
         default;
-      }
+      }*/
     | Model.Actions.BufferEnter(metadata, fileType) => (
         state,
         bufferEnterEffect(state, Vim.BufferMetadata.(metadata.id), fileType),
