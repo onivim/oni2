@@ -5,6 +5,7 @@ type t = {
   icon: option(IconTheme.IconDefinition.t),
   depth: int,
   kind,
+  expandedSubtreeSize: int,
 }
 
 and kind =
@@ -13,6 +14,28 @@ and kind =
       children: [ | `Loading | `Loaded(list(t))],
     })
   | File;
+
+
+let rec _expandedSubtreeSize =
+  fun
+  | Directory({isOpen: true, children: `Loaded(children)}) =>
+    List.fold_left(
+      (acc, child) => acc + _expandedSubtreeSize(child.kind),
+      1,
+      children,
+    )
+
+  | _ => 1;
+
+let create = (~id, ~path, ~icon, ~depth, ~kind) => {
+  id,
+  path,
+  displayName: Filename.basename(path),
+  icon,
+  depth,
+  kind,
+  expandedSubtreeSize: _expandedSubtreeSize(kind)
+};
 
 let updateNode = (nodeId, tree, ~updater) => {
   let rec update = tree => {
@@ -63,14 +86,5 @@ module Model = {
     };
 
   let rec expandedSubtreeSize = node =>
-    switch (node.kind) {
-    | Directory({isOpen: true, children: `Loaded(children)}) =>
-      List.fold_left(
-        (acc, child) => acc + expandedSubtreeSize(child),
-        1,
-        children,
-      )
-
-    | _ => 1
-    };
+    node.expandedSubtreeSize;
 };

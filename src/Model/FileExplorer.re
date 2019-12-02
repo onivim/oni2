@@ -109,14 +109,13 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
                 };
 
               Lwt.return(
-                UiTree.{
-                  id,
-                  path,
-                  displayName: file,
-                  depth: nextDepth,
-                  icon: getIcon(path),
-                  kind,
-                },
+                UiTree.create(
+                  ~id,
+                  ~path,
+                  ~depth=nextDepth,
+                  ~icon=getIcon(path),
+                  ~kind,
+                ),
               );
             },
             files,
@@ -137,14 +136,13 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
-  UiTree.{
-    id,
-    path: cwd,
-    displayName: Filename.basename(cwd),
-    icon: getIcon(cwd),
-    depth: 0,
-    kind: Directory({isOpen: true, children: `Loaded(children)}),
-  };
+  UiTree.create(
+    ~id,
+    ~path=cwd,
+    ~icon=getIcon(cwd),
+    ~depth=0,
+    ~kind=Directory({isOpen: true, children: `Loaded(children)}),
+  );
 };
 
 let getNodePath = (node: UiTree.t) => node.path;
