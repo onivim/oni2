@@ -15,7 +15,6 @@ and kind =
     })
   | File;
 
-
 let rec _expandedSubtreeSize =
   fun
   | Directory({isOpen: true, children: `Loaded(children)}) =>
@@ -34,7 +33,7 @@ let create = (~id, ~path, ~icon, ~depth, ~kind) => {
   icon,
   depth,
   kind,
-  expandedSubtreeSize: _expandedSubtreeSize(kind)
+  expandedSubtreeSize: _expandedSubtreeSize(kind),
 };
 
 let updateNode = (nodeId, tree, ~updater) => {
@@ -85,6 +84,5 @@ module Model = {
     | File => `Leaf
     };
 
-  let rec expandedSubtreeSize = node =>
-    node.expandedSubtreeSize;
+  let rec expandedSubtreeSize = node => node.expandedSubtreeSize;
 };

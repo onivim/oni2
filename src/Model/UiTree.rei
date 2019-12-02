@@ -1,32 +1,36 @@
+type t =
+  pri {
+    id: int,
+    path: string,
+    displayName: string,
+    icon: option(Oni_Model__.IconTheme.IconDefinition.t),
+    depth: int,
+    kind,
+    expandedSubtreeSize: int,
+  }
 
+and kind =
+  | Directory({
+      isOpen: bool,
+      children: [ | `Loading | `Loaded(list(t))],
+    })
+  | File;
 
-type t = pri {
-  id: int,
-  path: string,
-  displayName: string,
-  icon: option(Oni_Model__.IconTheme.IconDefinition.t),
-  depth: int,
-  kind: kind,
-  expandedSubtreeSize: int,
-}
-
-and kind = Directory({ isOpen: bool, children: [`Loading | `Loaded(list(t))]}) | File;
-
-let create: (
-  ~id: int,
-  ~path: string,
-  ~icon: option(
-    Oni_Model__.IconTheme.IconDefinition.t
-  ),
-  ~depth: int,
-  ~kind: kind
-) => t;
+let create:
+  (
+    ~id: int,
+    ~path: string,
+    ~icon: option(Oni_Model__.IconTheme.IconDefinition.t),
+    ~depth: int,
+    ~kind: kind
+  ) =>
+  t;
 
 let updateNode: (int, t, ~updater: t => t) => t;
 
 let toggleOpenState: (int, t) => t;
 
-module Model : {
+module Model: {
   type nonrec t = t;
 
   let children: t => [ | `Loading | `Loaded(list(t))];

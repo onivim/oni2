@@ -96,7 +96,8 @@ module Make = (Model: TreeModel) => {
       <View style={Styles.placeholder(~height=subtreeSize * itemHeight)} />;
 
     let item = (~arrow, ()) =>
-      <Clickable onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
+      <Clickable
+        onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -127,8 +128,10 @@ module Make = (Model: TreeModel) => {
     };
 
     if (subtreeSize < clipStart || clipEnd < 0) {
-      // If the entire node is out of view, render a placeholder with the appropriate height
-      <placeholder size={subtreeSize * itemHeight} />;
+      <placeholder
+        // If the entire node is out of view, render a placeholder with the appropriate height
+        size={subtreeSize * itemHeight}
+      />;
     } else {
       switch (Model.kind(node)) {
       | `Node(state) =>
@@ -147,8 +150,7 @@ module Make = (Model: TreeModel) => {
           </View>
         </View>
 
-      | `Leaf =>
-        <item arrow=noArrow />
+      | `Leaf => <item arrow=noArrow />
       };
     };
   };
