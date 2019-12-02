@@ -2,7 +2,6 @@ open Oni_Model;
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 module Core = Oni_Core;
 
@@ -60,7 +59,6 @@ let nodeView =
       ~font: Core.Types.UiFont.t,
       ~fg,
       ~bg,
-      ~state: State.t,
       ~node: FsTreeNode.t,
       (),
     ) => {
@@ -98,6 +96,7 @@ let nodeView =
 module TreeView = TreeView.Make(FsTreeNode.Model);
 
 let make = (~title, ~tree: FsTreeNode.t, ~onNodeClick, ~state: State.t, ()) => {
+  [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
   let bg = state.theme.sideBarBackground;
@@ -108,7 +107,7 @@ let make = (~title, ~tree: FsTreeNode.t, ~onNodeClick, ~state: State.t, ()) => {
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
     <TreeView tree itemHeight=20 onClick=onNodeClick>
-      ...{node => <nodeView font bg fg state node />}
+      ...{node => <nodeView font bg fg node />}
     </TreeView>
   </View>;
 };

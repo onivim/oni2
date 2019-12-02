@@ -3,7 +3,7 @@ type t =
     id: int,
     path: string,
     displayName: string,
-    icon: option(Oni_Model__.IconTheme.IconDefinition.t),
+    icon: option(IconTheme.IconDefinition.t),
     depth: int,
     kind,
     expandedSubtreeSize: int,
@@ -20,7 +20,7 @@ let create:
   (
     ~id: int,
     ~path: string,
-    ~icon: option(Oni_Model__.IconTheme.IconDefinition.t),
+    ~icon: option(IconTheme.IconDefinition.t),
     ~depth: int,
     ~kind: kind
   ) =>

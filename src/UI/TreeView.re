@@ -24,7 +24,7 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (~height) => [overflow(`Hidden), flexGrow(1)];
+  let container = [overflow(`Hidden), flexGrow(1)];
 
   let slider = [
     position(`Absolute),
@@ -93,7 +93,7 @@ module Make = (Model: TreeModel) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
 
     let placeholder = (~size, ()) =>
-      <View style={Styles.placeholder(~height=subtreeSize * itemHeight)} />;
+      <View style={Styles.placeholder(~height=size * itemHeight)} />;
 
     let item = (~arrow, ()) =>
       <Clickable
@@ -219,7 +219,7 @@ module Make = (Model: TreeModel) => {
     );
 
     <View
-      style={Styles.container(~height=min(menuHeight, count * itemHeight))}
+      style=Styles.container
       ref={ref => setOuterRef(Some(ref))}
       onMouseWheel=scroll>
       <View style={Styles.viewport(~showScrollbar)}>

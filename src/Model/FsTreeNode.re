@@ -41,7 +41,7 @@ let update = (~tree, ~updater, nodeId) => {
     switch (tree) {
     | {id, _} as node when id == nodeId => updater(node)
 
-    | {kind: Directory({children: `Loaded(children)} as dir)} as node => {
+    | {kind: Directory({children: `Loaded(children), _} as dir), _} as node => {
         ...node,
         kind:
           Directory({
@@ -59,7 +59,7 @@ let update = (~tree, ~updater, nodeId) => {
 
 let toggleOpenState =
   fun
-  | {kind: Directory({isOpen, children})} as node => {
+  | {kind: Directory({isOpen, children}), _} as node => {
       ...node,
       kind: Directory({isOpen: !isOpen, children}),
     }
@@ -70,7 +70,7 @@ module Model = {
 
   let children = node =>
     switch (node.kind) {
-    | Directory({children}) => children
+    | Directory({children, _}) => children
     | File => `Loaded([])
     };
 
@@ -81,5 +81,5 @@ module Model = {
     | File => `Leaf
     };
 
-  let rec expandedSubtreeSize = node => node.expandedSubtreeSize;
+  let expandedSubtreeSize = node => node.expandedSubtreeSize;
 };

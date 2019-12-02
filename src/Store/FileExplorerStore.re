@@ -81,7 +81,7 @@ let start = () => {
       switch (node) {
       | {kind: File, path, _} => (state, openFileByPathEffect(path))
 
-      | {kind: Directory({children: `Loading}), _} => (
+      | {kind: Directory({children: `Loading, _}), _} => (
           state,
           Effects.refreshNode(
             node,
