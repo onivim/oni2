@@ -54,14 +54,7 @@ let setiIcon = (~icon, ~fontSize as size, ~bg, ~fg, ()) => {
   />;
 };
 
-let nodeView =
-    (
-      ~font: Core.Types.UiFont.t,
-      ~fg,
-      ~bg,
-      ~node: FsTreeNode.t,
-      (),
-    ) => {
+let nodeView = (~font: Core.Types.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
