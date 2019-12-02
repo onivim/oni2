@@ -65,8 +65,8 @@ type t =
   | OpenExplorer(string)
   | ShowNotification(notification)
   | HideNotification(int)
-  | SetExplorerTree([@opaque] UiTree.t)
-  | ExplorerNodeClicked([@opaque] UiTree.t)
+  | SetExplorerTree([@opaque] FsTreeNode.t)
+  | ExplorerNodeClicked([@opaque] FsTreeNode.t)
   | LanguageFeatureRegisterSuggestProvider(
       [@opaque] LanguageFeatures.SuggestProvider.t,
     )

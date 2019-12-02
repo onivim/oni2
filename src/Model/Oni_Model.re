@@ -51,5 +51,5 @@ module WhitespaceTokenFilter = WhitespaceTokenFilter;
 module WindowManager = WindowManager;
 module WindowTree = WindowTree;
 module WindowTreeLayout = WindowTreeLayout;
-module UiTree = UiTree;
+module FsTreeNode = FsTreeNode;
 module FileExplorer = FileExplorer;

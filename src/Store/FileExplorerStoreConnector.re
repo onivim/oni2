@@ -28,7 +28,7 @@ let start = () => {
           ignored,
         );
 
-      let tree = UiTree.updateNode(nodeId, tree, ~updater);
+      let tree = FsTreeNode.update(nodeId, ~tree, ~updater);
       dispatch(Actions.SetExplorerTree(tree));
     });
   };
@@ -85,7 +85,7 @@ let start = () => {
       | _ =>
         switch (state.fileExplorer.directory) {
         | Some(tree) =>
-          let tree = UiTree.toggleOpenState(node.id, tree);
+          let tree = FsTreeNode.toggleOpenState(node.id, ~tree);
           (state, setExplorerTreeEffect(tree));
         | None => (state, Isolinear.Effect.none)
         }

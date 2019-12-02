@@ -2,7 +2,7 @@ open Revery;
 open Oni_Core;
 
 type t = {
-  directory: option(UiTree.t),
+  directory: option(FsTreeNode.t),
   isOpen: bool,
 };
 
@@ -42,7 +42,7 @@ let handleError = (~defaultValue, func) => {
   };
 };
 
-let sortByLoweredDisplayName = (a: UiTree.t, b: UiTree.t) => {
+let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
   switch (a.kind, b.kind) {
   | (Directory(_), File) => (-1)
   | (File, Directory(_)) => 1
@@ -103,13 +103,13 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
                       Lwt.return(`Loading);
                     };
 
-                  Lwt.return(UiTree.Directory({isOpen: false, children}));
+                  Lwt.return(FsTreeNode.Directory({isOpen: false, children}));
                 } else {
-                  Lwt.return(UiTree.File);
+                  Lwt.return(FsTreeNode.File);
                 };
 
               Lwt.return(
-                UiTree.create(
+                FsTreeNode.create(
                   ~id,
                   ~path,
                   ~depth=nextDepth,
@@ -136,7 +136,7 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
-  UiTree.create(
+  FsTreeNode.create(
     ~id,
     ~path=cwd,
     ~icon=getIcon(cwd),
@@ -145,13 +145,9 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   );
 };
 
-let getNodePath = (node: UiTree.t) => node.path;
-
-let getNodeId = (node: UiTree.t) => node.id;
-
 let create = () => {directory: None, isOpen: true};
 
-let reduce = (state: t, action: Actions.t) => {
+let reduce = (state, action: Actions.t) => {
   switch (action) {
   | SetExplorerTree(tree) => {directory: Some(tree), isOpen: true}
   | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}

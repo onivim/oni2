@@ -36,7 +36,7 @@ let create = (~id, ~path, ~icon, ~depth, ~kind) => {
   expandedSubtreeSize: _expandedSubtreeSize(kind),
 };
 
-let updateNode = (nodeId, tree, ~updater) => {
+let update = (~tree, ~updater, nodeId) => {
   let rec update = tree => {
     switch (tree) {
     | {id, _} as node when id == nodeId => updater(node)
@@ -58,7 +58,7 @@ let updateNode = (nodeId, tree, ~updater) => {
 };
 
 let toggleOpenState =
-  updateNode(
+  update(
     ~updater=
       fun
       | {kind: Directory({isOpen, children})} as node => {

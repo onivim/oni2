@@ -61,7 +61,7 @@ let nodeView =
       ~fg,
       ~bg,
       ~state: State.t,
-      ~node: UiTree.t,
+      ~node: FsTreeNode.t,
       (),
     ) => {
   let icon = () =>
@@ -95,9 +95,9 @@ let nodeView =
   </View>;
 };
 
-module TreeView = TreeView.Make(UiTree.Model);
+module TreeView = TreeView.Make(FsTreeNode.Model);
 
-let make = (~title, ~tree: UiTree.t, ~onNodeClick, ~state: State.t, ()) => {
+let make = (~title, ~tree: FsTreeNode.t, ~onNodeClick, ~state: State.t, ()) => {
   let State.{theme, uiFont as font, _} = state;
 
   let bg = state.theme.sideBarBackground;
