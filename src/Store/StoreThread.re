@@ -158,7 +158,7 @@ let start =
       ~initialState=state,
       ~updater=
         Isolinear.Updater.combine([
-          Isolinear.Updater.ofReducer(Model.Reducer.reduce),
+          Isolinear.Updater.ofReducer(Reducer.reduce),
           vimUpdater,
           syntaxUpdater,
           extHostUpdater,

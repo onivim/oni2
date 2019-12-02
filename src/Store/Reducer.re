@@ -4,7 +4,7 @@
  * Manage state transitions based on Actions
  */
 
-open Actions;
+open Oni_Model;
 
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
