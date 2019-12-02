@@ -146,11 +146,3 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
 };
 
 let create = () => {directory: None, isOpen: true};
-
-let reduce = (state, action: Actions.t) => {
-  switch (action) {
-  | SetExplorerTree(tree) => {directory: Some(tree), isOpen: true}
-  | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}
-  | _ => state
-  };
-};

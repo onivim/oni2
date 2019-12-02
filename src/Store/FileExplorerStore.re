@@ -97,3 +97,11 @@ let start = () => {
 
   (updater, stream);
 };
+
+let reduce = (state: FileExplorer.t, action: Actions.t) => {
+  switch (action) {
+  | SetExplorerTree(tree) => FileExplorer.{directory: Some(tree), isOpen: true}
+  | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}
+  | _ => state
+  };
+};
