@@ -203,7 +203,7 @@ let start =
     switch (action) {
     | Tick(_) => () // This gets a bit intense, so ignore it
     | _ =>
-      Core.Log.info("[SotreThread.dispatch]: " ++ Model.Actions.show(action))
+      Core.Log.info("[StoreThread.dispatch]: " ++ Model.Actions.show(action))
     };
 
     let lastState = latestState^;
