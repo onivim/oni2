@@ -131,7 +131,7 @@ let start =
   let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
   let (fileExplorerUpdater, explorerStream) =
-    FileExplorerStoreConnector.start();
+    FileExplorerStore.start();
 
   let (searchUpdater, searchStream) = SearchStoreConnector.start();
 
