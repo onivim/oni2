@@ -1,4 +1,6 @@
 module Core = Oni_Core;
+module Option = Core.Utility.Option;
+
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
@@ -59,16 +61,15 @@ let runTest =
 
   logInit("Starting store...");
 
-  let configPath =
-    switch (configuration) {
-    | None => None
-    | Some(v) =>
-      let tempFile = Filename.temp_file("configuration", ".json");
-      let oc = open_out(tempFile);
-      Printf.fprintf(oc, "%s\n", v);
-      close_out(oc);
-      Some(tempFile);
-    };
+  let configurationFilePath = Filename.temp_file("configuration", ".json");
+  let oc = open_out(configurationFilePath);
+
+  let () =
+    configuration
+    |> Option.value(~default="{}")
+    |> Printf.fprintf(oc, "%s\n");
+
+  close_out(oc);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -84,7 +85,7 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~onStateChanged,
       ~cliOptions,
-      ~configurationFilePath=configPath,
+      ~configurationFilePath=Some(configurationFilePath),
       ~quit,
       ~window=None,
       (),

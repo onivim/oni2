@@ -15,12 +15,4 @@ type workspace = {
 
 type t = option(workspace);
 
-let empty: t = None;
-
-let reduce = (v: t, a) => {
-  switch (a) {
-  | Actions.OpenExplorer(dir) =>
-    Some({workingDirectory: dir, rootName: Filename.basename(dir)})
-  | _ => v
-  };
-};
+let initial: t = None;
