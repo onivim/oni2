@@ -4,6 +4,7 @@
 
 open Oni_Core;
 
+[@deriving show]
 type t = {
   range: Range.t,
   message: string,

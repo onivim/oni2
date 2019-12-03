@@ -21,3 +21,5 @@ let fromMemory: string => t;
 let fromPath: string => t;
 
 let getScheme: t => Scheme.t;
+
+let pp: (Format.formatter, t) => unit;
