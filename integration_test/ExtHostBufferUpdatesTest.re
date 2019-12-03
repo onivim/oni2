@@ -58,10 +58,10 @@ runTestWithInput(
 
   // Helper function to wait for the buffer text to match
   // The extension maps newlines -> |
-  let waitForTextToMatch = expectedText =>
+  let waitForTextToMatch = (~description, expectedText) =>
     wait(
       ~timeout=30.0,
-      ~name="Validate buffer text matches: " ++ expectedText,
+      ~name=description ++ " - validate buffer text matches: " ++ expectedText,
       (state: State.t) => {
         dispatch(
           Actions.CommandExecuteContributed("developer.oni.getBufferText"),
@@ -74,23 +74,23 @@ runTestWithInput(
     );
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
-  waitForTextToMatch("a|b|c");
+  waitForTextToMatch(~description="after insert mode", "a|b|c");
 
   // Now, delete a line - we had some bugs where deletes were not sync'd properly
   input("gg");
   input("j");
   input("dd");
 
-  waitForTextToMatch("a|c");
+  waitForTextToMatch(~description="after deleting some lines", "a|c");
 
   // Undo the change - we also had bugs here!
   input("u");
 
-  waitForTextToMatch("a|b|c");
+  waitForTextToMatch(~description="after undo", "a|b|c");
 
   // Finally, modify a single line
   input("gg");
   input("Iabc");
 
-  waitForTextToMatch("abca|b|c");
+  waitForTextToMatch(~description="after inserting some text in an existing line", "abca|b|c");
 });

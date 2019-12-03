@@ -102,6 +102,8 @@ module Position = {
 module BufferUpdate = {
   [@deriving show({with_path: false})]
   type t = {
+    // True if the update applies to the entire buffer, false otherwise
+    isFull: bool,
     id: int,
     startLine: Index.t,
     endLine: Index.t,
@@ -131,13 +133,14 @@ module BufferUpdate = {
     jsont_to_yojson(jsonr);
   };
 
-  let create = (~id=0, ~startLine, ~endLine, ~lines, ~version, ()) => {
-    let ret: t = {id, startLine, endLine, lines, version};
+  let create = (~id=0, ~isFull=false, ~startLine, ~endLine, ~lines, ~version, ()) => {
+    let ret: t = {id, startLine, endLine, lines, version, isFull};
     ret;
   };
   let createFromZeroBasedIndices =
-      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+      (~id=0, ~isFull=false, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
     let ret: t = {
+      isFull,
       id,
       startLine: Index.ZeroBasedIndex(startLine),
       endLine: Index.ZeroBasedIndex(endLine),
@@ -147,8 +150,9 @@ module BufferUpdate = {
     ret;
   };
   let createFromOneBasedIndices =
-      (~id=0, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+      (~id=0, ~isFull=false, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
     let ret: t = {
+      isFull,
       id,
       startLine: Index.OneBasedIndex(startLine),
       endLine: Index.OneBasedIndex(endLine),

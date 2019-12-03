@@ -7,6 +7,8 @@
  */
 
 module Core = Oni_Core;
+module Option = Core.Utility.Option;
+
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
@@ -316,12 +318,33 @@ let start =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
+      prerr_endline ("VIM UPDATE: " ++ Vim.BufferUpdate.show(update));
       open Core.Types;
+      open Model.State;
+
+      let isFull = update.endLine == -1;
+
+
+      // If this is a 'full' update, check if there was a previous buffer.
+      // We need to keep track of the previous line count for some 
+      // buffer synchronization strategies (ie, extension host)
+      let endLine = if(isFull) {
+        prerr_endline ("ISFULL");
+        Some(getState())
+        |> Option.map(state => state.buffers)
+        |> Option.bind(Model.Buffers.getBuffer(update.id))
+        |> Option.map((b) => Model.Buffer.getNumberOfLines(b) + 1)
+        |> Option.value(~default=update.startLine);
+      } else {
+        update.endLine
+      }
+
       let bu =
         Core.Types.BufferUpdate.create(
           ~id=update.id,
+          ~isFull,
           ~startLine=Index.OneBasedIndex(update.startLine),
-          ~endLine=Index.OneBasedIndex(update.endLine),
+          ~endLine=Index.OneBasedIndex(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
