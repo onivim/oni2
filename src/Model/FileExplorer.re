@@ -72,56 +72,47 @@ let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
  */
 let getFilesAndFolders = (~ignored, cwd, getIcon) => {
   let rec getDirContent = (~loadChildren=false, cwd) => {
-    Lwt_unix.files_of_directory(cwd)
-    /* Filter out the relative name for current and parent directory*/
-    |> Lwt_stream.filter(name => name != ".." && name != ".")
-    /* Remove ignored files from search */
-    |> Lwt_stream.filter(name => !List.mem(name, ignored))
-    |> Lwt_stream.to_list
-    |> (
-      promise =>
-        Lwt.bind(
-          promise,
-          Lwt_list.map_p(file => {
-            let path = Filename.concat(cwd, file);
-            let isDirectory = isDir(path);
-            let id = ExplorerId.getUniqueId();
+    let toFsTreeNode = file => {
+      let path = Filename.concat(cwd, file);
+      let isDirectory = isDir(path);
+      let id = ExplorerId.getUniqueId();
 
-            /**
-                 If resolving children for a particular directory fails
-                 log the error but carry on processing other directories
-               */
-            (
-              if (isDirectory) {
-                let%lwt children =
-                  if (loadChildren) {
-                    let%lwt children =
-                      handleError(~defaultValue=[], () =>
-                        getDirContent(path)
-                      );
+      /**
+           If resolving children for a particular directory fails
+            log the error but carry on processing other directories
+          */
+      (
+        if (isDirectory) {
+          let%lwt children =
+            if (loadChildren) {
+              let%lwt children =
+                handleError(~defaultValue=[], () => getDirContent(path));
 
-                    children
-                    |> List.sort(sortByLoweredDisplayName)
-                    |> (children => `Loaded(children) |> Lwt.return);
-                  } else {
-                    Lwt.return(`Loading);
-                  };
+              children
+              |> List.sort(sortByLoweredDisplayName)
+              |> (children => `Loaded(children) |> Lwt.return);
+            } else {
+              Lwt.return(`Loading);
+            };
 
-                Lwt.return(
-                  FsTreeNode.directory(
-                    path,
-                    ~id,
-                    ~icon=getIcon(path),
-                    ~children,
-                  ),
-                );
-              } else {
-                Lwt.return(FsTreeNode.file(path, ~id, ~icon=getIcon(path)));
-              }
-            );
-          }),
-        )
-    );
+          Lwt.return(
+            FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children),
+          );
+        } else {
+          Lwt.return(FsTreeNode.file(path, ~id, ~icon=getIcon(path)));
+        }
+      );
+    };
+
+    let%lwt files =
+      Lwt_unix.files_of_directory(cwd)
+      /* Filter out the relative name for current and parent directory*/
+      |> Lwt_stream.filter(name => name != ".." && name != ".")
+      /* Remove ignored files from search */
+      |> Lwt_stream.filter(name => !List.mem(name, ignored))
+      |> Lwt_stream.to_list;
+
+    Lwt_list.map_p(toFsTreeNode, files);
   };
 
   handleError(~defaultValue=[], () => getDirContent(cwd, ~loadChildren=true));
