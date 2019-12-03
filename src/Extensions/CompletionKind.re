@@ -2,6 +2,7 @@
  * CompletionKind.re
  */
 
+[@deriving show]
 type t =
   | Text
   | Method

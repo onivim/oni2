@@ -1,4 +1,5 @@
 module Scheme = {
+  [@deriving show]
   type t = string;
 
   let file: t = "file";
@@ -21,7 +22,7 @@ module Scheme = {
   let to_yojson = v => `String(v);
 };
 
-[@deriving yojson({strict: false})]
+[@deriving (show, yojson({strict: false}))]
 type t = {
   scheme: Scheme.t,
   path: string,

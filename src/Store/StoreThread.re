@@ -200,6 +200,12 @@ let start =
     SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
+    switch (action) {
+    | Tick(_) => () // This gets a bit intense, so ignore it
+    | _ =>
+      Core.Log.info("[StoreThread.dispatch]: " ++ Model.Actions.show(action))
+    };
+
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
