@@ -3,13 +3,31 @@
  */
 
 module Core = Oni_Core;
+module ColorizedToken = Core.Types.ColorizedToken;
+module Range = Core.Range;
+
+module type SyntaxHighlighter = {
+  type t;
+
+  let hasPendingWork: t => bool;
+  let doWork: t => t;
+  let updateVisibleRanges: (list(Range.t), t) => t;
+  let updateTheme: (TokenTheme.t, t) => t;
+
+  let update:
+    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), t) => t;
+
+  let getTokenColors: (t, int) => list(ColorizedToken.t);
+};
+
+type highlighter('a) = (module SyntaxHighlighter with type t = 'a);
 
 type t =
-  | TextMate(TextMateSyntaxHighlights.t)
-  | TreeSitter(TreeSitterSyntaxHighlights.t)
-  | None;
-
-let default = None;
+  | Highlighter({
+      highlighter: highlighter('a),
+      state: 'a,
+    })
+    : t;
 
 let _hasTreeSitterScope = (configuration, scope: string) => {
   let treeSitterEnabled =
@@ -27,39 +45,31 @@ let _hasTreeSitterScope = (configuration, scope: string) => {
   };
 };
 
-let anyPendingWork = v => {
-  switch (v) {
-  | None => false
-  | TextMate(tm) => TextMateSyntaxHighlights.hasPendingWork(tm)
-  | TreeSitter(ts) => TreeSitterSyntaxHighlights.hasPendingWork(ts)
-  };
+let anyPendingWork = hl => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  SyntaxHighlighter.hasPendingWork(state);
 };
 
-let doWork = v => {
-  switch (v) {
-  | None => v
-  | TextMate(tm) => TextMate(TextMateSyntaxHighlights.doWork(tm))
-  | TreeSitter(ts) => TreeSitter(TreeSitterSyntaxHighlights.doWork(ts))
-  };
+let doWork = hl => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.doWork(state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
-let updateVisibleRanges = (ranges, v) => {
-  switch (v) {
-  | None => v
-  | TextMate(tm) =>
-    TextMate(TextMateSyntaxHighlights.updateVisibleRanges(ranges, tm))
-  | TreeSitter(ts) =>
-    TreeSitter(TreeSitterSyntaxHighlights.updateVisibleRanges(ranges, ts))
-  };
+let updateVisibleRanges = (ranges, hl) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.updateVisibleRanges(ranges, state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
-let updateTheme = (theme: TokenTheme.t, v) => {
-  switch (v) {
-  | None => v
-  | TextMate(tm) => TextMate(TextMateSyntaxHighlights.updateTheme(theme, tm))
-  | TreeSitter(ts) =>
-    TreeSitter(TreeSitterSyntaxHighlights.updateTheme(theme, ts))
-  };
+let updateTheme = (theme, hl) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.updateTheme(theme, state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let create =
@@ -79,7 +89,10 @@ let create =
           ~getTreeSitterScopeMapper,
           lines,
         );
-      TreeSitter(ts);
+      Highlighter({
+        highlighter: (module TreeSitterSyntaxHighlights),
+        state: ts,
+      });
     }
     : {
       let tm =
@@ -89,27 +102,23 @@ let create =
           ~getTextmateGrammar,
           lines,
         );
-      TextMate(tm);
+      Highlighter({
+        highlighter: (module TextMateSyntaxHighlights),
+        state: tm,
+      });
     };
 };
 
 let update =
-    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), v: t) => {
-  switch (v) {
-  | TextMate(tm) =>
-    TextMate(TextMateSyntaxHighlights.update(~bufferUpdate, ~lines, tm))
-  | TreeSitter(ts) =>
-    let newTs: TreeSitterSyntaxHighlights.t =
-      TreeSitterSyntaxHighlights.update(~bufferUpdate, ~lines, ts);
-    TreeSitter(newTs);
-  | _ => v
-  };
+    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
-let getTokensForLine = (v: t, line: int) => {
-  switch (v) {
-  | TextMate(tm) => TextMateSyntaxHighlights.getTokenColors(tm, line)
-  | TreeSitter(ts) => TreeSitterSyntaxHighlights.getTokenColors(ts, line)
-  | _ => []
-  };
+let getTokensForLine = (hl: t, line: int) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  SyntaxHighlighter.getTokenColors(state, line);
 };
