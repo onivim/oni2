@@ -92,7 +92,6 @@ let start = (extensions, setup: Core.Setup.t) => {
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
-      // TODO: Not placeholder...
       ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,
@@ -311,8 +310,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         checkCompletionsEffect(completionMeet, state),
       )
-    // TODO: Pick up new action
-    | Model.Actions.OpenExplorer(path) => (
+    | Model.Actions.VimDirectoryChanged(path) => (
         state,
         changeWorkspaceEffect(path),
       )
