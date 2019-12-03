@@ -13,29 +13,23 @@ let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
 let make =
     (
       ~icon,
-      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontFamily=FontAwesome.fontFamily,
       ~fontSize=15,
       ~backgroundColor,
       ~color,
       ~margin=0,
       (),
-    ) => {
-  let (fontFamily_, fontSize_, backgroundColor_, color_, margin_) = (
-    fontFamily,
-    fontSize,
-    backgroundColor,
-    color,
-    margin,
-  );
-
+    ) =>
   <Text
     text={codeToIcon(icon)}
-    style=Style.[
-      fontFamily(fontFamily_),
-      fontSize(fontSize_),
-      color(color_),
-      backgroundColor(backgroundColor_),
-      margin(margin_),
+    style=[
+      Style.fontFamily(fontFamily),
+      Style.fontSize(fontSize),
+      Style.color(color),
+      Style.backgroundColor(backgroundColor),
+      Style.margin(margin),
+      Style.height(fontSize),
+      Style.width(fontSize),
+      Style.textWrap(Revery.TextWrapping.NoWrap),
     ]
   />;
-};
