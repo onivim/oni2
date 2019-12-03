@@ -16,3 +16,10 @@ let errorf: msgf('a, unit) => unit;
 let error: string => unit;
 
 let perf: (string, unit => 'a) => 'a;
+
+module type Logger = {
+  let infof: msgf(_, unit) => unit;
+  let info: string => unit;
+};
+
+let withNamespace: string => (module Logger);

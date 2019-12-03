@@ -4,24 +4,42 @@
  * Simple console logger
  */
 
+// TODO: Remove after 4.08
+module Option = {
+  let bind = (o, f) =>
+    switch (o) {
+    | Some(x) => f(x)
+    | None => None
+    };
+
+  let iter = f =>
+    fun
+    | Some(x) => f(x)
+    | None => ();
+};
+
+module Constants = {
+  let namespaceStyle = Fmt.(styled(`Fg(`Hi(`Yellow)), string));
+
+  module Env = {
+    let logFile = "ONI2_LOG_FILE";
+    let debug = "ONI2_DEBUG";
+  };
+};
+
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
-let fileChannel =
-  switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | Some(v) =>
-    let oc = open_out(v);
-    Printf.fprintf(oc, "Starting log file.\n");
-    flush(oc);
-    Some(oc);
-  | None => None
-  };
+let namespaceTag = Logs.Tag.def("namespace", Format.pp_print_string);
+
+let pp_namespace = ppf =>
+  Option.iter(Fmt.pf(ppf, "[%a]", Constants.namespaceStyle));
 
 let fileReporter =
-  switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
+  switch (Sys.getenv_opt(Constants.Env.logFile)) {
   | Some(path) =>
     let channel = open_out(path);
-    let ppf = Format.formatter_of_out_channel(channel);
     Printf.fprintf(channel, "Starting log file.\n%!");
+    let ppf = Format.formatter_of_out_channel(channel);
 
     Logs.{
       report: (_src, level, ~over, k, msgf) => {
@@ -45,7 +63,29 @@ let fileReporter =
   | None => Logs.nop_reporter
   };
 
-let consoleReporter = Logs_fmt.reporter(~pp_header=Logs_fmt.pp_header, ());
+let consoleReporter =
+  Logs.{
+    report: (_src, level, ~over, k, msgf) => {
+      let k = _ => {
+        over();
+        k();
+      };
+
+      msgf((~header=?, ~tags=?, fmt) => {
+        let namespace = Option.bind(tags, Logs.Tag.find(namespaceTag));
+
+        Format.kfprintf(
+          k,
+          Format.err_formatter,
+          "%a%a@[" ^^ fmt ^^ "@]@.",
+          Logs_fmt.pp_header,
+          (level, header),
+          pp_namespace,
+          namespace,
+        );
+      });
+    },
+  };
 
 let reporter =
   Logs.{
@@ -58,7 +98,10 @@ let reporter =
 // defaults
 let () = {
   Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
-  switch (Sys.getenv_opt("ONI2_DEBUG"), Sys.getenv_opt("ONI2_LOG_FILE")) {
+  switch (
+    Sys.getenv_opt(Constants.Env.debug),
+    Sys.getenv_opt(Constants.Env.logFile),
+  ) {
   | (Some(_), _)
   | (_, Some(_)) => Logs.set_level(Some(Logs.Debug))
   | _ => Logs.set_level(Some(Logs.Info))
@@ -112,3 +155,21 @@ let () =
       flush_all();
     });
   };
+
+module type Logger = {
+  let infof: msgf(_, unit) => unit;
+  let info: string => unit;
+};
+
+let withNamespace = namespace => {
+  let namespace = Logs.Tag.(empty |> add(namespaceTag, namespace));
+
+  (
+    (module
+     {
+       let infof = msgf =>
+         Logs.info(m => msgf(m(~header=?None, ~tags=namespace)));
+       let info = msg => infof(m => m("%s", msg));
+     }): (module Logger)
+  );
+};
