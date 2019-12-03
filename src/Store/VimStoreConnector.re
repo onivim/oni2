@@ -351,6 +351,14 @@ let start =
           (),
         );
 
+      // We need to filter out updates that come 'out-of-order'. This shouldn't need to be done
+      // at this layer - but there are some bugs with the updates we get from 'reason-libvim'.
+      // In particular, with undo / redo, we get multiple updates - a full update (version+2) and
+      // an incremental update (version+1) _after_ the full update. If we apply the incremental update
+      // after the full update, ignoring the version, we'll get incorrect results.
+      //
+      // The fix really belongs in reason-libvim - we should always be trust the order we get from the updates,
+      // and any of this filtering or manipulation of updates should be handled and tested there.
       let shouldApply =
         bufferMaybe
         |> Option.map(Model.Buffer.shouldApplyUpdate(bu))
