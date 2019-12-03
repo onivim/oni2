@@ -6,11 +6,7 @@ module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 
-type dispatchFunction = Model.Actions.t => unit;
-type waiter = Model.State.t => bool;
-type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
-
-let getTextForVimBuffer = () => {
+let _getTextForVimBuffer = () => {
   let buffer = Vim.Buffer.getCurrent();
   let count = Vim.Buffer.getLineCount(buffer);
 
@@ -23,7 +19,7 @@ let getTextForVimBuffer = () => {
   "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";
 };
 
-let getTextForOnivimBuffer = state => {
+let _getTextForOnivimBuffer = state => {
   Some(state)
   |> Option.bind(Model.Selectors.getActiveBuffer)
   |> Option.map(Model.Buffer.getLines)
@@ -33,7 +29,7 @@ let getTextForOnivimBuffer = state => {
   |> Option.value(~default="(Empty)");
 };
 
-let getTextFromExtHost = state => {
+let _getTextFromExtHost = state => {
   Model.State.(
     switch (state.notifications) {
     | [hd, ..._] => hd.message
@@ -44,10 +40,10 @@ let getTextFromExtHost = state => {
 
 let validateTextIsSynchronized =
     (
-      ~expectedText=None,
       ~description,
-      dispatch: dispatchFunction,
-      wait: waitForState,
+      dispatch: Types.dispatchFunction,
+      wait: Types.waitForState,
+      ~expectedText=None,
     ) => {
   wait(
     ~name=description ++ ": validate text is synchronized",
@@ -60,9 +56,9 @@ let validateTextIsSynchronized =
         ),
       );
 
-      let onivimBuffer = getTextForOnivimBuffer(state);
-      let extHostBuffer = getTextFromExtHost(state);
-      let vimBuffer = getTextForVimBuffer();
+      let onivimBuffer = _getTextForOnivimBuffer(state);
+      let extHostBuffer = _getTextFromExtHost(state);
+      let vimBuffer = _getTextForVimBuffer();
 
       print_endline("Onivim buffer: " ++ onivimBuffer);
       print_endline("Exthost buffer: " ++ extHostBuffer);

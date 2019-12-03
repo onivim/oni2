@@ -4,13 +4,8 @@ module Store = Oni_Store;
 module Log = Core.Log;
 module TextSynchronization = TextSynchronization;
 
-type dispatchFunction = Model.Actions.t => unit;
-type runEffectsFunction = unit => unit;
-type waiter = Model.State.t => bool;
-type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
-
 type testCallback =
-  (dispatchFunction, waitForState, runEffectsFunction) => unit;
+  (Types.dispatchFunction, Types.waitForState, Types.runEffectsFunction) => unit;
 
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
