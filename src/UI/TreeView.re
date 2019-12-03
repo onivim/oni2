@@ -130,7 +130,7 @@ module Make = (Model: TreeModel) => {
     if (subtreeSize < clipStart || clipEnd < 0) {
       <placeholder
         // If the entire node is out of view, render a placeholder with the appropriate height
-        size={subtreeSize * itemHeight}
+        size=subtreeSize
       />;
     } else {
       switch (Model.kind(node)) {
