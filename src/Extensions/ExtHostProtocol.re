@@ -310,6 +310,50 @@ module Suggestions = {
   type t = list(SuggestionItem.t);
 };
 
+module Workspace = {
+  module Folder = {
+    type t = {
+      uri: Uri.t,
+      name: string,
+      id: string,
+    };
+
+    let to_yojson: t => Yojson.Safe.t =
+      folder => {
+        `Assoc([
+          ("uri", Uri.to_yojson(folder.uri)),
+          ("name", `String(folder.name)),
+          ("id", `String(folder.id)),
+        ]);
+      };
+  };
+
+  type t = {
+    id: string,
+    name: string,
+    folders: list(Folder.t),
+  };
+
+  let empty: t = {id: "No workspace", name: "No workspace", folders: []};
+
+  let create = (~folders=[], name, ~id) => {id, name, folders};
+
+  let ofUri = (uri, ~name, ~id) => {id, name, folders: [{uri, name, id}]};
+
+  let to_yojson: t => Yojson.Safe.t =
+    ws => {
+      let foldersJson =
+        ws.folders |> List.map(Folder.to_yojson) |> (v => `List(v));
+
+      `Assoc([
+        ("id", `String(ws.id)),
+        ("name", `String(ws.name)),
+        ("configuration", `Assoc([])),
+        ("folders", foldersJson),
+      ]);
+    };
+};
+
 module LF = LanguageFeatures;
 
 module IncomingNotifications = {
@@ -483,13 +527,19 @@ module OutgoingNotifications = {
       folders: list(string),
     };
 
-    let initializeWorkspace = (id: string, name: string) => {
-      let wsinfo = {id, name, folders: []};
-
+    let initializeWorkspace = (workspace: Workspace.t) => {
       _buildNotification(
         "ExtHostWorkspace",
         "$initializeWorkspace",
-        `List([workspaceInfo_to_yojson(wsinfo)]),
+        `List([Workspace.to_yojson(workspace)]),
+      );
+    };
+
+    let acceptWorkspaceData = (workspace: Workspace.t) => {
+      _buildNotification(
+        "ExtHostWorkspace",
+        "$acceptWorkspaceData",
+        `List([Workspace.to_yojson(workspace)]),
       );
     };
   };

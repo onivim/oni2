@@ -7,12 +7,15 @@
  */
 
 module Core = Oni_Core;
+module Uri = Core.Uri;
 open Oni_Core.Utility;
 module Model = Oni_Model;
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
+
+module Workspace = Protocol.Workspace;
 
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -89,6 +92,13 @@ let start = (extensions, setup: Core.Setup.t) => {
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
+      // TODO: Not placeholder...
+      ~initialWorkspace=
+        Workspace.ofUri(
+          ~name="an-initial-path",
+          ~id="an-initial-path",
+          Uri.fromPath("/some/initial/path"),
+        ),
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
@@ -283,6 +293,18 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     );
 
+  let changeWorkspaceEffect = _path =>
+    Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+      ExtHostClient.acceptWorkspaceData(
+        Workspace.ofUri(
+          ~name="another-workspace",
+          ~id="another-workspace",
+          Uri.fromPath("/some/other/path"),
+        ),
+        extHostClient,
+      )
+    });
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
     | Model.Actions.Init => (state, registerQuitCleanupEffect)
@@ -297,6 +319,11 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
         checkCompletionsEffect(completionMeet, state),
+      )
+    // TODO: Pick up new action
+    | Model.Actions.OpenExplorer(path) => (
+        state,
+        changeWorkspaceEffect(path),
       )
     | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
