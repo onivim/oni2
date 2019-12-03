@@ -338,7 +338,17 @@ module Workspace = {
 
   let create = (~folders=[], name, ~id) => {id, name, folders};
 
-  let ofUri = (uri, ~name, ~id) => {id, name, folders: [{uri, name, id}]};
+  let fromUri = (uri, ~name, ~id) => {
+    id,
+    name,
+    folders: [{uri, name, id}],
+  };
+
+  let fromPath = path => {
+    id: path,
+    name: path,
+    folders: [{uri: Uri.fromPath(path), name: path, id: path}],
+  };
 
   let to_yojson: t => Yojson.Safe.t =
     ws => {

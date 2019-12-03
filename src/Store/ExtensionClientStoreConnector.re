@@ -93,12 +93,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let extHostClient =
     Extensions.ExtHostClient.start(
       // TODO: Not placeholder...
-      ~initialWorkspace=
-        Workspace.ofUri(
-          ~name="an-initial-path",
-          ~id="an-initial-path",
-          Uri.fromPath("/some/initial/path"),
-        ),
+      ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
@@ -293,14 +288,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     );
 
-  let changeWorkspaceEffect = _path =>
+  let changeWorkspaceEffect = path =>
     Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
       ExtHostClient.acceptWorkspaceData(
-        Workspace.ofUri(
-          ~name="another-workspace",
-          ~id="another-workspace",
-          Uri.fromPath("/some/other/path"),
-        ),
+        Workspace.fromPath(path),
         extHostClient,
       )
     });
