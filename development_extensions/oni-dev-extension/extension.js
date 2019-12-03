@@ -97,10 +97,15 @@ function activate(context) {
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello from extension!');
 	});
+    
+	let disposable5 = vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
+		// Display a message box to the user
+		vscode.window.showInformationMessage("rootPath: " + vscode.workspace.rootPath);
+	});
 
     // Helper command to show buffer text
     // This helps us create a test case to validate buffer manipulations
-	let disposable5 = vscode.commands.registerCommand('developer.oni.getBufferText', () => {
+	let disposable6 = vscode.commands.registerCommand('developer.oni.getBufferText', () => {
 		vscode.window.showInformationMessage("fulltext:" + latestText);
 	});
 
@@ -108,6 +113,7 @@ function activate(context) {
 	context.subscriptions.push(disposable3);
 	context.subscriptions.push(disposable4);
 	context.subscriptions.push(disposable5);
+	context.subscriptions.push(disposable6);
 }
 
 // this method is called when your extension is deactivated
