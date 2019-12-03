@@ -11,6 +11,7 @@ module Protocol = ExtHostProtocol;
 
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
+module Workspace = Protocol.Workspace;
 
 type t = {transport: ExtHostTransport.t};
 
@@ -28,6 +29,7 @@ let apply = (f, r) => {
 let start =
     (
       ~initData=ExtHostInitData.create(),
+      ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
       ~onDiagnosticsChangeMany=defaultOneArgCallback,
@@ -101,6 +103,7 @@ let start =
   let transport =
     ExtHostTransport.start(
       ~initData,
+      ~initialWorkspace,
       ~onInitialized,
       ~onMessage,
       ~onClosed,
@@ -121,6 +124,13 @@ let executeContributedCommand = (cmd, v) => {
   ExtHostTransport.send(
     v.transport,
     Out.Commands.executeContributedCommand(cmd),
+  );
+};
+
+let acceptWorkspaceData = (workspace: Workspace.t, v) => {
+  ExtHostTransport.send(
+    v.transport,
+    Out.Workspace.acceptWorkspaceData(workspace),
   );
 };
 
