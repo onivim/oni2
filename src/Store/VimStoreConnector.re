@@ -9,16 +9,17 @@
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
 
+open Oni_Model;
+
 module Extensions = Oni_Extensions;
-module Model = Oni_Model;
 
 module Log = Core.Log;
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
     (
-      languageInfo: Model.LanguageInfo.t,
-      getState: unit => Model.State.t,
+      languageInfo: LanguageInfo.t,
+      getState: unit => State.t,
       getClipboardText,
       setClipboardText,
     ) => {
@@ -27,7 +28,7 @@ let start =
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
-      Model.Selectors.getActiveConfigurationValue(state, c =>
+      Selectors.getActiveConfigurationValue(state, c =>
         c.vimUseSystemClipboard
       );
 
@@ -67,21 +68,19 @@ let start =
     // but nothing to escape from (ie, in normal mode with no pending operator)
     Vim.onUnhandledEscape(() => {
       let state = getState();
-      if (Model.Notifications.any(state.notifications)) {
+      if (Notifications.any(state.notifications)) {
         let oldestNotificationId =
-          Model.Notifications.getOldestId(state.notifications);
-        dispatch(Model.Actions.HideNotification(oldestNotificationId));
+          Notifications.getOldestId(state.notifications);
+        dispatch(Actions.HideNotification(oldestNotificationId));
       };
     });
 
   let _ =
-    Vim.Mode.onChanged(newMode =>
-      dispatch(Model.Actions.ChangeMode(newMode))
-    );
+    Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
 
   let _ =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Model.Actions.VimDirectoryChanged(newDir))
+      dispatch(Actions.VimDirectoryChanged(newDir))
     );
 
   let _ =
@@ -89,16 +88,16 @@ let start =
       open Vim.Types;
       let (priorityString, notificationType) =
         switch (priority) {
-        | Error => ("ERROR", Model.Actions.Error)
-        | Warning => ("WARNING", Model.Actions.Warning)
-        | Info => ("INFO", Model.Actions.Info)
+        | Error => ("ERROR", Actions.Error)
+        | Warning => ("WARNING", Actions.Warning)
+        | Info => ("INFO", Actions.Info)
         };
 
       Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
 
       dispatch(
         ShowNotification(
-          Model.Notification.create(
+          Notification.create(
             ~notificationType,
             ~title="libvim",
             ~message=msg,
@@ -112,7 +111,7 @@ let start =
     Vim.onYank(({lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
-        Model.Selectors.getActiveConfigurationValue(state, c =>
+        Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard
         );
       let allYanks = yankConfig.yank;
@@ -145,11 +144,11 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
-      dispatch(Model.Actions.BufferEnter(meta, fileType));
+      dispatch(Actions.BufferEnter(meta, fileType));
     });
 
   let _ =
@@ -160,7 +159,7 @@ let start =
         ++ " | "
         ++ string_of_bool(modified),
       );
-      dispatch(Model.Actions.BufferSetModified(id, modified));
+      dispatch(Actions.BufferSetModified(id, modified));
     });
 
   let _ =
@@ -170,10 +169,10 @@ let start =
 
       let result = Vim.Search.getMatchingPair();
       switch (result) {
-      | None => dispatch(Model.Actions.SearchClearMatchingPair(id))
+      | None => dispatch(Actions.SearchClearMatchingPair(id))
       | Some({line, column}) =>
         dispatch(
-          Model.Actions.SearchSetMatchingPair(
+          Actions.SearchSetMatchingPair(
             id,
             Core.Types.Position.create(
               OneBasedIndex(newPosition.line),
@@ -192,7 +191,7 @@ let start =
     Vim.Search.onStopSearchHighlight(() => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
-      dispatch(Model.Actions.SearchClearHighlights(id));
+      dispatch(Actions.SearchClearHighlights(id));
     });
 
   let _ =
@@ -242,18 +241,10 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Model.Actions.OpenFileByPath(
-            buf,
-            Some(Model.WindowTree.Vertical),
-            None,
-          )
+          Actions.OpenFileByPath(buf, Some(WindowTree.Vertical), None)
         | Vim.Types.Horizontal =>
-          Model.Actions.OpenFileByPath(
-            buf,
-            Some(Model.WindowTree.Horizontal),
-            None,
-          )
-        | Vim.Types.TabPage => Model.Actions.OpenFileByPath(buf, None, None)
+          Actions.OpenFileByPath(buf, Some(WindowTree.Horizontal), None)
+        | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
     });
@@ -266,31 +257,29 @@ let start =
       let move = moveFunc => {
         let windowId = moveFunc(currentState.windowManager);
         let maybeEditorGroupId =
-          Model.WindowTree.getEditorGroupIdFromSplitId(
+          WindowTree.getEditorGroupIdFromSplitId(
             windowId,
             currentState.windowManager.windowTree,
           );
 
         switch (maybeEditorGroupId) {
         | Some(editorGroupId) =>
-          dispatch(Model.Actions.WindowSetActive(windowId, editorGroupId))
+          dispatch(Actions.WindowSetActive(windowId, editorGroupId))
         | None => ()
         };
       };
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(Model.WindowManager.moveLeft)
+      | OneLeft => move(WindowManager.moveLeft)
       | FullRight
-      | OneRight => move(Model.WindowManager.moveRight)
+      | OneRight => move(WindowManager.moveRight)
       | FullDown
-      | OneDown => move(Model.WindowManager.moveDown)
+      | OneDown => move(WindowManager.moveDown)
       | FullUp
-      | OneUp => move(Model.WindowManager.moveUp)
-      | RotateDownwards =>
-        dispatch(Model.Actions.Command("view.rotateForward"))
-      | RotateUpwards =>
-        dispatch(Model.Actions.Command("view.rotateBackward"))
+      | OneUp => move(WindowManager.moveUp)
+      | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
+      | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
       | _ => move(windowManager => windowManager.activeWindowId)
       };
     });
@@ -308,10 +297,10 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-      dispatch(Model.Actions.BufferEnter(meta, fileType));
+      dispatch(Actions.BufferEnter(meta, fileType));
     });
 
   let _ =
@@ -319,22 +308,19 @@ let start =
       open Vim.BufferUpdate;
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
       open Core.Types;
-      open Model.State;
+      open State;
 
       let isFull = update.endLine == (-1);
 
-      let bufferMaybe =
-        Some(getState())
-        |> Option.map(state => state.buffers)
-        |> Option.bind(Model.Buffers.getBuffer(update.id));
+      let maybeBuffer = Buffers.getBuffer(update.id, getState().buffers);
 
       // If this is a 'full' update, check if there was a previous buffer.
       // We need to keep track of the previous line count for some
       // buffer synchronization strategies (ie, extension host)
       let endLine =
         if (isFull) {
-          bufferMaybe
-          |> Option.map(b => Model.Buffer.getNumberOfLines(b) + 1)
+          maybeBuffer
+          |> Option.map(b => Buffer.getNumberOfLines(b) + 1)
           |> Option.value(~default=update.startLine);
         } else {
           update.endLine;
@@ -360,12 +346,10 @@ let start =
       // The fix really belongs in reason-libvim - we should always be trust the order we get from the updates,
       // and any of this filtering or manipulation of updates should be handled and tested there.
       let shouldApply =
-        bufferMaybe
-        |> Option.map(Model.Buffer.shouldApplyUpdate(bu))
-        |> Option.value(~default=true);
+        Option.map(Buffer.shouldApplyUpdate(bu), maybeBuffer) == Some(true);
 
       if (shouldApply) {
-        dispatch(Model.Actions.BufferUpdate(bu));
+        dispatch(Actions.BufferUpdate(bu));
       } else {
         Log.info(
           "Skipped buffer update at version: "
@@ -376,7 +360,7 @@ let start =
 
   let _ =
     Vim.CommandLine.onEnter(c =>
-      dispatch(Model.Actions.QuickmenuShow(Wildmenu(c.cmdType)))
+      dispatch(Actions.QuickmenuShow(Wildmenu(c.cmdType)))
     );
 
   let lastCompletionMeet = ref(None);
@@ -393,7 +377,7 @@ let start =
     let items =
       Array.map(
         name =>
-          Model.Actions.{
+          Actions.{
             name,
             category: None,
             icon: None,
@@ -402,12 +386,12 @@ let start =
           },
         completions,
       );
-    dispatch(Model.Actions.QuickmenuUpdateFilterProgress(items, Complete));
+    dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 
   let _ =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
-      dispatch(Model.Actions.QuickmenuInput({text, cursorPosition}));
+      dispatch(Actions.QuickmenuInput({text, cursorPosition}));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
@@ -456,7 +440,7 @@ let start =
     Vim.CommandLine.onLeave(() => {
       lastCompletionMeet := None;
       isCompleting := false;
-      dispatch(Model.Actions.QuickmenuClose);
+      dispatch(Actions.QuickmenuClose);
     });
 
   let hasInitialized = ref(false);
@@ -473,12 +457,10 @@ let start =
     open Oni_Core.Utility;
     let () =
       getState()
-      |> Model.Selectors.getActiveEditorGroup
-      |> Model.Selectors.getActiveEditor
-      |> Option.map(Model.Editor.getId)
-      |> Option.iter(id => {
-           dispatch(Model.Actions.EditorCursorMove(id, cursors))
-         });
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
+      |> Option.map(Editor.getId)
+      |> Option.iter(id => {dispatch(Actions.EditorCursorMove(id, cursors))});
     ();
   };
 
@@ -490,12 +472,12 @@ let start =
         // Set cursors based on current editor
         let editor =
           getState()
-          |> Model.Selectors.getActiveEditorGroup
-          |> Model.Selectors.getActiveEditor;
+          |> Selectors.getActiveEditorGroup
+          |> Selectors.getActiveEditor;
 
         let cursors =
           editor
-          |> Option.map(Model.Editor.getVimCursors)
+          |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
         let () =
@@ -503,13 +485,11 @@ let start =
           |> Core.Utility.Option.iter(e => {
                let () =
                  getState()
-                 |> Model.Selectors.getActiveEditorGroup
-                 |> Option.map(Model.EditorGroup.getMetrics)
+                 |> Selectors.getActiveEditorGroup
+                 |> Option.map(EditorGroup.getMetrics)
                  |> Option.iter(metrics => {
-                      let topLine =
-                        Model.Editor.getTopVisibleLine(e, metrics);
-                      let leftCol =
-                        Model.Editor.getLeftVisibleColumn(e, metrics);
+                      let topLine = Editor.getTopVisibleLine(e, metrics);
+                      let leftCol = Editor.getLeftVisibleColumn(e, metrics);
                       Vim.Window.setTopLeft(topLine, leftCol);
                     });
                ();
@@ -522,15 +502,11 @@ let start =
 
         let () =
           editor
-          |> Option.map(Model.Editor.getId)
+          |> Option.map(Editor.getId)
           |> Option.iter(id => {
-               dispatch(Model.Actions.EditorCursorMove(id, cursors));
-               dispatch(
-                 Model.Actions.EditorScrollToLine(id, newTopLine - 1),
-               );
-               dispatch(
-                 Model.Actions.EditorScrollToColumn(id, newLeftColumn),
-               );
+               dispatch(Actions.EditorCursorMove(id, cursors));
+               dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
+               dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
         Log.debug(() => "VimStoreConnector - handled key: " ++ key);
       }
@@ -544,13 +520,13 @@ let start =
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
-        let eg = Model.EditorGroup.create();
-        dispatch(Model.Actions.EditorGroupAdd(eg));
+        let eg = EditorGroup.create();
+        dispatch(Actions.EditorGroupAdd(eg));
 
         let split =
-          Model.WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
+          WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
 
-        dispatch(Model.Actions.AddSplit(direction, split));
+        dispatch(Actions.AddSplit(direction, split));
       | None => ()
       };
 
@@ -560,7 +536,7 @@ let start =
       let fileType =
         switch (metadata.filePath) {
         | Some(v) =>
-          Some(Model.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -580,11 +556,11 @@ let start =
 
              let () =
                getState()
-               |> Model.Selectors.getActiveEditorGroup
-               |> Model.Selectors.getActiveEditor
-               |> Option.map(Model.Editor.getId)
+               |> Selectors.getActiveEditorGroup
+               |> Selectors.getActiveEditor
+               |> Option.map(Editor.getId)
                |> Option.iter(id =>
-                    dispatch(Model.Actions.EditorScrollToLine(id, topLine))
+                    dispatch(Actions.EditorScrollToLine(id, topLine))
                   );
              ();
            });
@@ -594,7 +570,7 @@ let start =
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
       switch (dir) {
-      | Some(_) => dispatch(Model.Actions.BufferEnter(metadata, fileType))
+      | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
       | None => ()
       };
     });
@@ -656,15 +632,15 @@ let start =
       switch (hasInitialized^) {
       | false => ()
       | true =>
-        let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-        let editor = Model.Selectors.getActiveEditor(editorGroup);
+        let editorGroup = Selectors.getActiveEditorGroup(state);
+        let editor = Selectors.getActiveEditor(editorGroup);
 
         /* If the editor / buffer in Onivim changed,
          * let libvim know about it and set it as the current buffer */
-        let editorBuffer = Model.Selectors.getActiveBuffer(state);
+        let editorBuffer = Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
-          let id = Model.Buffer.getId(editorBuffer);
+          let id = Buffer.getId(editorBuffer);
           if (id != v) {
             let buf = Vim.Buffer.getById(id);
             switch (buf) {
@@ -673,7 +649,7 @@ let start =
             };
           };
         | (Some(editorBuffer), _) =>
-          let id = Model.Buffer.getId(editorBuffer);
+          let id = Buffer.getId(editorBuffer);
           let buf = Vim.Buffer.getById(id);
           switch (buf) {
           | None => ()
@@ -683,12 +659,12 @@ let start =
         };
 
         let synchronizeWindowMetrics =
-            (editor: Model.Editor.t, editorGroup: Model.EditorGroup.t) => {
+            (editor: Editor.t, editorGroup: EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
           let (lines, columns) =
-            Model.Editor.getLinesAndColumns(editor, editorGroup.metrics);
+            Editor.getLinesAndColumns(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -739,11 +715,11 @@ let start =
       }
     );
 
-  let applyCompletion = (state: Model.State.t) =>
+  let applyCompletion = (state: State.t) =>
     Isolinear.Effect.create(~name="vim.applyCompletion", () => {
       let completions = state.completions;
-      let bestMatch = Model.Completions.getBestCompletion(completions);
-      let meet = Model.Completions.getMeet(completions);
+      let bestMatch = Completions.getBestCompletion(completions);
+      let meet = Completions.getMeet(completions);
       Oni_Core.Types.(
         switch (bestMatch, meet) {
         | (Some(completion), Some(meet)) =>
@@ -811,25 +787,25 @@ let start =
       ();
     });
 
-  let updater = (state: Model.State.t, action) => {
+  let updater = (state: State.t, action) => {
     switch (action) {
-    | Model.Actions.ConfigurationSet(configuration) => (
+    | Actions.ConfigurationSet(configuration) => (
         state,
         synchronizeViml(configuration),
       )
-    | Model.Actions.Command("editor.action.clipboardPasteAction") => (
+    | Actions.Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
       )
-    | Model.Actions.Command("insertBestCompletion") => (
+    | Actions.Command("insertBestCompletion") => (
         state,
         applyCompletion(state),
       )
-    | Model.Actions.Command("undo") => (state, undoEffect)
-    | Model.Actions.Command("redo") => (state, redoEffect)
-    | Model.Actions.ListFocusUp
-    | Model.Actions.ListFocusDown
-    | Model.Actions.ListFocus(_) =>
+    | Actions.Command("undo") => (state, undoEffect)
+    | Actions.Command("redo") => (state, redoEffect)
+    | Actions.ListFocusUp
+    | Actions.ListFocusDown
+    | Actions.ListFocus(_) =>
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.quickmenu) {
@@ -841,37 +817,34 @@ let start =
         };
       (state, eff);
 
-    | Model.Actions.Init => (state, initEffect)
-    | Model.Actions.OpenFileByPath(path, direction, location) => (
+    | Actions.Init => (state, initEffect)
+    | Actions.OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
-    | Model.Actions.BufferEnter(_)
-    | Model.Actions.SetEditorFont(_)
-    | Model.Actions.WindowSetActive(_, _)
-    | Model.Actions.EditorGroupSetSize(_, _) => (
+    | Actions.BufferEnter(_)
+    | Actions.SetEditorFont(_)
+    | Actions.WindowSetActive(_, _)
+    | Actions.EditorGroupSetSize(_, _) => (
         state,
         synchronizeEditorEffect(state),
       )
-    | Model.Actions.BufferSetIndentation(_, indent) => (
+    | Actions.BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
       )
-    | Model.Actions.ViewSetActiveEditor(_) => (
+    | Actions.ViewSetActiveEditor(_) => (
         state,
         synchronizeEditorEffect(state),
       )
-    | Model.Actions.ViewCloseEditor(_) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Model.Actions.KeyboardInput(s) => (state, inputEffect(s))
-    | Model.Actions.CopyActiveFilepathToClipboard => (
+    | Actions.ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | Actions.KeyboardInput(s) => (state, inputEffect(s))
+    | Actions.CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
       )
 
-    | Model.Actions.VimDirectoryChanged(directory) =>
+    | Actions.VimDirectoryChanged(directory) =>
       let newState = {
         ...state,
         workspace:

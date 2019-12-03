@@ -22,27 +22,3 @@ let create:
     unit
   ) =>
   t;
-
-let createFromZeroBasedIndices:
-  (
-    ~id: int=?,
-    ~isFull: bool=?,
-    ~startLine: int,
-    ~endLine: int,
-    ~lines: array(string),
-    ~version: int,
-    unit
-  ) =>
-  t;
-
-let createFromOneBasedIndices:
-  (
-    ~id: int=?,
-    ~isFull: bool=?,
-    ~startLine: int,
-    ~endLine: int,
-    ~lines: array(string),
-    ~version: int,
-    unit
-  ) =>
-  t;
