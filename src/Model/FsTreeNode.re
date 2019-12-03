@@ -25,13 +25,26 @@ let rec countExpandedSubtree =
 
   | _ => 1;
 
-let create = (~id, ~path, ~icon, ~kind) => {
+let file = (path, ~id, ~icon) => {
   id,
   path,
   displayName: Filename.basename(path),
   icon,
-  kind,
-  expandedSubtreeSize: countExpandedSubtree(kind),
+  kind: File,
+  expandedSubtreeSize: 1,
+};
+
+let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
+  let kind = Directory({isOpen, children});
+
+  {
+    id,
+    path,
+    displayName: Filename.basename(path),
+    icon,
+    kind,
+    expandedSubtreeSize: countExpandedSubtree(kind),
+  };
 };
 
 let update = (~tree, ~updater, nodeId) => {

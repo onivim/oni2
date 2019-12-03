@@ -9,20 +9,24 @@ type t =
   }
 
 and kind =
-  | Directory({
-      isOpen: bool,
-      children: [ | `Loading | `Loaded(list(t))],
-    })
-  | File;
+  pri
+    | Directory({
+        isOpen: bool,
+        children: [ | `Loading | `Loaded(list(t))],
+      })
+    | File;
 
-let create:
+let file: (string, ~id: int, ~icon: option(IconTheme.IconDefinition.t)) => t;
+let directory:
   (
+    ~isOpen: bool=?,
+    string,
     ~id: int,
-    ~path: string,
     ~icon: option(IconTheme.IconDefinition.t),
-    ~kind: kind
+    ~children: [ | `Loading | `Loaded(list(t))]
   ) =>
   t;
+
 let update: (~tree: t, ~updater: t => t, int) => t;
 let toggleOpenState: t => t;
 

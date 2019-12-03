@@ -80,46 +80,46 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
     |> Lwt_stream.to_list
     |> (
       promise =>
-        Lwt.bind(promise, files =>
-          Lwt_list.map_p(
-            file => {
-              let path = Filename.concat(cwd, file);
-              let isDirectory = isDir(path);
-              let id = ExplorerId.getUniqueId();
+        Lwt.bind(
+          promise,
+          Lwt_list.map_p(file => {
+            let path = Filename.concat(cwd, file);
+            let isDirectory = isDir(path);
+            let id = ExplorerId.getUniqueId();
 
-              /**
+            /**
                  If resolving children for a particular directory fails
                  log the error but carry on processing other directories
                */
-              let%lwt kind =
-                if (isDirectory) {
-                  let%lwt children =
-                    if (loadChildren) {
-                      let%lwt children =
-                        handleError(~defaultValue=[], () =>
-                          getDirContent(path)
-                        );
+            (
+              if (isDirectory) {
+                let%lwt children =
+                  if (loadChildren) {
+                    let%lwt children =
+                      handleError(~defaultValue=[], () =>
+                        getDirContent(path)
+                      );
 
-                      children
-                      |> List.sort(sortByLoweredDisplayName)
-                      |> (children => `Loaded(children) |> Lwt.return);
-                    } else {
-                      Lwt.return(`Loading);
-                    };
+                    children
+                    |> List.sort(sortByLoweredDisplayName)
+                    |> (children => `Loaded(children) |> Lwt.return);
+                  } else {
+                    Lwt.return(`Loading);
+                  };
 
-                  Lwt.return(
-                    FsTreeNode.Directory({isOpen: false, children}),
-                  );
-                } else {
-                  Lwt.return(FsTreeNode.File);
-                };
-
-              Lwt.return(
-                FsTreeNode.create(~id, ~path, ~icon=getIcon(path), ~kind),
-              );
-            },
-            files,
-          )
+                Lwt.return(
+                  FsTreeNode.directory(
+                    path,
+                    ~id,
+                    ~icon=getIcon(path),
+                    ~children,
+                  ),
+                );
+              } else {
+                Lwt.return(FsTreeNode.file(path, ~id, ~icon=getIcon(path)));
+              }
+            );
+          }),
         )
     );
   };
@@ -135,11 +135,12 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
-  FsTreeNode.create(
+  FsTreeNode.directory(
+    cwd,
     ~id,
-    ~path=cwd,
     ~icon=getIcon(cwd),
-    ~kind=Directory({isOpen: true, children: `Loaded(children)}),
+    ~children=`Loaded(children),
+    ~isOpen=true,
   );
 };
 
