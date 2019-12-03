@@ -26,6 +26,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.createFromZeroBasedIndices(
+          ~isFull=true,
           ~startLine=0,
           ~endLine=-1,
           ~lines=[|"a", "d", "e", "f", "c"|],
@@ -42,6 +43,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.createFromOneBasedIndices(
+          ~isFull=true,
           ~startLine=1,
           ~endLine=-1,
           ~lines=[|"a", "d", "e", "f", "c"|],
