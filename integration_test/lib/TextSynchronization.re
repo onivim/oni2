@@ -40,10 +40,10 @@ let _getTextFromExtHost = state => {
 
 let validateTextIsSynchronized =
     (
-      ~description,
+      ~expectedText=None,
       dispatch: Types.dispatchFunction,
       wait: Types.waitForState,
-      ~expectedText=None,
+      ~description,
     ) => {
   wait(
     ~name=description ++ ": validate text is synchronized",

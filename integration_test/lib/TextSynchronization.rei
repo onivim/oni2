@@ -11,7 +11,7 @@
 let validateTextIsSynchronized:
     (
       ~expectedText:option(string)=?,
-      ~description: string,
       Types.dispatchFunction,
       Types.waitForState,
+      ~description: string,
     ) => unit;
