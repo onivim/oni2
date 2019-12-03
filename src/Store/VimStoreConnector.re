@@ -324,15 +324,17 @@ let start =
 
       let isFull = update.endLine == -1;
 
+        let bufferMaybe = 
+        Some(getState())
+        |> Option.map(state => state.buffers)
+        |> Option.bind(Model.Buffers.getBuffer(update.id));
 
       // If this is a 'full' update, check if there was a previous buffer.
       // We need to keep track of the previous line count for some 
       // buffer synchronization strategies (ie, extension host)
       let endLine = if(isFull) {
         prerr_endline ("ISFULL");
-        Some(getState())
-        |> Option.map(state => state.buffers)
-        |> Option.bind(Model.Buffers.getBuffer(update.id))
+        bufferMaybe
         |> Option.map((b) => Model.Buffer.getNumberOfLines(b) + 1)
         |> Option.value(~default=update.startLine);
       } else {
@@ -350,7 +352,16 @@ let start =
           (),
         );
 
-      dispatch(Model.Actions.BufferUpdate(bu));
+      let shouldApply = 
+        bufferMaybe
+        |> Option.map(Model.Buffer.shouldApplyUpdate(bu))
+        |> Option.value(~default=true);
+
+      if (shouldApply) {
+        dispatch(Model.Actions.BufferUpdate(bu));
+      } else {
+        Log.info("Skipped buffer update at version: " ++ string_of_int(update.version));
+      }
     });
 
   let _ =

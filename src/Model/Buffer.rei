@@ -37,6 +37,7 @@ let getIndentation: t => option(IndentationSettings.t);
 let setModified: (bool, t) => t;
 let disableSyntaxHighlighting: t => t;
 
+let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
 let update: (t, BufferUpdate.t) => t;
 
 let empty: t;

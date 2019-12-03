@@ -74,23 +74,23 @@ runTestWithInput(
     );
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
-  waitForTextToMatch(~description="after insert mode", "a|b|c");
+  waitForTextToMatch(~description="after insert mode", "a|b|c|");
 
   // Now, delete a line - we had some bugs where deletes were not sync'd properly
   input("gg");
   input("j");
   input("dd");
 
-  waitForTextToMatch(~description="after deleting some lines", "a|c");
+  waitForTextToMatch(~description="after deleting some lines", "a|c|");
 
   // Undo the change - we also had bugs here!
   input("u");
 
-  waitForTextToMatch(~description="after undo", "a|b|c");
+  waitForTextToMatch(~description="after undo", "a|b|c|");
 
   // Finally, modify a single line
   input("gg");
   input("Iabc");
 
-  waitForTextToMatch(~description="after inserting some text in an existing line", "abca|b|c");
+  waitForTextToMatch(~description="after inserting some text in an existing line", "abca|b|c|");
 });

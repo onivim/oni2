@@ -173,7 +173,7 @@ module ModelContentChange = {
     let newLines = Array.length(bu.lines);
     let isInsert = newLines >= Index.toInt0(bu.endLine) - Index.toInt0(bu.startLine);
 
-    let isDelete = newLines == 0;
+    //let isDelete = newLines == 0;
 
     let startLine = Index.toInt0(bu.startLine);
     let endLine = Index.toInt0(bu.endLine);

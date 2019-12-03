@@ -148,10 +148,12 @@ let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
 
 let getIndentation = buf => buf.indentation;
 
-let update = (buf: t, update: BufferUpdate.t) => {
-  let curVersion = getVersion(buf);
+let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
+    update.version > getVersion(buf);
+};
 
-  if (update.version > curVersion) {
+let update = (buf: t, update: BufferUpdate.t) => {
+  if (shouldApplyUpdate(update, buf)) {
     /***
      If it's a full update, just apply the lines in their entiretupdate.endLiney
      */
