@@ -318,28 +318,27 @@ let start =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
-      prerr_endline ("VIM UPDATE: " ++ Vim.BufferUpdate.show(update));
       open Core.Types;
       open Model.State;
 
-      let isFull = update.endLine == -1;
+      let isFull = update.endLine == (-1);
 
-        let bufferMaybe = 
+      let bufferMaybe =
         Some(getState())
         |> Option.map(state => state.buffers)
         |> Option.bind(Model.Buffers.getBuffer(update.id));
 
       // If this is a 'full' update, check if there was a previous buffer.
-      // We need to keep track of the previous line count for some 
+      // We need to keep track of the previous line count for some
       // buffer synchronization strategies (ie, extension host)
-      let endLine = if(isFull) {
-        prerr_endline ("ISFULL");
-        bufferMaybe
-        |> Option.map((b) => Model.Buffer.getNumberOfLines(b) + 1)
-        |> Option.value(~default=update.startLine);
-      } else {
-        update.endLine
-      }
+      let endLine =
+        if (isFull) {
+          bufferMaybe
+          |> Option.map(b => Model.Buffer.getNumberOfLines(b) + 1)
+          |> Option.value(~default=update.startLine);
+        } else {
+          update.endLine;
+        };
 
       let bu =
         Core.Types.BufferUpdate.create(
@@ -352,7 +351,7 @@ let start =
           (),
         );
 
-      let shouldApply = 
+      let shouldApply =
         bufferMaybe
         |> Option.map(Model.Buffer.shouldApplyUpdate(bu))
         |> Option.value(~default=true);
@@ -360,8 +359,11 @@ let start =
       if (shouldApply) {
         dispatch(Model.Actions.BufferUpdate(bu));
       } else {
-        Log.info("Skipped buffer update at version: " ++ string_of_int(update.version));
-      }
+        Log.info(
+          "Skipped buffer update at version: "
+          ++ string_of_int(update.version),
+        );
+      };
     });
 
   let _ =

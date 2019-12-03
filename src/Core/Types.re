@@ -133,12 +133,21 @@ module BufferUpdate = {
     jsont_to_yojson(jsonr);
   };
 
-  let create = (~id=0, ~isFull=false, ~startLine, ~endLine, ~lines, ~version, ()) => {
+  let create =
+      (~id=0, ~isFull=false, ~startLine, ~endLine, ~lines, ~version, ()) => {
     let ret: t = {id, startLine, endLine, lines, version, isFull};
     ret;
   };
   let createFromZeroBasedIndices =
-      (~id=0, ~isFull=false, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+      (
+        ~id=0,
+        ~isFull=false,
+        ~startLine: int,
+        ~endLine: int,
+        ~lines,
+        ~version,
+        (),
+      ) => {
     let ret: t = {
       isFull,
       id,
@@ -150,7 +159,15 @@ module BufferUpdate = {
     ret;
   };
   let createFromOneBasedIndices =
-      (~id=0, ~isFull=false, ~startLine: int, ~endLine: int, ~lines, ~version, ()) => {
+      (
+        ~id=0,
+        ~isFull=false,
+        ~startLine: int,
+        ~endLine: int,
+        ~lines,
+        ~version,
+        (),
+      ) => {
     let ret: t = {
       isFull,
       id,

@@ -2,6 +2,7 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
+module TextSynchronization = TextSynchronization;
 
 type dispatchFunction = Model.Actions.t => unit;
 type runEffectsFunction = unit => unit;

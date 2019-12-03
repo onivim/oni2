@@ -171,20 +171,14 @@ module ModelContentChange = {
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
     let newLines = Array.length(bu.lines);
-    let isInsert = newLines >= Index.toInt0(bu.endLine) - Index.toInt0(bu.startLine);
-
-    //let isDelete = newLines == 0;
+    let isInsert =
+      newLines >= Index.toInt0(bu.endLine) - Index.toInt0(bu.startLine);
 
     let startLine = Index.toInt0(bu.startLine);
     let endLine = Index.toInt0(bu.endLine);
 
-    //let endLine = endLine <= (-1) ? 0 : endLine - 1;
-
     let endLine = max(endLine, startLine);
-    //let endCharacter = isInsert || isDelete ? 0 : 2147483647;
     let endCharacter = 0;
-
-    //let endLine = isDelete ? endLine + 1 : endLine;
 
     let range =
       Range.create(
@@ -204,9 +198,7 @@ module ModelContentChange = {
 
     let text = isInsert ? text ++ Eol.toString(eol) : text;
 
-    let ret = {range: OneBasedRange.ofRange(range), text};
-    prerr_endline ("Content change: " ++ Yojson.Safe.to_string(to_yojson(ret)));
-    ret;
+    {range: OneBasedRange.ofRange(range), text};
   };
 };
 
