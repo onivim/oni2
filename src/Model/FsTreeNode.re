@@ -3,7 +3,6 @@ type t = {
   path: string,
   displayName: string,
   icon: option(IconTheme.IconDefinition.t),
-  depth: int,
   kind,
   expandedSubtreeSize: int,
 }
@@ -26,12 +25,11 @@ let rec countExpandedSubtree =
 
   | _ => 1;
 
-let create = (~id, ~path, ~icon, ~depth, ~kind) => {
+let create = (~id, ~path, ~icon, ~kind) => {
   id,
   path,
   displayName: Filename.basename(path),
   icon,
-  depth,
   kind,
   expandedSubtreeSize: countExpandedSubtree(kind),
 };

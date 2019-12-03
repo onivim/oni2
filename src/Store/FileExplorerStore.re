@@ -81,19 +81,16 @@ let start = () => {
       switch (node) {
       | {kind: File, path, _} => (state, openFileByPathEffect(path))
 
-      | {kind: Directory({children: `Loading, _}), _} => (
-          state,
-          Effects.refreshNode(
-            node,
-            state.languageInfo,
-            state.iconTheme,
-            state.configuration,
-          ),
-        )
-
-      | _ => (
+      | {kind: Directory({isOpen, _}), _} => (
           replaceNode(node.id, FsTreeNode.toggleOpenState(node)),
-          Isolinear.Effect.none,
+          isOpen
+            ? Isolinear.Effect.none
+            : Effects.refreshNode(
+                node,
+                state.languageInfo,
+                state.iconTheme,
+                state.configuration,
+              ),
         )
       }
     };

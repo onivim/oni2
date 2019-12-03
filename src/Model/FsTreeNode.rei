@@ -4,7 +4,6 @@ type t =
     path: string,
     displayName: string,
     icon: option(IconTheme.IconDefinition.t),
-    depth: int,
     kind,
     expandedSubtreeSize: int,
   }
@@ -21,7 +20,6 @@ let create:
     ~id: int,
     ~path: string,
     ~icon: option(IconTheme.IconDefinition.t),
-    ~depth: int,
     ~kind: kind
   ) =>
   t;

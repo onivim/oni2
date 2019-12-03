@@ -6,7 +6,7 @@ type t = {
   isOpen: bool,
 };
 
-[@deriving show]
+[@deriving show({with_path: false})]
 type action =
   | TreeUpdated([@opaque] FsTreeNode.t)
   | NodeUpdated(int, [@opaque] FsTreeNode.t)
@@ -70,9 +70,8 @@ let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
    Lwt_list.map_p. The recursion is gated by the depth value so it does
    not recurse too far.
  */
-let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
-  let attempt = handleError(~defaultValue=[]);
-  let rec getDirContent = (~depth, cwd, getIcon) => {
+let getFilesAndFolders = (~ignored, cwd, getIcon) => {
+  let rec getDirContent = (~loadChildren=false, cwd) => {
     Lwt_unix.files_of_directory(cwd)
     /* Filter out the relative name for current and parent directory*/
     |> Lwt_stream.filter(name => name != ".." && name != ".")
@@ -86,7 +85,6 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
             file => {
               let path = Filename.concat(cwd, file);
               let isDirectory = isDir(path);
-              let nextDepth = depth + 1;
               let id = ExplorerId.getUniqueId();
 
               /**
@@ -96,10 +94,10 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
               let%lwt kind =
                 if (isDirectory) {
                   let%lwt children =
-                    if (nextDepth < maxDepth) {
+                    if (loadChildren) {
                       let%lwt children =
-                        attempt(() =>
-                          getDirContent(~depth=nextDepth, path, getIcon)
+                        handleError(~defaultValue=[], () =>
+                          getDirContent(path)
                         );
 
                       children
@@ -117,13 +115,7 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
                 };
 
               Lwt.return(
-                FsTreeNode.create(
-                  ~id,
-                  ~path,
-                  ~depth=nextDepth,
-                  ~icon=getIcon(path),
-                  ~kind,
-                ),
+                FsTreeNode.create(~id, ~path, ~icon=getIcon(path), ~kind),
               );
             },
             files,
@@ -132,15 +124,14 @@ let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
     );
   };
 
-  attempt(() => getDirContent(~depth=0, cwd, getIcon));
+  handleError(~defaultValue=[], () => getDirContent(cwd, ~loadChildren=true));
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   let id = ExplorerId.getUniqueId();
   let getIcon = getFileIcon(languageInfo, iconTheme);
-  let maxDepth = Constants.default.maximumExplorerDepth;
   let children =
-    getFilesAndFolders(~maxDepth, ~ignored, cwd, getIcon)
+    getFilesAndFolders(~ignored, cwd, getIcon)
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
@@ -148,7 +139,6 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     ~id,
     ~path=cwd,
     ~icon=getIcon(cwd),
-    ~depth=0,
     ~kind=Directory({isOpen: true, children: `Loaded(children)}),
   );
 };
