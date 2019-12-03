@@ -7,12 +7,15 @@
  */
 
 module Core = Oni_Core;
+module Uri = Core.Uri;
 open Oni_Core.Utility;
 module Model = Oni_Model;
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
+
+module Workspace = Protocol.Workspace;
 
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -89,6 +92,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
+      ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
@@ -282,6 +286,14 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     );
 
+  let changeWorkspaceEffect = path =>
+    Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+      ExtHostClient.acceptWorkspaceData(
+        Workspace.fromPath(path),
+        extHostClient,
+      )
+    });
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
     | Model.Actions.Init => (state, registerQuitCleanupEffect)
@@ -296,6 +308,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
         checkCompletionsEffect(completionMeet, state),
+      )
+    | Model.Actions.VimDirectoryChanged(path) => (
+        state,
+        changeWorkspaceEffect(path),
       )
     | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,

@@ -18,44 +18,40 @@ function activate(context) {
         vscode.window.showInformationMessage(JSON.stringify(val));
     }
 
+    let cleanup = (disposable) => context.subscriptions.push(disposable);
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
+	cleanup(vscode.commands.registerCommand('extension.helloWorld', () => {
 		// The code you place here will be executed every time your command is executed
-
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World!');
-	});
+	}));
 
-    let disposable2 = vscode.workspace.onDidOpenTextDocument((e) => {
+    cleanup(vscode.workspace.onDidOpenTextDocument((e) => {
         showData({
             type: "workspace.onDidOpenTextDocument",
             filename: e.fileName,
             fullText: e.getText(),
         });
-    });
+    }));
 
-    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+    cleanup(vscode.workspace.onDidChangeTextDocument((e) => {
         showData({
             type: "workspace.onDidChangeTextDocument",
             filename: e.document.fileName,
             contentChanges: e.contentChanges,
             fullText: e.document.getText(),
         });
-    });
+    }));
 
-    let disposable4 = vscode.workspace.onDidCloseTextDocument((e) => {
+    cleanup(vscode.workspace.onDidCloseTextDocument((e) => {
         showData({
             type: "workspace.onDidCloseTextDocument",
             filename: e.fileName,
         });
-    });
-
-	context.subscriptions.push(disposable);
-    context.subscriptions.push(disposable2);
-    context.subscriptions.push(disposable3);
-    context.subscriptions.push(disposable4);
+    }));
 }
 
 // this method is called when your extension is deactivated

@@ -9,6 +9,7 @@
 open Oni_Core;
 
 module Protocol = ExtHostProtocol;
+module Workspace = Protocol.Workspace;
 
 type t;
 
@@ -25,6 +26,7 @@ type messageHandler =
 let start:
   (
     ~initData: ExtHostInitData.t=?,
+    ~initialWorkspace: Workspace.t=?,
     ~onInitialized: simpleCallback=?,
     ~onMessage: messageHandler=?,
     ~onClosed: simpleCallback=?,

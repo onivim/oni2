@@ -12,6 +12,8 @@ open Rench;
 
 module Protocol = ExtHostProtocol;
 
+module Workspace = Protocol.Workspace;
+
 type t = {
   process: NodeProcess.t,
   rpc: Rpc.t,
@@ -32,6 +34,7 @@ let defaultMessageHandler = (_, _, _) => Ok(None);
 let start =
     (
       ~initData=ExtHostInitData.create(),
+      ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
@@ -157,8 +160,7 @@ let start =
     open ExtHostProtocol.OutgoingNotifications;
 
     Configuration.initializeConfiguration() |> sendNotification;
-    Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-    |> sendNotification;
+    Workspace.initializeWorkspace(initialWorkspace) |> sendNotification;
 
     initialized := true;
 
