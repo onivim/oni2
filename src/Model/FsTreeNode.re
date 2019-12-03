@@ -15,11 +15,11 @@ and kind =
     })
   | File;
 
-let rec _expandedSubtreeSize =
+let rec countExpandedSubtree =
   fun
   | Directory({isOpen: true, children: `Loaded(children)}) =>
     List.fold_left(
-      (acc, child) => acc + _expandedSubtreeSize(child.kind),
+      (acc, child) => acc + countExpandedSubtree(child.kind),
       1,
       children,
     )
@@ -33,7 +33,7 @@ let create = (~id, ~path, ~icon, ~depth, ~kind) => {
   icon,
   depth,
   kind,
-  expandedSubtreeSize: _expandedSubtreeSize(kind),
+  expandedSubtreeSize: countExpandedSubtree(kind),
 };
 
 let update = (~tree, ~updater, nodeId) => {
@@ -41,14 +41,11 @@ let update = (~tree, ~updater, nodeId) => {
     switch (tree) {
     | {id, _} as node when id == nodeId => updater(node)
 
-    | {kind: Directory({children: `Loaded(children), _} as dir), _} as node => {
-        ...node,
-        kind:
-          Directory({
-            ...dir,
-            children: `Loaded(List.map(update, children)),
-          }),
-      }
+    | {kind: Directory({children: `Loaded(children), _} as dir), _} as node =>
+      let kind =
+        Directory({...dir, children: `Loaded(List.map(update, children))});
+
+      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
 
     | node => node
     };
@@ -60,8 +57,9 @@ let update = (~tree, ~updater, nodeId) => {
 let toggleOpenState =
   fun
   | {kind: Directory({isOpen, children}), _} as node => {
-      ...node,
-      kind: Directory({isOpen: !isOpen, children}),
+      let kind = Directory({isOpen: !isOpen, children});
+
+      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
     }
   | node => node;
 
