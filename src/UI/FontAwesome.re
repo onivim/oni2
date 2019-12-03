@@ -4,6 +4,8 @@
  * Helper constants for FontAwesome
  */
 
+let fontFamily = "FontAwesome5FreeSolid.otf";
+
 let ad = 0xf641;
 let addressBook = 0xf2b9;
 let addressCard = 0xf2bb;

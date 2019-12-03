@@ -24,11 +24,6 @@ type t = {
   minimapLineSpacing: int,
   scrollBarThickness: int,
   minimapMaxColumn: int,
-  /*
-   * Maximum levels of the file system to traverse
-   * when initially populating the file explorer
-   */
-  maximumExplorerDepth: int,
   tabHeight: int,
   /*
    * The line count considered a 'large file' - if a file exceeds this limit,
@@ -47,7 +42,6 @@ let default: t = {
   minimapLineSpacing: 1,
   scrollBarThickness: 15,
   minimapMaxColumn: 120,
-  maximumExplorerDepth: 1,
   tabHeight: 35,
   notificationWidth: 300,
 

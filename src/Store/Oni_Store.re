@@ -9,3 +9,4 @@
  * and funneled through the appropriate reducers / updaters.
  */
 module StoreThread = StoreThread;
+module Reducer = Reducer;
