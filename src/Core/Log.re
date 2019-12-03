@@ -71,9 +71,12 @@ let enableDebugLogging = () =>
 let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
-let info = msg => Logs.info(m => m("%s", msg));
-let debug = msgf => Logs.debug(m => m("%s", msgf()));
-let error = msg => Logs.err(m => m("%s", msg));
+let infof = msgf => Logs.info(msgf);
+let info = msg => infof(m => m("%s", msg));
+let debugf = msgf => Logs.debug(msgf);
+let debug = msgf => debugf(m => m("%s", msgf()));
+let errorf = msgf => Logs.err(msgf);
+let error = msg =>errorf(m => m("%s", msg));
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
