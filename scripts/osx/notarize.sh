@@ -10,7 +10,7 @@ notarize_uuid=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.
 if  [ -z "$notarize_uuid" ]
 then
 	echo "Notarization failed; running again to get error message"
-	failure=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onvim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1)
+	failure=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onivim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1)
 	echo "MESSAGE: $failure"
 	exit 1
 else

@@ -1,5 +1,6 @@
 open Oni_Core;
 open Oni_Model;
+open Oni_Store;
 
 module Option = Utility.Option;
 
