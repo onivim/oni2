@@ -37,7 +37,7 @@ let printUnixError = (error, fn, arg) =>
   )
   |> Log.error;
 
-let handleError = (~defaultValue, func) => {
+let attempt = (~defaultValue, func) => {
   try%lwt(func()) {
   | Unix.Unix_error(error, fn, arg) =>
     printUnixError(error, fn, arg);
@@ -76,28 +76,24 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
       let path = Filename.concat(cwd, file);
       let id = ExplorerId.getUniqueId();
 
-      /**
-           If resolving children for a particular directory fails
-            log the error but carry on processing other directories
-          */
-      (
-        if (isDirectory(path)) {
-          let%lwt children =
-            if (loadChildren) {
-              let%lwt children =
-                handleError(~defaultValue=[], () => getDirContent(path));
+      if (isDirectory(path)) {
+        let%lwt children =
+          if (loadChildren) {
+            /**
+               If resolving children for a particular directory fails
+                log the error but carry on processing other directories
+              */
+            attempt(() => getDirContent(path), ~defaultValue=[])
+            |> Lwt.map(List.sort(sortByLoweredDisplayName));
+          } else {
+            Lwt.return([]);
+          };
 
-              children |> List.sort(sortByLoweredDisplayName) |> Lwt.return;
-            } else {
-              Lwt.return([]);
-            };
-
-          FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children)
-          |> Lwt.return;
-        } else {
-          FsTreeNode.file(path, ~id, ~icon=getIcon(path)) |> Lwt.return;
-        }
-      );
+        FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children)
+        |> Lwt.return;
+      } else {
+        FsTreeNode.file(path, ~id, ~icon=getIcon(path)) |> Lwt.return;
+      };
     };
 
     let%lwt files =
@@ -111,7 +107,7 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
     Lwt_list.map_p(toFsTreeNode, files);
   };
 
-  handleError(~defaultValue=[], () => getDirContent(cwd, ~loadChildren=true));
+  attempt(() => getDirContent(cwd, ~loadChildren=true), ~defaultValue=[]);
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
