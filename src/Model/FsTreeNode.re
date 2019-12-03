@@ -10,13 +10,13 @@ type t = {
 and kind =
   | Directory({
       isOpen: bool,
-      children: [ | `Loading | `Loaded(list(t))],
+      children: list(t),
     })
   | File;
 
 let rec countExpandedSubtree =
   fun
-  | Directory({isOpen: true, children: `Loaded(children)}) =>
+  | Directory({isOpen: true, children}) =>
     List.fold_left(
       (acc, child) => acc + countExpandedSubtree(child.kind),
       1,
@@ -52,9 +52,8 @@ let update = (~tree, ~updater, nodeId) => {
     switch (tree) {
     | {id, _} as node when id == nodeId => updater(node)
 
-    | {kind: Directory({children: `Loaded(children), _} as dir), _} as node =>
-      let kind =
-        Directory({...dir, children: `Loaded(List.map(update, children))});
+    | {kind: Directory({children, _} as dir), _} as node =>
+      let kind = Directory({...dir, children: List.map(update, children)});
 
       {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
 
@@ -80,7 +79,7 @@ module Model = {
   let children = node =>
     switch (node.kind) {
     | Directory({children, _}) => children
-    | File => `Loaded([])
+    | File => []
     };
 
   let kind = node =>

@@ -11,6 +11,7 @@ type action =
 
 let initial: t;
 
-let getFileIcon: (LanguageInfo.t, IconTheme.t, string) => option(IconTheme.IconDefinition.t);
+let getFileIcon:
+  (LanguageInfo.t, IconTheme.t, string) => option(IconTheme.IconDefinition.t);
 let getDirectoryTree:
   (string, LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;

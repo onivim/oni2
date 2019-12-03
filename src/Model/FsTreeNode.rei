@@ -12,7 +12,7 @@ and kind =
   pri
     | Directory({
         isOpen: bool,
-        children: [ | `Loading | `Loaded(list(t))],
+        children: list(t),
       })
     | File;
 
@@ -23,7 +23,7 @@ let directory:
     string,
     ~id: int,
     ~icon: option(IconTheme.IconDefinition.t),
-    ~children: [ | `Loading | `Loaded(list(t))]
+    ~children: list(t)
   ) =>
   t;
 
@@ -33,7 +33,7 @@ let toggleOpenState: t => t;
 module Model: {
   type nonrec t = t;
 
-  let children: t => [ | `Loading | `Loaded(list(t))];
+  let children: t => list(t);
   let kind: t => [ | `Node([ | `Open | `Closed]) | `Leaf];
   let expandedSubtreeSize: t => int;
 };

@@ -26,7 +26,7 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
+let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
 
 let printUnixError = (error, fn, arg) =>
   Printf.sprintf(
@@ -74,7 +74,6 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
   let rec getDirContent = (~loadChildren=false, cwd) => {
     let toFsTreeNode = file => {
       let path = Filename.concat(cwd, file);
-      let isDirectory = isDir(path);
       let id = ExplorerId.getUniqueId();
 
       /**
@@ -82,24 +81,21 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
             log the error but carry on processing other directories
           */
       (
-        if (isDirectory) {
+        if (isDirectory(path)) {
           let%lwt children =
             if (loadChildren) {
               let%lwt children =
                 handleError(~defaultValue=[], () => getDirContent(path));
 
-              children
-              |> List.sort(sortByLoweredDisplayName)
-              |> (children => `Loaded(children) |> Lwt.return);
+              children |> List.sort(sortByLoweredDisplayName) |> Lwt.return;
             } else {
-              Lwt.return(`Loading);
+              Lwt.return([]);
             };
 
-          Lwt.return(
-            FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children),
-          );
+          FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children)
+          |> Lwt.return;
         } else {
-          Lwt.return(FsTreeNode.file(path, ~id, ~icon=getIcon(path)));
+          FsTreeNode.file(path, ~id, ~icon=getIcon(path)) |> Lwt.return;
         }
       );
     };
@@ -130,7 +126,7 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     cwd,
     ~id,
     ~icon=getIcon(cwd),
-    ~children=`Loaded(children),
+    ~children,
     ~isOpen=true,
   );
 };

@@ -7,7 +7,7 @@ open Oni_Core;
 module type TreeModel = {
   type t;
 
-  let children: t => [ | `Loading | `Loaded(list(t))];
+  let children: t => list(t);
   let kind: t => [ | `Node([ | `Open | `Closed]) | `Leaf];
   let expandedSubtreeSize: t => int;
 };
@@ -139,12 +139,7 @@ module Make = (Model: TreeModel) => {
           <item arrow={arrow(~isOpen=state == `Open)} />
           <View style=Styles.children>
             {switch (state) {
-             | `Open =>
-               switch (Model.children(node)) {
-               | `Loading => <Text text="Loading..." style=Styles.loading />
-               | `Loaded(children) => renderChildren(children)
-               }
-
+             | `Open => node |> Model.children |> renderChildren
              | `Closed => React.empty
              }}
           </View>
