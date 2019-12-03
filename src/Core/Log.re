@@ -4,23 +4,6 @@
  * Simple console logger
  */
 
-let canPrint = ref(false);
-let debugLogging = ref(false);
-
-let enablePrinting = () => {
-  canPrint := true;
-};
-
-let enableDebugLogging = () => {
-  debugLogging := true;
-};
-
-let isDebugLoggingEnabled = () => debugLogging^;
-
-let print = msg => canPrint^ ? print_endline(msg) : ();
-
-let prerr = msg => canPrint^ ? prerr_endline(msg) : ();
-
 let fileChannel =
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | Some(v) =>
@@ -31,50 +14,83 @@ let fileChannel =
   | None => None
   };
 
-let _ =
-  switch (Sys.getenv_opt("ONI2_DEBUG"), Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | (Some(_), _) => debugLogging := true
-  | (_, Some(_)) => debugLogging := true
-  | _ => ()
+let fileReporter =
+  switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
+  | Some(path) =>
+    let channel = open_out(path);
+    let ppf = Format.formatter_of_out_channel(channel);
+    Printf.fprintf(channel, "Starting log file.\n%!");
+
+    Logs.{
+      report: (_src, level, ~over, k, msgf) => {
+        let k = _ => {
+          over();
+          k();
+        };
+
+        msgf((~header=?, ~tags as _=?, fmt) => {
+          Format.kfprintf(
+            k,
+            ppf,
+            "%a@[" ^^ fmt ^^ "@]@.",
+            pp_header,
+            (level, header),
+          )
+        });
+      },
+    };
+
+  | None => Logs.nop_reporter
   };
 
-let logCore = (~error=false, msg) => {
-  switch (fileChannel) {
-  | Some(oc) =>
-    Printf.fprintf(oc, "%s\n", msg);
-    flush(oc);
-  | None =>
-    switch (error) {
-    | false => print(msg)
-    | true => prerr(msg)
-    }
+let consoleReporter = Logs_fmt.reporter(~pp_header=Logs_fmt.pp_header, ());
+
+let reporter =
+  Logs.{
+    report: (src, level, ~over, k, msgf) => {
+      let kret = consoleReporter.report(src, level, ~over=() => (), k, msgf);
+      fileReporter.report(src, level, ~over, () => kret, msgf);
+    },
+  };
+
+// defaults
+let () = {
+  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
+  switch (Sys.getenv_opt("ONI2_DEBUG"), Sys.getenv_opt("ONI2_LOG_FILE")) {
+  | (Some(_), _)
+  | (_, Some(_)) => Logs.set_level(Some(Logs.Debug))
+  | _ => Logs.set_level(Some(Logs.Info))
   };
 };
 
-let info = msg => logCore("[INFO] " ++ msg);
+let enablePrinting = () => Logs.set_reporter(reporter);
+let isPrintingEnabled = () => Logs.reporter() === Logs.nop_reporter;
 
-// Debug takes a function callback, so that we can avoid
-// very expensive logging in the case debug logging is not enabled.
-let debug = msgF => debugLogging^ ? logCore("[DEBUG] " ++ msgF()) : ();
+let enableDebugLogging = () =>
+  Logs.Src.set_level(Logs.default, Some(Logs.Debug));
+let isDebugLoggingEnabled = () =>
+  Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
-let error = msg => logCore(~error=true, "[ERROR] " ++ msg);
+let info = msg => Logs.info(m => m("%s", msg));
+let debug = msgf => Logs.debug(m => m("%s", msgf()));
+let error = msg => Logs.err(m => m("%s", msg));
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
   let ret = f();
   let endTime = Unix.gettimeofday();
-  logCore(
+  debug(() =>
     "[PERF] "
     ++ msg
     ++ " took "
     ++ string_of_float(endTime -. startTime)
-    ++ "s",
+    ++ "s"
   );
   ret;
 };
 
 let () =
-  switch (debugLogging^) {
+  switch (isDebugLoggingEnabled()) {
   | false => ()
   | true =>
     debug(() => "Recording backtraces");

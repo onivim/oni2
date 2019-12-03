@@ -57,7 +57,7 @@ let parse = () => {
     "",
   );
 
-  if (! Log.canPrint^) {
+  if (!Log.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
     Utility.freeConsole();
   };

@@ -16,5 +16,9 @@
         ppx_deriving_yojson.runtime
         reason-jsonrpc
         textmate
+        fmt
+        fmt.tty
+        logs
+        logs.fmt
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
