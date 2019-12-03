@@ -3,7 +3,7 @@ open TestFramework;
 
 open Helpers;
 
-open Oni_Core.Types;
+module BufferUpdate = Oni_Core.BufferUpdate;
 module Buffer = Oni_Model.Buffer;
 
 describe("Buffer", ({describe, _}) =>

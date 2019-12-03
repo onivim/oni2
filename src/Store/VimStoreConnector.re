@@ -341,7 +341,7 @@ let start =
         };
 
       let bu =
-        Core.Types.BufferUpdate.create(
+        Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
           ~startLine=Index.OneBasedIndex(update.startLine),
