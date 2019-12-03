@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Types;
 open Oni_Model;
 open BenchFramework;
 
@@ -23,10 +24,10 @@ let hundredThousandLines = Array.make(100000, "Another big buffer update");
 
 let addLinesToEmptyBuffer = () => {
   let _ =
-    BufferUpdate.createFromZeroBasedIndices(
+    BufferUpdate.create(
       ~id=emptyBufferId,
-      ~startLine=0,
-      ~endLine=-1,
+      ~startLine=Index.ZeroBasedIndex(0),
+      ~endLine=Index.ZeroBasedIndex(-1),
       ~lines=hundredThousandLines,
       ~version=1,
       (),
@@ -37,10 +38,10 @@ let addLinesToEmptyBuffer = () => {
 
 let clearLargeBuffer = () => {
   let _ =
-    BufferUpdate.createFromZeroBasedIndices(
+    BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=0,
-      ~endLine=-1,
+      ~startLine=Index.ZeroBasedIndex(0),
+      ~endLine=Index.ZeroBasedIndex(-1),
       ~lines=[||],
       ~version=1,
       (),
@@ -51,10 +52,10 @@ let clearLargeBuffer = () => {
 
 let insertInMiddleOfSmallBuffer = () => {
   let _ =
-    BufferUpdate.createFromZeroBasedIndices(
+    BufferUpdate.create(
       ~id=smallBufferId,
-      ~startLine=50,
-      ~endLine=51,
+      ~startLine=Index.ZeroBasedIndex(50),
+      ~endLine=Index.ZeroBasedIndex(51),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),
@@ -65,10 +66,10 @@ let insertInMiddleOfSmallBuffer = () => {
 
 let insertInMiddleOfLargeBuffer = () => {
   let _ =
-    BufferUpdate.createFromZeroBasedIndices(
+    BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=5000,
-      ~endLine=50001,
+      ~startLine=Index.ZeroBasedIndex(5000),
+      ~endLine=Index.ZeroBasedIndex(50001),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),
