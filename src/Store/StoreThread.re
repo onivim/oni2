@@ -17,6 +17,8 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
+module Log = (val Core.Log.withNamespace("StoreTread"));
+
 let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
   open Core.Cli;
   let extensions =
@@ -216,8 +218,7 @@ let start =
   let rec dispatch = (action: Model.Actions.t) => {
     switch (action) {
     | Tick(_) => () // This gets a bit intense, so ignore it
-    | _ =>
-      Core.Log.info("[StoreThread.dispatch]: " ++ Model.Actions.show(action))
+    | _ => Log.info("[dispatch]: " ++ Model.Actions.show(action))
     };
 
     let lastState = latestState^;
