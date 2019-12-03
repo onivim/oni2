@@ -4,6 +4,8 @@
  * Simple console logger
  */
 
+type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
+
 let fileChannel =
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | Some(v) =>
@@ -71,12 +73,14 @@ let enableDebugLogging = () =>
 let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
-let infof = msgf => Logs.info(msgf);
+let infof = msgf => Logs.info(m => msgf(m(~header=?None, ~tags=?None)));
 let info = msg => infof(m => m("%s", msg));
-let debugf = msgf => Logs.debug(msgf);
+
+let debugf = msgf => Logs.debug(m => msgf(m(~header=?None, ~tags=?None)));
 let debug = msgf => debugf(m => m("%s", msgf()));
-let errorf = msgf => Logs.err(msgf);
-let error = msg =>errorf(m => m("%s", msg));
+
+let errorf = msgf => Logs.err(m => msgf(m(~header=?None, ~tags=?None)));
+let error = msg => errorf(m => m("%s", msg));
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
