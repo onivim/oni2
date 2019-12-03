@@ -6,12 +6,13 @@
  */
 
 /* [validateTextIsSynchronized] takes a dispatch and a wait function,
-   and validates that the text across all sources is synchronized.
-*/
+      and validates that the text across all sources is synchronized.
+   */
 let validateTextIsSynchronized:
-    (
-      ~expectedText:option(string)=?,
-      Types.dispatchFunction,
-      Types.waitForState,
-      ~description: string,
-    ) => unit;
+  (
+    ~expectedText: option(string)=?,
+    Types.dispatchFunction,
+    Types.waitForState,
+    ~description: string
+  ) =>
+  unit;
