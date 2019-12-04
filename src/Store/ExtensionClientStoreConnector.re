@@ -184,9 +184,12 @@ let start = (extensions, setup: Core.Setup.t) => {
   let suggestionItemToCompletionItem:
     Protocol.SuggestionItem.t => Model.Actions.completionItem =
     suggestion => {
+      let completionKind =
+        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+
       {
         completionLabel: suggestion.label,
-        completionKind: CompletionKind.Text,
+        completionKind,
         completionDetail: None,
       };
     };

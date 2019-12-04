@@ -36,17 +36,17 @@ let toModelDiagnostics = (errors: MerlinProtocol.errorResult) => {
 
 let completionKindConverter = (kind: string) => {
   switch (String.lowercase_ascii(kind)) {
-  | "value" => CompletionKind.Method
-  | "variant" => CompletionKind.Enum
-  | "constructor" => CompletionKind.Constructor
-  | "label" => CompletionKind.Property
-  | "module" => CompletionKind.Module
-  | "signature" => CompletionKind.Interface
-  | "type" => CompletionKind.Struct
-  | "method" => CompletionKind.Method
-  | "exn" => CompletionKind.Event
-  | "class" => CompletionKind.Class
-  | _ => CompletionKind.Method
+  | "value" => CompletionItemKind.Method
+  | "variant" => CompletionItemKind.Enum
+  | "constructor" => CompletionItemKind.Constructor
+  | "label" => CompletionItemKind.Property
+  | "module" => CompletionItemKind.Module
+  | "signature" => CompletionItemKind.Interface
+  | "type" => CompletionItemKind.Struct
+  | "method" => CompletionItemKind.Method
+  | "exn" => CompletionItemKind.Event
+  | "class" => CompletionItemKind.Class
+  | _ => CompletionItemKind.Method
   };
 };
 
@@ -54,7 +54,7 @@ let toModelCompletions = (completions: MerlinProtocol.completionResult) => {
   let f = (cmp: MerlinProtocol.completionResultItem) => {
     let descLen = String.length(cmp.desc);
     Model.Actions.{
-      completionKind: completionKindConverter(cmp.kind),
+      completionKind: Some(completionKindConverter(cmp.kind)),
       completionLabel: cmp.name,
       // For now, restrict the description length. We had cases where the very-large
       // description was taking significant time to render.

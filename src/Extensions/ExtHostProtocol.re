@@ -298,12 +298,38 @@ module SuggestionItem = {
   type t = {
     label: string,
     insertText: string,
+    kind: option(int),
+  };
+
+  let of_yojson = json => {
+    Yojson.Safe.Util.(
+      try({
+        let label = json |> member("label") |> to_string;
+        let insertText = json |> member("insertText") |> to_string;
+        let kind = json |> member("kind") |> to_int_option;
+        Ok({label, insertText, kind});
+      }) {
+      | Undefined(msg, _) => Error(msg)
+      }
+    );
   };
 };
 
 module Suggestions = {
-  [@deriving yojson({strict: false})]
   type t = list(SuggestionItem.t);
+
+  let of_yojson = json => {
+    switch (json) {
+    | `List(suggestions) =>
+      let result =
+        suggestions
+        |> List.map(SuggestionItem.of_yojson)
+        |> List.map(resultToOption)
+        |> List.filter_map(v => v);
+      Ok(result);
+    | _ => Error("Unable to parse Suggestions")
+    };
+  };
 };
 
 module Workspace = {

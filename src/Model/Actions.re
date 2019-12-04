@@ -135,7 +135,7 @@ and completionMeet = {
 }
 and completionItem = {
   completionLabel: string,
-  completionKind: Ext.CompletionKind.t,
+  completionKind: option(Ext.CompletionItemKind.t),
   completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
