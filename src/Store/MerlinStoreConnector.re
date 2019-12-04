@@ -36,8 +36,7 @@ let start = () => {
 
   let pendingGetErrorsRequest = ref(None);
 
-  let modelChangedEffect =
-      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
     effectIfMerlinEnabled(
       Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
         switch (Model.Buffers.getBuffer(bu.id, buffers)) {

@@ -5,6 +5,8 @@
  *
  */
 
+module ModelConfig = Configuration;
+
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Core.Utility;
@@ -171,20 +173,14 @@ module ModelContentChange = {
 
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
     let newLines = Array.length(bu.lines);
-    let isInsert = Index.toInt0(bu.endLine) == Index.toInt0(bu.startLine);
-
-    let isDelete = newLines == 0;
+    let isInsert =
+      newLines >= Index.toInt0(bu.endLine) - Index.toInt0(bu.startLine);
 
     let startLine = Index.toInt0(bu.startLine);
     let endLine = Index.toInt0(bu.endLine);
 
-    let endLine = endLine <= (-1) ? 2147483647 : endLine - 1;
-
     let endLine = max(endLine, startLine);
-    let endCharacter = isInsert || isDelete ? 0 : 2147483647;
-    //    let endCharacter = 0;
-
-    let endLine = isDelete ? endLine + 1 : endLine;
+    let endCharacter = 0;
 
     let range =
       Range.create(
@@ -310,6 +306,60 @@ module Suggestions = {
   type t = list(SuggestionItem.t);
 };
 
+module Workspace = {
+  module Folder = {
+    type t = {
+      uri: Uri.t,
+      name: string,
+      id: string,
+    };
+
+    let to_yojson: t => Yojson.Safe.t =
+      folder => {
+        `Assoc([
+          ("uri", Uri.to_yojson(folder.uri)),
+          ("name", `String(folder.name)),
+          ("id", `String(folder.id)),
+        ]);
+      };
+  };
+
+  type t = {
+    id: string,
+    name: string,
+    folders: list(Folder.t),
+  };
+
+  let empty: t = {id: "No workspace", name: "No workspace", folders: []};
+
+  let create = (~folders=[], name, ~id) => {id, name, folders};
+
+  let fromUri = (uri, ~name, ~id) => {
+    id,
+    name,
+    folders: [{uri, name, id}],
+  };
+
+  let fromPath = path => {
+    id: path,
+    name: path,
+    folders: [{uri: Uri.fromPath(path), name: path, id: path}],
+  };
+
+  let to_yojson: t => Yojson.Safe.t =
+    ws => {
+      let foldersJson =
+        ws.folders |> List.map(Folder.to_yojson) |> (v => `List(v));
+
+      `Assoc([
+        ("id", `String(ws.id)),
+        ("name", `String(ws.name)),
+        ("configuration", `Assoc([])),
+        ("folders", foldersJson),
+      ]);
+    };
+};
+
 module LF = LanguageFeatures;
 
 module IncomingNotifications = {
@@ -389,7 +439,7 @@ module OutgoingNotifications = {
       _buildNotification(
         "ExtHostConfiguration",
         "$initializeConfiguration",
-        `List([`Assoc([])]),
+        `List([ModelConfig.empty |> ModelConfig.to_yojson]),
       );
     };
   };
@@ -483,13 +533,19 @@ module OutgoingNotifications = {
       folders: list(string),
     };
 
-    let initializeWorkspace = (id: string, name: string) => {
-      let wsinfo = {id, name, folders: []};
-
+    let initializeWorkspace = (workspace: Workspace.t) => {
       _buildNotification(
         "ExtHostWorkspace",
         "$initializeWorkspace",
-        `List([workspaceInfo_to_yojson(wsinfo)]),
+        `List([Workspace.to_yojson(workspace)]),
+      );
+    };
+
+    let acceptWorkspaceData = (workspace: Workspace.t) => {
+      _buildNotification(
+        "ExtHostWorkspace",
+        "$acceptWorkspaceData",
+        `List([Workspace.to_yojson(workspace)]),
       );
     };
   };

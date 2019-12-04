@@ -20,6 +20,10 @@
 			{
 				"command": "developer.oni.getBufferText",
 				"title": "Onivim - Developer: Buffer Text"
+			},
+			{
+				"command": "developer.oni.showWorkspaceRootPath",
+				"title": "Onivim - Developer: Show Root Path"
 			}
 		],
 		"languages": [{

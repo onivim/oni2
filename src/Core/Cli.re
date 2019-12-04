@@ -9,12 +9,14 @@ type t = {
   folder: string,
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  overriddenExtensionsDir: option(string),
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
   folder,
   filesToOpen,
   forceScaleFactor: None,
+  overriddenExtensionsDir: None,
 };
 
 let newline = "\n";
@@ -33,10 +35,14 @@ let setWorkingDirectory = s => {
   Sys.chdir(s);
 };
 
+let setRef: (ref(option('a)), 'a) => unit =
+  (someRef, v) => someRef := Some(v);
+
 let parse = () => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
+  let extensionsDir = ref(None);
 
   Arg.parse(
     [
@@ -44,11 +50,8 @@ let parse = () => {
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
-      (
-        "--force-device-scale-factor",
-        Float(f => scaleFactor := Some(f)),
-        "",
-      ),
+      ("--extensions-dir", String(setRef(extensionsDir)), ""),
+      ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
     ],
     arg => args := [arg, ...args^],
     "",
@@ -121,5 +124,10 @@ let parse = () => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {folder, filesToOpen, forceScaleFactor: scaleFactor^};
+  {
+    folder,
+    filesToOpen,
+    forceScaleFactor: scaleFactor^,
+    overriddenExtensionsDir: extensionsDir^,
+  };
 };

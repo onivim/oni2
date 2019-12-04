@@ -1,4 +1,4 @@
-p---
+---
 id: key-bindings
 title: Key Bindings
 sidebar_label: Key Bindings

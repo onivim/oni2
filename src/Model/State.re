@@ -6,9 +6,10 @@
 
 open Oni_Core;
 open Oni_Core.Types;
-open Oni_Extensions;
 open Oni_Input;
 open Oni_Syntax;
+
+module Ext = Oni_Extensions;
 
 type t = {
   commands: Commands.t,
@@ -32,7 +33,7 @@ type t = {
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
-  languageFeatures: LanguageFeatures.t,
+  languageFeatures: Ext.LanguageFeatures.t,
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
@@ -69,7 +70,7 @@ let create: unit => t =
         (),
       ),
     extensions: Extensions.empty,
-    languageFeatures: LanguageFeatures.empty,
+    languageFeatures: Ext.LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     syntaxHighlighting: SyntaxHighlighting.empty,
