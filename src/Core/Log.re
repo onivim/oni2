@@ -55,7 +55,7 @@ module Namespace = {
       let color = pickColor(Hashtbl.hash(namespace));
       let style = Fmt.(styled(`Fg(color), string));
 
-      Fmt.pf(ppf, "[%a]", style, namespace);
+      Fmt.pf(ppf, "%a :", style, namespace);
     });
 
   let includes = ref([]);
@@ -137,7 +137,34 @@ let fileReporter =
     },
   };
 
-let consoleReporter =
+let consoleReporter = {
+  let pp_level = (ppf, level) => {
+    let str =
+      switch (level) {
+      | Logs.App => ""
+      | Logs.Error => "ERROR"
+      | Logs.Warning => "WARN"
+      | Logs.Info => "INFO"
+      | Logs.Debug => "DEBUG"
+      };
+
+    Fmt.pf(ppf, "%-7s", "[" ++ str ++ "]");
+  };
+
+  let pp_level_styled = (ppf, level) => {
+    let (fg, bg) =
+      switch (level) {
+      | Logs.App => (`White, `Cyan)
+      | Logs.Error => (`White, `Red)
+      | Logs.Warning => (`White, `Yellow)
+      | Logs.Info => (`Black, `Blue)
+      | Logs.Debug => (`Black, `Green)
+      };
+
+    let style = Fmt.(styled(`Fg(fg), styled(`Bg(bg), pp_level)));
+    Fmt.pf(ppf, "%7a", style, level);
+  };
+
   Logs.{
     report: (_src, level, ~over, k, msgf) => {
       let k = _ => {
@@ -145,21 +172,22 @@ let consoleReporter =
         k();
       };
 
-      msgf((~header=?, ~tags=?, fmt) => {
+      msgf((~header as _=?, ~tags=?, fmt) => {
         let namespace = Option.bind(tags, Logs.Tag.find(Namespace.tag));
 
         Format.kfprintf(
           k,
           Format.err_formatter,
-          "%a%a@[" ^^ fmt ^^ "@]@.",
-          Logs_fmt.pp_header,
-          (level, header),
+          "%a %a @[" ^^ fmt ^^ "@]@.",
+          pp_level_styled,
+          level,
           Namespace.pp,
           namespace,
         );
       });
     },
   };
+};
 
 let reporter =
   Logs.{
