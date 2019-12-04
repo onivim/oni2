@@ -46,17 +46,13 @@ module Env = {
 };
 
 module Namespace = {
-  let pickColor = i => Constants.colors[i mod Array.length(Constants.colors)];
+  let pickColor = namespace => {
+    let index = Hashtbl.hash(namespace) mod Array.length(Constants.colors);
+    Constants.colors[index];
+  };
 
-  let tag = Logs.Tag.def("namespace", Format.pp_print_string);
-
-  let pp = ppf =>
-    Option.iter(namespace => {
-      let color = pickColor(Hashtbl.hash(namespace));
-      let style = Fmt.(styled(`Fg(color), string));
-
-      Fmt.pf(ppf, "%a :", style, namespace);
-    });
+  let pp = ppf => Format.pp_print_string(ppf);
+  let tag = Logs.Tag.def("namespace", pp);
 
   let includes = ref([]);
   let excludes = ref([]);
@@ -99,6 +95,11 @@ module Namespace = {
   };
 };
 
+module DeltaTime = {
+  let pp = (ppf, dt) => Fmt.pf(ppf, "%+5.0fms", dt *. 1000.);
+  let tag = Logs.Tag.def("time", pp);
+};
+
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
 let logFileChannel = ref(None);
@@ -131,7 +132,7 @@ let fileReporter =
             "%a %a @[" ^^ fmt ^^ "@]@.",
             pp_header,
             (level, header),
-            Namespace.pp,
+            ppf => Option.iter(Namespace.pp(ppf)),
             namespace,
           );
         });
@@ -178,14 +179,19 @@ let consoleReporter = {
 
       msgf((~header as _=?, ~tags=?, fmt) => {
         let namespace = Option.bind(tags, Tag.find(Namespace.tag));
+        let dt = Option.bind(tags, Tag.find(DeltaTime.tag));
+        let color = Namespace.pickColor(namespace);
+        let style = pp => Fmt.(styled(`Fg(color), pp));
 
         Format.kfprintf(
           k,
           Format.err_formatter,
-          "%a %a @[" ^^ fmt ^^ "@]@.",
+          "%a %a %a : @[" ^^ fmt ^^ "@]@.",
           pp_level_styled,
           level,
-          Namespace.pp,
+          ppf => Option.iter(DeltaTime.pp(ppf)),
+          dt,
+          ppf => Option.iter(Fmt.pf(ppf, "%a", style(Namespace.pp))),
           namespace,
         );
       });
@@ -209,11 +215,22 @@ let enableDebugLogging = () =>
 let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
+let lastLogTime = ref(Unix.gettimeofday());
+
 let log = (~namespace="Global", level, msgf) =>
   Logs.msg(level, m =>
     if (Namespace.isEnabled(namespace)) {
-      let tags = Logs.Tag.(empty |> add(Namespace.tag, namespace));
+      let now = Unix.gettimeofday();
+      let tags =
+        Logs.Tag.(
+          empty
+          |> add(Namespace.tag, namespace)
+          |> add(DeltaTime.tag, now -. lastLogTime^)
+        );
+
       msgf(m(~header=?None, ~tags));
+
+      lastLogTime := now;
     }
   );
 
