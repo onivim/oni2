@@ -1,4 +1,5 @@
 open Oni_Core.Utility;
+open Oni_Extensions;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -40,6 +41,16 @@ runTestWithInput(
     )
   );
 
+  // Also, wait for suggest providers to be registered
+  wait(
+    ~timeout=30.0,
+    ~name="Wait for suggest providers for 'typescript' to be registered",
+    (state: State.t) =>
+    state.languageFeatures
+    |> LanguageFeatures.getSuggestProviders("typescript")
+    |> (providers => List.length(providers) > 0)
+  );
+
   // Enter some text
   input("i");
 
@@ -65,6 +76,15 @@ runTestWithInput(
       },
     );
   };
+
+  // Should've also gotten some completions...
+  wait(
+    ~timeout=30.0,
+    ~name="Validate we also got some completions",
+    (state: State.t) => {
+    Model.Completions.getCompletions(state.completions)
+    |> (comp => List.length(comp) > 0)
+  });
 
   // Fix error, finish identifier
   input("indow");
