@@ -66,10 +66,11 @@ let empty = {
   workspace: Model.empty,
 };
 
-let create = (~defaults=Model.empty, ~user=Model.empty, ~workspace=Model.empty, ()) => {
+let create =
+    (~defaults=Model.empty, ~user=Model.empty, ~workspace=Model.empty, ()) => {
   // For now... we'll only consider a single configuration model. But we'll need to update this to handle
   // workspace / user configuration for better fidelity with extensions, later!
   defaults,
-  user, 
+  user,
   workspace,
 };
