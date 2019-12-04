@@ -13,7 +13,7 @@ module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
 module Workspace = Protocol.Workspace;
 
-module Log = (val Log.withNamespace("ExtHostClient"));
+module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
 
 type t = {transport: ExtHostTransport.t};
 
@@ -92,7 +92,7 @@ let start =
     | (system, method, _a) =>
       Log.errorf(m =>
         m(
-          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
+          "Unhandled message - [%s:%s]: %s",
           system,
           method,
           Yojson.Safe.to_string(`List(_a)),

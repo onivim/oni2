@@ -17,7 +17,10 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("StoreThread"));
+module Log = (val Core.Log.withNamespace("Oni2.StoreThread"));
+module DispatchLog = (
+  val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
+);
 
 let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
   open Core.Cli;
@@ -42,31 +45,28 @@ let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
             switch (Core.Filesystem.getExtensionsFolder()) {
             | Ok(p) => Some(p)
             | Error(msg) =>
-              Core.Log.error("Error discovering user extensions: " ++ msg);
+              Log.errorf(m => m("Error discovering user extensions: %s", msg));
               None;
             }
           }
         )
         |> Option.map(p => {
-             Core.Log.info("Searching for user extensions in: " ++ p);
+             Log.infof(m => m("Searching for user extensions in: %s", p));
              p;
            })
         |> Option.map(ExtensionScanner.scan)
         |> Option.value(~default=[]);
 
-      Core.Log.debug(() =>
-        "discoverExtensions - discovered "
-        ++ string_of_int(List.length(userExtensions))
-        ++ " user extensions."
+      Log.debugf(m =>
+        m(
+          "discoverExtensions - discovered %n user extensions.",
+          List.length(userExtensions),
+        )
       );
       [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
 
-  Core.Log.info(
-    "-- Discovered: "
-    ++ string_of_int(List.length(extensions))
-    ++ " extensions",
-  );
+  Log.infof(m => m("-- Discovered: %n extensions", List.length(extensions)));
 
   extensions;
 };
@@ -218,7 +218,7 @@ let start =
   let rec dispatch = (action: Model.Actions.t) => {
     switch (action) {
     | Tick(_) => () // This gets a bit intense, so ignore it
-    | _ => Log.info("[dispatch]: " ++ Model.Actions.show(action))
+    | _ => DispatchLog.info(Model.Actions.show(action))
     };
 
     let lastState = latestState^;
@@ -245,8 +245,8 @@ let start =
     |> List.filter(e => e != Isolinear.Effect.none)
     |> List.rev
     |> List.iter(e => {
-         Core.Log.debug(() =>
-           "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e)
+         Log.debugf(m =>
+           m("Running effect: %s", Isolinear.Effect.getName(e))
          );
          Isolinear.Effect.run(e, dispatch);
        });

@@ -12,7 +12,8 @@ module Core = Oni_Core;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
-module Log = Core.Log;
+module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
+module ReveryLog = (val Core.Log.withNamespace("Revery"));
 
 let cliOptions = Core.Cli.parse();
 Log.info("Startup: Parsing CLI options complete");
@@ -23,7 +24,7 @@ Log.info("Starting Onivim 2.");
 let init = app => {
   Log.info("Init");
 
-  let _ = Revery.Log.listen((_, msg) => Log.info("[Revery]: " ++ msg));
+  let _ = Revery.Log.listen((_, msg) => ReveryLog.info(msg));
 
   let w =
     App.createWindow(

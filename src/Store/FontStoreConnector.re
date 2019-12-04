@@ -7,6 +7,8 @@
 open Oni_Core;
 open Oni_Model;
 
+module Log = (val Log.withNamespace("Oni2.FontStoreConnector"));
+
 let minFontSize = 6;
 let defaultFontFamily = "FiraCode-Regular.ttf";
 let defaultFontSize = 14;
@@ -112,9 +114,7 @@ let start = (~getScaleFactor, ()) => {
                 Utility.executingDirectory ++ defaultFontFamily,
               )
             | Some(v) =>
-              Log.info(
-                "FontStoreConnector::setFont - discovering font: " ++ v,
-              );
+              Log.info("setFont - discovering font: " ++ v);
               Rench.Path.isAbsolute(v)
                 ? (v, v)
                 : {
@@ -125,8 +125,7 @@ let start = (~getScaleFactor, ()) => {
                       v,
                     );
                   Log.info(
-                    "FontStoreConnector::setFont - discovering font at path: "
-                    ++ descriptor.path,
+                    "setFont - discovering font at path: " ++ descriptor.path,
                   );
                   (v, descriptor.path);
                 };
@@ -175,7 +174,7 @@ let start = (~getScaleFactor, ()) => {
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
 
-      Log.info("FontStoreConnector::synchronizeConfiguration");
+      Log.info("synchronizeConfiguration");
 
       setFont(dispatch, editorFontFamily, editorFontSize);
     });

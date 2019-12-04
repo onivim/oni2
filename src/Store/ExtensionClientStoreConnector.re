@@ -11,6 +11,10 @@ module Uri = Core.Uri;
 open Oni_Core.Utility;
 module Model = Oni_Model;
 
+module Log = (
+  val Core.Log.withNamespace("Oni2.ExtensionClientStoreConnector")
+);
+
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
@@ -20,7 +24,7 @@ module Workspace = Protocol.Workspace;
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onExtHostClosed = () => Core.Log.info("ext host closed");
+  let onExtHostClosed = () => Log.info("ext host closed");
 
   let extensionInfo =
     extensions
@@ -67,15 +71,11 @@ let start = (extensions, setup: Core.Setup.t) => {
   };
 
   let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
-    Core.Log.info(
-      "Registered suggest provider with ID: " ++ string_of_int(sp.id),
-    );
+    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
     dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
   };
 
-  let onOutput = msg => {
-    Core.Log.info("[ExtHost]: " ++ msg);
-  };
+  let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
     dispatch(Model.Actions.ExtensionActivated(id));
@@ -109,7 +109,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Core.Log.info("Creating model for filetype: " ++ ft);
+      Log.info("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),
@@ -201,9 +201,11 @@ let start = (extensions, setup: Core.Setup.t) => {
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
-         Core.Log.info(
-           "[Exthost] Completions - getting completions for suggest provider: "
-           ++ string_of_int(provider.id),
+         Log.infof(m =>
+           m(
+             "Completions - getting completions for suggest provider: %n",
+             provider.id,
+           )
          );
          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
            ExtHostClient.getCompletions(
@@ -218,7 +220,7 @@ let start = (extensions, setup: Core.Setup.t) => {
              completionPromise,
              completions => {
                switch (completions) {
-               | None => Core.Log.info("No completions for provider")
+               | None => Log.info("No completions for provider")
                | Some(completions) =>
                  let completionItems =
                    suggestionsToCompletionItems(completions);
@@ -250,12 +252,12 @@ let start = (extensions, setup: Core.Setup.t) => {
               ~column=completionMeet.completionMeetColumn |> Index.toInt1,
               (),
             );
-          Core.Log.info(
-            Printf.sprintf(
-              "[Exthost] Completions - requesting at %s for %s",
+          Log.infof(m =>
+            m(
+              "Completions - requesting at %s for %s",
               Core.Uri.toString(uri),
               Protocol.OneBasedPosition.show(position),
-            ),
+            )
           );
           let languageFeatures = state.languageFeatures;
           getAndDispatchCompletions(
