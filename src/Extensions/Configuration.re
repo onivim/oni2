@@ -29,7 +29,7 @@ module Model = {
     let keysJson = keys |> List.map(str => `String(str));
 
     `Assoc([
-      ("contents", model.contents),
+      ("contents", contents),
       ("keys", `List(keysJson)),
       ("overrides", emptyJsonArray),
     ]);
@@ -66,10 +66,10 @@ let empty = {
   workspace: Model.empty,
 };
 
-let create = (~model) => {
+let create = (~defaults=Model.empty, ~user=Model.empty, ~workspace=Model.empty, ()) => {
   // For now... we'll only consider a single configuration model. But we'll need to update this to handle
   // workspace / user configuration for better fidelity with extensions, later!
-  defaults: model,
-  user: Model.empty,
-  workspace: Model.empty,
+  defaults,
+  user, 
+  workspace,
 };
