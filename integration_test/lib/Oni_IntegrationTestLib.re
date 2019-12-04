@@ -30,6 +30,21 @@ let setVsync = vsync => _currentVsync := vsync;
 
 let quit = code => exit(code);
 
+exception TestAssetNotFound(string);
+
+let getAssetPath = path =>
+  // Does it exist
+  if (Sys.file_exists(path)) {
+    Log.info("Found file at: " ++ path);
+    path;
+  } else if (Sys.file_exists("integration_test/" ++ path)) {
+    let result = "integration_test/" ++ path;
+    Log.info("Found file at: " ++ result);
+    result;
+  } else {
+    raise(TestAssetNotFound(path));
+  };
+
 let runTest =
     (
       ~configuration=None,
@@ -37,10 +52,10 @@ let runTest =
       ~name="AnonymousTest",
       test: Types.testCallback,
     ) => {
-  print_endline("Starting test... Working directory: " ++ Sys.getcwd());
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
+  Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
