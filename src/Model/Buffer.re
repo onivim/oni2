@@ -148,18 +148,16 @@ let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
 
 let getIndentation = buf => buf.indentation;
 
-let update = (buf: t, update: BufferUpdate.t) => {
-  let endLine = Index.toInt0(update.endLine);
-  let curVersion = getVersion(buf);
+let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
+  update.version > getVersion(buf);
+};
 
-  if (update.version > curVersion) {
+let update = (buf: t, update: BufferUpdate.t) =>
+  if (shouldApplyUpdate(update, buf)) {
     /***
-       When a buffer is first attached it emits an update with
-       a startLine of 0 and endLine of -1 in this case we should
-       update the buffer's version but set the content of the buffer
-       rather than update it, which would result in duplication
+     If it's a full update, just apply the lines in their entiretupdate.endLiney
      */
-    if (endLine < 0) {
+    if (update.isFull) {
       {...buf, version: update.version, lines: update.lines};
     } else {
       {
@@ -171,4 +169,3 @@ let update = (buf: t, update: BufferUpdate.t) => {
   } else {
     buf;
   };
-};

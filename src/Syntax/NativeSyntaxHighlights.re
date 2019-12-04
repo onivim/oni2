@@ -15,7 +15,7 @@ module type SyntaxHighlighter = {
   let updateTheme: (TokenTheme.t, t) => t;
 
   let update:
-    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), t) => t;
+    (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), t) => t;
 
   let getTokenColors: (t, int) => list(ColorizedToken.t);
 };
@@ -110,7 +110,7 @@ let create =
 };
 
 let update =
-    (~bufferUpdate: Core.Types.BufferUpdate.t, ~lines: array(string), hl: t) => {
+    (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), hl: t) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);

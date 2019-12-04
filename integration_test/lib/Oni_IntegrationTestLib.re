@@ -4,14 +4,7 @@ module Option = Core.Utility.Option;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
-
-type dispatchFunction = Model.Actions.t => unit;
-type runEffectsFunction = unit => unit;
-type waiter = Model.State.t => bool;
-type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
-
-type testCallback =
-  (dispatchFunction, waitForState, runEffectsFunction) => unit;
+module TextSynchronization = TextSynchronization;
 
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
@@ -37,16 +30,32 @@ let setVsync = vsync => _currentVsync := vsync;
 
 let quit = code => exit(code);
 
+exception TestAssetNotFound(string);
+
+let getAssetPath = path =>
+  // Does it exist
+  if (Sys.file_exists(path)) {
+    Log.info("Found file at: " ++ path);
+    path;
+  } else if (Sys.file_exists("integration_test/" ++ path)) {
+    let result = "integration_test/" ++ path;
+    Log.info("Found file at: " ++ result);
+    result;
+  } else {
+    raise(TestAssetNotFound(path));
+  };
+
 let runTest =
     (
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      test: testCallback,
+      test: Types.testCallback,
     ) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
+  Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
@@ -148,7 +157,7 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, f) => {
+let runTestWithInput = (~name, f: Types.testCallbackWithInput) => {
   runTest(
     ~name,
     (dispatch, wait, runEffects) => {
