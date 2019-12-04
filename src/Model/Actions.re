@@ -7,8 +7,9 @@
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Input;
-open Oni_Extensions;
 open Oni_Syntax;
+
+module Ext = Oni_Extensions;
 
 [@deriving show({with_path: false})]
 type t =
@@ -66,7 +67,7 @@ type t =
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
   | LanguageFeatureRegisterSuggestProvider(
-      [@opaque] LanguageFeatures.SuggestProvider.t,
+      [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
     )
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
@@ -134,7 +135,7 @@ and completionMeet = {
 }
 and completionItem = {
   completionLabel: string,
-  completionKind: CompletionKind.t,
+  completionKind: Ext.CompletionKind.t,
   completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json

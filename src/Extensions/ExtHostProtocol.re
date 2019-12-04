@@ -5,6 +5,8 @@
  *
  */
 
+module ModelConfig = Configuration;
+
 open Oni_Core;
 open Oni_Core.Types;
 open Oni_Core.Utility;
@@ -437,7 +439,7 @@ module OutgoingNotifications = {
       _buildNotification(
         "ExtHostConfiguration",
         "$initializeConfiguration",
-        `List([`Assoc([])]),
+        `List([ModelConfig.empty |> ModelConfig.to_yojson]),
       );
     };
   };
