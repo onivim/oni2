@@ -89,11 +89,11 @@ let start =
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | (system, method, _a) =>
+    | (scope, method, _argsAsJson) =>
       Log.errorf(m =>
         m(
           "Unhandled message - [%s:%s]: %s",
-          system,
+          scope,
           method,
           Yojson.Safe.to_string(`List(_a)),
         )
