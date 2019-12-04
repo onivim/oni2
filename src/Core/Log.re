@@ -96,7 +96,10 @@ module Namespace = {
 };
 
 module DeltaTime = {
-  let pp = (ppf, dt) => Fmt.pf(ppf, "%+5.0fms", dt *. 1000.);
+  let pp = (ppf, dt) =>
+    dt > 10.
+      ? Fmt.pf(ppf, "%+6.2fs", dt) : Fmt.pf(ppf, "%+5.0fms", dt *. 1000.);
+
   let tag = Logs.Tag.def("time", pp);
 };
 
