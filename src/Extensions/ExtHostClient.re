@@ -13,6 +13,8 @@ module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
 module Workspace = Protocol.Workspace;
 
+module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
+
 type t = {transport: ExtHostTransport.t};
 
 type simpleCallback = unit => unit;
@@ -87,14 +89,14 @@ let start =
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | (s, m, _a) =>
-      Log.error(
-        Printf.sprintf(
-          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
-          s,
-          m,
-          Yojson.Safe.to_string(`List(_a)),
-        ),
+    | (scope, method, argsAsJson) =>
+      Log.errorf(m =>
+        m(
+          "Unhandled message - [%s:%s]: %s",
+          scope,
+          method,
+          Yojson.Safe.to_string(`List(argsAsJson)),
+        )
       );
       Ok(None);
     };

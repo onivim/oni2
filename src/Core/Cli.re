@@ -48,6 +48,9 @@ let parse = () => {
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
+      ("--debug", Unit(Log.enableDebugLogging), ""),
+      ("--log-file", String(Log.setLogFile), ""),
+      ("--log-filter", String(Log.Namespace.setFilter), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
@@ -57,7 +60,7 @@ let parse = () => {
     "",
   );
 
-  if (! Log.canPrint^) {
+  if (!Log.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
     Utility.freeConsole();
   };
