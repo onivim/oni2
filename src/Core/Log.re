@@ -38,11 +38,12 @@ module Constants = {
         `Hi(`White),
         `Hi(`Yellow),
       |]
+};
 
-  module Env = {
-    let logFile = "ONI2_LOG_FILE";
-    let debug = "ONI2_DEBUG";
-  };
+module Env = {
+  let logFile = Sys.getenv_opt("ONI2_LOG_FILE");
+  let debug = Sys.getenv_opt("ONI2_DEBUG");
+  let filter = Sys.getenv_opt("ONI2_LOG_FILTER");
 };
 
 module Namespace = {
@@ -106,7 +107,7 @@ module Namespace = {
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
 let fileReporter =
-  switch (Sys.getenv_opt(Constants.Env.logFile)) {
+  switch (Env.logFile) {
   | Some(path) =>
     let channel = open_out(path);
     Printf.fprintf(channel, "Starting log file.\n%!");
@@ -200,34 +201,6 @@ let perf = (msg, f) => {
   ret;
 };
 
-// init
-let () =
-  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
-  switch (
-    Sys.getenv_opt(Constants.Env.debug),
-    Sys.getenv_opt(Constants.Env.logFile),
-  ) {
-  | (Some(_), _)
-  | (_, Some(_)) => Logs.set_level(Some(Logs.Debug))
-  | _ => Logs.set_level(Some(Logs.Info))
-  };
-
-  switch (isDebugLoggingEnabled()) {
-  | false => ()
-  | true =>
-    debug(() => "Recording backtraces");
-    Printexc.record_backtrace(true);
-    Printexc.set_uncaught_exception_handler((e, bt) => {
-      error(
-        "Exception "
-        ++ Printexc.to_string(e)
-        ++ ":\n"
-        ++ Printexc.raw_backtrace_to_string(bt),
-      );
-      flush_all();
-    });
-  };
-
 module type Logger = {
   let errorf: msgf(_, unit) => unit;
   let error: string => unit;
@@ -257,3 +230,28 @@ let withNamespace = namespace => {
      }): (module Logger)
   );
 };
+
+// init
+let () =
+  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
+
+  switch (Env.debug, Env.logFile) {
+  | (None, None) => Logs.set_level(Some(Logs.Info))
+  | _ => Logs.set_level(Some(Logs.Debug))
+  };
+
+  Env.filter |> Option.iter(Namespace.setFilter);
+
+  if (isDebugLoggingEnabled()) {
+    debug(() => "Recording backtraces");
+    Printexc.record_backtrace(true);
+    Printexc.set_uncaught_exception_handler((e, bt) => {
+      error(
+        "Exception "
+        ++ Printexc.to_string(e)
+        ++ ":\n"
+        ++ Printexc.raw_backtrace_to_string(bt),
+      );
+      flush_all();
+    });
+  };
