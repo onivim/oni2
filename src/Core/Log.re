@@ -167,7 +167,7 @@ let consoleReporter = {
       };
 
     let style = Fmt.(styled(`Fg(fg), styled(`Bg(bg), pp_level)));
-    Fmt.pf(ppf, "%7a", style, level);
+    Fmt.pf(ppf, "%a", style, level);
   };
 
   Logs.{
