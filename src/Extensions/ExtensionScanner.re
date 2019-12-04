@@ -51,20 +51,18 @@ let scan = (~prefix=None, directory: string) => {
   let loadPackageJson = pkg => {
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
     let path = Path.dirname(pkg);
-    
-    let manifest = json
+
+    let manifest =
+      json
       |> ExtensionManifest.of_yojson_exn
       |> remapManifest(path)
-      |> ExtensionManifest.updateName((prevName) => 
-        prefix
-        |> Option.map((somePrefix) => somePrefix ++ "." ++ prevName)
-        |> Option.value(~default=prevName)
-      );
+      |> ExtensionManifest.updateName(prevName =>
+           prefix
+           |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
+           |> Option.value(~default=prevName)
+         );
 
-    {
-      manifest,
-      path,
-    };
+    {manifest, path};
   };
 
   items

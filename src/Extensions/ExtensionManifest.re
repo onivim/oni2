@@ -44,5 +44,3 @@ let updateName = (nameSetter, manifest: t) => {
   ...manifest,
   name: nameSetter(manifest.name),
 };
-
-
