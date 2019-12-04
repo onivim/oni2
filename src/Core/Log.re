@@ -143,6 +143,9 @@ let enableDebugLogging = () =>
 let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
+let log = (~namespace=?, level, msgf) =>
+  Logs.msg(level, m => msgf(m(~header=?None, ~tags=?namespace)));
+
 let infof = msgf => Logs.info(m => msgf(m(~header=?None, ~tags=?None)));
 let info = msg => infof(m => m("%s", msg));
 
@@ -184,19 +187,35 @@ let () =
   };
 
 module type Logger = {
+  let errorf: msgf(_, unit) => unit;
+  let error: string => unit;
+  let warnf: msgf(_, unit) => unit;
+  let warn: string => unit;
   let infof: msgf(_, unit) => unit;
   let info: string => unit;
+  let debugf: msgf(_, unit) => unit;
+  let debug: string => unit;
 };
 
 let withNamespace = namespace => {
-  let namespace = Logs.Tag.(empty |> add(namespaceTag, namespace));
+  let logf = (level, msgf) => {
+    let namespace = Logs.Tag.(empty |> add(namespaceTag, namespace));
+    log(~namespace, level, msgf);
+  };
+  let log = (level, msg) =>
+    logf(level, m => m("%s", msg));
 
   (
     (module
      {
-       let infof = msgf =>
-         Logs.info(m => msgf(m(~header=?None, ~tags=namespace)));
-       let info = msg => infof(m => m("%s", msg));
+       let errorf = msgf => logf(Logs.Error, msgf);
+       let error = log(Logs.Error);
+       let warnf = msgf => logf(Logs.Warning, msgf);
+       let warn = log(Logs.Warning);
+       let infof = msgf => logf(Logs.Info, msgf);
+       let info = log(Logs.Info);
+       let debugf = msgf => logf(Logs.Debug, msgf);
+       let debug = log(Logs.Debug);
      }): (module Logger)
   );
 };
