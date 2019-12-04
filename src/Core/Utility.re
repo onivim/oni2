@@ -286,6 +286,17 @@ module StringUtil = {
     | '\t' => true
     | _ => false;
 
+  /** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
+  let contains = (query, str) => {
+    let re = Str.regexp_string(query); 
+    try ({
+      let _: int = Str.search_forward(re, str, 0);
+      true;
+    }) {
+    | Not_found => false;
+    }
+  };
+
   let trimLeft = str => {
     let length = String.length(str);
 
