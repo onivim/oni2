@@ -4,7 +4,7 @@
  * Top-level module for Oni_Extensions.
  */
 
-module CompletionKind = CompletionKind;
+module CompletionItemKind = CompletionItemKind;
 module Configuration = Configuration;
 module LanguageFeatures = LanguageFeatures;
 module ExtensionContributions = ExtensionContributions;
