@@ -48,6 +48,9 @@ let parse = () => {
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
+      ("--debug", Unit(Log.enableDebugLogging), ""),
+      ("--log-file", String(Log.setLogFile), ""),
+      ("--log-filter", String(Log.Namespace.setFilter), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),

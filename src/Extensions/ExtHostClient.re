@@ -90,13 +90,13 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (system, method, _a) =>
-      Log.errorf(m => 
+      Log.errorf(m =>
         m(
           "[ExtHostClient] Unhandled message - [%s:%s]: %s",
           system,
           method,
           Yojson.Safe.to_string(`List(_a)),
-        ),
+        )
       );
       Ok(None);
     };

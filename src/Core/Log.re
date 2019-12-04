@@ -19,25 +19,24 @@ module Option = {
 };
 
 module Constants = {
-  let colors =
-      [|
-        // `Black
-        `Blue,
-        `Cyan,
-        `Green,
-        `Magenta,
-        `Red,
-        //`White,
-        `Yellow,
-        `Hi(`Black),
-        `Hi(`Blue),
-        `Hi(`Cyan),
-        `Hi(`Green),
-        `Hi(`Magenta),
-        `Hi(`Red),
-        `Hi(`White),
-        `Hi(`Yellow),
-      |]
+  let colors = [|
+    // `Black
+    `Blue,
+    `Cyan,
+    `Green,
+    `Magenta,
+    `Red,
+    //`White,
+    `Yellow,
+    `Hi(`Black),
+    `Hi(`Blue),
+    `Hi(`Cyan),
+    `Hi(`Green),
+    `Hi(`Magenta),
+    `Hi(`Red),
+    `Hi(`White),
+    `Hi(`Yellow),
+  |];
 };
 
 module Env = {
@@ -72,32 +71,28 @@ module Namespace = {
 
   let setFilter = filter => {
     let filters =
-      filter
-      |> String.split_on_char(',')
-      |> List.map(String.trim);
+      filter |> String.split_on_char(',') |> List.map(String.trim);
 
     let (incs, excs) =
       filters
-      |> List.fold_left(((includes, excludes), filter) =>
-        if (filter == "") {
-          (includes, excludes)
-        } else if (filter.[0] == '-') {
-          let filter =
-            String.sub(filter, 1, String.length(filter) - 2)
-            |> Re.Glob.glob
-            |> Re.compile;
+      |> List.fold_left(
+           ((includes, excludes), filter) =>
+             if (filter == "") {
+               (includes, excludes);
+             } else if (filter.[0] == '-') {
+               let filter =
+                 String.sub(filter, 1, String.length(filter) - 2)
+                 |> Re.Glob.glob
+                 |> Re.compile;
 
-          (includes, [filter, ...excludes])
-        } else {
-          let filter =
-            filter
-            |> Re.Glob.glob
-            |> Re.compile;
+               (includes, [filter, ...excludes]);
+             } else {
+               let filter = filter |> Re.Glob.glob |> Re.compile;
 
-          ([filter, ...includes], excludes)
-        },
-        ([], [])
-      );
+               ([filter, ...includes], excludes);
+             },
+           ([], []),
+         );
 
     includes := incs;
     excludes := excs;
@@ -106,19 +101,26 @@ module Namespace = {
 
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
-let fileReporter =
-  switch (Env.logFile) {
-  | Some(path) =>
-    let channel = open_out(path);
-    Printf.fprintf(channel, "Starting log file.\n%!");
-    let ppf = Format.formatter_of_out_channel(channel);
+let logFileChannel = ref(None);
 
-    Logs.{
-      report: (_src, level, ~over, k, msgf) => {
-        let k = _ => {
-          over();
-          k();
-        };
+let setLogFile = path => {
+  Option.iter(close_out, logFileChannel^);
+  let channel = open_out(path);
+  Printf.fprintf(channel, "Starting log file.\n%!");
+  logFileChannel := Some(channel);
+};
+
+let fileReporter =
+  Logs.{
+    report: (_src, level, ~over, k, msgf) => {
+      let k = _ => {
+        over();
+        k();
+      };
+
+      switch (logFileChannel^) {
+      | Some(channel) =>
+        let ppf = Format.formatter_of_out_channel(channel);
 
         msgf((~header=?, ~tags as _=?, fmt) => {
           Format.kfprintf(
@@ -129,10 +131,10 @@ let fileReporter =
             (level, header),
           )
         });
-      },
-    };
 
-  | None => Logs.nop_reporter
+      | None => k()
+      };
+    },
   };
 
 let consoleReporter =
@@ -156,7 +158,7 @@ let consoleReporter =
           namespace,
         );
       });
-    }
+    },
   };
 
 let reporter =
@@ -176,16 +178,16 @@ let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
 let log = (~namespace="Global", level, msgf) =>
-  Logs.msg(level, m => {
+  Logs.msg(level, m =>
     if (Namespace.isEnabled(namespace)) {
       let tags = Logs.Tag.(empty |> add(Namespace.tag, namespace));
-      msgf(m(~header=?None, ~tags))
+      msgf(m(~header=?None, ~tags));
     }
-  });
+  );
 
 let info = msg => log(Logs.Info, m => m("%s", msg));
-let debug = msgf => log(Logs.Info, m => m("%s", msgf()));
-let error = msg => log(Logs.Info, m => m("%s", msg));
+let debug = msgf => log(Logs.Debug, m => m("%s", msgf()));
+let error = msg => log(Logs.Error, m => m("%s", msg));
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
@@ -232,26 +234,26 @@ let withNamespace = namespace => {
 };
 
 // init
-let () =
-  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
+let () = Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
 
-  switch (Env.debug, Env.logFile) {
-  | (None, None) => Logs.set_level(Some(Logs.Info))
-  | _ => Logs.set_level(Some(Logs.Debug))
-  };
+switch (Env.debug, Env.logFile) {
+| (None, None) => Logs.set_level(Some(Logs.Info))
+| _ => Logs.set_level(Some(Logs.Debug))
+};
 
-  Env.filter |> Option.iter(Namespace.setFilter);
+Env.logFile |> Option.iter(setLogFile);
+Env.filter |> Option.iter(Namespace.setFilter);
 
-  if (isDebugLoggingEnabled()) {
-    debug(() => "Recording backtraces");
-    Printexc.record_backtrace(true);
-    Printexc.set_uncaught_exception_handler((e, bt) => {
-      error(
-        "Exception "
-        ++ Printexc.to_string(e)
-        ++ ":\n"
-        ++ Printexc.raw_backtrace_to_string(bt),
-      );
-      flush_all();
-    });
-  };
+if (isDebugLoggingEnabled()) {
+  debug(() => "Recording backtraces");
+  Printexc.record_backtrace(true);
+  Printexc.set_uncaught_exception_handler((e, bt) => {
+    error(
+      "Exception "
+      ++ Printexc.to_string(e)
+      ++ ":\n"
+      ++ Printexc.raw_backtrace_to_string(bt),
+    );
+    flush_all();
+  });
+};
