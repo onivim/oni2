@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            FontSizeChangeTest
@@ -48,6 +49,7 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         FontSizeChangeTest.exe
@@ -66,4 +68,5 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+	some-test-file.txt
         ))

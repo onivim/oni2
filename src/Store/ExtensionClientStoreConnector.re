@@ -150,8 +150,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let modelChangedEffect =
-      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
