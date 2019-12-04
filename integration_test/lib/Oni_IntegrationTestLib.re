@@ -37,6 +37,7 @@ let runTest =
       ~name="AnonymousTest",
       test: Types.testCallback,
     ) => {
+  print_endline("Starting test... Working directory: " ++ Sys.getcwd());
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
