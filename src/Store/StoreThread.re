@@ -45,7 +45,9 @@ let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
             switch (Core.Filesystem.getExtensionsFolder()) {
             | Ok(p) => Some(p)
             | Error(msg) =>
-              Log.errorf(m => m("Error discovering user extensions: %s", msg));
+              Log.errorf(m =>
+                m("Error discovering user extensions: %s", msg)
+              );
               None;
             }
           }
