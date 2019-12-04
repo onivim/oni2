@@ -208,7 +208,7 @@ let reporter =
   };
 
 let enablePrinting = () => Logs.set_reporter(reporter);
-let isPrintingEnabled = () => Logs.reporter() === Logs.nop_reporter;
+let isPrintingEnabled = () => Logs.reporter() !== Logs.nop_reporter;
 
 let enableDebugLogging = () =>
   Logs.Src.set_level(Logs.default, Some(Logs.Debug));
