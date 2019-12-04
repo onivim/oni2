@@ -122,14 +122,18 @@ let fileReporter =
       | Some(channel) =>
         let ppf = Format.formatter_of_out_channel(channel);
 
-        msgf((~header=?, ~tags as _=?, fmt) => {
+        msgf((~header=?, ~tags=?, fmt) => {
+          let namespace = Option.bind(tags, Tag.find(Namespace.tag));
+
           Format.kfprintf(
             k,
             ppf,
-            "%a@[" ^^ fmt ^^ "@]@.",
+            "%a %a @[" ^^ fmt ^^ "@]@.",
             pp_header,
             (level, header),
-          )
+            Namespace.pp,
+            namespace,
+          );
         });
 
       | None => k()
@@ -173,7 +177,7 @@ let consoleReporter = {
       };
 
       msgf((~header as _=?, ~tags=?, fmt) => {
-        let namespace = Option.bind(tags, Logs.Tag.find(Namespace.tag));
+        let namespace = Option.bind(tags, Tag.find(Namespace.tag));
 
         Format.kfprintf(
           k,
