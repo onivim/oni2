@@ -20,7 +20,6 @@ module Option = {
 
 module Constants = {
   let colors =
-    Fmt.(
       [|
         // `Black
         `Blue,
@@ -39,7 +38,6 @@ module Constants = {
         `Hi(`White),
         `Hi(`Yellow),
       |]
-    );
 
   module Env = {
     let logFile = "ONI2_LOG_FILE";
@@ -47,19 +45,65 @@ module Constants = {
   };
 };
 
+module Namespace = {
+  let pickColor = i => Constants.colors[i mod Array.length(Constants.colors)];
+
+  let tag = Logs.Tag.def("namespace", Format.pp_print_string);
+
+  let pp = ppf =>
+    Option.iter(namespace => {
+      let color = pickColor(Hashtbl.hash(namespace));
+      let style = Fmt.(styled(`Fg(color), string));
+
+      Fmt.pf(ppf, "[%a]", style, namespace);
+    });
+
+  let includes = ref([]);
+  let excludes = ref([]);
+
+  let isEnabled = namespace => {
+    let test = re => Re.execp(re, namespace);
+    let included = includes^ == [] || List.exists(test, includes^);
+    let excluded = List.exists(test, excludes^);
+
+    included && !excluded;
+  };
+
+  let setFilter = filter => {
+    let filters =
+      filter
+      |> String.split_on_char(',')
+      |> List.map(String.trim);
+
+    let (incs, excs) =
+      filters
+      |> List.fold_left(((includes, excludes), filter) =>
+        if (filter == "") {
+          (includes, excludes)
+        } else if (filter.[0] == '-') {
+          let filter =
+            String.sub(filter, 1, String.length(filter) - 2)
+            |> Re.Glob.glob
+            |> Re.compile;
+
+          (includes, [filter, ...excludes])
+        } else {
+          let filter =
+            filter
+            |> Re.Glob.glob
+            |> Re.compile;
+
+          ([filter, ...includes], excludes)
+        },
+        ([], [])
+      );
+
+    includes := incs;
+    excludes := excs;
+  };
+};
+
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
-
-let pickColor = i => Constants.colors[i mod Array.length(Constants.colors)];
-
-let namespaceTag = Logs.Tag.def("namespace", Format.pp_print_string);
-
-let pp_namespace = ppf =>
-  Option.iter(namespace => {
-    let color = pickColor(Hashtbl.hash(namespace));
-    let style = Fmt.(styled(`Fg(color), string));
-
-    Fmt.pf(ppf, "[%a]", style, namespace);
-  });
 
 let fileReporter =
   switch (Sys.getenv_opt(Constants.Env.logFile)) {
@@ -99,7 +143,7 @@ let consoleReporter =
       };
 
       msgf((~header=?, ~tags=?, fmt) => {
-        let namespace = Option.bind(tags, Logs.Tag.find(namespaceTag));
+        let namespace = Option.bind(tags, Logs.Tag.find(Namespace.tag));
 
         Format.kfprintf(
           k,
@@ -107,11 +151,11 @@ let consoleReporter =
           "%a%a@[" ^^ fmt ^^ "@]@.",
           Logs_fmt.pp_header,
           (level, header),
-          pp_namespace,
+          Namespace.pp,
           namespace,
         );
       });
-    },
+    }
   };
 
 let reporter =
@@ -122,19 +166,6 @@ let reporter =
     },
   };
 
-// defaults
-let () = {
-  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
-  switch (
-    Sys.getenv_opt(Constants.Env.debug),
-    Sys.getenv_opt(Constants.Env.logFile),
-  ) {
-  | (Some(_), _)
-  | (_, Some(_)) => Logs.set_level(Some(Logs.Debug))
-  | _ => Logs.set_level(Some(Logs.Info))
-  };
-};
-
 let enablePrinting = () => Logs.set_reporter(reporter);
 let isPrintingEnabled = () => Logs.reporter() === Logs.nop_reporter;
 
@@ -143,17 +174,17 @@ let enableDebugLogging = () =>
 let isDebugLoggingEnabled = () =>
   Logs.Src.level(Logs.default) == Some(Logs.Debug);
 
-let log = (~namespace=?, level, msgf) =>
-  Logs.msg(level, m => msgf(m(~header=?None, ~tags=?namespace)));
+let log = (~namespace="Global", level, msgf) =>
+  Logs.msg(level, m => {
+    if (Namespace.isEnabled(namespace)) {
+      let tags = Logs.Tag.(empty |> add(Namespace.tag, namespace));
+      msgf(m(~header=?None, ~tags))
+    }
+  });
 
-let infof = msgf => Logs.info(m => msgf(m(~header=?None, ~tags=?None)));
-let info = msg => infof(m => m("%s", msg));
-
-let debugf = msgf => Logs.debug(m => msgf(m(~header=?None, ~tags=?None)));
-let debug = msgf => debugf(m => m("%s", msgf()));
-
-let errorf = msgf => Logs.err(m => msgf(m(~header=?None, ~tags=?None)));
-let error = msg => errorf(m => m("%s", msg));
+let info = msg => log(Logs.Info, m => m("%s", msg));
+let debug = msgf => log(Logs.Info, m => m("%s", msgf()));
+let error = msg => log(Logs.Info, m => m("%s", msg));
 
 let perf = (msg, f) => {
   let startTime = Unix.gettimeofday();
@@ -169,7 +200,18 @@ let perf = (msg, f) => {
   ret;
 };
 
+// init
 let () =
+  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
+  switch (
+    Sys.getenv_opt(Constants.Env.debug),
+    Sys.getenv_opt(Constants.Env.logFile),
+  ) {
+  | (Some(_), _)
+  | (_, Some(_)) => Logs.set_level(Some(Logs.Debug))
+  | _ => Logs.set_level(Some(Logs.Info))
+  };
+
   switch (isDebugLoggingEnabled()) {
   | false => ()
   | true =>
@@ -198,12 +240,8 @@ module type Logger = {
 };
 
 let withNamespace = namespace => {
-  let logf = (level, msgf) => {
-    let namespace = Logs.Tag.(empty |> add(namespaceTag, namespace));
-    log(~namespace, level, msgf);
-  };
-  let log = (level, msg) =>
-    logf(level, m => m("%s", msg));
+  let logf = (level, msgf) => log(~namespace, level, msgf);
+  let log = (level, msg) => logf(level, m => m("%s", msg));
 
   (
     (module

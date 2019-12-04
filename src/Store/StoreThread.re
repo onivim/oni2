@@ -17,7 +17,7 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("StoreTread"));
+module Log = (val Core.Log.withNamespace("StoreThread"));
 
 let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
   open Core.Cli;
