@@ -19,7 +19,27 @@ module Option = {
 };
 
 module Constants = {
-  let namespaceStyle = Fmt.(styled(`Fg(`Hi(`Yellow)), string));
+  let colors =
+    Fmt.(
+      [|
+        // `Black
+        `Blue,
+        `Cyan,
+        `Green,
+        `Magenta,
+        `Red,
+        //`White,
+        `Yellow,
+        `Hi(`Black),
+        `Hi(`Blue),
+        `Hi(`Cyan),
+        `Hi(`Green),
+        `Hi(`Magenta),
+        `Hi(`Red),
+        `Hi(`White),
+        `Hi(`Yellow),
+      |]
+    );
 
   module Env = {
     let logFile = "ONI2_LOG_FILE";
@@ -29,10 +49,17 @@ module Constants = {
 
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
+let pickColor = i => Constants.colors[i mod Array.length(Constants.colors)];
+
 let namespaceTag = Logs.Tag.def("namespace", Format.pp_print_string);
 
 let pp_namespace = ppf =>
-  Option.iter(Fmt.pf(ppf, "[%a]", Constants.namespaceStyle));
+  Option.iter(namespace => {
+    let color = pickColor(Hashtbl.hash(namespace));
+    let style = Fmt.(styled(`Fg(color), string));
+
+    Fmt.pf(ppf, "[%a]", style, namespace);
+  });
 
 let fileReporter =
   switch (Sys.getenv_opt(Constants.Env.logFile)) {
