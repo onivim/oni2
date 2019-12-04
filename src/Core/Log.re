@@ -250,19 +250,18 @@ let withNamespace = namespace => {
   let logf = (level, msgf) => log(~namespace, level, msgf);
   let log = (level, msg) => logf(level, m => m("%s", msg));
 
-  (
-    (module
-     {
-       let errorf = msgf => logf(Logs.Error, msgf);
-       let error = log(Logs.Error);
-       let warnf = msgf => logf(Logs.Warning, msgf);
-       let warn = log(Logs.Warning);
-       let infof = msgf => logf(Logs.Info, msgf);
-       let info = log(Logs.Info);
-       let debugf = msgf => logf(Logs.Debug, msgf);
-       let debug = log(Logs.Debug);
-     }): (module Logger)
-  );
+  module Log = {
+    let errorf = msgf => logf(Logs.Error, msgf);
+    let error = log(Logs.Error);
+    let warnf = msgf => logf(Logs.Warning, msgf);
+    let warn = log(Logs.Warning);
+    let infof = msgf => logf(Logs.Info, msgf);
+    let info = log(Logs.Info);
+    let debugf = msgf => logf(Logs.Debug, msgf);
+    let debug = log(Logs.Debug);
+  };
+
+  ((module Log): (module Logger));
 };
 
 // init
