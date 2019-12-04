@@ -29,10 +29,10 @@ sudo-prompt@^9.0.0:
   resolved "https://registry.yarnpkg.com/sudo-prompt/-/sudo-prompt-9.0.0.tgz#eebedeee9fcd6f661324e6bb46335e3288e8dc8a"
   integrity sha512-kUn5fiOk0nhY2oKD9onIkcNCE4Zt85WTsvOfSmqCplmlEvXCcPOmp1npH5YWuf8Bmyy9wLWkIxx+D+8cThBORQ==
 
-vscode-exthost@1.33.3:
-  version "1.33.3"
-  resolved "https://registry.yarnpkg.com/vscode-exthost/-/vscode-exthost-1.33.3.tgz#4f3e24f028a7b0fc9c50adeed041ab97dab4d444"
-  integrity sha512-OdCtAA+NfevGzmwIAEazV6TPBZRQS9wcIBz+CaSB1nBY8tfGK7Ly6hZeJ4Cf4sgmjzEqSAGzy+QjENNOXhck+A==
+vscode-exthost@1.33.4:
+  version "1.33.4"
+  resolved "https://registry.yarnpkg.com/vscode-exthost/-/vscode-exthost-1.33.4.tgz#f076ef6f753b46f1d3ea6c3cb121ee5eb89f9efd"
+  integrity sha512-V6hikfsZTgwqNITMpwoYwxkoJq99UmX1xZm0AquxHcKKfcksGql5k1dg0jQe7SyLNp0LEW9WhZUIbZIRwSNCkA==
   dependencies:
     graceful-fs "4.1.11"
     iconv-lite "0.4.23"
