@@ -210,7 +210,8 @@
     "reason-textmate": "^2.1.0",
     "esy-sdl2": "*",
     "@opam/fmt": "^0.8.8",
-    "@opam/logs": "^0.7.0"
+    "@opam/logs": "^0.7.0",
+    "@opam/re": "*"
   },
   "resolutions": {
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
