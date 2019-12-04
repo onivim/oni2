@@ -9,4 +9,4 @@ type t = {
   path: string,
 };
 
-let scan: string => list(t);
+let scan: (~prefix: option(string)=?, string) => list(t);

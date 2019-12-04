@@ -436,10 +436,31 @@ module OutgoingNotifications = {
 
   module Configuration = {
     let initializeConfiguration = () => {
+      let keys = ["typescript.suggest.enabled", "javascript.suggest.enabled"];
+
+      let contents =
+        `Assoc([
+          (
+            "typescript",
+            `Assoc([("suggest", `Assoc([("enabled", `Bool(true))]))]),
+          ),
+          (
+            "javascript",
+            `Assoc([("suggest", `Assoc([("enabled", `Bool(true))]))]),
+          ),
+        ]);
+
+      // TODO: Pull from our defaults + user defaults
+      let initialConfiguration =
+        ModelConfig.create(
+          ~defaults=ModelConfig.Model.create(~keys, contents),
+          (),
+        );
+
       _buildNotification(
         "ExtHostConfiguration",
         "$initializeConfiguration",
-        `List([ModelConfig.empty |> ModelConfig.to_yojson]),
+        `List([initialConfiguration |> ModelConfig.to_yojson]),
       );
     };
   };

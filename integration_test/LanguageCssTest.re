@@ -39,7 +39,7 @@ runTestWithInput(
     ~name="Validate the 'css-language-features' extension gets activated",
     (state: State.t) =>
     List.exists(
-      id => id == "css-language-features",
+      id => id == "vscode.css-language-features",
       state.extensions.activatedIds,
     )
   );
