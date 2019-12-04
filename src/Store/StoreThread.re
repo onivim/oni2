@@ -10,30 +10,47 @@
 open Revery;
 
 module Core = Oni_Core;
+module Option = Core.Utility.Option;
+
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
 
-let discoverExtensions = (setup: Core.Setup.t) => {
+let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
+  open Core.Cli;
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-      let userExtensions = Core.Filesystem.getExtensionsFolder();
+
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
         | Some(p) => ExtensionScanner.scan(p)
         | None => []
         };
+
+      let overriddenExtensionsDir =
+        cli |> Option.bind(cli => cli.overriddenExtensionsDir);
+
       let userExtensions =
-        switch (userExtensions) {
-        | Ok(p) =>
-          Core.Log.info("Searching for user extensions in: " ++ p);
-          ExtensionScanner.scan(p);
-        | Error(msg) =>
-          Core.Log.error("Error discovering user extensions: " ++ msg);
-          [];
-        };
+        (
+          switch (overriddenExtensionsDir) {
+          | Some(p) => Some(p)
+          | None =>
+            switch (Core.Filesystem.getExtensionsFolder()) {
+            | Ok(p) => Some(p)
+            | Error(msg) =>
+              Core.Log.error("Error discovering user extensions: " ++ msg);
+              None;
+            }
+          }
+        )
+        |> Option.map(p => {
+             Core.Log.info("Searching for user extensions in: " ++ p);
+             p;
+           })
+        |> Option.map(ExtensionScanner.scan)
+        |> Option.value(~default=[]);
 
       Core.Log.debug(() =>
         "discoverExtensions - discovered "
@@ -91,7 +108,7 @@ let start =
     | None => ()
     };
 
-  let extensions = discoverExtensions(setup);
+  let extensions = discoverExtensions(setup, cliOptions);
   let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let contributedCommands = Model.Commands.ofExtensions(extensions);
