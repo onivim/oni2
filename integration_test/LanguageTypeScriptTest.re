@@ -1,24 +1,19 @@
 open Oni_Core.Utility;
 open Oni_Model;
-open Oni_Extensions;
 open Oni_IntegrationTestLib;
 
-// This test validates:
-// - The 'oni-dev' extension gets activated
-// - When typing in an 'oni-dev' buffer, we get some completion results
 runTestWithInput(
-  ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
+  ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.css", None, None));
+  dispatch(Actions.OpenFileByPath("test.ts", None, None));
 
-  // Wait for the CSS filetype
   wait(
     ~timeout=30.0,
-    ~name="Validate we have a CSS filetype",
+    ~name="Validate we have a TypeScript filetype",
     (state: State.t) => {
       let fileType =
         Some(state)
@@ -26,7 +21,7 @@ runTestWithInput(
         |> Option.bind(Buffer.getFileType);
 
       switch (fileType) {
-      | Some("css") => true
+      | Some("typescript") => true
       | _ => false
       };
     },
@@ -36,28 +31,19 @@ runTestWithInput(
   // Give some time for the exthost to start
   wait(
     ~timeout=30.0,
-    ~name="Validate the 'css-language-features' extension gets activated",
+    ~name=
+      "Validate the 'typescript-language-features' extension gets activated",
     (state: State.t) =>
     List.exists(
-      id => id == "vscode.css-language-features",
+      id => id == "vscode.typescript-language-features",
       state.extensions.activatedIds,
     )
-  );
-
-  // Also, wait for suggest providers to be registered
-  wait(
-    ~timeout=30.0,
-    ~name="Wait for suggest providers for 'css' to be registered",
-    (state: State.t) =>
-    state.languageFeatures
-    |> LanguageFeatures.getSuggestProviders("css")
-    |> (providers => List.length(providers) > 0)
   );
 
   // Enter some text
   input("i");
 
-  input("a");
+  input("w");
 
   // TODO: Fix diagnostics on Windows!
   if (!Sys.win32) {
@@ -80,20 +66,8 @@ runTestWithInput(
     );
   };
 
-  // Should've also gotten some completions...
-  wait(
-    ~timeout=30.0,
-    ~name="Validate we also got some completions",
-    (state: State.t) => {
-    Model.Completions.getCompletions(state.completions)
-    |> (comp => List.length(comp) > 0)
-  });
-
-  // Finish input, clear diagnostics
-  input(" ");
-  input("{");
-  input("color:red");
-  input("}");
+  // Fix error, finish identifier
+  input("indow");
 
   wait(
     ~timeout=30.0,
