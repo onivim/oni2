@@ -21,7 +21,7 @@ let write = (v: t, msg: Protocol.ClientToServer.t) => {
   Stdlib.flush(v.out_channel);
 };
 
-let start = (languageInfo) => {
+let start = languageInfo => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
@@ -65,9 +65,8 @@ let start = (languageInfo) => {
             Marshal.from_channel(in_channel);
           switch (result) {
           | Oni_Syntax.Protocol.ServerToClient.EchoReply(result) =>
-            LogClient.info("got message from channel: |" ++ result ++ "|");
-          | Oni_Syntax.Protocol.ServerToClient.Log(msg) =>
-            LogServer.info(msg);
+            LogClient.info("got message from channel: |" ++ result ++ "|")
+          | Oni_Syntax.Protocol.ServerToClient.Log(msg) => LogServer.info(msg)
           };
         }
       },
@@ -102,6 +101,10 @@ let notifyBufferEnter =
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
   LogClient.info("TODO - Send Buffer leave.");
+};
+
+let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
+  write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
 let notifyBufferUpdate = (v: t, bufferUpdate: Oni_Core.BufferUpdate.t) => {

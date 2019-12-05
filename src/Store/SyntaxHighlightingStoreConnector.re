@@ -54,9 +54,9 @@ module GrammarRepository = {
 
 let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
-  let syntaxClient = Oni_Syntax_Client.start(languageInfo);
+  let _syntaxClient = Oni_Syntax_Client.start(languageInfo);
 
-  Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
+  //Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
 
   let jsonTreeSitterScopes =
     setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
@@ -116,6 +116,11 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
       Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate)
     });
 
+  let themeChangeEffect = theme =>
+    Isolinear.Effect.create(~name="syntax.theme", () => {
+      Oni_Syntax_Client.notifyThemeChanged(_syntaxClient, theme)
+    });
+
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
@@ -123,16 +128,10 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.SetTokenTheme(tokenTheme) =>
-      let state = {
-        ...state,
-        syntaxHighlighting:
-          Model.SyntaxHighlighting.updateTheme(
-            tokenTheme,
-            state.syntaxHighlighting,
-          ),
-      };
-      (state, Isolinear.Effect.none);
+    | Model.Actions.SetTokenTheme(tokenTheme) => (
+        state,
+        themeChangeEffect(tokenTheme),
+      )
     /*| Model.Actions.Tick(_) =>
       if (Model.SyntaxHighlighting.anyPendingWork(state.syntaxHighlighting)) {
         let syntaxHighlighting =
