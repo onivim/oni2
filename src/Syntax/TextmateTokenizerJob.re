@@ -171,7 +171,7 @@ let create = (~scope, ~theme, ~grammarRepository, lines) => {
   Job.create(
     ~name="TextmateTokenizerJob",
     ~initialCompletedWork,
-    ~budget=Time.ms(2),
+    ~budget=Time.ms(25),
     ~f=doWork,
     p,
   );

@@ -21,6 +21,8 @@ let write = (v: t, msg: Protocol.ClientToServer.t) => {
   Stdlib.flush(v.out_channel);
 };
 
+exception SyntaxProcessCrashed;
+
 let start = languageInfo => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
@@ -51,7 +53,7 @@ let start = languageInfo => {
     Thread.create(
       () => {
         let _ = Unix.waitpid([], pid);
-        print_endline("syntax process exited!");
+        LogClient.error("SYNTAX PROCESS CRASHED");
       },
       (),
     );

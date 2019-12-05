@@ -63,7 +63,7 @@ let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
-let create = () => {
+let empty = {
   grammars: [],
   languages: [],
   extToLanguage: StringMap.empty,

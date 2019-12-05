@@ -6,6 +6,7 @@
 module Ext = Oni_Extensions;
 
 module ServerToClient = {
+  [@deriving show({with_path: false})]
   type t =
     | EchoReply(string)
     | Log(string);
@@ -13,11 +14,12 @@ module ServerToClient = {
 };
 
 module ClientToServer = {
+  [@deriving show({with_path: false})]
   type t =
     | Echo(string)
-    | Initialize(Ext.LanguageInfo.t)
-    | BufferEnter(int, string, array(string))
+    | Initialize([@opaque] Ext.LanguageInfo.t)
+    | BufferEnter(int, string, [@opaque] array(string))
     | BufferLeave(int)
-    | BufferUpdate(Oni_Core.BufferUpdate.t)
-    | ThemeChanged(TokenTheme.t);
+    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t)
+    | ThemeChanged([@opaque] TokenTheme.t);
 };
