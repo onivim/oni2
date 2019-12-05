@@ -51,7 +51,7 @@ let start = (~onHighlights, languageInfo, setup) => {
   let waitThread =
     Thread.create(
       () => {
-        let (code, _status) = Unix.waitpid([], pid);
+        let (code, _status: Unix.process_status) = Unix.waitpid([], pid);
         ClientLog.error(
           "Syntax process closed with exit code: " ++ string_of_int(code),
         );

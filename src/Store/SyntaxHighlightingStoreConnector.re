@@ -175,12 +175,6 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
       let lines = getLines(state, bu.id);
       let scope = getScopeForBuffer(state, bu.id);
       let version = getVersion(state, bu.id);
-      prerr_endline(
-        "VERSION: "
-        ++ string_of_int(version)
-        ++ " UPDATE VERSION: "
-        ++ string_of_int(bu.version),
-      );
       switch (scope) {
       | None => default
       | Some(scope) when isVersionValid(version, bu.version) =>

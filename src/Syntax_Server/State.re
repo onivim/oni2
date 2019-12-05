@@ -36,23 +36,18 @@ let initialize = (languageInfo, setup, state) => {
 
 let getVisibleBuffers = state => state.visibleBuffers;
 
-let getVisibleHighlighters = (v: t) => {
-  v.visibleBuffers
-  |> List.map(b => IntMap.find_opt(b, v.highlightsMap))
+let getVisibleHighlighters = state => {
+  state.visibleBuffers
+  |> List.map(b => IntMap.find_opt(b, state.highlightsMap))
   |> List.filter_map(v => v);
 };
 
-let getActiveHighlighters = (v: t) => {
-  getVisibleHighlighters(v)
+let getActiveHighlighters = state => {
+  getVisibleHighlighters(state)
   |> List.filter(hl => NativeSyntaxHighlights.anyPendingWork(hl));
 };
 
-let anyPendingWork = (v: t) => {
-  switch (getActiveHighlighters(v)) {
-  | [] => false
-  | _ => true
-  };
-};
+let anyPendingWork = state => getActiveHighlighters(state) != [];
 
 let bufferEnter = (id: int, state: t) => {
   // TODO: Don't add duplicates...
@@ -61,37 +56,36 @@ let bufferEnter = (id: int, state: t) => {
   {...state, visibleBuffers};
 };
 
-let updateTheme = (theme, v: t) => {
+let updateTheme = (theme, state) => {
   let highlightsMap =
     IntMap.map(
-      oldV => {NativeSyntaxHighlights.updateTheme(theme, oldV)},
-      v.highlightsMap,
+      NativeSyntaxHighlights.updateTheme(theme),
+      state.highlightsMap,
     );
 
-  {...v, theme, highlightsMap};
+  {...state, theme, highlightsMap};
 };
 
-let doPendingWork = (v: t) => {
+let doPendingWork = state => {
   let highlightsMap =
     List.fold_left(
       (prev, curr) =>
         IntMap.update(
           curr,
-          oldV =>
-            switch (oldV) {
-            | None => None
-            | Some(v) => Some(NativeSyntaxHighlights.doWork(v))
-            },
+          fun
+          | None => None
+          | Some(highlighter) =>
+            Some(NativeSyntaxHighlights.doWork(highlighter)),
           prev,
         ),
-      v.highlightsMap,
-      v.visibleBuffers,
+      state.highlightsMap,
+      state.visibleBuffers,
     );
 
-  {...v, highlightsMap};
+  {...state, highlightsMap};
 };
 
-let updateVisibleBuffers = (buffers, v: t) => {
+let updateVisibleBuffers = (buffers, state) => {
   let visibleBuffers =
     List.map(
       v => {
@@ -116,11 +110,11 @@ let updateVisibleBuffers = (buffers, v: t) => {
           prev,
         );
       },
-      v.highlightsMap,
+      state.highlightsMap,
       buffers,
     );
 
-  {...v, visibleBuffers, highlightsMap};
+  {...state, visibleBuffers, highlightsMap};
 };
 
 /*let getTokensForLine = (v: t, bufferId: int, line: int) => {
@@ -168,7 +162,7 @@ let bufferUpdate =
     //      ~scope,
     //      ~getTreeSitterScopeMapper,
     //      ~getTextmateGrammar,
-    (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
+    (~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
   let highlightsMap =
     IntMap.update(
       bufferUpdate.id,
@@ -179,7 +173,7 @@ let bufferUpdate =
             NativeSyntaxHighlights.create(
               //              ~configuration,
               ~bufferUpdate,
-              ~theme=v.theme,
+              ~theme=state.theme,
               //              ~scope,
               //              ~getTreeSitterScopeMapper,
               //              ~getTextmateGrammar,
@@ -189,9 +183,7 @@ let bufferUpdate =
         | Some(v) =>
           Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
         },
-      v.highlightsMap,
+      state.highlightsMap,
     );
-  let ret: t = {...v, highlightsMap};
-
-  ret;
+  {...state, highlightsMap};
 };
