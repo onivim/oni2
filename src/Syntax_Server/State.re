@@ -52,6 +52,13 @@ let anyPendingWork = (v: t) => {
   };
 };
 
+let bufferEnter = (id: int, state: t) => {
+  // TODO: Don't add duplicates...
+  let visibleBuffers = [id, ...state.visibleBuffers];
+
+  {...state, visibleBuffers};
+};
+
 let updateTheme = (theme, v: t) => {
   let highlightsMap =
     IntMap.map(
@@ -118,7 +125,7 @@ let updateVisibleBuffers = (buffers, v: t) => {
     switch (IntMap.find_opt(bufferId, v.highlightsMap)) {
     | Some(v) => NativeSyntaxHighlights.getTokensForLine(v, line)
     | None => []
-    };
+    }};
   }*/
 
 let getTokenUpdates = state => {

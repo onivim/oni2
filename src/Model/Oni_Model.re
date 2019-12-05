@@ -11,6 +11,7 @@ module Animation = Animation;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferSyntaxHighlights = BufferSyntaxHighlights;
+module BufferSyntaxHighlightsReducer = BufferSyntaxHighlightsReducer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Command = Command;
 module Commands = Commands;

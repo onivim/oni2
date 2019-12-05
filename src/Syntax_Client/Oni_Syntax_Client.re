@@ -25,7 +25,7 @@ let write = (v: t, msg: Protocol.ClientToServer.t) => {
 
 exception SyntaxProcessCrashed;
 
-let start = (languageInfo, setup) => {
+let start = (~onHighlights, languageInfo, setup) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
@@ -73,7 +73,9 @@ let start = (languageInfo, setup) => {
           | ServerToClient.TokenUpdate(tokens) =>
             LogClient.info(
               "Got " ++ string_of_int(List.length(tokens)) ++ " tokens!",
-            )
+            );
+            onHighlights(tokens);
+            LogClient.info("Tokens applied");
           };
         }
       },

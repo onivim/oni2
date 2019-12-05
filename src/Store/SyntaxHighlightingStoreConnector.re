@@ -15,6 +15,7 @@ module Ext = Oni_Extensions;
 
 open Oni_Syntax.TreeSitterScopes;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
+module Protocol = Oni_Syntax.Protocol;
 
 module Log = Core.Log;
 
@@ -53,8 +54,20 @@ module GrammarRepository = {
 };
 
 let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-  let _syntaxClient = Oni_Syntax_Client.start(languageInfo, setup);
+  let (stream, dispatch) = Isolinear.Stream.create();
+
+  let onHighlights = tokenUpdates => {
+    List.iter(
+      tu => Protocol.TokenUpdate.show(tu) |> prerr_endline,
+      tokenUpdates,
+    );
+    Revery.App.runOnMainThread(() => {
+      dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates))
+    });
+  };
+
+  let _syntaxClient =
+    Oni_Syntax_Client.start(~onHighlights, languageInfo, setup);
 
   //Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
 

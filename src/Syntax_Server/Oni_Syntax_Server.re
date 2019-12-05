@@ -17,19 +17,26 @@ let start = () => {
   let messageQueue: ref(list(message)) = ref([]);
   // Mutex to guard accessing the queue from multiple threads
   let messageMutex = Mutex.create();
+  // And a semaphore for signaling when we have a new message
+  let messageCondition = Condition.create();
 
   let queue = msg => {
     Mutex.lock(messageMutex);
     messageQueue := [msg, ...messageQueue^];
+    Condition.signal(messageCondition);
     Mutex.unlock(messageMutex);
   };
 
+  let hasPendingMessage = () =>
+    switch (messageQueue^) {
+    | [] => false
+    | [hd, ..._] => true
+    };
+
   let flush = () => {
-    Mutex.lock(messageMutex);
     let result = messageQueue^;
     messageQueue := [];
-    Mutex.unlock(messageMutex);
-    List.rev(result);
+    result;
   };
 
   let isRunning = ref(true);
@@ -55,14 +62,17 @@ let start = () => {
                 map(State.initialize(languageInfo, setup));
                 log("Initialized!");
               }
-            | BufferEnter(id, filetype) =>
-              log(
-                Printf.sprintf(
-                  "Buffer enter - id: %d filetype: %s",
-                  id,
-                  filetype,
-                ),
-              )
+            | BufferEnter(id, filetype) => {
+                log(
+                  Printf.sprintf(
+                    "Buffer enter - id: %d filetype: %s",
+                    id,
+                    filetype,
+                  ),
+                );
+                map(State.bufferEnter(id));
+              }
+            | ThemeChanged(theme) => map(State.updateTheme(theme))
             | BufferUpdate(bufferUpdate, lines) => {
                 map(State.bufferUpdate(~bufferUpdate, ~lines));
                 log(
@@ -83,25 +93,36 @@ let start = () => {
           | Message(protocol) => handleProtocol(protocol);
 
         while (true) {
-          log("Syntax Server - tick");
+          log("Waiting for incoming message...");
 
-          // Get pending messages and handle them
-          flush() |> List.iter(handleMessage);
+          // Wait for pending incoming messages
+          Mutex.lock(messageMutex);
+          while (!hasPendingMessage()) {
+            Condition.wait(messageCondition, messageMutex);
+          };
+          // Once we have them, let's track and run them
+          let messages = flush();
+          Mutex.unlock(messageMutex);
+          log("Got some messages!");
 
+          // Handle messages
+          messages |> List.rev |> List.iter(handleMessage);
+
+          // TODO: Do this in a loop
+          // If the messages incurred work, do it!
           if (State.anyPendingWork(state^)) {
             log("Running unit of work...");
             map(State.doPendingWork);
-
-            let tokenUpdates = State.getTokenUpdates(state^);
-            write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
 
             log("Unit of work completed.");
           } else {
             log("No pending work.");
           };
-          // Wait for incoming messages
-          // Handle messages
-          // If any work, flush work
+
+          log("Sending token updates...");
+          let tokenUpdates = State.getTokenUpdates(state^);
+          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+          log("Token updates sent.");
         };
       },
       (),
@@ -126,34 +147,3 @@ let start = () => {
 
   Thread.join(_runThread);
 };
-/*log("Got language info!!")
-        map(State.setLanguageInfo(languageInfo))
-      | Echo(m) => write(Protocol.ServerToClient.EchoReply(m))
-      | ThemeChanged(theme) =>
-        log("Got new theme!")
-        map(State.updateTheme(theme))
-      | BufferEnter(id, fileType, lines) =>
-        write(
-          Protocol.ServerToClient.Log(
-            Printf.sprintf(
-              "Got buffer enter for id: %d of filetype %s with %d lines",
-              id,
-              fileType,
-              Array.length(lines),
-            ),
-          ),
-        )
-      | BufferUpdate(bufferUpdate) =>
-        write(
-          Protocol.ServerToClient.Log(
-            Printf.sprintf(
-              "Got buffer update for id: %d with %d lines",
-              bufferUpdate.id,
-              Array.length(bufferUpdate.lines),
-            ),
-          ),
-        )
-      | _ => ()
-      };
-    };
-  };*/

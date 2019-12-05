@@ -39,11 +39,29 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v) => {
           ColorizedToken.create(
             ~index=0,
             ~backgroundColor=Colors.black,
-            ~foregroundColor=TokenTheme.getCommentColor(v.theme),
+            ~foregroundColor=Colors.red,
             (),
           ),
           ColorizedToken.create(
             ~index=2,
+            ~backgroundColor=Colors.black,
+            ~foregroundColor=Colors.green,
+            (),
+          ),
+          ColorizedToken.create(
+            ~index=3,
+            ~backgroundColor=Colors.black,
+            ~foregroundColor=TokenTheme.getEntityColor(v.theme),
+            (),
+          ),
+          ColorizedToken.create(
+            ~index=4,
+            ~backgroundColor=Colors.black,
+            ~foregroundColor=TokenTheme.getCommentColor(v.theme),
+            (),
+          ),
+          ColorizedToken.create(
+            ~index=5,
             ~backgroundColor=Colors.black,
             ~foregroundColor=TokenTheme.getKeywordColor(v.theme),
             (),

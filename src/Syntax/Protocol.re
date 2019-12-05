@@ -14,6 +14,15 @@ module TokenUpdate = {
     tokenColors: list(ColorizedToken.t),
   };
 
+  let show = tokenUpdate => {
+    Printf.sprintf(
+      "Buffer id: %d line: %d token count: %d",
+      tokenUpdate.bufferId,
+      tokenUpdate.line,
+      List.length(tokenUpdate.tokenColors),
+    );
+  };
+
   let create = (~bufferId, ~line, tokenColors) => {
     bufferId,
     line,

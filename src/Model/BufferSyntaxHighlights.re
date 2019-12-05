@@ -25,16 +25,9 @@ let getTokens = (bufferId: int, line: int, highlights: t) => {
   |> BufferMap.find_opt(bufferId)
   |> Option.bind(LineMap.find_opt(line))
   |> Option.value(~default=noTokens);
-                                     /*
-                                        [
-                                          ColorizedToken.create(~index=0, ~backgroundColor=Colors.red, ~foregroundColor=Colors.red, ()),
-                                          ColorizedToken.create(~index=4, ~backgroundColor=Colors.blue, ~foregroundColor=Colors.blue, ()),
-                                          ColorizedToken.create(~index=8, ~backgroundColor=Colors.green, ~foregroundColor=Colors.green, ()),
-                                        ]
-                                      */
 };
 
-let setTokens =
+let setTokensForLine =
     (bufferId: int, line: int, tokens: list(ColorizedToken.t), highlights: t) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
@@ -46,5 +39,17 @@ let setTokens =
     | None => Some(updateLineMap(LineMap.empty))
     | Some(v) => Some(updateLineMap(v)),
     highlights,
+  );
+};
+
+let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
+  Protocol.TokenUpdate.(
+    tokenUpdates
+    |> List.fold_left(
+         (acc, curr) => {
+           setTokensForLine(curr.bufferId, curr.line, curr.tokenColors, acc)
+         },
+         highlights,
+       )
   );
 };
