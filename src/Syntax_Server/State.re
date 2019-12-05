@@ -34,6 +34,8 @@ let initialize = (languageInfo, setup, state) => {
   setup: Some(setup),
 };
 
+let getVisibleBuffers = state => state.visibleBuffers;
+
 let getVisibleHighlighters = (v: t) => {
   v.visibleBuffers
   |> List.map(b => IntMap.find_opt(b, v.highlightsMap))
@@ -128,21 +130,28 @@ let updateVisibleBuffers = (buffers, v: t) => {
     }};
   }*/
 
-let getTokenUpdates = state => {
+let getTokenUpdates = (state, log) => {
   List.fold_left(
     (acc, curr) => {
       let tokenUpdatesForBuffer =
         state.highlightsMap
         |> IntMap.find_opt(curr)
         |> Option.map(highlights => {
+             log("Got highlights for curr: " ++ string_of_int(curr));
              highlights
              |> NativeSyntaxHighlights.getUpdatedLines
              |> List.map(line => {
+                  log(
+                    "Getting tokens for buffer: "
+                    ++ string_of_int(curr)
+                    ++ " line: "
+                    ++ string_of_int(line),
+                  );
                   let tokenColors =
                     NativeSyntaxHighlights.getTokensForLine(highlights, line);
                   let bufferId = curr;
                   Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
-                })
+                });
            })
         |> Option.value(~default=[]);
 
@@ -169,6 +178,7 @@ let bufferUpdate =
           Some(
             NativeSyntaxHighlights.create(
               //              ~configuration,
+              ~bufferUpdate,
               ~theme=v.theme,
               //              ~scope,
               //              ~getTreeSitterScopeMapper,

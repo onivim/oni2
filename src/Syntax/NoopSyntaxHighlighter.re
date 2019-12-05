@@ -14,13 +14,6 @@ type t = {
   tokenColors: IntMap.t(list(ColorizedToken.t)),
 };
 
-let create = (~theme, lines) => {
-  theme,
-  lines,
-  updatedLines: [],
-  tokenColors: IntMap.empty,
-};
-
 let hasPendingWork = _ => false;
 let doWork = v => v;
 
@@ -74,6 +67,17 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v) => {
     );
 
   {...v, updatedLines, tokenColors};
+};
+
+let create = (~bufferUpdate, ~theme, lines) => {
+  let noopHighlights = {
+    theme,
+    lines,
+    updatedLines: [],
+    tokenColors: IntMap.empty,
+  };
+
+  noopHighlights |> update(~bufferUpdate, ~lines);
 };
 
 let getUpdatedLines = v => v.updatedLines;

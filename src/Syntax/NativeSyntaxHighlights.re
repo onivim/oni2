@@ -80,13 +80,14 @@ let create =
     //      ~configuration,
     // !     ~scope,
     (
+      ~bufferUpdate,
       ~theme,
       // TODO: Bring back!
       //      ~getTextmateGrammar,
       //      ~getTreeSitterScopeMapper,
       lines: array(string),
     ) => {
-  let state = NoopSyntaxHighlighter.create(~theme, lines);
+  let state = NoopSyntaxHighlighter.create(~bufferUpdate, ~theme, lines);
   Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
   /*_hasTreeSitterScope(configuration, scope)
     ? {
