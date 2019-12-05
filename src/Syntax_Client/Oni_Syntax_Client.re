@@ -2,7 +2,12 @@
  Syntax client
  */
 
+module Core = Oni_Core;
+
 open Oni_Syntax;
+
+module LogClient = (val Core.Log.withNamespace("Syntax.client"));
+module LogServer = (val Core.Log.withNamespace("Syntax.server"));
 
 type t = {
   in_channel: Stdlib.in_channel,
@@ -11,9 +16,12 @@ type t = {
   //writeThread: Thread.t,
 };
 
-let log = msg => print_endline("[Syntax Client] " ++ msg);
+let write = (v: t, msg: Protocol.ClientToServer.t) => {
+  Marshal.to_channel(v.out_channel, msg, []);
+  Stdlib.flush(v.out_channel);
+};
 
-let start = () => {
+let start = (languageInfo) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
@@ -57,9 +65,9 @@ let start = () => {
             Marshal.from_channel(in_channel);
           switch (result) {
           | Oni_Syntax.Protocol.ServerToClient.EchoReply(result) =>
-            log("got message from channel: |" ++ result ++ "|")
+            LogClient.info("got message from channel: |" ++ result ++ "|");
           | Oni_Syntax.Protocol.ServerToClient.Log(msg) =>
-            log("log message: " ++ msg)
+            LogServer.info(msg);
           };
         }
       },
@@ -79,13 +87,10 @@ let start = () => {
 
      }
     }, ());*/
-  log("started syntax client");
-  {in_channel, out_channel, readThread /*writeThread*/};
-};
-
-let write = (v: t, msg: Protocol.ClientToServer.t) => {
-  Marshal.to_channel(v.out_channel, msg, []);
-  Stdlib.flush(v.out_channel);
+  LogClient.info("started syntax client");
+  let syntaxClient = {in_channel, out_channel, readThread};
+  write(syntaxClient, Protocol.ClientToServer.Initialize(languageInfo));
+  syntaxClient;
 };
 
 let notifyBufferEnter =
@@ -96,7 +101,7 @@ let notifyBufferEnter =
 };
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  log("Buffer leave.");
+  LogClient.info("TODO - Send Buffer leave.");
 };
 
 let notifyBufferUpdate = (v: t, bufferUpdate: Oni_Core.BufferUpdate.t) => {

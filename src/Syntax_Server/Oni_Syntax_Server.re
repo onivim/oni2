@@ -9,12 +9,18 @@ let write = (msg: Protocol.ServerToClient.t) => {
   Stdlib.flush(Stdlib.stdout);
 };
 
+let log = msg => 
+      write(
+        Protocol.ServerToClient.Log(msg)
+      );
+
 let start = () => {
   while (true) {
     let msg: Oni_Syntax.Protocol.ClientToServer.t =
       Marshal.from_channel(Stdlib.stdin);
     switch (msg) {
     | exception _ => write(Protocol.ServerToClient.Log("Got an exception"))
+    | Initialize(languageInfo) => log("Got language info!!");
     | Echo(m) => write(Protocol.ServerToClient.EchoReply(m))
     | BufferEnter(id, fileType, lines) =>
       write(

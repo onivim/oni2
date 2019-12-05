@@ -1,5 +1,5 @@
 /*
- * SyntaxHighlighting2.re
+ * SyntaxHighlighting.re
  *
  * State kept for syntax highlighting (via TextMate today)
  */

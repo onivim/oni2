@@ -54,8 +54,7 @@ module GrammarRepository = {
 
 let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
-  print_endline("!! starting");
-  let _syntaxClient = Oni_Syntax_Client.start();
+  let syntaxClient = Oni_Syntax_Client.start(languageInfo);
 
   Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
 
