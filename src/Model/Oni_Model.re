@@ -49,7 +49,6 @@ module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;
 module StatusBarReducer = StatusBarReducer;
 module State = State;
-module SyntaxHighlighting = SyntaxHighlighting;
 module ThemeInfo = ThemeInfo;
 module Title = Title;
 module WhitespaceTokenFilter = WhitespaceTokenFilter;
