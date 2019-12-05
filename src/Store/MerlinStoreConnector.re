@@ -36,17 +36,16 @@ let start = () => {
 
   let pendingGetErrorsRequest = ref(None);
 
-  let modelChangedEffect =
-      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
     effectIfMerlinEnabled(
       Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
         switch (Model.Buffers.getBuffer(bu.id, buffers)) {
         | None => ()
         | Some(v) =>
-          let lines = Model.Buffer.getLines(v);
-          let fileType = Model.Buffer.getFileType(v);
-          let uri = Model.Buffer.getUri(v);
-          switch (fileType, Model.Buffer.getFilePath(v)) {
+          let lines = Core.Buffer.getLines(v);
+          let fileType = Core.Buffer.getFileType(v);
+          let uri = Core.Buffer.getUri(v);
+          switch (fileType, Core.Buffer.getFilePath(v)) {
           | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
             let cb = err => {
               let modelDiagnostics =
@@ -98,10 +97,10 @@ let start = () => {
         switch (Model.Selectors.getActiveBuffer(state)) {
         | None => ()
         | Some(buf) =>
-          let id = Model.Buffer.getId(buf);
-          let lines = Model.Buffer.getLines(buf);
-          let fileType = Model.Buffer.getFileType(buf);
-          switch (fileType, Model.Buffer.getFilePath(buf)) {
+          let id = Core.Buffer.getId(buf);
+          let lines = Core.Buffer.getLines(buf);
+          let fileType = Core.Buffer.getFileType(buf);
+          switch (fileType, Core.Buffer.getFilePath(buf)) {
           | (Some(ft), Some(path)) when ft == "reason" || ft == "ocaml" =>
             let cb = completions => {
               let modelCompletions =

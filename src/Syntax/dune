@@ -9,6 +9,7 @@
         lwt.unix
         yojson
         Oni2.core
+        Oni2.extensions
         Rench
         Revery
         textmate

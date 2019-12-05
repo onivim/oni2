@@ -10,6 +10,7 @@
         yojson
         Oni2.core
         Oni2.syntax
+        Oni2.model
         Rench
         Revery
         textmate

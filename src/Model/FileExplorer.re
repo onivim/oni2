@@ -1,18 +1,20 @@
 open Revery;
 open Oni_Core;
+open Oni_Extensions;
 
 type t = {
-  directory: UiTree.t,
+  tree: option(FsTreeNode.t),
   isOpen: bool,
 };
 
+[@deriving show({with_path: false})]
+type action =
+  | TreeUpdated([@opaque] FsTreeNode.t)
+  | NodeUpdated(int, [@opaque] FsTreeNode.t)
+  | NodeClicked([@opaque] FsTreeNode.t);
+
 module ExplorerId =
   UniqueId.Make({});
-
-let toFsNode = node =>
-  switch (node) {
-  | UiTree.FileSystemNode(n) => n
-  };
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
@@ -25,27 +27,7 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   };
 };
 
-let createFsNode =
-    (~children, ~depth, ~path, ~displayName, ~fileIcon, ~isDirectory) => {
-  /**
-     TODO: Find an icon theme with folders and use those icons
-     Fallbacks are used for the directory icons. FontAwesome is not
-     accessible here so we specify no icons for directories.
-   */
-  let (primary, secondary) = isDirectory ? (None, None) : (fileIcon, None);
-
-  UiTree.FileSystemNode({
-    path,
-    depth,
-    displayName,
-    children,
-    isDirectory,
-    icon: primary,
-    secondaryIcon: secondary,
-  });
-};
-
-let isDir = path => Sys.file_exists(path) ? Sys.is_directory(path) : false;
+let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
 
 let printUnixError = (error, fn, arg) =>
   Printf.sprintf(
@@ -56,7 +38,7 @@ let printUnixError = (error, fn, arg) =>
   )
   |> Log.error;
 
-let handleError = (~defaultValue, func) => {
+let attempt = (~defaultValue, func) => {
   try%lwt(func()) {
   | Unix.Unix_error(error, fn, arg) =>
     printUnixError(error, fn, arg);
@@ -64,6 +46,18 @@ let handleError = (~defaultValue, func) => {
   | Failure(e) =>
     Log.error(e);
     Lwt.return(defaultValue);
+  };
+};
+
+let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
+  switch (a.kind, b.kind) {
+  | (Directory(_), File) => (-1)
+  | (File, Directory(_)) => 1
+  | _ =>
+    compare(
+      a.displayName |> String.lowercase_ascii,
+      b.displayName |> String.lowercase_ascii,
+    )
   };
 };
 
@@ -77,136 +71,61 @@ let handleError = (~defaultValue, func) => {
    Lwt_list.map_p. The recursion is gated by the depth value so it does
    not recurse too far.
  */
-let getFilesAndFolders = (~maxDepth, ~ignored, cwd, getIcon) => {
-  let attempt = handleError(~defaultValue=[]);
-  let rec getDirContent = (~depth, cwd, getIcon) => {
-    Lwt_unix.files_of_directory(cwd)
-    /* Filter out the relative name for current and parent directory*/
-    |> Lwt_stream.filter(name => name != ".." && name != ".")
-    /* Remove ignored files from search */
-    |> Lwt_stream.filter(name => !List.mem(name, ignored))
-    |> Lwt_stream.to_list
-    |> (
-      promise =>
-        Lwt.bind(promise, files =>
-          Lwt_list.map_p(
-            file => {
-              let path = Filename.concat(cwd, file);
-              let isDirectory = isDir(path);
-              let nextDepth = depth + 1;
+let getFilesAndFolders = (~ignored, cwd, getIcon) => {
+  let rec getDirContent = (~loadChildren=false, cwd) => {
+    let toFsTreeNode = file => {
+      let path = Filename.concat(cwd, file);
+      let id = ExplorerId.getUniqueId();
 
-              /**
-                 If resolving children for a particular directory fails
-                 log the error but carry on processing other directories
-               */
-              let%lwt children =
-                isDirectory && nextDepth < maxDepth
-                  ? attempt(() =>
-                      getDirContent(~depth=nextDepth, path, getIcon)
-                    )
-                  : Lwt.return([]);
+      if (isDirectory(path)) {
+        let%lwt children =
+          if (loadChildren) {
+            /**
+               If resolving children for a particular directory fails
+                log the error but carry on processing other directories
+              */
+            attempt(() => getDirContent(path), ~defaultValue=[])
+            |> Lwt.map(List.sort(sortByLoweredDisplayName));
+          } else {
+            Lwt.return([]);
+          };
 
-              createFsNode(
-                ~path,
-                ~children,
-                ~isDirectory,
-                ~depth=nextDepth,
-                ~displayName=file,
-                ~fileIcon=getIcon(path),
-              )
-              |> Lwt.return;
-            },
-            files,
-          )
-        )
-    );
-  };
-
-  attempt(() => getDirContent(~depth=0, cwd, getIcon));
-};
-
-let rec listToTree = (~status, nodes, parent) => {
-  open UiTree;
-  let parentId = ExplorerId.getUniqueId();
-  let sortByLoweredDisplayName = (a, b) => {
-    switch (a.isDirectory, b.isDirectory) {
-    | (true, false) => (-1)
-    | (false, true) => 1
-    | _ =>
-      compare(
-        a.displayName |> String.lowercase_ascii,
-        b.displayName |> String.lowercase_ascii,
-      )
+        FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children)
+        |> Lwt.return;
+      } else {
+        FsTreeNode.file(path, ~id, ~icon=getIcon(path)) |> Lwt.return;
+      };
     };
+
+    let%lwt files =
+      Lwt_unix.files_of_directory(cwd)
+      /* Filter out the relative name for current and parent directory*/
+      |> Lwt_stream.filter(name => name != ".." && name != ".")
+      /* Remove ignored files from search */
+      |> Lwt_stream.filter(name => !List.mem(name, ignored))
+      |> Lwt_stream.to_list;
+
+    Lwt_list.map_p(toFsTreeNode, files);
   };
-  let children =
-    nodes
-    |> List.map(toFsNode)
-    |> List.sort(sortByLoweredDisplayName)
-    |> List.map(fsNode => {
-         let descendantNodes = List.map(toFsNode, fsNode.children);
-         let descendants =
-           List.map(
-             descendant =>
-               listToTree(
-                 ~status=Closed,
-                 descendant.children,
-                 FileSystemNode(descendant),
-               ),
-             descendantNodes,
-           );
 
-         let id = ExplorerId.getUniqueId();
-         Node(
-           {id, data: FileSystemNode(fsNode), status: Closed},
-           descendants,
-         );
-       });
-
-  Node({id: parentId, data: parent, status}, children);
+  attempt(() => getDirContent(cwd, ~loadChildren=true), ~defaultValue=[]);
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
+  let id = ExplorerId.getUniqueId();
   let getIcon = getFileIcon(languageInfo, iconTheme);
-  let maxDepth = Constants.default.maximumExplorerDepth;
-  let directory =
-    getFilesAndFolders(~maxDepth, ~ignored, cwd, getIcon) |> Lwt_main.run;
+  let children =
+    getFilesAndFolders(~ignored, cwd, getIcon)
+    |> Lwt_main.run
+    |> List.sort(sortByLoweredDisplayName);
 
-  createFsNode(
-    ~depth=0,
-    ~path=cwd,
-    ~displayName=Filename.basename(cwd),
-    ~isDirectory=true,
-    ~children=directory,
-    ~fileIcon=getIcon(cwd),
-  )
-  |> listToTree(~status=Open, directory);
-};
-
-let getNodePath = node => {
-  UiTree.(
-    switch (node) {
-    | Node({data: FileSystemNode({path, _}), _}, _) => Some(path)
-    | Empty => None
-    }
+  FsTreeNode.directory(
+    cwd,
+    ~id,
+    ~icon=getIcon(cwd),
+    ~children,
+    ~isOpen=true,
   );
 };
 
-let getNodeId = node => {
-  UiTree.(
-    switch (node) {
-    | Node({id, _}, _) => Some(id)
-    | Empty => None
-    }
-  );
-};
-
-let create = () => {directory: UiTree.Empty, isOpen: true};
-
-let reduce = (state: t, action: Actions.t) => {
-  switch (action) {
-  | SetExplorerTree(tree) => {directory: tree, isOpen: true}
-  | RemoveDockItem(WindowManager.ExplorerDock) => {...state, isOpen: false}
-  | _ => state
-  };
-};
+let initial = {tree: None, isOpen: true};

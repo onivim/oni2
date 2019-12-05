@@ -10,7 +10,11 @@ open Reason_jsonrpc;
 open Rench;
 /* open Revery; */
 
+module Log = (val Log.withNamespace("Oni2.ExtHostTransport"));
+
 module Protocol = ExtHostProtocol;
+
+module Workspace = Protocol.Workspace;
 
 type t = {
   process: NodeProcess.t,
@@ -32,6 +36,7 @@ let defaultMessageHandler = (_, _, _) => Ok(None);
 let start =
     (
       ~initData=ExtHostInitData.create(),
+      ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
       ~onClosed=defaultCallback,
@@ -65,7 +70,7 @@ let start =
   let send = (msgType: MessageType.t, msg: Yojson.Safe.t) => {
     switch (rpcRef^) {
     | None =>
-      Log.error("ExtHostClient: RPC not initialized.");
+      Log.error("RPC not initialized.");
       (-1);
     | Some(v) =>
       incr(lastReqId);
@@ -99,7 +104,7 @@ let start =
 
   let sendResponse = (msgType, reqId, msg) => {
     switch (rpcRef^) {
-    | None => Log.error("ExtHostClient: RPC not initialized.")
+    | None => Log.error("RPC not initialized.")
     | Some(v) =>
       let response =
         `Assoc([
@@ -123,19 +128,14 @@ let start =
       | _ => sendResponse(12, reqId, `Assoc([]))
       }
     | _ =>
-      Log.error(
-        "ExtHostTransport - Unknown message: "
-        ++ Yojson.Safe.to_string(payload),
+      Log.errorf(m =>
+        m("Unknown message: %s", Yojson.Safe.to_string(payload))
       )
     };
 
   let handleReply = (reqId: int, payload: Yojson.Safe.t) => {
-    Log.debug(() =>
-      Printf.sprintf(
-        "Reply ID: %d payload: %s\n",
-        reqId,
-        Yojson.Safe.to_string(payload),
-      )
+    Log.debugf(m =>
+      m("Reply ID: %d payload: %s\n", reqId, Yojson.Safe.to_string(payload))
     );
     switch (Hashtbl.find_opt(replyIdToResolver, reqId)) {
     | Some(resolver) =>
@@ -157,8 +157,7 @@ let start =
     open ExtHostProtocol.OutgoingNotifications;
 
     Configuration.initializeConfiguration() |> sendNotification;
-    Workspace.initializeWorkspace("onivim-workspace-id", "onivim-workspace")
-    |> sendNotification;
+    Workspace.initializeWorkspace(initialWorkspace) |> sendNotification;
 
     initialized := true;
 
@@ -179,7 +178,7 @@ let start =
         }
       )
 
-    | _ => Log.error("[Extension Host Client] Unknown message: " ++ n.method)
+    | _ => Log.error("Unknown message: " ++ n.method)
     };
   };
 

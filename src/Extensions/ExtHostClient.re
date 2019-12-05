@@ -11,6 +11,9 @@ module Protocol = ExtHostProtocol;
 
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
+module Workspace = Protocol.Workspace;
+
+module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
 
 type t = {transport: ExtHostTransport.t};
 
@@ -28,6 +31,7 @@ let apply = (f, r) => {
 let start =
     (
       ~initData=ExtHostInitData.create(),
+      ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onClosed=defaultCallback,
       ~onDiagnosticsChangeMany=defaultOneArgCallback,
@@ -85,14 +89,14 @@ let start =
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
-    | (s, m, _a) =>
-      Log.error(
-        Printf.sprintf(
-          "[ExtHostClient] Unhandled message - [%s:%s]: %s",
-          s,
-          m,
-          Yojson.Safe.to_string(`List(_a)),
-        ),
+    | (scope, method, argsAsJson) =>
+      Log.errorf(m =>
+        m(
+          "Unhandled message - [%s:%s]: %s",
+          scope,
+          method,
+          Yojson.Safe.to_string(`List(argsAsJson)),
+        )
       );
       Ok(None);
     };
@@ -101,6 +105,7 @@ let start =
   let transport =
     ExtHostTransport.start(
       ~initData,
+      ~initialWorkspace,
       ~onInitialized,
       ~onMessage,
       ~onClosed,
@@ -121,6 +126,13 @@ let executeContributedCommand = (cmd, v) => {
   ExtHostTransport.send(
     v.transport,
     Out.Commands.executeContributedCommand(cmd),
+  );
+};
+
+let acceptWorkspaceData = (workspace: Workspace.t, v) => {
+  ExtHostTransport.send(
+    v.transport,
+    Out.Workspace.acceptWorkspaceData(workspace),
   );
 };
 

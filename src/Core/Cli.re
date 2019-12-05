@@ -10,6 +10,7 @@ type t = {
   filesToOpen: list(string),
   forceScaleFactor: option(float),
   syntaxHighlightService: bool,
+  overriddenExtensionsDir: option(string),
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
@@ -17,6 +18,7 @@ let create = (~folder, ~filesToOpen, ()) => {
   filesToOpen,
   forceScaleFactor: None,
   syntaxHighlightService: false,
+  overriddenExtensionsDir: None,
 };
 
 let newline = "\n";
@@ -35,16 +37,23 @@ let setWorkingDirectory = s => {
   Sys.chdir(s);
 };
 
+let setRef: (ref(option('a)), 'a) => unit =
+  (someRef, v) => someRef := Some(v);
+
 let parse = () => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
   let syntaxHighlightService = ref(false);
+  let extensionsDir = ref(None);
 
   Arg.parse(
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
+      ("--debug", Unit(Log.enableDebugLogging), ""),
+      ("--log-file", String(Log.setLogFile), ""),
+      ("--log-filter", String(Log.Namespace.setFilter), ""),
       ("--checkhealth", Unit(HealthCheck.run), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
@@ -57,12 +66,14 @@ let parse = () => {
         Unit(() => syntaxHighlightService := true),
         "",
       ),
+      ("--extensions-dir", String(setRef(extensionsDir)), ""),
+      ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
     ],
     arg => args := [arg, ...args^],
     "",
   );
 
-  if (! Log.canPrint^) {
+  if (!Log.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
     Utility.freeConsole();
   };
@@ -134,5 +145,6 @@ let parse = () => {
     filesToOpen,
     forceScaleFactor: scaleFactor^,
     syntaxHighlightService: syntaxHighlightService^,
+    overriddenExtensionsDir: extensionsDir^,
   };
 };

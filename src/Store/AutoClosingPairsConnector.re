@@ -6,12 +6,12 @@
  */
 
 module Core = Oni_Core;
-module Extensions = Oni_Extensions;
+module Ext = Oni_Extensions;
 module Model = Oni_Model;
 
 module Log = Core.Log;
 
-let start = (languageInfo: Model.LanguageInfo.t) => {
+let start = (languageInfo: Ext.LanguageInfo.t) => {
   ignore(languageInfo);
 
   let autoClosingPairsEnabled = ref(false);

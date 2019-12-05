@@ -16,8 +16,10 @@ function activate(context) {
     item.text = "Developer";
     item.show();
 
+    let cleanup = (disposable) => context.subscriptions.push(disposable);
+
     // Add a completion provider for oni-dev files
-    let provider1 = vscode.languages.registerCompletionItemProvider('oni-dev',
+    cleanup(vscode.languages.registerCompletionItemProvider('oni-dev',
         {
             provideCompletionItems: (document, position, token, context) => {
                 return [
@@ -26,9 +28,9 @@ function activate(context) {
                 ];
             }
         }
-    );
+    ));
     
-    let provider2 = vscode.languages.registerCompletionItemProvider('oni-dev',
+    cleanup(vscode.languages.registerCompletionItemProvider('oni-dev',
         {
             provideCompletionItems: (document, position, token, context) => {
                 return [
@@ -37,9 +39,7 @@ function activate(context) {
                 ];
             }
         }
-    );
-
-    context.subscriptions.push(provider1);
+    ));
 
     const output = vscode.window.createOutputChannel("oni-dev");
     output.appendLine("Hello output channel!");
@@ -49,18 +49,18 @@ function activate(context) {
 
     const collection = vscode.languages.createDiagnosticCollection('test');
 
-    let disposable2 = vscode.workspace.onDidOpenTextDocument((e) => {
+    cleanup(vscode.workspace.onDidOpenTextDocument((e) => {
         // TODO:
         // Add command / option to toggle this
         // showData({
         //     type: "workspace.onDidOpenTextDocument",
         //     filename: e.fileName,
         // });
-    });
+    }));
 
     let latestText = "";
 
-    let disposable3 = vscode.workspace.onDidChangeTextDocument((e) => {
+    cleanup(vscode.workspace.onDidChangeTextDocument((e) => {
         // TODO:
         // Add command / option to toggle this
         // showData({
@@ -86,28 +86,28 @@ function activate(context) {
                 relatedInformation: []
            }]);
         }
-    });
+    }));
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable4 = vscode.commands.registerCommand('developer.oni.showNotification', () => {
+	cleanup(vscode.commands.registerCommand('developer.oni.showNotification', () => {
 		// The code you place here will be executed every time your command is executed
 
 		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello from extension!');
-	});
+	}));
+    
+	cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
+		// Display a message box to the user
+		vscode.window.showInformationMessage("rootPath: " + vscode.workspace.rootPath);
+	}));
 
     // Helper command to show buffer text
     // This helps us create a test case to validate buffer manipulations
-	let disposable5 = vscode.commands.registerCommand('developer.oni.getBufferText', () => {
+	cleanup(vscode.commands.registerCommand('developer.oni.getBufferText', () => {
 		vscode.window.showInformationMessage("fulltext:" + latestText);
-	});
-
-	context.subscriptions.push(disposable2);
-	context.subscriptions.push(disposable3);
-	context.subscriptions.push(disposable4);
-	context.subscriptions.push(disposable5);
+	}));
 }
 
 // this method is called when your extension is deactivated

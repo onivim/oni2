@@ -30,7 +30,7 @@ let start = () => {
         switch (Model.Selectors.getActiveBuffer(state)) {
         | None => state
         | Some(buf) =>
-          let bufferId = Model.Buffer.getId(buf);
+          let bufferId = Core.Buffer.getId(buf);
           let delay =
             Core.Configuration.getValue(
               c => c.editorHoverDelay,

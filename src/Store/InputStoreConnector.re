@@ -11,6 +11,8 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
+module Log = (val Log.withNamespace("Oni2.InputStoreConnector"));
+
 type captureMode =
   | Normal
   | Wildmenu
@@ -123,11 +125,11 @@ let start =
         | Normal
         | Wildmenu
             when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
-          Log.info("Input::handle - sending raw input: " ++ k);
+          Log.info("handle - sending raw input: " ++ k);
           [Actions.KeyboardInput(k)];
 
         | _ =>
-          Log.info("Input::handle - sending bound actions.");
+          Log.info("handle - sending bound actions.");
           bindingActions;
         };
 
@@ -146,7 +148,7 @@ let start =
   };
 
   switch (window) {
-  | None => Log.info("Input - no window to subscribe to events")
+  | None => Log.info("no window to subscribe to events")
   | Some(window) =>
     let _ignore =
       Revery.Event.subscribe(
@@ -154,8 +156,7 @@ let start =
         keyEvent => {
           let isTextInputActive = isTextInputActive();
           Log.info(
-            "Input - got keydown - text input:"
-            ++ string_of_bool(isTextInputActive),
+            "got keydown - text input:" ++ string_of_bool(isTextInputActive),
           );
           Handler.keyPressToCommand(~isTextInputActive, keyEvent)
           |> keyEventListener;
@@ -166,7 +167,7 @@ let start =
       Revery.Event.subscribe(
         window.onTextInputCommit,
         textEvent => {
-          Log.info("Input - onTextInputCommit: " ++ textEvent.text);
+          Log.info("onTextInputCommit: " ++ textEvent.text);
           keyEventListener(Some(textEvent.text));
         },
       );

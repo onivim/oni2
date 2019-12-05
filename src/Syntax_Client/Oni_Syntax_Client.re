@@ -99,6 +99,6 @@ let notifyBufferLeave = (_v: t, _bufferId: int) => {
   log("Buffer leave.");
 };
 
-let notifyBufferUpdate = (v: t, bufferUpdate: Oni_Core.Types.BufferUpdate.t) => {
+let notifyBufferUpdate = (v: t, bufferUpdate: Oni_Core.BufferUpdate.t) => {
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
 };

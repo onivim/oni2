@@ -9,11 +9,13 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            FontSizeChangeTest
            InputIgnoreTest
            LanguageCssTest
+           LanguageTypeScriptTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
@@ -48,11 +50,13 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
         LanguageCssTest.exe
+        LanguageTypeScriptTest.exe
         QuickOpenEventuallyCompletesTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
@@ -66,4 +70,5 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        some-test-file.txt
         ))

@@ -9,6 +9,7 @@ open Revery.UI.Components;
 
 open Oni_Core;
 module Model = Oni_Model;
+module Ext = Oni_Extensions;
 
 type tabAction = unit => unit;
 
@@ -86,7 +87,7 @@ let make =
 
   let state = GlobalContext.current().state;
   let language =
-    Model.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
+    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
   let fileIcon: option(Model.IconTheme.IconDefinition.t) =
     Model.IconTheme.getIconForFile(state.iconTheme, title, language);
 

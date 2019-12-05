@@ -25,6 +25,20 @@ let fontAwesomeStyle =
 
 let fontAwesomeIcon = ZedBundled.singleton(UChar.of_int(0xF556));
 
+module Styles = {
+  let bufferView = bufferPixelWidth =>
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      width(int_of_float(bufferPixelWidth)),
+      bottom(0),
+    ];
+
+  let bufferViewClipped = bufferPixelWidth =>
+    Style.[overflow(`Hidden), ...bufferView(bufferPixelWidth)];
+};
+
 let renderLineNumber =
     (
       fontFamily: string,
@@ -414,16 +428,6 @@ let%component make =
   let bufferPixelWidth =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
-  let bufferViewStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      width(int_of_float(bufferPixelWidth)),
-      bottom(0),
-      overflow(`Hidden),
-    ];
-
   let minimapPixelWidth =
     layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
   let minimapViewStyle =
@@ -552,9 +556,11 @@ let%component make =
 
   <View style ref={node => setElementRef(Some(node))} onDimensionsChanged>
     <View
-      style=bufferViewStyle onMouseUp=editorMouseUp onMouseWheel=scrollSurface>
+      style={Styles.bufferViewClipped(bufferPixelWidth)}
+      onMouseUp=editorMouseUp
+      onMouseWheel=scrollSurface>
       <OpenGL
-        style=bufferViewStyle
+        style={Styles.bufferViewClipped(bufferPixelWidth)}
         render={(transform, _ctx) => {
           let count = lineCount;
           let height = metrics.pixelHeight;
@@ -880,13 +886,15 @@ let%component make =
       </View>
     </View>
     minimapLayout
-    <HoverView x=cursorPixelX y=cursorPixelY state />
-    <CompletionsView
-      x=cursorPixelX
-      y=cursorPixelY
-      lineHeight=fontHeight
-      state
-    />
+    <View style={Styles.bufferView(bufferPixelWidth)}>
+      <HoverView x=cursorPixelX y=cursorPixelY state />
+      <CompletionsView
+        x=cursorPixelX
+        y=cursorPixelY
+        lineHeight=fontHeight
+        state
+      />
+    </View>
     <View style=verticalScrollBarStyle>
       <EditorVerticalScrollbar
         state

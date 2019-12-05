@@ -7,17 +7,24 @@
  */
 
 module Core = Oni_Core;
+module Uri = Core.Uri;
 open Oni_Core.Utility;
 module Model = Oni_Model;
+
+module Log = (
+  val Core.Log.withNamespace("Oni2.ExtensionClientStoreConnector")
+);
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
 
+module Workspace = Protocol.Workspace;
+
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let onExtHostClosed = () => Core.Log.info("ext host closed");
+  let onExtHostClosed = () => Log.info("ext host closed");
 
   let extensionInfo =
     extensions
@@ -64,15 +71,11 @@ let start = (extensions, setup: Core.Setup.t) => {
   };
 
   let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
-    Core.Log.info(
-      "Registered suggest provider with ID: " ++ string_of_int(sp.id),
-    );
+    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
     dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
   };
 
-  let onOutput = msg => {
-    Core.Log.info("[ExtHost]: " ++ msg);
-  };
+  let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
     dispatch(Model.Actions.ExtensionActivated(id));
@@ -89,6 +92,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
+      ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,
       ~onStatusBarSetEntry,
@@ -105,7 +109,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Core.Log.info("Creating model for filetype: " ++ ft);
+      Log.info("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),
@@ -146,8 +150,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let modelChangedEffect =
-      (buffers: Model.Buffers.t, bu: Core.Types.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Model.Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
@@ -166,7 +169,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               (),
             );
 
-          let uri = Model.Buffer.getUri(v);
+          let uri = Core.Buffer.getUri(v);
 
           ExtHostClient.updateDocument(
             uri,
@@ -181,9 +184,12 @@ let start = (extensions, setup: Core.Setup.t) => {
   let suggestionItemToCompletionItem:
     Protocol.SuggestionItem.t => Model.Actions.completionItem =
     suggestion => {
+      let completionKind =
+        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+
       {
         completionLabel: suggestion.label,
-        completionKind: CompletionKind.Text,
+        completionKind,
         completionDetail: None,
       };
     };
@@ -198,9 +204,11 @@ let start = (extensions, setup: Core.Setup.t) => {
 
     providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
-         Core.Log.info(
-           "[Exthost] Completions - getting completions for suggest provider: "
-           ++ string_of_int(provider.id),
+         Log.infof(m =>
+           m(
+             "Completions - getting completions for suggest provider: %n",
+             provider.id,
+           )
          );
          let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
            ExtHostClient.getCompletions(
@@ -215,7 +223,7 @@ let start = (extensions, setup: Core.Setup.t) => {
              completionPromise,
              completions => {
                switch (completions) {
-               | None => Core.Log.info("No completions for provider")
+               | None => Log.info("No completions for provider")
                | Some(completions) =>
                  let completionItems =
                    suggestionsToCompletionItems(completions);
@@ -240,19 +248,19 @@ let start = (extensions, setup: Core.Setup.t) => {
         (buf, fileType) => {
           open Model.Actions;
           open Oni_Core.Types;
-          let uri = Model.Buffer.getUri(buf);
+          let uri = Core.Buffer.getUri(buf);
           let position =
             Protocol.OneBasedPosition.ofInt1(
               ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
               ~column=completionMeet.completionMeetColumn |> Index.toInt1,
               (),
             );
-          Core.Log.info(
-            Printf.sprintf(
-              "[Exthost] Completions - requesting at %s for %s",
+          Log.infof(m =>
+            m(
+              "Completions - requesting at %s for %s",
               Core.Uri.toString(uri),
               Protocol.OneBasedPosition.show(position),
-            ),
+            )
           );
           let languageFeatures = state.languageFeatures;
           getAndDispatchCompletions(
@@ -283,6 +291,14 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     );
 
+  let changeWorkspaceEffect = path =>
+    Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+      ExtHostClient.acceptWorkspaceData(
+        Workspace.fromPath(path),
+        extHostClient,
+      )
+    });
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
     | Model.Actions.Init => (state, registerQuitCleanupEffect)
@@ -297,6 +313,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
         checkCompletionsEffect(completionMeet, state),
+      )
+    | Model.Actions.VimDirectoryChanged(path) => (
+        state,
+        changeWorkspaceEffect(path),
       )
     | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
         state,

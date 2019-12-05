@@ -10,46 +10,70 @@
 open Revery;
 
 module Core = Oni_Core;
+module Option = Core.Utility.Option;
+
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
 
-let discoverExtensions = (setup: Core.Setup.t) => {
+module Log = (val Core.Log.withNamespace("Oni2.StoreThread"));
+module DispatchLog = (
+  val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
+);
+
+let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
+  open Core.Cli;
   let extensions =
     Core.Log.perf("Discover extensions", () => {
-      let extensions = ExtensionScanner.scan(setup.bundledExtensionsPath);
-      let userExtensions = Core.Filesystem.getExtensionsFolder();
+      let extensions =
+        ExtensionScanner.scan(
+          // The extension host assumes bundled extensions start with 'vscode.'
+          ~prefix=Some("vscode"),
+          setup.bundledExtensionsPath,
+        );
+
       let developmentExtensions =
         switch (setup.developmentExtensionsPath) {
-        | Some(p) =>
-          let ret = ExtensionScanner.scan(p);
-          ret;
+        | Some(p) => ExtensionScanner.scan(p)
         | None => []
         };
-      let userExtensions =
-        switch (userExtensions) {
-        | Ok(p) =>
-          Core.Log.info("Searching for user extensions in: " ++ p);
-          ExtensionScanner.scan(p);
-        | Error(msg) =>
-          Core.Log.error("Error discovering user extensions: " ++ msg);
-          [];
-        };
 
-      Core.Log.debug(() =>
-        "discoverExtensions - discovered "
-        ++ string_of_int(List.length(userExtensions))
-        ++ " user extensions."
+      let overriddenExtensionsDir =
+        cli |> Option.bind(cli => cli.overriddenExtensionsDir);
+
+      let userExtensions =
+        (
+          switch (overriddenExtensionsDir) {
+          | Some(p) => Some(p)
+          | None =>
+            switch (Core.Filesystem.getExtensionsFolder()) {
+            | Ok(p) => Some(p)
+            | Error(msg) =>
+              Log.errorf(m =>
+                m("Error discovering user extensions: %s", msg)
+              );
+              None;
+            }
+          }
+        )
+        |> Option.map(p => {
+             Log.infof(m => m("Searching for user extensions in: %s", p));
+             p;
+           })
+        |> Option.map(ExtensionScanner.scan)
+        |> Option.value(~default=[]);
+
+      Log.debugf(m =>
+        m(
+          "discoverExtensions - discovered %n user extensions.",
+          List.length(userExtensions),
+        )
       );
       [extensions, developmentExtensions, userExtensions] |> List.flatten;
     });
 
-  Core.Log.info(
-    "-- Discovered: "
-    ++ string_of_int(List.length(extensions))
-    ++ " extensions",
-  );
+  Log.infof(m => m("-- Discovered: %n extensions", List.length(extensions)));
 
   extensions;
 };
@@ -93,8 +117,8 @@ let start =
     | None => ()
     };
 
-  let extensions = discoverExtensions(setup);
-  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+  let extensions = discoverExtensions(setup, cliOptions);
+  let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let contributedCommands = Model.Commands.ofExtensions(extensions);
 
@@ -130,8 +154,7 @@ let start =
 
   let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
 
-  let (fileExplorerUpdater, explorerStream) =
-    FileExplorerStoreConnector.start();
+  let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
 
   let (searchUpdater, searchStream) = SearchStoreConnector.start();
 
@@ -158,7 +181,7 @@ let start =
       ~initialState=state,
       ~updater=
         Isolinear.Updater.combine([
-          Isolinear.Updater.ofReducer(Model.Reducer.reduce),
+          Isolinear.Updater.ofReducer(Reducer.reduce),
           vimUpdater,
           syntaxUpdater,
           extHostUpdater,
@@ -200,6 +223,11 @@ let start =
     SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
+    switch (action) {
+    | Tick(_) => () // This gets a bit intense, so ignore it
+    | _ => DispatchLog.info(Model.Actions.show(action))
+    };
+
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
@@ -224,8 +252,8 @@ let start =
     |> List.filter(e => e != Isolinear.Effect.none)
     |> List.rev
     |> List.iter(e => {
-         Core.Log.debug(() =>
-           "[StoreThread] Running effect: " ++ Isolinear.Effect.getName(e)
+         Log.debugf(m =>
+           m("Running effect: %s", Isolinear.Effect.getName(e))
          );
          Isolinear.Effect.run(e, dispatch);
        });

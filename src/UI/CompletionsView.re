@@ -6,13 +6,17 @@
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Syntax;
-module Model = Oni_Model;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
+module Model = Oni_Model;
+module Ext = Oni_Extensions;
 
-let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
-  switch (v) {
+open Ext.CompletionItemKind;
+
+let kindToIcon =
+  fun
   | Text => FontAwesome.alignJustify
   | Method => FontAwesome.bolt
   | Function => FontAwesome.cog
@@ -28,24 +32,19 @@ let completionKindToIcon = (v: Oni_Extensions.CompletionKind.t) => {
   | Property => FontAwesome.code
   | Interface => FontAwesome.plug
   | Color => FontAwesome.paintBrush
-  | _ => FontAwesome.code
-  };
-};
+  | _ => FontAwesome.code;
 
-let completionKindToColor =
+let kindToColor =
     (
-      default: Revery.Color.t,
-      theme: TokenTheme.t,
-      v: Oni_Extensions.CompletionKind.t,
-    ) => {
-  let textColor = TokenTheme.getTextColor(theme);
-  let constantColor = TokenTheme.getConstantColor(theme);
-  let keywordColor = TokenTheme.getKeywordColor(theme);
-  let entityColor = TokenTheme.getEntityColor(theme);
-  let functionColor = TokenTheme.getFunctionColor(theme);
-  let typeColor = TokenTheme.getTypeColor(theme);
-
-  switch (v) {
+      ~textColor,
+      ~functionColor,
+      ~entityColor,
+      ~typeColor,
+      ~keywordColor,
+      ~constantColor,
+      default,
+    ) =>
+  fun
   | Text => textColor
   | Value => functionColor
   | Method => functionColor
@@ -59,8 +58,40 @@ let completionKindToColor =
   | Constant => constantColor
   | Property => entityColor
   | Interface => entityColor
-  | _ => default
+  | _ => default;
+
+let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
+  maybeCompletionKind => {
+    maybeCompletionKind
+    |> Option.map(kindToIcon)
+    |> Option.value(~default=FontAwesome.question);
   };
+
+let completionKindToColor =
+    (
+      default: Revery.Color.t,
+      theme: TokenTheme.t,
+      maybeKind: option(Ext.CompletionItemKind.t),
+    ) => {
+  let textColor = TokenTheme.getTextColor(theme);
+  let constantColor = TokenTheme.getConstantColor(theme);
+  let keywordColor = TokenTheme.getKeywordColor(theme);
+  let entityColor = TokenTheme.getEntityColor(theme);
+  let functionColor = TokenTheme.getFunctionColor(theme);
+  let typeColor = TokenTheme.getTypeColor(theme);
+
+  let toColor =
+    kindToColor(
+      ~textColor,
+      ~constantColor,
+      ~keywordColor,
+      ~entityColor,
+      ~functionColor,
+      ~typeColor,
+      default,
+    );
+
+  maybeKind |> Option.map(toColor) |> Option.value(~default);
 };
 
 let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => {

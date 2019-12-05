@@ -8,8 +8,10 @@
  */
 
 module Core = Oni_Core;
+open Core.Utility;
+
 module Model = Oni_Model;
-module Extensions = Oni_Extensions;
+module Ext = Oni_Extensions;
 
 open Oni_Syntax.TreeSitterScopes;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
@@ -19,7 +21,7 @@ module Log = Core.Log;
 module GrammarRepository = {
   type t = {scopeToGrammar: Core.StringMap.t(Textmate.Grammar.t)};
 
-  let ofLanguageInfo = (languageInfo: Model.LanguageInfo.t) => {
+  let ofLanguageInfo = (languageInfo: Ext.LanguageInfo.t) => {
     let scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t) =
       Hashtbl.create(32);
 
@@ -28,7 +30,7 @@ module GrammarRepository = {
       | Some(v) => Some(v)
       | None =>
         switch (
-          Model.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)
+          Ext.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)
         ) {
         | Some(grammarPath) =>
           Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
@@ -52,7 +54,7 @@ module GrammarRepository = {
   };
 };
 
-let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
+let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
   print_endline("!! starting");
   let _syntaxClient = Oni_Syntax_Client.start();
@@ -76,14 +78,14 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => [||]
-    | Some(v) => Model.Buffer.getLines(v)
+    | Some(v) => Core.Buffer.getLines(v)
     };
   };
 
   let getVersion = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => (-1)
-    | Some(v) => Model.Buffer.getVersion(v)
+    | Some(v) => Core.Buffer.getVersion(v)
     };
   };
 
@@ -91,9 +93,9 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => None
     | Some(buffer) =>
-      switch (Model.Buffer.getFileType(buffer)) {
+      switch (Core.Buffer.getFileType(buffer)) {
       | None => None
-      | Some(v) => Model.LanguageInfo.getScopeFromLanguage(languageInfo, v)
+      | Some(v) => Ext.LanguageInfo.getScopeFromLanguage(languageInfo, v)
       }
     };
   };
@@ -108,11 +110,11 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
           id,
           fileType,
           lines,
-        );
-      )
+        )
+      );
     });
 
-  let bufferUpdateEffect = (bufferUpdate: Oni_Core.Types.BufferUpdate.t) =>
+  let bufferUpdateEffect = (bufferUpdate: Oni_Core.BufferUpdate.t) =>
     Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
       Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate)
     });

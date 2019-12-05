@@ -59,7 +59,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     |> Seq.filter_map(element => {
          let (_, buffer) = element;
 
-         switch (Model.Buffer.getFilePath(buffer)) {
+         switch (Core.Buffer.getFilePath(buffer)) {
          | Some(path) =>
            Some(
              Actions.{

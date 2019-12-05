@@ -12,11 +12,16 @@ let version = () => {
 
 let passthrough = Arg.Unit(() => ());
 let passthroughFloat = Arg.Float(_ => ());
+let passthroughString = Arg.String(_ => ());
 
 let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
+  ("--debug", passthrough, ""),
+  ("--log-file", passthroughString, ""),
+  ("--log-filter", passthroughString, ""),
   ("--checkhealth", passthrough, ""),
+  ("--extensions-dir", passthroughString, ""),
   ("--force-device-scale-factor", passthroughFloat, ""),
   ("--working-directory", passthrough, ""),
   ("-version", Arg.Unit(version), ""),

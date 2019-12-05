@@ -4,6 +4,8 @@
  * Top-level module for Oni_Core. This module is intended for core editing primitives.
  */
 
+module Buffer = Buffer;
+module BufferUpdate = BufferUpdate;
 module CamomileBundled = CamomileBundled;
 module Cli = Cli;
 module Configuration = Configuration;
