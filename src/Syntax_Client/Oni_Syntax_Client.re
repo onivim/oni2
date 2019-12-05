@@ -5,6 +5,8 @@
 module Core = Oni_Core;
 
 open Oni_Syntax;
+module Protocol = Oni_Syntax.Protocol;
+module ServerToClient = Protocol.ServerToClient;
 
 module LogClient = (val Core.Log.withNamespace("Syntax.client"));
 module LogServer = (val Core.Log.withNamespace("Syntax.server"));
@@ -23,7 +25,7 @@ let write = (v: t, msg: Protocol.ClientToServer.t) => {
 
 exception SyntaxProcessCrashed;
 
-let start = languageInfo => {
+let start = (languageInfo, setup) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
@@ -63,12 +65,15 @@ let start = languageInfo => {
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stdout);
-          let result: Oni_Syntax.Protocol.ServerToClient.t =
-            Marshal.from_channel(in_channel);
+          let result: ServerToClient.t = Marshal.from_channel(in_channel);
           switch (result) {
-          | Oni_Syntax.Protocol.ServerToClient.EchoReply(result) =>
+          | ServerToClient.EchoReply(result) =>
             LogClient.info("got message from channel: |" ++ result ++ "|")
-          | Oni_Syntax.Protocol.ServerToClient.Log(msg) => LogServer.info(msg)
+          | ServerToClient.Log(msg) => LogServer.info(msg)
+          | ServerToClient.TokenUpdate(tokens) =>
+            LogClient.info(
+              "Got " ++ string_of_int(List.length(tokens)) ++ " tokens!",
+            )
           };
         }
       },
@@ -90,14 +95,16 @@ let start = languageInfo => {
     }, ());*/
   LogClient.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
-  write(syntaxClient, Protocol.ClientToServer.Initialize(languageInfo));
+  write(
+    syntaxClient,
+    Protocol.ClientToServer.Initialize(languageInfo, setup),
+  );
   syntaxClient;
 };
 
-let notifyBufferEnter =
-    (v: t, bufferId: int, fileType: string, lines: array(string)) => {
+let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType, lines);
+    Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
   write(v, message);
 };
 
@@ -109,6 +116,7 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
-let notifyBufferUpdate = (v: t, bufferUpdate: Oni_Core.BufferUpdate.t) => {
-  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
+let notifyBufferUpdate =
+    (v: t, bufferUpdate: Oni_Core.BufferUpdate.t, lines: array(string)) => {
+  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines));
 };

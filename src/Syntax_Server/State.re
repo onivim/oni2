@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
@@ -12,6 +13,7 @@ module Ext = Oni_Extensions;
 module List = Utility.List;
 
 type t = {
+  setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
   theme: TokenTheme.t,
   visibleBuffers: list(int),
@@ -19,13 +21,18 @@ type t = {
 };
 
 let empty = {
+  setup: None,
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
   languageInfo: Ext.LanguageInfo.empty,
 };
 
-let setLanguageInfo = (languageInfo, state: t) => {...state, languageInfo};
+let initialize = (languageInfo, setup, state) => {
+  ...state,
+  languageInfo,
+  setup: Some(setup),
+};
 
 let getVisibleHighlighters = (v: t) => {
   v.visibleBuffers
@@ -107,23 +114,45 @@ let updateVisibleBuffers = (buffers, v: t) => {
   {...v, visibleBuffers, highlightsMap};
 };
 
-let getTokensForLine = (v: t, bufferId: int, line: int) => {
-  switch (IntMap.find_opt(bufferId, v.highlightsMap)) {
-  | Some(v) => NativeSyntaxHighlights.getTokensForLine(v, line)
-  | None => []
-  };
+/*let getTokensForLine = (v: t, bufferId: int, line: int) => {
+    switch (IntMap.find_opt(bufferId, v.highlightsMap)) {
+    | Some(v) => NativeSyntaxHighlights.getTokensForLine(v, line)
+    | None => []
+    };
+  }*/
+
+let getTokenUpdates = state => {
+  List.fold_left(
+    (acc, curr) => {
+      let tokenUpdatesForBuffer =
+        state.highlightsMap
+        |> IntMap.find_opt(curr)
+        |> Option.map(highlights => {
+             highlights
+             |> NativeSyntaxHighlights.getUpdatedLines
+             |> List.map(line => {
+                  let tokenColors =
+                    NativeSyntaxHighlights.getTokensForLine(highlights, line);
+                  let bufferId = curr;
+                  Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
+                })
+           })
+        |> Option.value(~default=[]);
+
+      [tokenUpdatesForBuffer, ...acc];
+    },
+    [],
+    state.visibleBuffers,
+  )
+  |> List.flatten;
 };
 
-let onBufferUpdate =
-    (
-      ~configuration,
-      ~scope,
-      ~getTreeSitterScopeMapper,
-      ~getTextmateGrammar,
-      ~bufferUpdate: BufferUpdate.t,
-      ~lines: array(string),
-      v: t,
-    ) => {
+let bufferUpdate =
+    //      ~configuration,
+    //      ~scope,
+    //      ~getTreeSitterScopeMapper,
+    //      ~getTextmateGrammar,
+    (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   let highlightsMap =
     IntMap.update(
       bufferUpdate.id,
@@ -132,11 +161,11 @@ let onBufferUpdate =
         | None =>
           Some(
             NativeSyntaxHighlights.create(
-              ~configuration,
+              //              ~configuration,
               ~theme=v.theme,
-              ~scope,
-              ~getTreeSitterScopeMapper,
-              ~getTextmateGrammar,
+              //              ~scope,
+              //              ~getTreeSitterScopeMapper,
+              //              ~getTextmateGrammar,
               lines,
             ),
           )

@@ -18,6 +18,10 @@ module type SyntaxHighlighter = {
     (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), t) => t;
 
   let getTokenColors: (t, int) => list(ColorizedToken.t);
+
+  // Get a list of lines that have been updated since last clear
+  let getUpdatedLines: t => list(int);
+  let clearUpdatedLines: t => t;
 };
 
 type highlighter('a) = (module SyntaxHighlighter with type t = 'a);
@@ -73,15 +77,18 @@ let updateTheme = (theme, hl) => {
 };
 
 let create =
+    //      ~configuration,
+    // !     ~scope,
     (
-      ~configuration,
-      ~scope,
       ~theme,
-      ~getTextmateGrammar,
-      ~getTreeSitterScopeMapper,
+      // TODO: Bring back!
+      //      ~getTextmateGrammar,
+      //      ~getTreeSitterScopeMapper,
       lines: array(string),
     ) => {
-  _hasTreeSitterScope(configuration, scope)
+  let state = NoopSyntaxHighlighter.create(~theme, lines);
+  Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
+  /*_hasTreeSitterScope(configuration, scope)
     ? {
       let ts =
         TreeSitterSyntaxHighlights.create(
@@ -106,7 +113,7 @@ let create =
         highlighter: (module TextMateSyntaxHighlights),
         state: tm,
       });
-    };
+    };*/
 };
 
 let update =
@@ -114,6 +121,18 @@ let update =
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
+};
+
+let getUpdatedLines = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+  SyntaxHighlighter.getUpdatedLines(state);
+};
+
+let clearUpdatedLines = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.clearUpdatedLines(state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 

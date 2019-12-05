@@ -54,7 +54,7 @@ module GrammarRepository = {
 
 let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, _dispatch) = Isolinear.Stream.create();
-  let _syntaxClient = Oni_Syntax_Client.start(languageInfo);
+  let _syntaxClient = Oni_Syntax_Client.start(languageInfo, setup);
 
   //Oni_Syntax_Client.notifyBufferLeave(_syntaxClient, 1);
 
@@ -99,21 +99,15 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let bufferEnterEffect = (state: Model.State.t, id: int, fileType) =>
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
-      let lines = getLines(state, id);
       fileType
       |> Option.iter(fileType =>
-           Oni_Syntax_Client.notifyBufferEnter(
-             _syntaxClient,
-             id,
-             fileType,
-             lines,
-           )
-         );
+           Oni_Syntax_Client.notifyBufferEnter(_syntaxClient, id, fileType)
+         )
     });
 
-  let bufferUpdateEffect = (bufferUpdate: Oni_Core.BufferUpdate.t) =>
+  let bufferUpdateEffect = (bufferUpdate: Oni_Core.BufferUpdate.t, lines) =>
     Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-      Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate)
+      Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate, lines)
     });
 
   let themeChangeEffect = theme =>
@@ -176,21 +170,21 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
       | None => default
       | Some(scope) when isVersionValid(bu.version, version) =>
         ignore(scope);
-        let state = {
-          ...state,
-          syntaxHighlighting:
-            Model.SyntaxHighlighting.onBufferUpdate(
-              ~configuration=state.configuration,
-              ~scope,
-              ~getTextmateGrammar,
-              ~getTreeSitterScopeMapper,
-              ~bufferUpdate=bu,
-              ~lines,
-              ~theme=state.tokenTheme,
-              state.syntaxHighlighting,
-            ),
-        };
-        (state, bufferUpdateEffect(bu));
+        /*let state = {
+            ...state,
+            syntaxHighlighting:
+              Model.SyntaxHighlighting.onBufferUpdate(
+                ~configuration=state.configuration,
+                ~scope,
+                ~getTextmateGrammar,
+                ~getTreeSitterScopeMapper,
+                ~bufferUpdate=bu,
+                ~lines,
+                ~theme=state.tokenTheme,
+                state.syntaxHighlighting,
+              ),
+          };*/
+        (state, bufferUpdateEffect(bu, lines));
       | Some(_) => default
       };
     | _ => default

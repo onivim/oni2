@@ -48,10 +48,33 @@ let start = () => {
         let map = f => state := f(state^);
 
         let handleProtocol =
-          fun
-          | ClientToServer.Echo(m) =>
-            write(Protocol.ServerToClient.EchoReply(m))
-          | v => log("Unhandled message: " ++ ClientToServer.show(v));
+          ClientToServer.(
+            fun
+            | Echo(m) => write(Protocol.ServerToClient.EchoReply(m))
+            | Initialize(languageInfo, setup) => {
+                map(State.initialize(languageInfo, setup));
+                log("Initialized!");
+              }
+            | BufferEnter(id, filetype) =>
+              log(
+                Printf.sprintf(
+                  "Buffer enter - id: %d filetype: %s",
+                  id,
+                  filetype,
+                ),
+              )
+            | BufferUpdate(bufferUpdate, lines) => {
+                map(State.bufferUpdate(~bufferUpdate, ~lines));
+                log(
+                  Printf.sprintf(
+                    "Received buffer update - %d | %d lines",
+                    bufferUpdate.id,
+                    Array.length(lines),
+                  ),
+                );
+              }
+            | v => log("Unhandled message: " ++ ClientToServer.show(v))
+          );
 
         let handleMessage =
           fun
@@ -65,7 +88,17 @@ let start = () => {
           // Get pending messages and handle them
           flush() |> List.iter(handleMessage);
 
-          Unix.sleepf(1.0);
+          if (State.anyPendingWork(state^)) {
+            log("Running unit of work...");
+            map(State.doPendingWork);
+
+            let tokenUpdates = State.getTokenUpdates(state^);
+            write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+
+            log("Unit of work completed.");
+          } else {
+            log("No pending work.");
+          };
           // Wait for incoming messages
           // Handle messages
           // If any work, flush work

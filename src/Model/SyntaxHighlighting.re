@@ -102,39 +102,39 @@ let getTokensForLine = (v: t, bufferId: int, line: int) => {
   };
 };
 
-let onBufferUpdate =
-    (
-      ~configuration,
-      ~scope,
-      ~getTreeSitterScopeMapper,
-      ~getTextmateGrammar,
-      ~bufferUpdate: BufferUpdate.t,
-      ~lines: array(string),
-      ~theme: TokenTheme.t,
-      v: t,
-    ) => {
-  let highlightsMap =
-    IntMap.update(
-      bufferUpdate.id,
-      current =>
-        switch (current) {
-        | None =>
-          Some(
-            NativeSyntaxHighlights.create(
-              ~configuration,
-              ~theme,
-              ~scope,
-              ~getTreeSitterScopeMapper,
-              ~getTextmateGrammar,
-              lines,
-            ),
-          )
-        | Some(v) =>
-          Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
-        },
-      v.highlightsMap,
-    );
-  let ret: t = {...v, highlightsMap};
+/*let onBufferUpdate =
+      (
+        ~configuration,
+        ~scope,
+        ~getTreeSitterScopeMapper,
+        ~getTextmateGrammar,
+        ~bufferUpdate: BufferUpdate.t,
+        ~lines: array(string),
+        ~theme: TokenTheme.t,
+        v: t,
+      ) => {
+    let highlightsMap =
+      IntMap.update(
+        bufferUpdate.id,
+        current =>
+          switch (current) {
+          | None =>
+            Some(
+              NativeSyntaxHighlights.create(
+                ~configuration,
+                ~theme,
+                ~scope,
+                ~getTreeSitterScopeMapper,
+                ~getTextmateGrammar,
+                lines,
+              ),
+            )
+          | Some(v) =>
+            Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
+          },
+        v.highlightsMap,
+      );
+    let ret: t = {...v, highlightsMap};
 
-  ret;
-};
+    ret;
+  };*/
