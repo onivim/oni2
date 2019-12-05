@@ -57,10 +57,6 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let onHighlights = tokenUpdates => {
-    List.iter(
-      tu => Protocol.TokenUpdate.show(tu) |> prerr_endline,
-      tokenUpdates,
-    );
     Revery.App.runOnMainThread(() => {
       dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates))
     });
