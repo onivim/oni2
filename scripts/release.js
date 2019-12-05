@@ -8,7 +8,7 @@ console.log("Bin folder: " + curBin);
 console.log("Working directory: " + process.cwd());
 
 const rootDirectory = process.cwd();
-const vendorDirectory = path.jion(rootDirectory, "vendor");
+const vendorDirectory = path.join(rootDirectory, "vendor");
 const releaseDirectory = path.join(rootDirectory, "_release");
 
 // Delete releaseDirectory, and remake
