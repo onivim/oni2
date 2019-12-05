@@ -8,7 +8,8 @@ console.log("Bin folder: " + curBin);
 console.log("Working directory: " + process.cwd());
 
 const rootDirectory = process.cwd();
-const releaseDirectory = path.join(process.cwd(), "_release");
+const vendorDirectory = path.join(rootDirectory, "vendor");
+const releaseDirectory = path.join(rootDirectory, "_release");
 
 // Delete releaseDirectory, and remake
 fs.removeSync(releaseDirectory);
@@ -64,6 +65,18 @@ const getNodePath = () => {
         return path.join(rootDirectory, "vendor", nodeDir, "win-x64", "node.exe");
     } else {
         return path.join(rootDirectory, "vendor", nodeDir, "linux-x64", "node");
+    }
+}
+
+const getRlsPath = () => {
+    const rlsDir = "reason-language-server";
+
+    if (process.platform == "darwin") {
+        return path.join(vendorDirectory, rlsDir, "bin.native")
+    } else if (process.platform == "win32") {
+        return path.join(vendorDirectory, rlsDir, "bin.native.exe");
+    } else {
+        return path.join(vendorDirectory, rlsDir, "bin.native.linux");
     }
 }
 
@@ -126,6 +139,7 @@ if (process.platform == "linux") {
   copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
+  copy(getRlsPath(), path.join(binaryDirectory, "rls"));
 
   // Remove setup.json prior to remapping bundled files,
   // so it doesn't get symlinked.
@@ -202,6 +216,7 @@ if (process.platform == "linux") {
 
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
+  copy(getRlsPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"));
   copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconFile = path.join(imageSourceDirectory, "oni2.ico");

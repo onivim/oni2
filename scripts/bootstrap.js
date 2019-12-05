@@ -18,6 +18,7 @@ let nodeScriptPath = path.join(rootDir, "node");
 let extensionsPath = path.join(rootDir, "extensions")
 let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
+let rlsPath = path.join(vendorPath, "reason-language-server");
 
 let camomileRoot = process.argv[2];
 let camomilePath = path.join(camomileRoot, "share", "camomile");
@@ -34,12 +35,15 @@ if (isWindows) {
     extensionsPath = getCygwinPath(extensionsPath)
     developmentExtensionsPath = getCygwinPath(developmentExtensionsPath);
     rgPath = getCygwinPath(path.join(rgPath, "windows", "rg.exe"))
+    rlsPath = getCygwinPath(path.join(rlsPath, "bin.native.exe"))
 } else if (isMac) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "osx", "node")
     rgPath = path.join(rgPath, "mac", "rg")
+    rlsPath = path.join(rlsPath, "bin.native");
 } else if (isLinux) {
     nodePath = path.join(vendorPath, "node-v10.15.1", "linux-x64", "node")
     rgPath = path.join(rgPath, "linux", "rg")
+    rlsPath = path.join(rlsPath, "bin.native.linux");
 } else {
     console.error("Unknown OS...aborting.")
     return 1
@@ -52,6 +56,7 @@ const config = {
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,
     rg: rgPath,
+    rls: rlsPath,
 }
 const oniConfig = JSON.stringify(config)
 
