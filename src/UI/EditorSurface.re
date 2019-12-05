@@ -377,10 +377,10 @@ let%component make =
 
     let tokenColors2 =
       switch (
-        SyntaxHighlighting.getTokensForLine(
-          state.syntaxHighlighting,
+        BufferSyntaxHighlights.getTokens(
           bufferId,
           i,
+          state.bufferSyntaxHighlights,
         )
       ) {
       | [] => []

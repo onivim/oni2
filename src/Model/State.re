@@ -12,17 +12,19 @@ open Oni_Syntax;
 module Ext = Oni_Extensions;
 
 type t = {
+  buffers: Buffers.t,
+  bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
-  buffers: Buffers.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   // New-school native syntax highlighting
+  // TODO: Remove
   syntaxHighlighting: SyntaxHighlighting.t,
   // Theme is the UI shell theming
   theme: Theme.t,
@@ -53,6 +55,8 @@ type t = {
 
 let create: unit => t =
   () => {
+    buffers: Buffers.empty,
+    bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     completions: Completions.default,
     configuration: Configuration.default,
@@ -60,7 +64,6 @@ let create: unit => t =
     hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
-    buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
@@ -73,6 +76,7 @@ let create: unit => t =
     languageFeatures: Ext.LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
+    // TODO: Remove
     syntaxHighlighting: SyntaxHighlighting.empty,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
