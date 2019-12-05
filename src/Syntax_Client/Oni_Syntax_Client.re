@@ -8,22 +8,19 @@ open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module ServerToClient = Protocol.ServerToClient;
 
-module LogClient = (val Core.Log.withNamespace("Syntax.client"));
-module LogServer = (val Core.Log.withNamespace("Syntax.server"));
+module ClientLog = (val Core.Log.withNamespace("Oni2.SyntaxClient"));
+module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
 
 type t = {
   in_channel: Stdlib.in_channel,
   out_channel: Stdlib.out_channel,
   readThread: Thread.t,
-  //writeThread: Thread.t,
 };
 
-let write = (v: t, msg: Protocol.ClientToServer.t) => {
-  Marshal.to_channel(v.out_channel, msg, []);
-  Stdlib.flush(v.out_channel);
+let write = (client: t, msg: Protocol.ClientToServer.t) => {
+  Marshal.to_channel(client.out_channel, msg, []);
+  Stdlib.flush(client.out_channel);
 };
-
-exception SyntaxProcessCrashed;
 
 let start = (~onHighlights, languageInfo, setup) => {
   let (pstdin, stdin) = Unix.pipe();
@@ -54,8 +51,10 @@ let start = (~onHighlights, languageInfo, setup) => {
   let waitThread =
     Thread.create(
       () => {
-        let _ = Unix.waitpid([], pid);
-        LogClient.error("SYNTAX PROCESS CRASHED");
+        let (code, _status) = Unix.waitpid([], pid);
+        ClientLog.error(
+          "Syntax process closed with exit code: " ++ string_of_int(code),
+        );
       },
       (),
     );
@@ -68,34 +67,21 @@ let start = (~onHighlights, languageInfo, setup) => {
           let result: ServerToClient.t = Marshal.from_channel(in_channel);
           switch (result) {
           | ServerToClient.EchoReply(result) =>
-            LogClient.info("got message from channel: |" ++ result ++ "|")
-          | ServerToClient.Log(msg) => LogServer.info(msg)
+            ClientLog.info("got message from channel: |" ++ result ++ "|")
+          | ServerToClient.Log(msg) => ServerLog.info(msg)
           | ServerToClient.TokenUpdate(tokens) =>
-            LogClient.info(
+            ClientLog.info(
               "Got " ++ string_of_int(List.length(tokens)) ++ " tokens!",
             );
             onHighlights(tokens);
-            LogClient.info("Tokens applied");
+            ClientLog.info("Tokens applied");
           };
         }
       },
       (),
     );
 
-  /*let writeThread = Thread.create(() => {
-
-     let count = ref(0);
-     while (!shouldClose^) {
-      incr(count);
-      print_endline ("Writing!");
-      let message: Oni_Syntax.Protocol.ClientToServer.t = Oni_Syntax.Protocol.ClientToServer.Echo("yoyoyo" ++ string_of_int(count^));
-      Marshal.to_channel(out_channel, message, []);
-      Stdlib.flush(out_channel);
-      Unix.sleepf(0.5);
-
-     }
-    }, ());*/
-  LogClient.info("started syntax client");
+  ClientLog.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
     syntaxClient,
@@ -111,7 +97,7 @@ let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
 };
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  LogClient.info("TODO - Send Buffer leave.");
+  ClientLog.info("TODO - Send Buffer leave.");
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
