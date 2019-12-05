@@ -124,28 +124,21 @@ let updateVisibleBuffers = (buffers, state) => {
     }};
   }*/
 
-let getTokenUpdates = (state, log) => {
+let getTokenUpdates = state => {
   List.fold_left(
     (acc, curr) => {
       let tokenUpdatesForBuffer =
         state.highlightsMap
         |> IntMap.find_opt(curr)
         |> Option.map(highlights => {
-             log("Got highlights for curr: " ++ string_of_int(curr));
              highlights
              |> NativeSyntaxHighlights.getUpdatedLines
              |> List.map(line => {
-                  log(
-                    "Getting tokens for buffer: "
-                    ++ string_of_int(curr)
-                    ++ " line: "
-                    ++ string_of_int(line),
-                  );
                   let tokenColors =
                     NativeSyntaxHighlights.getTokensForLine(highlights, line);
                   let bufferId = curr;
                   Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
-                });
+                })
            })
         |> Option.value(~default=[]);
 

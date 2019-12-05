@@ -103,23 +103,19 @@ let start = () => {
 
           // Wait for pending incoming messages
           Mutex.lock(messageMutex);
-          while (!hasPendingMessage()) {
+          while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
             Condition.wait(messageCondition, messageMutex);
           };
+
           // Once we have them, let's track and run them
           let messages = flush();
           Mutex.unlock(messageMutex);
-          log(
-            "Got some messages: " ++ string_of_int(List.length(messages)),
-          );
 
           // Handle messages
           messages
+          // Messages are queued in inverse order, so we need to fix that...
           |> List.rev
-          |> List.iteri((i, msg) => {
-               log("Handling message: " ++ string_of_int(i));
-               handleMessage(msg);
-             });
+          |> List.iter(handleMessage);
 
           // TODO: Do this in a loop
           // If the messages incurred work, do it!
@@ -132,13 +128,8 @@ let start = () => {
             log("No pending work.");
           };
 
-          let vis =
-            State.getVisibleBuffers(state^)
-            |> List.map(i => string_of_int(i))
-            |> String.concat(",");
-          log("Visible buffers: " ++ vis);
           log("Sending token updates...");
-          let tokenUpdates = State.getTokenUpdates(state^, log);
+          let tokenUpdates = State.getTokenUpdates(state^);
           write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
           log("Token updates sent.");
         };
