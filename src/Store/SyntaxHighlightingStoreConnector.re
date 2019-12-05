@@ -29,9 +29,7 @@ module GrammarRepository = {
       switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
       | Some(v) => Some(v)
       | None =>
-        switch (
-          Ext.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)
-        ) {
+        switch (Ext.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)) {
         | Some(grammarPath) =>
           Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
           let json = Yojson.Safe.from_file(grammarPath);
@@ -104,14 +102,14 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       let lines = getLines(state, id);
       fileType
-      |> Option.iter((fileType) => 
-        Oni_Syntax_Client.notifyBufferEnter(
-          _syntaxClient,
-          id,
-          fileType,
-          lines,
-        )
-      );
+      |> Option.iter(fileType =>
+           Oni_Syntax_Client.notifyBufferEnter(
+             _syntaxClient,
+             id,
+             fileType,
+             lines,
+           )
+         );
     });
 
   let bufferUpdateEffect = (bufferUpdate: Oni_Core.BufferUpdate.t) =>

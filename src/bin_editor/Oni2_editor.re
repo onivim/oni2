@@ -18,7 +18,7 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 let cliOptions = Core.Cli.parse();
 
 if (cliOptions.syntaxHighlightService) {
-  Oni_Syntax_Server.start(); 
+  Oni_Syntax_Server.start();
 } else {
   Log.info("Startup: Parsing CLI options complete");
 
@@ -50,7 +50,8 @@ if (cliOptions.syntaxHighlightService) {
 
     Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
     switch (Sys.chdir(cliOptions.folder)) {
-    | exception (Sys_error(msg)) => Log.error("Folder does not exist: " ++ msg)
+    | exception (Sys_error(msg)) =>
+      Log.error("Folder does not exist: " ++ msg)
     | v => v
     };
 
