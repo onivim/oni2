@@ -156,6 +156,7 @@ let updateDocument = (uri, modelChange, dirty, v) => {
 
 let getCompletions = (id, uri, position, v) => {
   let f = (json: Yojson.Safe.t) => {
+    prerr_endline("Completions: " ++ Yojson.Safe.to_string(json));
     In.LanguageFeatures.parseProvideCompletionsResponse(json);
   };
 

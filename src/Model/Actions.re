@@ -26,7 +26,7 @@ type t =
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
   | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, list(completionItem))
+  | CompletionAddItems(completionMeet, [@opaque] list(completionItem))
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -41,7 +41,7 @@ type t =
   | KeyBindingsReload
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
-  | DiagnosticsSet(Uri.t, string, list(Diagnostic.t))
+  | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
   // LoadEditorFont is the request to load a new font
