@@ -3,7 +3,6 @@
  *
  */
 
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -66,7 +65,7 @@ let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
   maybeCompletionKind => {
     maybeCompletionKind
     |> Option.map(kindToIcon)
-    |> Option.value(~default=FontAwesome.atlas);
+    |> Option.value(~default=FontAwesome.question);
   };
 
 let completionKindToColor =
@@ -122,8 +121,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let textStyle = (~highlighted) =>
       Style.[
-        //width(width_),
-        //height(height_),
         textWrap(Revery.TextWrapping.NoWrap),
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
@@ -134,9 +131,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let detailTextStyle =
       Style.[
-        //width(width_),
-        //height(height_),
-        //textWrap(Revery.TextWrapping.NoWrap),
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
         fontSize(editorFont.fontSize),
@@ -152,7 +146,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         top(int_of_float(lineHeight_ +. 0.5)),
         left(0),
         width(width_),
-        //height(height_),
         flexDirection(`Column),
         alignItems(`FlexStart),
         justifyContent(`Center),
@@ -188,7 +181,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
             Types.EditorFont.measure(~text=message, editorFont)
             +. 0.5
             |> int_of_float;
-          let remainingWidth = maxCompletionWidth - width;
 
           let newWidth = max(prevWidth, width + padding);
           let completionColor =
@@ -238,20 +230,26 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
       );
 
     let totalWidth = _maxWidth + padding * 2;
-    open Model.Actions;
+
     let detailElem =
-      switch (completions.filteredCompletions) {
-      | [curr, ..._] =>
-        switch (curr.item.completionDetail) {
-        | None => React.empty
-        | Some(text) when String.length(text) > 0 =>
-          <View style={detailStyle(totalWidth)}>
-            <Text style=detailTextStyle text />
-          </View>
-        | _ => React.empty
-        }
-      | _ => React.empty
-      };
+      completions
+      |> Model.Completions.getBestCompletion
+      |> Option.bind(
+           (filteredCompletion: Model.Completions.filteredCompletion) =>
+           filteredCompletion.item.completionDetail
+         )
+      |> Option.bind(text =>
+           if (String.length(text) > 0) {
+             Some(
+               <View style={detailStyle(totalWidth)}>
+                 <Text style=detailTextStyle text />
+               </View>,
+             );
+           } else {
+             None;
+           }
+         )
+      |> Option.value(~default=React.empty);
 
     let completionItems = List.rev(completionItems) |> React.listToElement;
 
