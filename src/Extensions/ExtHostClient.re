@@ -90,7 +90,7 @@ let start =
       In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
       Ok(None);
     | (scope, method, argsAsJson) =>
-      Log.errorf(m =>
+      Log.warnf(m =>
         m(
           "Unhandled message - [%s:%s]: %s",
           scope,
