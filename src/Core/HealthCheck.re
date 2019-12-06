@@ -54,6 +54,16 @@ let checks = [
     _ =>
       Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
   ),
+  (
+    "Verify bundled reason-language-server executable",
+    (setup: Setup.t) => {
+      let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
+
+      ret.stdout
+      |> String.trim
+      |> Utility.StringUtil.contains("Reason Language Server");
+    },
+  ),
 ];
 
 let run = () => {

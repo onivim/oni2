@@ -26,7 +26,7 @@ let fontAwesomeStyle =
 let fontAwesomeIcon = ZedBundled.singleton(UChar.of_int(0xF556));
 
 module Styles = {
-  let bufferView = bufferPixelWidth =>
+  let bufferViewCommon = bufferPixelWidth =>
     Style.[
       position(`Absolute),
       top(0),
@@ -35,8 +35,11 @@ module Styles = {
       bottom(0),
     ];
 
+  let bufferViewOverlay = bufferPixelWidth =>
+    Style.[pointerEvents(`Ignore), ...bufferViewCommon(bufferPixelWidth)];
+
   let bufferViewClipped = bufferPixelWidth =>
-    Style.[overflow(`Hidden), ...bufferView(bufferPixelWidth)];
+    Style.[overflow(`Hidden), ...bufferViewCommon(bufferPixelWidth)];
 };
 
 let renderLineNumber =
@@ -886,7 +889,7 @@ let%component make =
       </View>
     </View>
     minimapLayout
-    <View style={Styles.bufferView(bufferPixelWidth)}>
+    <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
       <HoverView x=cursorPixelX y=cursorPixelY state />
       <CompletionsView
         x=cursorPixelX
