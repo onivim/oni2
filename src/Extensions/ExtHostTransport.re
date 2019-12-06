@@ -141,7 +141,7 @@ let start =
     | Some(resolver) =>
       Lwt.wakeup(resolver, payload);
       Hashtbl.remove(replyIdToResolver, reqId);
-    | None => Log.error("Unmatched reply: " ++ string_of_int(reqId))
+    | None => Log.warn("Unmatched reply: " ++ string_of_int(reqId))
     };
   };
 
