@@ -36,3 +36,9 @@ let update = (~bufferUpdate, ~lines, v: t) => {
 let getTokenColors = (v: t, line: int) => {
   TextmateTokenizerJob.getTokenColors(line, v);
 };
+
+let getUpdatedLines = (tm: t) => {
+  Job.getCompletedWork(tm).latestLines;
+}
+
+let clearUpdatedLines = (tm: t) => TextmateTokenizerJob.clearUpdatedLines(tm);

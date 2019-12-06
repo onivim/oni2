@@ -25,18 +25,37 @@ type lineInfo = {
   version: int,
 };
 
-type completedWork = IntMap.t(lineInfo);
-let initialCompletedWork = IntMap.empty;
+type completedWork = {
+  tokens: IntMap.t(lineInfo),
+  latestLines: list(int),
+}
+
+let initialCompletedWork = {
+  tokens: IntMap.empty,
+  latestLines: [],
+}
 
 type t = Job.t(pendingWork, completedWork);
 
 let getTokenColors = (line: int, v: t) => {
-  let completed = Job.getCompletedWork(v);
+  let completed = Job.getCompletedWork(v).tokens;
   switch (IntMap.find_opt(line, completed)) {
   | Some({tokens, _}) => tokens
   | None => []
   };
 };
+
+let clearUpdatedLines = (tm: t) => {
+  let isComplete = Job.isComplete(tm);
+  let f = (p: pendingWork, c: completedWork) => {
+    (isComplete, p, {
+      ...c,
+      latestLines: []
+    }) 
+  };
+
+  Job.map(f, tm);
+}
 
 let onTheme = (theme: TokenTheme.t, v: t) => {
   let f = (p: pendingWork, _c: completedWork) => {
@@ -63,7 +82,9 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
         currentLine: min(startPos, p.currentLine),
         currentVersion: bufferUpdate.version,
       },
-      IntMap.shift(
+      {
+        ...c,
+        tokens: IntMap.shift(
         ~default=
           prev =>
             switch (prev) {
@@ -74,8 +95,8 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
         ~startPos,
         ~endPos,
         ~delta=Array.length(bufferUpdate.lines),
-        c,
-      ),
+        c.tokens),
+      }
     );
   };
 
@@ -90,7 +111,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
   } else {
     // Check if there are scope stacks from the previous line
     let scopes =
-      switch (IntMap.find_opt(currentLine - 1, completed)) {
+      switch (IntMap.find_opt(currentLine - 1, completed.tokens)) {
       | None => None
       | Some(v) => Some(v.scopeStack)
       };
@@ -133,7 +154,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       version: pending.currentVersion,
     };
 
-    let completed =
+    let tokens =
       IntMap.update(
         currentLine,
         prev =>
@@ -141,7 +162,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
           | None => Some(newLineInfo)
           | Some(_) => Some(newLineInfo)
           },
-        completed,
+        completed.tokens,
       );
 
     let nextLine = currentLine + 1;
@@ -150,7 +171,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     (
       isComplete,
       {...pending, hasRun: true, currentLine: nextLine},
-      completed,
+      {tokens, latestLines: [currentLine, ...completed.latestLines]}
     );
   };
 };
@@ -171,7 +192,7 @@ let create = (~scope, ~theme, ~grammarRepository, lines) => {
   Job.create(
     ~name="TextmateTokenizerJob",
     ~initialCompletedWork,
-    ~budget=Time.ms(25),
+    ~budget=Time.ms(8),
     ~f=doWork,
     p,
   );

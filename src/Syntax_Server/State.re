@@ -15,6 +15,7 @@ module List = Utility.List;
 type t = {
   setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
+  grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
   visibleBuffers: list(int),
   highlightsMap: IntMap.t(NativeSyntaxHighlights.t),
@@ -26,11 +27,13 @@ let empty = {
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
   languageInfo: Ext.LanguageInfo.empty,
+  grammarRepository: GrammarRepository.empty,
 };
 
-let initialize = (languageInfo, setup, state) => {
+let initialize = (~log, languageInfo, setup, state) => {
   ...state,
   languageInfo,
+  grammarRepository: GrammarRepository.create(~log, languageInfo),
   setup: Some(setup),
 };
 
@@ -150,6 +153,23 @@ let getTokenUpdates = state => {
   |> List.flatten;
 };
 
+
+let clearTokenUpdates = state => {
+  let highlightsMap = List.fold_left(
+  (acc, curr) => {
+    acc
+    |> IntMap.update(curr, fun
+    | None => None
+    | Some(highlight) => Some(NativeSyntaxHighlights.clearUpdatedLines(highlight))
+    );
+  }, state.highlightsMap, state.visibleBuffers);
+
+  {
+  ...state,
+  highlightsMap,
+  }
+}
+
 let bufferUpdate =
     //      ~configuration,
     //      ~scope,
@@ -162,15 +182,17 @@ let bufferUpdate =
       current =>
         switch (current) {
         | None =>
+          let getTextmateGrammar = (scope) => GrammarRepository.getGrammar(~scope, state.grammarRepository);
           Some(
             NativeSyntaxHighlights.create(
               //              ~configuration,
               ~bufferUpdate,
               ~theme=state.theme,
-              //              ~scope,
+              ~scope="source.reason",
               //              ~getTreeSitterScopeMapper,
-              //              ~getTextmateGrammar,
+              ~getTextmateGrammar,
               lines,
+
             ),
           )
         | Some(v) =>

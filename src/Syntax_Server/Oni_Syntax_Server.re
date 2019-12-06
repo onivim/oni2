@@ -62,7 +62,7 @@ let start = () => {
                 log("handled echo");
               }
             | Initialize(languageInfo, setup) => {
-                map(State.initialize(languageInfo, setup));
+                map(State.initialize(~log, languageInfo, setup));
                 log("Initialized!");
               }
             | BufferEnter(id, filetype) => {
@@ -132,6 +132,7 @@ let start = () => {
           let tokenUpdates = State.getTokenUpdates(state^);
           write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
           log("Token updates sent.");
+          map(State.clearTokenUpdates);
         };
       },
       (),
