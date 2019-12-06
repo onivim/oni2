@@ -464,7 +464,7 @@ module OutgoingNotifications = {
   module Configuration = {
     let initializeConfiguration = (setup: Setup.t) => {
       let keys = [
-        "typescript.suggest.enabled", 
+        "typescript.suggest.enabled",
         "javascript.suggest.enabled",
         "reason_language_server.location",
       ];
@@ -473,9 +473,7 @@ module OutgoingNotifications = {
         `Assoc([
           (
             "reason_language_server",
-            `Assoc([
-              ("location", `String(setup.rlsPath)) 
-            ])
+            `Assoc([("location", `String(setup.rlsPath))]),
           ),
           (
             "typescript",
