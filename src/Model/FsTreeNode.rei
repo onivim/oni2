@@ -27,6 +27,9 @@ let directory:
   ) =>
   t;
 
+let findNodesByLocalPath:
+  (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+
 let update: (~tree: t, ~updater: t => t, int) => t;
 let toggleOpenState: t => t;
 
