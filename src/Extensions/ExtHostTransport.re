@@ -156,7 +156,7 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration() |> sendNotification;
+    Configuration.initializeConfiguration(setup) |> sendNotification;
     Workspace.initializeWorkspace(initialWorkspace) |> sendNotification;
 
     initialized := true;

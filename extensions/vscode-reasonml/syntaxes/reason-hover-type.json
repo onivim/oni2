@@ -1,7 +1,0 @@
-{
-  "scopeName": "source.reason.hover.type",
-  "patterns": [
-    { "include": "source.reason#module-item-type" },
-    { "include": "source.reason#type-expression" }
-  ]
-}

@@ -223,20 +223,20 @@ module Diagnostic = {
     startColumn: int,
     endColumn: int,
     message: string,
-    source: string,
-    code: string,
     severity: int,
     // TODO:
+    // source: string,
+    //code: string,
     // relatedInformation: DiagnosticRelatedInformation.t,
   };
 
   type t = {
     range: OneBasedRange.t,
     message: string,
-    source: string,
-    code: string,
     severity: int,
     // TODO:
+    // source: string,
+    // code: string,
     // relatedInformation: DiagnosticRelatedInformation.t,
   };
 
@@ -255,9 +255,10 @@ module Diagnostic = {
       Ok({
         range,
         message: ret.message,
-        source: ret.source,
-        code: ret.code,
         severity: ret.severity,
+        // TODO:
+        //source: ret.source,
+        //code: ret.code,
       });
     | Error(msg) => Error(msg)
     };
@@ -461,11 +462,19 @@ module OutgoingNotifications = {
   };
 
   module Configuration = {
-    let initializeConfiguration = () => {
-      let keys = ["typescript.suggest.enabled", "javascript.suggest.enabled"];
+    let initializeConfiguration = (setup: Setup.t) => {
+      let keys = [
+        "typescript.suggest.enabled",
+        "javascript.suggest.enabled",
+        "reason_language_server.location",
+      ];
 
       let contents =
         `Assoc([
+          (
+            "reason_language_server",
+            `Assoc([("location", `String(setup.rlsPath))]),
+          ),
           (
             "typescript",
             `Assoc([("suggest", `Assoc([("enabled", `Bool(true))]))]),
