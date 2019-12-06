@@ -148,6 +148,18 @@ let start = () => {
           },
           Isolinear.Effect.none,
         )
+      | BufferEnter({filePath, _}, _) => {
+          (
+            {
+              ...state,
+              fileExplorer: {
+                ...state.fileExplorer,
+                focus: filePath,
+              },
+            },
+            eff,
+          );
+        }
 
       | Actions.FileExplorer(action) => updater(state, action)
       | _ => (state, Isolinear.Effect.none),

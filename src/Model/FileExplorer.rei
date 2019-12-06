@@ -1,6 +1,7 @@
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
+  focus: option(string) // path
 };
 
 [@deriving show]

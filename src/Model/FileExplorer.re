@@ -4,6 +4,7 @@ open Oni_Core;
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
+  focus: option(string) // path
 };
 
 [@deriving show({with_path: false})]
@@ -127,4 +128,4 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   );
 };
 
-let initial = {tree: None, isOpen: true};
+let initial = {tree: None, isOpen: true, focus: None};
