@@ -80,26 +80,60 @@ let findNodesByLocalPath = (path, tree) => {
 };
 
 let update = (~tree, ~updater, nodeId) => {
-  let rec update = tree => {
-    switch (tree) {
+  let rec loop =
+    fun
     | {id, _} as node when id == nodeId => updater(node)
 
-    | {kind: Directory({children, _} as dir), _} as node =>
-      let kind = Directory({...dir, children: List.map(update, children)});
+    | {kind: Directory({children, _} as dir), _} as node => {
+        let kind = Directory({...dir, children: List.map(loop, children)});
+        {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
+      }
 
-      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
+    | node => node;
 
-    | node => node
-    };
-  };
-
-  update(tree);
+  loop(tree);
 };
 
-let toggleOpenState =
+let updateNodesInPath = (~tree, ~updater, nodes) => {
+  let rec loop = (nodes, node) =>
+    switch (nodes) {
+    | [{id, kind, _}, ...rest] when id == node.id =>
+      switch (kind) {
+      | Directory({children, _} as dir) =>
+        let newChildren = List.map(loop(rest), children);
+        let newNode =
+          updater({
+            ...node,
+            kind: Directory({...dir, children: newChildren}),
+          });
+
+        {
+          ...newNode,
+          expandedSubtreeSize: countExpandedSubtree(newNode.kind),
+        };
+
+      | File => updater(node)
+      }
+
+    | _ => node
+    };
+
+  loop(nodes, tree);
+};
+
+let toggleOpen =
   fun
   | {kind: Directory({isOpen, children}), _} as node => {
       let kind = Directory({isOpen: !isOpen, children});
+
+      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
+    }
+  | node => node;
+
+let setOpen =
+  fun
+  | {kind: Directory({isOpen, children}), _} as node => {
+      let kind = Directory({isOpen: true, children});
 
       {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
     }

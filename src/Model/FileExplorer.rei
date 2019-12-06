@@ -6,9 +6,10 @@ type t = {
 
 [@deriving show]
 type action =
-  | TreeUpdated(FsTreeNode.t)
-  | NodeUpdated(int, FsTreeNode.t)
-  | NodeClicked(FsTreeNode.t);
+  | TreeLoaded([@opaque] FsTreeNode.t)
+  | NodeLoaded(int, [@opaque] FsTreeNode.t)
+  | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
+  | NodeClicked([@opaque] FsTreeNode.t);
 
 let initial: t;
 

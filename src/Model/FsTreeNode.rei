@@ -31,7 +31,9 @@ let findNodesByLocalPath:
   (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
 
 let update: (~tree: t, ~updater: t => t, int) => t;
-let toggleOpenState: t => t;
+let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;
+let toggleOpen: t => t;
+let setOpen: t => t;
 
 module Model: {
   type nonrec t = t;

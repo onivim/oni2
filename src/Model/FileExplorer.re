@@ -9,8 +9,9 @@ type t = {
 
 [@deriving show({with_path: false})]
 type action =
-  | TreeUpdated([@opaque] FsTreeNode.t)
-  | NodeUpdated(int, [@opaque] FsTreeNode.t)
+  | TreeLoaded([@opaque] FsTreeNode.t)
+  | NodeLoaded(int, [@opaque] FsTreeNode.t)
+  | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t);
 
 module ExplorerId =

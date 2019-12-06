@@ -55,7 +55,9 @@ module Styles = {
     cursor(Revery.MouseCursors.pointer),
     flexDirection(`Row),
     overflow(`Hidden),
-    backgroundColor(isFocused ? theme.menuSelectionBackground : Colors.transparentWhite),
+    backgroundColor(
+      isFocused ? theme.menuSelectionBackground : Colors.transparentWhite,
+    ),
   ];
 
   let placeholder = (~height) => [Style.height(height)];
