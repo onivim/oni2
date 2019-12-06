@@ -223,20 +223,20 @@ module Diagnostic = {
     startColumn: int,
     endColumn: int,
     message: string,
-    source: string,
-    code: string,
     severity: int,
     // TODO:
+    // source: string,
+    //code: string,
     // relatedInformation: DiagnosticRelatedInformation.t,
   };
 
   type t = {
     range: OneBasedRange.t,
     message: string,
-    source: string,
-    code: string,
     severity: int,
     // TODO:
+    // source: string,
+    // code: string,
     // relatedInformation: DiagnosticRelatedInformation.t,
   };
 
@@ -255,9 +255,10 @@ module Diagnostic = {
       Ok({
         range,
         message: ret.message,
-        source: ret.source,
-        code: ret.code,
         severity: ret.severity,
+        // TODO:
+        //source: ret.source,
+        //code: ret.code,
       });
     | Error(msg) => Error(msg)
     };
