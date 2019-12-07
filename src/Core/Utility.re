@@ -263,6 +263,12 @@ module Option = {
     | Some(x) => f(x)
     | None => None;
 
+  let flatten =
+    fun
+    | Some(Some(x)) => Some(x)
+    | Some(None) => None
+    | None => None;
+
   let join =
     fun
     | Some(x) => x
