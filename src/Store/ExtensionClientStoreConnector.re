@@ -190,7 +190,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       {
         completionLabel: suggestion.label,
         completionKind,
-        completionDetail: None,
+        completionDetail: suggestion.detail,
       };
     };
 
