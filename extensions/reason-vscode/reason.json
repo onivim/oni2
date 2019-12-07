@@ -100,7 +100,7 @@
     "comment": {
       "name": "comment",
       "patterns": [
-        {	"include": "#comment-line"	},
+        { "include": "#comment-line" },
         { "include": "#comment-block-doc" },
         {	"include": "#comment-block"	}
       ]
@@ -108,17 +108,15 @@
     "comment-line": {
       "name": "comment.line",
       "begin": "(^[ \\t]+)?((//))",
-      "end": "(?=^)",
-      "patterns": [
-        {"include": "#comment" }
-      ]
+      "end": "(?=^)"
     },
     "comment-block": {
       "begin": "/\\*",
       "end": "\\*/",
       "name": "comment.block",
       "patterns": [
-        { "include": "#comment" }
+        { "include": "#comment-block-doc" },
+        { "include": "#comment-block" }
       ]
     },
     "comment-block-doc": {
@@ -126,7 +124,8 @@
       "end": "\\*/",
       "name": "comment.block.documentation",
       "patterns": [
-        { "include": "#comment" }
+        { "include": "#comment-block-doc" },
+        { "include": "#comment-block" }
       ]
     },
     "condition-lhs": {
@@ -230,7 +229,8 @@
           ]
         },
         { "include": "#jsx-attributes" },
-        { "include": "#jsx-body" }
+        { "include": "#jsx-body" },
+        { "include": "#comment" }
       ]
     },
     "jsx-tail": {
@@ -443,10 +443,12 @@
       ]
     },
     "module-item-let": {
-      "begin": "\\b(let)\\b",
+      "begin": "\\b(let)((%)([[:word:]\\.]+))?\\b",
       "end": "(;)|(?=}|\\b(class|constraint|exception|external|include|inherit|let|method|nonrec|open|private|type|val|with)\\b)",
       "beginCaptures": {
-        "1": { "name": "storage.type" }
+        "1": { "name": "storage.type" },
+        "3": { "name": "keyword.control.less" },
+        "4": { "name": "entity.name.class" }
       },
       "endCaptures": {
         "1": { "name": "variable.other.class.js variable.interpolation keyword.operator keyword.control message.error" }
@@ -582,7 +584,6 @@
       ]
     },
     "module-item-let-value-bind-name-or-pattern": {
-      "begin": "(?<=[^[:word:]]and|^and|[^[:word:]]external|^external|[^[:word:]]let|^let|[^[:word:]]method|^method|[^[:word:]]rec|^rec)[[:space:]]*",
       "end": "(?<=[^[:space:]])|(?=[[:space:]]|[;:}=]|\\b(and|as|class|constraint|exception|external|for|include|inherit|let|method|module|nonrec|open|private|rec|switch|try|type|val|while|with)\\b)",
       "patterns": [
         { "include": "#comment" },
@@ -598,33 +599,8 @@
       ]
     },
     "module-item-let-value-bind-name-params-type-body": {
-      "begin": "(?<=[^[:word:]]and|^and|[^[:word:]]external|^external|[^[:word:]]let|^let|[^[:word:]]method|^method|[^[:word:]]rec|^rec)",
       "end": "(?=[;}]|\\b(and|class|constraint|exception|external|include|inherit|let|method|module|nonrec|open|private|rec|type|val|with)\\b)",
       "patterns": [
-        {
-          "comment": "FIXME; hack for punned arguments",
-          "begin": "(::)",
-          "end": "(?<=[[:space:]])",
-          "beginCaptures": {
-            "1": { "name": "keyword.control" }
-          },
-          "patterns": [
-            { "include": "#pattern" },
-            {
-              "begin": "(=)",
-              "end": "(\\?)|(?<=[^[:space:]=][[:space:]])(?=[[:space:]]*+[^\\.])",
-              "beginCaptures": {
-                "1": { "name": "markup.inserted keyword.control.less message.error" }
-              },
-              "endCaptures": {
-                "1": { "name": "storage.type" }
-              },
-              "patterns": [
-                { "include": "#value-expression-atomic-with-paths" }
-              ]
-            }
-          ]
-        },
         { "include": "#module-item-let-value-bind-name-or-pattern" },
         { "include": "#module-item-let-value-bind-params-type" },
         { "include": "#module-item-let-value-bind-type" },

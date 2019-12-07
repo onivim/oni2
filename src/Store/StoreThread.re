@@ -101,8 +101,6 @@ let start =
 
   let state = Model.State.create();
 
-  let (merlinUpdater, merlinStream) = MerlinStoreConnector.start();
-
   let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
     ref([]);
 
@@ -197,7 +195,6 @@ let start =
           windowUpdater,
           keyDisplayerUpdater,
           themeUpdater,
-          merlinUpdater,
           acpUpdater,
           hoverUpdater,
           completionUpdater,
@@ -296,8 +293,6 @@ let start =
     Isolinear.Stream.connect(dispatch, windowStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, hoverStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, merlinStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
   let _: Isolinear.Stream.unsubscribeFunc =

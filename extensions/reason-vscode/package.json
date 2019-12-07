@@ -1,0 +1,208 @@
+{
+	"name": "reason-vscode",
+	"description": "IDE & Syntax support for Reason/OCaml",
+	"author": "Jared Forsyth",
+	"license": "ISC",
+	"version": "1.7.2",
+	"publisher": "jaredly",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jaredly/reason-language-server"
+	},
+	"engines": {
+		"vscode": "^1.22.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"icon": "logo.png",
+	"activationEvents": [
+		"onLanguage:reason",
+		"onLanguage:ocaml",
+		"onLanguage:reason_lisp"
+	],
+	"main": "./src/index",
+	"contributes": {
+		"commands": [
+			{
+				"command": "reason-language-server.restart",
+				"title": "Restart Reason Language Server"
+			},
+			{
+				"command": "reason-language-server.show_ppxed_source",
+				"title": "Reason: Show the fully ppxed source for this file."
+			},
+			{
+				"command": "reason-language-server.show_ast",
+				"title": "Reason: Show the abstract syntax tree (AST) for this file."
+			},
+			{
+				"command": "reason-language-server.create_interface",
+				"title": "Reason: Create an interface file for this implementation file."
+			}
+		],
+		"snippets": [
+			{
+				"language": "reason",
+				"path": "./snippets/snippets.json"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Reason Language Server",
+			"properties": {
+				"reason_language_server.location": {
+					"type": "string",
+					"description": "Provide a custom location for the language server binary"
+				},
+				"reason_language_server.build_system_override_by_root": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string",
+						"enum": [
+							"bsb:4.0.7",
+							"dune:esy",
+							"dune:opam:/abs/path/to/switch",
+							"bsb-native:4.0.7:js",
+							"bsb-native:4.0.7:bytecode",
+							"bsb-native:4.0.7:native"
+						]
+					},
+					"description": "Only specify this if build system autodetection isn't working for you (for example if you have a bsconfig.json, and a dune file in the same project). The keys in this object should be in uri format, e.g. file:///some/path/here"
+				},
+				"reason_language_server.refmt": {
+					"type": "string",
+					"description": "Provide a custom location for the refmt binary"
+				},
+				"reason_language_server.lispRefmt": {
+					"type": "string",
+					"description": "Provide a location for the reason-lisp lispRefmt binary"
+				},
+				"reason_language_server.format_width": {
+					"type": "number",
+					"default": 80,
+					"description": "Format width (default=80)"
+				},
+				"reason_language_server.per_value_codelens": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show the type for each top-level value in a codelens"
+				},
+				"reason_language_server.dependencies_codelens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show the dependencies for a file at the top"
+				},
+				"reason_language_server.opens_codelens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Indicate what values have been used from an open"
+				},
+				"reason_language_server.show_module_path_on_hover": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show the module path on hover"
+				},
+				"reason_language_server.reloadOnChange": {
+					"type": "boolean",
+					"default": false,
+					"description": "Monitor the language server binary for updates, and restart it (for development)."
+				},
+				"reason_language_server.show_debug_errors": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show errors in the console"
+				},
+				"reason_language_server.autoRebuild": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enables autorun of bsb"
+				},
+				"reason_language_server.useOldDuneProcess": {
+					"type": "boolean",
+					"default": true,
+					"description": "Keep the old process for determining package files (for compatability, will remove soon)"
+				}
+			}
+		},
+		"grammars": [
+			{
+				"language": "ocaml",
+				"scopeName": "source.ocaml",
+				"path": "./ocaml.json"
+			},
+			{
+				"language": "reason",
+				"scopeName": "source.reason",
+				"path": "./reason.json"
+			},
+			{
+				"language": "reason_lisp",
+				"scopeName": "source.reason_lisp",
+				"path": "./reason-lisp.json"
+			},
+			{
+				"scopeName": "markdown.reason.codeblock",
+				"path": "./reason-markdown-codeblock.json",
+				"injectTo": [
+					"text.html.markdown"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.block.reason": "reason"
+				}
+			}
+		],
+		"languages": [
+			{
+				"id": "reason",
+				"aliases": [
+					"Reason"
+				],
+				"extensions": [
+					".re",
+					".rei"
+				],
+				"configuration": "./reason.configuration.json"
+			},
+			{
+				"id": "ocaml",
+				"aliases": [
+					"OCaml"
+				],
+				"extensions": [
+					".ml",
+					".mli"
+				],
+				"configuration": "./ocaml.configuration.json"
+			},
+			{
+				"id": "reason_lisp",
+				"aliases": [
+					"Reason Lisp"
+				],
+				"extensions": [
+					".rel",
+					".reli"
+				],
+				"configuration": "./reason-lisp.configuration.json"
+			}
+		]
+	},
+	"scripts": {
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"build-syntaxes": "tsc -p src/syntaxes && node script/syntax.js"
+	},
+	"dependencies": {
+		"vscode": "^1.1.17",
+		"vscode-languageclient": "^4.1.3",
+		"vscode-languageserver-types": "^3.14.0"
+	},
+	"devDependencies": {
+		"typescript": "^2.8.1"
+	},
+	"__metadata": {
+		"id": "8a8e3e61-d49b-47f8-b98f-b7169d624b29",
+		"publisherId": "c10ae63a-fcd5-41d7-a94f-f0cebd0bcb1c",
+		"publisherDisplayName": "Jared Forsyth"
+	}
+}
