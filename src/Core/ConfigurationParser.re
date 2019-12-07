@@ -246,10 +246,6 @@ let configurationParsers: list(configurationTuple) = [
     "experimental.treeSitter",
     (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
   ),
-  /*(
-      "experimental.merlin",
-      (s, v) => {...s, experimentalMerlin: parseBool(v)},
-    ),*/
   (
     "experimental.autoClosingPairs",
     (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},

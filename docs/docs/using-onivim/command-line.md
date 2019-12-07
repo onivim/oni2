@@ -26,9 +26,10 @@ oni2 --extensions-dir /some/path/with/extensions
 The `-f` argument can be used to keep Onivim 2 attached to the terminal,
 and provide logging output.
 
-There are some environment variables that can impact logging behavior:
-- `ONI2_DEBUG` (ie, `ONI2_DEBUG=1 oni2 -f`) - enable debug logging. This is very verbose but is helpful when logging issues!
-- `ONI2_LOG_FILE` (ie, `ONI2_LOG_FILE='/Users/me/oni.log' oni2`) - enable logging to a file.
+There are a also few options that can be specified using either environment variables or command line arguments:
+- `ONI2_DEBUG` or `--debug` (e.g., `ONI2_DEBUG=1 oni2 -f` or `oni2 -f --debug`) - enable debug logging. This is very verbose but is helpful when logging issues!
+- `ONI2_LOG_FILE` or `--log-file` (e.g., `ONI2_LOG_FILE='oni.log' oni2` or `oni2 --log-file oni.log`) - enable logging to a file.
+- `ONI2_LOG_FILTER` or `--log-filter` (e.g.. `ONI2_LOG_FILTER=Oni2.* oni2 -f` or `oni2 -f --log-filter "Oni2.*"`) - filter log messages using a comma-separated list of glob patterns matched against each message's namespace. Prefix a pattern with `-` to exclude rather than include matches. E.g. `ONI2_LOG_FILTER="Oni2.*, -*Ext*"` will include everything that matches `Oni2.*`, but exclude messages that also match `*Ext*`.
 
 > __NOTE:__ Enabling debug logging will impact performance.
 
