@@ -4,6 +4,9 @@
  * This implements an updater (reducer + side effects) for window management
  */
 
+open Revery;
+open Revery.UI.Components;
+
 module Core = Oni_Core;
 module Model = Oni_Model;
 
@@ -59,9 +62,19 @@ let start = getState => {
           ~component=splitFactory(state => <FileExplorerView state />),
           (),
         );
+      
+      /*let extensions =
+        WindowManager.registerDock(
+          ~order=3,
+          ~width=225,
+          ~id=ExtensionDock,
+          ~component=splitFactory(state => <Container color=Colors.red width=100 height=100 />),
+          (),
+        );*/
 
       dispatch(RegisterDockItem(dock));
       dispatch(RegisterDockItem(explorer));
+      dispatch(RegisterDockItem(extensions));
       dispatch(AddSplit(Vertical, editor));
     });
 

@@ -36,5 +36,8 @@ let make = (~state: State.t, ()) => {
     <Clickable onClick={toggleSearch(state)} style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
     </Clickable>
+    <Clickable onClick={toggleSearch(state)} style=button>
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
+    </Clickable>
   </View>;
 };

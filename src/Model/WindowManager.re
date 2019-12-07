@@ -15,6 +15,7 @@ module WindowId = {
 [@deriving show({with_path: false})]
 type docks =
   | ExplorerDock
+  | ExtensionDock
   | MainDock;
 
 [@deriving show({with_path: false})]
