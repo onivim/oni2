@@ -82,11 +82,20 @@ let create =
       ~bufferUpdate,
       ~scope,
       ~theme,
-      // TODO: Bring back!
+      ~treeSitterScopeConverter,
       ~getTextmateGrammar,
-      //      ~getTreeSitterScopeMapper,
       lines: array(string),
     ) => {
+      let ts =
+        TreeSitterSyntaxHighlights.create(
+          ~theme,
+          ~scopeConverter=treeSitterScopeConverter,
+          lines,
+        );
+      Highlighter({
+        highlighter: (module TreeSitterSyntaxHighlights),
+        state: ts,
+      });
   /*  let state = NoopSyntaxHighlighter.create(~bufferUpdate, ~theme, lines);
       Highlighter({highlighter: (module NoopSyntaxHighlighter), state});*/
   /*_hasTreeSitterScope(configuration, scope)
@@ -104,14 +113,14 @@ let create =
     }
     : {*/
 
-  let tm =
+  /*let tm =
     TextMateSyntaxHighlights.create(
       ~scope,
       ~theme,
       ~getTextmateGrammar,
       lines,
     );
-  Highlighter({highlighter: (module TextMateSyntaxHighlights), state: tm});
+  Highlighter({highlighter: (module TextMateSyntaxHighlights), state: tm});*/
 };
 
 let update =

@@ -7,28 +7,20 @@ open Oni_Core;
 module Ext = Oni_Extensions;
 
 type t = {
-  isEmpty: bool,
   scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t),
   languageInfo: Ext.LanguageInfo.t,
   log: string => unit,
 };
 
-let create = (~isEmpty=false, ~log=_ => (), languageInfo) => {
-  isEmpty,
+let create = (~log=_ => (), languageInfo) => {
   log,
   scopeToGrammar: Hashtbl.create(32),
   languageInfo,
 };
 
-let empty = create(~isEmpty=true, Ext.LanguageInfo.empty);
+let empty = create(Ext.LanguageInfo.empty);
 
 let getGrammar = (~scope: string, gr: t) => {
-  gr.log(
-    "getGrammar - scope: "
-    ++ scope
-    ++ " isEmpty: "
-    ++ (gr.isEmpty ? "TRUE" : "false"),
-  );
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
   | Some(v) =>
     gr.log("getGrammar - using cached grammar.");

@@ -15,6 +15,7 @@ module List = Utility.List;
 type t = {
   setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
+  treeSitterScopeConverter: TreeSitterScopes.TextMateConverter.t,
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
   visibleBuffers: list(int),
@@ -28,6 +29,7 @@ let empty = {
   theme: TokenTheme.empty,
   languageInfo: Ext.LanguageInfo.empty,
   grammarRepository: GrammarRepository.empty,
+  treeSitterScopeConverter: TreeSitterScopes.TextMateConverter.empty,
 };
 
 let initialize = (~log, languageInfo, setup, state) => {
@@ -192,8 +194,8 @@ let bufferUpdate =
               //              ~configuration,
               ~bufferUpdate,
               ~theme=state.theme,
-              ~scope="source.reason",
-              //              ~getTreeSitterScopeMapper,
+              ~scope="source.json",
+              ~treeSitterScopeConverter=state.treeSitterScopeConverter,
               ~getTextmateGrammar,
               lines,
             ),
