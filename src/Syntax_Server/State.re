@@ -15,7 +15,7 @@ module List = Utility.List;
 type t = {
   setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
-  treeSitterScopeConverter: TreeSitterScopes.TextMateConverter.t,
+  treesitterRepository: TreesitterRepository.t,
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
   visibleBuffers: list(int),
@@ -29,7 +29,7 @@ let empty = {
   theme: TokenTheme.empty,
   languageInfo: Ext.LanguageInfo.empty,
   grammarRepository: GrammarRepository.empty,
-  treeSitterScopeConverter: TreeSitterScopes.TextMateConverter.empty,
+  treesitterRepository: TreesitterRepository.empty,
 };
 
 let initialize = (~log, languageInfo, setup, state) => {
@@ -189,13 +189,17 @@ let bufferUpdate =
         | None =>
           let getTextmateGrammar = scope =>
             GrammarRepository.getGrammar(~scope, state.grammarRepository);
+
+          let getTreesitterScope = scope =>
+            TreesitterRepository.getScopeConverter(~scope, state.treesitterRepository);
+
           Some(
             NativeSyntaxHighlights.create(
               //              ~configuration,
               ~bufferUpdate,
               ~theme=state.theme,
               ~scope="source.json",
-              ~treeSitterScopeConverter=state.treeSitterScopeConverter,
+              ~getTreesitterScope,
               ~getTextmateGrammar,
               lines,
             ),
