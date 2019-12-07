@@ -74,7 +74,7 @@ let start = getState => {
 
       dispatch(RegisterDockItem(dock));
       dispatch(RegisterDockItem(explorer));
-      dispatch(RegisterDockItem(extensions));
+      //dispatch(RegisterDockItem(extensions));
       dispatch(AddSplit(Vertical, editor));
     });
 
