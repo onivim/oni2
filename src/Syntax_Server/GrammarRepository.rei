@@ -8,6 +8,8 @@ module Ext = Oni_Extensions;
 
 type t;
 
+let empty: t;
+
 let create:
   (~log: string => unit=?, Ext.LanguageInfo.t) => t;
 
