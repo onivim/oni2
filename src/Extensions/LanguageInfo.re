@@ -54,7 +54,7 @@ let getGrammarPathFromScope = (li: t, scope: string) => {
 
 let getTreesitterPathFromScope = (li: t, scope: string) => {
   StringMap.find_opt(scope, li.scopeToTreesitterPath);
-}
+};
 
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
@@ -110,13 +110,22 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          (prev, curr) => {StringMap.add(curr.scopeName, curr.path, prev)},
          StringMap.empty,
        );
-  
+
   let scopeToTreesitterPath =
     grammars
     |> List.fold_left(
-         (prev, curr) => {StringMap.add(curr.scopeName, curr.treeSitterPath, prev)},
+         (prev, curr) => {
+           StringMap.add(curr.scopeName, curr.treeSitterPath, prev)
+         },
          StringMap.empty,
        );
 
-  {grammars, languages, extToLanguage, languageToScope, scopeToGrammarPath, scopeToTreesitterPath };
+  {
+    grammars,
+    languages,
+    extToLanguage,
+    languageToScope,
+    scopeToGrammarPath,
+    scopeToTreesitterPath,
+  };
 };

@@ -153,22 +153,25 @@ let getTokenUpdates = state => {
   |> List.flatten;
 };
 
-
 let clearTokenUpdates = state => {
-  let highlightsMap = List.fold_left(
-  (acc, curr) => {
-    acc
-    |> IntMap.update(curr, fun
-    | None => None
-    | Some(highlight) => Some(NativeSyntaxHighlights.clearUpdatedLines(highlight))
+  let highlightsMap =
+    List.fold_left(
+      (acc, curr) => {
+        acc
+        |> IntMap.update(
+             curr,
+             fun
+             | None => None
+             | Some(highlight) =>
+               Some(NativeSyntaxHighlights.clearUpdatedLines(highlight)),
+           )
+      },
+      state.highlightsMap,
+      state.visibleBuffers,
     );
-  }, state.highlightsMap, state.visibleBuffers);
 
-  {
-  ...state,
-  highlightsMap,
-  }
-}
+  {...state, highlightsMap};
+};
 
 let bufferUpdate =
     //      ~configuration,
@@ -182,7 +185,8 @@ let bufferUpdate =
       current =>
         switch (current) {
         | None =>
-          let getTextmateGrammar = (scope) => GrammarRepository.getGrammar(~scope, state.grammarRepository);
+          let getTextmateGrammar = scope =>
+            GrammarRepository.getGrammar(~scope, state.grammarRepository);
           Some(
             NativeSyntaxHighlights.create(
               //              ~configuration,
@@ -192,9 +196,8 @@ let bufferUpdate =
               //              ~getTreeSitterScopeMapper,
               ~getTextmateGrammar,
               lines,
-
             ),
-          )
+          );
         | Some(v) =>
           Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
         },

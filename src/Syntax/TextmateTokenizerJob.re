@@ -28,12 +28,9 @@ type lineInfo = {
 type completedWork = {
   tokens: IntMap.t(lineInfo),
   latestLines: list(int),
-}
+};
 
-let initialCompletedWork = {
-  tokens: IntMap.empty,
-  latestLines: [],
-}
+let initialCompletedWork = {tokens: IntMap.empty, latestLines: []};
 
 type t = Job.t(pendingWork, completedWork);
 
@@ -48,14 +45,11 @@ let getTokenColors = (line: int, v: t) => {
 let clearUpdatedLines = (tm: t) => {
   let isComplete = Job.isComplete(tm);
   let f = (p: pendingWork, c: completedWork) => {
-    (isComplete, p, {
-      ...c,
-      latestLines: []
-    }) 
+    (isComplete, p, {...c, latestLines: []});
   };
 
   Job.map(f, tm);
-}
+};
 
 let onTheme = (theme: TokenTheme.t, v: t) => {
   let f = (p: pendingWork, _c: completedWork) => {
@@ -84,19 +78,21 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
       },
       {
         ...c,
-        tokens: IntMap.shift(
-        ~default=
-          prev =>
-            switch (prev) {
-            | None => None
-            | Some({scopeStack, _}) =>
-              Some({tokens: [], scopeStack, version: (-1)})
-            },
-        ~startPos,
-        ~endPos,
-        ~delta=Array.length(bufferUpdate.lines),
-        c.tokens),
-      }
+        tokens:
+          IntMap.shift(
+            ~default=
+              prev =>
+                switch (prev) {
+                | None => None
+                | Some({scopeStack, _}) =>
+                  Some({tokens: [], scopeStack, version: (-1)})
+                },
+            ~startPos,
+            ~endPos,
+            ~delta=Array.length(bufferUpdate.lines),
+            c.tokens,
+          ),
+      },
     );
   };
 
@@ -171,7 +167,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     (
       isComplete,
       {...pending, hasRun: true, currentLine: nextLine},
-      {tokens, latestLines: [currentLine, ...completed.latestLines]}
+      {tokens, latestLines: [currentLine, ...completed.latestLines]},
     );
   };
 };

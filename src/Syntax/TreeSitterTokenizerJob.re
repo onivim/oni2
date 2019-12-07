@@ -23,6 +23,8 @@ type output = list(ColorizedToken.t);
 type t = BufferLineJob.t(context, output);
 
 let isComplete = Job.isComplete;
+let getUpdatedLines = BufferLineJob.getUpdatedLines;
+let clearUpdatedLines = BufferLineJob.clearUpdatedLines;
 
 let noTokens = [];
 let getTokensForLine = (line: int, v: t) => {
