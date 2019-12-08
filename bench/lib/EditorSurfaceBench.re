@@ -79,7 +79,7 @@ let setupSurfaceThousandLineLayout = () => {
   let rootNode = (new viewNode)();
 
   rootNode#setStyle(
-    Style.make(~position=LayoutRelative, ~width=1600, ~height=1200, ()),
+    Style.make(~position=LayoutTypes.Relative, ~width=1600, ~height=1200, ()),
   );
 
   let container = Container.create(rootNode);

@@ -1,9 +1,8 @@
-open TestFramework;
-
-open Helpers;
-
-module BufferUpdate = Oni_Core.BufferUpdate;
+open Oni_Core;
 open Oni_Model;
+
+open TestFramework;
+open Helpers;
 
 describe("Buffer", ({describe, _}) =>
   describe("update", ({test, _}) => {

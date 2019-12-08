@@ -8,6 +8,8 @@
 /* [validateTextIsSynchronized] takes a dispatch and a wait function,
       and validates that the text across all sources is synchronized.
    */
+open Types;
+
 let validateTextIsSynchronized:
   (
     ~expectedText: option(string)=?,

@@ -6,6 +6,8 @@ module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 
+open Types;
+
 let _getTextForVimBuffer = () => {
   let buffer = Vim.Buffer.getCurrent();
   let count = Vim.Buffer.getLineCount(buffer);

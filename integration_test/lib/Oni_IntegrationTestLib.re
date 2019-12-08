@@ -6,6 +6,8 @@ module Store = Oni_Store;
 module Log = Core.Log;
 module TextSynchronization = TextSynchronization;
 
+open Types;
+
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
 let _currentZoom: ref(float) = ref(1.0);

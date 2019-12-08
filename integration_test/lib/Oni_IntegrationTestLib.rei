@@ -2,6 +2,7 @@ module Core = Oni_Core;
 module Log = Core.Log;
 module Model = Oni_Model;
 module TextSynchronization = TextSynchronization;
+open Types;
 
 let runTest:
   (

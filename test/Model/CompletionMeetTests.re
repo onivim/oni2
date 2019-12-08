@@ -1,3 +1,4 @@
+open Oni_Core;
 open TestFramework;
 
 module CompletionMeet = Oni_Model.CompletionMeet;
