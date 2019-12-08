@@ -5,6 +5,10 @@ open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
+module Option = Utility.Option;
+
+module Log = (val Log.withNamespace("TreeView"));
+
 module type TreeModel = {
   type t;
 
@@ -84,6 +88,41 @@ module Make = (Model: TreeModel) => {
     <View
       style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)]
     />;
+
+  // COunts the number of axpanded nodes before the node specified by the given path
+  let nodeOffsetByPath = (tree, path) => {
+    let rec loop = (node, path) =>
+      switch (path) {
+      | [] => failwith("Well, this is awkward (ie. unreachable)")
+      | [focus, ...focusTail] =>
+        if (focus != node) {
+          `NotFound(Model.expandedSubtreeSize(node));
+        } else {
+          switch (Model.kind(node)) {
+          | `Node(`Closed)
+          | `Leaf => `Found(0)
+
+          | `Node(`Open) =>
+            let rec loopChildren = (count, children) =>
+              switch (children) {
+              | [] => `NotFound(count)
+              | [child, ...childTail] =>
+                switch (loop(child, focusTail)) {
+                | `Found(subtreeCount) => `Found(count + subtreeCount)
+                | `NotFound(subtreeCount) =>
+                  loopChildren(count + subtreeCount, childTail)
+                }
+              };
+            loopChildren(1, Model.children(node));
+          };
+        }
+      };
+
+    switch (loop(tree, path)) {
+    | `Found(count) => Some(count)
+    | `NotFound(_) => None
+    };
+  };
 
   let rec nodeView =
           (
@@ -195,6 +234,22 @@ module Make = (Model: TreeModel) => {
     // Make sure we're not scrolled past the items
     let scrollTop =
       scrollTop |> Utility.clamp(~lo=0, ~hi=itemHeight * count - menuHeight);
+
+    let%hook () =
+      Hooks.effect(
+        If((!=), focus),
+        () => {
+          focus
+          |> Option.bind(nodeOffsetByPath(tree))
+          |> Option.iter(offset => {
+               // center focused item
+               setScrollTop(_ =>
+                 offset * itemHeight - menuHeight / 2
+               )
+             });
+          None;
+        },
+      );
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let delta =

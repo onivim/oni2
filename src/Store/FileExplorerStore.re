@@ -111,7 +111,7 @@ let start = () => {
     | NodeLoaded(id, node) => (replaceNode(id, node), Isolinear.Effect.none)
 
     | FocusNodeLoaded(id, node) =>
-      openFoldersInPath(replaceNode(id, node), state.fileExplorer.focus);
+      openFoldersInPath(replaceNode(id, node), state.fileExplorer.focus)
 
     | NodeClicked(node) =>
       switch (node) {
