@@ -1,6 +1,4 @@
-[@deriving
-  (show({with_path: false}), yojson({strict: false, exn: false}))
-]
+[@deriving (show({with_path: false}), yojson({strict: false, exn: false}))]
 // This type is overloaded - describing both the current 'input mode'
 // the UI is in, as well as the state of 'when' conditions in the input
 // bindings. Need to decouple these.

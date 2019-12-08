@@ -251,7 +251,8 @@ let start = (extensions, setup: Core.Setup.t) => {
           let uri = Model.Buffer.getUri(buf);
           let position =
             Protocol.OneBasedPosition.ofInt1(
-              ~lineNumber=completionMeet.completionMeetLine |> Core.Index.toInt1,
+              ~lineNumber=
+                completionMeet.completionMeetLine |> Core.Index.toInt1,
               ~column=completionMeet.completionMeetColumn |> Core.Index.toInt1,
               (),
             );
