@@ -1,5 +1,3 @@
-open Types;
-
 [@deriving show({with_path: false})]
 type t = {
   startPosition: Position.t,

@@ -13,8 +13,6 @@ open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
 open Oni_Model;
 
-open Types;
-
 /* Set up some styles */
 let textHeaderStyle =
   Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];

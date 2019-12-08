@@ -4,8 +4,6 @@
  * Module dealing with Range (tuples of positions)
  */
 
-open Types;
-
 [@deriving show({with_path: false})]
 type t = {
   startPosition: Position.t,

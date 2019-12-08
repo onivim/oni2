@@ -40,11 +40,10 @@ let start = () => {
           let position =
             switch (cursors) {
             | [hd, ..._] =>
-              open Oni_Core.Types;
-              let line = Index.ofInt1(hd.line);
-              let character = Index.ofInt0(hd.column);
-              Position.create(line, character);
-            | [] => Core.Types.Position.ofInt0(0, 0)
+              let line = Core.Index.ofInt1(hd.line);
+              let character = Core.Index.ofInt0(hd.column);
+              Core.Position.create(line, character);
+            | [] => Core.Position.ofInt0(0, 0)
             };
           {
             ...state,

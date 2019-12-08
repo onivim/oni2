@@ -3,7 +3,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 open Treesitter;
 
 type treeSitterScopeMapperFactory =

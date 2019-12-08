@@ -2,7 +2,6 @@ open TestFramework;
 
 /* open Helpers; */
 
-/* open Oni_Core.Types; */
 module WindowTree = Oni_Model.WindowTree;
 
 open WindowTree;

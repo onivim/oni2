@@ -6,6 +6,8 @@ module Store = Oni_Store;
 module Log = Core.Log;
 module TextSynchronization = TextSynchronization;
 
+open Types;
+
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
 let _currentZoom: ref(float) = ref(1.0);
@@ -50,7 +52,7 @@ let runTest =
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      test: Types.testCallback,
+      test: testCallback,
     ) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
@@ -157,7 +159,7 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, f: Types.testCallbackWithInput) => {
+let runTestWithInput = (~name, f: testCallbackWithInput) => {
   runTest(
     ~name,
     (dispatch, wait, runEffects) => {

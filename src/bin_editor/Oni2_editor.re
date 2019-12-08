@@ -126,11 +126,7 @@ let init = app => {
       dispatch(
         Model.Actions.EditorGroupSetSize(
           editorGroupId,
-          Core.Types.EditorSize.create(
-            ~pixelWidth=width,
-            ~pixelHeight=height,
-            (),
-          ),
+          Core.EditorSize.create(~pixelWidth=width, ~pixelHeight=height, ()),
         ),
       ),
     openEditorById: id => {

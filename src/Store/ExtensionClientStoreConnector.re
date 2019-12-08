@@ -247,12 +247,13 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         (buf, fileType) => {
           open Model.Actions;
-          open Oni_Core.Types;
+
           let uri = Model.Buffer.getUri(buf);
           let position =
             Protocol.OneBasedPosition.ofInt1(
-              ~lineNumber=completionMeet.completionMeetLine |> Index.toInt1,
-              ~column=completionMeet.completionMeetColumn |> Index.toInt1,
+              ~lineNumber=
+                completionMeet.completionMeetLine |> Core.Index.toInt1,
+              ~column=completionMeet.completionMeetColumn |> Core.Index.toInt1,
               (),
             );
           Log.infof(m =>

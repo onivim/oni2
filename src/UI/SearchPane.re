@@ -1,7 +1,6 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
-open Types;
 open Oni_Model;
 
 module Styles = {
@@ -23,7 +22,7 @@ module Styles = {
   let row =
     Style.[flexDirection(`Row), alignItems(`Center), marginHorizontal(8)];
 
-  let title = (~font: Types.UiFont.t) =>
+  let title = (~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
@@ -32,7 +31,7 @@ module Styles = {
       marginHorizontal(8),
     ];
 
-  let input = (~font: Types.UiFont.t) =>
+  let input = (~font: UiFont.t) =>
     Style.[
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),

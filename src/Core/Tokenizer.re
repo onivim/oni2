@@ -2,8 +2,6 @@
  * Tokenizer.re
  */
 
-open Types;
-
 open CamomileLibrary;
 
 module Zed_utf8 = ZedBundled;

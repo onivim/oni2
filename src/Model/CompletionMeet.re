@@ -6,7 +6,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 
 open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;

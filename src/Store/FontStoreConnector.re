@@ -30,8 +30,6 @@ let loadAndValidateEditorFont =
     fullPath,
     adjSize,
     font => {
-      open Types;
-
       /* Measure text */
       let shapedText = Fontkit.fk_shape(font, "Hi");
       let firstShape = shapedText[0];

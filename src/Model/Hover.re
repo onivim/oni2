@@ -4,8 +4,7 @@
  * This module is responsible for the types and operations
  * for the 'Hover' view
  */
-
-open Oni_Core.Types;
+open Oni_Core;
 
 type hover = {
   bufferId: int,

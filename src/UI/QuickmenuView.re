@@ -28,8 +28,7 @@ module Styles = {
 
   let menuItem = Style.[fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
-  let label =
-      (~font: Types.UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
@@ -91,7 +90,7 @@ let progressBar = (~progress=?, ~theme, ()) => {
 
 let make =
     (
-      ~font: Types.UiFont.t,
+      ~font: UiFont.t,
       ~theme: Theme.t,
       ~configuration: Configuration.t,
       ~autofocus: bool=true,
