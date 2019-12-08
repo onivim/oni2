@@ -50,5 +50,7 @@ module ClientToServer = {
         [@opaque] Oni_Core.BufferUpdate.t,
         [@opaque] array(string),
       )
-    | ThemeChanged([@opaque] TokenTheme.t);
+    | ThemeChanged([@opaque] TokenTheme.t)
+    // TODO: Clean up this type here
+    | VisibleRangesChanged(list((int /* buffer id */, list(Range.t))));
 };

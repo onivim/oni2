@@ -168,4 +168,8 @@ module ColorizedToken = {
     backgroundColor,
     foregroundColor,
   };
+
+  let show = (v) => Printf.sprintf("index: %d bg: %s fg: %s", v.index,
+    Revery.Color.toString(v.backgroundColor),
+    Revery.Color.toString(v.foregroundColor));
 };

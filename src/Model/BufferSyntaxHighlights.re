@@ -20,6 +20,8 @@ let empty = BufferMap.empty;
 
 let noTokens = [];
 
+module ClientLog = (val Oni_Core.Log.withNamespace("BufferSyntaxHighlights - TESTING"));
+
 let getTokens = (bufferId: int, line: int, highlights: t) => {
   highlights
   |> BufferMap.find_opt(bufferId)

@@ -72,7 +72,7 @@ let updateTheme = (theme, state) => {
   {...state, theme, highlightsMap};
 };
 
-let doPendingWork = state => {
+let doPendingWork = (state) => {
   let highlightsMap =
     List.fold_left(
       (prev, curr) =>
@@ -130,7 +130,7 @@ let updateVisibleBuffers = (buffers, state) => {
     }};
   }*/
 
-let getTokenUpdates = state => {
+let getTokenUpdates = (~log, state) => {
   List.fold_left(
     (acc, curr) => {
       let tokenUpdatesForBuffer =
@@ -140,8 +140,10 @@ let getTokenUpdates = state => {
              highlights
              |> NativeSyntaxHighlights.getUpdatedLines
              |> List.map(line => {
+                  log("Got tokens for line: " ++ string_of_int(line));
                   let tokenColors =
                     NativeSyntaxHighlights.getTokensForLine(highlights, line);
+                  List.iter(tok => log(" -- Token: " ++ Oni_Core.Types.ColorizedToken.show(tok)), tokenColors);
                   let bufferId = curr;
                   Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
                 })
@@ -179,8 +181,6 @@ let clearTokenUpdates = state => {
 let bufferUpdate =
     //      ~configuration,
     //      ~scope,
-    //      ~getTreeSitterScopeMapper,
-    //      ~getTextmateGrammar,
     (~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
   let highlightsMap =
     IntMap.update(
@@ -212,3 +212,23 @@ let bufferUpdate =
     );
   {...state, highlightsMap};
 };
+
+let updateVisibility = (
+  visibility: list((int, list(Range.t))), state) => {
+  
+    let highlightsMap = visibility
+    |> List.fold_left((acc, curr) => {
+        let (bufferId, ranges) = curr; 
+
+        let updateVisibility = fun
+        | None => None
+        | Some(hl) => Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
+
+        IntMap.update(bufferId, updateVisibility, acc);
+    }, state.highlightsMap);
+
+    {
+      ...state,
+      highlightsMap,
+    }
+  }

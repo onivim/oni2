@@ -33,7 +33,7 @@ let getScopeConverter = (~scope: string, gr: t) => {
     ) {
     | Some(grammarPath) =>
       gr.log("Loading tree sitter converter from: " ++ grammarPath);
-      let json = Yojson.Safe.from_file(grammarPath);
+      let json = Yojson.Safe.from_file(grammarPath) |> Yojson.Safe.Util.member("scopes");
       let grammar = TreeSitterScopes.TextMateConverter.of_yojson(json);
       Hashtbl.add(gr.scopeToConverter, scope, grammar);
       Some(grammar);

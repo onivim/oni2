@@ -89,6 +89,9 @@ let start = () => {
                   ),
                 );
               }
+            | VisibleRangesChanged(visibilityUpdate) => {
+              map(State.updateVisibility(visibilityUpdate));
+            }
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );
 
@@ -129,7 +132,7 @@ let start = () => {
           };
 
           log("Sending token updates...");
-          let tokenUpdates = State.getTokenUpdates(state^);
+          let tokenUpdates = State.getTokenUpdates(~log, state^);
           write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
           log("Token updates sent.");
           map(State.clearTokenUpdates);

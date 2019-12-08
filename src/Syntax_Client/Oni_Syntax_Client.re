@@ -116,3 +116,7 @@ let notifyBufferUpdate =
     (v: t, bufferUpdate: Oni_Core.BufferUpdate.t, lines: array(string)) => {
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines));
 };
+
+let notifyVisibilityChanged =
+  (v: t, visibility) => 
+    write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));

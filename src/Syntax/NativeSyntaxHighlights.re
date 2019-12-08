@@ -97,7 +97,7 @@ let create =
       lines,
     );
     Highlighter({highlighter: (module TreeSitterSyntaxHighlights), state: ts});
-    | None => 
+    | None =>
     let state = NoopSyntaxHighlighter.create(~bufferUpdate, ~theme, lines);
       Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
      }; 
