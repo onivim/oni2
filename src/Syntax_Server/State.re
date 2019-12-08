@@ -36,6 +36,7 @@ let initialize = (~log, languageInfo, setup, state) => {
   ...state,
   languageInfo,
   grammarRepository: GrammarRepository.create(~log, languageInfo),
+  treesitterRepository: TreesitterRepository.create(~log, languageInfo),
   setup: Some(setup),
 };
 

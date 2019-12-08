@@ -11,6 +11,8 @@ module ServerToClient = Protocol.ServerToClient;
 module ClientLog = (val Core.Log.withNamespace("Oni2.SyntaxClient"));
 module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
 
+exception Test(string);
+
 type t = {
   in_channel: Stdlib.in_channel,
   out_channel: Stdlib.out_channel,
@@ -26,6 +28,12 @@ let start = (~onHighlights, languageInfo, setup) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
+
+  /*switch(Oni_Extensions.LanguageInfo.getTreesitterPathFromScope(languageInfo, "source.json")) {
+  | None => raise(Test("None"))
+  | Some(v) => raise(Test("Some: " ++ v))
+  }*/
+  
 
   Unix.set_close_on_exec(pstdin);
   Unix.set_close_on_exec(stdin);
