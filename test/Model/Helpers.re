@@ -1,5 +1,3 @@
-open Oni_Core.Types;
-
 open Oni_Model;
 
 let validateBuffer =

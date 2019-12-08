@@ -178,7 +178,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
           let message = curr.item.completionLabel;
           let width =
-            Types.EditorFont.measure(~text=message, editorFont)
+            EditorFont.measure(~text=message, editorFont)
             +. 0.5
             |> int_of_float;
 

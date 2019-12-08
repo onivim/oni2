@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 
 module Time = Revery_Core.Time;
 

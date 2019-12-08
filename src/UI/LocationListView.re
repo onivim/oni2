@@ -2,7 +2,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
-open Types;
 open Oni_Model;
 
 module Option = Utility.Option;
@@ -36,14 +35,14 @@ module Styles = {
     ),
   ];
 
-  let locationText = (~font: Types.UiFont.t, ~theme: Theme.t) => [
+  let locationText = (~font: UiFont.t, ~theme: Theme.t) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(theme.editorActiveLineNumberForeground),
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: Types.EditorFont.t, ~theme: Theme.t, ~isHighlighted) => [
+  let snippet = (~font: EditorFont.t, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(
@@ -166,8 +165,8 @@ let item =
 let%component make =
               (
                 ~theme: Theme.t,
-                ~uiFont: Types.UiFont.t,
-                ~editorFont: Types.EditorFont.t,
+                ~uiFont: UiFont.t,
+                ~editorFont: EditorFont.t,
                 ~items: array(LocationListItem.t),
                 (),
               ) => {

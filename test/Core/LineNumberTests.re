@@ -1,7 +1,6 @@
 /* open Oni_Core; */
 open TestFramework;
 
-/* open Oni_Core.Types; */
 module LineNumber = Oni_Core.LineNumber;
 
 describe("LineNumber", ({test, _}) =>

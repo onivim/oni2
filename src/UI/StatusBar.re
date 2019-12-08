@@ -13,7 +13,7 @@ open Oni_Model;
 open Oni_Model.StatusBarModel;
 
 let getTextStyle = uiFont => {
-  Oni_Core.Types.UiFont.(
+  UiFont.(
     Style.[
       fontFamily(uiFont.fontFile),
       fontSize(11),
@@ -36,12 +36,12 @@ let viewStyle = bgColor =>
     right(0),
   ];
 
-let convertPositionToString = (position: option(Types.Position.t)) =>
+let convertPositionToString = (position: option(Position.t)) =>
   switch (position) {
   | Some(v) =>
-    string_of_int(Types.Index.toOneBasedInt(v.line))
+    string_of_int(Index.toOneBasedInt(v.line))
     ++ ","
-    ++ string_of_int(Types.Index.toOneBasedInt(v.character))
+    ++ string_of_int(Index.toOneBasedInt(v.character))
   | None => ""
   };
 

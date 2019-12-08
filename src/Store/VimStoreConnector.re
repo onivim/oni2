@@ -174,11 +174,11 @@ let start =
         dispatch(
           Actions.SearchSetMatchingPair(
             id,
-            Core.Types.Position.create(
+            Core.Position.create(
               OneBasedIndex(newPosition.line),
               ZeroBasedIndex(newPosition.column),
             ),
-            Core.Types.Position.create(
+            Core.Position.create(
               OneBasedIndex(line),
               ZeroBasedIndex(column),
             ),
@@ -305,9 +305,9 @@ let start =
 
   let _ =
     Vim.Buffer.onUpdate(update => {
+      open Oni_Core;
       open Vim.BufferUpdate;
       Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
-      open Core.Types;
       open State;
 
       let isFull = update.endLine == (-1);
@@ -514,8 +514,8 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+      open Oni_Core;
       open Oni_Core.Utility;
-      open Oni_Core.Types;
 
       /* If a split was requested, create that first! */
       switch (dir) {
@@ -720,7 +720,7 @@ let start =
       let completions = state.completions;
       let bestMatch = Completions.getBestCompletion(completions);
       let meet = Completions.getMeet(completions);
-      Oni_Core.Types.(
+      Core.(
         switch (bestMatch, meet) {
         | (Some(completion), Some(meet)) =>
           let cursorPosition = Vim.Cursor.getPosition();
@@ -751,7 +751,7 @@ let start =
   let synchronizeViml = configuration =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
       let lines =
-        Oni_Core.Configuration.getValue(
+        Core.Configuration.getValue(
           c => c.experimentalVimL,
           configuration,
         );

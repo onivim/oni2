@@ -50,7 +50,7 @@ let runTest =
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      test: Types.testCallback,
+      test: testCallback,
     ) => {
   Printexc.record_backtrace(true);
   Log.enablePrinting();
@@ -157,7 +157,7 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, f: Types.testCallbackWithInput) => {
+let runTestWithInput = (~name, f: testCallbackWithInput) => {
   runTest(
     ~name,
     (dispatch, wait, runEffects) => {

@@ -1,4 +1,3 @@
-open Oni_Core.Types;
 open TestFramework;
 
 open Helpers;

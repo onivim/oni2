@@ -10,7 +10,7 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
+  let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
     backgroundColor(bg),
@@ -27,7 +27,7 @@ module Styles = {
 
   let item = [flexDirection(`Row), alignItems(`Center)];
 
-  let text = (~fg, ~bg, ~font: Core.Types.UiFont.t) => [
+  let text = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
     color(fg),
@@ -54,7 +54,7 @@ let setiIcon = (~icon, ~fontSize as size, ~bg, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: Core.Types.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
+let nodeView = (~font: Core.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>

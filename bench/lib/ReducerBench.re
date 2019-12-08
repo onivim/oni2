@@ -19,7 +19,7 @@ let doubleEditorSize = () => {
       state,
       Actions.EditorGroupSetSize(
         editorGroup.editorGroupId,
-        Types.EditorSize.create(~pixelWidth=3200, ~pixelHeight=2400, ()),
+        EditorSize.create(~pixelWidth=3200, ~pixelHeight=2400, ()),
       ),
     );
   ();
@@ -32,7 +32,7 @@ let changeEditorFont = () => {
     Reducer.reduce(
       state,
       Actions.SetEditorFont(
-        Types.EditorFont.create(
+        EditorFont.create(
           ~fontFile="dummy",
           ~fontSize=10,
           ~measuredWidth=10.,

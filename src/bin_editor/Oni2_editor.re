@@ -126,7 +126,7 @@ let init = app => {
       dispatch(
         Model.Actions.EditorGroupSetSize(
           editorGroupId,
-          Core.Types.EditorSize.create(
+          Core.EditorSize.create(
             ~pixelWidth=width,
             ~pixelHeight=height,
             (),

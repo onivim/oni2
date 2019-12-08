@@ -1,4 +1,4 @@
-open Oni_Core.Types;
+open Oni_Core;
 
 type t = {
   file: string,

@@ -8,11 +8,11 @@ let runTest:
     ~configuration: option(string)=?,
     ~cliOptions: option(Core.Cli.t)=?,
     ~name: string=?,
-    Types.testCallback
+    testCallback
   ) =>
   unit;
 
-let runTestWithInput: (~name: string, Types.testCallbackWithInput) => unit;
+let runTestWithInput: (~name: string, testCallbackWithInput) => unit;
 
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);

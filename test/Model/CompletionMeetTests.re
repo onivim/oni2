@@ -1,7 +1,5 @@
 open TestFramework;
 
-open Oni_Core.Types;
-
 module CompletionMeet = Oni_Model.CompletionMeet;
 
 describe("CompletionMeet", ({describe, _}) => {
