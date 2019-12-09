@@ -4,6 +4,8 @@
  * This module documents & types the protocol for communicating with the VSCode Extension Host.
  */
 
+open Oni_Core;
+
 module SuggestProvider = {
   type t = {
     id: int,
@@ -20,9 +22,17 @@ module SuggestProvider = {
   };
 };
 
-type t = {suggestProviders: list(SuggestProvider.t)};
+module DefinitionProvider = {
+  type t = (Buffer.t, Position.t) => option(Lwt.t(Position.t));
+}
 
-let empty = {suggestProviders: []};
+type t = {
+  suggestProviders: list(SuggestProvider.t),
+  definitionProviders: list(DefinitionProvider.t)
+
+};
+
+let empty = {suggestProviders: [], definitionProviders: []};
 
 let getSuggestProviders = (fileType: string, v: t) => {
   let filter = (sp: SuggestProvider.t) => {
@@ -31,6 +41,19 @@ let getSuggestProviders = (fileType: string, v: t) => {
   List.filter(filter, v.suggestProviders);
 };
 
-let registerSuggestProvider = (suggestProvider: SuggestProvider.t, v: t) => {
-  suggestProviders: [suggestProvider, ...v.suggestProviders],
+let getDefinition = (buffer: Buffer.t, pos: Position.t, lf: t) => {
+  lf.definitionProviders
+  |> List.map(df => df(buffer, pos))
+  |> Utility.List.filter_map(v => v)
+  |> Lwt.choose;
+}
+
+let registerSuggestProvider = (suggestProvider: SuggestProvider.t, languageFeatures: t) => {
+  ...languageFeatures,
+  suggestProviders: [suggestProvider, ...languageFeatures.suggestProviders],
 };
+
+let registerDefinitionProvider = (definitionProvider: DefinitionProvider.t, languageFeatures) => {
+  ...languageFeatures,
+  definitionProviders: [definitionProvider, ...languageFeatures.definitionProviders],
+}
