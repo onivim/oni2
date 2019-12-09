@@ -24,12 +24,11 @@ module SuggestProvider = {
 
 module DefinitionProvider = {
   type t = (Buffer.t, Position.t) => option(Lwt.t(Position.t));
-}
+};
 
 type t = {
   suggestProviders: list(SuggestProvider.t),
-  definitionProviders: list(DefinitionProvider.t)
-
+  definitionProviders: list(DefinitionProvider.t),
 };
 
 let empty = {suggestProviders: [], definitionProviders: []};
@@ -46,14 +45,19 @@ let getDefinition = (buffer: Buffer.t, pos: Position.t, lf: t) => {
   |> List.map(df => df(buffer, pos))
   |> Utility.List.filter_map(v => v)
   |> Lwt.choose;
-}
+};
 
-let registerSuggestProvider = (suggestProvider: SuggestProvider.t, languageFeatures: t) => {
+let registerSuggestProvider =
+    (suggestProvider: SuggestProvider.t, languageFeatures: t) => {
   ...languageFeatures,
   suggestProviders: [suggestProvider, ...languageFeatures.suggestProviders],
 };
 
-let registerDefinitionProvider = (definitionProvider: DefinitionProvider.t, languageFeatures) => {
+let registerDefinitionProvider =
+    (definitionProvider: DefinitionProvider.t, languageFeatures) => {
   ...languageFeatures,
-  definitionProviders: [definitionProvider, ...languageFeatures.definitionProviders],
-}
+  definitionProviders: [
+    definitionProvider,
+    ...languageFeatures.definitionProviders,
+  ],
+};
