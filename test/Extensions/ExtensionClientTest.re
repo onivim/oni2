@@ -7,16 +7,15 @@ open TestFramework;
 open ExtensionClientHelper;
 open ExtHostProtocol;
 
-// Windows extension 
-let normalizeExpectedPath = (path) => {
-  // Windows does a normalization of slashes in the ext host...
+let normalizeExpectedPath = path =>
+  // Windows does a normalization of slashes in the ext host... we need to match this logic
+  // for our verification. For example, if we send it a path like /root/test.txt, it'll send us
+  // back \\root\\test.txt
   if (Sys.win32) {
-    path
-    |> Str.global_replace(Str.regexp_string("/"), "\\");
+    path |> String.split_on_char('/') |> String.concat("\\");
   } else {
-    path
-  }
-};
+    path;
+  };
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
@@ -115,7 +114,10 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
@@ -152,13 +154,19 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
       let didGetUpdateMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(
                info.messageType,
                "workspace.onDidChangeTextDocument",
