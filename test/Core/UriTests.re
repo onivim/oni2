@@ -20,6 +20,12 @@ let okOrFail = v =>
   };
 
 describe("Uri", ({describe, _}) => {
+  describe("toString", ({test, _}) => {
+    test("adds slash for windows-style path", ({expect, _}) => {
+      let uri = Uri.fromPath("C:/test");
+      expect.string(Uri.toString(uri)).toEqual("file:///c:/test");
+    })
+  });
   describe("JSON", ({test, _}) => {
     test("parses with scheme as string", ({expect, _}) => {
       let scheme =
@@ -33,5 +39,5 @@ describe("Uri", ({describe, _}) => {
 
       expect.bool(scheme == Uri.Scheme.Memory).toBe(true);
     });
-  })
+  });
 });
