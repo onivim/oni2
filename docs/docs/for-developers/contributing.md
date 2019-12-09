@@ -39,6 +39,26 @@ To enable us to quickly review and accept your pull requests, follow these guide
 
 To avoid duplicate work, if you decide to start working on an issue, please leave a comment on the issue.
 
+### Branch Naming
+
+We recommend this scheme for naming branches: `<type>/<area>/<description>`
+
+Where `type` is:
+- `bugfix` - a change that fixes a bug
+- `feature` - a change that adds new functionality
+- `doc` - a change that modifies the documentation
+- `refactoring` - a code change that does not fix a bug or change a feature
+- `dependency` - a change to bring in a new dependency
+
+And `area` corresponds to our [Area Labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) 
+
+`description` is just a short, hyphen-delimited blurb to very briefly describe the change.
+
+Some examples:
+- `bugfix/vim/fix-gd-crash`
+- `feature/exthost/go-to-definition`
+- `refactoring/editor-component/remove-duplication`
+
 ## Discussion Etiquette
 
 We strictly enforce a [Code of Conduct](https://github.com/onivim/oni2/blob/master/CODE_OF_CONDUCT.md) and have a zero-tolerance policy towards infractions. Be considerate to others, and try to be courteous and professional at all times.
