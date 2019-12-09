@@ -104,7 +104,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(info.filename, "/root/test.txt")
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
@@ -118,7 +118,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.addDocument(
             createInitialDocumentModel(
               ~lines=["Hello world"],
-              ~path="test.txt",
+              ~path="/root/test.txt",
               (),
             ),
             client,
@@ -141,13 +141,13 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(info.filename, "/root/test.txt")
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
       let didGetUpdateMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(info.filename, "/root/test.txt")
           && String.equal(
                info.messageType,
                "workspace.onDidChangeTextDocument",
@@ -168,7 +168,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.addDocument(
             createInitialDocumentModel(
               ~lines=["hello", "world"],
-              ~path="test.txt",
+              ~path="/root/test.txt",
               (),
             ),
             client,
@@ -198,7 +198,7 @@ describe("ExtHostClient", ({describe, _}) => {
               (),
             );
           ExtHostClient.updateDocument(
-            Uri.fromPath("test.txt"),
+            Uri.fromPath("/root/test.txt"),
             modelChangedEvent,
             true,
             client,
