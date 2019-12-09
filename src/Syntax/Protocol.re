@@ -52,5 +52,7 @@ module ClientToServer = {
       )
     | ThemeChanged([@opaque] TokenTheme.t)
     // TODO: Clean up this type here
-    | VisibleRangesChanged(list((int /* buffer id */, list(Range.t))));
+    | VisibleRangesChanged(
+        [@opaque] list((int /* buffer id */, list(Range.t))),
+      );
 };

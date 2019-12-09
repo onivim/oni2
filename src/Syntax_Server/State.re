@@ -72,7 +72,7 @@ let updateTheme = (theme, state) => {
   {...state, theme, highlightsMap};
 };
 
-let doPendingWork = (state) => {
+let doPendingWork = state => {
   let highlightsMap =
     List.fold_left(
       (prev, curr) =>
@@ -123,14 +123,7 @@ let updateVisibleBuffers = (buffers, state) => {
   {...state, visibleBuffers, highlightsMap};
 };
 
-/*let getTokensForLine = (v: t, bufferId: int, line: int) => {
-    switch (IntMap.find_opt(bufferId, v.highlightsMap)) {
-    | Some(v) => NativeSyntaxHighlights.getTokensForLine(v, line)
-    | None => []
-    }};
-  }*/
-
-let getTokenUpdates = (~log, state) => {
+let getTokenUpdates = state => {
   List.fold_left(
     (acc, curr) => {
       let tokenUpdatesForBuffer =
@@ -140,10 +133,8 @@ let getTokenUpdates = (~log, state) => {
              highlights
              |> NativeSyntaxHighlights.getUpdatedLines
              |> List.map(line => {
-                  log("Got tokens for line: " ++ string_of_int(line));
                   let tokenColors =
                     NativeSyntaxHighlights.getTokensForLine(highlights, line);
-                  List.iter(tok => log(" -- Token: " ++ Oni_Core.Types.ColorizedToken.show(tok)), tokenColors);
                   let bufferId = curr;
                   Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
                 })
@@ -192,7 +183,10 @@ let bufferUpdate =
             GrammarRepository.getGrammar(~scope, state.grammarRepository);
 
           let getTreesitterScope = scope =>
-            TreesitterRepository.getScopeConverter(~scope, state.treesitterRepository);
+            TreesitterRepository.getScopeConverter(
+              ~scope,
+              state.treesitterRepository,
+            );
 
           Some(
             NativeSyntaxHighlights.create(
@@ -213,22 +207,23 @@ let bufferUpdate =
   {...state, highlightsMap};
 };
 
-let updateVisibility = (
-  visibility: list((int, list(Range.t))), state) => {
-  
-    let highlightsMap = visibility
-    |> List.fold_left((acc, curr) => {
-        let (bufferId, ranges) = curr; 
+let updateVisibility = (visibility: list((int, list(Range.t))), state) => {
+  let highlightsMap =
+    visibility
+    |> List.fold_left(
+         (acc, curr) => {
+           let (bufferId, ranges) = curr;
 
-        let updateVisibility = fun
-        | None => None
-        | Some(hl) => Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
+           let updateVisibility =
+             fun
+             | None => None
+             | Some(hl) =>
+               Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
 
-        IntMap.update(bufferId, updateVisibility, acc);
-    }, state.highlightsMap);
+           IntMap.update(bufferId, updateVisibility, acc);
+         },
+         state.highlightsMap,
+       );
 
-    {
-      ...state,
-      highlightsMap,
-    }
-  }
+  {...state, highlightsMap};
+};

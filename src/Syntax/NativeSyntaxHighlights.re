@@ -86,21 +86,20 @@ let create =
       ~getTextmateGrammar,
       lines: array(string),
     ) => {
+  let maybeScopeConverter = getTreesitterScope(scope);
 
-    let maybeScopeConverter = getTreesitterScope(scope);
-
-    switch (maybeScopeConverter) {
-    | Some(scopeConverter) =>
-    let ts = TreeSitterSyntaxHighlights.create(
-      ~theme,
-      ~scopeConverter,
-      lines,
-    );
-    Highlighter({highlighter: (module TreeSitterSyntaxHighlights), state: ts});
-    | None =>
+  switch (maybeScopeConverter) {
+  | Some(scopeConverter) =>
+    let ts =
+      TreeSitterSyntaxHighlights.create(~theme, ~scopeConverter, lines);
+    Highlighter({
+      highlighter: (module TreeSitterSyntaxHighlights),
+      state: ts,
+    });
+  | None =>
     let state = NoopSyntaxHighlighter.create(~bufferUpdate, ~theme, lines);
-      Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
-     }; 
+    Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
+  };
   /*_hasTreeSitterScope(configuration, scope)
     ? {
       let ts =

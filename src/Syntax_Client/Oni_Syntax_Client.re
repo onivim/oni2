@@ -29,12 +29,6 @@ let start = (~onHighlights, languageInfo, setup) => {
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
 
-  /*switch(Oni_Extensions.LanguageInfo.getTreesitterPathFromScope(languageInfo, "source.json")) {
-  | None => raise(Test("None"))
-  | Some(v) => raise(Test("Some: " ++ v))
-  }*/
-  
-
   Unix.set_close_on_exec(pstdin);
   Unix.set_close_on_exec(stdin);
   Unix.set_close_on_exec(pstdout);
@@ -78,9 +72,6 @@ let start = (~onHighlights, languageInfo, setup) => {
             ClientLog.info("got message from channel: |" ++ result ++ "|")
           | ServerToClient.Log(msg) => ServerLog.info(msg)
           | ServerToClient.TokenUpdate(tokens) =>
-            ClientLog.info(
-              "Got " ++ string_of_int(List.length(tokens)) ++ " tokens!",
-            );
             onHighlights(tokens);
             ClientLog.info("Tokens applied");
           };
@@ -117,6 +108,5 @@ let notifyBufferUpdate =
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines));
 };
 
-let notifyVisibilityChanged =
-  (v: t, visibility) => 
-    write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+let notifyVisibilityChanged = (v: t, visibility) =>
+  write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));

@@ -24,16 +24,13 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let onHighlights = tokenUpdates => {
     Revery.App.runOnMainThread(() => {
-    Log.info(" --- token updates!!!!")
-      List.iter(tok => Log.info(" -- " ++ Protocol.TokenUpdate.show(tok)), tokenUpdates);
       dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates))
-    Log.info(" --- token updates done!!!!")
     });
   };
 
   let _syntaxClient =
     Oni_Syntax_Client.start(~onHighlights, languageInfo, setup);
-  
+
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => [||]
@@ -45,17 +42,6 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => (-1)
     | Some(v) => Core.Buffer.getVersion(v)
-    };
-  };
-
-  let getScopeForBuffer = (state: Model.State.t, id: int) => {
-    switch (Model.Buffers.getBuffer(id, state.buffers)) {
-    | None => None
-    | Some(buffer) =>
-      switch (Core.Buffer.getFileType(buffer)) {
-      | None => None
-      | Some(v) => Ext.LanguageInfo.getScopeFromLanguage(languageInfo, v)
-      }
     };
   };
 
@@ -93,50 +79,44 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
         state,
         themeChangeEffect(tokenTheme),
       )
-    | Model.Actions.BufferEnter(metadata, fileType) => (
-        state,
-        bufferEnterEffect(state, Vim.BufferMetadata.(metadata.id), fileType),
-      )
+    | Model.Actions.BufferEnter(metadata, fileType) =>
+      let visibleBuffers =
+        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+
+      let combinedEffects =
+        Isolinear.Effect.batch([
+          visibilityChangedEffect(visibleBuffers),
+          bufferEnterEffect(
+            state,
+            Vim.BufferMetadata.(metadata.id),
+            fileType,
+          ),
+        ]);
+
+      (state, combinedEffects);
     // When the view changes, update our list of visible buffers,
     // so we know which ones might have pending work!
     | Model.Actions.EditorGroupAdd(_)
-      | Model.Actions.EditorScroll(_)
-      | Model.Actions.EditorScrollToLine(_)
-      | Model.Actions.EditorScrollToColumn(_)
-      | Model.Actions.AddSplit(_)
-      | Model.Actions.RemoveSplit(_)
-      | Model.Actions.ViewSetActiveEditor(_)
-      //| Model.Actions.BufferEnter(_)
-      | Model.Actions.ViewCloseEditor(_) =>
-        let visibleBuffers =
-          Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-        (state, visibilityChangedEffect(visibleBuffers))
+    | Model.Actions.EditorScroll(_)
+    | Model.Actions.EditorScrollToLine(_)
+    | Model.Actions.EditorScrollToColumn(_)
+    | Model.Actions.AddSplit(_)
+    | Model.Actions.RemoveSplit(_)
+    | Model.Actions.ViewSetActiveEditor(_)
+    //| Model.Actions.BufferEnter(_)
+    | Model.Actions.ViewCloseEditor(_) =>
+      let visibleBuffers =
+        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+      (state, visibilityChangedEffect(visibleBuffers));
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
-      let scope = getScopeForBuffer(state, bu.id);
       let version = getVersion(state, bu.id);
-      switch (scope) {
-      | None => default
-      | Some(scope) when isVersionValid(version, bu.version) =>
-        ignore(scope);
-        /*let state = {
-            ...state,
-            syntaxHighlighting:
-              Model.SyntaxHighlighting.onBufferUpdate(
-                ~configuration=state.configuration,
-                ~scope,
-                ~getTextmateGrammar,
-                ~getTreeSitterScopeMapper,
-                ~bufferUpdate=bu,
-                ~lines,
-                ~theme=state.tokenTheme,
-                state.syntaxHighlighting,
-              ),
-          };*/
+      if (!isVersionValid(version, bu.version)) {
+        default;
+      } else {
         (state, bufferUpdateEffect(bu, lines));
-      | Some(_) => default
       };
     | _ => default
     };
