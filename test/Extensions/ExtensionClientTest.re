@@ -7,6 +7,17 @@ open TestFramework;
 open ExtensionClientHelper;
 open ExtHostProtocol;
 
+// Windows extension 
+let normalizeExpectedPath = (path) => {
+  // Windows does a normalization of slashes in the ext host...
+  if (Sys.win32) {
+    path
+    |> Str.global_replace(Str.regexp_string("/"), "\\");
+  } else {
+    path
+  }
+};
+
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", ({expect}) => {
@@ -104,7 +115,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt")
+          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
@@ -141,13 +152,13 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt")
+          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
       let didGetUpdateMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "/root/test.txt")
+          String.equal(info.filename, "/root/test.txt" |> normalizeExpectedPath)
           && String.equal(
                info.messageType,
                "workspace.onDidChangeTextDocument",
