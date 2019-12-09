@@ -56,9 +56,17 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     buffers
     |> Core.IntMap.to_seq
-    |> Seq.filter_map(element => {
-         let (_, buffer) = element;
-
+    |> Seq.map(snd)
+    |> List.of_seq
+    // Sort by most recerntly used
+    |> List.fast_sort((a, b) =>
+         -
+           Float.compare(
+             Model.Buffer.getLastUsed(a),
+             Model.Buffer.getLastUsed(b),
+           )
+       )
+    |> Utility.List.filter_map(buffer => {
          switch (Model.Buffer.getFilePath(buffer)) {
          | Some(path) =>
            Some(
@@ -78,9 +86,9 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
              },
            )
          | None => None
-         };
+         }
        })
-    |> Array.of_seq;
+    |> Array.of_list;
   };
 
   let menuUpdater =
