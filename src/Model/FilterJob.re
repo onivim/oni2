@@ -193,9 +193,9 @@ module Make = (Config: Config) => {
     | Some((isCompleted, pendingWork, completedWork)) =>
       /* As a last pass, run the filter to sort / score filtered items if under a certain length */
       let uiFiltered =
-          completedWork
-          |> Utility.firstk(maxItemsToFilter)
-          |> Filter.rank(p.filter, format);
+        completedWork
+        |> Utility.firstk(maxItemsToFilter)
+        |> Filter.rank(p.filter, format);
 
       (isCompleted, pendingWork, {allFiltered: completedWork, uiFiltered});
     };
@@ -204,12 +204,12 @@ module Make = (Config: Config) => {
   let doWork = (pending, completed) =>
     if (pending.filter == "") {
       let allFiltered = List.concat(pending.allItems);
-      let uiFiltered = allFiltered |> List.map(item => Filter.{highlight: [], item});
+      let uiFiltered =
+        allFiltered |> List.map(item => Filter.{highlight: [], item});
       (true, pending, {allFiltered, uiFiltered});
     } else {
       doActualWork(pending, completed);
-    }
-
+    };
 
   let progressReporter = (p: pendingWork, _) => {
     let toFilter = float_of_int(List.length(p.itemsToFilter));
