@@ -523,6 +523,7 @@ let%component make =
       let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
       let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
 
+      let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
         Editor.pixelPositionToLineColumn(
           editor,
@@ -530,28 +531,31 @@ let%component make =
           relX -. lineNumberWidth,
           relY,
         );
-      Log.debug(() =>
-        "EditorSurface - editorMouseUp: topVisibleLine is "
-        ++ string_of_int(topVisibleLine)
-      );
-      Log.debug(() =>
-        "EditorSurface - editorMouseUp: setPosition ("
-        ++ string_of_int(line + 1)
-        ++ ", "
-        ++ string_of_int(col)
-        ++ ")"
-      );
-      let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
 
-      /*GlobalContext.current().dispatch(
-          Actions.EditorScrollToLine(editorId, topVisibleLine),
+      if (line < numberOfLines) {
+        Log.debug(() =>
+          "EditorSurface - editorMouseUp: topVisibleLine is "
+          ++ string_of_int(topVisibleLine)
         );
+        Log.debug(() =>
+          "EditorSurface - editorMouseUp: setPosition ("
+          ++ string_of_int(line + 1)
+          ++ ", "
+          ++ string_of_int(col)
+          ++ ")"
+        );
+        let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
+
+        /*GlobalContext.current().dispatch(
+            Actions.EditorScrollToLine(editorId, topVisibleLine),
+          );
+          GlobalContext.current().dispatch(
+            Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
+          );*/
         GlobalContext.current().dispatch(
-          Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
-        );*/
-      GlobalContext.current().dispatch(
-        Actions.EditorCursorMove(editorId, [cursor]),
-      );
+          Actions.EditorCursorMove(editorId, [cursor]),
+        );
+      };
     };
   };
 
