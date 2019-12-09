@@ -1,25 +1,43 @@
 module Scheme = {
   [@deriving show]
-  type t = string;
+  type t =
+    | File
+    | Http
+    | Https
+    | Memory;
 
-  let file: t = "file";
-  let memory: t = "memory";
-
-  let toString = (v: t) => v;
-
-  let isAllowedScheme = scheme => {
-    scheme == file || scheme == memory;
+  let create = () => {
+    let strToScheme = Hashtbl.create(8);
+    Hashtbl.add(strToScheme, "file", File);
+    Hashtbl.add(strToScheme, "http", Http);
+    Hashtbl.add(strToScheme, "https", Https);
+    Hashtbl.add(strToScheme, "memory", Memory);
+    strToScheme;
   };
+
+  let strToScheme = create();
+
+  let toString =
+    fun
+    | File => "file"
+    | Http => "http"
+    | Https => "https"
+    | Memory => "memory";
+
+  let _isAllowedScheme = Hashtbl.mem(strToScheme);
+
+  let _ofString = Hashtbl.find(strToScheme);
 
   let of_yojson = json =>
     switch (json) {
-    | `String(scheme) when isAllowedScheme(scheme) => Ok(scheme)
-    | `List([`String(scheme), ..._]) when isAllowedScheme(scheme) =>
-      Ok(scheme)
+    | `String(scheme) when _isAllowedScheme(scheme) =>
+      Ok(scheme |> _ofString)
+    | `List([`String(scheme), ..._]) when _isAllowedScheme(scheme) =>
+      Ok(scheme |> _ofString)
     | _ => Error("Invalid scheme")
     };
 
-  let to_yojson = v => `String(v);
+  let to_yojson = v => `String(v |> toString);
 };
 
 [@deriving (show, yojson({strict: false}))]
@@ -28,8 +46,8 @@ type t = {
   path: string,
 };
 
-let fromMemory = (path: string) => {scheme: Scheme.memory, path};
-let fromPath = (path: string) => {scheme: Scheme.file, path};
+let fromMemory = (path: string) => {scheme: Scheme.Memory, path};
+let fromPath = (path: string) => {scheme: Scheme.File, path};
 
 let toString = (uri: t) => {
   Scheme.toString(uri.scheme) ++ "://" ++ uri.path;

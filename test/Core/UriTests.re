@@ -25,13 +25,13 @@ describe("Uri", ({describe, _}) => {
       let scheme =
         Uri.of_yojson(uriSchemeStringJSON) |> okOrFail |> Uri.getScheme;
 
-      expect.bool(scheme == Uri.Scheme.file).toBe(true);
+      expect.bool(scheme == Uri.Scheme.File).toBe(true);
     });
     test("parses with scheme as array", ({expect, _}) => {
       let scheme =
         Uri.of_yojson(uriSchemeArrayJSON) |> okOrFail |> Uri.getScheme;
 
-      expect.bool(scheme == Uri.Scheme.memory).toBe(true);
+      expect.bool(scheme == Uri.Scheme.Memory).toBe(true);
     });
   })
 });
