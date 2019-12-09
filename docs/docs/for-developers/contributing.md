@@ -43,14 +43,14 @@ To avoid duplicate work, if you decide to start working on an issue, please leav
 
 We recommend this scheme for naming branches: `<type>/<area>/<description>`
 
-Where `type` is:
+`type` is one of:
 - `bugfix` - a change that fixes a bug
 - `feature` - a change that adds new functionality
 - `doc` - a change that modifies the documentation
 - `refactoring` - a code change that does not fix a bug or change a feature
 - `dependency` - a change to bring in a new dependency
 
-And `area` corresponds to our [Area Labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) 
+`area` corresponds to our [Area Labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) 
 
 `description` is just a short, hyphen-delimited blurb to very briefly describe the change.
 
