@@ -7,7 +7,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 
 /*
  * The type for diagnostics is a nested map:

@@ -38,7 +38,7 @@ let make =
       ~onClick,
       ~onClose,
       ~theme: Theme.t,
-      ~uiFont: Types.UiFont.t,
+      ~uiFont: UiFont.t,
       ~mode: Vim.Mode.t,
       ~showHighlight: bool,
       (),

@@ -9,6 +9,13 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 
+let getDirectory = (fp: string): option(string) => {
+  let dirs =
+    Filename.dirname(fp) |> String.split_on_char(Filename.dir_sep.[0]);
+
+  List.length(dirs) - 1 |> List.nth_opt(dirs);
+};
+
 let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
   state => {
     let initialValues = [("appName", "Onivim 2")];
@@ -23,7 +30,18 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
           | None => initialValues
           | Some(fp) =>
             let activeEditorShort = Filename.basename(fp);
-            [("activeEditorShort", activeEditorShort), ...initialValues];
+            let parentDir = getDirectory(fp);
+
+            let initialValues = [
+              ("activeEditorShort", activeEditorShort),
+              ("activeEditorLong", fp),
+              ...initialValues,
+            ];
+
+            switch (parentDir) {
+            | None => initialValues
+            | Some(dir) => [("activeFolderShort", dir), ...initialValues]
+            };
           };
         switch (Core.Buffer.isModified(buf)) {
         | false => ret
@@ -36,6 +54,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       | None => initialValues
       | Some(workspace) => [
           ("rootName", workspace.rootName),
+          ("rootPath", workspace.workingDirectory),
           ...initialValues,
         ]
       };

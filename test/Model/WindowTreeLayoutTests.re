@@ -2,7 +2,6 @@ open TestFramework;
 
 open Oni_Core_Test.Helpers;
 
-/* open Oni_Core.Types; */
 module WindowTree = Oni_Model.WindowTree;
 module WindowTreeLayout = Oni_Model.WindowTreeLayout;
 

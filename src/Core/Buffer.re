@@ -4,7 +4,7 @@
  * In-memory text buffer representation
  */
 
-open Types;
+open Oni_Core;
 
 type t = {
   id: int,
@@ -15,6 +15,7 @@ type t = {
   lines: array(string),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
+  lastUsed: float,
 };
 
 let show = _ => "TODO";
@@ -28,6 +29,7 @@ let ofLines = (lines: array(string)) => {
   lines,
   indentation: None,
   syntaxHighlightingEnabled: true,
+  lastUsed: 0.,
 };
 
 let empty = ofLines([||]);
@@ -41,17 +43,16 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   lines: [||],
   indentation: None,
   syntaxHighlightingEnabled: true,
+  lastUsed: 0.,
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
-
 let setFilePath = (filePath: option(string), buffer) => {
   ...buffer,
   filePath,
 };
 
 let getFileType = (buffer: t) => buffer.fileType;
-
 let setFileType = (fileType: option(string), buffer: t) => {
   ...buffer,
   fileType,
@@ -60,16 +61,16 @@ let setFileType = (fileType: option(string), buffer: t) => {
 let getId = (buffer: t) => buffer.id;
 
 let getLine = (buffer: t, line: int) => buffer.lines[line];
-
 let getLines = (buffer: t) => buffer.lines;
 
 let getVersion = (buffer: t) => buffer.version;
-
 let setVersion = (version: int, buffer: t) => {...buffer, version};
 
 let isModified = (buffer: t) => buffer.modified;
-
 let setModified = (modified: bool, buffer: t) => {...buffer, modified};
+
+let stampLastUsed = buffer => {...buffer, lastUsed: Unix.gettimeofday()};
+let getLastUsed = buffer => buffer.lastUsed;
 
 let isSyntaxHighlightingEnabled = (buffer: t) =>
   buffer.syntaxHighlightingEnabled;

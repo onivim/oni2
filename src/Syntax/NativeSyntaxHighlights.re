@@ -3,7 +3,7 @@
  */
 
 module Core = Oni_Core;
-module ColorizedToken = Core.Types.ColorizedToken;
+module ColorizedToken = Core.ColorizedToken;
 module Range = Core.Range;
 
 module type SyntaxHighlighter = {

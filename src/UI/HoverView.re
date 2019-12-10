@@ -65,11 +65,11 @@ let make = (~x: int, ~y: int, ~state: Model.State.t, ()) => {
 
           let message = curr.message;
           let width =
-            Types.EditorFont.measure(~text=message, editorFont)
+            EditorFont.measure(~text=message, editorFont)
             +. 0.5
             |> int_of_float;
           let height =
-            Types.EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
+            EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
 
           let newWidth = max(prevWidth, width + padding);
           let newHeight = height + prevHeight + innerPadding;

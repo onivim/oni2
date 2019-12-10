@@ -8,7 +8,6 @@
 module ModelConfig = Configuration;
 
 open Oni_Core;
-open Oni_Core.Types;
 open Oni_Core.Utility;
 
 module MessageType = {
@@ -300,6 +299,7 @@ module SuggestionItem = {
     label: string,
     insertText: string,
     kind: option(int),
+    detail: option(string),
   };
 
   let of_yojson = json => {
@@ -308,7 +308,8 @@ module SuggestionItem = {
         let label = json |> member("label") |> to_string;
         let insertText = json |> member("insertText") |> to_string;
         let kind = json |> member("kind") |> to_int_option;
-        Ok({label, insertText, kind});
+        let detail = json |> member("detail") |> to_string_option;
+        Ok({label, insertText, kind, detail});
       }) {
       | Undefined(msg, _) => Error(msg)
       }

@@ -15,8 +15,6 @@ module Editor = Oni_Model.Editor;
 module Selectors = Oni_Model.Selectors;
 module State = Oni_Model.State;
 
-open Types;
-
 let lineStyle = Style.[position(`Absolute), top(0)];
 
 let renderLine =

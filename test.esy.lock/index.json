@@ -1,5 +1,5 @@
 {
-  "checksum": "526964f200af6eb27c02b96fdbaa6891",
+  "checksum": "004fd26382ca21c471f9cba6c485220f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -88,7 +88,7 @@
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-sdl2@2.10.3010@d41d8cd9",
+        "reason-sdl2@2.10.3011@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
         "reason-fontkit@2.7.0@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9",
@@ -269,20 +269,20 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@2.10.3010@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3010@d41d8cd9",
+    "reason-sdl2@2.10.3011@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3011@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3010",
+      "version": "2.10.3011",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3010.tgz#sha1:a5e95f3a89ad3d944524e52da10e3ff64a27c0fa"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3011.tgz#sha1:4b03fa4ba56fe15050168545ac4d6ac7277b6fc1"
         ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "reason-gl-matrix@0.9.9306@d41d8cd9",
-        "esy-sdl2@2.0.10004@d41d8cd9", "esy-cmake@0.3.5@d41d8cd9",
+        "esy-sdl2@2.0.10005@d41d8cd9", "esy-cmake@0.3.5@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.4.0@0357bb8b",
         "@opam/js_of_ocaml-lwt@github:ocsigen/js_of_ocaml:js_of_ocaml-lwt.opam#db257ce@d41d8cd9",
         "@opam/js_of_ocaml-compiler@github:ocsigen/js_of_ocaml:js_of_ocaml-compiler.opam#db257ce@d41d8cd9",
@@ -312,21 +312,23 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#17d09d2@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#17d09d2@d41d8cd9",
+    "reason-libvim@8.10869.26000@d41d8cd9": {
+      "id": "reason-libvim@8.10869.26000@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#17d09d2",
+      "version": "8.10869.26000",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#17d09d2" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.26000.tgz#sha1:07a6ef357ceff4e4b0c72eb6aea2bc4042f20edb"
+        ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.25@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "libvim@8.10869.26@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9": {
       "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
@@ -549,14 +551,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.25@d41d8cd9": {
-      "id": "libvim@8.10869.25@d41d8cd9",
+    "libvim@8.10869.26@d41d8cd9": {
+      "id": "libvim@8.10869.26@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.25",
+      "version": "8.10869.26",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.25.tgz#sha1:0d020992c47b36f3404a40873f30ee3048f6c5a2"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.26.tgz#sha1:76e56a64a587719bb0dc70ce16c438200e47a38b"
         ]
       },
       "overrides": [],
@@ -771,14 +773,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-sdl2@2.0.10004@d41d8cd9": {
-      "id": "esy-sdl2@2.0.10004@d41d8cd9",
+    "esy-sdl2@2.0.10005@d41d8cd9": {
+      "id": "esy-sdl2@2.0.10005@d41d8cd9",
       "name": "esy-sdl2",
-      "version": "2.0.10004",
+      "version": "2.0.10005",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-sdl2/-/esy-sdl2-2.0.10004.tgz#sha1:099759847d2e33258d80bdeeb536cf1d4cc98fa5"
+          "archive:https://registry.npmjs.org/esy-sdl2/-/esy-sdl2-2.0.10005.tgz#sha1:adfb34d5cb0c5a7886c04e63bfef6dc15eda5942"
         ]
       },
       "overrides": [],
@@ -958,11 +960,11 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
-        "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3010@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#17d09d2@d41d8cd9",
+        "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3011@d41d8cd9",
+        "reason-libvim@8.10869.26000@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
-        "esy-sdl2@2.0.10004@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
+        "esy-sdl2@2.0.10005@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
         "axios@0.19.0@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d",

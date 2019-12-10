@@ -147,7 +147,7 @@ module Make = (Config: Config) => {
   };
 
   /* [doWork] is run each frame until the work is completed! */
-  let doWork = (p: pendingWork, c: completedWork) => {
+  let doActualWork = (p: pendingWork, c: completedWork) => {
     let i = ref(0);
     let isCompleted = ref(false);
     let result = ref(None);
@@ -200,6 +200,16 @@ module Make = (Config: Config) => {
       (isCompleted, pendingWork, {allFiltered: completedWork, uiFiltered});
     };
   };
+
+  let doWork = (pending, completed) =>
+    if (pending.filter == "") {
+      let allFiltered = List.concat(pending.allItems);
+      let uiFiltered =
+        allFiltered |> List.map(item => Filter.{highlight: [], item});
+      (true, pending, {allFiltered, uiFiltered});
+    } else {
+      doActualWork(pending, completed);
+    };
 
   let progressReporter = (p: pendingWork, _) => {
     let toFilter = float_of_int(List.length(p.itemsToFilter));

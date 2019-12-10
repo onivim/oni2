@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Types;
 open Oni_Model;
 open Oni_Store;
 
@@ -15,7 +14,7 @@ let simpleState = {
     state,
     Actions.EditorGroupSetSize(
       EditorGroups.activeGroupId(state.editorGroups),
-      Types.EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
+      EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
     ),
   );
 };
@@ -24,7 +23,7 @@ let simpleState =
   Reducer.reduce(
     simpleState,
     Actions.SetEditorFont(
-      Types.EditorFont.create(
+      EditorFont.create(
         ~fontFile="dummy",
         ~fontSize=14,
         ~measuredWidth=14.,

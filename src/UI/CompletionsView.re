@@ -14,6 +14,7 @@ module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
 open Ext.CompletionItemKind;
+open Model.Completions;
 
 let kindToIcon =
   fun
@@ -120,8 +121,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let textStyle = (~highlighted) =>
       Style.[
-        //width(width_),
-        //height(height_),
         textWrap(Revery.TextWrapping.NoWrap),
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
@@ -130,16 +129,14 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         backgroundColor(bgColor),
       ];
 
-    let detailStyle = width_ =>
+    let detailTextStyle =
       Style.[
-        width(width_),
-        //height(height_),
-        textWrap(Revery.TextWrapping.NoWrap),
         textOverflow(`Ellipsis),
         fontFamily(editorFont.fontFile),
         fontSize(editorFont.fontSize),
         color(commentColor),
         backgroundColor(bgColor),
+        margin(3),
       ];
 
     let lineHeight_ = lineHeight;
@@ -149,7 +146,6 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         top(int_of_float(lineHeight_ +. 0.5)),
         left(0),
         width(width_),
-        //height(height_),
         flexDirection(`Column),
         alignItems(`FlexStart),
         justifyContent(`Center),
@@ -157,32 +153,34 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
         backgroundColor(bgColor),
       ];
 
-    let (_maxWidth, diags) =
+    let maxCompletionWidth = 225;
+    let maxDetailWidth = 225;
+
+    let lineHeightInt = int_of_float(lineHeight_ +. 0.5);
+
+    let detailStyle = width_ =>
+      Style.[
+        position(`Absolute),
+        left(width_),
+        top(lineHeightInt),
+        width(maxDetailWidth),
+        flexDirection(`Column),
+        alignItems(`FlexStart),
+        justifyContent(`Center),
+        border(~color=borderColor, ~width=1),
+        backgroundColor(bgColor),
+      ];
+
+    let (_maxWidth, completionItems) =
       List.fold_left(
         (acc, curr: Model.Filter.result(Model.Actions.completionItem)) => {
           let (prevWidth, prevDiags) = acc;
 
           let message = curr.item.completionLabel;
           let width =
-            Types.EditorFont.measure(~text=message, editorFont)
+            EditorFont.measure(~text=message, editorFont)
             +. 0.5
             |> int_of_float;
-          let remainingWidth = 450 - width;
-
-          let detailElem =
-            switch (curr.item.completionDetail) {
-            | None => React.empty
-            | Some(text) when String.length(text) > 0 =>
-              let detailWidth =
-                Types.EditorFont.measure(~text, editorFont)
-                +. 0.5
-                |> int_of_float
-                |> min(remainingWidth);
-              <View style=Style.[flexGrow(0), margin(4)]>
-                <Text style={detailStyle(detailWidth)} text />
-              </View>;
-            | _ => React.empty
-            };
 
           let newWidth = max(prevWidth, width + padding);
           let completionColor =
@@ -211,7 +209,8 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                   backgroundColor=completionColor
                   color=bgColor
                   margin=4
-                  fontSize=14
+                  // Not sure why, but specifying a font size fails to render the icon!
+                  // Might be a bug with Revery font loading / re - rendering in this case?
                 />
               </View>
               <View style=Style.[flexGrow(1), margin(4)]>
@@ -222,22 +221,42 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                   text=message
                 />
               </View>
-              detailElem
             </View>;
           let newDiags = [newElem, ...prevDiags];
           (newWidth, newDiags);
         },
-        (450, []),
+        (maxCompletionWidth, []),
         completions.filteredCompletions,
       );
 
-    let diags = List.rev(diags) |> React.listToElement;
+    let totalWidth = _maxWidth + padding * 2;
+
+    let detailElem =
+      completions
+      |> Model.Completions.getBestCompletion
+      |> Option.bind(
+           (filteredCompletion: Model.Completions.filteredCompletion) =>
+           filteredCompletion.item.completionDetail
+         )
+      |> Option.bind(text =>
+           if (String.length(text) > 0) {
+             Some(
+               <View style={detailStyle(totalWidth)}>
+                 <Text style=detailTextStyle text />
+               </View>,
+             );
+           } else {
+             None;
+           }
+         )
+      |> Option.value(~default=React.empty);
+
+    let completionItems = List.rev(completionItems) |> React.listToElement;
 
     <View style=outerPositionStyle>
       <Opacity opacity>
-        <View style={innerPositionStyle(_maxWidth + padding * 2)}>
-          diags
-        </View>
+        <View style={innerPositionStyle(totalWidth)}> completionItems </View>
+        detailElem
       </Opacity>
     </View>;
   };
