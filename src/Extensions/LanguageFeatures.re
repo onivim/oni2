@@ -22,7 +22,7 @@ module SuggestProvider = {
   };
 };
 
-module Definition = {
+module DefinitionResult = {
   type t = {
     uri: Uri.t,
     position: Position.t,
@@ -39,7 +39,7 @@ module Definition = {
 };
 
 module DefinitionProvider = {
-  type t = (Uri.t, Position.t) => option(Lwt.t(Definition.t));
+  type t = (Buffer.t, Position.t) => option(Lwt.t(DefinitionResult.t));
 };
 
 type t = {
@@ -56,13 +56,13 @@ let getSuggestProviders = (fileType: string, v: t) => {
   List.filter(filter, v.suggestProviders);
 };
 
-let getDefinition = (uri: Uri.t, pos: Position.t, lf: t) => {
+let getDefinition = (buffer: Buffer.t, pos: Position.t, lf: t) => {
   prerr_endline(
     "DEFINITION PROVIDER COUNT: "
     ++ string_of_int(List.length(lf.definitionProviders)),
   );
   lf.definitionProviders
-  |> List.map(df => df(uri, pos))
+  |> List.map(df => df(buffer, pos))
   |> Utility.List.filter_map(v => v)
   |> Lwt.choose;
 };

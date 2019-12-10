@@ -77,11 +77,11 @@ let start = (extensions, setup: Core.Setup.t) => {
     // TODO: Move
     dispatch(
       Oni_Model.Actions.LanguageFeatureRegisterDefinitionProvider(
-        (_u, _p) => {
+        (_buf, _p) => {
           Log.info("Sending definiton");
           Some(
             Lwt.return(
-              Extensions.LanguageFeatures.Definition.create(
+              Extensions.LanguageFeatures.DefinitionResult.create(
                 ~uri=Core.Uri.fromPath("/Users/bryphe/revery/package.json"),
                 ~position=Core.Position.ofInt0(5, 5),
               ),

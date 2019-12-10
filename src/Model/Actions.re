@@ -34,6 +34,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | DefinitionAvailable(int, Position.t, [@opaque] Ext.LanguageFeatures.DefinitionResult.t)
   | ExtensionActivated(string)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration

@@ -17,22 +17,23 @@ module Log = (val Oni_Core.Log.withNamespace("Oni2.HoverStoreConnector"));
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
-  let checkForDefinitionEffect = (languageFeatures, uri, position) =>
+  let checkForDefinitionEffect = (languageFeatures, buffer, position) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="hover.checkForDefinition", _dispatch => {
+      ~name="hover.checkForDefinition", dispatch => {
       Log.info("Checking for hover...");
 
       let promise =
-        Ext.LanguageFeatures.getDefinition(uri, position, languageFeatures);
+        Ext.LanguageFeatures.getDefinition(buffer, position, languageFeatures);
 
       let _: Lwt.t(unit) =
         Lwt.bind(
           promise,
-          _result => {
+          result => {
             Log.info(
               "Got definition:"
-              ++ Ext.LanguageFeatures.Definition.toString(_result),
+              ++ Ext.LanguageFeatures.DefinitionResult.toString(result),
             );
+            dispatch(Actions.DefinitionAvailable(Core.Buffer.getId(buffer), position, result));
             Lwt.return();
           },
         );
@@ -62,8 +63,6 @@ let start = () => {
             state.configuration,
           );
 
-        let uri = Core.Buffer.getUri(buf);
-
         let position =
           switch (cursors) {
           | [hd, ..._] =>
@@ -85,7 +84,7 @@ let start = () => {
         };
         (
           newState,
-          checkForDefinitionEffect(state.languageFeatures, uri, position),
+          checkForDefinitionEffect(state.languageFeatures, buf, position),
         );
       }
     | _ => default

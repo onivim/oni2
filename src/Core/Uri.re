@@ -35,4 +35,8 @@ let toString = (uri: t) => {
   Scheme.toString(uri.scheme) ++ "://" ++ uri.path;
 };
 
+let toFileSystemPath = (uri: t) => {
+  uri.path
+}
+
 let getScheme = (uri: t) => uri.scheme;

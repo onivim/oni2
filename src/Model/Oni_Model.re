@@ -15,6 +15,7 @@ module Command = Command;
 module Commands = Commands;
 module Completions = Completions;
 module CompletionMeet = CompletionMeet;
+module Definition = Definition;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module Editor = Editor;

@@ -68,21 +68,25 @@ let start =
     Vim.onGoto((_position, _definitionType) => {
       Log.info("Goto definition requested");
       // Get buffer and cursor position
-      let maybeBuffer = getState() |> Selectors.getActiveBuffer;
+      let state = getState();
+      let maybeBuffer = state |> Selectors.getActiveBuffer;
 
       let maybeEditor =
-        getState()
+        state
         |> Selectors.getActiveEditorGroup
         |> Selectors.getActiveEditor;
 
-      let getDefinition = (_buffer, _editor) => {
-        Some(
+      let getDefinition = (buffer, editor) => {
+        let id = Core.Buffer.getId(buffer);
+        let position = Editor.getPrimaryCursor(editor);
+        Definition.getAt(id, position, state.definition)
+        |> Option.map((definitionResult: Extensions.LanguageFeatures.DefinitionResult.t) => {
           Actions.OpenFileByPath(
-            "/Users/bryphe/revery/package.json",
+            definitionResult.uri |> Core.Uri.toFileSystemPath,
             None,
-            Some(Core.Position.ofInt0(5, 5)),
-          ),
-        );
+            Some(definitionResult.position),
+          )
+        });
       };
 
       Option.map2(getDefinition, maybeBuffer, maybeEditor)
