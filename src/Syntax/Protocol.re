@@ -4,7 +4,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 module Ext = Oni_Extensions;
 
 module TokenUpdate = {

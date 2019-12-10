@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Types;
 open Oni_Core.Utility;
 open Oni_Syntax;
 open Oni_Model;

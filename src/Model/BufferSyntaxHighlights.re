@@ -4,7 +4,6 @@
  * State kept for per-buffer syntax highlighting
  */
 open Oni_Core;
-open Oni_Core.Types;
 open Oni_Core.Utility;
 open Oni_Syntax;
 

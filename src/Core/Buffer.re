@@ -4,8 +4,6 @@
  * In-memory text buffer representation
  */
 
-open Oni_Core;
-
 type t = {
   id: int,
   filePath: option(string),
