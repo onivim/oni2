@@ -13,6 +13,7 @@ module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module Utility = Core.Utility;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun
@@ -377,7 +378,7 @@ let subscriptions = ripgrep => {
 
           dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
-      ~onCompleted=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+      ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
     );
   };
 

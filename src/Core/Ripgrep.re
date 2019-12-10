@@ -1,10 +1,11 @@
 open Rench;
 
 module Time = Revery_Core.Time;
-
 module List = Utility.List;
 
 module Match = {
+  module Log = (val Log.withNamespace("Oni2.Ripgrep.Match"));
+
   type t = {
     file: string,
     text: string,
@@ -43,15 +44,17 @@ module Match = {
         };
       }) {
       | Type_error(message, _) =>
-        Log.error("[Ripgrep.Match] Error decoding JSON: " ++ message);
+        Log.error("Error decoding JSON: " ++ message);
         None;
       | Yojson.Json_error(message) =>
-        Log.error("[Ripgrep.Match] Error parsing JSON: " ++ message);
+        Log.error("Error parsing JSON: " ++ message);
         None;
       }
     );
   };
 };
+
+module Log = (val Log.withNamespace("Oni2.Ripgrep"));
 
 type t = {
   search:
@@ -82,7 +85,8 @@ and dispose = unit => unit;
 */
 module RipgrepProcessingJob = {
   type pendingWork = {
-    callback: list(string) => unit,
+    onUpdate: list(string) => unit,
+    onComplete: unit => unit,
     queue: Queue.t(Bytes.t) // WARNING: mutable data structure
   };
 
@@ -97,22 +101,26 @@ module RipgrepProcessingJob = {
     | bytes =>
       let items =
         bytes |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
-      pending.callback(items);
+      pending.onUpdate(items);
     };
 
     let isDone = Queue.is_empty(pending.queue);
 
+    if (isDone) {
+      pending.onComplete();
+    };
+
     (isDone, pending, completed);
   };
 
-  let create = (~callback, ()) => {
+  let create = (~onUpdate, ~onComplete) => {
     Job.create(
       ~f=doWork,
       ~initialCompletedWork=(),
       ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {callback, queue: Queue.create()},
+      {onUpdate, onComplete, queue: Queue.create()},
     );
   };
 
@@ -127,19 +135,13 @@ module RipgrepProcessingJob = {
   };
 };
 
-let process = (rgPath, args, callback, completedCallback) => {
+let process = (rgPath, args, onUpdate, onComplete) => {
   let argsStr = String.concat("|", Array.to_list(args));
-  Log.info(
-    "[Ripgrep] Starting process: "
-    ++ rgPath
-    ++ " with args: |"
-    ++ argsStr
-    ++ "|",
-  );
+  Log.infof(m => m("Starting process: %s with args: |%s|", rgPath, argsStr));
 
   // Mutex to
   let jobMutex = Mutex.create();
-  let job = ref(RipgrepProcessingJob.create(~callback, ()));
+  let job = ref(RipgrepProcessingJob.create(~onUpdate, ~onComplete));
 
   let disposeTick = ref(None);
 
@@ -171,19 +173,12 @@ let process = (rgPath, args, callback, completedCallback) => {
     );
 
   let disposeOnClose =
-    Event.subscribe(
-      childProcess.onClose,
-      exitCode => {
-        Log.info(
-          "[Ripgrep] Process completed - exit code: "
-          ++ string_of_int(exitCode),
-        );
-        completedCallback();
-      },
-    );
+    Event.subscribe(childProcess.onClose, exitCode => {
+      Log.infof(m => m("Process completed - exit code: %n", exitCode))
+    });
 
   let dispose = () => {
-    Log.info("Ripgrep session complete.");
+    Log.info("Session complete.");
     disposeOnData();
     disposeOnClose();
     switch (disposeTick^) {
@@ -231,7 +226,7 @@ let findInFiles =
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
-      |> List.concat
+      |> List.concat  // TODO: This causes a stack overflow
       |> onUpdate
     },
     onComplete,
