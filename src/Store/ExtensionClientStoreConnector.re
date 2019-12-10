@@ -92,6 +92,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+ /* let onRegisterDefintionProvider = (sp: LanguageFeatures.DefinitionProvider.t) => {
+  
+  };*/
+
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
