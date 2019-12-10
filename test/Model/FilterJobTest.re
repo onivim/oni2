@@ -14,23 +14,13 @@ describe("FilterJob", ({describe, _}) => {
     Actions.{
       category: None,
       name,
-      command: () =>
-        Oni_Model.Actions.ShowNotification(
-          Oni_Model.Notification.create(~title="derp", ~message=name, ()),
-        ),
+      command: () => Actions.Noop,
       icon: None,
       highlight: [],
     };
 
-  let runToCompletion = j => {
-    let job = ref(j);
-
-    while (!Job.isComplete(job^)) {
-      job := Job.tick(job^);
-    };
-
-    job^;
-  };
+  let rec runToCompletion = job =>
+    Job.isComplete(job) ? job : job |> Job.tick |> runToCompletion;
 
   describe("filtering", ({test, _}) => {
     test("filtering should respect smart casing", ({expect, _}) => {
@@ -40,10 +30,11 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("pref"))
         |> runToCompletion;
 
-      expect.int(List.length(Job.getCompletedWork(job).uiFiltered)).toBe(
-        1,
-      );
+      let uiFilteredLength =
+        List.length(Job.getCompletedWork(job).uiFiltered);
+      expect.int(uiFilteredLength).toBe(1);
     });
+
     test("updating query should not reset items", ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -62,12 +53,10 @@ describe("FilterJob", ({describe, _}) => {
 
       // We should have results without needing to do another iteration of work
       let filtered = Job.getCompletedWork(job).allFiltered;
-      expect.int(List.length(filtered)).toBe(1);
-
-      let head = List.hd(filtered);
-
-      expect.string(head.name).toEqual("abcde");
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abcde"]);
     });
+
     test("items batched separately get filtered", ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -84,14 +73,10 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork;
 
       let filtered = Job.getCompletedWork(job).allFiltered;
-      expect.int(List.length(filtered)).toBe(2);
-
-      let head = List.hd(filtered);
-      let second = List.nth(filtered, 1);
-
-      expect.string(head.name).toEqual("abcd");
-      expect.string(second.name).toEqual("abcde");
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abcde", "abcd"]);
     });
+
     test("items batched together get filtered", ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -112,13 +97,37 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork;
 
       let filtered = Job.getCompletedWork(job).allFiltered;
-      expect.int(List.length(filtered)).toBe(2);
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abcde", "abcd"]);
+    });
 
-      let head = List.hd(filtered);
-      let second = List.nth(filtered, 1);
+    test(
+      "should reset when updating query with a broader filter", ({expect, _}) => {
+      let job =
+        FilterJob.create()
+        |> Job.map(
+             FilterJob.addItems([createItem("abc"), createItem("abd")]),
+           )
+        |> Job.map(FilterJob.updateQuery("abc"))
+        |> runToCompletion;
 
-      expect.string(head.name).toEqual("abcde");
-      expect.string(second.name).toEqual("abcd");
+      let filtered = Job.getCompletedWork(job).allFiltered;
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abc"]);
+
+      let job =
+        job |> Job.map(FilterJob.updateQuery("abd")) |> runToCompletion;
+
+      let filtered = Job.getCompletedWork(job).allFiltered;
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abd"]);
+
+      let job =
+        job |> Job.map(FilterJob.updateQuery("ab")) |> runToCompletion;
+
+      let filtered = Job.getCompletedWork(job).allFiltered;
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abd", "abc"]);
     });
 
     test(
@@ -134,13 +143,11 @@ describe("FilterJob", ({describe, _}) => {
         |> runToCompletion;
 
       let filtered = Job.getCompletedWork(job).allFiltered;
-      expect.int(List.length(filtered)).toBe(1);
-
-      let head = List.hd(filtered);
-
-      expect.string(head.name).toEqual("abcd");
+      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      expect.list(names).toEqual(["abcd"]);
     });
   });
+
   describe("boundary cases", ({test, _}) =>
     test("large amount of items added work", ({expect, _}) => {
       let job = FilterJob.create();
@@ -149,7 +156,6 @@ describe("FilterJob", ({describe, _}) => {
         List.init(1000000, i => createItem("Item " ++ string_of_int(i)));
 
       let job = Job.map(FilterJob.addItems(items), job);
-
       expect.bool(Job.isComplete(job)).toBe(false);
     })
   );
