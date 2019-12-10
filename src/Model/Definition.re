@@ -30,8 +30,10 @@ let getAt = (bufferId, position, definition: t) => {
   definition |> Utility.Option.bind(getHover);
 };
 
-let clear = () => empty;
+let isAvailable = (bufferId, position, definition: t) => {
+  getAt(bufferId, position, definition) != None
+}
 
-let set = (bufferId, requestPosition, result) => {
+let create = (bufferId, requestPosition, result) => {
   Some({bufferId, requestPosition, result: Some(result)});
 };

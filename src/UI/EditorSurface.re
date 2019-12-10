@@ -411,7 +411,7 @@ let%component make =
     );
   };
 
-  let _getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
+  let getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
     let lineNumber = position.line |> Index.toInt0;
     let index = position.character |> Index.toInt0;
 
@@ -711,10 +711,8 @@ let%component make =
                  (),
                );
              }};
-
-          // TODO:
-          // Render underline if we have an available go-to definition
-          /*
+           
+           if (Definition.isAvailable(bufferId, cursorPosition, state.definition)) {
            let () =
              getTokenAtPosition(
                ~startIndex=leftVisibleColumn,
@@ -733,7 +731,8 @@ let%component make =
                   let () = renderUnderline(~color=token.color, range);
                   ();
                 });
-            */
+           };
+           
 
           ImmediateList.render(
             ~scrollY,
