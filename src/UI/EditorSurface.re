@@ -349,7 +349,8 @@ let%component make =
     !matchingPairsEnabled
       ? None : Selectors.getMatchingPairs(state, editor.bufferId);
 
-  let getTokensForLine = (~selection=None, startIndex, endIndex, i) => {
+  let getTokensForLine =
+      (~ignoreMatchingPairs=false, ~selection=None, startIndex, endIndex, i) => {
     let line = Buffer.getLine(buffer, i);
 
     let searchHighlightRanges =
@@ -366,7 +367,7 @@ let%component make =
     let matchingPairIndex =
       switch (matchingPairs) {
       | None => None
-      | Some(v) =>
+      | Some(v) when !ignoreMatchingPairs =>
         if (Index.toInt0(v.startPos.line) == i) {
           Some(Index.toInt0(v.startPos.character));
         } else if (Index.toInt0(v.endPos.line) == i) {
@@ -374,6 +375,7 @@ let%component make =
         } else {
           None;
         }
+      | _ => None
       };
 
     let tokenColors2 =
@@ -407,6 +409,24 @@ let%component make =
       IndentationSettings.default,
       colorizer,
     );
+  };
+
+  let getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
+    let lineNumber = position.line |> Index.toInt0;
+    let index = position.character |> Index.toInt0;
+
+    getTokensForLine(
+      ~ignoreMatchingPairs=true,
+      startIndex,
+      endIndex,
+      lineNumber,
+    )
+    |> List.filter((token: BufferViewTokenizer.t) => {
+         let tokenStart = token.startPosition |> Index.toInt0;
+         let tokenEnd = token.endPosition |> Index.toInt0;
+         index >= tokenStart && index < tokenEnd;
+       })
+    |> Utility.Option.of_list;
   };
 
   let style =
@@ -691,6 +711,29 @@ let%component make =
                  (),
                );
              }};
+
+          // TODO:
+          // Render underline if we have an available go-to definition
+          /* 
+          let () =
+            getTokenAtPosition(
+              ~startIndex=leftVisibleColumn,
+              ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+              cursorPosition,
+            )
+            |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+                 let range =
+                   Range.create(
+                     ~startLine=cursorPosition.line,
+                     ~startCharacter=token.startPosition,
+                     ~endLine=cursorPosition.line,
+                     ~endCharacter=token.endPosition,
+                     (),
+                   );
+                 let () = renderUnderline(~color=token.color, range);
+                 ();
+               });
+           */
 
           ImmediateList.render(
             ~scrollY,
