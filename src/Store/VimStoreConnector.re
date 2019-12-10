@@ -13,7 +13,8 @@ open Oni_Model;
 
 module Extensions = Oni_Extensions;
 
-module Log = Core.Log;
+module Log = (val Oni_Core.Log.withNamespace("Oni2.VimStoreConnector"));
+
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
@@ -62,6 +63,32 @@ let start =
       None;
     };
   });
+
+  let _ =
+    Vim.onGoto((_position, _definitionType) => {
+      Log.info("Goto definition requested");
+      // Get buffer and cursor position
+      let maybeBuffer = getState() |> Selectors.getActiveBuffer;
+
+      let maybeEditor =
+        getState()
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor;
+
+      let getDefinition = (_buffer, _editor) => {
+        Some(
+          Actions.OpenFileByPath(
+            "/Users/bryphe/revery/package.json",
+            None,
+            Some(Core.Position.ofInt0(5, 5)),
+          ),
+        );
+      };
+
+      Option.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.flatten
+      |> Option.iter(action => dispatch(action));
+    });
 
   let _ =
     // Unhandled escape is called when there is an `<esc>` sent to Vim,
@@ -508,7 +535,7 @@ let start =
                dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
                dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
-        Log.debug(() => "VimStoreConnector - handled key: " ++ key);
+        Log.debugf(msg => msg("VimStoreConnector - handled key: %s", key));
       }
     );
 
