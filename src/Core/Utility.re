@@ -278,6 +278,11 @@ module Option = {
     fun
     | Some(x) => x
     | None => None;
+
+  let of_list =
+    fun
+    | [] => None
+    | [hd, ..._] => Some(hd);
 };
 
 module Result = {

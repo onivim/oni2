@@ -83,33 +83,26 @@ and dispose = unit => unit;
 module RipgrepProcessingJob = {
   type pendingWork = {
     callback: list(string) => unit,
-    bytes: list(Bytes.t),
+    queue: Queue.t(Bytes.t) // WARNING: mutable data structure
   };
 
-  let pendingWorkPrinter = (p: pendingWork) => {
-    "Byte chunks left: " ++ string_of_int(List.length(p.bytes));
-  };
+  let pendingWorkPrinter = pending =>
+    Printf.sprintf("Byte chunks left: %n", Queue.length(pending.queue));
 
   type t = Job.t(pendingWork, unit);
 
-  let doWork = (pendingWork, c) => {
-    let newBytes =
-      switch (pendingWork.bytes) {
-      | [] => []
-      | [hd, ...tail] =>
-        let items =
-          hd |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
-        pendingWork.callback(items);
-        tail;
-      };
+  let doWork = (pending, completed) => {
+    switch (Queue.take(pending.queue)) {
+    | exception Queue.Empty => ()
+    | bytes =>
+      let items =
+        bytes |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
+      pending.callback(items);
+    };
 
-    let isDone =
-      switch (newBytes) {
-      | [] => true
-      | _ => false
-      };
+    let isDone = Queue.is_empty(pending.queue);
 
-    (isDone, {...pendingWork, bytes: newBytes}, c);
+    (isDone, pending, completed);
   };
 
   let create = (~callback, ()) => {
@@ -119,15 +112,15 @@ module RipgrepProcessingJob = {
       ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {callback, bytes: []},
+      {callback, queue: Queue.create()},
     );
   };
 
   let queueWork = (bytes: Bytes.t, currentJob: t) => {
     Job.map(
-      (p, c) => {
-        let newP: pendingWork = {...p, bytes: [bytes, ...p.bytes]};
-        (false, newP, c);
+      (pending, completed) => {
+        Queue.push(bytes, pending.queue);
+        (false, pending, completed);
       },
       currentJob,
     );
@@ -194,7 +187,7 @@ let process = (rgPath, args, callback, completedCallback) => {
     disposeOnData();
     disposeOnClose();
     switch (disposeTick^) {
-    | Some(v) => v()
+    | Some(dispose) => dispose()
     | None => ()
     };
     childProcess.kill(Sys.sigkill);

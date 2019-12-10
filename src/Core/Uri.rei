@@ -1,8 +1,9 @@
 module Scheme: {
-  type t;
-
-  let file: t;
-  let memory: t;
+  type t =
+    | File
+    | Http
+    | Https
+    | Memory;
 
   let toString: t => string;
 
