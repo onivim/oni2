@@ -72,21 +72,22 @@ let start =
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
       let maybeEditor =
-        state
-        |> Selectors.getActiveEditorGroup
-        |> Selectors.getActiveEditor;
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(editor);
         Definition.getAt(id, position, state.definition)
-        |> Option.map((definitionResult: Extensions.LanguageFeatures.DefinitionResult.t) => {
-          Actions.OpenFileByPath(
-            definitionResult.uri |> Core.Uri.toFileSystemPath,
-            None,
-            Some(definitionResult.position),
-          )
-        });
+        |> Option.map(
+             (
+               definitionResult: Extensions.LanguageFeatures.DefinitionResult.t,
+             ) => {
+             Actions.OpenFileByPath(
+               definitionResult.uri |> Core.Uri.toFileSystemPath,
+               None,
+               Some(definitionResult.position),
+             )
+           });
       };
 
       Option.map2(getDefinition, maybeBuffer, maybeEditor)

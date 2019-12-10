@@ -10,7 +10,6 @@ type definition = {
   bufferId: int,
   // The position the hover was requested
   requestPosition: Position.t,
-
   // result
   result: option(Ext.LanguageFeatures.DefinitionResult.t),
 };
@@ -20,24 +19,19 @@ type t = option(definition);
 let empty: t = None;
 
 let getAt = (bufferId, position, definition: t) => {
-  let getHover = (definition) => {
-    if (bufferId === definition.bufferId && Position.equals(position, definition.requestPosition)) {
-      definition.result
+  let getHover = definition =>
+    if (bufferId === definition.bufferId
+        && Position.equals(position, definition.requestPosition)) {
+      definition.result;
     } else {
-      None
-    }
-  };
+      None;
+    };
 
-  definition
-  |> Utility.Option.bind(getHover);
+  definition |> Utility.Option.bind(getHover);
 };
 
 let clear = () => empty;
 
 let set = (bufferId, requestPosition, result) => {
-  Some({
-  bufferId,
-  requestPosition,
-  result: Some(result),
-  })
+  Some({bufferId, requestPosition, result: Some(result)});
 };

@@ -23,7 +23,11 @@ let start = () => {
       Log.info("Checking for hover...");
 
       let promise =
-        Ext.LanguageFeatures.getDefinition(buffer, position, languageFeatures);
+        Ext.LanguageFeatures.getDefinition(
+          buffer,
+          position,
+          languageFeatures,
+        );
 
       let _: Lwt.t(unit) =
         Lwt.bind(
@@ -33,7 +37,13 @@ let start = () => {
               "Got definition:"
               ++ Ext.LanguageFeatures.DefinitionResult.toString(result),
             );
-            dispatch(Actions.DefinitionAvailable(Core.Buffer.getId(buffer), position, result));
+            dispatch(
+              Actions.DefinitionAvailable(
+                Core.Buffer.getId(buffer),
+                position,
+                result,
+              ),
+            );
             Lwt.return();
           },
         );

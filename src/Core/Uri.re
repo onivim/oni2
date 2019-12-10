@@ -36,7 +36,7 @@ let toString = (uri: t) => {
 };
 
 let toFileSystemPath = (uri: t) => {
-  uri.path
-}
+  uri.path;
+};
 
 let getScheme = (uri: t) => uri.scheme;
