@@ -314,7 +314,7 @@ let start =
       let endLine =
         if (isFull) {
           maybeBuffer
-          |> Option.map(b => Buffer.getNumberOfLines(b) + 1)
+          |> Option.map(b => Core.Buffer.getNumberOfLines(b) + 1)
           |> Option.value(~default=update.startLine);
         } else {
           update.endLine;
@@ -340,7 +340,8 @@ let start =
       // The fix really belongs in reason-libvim - we should always be trust the order we get from the updates,
       // and any of this filtering or manipulation of updates should be handled and tested there.
       let shouldApply =
-        Option.map(Buffer.shouldApplyUpdate(bu), maybeBuffer) != Some(false);
+        Option.map(Core.Buffer.shouldApplyUpdate(bu), maybeBuffer)
+        != Some(false);
 
       if (shouldApply) {
         dispatch(Actions.BufferUpdate(bu));
