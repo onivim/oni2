@@ -21,215 +21,194 @@ module Make = (Config: Config) => {
     shouldLower ? String.lowercase_ascii(s) : s;
   };
 
-  type pendingWork = {
-    filter: string,
-    // Full commands is the _complete set_ of unfiltered commands
-    // This never gets filtered - it's persisted in case we need
-    // the full set again
-    explodedFilter: list(UChar.t),
-    shouldLower: bool,
-    totalItemCount: int,
-    allItems: list(list(Config.item)),
-    // Commands to filter are commands we haven't looked at yet.
-    itemsToFilter: list(list(Config.item)),
+  module PendingWork = {
+    type t = {
+      filter: string,
+      explodedFilter: list(UChar.t),
+      shouldLower: bool,
+      totalItemCount: int,
+      allItems: Queue.t(list(Config.item)), // WARNING: mutable data structure
+      itemsToFilter: Queue.t(list(Config.item)) // WARNING: mutable data structure
+    };
+
+    let create = () => {
+      filter: "",
+      allItems: Queue.create(),
+      explodedFilter: [],
+      shouldLower: false,
+      itemsToFilter: Queue.create(),
+      totalItemCount: 0,
+    };
+
+    let toString = ({allItems, itemsToFilter, totalItemCount, _}) =>
+      Printf.sprintf(
+        "- Pending Work\n -- totalItemCount: %n -- allItems: %n -- itemsToFilter: %n",
+        totalItemCount,
+        Queue.length(allItems),
+        Queue.length(itemsToFilter),
+      );
   };
 
-  let showPendingWork = (v: pendingWork) => {
-    "- Pending Work\n"
-    ++ " -- totalItemCount: "
-    ++ string_of_int(v.totalItemCount)
-    ++ " -- allItems: "
-    ++ string_of_int(List.length(v.allItems))
-    ++ " -- itemsToFilter: "
-    ++ string_of_int(List.length(v.itemsToFilter));
+  module CompletedWork = {
+    type t = {
+      allFiltered: list(Config.item),
+      // If the allFiltered list is still huge,
+      // we take a subset prior to sorting to display in the UI
+      // The 'ui' filtered should be the main item for the UI to use
+      uiFiltered: list(Filter.result(Config.item)),
+    };
+
+    let initial = {allFiltered: [], uiFiltered: []};
+
+    let toString = ({allFiltered, uiFiltered}) =>
+      Printf.sprintf(
+        "- Completed Work\n -- allFiltered: %n -- uiFiltered: %n",
+        List.length(allFiltered),
+        List.length(uiFiltered),
+      );
   };
 
-  type completedWork = {
-    allFiltered: list(Config.item),
-    // If the allFiltered list is still huge,
-    // we take a subset prior to sorting to display in the UI
-    // The 'ui' filtered should be the main item for the UI to use
-    uiFiltered: list(Filter.result(Config.item)),
-  };
-
-  let showCompletedWork = (v: completedWork) => {
-    "- Completed Work\n"
-    ++ " -- allFiltered: "
-    ++ string_of_int(List.length(v.allFiltered))
-    ++ " -- uiFiltered: "
-    ++ string_of_int(List.length(v.uiFiltered));
-  };
-
-  type t = Job.t(pendingWork, completedWork);
-
-  let initialCompletedWork = {allFiltered: [], uiFiltered: []};
-  let initialPendingWork = {
-    filter: "",
-    allItems: [],
-    explodedFilter: [],
-    shouldLower: false,
-    itemsToFilter: [],
-    totalItemCount: 0,
-  };
+  type t = Job.t(PendingWork.t, CompletedWork.t);
 
   // Constants
   let iterationsPerFrame = 250;
   let maxItemsToFilter = 250;
 
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
-  let updateQuery = (newQuery: string, p: pendingWork, c: completedWork) => {
+  let updateQuery =
+      (
+        filter,
+        pending: PendingWork.t,
+        {allFiltered, uiFiltered}: CompletedWork.t,
+      ) => {
     // TODO: Optimize - for now, if the query changes, just clear the completed work
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
     // - If the query is broader, we could keep our current filtered items anyway
-    let newQueryEx = Zed_utf8.explode(newQuery);
-    let shouldLower = newQuery == String.lowercase_ascii(newQuery);
+    let oldExplodedFilter = pending.explodedFilter;
+    let explodedFilter = Zed_utf8.explode(filter);
+    let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = Utility.firstk(maxItemsToFilter, c.allFiltered);
+    let currentMatches = Utility.firstk(maxItemsToFilter, allFiltered);
 
     // If the new query matches the old one... we can re-use results
-    if (Filter.fuzzyMatches(p.explodedFilter, newQuery)
+    if (Filter.fuzzyMatches(oldExplodedFilter, filter)
         && List.length(currentMatches) < maxItemsToFilter) {
-      let {allFiltered, uiFiltered} = c;
+      let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
 
-      let uiFilteredNew =
-        List.filter(
-          (Filter.{item, _}) =>
-            Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
-          uiFiltered,
-        );
-
-      let allFilteredNew =
-        List.filter(
-          item =>
-            Filter.fuzzyMatches(newQueryEx, format(item, ~shouldLower)),
-          allFiltered,
-        );
-
-      let newPendingWork = {
-        ...p,
-        filter: newQuery,
-        explodedFilter: newQueryEx,
-        shouldLower,
-      };
-
-      let newCompletedWork = {
-        allFiltered: allFilteredNew,
-        uiFiltered: uiFilteredNew,
-      };
+      let newCompletedWork =
+        CompletedWork.{
+          allFiltered:
+            List.filter(
+              item =>
+                Filter.fuzzyMatches(
+                  explodedFilter,
+                  format(item, ~shouldLower),
+                ),
+              allFiltered,
+            ),
+          uiFiltered:
+            List.filter(
+              (Filter.{item, _}) =>
+                Filter.fuzzyMatches(
+                  explodedFilter,
+                  format(item, ~shouldLower),
+                ),
+              uiFiltered,
+            ),
+        };
 
       (false, newPendingWork, newCompletedWork);
     } else {
       let newPendingWork = {
-        ...p,
-        filter: newQuery,
-        explodedFilter: newQueryEx,
-        itemsToFilter: p.allItems, // Reset items to filter
+        ...pending,
+        filter,
+        explodedFilter,
+        itemsToFilter: Queue.copy(pending.allItems), // Reset items to filter
         shouldLower,
       };
 
-      let newCompletedWork = initialCompletedWork;
-
-      (false, newPendingWork, newCompletedWork);
+      (false, newPendingWork, CompletedWork.initial);
     };
   };
 
   /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
-  let addItems = (items: list(Config.item), p: pendingWork, c: completedWork) => {
+  let addItems = (items, pending: PendingWork.t, completed) => {
+    Queue.push(items, pending.allItems);
+    Queue.push(items, pending.itemsToFilter);
+
     let newPendingWork = {
-      ...p,
-      allItems: [items, ...p.allItems],
-      totalItemCount: p.totalItemCount + List.length(items),
-      itemsToFilter: [items, ...p.itemsToFilter],
+      ...pending,
+      totalItemCount: pending.totalItemCount + List.length(items),
     };
 
-    (false, newPendingWork, c);
+    (false, newPendingWork, completed);
   };
 
   /* [doWork] is run each frame until the work is completed! */
-  let doActualWork = (p: pendingWork, c: completedWork) => {
-    let i = ref(0);
-    let isCompleted = ref(false);
-    let result = ref(None);
-
-    let pendingWork = ref(p);
-    let completedWork = ref(c.allFiltered);
-
-    while (i^ < iterationsPerFrame && ! isCompleted^) {
-      let p = pendingWork^;
-      let c = completedWork^;
-      let (newIsCompleted, newPendingWork, newCompletedWork) =
-        switch (p.itemsToFilter) {
-        | [] => (true, p, c)
-
-        | [[], ...tail] => (false, {...p, itemsToFilter: tail}, c)
-
-        | [[innerHd, ...innerTail], ...tail] =>
+  let doActualWork =
+      (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
+    let rec loop = (i, current, completed) =>
+      if (i >= iterationsPerFrame) {
+        (false, completed);
+      } else {
+        switch (current) {
+        | [item, ...rest] =>
           // Do a first filter pass to check if the item satisifies the regex
-          let name = format(innerHd, ~shouldLower=p.shouldLower);
-          let newCompleted =
-            if (Filter.fuzzyMatches(p.explodedFilter, name)) {
-              [innerHd, ...c];
-            } else {
-              c;
-            };
+          let name = format(item, ~shouldLower=pendingWork.shouldLower);
+          let matches = Filter.fuzzyMatches(pendingWork.explodedFilter, name);
+          loop(i + 1, rest, matches ? [item, ...completed] : completed);
 
-          (
-            false,
-            {...p, itemsToFilter: [innerTail, ...tail]},
-            newCompleted,
-          );
+        | [] =>
+          switch (Queue.take(pendingWork.itemsToFilter)) {
+          | items => loop(i, items, completed)
+          | exception Queue.Empty => (true, completed)
+          }
         };
+      };
 
-      pendingWork := newPendingWork;
-      completedWork := newCompletedWork;
-      incr(i);
-      isCompleted := newIsCompleted || isCompleted^;
-      result := Some((newIsCompleted, newPendingWork, newCompletedWork));
-    };
+    let (isComplete, completed) = loop(0, [], allFiltered);
 
-    switch (result^) {
-    | None => (true, p, c)
-    | Some((isCompleted, pendingWork, completedWork)) =>
-      /* As a last pass, run the filter to sort / score filtered items if under a certain length */
-      let uiFiltered =
-        completedWork
-        |> Utility.firstk(maxItemsToFilter)
-        |> Filter.rank(p.filter, format);
+    let uiFiltered =
+      completed
+      |> Utility.firstk(maxItemsToFilter)
+      |> Filter.rank(pendingWork.filter, format);
 
-      (isCompleted, pendingWork, {allFiltered: completedWork, uiFiltered});
-    };
+    (
+      isComplete,
+      pendingWork,
+      CompletedWork.{allFiltered: completed, uiFiltered},
+    );
   };
 
-  let doWork = (pending, completed) =>
+  let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
-      let allFiltered = List.concat(pending.allItems);
+      let allFiltered =
+        pending.allItems |> Queue.to_seq |> List.of_seq |> List.concat;
       let uiFiltered =
         allFiltered |> List.map(item => Filter.{highlight: [], item});
-      (true, pending, {allFiltered, uiFiltered});
+      (true, pending, CompletedWork.{allFiltered, uiFiltered});
     } else {
       doActualWork(pending, completed);
     };
 
-  let progressReporter = (p: pendingWork, _) => {
-    let toFilter = float_of_int(List.length(p.itemsToFilter));
-    let total = float_of_int(List.length(p.allItems));
+  let progressReporter = (pending: PendingWork.t, _) => {
+    let toFilter = float(Queue.length(pending.itemsToFilter));
+    let total = float(Queue.length(pending.allItems));
 
     1.0 -. toFilter /. total;
   };
 
   let create = () => {
     Job.create(
-      ~pendingWorkPrinter=showPendingWork,
-      ~completedWorkPrinter=showCompletedWork,
+      ~pendingWorkPrinter=PendingWork.toString,
+      ~completedWorkPrinter=CompletedWork.toString,
       ~progressReporter,
       ~name="FilterJob",
-      ~initialCompletedWork,
+      ~initialCompletedWork=CompletedWork.initial,
       ~budget=Time.ms(2),
       ~f=doWork,
-      initialPendingWork,
+      PendingWork.create(),
     );
   };
-
-  let default = create();
 };
