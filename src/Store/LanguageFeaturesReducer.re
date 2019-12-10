@@ -4,12 +4,13 @@
 
 open Oni_Extensions;
 
+open Oni_Model;
 open Actions;
 
 let reduce = (action: Actions.t, state: LanguageFeatures.t) => {
   switch (action) {
-  | LanguageFeatureRegisterSuggestProvider(sp) =>
-    LanguageFeatures.registerSuggestProvider(sp, state)
+  | LanguageFeatureRegisterCompletionProvider(sp) =>
+    LanguageFeatures.registerCompletionProvider(sp, state)
   | _ => state
   };
 };

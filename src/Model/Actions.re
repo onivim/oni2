@@ -25,7 +25,7 @@ type t =
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
   | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, [@opaque] list(completionItem))
+  | CompletionAddItems(completionMeet, [@opaque] list(CompletionItem.t))
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -65,8 +65,8 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
-  | LanguageFeatureRegisterSuggestProvider(
-      [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
+  | LanguageFeatureRegisterCompletionProvider(
+      [@opaque] LanguageFeatureTypes.CompletionProvider.t,
     )
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
@@ -131,11 +131,6 @@ and completionMeet = {
   completionMeetBufferId: int,
   completionMeetLine: Index.t,
   completionMeetColumn: Index.t,
-}
-and completionItem = {
-  completionLabel: string,
-  completionKind: option(Ext.CompletionItemKind.t),
-  completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t

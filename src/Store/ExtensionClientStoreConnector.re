@@ -70,9 +70,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
-    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
-    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
+  let onRegisterSuggestProvider = (_sp) => {
+  ();
+    /*Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
+    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));*/
   };
 
   let onOutput = Log.info;
@@ -182,15 +183,15 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
 
   let suggestionItemToCompletionItem:
-    Protocol.SuggestionItem.t => Model.Actions.completionItem =
+    Protocol.SuggestionItem.t => Model.CompletionItem.t =
     suggestion => {
       let completionKind =
         suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
 
       {
-        completionLabel: suggestion.label,
-        completionKind,
-        completionDetail: suggestion.detail,
+        label: suggestion.label,
+        kind: completionKind,
+        detail: suggestion.detail,
       };
     };
 
@@ -198,11 +199,27 @@ let start = (extensions, setup: Core.Setup.t) => {
     List.map(suggestionItemToCompletionItem, suggestions);
 
   let getAndDispatchCompletions =
-      (~languageFeatures, ~fileType, ~uri, ~completionMeet, ~position, ()) => {
-    let providers =
-      LanguageFeatures.getSuggestProviders(fileType, languageFeatures);
+      (~languageFeatures, ~buffer, ~meet, ~position, ()) => {
+    let completionPromise = Model.LanguageFeatures.requestCompletions(
+      ~buffer,
+      ~meet,
+      ~position,
+      languageFeatures
+    );
 
-    providers
+    Lwt.bind(completionPromise, 
+         completions => {
+             dispatch(
+               Model.Actions.CompletionAddItems(
+                 completionMeet,
+                 completions,
+               ),
+             );
+           Lwt.return();
+         }
+    );
+
+    /*providers
     |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
          Log.infof(m =>
            m(
@@ -238,10 +255,10 @@ let start = (extensions, setup: Core.Setup.t) => {
              },
            );
          ();
-       });
+       });*/
   };
 
-  let checkCompletionsEffect = (completionMeet, state) =>
+  let checkCompletionsEffect = (state) =>
     Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
@@ -249,6 +266,7 @@ let start = (extensions, setup: Core.Setup.t) => {
           open Model.Actions;
 
           let uri = Model.Buffer.getUri(buf);
+          let meet = Model.Completions.getMeet(state.completions);
           let position =
             Protocol.OneBasedPosition.ofInt1(
               ~lineNumber=
@@ -266,9 +284,8 @@ let start = (extensions, setup: Core.Setup.t) => {
           let languageFeatures = state.languageFeatures;
           getAndDispatchCompletions(
             ~languageFeatures,
-            ~fileType,
-            ~uri,
-            ~completionMeet,
+            ~buffer=buf,
+            ~meet,
             ~position,
             (),
           );
@@ -313,7 +330,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     | Model.Actions.CompletionStart(completionMeet) => (
         state,
-        checkCompletionsEffect(completionMeet, state),
+        checkCompletionsEffect(state),
       )
     | Model.Actions.VimDirectoryChanged(path) => (
         state,
