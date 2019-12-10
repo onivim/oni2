@@ -59,14 +59,20 @@ let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
 
 // When there is a buffer update, shift the lines to match
 let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
-  BufferMap.update(bufferUpdate.id, fun
-  | None => None
-  | Some(lineMap) => Some(LineMap.shift(
-  ~default=v => v,
-  ~startPos=bufferUpdate.startLine |> Index.toInt0,
-  ~endPos=bufferUpdate.endLine |> Index.toInt0,
-  ~delta=Array.length(bufferUpdate.lines),
-  lineMap
-  )),
-  highlights);
-}
+  BufferMap.update(
+    bufferUpdate.id,
+    fun
+    | None => None
+    | Some(lineMap) =>
+      Some(
+        LineMap.shift(
+          ~default=v => v,
+          ~startPos=bufferUpdate.startLine |> Index.toInt0,
+          ~endPos=bufferUpdate.endLine |> Index.toInt0,
+          ~delta=Array.length(bufferUpdate.lines),
+          lineMap,
+        ),
+      ),
+    highlights,
+  );
+};

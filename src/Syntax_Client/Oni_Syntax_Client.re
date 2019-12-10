@@ -113,8 +113,13 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
 };
 
 let notifyBufferUpdate =
-    (v: t, bufferUpdate: Oni_Core.BufferUpdate.t, lines: array(string)) => {
-  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines));
+    (
+      v: t,
+      bufferUpdate: Oni_Core.BufferUpdate.t,
+      lines: array(string),
+      scope,
+    ) => {
+  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
 let notifyVisibilityChanged = (v: t, visibility) =>

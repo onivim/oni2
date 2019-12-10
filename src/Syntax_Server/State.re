@@ -171,8 +171,7 @@ let clearTokenUpdates = state => {
 
 let bufferUpdate =
     //      ~configuration,
-    //      ~scope,
-    (~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
+    (~scope, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
   let highlightsMap =
     IntMap.update(
       bufferUpdate.id,
@@ -193,7 +192,7 @@ let bufferUpdate =
               //              ~configuration,
               ~bufferUpdate,
               ~theme=state.theme,
-              ~scope="source.json",
+              ~scope,
               ~getTreesitterScope,
               ~getTextmateGrammar,
               lines,

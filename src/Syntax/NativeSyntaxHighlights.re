@@ -97,31 +97,15 @@ let create =
       state: ts,
     });
   | None =>
-    let state = NoopSyntaxHighlighter.create(~bufferUpdate, ~theme, lines);
-    Highlighter({highlighter: (module NoopSyntaxHighlighter), state});
-  };
-  /*_hasTreeSitterScope(configuration, scope)
-    ? {
-      let ts =
-        TreeSitterSyntaxHighlights.create(
-          ~theme,
-          ~getTreeSitterScopeMapper,
-          lines,
-        );
-      Highlighter({
-        highlighter: (module TreeSitterSyntaxHighlights),
-        state: ts,
-      });
-    }
-    : {*/
-  /*let tm =
+    let tm =
       TextMateSyntaxHighlights.create(
         ~scope,
         ~theme,
         ~getTextmateGrammar,
         lines,
       );
-    Highlighter({highlighter: (module TextMateSyntaxHighlights), state: tm});*/
+    Highlighter({highlighter: (module TextMateSyntaxHighlights), state: tm});
+  };
 };
 
 let update =

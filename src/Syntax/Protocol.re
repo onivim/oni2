@@ -48,6 +48,7 @@ module ClientToServer = {
     | BufferUpdate(
         [@opaque] Oni_Core.BufferUpdate.t,
         [@opaque] array(string),
+        string,
       )
     | ThemeChanged([@opaque] TokenTheme.t)
     // TODO: Clean up this type here

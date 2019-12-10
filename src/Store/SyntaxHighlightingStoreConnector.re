@@ -53,9 +53,19 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
          )
     });
 
-  let bufferUpdateEffect = (bufferUpdate: Oni_Core.BufferUpdate.t, lines) =>
+  let bufferUpdateEffect =
+      (bufferUpdate: Oni_Core.BufferUpdate.t, lines, maybeScope) =>
     Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-      Oni_Syntax_Client.notifyBufferUpdate(_syntaxClient, bufferUpdate, lines)
+      switch (maybeScope) {
+      | None => ()
+      | Some(scope) =>
+        Oni_Syntax_Client.notifyBufferUpdate(
+          _syntaxClient,
+          bufferUpdate,
+          lines,
+          scope,
+        )
+      }
     });
 
   let themeChangeEffect = theme =>
@@ -70,6 +80,15 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
+  };
+
+  let getScopeForBuffer = (state: Model.State.t, id: int) => {
+    state.buffers
+    |> Model.Buffers.getBuffer(id)
+    |> Option.bind(buf => Core.Buffer.getFileType(buf))
+    |> Option.bind(fileType =>
+         Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
+       );
   };
 
   let updater = (state: Model.State.t, action) => {
@@ -113,10 +132,11 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
       let version = getVersion(state, bu.id);
+      let scope = getScopeForBuffer(state, bu.id);
       if (!isVersionValid(version, bu.version)) {
         default;
       } else {
-        (state, bufferUpdateEffect(bu, lines));
+        (state, bufferUpdateEffect(bu, lines, scope));
       };
     | _ => default
     };
