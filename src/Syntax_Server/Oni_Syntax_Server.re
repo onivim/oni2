@@ -13,7 +13,6 @@ type message =
   | Exception;
 
 let start = () => {
-
   Stdlib.set_binary_mode_out(Stdlib.stdout, true);
   Stdlib.set_binary_mode_in(Stdlib.stdin, true);
 
@@ -57,7 +56,9 @@ let start = () => {
 
         let log = msg => write(Protocol.ServerToClient.Log(msg));
 
-        log("Starting up server. Parent PID is: " ++ string_of_int(parentPid));
+        log(
+          "Starting up server. Parent PID is: " ++ string_of_int(parentPid),
+        );
 
         let state = ref(State.empty);
         let map = f => state := f(state^);
@@ -164,4 +165,5 @@ let start = () => {
     );
 
   let (_exitCode, _status) = Thread.wait_pid(parentPid);
+  ();
 };

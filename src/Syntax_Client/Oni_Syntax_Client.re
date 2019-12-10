@@ -36,11 +36,10 @@ let start = (~onHighlights, languageInfo, setup) => {
   Unix.set_close_on_exec(pstderr);
   Unix.set_close_on_exec(stderr);
 
-  let env = 
-  ["__ONI2_PARENT_PID__="++string_of_int(Unix.getpid()),
-  ...Array.to_list(Unix.environment())
+  let env = [
+    "__ONI2_PARENT_PID__=" ++ string_of_int(Unix.getpid()),
+    ...Array.to_list(Unix.environment()),
   ];
-
 
   let pid =
     Unix.create_process_env(
