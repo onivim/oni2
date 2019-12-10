@@ -13,6 +13,10 @@ type message =
   | Exception;
 
 let start = () => {
+
+  Stdlib.set_binary_mode_out(Stdlib.stdout, true);
+  Stdlib.set_binary_mode_in(Stdlib.stdin, true);
+
   // A list of pending messages for us to handle
   let messageQueue: ref(list(message)) = ref([]);
   // Mutex to guard accessing the queue from multiple threads

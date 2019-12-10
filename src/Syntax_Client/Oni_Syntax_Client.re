@@ -50,6 +50,9 @@ let start = (~onHighlights, languageInfo, setup) => {
   let in_channel = Unix.in_channel_of_descr(stdout);
   let out_channel = Unix.out_channel_of_descr(stdin);
 
+  Stdlib.set_binary_mode_in(in_channel, true);
+  Stdlib.set_binary_mode_out(out_channel, true);
+
   let waitThread =
     Thread.create(
       () => {
