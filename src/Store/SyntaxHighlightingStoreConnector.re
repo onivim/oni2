@@ -71,14 +71,14 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => [||]
-    | Some(v) => Model.Buffer.getLines(v)
+    | Some(v) => Core.Buffer.getLines(v)
     };
   };
 
   let getVersion = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => (-1)
-    | Some(v) => Model.Buffer.getVersion(v)
+    | Some(v) => Core.Buffer.getVersion(v)
     };
   };
 
@@ -86,7 +86,7 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => None
     | Some(buffer) =>
-      switch (Model.Buffer.getFileType(buffer)) {
+      switch (Core.Buffer.getFileType(buffer)) {
       | None => None
       | Some(v) => Model.LanguageInfo.getScopeFromLanguage(languageInfo, v)
       }

@@ -186,7 +186,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               (),
             );
 
-          let uri = Model.Buffer.getUri(v);
+          let uri = Core.Buffer.getUri(v);
 
           ExtHostClient.updateDocument(
             uri,
@@ -265,7 +265,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         (buf, fileType) => {
           open Model.Actions;
 
-          let uri = Model.Buffer.getUri(buf);
+          let uri = Core.Buffer.getUri(buf);
           let position =
             Protocol.OneBasedPosition.ofInt1(
               ~lineNumber=

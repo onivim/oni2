@@ -2,7 +2,6 @@ open TestFramework;
 
 open Oni_Core;
 
-module Buffer = Oni_Model.Buffer;
 module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 

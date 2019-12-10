@@ -55,14 +55,14 @@ let start = () => {
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => default
       | Some(buf) =>
-        let bufferId = Model.Buffer.getId(buf);
+        let bufferId = Core.Buffer.getId(buf);
         let delay =
           Core.Configuration.getValue(
             c => c.editorHoverDelay,
             state.configuration,
           );
 
-        let uri = Model.Buffer.getUri(buf);
+        let uri = Core.Buffer.getUri(buf);
 
         let position =
           switch (cursors) {

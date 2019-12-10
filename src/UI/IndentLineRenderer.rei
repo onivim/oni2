@@ -7,7 +7,7 @@
 let render:
   (
     ~transform: Reglm.Mat4.t,
-    ~buffer: Oni_Model.Buffer.t,
+    ~buffer: Oni_Core.Buffer.t,
     ~startLine: int,
     ~endLine: int,
     ~lineHeight: float,
