@@ -6,6 +6,8 @@
 
 open Oni_Core;
 
+module Option = Utility.Option;
+
 type t = IntMap.t(Buffer.t);
 
 let empty = IntMap.empty;
@@ -71,28 +73,37 @@ let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
+
   | BufferEnter(metadata, fileType) =>
-    let f = buffer =>
-      switch (buffer) {
-      | Some(v) =>
-        Some(
-          v
-          |> Buffer.setModified(metadata.modified)
-          |> Buffer.setFilePath(metadata.filePath)
-          |> Buffer.setVersion(metadata.version),
-        )
+    let updater = (
+      fun
+      | Some(buffer) =>
+        buffer
+        |> Buffer.setModified(metadata.modified)
+        |> Buffer.setFilePath(metadata.filePath)
+        |> Buffer.setVersion(metadata.version)
+        |> Buffer.stampLastUsed
+        |> Option.some
       | None =>
-        Some(Buffer.ofMetadata(metadata) |> Buffer.setFileType(fileType))
-      };
-    IntMap.update(metadata.id, f, state);
+        Buffer.ofMetadata(metadata)
+        |> Buffer.setFileType(fileType)
+        |> Buffer.stampLastUsed
+        |> Option.some
+    );
+    IntMap.update(metadata.id, updater, state);
+
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
   | BufferSetModified(id, modified) =>
     IntMap.update(id, setModified(modified), state)
+
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
+
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
+
   | BufferSaved(metadata) =>
     IntMap.update(metadata.id, setModified(metadata.modified), state)
+
   | _ => state
   };
 };
