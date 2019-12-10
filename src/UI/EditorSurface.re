@@ -411,7 +411,7 @@ let%component make =
     );
   };
 
-  let getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
+  let _getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
     let lineNumber = position.line |> Index.toInt0;
     let index = position.character |> Index.toInt0;
 
@@ -714,26 +714,26 @@ let%component make =
 
           // TODO:
           // Render underline if we have an available go-to definition
-          /* 
-          let () =
-            getTokenAtPosition(
-              ~startIndex=leftVisibleColumn,
-              ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
-              cursorPosition,
-            )
-            |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
-                 let range =
-                   Range.create(
-                     ~startLine=cursorPosition.line,
-                     ~startCharacter=token.startPosition,
-                     ~endLine=cursorPosition.line,
-                     ~endCharacter=token.endPosition,
-                     (),
-                   );
-                 let () = renderUnderline(~color=token.color, range);
-                 ();
-               });
-           */
+          /*
+           let () =
+             getTokenAtPosition(
+               ~startIndex=leftVisibleColumn,
+               ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+               cursorPosition,
+             )
+             |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+                  let range =
+                    Range.create(
+                      ~startLine=cursorPosition.line,
+                      ~startCharacter=token.startPosition,
+                      ~endLine=cursorPosition.line,
+                      ~endCharacter=token.endPosition,
+                      (),
+                    );
+                  let () = renderUnderline(~color=token.color, range);
+                  ();
+                });
+            */
 
           ImmediateList.render(
             ~scrollY,
