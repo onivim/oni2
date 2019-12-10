@@ -1,28 +1,6 @@
 open Oni_Core;
 open Oni_Model;
 
-let validateBuffer =
-    (
-      expect: Rely__DefaultMatchers.matchers(unit),
-      actualBuffer: Buffer.t,
-      expectedLines: array(string),
-    ) => {
-  expect.int(Buffer.getNumberOfLines(actualBuffer)).toBe(
-    Array.length(expectedLines),
-  );
-
-  let validateLine = (actualLine, expectedLine) => {
-    expect.string(actualLine).toEqual(expectedLine);
-  };
-
-  let f = (i, expected) => {
-    let actual = Buffer.getLine(actualBuffer, i);
-    validateLine(actual, expected);
-  };
-
-  Array.iteri(f, expectedLines);
-};
-
 let validateToken =
     (
       expect: Rely__DefaultMatchers.matchers(unit),

@@ -62,12 +62,12 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     |> List.fast_sort((a, b) =>
          -
            Float.compare(
-             Model.Buffer.getLastUsed(a),
-             Model.Buffer.getLastUsed(b),
+             Core.Buffer.getLastUsed(a),
+             Core.Buffer.getLastUsed(b),
            )
        )
     |> Utility.List.filter_map(buffer => {
-         switch (Model.Buffer.getFilePath(buffer)) {
+         switch (Core.Buffer.getFilePath(buffer)) {
          | Some(path) =>
            Some(
              Actions.{

@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Extensions;
 open Oni_Model;

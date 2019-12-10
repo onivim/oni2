@@ -7,6 +7,7 @@
  - unnamed register should only paste from clipboard if `["paste"]` is set in configuration
  */
 
+open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
