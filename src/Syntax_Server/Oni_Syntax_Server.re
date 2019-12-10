@@ -45,6 +45,8 @@ let start = () => {
 
   let isRunning = ref(true);
 
+  let parentPid = Unix.getenv("__ONI2_PARENT_PID__") |> int_of_string;
+
   let _runThread: Thread.t =
     Thread.create(
       () => {
@@ -54,6 +56,8 @@ let start = () => {
         };
 
         let log = msg => write(Protocol.ServerToClient.Log(msg));
+
+        log("Starting up server. Parent PID is: " ++ string_of_int(parentPid));
 
         let state = ref(State.empty);
         let map = f => state := f(state^);
@@ -105,7 +109,7 @@ let start = () => {
           | Exception => log("Exception encountered!")
           | Message(protocol) => handleProtocol(protocol);
 
-        while (true) {
+        while (isRunning^) {
           log("Waiting for incoming message...");
 
           // Wait for pending incoming messages
@@ -159,5 +163,5 @@ let start = () => {
       (),
     );
 
-  Thread.join(_runThread);
+  let (_exitCode, _status) = Thread.wait_pid(parentPid);
 };
