@@ -7,7 +7,6 @@
 open Revery.Draw;
 
 open Oni_Core;
-open Oni_Model;
 
 let rec getIndentLevel =
         (
@@ -32,7 +31,7 @@ let rec getIndentLevel =
    * to 0.
    */
   if (String.trim(lineText) != "") {
-    Oni_Core.Indentation.getLevel(indentationSettings, lineText);
+    Indentation.getLevel(indentationSettings, lineText);
   } else {
     let newLine = reverse ? line - 1 : line + 1;
     let nextLineLevel =
