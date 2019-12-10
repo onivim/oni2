@@ -21,6 +21,60 @@ module Protocol = Extensions.ExtHostProtocol;
 
 module Workspace = Protocol.Workspace;
 
+module ExtensionCompletionProvider = {
+  let suggestionItemToCompletionItem:
+    Protocol.SuggestionItem.t => Model.CompletionItem.t =
+    suggestion => {
+      let completionKind =
+        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+
+      {
+        label: suggestion.label,
+        kind: completionKind,
+        detail: suggestion.detail,
+      };
+    };
+
+  let suggestionsToCompletionItems:
+    option(Protocol.Suggestions.t) => list(Model.CompletionItem.t) =
+    fun
+    | Some(suggestions) =>
+      List.map(suggestionItemToCompletionItem, suggestions)
+    | None => [];
+
+  let create =
+      (
+        client: ExtHostClient.t,
+        suggestProvider: Protocol.SuggestProvider.t,
+        buffer,
+        _completionMeet,
+        position,
+      ) => {
+    Model.Buffer.getFileType(buffer)
+    |> Option.map(
+         Extensions.DocumentSelector.matches(suggestProvider.selector),
+       )
+    |> Option.bind(matches => {
+         let uri = Model.Buffer.getUri(buffer);
+         let position = Protocol.OneBasedPosition.ofPosition(position);
+
+         switch (matches) {
+         | false => None
+         | true =>
+           Some(
+             ExtHostClient.getCompletions(
+               suggestProvider.id,
+               uri,
+               position,
+               client,
+             )
+             |> Lwt.map(suggestionsToCompletionItems),
+           )
+         };
+       });
+  };
+};
+
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -70,10 +124,14 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onRegisterSuggestProvider = _sp => {
-    ();
-      /*Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
-        dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));*/
+  let onRegisterSuggestProvider = (client, sp) => {
+    let completionProvider = ExtensionCompletionProvider.create(client, sp);
+    dispatch(
+      Oni_Model.Actions.LanguageFeatureRegisterCompletionProvider(
+        completionProvider,
+      ),
+    );
+    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
   };
 
   let onOutput = Log.info;
@@ -182,22 +240,6 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let suggestionItemToCompletionItem:
-    Protocol.SuggestionItem.t => Model.CompletionItem.t =
-    suggestion => {
-      let completionKind =
-        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
-
-      {
-        label: suggestion.label,
-        kind: completionKind,
-        detail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
-    List.map(suggestionItemToCompletionItem, suggestions);
-
   let getAndDispatchCompletions =
       (~languageFeatures, ~buffer, ~meet, ~position, ()) => {
     let completionPromise =
@@ -256,41 +298,37 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let checkCompletionsEffect = state =>
     Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
-      Model.Selectors.withActiveBufferAndFileType(
-        state,
-        (buf, fileType) => {
-          open Model.Actions;
+      Model.Selectors.getActiveBuffer(state)
+      |> Option.iter(buf => {
+           let uri = Model.Buffer.getUri(buf);
+           let meet = Model.Completions.getMeet(state.completions);
 
-          let uri = Model.Buffer.getUri(buf);
-          let meet = Model.Completions.getMeet(state.completions);
+           let maybeLine = Model.CompletionMeet.getLine(meet);
+           let maybeColumn = Model.CompletionMeet.getColumn(meet);
 
-          let maybeLine = Model.CompletionMeet.getLine(meet);
-          let maybeColumn = Model.CompletionMeet.getColumn(meet);
+           let request = (lineNumber: Core.Index.t, column: Core.Index.t) => {
+             let position = Core.Position.create(lineNumber, column);
+             Log.infof(m =>
+               m(
+                 "Completions - requesting at %s for %s",
+                 Core.Uri.toString(uri),
+                 Core.Position.show(position),
+               )
+             );
+             let languageFeatures = state.languageFeatures;
+             let _: Lwt.t(unit) =
+               getAndDispatchCompletions(
+                 ~languageFeatures,
+                 ~buffer=buf,
+                 ~meet,
+                 ~position,
+                 (),
+               );
+             ();
+           };
 
-          let request = (lineNumber: Core.Index.t, column: Core.Index.t) => {
-            let position = Core.Position.create(lineNumber, column);
-            Log.infof(m =>
-              m(
-                "Completions - requesting at %s for %s",
-                Core.Uri.toString(uri),
-                Core.Position.show(position),
-              )
-            );
-            let languageFeatures = state.languageFeatures;
-            let _: Lwt.t(unit) =
-              getAndDispatchCompletions(
-                ~languageFeatures,
-                ~buffer=buf,
-                ~meet,
-                ~position,
-                (),
-              );
-            ();
-          };
-
-          Option.iter2(request, maybeLine, maybeColumn);
-        },
-      )
+           Option.iter2(request, maybeLine, maybeColumn);
+         })
     });
 
   let executeContributedCommandEffect = cmd =>
@@ -327,7 +365,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         executeContributedCommandEffect(cmd),
       )
-    | Model.Actions.CompletionStart(completionMeet) => (
+    | Model.Actions.CompletionStart(_completionMeet) => (
         state,
         checkCompletionsEffect(state),
       )

@@ -23,14 +23,55 @@ let requestCompletions =
   let promises =
     lf.completionProviders
     |> List.map(suggestor => suggestor(buffer, meet, position))
-    |> Utility.List.filter_map(_identity)
-    // TODO: Handle multiple providers..
-    |> Lwt.choose;
+    |> Utility.List.filter_map(_identity);
 
-  promises;
+  let completorCount = ref(List.length(promises));
+  let completions = ref([]);
+
+  let (promise, waker) = Lwt.task();
+
+  let decrement = () => {
+    decr(completorCount);
+    Log.info(
+      "Decrementing - completor count now: " ++ string_of_int(completorCount^),
+    );
+
+    if (completorCount^ == 0) {
+      // We're done!
+      Lwt.wakeup(waker, completions^);
+    };
+  };
+
+  List.iter(
+    promise => {
+      Lwt.on_success(
+        promise,
+        items => {
+          completions := items @ completions^;
+          decrement();
+        },
+      );
+
+      Lwt.on_failure(
+        promise,
+        exn => {
+          Log.error(
+            "Error retrieving completions: " ++ Printexc.to_string(exn),
+          );
+          decrement();
+        },
+      );
+    },
+    promises,
+  );
+
+  promise;
 };
 
 let registerCompletionProvider =
     (completionProvider: CompletionProvider.t, v: t) => {
   completionProviders: [completionProvider, ...v.completionProviders],
 };
+
+let getCompletionProviderCount = (lf: t) =>
+  List.length(lf.completionProviders);

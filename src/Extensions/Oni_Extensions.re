@@ -6,6 +6,7 @@
 
 module CompletionItemKind = CompletionItemKind;
 module Configuration = Configuration;
+module DocumentSelector = DocumentSelector;
 module ExtensionContributions = ExtensionContributions;
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;

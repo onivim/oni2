@@ -2,8 +2,6 @@
  * LanguageFeaturesReducer.re
  */
 
-open Oni_Extensions;
-
 open Oni_Model;
 open Actions;
 

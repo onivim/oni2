@@ -19,6 +19,19 @@ type t = {
   selected: option(int),
 };
 
+let toString = (completions: t) => {
+  let filter =
+    switch (completions.filter) {
+    | Some(f) => f
+    | None => "(None)"
+    };
+  Printf.sprintf(
+    "Completions - meet: %s filter: %s",
+    CompletionMeet.show(completions.meet),
+    filter,
+  );
+};
+
 let default: t = {
   meet: None,
   selected: None,

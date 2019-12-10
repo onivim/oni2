@@ -20,6 +20,7 @@ type t = {transport: ExtHostTransport.t};
 type simpleCallback = unit => unit;
 let defaultCallback: simpleCallback = () => ();
 let defaultOneArgCallback = _ => ();
+let defaultTwoArgCallback = (_, _) => ();
 
 let apply = (f, r) => {
   switch (r) {
@@ -41,16 +42,28 @@ let start =
       ~onTelemetry=defaultOneArgCallback,
       ~onOutput=defaultOneArgCallback,
       ~onRegisterCommand=defaultOneArgCallback,
-      ~onRegisterSuggestProvider=defaultOneArgCallback,
+      ~onRegisterSuggestProvider=defaultTwoArgCallback,
       ~onShowMessage=defaultOneArgCallback,
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
+  // Hold onto a reference of the client, so that we can pass it along with
+  // '$register' actions.
+  let client: ref(option(t)) = ref(None);
+
+  let withClient = f =>
+    switch (client^) {
+    | None => ()
+    | Some(client) => f(client)
+    };
+
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
-      In.LanguageFeatures.parseRegisterSuggestSupport(args)
-      |> apply(onRegisterSuggestProvider);
+      withClient(client => {
+        In.LanguageFeatures.parseRegisterSuggestSupport(args)
+        |> apply(onRegisterSuggestProvider(client))
+      });
       Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
@@ -112,6 +125,7 @@ let start =
       setup,
     );
   let ret: t = {transport: transport};
+  client := Some(ret);
   ret;
 };
 
