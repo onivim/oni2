@@ -68,6 +68,11 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
       }
     });
 
+  let configurationChangeEffect = (config: Core.Configuration.t) =>
+    Isolinear.Effect.create(~name="syntax.configurationChange", () => {
+      Oni_Syntax_Client.notifyConfigurationChanged(_syntaxClient, config)
+    });
+
   let themeChangeEffect = theme =>
     Isolinear.Effect.create(~name="syntax.theme", () => {
       Oni_Syntax_Client.notifyThemeChanged(_syntaxClient, theme)
@@ -94,6 +99,10 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
+    | Model.Actions.ConfigurationSet(config) => (
+        state,
+        configurationChangeEffect(config),
+      )
     | Model.Actions.SetTokenTheme(tokenTheme) => (
         state,
         themeChangeEffect(tokenTheme),

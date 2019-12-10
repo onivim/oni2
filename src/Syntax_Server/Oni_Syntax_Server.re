@@ -84,6 +84,10 @@ let start = () => {
                 );
                 map(State.bufferEnter(id));
               }
+            | ConfigurationChanged(config) => {
+                map(State.updateConfiguration(config));
+                log("handled config changed");
+              }
             | ThemeChanged(theme) => {
                 map(State.updateTheme(theme));
                 log("handled theme changed");

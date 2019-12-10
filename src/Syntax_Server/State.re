@@ -13,6 +13,7 @@ module Ext = Oni_Extensions;
 module List = Utility.List;
 
 type t = {
+  configuration: Configuration.t,
   setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
   treesitterRepository: TreesitterRepository.t,
@@ -23,6 +24,7 @@ type t = {
 };
 
 let empty = {
+  configuration: Configuration.default,
   setup: None,
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
@@ -70,6 +72,10 @@ let updateTheme = (theme, state) => {
     );
 
   {...state, theme, highlightsMap};
+};
+
+let updateConfiguration = (configuration, state) => {
+  {...state, configuration};
 };
 
 let doPendingWork = state => {

@@ -112,6 +112,11 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
+let notifyConfigurationChanged =
+    (v: t, configuration: Oni_Core.Configuration.t) => {
+  write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
+};
+
 let notifyBufferUpdate =
     (
       v: t,

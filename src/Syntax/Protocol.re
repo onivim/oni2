@@ -50,6 +50,7 @@ module ClientToServer = {
         [@opaque] array(string),
         string,
       )
+    | ConfigurationChanged([@opaque] Configuration.t)
     | ThemeChanged([@opaque] TokenTheme.t)
     // TODO: Clean up this type here
     | VisibleRangesChanged(
