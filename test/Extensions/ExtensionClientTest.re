@@ -7,6 +7,16 @@ open TestFramework;
 open ExtensionClientHelper;
 open ExtHostProtocol;
 
+let normalizeExpectedPath = path =>
+  // Windows does a normalization of slashes in the ext host... we need to match this logic
+  // for our verification. For example, if we send it a path like /root/test.txt, it'll send us
+  // back \\root\\test.txt
+  if (Sys.win32) {
+    path |> String.split_on_char('/') |> String.concat("\\");
+  } else {
+    path;
+  };
+
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
     test("activates by language", ({expect}) => {
@@ -104,7 +114,10 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
@@ -118,7 +131,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.addDocument(
             createInitialDocumentModel(
               ~lines=["Hello world"],
-              ~path="test.txt",
+              ~path="/root/test.txt",
               (),
             ),
             client,
@@ -141,13 +154,19 @@ describe("ExtHostClient", ({describe, _}) => {
 
       let didGetOpenMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(info.messageType, "workspace.onDidOpenTextDocument")
         );
 
       let didGetUpdateMessage = () =>
         doesInfoMessageMatch(messages, info =>
-          String.equal(info.filename, "test.txt")
+          String.equal(
+            info.filename,
+            "/root/test.txt" |> normalizeExpectedPath,
+          )
           && String.equal(
                info.messageType,
                "workspace.onDidChangeTextDocument",
@@ -168,7 +187,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.addDocument(
             createInitialDocumentModel(
               ~lines=["hello", "world"],
-              ~path="test.txt",
+              ~path="/root/test.txt",
               (),
             ),
             client,
@@ -198,7 +217,7 @@ describe("ExtHostClient", ({describe, _}) => {
               (),
             );
           ExtHostClient.updateDocument(
-            Uri.fromPath("test.txt"),
+            Uri.fromPath("/root/test.txt"),
             modelChangedEvent,
             true,
             client,
