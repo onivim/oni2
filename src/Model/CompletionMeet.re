@@ -28,6 +28,20 @@ let show = (v: t) =>
 
 let defaultTriggerCharacters = [UChar.of_char('.')];
 
+let getLine = maybeMeet => {
+  switch (maybeMeet) {
+  | None => None
+  | Some(meet) => Some(meet.meet.line)
+  };
+};
+
+let getColumn = maybeMeet => {
+  switch (maybeMeet) {
+  | None => None
+  | Some(meet) => Some(meet.meet.character)
+  };
+};
+
 let createFromLine =
     (
       ~triggerCharacters=defaultTriggerCharacters,

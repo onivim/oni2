@@ -70,10 +70,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onRegisterSuggestProvider = (_sp) => {
-  ();
-    /*Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
-    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));*/
+  let onRegisterSuggestProvider = _sp => {
+    ();
+      /*Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
+        dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));*/
   };
 
   let onOutput = Log.info;
@@ -200,65 +200,61 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let getAndDispatchCompletions =
       (~languageFeatures, ~buffer, ~meet, ~position, ()) => {
-    let completionPromise = Model.LanguageFeatures.requestCompletions(
-      ~buffer,
-      ~meet,
-      ~position,
-      languageFeatures
-    );
+    let completionPromise =
+      Model.LanguageFeatures.requestCompletions(
+        ~buffer,
+        ~meet,
+        ~position,
+        languageFeatures,
+      );
 
-    Lwt.bind(completionPromise, 
-         completions => {
-             dispatch(
-               Model.Actions.CompletionAddItems(
-                 completionMeet,
-                 completions,
-               ),
-             );
-           Lwt.return();
-         }
+    Lwt.bind(
+      completionPromise,
+      completions => {
+        dispatch(Model.Actions.CompletionAddItems(meet, completions));
+        Lwt.return();
+      },
     );
-
     /*providers
-    |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
-         Log.infof(m =>
-           m(
-             "Completions - getting completions for suggest provider: %n",
-             provider.id,
-           )
-         );
-         let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
-           ExtHostClient.getCompletions(
-             provider.id,
-             uri,
-             position,
-             extHostClient,
+      |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
+           Log.infof(m =>
+             m(
+               "Completions - getting completions for suggest provider: %n",
+               provider.id,
+             )
            );
+           let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
+             ExtHostClient.getCompletions(
+               provider.id,
+               uri,
+               position,
+               extHostClient,
+             );
 
-         let _ =
-           Lwt.bind(
-             completionPromise,
-             completions => {
-               switch (completions) {
-               | None => Log.info("No completions for provider")
-               | Some(completions) =>
-                 let completionItems =
-                   suggestionsToCompletionItems(completions);
-                 dispatch(
-                   Model.Actions.CompletionAddItems(
-                     completionMeet,
-                     completionItems,
-                   ),
-                 );
-               };
-               Lwt.return();
-             },
-           );
-         ();
-       });*/
+           let _ =
+             Lwt.bind(
+               completionPromise,
+               completions => {
+                 switch (completions) {
+                 | None => Log.info("No completions for provider")
+                 | Some(completions) =>
+                   let completionItems =
+                     suggestionsToCompletionItems(completions);
+                   dispatch(
+                     Model.Actions.CompletionAddItems(
+                       completionMeet,
+                       completionItems,
+                     ),
+                   );
+                 };
+                 Lwt.return();
+               },
+             );
+           ();
+         });*/
   };
 
-  let checkCompletionsEffect = (state) =>
+  let checkCompletionsEffect = state =>
     Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
       Model.Selectors.withActiveBufferAndFileType(
         state,
@@ -267,29 +263,32 @@ let start = (extensions, setup: Core.Setup.t) => {
 
           let uri = Model.Buffer.getUri(buf);
           let meet = Model.Completions.getMeet(state.completions);
-          let position =
-            Protocol.OneBasedPosition.ofInt1(
-              ~lineNumber=
-                completionMeet.completionMeetLine |> Core.Index.toInt1,
-              ~column=completionMeet.completionMeetColumn |> Core.Index.toInt1,
-              (),
+
+          let maybeLine = Model.CompletionMeet.getLine(meet);
+          let maybeColumn = Model.CompletionMeet.getColumn(meet);
+
+          let request = (lineNumber: Core.Index.t, column: Core.Index.t) => {
+            let position = Core.Position.create(lineNumber, column);
+            Log.infof(m =>
+              m(
+                "Completions - requesting at %s for %s",
+                Core.Uri.toString(uri),
+                Core.Position.show(position),
+              )
             );
-          Log.infof(m =>
-            m(
-              "Completions - requesting at %s for %s",
-              Core.Uri.toString(uri),
-              Protocol.OneBasedPosition.show(position),
-            )
-          );
-          let languageFeatures = state.languageFeatures;
-          getAndDispatchCompletions(
-            ~languageFeatures,
-            ~buffer=buf,
-            ~meet,
-            ~position,
-            (),
-          );
-          ();
+            let languageFeatures = state.languageFeatures;
+            let _: Lwt.t(unit) =
+              getAndDispatchCompletions(
+                ~languageFeatures,
+                ~buffer=buf,
+                ~meet,
+                ~position,
+                (),
+              );
+            ();
+          };
+
+          Option.iter2(request, maybeLine, maybeColumn);
         },
       )
     });

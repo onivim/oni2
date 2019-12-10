@@ -719,13 +719,13 @@ let start =
     Isolinear.Effect.create(~name="vim.applyCompletion", () => {
       let completions = state.completions;
       let bestMatch = Completions.getBestCompletion(completions);
-      let meet = Completions.getMeet(completions);
+      let meet =
+        completions |> Completions.getMeet |> CompletionMeet.getColumn;
       Core.(
         switch (bestMatch, meet) {
         | (Some(completion), Some(meet)) =>
           let cursorPosition = Vim.Cursor.getPosition();
-          let delta =
-            cursorPosition.column - Index.toInt1(meet.completionMeetColumn);
+          let delta = cursorPosition.column - Index.toInt1(meet);
 
           let idx = ref(delta);
           while (idx^ >= 0) {

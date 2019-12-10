@@ -14,7 +14,11 @@ module Quickmenu = Model.Quickmenu;
 
 open Actions;
 
-type lastCompletionMeet = Actions.completionMeet;
+type lastCompletionMeet = {
+  completionMeetBufferId: int,
+  completionMeetLine: Index.t,
+  completionMeetColumn: Index.t,
+};
 
 let defaultMeet = {
   completionMeetBufferId: (-1),
@@ -72,7 +76,7 @@ let start = () => {
                    "[Completion] New completion meet: "
                    ++ Model.CompletionMeet.show(meetOpt),
                  );
-                 dispatch(Actions.CompletionStart(newMeet));
+                 dispatch(Actions.CompletionStart(meetOpt));
                  dispatch(Actions.CompletionBaseChanged(meet.base));
                } else if
                  // If we're at the same position... but our base is different...

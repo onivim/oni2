@@ -24,8 +24,11 @@ type t =
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, [@opaque] list(CompletionItem.t))
+  | CompletionStart([@opaque] CompletionMeet.t)
+  | CompletionAddItems(
+      [@opaque] CompletionMeet.t,
+      [@opaque] list(CompletionItem.t),
+    )
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -66,7 +69,7 @@ type t =
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
   | LanguageFeatureRegisterCompletionProvider(
-      [@opaque] LanguageFeatureTypes.CompletionProvider.t,
+      [@opaque] LanguageFeatures.CompletionProvider.t,
     )
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
@@ -126,11 +129,6 @@ and command = {
   commandAction: t,
   commandEnabled: unit => bool,
   commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
-}
-and completionMeet = {
-  completionMeetBufferId: int,
-  completionMeetLine: Index.t,
-  completionMeetColumn: Index.t,
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t

@@ -251,6 +251,13 @@ module Option = {
     | Some(x) => f(x)
     | None => ();
 
+  let iter2 = (f, a, b) => {
+    switch (a, b) {
+    | (Some(a), Some(b)) => f(a, b)
+    | _ => ()
+    };
+  };
+
   let iter_none = f =>
     fun
     | Some(_) => ()

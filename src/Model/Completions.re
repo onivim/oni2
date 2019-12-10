@@ -12,7 +12,7 @@ type filteredCompletion = Filter.result(CompletionItem.t);
 
 type t = {
   // The last completion meet we found
-  meet: option(Actions.completionMeet),
+  meet: CompletionMeet.t,
   completions: list(CompletionItem.t),
   filteredCompletions: list(filteredCompletion),
   filter: option(string),
@@ -35,10 +35,10 @@ let endCompletions = (_v: t) => {
   default;
 };
 
-let startCompletions = (meet: Actions.completionMeet, v: t) => {
+let startCompletions = (meet: CompletionMeet.t, v: t) => {
   {
     ...v,
-    meet: Some(meet),
+    meet,
     completions: default.completions,
     filteredCompletions: default.filteredCompletions,
   };
@@ -56,8 +56,7 @@ let _toFilterResult = (items: list(CompletionItem.t)) => {
 
 let getCompletions = (v: t) => v.filteredCompletions;
 
-let _applyFilter =
-    (filter: option(string), items: list(CompletionItem.t)) => {
+let _applyFilter = (filter: option(string), items: list(CompletionItem.t)) => {
   switch (filter) {
   | None => items |> _toFilterResult
   | Some(filter) =>

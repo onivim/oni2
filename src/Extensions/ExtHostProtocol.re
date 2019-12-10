@@ -388,8 +388,6 @@ module Workspace = {
     };
 };
 
-module LF = LanguageFeatures;
-
 module IncomingNotifications = {
   module StatusBar = {
     let parseSetEntry = args => {
@@ -436,11 +434,12 @@ module IncomingNotifications = {
     let parseRegisterSuggestSupport = json => {
       switch (json) {
       | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+        /*        documentSelector
+                  |> DocumentSelector.of_yojson
+                  |> Result.to_option
+                  |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})*/
+        None
         // TODO: Finish parsing
-        documentSelector
-        |> DocumentSelector.of_yojson
-        |> Result.to_option
-        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
       | _ => None
       };
     };
