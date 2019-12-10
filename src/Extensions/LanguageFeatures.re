@@ -22,8 +22,24 @@ module SuggestProvider = {
   };
 };
 
+module Definition = {
+  type t = {
+    uri: Uri.t,
+    position: Position.t,
+  };
+
+  let create = (~uri, ~position) => {uri, position};
+
+  let toString = def =>
+    Printf.sprintf(
+      "Definition - uri: %s position: %s",
+      Uri.toString(def.uri),
+      Position.show(def.position),
+    );
+};
+
 module DefinitionProvider = {
-  type t = (Buffer.t, Position.t) => option(Lwt.t(Position.t));
+  type t = (Uri.t, Position.t) => option(Lwt.t(Definition.t));
 };
 
 type t = {
@@ -40,9 +56,13 @@ let getSuggestProviders = (fileType: string, v: t) => {
   List.filter(filter, v.suggestProviders);
 };
 
-let getDefinition = (buffer: Buffer.t, pos: Position.t, lf: t) => {
+let getDefinition = (uri: Uri.t, pos: Position.t, lf: t) => {
+  prerr_endline(
+    "DEFINITION PROVIDER COUNT: "
+    ++ string_of_int(List.length(lf.definitionProviders)),
+  );
   lf.definitionProviders
-  |> List.map(df => df(buffer, pos))
+  |> List.map(df => df(uri, pos))
   |> Utility.List.filter_map(v => v)
   |> Lwt.choose;
 };

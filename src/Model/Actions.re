@@ -68,6 +68,9 @@ type t =
   | LanguageFeatureRegisterSuggestProvider(
       [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
     )
+  | LanguageFeatureRegisterDefinitionProvider(
+      [@opaque] Ext.LanguageFeatures.DefinitionProvider.t,
+    )
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
