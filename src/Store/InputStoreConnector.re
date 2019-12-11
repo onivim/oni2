@@ -25,12 +25,16 @@ let conditionsOfState = (state: State.t) => {
   let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   switch (state.quickmenu) {
-  | Some({query, cursorPosition, _}) =>
+  | Some({variant, query, cursorPosition, _}) =>
     Hashtbl.add(ret, "listFocus", true);
     Hashtbl.add(ret, "inQuickOpen", true);
 
     if (cursorPosition == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
+    };
+
+    if (variant == EditorsPicker) {
+      Hashtbl.add(ret, "inEditorsPicker", true);
     };
 
   | None => ()

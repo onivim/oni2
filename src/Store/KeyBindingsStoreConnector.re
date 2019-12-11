@@ -104,6 +104,16 @@ let start = () => {
         condition: "listFocus || textInputFocus" |> parseExp,
       },
       {
+        key: "<C-TAB>",
+        command: "workbench.action.quickOpenNavigateNextInEditorPicker",
+        condition: "inEditorsPicker" |> parseExp,
+      },
+      {
+        key: "<S-C-TAB>",
+        command: "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+        condition: "inEditorsPicker" |> parseExp,
+      },
+      {
         key: "<CR>",
         command: "list.select",
         condition: "listFocus || textInputFocus" |> parseExp,
