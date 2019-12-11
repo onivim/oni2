@@ -211,7 +211,8 @@
     "esy-sdl2": "*",
     "@opam/fmt": "^0.8.8",
     "@opam/logs": "^0.7.0",
-    "@opam/re": "*"
+    "@opam/re": "*",
+    "editor-core-types": "*"
   },
   "resolutions": {
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
@@ -237,7 +238,8 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#b0021ec"
+    "revery": "github:revery-ui/revery#b0021ec",
+    "editor-core-types": "onivim/editor-core-types#5e5ffd9"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
