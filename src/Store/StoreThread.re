@@ -180,11 +180,11 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Reducer.reduce),
+          quickmenuUpdater,
           vimUpdater,
           syntaxUpdater,
           extHostUpdater,
           fontUpdater,
-          quickmenuUpdater,
           configurationUpdater,
           keyBindingsUpdater,
           commandUpdater,

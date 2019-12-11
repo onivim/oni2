@@ -52,34 +52,23 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
         Revery.Tick.interval(
           _ =>
             switch (Hashtbl.find_opt(jobs, id)) {
-            | Some({job, _} as state) =>
-              if (!Job.isComplete(job)) {
-                Hashtbl.replace(jobs, id, {...state, job: Job.tick(job)});
-              }
+            | Some({job, _} as state) when !Job.isComplete(job) =>
+              let job = Job.tick(job);
+              let items = Job.getCompletedWork(job).uiFiltered;
+              let progress = Job.getProgress(job);
+              dispatch(onUpdate(items, ~progress));
+              Hashtbl.replace(jobs, id, {...state, job});
+
+            | Some(_) => ()
 
             | None => Log.error("Unable to tick non-existing FilterJob")
             },
           Time.zero,
         );
 
-      let disposeMessagePump =
-        Revery.Tick.interval(
-          _ =>
-            switch (Hashtbl.find_opt(jobs, id)) {
-            | Some({job, _}) =>
-              let items = Job.getCompletedWork(job).uiFiltered;
-              let progress = Job.getProgress(job);
-              dispatch(onUpdate(items, ~progress));
-
-            | None => Log.error("Unable to pump non-existing FilterJob")
-            },
-          Time.ms(100),
-        );
-
       let dispose = () => {
         unsubscribeFromItemStream();
         disposeTick();
-        disposeMessagePump();
       };
 
       Hashtbl.add(jobs, id, {job, dispose});
