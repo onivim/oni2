@@ -24,7 +24,7 @@ let toString = (meet: t) =>
     meet.position |> Position.show,
   );
 
-let create = (~position, ~base) => { position, base };
+let create = (~position, ~base) => {position, base};
 
 let defaultTriggerCharacters = [UChar.of_char('.')];
 

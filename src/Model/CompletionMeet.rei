@@ -18,10 +18,7 @@ let getPosition: t => Position.t;
 // items.
 let getBase: t => string;
 
-let create: (
-  ~position: Position.t,
-  ~base: string,
-) => t;
+let create: (~position: Position.t, ~base: string) => t;
 
 let createFromLine:
   (

@@ -1,3 +1,8 @@
+let identity = v => v;
+let noop = () => ();
+let noop1 = _ => ();
+let noop2 = (_, _) => ();
+
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     Thread.create(

@@ -20,9 +20,9 @@ module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
 type t = ExtHostTransport.t;
 
 type unitCallback = unit => unit;
-let noop = () => ();
-let noop1 = _ => ();
-let noop2 = (_, _) => ();
+let noop = Utility.noop;
+let noop1 = Utility.noop1;
+let noop2 = Utility.noop2;
 
 let start =
     (
