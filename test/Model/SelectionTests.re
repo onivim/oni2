@@ -2,7 +2,7 @@ open TestFramework;
 
 module VisualRange = Oni_Core.VisualRange;
 module Range = Oni_Core.Range;
-module Buffer = Oni_Model.Buffer;
+module Buffer = Oni_Core.Buffer;
 module Selection = Oni_Model.Selection;
 
 open Oni_Core_Test.Helpers;

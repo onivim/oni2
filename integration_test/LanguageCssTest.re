@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_Extensions;
@@ -59,26 +60,23 @@ runTestWithInput(
 
   input("a");
 
-  // TODO: Fix diagnostics on Windows!
-  if (!Sys.win32) {
-    // Should get an error diagnostic
-    wait(
-      ~timeout=30.0,
-      ~name=
-        "Validate a diagnostic showed up, since our current input is erroneous",
-      (state: State.t) => {
-        let bufferOpt = Selectors.getActiveBuffer(state);
+  // Should get an error diagnostic
+  wait(
+    ~timeout=30.0,
+    ~name=
+      "Validate a diagnostic showed up, since our current input is erroneous",
+    (state: State.t) => {
+      let bufferOpt = Selectors.getActiveBuffer(state);
 
-        switch (bufferOpt) {
-        | Some(buffer) =>
-          let diags =
-            Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
-          List.length(diags) > 0;
-        | _ => false
-        };
-      },
-    );
-  };
+      switch (bufferOpt) {
+      | Some(buffer) =>
+        let diags =
+          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        List.length(diags) > 0;
+      | _ => false
+      };
+    },
+  );
 
   // Should've also gotten some completions...
   wait(

@@ -3,7 +3,7 @@ open TestFramework;
 open Vim;
 
 module Buffers = Oni_Model.Buffers;
-module Buffer = Oni_Model.Buffer;
+module Buffer = Oni_Core.Buffer;
 
 let getFilePathOrFail = (v: option(Buffer.t)) => {
   let failedMsg = "failed - no buffer was specified";
