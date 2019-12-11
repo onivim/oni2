@@ -50,12 +50,12 @@ module ExtensionCompletionProvider = {
         _completionMeet,
         position,
       ) => {
-    Model.Buffer.getFileType(buffer)
+    Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(suggestProvider.selector),
        )
     |> Option.bind(matches => {
-         let uri = Model.Buffer.getUri(buffer);
+         let uri = Core.Buffer.getUri(buffer);
          let position = Protocol.OneBasedPosition.ofPosition(position);
 
          switch (matches) {
@@ -228,7 +228,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               (),
             );
 
-          let uri = Model.Buffer.getUri(v);
+          let uri = Core.Buffer.getUri(v);
 
           ExtHostClient.updateDocument(
             uri,
@@ -300,7 +300,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
       Model.Selectors.getActiveBuffer(state)
       |> Option.iter(buf => {
-           let uri = Model.Buffer.getUri(buf);
+           let uri = Core.Buffer.getUri(buf);
            let meet = Model.Completions.getMeet(state.completions);
 
            let maybeLine = Model.CompletionMeet.getLine(meet);

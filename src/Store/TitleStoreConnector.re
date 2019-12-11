@@ -24,7 +24,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => initialValues
       | Some(buf) =>
-        let fp = Model.Buffer.getFilePath(buf);
+        let fp = Core.Buffer.getFilePath(buf);
         let ret =
           switch (fp) {
           | None => initialValues
@@ -43,7 +43,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
             | Some(dir) => [("activeFolderShort", dir), ...initialValues]
             };
           };
-        switch (Model.Buffer.isModified(buf)) {
+        switch (Core.Buffer.isModified(buf)) {
         | false => ret
         | true => [("dirty", "*"), ...ret]
         };

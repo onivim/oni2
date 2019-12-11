@@ -8,7 +8,6 @@
 
 module Actions = Actions;
 module Animation = Animation;
-module Buffer = Buffer;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;

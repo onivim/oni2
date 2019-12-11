@@ -640,7 +640,7 @@ let start =
         let editorBuffer = Selectors.getActiveBuffer(state);
         switch (editorBuffer, currentBufferId^) {
         | (Some(editorBuffer), Some(v)) =>
-          let id = Buffer.getId(editorBuffer);
+          let id = Core.Buffer.getId(editorBuffer);
           if (id != v) {
             let buf = Vim.Buffer.getById(id);
             switch (buf) {
@@ -649,7 +649,7 @@ let start =
             };
           };
         | (Some(editorBuffer), _) =>
-          let id = Buffer.getId(editorBuffer);
+          let id = Core.Buffer.getId(editorBuffer);
           let buf = Vim.Buffer.getById(id);
           switch (buf) {
           | None => ()

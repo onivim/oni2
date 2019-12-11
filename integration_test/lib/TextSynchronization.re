@@ -24,7 +24,7 @@ let _getTextForVimBuffer = () => {
 let _getTextForOnivimBuffer = state => {
   Some(state)
   |> Option.bind(Model.Selectors.getActiveBuffer)
-  |> Option.map(Model.Buffer.getLines)
+  |> Option.map(Core.Buffer.getLines)
   |> Option.map(Array.to_list)
   |> Option.map(String.concat("|"))
   |> Option.map(s => "fulltext:" ++ s ++ "|")
