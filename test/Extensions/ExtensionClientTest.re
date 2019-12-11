@@ -199,11 +199,13 @@ describe("ExtHostClient", ({describe, _}) => {
             ModelContentChange.create(
               ~range=
                 Range.create(
-                  ~startLine=ZeroBasedIndex(0),
-                  ~endLine=ZeroBasedIndex(0),
-                  ~startCharacter=ZeroBasedIndex(0),
-                  ~endCharacter=ZeroBasedIndex(5),
-                  (),
+                  ~start=
+                    Location.create(~line=Index.zero, ~column=Index.zero),
+                  ~stop=
+                    Location.create(
+                      ~line=Index.zero,
+                      ~column=Index.(zero + 5),
+                    ),
                 ),
               ~text="Greetings",
               (),

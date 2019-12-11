@@ -54,7 +54,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(0, 0),
+          Location.ofInt0(0, 0),
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -62,7 +62,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(1, 1),
+          Location.ofInt0(1, 1),
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -70,7 +70,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 1),
+          Location.ofInt0(2, 1),
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -78,7 +78,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 2),
+          Location.ofInt0(2, 2),
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -86,7 +86,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 3),
+          Location.ofInt0(2, 3),
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -94,7 +94,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(3, 0),
+          Location.ofInt0(3, 0),
         );
       expect.int(List.length(diags)).toBe(0);
     })

@@ -2,6 +2,7 @@
  * Diagnostic.re
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show]
@@ -10,11 +11,11 @@ type t = {
   message: string,
 };
 
-let create = (~range: Range.t, ~message, ()) => {range, message};
+let create = (~range, ~message, ()) => {range, message};
 
-let explode = (buffer: Buffer.t, v: t) => {
-  let measure = Buffer.getLineLength(buffer);
+let explode = (buffer, diagnostic) => {
+  let measure = n => Buffer.getLineLength(buffer, Index.toOneBased(n));
 
-  Range.explode(measure, v.range)
-  |> List.map(range => create(~range, ~message=v.message, ()));
+  Range.explode(measure, diagnostic.range)
+  |> List.map(range => create(~range, ~message=diagnostic.message, ()));
 };

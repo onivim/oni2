@@ -6,6 +6,7 @@
  * - Translates Actions into Effects that should run against vim
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
 
@@ -169,13 +170,13 @@ let start =
         dispatch(
           Actions.SearchSetMatchingPair(
             id,
-            Core.Position.create(
-              OneBasedIndex(newPosition.line),
-              ZeroBasedIndex(newPosition.column),
+            Location.create(
+              Index.fromOneBased(newPosition.line),
+              Index.fromZeroBased(newPosition.column),
             ),
-            Core.Position.create(
-              OneBasedIndex(line),
-              ZeroBasedIndex(column),
+            Location.create(
+              Index.fromOneBased(line),
+              Index.fromZeroBased(column),
             ),
           ),
         )
@@ -324,8 +325,8 @@ let start =
         Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
-          ~startLine=Core.Index.OneBasedIndex(update.startLine),
-          ~endLine=Core.Index.OneBasedIndex(endLine),
+          ~startLine=Index.fromOneBased(update.startLine),
+          ~endLine=Index.fromOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
@@ -414,13 +415,18 @@ let start =
         let id = Vim.Buffer.getId(buffer);
 
         let toOniRange = (range: Vim.Range.t) =>
-          Core.Range.create(
-            ~startLine=OneBasedIndex(range.startPos.line),
-            ~startCharacter=ZeroBasedIndex(range.startPos.column),
-            ~endLine=OneBasedIndex(range.endPos.line),
-            ~endCharacter=ZeroBasedIndex(range.endPos.column),
-            (),
-          );
+          Range.{
+            start:
+              Location.{
+                line: Index.fromOneBased(range.startPos.line),
+                column: Index.fromZeroBased(range.startPos.column),
+              },
+            stop:
+              Location.{
+                line: Index.fromOneBased(range.endPos.line),
+                column: Index.fromZeroBased(range.endPos.column),
+              },
+          };
 
         let highlightList =
           highlights
@@ -538,17 +544,16 @@ let start =
 
       let () =
         location
-        |> Option.iter((pos: Position.t) => {
-             open Position;
+        |> Option.iter((loc: Location.t) => {
              let cursor =
                Vim.Cursor.create(
-                 ~line=Index.toInt1(pos.line),
-                 ~column=Index.toInt0(pos.character),
+                 ~line=Index.toOneBased(loc.line),
+                 ~column=Index.toZeroBased(loc.column),
                  (),
                );
              let () = updateActiveEditorCursors([cursor]);
 
-             let topLine: int = max(Index.toInt0(pos.line) - 10, 0);
+             let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
 
              let () =
                getState()
@@ -721,7 +726,8 @@ let start =
         | (Some(completion), Some(meet)) =>
           let cursorPosition = Vim.Cursor.getPosition();
           let delta =
-            cursorPosition.column - Index.toInt1(meet.completionMeetColumn);
+            cursorPosition.column
+            - Index.toOneBased(meet.completionMeetColumn);
 
           let idx = ref(delta);
           while (idx^ >= 0) {

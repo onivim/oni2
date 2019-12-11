@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 let lastId = ref(0);
@@ -52,11 +53,11 @@ let getVimCursors = model => model.cursors;
 
 let getPrimaryCursor = model =>
   switch (model.cursors) {
-  | [hd, ..._] =>
-    let line = Index.ofInt1(hd.line);
-    let character = Index.ofInt0(hd.column);
-    Position.create(line, character);
-  | [] => Position.ofInt0(0, 0)
+  | [cursor, ..._] =>
+    let line = Index.fromOneBased(cursor.line);
+    let column = Index.fromZeroBased(cursor.column);
+    Location.{line, column};
+  | [] => Location.{line: Index.zero, column: Index.zero}
   };
 
 let getId = model => model.editorId;

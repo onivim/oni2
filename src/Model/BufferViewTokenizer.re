@@ -2,6 +2,7 @@
  * BufferViewTokenizer.re
  */
 
+open EditorCoreTypes;
 open Revery;
 
 open Oni_Core;
@@ -49,7 +50,7 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
 type colorizer = int => (Color.t, Color.t);
 
 let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
-  let startIndex = Index.toZeroBasedInt(r.startIndex);
+  let startIndex = Index.toZeroBased(r.startIndex);
   let (bg, fg) = colorizer(startIndex);
 
   let firstChar = ZedBundled.get(r.text, 0);

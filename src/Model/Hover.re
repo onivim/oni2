@@ -4,11 +4,12 @@
  * This module is responsible for the types and operations
  * for the 'Hover' view
  */
+open EditorCoreTypes;
 open Oni_Core;
 
 type hover = {
   bufferId: int,
-  position: Position.t,
+  position: Location.t,
   animation: Animation.t,
 };
 

@@ -4,11 +4,12 @@
  * Per-buffer highlight info
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 type matchingPair = {
-  startPos: Position.t,
-  endPos: Position.t,
+  startPos: Location.t,
+  endPos: Location.t,
 };
 
 type highlights = {
@@ -27,7 +28,7 @@ let highlightRangesToMap = (ranges: list(Range.t)) => {
     (prev, cur) =>
       Range.(
         IntMap.update(
-          Index.toInt0(cur.startPosition.line),
+          Index.toZeroBased(cur.start.line),
           v =>
             switch (v) {
             | None => Some([cur])

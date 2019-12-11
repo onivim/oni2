@@ -30,21 +30,16 @@ describe("Selection", ({test, _}) =>
     let r1 = List.nth(ranges, 1);
 
     let expectedR0 =
-      Range.create(
-        ~startLine=ZeroBasedIndex(0),
-        ~endLine=ZeroBasedIndex(0),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(3),
-        (),
-      );
+      Range.{
+        start: Location.{line: Index.zero, column: Index.zero},
+        stop: Location.{line: Index.zero, column: Index.(zero + 5)},
+      };
 
     let expectedR1 =
       Range.create(
-        ~startLine=ZeroBasedIndex(1),
-        ~endLine=ZeroBasedIndex(1),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(4),
-        (),
+        ~start=
+          Location.create(~line=Index.(zero + 1), ~column=Index.(zero + 1)),
+        ~stop=Location.create(~line=Index.zero, ~column=Index.(zero + 4)),
       );
 
     validateRange(expect, r0, expectedR0);

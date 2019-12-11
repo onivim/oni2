@@ -3,7 +3,9 @@
  *
  * In-memory text buffer representation
  */
+
 open EditorCoreTypes;
+open Oni_Core;
 
 type t = {
   id: int,

@@ -24,8 +24,8 @@ let addLinesToEmptyBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=emptyBufferId,
-      ~startLine=Index.ZeroBasedIndex(0),
-      ~endLine=Index.ZeroBasedIndex(-1),
+      ~startLine=Index.zero,
+      ~endLine=Index.fromZeroBased(-1),
       ~lines=hundredThousandLines,
       ~version=1,
       (),
@@ -38,8 +38,8 @@ let clearLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.ZeroBasedIndex(0),
-      ~endLine=Index.ZeroBasedIndex(-1),
+      ~startLine=Index.zero,
+      ~endLine=Index.fromZeroBased(-1),
       ~lines=[||],
       ~version=1,
       (),
@@ -52,8 +52,8 @@ let insertInMiddleOfSmallBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=smallBufferId,
-      ~startLine=Index.ZeroBasedIndex(50),
-      ~endLine=Index.ZeroBasedIndex(51),
+      ~startLine=Index.fromZeroBased(50),
+      ~endLine=Index.fromZeroBased(51),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),
@@ -66,8 +66,8 @@ let insertInMiddleOfLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.ZeroBasedIndex(5000),
-      ~endLine=Index.ZeroBasedIndex(50001),
+      ~startLine=Index.fromZeroBased(5000),
+      ~endLine=Index.fromZeroBased(50001),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),

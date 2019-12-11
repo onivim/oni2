@@ -5,10 +5,10 @@ module CompletionMeet = Oni_Model.CompletionMeet;
 
 describe("CompletionMeet", ({describe, _}) => {
   describe("createFromLine", ({test, _}) => {
-    let line0column0 = Position.ofInt0(0, 0);
-    let line0column1 = Position.ofInt0(0, 1);
-    let line0column2 = Position.ofInt0(0, 2);
-    let line0column8 = Position.ofInt0(0, 8);
+    let line0column0 = Location.ofInt0(0, 0);
+    let line0column1 = Location.ofInt0(0, 1);
+    let line0column2 = Location.ofInt0(0, 2);
+    let line0column8 = Location.ofInt0(0, 8);
 
     test("empty line - no meet", ({expect}) => {
       let result =

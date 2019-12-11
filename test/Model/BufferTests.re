@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Model;
 
 open TestFramework;
 open Helpers;

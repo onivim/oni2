@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 type mode = Vim.Types.visualType;
 
 type t = {
@@ -33,11 +35,16 @@ let create =
 
   let range =
     Range.create(
-      ~startLine=OneBasedIndex(startLine),
-      ~startCharacter=OneBasedIndex(startColumn),
-      ~endLine=OneBasedIndex(endLine),
-      ~endCharacter=OneBasedIndex(endColumn),
-      (),
+      ~start=
+        Location.create(
+          ~line=Index.fromOneBased(startLine),
+          ~column=Index.fromOneBased(startColumn),
+        ),
+      ~stop=
+        Location.create(
+          ~line=Index.fromOneBased(endLine),
+          ~column=Index.fromOneBased(endColumn),
+        ),
     );
 
   {range, mode};

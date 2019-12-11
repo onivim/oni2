@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
@@ -80,7 +81,7 @@ let item =
     Printf.sprintf(
       "%s:%n - ",
       getDisplayPath(item.file),
-      Index.toInt1(item.location.line),
+      Index.toOneBased(item.location.line),
     );
 
   let locationWidth =
@@ -122,8 +123,8 @@ let item =
       let availableWidth = float(width - locationWidth);
       let maxLength =
         int_of_float(availableWidth /. editorFont.measuredWidth);
-      let charStart = Index.toInt1(indexStart);
-      let charEnd = Index.toInt1(indexEnd);
+      let charStart = Index.toOneBased(indexStart);
+      let charEnd = Index.toOneBased(indexEnd);
 
       try({
         let (text, charStart, charEnd) =
