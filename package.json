@@ -236,7 +236,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
-    "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
+    "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
     "revery": "github:revery-ui/revery#b0021ec",
     "reason-libvim": "onivim/reason-libvim#4919011",

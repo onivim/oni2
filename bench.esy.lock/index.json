@@ -1,5 +1,5 @@
 {
-  "checksum": "bb631d8a8ac0416639f3de30dcd2be0a",
+  "checksum": "99d16575cf3f6e92a04351d5af17b453",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -226,19 +226,20 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9": {
+    "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9": {
       "id":
-        "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
+        "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
       "name": "reason-tree-sitter",
-      "version": "github:onivim/reason-tree-sitter#4947ead",
+      "version": "github:onivim/reason-tree-sitter#e2c571e",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-tree-sitter#4947ead" ]
+        "source": [ "github:onivim/reason-tree-sitter#e2c571e" ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "esy-tree-sitter@1.4.1@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
@@ -324,7 +325,7 @@
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "libvim@8.10869.26@d41d8cd9",
-        "editor-core-types@github:onivim/editor-core-types#5e5ffd9@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
@@ -857,18 +858,19 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "editor-core-types@github:onivim/editor-core-types#5e5ffd9@d41d8cd9": {
+    "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9": {
       "id":
-        "editor-core-types@github:onivim/editor-core-types#5e5ffd9@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
       "name": "editor-core-types",
-      "version": "github:onivim/editor-core-types#5e5ffd9",
+      "version": "github:onivim/editor-core-types#16dd98e",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/editor-core-types#5e5ffd9" ]
+        "source": [ "github:onivim/editor-core-types#16dd98e" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@opam/ppx_deriving@opam:4.4@21d6c7a5",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
@@ -977,13 +979,13 @@
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
-        "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
+        "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3011@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
         "esy-sdl2@2.0.10005@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
-        "editor-core-types@github:onivim/editor-core-types#5e5ffd9@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
         "axios@0.19.0@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d",
