@@ -168,10 +168,11 @@ let%component make =
   let%hook (textRef, setTextRef) = Hooks.ref(None);
   let%hook (scrollOffset, _setScrollOffset) = Hooks.state(ref(0));
 
-  let value = prefix ++ Option.value(value, ~default=state.value);
-  let showPlaceholder = value == "";
+  let value = Option.value(value, ~default=state.value);
   let cursorPosition =
     Option.value(cursorPosition, ~default=state.cursorPosition);
+  let displayValue = prefix ++ value;
+  let showPlaceholder = displayValue == "";
 
   module Styles = {
     open Style;
@@ -242,7 +243,7 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(value, 0, cursorPosition));
+      measureTextWidth(String.sub(displayValue, 0, cursorPosition));
 
     switch (Option.bind(r => r#getParent(), textRef)) {
     | Some(containerNode) =>
@@ -377,7 +378,7 @@ let%component make =
   let text = () =>
     <Text
       ref={node => setTextRef(Some(node))}
-      text={showPlaceholder ? placeholder : value}
+      text={showPlaceholder ? placeholder : displayValue}
       style=Styles.text
     />;
 

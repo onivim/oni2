@@ -13,7 +13,7 @@ open Oni_Model;
 
 module Extensions = Oni_Extensions;
 
-module Log = Core.Log;
+module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
@@ -93,7 +93,7 @@ let start =
         | Info => ("INFO", Actions.Info)
         };
 
-      Log.info("Message -" ++ priorityString ++ " [" ++ t ++ "]: " ++ msg);
+      Log.infof(m => m("Message - %s [%s]: %s", priorityString, t, msg));
 
       dispatch(
         ShowNotification(
@@ -131,7 +131,7 @@ let start =
 
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
-      Log.info("Buffer metadata changed: " ++ string_of_int(meta.id));
+      Log.infof(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
         ...meta,
         /*
@@ -153,12 +153,7 @@ let start =
 
   let _ =
     Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.info(
-        "Buffer metadata changed: "
-        ++ string_of_int(id)
-        ++ " | "
-        ++ string_of_bool(modified),
-      );
+      Log.infof(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
 
@@ -305,9 +300,8 @@ let start =
 
   let _ =
     Vim.Buffer.onUpdate(update => {
-      open Oni_Core;
       open Vim.BufferUpdate;
-      Log.info("Vim - Buffer update: " ++ string_of_int(update.id));
+      Log.infof(m => m("Vim - Buffer update: %n", update.id));
       open State;
 
       let isFull = update.endLine == (-1);
@@ -320,7 +314,7 @@ let start =
       let endLine =
         if (isFull) {
           maybeBuffer
-          |> Option.map(b => Buffer.getNumberOfLines(b) + 1)
+          |> Option.map(b => Core.Buffer.getNumberOfLines(b) + 1)
           |> Option.value(~default=update.startLine);
         } else {
           update.endLine;
@@ -330,8 +324,8 @@ let start =
         Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
-          ~startLine=Index.OneBasedIndex(update.startLine),
-          ~endLine=Index.OneBasedIndex(endLine),
+          ~startLine=Core.Index.OneBasedIndex(update.startLine),
+          ~endLine=Core.Index.OneBasedIndex(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
@@ -346,7 +340,8 @@ let start =
       // The fix really belongs in reason-libvim - we should always be trust the order we get from the updates,
       // and any of this filtering or manipulation of updates should be handled and tested there.
       let shouldApply =
-        Option.map(Buffer.shouldApplyUpdate(bu), maybeBuffer) != Some(false);
+        Option.map(Core.Buffer.shouldApplyUpdate(bu), maybeBuffer)
+        != Some(false);
 
       if (shouldApply) {
         dispatch(Actions.BufferUpdate(bu));
@@ -367,12 +362,13 @@ let start =
   let isCompleting = ref(false);
 
   let checkCommandLineCompletions = () => {
-    Log.info("VimStoreConnector::checkCommandLineCompletions");
+    Log.info("checkCommandLineCompletions");
     let completions = Vim.CommandLine.getCompletions();
-    Log.info(
-      "VimStoreConnector::checkCommandLineCompletions - got "
-      ++ string_of_int(Array.length(completions))
-      ++ " completions.",
+    Log.infof(m =>
+      m(
+        "checkCommandLineCompletions - got %n completions.",
+        Array.length(completions),
+      )
     );
     let items =
       Array.map(
@@ -508,7 +504,7 @@ let start =
                dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
                dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
-        Log.debug(() => "VimStoreConnector - handled key: " ++ key);
+        Log.debug("handled key: " ++ key);
       }
     );
 

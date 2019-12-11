@@ -92,7 +92,8 @@ module Make = (Config: Config) => {
     let currentMatches = Utility.firstk(maxItemsToFilter, allFiltered);
 
     // If the new query matches the old one... we can re-use results
-    if (Filter.fuzzyMatches(oldExplodedFilter, filter)
+    if (pending.filter != ""
+        && Filter.fuzzyMatches(oldExplodedFilter, filter)
         && List.length(currentMatches) < maxItemsToFilter) {
       let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
 
@@ -145,7 +146,6 @@ module Make = (Config: Config) => {
     (false, newPendingWork, completed);
   };
 
-  /* [doWork] is run each frame until the work is completed! */
   let doActualWork =
       (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
     let rec loop = (i, current, completed) =>
@@ -167,20 +167,17 @@ module Make = (Config: Config) => {
         };
       };
 
-    let (isComplete, completed) = loop(0, [], allFiltered);
+    let (isComplete, allFiltered) = loop(0, [], allFiltered);
 
     let uiFiltered =
-      completed
+      allFiltered
       |> Utility.firstk(maxItemsToFilter)
       |> Filter.rank(pendingWork.filter, format);
 
-    (
-      isComplete,
-      pendingWork,
-      CompletedWork.{allFiltered: completed, uiFiltered},
-    );
+    (isComplete, pendingWork, CompletedWork.{allFiltered, uiFiltered});
   };
 
+  /* [doWork] is run each frame until the work is completed! */
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
       let allFiltered =
