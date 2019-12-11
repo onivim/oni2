@@ -8,15 +8,17 @@ let start = () => {
 
   let searchUpdater = (state: Model.Search.t, action) => {
     switch (action) {
-    | SearchInput(text, cursorPosition) => {
-        ...state,
-        queryInput: text,
-        cursorPosition,
-      }
+    | SearchInput(text, cursorPosition) =>
+      prerr_endline("SEARCH INPUT");
+      {...state, queryInput: text, cursorPosition};
 
-    | SearchStart => {...state, query: state.queryInput, hits: []}
+    | SearchStart =>
+      prerr_endline("SEARCH START");
+      {...state, query: state.queryInput, hits: []};
 
-    | SearchUpdate(items) => {...state, hits: state.hits @ items}
+    | SearchUpdate(items) =>
+      prerr_endline("SEARCH UPDATE");
+      {...state, hits: state.hits @ items};
 
     // | SearchComplete
 
@@ -32,21 +34,19 @@ let start = () => {
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
 
-    | SearchShow => (
-        {...state, searchPane: Some(Model.Search.initial)},
+    /*
+     | SearchShow => (
+         {...state, searchPane: Model.Search.initial},
+         Isolinear.Effect.none,
+       )
+
+     | SearchHide => ({...state, searchPane: Model.Search.initial}, Isolinear.Effect.none)
+     */
+
+    | _ => (
+        {...state, searchPane: searchUpdater(state.searchPane, action)},
         Isolinear.Effect.none,
       )
-
-    | SearchHide => ({...state, searchPane: None}, Isolinear.Effect.none)
-
-    | _ =>
-      switch (state.searchPane) {
-      | Some(searchPane) => (
-          {...state, searchPane: Some(searchUpdater(searchPane, action))},
-          Isolinear.Effect.none,
-        )
-      | None => (state, Isolinear.Effect.none)
-      }
     };
   };
 
@@ -66,17 +66,23 @@ let subscriptions = ripgrep => {
       ~query,
       ~directory,
       ~ripgrep,
-      ~onUpdate=items => {dispatch(SearchUpdate(items))},
-      ~onCompleted=() => SearchComplete,
+      ~onUpdate=
+        items => {
+          prerr_endline("GOT ITEMS");
+          dispatch(SearchUpdate(items));
+        },
+      ~onCompleted=
+        () => {
+          prerr_endline("SEARCH COMPELTE");
+          SearchComplete;
+        },
     );
   };
 
   let updater = (state: Model.State.t) => {
     switch (state.searchPane) {
-    | None
-    | Some({query: "", _}) => []
-
-    | Some({query, _}) => [search(query)]
+    | {query: "", _} => []
+    | {query, _} => [search(query)]
     };
   };
 

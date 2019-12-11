@@ -13,8 +13,13 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
   GlobalContext.current().dispatch(action);
 };
 
-let toggleSearch = ({searchPane, _}: State.t, _) => {
-  let action = searchPane == None ? Actions.SearchShow : Actions.SearchHide;
+let toggleSearch = ({pane, _}: State.t, _) => {
+  let action =
+    if (Oni_Model.Pane.isTypeOpen(Oni_Model.Pane.Search, pane)) {
+      Actions.PaneHide;
+    } else {
+      Actions.PaneShow(Oni_Model.Pane.Diagnostics);
+    };
   GlobalContext.current().dispatch(action);
 };
 

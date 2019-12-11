@@ -110,8 +110,8 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | SearchShow
-  | SearchHide
+  | PaneShow(Pane.paneType)
+  | PaneHide
   | SearchInput(string, int)
   | SearchStart
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))

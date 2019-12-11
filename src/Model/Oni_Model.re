@@ -41,6 +41,7 @@ module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module Notification = Notification;
 module Notifications = Notifications;
+module Pane = Pane;
 module Search = Search;
 module SearchHighlights = SearchHighlights;
 module Selection = Selection;

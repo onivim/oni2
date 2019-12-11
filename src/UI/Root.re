@@ -49,16 +49,11 @@ let make = (~state: State.t, ()) => {
         </View>
       : React.empty;
 
-  let searchPane =
-    switch (state.searchPane) {
-    | Some(searchPane) =>
-      <SearchPane state=searchPane uiFont editorFont theme />
-
-    | None => React.empty
-    };
-
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface> <EditorView state /> searchPane </View>
+    <View style=Styles.surface>
+      <EditorView state />
+      <PaneView theme uiFont editorFont state />
+    </View>
     <Overlay>
       {switch (state.quickmenu) {
        | None => React.empty

@@ -24,6 +24,7 @@ let reduce: (State.t, Actions.t) => State.t =
         searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         notifications: Notifications.reduce(s.notifications, a),
+        pane: PaneReducer.reduce(s.pane, a),
       };
 
       switch (a) {
