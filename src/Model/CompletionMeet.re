@@ -24,6 +24,8 @@ let toString = (meet: t) =>
     meet.position |> Position.show,
   );
 
+let create = (~position, ~base) => { position, base };
+
 let defaultTriggerCharacters = [UChar.of_char('.')];
 
 let getPosition = meet => meet.position;
@@ -33,10 +35,10 @@ let createFromLine =
     (
       ~triggerCharacters=defaultTriggerCharacters,
       ~lineNumber=0,
-      ~cursor: Index.t,
+      ~index: Index.t,
       line: string,
     ) => {
-  let cursorIdx = Index.toInt0(cursor);
+  let cursorIdx = Index.toInt0(index);
   let idx = Stdlib.min(Zed_utf8.length(line) - 1, cursorIdx);
   let pos = ref(idx);
 
@@ -70,7 +72,7 @@ let createFromLine =
 
   switch (pos^) {
   | (-1) =>
-    if (baseLength == Index.toInt0(cursor) && baseLength > 0) {
+    if (baseLength == cursorIdx && baseLength > 0) {
       Some({position: Position.ofInt0(lineNumber, 0), base});
     } else {
       None;
@@ -93,7 +95,7 @@ let createFromBufferPosition =
     createFromLine(
       ~lineNumber=line0,
       ~triggerCharacters,
-      ~cursor=position.character,
+      ~index=position.character,
       line,
     );
   } else {

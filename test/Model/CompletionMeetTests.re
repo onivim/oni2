@@ -12,41 +12,49 @@ describe("CompletionMeet", ({describe, _}) => {
 
     test("empty line - no meet", ({expect}) => {
       let result =
-        CompletionMeet.createFromLine(~cursor=Index.ofInt0(0), "");
+        CompletionMeet.createFromLine(~index=Index.ofInt0(0), "");
       expect.equal(result, None);
     });
 
     test("single character at beginning", ({expect}) => {
       let result =
-        CompletionMeet.createFromLine(~cursor=Index.ofInt0(1), "a");
-      expect.equal(result, Some({meet: line0column0, base: "a"}));
+        CompletionMeet.createFromLine(~index=Index.ofInt0(1), "a");
+
+      let expected = CompletionMeet.create(~position=line0column0, ~base="a");
+
+      expect.equal(result, Some(expected));
     });
 
     test("spaces prior to character", ({expect}) => {
       let result =
-        CompletionMeet.createFromLine(~cursor=Index.ofInt0(1), " a");
-      expect.equal(result, Some({meet: line0column1, base: "a"}));
+        CompletionMeet.createFromLine(~index=Index.ofInt0(1), " a");
+      
+      let expected = CompletionMeet.create(~position=line0column1, ~base="a");
+      expect.equal(result, Some(expected));
     });
 
     test("longer base", ({expect}) => {
       let result =
-        CompletionMeet.createFromLine(~cursor=Index.ofInt0(4), " abc");
-      expect.equal(result, Some({meet: line0column1, base: "abc"}));
+        CompletionMeet.createFromLine(~index=Index.ofInt0(4), " abc");
+      let expected = CompletionMeet.create(~position=line0column1, ~base="abc");
+      expect.equal(result, Some(expected));
     });
 
     test("default trigger character", ({expect}) => {
       let result =
-        CompletionMeet.createFromLine(~cursor=Index.ofInt0(1), " .");
-      expect.equal(result, Some({meet: line0column2, base: ""}));
+        CompletionMeet.createFromLine(~index=Index.ofInt0(1), " .");
+      let expected = CompletionMeet.create(~position=line0column2, ~base="");
+      expect.equal(result, Some(expected));
     });
 
     test("default trigger character with base", ({expect}) => {
       let result =
         CompletionMeet.createFromLine(
-          ~cursor=Index.ofInt0(10),
+          ~index=Index.ofInt0(10),
           "console.lo",
         );
-      expect.equal(result, Some({meet: line0column8, base: "lo"}));
+      let expected = CompletionMeet.create(~position=line0column8, ~base="lo");
+      expect.equal(result, Some(expected));
     });
   })
 });

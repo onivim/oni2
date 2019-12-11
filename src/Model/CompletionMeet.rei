@@ -18,11 +18,16 @@ let getPosition: t => Position.t;
 // items.
 let getBase: t => string;
 
+let create: (
+  ~position: Position.t,
+  ~base: string,
+) => t;
+
 let createFromLine:
   (
     ~triggerCharacters: list(UChar.t)=?,
     ~lineNumber: int=?,
-    ~cursor: Index.t,
+    ~index: Index.t,
     string
   ) =>
   option(t);
