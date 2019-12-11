@@ -7,43 +7,38 @@
 
 open Oni_Core;
 
+module Option = Utility.Option;
 module Protocol = ExtHostProtocol;
+module Workspace = Protocol.Workspace;
+module Core = Oni_Core;
 
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
-module Workspace = Protocol.Workspace;
 
 module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
 
-type t = {transport: ExtHostTransport.t};
+type t = ExtHostTransport.t;
 
-type simpleCallback = unit => unit;
-let defaultCallback: simpleCallback = () => ();
-let defaultOneArgCallback = _ => ();
-let defaultTwoArgCallback = (_, _) => ();
-
-let apply = (f, r) => {
-  switch (r) {
-  | Some(v) => f(v)
-  | None => ()
-  };
-};
+type unitCallback = unit => unit;
+let noop = () => ();
+let noop1 = _ => ();
+let noop2 = (_, _) => ();
 
 let start =
     (
       ~initData=ExtHostInitData.create(),
       ~initialWorkspace=Workspace.empty,
-      ~onInitialized=defaultCallback,
-      ~onClosed=defaultCallback,
-      ~onDiagnosticsChangeMany=defaultOneArgCallback,
-      ~onDiagnosticsClear=defaultOneArgCallback,
-      ~onDidActivateExtension=defaultOneArgCallback,
-      ~onExtensionActivationFailed=defaultOneArgCallback,
-      ~onTelemetry=defaultOneArgCallback,
-      ~onOutput=defaultOneArgCallback,
-      ~onRegisterCommand=defaultOneArgCallback,
-      ~onRegisterSuggestProvider=defaultTwoArgCallback,
-      ~onShowMessage=defaultOneArgCallback,
+      ~onInitialized=noop,
+      ~onClosed=noop,
+      ~onDiagnosticsChangeMany=noop1,
+      ~onDiagnosticsClear=noop1,
+      ~onDidActivateExtension=noop1,
+      ~onExtensionActivationFailed=noop1,
+      ~onTelemetry=noop1,
+      ~onOutput=noop1,
+      ~onRegisterCommand=noop1,
+      ~onRegisterSuggestProvider=noop2,
+      ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
       setup: Setup.t,
     ) => {
@@ -51,28 +46,26 @@ let start =
   // '$register' actions.
   let client: ref(option(t)) = ref(None);
 
-  let withClient = f =>
-    switch (client^) {
-    | None => ()
-    | Some(client) => f(client)
-    };
-
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
-      withClient(client => {
-        In.LanguageFeatures.parseRegisterSuggestSupport(args)
-        |> apply(onRegisterSuggestProvider(client))
-      });
+      Option.iter(
+        client => {
+          In.LanguageFeatures.parseRegisterSuggestSupport(args)
+          |> Option.iter(onRegisterSuggestProvider(client))
+        },
+        client^,
+      );
       Ok(None);
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
     | ("MainThreadDiagnostics", "$changeMany", args) =>
-      In.Diagnostics.parseChangeMany(args) |> apply(onDiagnosticsChangeMany);
+      In.Diagnostics.parseChangeMany(args)
+      |> Option.iter(onDiagnosticsChangeMany);
       Ok(None);
     | ("MainThreadDiagnostics", "$clear", args) =>
-      In.Diagnostics.parseClear(args) |> apply(onDiagnosticsClear);
+      In.Diagnostics.parseClear(args) |> Option.iter(onDiagnosticsClear);
       Ok(None);
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
@@ -100,7 +93,7 @@ let start =
       onRegisterCommand(v);
       Ok(None);
     | ("MainThreadStatusBar", "$setEntry", args) =>
-      In.StatusBar.parseSetEntry(args) |> apply(onStatusBarSetEntry);
+      In.StatusBar.parseSetEntry(args) |> Option.iter(onStatusBarSetEntry);
       Ok(None);
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
@@ -124,35 +117,28 @@ let start =
       ~onClosed,
       setup,
     );
-  let ret: t = {transport: transport};
-  client := Some(ret);
-  ret;
+  client := Some(transport);
+  transport;
 };
 
-let activateByEvent = (evt, v) => {
-  ExtHostTransport.send(
-    v.transport,
-    Out.ExtensionService.activateByEvent(evt),
-  );
+let activateByEvent = (evt, client) => {
+  ExtHostTransport.send(client, Out.ExtensionService.activateByEvent(evt));
 };
 
-let executeContributedCommand = (cmd, v) => {
-  ExtHostTransport.send(
-    v.transport,
-    Out.Commands.executeContributedCommand(cmd),
-  );
+let executeContributedCommand = (cmd, client) => {
+  ExtHostTransport.send(client, Out.Commands.executeContributedCommand(cmd));
 };
 
-let acceptWorkspaceData = (workspace: Workspace.t, v) => {
+let acceptWorkspaceData = (workspace: Workspace.t, client) => {
   ExtHostTransport.send(
-    v.transport,
+    client,
     Out.Workspace.acceptWorkspaceData(workspace),
   );
 };
 
-let addDocument = (doc, v) => {
+let addDocument = (doc, client) => {
   ExtHostTransport.send(
-    v.transport,
+    client,
     Out.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
       ~addedDocuments=[doc],
       ~removedDocuments=[],
@@ -161,14 +147,14 @@ let addDocument = (doc, v) => {
   );
 };
 
-let updateDocument = (uri, modelChange, dirty, v) => {
+let updateDocument = (uri, modelChange, dirty, client) => {
   ExtHostTransport.send(
-    v.transport,
+    client,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
   );
 };
 
-let getCompletions = (id, uri, position, v) => {
+let getCompletions = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     In.LanguageFeatures.parseProvideCompletionsResponse(json);
   };
@@ -176,16 +162,16 @@ let getCompletions = (id, uri, position, v) => {
   let promise =
     ExtHostTransport.request(
       ~msgType=MessageType.requestJsonArgsWithCancellation,
-      v.transport,
+      client,
       Out.LanguageFeatures.provideCompletionItems(id, uri, position),
       f,
     );
   promise;
 };
 
-let send = (client, v) => {
-  let _ = ExtHostTransport.send(client.transport, v);
+let send = (client, msg) => {
+  let _ = ExtHostTransport.send(client, msg);
   ();
 };
 
-let close = (v: t) => ExtHostTransport.close(v.transport);
+let close = client => ExtHostTransport.close(client);

@@ -22,4 +22,4 @@
         logs.fmt
         re
     )
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
+    (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

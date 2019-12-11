@@ -279,6 +279,28 @@ module Option = {
     fun
     | [] => None
     | [hd, ..._] => Some(hd);
+
+  let toString = f =>
+    fun
+    | Some(v) => Printf.sprintf("Some(%s)", f(v))
+    | None => "(None)";
+
+  let values: list(option('a)) => list('a) =
+    items => List.filter_map(v => v, items);
+};
+
+module LwtUtil = {
+  let all = (join, promises) => {
+    List.fold_left(
+      (accPromise, promise) => {
+        let%lwt acc = accPromise;
+        let%lwt curr = promise;
+        Lwt.return(join(acc, curr));
+      },
+      Lwt.return([]),
+      promises,
+    );
+  };
 };
 
 module Result = {

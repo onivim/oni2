@@ -53,8 +53,8 @@ let start = () => {
            | Some(buffer) =>
              let cursorPosition = Model.Editor.getPrimaryCursor(ed);
              let meetOpt =
-               Model.CompletionMeet.createFromBufferCursor(
-                 ~cursor=cursorPosition,
+               Model.CompletionMeet.createFromBufferPosition(
+                 ~position=cursorPosition,
                  buffer,
                );
              switch (meetOpt) {
@@ -63,7 +63,8 @@ let start = () => {
                dispatch(Actions.CompletionEnd);
              | Some(meet) =>
                open Model.CompletionMeet;
-               let {line, character}: Position.t = meet.meet;
+               let {line, character}: Position.t = getPosition(meet);
+               let base = getBase(meet);
                // Check if our 'meet' position has changed
                let newMeet = {
                  completionMeetBufferId: bufferId,
@@ -74,17 +75,17 @@ let start = () => {
                if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
                  Log.info(
                    "[Completion] New completion meet: "
-                   ++ Model.CompletionMeet.show(meetOpt),
+                   ++ Model.CompletionMeet.toString(meet),
                  );
-                 dispatch(Actions.CompletionStart(meetOpt));
-                 dispatch(Actions.CompletionBaseChanged(meet.base));
+                 dispatch(Actions.CompletionStart(meet));
+                 dispatch(Actions.CompletionBaseChanged(base));
                } else if
                  // If we're at the same position... but our base is different...
                  // fire a base change
-                 (!String.equal(meet.base, lastBase^)) {
-                 lastBase := meet.base;
-                 dispatch(Actions.CompletionBaseChanged(meet.base));
-                 Log.info("[Completion] New completion base: " ++ meet.base);
+                 (!String.equal(base, lastBase^)) {
+                 lastBase := base;
+                 dispatch(Actions.CompletionBaseChanged(base));
+                 Log.info("[Completion] New completion base: " ++ base);
                };
                lastMeet := newMeet;
              };

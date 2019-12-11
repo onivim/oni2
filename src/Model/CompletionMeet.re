@@ -10,37 +10,24 @@ open Oni_Core;
 open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
-type completionMeet = {
+type t = {
   // Base is the prefix string
   base: string,
-  // Meet is the position where we request completions
-  meet: Position.t,
+  // Position to request completions
+  position: Position.t,
 };
 
-type t = option(completionMeet);
-
-let show = (v: t) =>
-  switch (v) {
-  | None => "(None)"
-  | Some(m) =>
-    Printf.sprintf("Base: |%s| Meet: %s", m.base, m.meet |> Position.show)
-  };
+let toString = (meet: t) =>
+  Printf.sprintf(
+    "Base: |%s| Meet: %s",
+    meet.base,
+    meet.position |> Position.show,
+  );
 
 let defaultTriggerCharacters = [UChar.of_char('.')];
 
-let getLine = maybeMeet => {
-  switch (maybeMeet) {
-  | None => None
-  | Some(meet) => Some(meet.meet.line)
-  };
-};
-
-let getColumn = maybeMeet => {
-  switch (maybeMeet) {
-  | None => None
-  | Some(meet) => Some(meet.meet.character)
-  };
-};
+let getPosition = meet => meet.position;
+let getBase = meet => meet.base;
 
 let createFromLine =
     (
@@ -84,29 +71,29 @@ let createFromLine =
   switch (pos^) {
   | (-1) =>
     if (baseLength == Index.toInt0(cursor) && baseLength > 0) {
-      Some({meet: Position.ofInt0(lineNumber, 0), base});
+      Some({position: Position.ofInt0(lineNumber, 0), base});
     } else {
       None;
     }
-  | v => Some({meet: Position.ofInt0(lineNumber, v), base})
+  | v => Some({position: Position.ofInt0(lineNumber, v), base})
   };
 };
 
-let createFromBufferCursor =
+let createFromBufferPosition =
     (
       ~triggerCharacters=defaultTriggerCharacters,
-      ~cursor: Position.t,
+      ~position: Position.t,
       buffer: Buffer.t,
     ) => {
   let bufferLines = Buffer.getNumberOfLines(buffer);
-  let line0 = Index.toInt0(cursor.line);
+  let line0 = Index.toInt0(position.line);
 
   if (line0 < bufferLines) {
     let line = Buffer.getLine(buffer, line0);
     createFromLine(
       ~lineNumber=line0,
       ~triggerCharacters,
-      ~cursor=cursor.character,
+      ~cursor=position.character,
       line,
     );
   } else {

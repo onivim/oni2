@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+module Option = Utility.Option;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
@@ -12,7 +13,7 @@ type filteredCompletion = Filter.result(CompletionItem.t);
 
 type t = {
   // The last completion meet we found
-  meet: CompletionMeet.t,
+  meet: option(CompletionMeet.t),
   completions: list(CompletionItem.t),
   filteredCompletions: list(filteredCompletion),
   filter: option(string),
@@ -27,7 +28,7 @@ let toString = (completions: t) => {
     };
   Printf.sprintf(
     "Completions - meet: %s filter: %s",
-    CompletionMeet.show(completions.meet),
+    Option.toString(CompletionMeet.toString, completions.meet),
     filter,
   );
 };
@@ -51,7 +52,7 @@ let endCompletions = (_v: t) => {
 let startCompletions = (meet: CompletionMeet.t, v: t) => {
   {
     ...v,
-    meet,
+    meet: Some(meet),
     completions: default.completions,
     filteredCompletions: default.filteredCompletions,
   };

@@ -58,9 +58,7 @@ module ExtensionCompletionProvider = {
          let uri = Core.Buffer.getUri(buffer);
          let position = Protocol.OneBasedPosition.ofPosition(position);
 
-         switch (matches) {
-         | false => None
-         | true =>
+         if (matches) {
            Some(
              ExtHostClient.getCompletions(
                suggestProvider.id,
@@ -69,7 +67,9 @@ module ExtensionCompletionProvider = {
                client,
              )
              |> Lwt.map(suggestionsToCompletionItems),
-           )
+           );
+         } else {
+           None;
          };
        });
   };
@@ -124,14 +124,15 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onRegisterSuggestProvider = (client, sp) => {
-    let completionProvider = ExtensionCompletionProvider.create(client, sp);
+  let onRegisterSuggestProvider = (client, provider) => {
+    let completionProvider =
+      ExtensionCompletionProvider.create(client, provider);
     dispatch(
       Oni_Model.Actions.LanguageFeatureRegisterCompletionProvider(
         completionProvider,
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
+    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
   let onOutput = Log.info;
@@ -250,50 +251,9 @@ let start = (extensions, setup: Core.Setup.t) => {
         languageFeatures,
       );
 
-    Lwt.bind(
-      completionPromise,
-      completions => {
-        dispatch(Model.Actions.CompletionAddItems(meet, completions));
-        Lwt.return();
-      },
-    );
-    /*providers
-      |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
-           Log.infof(m =>
-             m(
-               "Completions - getting completions for suggest provider: %n",
-               provider.id,
-             )
-           );
-           let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
-             ExtHostClient.getCompletions(
-               provider.id,
-               uri,
-               position,
-               extHostClient,
-             );
-
-           let _ =
-             Lwt.bind(
-               completionPromise,
-               completions => {
-                 switch (completions) {
-                 | None => Log.info("No completions for provider")
-                 | Some(completions) =>
-                   let completionItems =
-                     suggestionsToCompletionItems(completions);
-                   dispatch(
-                     Model.Actions.CompletionAddItems(
-                       completionMeet,
-                       completionItems,
-                     ),
-                   );
-                 };
-                 Lwt.return();
-               },
-             );
-           ();
-         });*/
+    Lwt.on_success(completionPromise, completions => {
+      dispatch(Model.Actions.CompletionAddItems(meet, completions))
+    });
   };
 
   let checkCompletionsEffect = state =>
@@ -301,13 +261,13 @@ let start = (extensions, setup: Core.Setup.t) => {
       Model.Selectors.getActiveBuffer(state)
       |> Option.iter(buf => {
            let uri = Core.Buffer.getUri(buf);
-           let meet = Model.Completions.getMeet(state.completions);
+           let maybeMeet = Model.Completions.getMeet(state.completions);
 
-           let maybeLine = Model.CompletionMeet.getLine(meet);
-           let maybeColumn = Model.CompletionMeet.getColumn(meet);
+           let maybePosition =
+             maybeMeet |> Option.map(Model.CompletionMeet.getPosition);
 
-           let request = (lineNumber: Core.Index.t, column: Core.Index.t) => {
-             let position = Core.Position.create(lineNumber, column);
+           let request =
+               (meet: Model.CompletionMeet.t, position: Core.Position.t) => {
              Log.infof(m =>
                m(
                  "Completions - requesting at %s for %s",
@@ -316,7 +276,7 @@ let start = (extensions, setup: Core.Setup.t) => {
                )
              );
              let languageFeatures = state.languageFeatures;
-             let _: Lwt.t(unit) =
+             let () =
                getAndDispatchCompletions(
                  ~languageFeatures,
                  ~buffer=buf,
@@ -327,7 +287,7 @@ let start = (extensions, setup: Core.Setup.t) => {
              ();
            };
 
-           Option.iter2(request, maybeLine, maybeColumn);
+           Option.iter2(request, maybeMeet, maybePosition);
          })
     });
 
