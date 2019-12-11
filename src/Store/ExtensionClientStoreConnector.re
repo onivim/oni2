@@ -49,7 +49,7 @@ module ExtensionCompletionProvider = {
         buffer,
         _completionMeet,
         position,
-      ) => {
+      ) =>
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(suggestProvider.selector),
@@ -72,7 +72,6 @@ module ExtensionCompletionProvider = {
            None;
          };
        });
-  };
 };
 
 let start = (extensions, setup: Core.Setup.t) => {
@@ -125,10 +124,13 @@ let start = (extensions, setup: Core.Setup.t) => {
   };
 
   let onRegisterSuggestProvider = (client, provider) => {
+    let id =
+      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
     let completionProvider =
       ExtensionCompletionProvider.create(client, provider);
     dispatch(
       Oni_Model.Actions.LanguageFeatureRegisterCompletionProvider(
+        id,
         completionProvider,
       ),
     );

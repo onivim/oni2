@@ -6,13 +6,20 @@
 
 open Oni_Core;
 
+module CompletionLog = (val Log.withNamespace("Oni2.CompletionProvider"));
+
 module CompletionProvider = {
   type t =
     (Buffer.t, CompletionMeet.t, Position.t) =>
     option(Lwt.t(list(CompletionItem.t)));
+
+  type info = {
+    provider: t,
+    id: string,
+  };
 };
 
-type t = {completionProviders: list(CompletionProvider.t)};
+type t = {completionProviders: list(CompletionProvider.info)};
 
 let empty = {completionProviders: []};
 
@@ -22,7 +29,16 @@ let requestCompletions =
     (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~position: Position.t, lf: t) => {
   let promises =
     lf.completionProviders
-    |> List.map(suggestor => suggestor(buffer, meet, position))
+    |> List.map((CompletionProvider.{id, provider}) => {
+         let result = provider(buffer, meet, position);
+         switch (result) {
+         | Some(_) =>
+           CompletionLog.infof(m => m("Querying completion provider: %s", id))
+         | None =>
+           CompletionLog.infof(m => m("Completion provider skipped: %s", id))
+         };
+         result;
+       })
     |> Utility.Option.values;
 
   let join = (accCompletions, currCompletions) =>
@@ -31,10 +47,9 @@ let requestCompletions =
   Utility.LwtUtil.all(join, promises);
 };
 
-let registerCompletionProvider =
-    (completionProvider: CompletionProvider.t, v: t) => {
-  completionProviders: [completionProvider, ...v.completionProviders],
+let registerCompletionProvider = (~id, ~provider: CompletionProvider.t, v: t) => {
+  completionProviders: [{id, provider}, ...v.completionProviders],
 };
 
-let getCompletionProviderCount = (lf: t) =>
-  List.length(lf.completionProviders);
+let getCompletionProviders = (lf: t) =>
+  lf.completionProviders |> List.map((CompletionProvider.{id, _}) => id);

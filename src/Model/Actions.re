@@ -69,6 +69,7 @@ type t =
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
   | LanguageFeatureRegisterCompletionProvider(
+      string,
       [@opaque] LanguageFeatures.CompletionProvider.t,
     )
   | QuickmenuShow(quickmenuVariant)

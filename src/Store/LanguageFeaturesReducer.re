@@ -7,8 +7,8 @@ open Actions;
 
 let reduce = (action: Actions.t, state: LanguageFeatures.t) => {
   switch (action) {
-  | LanguageFeatureRegisterCompletionProvider(sp) =>
-    LanguageFeatures.registerCompletionProvider(sp, state)
+  | LanguageFeatureRegisterCompletionProvider(id, provider) =>
+    LanguageFeatures.registerCompletionProvider(~id, ~provider, state)
   | _ => state
   };
 };

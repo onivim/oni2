@@ -5,6 +5,7 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 module TextSynchronization = TextSynchronization;
+module ExtensionHelpers = ExtensionHelpers;
 
 open Types;
 
