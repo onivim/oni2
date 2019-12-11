@@ -9,36 +9,51 @@ runTestWithInput(
     state.mode == Vim.Types.Normal
   );
 
-  // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.ts", None, None));
-
-  wait(
-    ~timeout=30.0,
-    ~name="Validate we have a TypeScript filetype",
-    (state: State.t) => {
-      let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
-
-      switch (fileType) {
-      | Some("typescript") => true
-      | _ => false
-      };
-    },
+  ExtensionHelpers.waitForExtensionToActivate(
+    ~extensionId="oni-dev-extension",
+    wait,
   );
 
-  // Wait until the extension is activated
-  // Give some time for the exthost to start
-  wait(
-    ~timeout=30.0,
-    ~name=
-      "Validate the 'typescript-language-features' extension gets activated",
-    (state: State.t) =>
-    List.exists(
-      id => id == "vscode.typescript-language-features",
-      state.extensions.activatedIds,
-    )
+  ExtensionHelpers.waitForNewCompletionProviders(
+    ~description="typescript completion",
+    () => {
+      // Create a buffer
+      dispatch(Actions.OpenFileByPath("test.ts", None, None));
+
+      wait(
+        ~timeout=30.0,
+        ~name="Validate we have a TypeScript filetype",
+        (state: State.t) => {
+          let fileType =
+            Some(state)
+            |> Option.bind(Selectors.getActiveBuffer)
+            |> Option.bind(Buffer.getFileType);
+
+          switch (fileType) {
+          | Some("typescript") => true
+          | _ => false
+          };
+        },
+      );
+      ExtensionHelpers.waitForExtensionToActivate(
+        ~extensionId="vscode.typescript-language-features",
+        wait,
+      );
+
+      // Wait until the extension is activated
+      // Give some time for the exthost to start
+      wait(
+        ~timeout=30.0,
+        ~name=
+          "Validate the 'typescript-language-features' extension gets activated",
+        (state: State.t) =>
+        List.exists(
+          id => id == "vscode.typescript-language-features",
+          state.extensions.activatedIds,
+        )
+      );
+    },
+    wait,
   );
 
   // Enter some text
