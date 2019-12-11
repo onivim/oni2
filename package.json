@@ -239,6 +239,7 @@
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
     "revery": "github:revery-ui/revery#b0021ec",
+    "reason-libvim": "onivim/reason-libvim#4919011",
     "editor-core-types": "onivim/editor-core-types#5e5ffd9"
   },
   "devDependencies": {

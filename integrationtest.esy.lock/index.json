@@ -1,5 +1,5 @@
 {
-  "checksum": "47e304c9c5fe94777675bc7a20e93001",
+  "checksum": "bb631d8a8ac0416639f3de30dcd2be0a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -312,23 +312,23 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@8.10869.26000@d41d8cd9": {
-      "id": "reason-libvim@8.10869.26000@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
       "name": "reason-libvim",
-      "version": "8.10869.26000",
+      "version": "github:onivim/reason-libvim#4919011",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.26000.tgz#sha1:07a6ef357ceff4e4b0c72eb6aea2bc4042f20edb"
-        ]
+        "source": [ "github:onivim/reason-libvim#4919011" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.26@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "libvim@8.10869.26@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#5e5ffd9@d41d8cd9",
+        "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
     "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9": {
       "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
@@ -978,7 +978,7 @@
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
         "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3011@d41d8cd9",
-        "reason-libvim@8.10869.26000@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
         "esy-sdl2@2.0.10005@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
