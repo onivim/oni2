@@ -565,7 +565,11 @@ let%component make =
           ++ string_of_int(col)
           ++ ")"
         );
-        let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
+        let cursor =
+          Vim.Cursor.create(
+            ~line=Index.fromOneBased(line + 1),
+            ~column=Index.fromZeroBased(col),
+          );
 
         /*GlobalContext.current().dispatch(
             Actions.EditorScrollToLine(editorId, topVisibleLine),

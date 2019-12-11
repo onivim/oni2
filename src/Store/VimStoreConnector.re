@@ -170,14 +170,8 @@ let start =
         dispatch(
           Actions.SearchSetMatchingPair(
             id,
-            Location.create(
-              Index.fromOneBased(newPosition.line),
-              Index.fromZeroBased(newPosition.column),
-            ),
-            Location.create(
-              Index.fromOneBased(line),
-              Index.fromZeroBased(column),
-            ),
+            newPosition,
+            Location.create(line, column),
           ),
         )
       };
@@ -200,21 +194,22 @@ let start =
 
   let _ =
     Vim.Visual.onRangeChanged(vr => {
-      open Vim.Range;
       open Vim.VisualRange;
 
       let {visualType, range} = vr;
-      let {startPos, endPos} = range;
-      let startColumn = startPos.column + 1;
-      let endColumn = endPos.column + 1;
       let vr =
         Core.VisualRange.create(
-          ~startLine=startPos.line,
-          ~startColumn,
-          ~endLine=endPos.line,
-          ~endColumn,
           ~mode=visualType,
-          (),
+          Range.{
+            start: {
+              ...range.start,
+              column: Index.(range.start.column + 1),
+            },
+            stop: {
+              ...range.stop,
+              column: Index.(range.stop.column + 1),
+            },
+          },
         );
       dispatch(SelectionChanged(vr));
     });
@@ -408,31 +403,14 @@ let start =
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: Vim.Range.t) =>
-          range.startPos.line == range.endPos.line;
+        let sameLineFilter = (range: Range.t) =>
+          range.start.line == range.stop.line;
 
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
 
-        let toOniRange = (range: Vim.Range.t) =>
-          Range.{
-            start:
-              Location.{
-                line: Index.fromOneBased(range.startPos.line),
-                column: Index.fromZeroBased(range.startPos.column),
-              },
-            stop:
-              Location.{
-                line: Index.fromOneBased(range.endPos.line),
-                column: Index.fromZeroBased(range.endPos.column),
-              },
-          };
-
         let highlightList =
-          highlights
-          |> Array.to_list
-          |> List.filter(sameLineFilter)
-          |> List.map(toOniRange);
+          highlights |> Array.to_list |> List.filter(sameLineFilter);
         dispatch(SearchSetHighlights(id, highlightList));
       | _ => ()
       };
@@ -545,12 +523,7 @@ let start =
       let () =
         location
         |> Option.iter((loc: Location.t) => {
-             let cursor =
-               Vim.Cursor.create(
-                 ~line=Index.toOneBased(loc.line),
-                 ~column=Index.toZeroBased(loc.column),
-                 (),
-               );
+             let cursor = (loc :> Vim.Cursor.t);
              let () = updateActiveEditorCursors([cursor]);
 
              let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
@@ -724,10 +697,13 @@ let start =
       Core.(
         switch (bestMatch, meet) {
         | (Some(completion), Some(meet)) =>
-          let cursorPosition = Vim.Cursor.getPosition();
+          let cursorLocation = Vim.Cursor.getLocation();
           let delta =
-            cursorPosition.column
-            - Index.toOneBased(meet.completionMeetColumn);
+            Index.(
+              toZeroBased(
+                cursorLocation.column - toOneBased(meet.completionMeetColumn),
+              )
+            );
 
           let idx = ref(delta);
           while (idx^ >= 0) {

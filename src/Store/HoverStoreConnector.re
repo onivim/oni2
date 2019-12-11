@@ -40,10 +40,7 @@ let start = () => {
 
           let position =
             switch (cursors) {
-            | [cursor, ..._] =>
-              let line = Index.fromOneBased(cursor.line);
-              let column = Index.fromZeroBased(cursor.column);
-              Location.create(line, column);
+            | [cursor, ..._] => (cursor :> Location.t)
             | [] => Location.create(Index.zero, Index.zero)
             };
           {

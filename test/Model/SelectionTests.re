@@ -14,12 +14,11 @@ describe("Selection", ({test, _}) =>
     /* Visual range is one-based */
     let vr =
       VisualRange.create(
-        ~startLine=1,
-        ~startColumn=1,
-        ~endLine=2,
-        ~endColumn=5,
         ~mode=Vim.Types.Line,
-        (),
+        Range.create({
+          start: Location.{line: Index.zero, column: Index.zero},
+          start: Location.{line: Index.(zero + 1), column: Index.(zero + 4)},
+        }),
       );
 
     let ranges = Selection.getRanges(vr, buffer) |> List.rev;

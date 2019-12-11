@@ -38,8 +38,15 @@ let create = (~bufferId=0, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursors: [Vim.Cursor.create(~line=1, ~column=0, ())],
-    selection: VisualRange.create(),
+    cursors: [Vim.Cursor.create(~line=Index.zero, ~column=Index.zero)],
+    selection:
+      VisualRange.create(
+        ~mode=Vim.Types.None,
+        Range.{
+          start: Location.{line: Index.zero, column: Index.zero},
+          stop: Location.{line: Index.zero, column: Index.zero},
+        },
+      ),
   };
 };
 
@@ -53,10 +60,7 @@ let getVimCursors = model => model.cursors;
 
 let getPrimaryCursor = model =>
   switch (model.cursors) {
-  | [cursor, ..._] =>
-    let line = Index.fromOneBased(cursor.line);
-    let column = Index.fromZeroBased(cursor.column);
-    Location.{line, column};
+  | [cursor, ..._] => (cursor :> Location.t)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
 
