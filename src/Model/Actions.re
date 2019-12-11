@@ -16,7 +16,7 @@ type t =
   | Tick(tick)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate(BufferUpdate.t)
+  | BufferUpdate([@opaque] BufferUpdate.t)
   | BufferSaved([@opaque] Vim.BufferMetadata.t)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)

@@ -86,7 +86,15 @@ let start = () => {
               }
             | ConfigurationChanged(config) => {
                 map(State.updateConfiguration(config));
-                log("handled config changed");
+                let treeSitterEnabled =
+                  Oni_Core.Configuration.getValue(
+                    c => c.experimentalTreeSitter,
+                    config,
+                  );
+                log(
+                  "got new config - treesitter enabled:"
+                  ++ (treeSitterEnabled ? "true" : "false"),
+                );
               }
             | ThemeChanged(theme) => {
                 map(State.updateTheme(theme));

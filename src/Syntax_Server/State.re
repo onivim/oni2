@@ -176,7 +176,6 @@ let clearTokenUpdates = state => {
 };
 
 let bufferUpdate =
-    //      ~configuration,
     (~scope, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
   let highlightsMap =
     IntMap.update(
@@ -195,7 +194,7 @@ let bufferUpdate =
 
           Some(
             NativeSyntaxHighlights.create(
-              //              ~configuration,
+              ~configuration=state.configuration,
               ~bufferUpdate,
               ~theme=state.theme,
               ~scope,

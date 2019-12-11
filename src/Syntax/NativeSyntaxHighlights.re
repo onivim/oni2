@@ -77,9 +77,9 @@ let updateTheme = (theme, hl) => {
 };
 
 let create =
-    //      ~configuration,
     (
       ~bufferUpdate,
+      ~configuration,
       ~scope,
       ~theme,
       ~getTreesitterScope,
@@ -88,15 +88,21 @@ let create =
     ) => {
   let maybeScopeConverter = getTreesitterScope(scope);
 
+  let allowTreeSitter =
+    Core.Configuration.getValue(
+      config => config.experimentalTreeSitter,
+      configuration,
+    );
+
   switch (maybeScopeConverter) {
-  | Some(scopeConverter) =>
+  | Some(scopeConverter) when allowTreeSitter =>
     let ts =
       TreeSitterSyntaxHighlights.create(~theme, ~scopeConverter, lines);
     Highlighter({
       highlighter: (module TreeSitterSyntaxHighlights),
       state: ts,
     });
-  | None =>
+  | _ =>
     let tm =
       TextMateSyntaxHighlights.create(
         ~scope,

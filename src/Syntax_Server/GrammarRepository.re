@@ -22,9 +22,7 @@ let empty = create(Ext.LanguageInfo.empty);
 
 let getGrammar = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
-  | Some(v) =>
-    gr.log("getGrammar - using cached grammar.");
-    Some(v);
+  | Some(v) => Some(v)
   | None =>
     gr.log("getGrammar - querying language info");
     switch (Ext.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)) {
@@ -35,7 +33,7 @@ let getGrammar = (~scope: string, gr: t) => {
 
       switch (resultGrammar) {
       | Ok(grammar) =>
-        gr.log("Grammar laoded successfully");
+        gr.log("Grammar loaded successfully");
         Hashtbl.add(gr.scopeToGrammar, scope, grammar);
         Some(grammar);
       | Error(e) =>
