@@ -97,6 +97,7 @@ let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
   |> Utility.Option.values
   |> Lwt.choose;
 };
+exception TestFailure;
 
 let requestDocumentHighlights =
     (~buffer: Buffer.t, ~location: Location.t, lf: t) => {

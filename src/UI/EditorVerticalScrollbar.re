@@ -161,7 +161,10 @@ let make =
   };
 
   let searchMatchElements =
-    BufferHighlights.getHighlights(editor.bufferId, state.bufferHighlights)
+    BufferHighlights.getHighlights(
+      ~bufferId=editor.bufferId,
+      state.bufferHighlights,
+    )
     |> List.map(searchHighlightToElement)
     |> React.listToElement;
 

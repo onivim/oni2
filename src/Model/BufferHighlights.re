@@ -5,13 +5,16 @@
  * document highlights from the language service
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
-open EditorCoreTypes;
-open Oni_Core;
-
 type matchingPair = (Location.t, Location.t);
+
+[@deriving show({with_path: false})]
+type action =
+  | DocumentHighlightsAvailable(int, [@opaque] list(Range.t))
+  | DocumentHighlightsCleared(int);
 
 type highlights = {
   matchingPair: option(matchingPair),

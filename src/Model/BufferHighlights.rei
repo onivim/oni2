@@ -5,6 +5,11 @@
  */
 open EditorCoreTypes;
 
+[@deriving show({with_path: false})]
+type action =
+  | DocumentHighlightsAvailable(int, list(Range.t))
+  | DocumentHighlightsCleared(int);
+
 type t;
 
 let initial: t;
