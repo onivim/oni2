@@ -101,7 +101,6 @@ module ExtensionDefinitionProvider = {
         buffer,
         location,
       ) => {
-    prerr_endline("Checking for definition");
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(definitionProvider.selector),
@@ -111,7 +110,6 @@ module ExtensionDefinitionProvider = {
          let position = Protocol.OneBasedPosition.ofPosition(location);
 
          if (matches) {
-           prerr_endline("!! Calling provideDefinition");
            Some(
              ExtHostClient.provideDefinition(
                definitionProvider.id,
@@ -122,7 +120,6 @@ module ExtensionDefinitionProvider = {
              |> Lwt.map(definitionToModel),
            );
          } else {
-           prerr_endline("!! No match, returning none..");
            None;
          };
        });

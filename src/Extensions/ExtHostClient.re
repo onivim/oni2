@@ -186,10 +186,7 @@ let provideDefinition = (id, uri, position, client) => {
       | `List([fst, ..._]) => fst
       | v => v
       };
-    prerr_endline("GOT REPLY: " ++ Yojson.Safe.to_string(json));
-    let ret = Protocol.DefinitionLink.of_yojson_exn(json);
-    prerr_endline("Parsed successfully!");
-    ret;
+    Protocol.DefinitionLink.of_yojson_exn(json);
   };
 
   let promise =
