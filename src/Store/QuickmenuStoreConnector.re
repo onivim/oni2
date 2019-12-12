@@ -114,7 +114,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(EditorsPicker) => 
+    | QuickmenuShow(EditorsPicker) =>
       let items = makeBufferCommands(languageInfo, iconTheme, buffers);
 
       (
@@ -124,7 +124,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
           focused: Some(min(1, Array.length(items) - 1)),
         }),
         Isolinear.Effect.none,
-      )
+      );
 
     | QuickmenuShow(FilesPicker) => (
         Some({
