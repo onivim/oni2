@@ -75,6 +75,8 @@ let runTest =
   let configurationFilePath = Filename.temp_file("configuration", ".json");
   let oc = open_out(configurationFilePath);
 
+  logInit("Writing configuration file: " ++ configurationFilePath);
+
   let () =
     configuration
     |> Option.value(~default="{}")
