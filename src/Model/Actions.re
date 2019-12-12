@@ -111,8 +111,8 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | PaneVisible(Pane.paneType)
-  | PaneHidden
+  | PaneOpen(Pane.paneType)
+  | PaneClosed
   | SearchInput(string, int)
   | SearchStart
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))

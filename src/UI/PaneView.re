@@ -19,9 +19,9 @@ module Styles = {
 };
 
 let showSearch = _ =>
-  GlobalContext.current().dispatch(Actions.PaneShow(Pane.Search));
+  GlobalContext.current().dispatch(Actions.PaneOpen(Pane.Search));
 let showProblems = _ =>
-  GlobalContext.current().dispatch(Actions.PaneShow(Pane.Diagnostics));
+  GlobalContext.current().dispatch(Actions.PaneOpen(Pane.Diagnostics));
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
   ignore(uiFont);

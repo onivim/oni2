@@ -18,9 +18,9 @@ let initial = {activePane: Search, isOpen: false};
 
 let getType = pane => !pane.isOpen ? None : Some(pane.activePane);
 
-let isVisible = pane => pane.isOpen;
+let isOpen = pane => pane.isOpen;
 
-let isTypeVisible = (paneType, pane) =>
+let isTypeOpen = (paneType, pane) =>
   pane.isOpen && pane.activePane == paneType;
 
 let setClosed = pane => {...pane, isOpen: false};

@@ -16,9 +16,9 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
 let toggleSearch = ({pane, _}: State.t, _) => {
   let action =
     if (Pane.isTypeOpen(Pane.Search, pane)) {
-      Actions.PaneHide;
+      Actions.PaneClosed;
     } else {
-      Actions.PaneShow(Pane.Search);
+      Actions.PaneOpen(Pane.Search);
     };
   GlobalContext.current().dispatch(action);
 };
