@@ -20,7 +20,7 @@ function activate(context) {
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
         provideDefinition: (document, _position, _token) => {
-             return new vscode.Location(document.uri, new vscode.Position(1, 1));
+             return new vscode.Location(document.uri, new vscode.Position(0, 0));
         }
     }));
 

@@ -181,10 +181,15 @@ let provideCompletions = (id, uri, position, client) => {
 
 let provideDefinition = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
-    failwith(
-      "GOT REPLY: " ++ Yojson.Safe.to_string(json),
-      //In.LanguageFeatures.parseProvideCompletionsResponse(json);
-    );
+    let json =
+      switch (json) {
+      | `List([fst, ..._]) => fst
+      | v => v
+      };
+    prerr_endline("GOT REPLY: " ++ Yojson.Safe.to_string(json));
+    let ret = Protocol.DefinitionLink.of_yojson_exn(json);
+    prerr_endline("Parsed successfully!");
+    ret;
   };
 
   let promise =

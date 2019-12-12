@@ -21,7 +21,7 @@ let start = () => {
   let checkForDefinitionEffect = (languageFeatures, buffer, position) =>
     Isolinear.Effect.createWithDispatch(
       ~name="hover.checkForDefinition", dispatch => {
-      Log.info("Checking for hover...");
+      Log.info("Checking for definition...");
 
       let promise =
         Model.LanguageFeatures.requestDefinition(

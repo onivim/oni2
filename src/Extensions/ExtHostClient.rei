@@ -37,6 +37,6 @@ let provideCompletions:
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
-  Lwt.t(option(Protocol.DefinitionLink.t));
+  Lwt.t(Protocol.DefinitionLink.t);
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;

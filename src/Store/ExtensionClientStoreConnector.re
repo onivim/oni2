@@ -76,10 +76,21 @@ module ExtensionCompletionProvider = {
 };
 
 module ExtensionDefinitionProvider = {
-  let definitionToModel = (def: option(Protocol.DefinitionLink.t)) => {
+  let definitionToModel = def => {
+    let Protocol.DefinitionLink.{
+          uri,
+          range as oneBasedRange,
+          originSelectionRange,
+        } = def;
+    let Range.{start, _} = Protocol.OneBasedRange.toRange(oneBasedRange);
+
+    let originRange =
+      originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
+
     Model.LanguageFeatures.DefinitionResult.create(
-      ~uri=Uri.fromPath("/Users/bryphe/revery/package.json"),
-      ~location=Location.create(~line=Index.zero, ~column=Index.zero),
+      ~originRange,
+      ~uri,
+      ~location=start,
     );
   };
 
@@ -90,6 +101,7 @@ module ExtensionDefinitionProvider = {
         buffer,
         location,
       ) => {
+    prerr_endline("Checking for definition");
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(definitionProvider.selector),
@@ -99,6 +111,7 @@ module ExtensionDefinitionProvider = {
          let position = Protocol.OneBasedPosition.ofPosition(location);
 
          if (matches) {
+           prerr_endline("!! Calling provideDefinition");
            Some(
              ExtHostClient.provideDefinition(
                definitionProvider.id,
@@ -109,6 +122,7 @@ module ExtensionDefinitionProvider = {
              |> Lwt.map(definitionToModel),
            );
          } else {
+           prerr_endline("!! No match, returning none..");
            None;
          };
        });

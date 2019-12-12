@@ -161,12 +161,14 @@ module OneBasedRange = {
 };
 
 module DefinitionLink = {
-  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  [@deriving yojson({strict: false, exn: true})]
   type t = {
+    [@default None]
     originSelectionRange: option(OneBasedRange.t),
     uri: Uri.t,
     range: OneBasedRange.t,
-    targetSelectionRange: option(OneBasedRange.t),
+    /*[@default None]
+      targetSelectionRange: option(OneBasedRange.t),*/
   };
 };
 

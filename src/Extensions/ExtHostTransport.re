@@ -215,7 +215,15 @@ let send = (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t) => {
 let request =
     (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t, f) => {
   let promise = v.sendRequest(msgType, msg);
-  Lwt.map(f, promise);
+  let wrapper = json =>
+    try(Lwt.return(f(json))) {
+    | e =>
+      Log.warnf(m =>
+        m("Request failed with error: %s", Printexc.to_string(e))
+      );
+      Lwt.fail(e);
+    };
+  Lwt.bind(promise, wrapper);
 };
 
 let close = (v: t) => {

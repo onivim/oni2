@@ -24,15 +24,21 @@ module DefinitionResult = {
   type t = {
     uri: Uri.t,
     location: Location.t,
+    originRange: option(Range.t),
   };
 
-  let create = (~uri, ~location) => {uri, location};
+  let create = (~originRange=None, ~uri, ~location) => {
+    uri,
+    location,
+    originRange,
+  };
 
   let toString = def =>
     Printf.sprintf(
-      "Definition - uri: %s position: %s",
+      "Definition - uri: %s position: %s originRange: %s",
       Uri.toString(def.uri),
       Location.show(def.location),
+      def.originRange |> Utility.Option.toString(Range.show),
     );
 };
 
