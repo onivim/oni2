@@ -75,6 +75,19 @@ module ExtensionCompletionProvider = {
        });
 };
 
+module ExtensionDefinitionProvider = {
+  let create = () => {
+      (_buffer, _location) => {
+          Model.LanguageFeatures.(
+          Some(Lwt.return(DefinitionResult.create(
+            ~uri=Uri.fromPath("/Users/bryphe/revery/package.json"),
+            ~location=Location.create(~line=Index.zero, ~column=Index.zero),
+          ))
+          ))
+      };
+  } 
+};
+
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
@@ -136,6 +149,14 @@ let start = (extensions, setup: Core.Setup.t) => {
           completionProvider,
         ),
       ),
+    );
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.DefinitionProviderAvailable(
+          id,
+          ExtensionDefinitionProvider.create(),
+        )
+      )
     );
     Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };

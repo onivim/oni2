@@ -23,16 +23,16 @@ module CompletionProvider = {
 module DefinitionResult = {
   type t = {
     uri: Uri.t,
-    position: Location.t,
+    location: Location.t,
   };
 
-  let create = (~uri, ~position) => {uri, position};
+  let create = (~uri, ~location) => {uri, location};
 
   let toString = def =>
     Printf.sprintf(
       "Definition - uri: %s position: %s",
       Uri.toString(def.uri),
-      Location.show(def.position),
+      Location.show(def.location),
     );
 };
 

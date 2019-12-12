@@ -82,7 +82,7 @@ let start =
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
-               Some(definitionResult.position),
+               Some(definitionResult.location),
              )
            });
       };
