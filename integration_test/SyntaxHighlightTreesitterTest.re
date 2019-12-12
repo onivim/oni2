@@ -4,7 +4,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 let configuration = Some({|
-{ "experimental.treeSitter": true },
+{ "experimental.treeSitter": true }
 |});
 
 // Validate that treesitter highlight runs
