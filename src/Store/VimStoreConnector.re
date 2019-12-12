@@ -696,39 +696,38 @@ let start =
         completions
         |> Completions.getMeet
         |> Option.map(CompletionMeet.getLocation);
-        switch (bestMatch, maybeMeetPosition) {
-        | (Some(completion), Some(meetPosition)) =>
-          let meet = Location.(meetPosition.column);
-          let cursorLocation = Vim.Cursor.getLocation();
-    let delta =
-          Index.(
-            toZeroBased(
-              cursorLocation.column - toOneBased(meet),
-            )
-          );
-          Log.infof(m => m("Completing at cursor position: %s | meet: %s", 
+      switch (bestMatch, maybeMeetPosition) {
+      | (Some(completion), Some(meetPosition)) =>
+        let meet = Location.(meetPosition.column);
+        let cursorLocation = Vim.Cursor.getLocation();
+        let delta =
+          Index.(toZeroBased(cursorLocation.column - toOneBased(meet)));
+        Log.infof(m =>
+          m(
+            "Completing at cursor position: %s | meet: %s",
             Index.show(cursorLocation.column),
-            Index.show(meet)
-            ));
+            Index.show(meet),
+          )
+        );
 
-          let idx = ref(delta);
-          while (idx^ >= 0) {
-            let _ = Vim.input("<BS>");
-            decr(idx);
-          };
+        let idx = ref(delta);
+        while (idx^ >= 0) {
+          let _ = Vim.input("<BS>");
+          decr(idx);
+        };
 
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(Zed_utf8.singleton(s));
-              ();
-            },
-            completion.item.label,
-          );
-          updateActiveEditorCursors(latestCursors^);
-        | _ => ()
-        }
-      });
+        let latestCursors = ref([]);
+        Zed_utf8.iter(
+          s => {
+            latestCursors := Vim.input(Zed_utf8.singleton(s));
+            ();
+          },
+          completion.item.label,
+        );
+        updateActiveEditorCursors(latestCursors^);
+      | _ => ()
+      };
+    });
 
   let prevViml = ref([]);
   let synchronizeViml = configuration =>
