@@ -25,8 +25,8 @@ let start = () => {
 
       let promise =
         Model.LanguageFeatures.requestDefinition(
-          buffer,
-          position,
+          ~buffer,
+          ~location=position,
           languageFeatures,
         );
 

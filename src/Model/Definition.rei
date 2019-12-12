@@ -4,7 +4,6 @@
  * This module is responsible for recording and managing the 'definition' feature state
  */
 open EditorCoreTypes;
-open Oni_Core;
 
 type t;
 

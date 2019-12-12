@@ -2,8 +2,6 @@
  * DefinitionReducer.re
  */
 
-open Oni_Extensions;
-
 open Oni_Model;
 
 let reduce = (action: Actions.t, state: Definition.t) => {
