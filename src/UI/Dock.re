@@ -15,10 +15,10 @@ let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
 
 let toggleSearch = ({pane, _}: State.t, _) => {
   let action =
-    if (Oni_Model.Pane.isTypeOpen(Oni_Model.Pane.Search, pane)) {
+    if (Pane.isTypeOpen(Pane.Search, pane)) {
       Actions.PaneHide;
     } else {
-      Actions.PaneShow(Oni_Model.Pane.Search);
+      Actions.PaneShow(Pane.Search);
     };
   GlobalContext.current().dispatch(action);
 };
