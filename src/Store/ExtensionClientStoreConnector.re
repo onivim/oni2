@@ -61,7 +61,7 @@ module ExtensionCompletionProvider = {
 
          if (matches) {
            Some(
-             ExtHostClient.getCompletions(
+             ExtHostClient.provideCompletions(
                suggestProvider.id,
                uri,
                position,
@@ -76,16 +76,43 @@ module ExtensionCompletionProvider = {
 };
 
 module ExtensionDefinitionProvider = {
-  let create = () => {
-      (_buffer, _location) => {
-          Model.LanguageFeatures.(
-          Some(Lwt.return(DefinitionResult.create(
-            ~uri=Uri.fromPath("/Users/bryphe/revery/package.json"),
-            ~location=Location.create(~line=Index.zero, ~column=Index.zero),
-          ))
-          ))
-      };
-  } 
+  let definitionToModel = (def: option(Protocol.DefinitionLink.t)) => {
+    Model.LanguageFeatures.DefinitionResult.create(
+      ~uri=Uri.fromPath("/Users/bryphe/revery/package.json"),
+      ~location=Location.create(~line=Index.zero, ~column=Index.zero),
+    );
+  };
+
+  let create =
+      (
+        client,
+        definitionProvider: Protocol.DefinitionProvider.t,
+        buffer,
+        location,
+      ) => {
+    Core.Buffer.getFileType(buffer)
+    |> Option.map(
+         Extensions.DocumentSelector.matches(definitionProvider.selector),
+       )
+    |> Option.bind(matches => {
+         let uri = Core.Buffer.getUri(buffer);
+         let position = Protocol.OneBasedPosition.ofPosition(location);
+
+         if (matches) {
+           Some(
+             ExtHostClient.provideDefinition(
+               definitionProvider.id,
+               uri,
+               position,
+               client,
+             )
+             |> Lwt.map(definitionToModel),
+           );
+         } else {
+           None;
+         };
+       });
+  };
 };
 
 let start = (extensions, setup: Core.Setup.t) => {
@@ -137,6 +164,22 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onRegisterDefinitionProvider = (client, provider) => {
+    let id =
+      Protocol.DefinitionProvider.("exthost." ++ string_of_int(provider.id));
+    let definitionProvider =
+      ExtensionDefinitionProvider.create(client, provider);
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.DefinitionProviderAvailable(
+          id,
+          definitionProvider,
+        ),
+      ),
+    );
+    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
+  };
+
   let onRegisterSuggestProvider = (client, provider) => {
     let id =
       Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
@@ -150,20 +193,8 @@ let start = (extensions, setup: Core.Setup.t) => {
         ),
       ),
     );
-    dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DefinitionProviderAvailable(
-          id,
-          ExtensionDefinitionProvider.create(),
-        )
-      )
-    );
     Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
-
-  /* let onRegisterDefintionProvider = (sp: LanguageFeatures.DefinitionProvider.t) => {
-
-     };*/
 
   let onOutput = Log.info;
 
@@ -189,6 +220,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDiagnosticsClear,
       ~onDiagnosticsChangeMany,
       ~onDidActivateExtension,
+      ~onRegisterDefinitionProvider,
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,

@@ -19,6 +19,7 @@ let start:
     ~onTelemetry: string => unit=?,
     ~onOutput: string => unit=?,
     ~onRegisterCommand: string => unit=?,
+    ~onRegisterDefinitionProvider: (t, Protocol.DefinitionProvider.t) => unit=?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
@@ -31,8 +32,11 @@ let acceptWorkspaceData: (Workspace.t, t) => unit;
 let addDocument: (Protocol.ModelAddedDelta.t, t) => unit;
 let updateDocument:
   (Core.Uri.t, Protocol.ModelChangedEvent.t, bool, t) => unit;
-let getCompletions:
+let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
+let provideDefinition:
+  (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
+  Lwt.t(option(Protocol.DefinitionLink.t));
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
