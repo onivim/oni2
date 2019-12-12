@@ -2,9 +2,9 @@
  NativeSyntaxHighlighting.re
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module ColorizedToken = Core.ColorizedToken;
-module Range = Core.Range;
 
 module type SyntaxHighlighter = {
   type t;

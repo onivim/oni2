@@ -5,6 +5,7 @@
  * the view of the buffer in the window.
  */
 
+open EditorCoreTypes;
 open Revery;
 open Revery.Draw;
 open Revery.UI;
@@ -149,7 +150,7 @@ let renderTokens =
     let x =
       lineNumberWidth
       +. fontWidth
-      *. float_of_int(Index.toZeroBasedInt(token.startPosition))
+      *. float_of_int(Index.toZeroBased(token.startPosition))
       -. xF;
     let y = yF;
 
@@ -258,7 +259,7 @@ let%component make =
 
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let cursorLine = Index.toZeroBasedInt(cursorPosition.line);
+  let cursorLine = Index.toZeroBased(cursorPosition.line);
 
   let (cursorOffset, cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
@@ -268,7 +269,7 @@ let%component make =
         BufferViewTokenizer.getCharacterPositionAndWidth(
           ~indentation,
           cursorStr,
-          Index.toZeroBasedInt(cursorPosition.character),
+          Index.toZeroBased(cursorPosition.column),
         );
       (cursorOffset, width);
     } else {
@@ -295,7 +296,7 @@ let%component make =
   let cursorPixelY =
     int_of_float(
       fontHeight
-      *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
+      *. float_of_int(Index.toZeroBased(cursorPosition.line))
       -. editor.scrollY
       +. 0.5,
     );
@@ -368,10 +369,10 @@ let%component make =
       switch (matchingPairs) {
       | None => None
       | Some(v) when !ignoreMatchingPairs =>
-        if (Index.toInt0(v.startPos.line) == i) {
-          Some(Index.toInt0(v.startPos.character));
-        } else if (Index.toInt0(v.endPos.line) == i) {
-          Some(Index.toInt0(v.endPos.character));
+        if (Index.toZeroBased(v.startPos.line) == i) {
+          Some(Index.toZeroBased(v.startPos.column));
+        } else if (Index.toZeroBased(v.endPos.line) == i) {
+          Some(Index.toZeroBased(v.endPos.column));
         } else {
           None;
         }
@@ -411,9 +412,9 @@ let%component make =
     );
   };
 
-  let _getTokenAtPosition = (~startIndex, ~endIndex, position: Position.t) => {
-    let lineNumber = position.line |> Index.toInt0;
-    let index = position.character |> Index.toInt0;
+  let _getTokenAtPosition = (~startIndex, ~endIndex, position: Location.t) => {
+    let lineNumber = position.line |> Index.toZeroBased;
+    let index = position.column |> Index.toZeroBased;
 
     getTokensForLine(
       ~ignoreMatchingPairs=true,
@@ -422,8 +423,8 @@ let%component make =
       lineNumber,
     )
     |> List.filter((token: BufferViewTokenizer.t) => {
-         let tokenStart = token.startPosition |> Index.toInt0;
-         let tokenEnd = token.endPosition |> Index.toInt0;
+         let tokenStart = token.startPosition |> Index.toZeroBased;
+         let tokenEnd = token.endPosition |> Index.toZeroBased;
          index >= tokenStart && index < tokenEnd;
        })
     |> Utility.Option.of_list;
@@ -564,7 +565,11 @@ let%component make =
           ++ string_of_int(col)
           ++ ")"
         );
-        let cursor = Vim.Cursor.create(~line=line + 1, ~column=col, ());
+        let cursor =
+          Vim.Cursor.create(
+            ~line=Index.fromOneBased(line + 1),
+            ~column=Index.fromZeroBased(col),
+          );
 
         /*GlobalContext.current().dispatch(
             Actions.EditorScrollToLine(editorId, topVisibleLine),
@@ -598,7 +603,7 @@ let%component make =
             ~x=lineNumberWidth,
             ~y=
               fontHeight
-              *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
+              *. float_of_int(Index.toZeroBased(cursorPosition.line))
               -. editor.scrollY,
             ~height=fontHeight,
             ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
@@ -622,9 +627,9 @@ let%component make =
 
           let renderUnderline = (~offset=0., ~color=Colors.black, r: Range.t) =>
             {let halfOffset = offset /. 2.0;
-             let line = Index.toZeroBasedInt(r.startPosition.line);
-             let start = Index.toZeroBasedInt(r.startPosition.character);
-             let endC = Index.toZeroBasedInt(r.endPosition.character);
+             let line = Index.toZeroBased(r.start.line);
+             let start = Index.toZeroBased(r.start.column);
+             let endC = Index.toZeroBased(r.stop.column);
 
              let text = Buffer.getLine(buffer, line);
              let (startOffset, _) =
@@ -651,7 +656,7 @@ let%component make =
                  -. halfOffset,
                ~y=
                  fontHeight
-                 *. float_of_int(Index.toZeroBasedInt(r.startPosition.line))
+                 *. float_of_int(Index.toZeroBased(r.start.line))
                  -. editor.scrollY
                  -. halfOffset
                  +. (fontHeight -. 2.),
@@ -666,9 +671,9 @@ let%component make =
 
           let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
             {let halfOffset = offset /. 2.0;
-             let line = Index.toZeroBasedInt(r.startPosition.line);
-             let start = Index.toZeroBasedInt(r.startPosition.character);
-             let endC = Index.toZeroBasedInt(r.endPosition.character);
+             let line = Index.toZeroBased(r.start.line);
+             let start = Index.toZeroBased(r.start.column);
+             let endC = Index.toZeroBased(r.stop.column);
 
              let lines = Buffer.getNumberOfLines(buffer);
              if (line < lines) {
@@ -697,9 +702,7 @@ let%component make =
                    -. halfOffset,
                  ~y=
                    fontHeight
-                   *. float_of_int(
-                        Index.toZeroBasedInt(r.startPosition.line),
-                      )
+                   *. float_of_int(Index.toZeroBased(r.start.line))
                    -. editor.scrollY
                    -. halfOffset,
                  ~height=fontHeight +. offset,
@@ -742,6 +745,7 @@ let%component make =
             ~count,
             ~render=
               (item, _offset) => {
+                let index = Index.fromZeroBased(item);
                 let renderDiagnostics = (d: Diagnostic.t) =>
                   renderUnderline(~color=Colors.red, d.range);
 
@@ -751,7 +755,7 @@ let%component make =
                 | Some(v) => List.iter(renderDiagnostics, v)
                 };
 
-                switch (Hashtbl.find_opt(selectionRanges, item)) {
+                switch (Hashtbl.find_opt(selectionRanges, index)) {
                 | None => ()
                 | Some(v) =>
                   List.iter(
@@ -768,20 +772,12 @@ let%component make =
                   renderRange(
                     ~offset=0.0,
                     ~color=matchColor,
-                    Range.createFromPositions(
-                      ~startPosition=v.startPos,
-                      ~endPosition=v.startPos,
-                      (),
-                    ),
+                    Range.{start: v.startPos, stop: v.startPos},
                   );
                   renderRange(
                     ~offset=0.0,
                     ~color=matchColor,
-                    Range.createFromPositions(
-                      ~startPosition=v.endPos,
-                      ~endPosition=v.endPos,
-                      (),
-                    ),
+                    Range.{start: v.endPos, stop: v.endPos},
                   );
                 };
 
@@ -810,8 +806,9 @@ let%component make =
             ~count,
             ~render=
               (item, offset) => {
+                let index = Index.fromZeroBased(item);
                 let selectionRange =
-                  switch (Hashtbl.find_opt(selectionRanges, item)) {
+                  switch (Hashtbl.find_opt(selectionRanges, index)) {
                   | None => None
                   | Some(v) =>
                     switch (List.length(v)) {
@@ -912,7 +909,7 @@ let%component make =
                 ~endLine=bottomVisibleLine + 1,
                 ~lineHeight=fontHeight,
                 ~fontWidth,
-                ~cursorLine=Index.toZeroBasedInt(cursorPosition.line),
+                ~cursorLine=Index.toZeroBased(cursorPosition.line),
                 ~theme=state.theme,
                 ~indentationSettings=indentation,
                 ~bufferPositionToPixel,

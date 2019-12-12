@@ -4,6 +4,7 @@
  * Encapsulates actions that can impact the editor state
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
@@ -77,13 +78,14 @@ type t =
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
   | QuickmenuSearch(string)
+  | QuickmenuMaybeLoseFocus
   | QuickmenuClose
   | ListFocus(int)
   | ListFocusUp
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Position.t))
+  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
@@ -94,7 +96,7 @@ type t =
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
-  | SearchSetMatchingPair(int, Position.t, Position.t)
+  | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)

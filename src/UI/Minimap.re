@@ -4,6 +4,7 @@
  * Component that handles Minimap rendering
  */
 
+open EditorCoreTypes;
 open Revery;
 open Revery.Draw;
 open Revery.UI;
@@ -27,8 +28,8 @@ let renderLine =
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
-      let startPosition = Index.toZeroBasedInt(token.startPosition);
-      let endPosition = Index.toZeroBasedInt(token.endPosition);
+      let startPosition = Index.toZeroBased(token.startPosition);
+      let endPosition = Index.toZeroBased(token.endPosition);
       let tokenWidth = endPosition - startPosition;
 
       let x =
@@ -93,7 +94,7 @@ let%component make =
                 ~count,
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
-                ~selection: Hashtbl.t(int, list(Range.t)),
+                ~selection: Hashtbl.t(Index.t, list(Range.t)),
                 ~metrics,
                 (),
               ) => {
@@ -199,7 +200,7 @@ let%component make =
           ~x=0.,
           ~y=
             rowHeight
-            *. float_of_int(Index.toZeroBasedInt(cursorPosition.line))
+            *. float_of_int(Index.toZeroBased(cursorPosition.line))
             -. scrollY,
           ~height=float_of_int(Constants.default.minimapCharacterHeight),
           ~width=float_of_int(width),
@@ -212,11 +213,11 @@ let%component make =
 
         let renderRange = (~color, ~offset, range: Range.t) =>
           {let startX =
-             Index.toZeroBasedInt(range.startPosition.character)
+             Index.toZeroBased(range.start.column)
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
            let endX =
-             Index.toZeroBasedInt(range.endPosition.character)
+             Index.toZeroBased(range.stop.column)
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
@@ -233,11 +234,11 @@ let%component make =
 
         let renderUnderline = (~color, ~offset, range: Range.t) =>
           {let startX =
-             Index.toZeroBasedInt(range.startPosition.character)
+             Index.toZeroBased(range.start.column)
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
            let endX =
-             Index.toZeroBasedInt(range.endPosition.character)
+             Index.toZeroBased(range.stop.column)
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
@@ -262,7 +263,8 @@ let%component make =
             (item, offset) => {
               open Range;
               /* draw selection */
-              switch (Hashtbl.find_opt(selection, item)) {
+              let index = Index.fromZeroBased(item);
+              switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
                 let selectionColor = state.theme.editorSelectionBackground;
@@ -278,8 +280,8 @@ let%component make =
               let shouldHighlight = i =>
                 List.exists(
                   r =>
-                    Index.toInt0(r.startPosition.character) <= i
-                    && Index.toInt0(r.endPosition.character) >= i,
+                    Index.toZeroBased(r.start.column) <= i
+                    && Index.toZeroBased(r.stop.column) >= i,
                   highlightRanges,
                 );
 

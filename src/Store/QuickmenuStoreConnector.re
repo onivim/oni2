@@ -13,6 +13,7 @@ module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module Utility = Core.Utility;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun
@@ -27,6 +28,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
       dispatch(action);
+      dispatch(Actions.QuickmenuMaybeLoseFocus);
     });
 
   let executeVimCommandEffect =
@@ -259,7 +261,6 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       )
 
     | ListSelect =>
-      Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
@@ -270,7 +271,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         }
 
       | _ => (state, Isolinear.Effect.none)
-      };
+      }
 
     | ListSelectBackground =>
       switch (state) {
@@ -284,6 +285,14 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
       | _ => (state, Isolinear.Effect.none)
       }
+
+    // Triggered by selectItemEffect in order to lose focus iff the item command
+    // has resulted in the menu being closed
+    | QuickmenuMaybeLoseFocus =>
+      if (state == None) {
+        Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
+      };
+      (state, Isolinear.Effect.none);
 
     | QuickmenuClose =>
       Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
@@ -377,7 +386,7 @@ let subscriptions = ripgrep => {
 
           dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
-      ~onCompleted=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+      ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
     );
   };
 

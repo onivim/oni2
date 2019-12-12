@@ -5,6 +5,7 @@
    per-line.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 open Treesitter;
@@ -45,19 +46,18 @@ let updateTheme = (theme: TokenTheme.t, v: t) => {
 let doWork = (context: context, line: int) => {
   let rootNode = Tree.getRootNode(context.tree);
   let range =
-    Treesitter.Types.Range.create(
-      ~startPosition=Treesitter.Types.Position.create(~line, ~column=0, ()),
-      ~endPosition=
-        Treesitter.Types.Position.create(~line=line + 1, ~column=0, ()),
-      (),
-    );
+    Range.{
+      start: Location.{line: Index.fromZeroBased(line), column: Index.zero},
+      stop:
+        Location.{line: Index.fromZeroBased(line + 1), column: Index.zero},
+    };
 
   let getTokenName = Syntax.createArrayTokenNameResolver(context.lines);
   let tokens = Syntax.getTokens(~getTokenName, ~range, rootNode);
 
   List.map(
     curr => {
-      let (p: Treesitter.Types.Position.t, _, scopes, token) = curr;
+      let (loc: Location.t, _, scopes, token) = curr;
       let tmScope =
         TextMateConverter.getTextMateScope(
           ~token,
@@ -67,11 +67,8 @@ let doWork = (context: context, line: int) => {
 
       let resolvedColor = TokenTheme.match(context.theme, tmScope);
 
-      //let line = p.line;
-      let col = p.column;
-
       ColorizedToken.create(
-        ~index=col,
+        ~index=Index.toZeroBased(loc.column),
         ~backgroundColor=Revery.Color.hex(resolvedColor.background),
         ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
         (),

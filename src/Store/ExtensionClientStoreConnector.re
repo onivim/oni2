@@ -6,6 +6,7 @@
  * - Calls appropriate APIs on extension host based on ACTIONS
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Uri = Core.Uri;
 open Oni_Core.Utility;
@@ -252,8 +253,8 @@ let start = (extensions, setup: Core.Setup.t) => {
           let position =
             Protocol.OneBasedPosition.ofInt1(
               ~lineNumber=
-                completionMeet.completionMeetLine |> Core.Index.toInt1,
-              ~column=completionMeet.completionMeetColumn |> Core.Index.toInt1,
+                completionMeet.completionMeetLine |> Index.toOneBased,
+              ~column=completionMeet.completionMeetColumn |> Index.toOneBased,
               (),
             );
           Log.infof(m =>

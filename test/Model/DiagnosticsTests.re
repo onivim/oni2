@@ -1,17 +1,23 @@
-open TestFramework;
-
+open EditorCoreTypes;
 open Oni_Core;
+open TestFramework;
 
 module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 
+let zeroRange =
+  Range.{
+    start: Location.{line: Index.zero, column: Index.zero},
+    stop: Location.{line: Index.zero, column: Index.zero},
+  };
+
 let singleDiagnostic = [
-  Diagnostic.create(~range=Range.zero, ~message="single error", ()),
+  Diagnostic.create(~range=zeroRange, ~message="single error", ()),
 ];
 
 let doubleDiagnostic = [
-  Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
-  Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
+  Diagnostic.create(~range=zeroRange, ~message="error 1", ()),
+  Diagnostic.create(~range=zeroRange, ~message="error 2", ()),
 ];
 
 let buffer = Buffer.ofLines([||]);
@@ -34,13 +40,12 @@ describe("Diagnostics", ({describe, _}) => {
       let singleDiagnostic = [
         Diagnostic.create(
           ~range=
-            Range.ofInt0(
-              ~startLine=1,
-              ~startCharacter=1,
-              ~endLine=2,
-              ~endCharacter=2,
-              (),
-            ),
+            Range.{
+              start:
+                Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
+              stop:
+                Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
+            },
           ~message="single error",
           (),
         ),
@@ -54,7 +59,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(0, 0),
+          Location.{line: Index.zero, column: Index.zero},
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -62,7 +67,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(1, 1),
+          Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -70,7 +75,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 1),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 1)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -78,7 +83,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 2),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -86,7 +91,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 3),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 3)},
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -94,7 +99,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(3, 0),
+          Location.{line: Index.(zero + 3), column: Index.zero},
         );
       expect.int(List.length(diags)).toBe(0);
     })
