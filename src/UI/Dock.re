@@ -18,7 +18,7 @@ let toggleSearch = ({pane, _}: State.t, _) => {
     if (Oni_Model.Pane.isTypeOpen(Oni_Model.Pane.Search, pane)) {
       Actions.PaneHide;
     } else {
-      Actions.PaneShow(Oni_Model.Pane.Diagnostics);
+      Actions.PaneShow(Oni_Model.Pane.Search);
     };
   GlobalContext.current().dispatch(action);
 };

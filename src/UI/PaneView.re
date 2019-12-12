@@ -1,21 +1,27 @@
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Core;
 module Model = Oni_Model;
+module Actions = Model.Actions;
 module Pane = Model.Pane;
 module State = Model.State;
 
 module Option = Utility.Option;
 
+let paneTabHeight = 25;
+
 module Styles = {
   let pane = (~theme: Theme.t) =>
     Style.[
-      flexDirection(`Row),
-      height(200),
+      flexDirection(`Column),
+      height(225),
       borderTop(~color=theme.sideBarBackground, ~width=1),
     ];
 };
+
+let showSearch = _ =>
+  GlobalContext.current().dispatch(Actions.PaneShow(Pane.Search));
+let showProblems = _ =>
+  GlobalContext.current().dispatch(Actions.PaneShow(Pane.Diagnostics));
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
   ignore(uiFont);
@@ -28,10 +34,27 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
          switch (paneType) {
          | Pane.Search =>
            <SearchPane theme uiFont editorFont state={state.searchPane} />
-         | Pane.Diagnostics =>
-           <Container color=Colors.yellow width=100 height=100 />
+         | Pane.Diagnostics => <DiagnosticsPane theme uiFont />
          };
-       <View style={Styles.pane(~theme)}> childPane </View>;
+       <View style={Styles.pane(~theme)}>
+         <View style=Style.[flexDirection(`Row)]>
+           <PaneTab
+             uiFont
+             theme
+             title="Search"
+             onClick=showSearch
+             active={paneType == Pane.Search}
+           />
+           <PaneTab
+             uiFont
+             theme
+             title="Problems"
+             onClick=showProblems
+             active={paneType == Pane.Diagnostics}
+           />
+         </View>
+         <View style=Style.[flexDirection(`Column)]> childPane </View>
+       </View>;
      })
   |> Option.value(~default=React.empty);
 };

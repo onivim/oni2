@@ -4,6 +4,8 @@ open Oni_Core;
 open Oni_Model;
 
 module Styles = {
+  let pane = Style.[flexGrow(1), flexDirection(`Row)];
+
   let queryPane = (~theme: Theme.t) =>
     Style.[
       width(300),
@@ -53,7 +55,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
 let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {
   let items = state.hits |> List.map(matchToLocListItem) |> Array.of_list;
 
-  <View style=Style.[flexGrow(1), flexDirection(`Row)]>
+  <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
         <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
