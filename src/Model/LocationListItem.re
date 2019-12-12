@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 
 type t = {
   file: string,

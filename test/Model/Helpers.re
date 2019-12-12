@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 open Oni_Model;
 
 let validateToken =

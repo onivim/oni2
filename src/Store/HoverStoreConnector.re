@@ -41,7 +41,7 @@ let start = () => {
           let position =
             switch (cursors) {
             | [cursor, ..._] => (cursor :> Location.t)
-            | [] => Location.create(Index.zero, Index.zero)
+            | [] => Location.{line: Index.zero, column: Index.zero}
             };
           {
             ...state,

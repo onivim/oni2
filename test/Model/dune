@@ -2,4 +2,4 @@
     (name Oni_Model_Test)
     (library_flags (-linkall -g))
     (modules (:standard))
-    (libraries libvim Oni2.core Oni2.extensions Oni2.model Oni_Core_Test rely.lib))
+    (libraries libvim Oni2.core Oni2.extensions Oni2.model Oni_Core_Test rely.lib editor-core-types))

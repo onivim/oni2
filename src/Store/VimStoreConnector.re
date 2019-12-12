@@ -171,7 +171,7 @@ let start =
           Actions.SearchSetMatchingPair(
             id,
             newPosition,
-            Location.create(line, column),
+            Location.{line, column},
           ),
         )
       };
@@ -494,7 +494,6 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      open Oni_Core;
       open Oni_Core.Utility;
 
       /* If a split was requested, create that first! */
@@ -694,35 +693,33 @@ let start =
       let completions = state.completions;
       let bestMatch = Completions.getBestCompletion(completions);
       let meet = Completions.getMeet(completions);
-      Core.(
-        switch (bestMatch, meet) {
-        | (Some(completion), Some(meet)) =>
-          let cursorLocation = Vim.Cursor.getLocation();
-          let delta =
-            Index.(
-              toZeroBased(
-                cursorLocation.column - toOneBased(meet.completionMeetColumn),
-              )
-            );
-
-          let idx = ref(delta);
-          while (idx^ >= 0) {
-            let _ = Vim.input("<BS>");
-            decr(idx);
-          };
-
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(Zed_utf8.singleton(s));
-              ();
-            },
-            completion.item.completionLabel,
+      switch (bestMatch, meet) {
+      | (Some(completion), Some(meet)) =>
+        let cursorLocation = Vim.Cursor.getLocation();
+        let delta =
+          Index.(
+            toZeroBased(
+              cursorLocation.column - toOneBased(meet.completionMeetColumn),
+            )
           );
-          updateActiveEditorCursors(latestCursors^);
-        | _ => ()
-        }
-      );
+
+        let idx = ref(delta);
+        while (idx^ >= 0) {
+          let _ = Vim.input("<BS>");
+          decr(idx);
+        };
+
+        let latestCursors = ref([]);
+        Zed_utf8.iter(
+          s => {
+            latestCursors := Vim.input(Zed_utf8.singleton(s));
+            ();
+          },
+          completion.item.completionLabel,
+        );
+        updateActiveEditorCursors(latestCursors^);
+      | _ => ()
+      };
     });
 
   let prevViml = ref([]);

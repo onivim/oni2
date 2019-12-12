@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core_Test;
 open Oni_Extensions;

@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 open TestFramework;

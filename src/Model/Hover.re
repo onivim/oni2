@@ -5,7 +5,6 @@
  * for the 'Hover' view
  */
 open EditorCoreTypes;
-open Oni_Core;
 
 type hover = {
   bufferId: int,
