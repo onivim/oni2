@@ -3,6 +3,7 @@
  *
  * State kept for per-buffer syntax highlighting
  */
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Syntax;
@@ -67,8 +68,8 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
       Some(
         LineMap.shift(
           ~default=v => v,
-          ~startPos=bufferUpdate.startLine |> Index.toInt0,
-          ~endPos=bufferUpdate.endLine |> Index.toInt0,
+          ~startPos=bufferUpdate.startLine |> Index.toZeroBased,
+          ~endPos=bufferUpdate.endLine |> Index.toZeroBased,
           ~delta=Array.length(bufferUpdate.lines),
           lineMap,
         ),

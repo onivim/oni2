@@ -4,6 +4,7 @@
  State modelled for the syntax server
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Syntax;

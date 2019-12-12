@@ -3,6 +3,7 @@
  * between the Syntax_client and Syntax_server
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 module Ext = Oni_Extensions;
 
