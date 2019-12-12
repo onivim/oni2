@@ -394,7 +394,14 @@ module Workspace = {
     };
 };
 
-module LF = LanguageFeatures;
+module SuggestProvider = {
+  type t = {
+    selector: DocumentSelector.t,
+    id: int,
+  };
+
+  let create = (~selector, id) => {selector, id};
+};
 
 module IncomingNotifications = {
   module StatusBar = {
@@ -442,11 +449,11 @@ module IncomingNotifications = {
     let parseRegisterSuggestSupport = json => {
       switch (json) {
       | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
-        // TODO: Finish parsing
         documentSelector
         |> DocumentSelector.of_yojson
         |> Result.to_option
-        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
+        |> Option.map(selector => {SuggestProvider.create(~selector, id)})
+      // TODO: Finish parsing
       | _ => None
       };
     };

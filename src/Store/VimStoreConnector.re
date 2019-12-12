@@ -692,16 +692,23 @@ let start =
     Isolinear.Effect.create(~name="vim.applyCompletion", () => {
       let completions = state.completions;
       let bestMatch = Completions.getBestCompletion(completions);
-      let meet = Completions.getMeet(completions);
-      switch (bestMatch, meet) {
-      | (Some(completion), Some(meet)) =>
+      let maybeMeetPosition =
+        completions
+        |> Completions.getMeet
+        |> Option.map(CompletionMeet.getLocation);
+      switch (bestMatch, maybeMeetPosition) {
+      | (Some(completion), Some(meetPosition)) =>
+        let meet = Location.(meetPosition.column);
         let cursorLocation = Vim.Cursor.getLocation();
         let delta =
-          Index.(
-            toZeroBased(
-              cursorLocation.column - toOneBased(meet.completionMeetColumn),
-            )
-          );
+          Index.(toZeroBased(cursorLocation.column - toOneBased(meet)));
+        Log.infof(m =>
+          m(
+            "Completing at cursor position: %s | meet: %s",
+            Index.show(cursorLocation.column),
+            Index.show(meet),
+          )
+        );
 
         let idx = ref(delta);
         while (idx^ >= 0) {
@@ -715,7 +722,7 @@ let start =
             latestCursors := Vim.input(Zed_utf8.singleton(s));
             ();
           },
-          completion.item.completionLabel,
+          completion.item.label,
         );
         updateActiveEditorCursors(latestCursors^);
       | _ => ()
