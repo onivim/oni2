@@ -1,7 +1,7 @@
+open EditorCoreTypes;
 open TestFramework;
 
 module VisualRange = Oni_Core.VisualRange;
-module Range = Oni_Core.Range;
 module Buffer = Oni_Core.Buffer;
 module Selection = Oni_Model.Selection;
 
@@ -14,12 +14,11 @@ describe("Selection", ({test, _}) =>
     /* Visual range is one-based */
     let vr =
       VisualRange.create(
-        ~startLine=1,
-        ~startColumn=1,
-        ~endLine=2,
-        ~endColumn=5,
         ~mode=Vim.Types.Line,
-        (),
+        Range.{
+          start: Location.{line: Index.zero, column: Index.zero},
+          stop: Location.{line: Index.(zero + 1), column: Index.(zero + 4)},
+        },
       );
 
     let ranges = Selection.getRanges(vr, buffer) |> List.rev;
@@ -30,21 +29,16 @@ describe("Selection", ({test, _}) =>
     let r1 = List.nth(ranges, 1);
 
     let expectedR0 =
-      Range.create(
-        ~startLine=ZeroBasedIndex(0),
-        ~endLine=ZeroBasedIndex(0),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(3),
-        (),
-      );
+      Range.{
+        start: Location.{line: Index.zero, column: Index.zero},
+        stop: Location.{line: Index.zero, column: Index.(zero + 3)},
+      };
 
     let expectedR1 =
       Range.create(
-        ~startLine=ZeroBasedIndex(1),
-        ~endLine=ZeroBasedIndex(1),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(4),
-        (),
+        ~start=Location.create(~line=Index.(zero + 1), ~column=Index.zero),
+        ~stop=
+          Location.create(~line=Index.(zero + 1), ~column=Index.(zero + 4)),
       );
 
     validateRange(expect, r0, expectedR0);

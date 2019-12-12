@@ -2,6 +2,7 @@
  * EditorVerticalScrollbar.re
  */
 
+open EditorCoreTypes;
 open Revery;
 open Revery.UI;
 
@@ -49,7 +50,7 @@ let make =
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
   let cursorPosition =
-    bufferLineToScrollbarPixel(Index.toZeroBasedInt(cursorPosition.line));
+    bufferLineToScrollbarPixel(Index.toZeroBased(cursorPosition.line));
   let cursorSize = 2;
 
   let scrollCursorStyle =
@@ -99,8 +100,9 @@ let make =
     | None => React.empty
     | Some(mp) =>
       let topLine =
-        bufferLineToScrollbarPixel(Index.toInt0(mp.startPos.line));
-      let botLine = bufferLineToScrollbarPixel(Index.toInt0(mp.endPos.line));
+        bufferLineToScrollbarPixel(Index.toZeroBased(mp.startPos.line));
+      let botLine =
+        bufferLineToScrollbarPixel(Index.toZeroBased(mp.endPos.line));
       React.listToElement([
         <View style={matchingPairStyle(topLine)} />,
         <View style={matchingPairStyle(botLine)} />,
@@ -125,11 +127,11 @@ let make =
     | _ =>
       let topLine =
         bufferLineToScrollbarPixel(
-          Index.toInt0(selection.range.startPosition.line),
+          Index.toZeroBased(selection.range.start.line),
         );
       let botLine =
         bufferLineToScrollbarPixel(
-          Index.toInt0(selection.range.endPosition.line) + 1,
+          Index.toZeroBased(selection.range.stop.line) + 1,
         );
       [<View style={selectionStyle(topLine, botLine)} />];
     };

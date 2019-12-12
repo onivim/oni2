@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 type t =
@@ -31,7 +32,7 @@ let getTopVisibleLine: (t, EditorMetrics.t) => int;
 let getBottomVisibleLine: (t, EditorMetrics.t) => int;
 let getLeftVisibleColumn: (t, EditorMetrics.t) => int;
 let getLayout: (t, EditorMetrics.t) => EditorLayout.t;
-let getPrimaryCursor: t => Position.t;
+let getPrimaryCursor: t => Location.t;
 let getVisibleView: EditorMetrics.t => int; // TODO: Move to EditorMetrics?
 let getTotalSizeInPixels: (t, EditorMetrics.t) => int;
 let getVerticalScrollbarMetrics: (t, int, EditorMetrics.t) => scrollbarMetrics;

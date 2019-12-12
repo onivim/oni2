@@ -4,6 +4,7 @@
  * This implements an updater (reducer + side effects) for completion
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 module Model = Oni_Model;
@@ -18,8 +19,8 @@ type lastCompletionMeet = Actions.completionMeet;
 
 let defaultMeet = {
   completionMeetBufferId: (-1),
-  completionMeetLine: Index.ofInt0(-1),
-  completionMeetColumn: Index.ofInt0(-1),
+  completionMeetLine: Index.fromZeroBased(-1),
+  completionMeetColumn: Index.fromZeroBased(-1),
 };
 
 let lastMeet = ref(defaultMeet);
@@ -59,14 +60,13 @@ let start = () => {
                dispatch(Actions.CompletionEnd);
              | Some(meet) =>
                open Model.CompletionMeet;
-               let {line, character}: Position.t = meet.meet;
+               let {line, column}: Location.t = meet.meet;
                // Check if our 'meet' position has changed
                let newMeet = {
                  completionMeetBufferId: bufferId,
                  completionMeetLine: line,
-                 completionMeetColumn: character,
+                 completionMeetColumn: column,
                };
-               let column = character;
                if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
                  Log.info(
                    "[Completion] New completion meet: "

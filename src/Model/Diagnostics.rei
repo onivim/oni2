@@ -6,6 +6,7 @@
  * or minimap.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 type t;
@@ -29,5 +30,5 @@ let clear: (t, string) => t;
  * Get all diagnostics for a buffer
  */
 let getDiagnostics: (t, Buffer.t) => list(Diagnostic.t);
-let getDiagnosticsAtPosition: (t, Buffer.t, Position.t) => list(Diagnostic.t);
+let getDiagnosticsAtPosition: (t, Buffer.t, Location.t) => list(Diagnostic.t);
 let getDiagnosticsMap: (t, Buffer.t) => IntMap.t(list(Diagnostic.t));

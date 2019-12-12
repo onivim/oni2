@@ -1,5 +1,5 @@
 {
-  "checksum": "9add37cc60298897298eb1d423438fa2",
+  "checksum": "99d16575cf3f6e92a04351d5af17b453",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.27@d41d8cd9": {
@@ -132,7 +132,7 @@
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
         "@reason-native/pastel@0.1.0@d41d8cd9",
-        "@opam/printbox@opam:0.3@963a823a",
+        "@opam/printbox@opam:0.4@8e9022ed",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
@@ -226,19 +226,20 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9": {
+    "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9": {
       "id":
-        "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
+        "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
       "name": "reason-tree-sitter",
-      "version": "github:onivim/reason-tree-sitter#4947ead",
+      "version": "github:onivim/reason-tree-sitter#e2c571e",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-tree-sitter#4947ead" ]
+        "source": [ "github:onivim/reason-tree-sitter#e2c571e" ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.4.0@d41d8cd9", "refmterr@3.2.2@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "esy-tree-sitter@1.4.1@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
@@ -312,23 +313,23 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@8.10869.26000@d41d8cd9": {
-      "id": "reason-libvim@8.10869.26000@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
       "name": "reason-libvim",
-      "version": "8.10869.26000",
+      "version": "github:onivim/reason-libvim#4919011",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-libvim/-/reason-libvim-8.10869.26000.tgz#sha1:07a6ef357ceff4e4b0c72eb6aea2bc4042f20edb"
-        ]
+        "source": [ "github:onivim/reason-libvim#4919011" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
-        "libvim@8.10869.26@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "libvim@8.10869.26@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
+        "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
     "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9": {
       "id": "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
@@ -857,6 +858,24 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9": {
+      "id":
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
+      "name": "editor-core-types",
+      "version": "github:onivim/editor-core-types#16dd98e",
+      "source": {
+        "type": "install",
+        "source": [ "github:onivim/editor-core-types#16dd98e" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.2.2@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@opam/ppx_deriving@opam:4.4@21d6c7a5",
+        "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+    },
     "debug@3.1.0@d41d8cd9": {
       "id": "debug@3.1.0@d41d8cd9",
       "name": "debug",
@@ -959,12 +978,13 @@
         "revery@github:revery-ui/revery#b0021ec@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
-        "reason-tree-sitter@github:onivim/reason-tree-sitter#4947ead@d41d8cd9",
+        "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@2.1.0@d41d8cd9", "reason-sdl2@2.10.3011@d41d8cd9",
-        "reason-libvim@8.10869.26000@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
         "esy-sdl2@2.0.10005@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
+        "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
         "axios@0.19.0@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d",
@@ -974,7 +994,7 @@
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/lwt@opam:4.4.0@0357bb8b", "@opam/logs@opam:0.7.0@1d03143e",
         "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:1.11.4@a7ccb7ae",
-        "@opam/charInfo_width@opam:1.1.0@a2633e77",
+        "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@opam/camomile@opam:1.0.1@c82ecdb5",
         "@esy-ocaml/reason@github:facebook/reason#474900e@d41d8cd9"
       ],
@@ -1464,20 +1484,20 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/result@opam:1.4@dc720aef"
       ]
     },
-    "@opam/printbox@opam:0.3@963a823a": {
-      "id": "@opam/printbox@opam:0.3@963a823a",
+    "@opam/printbox@opam:0.4@8e9022ed": {
+      "id": "@opam/printbox@opam:0.4@8e9022ed",
       "name": "@opam/printbox",
-      "version": "opam:0.3",
+      "version": "opam:0.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/7d/7dda76f4f9de0eb4fe08acb363c337a26b3c1b5b03dfa1d7a26c9b0c3f463309#sha256:7dda76f4f9de0eb4fe08acb363c337a26b3c1b5b03dfa1d7a26c9b0c3f463309",
-          "archive:https://github.com/c-cube/printbox/releases/download/0.3/printbox-0.3.tbz#sha256:7dda76f4f9de0eb4fe08acb363c337a26b3c1b5b03dfa1d7a26c9b0c3f463309"
+          "archive:https://opam.ocaml.org/cache/md5/c3/c32598a4923c055fba05d747d24b7d4f#md5:c32598a4923c055fba05d747d24b7d4f",
+          "archive:https://github.com/c-cube/printbox/archive/0.4.tar.gz#md5:c32598a4923c055fba05d747d24b7d4f"
         ],
         "opam": {
           "name": "printbox",
-          "version": "0.3",
-          "path": "integrationtest.esy.lock/opam/printbox.0.3"
+          "version": "0.4",
+          "path": "integrationtest.esy.lock/opam/printbox.0.4"
         }
       },
       "overrides": [],
@@ -2568,8 +2588,8 @@
         "ocaml@4.7.1004@d41d8cd9", "@opam/result@opam:1.4@dc720aef"
       ]
     },
-    "@opam/charInfo_width@opam:1.1.0@a2633e77": {
-      "id": "@opam/charInfo_width@opam:1.1.0@a2633e77",
+    "@opam/charInfo_width@opam:1.1.0@9d8d61b2": {
+      "id": "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
       "name": "@opam/charInfo_width",
       "version": "opam:1.1.0",
       "source": {

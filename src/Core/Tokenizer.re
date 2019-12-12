@@ -3,6 +3,7 @@
  */
 
 open CamomileLibrary;
+open EditorCoreTypes;
 
 module Zed_utf8 = ZedBundled;
 
@@ -112,10 +113,10 @@ let tokenize =
       let textRun =
         TextRun.create(
           ~text,
-          ~startIndex=ZeroBasedIndex(startToken),
-          ~endIndex=ZeroBasedIndex(endToken),
-          ~startPosition=ZeroBasedIndex(startOffset),
-          ~endPosition=ZeroBasedIndex(endOffset),
+          ~startIndex=Index.fromZeroBased(startToken),
+          ~endIndex=Index.fromZeroBased(endToken),
+          ~startPosition=Index.fromZeroBased(startOffset),
+          ~endPosition=Index.fromZeroBased(endOffset),
           (),
         );
 

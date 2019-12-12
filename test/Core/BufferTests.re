@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 open TestFramework;
@@ -9,8 +10,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([||]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(0),
-          ~endLine=Index.ZeroBasedIndex(1),
+          ~startLine=Index.zero,
+          ~endLine=Index.fromZeroBased(1),
           ~lines=[|"a"|],
           ~version=1,
           (),
@@ -24,8 +25,8 @@ describe("Buffer", ({describe, _}) =>
       let update =
         BufferUpdate.create(
           ~isFull=true,
-          ~startLine=Index.ZeroBasedIndex(0),
-          ~endLine=Index.ZeroBasedIndex(-1),
+          ~startLine=Index.zero,
+          ~endLine=Index.fromZeroBased(-1),
           ~lines=[|"a", "d", "e", "f", "c"|],
           ~version=2,
           (),
@@ -41,8 +42,8 @@ describe("Buffer", ({describe, _}) =>
       let update =
         BufferUpdate.create(
           ~isFull=true,
-          ~startLine=Index.ZeroBasedIndex(1),
-          ~endLine=Index.ZeroBasedIndex(-1),
+          ~startLine=Index.fromZeroBased(1),
+          ~endLine=Index.fromZeroBased(-1),
           ~lines=[|"a", "d", "e", "f", "c"|],
           ~version=2,
           (),
@@ -55,8 +56,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(0),
-          ~endLine=Index.ZeroBasedIndex(1),
+          ~startLine=Index.zero,
+          ~endLine=Index.fromZeroBased(1),
           ~lines=[|"abc"|],
           ~version=1,
           (),
@@ -69,8 +70,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(0),
-          ~endLine=Index.ZeroBasedIndex(1),
+          ~startLine=Index.zero,
+          ~endLine=Index.fromZeroBased(1),
           ~lines=[||],
           ~version=1,
           (),
@@ -83,8 +84,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(1),
-          ~endLine=Index.ZeroBasedIndex(2),
+          ~startLine=Index.fromZeroBased(1),
+          ~endLine=Index.fromZeroBased(2),
           ~lines=[|"d", "e", "f"|],
           ~version=1,
           (),
@@ -97,8 +98,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(3),
-          ~endLine=Index.ZeroBasedIndex(3),
+          ~startLine=Index.fromZeroBased(3),
+          ~endLine=Index.fromZeroBased(3),
           ~lines=[|"d"|],
           ~version=1,
           (),
@@ -111,8 +112,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(3),
-          ~endLine=Index.ZeroBasedIndex(3),
+          ~startLine=Index.fromZeroBased(3),
+          ~endLine=Index.fromZeroBased(3),
           ~lines=[|"d"|],
           ~version=5,
           (),
@@ -126,8 +127,8 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([||]);
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(3),
-          ~endLine=Index.ZeroBasedIndex(3),
+          ~startLine=Index.fromZeroBased(3),
+          ~endLine=Index.fromZeroBased(3),
           ~lines=[|"d"|],
           ~version=6,
           (),
@@ -136,8 +137,8 @@ describe("Buffer", ({describe, _}) =>
 
       let update =
         BufferUpdate.create(
-          ~startLine=Index.ZeroBasedIndex(3),
-          ~endLine=Index.ZeroBasedIndex(3),
+          ~startLine=Index.fromZeroBased(3),
+          ~endLine=Index.fromZeroBased(3),
           ~lines=[|"e"|],
           ~version=5,
           (),

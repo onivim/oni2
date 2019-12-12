@@ -2,6 +2,7 @@
    TextmateTokenizerJob.re
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module Time = Revery_Core.Time;
@@ -50,8 +51,8 @@ let onTheme = (theme: TokenTheme.t, v: t) => {
 };
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
-  let startPos = Index.toInt0(bufferUpdate.startLine);
-  let endPos = Index.toInt0(bufferUpdate.endLine);
+  let startPos = Index.toZeroBased(bufferUpdate.startLine);
+  let endPos = Index.toZeroBased(bufferUpdate.endLine);
 
   let f = (p: pendingWork, c: completedWork) => {
     (

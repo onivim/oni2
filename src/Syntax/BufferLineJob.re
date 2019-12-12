@@ -4,6 +4,7 @@
    BufferLineJob is a Job.t that breaks up work that happens across buffer lines.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module Time = Revery_Core.Time;
@@ -148,7 +149,7 @@ let doWork = (f, p: pendingWork('context), c: completedWork('v)) => {
     | [] => (false, {...p, remainingRanges: outerTail}, c)
     | [hd, ...tail] =>
       let range: Range.t = hd;
-      let line = range.startPosition.line |> Index.toInt0;
+      let line = range.start.line |> Index.toZeroBased;
 
       let doLineWork = () => {
         f(p.context, line);
