@@ -5,6 +5,7 @@
  * based on the visual selection state
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
@@ -16,12 +17,19 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
     ranges :=
       [
         Range.create(
-          ~startLine=ZeroBasedIndex(currentPos),
-          ~startCharacter=ZeroBasedIndex(0),
-          ~endLine=ZeroBasedIndex(currentPos),
-          ~endCharacter=
-            ZeroBasedIndex(Buffer.getLineLength(buffer, currentPos)),
-          (),
+          ~start=
+            Location.create(
+              ~line=Index.fromZeroBased(currentPos),
+              ~column=Index.zero,
+            ),
+          ~stop=
+            Location.create(
+              ~line=Index.fromZeroBased(currentPos),
+              ~column=
+                Index.fromZeroBased(
+                  Buffer.getLineLength(buffer, currentPos),
+                ),
+            ),
         ),
         ...ranges^,
       ];
@@ -42,22 +50,28 @@ let getRangesForVisualSelection =
     ranges :=
       [
         Range.create(
-          ~startLine=ZeroBasedIndex(currentPos),
-          ~startCharacter=
-            ZeroBasedIndex(
-              {
-                startLine == pos^ ? startColumn : 0;
-              },
+          ~start=
+            Location.create(
+              ~line=Index.fromZeroBased(currentPos),
+              ~column=
+                Index.fromZeroBased(
+                  {
+                    startLine == pos^ ? startColumn : 0;
+                  },
+                ),
             ),
-          ~endLine=ZeroBasedIndex(currentPos),
-          ~endCharacter=
-            ZeroBasedIndex(
-              {
-                endLine == currentPos
-                  ? endColumn + 1 : Buffer.getLineLength(buffer, currentPos);
-              },
+          ~stop=
+            Location.create(
+              ~line=Index.fromZeroBased(currentPos),
+              ~column=
+                Index.fromZeroBased(
+                  {
+                    endLine == currentPos
+                      ? endColumn + 1
+                      : Buffer.getLineLength(buffer, currentPos);
+                  },
+                ),
             ),
-          (),
         ),
         ...ranges^,
       ];
@@ -87,11 +101,17 @@ let getRangesForBlockSelection =
       if (startC < bufferLength) {
         Some(
           Range.create(
-            ~startLine=ZeroBasedIndex(currentPos),
-            ~startCharacter=ZeroBasedIndex(startC),
-            ~endLine=ZeroBasedIndex(currentPos),
-            ~endCharacter=ZeroBasedIndex(min(endColumn + 1, bufferLength)),
-            (),
+            ~start=
+              Location.create(
+                ~line=Index.fromZeroBased(currentPos),
+                ~column=Index.fromZeroBased(startC),
+              ),
+            ~stop=
+              Location.create(
+                ~line=Index.fromZeroBased(currentPos),
+                ~column=
+                  Index.fromZeroBased(min(endColumn + 1, bufferLength)),
+              ),
           ),
         );
       } else {
@@ -124,19 +144,14 @@ let getRangesForBlockSelection =
  */
 let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
   (selection, buffer) => {
-    let startLine = Index.toZeroBasedInt(selection.range.startPosition.line);
-    let startCharacter =
-      Index.toZeroBasedInt(selection.range.startPosition.character);
+    let startLine = Index.toZeroBased(selection.range.start.line);
+    let startCharacter = Index.toZeroBased(selection.range.start.column);
 
     let bufferLines = Buffer.getNumberOfLines(buffer);
 
     let endLine =
-      min(
-        Index.toZeroBasedInt(selection.range.endPosition.line),
-        bufferLines - 1,
-      );
-    let endCharacter =
-      Index.toZeroBasedInt(selection.range.endPosition.character);
+      min(Index.toZeroBased(selection.range.stop.line), bufferLines - 1);
+    let endCharacter = Index.toZeroBased(selection.range.stop.column);
 
     switch (selection.mode) {
     | Vim.Types.Block =>

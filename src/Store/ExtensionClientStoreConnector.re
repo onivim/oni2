@@ -6,6 +6,7 @@
  * - Calls appropriate APIs on extension host based on ACTIONS
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Uri = Core.Uri;
 open Oni_Core.Utility;
@@ -48,7 +49,7 @@ module ExtensionCompletionProvider = {
         suggestProvider: Protocol.SuggestProvider.t,
         buffer,
         _completionMeet,
-        position,
+        location,
       ) =>
     Core.Buffer.getFileType(buffer)
     |> Option.map(
@@ -56,7 +57,7 @@ module ExtensionCompletionProvider = {
        )
     |> Option.bind(matches => {
          let uri = Core.Buffer.getUri(buffer);
-         let position = Protocol.OneBasedPosition.ofPosition(position);
+         let position = Protocol.OneBasedPosition.ofPosition(location);
 
          if (matches) {
            Some(
@@ -244,12 +245,12 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
 
   let getAndDispatchCompletions =
-      (~languageFeatures, ~buffer, ~meet, ~position, ()) => {
+      (~languageFeatures, ~buffer, ~meet, ~location, ()) => {
     let completionPromise =
       Model.LanguageFeatures.requestCompletions(
         ~buffer,
         ~meet,
-        ~position,
+        ~location,
         languageFeatures,
       );
 
@@ -265,16 +266,15 @@ let start = (extensions, setup: Core.Setup.t) => {
            let uri = Core.Buffer.getUri(buf);
            let maybeMeet = Model.Completions.getMeet(state.completions);
 
-           let maybePosition =
-             maybeMeet |> Option.map(Model.CompletionMeet.getPosition);
+           let maybeLocation =
+             maybeMeet |> Option.map(Model.CompletionMeet.getLocation);
 
-           let request =
-               (meet: Model.CompletionMeet.t, position: Core.Position.t) => {
+           let request = (meet: Model.CompletionMeet.t, location: Location.t) => {
              Log.infof(m =>
                m(
                  "Completions - requesting at %s for %s",
                  Core.Uri.toString(uri),
-                 Core.Position.show(position),
+                 Location.show(location),
                )
              );
              let languageFeatures = state.languageFeatures;
@@ -283,13 +283,13 @@ let start = (extensions, setup: Core.Setup.t) => {
                  ~languageFeatures,
                  ~buffer=buf,
                  ~meet,
-                 ~position,
+                 ~location,
                  (),
                );
              ();
            };
 
-           Option.iter2(request, maybeMeet, maybePosition);
+           Option.iter2(request, maybeMeet, maybeLocation);
          })
     });
 

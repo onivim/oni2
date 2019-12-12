@@ -2,6 +2,7 @@
  * BufferViewColorizer.rei
  */
 
+open EditorCoreTypes;
 open Revery;
 open Oni_Core;
 

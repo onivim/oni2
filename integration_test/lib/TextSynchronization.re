@@ -1,6 +1,7 @@
 /*
  * TextSynchronization.re
  */
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
 
@@ -15,7 +16,7 @@ let _getTextForVimBuffer = () => {
   let i = ref(1);
   let lines = ref([]);
   while (i^ <= count) {
-    lines := [Vim.Buffer.getLine(buffer, i^), ...lines^];
+    lines := [Vim.Buffer.getLine(buffer, Index.fromOneBased(i^)), ...lines^];
     incr(i);
   };
   "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";

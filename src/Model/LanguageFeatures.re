@@ -4,13 +4,14 @@
  * This module documents & types the protocol for communicating with the VSCode Extension Host.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module CompletionLog = (val Log.withNamespace("Oni2.CompletionProvider"));
 
 module CompletionProvider = {
   type t =
-    (Buffer.t, CompletionMeet.t, Position.t) =>
+    (Buffer.t, CompletionMeet.t, Location.t) =>
     option(Lwt.t(list(CompletionItem.t)));
 
   type info = {
@@ -26,11 +27,11 @@ let empty = {completionProviders: []};
 let _identity = v => v;
 
 let requestCompletions =
-    (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~position: Position.t, lf: t) => {
+    (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
   let promises =
     lf.completionProviders
     |> List.map((CompletionProvider.{id, provider}) => {
-         let result = provider(buffer, meet, position);
+         let result = provider(buffer, meet, location);
          switch (result) {
          | Some(_) =>
            CompletionLog.infof(m => m("Querying completion provider: %s", id))

@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open CamomileBundled.Camomile;
 
@@ -9,16 +10,16 @@ type t;
 
 let toString: t => string;
 
-// [getPosition(meet)] returns a [Position.t] where completions should be
+// [getLocation(meet)] returns a [Position.t] where completions should be
 // requested from.
-let getPosition: t => Position.t;
+let getLocation: t => Location.t;
 
 // [getBase(meet)] returns a string of the 'base' - the characters
 // prefixing the completion. These can be used for filtering completion
 // items.
 let getBase: t => string;
 
-let create: (~position: Position.t, ~base: string) => t;
+let create: (~location: Location.t, ~base: string) => t;
 
 let createFromLine:
   (
@@ -29,6 +30,6 @@ let createFromLine:
   ) =>
   option(t);
 
-let createFromBufferPosition:
-  (~triggerCharacters: list(UChar.t)=?, ~position: Position.t, Buffer.t) =>
+let createFromBufferLocation:
+  (~triggerCharacters: list(UChar.t)=?, ~location: Location.t, Buffer.t) =>
   option(t);

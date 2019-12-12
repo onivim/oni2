@@ -6,6 +6,7 @@
  * or minimap.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 /*
@@ -39,7 +40,7 @@ let updateDiagnosticsMap =
 let explodeDiagnostics = (buffer, diagnostics) => {
   let f = (prev, curr: Diagnostic.t) => {
     IntMap.update(
-      Index.toZeroBasedInt(curr.range.startPosition.line),
+      Index.toZeroBased(curr.range.start.line),
       existing =>
         switch (existing) {
         | None => Some([curr])
@@ -88,7 +89,7 @@ let getDiagnostics = (instance, buffer) => {
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
   getDiagnostics(instance, buffer)
-  |> List.filter((d: Diagnostic.t) => Range.contains(d.range, position));
+  |> List.filter((Diagnostic.{range, _}) => Range.contains(position, range));
 };
 
 let getDiagnosticsMap = (instance, buffer) => {
