@@ -74,5 +74,6 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        some-test-file.json
         some-test-file.txt
         ))
