@@ -4,6 +4,7 @@
  * Container for StatusBar
  */
 
+open EditorCoreTypes;
 open Revery;
 open Revery.UI;
 
@@ -36,14 +37,15 @@ let viewStyle = bgColor =>
     right(0),
   ];
 
-let convertPositionToString = (position: option(Position.t)) =>
-  switch (position) {
-  | Some(v) =>
-    string_of_int(Index.toOneBasedInt(v.line))
-    ++ ","
-    ++ string_of_int(Index.toOneBasedInt(v.character))
-  | None => ""
-  };
+let convertPositionToString =
+  fun
+  | Some((loc: Location.t)) =>
+    Printf.sprintf(
+      "%n,%n",
+      Index.toOneBased(loc.line),
+      Index.toOneBased(loc.column),
+    )
+  | None => "";
 
 module StatusBarSection = {
   let make = (~children=React.empty, ~direction, ()) =>

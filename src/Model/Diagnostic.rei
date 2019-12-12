@@ -2,6 +2,7 @@
  * Diagnostic.rei
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 type t = {

@@ -4,6 +4,7 @@
  * This implements an updater (reducer + side effects) for the Hover UX
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Model = Oni_Model;
 
@@ -39,11 +40,8 @@ let start = () => {
 
           let position =
             switch (cursors) {
-            | [hd, ..._] =>
-              let line = Core.Index.ofInt1(hd.line);
-              let character = Core.Index.ofInt0(hd.column);
-              Core.Position.create(line, character);
-            | [] => Core.Position.ofInt0(0, 0)
+            | [cursor, ..._] => (cursor :> Location.t)
+            | [] => Location.{line: Index.zero, column: Index.zero}
             };
           {
             ...state,

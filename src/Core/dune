@@ -21,5 +21,6 @@
         logs
         logs.fmt
         re
+        editor-core-types
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

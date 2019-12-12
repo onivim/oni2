@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Revery;
 open Revery.UI;
 open Oni_Core;
@@ -43,13 +44,16 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   LocationListItem.{
     file: hit.file,
     location:
-      Position.create(
-        Index.ofInt1(hit.lineNumber),
-        Index.ofInt0(hit.charStart),
-      ),
+      Location.{
+        line: Index.fromOneBased(hit.lineNumber),
+        column: Index.fromZeroBased(hit.charStart),
+      },
     text: hit.text,
     highlight:
-      Some((Index.ofInt1(hit.charStart), Index.ofInt1(hit.charEnd))),
+      Some((
+        Index.fromOneBased(hit.charStart),
+        Index.fromZeroBased(hit.charEnd),
+      )),
   };
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {

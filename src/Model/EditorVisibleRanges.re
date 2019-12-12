@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Actions;
 
@@ -25,13 +26,21 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   while (i^ <= bottomVisibleLine) {
     let idx = i^;
     let range =
-      Range.ofInt0(
-        ~startLine=idx,
-        ~startCharacter=leftVisibleColumn,
-        ~endLine=idx,
-        ~endCharacter=leftVisibleColumn + bufferWidthInCharacters,
-        (),
-      );
+      Range.{
+        start:
+          Location.{
+            line: Index.fromZeroBased(idx),
+            column: Index.fromZeroBased(leftVisibleColumn),
+          },
+        stop:
+          Location.{
+            line: Index.fromZeroBased(idx),
+            column:
+              Index.fromZeroBased(
+                leftVisibleColumn + bufferWidthInCharacters,
+              ),
+          },
+      };
 
     eRanges := [range, ...eRanges^];
     incr(i);
@@ -55,13 +64,15 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   let minimapRanges =
     List.init(minimapBottomLine - minimapTopLine, i => i + minimapTopLine)
     |> List.map(i =>
-         Range.ofInt0(
-           ~startLine=i,
-           ~startCharacter=0,
-           ~endLine=i,
-           ~endCharacter=minimapWidthInCharacters + 1,
-           (),
-         )
+         Range.{
+           start:
+             Location.{line: Index.fromZeroBased(i), column: Index.zero},
+           stop:
+             Location.{
+               line: Index.fromZeroBased(i),
+               column: Index.fromZeroBased(minimapWidthInCharacters + 1),
+             },
+         }
        );
 
   {editorRanges: eRanges^, minimapRanges};
