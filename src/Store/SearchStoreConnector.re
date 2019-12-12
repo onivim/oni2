@@ -8,17 +8,15 @@ let start = () => {
 
   let searchUpdater = (state: Model.Search.t, action) => {
     switch (action) {
-    | SearchInput(text, cursorPosition) =>
-      prerr_endline("SEARCH INPUT");
-      {...state, queryInput: text, cursorPosition};
+    | SearchInput(text, cursorPosition) => {
+        ...state,
+        queryInput: text,
+        cursorPosition,
+      }
 
-    | SearchStart =>
-      prerr_endline("SEARCH START");
-      {...state, query: state.queryInput, hits: []};
+    | SearchStart => {...state, query: state.queryInput, hits: []}
 
-    | SearchUpdate(items) =>
-      prerr_endline("SEARCH UPDATE");
-      {...state, hits: state.hits @ items};
+    | SearchUpdate(items) => {...state, hits: state.hits @ items}
 
     // | SearchComplete
 
@@ -33,16 +31,6 @@ let start = () => {
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
-
-    /*
-     | SearchShow => (
-         {...state, searchPane: Model.Search.initial},
-         Isolinear.Effect.none,
-       )
-
-     | SearchHide => ({...state, searchPane: Model.Search.initial}, Isolinear.Effect.none)
-     */
-
     | _ => (
         {...state, searchPane: searchUpdater(state.searchPane, action)},
         Isolinear.Effect.none,
@@ -66,16 +54,8 @@ let subscriptions = ripgrep => {
       ~query,
       ~directory,
       ~ripgrep,
-      ~onUpdate=
-        items => {
-          prerr_endline("GOT ITEMS");
-          dispatch(SearchUpdate(items));
-        },
-      ~onCompleted=
-        () => {
-          prerr_endline("SEARCH COMPELTE");
-          SearchComplete;
-        },
+      ~onUpdate=items => dispatch(SearchUpdate(items)),
+      ~onCompleted=() => SearchComplete,
     );
   };
 
