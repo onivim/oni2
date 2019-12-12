@@ -1,23 +1,62 @@
-open TestFramework;
-
+open EditorCoreTypes;
 open Oni_Core;
+open TestFramework;
 
 module Diagnostic = Oni_Model.Diagnostic;
 module Diagnostics = Oni_Model.Diagnostics;
 
+let zeroRange =
+  Range.{
+    start: Location.{line: Index.zero, column: Index.zero},
+    stop: Location.{line: Index.zero, column: Index.zero},
+  };
+
 let singleDiagnostic = [
-  Diagnostic.create(~range=Range.zero, ~message="single error", ()),
+  Diagnostic.create(~range=zeroRange, ~message="single error", ()),
 ];
 
 let doubleDiagnostic = [
-  Diagnostic.create(~range=Range.zero, ~message="error 1", ()),
-  Diagnostic.create(~range=Range.zero, ~message="error 2", ()),
+  Diagnostic.create(~range=zeroRange, ~message="error 1", ()),
+  Diagnostic.create(~range=zeroRange, ~message="error 2", ()),
 ];
 
-let buffer = Buffer.ofLines([||]);
+let buffer = Buffer.ofLines(~id=0, [||]);
 let uri = Buffer.getUri(buffer);
 
+let buffer1 = Buffer.ofLines(~id=1, [||]);
+let uri1 = Buffer.getUri(buffer1);
+
+let buffer2 = Buffer.ofLines(~id=2, [||]);
+let uri2 = Buffer.getUri(buffer2);
+
 describe("Diagnostics", ({describe, _}) => {
+  describe("count", ({test, _}) => {
+    test("change single buffer, multiple keys", ({expect, _}) => {
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+
+      expect.int(Diagnostics.count(v)).toBe(1);
+
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      expect.int(Diagnostics.count(v)).toBe(3);
+
+      let v = Diagnostics.clear(v, "test_key1");
+      expect.int(Diagnostics.count(v)).toBe(2);
+    });
+
+    test("change multiple buffers, multiple keys", ({expect, _}) => {
+      let v = Diagnostics.create();
+
+      let v = Diagnostics.change(v, uri1, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri2, "test_key1", doubleDiagnostic);
+
+      expect.int(Diagnostics.count(v)).toBe(3);
+
+      let v = Diagnostics.clear(v, "test_key1");
+      expect.int(Diagnostics.count(v)).toBe(0);
+    });
+  });
+
   describe("getDiagnostics", ({test, _}) =>
     test("no diagnostics", ({expect}) => {
       let buffer = Buffer.ofLines([||]);
@@ -34,13 +73,12 @@ describe("Diagnostics", ({describe, _}) => {
       let singleDiagnostic = [
         Diagnostic.create(
           ~range=
-            Range.ofInt0(
-              ~startLine=1,
-              ~startCharacter=1,
-              ~endLine=2,
-              ~endCharacter=2,
-              (),
-            ),
+            Range.{
+              start:
+                Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
+              stop:
+                Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
+            },
           ~message="single error",
           (),
         ),
@@ -54,7 +92,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(0, 0),
+          Location.{line: Index.zero, column: Index.zero},
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -62,7 +100,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(1, 1),
+          Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -70,7 +108,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 1),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 1)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -78,7 +116,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 2),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -86,7 +124,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(2, 3),
+          Location.{line: Index.(zero + 2), column: Index.(zero + 3)},
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -94,7 +132,7 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Position.ofInt0(3, 0),
+          Location.{line: Index.(zero + 3), column: Index.zero},
         );
       expect.int(List.length(diags)).toBe(0);
     })

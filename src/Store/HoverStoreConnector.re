@@ -4,6 +4,7 @@
  * This implements an updater (reducer + side effects) for the Hover UX
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Ext = Oni_Extensions;
 module Model = Oni_Model;
@@ -23,7 +24,7 @@ let start = () => {
       Log.info("Checking for hover...");
 
       let promise =
-        Ext.LanguageFeatures.getDefinition(
+        Model.LanguageFeatures.requestDefinition(
           buffer,
           position,
           languageFeatures,
@@ -35,7 +36,7 @@ let start = () => {
           result => {
             Log.info(
               "Got definition:"
-              ++ Ext.LanguageFeatures.DefinitionResult.toString(result),
+              ++ Model.LanguageFeatures.DefinitionResult.toString(result),
             );
             dispatch(
               Actions.DefinitionAvailable(
@@ -64,7 +65,7 @@ let start = () => {
       }
     | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
       switch (Model.Selectors.getActiveBuffer(state)) {
-      | None => default
+      | None => (state, Isolinear.Effect.none)
       | Some(buf) =>
         let bufferId = Core.Buffer.getId(buf);
         let delay =
@@ -73,20 +74,17 @@ let start = () => {
             state.configuration,
           );
 
-        let position =
+        let location =
           switch (cursors) {
-          | [hd, ..._] =>
-            let line = Core.Index.ofInt1(hd.line);
-            let character = Core.Index.ofInt0(hd.column);
-            Core.Position.create(line, character);
-          | [] => Core.Position.ofInt0(0, 0)
+          | [cursor, ..._] => (cursor :> Location.t)
+          | [] => Location.{line: Index.zero, column: Index.zero}
           };
         let newState = {
           ...state,
           hover:
             Model.Hover.show(
               ~bufferId,
-              ~position,
+              ~location,
               ~currentTime=Unix.gettimeofday(),
               ~delay=float_of_int(delay) /. 1000.,
               (),
@@ -94,7 +92,7 @@ let start = () => {
         };
         (
           newState,
-          checkForDefinitionEffect(state.languageFeatures, buf, position),
+          checkForDefinitionEffect(state.languageFeatures, buf, location),
         );
       }
     | _ => default

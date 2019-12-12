@@ -3,6 +3,7 @@
  *
  * In-memory text buffer representation
  */
+open EditorCoreTypes;
 
 type t = {
   id: int,
@@ -18,8 +19,8 @@ type t = {
 
 let show = _ => "TODO";
 
-let ofLines = (lines: array(string)) => {
-  id: 0,
+let ofLines = (~id=0, lines: array(string)) => {
+  id,
   version: 0,
   filePath: None,
   fileType: None,
@@ -113,8 +114,8 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
 
 let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
   let updateLines = update.lines;
-  let startLine = update.startLine |> Index.toZeroBasedInt;
-  let endLine = update.endLine |> Index.toZeroBasedInt;
+  let startLine = update.startLine |> Index.toZeroBased;
+  let endLine = update.endLine |> Index.toZeroBased;
   if (Array.length(lines) == 0) {
     updateLines;
   } else if (startLine >= Array.length(lines)) {

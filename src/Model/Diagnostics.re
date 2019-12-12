@@ -6,6 +6,7 @@
  * or minimap.
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 /*
@@ -15,9 +16,16 @@ open Oni_Core;
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
  */
-type t = StringMap.t(StringMap.t(list(Diagnostic.t)));
+type t = {
+  diagnosticsMap: StringMap.t(StringMap.t(list(Diagnostic.t))),
+  // Keep a cached count so we don't have to recalculate when
+  // querying UI
+  count: int,
+};
 
-let create = () => StringMap.empty;
+let create = () => {diagnosticsMap: StringMap.empty, count: 0};
+
+let count = (diags: t) => diags.count;
 
 let getKeyForUri = (uri: Uri.t) => {
   uri |> Uri.toString;
@@ -27,7 +35,7 @@ let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
 };
 
-let updateDiagnosticsMap =
+let _updateDiagnosticsMap =
     (
       diagnosticsKey,
       diagnostics,
@@ -36,10 +44,10 @@ let updateDiagnosticsMap =
   StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
 };
 
-let explodeDiagnostics = (buffer, diagnostics) => {
+let _explodeDiagnostics = (buffer, diagnostics) => {
   let f = (prev, curr: Diagnostic.t) => {
     IntMap.update(
-      Index.toZeroBasedInt(curr.range.startPosition.line),
+      Index.toZeroBased(curr.range.start.line),
       existing =>
         switch (existing) {
         | None => Some([curr])
@@ -54,12 +62,32 @@ let explodeDiagnostics = (buffer, diagnostics) => {
   |> List.fold_left(f, IntMap.empty);
 };
 
+let _recalculateCount = diagnostics => {
+  let foldKeys = keyMap => {
+    StringMap.fold(
+      (_key, curr, acc) => {acc + List.length(curr)},
+      keyMap,
+      0,
+    );
+  };
+
+  let count =
+    StringMap.fold(
+      (_key, keyMap, acc) => {acc + foldKeys(keyMap)},
+      diagnostics.diagnosticsMap,
+      0,
+    );
+
+  {...diagnostics, count};
+};
+
 let clear = (instance, key) => {
   let f = identifierMap => {
     StringMap.remove(key, identifierMap);
   };
 
-  StringMap.map(f, instance);
+  {...instance, diagnosticsMap: StringMap.map(f, instance.diagnosticsMap)}
+  |> _recalculateCount;
 };
 
 let change = (instance, uri, diagKey, diagnostics) => {
@@ -68,19 +96,24 @@ let change = (instance, uri, diagKey, diagnostics) => {
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
     switch (bufferMap) {
-    | Some(v) => Some(updateDiagnosticsMap(diagKey, diagnostics, v))
+    | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
     | None =>
-      Some(updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
+      Some(_updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
     };
   };
 
-  StringMap.update(bufferKey, updateBufferMap, instance);
+  {
+    ...instance,
+    diagnosticsMap:
+      StringMap.update(bufferKey, updateBufferMap, instance.diagnosticsMap),
+  }
+  |> _recalculateCount;
 };
 
-let getDiagnostics = (instance, buffer) => {
+let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
   let f = ((_key, v)) => v;
   let bufferKey = getKeyForBuffer(buffer);
-  switch (StringMap.find_opt(bufferKey, instance)) {
+  switch (StringMap.find_opt(bufferKey, diagnosticsMap)) {
   | None => []
   | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
   };
@@ -88,9 +121,9 @@ let getDiagnostics = (instance, buffer) => {
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
   getDiagnostics(instance, buffer)
-  |> List.filter((d: Diagnostic.t) => Range.contains(d.range, position));
+  |> List.filter((Diagnostic.{range, _}) => Range.contains(position, range));
 };
 
 let getDiagnosticsMap = (instance, buffer) => {
-  getDiagnostics(instance, buffer) |> explodeDiagnostics(buffer);
+  getDiagnostics(instance, buffer) |> _explodeDiagnostics(buffer);
 };

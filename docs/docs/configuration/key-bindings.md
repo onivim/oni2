@@ -16,7 +16,7 @@ Onivim's keyboard configuration is designed to be mostly compatible with [VSCode
 Keybindings are defined as a JSON array, like:
 ```
 [
-{ "key": "<C-P">, command: "quickOpenFiles", "when": "editorTextFocus" }
+  { "key": "<C-P>", "command": "quickOpenFiles", "when": "editorTextFocus" }
 ]
 ```
 

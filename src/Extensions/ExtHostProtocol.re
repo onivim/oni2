@@ -7,6 +7,7 @@
 
 module ModelConfig = Configuration;
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
@@ -111,9 +112,9 @@ module OneBasedPosition = {
     column: int,
   };
 
-  let ofPosition = (p: Position.t) => {
-    lineNumber: p.line |> Index.toOneBasedInt,
-    column: p.character |> Index.toOneBasedInt,
+  let ofPosition = (p: Location.t) => {
+    lineNumber: p.line |> Index.toOneBased,
+    column: p.column |> Index.toOneBased,
   };
 
   let ofInt1 = (~lineNumber, ~column, ()) => {lineNumber, column};
@@ -137,20 +138,25 @@ module OneBasedRange = {
   };
 
   let ofRange = (r: Range.t) => {
-    startLineNumber: r.startPosition.line |> Index.toOneBasedInt,
-    endLineNumber: r.endPosition.line |> Index.toOneBasedInt,
-    startColumn: r.startPosition.character |> Index.toOneBasedInt,
-    endColumn: r.endPosition.character |> Index.toOneBasedInt,
+    startLineNumber: r.start.line |> Index.toOneBased,
+    endLineNumber: r.stop.line |> Index.toOneBased,
+    startColumn: r.start.column |> Index.toOneBased,
+    endColumn: r.stop.column |> Index.toOneBased,
   };
 
-  let toRange = (v: t) => {
-    Range.ofInt1(
-      ~startLine=v.startLineNumber,
-      ~endLine=v.endLineNumber,
-      ~startCharacter=v.startColumn,
-      ~endCharacter=v.endColumn,
-      (),
-    );
+  let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
+    Range.{
+      start:
+        Location.{
+          line: Index.fromOneBased(startLineNumber),
+          column: Index.fromOneBased(startColumn),
+        },
+      stop:
+        Location.{
+          line: Index.fromOneBased(endLineNumber),
+          column: Index.fromOneBased(endColumn),
+        },
+    };
   };
 };
 
@@ -173,22 +179,22 @@ module ModelContentChange = {
   let getRangeFromEdit = (bu: BufferUpdate.t) => {
     let newLines = Array.length(bu.lines);
     let isInsert =
-      newLines >= Index.toInt0(bu.endLine) - Index.toInt0(bu.startLine);
+      newLines >= Index.toZeroBased(bu.endLine)
+      - Index.toZeroBased(bu.startLine);
 
-    let startLine = Index.toInt0(bu.startLine);
-    let endLine = Index.toInt0(bu.endLine);
-
-    let endLine = max(endLine, startLine);
-    let endCharacter = 0;
+    let startLine = Index.toZeroBased(bu.startLine);
+    let endLine = Index.toZeroBased(bu.endLine) |> max(startLine);
 
     let range =
-      Range.create(
-        ~startLine=ZeroBasedIndex(startLine),
-        ~endLine=ZeroBasedIndex(endLine),
-        ~startCharacter=ZeroBasedIndex(0),
-        ~endCharacter=ZeroBasedIndex(endCharacter),
-        (),
-      );
+      Range.{
+        start:
+          Location.{
+            line: Index.fromZeroBased(startLine),
+            column: Index.zero,
+          },
+        stop:
+          Location.{line: Index.fromZeroBased(endLine), column: Index.zero},
+      };
 
     (isInsert, range);
   };
@@ -388,7 +394,14 @@ module Workspace = {
     };
 };
 
-module LF = LanguageFeatures;
+module SuggestProvider = {
+  type t = {
+    selector: DocumentSelector.t,
+    id: int,
+  };
+
+  let create = (~selector, id) => {selector, id};
+};
 
 module IncomingNotifications = {
   module StatusBar = {
@@ -436,11 +449,11 @@ module IncomingNotifications = {
     let parseRegisterSuggestSupport = json => {
       switch (json) {
       | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
-        // TODO: Finish parsing
         documentSelector
         |> DocumentSelector.of_yojson
         |> Result.to_option
-        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
+        |> Option.map(selector => {SuggestProvider.create(~selector, id)})
+      // TODO: Finish parsing
       | _ => None
       };
     };

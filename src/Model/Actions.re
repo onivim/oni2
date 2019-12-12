@@ -4,6 +4,7 @@
  * Encapsulates actions that can impact the editor state
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
@@ -24,8 +25,11 @@ type t =
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, [@opaque] list(completionItem))
+  | CompletionStart([@opaque] CompletionMeet.t)
+  | CompletionAddItems(
+      [@opaque] CompletionMeet.t,
+      [@opaque] list(CompletionItem.t),
+    )
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -36,8 +40,8 @@ type t =
   | DarkModeSet(bool)
   | DefinitionAvailable(
       int,
-      Position.t,
-      [@opaque] Ext.LanguageFeatures.DefinitionResult.t,
+      Location.t,
+      [@opaque] LanguageFeatures.DefinitionResult.t,
     )
   | ExtensionActivated(string)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -70,12 +74,7 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
-  | LanguageFeatureRegisterSuggestProvider(
-      [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
-    )
-  | LanguageFeatureRegisterDefinitionProvider(
-      [@opaque] Ext.LanguageFeatures.DefinitionProvider.t,
-    )
+  | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
@@ -84,13 +83,14 @@ type t =
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
   | QuickmenuSearch(string)
+  | QuickmenuMaybeLoseFocus
   | QuickmenuClose
   | ListFocus(int)
   | ListFocusUp
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Position.t))
+  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
   | RegisterDockItem(WindowManager.dock)
   | RemoveDockItem(WindowManager.docks)
   | AddDockItem(WindowManager.docks)
@@ -101,7 +101,7 @@ type t =
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
-  | SearchSetMatchingPair(int, Position.t, Position.t)
+  | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] LanguageInfo.t)
@@ -134,16 +134,6 @@ and command = {
   commandAction: t,
   commandEnabled: unit => bool,
   commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
-}
-and completionMeet = {
-  completionMeetBufferId: int,
-  completionMeetLine: Index.t,
-  completionMeetColumn: Index.t,
-}
-and completionItem = {
-  completionLabel: string,
-  completionKind: option(Ext.CompletionItemKind.t),
-  completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t

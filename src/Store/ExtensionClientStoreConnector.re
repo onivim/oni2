@@ -6,6 +6,7 @@
  * - Calls appropriate APIs on extension host based on ACTIONS
  */
 
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Uri = Core.Uri;
 open Oni_Core.Utility;
@@ -20,6 +21,59 @@ module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
 
 module Workspace = Protocol.Workspace;
+
+module ExtensionCompletionProvider = {
+  let suggestionItemToCompletionItem:
+    Protocol.SuggestionItem.t => Model.CompletionItem.t =
+    suggestion => {
+      let completionKind =
+        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+
+      {
+        label: suggestion.label,
+        kind: completionKind,
+        detail: suggestion.detail,
+      };
+    };
+
+  let suggestionsToCompletionItems:
+    option(Protocol.Suggestions.t) => list(Model.CompletionItem.t) =
+    fun
+    | Some(suggestions) =>
+      List.map(suggestionItemToCompletionItem, suggestions)
+    | None => [];
+
+  let create =
+      (
+        client: ExtHostClient.t,
+        suggestProvider: Protocol.SuggestProvider.t,
+        buffer,
+        _completionMeet,
+        location,
+      ) =>
+    Core.Buffer.getFileType(buffer)
+    |> Option.map(
+         Extensions.DocumentSelector.matches(suggestProvider.selector),
+       )
+    |> Option.bind(matches => {
+         let uri = Core.Buffer.getUri(buffer);
+         let position = Protocol.OneBasedPosition.ofPosition(location);
+
+         if (matches) {
+           Some(
+             ExtHostClient.getCompletions(
+               suggestProvider.id,
+               uri,
+               position,
+               client,
+             )
+             |> Lwt.map(suggestionsToCompletionItems),
+           );
+         } else {
+           None;
+         };
+       });
+};
 
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -70,31 +124,25 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
-  let onRegisterSuggestProvider = (sp: LanguageFeatures.SuggestProvider.t) => {
-    Log.infof(m => m("Registered suggest provider with ID: %n", sp.id));
-    dispatch(Oni_Model.Actions.LanguageFeatureRegisterSuggestProvider(sp));
-
-    // TODO: Move
+  let onRegisterSuggestProvider = (client, provider) => {
+    let id =
+      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
+    let completionProvider =
+      ExtensionCompletionProvider.create(client, provider);
     dispatch(
-      Oni_Model.Actions.LanguageFeatureRegisterDefinitionProvider(
-        (_buf, _p) => {
-          Log.info("Sending definiton");
-          Some(
-            Lwt.return(
-              Extensions.LanguageFeatures.DefinitionResult.create(
-                ~uri=Core.Uri.fromPath("/Users/bryphe/revery/package.json"),
-                ~position=Core.Position.ofInt0(5, 5),
-              ),
-            ),
-          );
-        },
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.CompletionProviderAvailable(
+          id,
+          completionProvider,
+        ),
       ),
     );
+    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
- /* let onRegisterDefintionProvider = (sp: LanguageFeatures.DefinitionProvider.t) => {
-  
-  };*/
+  /* let onRegisterDefintionProvider = (sp: LanguageFeatures.DefinitionProvider.t) => {
+
+     };*/
 
   let onOutput = Log.info;
 
@@ -202,100 +250,53 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let suggestionItemToCompletionItem:
-    Protocol.SuggestionItem.t => Model.Actions.completionItem =
-    suggestion => {
-      let completionKind =
-        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
-
-      {
-        completionLabel: suggestion.label,
-        completionKind,
-        completionDetail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems = (suggestions: Protocol.Suggestions.t) =>
-    List.map(suggestionItemToCompletionItem, suggestions);
-
   let getAndDispatchCompletions =
-      (~languageFeatures, ~fileType, ~uri, ~completionMeet, ~position, ()) => {
-    let providers =
-      LanguageFeatures.getSuggestProviders(fileType, languageFeatures);
+      (~languageFeatures, ~buffer, ~meet, ~location, ()) => {
+    let completionPromise =
+      Model.LanguageFeatures.requestCompletions(
+        ~buffer,
+        ~meet,
+        ~location,
+        languageFeatures,
+      );
 
-    providers
-    |> List.iter((provider: LanguageFeatures.SuggestProvider.t) => {
-         Log.infof(m =>
-           m(
-             "Completions - getting completions for suggest provider: %n",
-             provider.id,
-           )
-         );
-         let completionPromise: Lwt.t(option(Protocol.Suggestions.t)) =
-           ExtHostClient.getCompletions(
-             provider.id,
-             uri,
-             position,
-             extHostClient,
-           );
-
-         let _ =
-           Lwt.bind(
-             completionPromise,
-             completions => {
-               switch (completions) {
-               | None => Log.info("No completions for provider")
-               | Some(completions) =>
-                 let completionItems =
-                   suggestionsToCompletionItems(completions);
-                 dispatch(
-                   Model.Actions.CompletionAddItems(
-                     completionMeet,
-                     completionItems,
-                   ),
-                 );
-               };
-               Lwt.return();
-             },
-           );
-         ();
-       });
+    Lwt.on_success(completionPromise, completions => {
+      dispatch(Model.Actions.CompletionAddItems(meet, completions))
+    });
   };
 
-  let checkCompletionsEffect = (completionMeet, state) =>
+  let checkCompletionsEffect = state =>
     Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
-      Model.Selectors.withActiveBufferAndFileType(
-        state,
-        (buf, fileType) => {
-          open Model.Actions;
+      Model.Selectors.getActiveBuffer(state)
+      |> Option.iter(buf => {
+           let uri = Core.Buffer.getUri(buf);
+           let maybeMeet = Model.Completions.getMeet(state.completions);
 
-          let uri = Core.Buffer.getUri(buf);
-          let position =
-            Protocol.OneBasedPosition.ofInt1(
-              ~lineNumber=
-                completionMeet.completionMeetLine |> Core.Index.toInt1,
-              ~column=completionMeet.completionMeetColumn |> Core.Index.toInt1,
-              (),
-            );
-          Log.infof(m =>
-            m(
-              "Completions - requesting at %s for %s",
-              Core.Uri.toString(uri),
-              Protocol.OneBasedPosition.show(position),
-            )
-          );
-          let languageFeatures = state.languageFeatures;
-          getAndDispatchCompletions(
-            ~languageFeatures,
-            ~fileType,
-            ~uri,
-            ~completionMeet,
-            ~position,
-            (),
-          );
-          ();
-        },
-      )
+           let maybeLocation =
+             maybeMeet |> Option.map(Model.CompletionMeet.getLocation);
+
+           let request = (meet: Model.CompletionMeet.t, location: Location.t) => {
+             Log.infof(m =>
+               m(
+                 "Completions - requesting at %s for %s",
+                 Core.Uri.toString(uri),
+                 Location.show(location),
+               )
+             );
+             let languageFeatures = state.languageFeatures;
+             let () =
+               getAndDispatchCompletions(
+                 ~languageFeatures,
+                 ~buffer=buf,
+                 ~meet,
+                 ~location,
+                 (),
+               );
+             ();
+           };
+
+           Option.iter2(request, maybeMeet, maybeLocation);
+         })
     });
 
   let executeContributedCommandEffect = cmd =>
@@ -332,9 +333,9 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         executeContributedCommandEffect(cmd),
       )
-    | Model.Actions.CompletionStart(completionMeet) => (
+    | Model.Actions.CompletionStart(_completionMeet) => (
         state,
-        checkCompletionsEffect(completionMeet, state),
+        checkCompletionsEffect(state),
       )
     | Model.Actions.VimDirectoryChanged(path) => (
         state,

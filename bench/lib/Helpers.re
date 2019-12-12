@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
 open Oni_Store;
@@ -46,8 +47,8 @@ let thousandLineState =
     simpleState,
     Actions.BufferUpdate(
       BufferUpdate.create(
-        ~startLine=Index.ZeroBasedIndex(0),
-        ~endLine=Index.ZeroBasedIndex(1),
+        ~startLine=Index.zero,
+        ~endLine=Index.fromZeroBased(1),
         ~lines=thousandLines,
         ~version=1,
         (),
@@ -71,8 +72,8 @@ let thousandLineStateWithIndents =
     simpleState,
     Actions.BufferUpdate(
       BufferUpdate.create(
-        ~startLine=Index.ZeroBasedIndex(0),
-        ~endLine=Index.ZeroBasedIndex(1),
+        ~startLine=Index.zero,
+        ~endLine=Index.fromZeroBased(1),
         ~lines=thousandLinesWithIndents,
         ~version=1,
         (),
@@ -88,8 +89,8 @@ let hundredThousandLineState =
     simpleState,
     Actions.BufferUpdate(
       BufferUpdate.create(
-        ~startLine=Index.ZeroBasedIndex(0),
-        ~endLine=Index.ZeroBasedIndex(1),
+        ~startLine=Index.zero,
+        ~endLine=Index.fromZeroBased(1),
         ~lines=hundredThousandLines,
         ~version=1,
         (),

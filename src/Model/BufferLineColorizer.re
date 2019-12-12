@@ -2,6 +2,7 @@
  * BufferLineColorizer.re
  */
 
+open EditorCoreTypes;
 open Revery;
 
 open Oni_Core;
@@ -44,10 +45,10 @@ let create =
 
   let (selectionStart, selectionEnd) =
     switch (selection) {
-    | Some(v) =>
-      let s = Index.toZeroBasedInt(v.startPosition.character);
-      let e = Index.toZeroBasedInt(v.endPosition.character);
-      e > s ? (s, e) : (e, s);
+    | Some(range) =>
+      let start = Index.toZeroBased(range.start.column);
+      let stop = Index.toZeroBased(range.stop.column);
+      start < stop ? (start, stop) : (stop, start);
     | None => ((-1), (-1))
     };
 
@@ -69,10 +70,8 @@ let create =
         ? selectionColor : defaultBackgroundColor;
 
     let doesSearchIntersect = (range: Range.t) => {
-      Range.(
-        Index.toInt0(range.startPosition.character) <= i
-        && Index.toInt0(range.endPosition.character) > i
-      );
+      Index.toZeroBased(range.start.column) <= i
+      && Index.toZeroBased(range.stop.column) > i;
     };
 
     let isSearchHighlight =

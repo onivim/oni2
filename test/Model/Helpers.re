@@ -1,4 +1,4 @@
-open Oni_Core;
+open EditorCoreTypes;
 open Oni_Model;
 
 let validateToken =
@@ -8,11 +8,11 @@ let validateToken =
       expectedToken: BufferViewTokenizer.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
-  expect.int(Index.toZeroBasedInt(actualToken.startPosition)).toBe(
-    Index.toZeroBasedInt(expectedToken.startPosition),
+  expect.int(Index.toZeroBased(actualToken.startPosition)).toBe(
+    Index.toZeroBased(expectedToken.startPosition),
   );
-  expect.int(Index.toZeroBasedInt(actualToken.endPosition)).toBe(
-    Index.toZeroBasedInt(expectedToken.endPosition),
+  expect.int(Index.toZeroBased(actualToken.endPosition)).toBe(
+    Index.toZeroBased(expectedToken.endPosition),
   );
 };
 

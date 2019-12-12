@@ -2,6 +2,7 @@
  TreeSitterSyntaxHighlighting.re
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 open Treesitter;
 
@@ -71,8 +72,8 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   let delta =
     TreeSitter.ArrayParser.Delta.create(
       lastBaseline,
-      Index.toInt0(bufferUpdate.startLine),
-      Index.toInt0(bufferUpdate.endLine),
+      Index.toZeroBased(bufferUpdate.startLine),
+      Index.toZeroBased(bufferUpdate.endLine),
       bufferUpdate.lines,
     );
 

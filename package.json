@@ -211,7 +211,8 @@
     "esy-sdl2": "*",
     "@opam/fmt": "^0.8.8",
     "@opam/logs": "^0.7.0",
-    "@opam/re": "*"
+    "@opam/re": "*",
+    "editor-core-types": "*"
   },
   "resolutions": {
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
@@ -235,9 +236,11 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
-    "reason-tree-sitter": "github:onivim/reason-tree-sitter#4947ead",
+    "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#b0021ec"
+    "revery": "github:revery-ui/revery#b0021ec",
+    "reason-libvim": "onivim/reason-libvim#4919011",
+    "editor-core-types": "onivim/editor-core-types#16dd98e"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

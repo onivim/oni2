@@ -3,15 +3,16 @@
  *
  * This module is responsible for recording and managing the 'definition' feature state
  */
+open EditorCoreTypes;
 open Oni_Core;
 module Ext = Oni_Extensions;
 
 type definition = {
   bufferId: int,
   // The position the hover was requested
-  requestPosition: Position.t,
+  requestPosition: Location.t,
   // result
-  result: option(Ext.LanguageFeatures.DefinitionResult.t),
+  result: option(LanguageFeatures.DefinitionResult.t),
 };
 
 type t = option(definition);
@@ -21,7 +22,7 @@ let empty: t = None;
 let getAt = (bufferId, position, definition: t) => {
   let getHover = definition =>
     if (bufferId === definition.bufferId
-        && Position.equals(position, definition.requestPosition)) {
+        && Location.equals(position, definition.requestPosition)) {
       definition.result;
     } else {
       None;
@@ -31,8 +32,8 @@ let getAt = (bufferId, position, definition: t) => {
 };
 
 let isAvailable = (bufferId, position, definition: t) => {
-  getAt(bufferId, position, definition) != None
-}
+  getAt(bufferId, position, definition) != None;
+};
 
 let create = (bufferId, requestPosition, result) => {
   Some({bufferId, requestPosition, result: Some(result)});

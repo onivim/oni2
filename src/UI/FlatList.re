@@ -11,19 +11,7 @@ open Revery_UI_Components;
 module Utility = Oni_Core.Utility;
 
 // TODO: Remove after 4.08 upgrade
-module Option = {
-  let map = f =>
-    fun
-    | Some(x) => Some(f(x))
-    | None => None;
-
-  let value = (~default) =>
-    fun
-    | Some(x) => x
-    | None => default;
-
-  let some = x => Some(x);
-};
+module Option = Utility.Option;
 
 type renderFunction = int => React.element(React.node);
 
@@ -36,42 +24,40 @@ module Constants = {
 };
 
 module Styles = {
-  let container = (~height as h) =>
-    Style.[
-      position(`Relative),
-      top(0),
-      left(0),
-      height(h),
-      overflow(`Hidden),
-      flexGrow(1),
-    ];
+  open Style;
 
-  let slider =
-    Style.[
-      position(`Absolute),
-      right(0),
-      top(0),
-      bottom(0),
-      width(Constants.scrollBarThickness),
-    ];
+  let container = (~isHeightEstimated, ~height) => [
+    position(`Relative),
+    top(0),
+    left(0),
+    isHeightEstimated ? bottom(0) : Style.height(height),
+    overflow(`Hidden),
+    flexGrow(1),
+  ];
 
-  let viewport = (~isScrollbarVisible) =>
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      bottom(0),
-      right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
-    ];
+  let slider = [
+    position(`Absolute),
+    right(0),
+    top(0),
+    bottom(0),
+    width(Constants.scrollBarThickness),
+  ];
 
-  let item = (~offset, ~rowHeight) =>
-    Style.[
-      position(`Absolute),
-      top(offset),
-      left(0),
-      right(0),
-      height(rowHeight),
-    ];
+  let viewport = (~isScrollbarVisible) => [
+    position(`Absolute),
+    top(0),
+    left(0),
+    bottom(0),
+    right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
+  ];
+
+  let item = (~offset, ~rowHeight) => [
+    position(`Absolute),
+    top(offset),
+    left(0),
+    right(0),
+    height(rowHeight),
+  ];
 };
 
 let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
@@ -205,7 +191,10 @@ let%component make =
     |> React.listToElement;
 
   <View
-    style={Styles.container(~height=min(menuHeight, count * rowHeight))}
+    style={Styles.container(
+      ~isHeightEstimated=outerRef == None,
+      ~height=min(menuHeight, count * rowHeight),
+    )}
     ref=setOuterRef
     onMouseWheel=scroll>
     <View

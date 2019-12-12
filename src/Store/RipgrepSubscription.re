@@ -1,10 +1,10 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
-module Log = Core.Log;
 
 module Actions = Model.Actions;
 module Ripgrep = Core.Ripgrep;
 module Subscription = Core.Subscription;
+module Log = (val Core.Log.withNamespace("Oni2.RipgrepSubscription"));
 
 module Provider = {
   type action = Actions.t;
@@ -12,7 +12,7 @@ module Provider = {
     directory: string,
     ripgrep: Ripgrep.t, // TODO: Necessary dependency?
     onUpdate: list(string) => unit, // TODO: Should return action
-    onCompleted: unit => action,
+    onComplete: unit => action,
   };
 
   let jobs = Hashtbl.create(10);
@@ -20,7 +20,7 @@ module Provider = {
   let start =
       (
         ~id,
-        ~params as {directory, ripgrep, onUpdate, onCompleted},
+        ~params as {directory, ripgrep, onUpdate, onComplete},
         ~dispatch: _,
       ) => {
     Log.info("Starting Ripgrep search subscription " ++ id);
@@ -30,8 +30,8 @@ module Provider = {
         ~directory,
         ~onUpdate,
         ~onComplete=() => {
-          Log.info("[QuickOpenStoreConnector] Ripgrep completed.");
-          dispatch(onCompleted());
+          Log.info("Ripgrep completed.");
+          dispatch(onComplete());
         },
       );
 
@@ -43,7 +43,7 @@ module Provider = {
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some(dispose) =>
-      Log.info("Disposing Ripgrep subscription " ++ id);
+      Log.info("Disposing subscription " ++ id);
       dispose();
       Hashtbl.remove(jobs, id);
 
@@ -52,9 +52,9 @@ module Provider = {
   };
 };
 
-let create = (~id, ~directory, ~ripgrep, ~onUpdate, ~onCompleted) =>
+let create = (~id, ~directory, ~ripgrep, ~onUpdate, ~onComplete) =>
   Subscription.create(
     id,
     (module Provider),
-    {directory, ripgrep, onUpdate, onCompleted},
+    {directory, ripgrep, onUpdate, onComplete},
   );
