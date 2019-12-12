@@ -15,6 +15,7 @@ type t = {
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
+  bufferHighlights: BufferHighlights.t,
   buffers: Buffers.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
@@ -61,6 +62,7 @@ let create: unit => t =
     hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
+    bufferHighlights: BufferHighlights.initial,
     buffers: Buffers.empty,
     editorFont:
       EditorFont.create(

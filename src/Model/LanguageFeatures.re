@@ -51,17 +51,35 @@ module DefinitionProvider = {
   };
 };
 
+module DocumentHighlightResult = {
+  // TODO: Add highlight kind
+  type t = list(Range.t);
+
+  let create = (~ranges) => ranges;
+}
+
+module DocumentHighlightProvider = {
+  type t = (Buffer.t, Location.t) => option(Lwt.t(DocumentHighlightResult.t));
+
+  type info = {
+    id: string,
+    provider: t
+  }
+}
+
 [@deriving show({with_path: false})]
 type action =
   | CompletionProviderAvailable(string, [@opaque] CompletionProvider.t)
-  | DefinitionProviderAvailable(string, [@opaque] DefinitionProvider.t);
+  | DefinitionProviderAvailable(string, [@opaque] DefinitionProvider.t)
+  | DocumentHighlightProviderAvailable(string, [@opaque] DocumentHighlightProvider.t);
 
 type t = {
   completionProviders: list(CompletionProvider.info),
   definitionProviders: list(DefinitionProvider.info),
+  documentHighlightProviders: list(DocumentHighlightProvider.info),
 };
 
-let empty = {completionProviders: [], definitionProviders: []};
+let empty = {completionProviders: [], definitionProviders: [], documentHighlightProviders: []};
 
 let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
   lf.definitionProviders
@@ -71,6 +89,18 @@ let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
   |> Utility.Option.values
   |> Lwt.choose;
 };
+
+let requestDocumentHighlights = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
+  let promises =
+    lf.documentHighlightProviders
+    |> List.map((DocumentHighlightProvider.{ provider, _}) => provider(buffer, location))
+    |> Utility.Option.values;
+
+  let join = (accCompletions, currCompletions) =>
+    accCompletions @ currCompletions;
+
+  Utility.LwtUtil.all(join, promises);
+}
 
 let requestCompletions =
     (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
@@ -104,9 +134,18 @@ let registerDefinitionProvider = (~id, ~provider: DefinitionProvider.t, lf: t) =
   definitionProviders: [{id, provider}, ...lf.definitionProviders],
 };
 
+let registerDocumentHighlightProvider = (~id, ~provider: DocumentHighlightProvider.t, lf: t) => {
+  ...lf,
+  documentHighlightProviders: [{id, provider}, ...lf.documentHighlightProviders],
+}
+
 let getCompletionProviders = (lf: t) =>
   lf.completionProviders |> List.map((CompletionProvider.{id, _}) => id);
 
 let getDefinitionProviders = (lf: t) => {
   lf.definitionProviders |> List.map((DefinitionProvider.{id, _}) => id);
+};
+
+let getDocumentHighlightProviders = (lf: t) => {
+  lf.documentHighlightProviders |> List.map((DocumentHighlightProvider.{id, _}) => id);
 };
