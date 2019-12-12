@@ -77,11 +77,7 @@ module ExtensionCompletionProvider = {
 
 module ExtensionDefinitionProvider = {
   let definitionToModel = def => {
-    let Protocol.DefinitionLink.{
-          uri,
-          range,
-          originSelectionRange,
-        } = def;
+    let Protocol.DefinitionLink.{uri, range, originSelectionRange} = def;
     let Range.{start, _} = Protocol.OneBasedRange.toRange(range);
 
     let originRange =

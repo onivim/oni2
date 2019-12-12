@@ -50,7 +50,7 @@ runTestWithInput(
   input("a");
   input("b");
   input("c");
-  
+
   // Workaround a bug where cursor position is offset with <esc>
   input("<esc>");
   input("h");
@@ -60,19 +60,24 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
+      let maybeBuffer = Selectors.getActiveBuffer(state);
 
-    let maybeBuffer = Selectors.getActiveBuffer(state);
-    
-    let maybeEditor =  state
-    |> Selectors.getActiveEditorGroup
-    |> Selectors.getActiveEditor
-    |> Option.map((editor) => Editor.getPrimaryCursor(editor));
+      let maybeEditor =
+        state
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor
+        |> Option.map(editor => Editor.getPrimaryCursor(editor));
 
-    let isDefinitionAvailable = (buffer, location) => {
-      Definition.isAvailable(Buffer.getId(buffer), location, state.definition);  
-    }
+      let isDefinitionAvailable = (buffer, location) => {
+        Definition.isAvailable(
+          Buffer.getId(buffer),
+          location,
+          state.definition,
+        );
+      };
 
-    Option.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
-    |> Option.value(~default=false);
-  });
+      Option.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
+      |> Option.value(~default=false);
+    },
+  );
 });
