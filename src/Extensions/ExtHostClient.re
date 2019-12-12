@@ -38,6 +38,7 @@ let start =
       ~onOutput=noop1,
       ~onRegisterCommand=noop1,
       ~onRegisterDefinitionProvider=noop2,
+      ~onRegisterDocumentHighlightProvider=noop2,
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
@@ -52,8 +53,21 @@ let start =
     | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
       Option.iter(
         client => {
-          In.LanguageFeatures.parseRegisterDefinitionSupport(args)
+          In.LanguageFeatures.parseBasicProvider(args)
           |> Option.iter(onRegisterDefinitionProvider(client))
+        },
+        client^,
+      );
+      Ok(None);
+    | (
+        "MainThreadLanguageFeatures",
+        "$registerDocumentHighlightProvider",
+        args,
+      ) =>
+      Option.iter(
+        client => {
+          In.LanguageFeatures.parseBasicProvider(args)
+          |> Option.iter(onRegisterDocumentHighlightProvider(client))
         },
         client^,
       );
@@ -194,6 +208,25 @@ let provideDefinition = (id, uri, position, client) => {
       ~msgType=MessageType.requestJsonArgsWithCancellation,
       client,
       Out.LanguageFeatures.provideDefinition(id, uri, position),
+      f,
+    );
+  promise;
+};
+
+let provideDocumentHighlights = (id, uri, position, client) => {
+  let f = (json: Yojson.Safe.t) => {
+    switch (json) {
+    | `List(items) =>
+      List.map(Protocol.DocumentHighlight.of_yojson_exn, items)
+    | _ => []
+    };
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.LanguageFeatures.provideDocumentHighlights(id, uri, position),
       f,
     );
   promise;

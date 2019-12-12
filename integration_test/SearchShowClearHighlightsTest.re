@@ -34,7 +34,8 @@ runTest(
     | Some(buf) =>
       let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights) |> List.length;
+        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
+        |> List.length;
       searchHighlightCount > 0;
     }
   );
@@ -53,7 +54,8 @@ runTest(
     | Some(buf) =>
       let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights) |> List.length;
+        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
+        |> List.length;
       searchHighlightCount == 0;
     }
   );
