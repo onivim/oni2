@@ -14,6 +14,8 @@ let reduce: (State.t, Actions.t) => State.t =
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),
+        bufferHighlights:
+          BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         commands: Commands.reduce(s.commands, a),
         completions: Completions.reduce(s.completions, a),
         definition: DefinitionReducer.reduce(a, s.definition),
@@ -22,7 +24,6 @@ let reduce: (State.t, Actions.t) => State.t =
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         notifications: Notifications.reduce(s.notifications, a),
       };

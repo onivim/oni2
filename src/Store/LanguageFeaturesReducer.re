@@ -16,7 +16,11 @@ let reduce = (action: Actions.t, state: LanguageFeatures.t) => {
     | DefinitionProviderAvailable(id, provider) =>
       LanguageFeatures.registerDefinitionProvider(~id, ~provider, state)
     | DocumentHighlightProviderAvailable(id, provider) =>
-      LanguageFeatures.registerDocumentHighlightProvider(~id, ~provider, state)
+      LanguageFeatures.registerDocumentHighlightProvider(
+        ~id,
+        ~provider,
+        state,
+      )
     }
   | _ => state
   };

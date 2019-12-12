@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let identity = v => v;
 let noop = () => ();
 let noop1 = _ => ();
@@ -220,6 +222,28 @@ let ranges = indices =>
     indices,
   )
   |> List.rev;
+
+module RangeUtil = {
+  let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
+    ranges => {
+      List.fold_left(
+        (prev, cur) =>
+          Range.(
+            IntMap.update(
+              Index.toZeroBased(cur.start.line),
+              v =>
+                switch (v) {
+                | None => Some([cur])
+                | Some(v) => Some([cur, ...v])
+                },
+              prev,
+            )
+          ),
+        IntMap.empty,
+        ranges,
+      );
+    };
+};
 
 // TODO: Remove after 4.08 upgrade
 module List = {

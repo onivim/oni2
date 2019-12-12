@@ -320,9 +320,6 @@ let%component make =
       backgroundColor(Colors.white),
     ];
 
-  let searchHighlights =
-    Selectors.getSearchHighlights(state, editor.bufferId);
-
   let isMinimapShown =
     Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
 
@@ -348,7 +345,8 @@ let%component make =
 
   let matchingPairs =
     !matchingPairsEnabled
-      ? None : Selectors.getMatchingPairs(state, editor.bufferId);
+      ? None
+      : BufferHighlights.getMatchingPair(bufferId, state.bufferHighlights);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let getTokensForLine =
@@ -358,11 +356,13 @@ let%component make =
     } else {
       let line = Buffer.getLine(buffer, i);
 
-      let searchHighlightRanges =
-        switch (IntMap.find_opt(i, searchHighlights)) {
-        | Some(v) => v
-        | None => []
-        };
+      let idx = Index.fromZeroBased(i);
+      let highlights =
+        BufferHighlights.getHighlightsByLine(
+          ~bufferId,
+          ~line=idx,
+          state.bufferHighlights,
+        );
 
       let isActiveLine = i == cursorLine;
       let defaultBackground =
@@ -372,11 +372,11 @@ let%component make =
       let matchingPairIndex =
         switch (matchingPairs) {
         | None => None
-        | Some(v) when !ignoreMatchingPairs =>
-          if (Index.toZeroBased(v.startPos.line) == i) {
-            Some(Index.toZeroBased(v.startPos.column));
-          } else if (Index.toZeroBased(v.endPos.line) == i) {
-            Some(Index.toZeroBased(v.endPos.column));
+        | Some((startPos, endPos)) when !ignoreMatchingPairs =>
+          if (Index.toZeroBased(startPos.line) == i) {
+            Some(Index.toZeroBased(startPos.column));
+          } else if (Index.toZeroBased(endPos.line) == i) {
+            Some(Index.toZeroBased(endPos.column));
           } else {
             None;
           }
@@ -404,7 +404,7 @@ let%component make =
           defaultBackground,
           theme.editorSelectionBackground,
           matchingPairIndex,
-          searchHighlightRanges,
+          highlights,
         );
 
       BufferViewTokenizer.tokenize(
@@ -780,33 +780,32 @@ let%component make =
                 let matchColor = theme.editorSelectionBackground;
                 switch (matchingPairs) {
                 | None => ()
-                | Some(v) =>
+                | Some((startPos, endPos)) =>
                   renderRange(
                     ~offset=0.0,
                     ~color=matchColor,
-                    Range.{start: v.startPos, stop: v.startPos},
+                    Range.{start: startPos, stop: startPos},
                   );
                   renderRange(
                     ~offset=0.0,
                     ~color=matchColor,
-                    Range.{start: v.endPos, stop: v.endPos},
+                    Range.{start: endPos, stop: endPos},
                   );
                 };
 
                 /* Draw search highlights */
-                switch (IntMap.find_opt(item, searchHighlights)) {
-                | None => ()
-                | Some(v) =>
-                  List.iter(
-                    r =>
-                      renderRange(
-                        ~offset=2.0,
-                        ~color=theme.editorFindMatchBackground,
-                        r,
-                      ),
-                    v,
-                  )
-                };
+                BufferHighlights.getHighlightsByLine(
+                  ~bufferId,
+                  ~line=index,
+                  state.bufferHighlights,
+                )
+                |> List.iter(r =>
+                     renderRange(
+                       ~offset=2.0,
+                       ~color=theme.editorFindMatchBackground,
+                       r,
+                     )
+                   );
               },
             (),
           );
