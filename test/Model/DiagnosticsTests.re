@@ -20,10 +20,43 @@ let doubleDiagnostic = [
   Diagnostic.create(~range=zeroRange, ~message="error 2", ()),
 ];
 
-let buffer = Buffer.ofLines([||]);
+let buffer = Buffer.ofLines(~id=0, [||]);
 let uri = Buffer.getUri(buffer);
 
+let buffer1 = Buffer.ofLines(~id=1, [||]);
+let uri1 = Buffer.getUri(buffer1);
+
+let buffer2 = Buffer.ofLines(~id=2, [||]);
+let uri2 = Buffer.getUri(buffer2);
+
 describe("Diagnostics", ({describe, _}) => {
+  describe("count", ({test, _}) => {
+    test("change single buffer, multiple keys", ({expect, _}) => {
+      let v = Diagnostics.create();
+      let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
+
+      expect.int(Diagnostics.count(v)).toBe(1);
+
+      let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
+      expect.int(Diagnostics.count(v)).toBe(3);
+
+      let v = Diagnostics.clear(v, "test_key1");
+      expect.int(Diagnostics.count(v)).toBe(2);
+    });
+
+    test("change multiple buffers, multiple keys", ({expect, _}) => {
+      let v = Diagnostics.create();
+
+      let v = Diagnostics.change(v, uri1, "test_key1", singleDiagnostic);
+      let v = Diagnostics.change(v, uri2, "test_key1", doubleDiagnostic);
+
+      expect.int(Diagnostics.count(v)).toBe(3);
+
+      let v = Diagnostics.clear(v, "test_key1");
+      expect.int(Diagnostics.count(v)).toBe(0);
+    });
+  });
+
   describe("getDiagnostics", ({test, _}) =>
     test("no diagnostics", ({expect}) => {
       let buffer = Buffer.ofLines([||]);

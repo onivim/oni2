@@ -27,6 +27,11 @@ let change: (t, Uri.t, string, list(Diagnostic.t)) => t;
 let clear: (t, string) => t;
 
 /*
+ * [count(diagnostics)] gets the total count of all diagnostics across buffers
+ */
+let count: t => int;
+
+/*
  * Get all diagnostics for a buffer
  */
 let getDiagnostics: (t, Buffer.t) => list(Diagnostic.t);
