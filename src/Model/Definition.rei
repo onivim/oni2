@@ -12,7 +12,7 @@ let empty: t;
 let getAt:
   (int, Location.t, t) => option(LanguageFeatures.DefinitionResult.t);
 
-// [getRange(definition)] returns a Range.t with the associated source range of the definition
+// [getRange(definition)] returns a Range.t with the associated source range of the definitiocompletionsn
 let getRange: t => option(Range.t);
 
 let isAvailable: (int, Location.t, t) => bool;

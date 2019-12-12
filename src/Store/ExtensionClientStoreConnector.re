@@ -79,10 +79,10 @@ module ExtensionDefinitionProvider = {
   let definitionToModel = def => {
     let Protocol.DefinitionLink.{
           uri,
-          range as oneBasedRange,
+          range,
           originSelectionRange,
         } = def;
-    let Range.{start, _} = Protocol.OneBasedRange.toRange(oneBasedRange);
+    let Range.{start, _} = Protocol.OneBasedRange.toRange(range);
 
     let originRange =
       originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
