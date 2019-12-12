@@ -350,69 +350,73 @@ let%component make =
     !matchingPairsEnabled
       ? None : Selectors.getMatchingPairs(state, editor.bufferId);
 
+  let lineCount = Buffer.getNumberOfLines(buffer);
   let getTokensForLine =
-      (~ignoreMatchingPairs=false, ~selection=None, startIndex, endIndex, i) => {
-    let line = Buffer.getLine(buffer, i);
+      (~ignoreMatchingPairs=false, ~selection=None, startIndex, endIndex, i) =>
+    if (i >= lineCount) {
+      [];
+    } else {
+      let line = Buffer.getLine(buffer, i);
 
-    let searchHighlightRanges =
-      switch (IntMap.find_opt(i, searchHighlights)) {
-      | Some(v) => v
-      | None => []
-      };
+      let searchHighlightRanges =
+        switch (IntMap.find_opt(i, searchHighlights)) {
+        | Some(v) => v
+        | None => []
+        };
 
-    let isActiveLine = i == cursorLine;
-    let defaultBackground =
-      isActiveLine
-        ? theme.editorLineHighlightBackground : theme.editorBackground;
+      let isActiveLine = i == cursorLine;
+      let defaultBackground =
+        isActiveLine
+          ? theme.editorLineHighlightBackground : theme.editorBackground;
 
-    let matchingPairIndex =
-      switch (matchingPairs) {
-      | None => None
-      | Some(v) when !ignoreMatchingPairs =>
-        if (Index.toZeroBased(v.startPos.line) == i) {
-          Some(Index.toZeroBased(v.startPos.column));
-        } else if (Index.toZeroBased(v.endPos.line) == i) {
-          Some(Index.toZeroBased(v.endPos.column));
-        } else {
-          None;
-        }
-      | _ => None
-      };
+      let matchingPairIndex =
+        switch (matchingPairs) {
+        | None => None
+        | Some(v) when !ignoreMatchingPairs =>
+          if (Index.toZeroBased(v.startPos.line) == i) {
+            Some(Index.toZeroBased(v.startPos.column));
+          } else if (Index.toZeroBased(v.endPos.line) == i) {
+            Some(Index.toZeroBased(v.endPos.column));
+          } else {
+            None;
+          }
+        | _ => None
+        };
 
-    let tokenColors2 =
-      switch (
-        SyntaxHighlighting.getTokensForLine(
-          state.syntaxHighlighting,
-          bufferId,
-          i,
-        )
-      ) {
-      | [] => []
-      | v => v
-      };
+      let tokenColors2 =
+        switch (
+          SyntaxHighlighting.getTokensForLine(
+            state.syntaxHighlighting,
+            bufferId,
+            i,
+          )
+        ) {
+        | [] => []
+        | v => v
+        };
 
-    let colorizer =
-      BufferLineColorizer.create(
-        ZedBundled.length(line),
-        state.theme,
-        tokenColors2,
-        selection,
-        defaultBackground,
-        theme.editorSelectionBackground,
-        matchingPairIndex,
-        searchHighlightRanges,
+      let colorizer =
+        BufferLineColorizer.create(
+          ZedBundled.length(line),
+          state.theme,
+          tokenColors2,
+          selection,
+          defaultBackground,
+          theme.editorSelectionBackground,
+          matchingPairIndex,
+          searchHighlightRanges,
+        );
+
+      BufferViewTokenizer.tokenize(
+        ~startIndex,
+        ~endIndex,
+        line,
+        IndentationSettings.default,
+        colorizer,
       );
+    };
 
-    BufferViewTokenizer.tokenize(
-      ~startIndex,
-      ~endIndex,
-      line,
-      IndentationSettings.default,
-      colorizer,
-    );
-  };
-
-  let _getTokenAtPosition = (~startIndex, ~endIndex, position: Location.t) => {
+  let getTokenAtPosition = (~startIndex, ~endIndex, position: Location.t) => {
     let lineNumber = position.line |> Index.toZeroBased;
     let index = position.column |> Index.toZeroBased;
 
@@ -715,28 +719,36 @@ let%component make =
                );
              }};
 
-          // TODO:
-          // Render underline if we have an available go-to definition
-          /*
-           let () =
-             getTokenAtPosition(
-               ~startIndex=leftVisibleColumn,
-               ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
-               cursorPosition,
-             )
-             |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
-                  let range =
-                    Range.create(
-                      ~startLine=cursorPosition.line,
-                      ~startCharacter=token.startPosition,
-                      ~endLine=cursorPosition.line,
-                      ~endCharacter=token.endPosition,
-                      (),
-                    );
-                  let () = renderUnderline(~color=token.color, range);
-                  ();
-                });
-            */
+          if (Definition.isAvailable(
+                bufferId,
+                cursorPosition,
+                state.definition,
+              )) {
+            let () =
+              getTokenAtPosition(
+                ~startIndex=leftVisibleColumn,
+                ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+                cursorPosition,
+              )
+              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+                   let range =
+                     Range.{
+                       start:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.startPosition,
+                         },
+                       stop:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.endPosition,
+                         },
+                     };
+                   let () = renderUnderline(~color=token.color, range);
+                   ();
+                 });
+            ();
+          };
 
           ImmediateList.render(
             ~scrollY,

@@ -246,6 +246,12 @@ module Option = {
     | Some(x) => Some(f(x))
     | None => None;
 
+  let map2 = (f, a, b) =>
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => Some(f(aVal, bVal))
+    | _ => None
+    };
+
   let value = (~default) =>
     fun
     | Some(x) => x
@@ -274,6 +280,11 @@ module Option = {
     fun
     | Some(x) => f(x)
     | None => None;
+
+  let flatten =
+    fun
+    | Some(Some(x)) => Some(x)
+    | _ => None;
 
   let join =
     fun

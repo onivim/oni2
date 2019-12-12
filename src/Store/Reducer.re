@@ -16,6 +16,7 @@ let reduce: (State.t, Actions.t) => State.t =
         buffers: Buffers.reduce(s.buffers, a),
         commands: Commands.reduce(s.commands, a),
         completions: Completions.reduce(s.completions, a),
+        definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         extensions: Extensions.reduce(a, s.extensions),
         languageFeatures:

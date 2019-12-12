@@ -5,10 +5,17 @@
 open Oni_Model;
 open Actions;
 
+open LanguageFeatures;
+
 let reduce = (action: Actions.t, state: LanguageFeatures.t) => {
   switch (action) {
-  | LanguageFeatureRegisterCompletionProvider(id, provider) =>
-    LanguageFeatures.registerCompletionProvider(~id, ~provider, state)
+  | LanguageFeature(languageAction) =>
+    switch (languageAction) {
+    | CompletionProviderAvailable(id, provider) =>
+      LanguageFeatures.registerCompletionProvider(~id, ~provider, state)
+    | DefinitionProviderAvailable(id, provider) =>
+      LanguageFeatures.registerDefinitionProvider(~id, ~provider, state)
+    }
   | _ => state
   };
 };

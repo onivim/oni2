@@ -38,6 +38,11 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | DefinitionAvailable(
+      int,
+      Location.t,
+      [@opaque] LanguageFeatures.DefinitionResult.t,
+    )
   | ExtensionActivated(string)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
@@ -69,10 +74,7 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
-  | LanguageFeatureRegisterCompletionProvider(
-      string,
-      [@opaque] LanguageFeatures.CompletionProvider.t,
-    )
+  | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,

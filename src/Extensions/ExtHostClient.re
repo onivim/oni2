@@ -37,6 +37,7 @@ let start =
       ~onTelemetry=noop1,
       ~onOutput=noop1,
       ~onRegisterCommand=noop1,
+      ~onRegisterDefinitionProvider=noop2,
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
@@ -48,6 +49,15 @@ let start =
 
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
+    | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
+      Option.iter(
+        client => {
+          In.LanguageFeatures.parseRegisterDefinitionSupport(args)
+          |> Option.iter(onRegisterDefinitionProvider(client))
+        },
+        client^,
+      );
+      Ok(None);
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       Option.iter(
         client => {
@@ -154,7 +164,7 @@ let updateDocument = (uri, modelChange, dirty, client) => {
   );
 };
 
-let getCompletions = (id, uri, position, client) => {
+let provideCompletions = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     In.LanguageFeatures.parseProvideCompletionsResponse(json);
   };
@@ -164,6 +174,26 @@ let getCompletions = (id, uri, position, client) => {
       ~msgType=MessageType.requestJsonArgsWithCancellation,
       client,
       Out.LanguageFeatures.provideCompletionItems(id, uri, position),
+      f,
+    );
+  promise;
+};
+
+let provideDefinition = (id, uri, position, client) => {
+  let f = (json: Yojson.Safe.t) => {
+    let json =
+      switch (json) {
+      | `List([fst, ..._]) => fst
+      | v => v
+      };
+    Protocol.DefinitionLink.of_yojson_exn(json);
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.LanguageFeatures.provideDefinition(id, uri, position),
       f,
     );
   promise;

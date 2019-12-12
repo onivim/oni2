@@ -8,7 +8,7 @@ open EditorCoreTypes;
 
 type hover = {
   bufferId: int,
-  position: Location.t,
+  location: Location.t,
   animation: Animation.t,
 };
 
@@ -16,12 +16,12 @@ type t = option(hover);
 
 let empty: t = None;
 
-let show = (~bufferId, ~position, ~currentTime, ~delay, ()) => {
+let show = (~bufferId, ~location, ~currentTime, ~delay, ()) => {
   let animation =
     Animation.create(~duration=0.25, ~delay, ())
     |> Animation.start(currentTime);
 
-  Some({bufferId, position, animation});
+  Some({bufferId, location, animation});
 };
 
 let tick = (deltaTime, v: t) => {

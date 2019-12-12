@@ -65,6 +65,34 @@ let start =
   });
 
   let _ =
+    Vim.onGoto((_position, _definitionType) => {
+      Log.info("Goto definition requested");
+      // Get buffer and cursor position
+      let state = getState();
+      let maybeBuffer = state |> Selectors.getActiveBuffer;
+
+      let maybeEditor =
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+
+      let getDefinition = (buffer, editor) => {
+        let id = Core.Buffer.getId(buffer);
+        let position = Editor.getPrimaryCursor(editor);
+        Definition.getAt(id, position, state.definition)
+        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+             Actions.OpenFileByPath(
+               definitionResult.uri |> Core.Uri.toFileSystemPath,
+               None,
+               Some(definitionResult.location),
+             )
+           });
+      };
+
+      Option.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.flatten
+      |> Option.iter(action => dispatch(action));
+    });
+
+  let _ =
     // Unhandled escape is called when there is an `<esc>` sent to Vim,
     // but nothing to escape from (ie, in normal mode with no pending operator)
     Vim.onUnhandledEscape(() => {
