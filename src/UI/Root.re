@@ -22,7 +22,7 @@ module Styles = {
       alignItems(`Stretch),
     ];
 
-  let surface = Style.[flexGrow(1)];
+  let surface = Style.[flexGrow(1), flexDirection(`Row)];
 
   let statusBar = statusBarHeight =>
     Style.[
@@ -58,7 +58,14 @@ let make = (~state: State.t, ()) => {
     };
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface> <EditorView state /> searchPane </View>
+    <View style=Styles.surface> 
+      <Dock state />
+      <WindowHandle direction=Vertical theme />
+      <SideBarView state />
+      <WindowHandle direction=Vertical theme />
+      <EditorView state /> 
+      searchPane 
+    </View>
     <Overlay>
       {switch (state.quickmenu) {
        | None => React.empty

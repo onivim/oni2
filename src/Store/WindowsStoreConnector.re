@@ -36,32 +36,13 @@ let start = getState => {
     Isolinear.Effect.create(~name="windows.init", () => {
       open Oni_UI;
 
-      let dock =
-        WindowManager.registerDock(
-          ~order=1,
-          ~width=50,
-          ~id=MainDock,
-          ~component=splitFactory(state => <Dock state />),
-          (),
-        );
-
       let editor =
         WindowTree.createSplit(
           ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
           (),
         );
 
-      let explorer =
-        WindowManager.registerDock(
-          ~order=2,
-          ~width=225,
-          ~id=ExplorerDock,
-          ~component=splitFactory(state => <FileExplorerView state />),
-          (),
-        );
 
-      dispatch(RegisterDockItem(dock));
-      dispatch(RegisterDockItem(explorer));
       dispatch(AddSplit(Vertical, editor));
     });
 
@@ -78,7 +59,8 @@ let start = getState => {
           configuration,
         );
 
-      if (activityBarVisible) {
+      // TODO: Wire up to new actions
+      /*if (activityBarVisible) {
         dispatch(AddDockItem(MainDock));
       } else {
         dispatch(RemoveDockItem(MainDock));
@@ -88,12 +70,12 @@ let start = getState => {
         dispatch(AddDockItem(ExplorerDock));
       } else {
         dispatch(RemoveDockItem(ExplorerDock));
-      };
+      };*/
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | RegisterDockItem(dock) =>
+    /*| RegisterDockItem(dock) =>
       switch (dock) {
       | {position: Left, _} => {
           ...s,
@@ -111,15 +93,15 @@ let start = getState => {
             dockItems: [dock, ...s.windowManager.dockItems],
           },
         }
-      }
-    | RemoveDockItem(id) => {
+      }*/
+    /*| RemoveDockItem(id) => {
         ...s,
         windowManager: WindowManager.removeDockItem(~id, s.windowManager),
       }
     | AddDockItem(id) => {
         ...s,
         windowManager: WindowManager.addDockItem(~id, s.windowManager),
-      }
+      }*/
     | WindowSetActive(splitId, _) => {
         ...s,
         windowManager: {

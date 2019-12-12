@@ -13,17 +13,7 @@ module WindowId = {
 };
 
 [@deriving show({with_path: false})]
-type docks =
-  | ExplorerDock
-  | MainDock;
-
-[@deriving show({with_path: false})]
 type componentCreator = unit => React.element(React.node);
-
-[@deriving show({with_path: false})]
-type dockPosition =
-  | Left
-  | Right;
 
 type direction =
   | Up
@@ -31,31 +21,10 @@ type direction =
   | Down
   | Right;
 
-/**
-   A dock is a sub type of split, it does not require
-   a parent ID as docks are list of splits, not a tree
- */
-[@deriving show({with_path: false})]
-type dock = {
-  id: docks,
-  order: int,
-  component: componentCreator,
-  position: dockPosition,
-  width: option(int),
-};
-
 [@deriving show({with_path: false})]
 type t = {
   windowTree: WindowTree.t,
   activeWindowId: int,
-  leftDock: list(dock),
-  rightDock: list(dock),
-  /*
-   * Cache all the registered dock items so
-   * these can be reused i.e. docks can be
-   * reopened and closed
-   */
-  dockItems: list(dock),
   windowTreeWidth: int,
   windowTreeHeight: int,
 };
@@ -65,9 +34,6 @@ let initialWindowId = WindowId.next();
 let create = (): t => {
   activeWindowId: initialWindowId,
   windowTree: WindowTree.empty,
-  leftDock: [],
-  rightDock: [],
-  dockItems: [],
   windowTreeWidth: 1,
   windowTreeHeight: 1,
 };
@@ -76,15 +42,6 @@ let setTreeSize = (width, height, v: t) => {
   ...v,
   windowTreeWidth: width,
   windowTreeHeight: height,
-};
-
-let registerDock =
-    (~component, ~id, ~order, ~position: dockPosition=Left, ~width=?, ()) => {
-  order,
-  component,
-  position,
-  id,
-  width,
 };
 
 /* Ensure the activeWindowId points to a valid winodw */
@@ -124,27 +81,4 @@ let move = (direction: direction, v) => {
   | Left => moveLeft(v)
   | Right => moveRight(v)
   };
-};
-
-let removeDockItem = (~id, layout: t) => {
-  let leftDock = List.filter(item => item.id != id, layout.leftDock);
-  let rightDock = List.filter(item => item.id != id, layout.rightDock);
-  {...layout, leftDock, rightDock};
-};
-
-let findDockItem = (id, layout: t) =>
-  switch (List.find_opt(item => item.id == id, layout.dockItems)) {
-  | Some(_) as item => item
-  | None => None
-  };
-
-let addDockItem = (~id, layout: t) => {
-  List.exists(item => item.id == id, layout.leftDock)
-    ? layout
-    : (
-      switch (findDockItem(id, layout)) {
-      | None => layout
-      | Some(dock) => {...layout, leftDock: layout.leftDock @ [dock]}
-      }
-    );
 };

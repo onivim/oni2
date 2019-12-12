@@ -10,7 +10,7 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
+  /*let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
     backgroundColor(bg),
@@ -23,7 +23,7 @@ module Styles = {
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
     height(Core.Constants.default.tabHeight),
-  ];
+  ];*/
 
   let item = [flexDirection(`Row), alignItems(`Center)];
 
@@ -96,9 +96,6 @@ let make = (~title, ~tree: FsTreeNode.t, ~onNodeClick, ~state: State.t, ()) => {
   let fg = state.theme.sideBarForeground;
 
   <View style=Styles.container>
-    <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
-    </View>
     <TreeView tree itemHeight=20 onClick=onNodeClick>
       ...{node => <nodeView font bg fg node />}
     </TreeView>

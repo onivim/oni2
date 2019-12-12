@@ -23,11 +23,11 @@ let make = (~state: State.t, ()) => {
 
   <View
     style=Style.[
+      width(225),
       top(0),
       bottom(0),
       backgroundColor(bg),
       alignItems(`Center),
-      width(50),
     ]>
     <Clickable onClick={onExplorerClick} style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />

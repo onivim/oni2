@@ -127,28 +127,6 @@ let start = () => {
           );
         }
 
-      // TODO: Should not be handled here.
-      | AddDockItem(WindowManager.ExplorerDock) => (
-          {
-            ...state,
-            fileExplorer: {
-              ...state.fileExplorer,
-              isOpen: true,
-            },
-          },
-          Isolinear.Effect.none,
-        )
-      | RemoveDockItem(WindowManager.ExplorerDock) => (
-          {
-            ...state,
-            fileExplorer: {
-              ...state.fileExplorer,
-              isOpen: false,
-            },
-          },
-          Isolinear.Effect.none,
-        )
-
       | Actions.FileExplorer(action) => updater(state, action)
       | _ => (state, Isolinear.Effect.none),
     stream,

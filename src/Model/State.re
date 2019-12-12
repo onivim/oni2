@@ -21,6 +21,7 @@ type t = {
   hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
+  sideBar: SideBar.t,
   // New-school native syntax highlighting
   syntaxHighlighting: SyntaxHighlighting.t,
   // Theme is the UI shell theming
@@ -72,6 +73,7 @@ let create: unit => t =
     languageFeatures: Ext.LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
+    sideBar: SideBar.initial,
     syntaxHighlighting: SyntaxHighlighting.empty,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,

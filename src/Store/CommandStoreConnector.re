@@ -143,10 +143,7 @@ let start = (getState, contributedCommands) => {
 
   let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
-      let action =
-        fileExplorer.isOpen
-          ? RemoveDockItem(WindowManager.ExplorerDock)
-          : AddDockItem(WindowManager.ExplorerDock);
+      let action = Actions.ActivityBar(ActivityBar.FileExplorerClick);
       dispatch(action);
     });
   };
