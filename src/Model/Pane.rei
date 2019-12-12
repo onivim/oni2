@@ -14,8 +14,8 @@ type t;
 let initial: t;
 
 let getType: t => option(paneType);
-let isOpen: t => bool;
-let isTypeOpen: (paneType, t) => bool;
+let isVisible: t => bool;
+let isTypeVisible: (paneType, t) => bool;
 
-let hide: t => t;
-let show: paneType => t;
+let setClosed: t => t;
+let setOpen: paneType => t;
