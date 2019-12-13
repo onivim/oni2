@@ -369,7 +369,7 @@ let subscriptions = ripgrep => {
 
   let documentSymbols = (languageFeatures, buffer) => {
     DocumentSymbolSubscription.create(
-      ~id="document-symbols", ~languageFeatures, ~onUpdate=items => {
+      ~id="document-symbols", ~buffer, ~languageFeatures, ~onUpdate=items => {
       addItems(items)
     });
   };
@@ -419,11 +419,14 @@ let subscriptions = ripgrep => {
         ]
 
       | Wildmenu(_) => []
-      | DocumentSymbols => [
-          filter(quickmenu.query, quickmenu.items),
-          // TODO: Bring in proper buffer!
-          documentSymbols(state.languageFeatures, Core.Buffer.ofLines([||])),
-        ]
+      | DocumentSymbols =>
+        switch (Model.Selectors.getActiveBuffer(state)) {
+        | Some(buffer) => [
+            filter(quickmenu.query, quickmenu.items),
+            documentSymbols(state.languageFeatures, buffer),
+          ]
+        | None => []
+        }
       }
 
     | None => []

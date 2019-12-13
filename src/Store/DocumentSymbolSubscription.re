@@ -8,18 +8,17 @@ module Log = (val Core.Log.withNamespace("Oni2.RipgrepSubscription"));
 module Provider = {
   type action = Actions.t;
   type params = {
+    buffer: Core.Buffer.t,
     languageFeatures: Model.LanguageFeatures.t,
     onUpdate: list(Actions.menuItem) => unit,
   };
 
-  let start = (~id, ~params as {languageFeatures, onUpdate}, ~dispatch: _) => {
+  let start =
+      (~id, ~params as {languageFeatures, onUpdate, buffer}, ~dispatch: _) => {
     Log.info("Starting DocumentSymbol subscription " ++ id);
 
     let promise =
-      Model.LanguageFeatures.requestDocumentSymbol(
-        ~buffer=Core.Buffer.ofLines([||]),
-        languageFeatures,
-      );
+      Model.LanguageFeatures.requestDocumentSymbol(~buffer, languageFeatures);
 
     Lwt.on_success(
       promise,
@@ -58,5 +57,9 @@ module Provider = {
   };
 };
 
-let create = (~id, ~onUpdate, ~languageFeatures) =>
-  Subscription.create(id, (module Provider), {onUpdate, languageFeatures});
+let create = (~id, ~onUpdate, ~languageFeatures, ~buffer) =>
+  Subscription.create(
+    id,
+    (module Provider),
+    {onUpdate, languageFeatures, buffer},
+  );

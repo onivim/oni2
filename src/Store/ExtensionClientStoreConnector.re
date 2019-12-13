@@ -163,29 +163,30 @@ module ExtensionDocumentHighlightProvider = {
 };
 
 module ExtensionDocumentSymbolProvider = {
-  let create = ((), _buffer) => {
-    let loc0 = Location.create(~line=Index.zero, ~column=Index.zero);
-    let range = Range.{start: loc0, stop: loc0};
-
-    let items =
-      Model.LanguageFeatures.[
-        DocumentSymbol.create(
-          ~children=[],
-          ~name="test1",
-          ~kind=SymbolKind.File,
-          ~range,
-          ~detail="",
-        ),
-        DocumentSymbol.create(
-          ~children=[],
-          ~name="test2",
-          ~kind=SymbolKind.File,
-          ~range,
-          ~detail="",
-        ),
-      ];
-
-    Some(Lwt.return(items));
+  let create =
+      (
+        client,
+        documentSymbolProvider: Protocol.DocumentSymbolProvider.t,
+        buffer,
+      ) => {
+    Core.Buffer.getFileType(buffer)
+    |> Option.map(
+         Extensions.DocumentSelector.matches(documentSymbolProvider.selector),
+       )
+    |> Option.bind(matches => {
+         let uri = Core.Buffer.getUri(buffer);
+         if (matches) {
+           Some(
+             ExtHostClient.provideDocumentSymbols(
+               documentSymbolProvider.id,
+               uri,
+               client,
+             ),
+           );
+         } else {
+           None;
+         };
+       });
   };
 };
 
@@ -251,15 +252,24 @@ let start = (extensions, setup: Core.Setup.t) => {
         ),
       ),
     );
+    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
+  };
+
+  let onRegisterDocumentSymbolProvider = (client, provider) => {
+    let id =
+      Protocol.DocumentSymbolProvider.(
+        "exthost." ++ string_of_int(provider.id)
+      );
+    let documentSymbolProvider =
+      ExtensionDocumentSymbolProvider.create(client, provider);
     dispatch(
       Oni_Model.Actions.LanguageFeature(
         Model.LanguageFeatures.DocumentSymbolProviderAvailable(
           id,
-          ExtensionDocumentSymbolProvider.create(),
+          documentSymbolProvider,
         ),
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
   let onRegisterDocumentHighlightProvider = (client, provider) => {
@@ -322,6 +332,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDidActivateExtension,
       ~onRegisterDefinitionProvider,
       ~onRegisterDocumentHighlightProvider,
+      ~onRegisterDocumentSymbolProvider,
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,
