@@ -1,7 +1,7 @@
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
-  scrollOffset: float,
+  scrollOffset: [ | `Start(float) | `Middle(float)],
   focus: option(string) // path
 };
 
@@ -11,7 +11,7 @@ type action =
   | NodeLoaded(int, [@opaque] FsTreeNode.t)
   | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
-  | ScrollOffsetChanged(float);
+  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)]);
 
 let initial: t;
 

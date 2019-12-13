@@ -89,41 +89,6 @@ module Make = (Model: TreeModel) => {
       style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)]
     />;
 
-  // COunts the number of axpanded nodes before the node specified by the given path
-  let nodeOffsetByPath = (tree, path) => {
-    let rec loop = (node, path) =>
-      switch (path) {
-      | [] => failwith("Well, this is awkward (ie. unreachable)")
-      | [focus, ...focusTail] =>
-        if (focus != node) {
-          `NotFound(Model.expandedSubtreeSize(node));
-        } else {
-          switch (Model.kind(node)) {
-          | `Node(`Closed)
-          | `Leaf => `Found(0)
-
-          | `Node(`Open) =>
-            let rec loopChildren = (count, children) =>
-              switch (children) {
-              | [] => `NotFound(count)
-              | [child, ...childTail] =>
-                switch (loop(child, focusTail)) {
-                | `Found(subtreeCount) => `Found(count + subtreeCount)
-                | `NotFound(subtreeCount) =>
-                  loopChildren(count + subtreeCount, childTail)
-                }
-              };
-            loopChildren(1, Model.children(node));
-          };
-        }
-      };
-
-    switch (loop(tree, path)) {
-    | `Found(count) => Some(count)
-    | `NotFound(_) => None
-    };
-  };
-
   let rec nodeView =
           (
             ~renderContent,
@@ -213,8 +178,9 @@ module Make = (Model: TreeModel) => {
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
-                  ~scrollOffset=?,
-                  ~onScrollOffsetChange=_ => (),
+                  ~scrollOffset: option([ | `Start(float) | `Middle(float)])=?,
+                  ~onScrollOffsetChange:
+                     [ | `Start(float) | `Middle(float)] => unit=_ => (),
                   ~tree,
                   ~theme,
                   (),
@@ -233,12 +199,22 @@ module Make = (Model: TreeModel) => {
     let setScrollTop = callback =>
       setScrollTop(scrollTop => {
         let newScrollTop = callback(scrollTop);
-        onScrollOffsetChange(float(newScrollTop) /. float(itemHeight));
+        onScrollOffsetChange(
+          `Start(float(newScrollTop) /. float(itemHeight)),
+        );
         newScrollTop;
       });
     let scrollTop =
       scrollOffset
-      |> Option.map(offset => int_of_float(offset *. float(itemHeight)))
+      |> Option.map(
+           fun
+           | `Start(offset) => int_of_float(offset *. float(itemHeight))
+           | `Middle(offset) => {
+               let pixelOffset = int_of_float(offset *. float(itemHeight));
+               let halfHeight = (menuHeight - itemHeight) / 2;
+               pixelOffset - halfHeight;
+             },
+         )
       |> Option.value(~default=scrollTop);
 
     let count = Model.expandedSubtreeSize(tree);
@@ -246,22 +222,6 @@ module Make = (Model: TreeModel) => {
     // Make sure we're not scrolled past the items
     let scrollTop =
       scrollTop |> Utility.clamp(~lo=0, ~hi=itemHeight * count - menuHeight);
-
-    let%hook () =
-      Hooks.effect(
-        If((!=), focus),
-        () => {
-          focus
-          |> Option.bind(nodeOffsetByPath(tree))
-          |> Option.iter(offset => {
-               // center focused item
-               setScrollTop(_ =>
-                 offset * itemHeight - menuHeight / 2
-               )
-             });
-          None;
-        },
-      );
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let delta =
