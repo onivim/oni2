@@ -57,8 +57,8 @@ let start =
   ];
 
   let executableName =
-    Filename.dirname(Sys.executable_name)
-    ++ "/Oni2_editor"
+    Revery.Environment.executingDirectory
+    ++ "Oni2_editor"
     ++ (Sys.win32 ? ".exe" : "");
 
   ClientLog.info("Starting executable: " ++ executableName);
