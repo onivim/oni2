@@ -14,19 +14,20 @@ let create =
     (
       ~startIndex,
       ~endIndex,
-      theme: Theme.t,
+      ~defaultBackgroundColor: Color.t,
+      ~defaultForegroundColor: Color.t,
+      ~selectionHighlights: option(Range.t),
+      ~selectionColor: Color.t,
+      ~matchingPair: option(int),
+      ~searchHighlights: list(Range.t),
+      ~searchHighlightColor: Color.t,
       tokenColors: list(ColorizedToken.t),
-      selection: option(Range.t),
-      defaultBackgroundColor: Color.t,
-      selectionColor: Color.t,
-      matchingPair: option(int),
-      searchHighlightRanges: list(Range.t),
     ) => {
   let defaultToken2 =
     ColorizedToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
-      ~foregroundColor=theme.editorForeground,
+      ~foregroundColor=defaultForegroundColor,
       (),
     );
 
@@ -56,7 +57,7 @@ let create =
     };
 
   let (selectionStart, selectionEnd) =
-    switch (selection) {
+    switch (selectionHighlights) {
     | Some(range) =>
       let start = Index.toZeroBased(range.start.column);
       let stop = Index.toZeroBased(range.stop.column);
@@ -93,10 +94,10 @@ let create =
     };
 
     let isSearchHighlight =
-      List.exists(doesSearchIntersect, searchHighlightRanges);
+      List.exists(doesSearchIntersect, searchHighlights);
 
     let backgroundColor =
-      isSearchHighlight ? theme.editorFindMatchBackground : backgroundColor;
+      isSearchHighlight ? searchHighlightColor : backgroundColor;
 
     let color = colorIndex.foregroundColor;
     (backgroundColor, color);

@@ -399,13 +399,14 @@ let%component make =
         BufferLineColorizer.create(
           ~startIndex,
           ~endIndex,
-          state.theme,
+          ~defaultBackgroundColor=defaultBackground,
+          ~defaultForegroundColor=theme.editorForeground,
+          ~selectionHighlights=selection,
+          ~selectionColor=theme.editorSelectionBackground,
+          ~matchingPair=matchingPairIndex,
+          ~searchHighlights=highlights,
+          ~searchHighlightColor=theme.editorFindMatchBackground,
           tokenColors2,
-          selection,
-          defaultBackground,
-          theme.editorSelectionBackground,
-          matchingPairIndex,
-          highlights,
         );
 
       BufferViewTokenizer.tokenize(
