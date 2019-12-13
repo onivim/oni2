@@ -19,7 +19,9 @@ let start:
     ~onTelemetry: string => unit=?,
     ~onOutput: string => unit=?,
     ~onRegisterCommand: string => unit=?,
-    ~onRegisterDefinitionProvider: (t, Protocol.DefinitionProvider.t) => unit=?,
+    ~onRegisterDefinitionProvider: (t, Protocol.BasicProvider.t) => unit=?,
+    ~onRegisterDocumentHighlightProvider: (t, Protocol.BasicProvider.t) => unit
+                                            =?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
@@ -38,5 +40,8 @@ let provideCompletions:
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);
+let provideDocumentHighlights:
+  (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
+  Lwt.t(list(Protocol.DocumentHighlight.t));
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;

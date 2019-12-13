@@ -114,14 +114,17 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(EditorsPicker) => (
+    | QuickmenuShow(EditorsPicker) =>
+      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+      (
         Some({
           ...Quickmenu.defaults(EditorsPicker),
-          items: makeBufferCommands(languageInfo, iconTheme, buffers),
-          focused: Some(0),
+          items,
+          focused: Some(min(1, Array.length(items) - 1)),
         }),
         Isolinear.Effect.none,
-      )
+      );
 
     | QuickmenuShow(FilesPicker) => (
         Some({

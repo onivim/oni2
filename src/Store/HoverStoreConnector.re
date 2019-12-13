@@ -11,6 +11,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Animation = Model.Animation;
+module BufferHighlights = Model.BufferHighlights;
 module Quickmenu = Model.Quickmenu;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.HoverStoreConnector"));
@@ -18,34 +19,52 @@ module Log = (val Oni_Core.Log.withNamespace("Oni2.HoverStoreConnector"));
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
-  let checkForDefinitionEffect = (languageFeatures, buffer, position) =>
+  let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
       ~name="hover.checkForDefinition", dispatch => {
       Log.info("Checking for definition...");
 
-      let promise =
+      let getDefinitionPromise =
         Model.LanguageFeatures.requestDefinition(
           ~buffer,
-          ~location=position,
+          ~location,
           languageFeatures,
         );
 
-      let _: Lwt.t(unit) =
-        Lwt.bind(
-          promise,
+      let getHighlightsPromise =
+        Model.LanguageFeatures.requestDocumentHighlights(
+          ~buffer,
+          ~location,
+          languageFeatures,
+        );
+
+      let id = Core.Buffer.getId(buffer);
+      let () =
+        Lwt.on_success(getHighlightsPromise, result => {
+          dispatch(
+            Actions.BufferHighlights(
+              BufferHighlights.DocumentHighlightsAvailable(id, result),
+            ),
+          )
+        });
+      let () =
+        Lwt.on_failure(getHighlightsPromise, _exn => {
+          dispatch(
+            Actions.BufferHighlights(
+              BufferHighlights.DocumentHighlightsCleared(id),
+            ),
+          )
+        });
+
+      let () =
+        Lwt.on_success(
+          getDefinitionPromise,
           result => {
             Log.info(
               "Got definition:"
               ++ Model.LanguageFeatures.DefinitionResult.toString(result),
             );
-            dispatch(
-              Actions.DefinitionAvailable(
-                Core.Buffer.getId(buffer),
-                position,
-                result,
-              ),
-            );
-            Lwt.return();
+            dispatch(Actions.DefinitionAvailable(id, location, result));
           },
         );
       ();

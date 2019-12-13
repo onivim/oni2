@@ -12,6 +12,7 @@ module Ext = Oni_Extensions;
 
 type t = {
   buffers: Buffers.t,
+  bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
   mode: Vim.Mode.t,
@@ -36,7 +37,6 @@ type t = {
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
-  searchHighlights: SearchHighlights.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -53,6 +53,7 @@ type t = {
 let create: unit => t =
   () => {
     buffers: Buffers.empty,
+    bufferHighlights: BufferHighlights.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     completions: Completions.default,
@@ -83,7 +84,6 @@ let create: unit => t =
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: Ext.LanguageInfo.empty,
     notifications: Notifications.default,
-    searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",
