@@ -392,14 +392,16 @@ let%component make =
 
       let colorizer =
         BufferLineColorizer.create(
-          ZedBundled.length(line),
-          state.theme,
+          ~startIndex,
+          ~endIndex,
+          ~defaultBackgroundColor=defaultBackground,
+          ~defaultForegroundColor=theme.editorForeground,
+          ~selectionHighlights=selection,
+          ~selectionColor=theme.editorSelectionBackground,
+          ~matchingPair=matchingPairIndex,
+          ~searchHighlights=highlights,
+          ~searchHighlightColor=theme.editorFindMatchBackground,
           tokenColors,
-          selection,
-          defaultBackground,
-          theme.editorSelectionBackground,
-          matchingPairIndex,
-          highlights,
         );
 
       BufferViewTokenizer.tokenize(
