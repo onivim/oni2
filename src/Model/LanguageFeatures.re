@@ -7,7 +7,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-let joinAll = Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
+let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) = promises => Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
 
 module CompletionProvider =
   LanguageFeature.Make({
@@ -105,7 +105,7 @@ module DocumentSymbolProvider =
     type response = list(DocumentSymbol.t);
 
     let namespace = "Oni2.DocumentSymbolProvider";
-    let aggregate = Lwt.choose;
+    let aggregate = joinAll;
   });
 
 module DocumentHighlightResult = {
@@ -118,7 +118,7 @@ module DocumentHighlightResult = {
 module DocumentHighlightProvider =
   LanguageFeature.Make({
     type params = (Buffer.t, Location.t);
-    type result = DocumentHighlightResult.t;
+    type response = list(Range.t);
 
     let namespace = "Oni2.DocumentHighlightProvider";
     let aggregate = joinAll;
@@ -160,8 +160,8 @@ let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
 };
 let requestDocumentHighlights =
     (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
-  lf.documentHighlightsProviders
-  |> DocumentHighlightsProvider.request((buffer, location));
+  lf.documentHighlightProviders
+  |> DocumentHighlightProvider.request((buffer, location));
 };
 
 let requestCompletions =
@@ -171,21 +171,27 @@ let requestCompletions =
 };
 
 let registerCompletionProvider = (~id, ~provider: CompletionProvider.t, lf: t) => {
-  lf.completionProvders |> CompletionProvider.register(~id, provdier);
+  ...lf, 
+  completionProviders: lf.completionProviders |> CompletionProvider.register(~id, provider)
 };
 
-let registerDefinitionProvider = (~id, ~provider: DefinitionProvider.t, lf: t) =>
-  DefinitionProvider.register(~id, provider, lf.definitionProviders);
+let registerDefinitionProvider = (~id, ~provider: DefinitionProvider.t, lf: t) => {
+  ...lf,
+  definitionProviders: DefinitionProvider.register(~id, provider, lf.definitionProviders)
+}
 
 let registerDocumentHighlightProvider =
     (~id, ~provider: DocumentHighlightProvider.t, lf: t) => {
-  lf.documentHighlightProviders
-  |> DocumentHighlightsProvider.register(~id, provider);
+  ...lf, 
+  documentHighlightProviders: lf.documentHighlightProviders
+  |> DocumentHighlightProvider.register(~id, provider)
 };
 
 let registerDocumentSymbolProvider =
-    (~id, ~provider: DocumentSymbolProvider.t, lf: t) =>
-  lf.documentSymbolProviders |> DocumentSymbolProvider.register(~id, provider);
+    (~id, ~provider: DocumentSymbolProvider.t, lf: t) => {
+  ...lf, 
+  documentSymbolProviders: lf.documentSymbolProviders |> DocumentSymbolProvider.register(~id, provider)
+};
 
 let getCompletionProviders = (lf: t) =>
   lf.completionProviders |> CompletionProvider.get;
