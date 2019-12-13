@@ -397,7 +397,8 @@ let%component make =
 
       let colorizer =
         BufferLineColorizer.create(
-          ZedBundled.length(line),
+          ~startIndex,
+          ~endIndex,
           state.theme,
           tokenColors2,
           selection,

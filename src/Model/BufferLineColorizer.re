@@ -12,7 +12,8 @@ type t = int => tokenColor;
 
 let create =
     (
-      length: int,
+      ~startIndex,
+      ~endIndex,
       theme: Theme.t,
       tokenColors: list(ColorizedToken.t),
       selection: option(Range.t),
@@ -28,6 +29,9 @@ let create =
       ~foregroundColor=theme.editorForeground,
       (),
     );
+
+  let length = max(endIndex - startIndex, 1);
+
   let tokenColorArray: array(ColorizedToken.t) =
     Array.make(length, defaultToken2);
 
@@ -35,12 +39,20 @@ let create =
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
+
+      let adjIndex = hd.index - startIndex;
+
       let pos = ref(start);
-      while (pos^ >= hd.index) {
+      
+      while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
         tokenColorArray[pos^] = hd;
         decr(pos);
       };
-      f(tail, pos^);
+      if (hd.index < startIndex) {
+        ();
+      } else {
+        f(tail, pos^);
+      }
     };
 
   let (selectionStart, selectionEnd) =
@@ -57,7 +69,13 @@ let create =
   f(tokenColors, length - 1);
 
   i => {
-    let colorIndex = tokenColorArray[i];
+    let colorIndex = if (i < startIndex) {
+      tokenColorArray[0];
+    } else if (i > endIndex) {
+      tokenColorArray[Array.length(tokenColorArray) - 1];
+    } else {
+      tokenColorArray[i - startIndex];
+    };
 
     let matchingPair =
       switch (matchingPair) {

@@ -25,7 +25,8 @@ type t = int => tokenColor;
  */
 let create:
   (
-    int,
+    ~startIndex: int,
+    ~endIndex: int,
     Theme.t,
     list(ColorizedToken.t),
     option(Range.t),
