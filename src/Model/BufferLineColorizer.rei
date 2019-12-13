@@ -30,10 +30,10 @@ let create:
     ~defaultBackgroundColor: Color.t,
     ~defaultForegroundColor: Color.t, // theme.editorForeground
     ~selectionHighlights: option(Range.t),
-    ~selectionColor:Color.t,
+    ~selectionColor: Color.t,
     ~matchingPair: option(int),
     ~searchHighlights: list(Range.t),
     ~searchHighlightColor: Color.t, // theme.editorFindMatchBackground
-    list(ColorizedToken.t),
+    list(ColorizedToken.t)
   ) =>
   t;

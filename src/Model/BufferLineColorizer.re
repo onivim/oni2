@@ -40,11 +40,10 @@ let create =
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
-
       let adjIndex = hd.index - startIndex;
 
       let pos = ref(start);
-      
+
       while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
         tokenColorArray[pos^] = hd;
         decr(pos);
@@ -53,7 +52,7 @@ let create =
         ();
       } else {
         f(tail, pos^);
-      }
+      };
     };
 
   let (selectionStart, selectionEnd) =
@@ -70,13 +69,14 @@ let create =
   f(tokenColors, length - 1);
 
   i => {
-    let colorIndex = if (i < startIndex) {
-      tokenColorArray[0];
-    } else if (i > endIndex) {
-      tokenColorArray[Array.length(tokenColorArray) - 1];
-    } else {
-      tokenColorArray[i - startIndex];
-    };
+    let colorIndex =
+      if (i < startIndex) {
+        tokenColorArray[0];
+      } else if (i >= endIndex) {
+        tokenColorArray[Array.length(tokenColorArray) - 1];
+      } else {
+        tokenColorArray[i - startIndex];
+      };
 
     let matchingPair =
       switch (matchingPair) {
