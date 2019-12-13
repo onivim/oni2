@@ -127,11 +127,8 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       );
 
     | QuickmenuShow(DocumentSymbols) => (
-      Some({
-        ...Quickmenu.defaults(DocumentSymbols),
-        focused: Some(0),
-      }),
-      Isolinear.Effect.none
+        Some({...Quickmenu.defaults(DocumentSymbols), focused: Some(0)}),
+        Isolinear.Effect.none,
       )
 
     | QuickmenuShow(FilesPicker) => (
@@ -371,13 +368,9 @@ let subscriptions = ripgrep => {
   };
 
   let documentSymbols = (languageFeatures, buffer) => {
-    DocumentSymbolSubscription.create(
-      ~id="document-symbols",
-      ~onUpdate=
-      item => { 
-        addItems([item]);
-      },
-    ) ;
+    DocumentSymbolSubscription.create(~id="document-symbols", ~onUpdate=item => {
+      addItems([item])
+    });
   };
 
   let ripgrep = (languageInfo, iconTheme) => {
@@ -426,9 +419,9 @@ let subscriptions = ripgrep => {
 
       | Wildmenu(_) => []
       | DocumentSymbols => [
-        filter(quickmenu.query, quickmenu.items),
-        documentSymbols(state.languageFeatures, Core.Buffer.ofLines([||])),
-      ]
+          filter(quickmenu.query, quickmenu.items),
+          documentSymbols(state.languageFeatures, Core.Buffer.ofLines([||])),
+        ]
       }
 
     | None => []
