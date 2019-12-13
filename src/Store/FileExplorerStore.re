@@ -131,6 +131,16 @@ let start = () => {
               ),
         )
       }
+    | ScrollOffsetChanged(scrollOffset) => (
+        {
+          ...state,
+          fileExplorer: {
+            ...state.fileExplorer,
+            scrollOffset,
+          },
+        },
+        Isolinear.Effect.none,
+      )
     };
   };
 

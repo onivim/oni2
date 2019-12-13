@@ -116,11 +116,24 @@ let make =
     | _ => None
     };
 
+  let FileExplorer.{scrollOffset, _} = state.fileExplorer;
+  let onScrollOffsetChange = offset =>
+    GlobalContext.current().dispatch(
+      FileExplorer(ScrollOffsetChanged(offset)),
+    );
+
   <View style=Styles.container>
     <View style={Styles.heading(theme)}>
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
-    <TreeView tree focus theme itemHeight=22 onClick=onNodeClick>
+    <TreeView
+      scrollOffset
+      onScrollOffsetChange
+      tree
+      focus
+      theme
+      itemHeight=22
+      onClick=onNodeClick>
       ...{node => <nodeView font bg fg node />}
     </TreeView>
   </View>;

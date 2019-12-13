@@ -4,6 +4,7 @@ open Oni_Core;
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
+  scrollOffset: float,
   focus: option(string) // path
 };
 
@@ -12,7 +13,8 @@ type action =
   | TreeLoaded([@opaque] FsTreeNode.t)
   | NodeLoaded(int, [@opaque] FsTreeNode.t)
   | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
-  | NodeClicked([@opaque] FsTreeNode.t);
+  | NodeClicked([@opaque] FsTreeNode.t)
+  | ScrollOffsetChanged(float);
 
 module ExplorerId =
   UniqueId.Make({});
@@ -129,4 +131,4 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   );
 };
 
-let initial = {tree: None, isOpen: true, focus: None};
+let initial = {tree: None, isOpen: true, focus: None, scrollOffset: 0.};
