@@ -180,6 +180,14 @@ let start = (getState, contributedCommands) => {
       "workbench.action.quickOpen",
       _ => singleActionEffect(QuickmenuShow(FilesPicker)),
     ),
+    (
+      "workbench.action.quickOpenNavigateNextInEditorPicker",
+      _ => singleActionEffect(ListFocusDown),
+    ),
+    (
+      "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+      _ => singleActionEffect(ListFocusUp),
+    ),
     /*(
         "developer.massiveMenu",
         (state: Oni_Model.State.t) => {

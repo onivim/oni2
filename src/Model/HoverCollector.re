@@ -24,7 +24,7 @@ let get = (state: State.t) => {
         Diagnostics.getDiagnosticsAtPosition(
           state.diagnostics,
           buf,
-          hover.position,
+          hover.location,
         );
 
       switch (diagnostics) {

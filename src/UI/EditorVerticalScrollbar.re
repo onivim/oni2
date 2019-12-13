@@ -96,18 +96,23 @@ let make =
     ];
 
   let matchingPairElements =
-    switch (Selectors.getMatchingPairs(state, editor.bufferId)) {
-    | None => React.empty
-    | Some(mp) =>
-      let topLine =
-        bufferLineToScrollbarPixel(Index.toZeroBased(mp.startPos.line));
-      let botLine =
-        bufferLineToScrollbarPixel(Index.toZeroBased(mp.endPos.line));
-      React.listToElement([
-        <View style={matchingPairStyle(topLine)} />,
-        <View style={matchingPairStyle(botLine)} />,
-      ]);
-    };
+    BufferHighlights.getMatchingPair(editor.bufferId, state.bufferHighlights)
+    |> Utility.Option.map(mp => {
+         let (startPos, endPos) = mp;
+         let topLine =
+           bufferLineToScrollbarPixel(
+             Index.toZeroBased(Location.(startPos.line)),
+           );
+         let botLine =
+           bufferLineToScrollbarPixel(
+             Index.toZeroBased(Location.(endPos.line)),
+           );
+         React.listToElement([
+           <View style={matchingPairStyle(topLine)} />,
+           <View style={matchingPairStyle(botLine)} />,
+         ]);
+       })
+    |> Utility.Option.value(~default=React.empty);
 
   let selectionStyle = (t, bot) => {
     Style.[
@@ -150,13 +155,16 @@ let make =
       backgroundColor(state.theme.editorFindMatchBackground),
     ];
 
-  let searchHighlightToElement = ((line, _)) => {
+  let searchHighlightToElement = line => {
+    let line = Index.toZeroBased(line);
     <View style={searchMatches(bufferLineToScrollbarPixel(line))} />;
   };
 
   let searchMatchElements =
-    Selectors.getSearchHighlights(state, editor.bufferId)
-    |> IntMap.bindings
+    BufferHighlights.getHighlights(
+      ~bufferId=editor.bufferId,
+      state.bufferHighlights,
+    )
     |> List.map(searchHighlightToElement)
     |> React.listToElement;
 

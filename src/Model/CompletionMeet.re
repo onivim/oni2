@@ -11,32 +11,35 @@ open Oni_Core;
 open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
-type completionMeet = {
+type t = {
   // Base is the prefix string
   base: string,
-  // Meet is the position where we request completions
-  meet: Location.t,
+  // Meet is the location where we request completions
+  location: Location.t,
 };
 
-type t = option(completionMeet);
+let toString = (meet: t) =>
+  Printf.sprintf(
+    "Base: |%s| Meet: %s",
+    meet.base,
+    meet.location |> Location.show,
+  );
 
-let show = (v: t) =>
-  switch (v) {
-  | None => "(None)"
-  | Some(m) =>
-    Printf.sprintf("Base: |%s| Meet: %s", m.base, m.meet |> Location.show)
-  };
+let create = (~location, ~base) => {location, base};
 
 let defaultTriggerCharacters = [UChar.of_char('.')];
+
+let getLocation = meet => meet.location;
+let getBase = meet => meet.base;
 
 let createFromLine =
     (
       ~triggerCharacters=defaultTriggerCharacters,
       ~lineNumber=0,
-      ~cursor: Index.t,
+      ~index: Index.t,
       line: string,
     ) => {
-  let cursorIdx = Index.toZeroBased(cursor);
+  let cursorIdx = Index.toZeroBased(index);
   let idx = Stdlib.min(Zed_utf8.length(line) - 1, cursorIdx);
   let pos = ref(idx);
 
@@ -70,9 +73,9 @@ let createFromLine =
 
   switch (pos^) {
   | (-1) =>
-    if (baseLength == Index.toZeroBased(cursor) && baseLength > 0) {
+    if (baseLength == cursorIdx && baseLength > 0) {
       Some({
-        meet:
+        location:
           Location.{
             line: Index.fromZeroBased(lineNumber),
             column: Index.zero,
@@ -84,7 +87,7 @@ let createFromLine =
     }
   | v =>
     Some({
-      meet:
+      location:
         Location.{
           line: Index.fromZeroBased(lineNumber),
           column: Index.fromZeroBased(v),
@@ -94,21 +97,21 @@ let createFromLine =
   };
 };
 
-let createFromBufferCursor =
+let createFromBufferLocation =
     (
       ~triggerCharacters=defaultTriggerCharacters,
-      ~cursor: Location.t,
+      ~location: Location.t,
       buffer: Buffer.t,
     ) => {
   let bufferLines = Buffer.getNumberOfLines(buffer);
-  let line0 = Index.toZeroBased(cursor.line);
+  let line0 = Index.toZeroBased(location.line);
 
   if (line0 < bufferLines) {
     let line = Buffer.getLine(buffer, line0);
     createFromLine(
       ~lineNumber=line0,
       ~triggerCharacters,
-      ~cursor=cursor.column,
+      ~index=location.column,
       line,
     );
   } else {

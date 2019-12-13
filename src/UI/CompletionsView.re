@@ -173,10 +173,10 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
     let (_maxWidth, completionItems) =
       List.fold_left(
-        (acc, curr: Model.Filter.result(Model.Actions.completionItem)) => {
+        (acc, curr: Model.Filter.result(Model.CompletionItem.t)) => {
           let (prevWidth, prevDiags) = acc;
 
-          let message = curr.item.completionLabel;
+          let message = curr.item.label;
           let width =
             EditorFont.measure(~text=message, editorFont)
             +. 0.5
@@ -184,11 +184,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
 
           let newWidth = max(prevWidth, width + padding);
           let completionColor =
-            completionKindToColor(
-              fgColor,
-              state.tokenTheme,
-              curr.item.completionKind,
-            );
+            completionKindToColor(fgColor, state.tokenTheme, curr.item.kind);
 
           let normalStyle = textStyle(~highlighted=false);
           let highlightStyle = textStyle(~highlighted=true);
@@ -205,7 +201,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
                   width(25),
                 ]>
                 <FontIcon
-                  icon={completionKindToIcon(curr.item.completionKind)}
+                  icon={completionKindToIcon(curr.item.kind)}
                   backgroundColor=completionColor
                   color=bgColor
                   margin=4
@@ -236,7 +232,7 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => 
       |> Model.Completions.getBestCompletion
       |> Option.bind(
            (filteredCompletion: Model.Completions.filteredCompletion) =>
-           filteredCompletion.item.completionDetail
+           filteredCompletion.item.detail
          )
       |> Option.bind(text =>
            if (String.length(text) > 0) {

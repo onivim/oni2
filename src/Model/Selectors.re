@@ -36,20 +36,6 @@ let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   Configuration.getValue(~fileType, f, state.configuration);
 };
 
-let getMatchingPairs = (state: State.t, bufferId: int) => {
-  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-  | Some(v) => v.matchingPair
-  | None => None
-  };
-};
-
-let getSearchHighlights = (state: State.t, bufferId: int) => {
-  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-  | Some(v) => v.highlightRanges
-  | None => IntMap.empty
-  };
-};
-
 let getActiveBuffer = (state: State.t) => {
   let editorOpt = state |> getActiveEditorGroup |> getActiveEditor;
 

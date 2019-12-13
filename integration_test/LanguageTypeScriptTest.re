@@ -1,6 +1,5 @@
 open Oni_Core;
 open Oni_Core.Utility;
-open Oni_Extensions;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -10,46 +9,51 @@ runTestWithInput(
     state.mode == Vim.Types.Normal
   );
 
-  // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.ts", None, None));
+  ExtensionHelpers.waitForExtensionToActivate(
+    ~extensionId="oni-dev-extension",
+    wait,
+  );
 
-  wait(
-    ~timeout=30.0,
-    ~name="Validate we have a TypeScript filetype",
-    (state: State.t) => {
-      let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
+  ExtensionHelpers.waitForNewCompletionProviders(
+    ~description="typescript completion",
+    () => {
+      // Create a buffer
+      dispatch(Actions.OpenFileByPath("test.ts", None, None));
 
-      switch (fileType) {
-      | Some("typescript") => true
-      | _ => false
-      };
+      wait(
+        ~timeout=30.0,
+        ~name="Validate we have a TypeScript filetype",
+        (state: State.t) => {
+          let fileType =
+            Some(state)
+            |> Option.bind(Selectors.getActiveBuffer)
+            |> Option.bind(Buffer.getFileType);
+
+          switch (fileType) {
+          | Some("typescript") => true
+          | _ => false
+          };
+        },
+      );
+      ExtensionHelpers.waitForExtensionToActivate(
+        ~extensionId="vscode.typescript-language-features",
+        wait,
+      );
+
+      // Wait until the extension is activated
+      // Give some time for the exthost to start
+      wait(
+        ~timeout=30.0,
+        ~name=
+          "Validate the 'typescript-language-features' extension gets activated",
+        (state: State.t) =>
+        List.exists(
+          id => id == "vscode.typescript-language-features",
+          state.extensions.activatedIds,
+        )
+      );
     },
-  );
-
-  // Wait until the extension is activated
-  // Give some time for the exthost to start
-  wait(
-    ~timeout=30.0,
-    ~name=
-      "Validate the 'typescript-language-features' extension gets activated",
-    (state: State.t) =>
-    List.exists(
-      id => id == "vscode.typescript-language-features",
-      state.extensions.activatedIds,
-    )
-  );
-
-  // Also, wait for suggest providers to be registered
-  wait(
-    ~timeout=30.0,
-    ~name="Wait for suggest providers for 'typescript' to be registered",
-    (state: State.t) =>
-    state.languageFeatures
-    |> LanguageFeatures.getSuggestProviders("typescript")
-    |> (providers => List.length(providers) > 0)
+    wait,
   );
 
   // Enter some text
