@@ -2,8 +2,6 @@
  * GrammarRepository.re
  */
 
-open Oni_Core;
-
 module Ext = Oni_Extensions;
 
 type t = {

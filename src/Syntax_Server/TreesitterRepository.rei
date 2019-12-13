@@ -2,7 +2,6 @@
  * TreesitterRepository.rei
  */
 
-open Oni_Core;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;

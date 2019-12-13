@@ -8,8 +8,6 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Syntax;
 
-open Revery;
-
 module BufferMap = IntMap;
 
 module LineMap = IntMap;

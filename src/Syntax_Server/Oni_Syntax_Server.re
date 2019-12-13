@@ -1,8 +1,6 @@
 /*
- Syntax client
+ Syntax Server
  */
-
-open Oni_Syntax;
 
 module Protocol = Oni_Syntax.Protocol;
 module ClientToServer = Protocol.ClientToServer;
@@ -33,7 +31,7 @@ let start = () => {
   let hasPendingMessage = () =>
     switch (messageQueue^) {
     | [] => false
-    | [hd, ..._] => true
+    | _ => true
     };
 
   let flush = () => {

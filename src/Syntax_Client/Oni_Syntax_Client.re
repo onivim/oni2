@@ -41,10 +41,17 @@ let start = (~onHighlights, languageInfo, setup) => {
     ...Array.to_list(Unix.environment()),
   ];
 
+  let executableName =
+    Filename.dirname(Sys.executable_name)
+    ++ "/Oni2_editor"
+    ++ (Sys.win32 ? ".exe" : "");
+
+  ClientLog.info("Starting executable: " ++ executableName);
+
   let pid =
     Unix.create_process_env(
-      Sys.executable_name,
-      [|Sys.executable_name, "--syntax-highlight-service"|],
+      executableName,
+      [|executableName, "--syntax-highlight-service"|],
       Array.of_list(env),
       pstdin,
       pstdout,
@@ -59,7 +66,7 @@ let start = (~onHighlights, languageInfo, setup) => {
   Stdlib.set_binary_mode_in(in_channel, true);
   Stdlib.set_binary_mode_out(out_channel, true);
 
-  let waitThread =
+  let _waitThread =
     Thread.create(
       () => {
         let (code, _status: Unix.process_status) = Unix.waitpid([], pid);

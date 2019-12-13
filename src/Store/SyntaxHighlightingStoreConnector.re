@@ -13,7 +13,6 @@ open Core.Utility;
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
-open Oni_Syntax.TreeSitterScopes;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
@@ -45,7 +44,7 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
     };
   };
 
-  let bufferEnterEffect = (state: Model.State.t, id: int, fileType) =>
+  let bufferEnterEffect = (id: int, fileType) =>
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       fileType
       |> Option.iter(fileType =>
@@ -114,11 +113,7 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
       let combinedEffects =
         Isolinear.Effect.batch([
           visibilityChangedEffect(visibleBuffers),
-          bufferEnterEffect(
-            state,
-            Vim.BufferMetadata.(metadata.id),
-            fileType,
-          ),
+          bufferEnterEffect(Vim.BufferMetadata.(metadata.id), fileType),
         ]);
 
       (state, combinedEffects);

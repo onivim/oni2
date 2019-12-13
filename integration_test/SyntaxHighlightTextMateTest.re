@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
@@ -21,10 +23,10 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
     |> Option.map(Buffer.getId)
     |> Option.map(bufferId => {
          let tokens =
-           SyntaxHighlighting.getTokensForLine(
-             state.syntaxHighlighting,
+           BufferSyntaxHighlights.getTokens(
              bufferId,
-             0,
+             Index.zero,
+             state.bufferSyntaxHighlights,
            );
 
          List.length(tokens) > 1;
