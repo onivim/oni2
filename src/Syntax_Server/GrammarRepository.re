@@ -38,6 +38,6 @@ let getGrammar = (~scope: string, gr: t) => {
         None;
       };
     | None => None
-    };
+    }
   };
 };

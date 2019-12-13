@@ -17,7 +17,7 @@ module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
 type connectedCallback = unit => unit;
 type closeCallback = int => unit;
 type scheduler = (unit => unit) => unit;
-type highlightsCallback = (list(Protocol.TokenUpdate.t)) => unit;
+type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 type t = {
   in_channel: Stdlib.in_channel,
