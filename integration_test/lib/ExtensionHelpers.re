@@ -51,8 +51,7 @@ let waitForNewCompletionProviders =
   f();
 
   waitForState(
-    //~timeout=30.0,
-
+      ~timeout=10.0,
       ~name="Waiting for new suggest providers: " ++ originalDescription,
       (State.{languageFeatures, _}) => {
         let current =
