@@ -169,13 +169,13 @@ let start = () => {
     Thread.create(
       () => {
         while (isRunning^) {
-          try ({
-          let msg: Oni_Syntax.Protocol.ClientToServer.t =
-            Marshal.from_channel(Stdlib.stdin);
+          try({
+            let msg: Oni_Syntax.Protocol.ClientToServer.t =
+              Marshal.from_channel(Stdlib.stdin);
             queue(Message(msg));
           }) {
-          | ex => queue(Exception(Printexc.to_string(ex)));
-          }
+          | ex => queue(Exception(Printexc.to_string(ex)))
+          };
         }
       },
       (),

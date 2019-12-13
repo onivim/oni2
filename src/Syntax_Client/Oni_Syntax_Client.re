@@ -2,8 +2,6 @@
  Syntax client
  */
 
-open EditorCoreTypes;
-
 module Core = Oni_Core;
 module Ext = Oni_Extensions;
 

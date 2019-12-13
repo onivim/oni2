@@ -4,8 +4,6 @@
 
 open Oni_Core;
 
-open ExtensionScanner;
-
 type t;
 let initial: t;
 
