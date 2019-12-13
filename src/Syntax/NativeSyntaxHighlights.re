@@ -93,7 +93,8 @@ let create =
     Core.Configuration.getValue(
       config => config.experimentalTreeSitter,
       configuration,
-    );
+    )
+    && _hasTreeSitterScope(configuration, scope);
 
   switch (maybeScopeConverter) {
   | Some(scopeConverter) when allowTreeSitter =>
