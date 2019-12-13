@@ -38,7 +38,6 @@ module ServerToClient = {
     | EchoReply(string)
     | Log(string)
     | Closing;
-  // buffer lines
 };
 
 module ClientToServer = {
@@ -55,7 +54,6 @@ module ClientToServer = {
       )
     | ConfigurationChanged([@opaque] Configuration.t)
     | ThemeChanged([@opaque] TokenTheme.t)
-    // TODO: Clean up this type here
     | VisibleRangesChanged(
         [@opaque] list((int /* buffer id */, list(Range.t))),
       )

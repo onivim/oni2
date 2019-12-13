@@ -2,7 +2,10 @@
  Syntax client
  */
 
+open EditorCoreTypes;
+
 module Core = Oni_Core;
+module Ext = Oni_Extensions;
 
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
@@ -11,7 +14,10 @@ module ServerToClient = Protocol.ServerToClient;
 module ClientLog = (val Core.Log.withNamespace("Oni2.SyntaxClient"));
 module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
 
-exception Test(string);
+type connectedCallback = unit => unit;
+type closeCallback = int => unit;
+type scheduler = (unit => unit) => unit;
+type highlightsCallback = (list(Protocol.TokenUpdate.t)) => unit;
 
 type t = {
   in_channel: Stdlib.in_channel,
