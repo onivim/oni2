@@ -7,63 +7,50 @@ module Log = (val Core.Log.withNamespace("Oni2.RipgrepSubscription"));
 
 module Provider = {
   type action = Actions.t;
-  type params = {onUpdate: Actions.menuItem => unit};
+  type params = {
+    languageFeatures: Model.LanguageFeatures.t,
+    onUpdate: list(Actions.menuItem) => unit,
+  };
 
-  let start = (~id, ~params, ~dispatch: _) => {
+  let start = (~id, ~params as {languageFeatures, onUpdate}, ~dispatch: _) => {
     Log.info("Starting DocumentSymbol subscription " ++ id);
 
-    Revery.App.runOnMainThread(() => {
-      let onUpdate = params.onUpdate;
-
-      onUpdate(
-        Actions.{
-          category: None,
-          name: "a",
-          command: () =>
-            Model.Actions.OpenFileByPath(
-              "/Users/bryphe/revery/package.json",
-              None,
-              None,
-            ),
-          icon: None,
-          highlight: [],
-        },
+    let promise =
+      Model.LanguageFeatures.requestDocumentSymbol(
+        ~buffer=Core.Buffer.ofLines([||]),
+        languageFeatures,
       );
 
-      onUpdate(
-        Actions.{
-          category: None,
-          name: "b",
-          command: () =>
-            Model.Actions.OpenFileByPath(
-              "/Users/bryphe/revery/package.json",
-              None,
-              None,
-            ),
-          icon: None,
-          highlight: [],
-        },
-      );
+    Lwt.on_success(
+      promise,
+      items => {
+        open Model.LanguageFeatures;
 
-      onUpdate(
-        Actions.{
-          category: None,
-          name: "c",
-          command: () =>
-            Model.Actions.OpenFileByPath(
-              "/Users/bryphe/revery/package.json",
-              None,
-              None,
-            ),
-          icon: None,
-          highlight: [],
-        },
-      );
-    });
+        let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
+          Actions.{
+            category: None,
+            name: DocumentSymbol.(docSymbol.name),
+            command: () =>
+              Model.Actions.OpenFileByPath(
+                "/Users/bryphe/revery/package.json",
+                None,
+                None,
+              ),
+            icon: None,
+            highlight: [],
+          };
+        };
+
+        Revery.App.runOnMainThread(() => {
+          items |> List.map(docSymbolToMenuItem) |> onUpdate
+        });
+      },
+    );
   };
 
   let update = (~id, ~params, ~dispatch as _) => {
-    Log.info("UPDATE: " ++ id);
+    ();
+      //Log.info("UPDATE: " ++ id);
   };
 
   let dispose = (~id) => {
@@ -71,5 +58,5 @@ module Provider = {
   };
 };
 
-let create = (~id, ~onUpdate) =>
-  Subscription.create(id, (module Provider), {onUpdate: onUpdate});
+let create = (~id, ~onUpdate, ~languageFeatures) =>
+  Subscription.create(id, (module Provider), {onUpdate, languageFeatures});

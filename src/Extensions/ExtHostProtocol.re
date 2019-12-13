@@ -423,6 +423,16 @@ module SuggestProvider = {
   let create = (~selector, id) => {selector, id};
 };
 
+module DocumentSymbolProvider = {
+  type t = {
+    selector: DocumentSelector.t,
+    id: int,
+    label: string,
+  };
+
+  let create = (~selector, ~label, id) => {selector, label, id};
+};
+
 module BasicProvider = {
   type t = {
     selector: DocumentSelector.t,
@@ -482,6 +492,19 @@ module IncomingNotifications = {
         |> DocumentSelector.of_yojson
         |> Result.to_option
         |> Option.map(selector => {BasicProvider.create(~selector, id)})
+      | _ => None
+      };
+    };
+
+    let parseDocumentSymbolProvider = json => {
+      switch (json) {
+      | [`Int(id), documentSelector, `String(label)] =>
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map(selector => {
+             DocumentSymbolProvider.create(~selector, ~label, id)
+           })
       | _ => None
       };
     };
@@ -654,6 +677,13 @@ module OutgoingNotifications = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
         ]),
+      );
+
+    let provideDocumentSymbols = (handle: int, resource: Uri.t) =>
+      _buildNotification(
+        "ExtHostLanguageFeatures",
+        "$provideDocumentSymbols",
+        `List([`Int(handle), Uri.to_yojson(resource)]),
       );
   };
 

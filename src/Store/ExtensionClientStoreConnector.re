@@ -47,10 +47,8 @@ module ExtensionCompletionProvider = {
       (
         client: ExtHostClient.t,
         suggestProvider: Protocol.SuggestProvider.t,
+        (buffer, _completionMeet, location),
       ) =>
-        ((buffer,
-        _completionMeet,
-        location)) =>
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(suggestProvider.selector),
@@ -91,7 +89,11 @@ module ExtensionDefinitionProvider = {
   };
 
   let create =
-      (client, definitionProvider: Protocol.BasicProvider.t) => ((buffer, location)) => {
+      (
+        client,
+        definitionProvider: Protocol.BasicProvider.t,
+        (buffer, location),
+      ) => {
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(definitionProvider.selector),
@@ -131,7 +133,8 @@ module ExtensionDocumentHighlightProvider = {
       (
         client,
         documentHighlightProvider: Protocol.BasicProvider.t,
-      ) => ((buffer, location)) => {
+        (buffer, location),
+      ) => {
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(
@@ -160,19 +163,27 @@ module ExtensionDocumentHighlightProvider = {
 };
 
 module ExtensionDocumentSymbolProvider = {
-  let create =
-      (
-      ) => ((_buffer)) => {
-
+  let create = ((), _buffer) => {
     let loc0 = Location.create(~line=Index.zero, ~column=Index.zero);
-    let range = Range.{
-      start: loc0,
-      stop: loc0,
-    };
-    let items = Model.LanguageFeatures.[
-      DocumentSymbol.create(~children=[], ~name="test1", ~kind=SymbolKind.File, ~range, ~detail=""),
-      DocumentSymbol.create(~children=[], ~name="test2", ~kind=SymbolKind.File, ~range, ~detail=""),
-    ]
+    let range = Range.{start: loc0, stop: loc0};
+
+    let items =
+      Model.LanguageFeatures.[
+        DocumentSymbol.create(
+          ~children=[],
+          ~name="test1",
+          ~kind=SymbolKind.File,
+          ~range,
+          ~detail="",
+        ),
+        DocumentSymbol.create(
+          ~children=[],
+          ~name="test2",
+          ~kind=SymbolKind.File,
+          ~range,
+          ~detail="",
+        ),
+      ];
 
     Some(Lwt.return(items));
   };
@@ -240,12 +251,14 @@ let start = (extensions, setup: Core.Setup.t) => {
         ),
       ),
     );
-    dispatch(Oni_Model.Actions.LanguageFeature(
-      Model.LanguageFeatures.DocumentSymbolProviderAvailable(
-        id,
-        ExtensionDocumentSymbolProvider.create(),
-      )
-    ));
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.DocumentSymbolProviderAvailable(
+          id,
+          ExtensionDocumentSymbolProvider.create(),
+        ),
+      ),
+    );
     Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
