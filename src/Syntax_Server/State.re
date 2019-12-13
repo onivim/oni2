@@ -13,6 +13,8 @@ module Ext = Oni_Extensions;
 
 module List = Utility.List;
 
+type logFunc = string => unit;
+
 type t = {
   configuration: Configuration.t,
   setup: option(Setup.t),
@@ -96,38 +98,6 @@ let doPendingWork = state => {
     );
 
   {...state, highlightsMap};
-};
-
-let updateVisibleBuffers = (buffers, state) => {
-  let visibleBuffers =
-    List.map(
-      v => {
-        let (id, _) = v;
-        id;
-      },
-      buffers,
-    );
-
-  let highlightsMap =
-    List.fold_left(
-      (prev, curr) => {
-        let (bufferId, ranges) = curr;
-        IntMap.update(
-          bufferId,
-          oldV =>
-            switch (oldV) {
-            | None => None
-            | Some(v) =>
-              Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, v))
-            },
-          prev,
-        );
-      },
-      state.highlightsMap,
-      buffers,
-    );
-
-  {...state, visibleBuffers, highlightsMap};
 };
 
 let getTokenUpdates = state => {
