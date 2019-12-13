@@ -91,12 +91,7 @@ module ExtensionDefinitionProvider = {
   };
 
   let create =
-      (
-        client,
-        definitionProvider: Protocol.DefinitionProvider.t,
-        buffer,
-        location,
-      ) => {
+      (client, definitionProvider: Protocol.BasicProvider.t, buffer, location) => {
     Core.Buffer.getFileType(buffer)
     |> Option.map(
          Extensions.DocumentSelector.matches(definitionProvider.selector),
@@ -109,6 +104,50 @@ module ExtensionDefinitionProvider = {
            Some(
              ExtHostClient.provideDefinition(
                definitionProvider.id,
+               uri,
+               position,
+               client,
+             )
+             |> Lwt.map(definitionToModel),
+           );
+         } else {
+           None;
+         };
+       });
+  };
+};
+
+module ExtensionDocumentHighlightProvider = {
+  let definitionToModel = (highlights: list(Protocol.DocumentHighlight.t)) => {
+    highlights
+    |> List.map(highlights =>
+         Protocol.OneBasedRange.toRange(
+           Protocol.DocumentHighlight.(highlights.range),
+         )
+       );
+  };
+
+  let create =
+      (
+        client,
+        documentHighlightProvider: Protocol.BasicProvider.t,
+        buffer,
+        location,
+      ) => {
+    Core.Buffer.getFileType(buffer)
+    |> Option.map(
+         Extensions.DocumentSelector.matches(
+           documentHighlightProvider.selector,
+         ),
+       )
+    |> Option.bind(matches => {
+         let uri = Core.Buffer.getUri(buffer);
+         let position = Protocol.OneBasedPosition.ofPosition(location);
+
+         if (matches) {
+           Some(
+             ExtHostClient.provideDocumentHighlights(
+               documentHighlightProvider.id,
                uri,
                position,
                client,
@@ -173,7 +212,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onRegisterDefinitionProvider = (client, provider) => {
     let id =
-      Protocol.DefinitionProvider.("exthost." ++ string_of_int(provider.id));
+      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let definitionProvider =
       ExtensionDefinitionProvider.create(client, provider);
     dispatch(
@@ -185,6 +224,24 @@ let start = (extensions, setup: Core.Setup.t) => {
       ),
     );
     Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
+  };
+
+  let onRegisterDocumentHighlightProvider = (client, provider) => {
+    let id =
+      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+    let documentHighlightProvider =
+      ExtensionDocumentHighlightProvider.create(client, provider);
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.DocumentHighlightProviderAvailable(
+          id,
+          documentHighlightProvider,
+        ),
+      ),
+    );
+    Log.infof(m =>
+      m("Registered document highlight provider with ID: %n", provider.id)
+    );
   };
 
   let onRegisterSuggestProvider = (client, provider) => {
@@ -228,6 +285,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDiagnosticsChangeMany,
       ~onDidActivateExtension,
       ~onRegisterDefinitionProvider,
+      ~onRegisterDocumentHighlightProvider,
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,

@@ -15,6 +15,7 @@ module Ext = Oni_Extensions;
 type t =
   | Init
   | Tick(tick)
+  | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
   | BufferUpdate(BufferUpdate.t)

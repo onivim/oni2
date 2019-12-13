@@ -8,6 +8,7 @@
 
 module Actions = Actions;
 module Animation = Animation;
+module BufferHighlights = BufferHighlights;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
@@ -44,7 +45,6 @@ module FilterJob = FilterJob;
 module Notification = Notification;
 module Notifications = Notifications;
 module Search = Search;
-module SearchHighlights = SearchHighlights;
 module Selection = Selection;
 module Selectors = Selectors;
 module StatusBarModel = StatusBarModel;

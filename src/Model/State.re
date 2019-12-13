@@ -15,6 +15,7 @@ type t = {
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
+  bufferHighlights: BufferHighlights.t,
   buffers: Buffers.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
@@ -37,7 +38,6 @@ type t = {
   languageInfo: LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
-  searchHighlights: SearchHighlights.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -61,6 +61,7 @@ let create: unit => t =
     hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
+    bufferHighlights: BufferHighlights.initial,
     buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
@@ -83,7 +84,6 @@ let create: unit => t =
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: LanguageInfo.create(),
     notifications: Notifications.default,
-    searchHighlights: SearchHighlights.create(),
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",
