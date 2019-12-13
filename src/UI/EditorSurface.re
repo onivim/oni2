@@ -383,7 +383,7 @@ let%component make =
         | _ => None
         };
 
-    let tokenColors =
+      let tokenColors =
         BufferSyntaxHighlights.getTokens(
           bufferId,
           Index.fromZeroBased(i),
@@ -957,4 +957,4 @@ let%component make =
       />
     </View>
   </View>;
-}
+};
