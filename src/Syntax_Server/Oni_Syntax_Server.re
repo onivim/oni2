@@ -8,7 +8,7 @@ module ClientToServer = Protocol.ClientToServer;
 type message =
   | Log(string)
   | Message(ClientToServer.t)
-  | Exception;
+  | Exception(string);
 
 let start = () => {
   Stdlib.set_binary_mode_out(Stdlib.stdout, true);
@@ -123,7 +123,7 @@ let start = () => {
         let handleMessage =
           fun
           | Log(msg) => log(msg)
-          | Exception => log("Exception encountered!")
+          | Exception(msg) => log("Exception encountered: " ++ msg)
           | Message(protocol) => handleProtocol(protocol);
 
         while (isRunning^) {
@@ -169,12 +169,13 @@ let start = () => {
     Thread.create(
       () => {
         while (isRunning^) {
+          try ({
           let msg: Oni_Syntax.Protocol.ClientToServer.t =
             Marshal.from_channel(Stdlib.stdin);
-          switch (msg) {
-          | exception _ => queue(Exception)
-          | msg => queue(Message(msg))
-          };
+            queue(Message(msg));
+          }) {
+          | ex => queue(Exception(Printexc.to_string(ex)));
+          }
         }
       },
       (),
