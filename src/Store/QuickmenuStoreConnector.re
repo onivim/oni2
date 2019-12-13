@@ -126,6 +126,14 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuShow(DocumentSymbols) => (
+      Some({
+        ...Quickmenu.defaults(DocumentSymbols),
+        focused: Some(0),
+      }),
+      Isolinear.Effect.none
+      )
+
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
@@ -362,6 +370,16 @@ let subscriptions = ripgrep => {
     );
   };
 
+  let documentSymbols = (languageFeatures, buffer) => {
+    DocumentSymbolSubscription.create(
+      ~id="document-symbols",
+      ~onUpdate=
+      item => { 
+        addItems([item]);
+      },
+    ) ;
+  };
+
   let ripgrep = (languageInfo, iconTheme) => {
     let directory = Rench.Environment.getWorkingDirectory();
     let re = Str.regexp_string(directory ++ Filename.dir_sep);
@@ -407,6 +425,10 @@ let subscriptions = ripgrep => {
         ]
 
       | Wildmenu(_) => []
+      | DocumentSymbols => [
+        filter(quickmenu.query, quickmenu.items),
+        documentSymbols(state.languageFeatures, Core.Buffer.ofLines([||])),
+      ]
       }
 
     | None => []
