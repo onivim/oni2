@@ -150,6 +150,13 @@ module Make = (Config: Config) => {
       (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
     let rec loop = (i, current, completed) =>
       if (i >= iterationsPerFrame) {
+        if (current != []) {
+          // Push the remainder back on the queue, but note that this will now be processed last.
+          Queue.push(
+            current,
+            pendingWork.itemsToFilter,
+          );
+        };
         (false, completed);
       } else {
         switch (current) {
