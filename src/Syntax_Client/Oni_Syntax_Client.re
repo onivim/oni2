@@ -49,7 +49,10 @@ let start =
   Unix.set_close_on_exec(stderr);
 
   let env = [
-    "__ONI2_PARENT_PID__=" ++ string_of_int(Unix.getpid()),
+    Core.EnvironmentVariables.parentPid ++ "=" ++ string_of_int(Unix.getpid()),
+    Core.EnvironmentVariables.camomilePath
+    ++ "="
+    ++ Core.Setup.(setup.camomilePath),
     ...Array.to_list(Unix.environment()),
   ];
 
