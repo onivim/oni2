@@ -2,7 +2,6 @@
  * LanguageFeature.re
  */
 
-open EditorCoreTypes;
 open Oni_Core;
 
 module Make =

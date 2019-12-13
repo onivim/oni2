@@ -14,7 +14,7 @@ module Provider = {
   };
 
   let start =
-      (~id, ~params as {languageFeatures, onUpdate, buffer}, ~dispatch: _) => {
+      (~id, ~params as {languageFeatures, onUpdate, buffer}, ~dispatch as _) => {
     Log.info("Starting DocumentSymbol subscription " ++ id);
 
     let promise =
@@ -47,9 +47,8 @@ module Provider = {
     );
   };
 
-  let update = (~id, ~params, ~dispatch as _) => {
+  let update = (~id as _, ~params as _, ~dispatch as _) => {
     ();
-      //Log.info("UPDATE: " ++ id);
   };
 
   let dispose = (~id) => {
