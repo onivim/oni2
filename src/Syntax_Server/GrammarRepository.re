@@ -16,7 +16,7 @@ let create = (~log=_ => (), languageInfo) => {
   languageInfo,
 };
 
-let empty = create(Ext.LanguageInfo.empty);
+let empty = create(Ext.LanguageInfo.initial);
 
 let getGrammar = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {

@@ -82,7 +82,7 @@ let create: unit => t =
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
-    languageInfo: Ext.LanguageInfo.empty,
+    languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.default,
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),

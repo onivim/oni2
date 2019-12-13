@@ -30,7 +30,7 @@ let empty = {
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
-  languageInfo: Ext.LanguageInfo.empty,
+  languageInfo: Ext.LanguageInfo.initial,
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
 };

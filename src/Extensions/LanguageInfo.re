@@ -16,6 +16,15 @@ type t = {
   scopeToTreesitterPath: StringMap.t(option(string)),
 };
 
+let initial = {
+  grammars: [],
+  languages: [],
+  extToLanguage: StringMap.empty,
+  languageToScope: StringMap.empty,
+  scopeToGrammarPath: StringMap.empty,
+  scopeToTreesitterPath: StringMap.empty,
+};
+
 let getGrammars = (li: t) => {
   li.grammars;
 };
@@ -68,15 +77,6 @@ let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
 
 let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
-};
-
-let empty = {
-  grammars: [],
-  languages: [],
-  extToLanguage: StringMap.empty,
-  languageToScope: StringMap.empty,
-  scopeToGrammarPath: StringMap.empty,
-  scopeToTreesitterPath: StringMap.empty,
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {

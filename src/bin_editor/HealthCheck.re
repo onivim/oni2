@@ -77,7 +77,7 @@ let checks = [
           ~onConnected=() => connected := true,
           ~onClose=_ => closed := true,
           ~onHighlights=_ => (),
-          Oni_Extensions.LanguageInfo.empty,
+          Oni_Extensions.LanguageInfo.initial,
           setup,
         );
 
