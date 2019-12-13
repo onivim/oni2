@@ -22,7 +22,6 @@ let getGrammar = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
   | Some(v) => Some(v)
   | None =>
-    gr.log("getGrammar - querying language info");
     switch (Ext.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)) {
     | Some(grammarPath) =>
       gr.log("Loading grammar from: " ++ grammarPath);
