@@ -75,8 +75,7 @@ let setScrollOffset = (scrollOffset, state) =>
 let revealPath = (state: State.t, path) => {
   switch (state.fileExplorer.tree, state.workspace) {
   | (Some(tree), Some({workingDirectory, _})) =>
-    let re = Str.regexp_string(workingDirectory ++ Filename.dir_sep);
-    let localPath = path |> Str.replace_first(re, "");
+    let localPath = Workspace.toRelativePath(workingDirectory, path);
 
     switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
     // Nothing to do
@@ -182,7 +181,7 @@ let start = () => {
   (
     (state: State.t, action: Actions.t) =>
       switch (action) {
-      // TODO: Should be handle by a more general init mechanism
+      // TODO: Should be handled by a more general init mechanism
       | Init =>
         let cwd = Rench.Environment.getWorkingDirectory();
         let newState = {

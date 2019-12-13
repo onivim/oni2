@@ -1,9 +1,20 @@
+open Oni_Core;
 open Oni_Model;
 
 open Revery;
 open Revery.UI;
 
 module Core = Oni_Core;
+
+let toNodePath = (workspace: Workspace.workspace, tree, path) => {
+  let localPath = Workspace.toRelativePath(workspace.workingDirectory, path);
+
+  switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
+  | `Success(nodes) => Some(nodes)
+  | `Partial(_)
+  | `Failed => None
+  };
+};
 
 module Styles = {
   open Style;
@@ -102,17 +113,7 @@ let make =
 
   let focus =
     switch (focus, state.workspace) {
-    | (Some(path), Some(workspace)) =>
-      let re =
-        Str.regexp_string(workspace.workingDirectory ++ Filename.dir_sep);
-      let localPath = path |> Str.replace_first(re, "");
-
-      switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
-      | `Success(nodes) => Some(nodes)
-      | `Partial(_)
-      | `Failed => None
-      };
-
+    | (Some(path), Some(workspace)) => toNodePath(workspace, tree, path)
     | _ => None
     };
 

@@ -134,6 +134,6 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
 let initial = {
   tree: None,
   isOpen: true,
-  focus: None,
   scrollOffset: `Start(0.),
+  focus: None,
 };
