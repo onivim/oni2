@@ -120,8 +120,39 @@ let make = (~height, ~state: State.t, ()) => {
   let leftItems =
     statusBarItems
     |> List.filter(filterFunction(Alignment.Left))
-    |> List.map(toStatusBarElement)
-    |> React.listToElement;
+    |> List.map(toStatusBarElement);
+
+  let diagnosticsCount =
+    state.diagnostics |> Diagnostics.count |> string_of_int;
+
+  let diagnosticsItem =
+    <StatusBarItem height backgroundColor={theme.statusBarBackground}>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <FontIcon
+          icon=FontAwesome.timesCircle
+          backgroundColor={theme.statusBarBackground}
+          color={theme.statusBarForeground}
+          margin=4
+        />
+        <Text
+          style=Style.[
+            backgroundColor(theme.statusBarBackground),
+            color(theme.statusBarForeground),
+            ...textStyle,
+          ]
+          text=diagnosticsCount
+        />
+      </View>
+    </StatusBarItem>;
+
+  let leftItems = leftItems @ [diagnosticsItem];
+
+  let leftItems = leftItems |> React.listToElement;
 
   let rightItems =
     statusBarItems

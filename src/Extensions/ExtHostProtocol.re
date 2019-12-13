@@ -160,6 +160,18 @@ module OneBasedRange = {
   };
 };
 
+module DefinitionLink = {
+  [@deriving yojson({strict: false, exn: true})]
+  type t = {
+    [@default None]
+    originSelectionRange: option(OneBasedRange.t),
+    uri: Uri.t,
+    range: OneBasedRange.t,
+    /*[@default None]
+      targetSelectionRange: option(OneBasedRange.t),*/
+  };
+};
+
 module ModelContentChange = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]
   type t = {
@@ -394,7 +406,23 @@ module Workspace = {
     };
 };
 
-module LF = LanguageFeatures;
+module SuggestProvider = {
+  type t = {
+    selector: DocumentSelector.t,
+    id: int,
+  };
+
+  let create = (~selector, id) => {selector, id};
+};
+
+module DefinitionProvider = {
+  type t = {
+    selector: DocumentSelector.t,
+    id: int,
+  };
+
+  let create = (~selector, id) => {selector, id};
+};
 
 module IncomingNotifications = {
   module StatusBar = {
@@ -439,14 +467,25 @@ module IncomingNotifications = {
       };
     };
 
-    let parseRegisterSuggestSupport = json => {
+    let parseRegisterDefinitionSupport = json => {
       switch (json) {
-      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
-        // TODO: Finish parsing
+      | [`Int(id), documentSelector] =>
         documentSelector
         |> DocumentSelector.of_yojson
         |> Result.to_option
-        |> Option.map(selector => {LF.SuggestProvider.create(~selector, id)})
+        |> Option.map(selector => {DefinitionProvider.create(~selector, id)})
+      | _ => None
+      };
+    };
+
+    let parseRegisterSuggestSupport = json => {
+      switch (json) {
+      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
+        documentSelector
+        |> DocumentSelector.of_yojson
+        |> Result.to_option
+        |> Option.map(selector => {SuggestProvider.create(~selector, id)})
+      // TODO: Finish parsing
       | _ => None
       };
     };
@@ -574,8 +613,6 @@ module OutgoingNotifications = {
   module LanguageFeatures = {
     let provideCompletionItems =
         (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
-      // TODO: CompletionContext ?
-      // TODO: CancelationToken
       _buildNotification(
         "ExtHostLanguageFeatures",
         "$provideCompletionItems",
@@ -584,6 +621,18 @@ module OutgoingNotifications = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           `Assoc([]),
+        ]),
+      );
+
+    let provideDefinition =
+        (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
+      _buildNotification(
+        "ExtHostLanguageFeatures",
+        "$provideDefinition",
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
         ]),
       );
   };

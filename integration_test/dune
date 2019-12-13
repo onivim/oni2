@@ -12,6 +12,7 @@
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
+           ExtHostDefinitionTest
            FontSizeChangeTest
            InputIgnoreTest
            LanguageCssTest
@@ -22,6 +23,8 @@
            RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
+           SyntaxHighlightTextMateTest
+           SyntaxHighlightTreesitterTest
            TickTest
            AddRemoveSplitTest
            TypingBatchedTest
@@ -53,6 +56,7 @@
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
+        ExtHostDefinitionTest.exe
         FontSizeChangeTest.exe
         InputIgnoreTest.exe
         LanguageCssTest.exe
@@ -63,6 +67,8 @@
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
         SearchShowClearHighlightsTest.exe
+        SyntaxHighlightTextMateTest.exe
+        SyntaxHighlightTreesitterTest.exe
         AddRemoveSplitTest.exe
         TickTest.exe
         TypingBatchedTest.exe
@@ -70,5 +76,6 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        some-test-file.json
         some-test-file.txt
         ))

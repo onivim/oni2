@@ -6,7 +6,7 @@
 
 module CompletionItemKind = CompletionItemKind;
 module Configuration = Configuration;
-module LanguageFeatures = LanguageFeatures;
+module DocumentSelector = DocumentSelector;
 module LanguageInfo = LanguageInfo;
 module ExtensionContributions = ExtensionContributions;
 module ExtHostClient = ExtHostClient;

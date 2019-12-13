@@ -26,8 +26,11 @@ type t =
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, [@opaque] list(completionItem))
+  | CompletionStart([@opaque] CompletionMeet.t)
+  | CompletionAddItems(
+      [@opaque] CompletionMeet.t,
+      [@opaque] list(CompletionItem.t),
+    )
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -36,6 +39,11 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | DefinitionAvailable(
+      int,
+      Location.t,
+      [@opaque] LanguageFeatures.DefinitionResult.t,
+    )
   | ExtensionActivated(string)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
@@ -67,9 +75,7 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
-  | LanguageFeatureRegisterSuggestProvider(
-      [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
-    )
+  | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
@@ -129,16 +135,6 @@ and command = {
   commandAction: t,
   commandEnabled: unit => bool,
   commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
-}
-and completionMeet = {
-  completionMeetBufferId: int,
-  completionMeetLine: Index.t,
-  completionMeetColumn: Index.t,
-}
-and completionItem = {
-  completionLabel: string,
-  completionKind: option(Ext.CompletionItemKind.t),
-  completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t

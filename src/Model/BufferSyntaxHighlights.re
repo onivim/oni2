@@ -24,10 +24,10 @@ module ClientLog = (
   val Oni_Core.Log.withNamespace("BufferSyntaxHighlights - TESTING")
 );
 
-let getTokens = (bufferId: int, line: int, highlights: t) => {
+let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
   highlights
   |> BufferMap.find_opt(bufferId)
-  |> Option.bind(LineMap.find_opt(line))
+  |> Option.bind(LineMap.find_opt(line |> Index.toZeroBased))
   |> Option.value(~default=noTokens);
 };
 

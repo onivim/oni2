@@ -8,7 +8,7 @@ type t;
 
 let show: t => string;
 
-let ofLines: array(string) => t;
+let ofLines: (~id: int=?, array(string)) => t;
 let ofMetadata: Vim.BufferMetadata.t => t;
 
 let getId: t => int;

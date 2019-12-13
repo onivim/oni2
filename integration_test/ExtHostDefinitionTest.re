@@ -5,9 +5,9 @@ open Oni_IntegrationTestLib;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
-// - When typing in an 'oni-dev' buffer, we get some completion results
+// - We get a definition response
 runTestWithInput(
-  ~name="ExtHostCompletionTest", (input, _dispatch, wait, _runEffects) => {
+  ~name="ExtHostDefinitionTest", (input, _dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
@@ -47,13 +47,37 @@ runTestWithInput(
   // Enter some text
   input("i");
 
-  input("R");
+  input("a");
+  input("b");
+  input("c");
 
-  // Should get completions
+  // Workaround a bug where cursor position is offset with <esc>
+  input("<esc>");
+  input("h");
+
+  // Should get a definition
   wait(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
-    List.length(state.completions.filteredCompletions) > 0
-  });
+      let maybeBuffer = Selectors.getActiveBuffer(state);
+
+      let maybeEditor =
+        state
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor
+        |> Option.map(editor => Editor.getPrimaryCursor(editor));
+
+      let isDefinitionAvailable = (buffer, location) => {
+        Definition.isAvailable(
+          Buffer.getId(buffer),
+          location,
+          state.definition,
+        );
+      };
+
+      Option.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
+      |> Option.value(~default=false);
+    },
+  );
 });

@@ -1,3 +1,8 @@
+let identity = v => v;
+let noop = () => ();
+let noop1 = _ => ();
+let noop2 = (_, _) => ();
+
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     Thread.create(
@@ -241,6 +246,12 @@ module Option = {
     | Some(x) => Some(f(x))
     | None => None;
 
+  let map2 = (f, a, b) =>
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => Some(f(aVal, bVal))
+    | _ => None
+    };
+
   let value = (~default) =>
     fun
     | Some(x) => x
@@ -250,6 +261,13 @@ module Option = {
     fun
     | Some(x) => f(x)
     | None => ();
+
+  let iter2 = (f, a, b) => {
+    switch (a, b) {
+    | (Some(a), Some(b)) => f(a, b)
+    | _ => ()
+    };
+  };
 
   let iter_none = f =>
     fun
@@ -266,8 +284,7 @@ module Option = {
   let flatten =
     fun
     | Some(Some(x)) => Some(x)
-    | Some(None) => None
-    | None => None;
+    | _ => None;
 
   let join =
     fun
@@ -278,6 +295,28 @@ module Option = {
     fun
     | [] => None
     | [hd, ..._] => Some(hd);
+
+  let toString = f =>
+    fun
+    | Some(v) => Printf.sprintf("Some(%s)", f(v))
+    | None => "(None)";
+
+  let values: list(option('a)) => list('a) =
+    items => List.filter_map(v => v, items);
+};
+
+module LwtUtil = {
+  let all = (join, promises) => {
+    List.fold_left(
+      (accPromise, promise) => {
+        let%lwt acc = accPromise;
+        let%lwt curr = promise;
+        Lwt.return(join(acc, curr));
+      },
+      Lwt.return([]),
+      promises,
+    );
+  };
 };
 
 module Result = {
