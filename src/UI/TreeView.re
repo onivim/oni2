@@ -213,6 +213,8 @@ module Make = (Model: TreeModel) => {
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
+                  ~scrollOffset=?,
+                  ~onScrollOffsetChange=_=>(),
                   ~tree,
                   ~theme,
                   (),
@@ -228,6 +230,16 @@ module Make = (Model: TreeModel) => {
       };
 
     let%hook (scrollTop, setScrollTop) = Hooks.state(0);
+    let setScrollTop = callback =>
+      setScrollTop(scrollTop => {
+        let newScrollTop = callback(scrollTop);
+        onScrollOffsetChange(float(newScrollTop) /. float(itemHeight));
+        newScrollTop;
+      });
+    let scrollTop =
+      scrollOffset
+        |> Option.map(offset => int_of_float(offset *. float(itemHeight)))
+        |> Option.value(~default=scrollTop);
 
     let count = Model.expandedSubtreeSize(tree);
 
