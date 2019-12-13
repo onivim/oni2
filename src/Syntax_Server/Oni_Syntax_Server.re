@@ -58,6 +58,8 @@ let start = () => {
           "Starting up server. Parent PID is: " ++ string_of_int(parentPid),
         );
 
+        write(Protocol.ServerToClient.Initialized);
+
         let state = ref(State.empty);
         let map = f => state := f(state^);
 
@@ -110,6 +112,10 @@ let start = () => {
               }
             | VisibleRangesChanged(visibilityUpdate) => {
                 map(State.updateVisibility(visibilityUpdate));
+              }
+            | Close => {
+                write(Protocol.ServerToClient.Closing);
+                exit(1);
               }
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );

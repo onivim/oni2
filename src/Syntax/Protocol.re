@@ -33,9 +33,11 @@ module TokenUpdate = {
 module ServerToClient = {
   [@deriving show({with_path: false})]
   type t =
+    | Initialized
     | TokenUpdate([@opaque] list(TokenUpdate.t))
     | EchoReply(string)
-    | Log(string);
+    | Log(string)
+    | Closing;
   // buffer lines
 };
 
@@ -56,5 +58,6 @@ module ClientToServer = {
     // TODO: Clean up this type here
     | VisibleRangesChanged(
         [@opaque] list((int /* buffer id */, list(Range.t))),
-      );
+      )
+    | Close;
 };

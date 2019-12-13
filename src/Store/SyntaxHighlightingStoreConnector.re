@@ -22,13 +22,16 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let onHighlights = tokenUpdates => {
-    Revery.App.runOnMainThread(() => {
-      dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates))
-    });
+    dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates));
   };
 
   let _syntaxClient =
-    Oni_Syntax_Client.start(~onHighlights, languageInfo, setup);
+    Oni_Syntax_Client.start(
+      ~scheduler=Revery.App.runOnMainThread,
+      ~onHighlights,
+      languageInfo,
+      setup,
+    );
 
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {

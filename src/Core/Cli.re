@@ -40,7 +40,7 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = () => {
+let parse = (~checkHealth) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -54,7 +54,7 @@ let parse = () => {
       ("--debug", Unit(Log.enableDebugLogging), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
-      ("--checkhealth", Unit(HealthCheck.run), ""),
+      ("--checkhealth", Unit(checkHealth), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
         "--force-device-scale-factor",

@@ -24,7 +24,15 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
   Stdlib.flush(client.out_channel);
 };
 
-let start = (~onHighlights, languageInfo, setup) => {
+let start =
+    (
+      ~onConnected=Core.Utility.noop,
+      ~onClose=Core.Utility.noop1,
+      ~scheduler,
+      ~onHighlights,
+      languageInfo,
+      setup,
+    ) => {
   let (pstdin, stdin) = Unix.pipe();
   let (stdout, pstdout) = Unix.pipe();
   let (stderr, pstderr) = Unix.pipe();
@@ -73,6 +81,7 @@ let start = (~onHighlights, languageInfo, setup) => {
         ClientLog.error(
           "Syntax process closed with exit code: " ++ string_of_int(code),
         );
+        scheduler(() => onClose(code));
       },
       (),
     );
@@ -84,12 +93,19 @@ let start = (~onHighlights, languageInfo, setup) => {
           Thread.wait_read(stdout);
           let result: ServerToClient.t = Marshal.from_channel(in_channel);
           switch (result) {
+          | ServerToClient.Initialized => scheduler(onConnected)
           | ServerToClient.EchoReply(result) =>
-            ClientLog.info("got message from channel: |" ++ result ++ "|")
-          | ServerToClient.Log(msg) => ServerLog.info(msg)
+            scheduler(() =>
+              ClientLog.info("got message from channel: |" ++ result ++ "|")
+            )
+          | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
+          | ServerToClient.Closing =>
+            scheduler(() => ServerLog.info("Closing"))
           | ServerToClient.TokenUpdate(tokens) =>
-            onHighlights(tokens);
-            ClientLog.info("Tokens applied");
+            scheduler(() => {
+              onHighlights(tokens);
+              ClientLog.info("Tokens applied");
+            })
           };
         }
       },
@@ -136,3 +152,7 @@ let notifyBufferUpdate =
 
 let notifyVisibilityChanged = (v: t, visibility) =>
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+
+let close = (syntaxClient: t) => {
+  write(syntaxClient, Protocol.ClientToServer.Close);
+};
