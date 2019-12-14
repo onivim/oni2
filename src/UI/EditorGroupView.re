@@ -100,17 +100,20 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let uiFont = state.uiFont;
 
     let metrics = editorGroup.metrics;
-
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
-        <EditorSurface
+        let renderer = BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
+        switch (renderer) {
+        | BufferRenderer.Editor => <EditorSurface
           isActiveSplit=isActive
           editorGroup
           metrics
           editor
           state
         />
+        | BufferRenderer.Welcome => <WelcomeView state />
+        }
       | None => React.empty
       };
 

@@ -457,6 +457,12 @@ let start =
       Vim.init();
       let _ = Vim.command("e untitled");
       hasInitialized := true;
+
+      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+      dispatch(Actions.BufferRenderer(
+        BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome)
+      ))
+      
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
