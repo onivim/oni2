@@ -15,5 +15,6 @@ module ExtHostProtocol = ExtHostProtocol;
 module ExtHostTransport = ExtHostTransport;
 module ExtensionManifest = ExtensionManifest;
 module ExtensionScanner = ExtensionScanner;
+module LanguageInfo = LanguageInfo;
 module ProviderUtility = ProviderUtility;
 module SymbolKind = SymbolKind;

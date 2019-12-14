@@ -3,10 +3,9 @@
  */
 
 open Oni_Core;
-open Oni_Extensions;
 open Rench;
 
-open Oni_Extensions.ExtensionScanner;
+open ExtensionScanner;
 
 type t = {
   grammars: list(ExtensionContributions.Grammar.t),
@@ -14,6 +13,16 @@ type t = {
   extToLanguage: StringMap.t(string),
   languageToScope: StringMap.t(string),
   scopeToGrammarPath: StringMap.t(string),
+  scopeToTreesitterPath: StringMap.t(option(string)),
+};
+
+let initial = {
+  grammars: [],
+  languages: [],
+  extToLanguage: StringMap.empty,
+  languageToScope: StringMap.empty,
+  scopeToGrammarPath: StringMap.empty,
+  scopeToTreesitterPath: StringMap.empty,
 };
 
 let getGrammars = (li: t) => {
@@ -52,6 +61,12 @@ let getGrammarPathFromScope = (li: t, scope: string) => {
   StringMap.find_opt(scope, li.scopeToGrammarPath);
 };
 
+let getTreesitterPathFromScope = (li: t, scope: string) => {
+  li.scopeToTreesitterPath
+  |> StringMap.find_opt(scope)
+  |> Utility.Option.flatten;
+};
+
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
@@ -62,14 +77,6 @@ let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
 
 let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
-};
-
-let create = () => {
-  grammars: [],
-  languages: [],
-  extToLanguage: StringMap.empty,
-  languageToScope: StringMap.empty,
-  scopeToGrammarPath: StringMap.empty,
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
@@ -106,5 +113,21 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          StringMap.empty,
        );
 
-  {grammars, languages, extToLanguage, languageToScope, scopeToGrammarPath};
+  let scopeToTreesitterPath =
+    grammars
+    |> List.fold_left(
+         (prev, curr) => {
+           StringMap.add(curr.scopeName, curr.treeSitterPath, prev)
+         },
+         StringMap.empty,
+       );
+
+  {
+    grammars,
+    languages,
+    extToLanguage,
+    languageToScope,
+    scopeToGrammarPath,
+    scopeToTreesitterPath,
+  };
 };

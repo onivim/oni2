@@ -1,3 +1,5 @@
+open Oni_Core;
+
 let checks = [
   (
     "Verify camomile:datadir",
@@ -62,6 +64,47 @@ let checks = [
       ret.stdout
       |> String.trim
       |> Utility.StringUtil.contains("Reason Language Server");
+    },
+  ),
+  (
+    "Verify bundled syntax server",
+    (setup: Setup.t) => {
+      let connected = ref(false);
+      let closed = ref(false);
+      let syntaxClient =
+        Oni_Syntax_Client.start(
+          ~scheduler=f => f(),
+          ~onConnected=() => connected := true,
+          ~onClose=_ => closed := true,
+          ~onHighlights=_ => (),
+          Oni_Extensions.LanguageInfo.initial,
+          setup,
+        );
+
+      let waitForRef = (condition: ref(bool)) => {
+        let tries = ref(0);
+        let waitThread: Thread.t =
+          Thread.create(
+            () => {
+              while (condition^ == false && tries^ < 10) {
+                Unix.sleepf(0.2);
+                incr(tries);
+              }
+            },
+            (),
+          );
+
+        Thread.join(waitThread);
+      };
+
+      // Verify the syntax client spins up and emits a connection message
+      waitForRef(connected);
+
+      // Verify we are able to close it
+      Oni_Syntax_Client.close(syntaxClient);
+      waitForRef(closed);
+
+      connected^ && closed^;
     },
   ),
 ];

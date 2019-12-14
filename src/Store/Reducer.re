@@ -14,6 +14,8 @@ let reduce: (State.t, Actions.t) => State.t =
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),
+        bufferSyntaxHighlights:
+          BufferSyntaxHighlightsReducer.reduce(s.bufferSyntaxHighlights, a),
         bufferHighlights:
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         commands: Commands.reduce(s.commands, a),

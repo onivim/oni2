@@ -1,3 +1,5 @@
+open Oni_Extensions;
+
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,

@@ -11,20 +11,19 @@ open Oni_Syntax;
 module Ext = Oni_Extensions;
 
 type t = {
+  buffers: Buffers.t,
+  bufferHighlights: BufferHighlights.t,
+  bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
-  bufferHighlights: BufferHighlights.t,
-  buffers: Buffers.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
-  // New-school native syntax highlighting
-  syntaxHighlighting: SyntaxHighlighting.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -35,7 +34,7 @@ type t = {
   keyBindings: Keybindings.t,
   keyDisplayer: KeyDisplayer.t,
   languageFeatures: LanguageFeatures.t,
-  languageInfo: LanguageInfo.t,
+  languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   statusBar: StatusBarModel.t,
@@ -53,6 +52,9 @@ type t = {
 
 let create: unit => t =
   () => {
+    buffers: Buffers.empty,
+    bufferHighlights: BufferHighlights.initial,
+    bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     completions: Completions.default,
     configuration: Configuration.default,
@@ -61,8 +63,6 @@ let create: unit => t =
     hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
-    bufferHighlights: BufferHighlights.initial,
-    buffers: Buffers.empty,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
@@ -75,14 +75,14 @@ let create: unit => t =
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
-    syntaxHighlighting: SyntaxHighlighting.empty,
+    // TODO: Remove
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
-    languageInfo: LanguageInfo.create(),
+    languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.default,
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),

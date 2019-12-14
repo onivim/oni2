@@ -18,6 +18,10 @@ module type SyntaxHighlighter = {
     (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), t) => t;
 
   let getTokenColors: (t, int) => list(ColorizedToken.t);
+
+  // Get a list of lines that have been updated since last clear
+  let getUpdatedLines: t => list(int);
+  let clearUpdatedLines: t => t;
 };
 
 type highlighter('a) = (module SyntaxHighlighter with type t = 'a);
@@ -74,39 +78,42 @@ let updateTheme = (theme, hl) => {
 
 let create =
     (
+      ~bufferUpdate,
       ~configuration,
       ~scope,
       ~theme,
+      ~getTreesitterScope,
       ~getTextmateGrammar,
-      ~getTreeSitterScopeMapper,
       lines: array(string),
     ) => {
-  _hasTreeSitterScope(configuration, scope)
-    ? {
-      let ts =
-        TreeSitterSyntaxHighlights.create(
-          ~theme,
-          ~getTreeSitterScopeMapper,
-          lines,
-        );
-      Highlighter({
-        highlighter: (module TreeSitterSyntaxHighlights),
-        state: ts,
-      });
-    }
-    : {
-      let tm =
-        TextMateSyntaxHighlights.create(
-          ~scope,
-          ~theme,
-          ~getTextmateGrammar,
-          lines,
-        );
-      Highlighter({
-        highlighter: (module TextMateSyntaxHighlights),
-        state: tm,
-      });
-    };
+  ignore(bufferUpdate);
+  let maybeScopeConverter = getTreesitterScope(scope);
+
+  let allowTreeSitter =
+    Core.Configuration.getValue(
+      config => config.experimentalTreeSitter,
+      configuration,
+    )
+    && _hasTreeSitterScope(configuration, scope);
+
+  switch (maybeScopeConverter) {
+  | Some(scopeConverter) when allowTreeSitter =>
+    let ts =
+      TreeSitterSyntaxHighlights.create(~theme, ~scopeConverter, lines);
+    Highlighter({
+      highlighter: (module TreeSitterSyntaxHighlights),
+      state: ts,
+    });
+  | _ =>
+    let tm =
+      TextMateSyntaxHighlights.create(
+        ~scope,
+        ~theme,
+        ~getTextmateGrammar,
+        lines,
+      );
+    Highlighter({highlighter: (module TextMateSyntaxHighlights), state: tm});
+  };
 };
 
 let update =
@@ -114,6 +121,18 @@ let update =
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
   let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
+};
+
+let getUpdatedLines = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+  SyntaxHighlighter.getUpdatedLines(state);
+};
+
+let clearUpdatedLines = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.clearUpdatedLines(state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 

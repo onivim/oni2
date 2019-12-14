@@ -9,6 +9,7 @@ type t = {
   folder: string,
   filesToOpen: list(string),
   forceScaleFactor: option(float),
+  syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
 };
 
@@ -16,6 +17,7 @@ let create = (~folder, ~filesToOpen, ()) => {
   folder,
   filesToOpen,
   forceScaleFactor: None,
+  syntaxHighlightService: false,
   overriddenExtensionsDir: None,
 };
 
@@ -38,10 +40,11 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = () => {
+let parse = (~checkHealth) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
+  let syntaxHighlightService = ref(false);
   let extensionsDir = ref(None);
 
   Arg.parse(
@@ -51,8 +54,18 @@ let parse = () => {
       ("--debug", Unit(Log.enableDebugLogging), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
-      ("--checkhealth", Unit(HealthCheck.run), ""),
+      ("--checkhealth", Unit(checkHealth), ""),
       ("--working-directory", String(setWorkingDirectory), ""),
+      (
+        "--force-device-scale-factor",
+        Float(f => scaleFactor := Some(f)),
+        "",
+      ),
+      (
+        "--syntax-highlight-service",
+        Unit(() => syntaxHighlightService := true),
+        "",
+      ),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
       ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
     ],
@@ -131,6 +144,7 @@ let parse = () => {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
+    syntaxHighlightService: syntaxHighlightService^,
     overriddenExtensionsDir: extensionsDir^,
   };
 };

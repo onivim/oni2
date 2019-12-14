@@ -82,3 +82,5 @@ let getFunctionColor = (v: t) => v.functionColor;
 let getTypeColor = (v: t) => v.typeColor;
 
 let empty = create(Textmate.TokenTheme.empty);
+
+let toString = v => Textmate.TokenTheme.show(v.theme);

@@ -1,6 +1,6 @@
 (library
-    (name Oni_Syntax)
-    (public_name Oni2.syntax)
+    (name Oni_Syntax_Server)
+    (public_name Oni2.syntax_server)
     (libraries 
         str
         bigarray
@@ -8,12 +8,11 @@
         lwt
         lwt.unix
         yojson
-        ppx_deriving.runtime
         Oni2.core
-        Oni2.extensions
+        Oni2.syntax
+        Oni2.model
         Rench
         Revery
         textmate
         treesitter
-    )
-    (preprocess (pps ppx_deriving.show)))
+    ))

@@ -29,12 +29,25 @@ let version = "0.2.0";
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
 
+  let defaultCamomilePath =
+    switch (Revery.Environment.os) {
+    | Revery.Environment.Windows => execDir ++ "camomile"
+    | Revery.Environment.Mac => execDir ++ "../Resources/camomile"
+    | _ => execDir ++ "../share/camomile"
+    };
+
+  let camomilePath =
+    switch (Sys.getenv_opt(EnvironmentVariables.camomilePath)) {
+    | None => defaultCamomilePath
+    | Some(v) => v
+    };
+
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
       nodePath: execDir ++ "node.exe",
       nodeScriptPath: execDir ++ "node",
-      camomilePath: execDir ++ "camomile",
       bundledExtensionsPath: execDir ++ "extensions",
+      camomilePath,
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg.exe",
       rlsPath: execDir ++ "rls.exe",
@@ -43,7 +56,7 @@ let default = () => {
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../Resources/node",
-      camomilePath: execDir ++ "../Resources/camomile",
+      camomilePath,
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
@@ -53,7 +66,7 @@ let default = () => {
   | _ => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../share/node",
-      camomilePath: execDir ++ "../share/camomile",
+      camomilePath,
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
