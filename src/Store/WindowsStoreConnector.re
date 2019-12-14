@@ -42,7 +42,6 @@ let start = getState => {
           (),
         );
 
-
       dispatch(AddSplit(Vertical, editor));
     });
 
@@ -58,19 +57,19 @@ let start = getState => {
           c => c.workbenchSideBarVisible,
           configuration,
         );
-
+      ();
       // TODO: Wire up to new actions
       /*if (activityBarVisible) {
-        dispatch(AddDockItem(MainDock));
-      } else {
-        dispatch(RemoveDockItem(MainDock));
-      };
+          dispatch(AddDockItem(MainDock));
+        } else {
+          dispatch(RemoveDockItem(MainDock));
+        };
 
-      if (sideBarVisible) {
-        dispatch(AddDockItem(ExplorerDock));
-      } else {
-        dispatch(RemoveDockItem(ExplorerDock));
-      };*/
+        if (sideBarVisible) {
+          dispatch(AddDockItem(ExplorerDock));
+        } else {
+          dispatch(RemoveDockItem(ExplorerDock));
+        };*/
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
@@ -95,13 +94,13 @@ let start = getState => {
         }
       }*/
     /*| RemoveDockItem(id) => {
-        ...s,
-        windowManager: WindowManager.removeDockItem(~id, s.windowManager),
-      }
-    | AddDockItem(id) => {
-        ...s,
-        windowManager: WindowManager.addDockItem(~id, s.windowManager),
-      }*/
+          ...s,
+          windowManager: WindowManager.removeDockItem(~id, s.windowManager),
+        }
+      | AddDockItem(id) => {
+          ...s,
+          windowManager: WindowManager.addDockItem(~id, s.windowManager),
+        }*/
     | WindowSetActive(splitId, _) => {
         ...s,
         windowManager: {

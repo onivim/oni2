@@ -26,13 +26,13 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{ theme, sideBar, uiFont as font, _}= state;
+  let State.{theme, sideBar, uiFont as font, _} = state;
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
 
   let title = "Explorer";
-  
-  <View style=Styles.container(bg)>
+
+  <View style={Styles.container(bg)}>
     <View style={Styles.heading(theme)}>
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>

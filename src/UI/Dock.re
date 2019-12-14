@@ -5,17 +5,17 @@ open Oni_Model;
 
 let button = Style.[marginVertical(24)];
 
-let onExplorerClick = (_) => {
+let onExplorerClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
 };
 
-let onSearchClick = (_) => {
+let onSearchClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
 };
 
-let onExtensionsClick = (_) => {
+let onExtensionsClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
-}
+};
 
 let make = (~state: State.t, ()) => {
   let bg = state.theme.activityBarBackground;
@@ -29,13 +29,13 @@ let make = (~state: State.t, ()) => {
       alignItems(`Center),
       width(50),
     ]>
-    <Clickable onClick={onExplorerClick} style=button>
+    <Clickable onClick=onExplorerClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
     </Clickable>
-    <Clickable onClick={onSearchClick} style=button>
+    <Clickable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
     </Clickable>
-    <Clickable onClick={onExtensionsClick} style=button>
+    <Clickable onClick=onExtensionsClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
     </Clickable>
   </View>;

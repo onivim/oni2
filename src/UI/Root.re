@@ -58,13 +58,13 @@ let make = (~state: State.t, ()) => {
     };
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface> 
+    <View style=Styles.surface>
       <Dock state />
       <WindowHandle direction=Vertical theme />
       <SideBarView state />
       <WindowHandle direction=Vertical theme />
-      <EditorView state /> 
-      searchPane 
+      <EditorView state />
+      searchPane
     </View>
     <Overlay>
       {switch (state.quickmenu) {

@@ -21,19 +21,19 @@ module Styles = {
   let container = [flexGrow(1)];
 
   /*let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
-    fontSize(font.fontSize),
-    fontFamily(font.fontFile),
-    backgroundColor(bg),
-    color(fg),
-  ];
+      fontSize(font.fontSize),
+      fontFamily(font.fontFile),
+      backgroundColor(bg),
+      color(fg),
+    ];
 
-  let heading = (theme: Core.Theme.t) => [
-    flexDirection(`Row),
-    justifyContent(`Center),
-    alignItems(`Center),
-    backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
-  ];*/
+    let heading = (theme: Core.Theme.t) => [
+      flexDirection(`Row),
+      justifyContent(`Center),
+      alignItems(`Center),
+      backgroundColor(theme.sideBarBackground),
+      height(Core.Constants.default.tabHeight),
+    ];*/
 
   let item = [flexDirection(`Row), alignItems(`Center)];
 

@@ -15,7 +15,6 @@ let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
 
-
 let parentStyle = (dir: direction) => {
   let flexDir =
     switch (dir) {
