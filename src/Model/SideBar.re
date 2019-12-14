@@ -18,6 +18,8 @@ let setClosed = (sideBar: t) => {...sideBar, isOpen: false};
 
 let getType = sideBar => sideBar.activeType;
 
+let isOpen = sideBar => sideBar.isOpen;
+
 let toggle = (sideBarType, state: t) =>
   if (sideBarType == state.activeType) {
     {...state, isOpen: !state.isOpen};

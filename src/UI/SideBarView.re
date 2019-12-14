@@ -33,21 +33,22 @@ let make = (~state: State.t, ()) => {
 
   let sideBarType = SideBar.getType(sideBar);
 
-  let title = switch(sideBarType) {
-  | FileExplorer => "Explorer"
-  | Extensions => "Extensions"
-  };
+  let title =
+    switch (sideBarType) {
+    | FileExplorer => "Explorer"
+    | Extensions => "Extensions"
+    };
 
-  let elem = switch(sideBarType) {
-  | FileExplorer => <FileExplorerView state />
-  | Extensions => React.empty
-  };
-  
+  let elem =
+    switch (sideBarType) {
+    | FileExplorer => <FileExplorerView state />
+    | Extensions => React.empty
+    };
 
   <View style={Styles.container(bg)}>
     <View style={Styles.heading(theme)}>
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
-    {elem}
+    elem
   </View>;
 };
