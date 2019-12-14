@@ -3,7 +3,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Subscription = Core.Subscription;
-module Log = (val Core.Log.withNamespace("Oni2.RipgrepSubscription"));
+module Log = (val Core.Log.withNamespace("Oni2.DocumentSymbolSubscription"));
 
 module Provider = {
   type action = Actions.t;
@@ -47,6 +47,7 @@ module Provider = {
 
   let update = (~id as _, ~params as _, ~dispatch as _) => {
     ();
+      // TODO: Anything we should be doing here?
   };
 
   let dispose = (~id) => {
