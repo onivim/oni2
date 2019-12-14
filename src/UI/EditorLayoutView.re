@@ -6,7 +6,6 @@
  */
 open Revery;
 open UI;
-open Oni_Core;
 open Oni_Model;
 open WindowManager;
 open WindowTree;

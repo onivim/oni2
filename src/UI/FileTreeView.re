@@ -20,21 +20,6 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  /*let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
-      fontSize(font.fontSize),
-      fontFamily(font.fontFile),
-      backgroundColor(bg),
-      color(fg),
-    ];
-
-    let heading = (theme: Core.Theme.t) => [
-      flexDirection(`Row),
-      justifyContent(`Center),
-      alignItems(`Center),
-      backgroundColor(theme.sideBarBackground),
-      height(Core.Constants.default.tabHeight),
-    ];*/
-
   let item = [flexDirection(`Row), alignItems(`Center)];
 
   let text = (~fg, ~font: Core.UiFont.t) => [
@@ -97,7 +82,6 @@ module TreeView = TreeView.Make(FsTreeNode.Model);
 
 let make =
     (
-      ~title,
       ~tree: FsTreeNode.t,
       ~focus: option(string),
       ~onNodeClick,
@@ -107,7 +91,6 @@ let make =
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
-  let bg = state.theme.sideBarBackground;
   let fg = state.theme.sideBarForeground;
 
   let focus =

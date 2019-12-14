@@ -147,13 +147,6 @@ let start = (getState, contributedCommands) => {
       dispatch(AddSplit(direction, split));
     });
 
-  let toggleExplorerEffect = ({fileExplorer, _}: State.t, _) => {
-    Isolinear.Effect.createWithDispatch(~name="explorer.toggle", dispatch => {
-      let action = Actions.ActivityBar(ActivityBar.FileExplorerClick);
-      dispatch(action);
-    });
-  };
-
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
       let windowId = WindowManager.move(direction, state.windowManager);
@@ -244,7 +237,7 @@ let start = (getState, contributedCommands) => {
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    ("explorer.toggle", state => toggleExplorerEffect(state)),
+    ("explorer.toggle", _ => singleActionEffect(Actions.ActivityBar(ActivityBar.FileExplorerClick))),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),

@@ -1,5 +1,4 @@
 open Revery.UI;
-open Revery.UI.Components;
 
 open Oni_Model;
 module Core = Oni_Core;
@@ -27,7 +26,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{theme, sideBar, uiFont as font, _} = state;
+  let State.{theme, sideBar, uiFont, _} = state;
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
 
@@ -45,9 +44,9 @@ let make = (~state: State.t, ()) => {
     | Extensions => React.empty
     };
 
-  <View style={Styles.container(bg)}>
+  <View style={Styles.container(~bg)}>
     <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
+      <Text text=title style={Styles.title(~fg, ~bg, ~font=uiFont)} />
     </View>
     elem
   </View>;

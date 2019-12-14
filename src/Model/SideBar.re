@@ -1,6 +1,3 @@
-open Revery;
-open Oni_Core;
-
 type sideBarType =
   | FileExplorer
   | Extensions;
