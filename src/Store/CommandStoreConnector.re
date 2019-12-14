@@ -237,7 +237,13 @@ let start = (getState, contributedCommands) => {
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    ("explorer.toggle", _ => singleActionEffect(Actions.ActivityBar(ActivityBar.FileExplorerClick))),
+    (
+      "explorer.toggle",
+      _ =>
+        singleActionEffect(
+          Actions.ActivityBar(ActivityBar.FileExplorerClick),
+        ),
+    ),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
