@@ -40,9 +40,7 @@ module Provider = {
           };
         };
 
-        Revery.App.runOnMainThread(() => {
-          items |> List.map(docSymbolToMenuItem) |> onUpdate
-        });
+        items |> List.map(docSymbolToMenuItem) |> onUpdate;
       },
     );
   };

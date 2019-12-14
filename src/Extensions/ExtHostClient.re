@@ -245,7 +245,6 @@ let provideDocumentHighlights = (id, uri, position, client) => {
 let provideDocumentSymbols = (id, uri, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(DocumentSymbol.t) = [];
-    prerr_endline(Yojson.Safe.to_string(json));
     switch (json) {
     | `List(symbols) => List.map(DocumentSymbol.of_yojson_exn, symbols)
     | _ => default
