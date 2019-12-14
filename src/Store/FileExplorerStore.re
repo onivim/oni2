@@ -221,7 +221,7 @@ let start = () => {
         )
       | BufferEnter({filePath, _}, _) =>
         switch (state.fileExplorer) {
-        | {tree: Some(tree), focus, _} when focus != filePath =>
+        | {focus, _} when focus != filePath =>
           let state = setFocus(filePath, state);
           switch (filePath) {
           | Some(path) => revealPath(state, path)

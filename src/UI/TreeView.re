@@ -3,7 +3,6 @@ open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
-open Oni_Model;
 
 module Option = Utility.Option;
 
@@ -106,7 +105,7 @@ module Make = (Model: TreeModel) => {
       switch (focus) {
       | Some([last]) when last == node => (true, None)
       | Some([head, ...tail]) when head == node => (false, Some(tail))
-      | Some(v) => (false, None)
+      | Some(_) => (false, None)
       | _ => (false, None)
       };
 

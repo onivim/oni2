@@ -132,7 +132,7 @@ let toggleOpen =
 
 let setOpen =
   fun
-  | {kind: Directory({isOpen, children}), _} as node => {
+  | {kind: Directory({children, _}), _} as node => {
       let kind = Directory({isOpen: true, children});
 
       {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};

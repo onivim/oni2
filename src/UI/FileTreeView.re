@@ -1,4 +1,3 @@
-open Oni_Core;
 open Oni_Model;
 
 open Revery;
@@ -63,7 +62,7 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: Core.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
+let nodeView = (~font: Core.UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -135,7 +134,7 @@ let make =
       theme
       itemHeight=22
       onClick=onNodeClick>
-      ...{node => <nodeView font bg fg node />}
+      ...{node => <nodeView font fg node />}
     </TreeView>
   </View>;
 };

@@ -10,8 +10,8 @@ let make = (~state: State.t, ()) => {
     );
 
   switch (state.fileExplorer) {
-  | {tree: None} => React.empty
-  | {tree: Some(tree), focus} =>
+  | {tree: None, _} => React.empty
+  | {tree: Some(tree), focus, _} =>
     <FileTreeView state focus onNodeClick title="Explorer" tree />
   };
 };
