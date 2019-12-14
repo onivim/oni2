@@ -15,6 +15,7 @@ module Make = (Config: Config) => {
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
+  module Queue = Utility.Queue;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
@@ -27,16 +28,16 @@ module Make = (Config: Config) => {
       explodedFilter: list(UChar.t),
       shouldLower: bool,
       totalItemCount: int,
-      allItems: Queue.t(list(Config.item)), // WARNING: mutable data structure
-      itemsToFilter: Queue.t(list(Config.item)) // WARNING: mutable data structure
+      allItems: Queue.t(list(Config.item)),
+      itemsToFilter: Queue.t(list(Config.item)),
     };
 
     let create = () => {
       filter: "",
-      allItems: Queue.create(),
+      allItems: Queue.empty,
       explodedFilter: [],
       shouldLower: false,
-      itemsToFilter: Queue.create(),
+      itemsToFilter: Queue.empty,
       totalItemCount: 0,
     };
 
@@ -125,7 +126,7 @@ module Make = (Config: Config) => {
         ...pending,
         filter,
         explodedFilter,
-        itemsToFilter: Queue.copy(pending.allItems), // Reset items to filter
+        itemsToFilter: pending.allItems, // Reset items to filter
         shouldLower,
       };
 
@@ -135,11 +136,10 @@ module Make = (Config: Config) => {
 
   /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
   let addItems = (items, pending: PendingWork.t, completed) => {
-    Queue.push(items, pending.allItems);
-    Queue.push(items, pending.itemsToFilter);
-
     let newPendingWork = {
       ...pending,
+      allItems: Queue.push(items, pending.allItems),
+      itemsToFilter: Queue.push(items, pending.itemsToFilter),
       totalItemCount: pending.totalItemCount + List.length(items),
     };
 
@@ -148,47 +148,53 @@ module Make = (Config: Config) => {
 
   let doActualWork =
       (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
-    let rec loop = (i, current, completed) =>
+    let rec loop = (itemsToFilter, i, current, completed) =>
       if (i >= iterationsPerFrame) {
-        if (current != []) {
-          // Push the remainder back on the queue, but note that this will now be processed last.
-          Queue.push(
-            current,
-            pendingWork.itemsToFilter,
-          );
-        };
-        (false, completed);
+        let itemsToFilter =
+          if (current != []) {
+            Queue.pushFront(current, itemsToFilter);
+          } else {
+            itemsToFilter;
+          };
+        (false, itemsToFilter, completed);
       } else {
         switch (current) {
         | [item, ...rest] =>
           // Do a first filter pass to check if the item satisifies the regex
           let name = format(item, ~shouldLower=pendingWork.shouldLower);
           let matches = Filter.fuzzyMatches(pendingWork.explodedFilter, name);
-          loop(i + 1, rest, matches ? [item, ...completed] : completed);
+          let completed = matches ? [item, ...completed] : completed;
+          loop(itemsToFilter, i + 1, rest, completed);
 
         | [] =>
-          switch (Queue.take(pendingWork.itemsToFilter)) {
-          | items => loop(i, items, completed)
-          | exception Queue.Empty => (true, completed)
+          switch (Queue.pop(itemsToFilter)) {
+          | (Some(items), itemsToFilter) =>
+            loop(itemsToFilter, i, items, completed)
+
+          | (None, itemsToFilter) => (true, itemsToFilter, completed)
           }
         };
       };
 
-    let (isComplete, allFiltered) = loop(0, [], allFiltered);
+    let (isComplete, itemsToFilter, allFiltered) =
+      loop(pendingWork.itemsToFilter, 0, [], allFiltered);
 
     let uiFiltered =
       allFiltered
       |> Utility.firstk(maxItemsToFilter)
       |> Filter.rank(pendingWork.filter, format);
 
-    (isComplete, pendingWork, CompletedWork.{allFiltered, uiFiltered});
+    (
+      isComplete,
+      {...pendingWork, itemsToFilter},
+      CompletedWork.{allFiltered, uiFiltered},
+    );
   };
 
   /* [doWork] is run each frame until the work is completed! */
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
-      let allFiltered =
-        pending.allItems |> Queue.to_seq |> List.of_seq |> List.concat;
+      let allFiltered = pending.allItems |> Queue.toList |> List.concat;
       let uiFiltered =
         allFiltered |> List.map(item => Filter.{highlight: [], item});
       (true, pending, CompletedWork.{allFiltered, uiFiltered});
