@@ -7,7 +7,7 @@ type t = {
   id: int,
   startLine: Index.t,
   endLine: Index.t,
-  lines: array(string),
+  lines: [@opaque] array(string),
   version: int,
 };
 

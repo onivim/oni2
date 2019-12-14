@@ -5,7 +5,7 @@
  */
 
 module Core = Oni_Core;
-module Option = Oni_Core.Utility.Option;
+module Option = Core.Utility.Option;
 module Model = Oni_Model;
 
 module Actions = Model.Actions;
@@ -49,12 +49,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let currentDirectory = Rench.Environment.getWorkingDirectory();
-
-    let getDisplayPath = (fullPath, dir) => {
-      let re = Str.regexp_string(dir ++ Filename.dir_sep);
-      Str.replace_first(re, "", fullPath);
-    };
+    let currentDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
     |> Core.IntMap.to_seq
@@ -74,9 +69,9 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            Some(
              Actions.{
                category: None,
-               name: getDisplayPath(path, currentDirectory),
+               name: Model.Workspace.toRelativePath(currentDirectory, path),
                command: () => {
-                 Oni_Model.Actions.OpenFileByPath(path, None, None);
+                 Model.Actions.OpenFileByPath(path, None, None);
                },
                icon:
                  Oni_Model.FileExplorer.getFileIcon(
@@ -375,14 +370,12 @@ let subscriptions = ripgrep => {
   };
 
   let ripgrep = (languageInfo, iconTheme) => {
-    let directory = Rench.Environment.getWorkingDirectory();
-    let re = Str.regexp_string(directory ++ Filename.dir_sep);
-    let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
+    let directory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>
       Actions.{
         category: None,
-        name: getDisplayPath(fullPath),
+        name: Model.Workspace.toRelativePath(directory, fullPath),
         command: () => Model.Actions.OpenFileByPath(fullPath, None, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
