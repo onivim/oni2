@@ -526,7 +526,7 @@ module StringUtil = {
   };
 };
 
-module Queue : {
+module Queue: {
   type t('a);
 
   let empty: t(_);
@@ -534,61 +534,137 @@ module Queue : {
   let push: ('a, t('a)) => t('a);
   let pushFront: ('a, t('a)) => t('a);
   let pop: t('a) => (option('a), t('a));
+  let take: (int, t('a)) => (list('a), t('a));
   let toList: t('a) => list('a);
 } = {
   type t('a) = {
     front: list('a),
     rear: list('a), // reversed
-    length: int
+    length: int,
   };
 
-  let empty = {
-    front: [],
-    rear: [],
-    length: 0
-  };
+  let empty = {front: [], rear: [], length: 0};
 
-  let length = q =>
-    q.length;
+  let length = q => q.length;
 
   let push = (item, queue) => {
     ...queue,
     rear: [item, ...queue.rear],
-    length: queue.length + 1
+    length: queue.length + 1,
   };
 
   let pushFront = (item, queue) => {
     ...queue,
     front: [item, ...queue.front],
-    length: queue.length + 1
+    length: queue.length + 1,
   };
 
   let pop = queue => {
     let queue =
       if (queue.front == []) {
-        {
-          ...queue,
-          front: List.rev(queue.rear),
-          rear: []
-        }
+        {...queue, front: List.rev(queue.rear), rear: []};
       } else {
-        queue
+        queue;
       };
 
     switch (queue.front) {
     | [item, ...tail] => (
-      Some(item),
-      {
-        ...queue,
-        front: tail,
-        length: queue.length - 1
-      }
-    )
-    | [] =>
-      (None, queue)
-    }
+        Some(item),
+        {...queue, front: tail, length: queue.length - 1},
+      )
+    | [] => (None, queue)
+    };
   };
 
+  let rec take = (count, queue) =>
+    if (count == 0) {
+      ([], queue);
+    } else {
+      switch (pop(queue)) {
+      | (Some(item), queue) =>
+        let (items, queue) = take(count - 1, queue);
+        ([item, ...items], queue);
+
+      | (None, queue) => ([], queue)
+      };
+    };
+
+  let toList = ({front, rear, _}) => front @ List.rev(rear);
+};
+
+module ChunkyQueue: {
+  include (module type of Queue);
+  let pushChunk: (list('a), t('a)) => t('a);
+  let pushReversedChunk: (list('a), t('a)) => t('a);
+} = {
+  type t('a) = {
+    front: list('a),
+    rear: Queue.t(list('a)),
+    length: int,
+  };
+
+  let empty = {front: [], rear: Queue.empty, length: 0};
+
+  let length = q => q.length;
+
+  let push = (item, queue) => {
+    ...queue,
+    rear: Queue.push([item], queue.rear),
+    length: queue.length + 1,
+  };
+
+  let pushReversedChunk = (chunk, queue) =>
+    if (chunk == []) {
+      queue;
+    } else {
+      {
+        ...queue,
+        rear: Queue.push(chunk, queue.rear),
+        length: queue.length + List.length(chunk),
+      };
+    };
+
+  let pushChunk = chunk => pushReversedChunk(List.rev(chunk));
+
+  let pushFront = (item, queue) => {
+    ...queue,
+    front: [item, ...queue.front],
+    length: queue.length + 1,
+  };
+
+  let pop = queue => {
+    let queue =
+      if (queue.front == []) {
+        switch (Queue.pop(queue.rear)) {
+        | (Some(chunk), rear) => {...queue, front: chunk, rear}
+        | (None, rear) => {...queue, front: [], rear}
+        };
+      } else {
+        queue;
+      };
+
+    switch (queue.front) {
+    | [item, ...tail] => (
+        Some(item),
+        {...queue, front: tail, length: queue.length - 1},
+      )
+    | [] => (None, queue)
+    };
+  };
+
+  let rec take = (count, queue) =>
+    if (count == 0) {
+      ([], queue);
+    } else {
+      switch (pop(queue)) {
+      | (Some(item), queue) =>
+        let (items, queue) = take(count - 1, queue);
+        ([item, ...items], queue);
+
+      | (None, queue) => ([], queue)
+      };
+    };
+
   let toList = ({front, rear, _}) =>
-    front @ List.rev(rear)
-}
+    front @ (Queue.toList(rear) |> List.concat);
+};
