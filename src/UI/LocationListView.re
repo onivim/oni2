@@ -65,9 +65,7 @@ let item =
       ~item: LocationListItem.t,
       (),
     ) => {
-  let directory = Rench.Environment.getWorkingDirectory();
-  let re = Str.regexp_string(directory ++ Filename.dir_sep);
-  let getDisplayPath = fullPath => Str.replace_first(re, "", fullPath);
+  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
   let onClick = () => {
     GlobalContext.current().dispatch(
@@ -80,7 +78,7 @@ let item =
   let locationText =
     Printf.sprintf(
       "%s:%n - ",
-      getDisplayPath(item.file),
+      Workspace.toRelativePath(workingDirectory, item.file),
       Index.toOneBased(item.location.line),
     );
 
