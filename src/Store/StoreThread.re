@@ -116,7 +116,7 @@ let start =
     };
 
   let extensions = discoverExtensions(setup, cliOptions);
-  let languageInfo = Model.LanguageInfo.ofExtensions(extensions);
+  let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let contributedCommands = Model.Commands.ofExtensions(extensions);
 

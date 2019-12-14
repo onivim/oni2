@@ -307,8 +307,8 @@ module Option = {
 
   let flatten =
     fun
-    | Some(Some(x)) => Some(x)
-    | _ => None;
+    | Some(x) => x
+    | None => None;
 
   let join =
     fun

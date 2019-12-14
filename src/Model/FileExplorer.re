@@ -1,5 +1,6 @@
 open Revery;
 open Oni_Core;
+open Oni_Extensions;
 
 type t = {
   tree: option(FsTreeNode.t),

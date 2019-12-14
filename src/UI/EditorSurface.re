@@ -383,17 +383,12 @@ let%component make =
         | _ => None
         };
 
-      let tokenColors2 =
-        switch (
-          SyntaxHighlighting.getTokensForLine(
-            state.syntaxHighlighting,
-            bufferId,
-            i,
-          )
-        ) {
-        | [] => []
-        | v => v
-        };
+      let tokenColors =
+        BufferSyntaxHighlights.getTokens(
+          bufferId,
+          Index.fromZeroBased(i),
+          state.bufferSyntaxHighlights,
+        );
 
       let colorizer =
         BufferLineColorizer.create(
@@ -406,7 +401,7 @@ let%component make =
           ~matchingPair=matchingPairIndex,
           ~searchHighlights=highlights,
           ~searchHighlightColor=theme.editorFindMatchBackground,
-          tokenColors2,
+          tokenColors,
         );
 
       BufferViewTokenizer.tokenize(

@@ -12,14 +12,14 @@ module Option = Core.Utility.Option;
 
 open Oni_Model;
 
-module Extensions = Oni_Extensions;
+module Ext = Oni_Extensions;
 
 module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
     (
-      languageInfo: LanguageInfo.t,
+      languageInfo: Ext.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -173,7 +173,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -316,7 +316,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
       dispatch(Actions.BufferEnter(meta, fileType));
@@ -543,7 +543,7 @@ let start =
       let fileType =
         switch (metadata.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 

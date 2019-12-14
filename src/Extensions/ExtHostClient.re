@@ -39,6 +39,7 @@ let start =
       ~onRegisterCommand=noop1,
       ~onRegisterDefinitionProvider=noop2,
       ~onRegisterDocumentHighlightProvider=noop2,
+      ~onRegisterDocumentSymbolProvider=noop2,
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
@@ -50,6 +51,15 @@ let start =
 
   let onMessage = (scope, method, args) => {
     switch (scope, method, args) {
+    | ("MainThreadLanguageFeatures", "$registerDocumentSymbolProvider", args) =>
+      Option.iter(
+        client => {
+          In.LanguageFeatures.parseDocumentSymbolProvider(args)
+          |> Option.iter(onRegisterDocumentSymbolProvider(client))
+        },
+        client^,
+      );
+      Ok(None);
     | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
       Option.iter(
         client => {
@@ -227,6 +237,25 @@ let provideDocumentHighlights = (id, uri, position, client) => {
       ~msgType=MessageType.requestJsonArgsWithCancellation,
       client,
       Out.LanguageFeatures.provideDocumentHighlights(id, uri, position),
+      f,
+    );
+  promise;
+};
+
+let provideDocumentSymbols = (id, uri, client) => {
+  let f = (json: Yojson.Safe.t) => {
+    let default: list(DocumentSymbol.t) = [];
+    switch (json) {
+    | `List(symbols) => List.map(DocumentSymbol.of_yojson_exn, symbols)
+    | _ => default
+    };
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.LanguageFeatures.provideDocumentSymbols(id, uri),
       f,
     );
   promise;

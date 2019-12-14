@@ -8,65 +8,30 @@
  */
 
 module Core = Oni_Core;
-module Model = Oni_Model;
-module Extensions = Oni_Extensions;
+open Core.Utility;
 
-open Oni_Syntax.TreeSitterScopes;
+module Model = Oni_Model;
+module Ext = Oni_Extensions;
+
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
+module Protocol = Oni_Syntax.Protocol;
 
 module Log = Core.Log;
 
-module GrammarRepository = {
-  type t = {scopeToGrammar: Core.StringMap.t(Textmate.Grammar.t)};
+let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
+  let (stream, dispatch) = Isolinear.Stream.create();
 
-  let ofLanguageInfo = (languageInfo: Model.LanguageInfo.t) => {
-    let scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t) =
-      Hashtbl.create(32);
-
-    let f = scope => {
-      switch (Hashtbl.find_opt(scopeToGrammar, scope)) {
-      | Some(v) => Some(v)
-      | None =>
-        switch (
-          Model.LanguageInfo.getGrammarPathFromScope(languageInfo, scope)
-        ) {
-        | Some(grammarPath) =>
-          Log.info("GrammarRepository - Loading grammar: " ++ grammarPath);
-          let json = Yojson.Safe.from_file(grammarPath);
-          let grammar = Textmate.Grammar.Json.of_yojson(json);
-
-          switch (grammar) {
-          | Ok(g) =>
-            Hashtbl.add(scopeToGrammar, scope, g);
-            Some(g);
-          | Error(e) =>
-            Log.error("Error parsing grammar: " ++ e);
-            None;
-          };
-        | None => None
-        }
-      };
-    };
-
-    f;
-  };
-};
-
-let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-  let jsonTreeSitterScopes =
-    setup.bundledExtensionsPath ++ "/json/syntaxes/tree-sitter-json.json";
-
-  let parsedTreeSitterScopes = Yojson.Safe.from_file(jsonTreeSitterScopes);
-  let treeSitterJson =
-    Yojson.Safe.Util.member("scopes", parsedTreeSitterScopes);
-  let treeSitterScopes = TextMateConverter.of_yojson(treeSitterJson);
-
-  let getTreeSitterScopeMapper = () => {
-    treeSitterScopes;
+  let onHighlights = tokenUpdates => {
+    dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates));
   };
 
-  let getTextmateGrammar = GrammarRepository.ofLanguageInfo(languageInfo);
+  let _syntaxClient =
+    Oni_Syntax_Client.start(
+      ~scheduler=Revery.App.runOnMainThread,
+      ~onHighlights,
+      languageInfo,
+      setup,
+    );
 
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
@@ -82,42 +47,79 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     };
   };
 
-  let getScopeForBuffer = (state: Model.State.t, id: int) => {
-    switch (Model.Buffers.getBuffer(id, state.buffers)) {
-    | None => None
-    | Some(buffer) =>
-      switch (Core.Buffer.getFileType(buffer)) {
-      | None => None
-      | Some(v) => Model.LanguageInfo.getScopeFromLanguage(languageInfo, v)
+  let bufferEnterEffect = (id: int, fileType) =>
+    Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
+      fileType
+      |> Option.iter(fileType =>
+           Oni_Syntax_Client.notifyBufferEnter(_syntaxClient, id, fileType)
+         )
+    });
+
+  let bufferUpdateEffect =
+      (bufferUpdate: Oni_Core.BufferUpdate.t, lines, maybeScope) =>
+    Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
+      switch (maybeScope) {
+      | None => ()
+      | Some(scope) =>
+        Oni_Syntax_Client.notifyBufferUpdate(
+          _syntaxClient,
+          bufferUpdate,
+          lines,
+          scope,
+        )
       }
-    };
-  };
+    });
+
+  let configurationChangeEffect = (config: Core.Configuration.t) =>
+    Isolinear.Effect.create(~name="syntax.configurationChange", () => {
+      Oni_Syntax_Client.notifyConfigurationChanged(_syntaxClient, config)
+    });
+
+  let themeChangeEffect = theme =>
+    Isolinear.Effect.create(~name="syntax.theme", () => {
+      Oni_Syntax_Client.notifyThemeChanged(_syntaxClient, theme)
+    });
+
+  let visibilityChangedEffect = visibleRanges =>
+    Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
+      Oni_Syntax_Client.notifyVisibilityChanged(_syntaxClient, visibleRanges)
+    });
 
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
 
+  let getScopeForBuffer = (state: Model.State.t, id: int) => {
+    state.buffers
+    |> Model.Buffers.getBuffer(id)
+    |> Option.bind(buf => Core.Buffer.getFileType(buf))
+    |> Option.bind(fileType =>
+         Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
+       );
+  };
+
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.SetTokenTheme(tokenTheme) =>
-      let state = {
-        ...state,
-        syntaxHighlighting:
-          Model.SyntaxHighlighting.updateTheme(
-            tokenTheme,
-            state.syntaxHighlighting,
-          ),
-      };
-      (state, Isolinear.Effect.none);
-    | Model.Actions.Tick(_) =>
-      if (Model.SyntaxHighlighting.anyPendingWork(state.syntaxHighlighting)) {
-        let syntaxHighlighting =
-          Model.SyntaxHighlighting.doPendingWork(state.syntaxHighlighting);
-        ({...state, syntaxHighlighting}, Isolinear.Effect.none);
-      } else {
-        default;
-      }
+    | Model.Actions.ConfigurationSet(config) => (
+        state,
+        configurationChangeEffect(config),
+      )
+    | Model.Actions.SetTokenTheme(tokenTheme) => (
+        state,
+        themeChangeEffect(tokenTheme),
+      )
+    | Model.Actions.BufferEnter(metadata, fileType) =>
+      let visibleBuffers =
+        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+
+      let combinedEffects =
+        Isolinear.Effect.batch([
+          visibilityChangedEffect(visibleBuffers),
+          bufferEnterEffect(Vim.BufferMetadata.(metadata.id), fileType),
+        ]);
+
+      (state, combinedEffects);
     // When the view changes, update our list of visible buffers,
     // so we know which ones might have pending work!
     | Model.Actions.EditorGroupAdd(_)
@@ -127,45 +129,21 @@ let start = (languageInfo: Model.LanguageInfo.t, setup: Core.Setup.t) => {
     | Model.Actions.AddSplit(_)
     | Model.Actions.RemoveSplit(_)
     | Model.Actions.ViewSetActiveEditor(_)
-    | Model.Actions.BufferEnter(_)
+    //| Model.Actions.BufferEnter(_)
     | Model.Actions.ViewCloseEditor(_) =>
       let visibleBuffers =
         Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-      let state = {
-        ...state,
-        syntaxHighlighting:
-          Model.SyntaxHighlighting.updateVisibleBuffers(
-            visibleBuffers,
-            state.syntaxHighlighting,
-          ),
-      };
-      (state, Isolinear.Effect.none);
+      (state, visibilityChangedEffect(visibleBuffers));
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate(bu) =>
       let lines = getLines(state, bu.id);
-      let scope = getScopeForBuffer(state, bu.id);
       let version = getVersion(state, bu.id);
-      switch (scope) {
-      | None => default
-      | Some(scope) when isVersionValid(bu.version, version) =>
-        ignore(scope);
-        let state = {
-          ...state,
-          syntaxHighlighting:
-            Model.SyntaxHighlighting.onBufferUpdate(
-              ~configuration=state.configuration,
-              ~scope,
-              ~getTextmateGrammar,
-              ~getTreeSitterScopeMapper,
-              ~bufferUpdate=bu,
-              ~lines,
-              ~theme=state.tokenTheme,
-              state.syntaxHighlighting,
-            ),
-        };
-        (state, Isolinear.Effect.none);
-      | Some(_) => default
+      let scope = getScopeForBuffer(state, bu.id);
+      if (!isVersionValid(version, bu.version)) {
+        default;
+      } else {
+        (state, bufferUpdateEffect(bu, lines, scope));
       };
     | _ => default
     };

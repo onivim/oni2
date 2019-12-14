@@ -19,10 +19,11 @@ type t =
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate(BufferUpdate.t)
+  | BufferUpdate([@opaque] BufferUpdate.t)
   | BufferSaved([@opaque] Vim.BufferMetadata.t)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
@@ -103,7 +104,7 @@ type t =
   | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
   | SetIconTheme([@opaque] IconTheme.t)
@@ -194,6 +195,7 @@ and quickmenuVariant =
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker
+  | DocumentSymbols
 and progress =
   | Loading
   | InProgress(float)

@@ -22,6 +22,12 @@ let start:
     ~onRegisterDefinitionProvider: (t, Protocol.BasicProvider.t) => unit=?,
     ~onRegisterDocumentHighlightProvider: (t, Protocol.BasicProvider.t) => unit
                                             =?,
+    ~onRegisterDocumentSymbolProvider: (
+                                         t,
+                                         Protocol.DocumentSymbolProvider.t
+                                       ) =>
+                                       unit
+                                         =?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
@@ -43,5 +49,7 @@ let provideDefinition:
 let provideDocumentHighlights:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(Protocol.DocumentHighlight.t));
+let provideDocumentSymbols:
+  (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;

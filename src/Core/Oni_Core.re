@@ -18,6 +18,7 @@ module Constants = Constants;
 module Cursor = Cursor;
 module EditorFont = EditorFont;
 module EditorSize = EditorSize;
+module EnvironmentVariables = EnvironmentVariables;
 module Filesystem = Filesystem;
 module Indentation = Indentation;
 module IndentationGuesser = IndentationGuesser;

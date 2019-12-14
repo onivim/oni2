@@ -46,33 +46,19 @@ module ExtensionCompletionProvider = {
   let create =
       (
         client: ExtHostClient.t,
-        suggestProvider: Protocol.SuggestProvider.t,
-        buffer,
-        _completionMeet,
-        location,
+        {id, selector}: Protocol.SuggestProvider.t,
+        (buffer, _completionMeet, location),
       ) =>
-    Core.Buffer.getFileType(buffer)
-    |> Option.map(
-         Extensions.DocumentSelector.matches(suggestProvider.selector),
-       )
-    |> Option.bind(matches => {
-         let uri = Core.Buffer.getUri(buffer);
-         let position = Protocol.OneBasedPosition.ofPosition(location);
-
-         if (matches) {
-           Some(
-             ExtHostClient.provideCompletions(
-               suggestProvider.id,
-               uri,
-               position,
-               client,
-             )
-             |> Lwt.map(suggestionsToCompletionItems),
-           );
-         } else {
-           None;
-         };
-       });
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Core.Buffer.getUri(buffer);
+        let position = Protocol.OneBasedPosition.ofPosition(location);
+        ExtHostClient.provideCompletions(id, uri, position, client)
+        |> Lwt.map(suggestionsToCompletionItems);
+      },
+    );
 };
 
 module ExtensionDefinitionProvider = {
@@ -91,29 +77,17 @@ module ExtensionDefinitionProvider = {
   };
 
   let create =
-      (client, definitionProvider: Protocol.BasicProvider.t, buffer, location) => {
-    Core.Buffer.getFileType(buffer)
-    |> Option.map(
-         Extensions.DocumentSelector.matches(definitionProvider.selector),
-       )
-    |> Option.bind(matches => {
-         let uri = Core.Buffer.getUri(buffer);
-         let position = Protocol.OneBasedPosition.ofPosition(location);
-
-         if (matches) {
-           Some(
-             ExtHostClient.provideDefinition(
-               definitionProvider.id,
-               uri,
-               position,
-               client,
-             )
-             |> Lwt.map(definitionToModel),
-           );
-         } else {
-           None;
-         };
-       });
+      (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Core.Buffer.getUri(buffer);
+        let position = Protocol.OneBasedPosition.ofPosition(location);
+        ExtHostClient.provideDefinition(id, uri, position, client)
+        |> Lwt.map(definitionToModel);
+      },
+    );
   };
 };
 
@@ -128,36 +102,32 @@ module ExtensionDocumentHighlightProvider = {
   };
 
   let create =
-      (
-        client,
-        documentHighlightProvider: Protocol.BasicProvider.t,
-        buffer,
-        location,
-      ) => {
-    Core.Buffer.getFileType(buffer)
-    |> Option.map(
-         Extensions.DocumentSelector.matches(
-           documentHighlightProvider.selector,
-         ),
-       )
-    |> Option.bind(matches => {
-         let uri = Core.Buffer.getUri(buffer);
-         let position = Protocol.OneBasedPosition.ofPosition(location);
+      (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Core.Buffer.getUri(buffer);
+        let position = Protocol.OneBasedPosition.ofPosition(location);
 
-         if (matches) {
-           Some(
-             ExtHostClient.provideDocumentHighlights(
-               documentHighlightProvider.id,
-               uri,
-               position,
-               client,
-             )
-             |> Lwt.map(definitionToModel),
-           );
-         } else {
-           None;
-         };
-       });
+        ExtHostClient.provideDocumentHighlights(id, uri, position, client)
+        |> Lwt.map(definitionToModel);
+      },
+    );
+  };
+};
+
+module ExtensionDocumentSymbolProvider = {
+  let create =
+      (client, {id, selector, _}: Protocol.DocumentSymbolProvider.t, buffer) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Core.Buffer.getUri(buffer);
+        ExtHostClient.provideDocumentSymbols(id, uri, client);
+      },
+    );
   };
 };
 
@@ -226,6 +196,23 @@ let start = (extensions, setup: Core.Setup.t) => {
     Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
+  let onRegisterDocumentSymbolProvider = (client, provider) => {
+    let id =
+      Protocol.DocumentSymbolProvider.(
+        "exthost." ++ string_of_int(provider.id)
+      );
+    let documentSymbolProvider =
+      ExtensionDocumentSymbolProvider.create(client, provider);
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.DocumentSymbolProviderAvailable(
+          id,
+          documentSymbolProvider,
+        ),
+      ),
+    );
+  };
+
   let onRegisterDocumentHighlightProvider = (client, provider) => {
     let id =
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
@@ -286,6 +273,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onDidActivateExtension,
       ~onRegisterDefinitionProvider,
       ~onRegisterDocumentHighlightProvider,
+      ~onRegisterDocumentSymbolProvider,
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,

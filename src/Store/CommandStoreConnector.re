@@ -94,6 +94,12 @@ let createDefaultCommands = getState => {
         ~action=CopyActiveFilepathToClipboard,
         (),
       ),
+      Command.create(
+        ~category=None,
+        ~name="Goto symbol in file...",
+        ~action=QuickmenuShow(DocumentSymbols),
+        (),
+      ),
     ]
   );
 };
@@ -171,6 +177,10 @@ let start = (getState, contributedCommands) => {
     (
       "workbench.action.showCommands",
       _ => singleActionEffect(QuickmenuShow(CommandPalette)),
+    ),
+    (
+      "workbench.action.gotoSymbol",
+      _ => singleActionEffect(QuickmenuShow(DocumentSymbols)),
     ),
     (
       "workbench.action.openNextRecentlyUsedEditorInGroup",
