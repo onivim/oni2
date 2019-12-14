@@ -167,7 +167,8 @@ let start =
 
   let completionUpdater = CompletionStoreConnector.start();
 
-  let (hoverUpdater, hoverStream) = HoverStoreConnector.start();
+  let (languageFeatureUpdater, languageFeatureStream) =
+    LanguageFeatureConnector.start();
 
   let inputStream =
     InputStoreConnector.start(getState, window, runRunEffects);
@@ -196,7 +197,7 @@ let start =
           keyDisplayerUpdater,
           themeUpdater,
           acpUpdater,
-          hoverUpdater,
+          languageFeatureUpdater,
           completionUpdater,
           titleUpdater,
         ]),
@@ -292,7 +293,7 @@ let start =
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, windowStream);
   let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, hoverStream);
+    Isolinear.Stream.connect(dispatch, languageFeatureStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
   let _: Isolinear.Stream.unsubscribeFunc =

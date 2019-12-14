@@ -111,7 +111,7 @@ let resultToException = r => {
   switch (r) {
   | Ok(v) => v
   | Error(msg) => raise(ResultError(msg))
-  } 
+  };
 };
 
 type commandLineCompletionMeet = {

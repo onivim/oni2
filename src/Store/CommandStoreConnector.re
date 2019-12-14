@@ -77,6 +77,12 @@ let createDefaultCommands = getState => {
         (),
       ),
       Command.create(
+        ~category=Some("References"),
+        ~name="Find all References",
+        ~action=Command("references-view.find"),
+        (),
+      ),
+      Command.create(
         ~category=Some("View"),
         ~name="Rotate Windows (Forwards)",
         ~action=Command("view.rotateForward"),
@@ -177,6 +183,10 @@ let start = (getState, contributedCommands) => {
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
+    (
+      "references-view.find",
+      _ => singleActionEffect(FindAllReferencesRequested),
+    ),
     (
       "workbench.action.showCommands",
       _ => singleActionEffect(QuickmenuShow(CommandPalette)),

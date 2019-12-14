@@ -1,11 +1,12 @@
 /*
- * HoverStoreConnector.re
+ * LanguageFeatureConnector.re
  *
- * This implements an updater (reducer + side effects) for the Hover UX
+ * This implements an updater (reducer + side effects) for language features
  */
 
 open EditorCoreTypes;
 module Core = Oni_Core;
+module Utility = Core.Utility;
 module Ext = Oni_Extensions;
 module Model = Oni_Model;
 
@@ -14,14 +15,16 @@ module Animation = Model.Animation;
 module BufferHighlights = Model.BufferHighlights;
 module Quickmenu = Model.Quickmenu;
 
-module Log = (val Oni_Core.Log.withNamespace("Oni2.HoverStoreConnector"));
+module Log = (
+  val Oni_Core.Log.withNamespace("Oni2.LanguageFeatureConnector")
+);
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
   let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="hover.checkForDefinition", dispatch => {
+      ~name="languageFeature.checkForDefinition", dispatch => {
       Log.info("Checking for definition...");
 
       let getDefinitionPromise =
@@ -70,18 +73,46 @@ let start = () => {
       ();
     });
 
+  let findAllReferences = state =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="languageFeature.findAllReferences", dispatch => {
+      let maybeBuffer = state |> Model.Selectors.getActiveBuffer;
+
+      let maybeEditor =
+        state
+        |> Model.Selectors.getActiveEditorGroup
+        |> Model.Selectors.getActiveEditor;
+
+      let request = (buffer, editor) => {
+        let location = Model.Editor.getPrimaryCursor(editor);
+        let promise =
+          Model.LanguageFeatures.requestFindAllReferences(
+            ~buffer,
+            ~location,
+            state.languageFeatures,
+          );
+
+        Lwt.on_success(promise, result => {
+          dispatch(Actions.FindAllReferencesSet(result))
+        });
+      };
+
+      Utility.Option.iter2(request, maybeBuffer, maybeEditor);
+    });
+
   let updater = (state: Model.State.t, action: Actions.t) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    /* Actions.Tick({deltaTime, _}) =>
-       if (Model.Hover.isAnimationActive(state.hover)) {
-         let hover = state.hover |> Model.Hover.tick(deltaTime);
-         let newState = {...state, hover};
+    | Actions.Tick({deltaTime, _}) =>
+      if (Model.Hover.isAnimationActive(state.hover)) {
+        let hover = state.hover |> Model.Hover.tick(deltaTime);
+        let newState = {...state, hover};
 
-         (newState, Isolinear.Effect.none);
-       } else {
-         default;
-       }*/
+        (newState, Isolinear.Effect.none);
+      } else {
+        default;
+      }
+    | Actions.FindAllReferencesRequested => (state, findAllReferences(state))
     | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)

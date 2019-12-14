@@ -24,7 +24,11 @@ let reduce = (action: Actions.t, state: LanguageFeatures.t) => {
     | DocumentSymbolProviderAvailable(id, provider) =>
       LanguageFeatures.registerDocumentSymbolProvider(~id, ~provider, state)
     | FindAllReferencesProviderAvailable(id, provider) =>
-      LanguageFeatures.registerFindAllReferencesProvider(~id, ~provider, state)
+      LanguageFeatures.registerFindAllReferencesProvider(
+        ~id,
+        ~provider,
+        state,
+      )
     }
   | _ => state
   };

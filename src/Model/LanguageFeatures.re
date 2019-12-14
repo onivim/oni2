@@ -79,7 +79,7 @@ module DocumentHighlightProvider =
     let aggregate = joinAll;
   });
 
-module FindAllReferencesProvider = 
+module FindAllReferencesProvider =
   LanguageFeature.Make({
     type params = (Buffer.t, Location.t);
     type response = list(LocationWithUri.t);
@@ -100,7 +100,10 @@ type action =
       string,
       [@opaque] DocumentHighlightProvider.t,
     )
-  | FindAllReferencesProviderAvailable(string, [@opaque] FindAllReferencesProvider. t);
+  | FindAllReferencesProviderAvailable(
+      string,
+      [@opaque] FindAllReferencesProvider.t,
+    );
 
 type t = {
   completionProviders: CompletionProvider.providers,
@@ -138,10 +141,10 @@ let requestCompletions =
 };
 
 let requestFindAllReferences =
-  (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
-    lf.findAllReferencesProviders
-    |> FindAllReferencesProvider.request((buffer, location));
-  }
+    (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
+  lf.findAllReferencesProviders
+  |> FindAllReferencesProvider.request((buffer, location));
+};
 
 let registerCompletionProvider = (~id, ~provider: CompletionProvider.t, lf: t) => {
   ...lf,
@@ -171,12 +174,13 @@ let registerDocumentSymbolProvider =
     |> DocumentSymbolProvider.register(~id, provider),
 };
 
-let registerFindAllReferencesProvider = 
-  (~id, ~provider: FindAllReferencesProvider.t, lf: t) => {
+let registerFindAllReferencesProvider =
+    (~id, ~provider: FindAllReferencesProvider.t, lf: t) => {
   ...lf,
   findAllReferencesProviders:
-  lf.findAllReferencesProviders |> FindAllReferencesProvider.register(~id, provider)
-  };
+    lf.findAllReferencesProviders
+    |> FindAllReferencesProvider.register(~id, provider),
+};
 
 let getCompletionProviders = (lf: t) =>
   lf.completionProviders |> CompletionProvider.get;
