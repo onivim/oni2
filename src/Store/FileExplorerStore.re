@@ -31,8 +31,8 @@ let nodeOffsetByPath = (tree, path) => {
   let rec loop = (node: FsTreeNode.t, path) =>
     switch (path) {
     | [] => failwith("Well, this is awkward (ie. unreachable)")
-    | [focus, ...focusTail] =>
-      if (focus != node) {
+    | [(focus: FsTreeNode.t), ...focusTail] =>
+      if (focus.id != node.id) {
         `NotFound(node.expandedSubtreeSize);
       } else {
         switch (node.kind) {
