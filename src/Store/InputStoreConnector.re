@@ -145,6 +145,7 @@ let start =
       switch (state.quickmenu) {
       | Some({variant: Wildmenu(_), _}) => Wildmenu
 
+      | Some({variant: DocumentSymbols, _})
       | Some({variant: CommandPalette, _})
       | Some({variant: EditorsPicker, _})
       | Some({variant: FilesPicker, _})
