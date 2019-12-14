@@ -17,7 +17,8 @@ and variant =
     | EditorsPicker
     | FilesPicker
     | Wildmenu(Vim.Types.cmdlineType)
-    | ThemesPicker;
+    | ThemesPicker
+    | DocumentSymbols;
 
 let defaults = variant => {
   variant,

@@ -196,6 +196,7 @@ and quickmenuVariant =
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker
+  | DocumentSymbols
 and progress =
   | Loading
   | InProgress(float)

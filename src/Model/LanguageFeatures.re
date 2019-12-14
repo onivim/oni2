@@ -7,18 +7,20 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-module CompletionLog = (val Log.withNamespace("Oni2.CompletionProvider"));
+module DocumentSymbol = Oni_Extensions.DocumentSymbol;
+module SymbolKind = Oni_Extensions.SymbolKind;
 
-module CompletionProvider = {
-  type t =
-    (Buffer.t, CompletionMeet.t, Location.t) =>
-    option(Lwt.t(list(CompletionItem.t)));
+let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
+  promises => Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
 
-  type info = {
-    provider: t,
-    id: string,
-  };
-};
+module CompletionProvider =
+  LanguageFeature.Make({
+    type params = (Buffer.t, CompletionMeet.t, Location.t);
+    type response = list(CompletionItem.t);
+
+    let namespace = "Oni2.CompletionProvider";
+    let aggregate = joinAll;
+  });
 
 module DefinitionResult = {
   type t = {
@@ -42,14 +44,23 @@ module DefinitionResult = {
     );
 };
 
-module DefinitionProvider = {
-  type t = (Buffer.t, Location.t) => option(Lwt.t(DefinitionResult.t));
+module DefinitionProvider =
+  LanguageFeature.Make({
+    type params = (Buffer.t, Location.t);
+    type response = DefinitionResult.t;
 
-  type info = {
-    provider: t,
-    id: string,
-  };
-};
+    let namespace = "Oni2.DefinitionProvider";
+    let aggregate = Lwt.choose;
+  });
+
+module DocumentSymbolProvider =
+  LanguageFeature.Make({
+    type params = Buffer.t;
+    type response = list(DocumentSymbol.t);
+
+    let namespace = "Oni2.DocumentSymbolProvider";
+    let aggregate = joinAll;
+  });
 
 module DocumentHighlightResult = {
   // TODO: Add highlight kind
@@ -58,18 +69,21 @@ module DocumentHighlightResult = {
   let create = (~ranges) => ranges;
 };
 
-module DocumentHighlightProvider = {
-  type t =
-    (Buffer.t, Location.t) => option(Lwt.t(DocumentHighlightResult.t));
+module DocumentHighlightProvider =
+  LanguageFeature.Make({
+    type params = (Buffer.t, Location.t);
+    type response = list(Range.t);
 
-  type info = {
-    id: string,
-    provider: t,
-  };
-};
+    let namespace = "Oni2.DocumentHighlightProvider";
+    let aggregate = joinAll;
+  });
 
 [@deriving show({with_path: false})]
 type action =
+  | DocumentSymbolProviderAvailable(
+      string,
+      [@opaque] DocumentSymbolProvider.t,
+    )
   | CompletionProviderAvailable(string, [@opaque] CompletionProvider.t)
   | DefinitionProviderAvailable(string, [@opaque] DefinitionProvider.t)
   | DocumentHighlightProviderAvailable(
@@ -78,91 +92,76 @@ type action =
     );
 
 type t = {
-  completionProviders: list(CompletionProvider.info),
-  definitionProviders: list(DefinitionProvider.info),
-  documentHighlightProviders: list(DocumentHighlightProvider.info),
+  completionProviders: CompletionProvider.providers,
+  definitionProviders: DefinitionProvider.providers,
+  documentHighlightProviders: DocumentHighlightProvider.providers,
+  documentSymbolProviders: DocumentSymbolProvider.providers,
 };
 
 let empty = {
   completionProviders: [],
   definitionProviders: [],
   documentHighlightProviders: [],
+  documentSymbolProviders: [],
+};
+
+let requestDocumentSymbol = (~buffer: Buffer.t, lf: t) => {
+  DocumentSymbolProvider.request(buffer, lf.documentSymbolProviders);
 };
 
 let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
-  lf.definitionProviders
-  |> List.map((DefinitionProvider.{provider, _}) =>
-       provider(buffer, location)
-     )
-  |> Utility.Option.values
-  |> Lwt.choose;
+  lf.definitionProviders |> DefinitionProvider.request((buffer, location));
 };
-exception TestFailure;
-
 let requestDocumentHighlights =
     (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
-  let promises =
-    lf.documentHighlightProviders
-    |> List.map((DocumentHighlightProvider.{provider, _}) =>
-         provider(buffer, location)
-       )
-    |> Utility.Option.values;
-
-  let join = (accCompletions, currCompletions) =>
-    accCompletions @ currCompletions;
-
-  Utility.LwtUtil.all(join, promises);
+  lf.documentHighlightProviders
+  |> DocumentHighlightProvider.request((buffer, location));
 };
 
 let requestCompletions =
     (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
-  let promises =
-    lf.completionProviders
-    |> List.map((CompletionProvider.{id, provider}) => {
-         let result = provider(buffer, meet, location);
-         switch (result) {
-         | Some(_) =>
-           CompletionLog.infof(m => m("Querying completion provider: %s", id))
-         | None =>
-           CompletionLog.infof(m => m("Completion provider skipped: %s", id))
-         };
-         result;
-       })
-    |> Utility.Option.values;
-
-  let join = (accCompletions, currCompletions) =>
-    accCompletions @ currCompletions;
-
-  Utility.LwtUtil.all(join, promises);
+  lf.completionProviders
+  |> CompletionProvider.request((buffer, meet, location));
 };
 
 let registerCompletionProvider = (~id, ~provider: CompletionProvider.t, lf: t) => {
   ...lf,
-  completionProviders: [{id, provider}, ...lf.completionProviders],
+  completionProviders:
+    lf.completionProviders |> CompletionProvider.register(~id, provider),
 };
 
 let registerDefinitionProvider = (~id, ~provider: DefinitionProvider.t, lf: t) => {
   ...lf,
-  definitionProviders: [{id, provider}, ...lf.definitionProviders],
+  definitionProviders:
+    DefinitionProvider.register(~id, provider, lf.definitionProviders),
 };
 
 let registerDocumentHighlightProvider =
     (~id, ~provider: DocumentHighlightProvider.t, lf: t) => {
   ...lf,
-  documentHighlightProviders: [
-    {id, provider},
-    ...lf.documentHighlightProviders,
-  ],
+  documentHighlightProviders:
+    lf.documentHighlightProviders
+    |> DocumentHighlightProvider.register(~id, provider),
+};
+
+let registerDocumentSymbolProvider =
+    (~id, ~provider: DocumentSymbolProvider.t, lf: t) => {
+  ...lf,
+  documentSymbolProviders:
+    lf.documentSymbolProviders
+    |> DocumentSymbolProvider.register(~id, provider),
 };
 
 let getCompletionProviders = (lf: t) =>
-  lf.completionProviders |> List.map((CompletionProvider.{id, _}) => id);
+  lf.completionProviders |> CompletionProvider.get;
 
 let getDefinitionProviders = (lf: t) => {
-  lf.definitionProviders |> List.map((DefinitionProvider.{id, _}) => id);
+  lf.definitionProviders |> DefinitionProvider.get;
 };
 
 let getDocumentHighlightProviders = (lf: t) => {
-  lf.documentHighlightProviders
-  |> List.map((DocumentHighlightProvider.{id, _}) => id);
+  lf.documentHighlightProviders |> DocumentHighlightProvider.get;
 };
+
+let getDocumentSymbolProviders = lf =>
+  lf.documentSymbolProviders |> DocumentSymbolProvider.get;
