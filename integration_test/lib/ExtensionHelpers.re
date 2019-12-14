@@ -51,16 +51,15 @@ let waitForNewCompletionProviders =
   f();
 
   waitForState(
-      ~timeout=10.0,
-      ~name="Waiting for new suggest providers: " ++ originalDescription,
-      (State.{languageFeatures, _}) => {
-        let current =
-          LanguageFeatures.getCompletionProviders(languageFeatures);
+    ~timeout=10.0,
+    ~name="Waiting for new suggest providers: " ++ originalDescription,
+    (State.{languageFeatures, _}) => {
+      let current = LanguageFeatures.getCompletionProviders(languageFeatures);
 
-        Log.info("Current suggest providers: ");
-        List.iter(id => Log.info("-- " ++ id), current);
+      Log.info("Current suggest providers: ");
+      List.iter(id => Log.info("-- " ++ id), current);
 
-        List.length(current) > existingCompletionCount^;
-      },
-    );
+      List.length(current) > existingCompletionCount^;
+    },
+  );
 };
