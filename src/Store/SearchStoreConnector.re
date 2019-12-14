@@ -32,6 +32,7 @@ let start = () => {
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
 
+    | ActivityBar(Model.ActivityBar.SearchClick)
     | SearchShow => (
         {...state, searchPane: Some(Model.Search.initial)},
         Isolinear.Effect.none,
