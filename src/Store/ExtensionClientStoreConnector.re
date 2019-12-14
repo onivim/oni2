@@ -117,6 +117,22 @@ module ExtensionDocumentHighlightProvider = {
   };
 };
 
+module ExtensionFindAllReferencesProvider = {
+  let create =
+      (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Core.Buffer.getUri(buffer);
+        let position = Protocol.OneBasedPosition.ofPosition(location);
+
+        ExtHostClient.provideReferences(id, uri, position, client);
+      },
+    );
+  };
+};
+
 module ExtensionDocumentSymbolProvider = {
   let create =
       (client, {id, selector, _}: Protocol.DocumentSymbolProvider.t, buffer) => {
@@ -213,6 +229,21 @@ let start = (extensions, setup: Core.Setup.t) => {
     );
   };
 
+  let onRegisterReferencesProvider = (client, provider) => {
+    let id =
+      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+    let findAllReferencesProvider =
+      ExtensionFindAllReferencesProvider.create(client, provider);
+    dispatch(
+      Oni_Model.Actions.LanguageFeature(
+        Model.LanguageFeatures.FindAllReferencesProviderAvailable(
+          id,
+          findAllReferencesProvider,
+        ),
+      ),
+    );
+  };
+
   let onRegisterDocumentHighlightProvider = (client, provider) => {
     let id =
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
@@ -274,6 +305,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onRegisterDefinitionProvider,
       ~onRegisterDocumentHighlightProvider,
       ~onRegisterDocumentSymbolProvider,
+      ~onRegisterReferencesProvider,
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,

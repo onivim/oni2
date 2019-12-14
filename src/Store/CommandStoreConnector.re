@@ -185,7 +185,7 @@ let start = (getState, contributedCommands) => {
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     (
       "references-view.find",
-      _ => singleActionEffect(FindAllReferencesRequested),
+      _ => singleActionEffect(References(References.Requested)),
     ),
     (
       "workbench.action.showCommands",

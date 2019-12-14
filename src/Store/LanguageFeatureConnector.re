@@ -93,7 +93,7 @@ let start = () => {
           );
 
         Lwt.on_success(promise, result => {
-          dispatch(Actions.FindAllReferencesSet(result))
+          dispatch(Actions.References(Model.References.Set(result)))
         });
       };
 
@@ -112,7 +112,15 @@ let start = () => {
       } else {
         default;
       }
-    | Actions.FindAllReferencesRequested => (state, findAllReferences(state))
+
+    | Actions.References(Model.References.Requested) => (
+        state,
+        findAllReferences(state),
+      )
+    | Actions.References(Model.References.Set(references)) => (
+        {...state, references},
+        Isolinear.Effect.none,
+      )
     | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
       switch (Model.Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)

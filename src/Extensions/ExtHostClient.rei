@@ -28,6 +28,7 @@ let start:
                                        ) =>
                                        unit
                                          =?,
+    ~onRegisterReferencesProvider: (t, Protocol.BasicProvider.t) => unit=?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
@@ -51,5 +52,8 @@ let provideDocumentHighlights:
   Lwt.t(list(Protocol.DocumentHighlight.t));
 let provideDocumentSymbols:
   (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
+let provideReferences:
+  (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
+  Lwt.t(list(LocationWithUri.t));
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
