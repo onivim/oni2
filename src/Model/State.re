@@ -25,8 +25,6 @@ type t = {
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   sideBar: SideBar.t,
-  // New-school native syntax highlighting
-  syntaxHighlighting: SyntaxHighlighting.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -79,7 +77,6 @@ let create: unit => t =
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
     sideBar: SideBar.initial,
-    syntaxHighlighting: SyntaxHighlighting.empty,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
