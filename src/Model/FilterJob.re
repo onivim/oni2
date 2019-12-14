@@ -15,7 +15,7 @@ module Make = (Config: Config) => {
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
-  module Queue = Utility.Queue;
+  module Queue = Utility.ChunkyQueue;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
@@ -27,9 +27,8 @@ module Make = (Config: Config) => {
       filter: string,
       explodedFilter: list(UChar.t),
       shouldLower: bool,
-      totalItemCount: int,
-      allItems: Queue.t(list(Config.item)),
-      itemsToFilter: Queue.t(list(Config.item)),
+      allItems: Queue.t(Config.item),
+      queue: Queue.t(Config.item),
     };
 
     let create = () => {
@@ -37,16 +36,14 @@ module Make = (Config: Config) => {
       allItems: Queue.empty,
       explodedFilter: [],
       shouldLower: false,
-      itemsToFilter: Queue.empty,
-      totalItemCount: 0,
+      queue: Queue.empty,
     };
 
-    let toString = ({allItems, itemsToFilter, totalItemCount, _}) =>
+    let toString = ({allItems, queue, _}) =>
       Printf.sprintf(
-        "- Pending Work\n -- totalItemCount: %n -- allItems: %n -- itemsToFilter: %n",
-        totalItemCount,
+        "- Pending Work\n -- allItems: %n -- itemsToFilter: %n",
         Queue.length(allItems),
-        Queue.length(itemsToFilter),
+        Queue.length(queue),
       );
   };
 
@@ -126,7 +123,7 @@ module Make = (Config: Config) => {
         ...pending,
         filter,
         explodedFilter,
-        itemsToFilter: pending.allItems, // Reset items to filter
+        queue: pending.allItems, // Reset items to filter
         shouldLower,
       };
 
@@ -138,9 +135,8 @@ module Make = (Config: Config) => {
   let addItems = (items, pending: PendingWork.t, completed) => {
     let newPendingWork = {
       ...pending,
-      allItems: Queue.push(items, pending.allItems),
-      itemsToFilter: Queue.push(items, pending.itemsToFilter),
-      totalItemCount: pending.totalItemCount + List.length(items),
+      allItems: Queue.pushReversedChunk(items, pending.allItems),
+      queue: Queue.pushReversedChunk(items, pending.queue),
     };
 
     (false, newPendingWork, completed);
@@ -148,36 +144,24 @@ module Make = (Config: Config) => {
 
   let doActualWork =
       (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
-    let rec loop = (itemsToFilter, i, current, completed) =>
+    let rec loop = (queue, i, completed) =>
       if (i >= iterationsPerFrame) {
-        let itemsToFilter =
-          if (current != []) {
-            Queue.pushFront(current, itemsToFilter);
-          } else {
-            itemsToFilter;
-          };
-        (false, itemsToFilter, completed);
+        (false, queue, completed);
       } else {
-        switch (current) {
-        | [item, ...rest] =>
+        switch (Queue.pop(queue)) {
+        | (Some(item), queue) =>
           // Do a first filter pass to check if the item satisifies the regex
           let name = format(item, ~shouldLower=pendingWork.shouldLower);
           let matches = Filter.fuzzyMatches(pendingWork.explodedFilter, name);
           let completed = matches ? [item, ...completed] : completed;
-          loop(itemsToFilter, i + 1, rest, completed);
+          loop(queue, i + 1, completed);
 
-        | [] =>
-          switch (Queue.pop(itemsToFilter)) {
-          | (Some(items), itemsToFilter) =>
-            loop(itemsToFilter, i, items, completed)
-
-          | (None, itemsToFilter) => (true, itemsToFilter, completed)
-          }
+        | (None, queue) => (true, queue, completed)
         };
       };
 
-    let (isComplete, itemsToFilter, allFiltered) =
-      loop(pendingWork.itemsToFilter, 0, [], allFiltered);
+    let (isComplete, queue, allFiltered) =
+      loop(pendingWork.queue, 0, allFiltered);
 
     let uiFiltered =
       allFiltered
@@ -186,7 +170,7 @@ module Make = (Config: Config) => {
 
     (
       isComplete,
-      {...pendingWork, itemsToFilter},
+      {...pendingWork, queue},
       CompletedWork.{allFiltered, uiFiltered},
     );
   };
@@ -194,7 +178,7 @@ module Make = (Config: Config) => {
   /* [doWork] is run each frame until the work is completed! */
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
-      let allFiltered = pending.allItems |> Queue.toList |> List.concat;
+      let allFiltered = pending.allItems |> Queue.toList;
       let uiFiltered =
         allFiltered |> List.map(item => Filter.{highlight: [], item});
       (true, pending, CompletedWork.{allFiltered, uiFiltered});
@@ -203,10 +187,10 @@ module Make = (Config: Config) => {
     };
 
   let progressReporter = (pending: PendingWork.t, _) => {
-    let toFilter = float(Queue.length(pending.itemsToFilter));
-    let total = float(Queue.length(pending.allItems));
+    let toFilter = Queue.length(pending.queue);
+    let total = Queue.length(pending.allItems);
 
-    1.0 -. toFilter /. total;
+    1.0 -. float(toFilter) /. float(total);
   };
 
   let create = () => {
