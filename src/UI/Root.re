@@ -57,16 +57,19 @@ let make = (~state: State.t, ()) => {
     | None => React.empty
     };
 
-  let sideBar = state.sideBar.isOpen ? React.listToElement([
-      <SideBarView state />,
-      <WindowHandle direction=Vertical theme />
-  ]) : React.empty;
+  let sideBar =
+    state.sideBar.isOpen
+      ? React.listToElement([
+          <SideBarView state />,
+          <WindowHandle direction=Vertical theme />,
+        ])
+      : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
     <View style=Styles.surface>
       <Dock state />
       <WindowHandle direction=Vertical theme />
-      {sideBar}
+      sideBar
       <EditorView state />
     </View>
     searchPane
