@@ -2,6 +2,12 @@
      FilterJob is a Job.t that describes how to break up the work of filtering
      items across multiple frames.
    */
+open Oni_Core;
+
+module Constants = {
+  let itemsPerFrame = 250;
+  let maxItemsToFilter = 250;
+};
 
 module type Config = {
   type item;
@@ -10,8 +16,6 @@ module type Config = {
 };
 
 module Make = (Config: Config) => {
-  open Oni_Core;
-
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
@@ -68,10 +72,6 @@ module Make = (Config: Config) => {
 
   type t = Job.t(PendingWork.t, CompletedWork.t);
 
-  // Constants
-  let iterationsPerFrame = 250;
-  let maxItemsToFilter = 250;
-
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
   let updateQuery =
       (
@@ -87,12 +87,13 @@ module Make = (Config: Config) => {
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = Utility.firstk(maxItemsToFilter, allFiltered);
+    let currentMatches =
+      Utility.firstk(Constants.maxItemsToFilter, allFiltered);
 
     // If the new query matches the old one... we can re-use results
     if (pending.filter != ""
         && Filter.fuzzyMatches(oldExplodedFilter, filter)
-        && List.length(currentMatches) < maxItemsToFilter) {
+        && List.length(currentMatches) < Constants.maxItemsToFilter) {
       let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
 
       let newCompletedWork =
@@ -143,33 +144,37 @@ module Make = (Config: Config) => {
   };
 
   let doActualWork =
-      (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
-    let rec loop = (queue, i, completed) =>
-      if (i >= iterationsPerFrame) {
-        (false, queue, completed);
-      } else {
-        switch (Queue.pop(queue)) {
-        | (Some(item), queue) =>
-          // Do a first filter pass to check if the item satisifies the regex
-          let name = format(item, ~shouldLower=pendingWork.shouldLower);
-          let matches = Filter.fuzzyMatches(pendingWork.explodedFilter, name);
-          let completed = matches ? [item, ...completed] : completed;
-          loop(queue, i + 1, completed);
+      (
+        {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
+        {allFiltered, _}: CompletedWork.t,
+      ) => {
+    // Take out the items to process this frame
+    let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
-        | (None, queue) => (true, queue, completed)
-        };
-      };
+    // Do a first filter pass to check if the item satisifies the regex
+    let allFiltered =
+      List.fold_left(
+        (completed, item) => {
+          let name = format(item, ~shouldLower);
 
-    let (isComplete, queue, allFiltered) =
-      loop(pendingWork.queue, 0, allFiltered);
+          if (Filter.fuzzyMatches(explodedFilter, name)) {
+            [item, ...completed];
+          } else {
+            completed;
+          };
+        },
+        allFiltered,
+        items,
+      );
 
+    // Rank a limited nuumber of filtered items
     let uiFiltered =
       allFiltered
-      |> Utility.firstk(maxItemsToFilter)
-      |> Filter.rank(pendingWork.filter, format);
+      |> Utility.firstk(Constants.maxItemsToFilter)
+      |> Filter.rank(filter, format);
 
     (
-      isComplete,
+      Queue.isEmpty(queue),
       {...pendingWork, queue},
       CompletedWork.{allFiltered, uiFiltered},
     );

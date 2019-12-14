@@ -110,13 +110,11 @@ module RipgrepProcessingJob = {
         queue;
       };
 
-    let isDone = Queue.length(pending.queue) == 0;
-
-    if (isDone) {
+    if (Queue.isEmpty(pending.queue)) {
       pending.onComplete();
     };
 
-    (isDone, {...pending, queue}, completed);
+    (Queue.isEmpty(pending.queue), {...pending, queue}, completed);
   };
 
   let create = (~onUpdate, ~onComplete) => {

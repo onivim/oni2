@@ -531,6 +531,7 @@ module Queue: {
 
   let empty: t(_);
   let length: t('a) => int;
+  let isEmpty: t('a) => bool;
   let push: ('a, t('a)) => t('a);
   let pushFront: ('a, t('a)) => t('a);
   let pop: t('a) => (option('a), t('a));
@@ -545,7 +546,8 @@ module Queue: {
 
   let empty = {front: [], rear: [], length: 0};
 
-  let length = q => q.length;
+  let length = queue => queue.length;
+  let isEmpty = queue => queue.length == 0;
 
   let push = (item, queue) => {
     ...queue,
@@ -605,7 +607,8 @@ module ChunkyQueue: {
 
   let empty = {front: [], rear: Queue.empty, length: 0};
 
-  let length = q => q.length;
+  let length = queue => queue.length;
+  let isEmpty = queue => queue.length == 0;
 
   let push = (item, queue) => {
     ...queue,
