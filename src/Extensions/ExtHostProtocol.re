@@ -121,7 +121,7 @@ module OneBasedPosition = {
 };
 
 module OneBasedRange = {
-  [@deriving (show({with_path: false}), yojson({strict: false}))]
+  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type t = {
     startLineNumber: int,
     endLineNumber: int,

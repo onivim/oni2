@@ -1,4 +1,7 @@
 open EditorCoreTypes;
+open Oni_Core;
+
+module Protocol = ExtHostProtocol;
 
 type t = {
   name: string,
@@ -17,3 +20,27 @@ let create = (~children=[], ~name, ~detail, ~kind, ~range) => {
   range,
   children,
 };
+
+let rec of_yojson_exn: Yojson.Safe.t => t =
+  json => {
+    Yojson.Safe.Util.(
+      {
+        let name = json |> member("name") |> to_string;
+        let detail =
+          json
+          |> member("detail")
+          |> to_string_option
+          |> Utility.Option.value(~default="");
+        let range =
+          json
+          |> member("range")
+          |> Protocol.OneBasedRange.of_yojson_exn
+          |> Protocol.OneBasedRange.toRange;
+        let children =
+          json |> member("children") |> to_list |> List.map(of_yojson_exn);
+        let kind = json |> member("kind") |> to_int |> SymbolKind.of_int;
+
+        {name, detail, range, children, kind};
+      }
+    );
+  };

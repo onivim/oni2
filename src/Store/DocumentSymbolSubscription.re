@@ -27,13 +27,13 @@ module Provider = {
 
         let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
           Actions.{
-            category: None,
-            name: DocumentSymbol.(docSymbol.name),
+            category: Some(DocumentSymbol.(docSymbol.name)),
+            name: DocumentSymbol.(docSymbol.detail),
             command: () =>
               Model.Actions.OpenFileByPath(
-                "/Users/bryphe/revery/package.json",
+                Core.Buffer.getUri(buffer) |> Core.Uri.toFileSystemPath,
                 None,
-                None,
+                Some(DocumentSymbol.(docSymbol.range.start)),
               ),
             icon: None,
             highlight: [],
