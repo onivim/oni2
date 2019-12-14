@@ -4,6 +4,7 @@ open Revery.UI.Components;
 open Oni_Model;
 module Core = Oni_Core;
 
+open Oni_Model.SideBar;
 module Styles = {
   open Style;
 
@@ -30,12 +31,23 @@ let make = (~state: State.t, ()) => {
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
 
-  let title = "Explorer";
+  let sideBarType = SideBar.getType(sideBar);
+
+  let title = switch(sideBarType) {
+  | FileExplorer => "Explorer"
+  | Extensions => "Extensions"
+  };
+
+  let elem = switch(sideBarType) {
+  | FileExplorer => <FileExplorerView state />
+  | Extensions => React.empty
+  };
+  
 
   <View style={Styles.container(bg)}>
     <View style={Styles.heading(theme)}>
       <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
-    <FileExplorerView state />
+    {elem}
   </View>;
 };
