@@ -15,6 +15,7 @@ module Ext = Oni_Extensions;
 type t =
   | Init
   | Tick(tick)
+  | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
@@ -94,9 +95,6 @@ type t =
   | ListSelect
   | ListSelectBackground
   | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | RegisterDockItem(WindowManager.dock)
-  | RemoveDockItem(WindowManager.docks)
-  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)

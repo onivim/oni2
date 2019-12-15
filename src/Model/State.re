@@ -24,6 +24,7 @@ type t = {
   hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
+  sideBar: SideBar.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -76,7 +77,7 @@ let create: unit => t =
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
-    // TODO: Remove
+    sideBar: SideBar.initial,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),

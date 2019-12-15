@@ -12,6 +12,6 @@ let make = (~state: State.t, ()) => {
   switch (state.fileExplorer) {
   | {tree: None, _} => React.empty
   | {tree: Some(tree), focus, _} =>
-    <FileTreeView state focus onNodeClick title="Explorer" tree />
+    <FileTreeView state focus onNodeClick tree />
   };
 };

@@ -7,6 +7,7 @@
  */
 
 module Actions = Actions;
+module ActivityBar = ActivityBar;
 module Animation = Animation;
 module BufferHighlights = BufferHighlights;
 module Buffers = Buffers;
@@ -48,6 +49,7 @@ module References = References;
 module Search = Search;
 module Selection = Selection;
 module Selectors = Selectors;
+module SideBar = SideBar;
 module StatusBarModel = StatusBarModel;
 module StatusBarReducer = StatusBarReducer;
 module State = State;

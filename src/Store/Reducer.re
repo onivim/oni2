@@ -26,6 +26,7 @@ let reduce: (State.t, Actions.t) => State.t =
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
+        sideBar: SideBarReducer.reduce(s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         notifications: Notifications.reduce(s.notifications, a),
       };

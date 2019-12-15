@@ -22,7 +22,7 @@ module Styles = {
       alignItems(`Stretch),
     ];
 
-  let surface = Style.[flexGrow(1)];
+  let surface = Style.[flexGrow(1), flexDirection(`Row)];
 
   let statusBar = statusBarHeight =>
     Style.[
@@ -34,14 +34,29 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{theme, configuration, uiFont, editorFont, _} = state;
+  let State.{theme, configuration, uiFont, editorFont, sideBar, zenMode, _} = state;
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
       c.workbenchStatusBarVisible
     )
-    && !state.zenMode;
+    && !zenMode;
+
+  let activityBarVisible =
+    Selectors.getActiveConfigurationValue(state, c =>
+      c.workbenchActivityBarVisible
+    )
+    && !zenMode;
+
+  let sideBarVisible =
+    Selectors.getActiveConfigurationValue(state, c =>
+      c.workbenchSideBarVisible
+    )
+    && !zenMode
+    && SideBar.isOpen(sideBar);
+
   let statusBarHeight = statusBarVisible ? 25 : 0;
+
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
@@ -53,12 +68,35 @@ let make = (~state: State.t, ()) => {
     switch (state.searchPane) {
     | Some(searchPane) =>
       <SearchPane state=searchPane uiFont editorFont theme />
-
-    | None => React.empty
+    // TODO: BUG - Why is this needed? Why can't it be 'React.empty'?
+    // Without this: when switching out of zen mode, the entire
+    // editor surface will be empty. Seems like a reconciliation bug.
+    | None => <View />
     };
 
+  let activityBar =
+    activityBarVisible
+      ? React.listToElement([
+          <Dock state />,
+          <WindowHandle direction=Vertical theme />,
+        ])
+      : React.empty;
+
+  let sideBar =
+    sideBarVisible
+      ? React.listToElement([
+          <SideBarView state />,
+          <WindowHandle direction=Vertical theme />,
+        ])
+      : React.empty;
+
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface> <EditorView state /> searchPane </View>
+    <View style=Styles.surface>
+      activityBar
+      sideBar
+      <EditorView state />
+    </View>
+    searchPane
     <Overlay>
       {switch (state.quickmenu) {
        | None => React.empty
