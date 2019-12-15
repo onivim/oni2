@@ -79,8 +79,43 @@ Onivim-specific contexts:
 | `menuFocus` | A pop-up menu has focus |
 
 
-## Default Keyboard Shortcuts
+## Commands
 
-TODO
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Command+Shift+P / Control+Shift+P | Show Command Palette | `workbench.action.showCommands` |
+| Command+P / Control+P | Quick Open (File Picker) | `workbench.action.quickOpen` | 
+| Control+Tab | Navigate to next editor in group | `workbench.action.quickOpenNavigateNextInEditorPicker` |
+| Shift+Control+Tab | Navigate to previous editor in group | `workbench.action.quickOpenNavigatePreviousInEditorPicker` | 
 
+### Basic Editing
 
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Control+V / Command+V | Paste from clipboard | `editor.action.clipboardPasteAction` |
+
+### List / Menu commands
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Up Arrow / Control+P | Move focus up | `list.focusUp` |
+| Down Arrow / Control+N | Move focus down | `list.focusDown` |
+
+### Window Management
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Control+Shift+B | Toggle Explorer | `explorer.toggle` |
+| Control+W, Control+V | Vertical Split | `view.splitVertical` |
+| Control+W, Control+S | Horizontal Split | `view.splitHorizontal` |
+| Control+W, Control+H | Move to left split | `window.moveLeft` |
+| Control+W, Control+L | Move to right split | `window.moveRight` |
+| Control+W, Control+J | Move down a split | `window.moveDown` |
+| Control+W, Control+K | Move up a split | `window.moveUp` |
+
+### Additional Commands
+
+| Default Key Binding | Description | Command |
+| --- | --- | ---
+| n/a | Enable KeyDisplayer | `keyDisplayer.enable` |
+| n/a | Disable KeyDisplayer | `keyDisplayer.disable` |
