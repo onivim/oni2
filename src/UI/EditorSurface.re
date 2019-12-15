@@ -820,7 +820,6 @@ let%component make =
             ();
           };
 
-
           ImmediateList.render(
             ~scrollY,
             ~rowHeight,
