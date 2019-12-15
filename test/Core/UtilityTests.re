@@ -218,7 +218,7 @@ describe("StringUtil", ({describe, _}) => {
   });
 });
 
-describe("Queue", ({describe, _}) => {
+let testQueue = (describe: Rely.Describe.describeFn(_), module Queue: Queue) => {
   describe("length", ({test, _}) => {
     test("empty", ({expect}) => {
       let q = Queue.empty;
@@ -417,6 +417,56 @@ describe("Queue", ({describe, _}) => {
 
       expect.list(items).toEqual([1, 2]);
       expect.list(Queue.toList(q)).toEqual([3, 4]);
+    });
+  });
+};
+
+describe("Queue", ({describe, _}) => {
+  testQueue(describe, (module Queue))
+});
+
+describe("ChunkyQueue", ({describe, _}) => {
+  testQueue(describe, (module ChunkyQueue));
+
+  module Queue = ChunkyQueue;
+
+  describe("pushChunk", ({test, _}) => {
+    test("empty", ({expect}) => {
+      let q = Queue.empty |> Queue.pushChunk([]);
+
+      expect.list(Queue.toList(q)).toEqual([]);
+    });
+
+    test("singleton", ({expect}) => {
+      let q = Queue.empty |> Queue.pushChunk([42]);
+
+      expect.list(Queue.toList(q)).toEqual([42]);
+    });
+
+    test("chunk", ({expect}) => {
+      let q = Queue.empty |> Queue.pushChunk([1, 2, 3, 4]);
+
+      expect.list(Queue.toList(q)).toEqual([4, 3, 2, 1]);
+    });
+  });
+
+  describe("pushReversedChunk", ({test, _}) => {
+    test("empty", ({expect}) => {
+      let q = Queue.empty |> Queue.pushReversedChunk([]);
+
+      expect.list(Queue.toList(q)).toEqual([]);
+    });
+
+    test("singleton", ({expect}) => {
+      let q = Queue.empty |> Queue.pushReversedChunk([42]);
+
+      expect.list(Queue.toList(q)).toEqual([42]);
+    });
+
+    test("chunk", ({expect}) => {
+      let q = Queue.empty |> Queue.pushReversedChunk([1, 2, 3, 4]);
+
+      expect.list(Queue.toList(q)).toEqual([1, 2, 3, 4]);
     });
   });
 });

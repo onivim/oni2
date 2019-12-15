@@ -526,7 +526,7 @@ module StringUtil = {
   };
 };
 
-module Queue: {
+module type Queue = {
   type t('a);
 
   let empty: t(_);
@@ -537,7 +537,9 @@ module Queue: {
   let pop: t('a) => (option('a), t('a));
   let take: (int, t('a)) => (list('a), t('a));
   let toList: t('a) => list('a);
-} = {
+};
+
+module Queue: Queue = {
   type t('a) = {
     front: list('a),
     rear: list('a), // reversed
@@ -595,7 +597,8 @@ module Queue: {
 };
 
 module ChunkyQueue: {
-  include (module type of Queue);
+  include Queue;
+
   let pushChunk: (list('a), t('a)) => t('a);
   let pushReversedChunk: (list('a), t('a)) => t('a);
 } = {
