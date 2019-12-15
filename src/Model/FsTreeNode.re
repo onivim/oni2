@@ -37,7 +37,7 @@ let file = (path, ~id, ~icon) => {
     icon,
     kind: File,
     expandedSubtreeSize: 1,
-  }
+  };
 };
 
 let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
@@ -56,19 +56,22 @@ let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
 };
 
 let findNodesByLocalPath = (path, tree) => {
-  let pathSegments = path |> String.split_on_char(Filename.dir_sep.[0]);
+  let pathHashes =
+    path
+    |> String.split_on_char(Filename.dir_sep.[0])
+    |> List.map(Hashtbl.hash);
 
   let rec loop = (focusedNodes, children, pathSegments) =>
     switch (pathSegments) {
     | [] => `Success(focusedNodes |> List.rev)
-    | [pathSegment, ...rest] =>
+    | [hash, ...rest] =>
       switch (children) {
       | [] =>
         let last = focusedNodes |> List.hd;
         last.id == tree.id ? `Failed : `Partial(last);
 
       | [node, ...children] =>
-        if (node.displayName == pathSegment) {
+        if (node.hash == hash) {
           let children =
             switch (node.kind) {
             | Directory({children, _}) => children
@@ -82,7 +85,7 @@ let findNodesByLocalPath = (path, tree) => {
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop([tree], children, pathSegments)
+  | Directory({children, _}) => loop([tree], children, pathHashes)
   | File => `Failed
   };
 };
