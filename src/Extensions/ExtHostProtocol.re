@@ -678,6 +678,18 @@ module OutgoingNotifications = {
           OneBasedPosition.to_yojson(position),
         ]),
       );
+    let provideReferences =
+        (handle: int, resource: Uri.t, position: OneBasedPosition.t) =>
+      _buildNotification(
+        "ExtHostLanguageFeatures",
+        "$provideReferences",
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `Assoc([]),
+        ]),
+      );
 
     let provideDocumentSymbols = (handle: int, resource: Uri.t) =>
       _buildNotification(

@@ -40,6 +40,7 @@ let start =
       ~onRegisterDefinitionProvider=noop2,
       ~onRegisterDocumentHighlightProvider=noop2,
       ~onRegisterDocumentSymbolProvider=noop2,
+      ~onRegisterReferencesProvider=noop2,
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
@@ -65,6 +66,15 @@ let start =
         client => {
           In.LanguageFeatures.parseBasicProvider(args)
           |> Option.iter(onRegisterDefinitionProvider(client))
+        },
+        client^,
+      );
+      Ok(None);
+    | ("MainThreadLanguageFeatures", "$registerReferenceSupport", args) =>
+      Option.iter(
+        client => {
+          In.LanguageFeatures.parseBasicProvider(args)
+          |> Option.iter(onRegisterReferencesProvider(client))
         },
         client^,
       );
@@ -256,6 +266,26 @@ let provideDocumentSymbols = (id, uri, client) => {
       ~msgType=MessageType.requestJsonArgsWithCancellation,
       client,
       Out.LanguageFeatures.provideDocumentSymbols(id, uri),
+      f,
+    );
+  promise;
+};
+
+let provideReferences = (id, uri, position, client) => {
+  let f = (json: Yojson.Safe.t) => {
+    let default: list(LocationWithUri.t) = [];
+    switch (json) {
+    | `List(references) =>
+      List.map(LocationWithUri.of_yojson_exn, references)
+    | _ => default
+    };
+  };
+
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.LanguageFeatures.provideReferences(id, uri, position),
       f,
     );
   promise;

@@ -105,6 +105,15 @@ let resultToOption = r => {
   };
 };
 
+exception ResultError(string);
+
+let resultToException = r => {
+  switch (r) {
+  | Ok(v) => v
+  | Error(msg) => raise(ResultError(msg))
+  };
+};
+
 type commandLineCompletionMeet = {
   prefix: string,
   position: int,
