@@ -5,15 +5,17 @@ open Revery.UI;
 
 module Core = Oni_Core;
 
-let toNodePath = (workspace: Workspace.workspace, tree, path) => {
-  let localPath = Workspace.toRelativePath(workspace.workingDirectory, path);
+let toNodePath = (workspace: Workspace.workspace, tree, path) =>
+  Core.Log.perf("FileTreeview.toNodePath", () => {
+    let localPath =
+      Workspace.toRelativePath(workspace.workingDirectory, path);
 
-  switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
-  | `Success(nodes) => Some(nodes)
-  | `Partial(_)
-  | `Failed => None
-  };
-};
+    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
+    | `Success(nodes) => Some(nodes)
+    | `Partial(_)
+    | `Failed => None
+    };
+  });
 
 module Styles = {
   open Style;
