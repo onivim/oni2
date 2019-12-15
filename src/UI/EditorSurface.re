@@ -532,6 +532,19 @@ let%component make =
         </View>
       : React.empty;
 
+  let hoverElements =
+    isActiveSplit
+      ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
+          <HoverView x=cursorPixelX y=cursorPixelY state />
+          <CompletionsView
+            x=cursorPixelX
+            y=cursorPixelY
+            lineHeight=fontHeight
+            state
+          />
+        </View>
+      : React.empty;
+
   /* TODO: Selection! */
   /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     };*/
@@ -939,15 +952,7 @@ let%component make =
       </View>
     </View>
     minimapLayout
-    <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
-      <HoverView x=cursorPixelX y=cursorPixelY state />
-      <CompletionsView
-        x=cursorPixelX
-        y=cursorPixelY
-        lineHeight=fontHeight
-        state
-      />
-    </View>
+    hoverElements
     <View style=verticalScrollBarStyle>
       <EditorVerticalScrollbar
         state
