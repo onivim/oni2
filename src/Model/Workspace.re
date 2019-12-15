@@ -18,6 +18,6 @@ type t = option(workspace);
 let initial: t = None;
 
 let toRelativePath = (base, path) => {
-  let re = Str.regexp_string(base ++ Filename.dir_sep);
-  Str.replace_first(re, "", path);
+  let base = base == "/" ? base : base ++ Filename.dir_sep;
+  Str.replace_first(Str.regexp_string(base), "", path);
 };
