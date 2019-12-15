@@ -2,6 +2,7 @@ type t = {
   id: int,
   path: string,
   displayName: string,
+  hash: int, // hash of basename, so only comparable locally
   icon: option(IconTheme.IconDefinition.t),
   kind,
   expandedSubtreeSize: int,
@@ -26,21 +27,28 @@ let rec countExpandedSubtree =
   | _ => 1;
 
 let file = (path, ~id, ~icon) => {
-  id,
-  path,
-  displayName: Filename.basename(path),
-  icon,
-  kind: File,
-  expandedSubtreeSize: 1,
-};
-
-let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
-  let kind = Directory({isOpen, children});
+  let basename = Filename.basename(path);
 
   {
     id,
     path,
-    displayName: Filename.basename(path),
+    displayName: basename,
+    hash: Hashtbl.hash(basename),
+    icon,
+    kind: File,
+    expandedSubtreeSize: 1,
+  }
+};
+
+let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
+  let kind = Directory({isOpen, children});
+  let basename = Filename.basename(path);
+
+  {
+    id,
+    path,
+    displayName: basename,
+    hash: Hashtbl.hash(basename),
     icon,
     kind,
     expandedSubtreeSize: countExpandedSubtree(kind),
