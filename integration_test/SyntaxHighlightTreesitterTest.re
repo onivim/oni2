@@ -24,7 +24,7 @@ runTest(
     dispatch(Actions.OpenFileByPath(testFile, None, None));
 
     // Wait for highlights to show up
-    wait(~name="Verify we get syntax highlights", (state: State.t) => {
+    wait(~name="Verify we get syntax highlights", ~timeout=10.0, (state: State.t) => {
       state
       |> Selectors.getActiveBuffer
       |> Option.map(Buffer.getId)
