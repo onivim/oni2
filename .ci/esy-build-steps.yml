@@ -34,7 +34,7 @@ steps:
       failTaskOnFailedTests: true
   - script: esy @bench install
     displayName: "Bench: install"
-  - script: esy @bench build
+  - script: esy @bench build -v -v
     displayName: "Bench: build"
   - script: esy @bench run
     displayName: "Bench: run"
