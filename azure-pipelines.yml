@@ -5,14 +5,14 @@
 
 name: $(Build.SourceVersion)
 jobs:
-  - job: Kickoff
-    displayName: "Kickoff"
-    pool:
-      vmImage: 'ubuntu-latest'
+- job: Kickoff
+  displayName: "Kickoff"
+  pool:
+    vmImage: 'ubuntu-latest'
 
-    steps:
-    - script: ./scripts/set-short-commit-variable.sh
-      name: shortCommitVariableStep
+  steps:
+  - script: ./scripts/set-short-commit-variable.sh
+    name: shortCommitVariableStep
 
 - job: Hygiene_Checks
   displayName: 'Hygiene Checks'
