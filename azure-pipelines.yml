@@ -27,10 +27,10 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Linux
-  displayName: 'Linux - Ubuntu 16.04'
+  displayName: 'Linux - Ubuntu 18.04'
   timeoutInMinutes: 0
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: 'ubuntu-latest'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
