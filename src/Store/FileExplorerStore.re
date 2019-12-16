@@ -210,15 +210,6 @@ let start = () => {
           ]),
         );
 
-      // TODO: These should not be handled here.
-      | AddDockItem(WindowManager.ExplorerDock) => (
-          setOpen(true, state),
-          Isolinear.Effect.none,
-        )
-      | RemoveDockItem(WindowManager.ExplorerDock) => (
-          setOpen(false, state),
-          Isolinear.Effect.none,
-        )
       | BufferEnter({filePath, _}, _) =>
         switch (state.fileExplorer) {
         | {focus, _} when focus != filePath =>

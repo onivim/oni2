@@ -9,6 +9,7 @@ open Oni_Core;
 
 module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;
+module LocationWithUri = Oni_Extensions.LocationWithUri;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
   promises => Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
@@ -78,6 +79,15 @@ module DocumentHighlightProvider =
     let aggregate = joinAll;
   });
 
+module FindAllReferencesProvider =
+  LanguageFeature.Make({
+    type params = (Buffer.t, Location.t);
+    type response = list(LocationWithUri.t);
+
+    let namespace = "Oni2.FindAllReferencesProvider";
+    let aggregate = joinAll;
+  });
+
 [@deriving show({with_path: false})]
 type action =
   | DocumentSymbolProviderAvailable(
@@ -89,6 +99,10 @@ type action =
   | DocumentHighlightProviderAvailable(
       string,
       [@opaque] DocumentHighlightProvider.t,
+    )
+  | FindAllReferencesProviderAvailable(
+      string,
+      [@opaque] FindAllReferencesProvider.t,
     );
 
 type t = {
@@ -96,6 +110,7 @@ type t = {
   definitionProviders: DefinitionProvider.providers,
   documentHighlightProviders: DocumentHighlightProvider.providers,
   documentSymbolProviders: DocumentSymbolProvider.providers,
+  findAllReferencesProviders: FindAllReferencesProvider.providers,
 };
 
 let empty = {
@@ -103,6 +118,7 @@ let empty = {
   definitionProviders: [],
   documentHighlightProviders: [],
   documentSymbolProviders: [],
+  findAllReferencesProviders: [],
 };
 
 let requestDocumentSymbol = (~buffer: Buffer.t, lf: t) => {
@@ -122,6 +138,12 @@ let requestCompletions =
     (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
   lf.completionProviders
   |> CompletionProvider.request((buffer, meet, location));
+};
+
+let requestFindAllReferences =
+    (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
+  lf.findAllReferencesProviders
+  |> FindAllReferencesProvider.request((buffer, location));
 };
 
 let registerCompletionProvider = (~id, ~provider: CompletionProvider.t, lf: t) => {
@@ -152,6 +174,14 @@ let registerDocumentSymbolProvider =
     |> DocumentSymbolProvider.register(~id, provider),
 };
 
+let registerFindAllReferencesProvider =
+    (~id, ~provider: FindAllReferencesProvider.t, lf: t) => {
+  ...lf,
+  findAllReferencesProviders:
+    lf.findAllReferencesProviders
+    |> FindAllReferencesProvider.register(~id, provider),
+};
+
 let getCompletionProviders = (lf: t) =>
   lf.completionProviders |> CompletionProvider.get;
 
@@ -165,3 +195,6 @@ let getDocumentHighlightProviders = (lf: t) => {
 
 let getDocumentSymbolProviders = lf =>
   lf.documentSymbolProviders |> DocumentSymbolProvider.get;
+
+let getFindAllReferencesProviders = lf =>
+  lf.findAllReferencesProviders |> FindAllReferencesProvider.get;

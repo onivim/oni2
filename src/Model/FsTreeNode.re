@@ -2,6 +2,7 @@ type t = {
   id: int,
   path: string,
   displayName: string,
+  hash: int, // hash of basename, so only comparable locally
   icon: option(IconTheme.IconDefinition.t),
   kind,
   expandedSubtreeSize: int,
@@ -26,21 +27,28 @@ let rec countExpandedSubtree =
   | _ => 1;
 
 let file = (path, ~id, ~icon) => {
-  id,
-  path,
-  displayName: Filename.basename(path),
-  icon,
-  kind: File,
-  expandedSubtreeSize: 1,
-};
-
-let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
-  let kind = Directory({isOpen, children});
+  let basename = Filename.basename(path);
 
   {
     id,
     path,
-    displayName: Filename.basename(path),
+    displayName: basename,
+    hash: Hashtbl.hash(basename),
+    icon,
+    kind: File,
+    expandedSubtreeSize: 1,
+  };
+};
+
+let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
+  let kind = Directory({isOpen, children});
+  let basename = Filename.basename(path);
+
+  {
+    id,
+    path,
+    displayName: basename,
+    hash: Hashtbl.hash(basename),
     icon,
     kind,
     expandedSubtreeSize: countExpandedSubtree(kind),
@@ -48,19 +56,22 @@ let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
 };
 
 let findNodesByLocalPath = (path, tree) => {
-  let pathSegments = path |> String.split_on_char(Filename.dir_sep.[0]);
+  let pathHashes =
+    path
+    |> String.split_on_char(Filename.dir_sep.[0])
+    |> List.map(Hashtbl.hash);
 
   let rec loop = (focusedNodes, children, pathSegments) =>
     switch (pathSegments) {
     | [] => `Success(focusedNodes |> List.rev)
-    | [pathSegment, ...rest] =>
+    | [hash, ...rest] =>
       switch (children) {
       | [] =>
         let last = focusedNodes |> List.hd;
         last.id == tree.id ? `Failed : `Partial(last);
 
       | [node, ...children] =>
-        if (node.displayName == pathSegment) {
+        if (node.hash == hash) {
           let children =
             switch (node.kind) {
             | Directory({children, _}) => children
@@ -74,7 +85,7 @@ let findNodesByLocalPath = (path, tree) => {
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop([tree], children, pathSegments)
+  | Directory({children, _}) => loop([tree], children, pathHashes)
   | File => `Failed
   };
 };

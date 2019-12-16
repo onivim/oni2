@@ -15,6 +15,7 @@ module Ext = Oni_Extensions;
 type t =
   | Init
   | Tick(tick)
+  | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
@@ -46,6 +47,7 @@ type t =
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
   | ExtensionActivated(string)
+  | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
@@ -93,9 +95,6 @@ type t =
   | ListSelect
   | ListSelectBackground
   | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | RegisterDockItem(WindowManager.dock)
-  | RemoveDockItem(WindowManager.docks)
-  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)

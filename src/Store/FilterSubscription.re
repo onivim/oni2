@@ -54,7 +54,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
             switch (Hashtbl.find_opt(jobs, id)) {
             | Some({job, _} as state) when !Job.isComplete(job) =>
               let job = Job.tick(job);
-              let items = Job.getCompletedWork(job).uiFiltered;
+              let items = Job.getCompletedWork(job).ranked;
               let progress = Job.getProgress(job);
               dispatch(onUpdate(items, ~progress));
               Hashtbl.replace(jobs, id, {...state, job});

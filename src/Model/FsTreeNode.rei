@@ -3,6 +3,7 @@ type t =
     id: int,
     path: string,
     displayName: string,
+    hash: int, // hash of basename, so only comparable locally
     icon: option(IconTheme.IconDefinition.t),
     kind,
     expandedSubtreeSize: int,

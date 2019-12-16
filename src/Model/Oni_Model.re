@@ -7,6 +7,7 @@
  */
 
 module Actions = Actions;
+module ActivityBar = ActivityBar;
 module Animation = Animation;
 module BufferHighlights = BufferHighlights;
 module Buffers = Buffers;
@@ -44,9 +45,11 @@ module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module Notification = Notification;
 module Notifications = Notifications;
+module References = References;
 module Search = Search;
 module Selection = Selection;
 module Selectors = Selectors;
+module SideBar = SideBar;
 module StatusBarModel = StatusBarModel;
 module StatusBarReducer = StatusBarReducer;
 module State = State;
