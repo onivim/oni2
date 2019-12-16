@@ -159,7 +159,7 @@ let start =
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
-  let (windowUpdater, windowStream) = WindowsStoreConnector.start(getState);
+  let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
   let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
