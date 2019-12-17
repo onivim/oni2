@@ -4,31 +4,45 @@ open Oni_Model;
 open Revery;
 open Revery.UI;
 
-module Core = Oni_Core;
+module Option = Utility.Option;
 
-let toNodePath = (workspace: Workspace.workspace, tree, path) =>
-  Core.Log.perf("FileTreeview.toNodePath", () => {
-    let localPath =
-      Workspace.toRelativePath(workspace.workingDirectory, path);
+let findNodeByPath = (workspace: Workspace.workspace, tree, path) => {
+  let localPath = Workspace.toRelativePath(workspace.workingDirectory, path);
 
-    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
-    | `Success(nodes) => Some(nodes)
-    | `Partial(_)
-    | `Failed => None
-    };
-  });
+  FsTreeNode.findByLocalPath(localPath, tree);
+};
 
 module Styles = {
   open Style;
 
   let container = [flexGrow(1)];
 
-  let item = [flexDirection(`Row), alignItems(`Center)];
-
-  let text = (~fg, ~font: UiFont.t) => [
+  let title = (~fg, ~bg, ~font: UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
+    backgroundColor(bg),
     color(fg),
+  ];
+
+  let heading = (theme: Theme.t) => [
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    backgroundColor(theme.sideBarBackground),
+    height(Constants.default.tabHeight),
+  ];
+
+  let item = (~isFocus, ~theme: Theme.t) => [
+    flexDirection(`Row),
+    flexGrow(1),
+    alignItems(`Center),
+    backgroundColor(isFocus ? theme.menuSelectionBackground : theme.sideBarBackground)
+  ];
+
+  let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
+    fontSize(font.fontSize),
+    fontFamily(font.fontFile),
+    color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
     marginLeft(10),
     marginVertical(2),
     textWrap(TextWrapping.NoWrap),
@@ -50,7 +64,7 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
+let nodeView = (~isFocus, ~isActive, ~font: UiFont.t, ~theme: Theme.t, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -68,16 +82,16 @@ let nodeView = (~font: UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
     switch (node.kind) {
     | Directory({isOpen, _}) =>
       <FontIcon
-        color=fg
+        color=theme.sideBarForeground
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
         backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
 
-  <View style=Styles.item>
+  <View style=Styles.item(~isFocus, ~theme)>
     <icon />
-    <Text text={node.displayName} style={Styles.text(~fg, ~font)} />
+    <Text text={node.displayName} style={Styles.text(~theme, ~isActive, ~font)} />
   </View>;
 };
 
@@ -86,7 +100,8 @@ module TreeView = TreeView.Make(FsTreeNode.Model);
 let make =
     (
       ~tree: FsTreeNode.t,
-      ~focus: option(string),
+      ~active: option(string),
+      ~focus: option(int),
       ~onNodeClick,
       ~state: State.t,
       (),
@@ -98,7 +113,9 @@ let make =
 
   let active =
     switch (active, state.workspace) {
-    | (Some(path), Some(workspace)) => toNodePath(workspace, tree, path)
+    | (Some(path), Some(workspace)) =>
+      findNodeByPath(workspace, tree, path)
+      |> Option.map((node: FsTreeNode.t) => node.id)
     | _ => None
     };
 
@@ -117,7 +134,7 @@ let make =
       theme
       itemHeight=22
       onClick=onNodeClick>
-      ...{node => <nodeView font fg node />}
+      ...{node => <nodeView isFocus={Some(node.id) == focus} isActive={Some(node.id) == active} font theme node />}
     </TreeView>
   </View>;
 };

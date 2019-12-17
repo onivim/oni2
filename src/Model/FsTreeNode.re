@@ -90,6 +90,37 @@ let findNodesByLocalPath = (path, tree) => {
   };
 };
 
+let findByLocalPath = (path, tree) => {
+  let pathSegments = path |> String.split_on_char(Filename.dir_sep.[0]);
+
+  let rec loop = (node, children, pathSegments) =>
+    switch (pathSegments) {
+    | [] => Some(node)
+    | [pathSegment, ...rest] =>
+      switch (children) {
+      | [] =>
+        None
+
+      | [node, ...children] =>
+        if (node.displayName == pathSegment) {
+          let children =
+            switch (node.kind) {
+            | Directory({children, _}) => children
+            | File => []
+            };
+          loop(node, children, rest);
+        } else {
+          loop(node, children, pathSegments);
+        }
+      }
+    };
+
+  switch (tree.kind) {
+  | Directory({children, _}) => loop(tree, children, pathSegments)
+  | File => None
+  };
+};
+
 let update = (~tree, ~updater, nodeId) => {
   let rec loop =
     fun

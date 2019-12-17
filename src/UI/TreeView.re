@@ -53,14 +53,11 @@ module Styles = {
     bottom(0),
   ];
 
-  let item = (~itemHeight, ~isActive, ~theme: Theme.t) => [
+  let item = (~itemHeight, ~theme: Theme.t) => [
     height(itemHeight),
     cursor(Revery.MouseCursors.pointer),
     flexDirection(`Row),
     overflow(`Hidden),
-    backgroundColor(
-      isActive ? theme.menuSelectionBackground : Colors.transparentWhite,
-    ),
   ];
 
   let placeholder = (~height) => [Style.height(height)];
@@ -91,7 +88,6 @@ module Make = (Model: TreeModel) => {
   let rec nodeView =
           (
             ~renderContent,
-            ~active,
             ~itemHeight,
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
@@ -101,21 +97,13 @@ module Make = (Model: TreeModel) => {
           ) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
 
-    let (isActive, descendantActive) =
-      switch (active) {
-      | Some([last]) when last == node => (true, None)
-      | Some([head, ...tail]) when head == node => (false, Some(tail))
-      | Some(_) => (false, None)
-      | _ => (false, None)
-      };
-
     let placeholder = (~size, ()) =>
       <View style={Styles.placeholder(~height=size * itemHeight)} />;
 
     let item = (~arrow, ()) =>
       <Clickable
         onClick={() => onClick(node)}
-        style={Styles.item(~itemHeight, ~isActive, ~theme)}>
+        style={Styles.item(~itemHeight, ~theme)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -127,7 +115,6 @@ module Make = (Model: TreeModel) => {
           let element =
             <nodeView
               renderContent
-              active=descendantActive
               itemHeight
               clipRange=(clipStart - count, clipEnd - count)
               onClick
@@ -173,7 +160,6 @@ module Make = (Model: TreeModel) => {
   let%component make =
                 (
                   ~children as renderContent,
-                  ~active: option(list(Model.t)),
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
@@ -266,7 +252,6 @@ module Make = (Model: TreeModel) => {
         <View style={Styles.content(~scrollTop)}>
           <nodeView
             renderContent
-            active
             itemHeight
             clipRange
             onClick

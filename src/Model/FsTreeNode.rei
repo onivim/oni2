@@ -30,6 +30,7 @@ let directory:
 
 let findNodesByLocalPath:
   (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+let findByLocalPath: (string, t) => option(t);
 
 let update: (~tree: t, ~updater: t => t, int) => t;
 let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;

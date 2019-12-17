@@ -69,6 +69,8 @@ let setOpen = (isOpen, state) =>
   updateFileExplorer(s => {...s, isOpen}, state);
 let setActive = (maybePath, state) =>
   updateFileExplorer(s => {...s, active: maybePath}, state);
+let setFocus = (maybeId, state) =>
+  updateFileExplorer(s => {...s, focus: maybeId}, state);
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
@@ -150,8 +152,11 @@ let start = () => {
       }
 
     | NodeClicked(node) =>
+      let state = 
+        state
       // Set active here to avoid scrolling in BufferEnter
-      let state = setActive(Some(node.path), state);
+        |> setActive(Some(node.path))
+        |> setFocus(Some(node.id));
 
       switch (node) {
       | {kind: File, path, _} => (state, openFileByPathEffect(path))
