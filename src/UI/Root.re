@@ -24,6 +24,8 @@ module Styles = {
 
   let surface = Style.[flexGrow(1), flexDirection(`Row)];
 
+  let workspace = Style.[flexGrow(1), flexDirection(`Column)];
+
   let statusBar = statusBarHeight =>
     Style.[
       backgroundColor(Color.hex("#21252b")),
@@ -84,8 +86,10 @@ let make = (~state: State.t, ()) => {
     <View style=Styles.surface>
       activityBar
       sideBar
-      <EditorView state />
-      <PaneView theme uiFont editorFont state />
+      <View style=Styles.workspace>
+        <EditorView state />
+        <PaneView theme uiFont editorFont state />
+      </View>
     </View>
     <Overlay>
       {switch (state.quickmenu) {

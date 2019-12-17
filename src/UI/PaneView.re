@@ -36,6 +36,8 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
            <SearchPane theme uiFont editorFont state={state.searchPane} />
          | Pane.Diagnostics => <DiagnosticsPane theme uiFont />
          };
+       [
+       <WindowHandle theme direction=Horizontal />,
        <View style={Styles.pane(~theme)}>
          <View style=Style.[flexDirection(`Row)]>
            <PaneTab
@@ -53,8 +55,9 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
              active={paneType == Pane.Diagnostics}
            />
          </View>
-         <View style=Style.[flexDirection(`Column)]> childPane </View>
-       </View>;
+         <View style=Style.[flexDirection(`Column), flexGrow(1)]> childPane </View>
+       </View>
+       ] |> React.listToElement;
      })
   |> Option.value(~default=<View />);
 };
