@@ -7,6 +7,7 @@
 open Oni_Core;
 open Oni_Extensions;
 
+module Utility = Oni_Core.Utility;
 module Option = Oni_Core.Utility.Option;
 
 module Log = (val Log.withNamespace("Oni2.StoreUtility"));
@@ -29,10 +30,11 @@ let getUserExtensionsDirectory = (cli: Cli.t) => {
 let getUserExtensions = (cli: Cli.t) => {
   cli
   |> getUserExtensionsDirectory
-  |> Option.map(p => {
-       Log.infof(m => m("Searching for user extensions in: %s", p));
-       p;
-     })
+  |> Option.map(
+       Utility.tap(p =>
+         Log.infof(m => m("Searching for user extensions in: %s", p))
+       ),
+     )
   |> Option.map(ExtensionScanner.scan)
   |> Option.value(~default=[]);
 };
