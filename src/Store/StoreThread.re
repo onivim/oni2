@@ -23,7 +23,6 @@ module DispatchLog = (
 );
 
 let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
-  open Core.Cli;
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions =
