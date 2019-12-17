@@ -295,6 +295,12 @@ switch (Env.debug, Env.logFile) {
 Env.logFile |> Option.iter(setLogFile);
 Env.filter |> Option.iter(Namespace.setFilter);
 
+let writeExceptionLog = (e, bt) => {
+  let oc = Stdlib.open_out("onivim2-crash.log");
+  Printf.fprintf(oc, "%s:\n%s", Printexc.to_string(e), Printexc.raw_backtrace_to_string(bt));
+  Stdlib.close_out(oc);
+};
+
 if (isDebugLoggingEnabled()) {
   debug(() => "Recording backtraces");
   Printexc.record_backtrace(true);
@@ -306,5 +312,11 @@ if (isDebugLoggingEnabled()) {
       ++ Printexc.raw_backtrace_to_string(bt),
     );
     flush_all();
+    writeExceptionLog(e, bt);
   });
-};
+} else {
+  // Even if we're not debugging.... at least emit the exception
+  Printexc.set_uncaught_exception_handler((e, bt) => {
+     writeExceptionLog(e, bt);
+  });
+}
