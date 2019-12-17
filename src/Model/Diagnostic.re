@@ -14,7 +14,10 @@ type t = {
 let create = (~range, ~message, ()) => {range, message};
 
 let explode = (buffer, diagnostic) => {
-  let measure = n => Buffer.getLineLength(buffer, Index.toOneBased(n));
+  let lineCount = Buffer.getNumberOfLines(buffer);
+  let measure = n =>
+    Index.toZeroBased(n) < lineCount
+      ? Buffer.getLineLength(buffer, Index.toZeroBased(n)) : 0;
 
   Range.explode(measure, diagnostic.range)
   |> List.map(range => create(~range, ~message=diagnostic.message, ()));

@@ -15,18 +15,24 @@ module Ext = Oni_Extensions;
 type t =
   | Init
   | Tick(tick)
+  | ActivityBar(ActivityBar.action)
+  | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate(BufferUpdate.t)
+  | BufferUpdate([@opaque] BufferUpdate.t)
   | BufferSaved([@opaque] Vim.BufferMetadata.t)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart(completionMeet)
-  | CompletionAddItems(completionMeet, [@opaque] list(completionItem))
+  | CompletionStart([@opaque] CompletionMeet.t)
+  | CompletionAddItems(
+      [@opaque] CompletionMeet.t,
+      [@opaque] list(CompletionItem.t),
+    )
   | CompletionBaseChanged(string)
   | CompletionEnd
   | ConfigurationReload
@@ -35,7 +41,13 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | DarkModeSet(bool)
+  | DefinitionAvailable(
+      int,
+      Location.t,
+      [@opaque] LanguageFeatures.DefinitionResult.t,
+    )
   | ExtensionActivated(string)
+  | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
@@ -66,9 +78,7 @@ type t =
   | ShowNotification(notification)
   | HideNotification(int)
   | FileExplorer(FileExplorer.action)
-  | LanguageFeatureRegisterSuggestProvider(
-      [@opaque] Ext.LanguageFeatures.SuggestProvider.t,
-    )
+  | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput({
       text: string,
@@ -85,9 +95,6 @@ type t =
   | ListSelect
   | ListSelectBackground
   | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | RegisterDockItem(WindowManager.dock)
-  | RemoveDockItem(WindowManager.docks)
-  | AddDockItem(WindowManager.docks)
   | AddSplit(WindowTree.direction, WindowTree.split)
   | RemoveSplit(int)
   | OpenConfigFile(string)
@@ -98,7 +105,7 @@ type t =
   | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
   | SetIconTheme([@opaque] IconTheme.t)
@@ -128,16 +135,6 @@ and command = {
   commandAction: t,
   commandEnabled: unit => bool,
   commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
-}
-and completionMeet = {
-  completionMeetBufferId: int,
-  completionMeetLine: Index.t,
-  completionMeetColumn: Index.t,
-}
-and completionItem = {
-  completionLabel: string,
-  completionKind: option(Ext.CompletionItemKind.t),
-  completionDetail: option(string),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
@@ -199,6 +196,7 @@ and quickmenuVariant =
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker
+  | DocumentSymbols
 and progress =
   | Loading
   | InProgress(float)

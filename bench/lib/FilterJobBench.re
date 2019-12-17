@@ -38,13 +38,24 @@ let job =
   |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
   |> Job.map(MenuFilterJob.addItems(largeAmountOfItems));
 
-let runJob = () => {
-  let _ = Job.doWork(job);
-  ();
-};
+let runJob = () => Job.doWork(job) |> (ignore: Job.t(_) => unit);
 
 let setup = () => ();
 
 let options = Reperf.Options.create(~iterations=1000, ());
 
 bench(~name="FilterJob: doWork atom", ~setup, ~options, ~f=runJob, ());
+
+bench(
+  ~name="FilterJob: addItems",
+  ~setup,
+  ~options,
+  ~f=
+    () => {
+      let _: Job.t(_) =
+        MenuFilterJob.create()
+        |> Job.map(MenuFilterJob.addItems(largeAmountOfItems));
+      ();
+    },
+  (),
+);

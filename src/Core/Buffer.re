@@ -19,8 +19,8 @@ type t = {
 
 let show = _ => "TODO";
 
-let ofLines = (lines: array(string)) => {
-  id: 0,
+let ofLines = (~id=0, lines: array(string)) => {
+  id,
   version: 0,
   filePath: None,
   fileType: None,

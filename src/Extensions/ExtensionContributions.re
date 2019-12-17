@@ -34,7 +34,7 @@ module Grammar = {
   };
 
   let toAbsolutePath = (path: string, g: t) => {
-    let path = Path.join(path, g.path);
+    let grammarPath = Path.join(path, g.path);
 
     let treeSitterPath =
       switch (g.treeSitterPath) {
@@ -42,7 +42,7 @@ module Grammar = {
       | None => None
       };
 
-    {...g, path, treeSitterPath};
+    {...g, path: grammarPath, treeSitterPath};
   };
 };
 

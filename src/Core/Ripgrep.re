@@ -2,6 +2,7 @@ open Rench;
 
 module Time = Revery_Core.Time;
 module List = Utility.List;
+module Queue = Utility.Queue;
 
 module Match = {
   module Log = (val Log.withNamespace("Oni2.Ripgrep.Match"));
@@ -87,7 +88,7 @@ module RipgrepProcessingJob = {
   type pendingWork = {
     onUpdate: list(string) => unit,
     onComplete: unit => unit,
-    queue: Queue.t(Bytes.t) // WARNING: mutable data structure
+    queue: Queue.t(Bytes.t),
   };
 
   let pendingWorkPrinter = pending =>
@@ -96,21 +97,24 @@ module RipgrepProcessingJob = {
   type t = Job.t(pendingWork, unit);
 
   let doWork = (pending, completed) => {
-    switch (Queue.take(pending.queue)) {
-    | exception Queue.Empty => ()
-    | bytes =>
-      let items =
-        bytes |> Bytes.to_string |> String.trim |> String.split_on_char('\n');
-      pending.onUpdate(items);
-    };
+    let queue =
+      switch (Queue.pop(pending.queue)) {
+      | (None, queue) => queue
+      | (Some(bytes), queue) =>
+        let items =
+          bytes
+          |> Bytes.to_string
+          |> String.trim
+          |> String.split_on_char('\n');
+        pending.onUpdate(items);
+        queue;
+      };
 
-    let isDone = Queue.is_empty(pending.queue);
-
-    if (isDone) {
+    if (Queue.isEmpty(pending.queue)) {
       pending.onComplete();
     };
 
-    (isDone, pending, completed);
+    (Queue.isEmpty(pending.queue), {...pending, queue}, completed);
   };
 
   let create = (~onUpdate, ~onComplete) => {
@@ -120,15 +124,15 @@ module RipgrepProcessingJob = {
       ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {onUpdate, onComplete, queue: Queue.create()},
+      {onUpdate, onComplete, queue: Queue.empty},
     );
   };
 
   let queueWork = (bytes: Bytes.t, currentJob: t) => {
     Job.map(
       (pending, completed) => {
-        Queue.push(bytes, pending.queue);
-        (false, pending, completed);
+        let queue = Queue.push(bytes, pending.queue);
+        (false, {...pending, queue}, completed);
       },
       currentJob,
     );

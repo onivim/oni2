@@ -31,10 +31,20 @@ let start = () => {
   let updater = (state: Model.State.t, action) => {
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
-    | _ => (
-        {...state, searchPane: searchUpdater(state.searchPane, action)},
+    | ActivityBar(Model.ActivityBar.SearchClick) when state.searchPane != None => (
+        {...state, searchPane: None},
         Isolinear.Effect.none,
       )
+    | ActivityBar(Model.ActivityBar.SearchClick) when state.searchPane == None => (
+        {...state, searchPane: Some(Model.Search.initial)},
+        Isolinear.Effect.none,
+      )
+    | SearchShow => (
+        {...state, searchPane: Some(Model.Search.initial)},
+        Isolinear.Effect.none,
+      )
+    | _ => (
+        {...state, searchPane: searchUpdater(state.searchPane, action)},
     };
   };
 

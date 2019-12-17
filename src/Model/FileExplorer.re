@@ -1,16 +1,21 @@
 open Revery;
 open Oni_Core;
+open Oni_Extensions;
 
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
+  scrollOffset: [ | `Start(float) | `Middle(float)],
+  focus: option(string) // path
 };
 
 [@deriving show({with_path: false})]
 type action =
-  | TreeUpdated([@opaque] FsTreeNode.t)
-  | NodeUpdated(int, [@opaque] FsTreeNode.t)
-  | NodeClicked([@opaque] FsTreeNode.t);
+  | TreeLoaded([@opaque] FsTreeNode.t)
+  | NodeLoaded(int, [@opaque] FsTreeNode.t)
+  | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
+  | NodeClicked([@opaque] FsTreeNode.t)
+  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)]);
 
 module ExplorerId =
   UniqueId.Make({});
@@ -127,4 +132,9 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   );
 };
 
-let initial = {tree: None, isOpen: true};
+let initial = {
+  tree: None,
+  isOpen: true,
+  scrollOffset: `Start(0.),
+  focus: None,
+};

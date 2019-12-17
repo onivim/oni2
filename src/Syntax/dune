@@ -8,9 +8,12 @@
         lwt
         lwt.unix
         yojson
+        ppx_deriving.runtime
         Oni2.core
+        Oni2.extensions
         Rench
         Revery
         textmate
         treesitter
-    ))
+    )
+    (preprocess (pps ppx_deriving.show)))

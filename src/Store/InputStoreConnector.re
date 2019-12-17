@@ -11,7 +11,10 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-module Log = (val Log.withNamespace("Oni2.InputStoreConnector"));
+module Log = (val Log.withNamespace("Oni2.InputStore"));
+
+module Option = Utility.Option;
+module List = Utility.List;
 
 type captureMode =
   | Normal
@@ -25,12 +28,16 @@ let conditionsOfState = (state: State.t) => {
   let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   switch (state.quickmenu) {
-  | Some({query, cursorPosition, _}) =>
+  | Some({variant, query, cursorPosition, _}) =>
     Hashtbl.add(ret, "listFocus", true);
     Hashtbl.add(ret, "inQuickOpen", true);
 
     if (cursorPosition == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
+    };
+
+    if (variant == EditorsPicker) {
+      Hashtbl.add(ret, "inEditorsPicker", true);
     };
 
   | None => ()
@@ -69,6 +76,38 @@ let start =
   // For IME: Is this sufficient? Or will we need a way to turn off / toggle IME when switching modes?
   Sdl2.TextInput.start();
 
+  let getKeyUpBindings = {
+    let containsCtrl = Re.execp(Re.compile(Re.str("C-")));
+    let containsShift = Re.execp(Re.compile(Re.str("S-")));
+    let containsAlt = Re.execp(Re.compile(Re.str("A-")));
+
+    // NOTE: THis currently only generates a single command based on an ordinary
+    // keybinding in order to emulate vscode's behaviour in the editors picker
+    List.filter_map((binding: Keybindings.Keybinding.t) =>
+      switch (binding.command) {
+      | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
+        let createBinding = key =>
+          Keybindings.Keybinding.{
+            key,
+            command: "list.select",
+            condition: Variable("inEditorsPicker"),
+          };
+
+        if (containsCtrl(binding.key)) {
+          Some(createBinding("<C>"));
+        } else if (containsShift(binding.key)) {
+          Some(createBinding("<S>"));
+        } else if (containsAlt(binding.key)) {
+          Some(createBinding("<A>"));
+        } else {
+          None;
+        };
+
+      | _ => None
+      }
+    );
+  };
+
   let getActionsForBinding =
       (inputKey, bindings, currentConditions: Hashtbl.t(string, bool)) => {
     let inputKey = String.uppercase_ascii(inputKey);
@@ -106,6 +145,7 @@ let start =
       switch (state.quickmenu) {
       | Some({variant: Wildmenu(_), _}) => Wildmenu
 
+      | Some({variant: DocumentSymbols, _})
       | Some({variant: CommandPalette, _})
       | Some({variant: EditorsPicker, _})
       | Some({variant: FilesPicker, _})
@@ -140,6 +180,35 @@ let start =
     runEffects();
   };
 
+  let keyUpEventListener = (event: Revery.Key.KeyEvent.t) => {
+    let state = getState();
+    let bindings = state.keyBindings;
+    let conditions = conditionsOfState(state);
+
+    // NOTE: This curretly only handles Ctrl, Shift and Alt. Everything else is ignored
+    let maybeKeyString =
+      switch (event.keycode) {
+      | 1073742048 => Some("<C>")
+      | 1073742049 => Some("<S>")
+      | 1073742050 => Some("<A>")
+      | _ => None
+      };
+
+    switch (maybeKeyString) {
+    | Some(keyString) =>
+      let bindings = getKeyUpBindings(bindings);
+      let actions = getActionsForBinding(keyString, bindings, conditions);
+
+      Log.info("handle keyup - sending bound actions.");
+      actions |> List.iter(dispatch);
+
+      // Run input effects _immediately_
+      runEffects();
+
+    | None => ()
+    };
+  };
+
   let isTextInputActive = () => {
     switch (window) {
     | None => false
@@ -150,7 +219,7 @@ let start =
   switch (window) {
   | None => Log.info("no window to subscribe to events")
   | Some(window) =>
-    let _ignore =
+    let _: unit => unit =
       Revery.Event.subscribe(
         window.onKeyDown,
         keyEvent => {
@@ -163,7 +232,19 @@ let start =
         },
       );
 
-    let _ignore =
+    let _: unit => unit =
+      Revery.Event.subscribe(
+        window.onKeyUp,
+        keyEvent => {
+          let isTextInputActive = isTextInputActive();
+          Log.info(
+            "got keyup - text input:" ++ string_of_bool(isTextInputActive),
+          );
+          keyUpEventListener(keyEvent);
+        },
+      );
+
+    let _: unit => unit =
       Revery.Event.subscribe(
         window.onTextInputCommit,
         textEvent => {

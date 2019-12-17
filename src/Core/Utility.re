@@ -1,3 +1,10 @@
+open EditorCoreTypes;
+
+let identity = v => v;
+let noop = () => ();
+let noop1 = _ => ();
+let noop2 = (_, _) => ();
+
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     Thread.create(
@@ -95,6 +102,15 @@ let resultToOption = r => {
   switch (r) {
   | Ok(v) => Some(v)
   | Error(_) => None
+  };
+};
+
+exception ResultError(string);
+
+let resultToException = r => {
+  switch (r) {
+  | Ok(v) => v
+  | Error(msg) => raise(ResultError(msg))
   };
 };
 
@@ -216,6 +232,28 @@ let ranges = indices =>
   )
   |> List.rev;
 
+module RangeUtil = {
+  let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
+    ranges => {
+      List.fold_left(
+        (prev, cur) =>
+          Range.(
+            IntMap.update(
+              Index.toZeroBased(cur.start.line),
+              v =>
+                switch (v) {
+                | None => Some([cur])
+                | Some(v) => Some([cur, ...v])
+                },
+              prev,
+            )
+          ),
+        IntMap.empty,
+        ranges,
+      );
+    };
+};
+
 // TODO: Remove after 4.08 upgrade
 module List = {
   include List;
@@ -241,6 +279,12 @@ module Option = {
     | Some(x) => Some(f(x))
     | None => None;
 
+  let map2 = (f, a, b) =>
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => Some(f(aVal, bVal))
+    | _ => None
+    };
+
   let value = (~default) =>
     fun
     | Some(x) => x
@@ -250,6 +294,13 @@ module Option = {
     fun
     | Some(x) => f(x)
     | None => ();
+
+  let iter2 = (f, a, b) => {
+    switch (a, b) {
+    | (Some(a), Some(b)) => f(a, b)
+    | _ => ()
+    };
+  };
 
   let iter_none = f =>
     fun
@@ -263,6 +314,11 @@ module Option = {
     | Some(x) => f(x)
     | None => None;
 
+  let flatten =
+    fun
+    | Some(x) => x
+    | None => None;
+
   let join =
     fun
     | Some(x) => x
@@ -272,6 +328,28 @@ module Option = {
     fun
     | [] => None
     | [hd, ..._] => Some(hd);
+
+  let toString = f =>
+    fun
+    | Some(v) => Printf.sprintf("Some(%s)", f(v))
+    | None => "(None)";
+
+  let values: list(option('a)) => list('a) =
+    items => List.filter_map(v => v, items);
+};
+
+module LwtUtil = {
+  let all = (join, promises) => {
+    List.fold_left(
+      (accPromise, promise) => {
+        let%lwt acc = accPromise;
+        let%lwt curr = promise;
+        Lwt.return(join(acc, curr));
+      },
+      Lwt.return([]),
+      promises,
+    );
+  };
 };
 
 module Result = {
@@ -455,4 +533,153 @@ module StringUtil = {
       );
     };
   };
+};
+
+module type Queue = {
+  type t('a);
+
+  let empty: t(_);
+  let length: t('a) => int;
+  let isEmpty: t('a) => bool;
+  let push: ('a, t('a)) => t('a);
+  let pushFront: ('a, t('a)) => t('a);
+  let pop: t('a) => (option('a), t('a));
+  let take: (int, t('a)) => (list('a), t('a));
+  let toList: t('a) => list('a);
+};
+
+module Queue: Queue = {
+  type t('a) = {
+    front: list('a),
+    rear: list('a), // reversed
+    length: int,
+  };
+
+  let empty = {front: [], rear: [], length: 0};
+
+  let length = queue => queue.length;
+  let isEmpty = queue => queue.length == 0;
+
+  let push = (item, queue) => {
+    ...queue,
+    rear: [item, ...queue.rear],
+    length: queue.length + 1,
+  };
+
+  let pushFront = (item, queue) => {
+    ...queue,
+    front: [item, ...queue.front],
+    length: queue.length + 1,
+  };
+
+  let pop = queue => {
+    let queue =
+      if (queue.front == []) {
+        {...queue, front: List.rev(queue.rear), rear: []};
+      } else {
+        queue;
+      };
+
+    switch (queue.front) {
+    | [item, ...tail] => (
+        Some(item),
+        {...queue, front: tail, length: queue.length - 1},
+      )
+    | [] => (None, queue)
+    };
+  };
+
+  let rec take = (count, queue) =>
+    if (count == 0) {
+      ([], queue);
+    } else {
+      switch (pop(queue)) {
+      | (Some(item), queue) =>
+        let (items, queue) = take(count - 1, queue);
+        ([item, ...items], queue);
+
+      | (None, queue) => ([], queue)
+      };
+    };
+
+  let toList = ({front, rear, _}) => front @ List.rev(rear);
+};
+
+module ChunkyQueue: {
+  include Queue;
+
+  let pushChunk: (list('a), t('a)) => t('a);
+  let pushReversedChunk: (list('a), t('a)) => t('a);
+} = {
+  type t('a) = {
+    front: list('a),
+    rear: Queue.t(list('a)),
+    length: int,
+  };
+
+  let empty = {front: [], rear: Queue.empty, length: 0};
+
+  let length = queue => queue.length;
+  let isEmpty = queue => queue.length == 0;
+
+  let push = (item, queue) => {
+    ...queue,
+    rear: Queue.push([item], queue.rear),
+    length: queue.length + 1,
+  };
+
+  let pushReversedChunk = (chunk, queue) =>
+    if (chunk == []) {
+      queue;
+    } else {
+      {
+        ...queue,
+        rear: Queue.push(chunk, queue.rear),
+        length: queue.length + List.length(chunk),
+      };
+    };
+
+  let pushChunk = chunk => pushReversedChunk(List.rev(chunk));
+
+  let pushFront = (item, queue) => {
+    ...queue,
+    front: [item, ...queue.front],
+    length: queue.length + 1,
+  };
+
+  let pop = queue => {
+    let queue =
+      if (queue.front == []) {
+        switch (Queue.pop(queue.rear)) {
+        | (Some(chunk), rear) => {...queue, front: chunk, rear}
+        | (None, rear) => {...queue, front: [], rear}
+        };
+      } else {
+        queue;
+      };
+
+    switch (queue.front) {
+    | [item, ...tail] => (
+        Some(item),
+        {...queue, front: tail, length: queue.length - 1},
+      )
+    | [] => (None, queue)
+    };
+  };
+
+  let rec take = (count, queue) =>
+    if (count == 0) {
+      ([], queue);
+    } else {
+      switch (pop(queue)) {
+      | (Some(item), queue) =>
+        let (items, queue) = take(count - 1, queue);
+        ([item, ...items], queue);
+
+      | (None, queue) => ([], queue)
+      };
+    };
+
+  let toList = ({front, rear, _}) =>
+    front @ (Queue.toList(rear) |> List.concat);
 };

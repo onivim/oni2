@@ -10,6 +10,7 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
+module BufferHighlights = Oni_Model.BufferHighlights;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
 module Diagnostic = Oni_Model.Diagnostic;
 module Editor = Oni_Model.Editor;
@@ -208,9 +209,6 @@ let%component make =
           (),
         );
 
-        let searchHighlights =
-          Selectors.getSearchHighlights(state, editor.bufferId);
-
         let renderRange = (~color, ~offset, range: Range.t) =>
           {let startX =
              Index.toZeroBased(range.start.column)
@@ -272,11 +270,14 @@ let%component make =
               };
 
               let tokens = getTokensForLine(item);
+
               let highlightRanges =
-                switch (IntMap.find_opt(item, searchHighlights)) {
-                | Some(v) => v
-                | None => []
-                };
+                BufferHighlights.getHighlightsByLine(
+                  ~bufferId=editor.bufferId,
+                  ~line=index,
+                  state.bufferHighlights,
+                );
+
               let shouldHighlight = i =>
                 List.exists(
                   r =>

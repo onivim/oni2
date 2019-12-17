@@ -32,10 +32,9 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let id = Buffer.getId(buf);
+      let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        Selectors.getSearchHighlights(state, id)
-        |> IntMap.bindings
+        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
         |> List.length;
       searchHighlightCount > 0;
     }
@@ -53,10 +52,9 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let id = Buffer.getId(buf);
+      let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        Selectors.getSearchHighlights(state, id)
-        |> IntMap.bindings
+        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
         |> List.length;
       searchHighlightCount == 0;
     }

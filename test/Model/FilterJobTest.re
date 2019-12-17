@@ -30,9 +30,8 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("pref"))
         |> runToCompletion;
 
-      let uiFilteredLength =
-        List.length(Job.getCompletedWork(job).uiFiltered);
-      expect.int(uiFilteredLength).toBe(1);
+      let rankedLength = List.length(Job.getCompletedWork(job).ranked);
+      expect.int(rankedLength).toBe(1);
     });
 
     test("updating query should not reset items", ({expect, _}) => {
@@ -52,7 +51,7 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abce"));
 
       // We should have results without needing to do another iteration of work
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abcde"]);
     });
@@ -72,7 +71,7 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abcde", "abcd"]);
     });
@@ -96,7 +95,7 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abcde", "abcd"]);
     });
@@ -111,21 +110,21 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abc"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("abd")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abd"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("ab")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abd", "abc"]);
     });
@@ -142,7 +141,7 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).allFiltered;
+      let filtered = Job.getCompletedWork(job).filtered;
       let names = List.map((item: Actions.menuItem) => item.name, filtered);
       expect.list(names).toEqual(["abcd"]);
     });

@@ -2,6 +2,12 @@
      FilterJob is a Job.t that describes how to break up the work of filtering
      items across multiple frames.
    */
+open Oni_Core;
+
+module Constants = {
+  let itemsPerFrame = 250;
+  let maxItemsToFilter = 250;
+};
 
 module type Config = {
   type item;
@@ -10,11 +16,10 @@ module type Config = {
 };
 
 module Make = (Config: Config) => {
-  open Oni_Core;
-
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
+  module Queue = Utility.ChunkyQueue;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
@@ -26,61 +31,47 @@ module Make = (Config: Config) => {
       filter: string,
       explodedFilter: list(UChar.t),
       shouldLower: bool,
-      totalItemCount: int,
-      allItems: Queue.t(list(Config.item)), // WARNING: mutable data structure
-      itemsToFilter: Queue.t(list(Config.item)) // WARNING: mutable data structure
+      allItems: Queue.t(Config.item),
+      queue: Queue.t(Config.item),
     };
 
     let create = () => {
       filter: "",
-      allItems: Queue.create(),
+      allItems: Queue.empty,
       explodedFilter: [],
       shouldLower: false,
-      itemsToFilter: Queue.create(),
-      totalItemCount: 0,
+      queue: Queue.empty,
     };
 
-    let toString = ({allItems, itemsToFilter, totalItemCount, _}) =>
+    let toString = ({allItems, queue, _}) =>
       Printf.sprintf(
-        "- Pending Work\n -- totalItemCount: %n -- allItems: %n -- itemsToFilter: %n",
-        totalItemCount,
+        "- Pending Work\n -- allItems: %n -- itemsToFilter: %n",
         Queue.length(allItems),
-        Queue.length(itemsToFilter),
+        Queue.length(queue),
       );
   };
 
   module CompletedWork = {
     type t = {
-      allFiltered: list(Config.item),
-      // If the allFiltered list is still huge,
-      // we take a subset prior to sorting to display in the UI
-      // The 'ui' filtered should be the main item for the UI to use
-      uiFiltered: list(Filter.result(Config.item)),
+      filtered: list(Config.item),
+      ranked: list(Filter.result(Config.item)),
     };
 
-    let initial = {allFiltered: [], uiFiltered: []};
+    let initial = {filtered: [], ranked: []};
 
-    let toString = ({allFiltered, uiFiltered}) =>
+    let toString = ({filtered, ranked}) =>
       Printf.sprintf(
-        "- Completed Work\n -- allFiltered: %n -- uiFiltered: %n",
-        List.length(allFiltered),
-        List.length(uiFiltered),
+        "- Completed Work\n -- filtered: %n -- ranked: %n",
+        List.length(filtered),
+        List.length(ranked),
       );
   };
 
   type t = Job.t(PendingWork.t, CompletedWork.t);
 
-  // Constants
-  let iterationsPerFrame = 250;
-  let maxItemsToFilter = 250;
-
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
   let updateQuery =
-      (
-        filter,
-        pending: PendingWork.t,
-        {allFiltered, uiFiltered}: CompletedWork.t,
-      ) => {
+      (filter, pending: PendingWork.t, {filtered, ranked}: CompletedWork.t) => {
     // TODO: Optimize - for now, if the query changes, just clear the completed work
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
@@ -89,33 +80,33 @@ module Make = (Config: Config) => {
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = Utility.firstk(maxItemsToFilter, allFiltered);
+    let currentMatches = Utility.firstk(Constants.maxItemsToFilter, filtered);
 
     // If the new query matches the old one... we can re-use results
     if (pending.filter != ""
         && Filter.fuzzyMatches(oldExplodedFilter, filter)
-        && List.length(currentMatches) < maxItemsToFilter) {
+        && List.length(currentMatches) < Constants.maxItemsToFilter) {
       let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
 
       let newCompletedWork =
         CompletedWork.{
-          allFiltered:
+          filtered:
             List.filter(
               item =>
                 Filter.fuzzyMatches(
                   explodedFilter,
                   format(item, ~shouldLower),
                 ),
-              allFiltered,
+              filtered,
             ),
-          uiFiltered:
+          ranked:
             List.filter(
               (Filter.{item, _}) =>
                 Filter.fuzzyMatches(
                   explodedFilter,
                   format(item, ~shouldLower),
                 ),
-              uiFiltered,
+              ranked,
             ),
         };
 
@@ -125,7 +116,7 @@ module Make = (Config: Config) => {
         ...pending,
         filter,
         explodedFilter,
-        itemsToFilter: Queue.copy(pending.allItems), // Reset items to filter
+        queue: pending.allItems, // Reset items to filter
         shouldLower,
       };
 
@@ -135,65 +126,67 @@ module Make = (Config: Config) => {
 
   /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
   let addItems = (items, pending: PendingWork.t, completed) => {
-    Queue.push(items, pending.allItems);
-    Queue.push(items, pending.itemsToFilter);
-
     let newPendingWork = {
       ...pending,
-      totalItemCount: pending.totalItemCount + List.length(items),
+      allItems: Queue.pushReversedChunk(items, pending.allItems),
+      queue: Queue.pushReversedChunk(items, pending.queue),
     };
 
     (false, newPendingWork, completed);
   };
 
   let doActualWork =
-      (pendingWork: PendingWork.t, {allFiltered, _}: CompletedWork.t) => {
-    let rec loop = (i, current, completed) =>
-      if (i >= iterationsPerFrame) {
-        (false, completed);
-      } else {
-        switch (current) {
-        | [item, ...rest] =>
-          // Do a first filter pass to check if the item satisifies the regex
-          let name = format(item, ~shouldLower=pendingWork.shouldLower);
-          let matches = Filter.fuzzyMatches(pendingWork.explodedFilter, name);
-          loop(i + 1, rest, matches ? [item, ...completed] : completed);
+      (
+        {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
+        {filtered, _}: CompletedWork.t,
+      ) => {
+    // Take out the items to process this frame
+    let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
-        | [] =>
-          switch (Queue.take(pendingWork.itemsToFilter)) {
-          | items => loop(i, items, completed)
-          | exception Queue.Empty => (true, completed)
-          }
-        };
-      };
+    // Do a first filter pass to check if the item satisifies the regex
+    let filtered =
+      List.fold_left(
+        (acc, item) => {
+          let name = format(item, ~shouldLower);
 
-    let (isComplete, allFiltered) = loop(0, [], allFiltered);
+          if (Filter.fuzzyMatches(explodedFilter, name)) {
+            [item, ...acc];
+          } else {
+            acc;
+          };
+        },
+        filtered,
+        items,
+      );
 
-    let uiFiltered =
-      allFiltered
-      |> Utility.firstk(maxItemsToFilter)
-      |> Filter.rank(pendingWork.filter, format);
+    // Rank a limited nuumber of filtered items
+    let ranked =
+      filtered
+      |> Utility.firstk(Constants.maxItemsToFilter)
+      |> Filter.rank(filter, format);
 
-    (isComplete, pendingWork, CompletedWork.{allFiltered, uiFiltered});
+    (
+      Queue.isEmpty(queue),
+      {...pendingWork, queue},
+      CompletedWork.{filtered, ranked},
+    );
   };
 
   /* [doWork] is run each frame until the work is completed! */
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
-      let allFiltered =
-        pending.allItems |> Queue.to_seq |> List.of_seq |> List.concat;
-      let uiFiltered =
-        allFiltered |> List.map(item => Filter.{highlight: [], item});
-      (true, pending, CompletedWork.{allFiltered, uiFiltered});
+      let filtered = pending.allItems |> Queue.toList;
+      let ranked = filtered |> List.map(item => Filter.{highlight: [], item});
+      (true, pending, CompletedWork.{filtered, ranked});
     } else {
       doActualWork(pending, completed);
     };
 
   let progressReporter = (pending: PendingWork.t, _) => {
-    let toFilter = float(Queue.length(pending.itemsToFilter));
-    let total = float(Queue.length(pending.allItems));
+    let toFilter = Queue.length(pending.queue);
+    let total = Queue.length(pending.allItems);
 
-    1.0 -. toFilter /. total;
+    1.0 -. float(toFilter) /. float(total);
   };
 
   let create = () => {

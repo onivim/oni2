@@ -5,22 +5,16 @@ open Oni_Model;
 
 let button = Style.[marginVertical(24)];
 
-let toggleExplorer = ({fileExplorer, _}: State.t, _) => {
-  let action =
-    fileExplorer.isOpen
-      ? Actions.RemoveDockItem(WindowManager.ExplorerDock)
-      : Actions.AddDockItem(WindowManager.ExplorerDock);
-  GlobalContext.current().dispatch(action);
+let onExplorerClick = _ => {
+  GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
 };
 
-let toggleSearch = ({pane, _}: State.t, _) => {
-  let action =
-    if (Pane.isTypeOpen(Pane.Search, pane)) {
-      Actions.PaneClosed;
-    } else {
-      Actions.PaneOpen(Pane.Search);
-    };
-  GlobalContext.current().dispatch(action);
+let onSearchClick = _ => {
+  GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+};
+
+let onExtensionsClick = _ => {
+  GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
 };
 
 let make = (~state: State.t, ()) => {
@@ -29,17 +23,20 @@ let make = (~state: State.t, ()) => {
 
   <View
     style=Style.[
-      flexGrow(1),
       top(0),
       bottom(0),
       backgroundColor(bg),
       alignItems(`Center),
+      width(50),
     ]>
-    <Clickable onClick={toggleExplorer(state)} style=button>
+    <Clickable onClick=onExplorerClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
     </Clickable>
-    <Clickable onClick={toggleSearch(state)} style=button>
+    <Clickable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
+    </Clickable>
+    <Clickable onClick=onExtensionsClick style=button>
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
     </Clickable>
   </View>;
 };

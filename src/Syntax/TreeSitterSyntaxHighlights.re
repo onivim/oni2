@@ -6,9 +6,6 @@ open EditorCoreTypes;
 open Oni_Core;
 open Treesitter;
 
-type treeSitterScopeMapperFactory =
-  unit => TreeSitterScopes.TextMateConverter.t;
-
 type t = {
   parser: Parser.t,
   tree: Tree.t,
@@ -32,11 +29,9 @@ let scopesToStrings = (scopes: list(TreeSitter.Syntax.scope)) => {
   );
 };
 
-let create = (~theme, ~getTreeSitterScopeMapper, lines: array(string)) => {
+let create = (~theme, ~scopeConverter, lines: array(string)) => {
   let parser = Parser.json();
   let (tree, baseline) = ArrayParser.parse(parser, None, lines);
-
-  let scopeConverter = getTreeSitterScopeMapper();
 
   let job =
     TreeSitterTokenizerJob.create({tree, lines, theme, scopeConverter});
@@ -48,6 +43,13 @@ let updateTheme = (theme, v) => {
   let job = TreeSitterTokenizerJob.updateTheme(theme, v.job);
   {...v, job};
 };
+
+let clearUpdatedLines = ts => {
+  ...ts,
+  job: TreeSitterTokenizerJob.clearUpdatedLines(ts.job),
+};
+
+let getUpdatedLines = ts => TreeSitterTokenizerJob.getUpdatedLines(ts.job);
 
 let hasPendingWork = v => !TreeSitterTokenizerJob.isComplete(v.job);
 let doWork = v => {

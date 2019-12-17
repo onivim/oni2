@@ -5,6 +5,7 @@ module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = Core.Log;
 module TextSynchronization = TextSynchronization;
+module ExtensionHelpers = ExtensionHelpers;
 
 open Types;
 
@@ -74,6 +75,8 @@ let runTest =
 
   let configurationFilePath = Filename.temp_file("configuration", ".json");
   let oc = open_out(configurationFilePath);
+
+  logInit("Writing configuration file: " ++ configurationFilePath);
 
   let () =
     configuration

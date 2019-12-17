@@ -14,14 +14,19 @@ let reduce: (State.t, Actions.t) => State.t =
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),
+        bufferSyntaxHighlights:
+          BufferSyntaxHighlightsReducer.reduce(s.bufferSyntaxHighlights, a),
+        bufferHighlights:
+          BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         commands: Commands.reduce(s.commands, a),
         completions: Completions.reduce(s.completions, a),
+        definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         extensions: Extensions.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        searchHighlights: SearchHighlights.reduce(a, s.searchHighlights),
+        sideBar: SideBarReducer.reduce(s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         notifications: Notifications.reduce(s.notifications, a),
         pane: PaneReducer.reduce(s.pane, a),

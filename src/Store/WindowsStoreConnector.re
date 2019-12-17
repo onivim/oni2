@@ -9,7 +9,7 @@ module Model = Oni_Model;
 
 open Model;
 
-let start = getState => {
+let start = () => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let quitEffect =
@@ -17,109 +17,19 @@ let start = getState => {
       dispatch(Model.Actions.Quit(false))
     );
 
-  /**
-     We wrap each split component as we have to have a type signature
-     that matches unit => React.syntheticElement this is because
-     in the WindowManager module we cannot pass a reference of state
-     in the type signature e.g. State.t => React.syntheticElement because
-     this would cause a circular reference.
-
-     Alternatives are type parameters but this invloves a lot of unrelated
-     type params being added everywhere. ?Functors is another route
-   */
-  let splitFactory = (fn, ()) => {
-    let state = getState();
-    fn(state);
-  };
-
   let initializeDefaultViewEffect = (state: State.t) =>
     Isolinear.Effect.create(~name="windows.init", () => {
-      open Oni_UI;
-
-      let dock =
-        WindowManager.registerDock(
-          ~order=1,
-          ~width=50,
-          ~id=MainDock,
-          ~component=splitFactory(state => <Dock state />),
-          (),
-        );
-
       let editor =
         WindowTree.createSplit(
           ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
           (),
         );
 
-      let explorer =
-        WindowManager.registerDock(
-          ~order=2,
-          ~width=225,
-          ~id=ExplorerDock,
-          ~component=splitFactory(state => <FileExplorerView state />),
-          (),
-        );
-
-      dispatch(RegisterDockItem(dock));
-      dispatch(RegisterDockItem(explorer));
       dispatch(AddSplit(Vertical, editor));
-    });
-
-  let synchronizeConfiguration = (configuration: Core.Configuration.t) =>
-    Isolinear.Effect.create(~name="windows.syncConfig", () => {
-      let activityBarVisible =
-        Core.Configuration.getValue(
-          c => c.workbenchActivityBarVisible,
-          configuration,
-        );
-      let sideBarVisible =
-        Core.Configuration.getValue(
-          c => c.workbenchSideBarVisible,
-          configuration,
-        );
-
-      if (activityBarVisible) {
-        dispatch(AddDockItem(MainDock));
-      } else {
-        dispatch(RemoveDockItem(MainDock));
-      };
-
-      if (sideBarVisible) {
-        dispatch(AddDockItem(ExplorerDock));
-      } else {
-        dispatch(RemoveDockItem(ExplorerDock));
-      };
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | RegisterDockItem(dock) =>
-      switch (dock) {
-      | {position: Left, _} => {
-          ...s,
-          windowManager: {
-            ...s.windowManager,
-            leftDock: [dock, ...s.windowManager.leftDock],
-            dockItems: [dock, ...s.windowManager.dockItems],
-          },
-        }
-      | {position: Right, _} => {
-          ...s,
-          windowManager: {
-            ...s.windowManager,
-            rightDock: [dock, ...s.windowManager.rightDock],
-            dockItems: [dock, ...s.windowManager.dockItems],
-          },
-        }
-      }
-    | RemoveDockItem(id) => {
-        ...s,
-        windowManager: WindowManager.removeDockItem(~id, s.windowManager),
-      }
-    | AddDockItem(id) => {
-        ...s,
-        windowManager: WindowManager.addDockItem(~id, s.windowManager),
-      }
     | WindowSetActive(splitId, _) => {
         ...s,
         windowManager: {
@@ -220,7 +130,6 @@ let start = getState => {
       let effect =
         switch (action) {
         | Init => initializeDefaultViewEffect(state)
-        | ConfigurationSet(c) => synchronizeConfiguration(c)
         // When opening a file, ensure that the active editor is getting focus
         | OpenFileByPath(_) => getFocusEffect
         | ViewCloseEditor(_) =>

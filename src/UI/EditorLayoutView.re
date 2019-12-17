@@ -6,7 +6,6 @@
  */
 open Revery;
 open UI;
-open Oni_Core;
 open Oni_Model;
 open WindowManager;
 open WindowTree;
@@ -14,34 +13,6 @@ open WindowTree;
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
-
-let getDockStyle = ({width, _}: dock, theme: Theme.t) => {
-  let w =
-    switch (width) {
-    | Some(w) => w
-    | None => 10
-    };
-  Style.[
-    width(w),
-    top(0),
-    bottom(0),
-    backgroundColor(theme.sideBarBackground),
-  ];
-};
-
-let renderDock = (dockItems: list(dock), state: State.t) =>
-  List.sort((prev, curr) => curr.order > prev.order ? 1 : 0, dockItems)
-  |> List.fold_left(
-       (accum, item) =>
-         [
-           <View style={getDockStyle(item, state.theme)}>
-             {item.component()}
-           </View>,
-           <WindowHandle direction=Vertical theme={state.theme} />,
-           ...accum,
-         ],
-       [],
-     );
 
 let parentStyle = (dir: direction) => {
   let flexDir =
@@ -90,13 +61,12 @@ let renderTree = (state, tree) => {
 
 let make = (~state: State.t, ()) => {
   let {State.windowManager, _} = state;
-  let {windowTree, leftDock, rightDock, _} = windowManager;
+  let {windowTree, _} = windowManager;
 
   let children = renderTree(state, windowTree);
 
   let splits =
-    renderDock(leftDock, state)
-    @ [
+    [
       <View
         onDimensionsChanged={dim =>
           GlobalContext.current().notifyWindowTreeSizeChanged(
@@ -109,7 +79,6 @@ let make = (~state: State.t, ()) => {
         children
       </View>,
     ]
-    @ renderDock(rightDock, state)
     |> React.listToElement;
 
   <View style=splitContainer> splits </View>;

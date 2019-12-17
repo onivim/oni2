@@ -7,6 +7,8 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Ext = Oni_Extensions;
+
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
 };
@@ -32,22 +34,8 @@ let getBufferForEditor = (state: State.t, editor: Editor.t) => {
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   let fileType =
-    LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+    Ext.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
   Configuration.getValue(~fileType, f, state.configuration);
-};
-
-let getMatchingPairs = (state: State.t, bufferId: int) => {
-  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-  | Some(v) => v.matchingPair
-  | None => None
-  };
-};
-
-let getSearchHighlights = (state: State.t, bufferId: int) => {
-  switch (IntMap.find_opt(bufferId, state.searchHighlights)) {
-  | Some(v) => v.highlightRanges
-  | None => IntMap.empty
-  };
 };
 
 let getActiveBuffer = (state: State.t) => {
@@ -74,7 +62,7 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   | None => Configuration.getValue(f, state.configuration)
   | Some(buffer) =>
     let fileType =
-      LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+      Ext.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };

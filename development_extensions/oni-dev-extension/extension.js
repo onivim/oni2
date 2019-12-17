@@ -18,6 +18,12 @@ function activate(context) {
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
 
+    cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
+        provideDefinition: (document, _position, _token) => {
+             return new vscode.Location(document.uri, new vscode.Position(0, 0));
+        }
+    }));
+
     // Add a completion provider for oni-dev files
     cleanup(vscode.languages.registerCompletionItemProvider('oni-dev',
         {

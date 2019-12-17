@@ -12,14 +12,14 @@ module Option = Core.Utility.Option;
 
 open Oni_Model;
 
-module Extensions = Oni_Extensions;
+module Ext = Oni_Extensions;
 
 module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
 module Zed_utf8 = Core.ZedBundled;
 
 let start =
     (
-      languageInfo: LanguageInfo.t,
+      languageInfo: Ext.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -63,6 +63,34 @@ let start =
       None;
     };
   });
+
+  let _ =
+    Vim.onGoto((_position, _definitionType) => {
+      Log.info("Goto definition requested");
+      // Get buffer and cursor position
+      let state = getState();
+      let maybeBuffer = state |> Selectors.getActiveBuffer;
+
+      let maybeEditor =
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+
+      let getDefinition = (buffer, editor) => {
+        let id = Core.Buffer.getId(buffer);
+        let position = Editor.getPrimaryCursor(editor);
+        Definition.getAt(id, position, state.definition)
+        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+             Actions.OpenFileByPath(
+               definitionResult.uri |> Core.Uri.toFileSystemPath,
+               None,
+               Some(definitionResult.location),
+             )
+           });
+      };
+
+      Option.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.flatten
+      |> Option.iter(action => dispatch(action));
+    });
 
   let _ =
     // Unhandled escape is called when there is an `<esc>` sent to Vim,
@@ -145,7 +173,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -288,7 +316,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
       dispatch(Actions.BufferEnter(meta, fileType));
@@ -515,7 +543,7 @@ let start =
       let fileType =
         switch (metadata.filePath) {
         | Some(v) =>
-          Some(LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -692,16 +720,23 @@ let start =
     Isolinear.Effect.create(~name="vim.applyCompletion", () => {
       let completions = state.completions;
       let bestMatch = Completions.getBestCompletion(completions);
-      let meet = Completions.getMeet(completions);
-      switch (bestMatch, meet) {
-      | (Some(completion), Some(meet)) =>
+      let maybeMeetPosition =
+        completions
+        |> Completions.getMeet
+        |> Option.map(CompletionMeet.getLocation);
+      switch (bestMatch, maybeMeetPosition) {
+      | (Some(completion), Some(meetPosition)) =>
+        let meet = Location.(meetPosition.column);
         let cursorLocation = Vim.Cursor.getLocation();
         let delta =
-          Index.(
-            toZeroBased(
-              cursorLocation.column - toOneBased(meet.completionMeetColumn),
-            )
-          );
+          Index.(toZeroBased(cursorLocation.column - toOneBased(meet)));
+        Log.infof(m =>
+          m(
+            "Completing at cursor position: %s | meet: %s",
+            Index.show(cursorLocation.column),
+            Index.show(meet),
+          )
+        );
 
         let idx = ref(delta);
         while (idx^ >= 0) {
@@ -715,7 +750,7 @@ let start =
             latestCursors := Vim.input(Zed_utf8.singleton(s));
             ();
           },
-          completion.item.completionLabel,
+          completion.item.label,
         );
         updateActiveEditorCursors(latestCursors^);
       | _ => ()
@@ -759,25 +794,22 @@ let start =
       ();
     });
 
-  let updater = (state: State.t, action) => {
+  let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.ConfigurationSet(configuration) => (
+    | ConfigurationSet(configuration) => (
         state,
         synchronizeViml(configuration),
       )
-    | Actions.Command("editor.action.clipboardPasteAction") => (
+    | Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
       )
-    | Actions.Command("insertBestCompletion") => (
-        state,
-        applyCompletion(state),
-      )
-    | Actions.Command("undo") => (state, undoEffect)
-    | Actions.Command("redo") => (state, redoEffect)
-    | Actions.ListFocusUp
-    | Actions.ListFocusDown
-    | Actions.ListFocus(_) =>
+    | Command("insertBestCompletion") => (state, applyCompletion(state))
+    | Command("undo") => (state, undoEffect)
+    | Command("redo") => (state, redoEffect)
+    | ListFocusUp
+    | ListFocusDown
+    | ListFocus(_) =>
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.quickmenu) {
@@ -789,34 +821,28 @@ let start =
         };
       (state, eff);
 
-    | Actions.Init => (state, initEffect)
-    | Actions.OpenFileByPath(path, direction, location) => (
+    | Init => (state, initEffect)
+    | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
-    | Actions.BufferEnter(_)
-    | Actions.SetEditorFont(_)
-    | Actions.WindowSetActive(_, _)
-    | Actions.EditorGroupSetSize(_, _) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Actions.BufferSetIndentation(_, indent) => (
+    | BufferEnter(_)
+    | SetEditorFont(_)
+    | WindowSetActive(_, _)
+    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
       )
-    | Actions.ViewSetActiveEditor(_) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Actions.ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
-    | Actions.KeyboardInput(s) => (state, inputEffect(s))
-    | Actions.CopyActiveFilepathToClipboard => (
+    | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
+    | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | KeyboardInput(s) => (state, inputEffect(s))
+    | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
       )
 
-    | Actions.VimDirectoryChanged(directory) =>
+    | VimDirectoryChanged(directory) =>
       let newState = {
         ...state,
         workspace:
@@ -833,6 +859,8 @@ let start =
             state.languageInfo,
             state.iconTheme,
             state.configuration,
+            ~onComplete=tree =>
+            Actions.FileExplorer(TreeLoaded(tree))
           ),
           TitleStoreConnector.Effects.updateTitle(newState),
         ]),

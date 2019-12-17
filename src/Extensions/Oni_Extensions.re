@@ -6,7 +6,8 @@
 
 module CompletionItemKind = CompletionItemKind;
 module Configuration = Configuration;
-module LanguageFeatures = LanguageFeatures;
+module DocumentSelector = DocumentSelector;
+module DocumentSymbol = DocumentSymbol;
 module ExtensionContributions = ExtensionContributions;
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;
@@ -14,3 +15,7 @@ module ExtHostProtocol = ExtHostProtocol;
 module ExtHostTransport = ExtHostTransport;
 module ExtensionManifest = ExtensionManifest;
 module ExtensionScanner = ExtensionScanner;
+module LanguageInfo = LanguageInfo;
+module LocationWithUri = LocationWithUri;
+module ProviderUtility = ProviderUtility;
+module SymbolKind = SymbolKind;

@@ -30,7 +30,7 @@ runTestWithInput(
   // Wait for the oni-dev filetype
   wait(
     ~timeout=30.0,
-    ~name="Validate the 'oni-dev' extension gets activated",
+    ~name="Wait for oni-dev filetype to show up",
     (state: State.t) => {
       let fileType =
         Some(state)
@@ -47,12 +47,12 @@ runTestWithInput(
   // Enter some text
   input("i");
 
-  input("H");
+  input("R");
 
   // Should get completions
   wait(
     ~timeout=30.0,
-    ~name="Validate the 'oni-dev' extension gets activated",
+    ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
     List.length(state.completions.filteredCompletions) > 0
   });
