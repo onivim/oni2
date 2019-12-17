@@ -132,5 +132,5 @@ let run = () => {
   Log.info("");
 
   Log.info("All systems go.");
-  exit(result ? 0 : 1);
+  result ? 0 : 1;
 };

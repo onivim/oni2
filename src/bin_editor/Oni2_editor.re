@@ -15,7 +15,14 @@ module Store = Oni_Store;
 module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 
-let cliOptions = Core.Cli.parse(~checkHealth=HealthCheck.run);
+let cliOptions =
+  Core.Cli.parse(
+    ~checkHealth=HealthCheck.run,
+    ~listExtensions=() => {
+      print_endline("Listing extensions...");
+      1;
+    },
+  );
 Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start();
