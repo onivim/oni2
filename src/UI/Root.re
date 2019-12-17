@@ -83,13 +83,13 @@ let make = (~state: State.t, ()) => {
       : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface>
-      activityBar
-      sideBar
-      <View style=Styles.workspace>
+    <View style=Styles.workspace>
+      <View style=Styles.surface>
+        activityBar
+        sideBar
         <EditorView state />
-        <PaneView theme uiFont editorFont state />
       </View>
+      <PaneView theme uiFont editorFont state />
     </View>
     <Overlay>
       {switch (state.quickmenu) {
