@@ -52,9 +52,7 @@ let parse = (~checkHealth, ~listExtensions) => {
 
   let queuedJob = ref(None);
   let runAndExit = f =>
-    Arg.Unit(() => queuedJob := Some((cli) => {
-        f(cli) |> exit;
-    }));
+    Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
 
   Arg.parse(
     [
@@ -160,9 +158,9 @@ let parse = (~checkHealth, ~listExtensions) => {
   };
 
   switch (queuedJob^) {
-  | None => ();
-  | Some(job) => job(cli);
-  }
+  | None => ()
+  | Some(job) => job(cli)
+  };
 
   cli;
 };

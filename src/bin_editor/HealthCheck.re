@@ -109,7 +109,7 @@ let checks = [
   ),
 ];
 
-let run = (_cli) => {
+let run = _cli => {
   let setup = Setup.init();
 
   let result =

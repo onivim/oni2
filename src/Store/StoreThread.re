@@ -38,10 +38,11 @@ let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
         | Some(p) => ExtensionScanner.scan(p)
         | None => []
         };
-      
-      let userExtensions = cli
-      |> Option.map(Utility.getUserExtensions)
-      |> Option.value(~default=[]);
+
+      let userExtensions =
+        cli
+        |> Option.map(Utility.getUserExtensions)
+        |> Option.value(~default=[]);
 
       Log.debugf(m =>
         m(

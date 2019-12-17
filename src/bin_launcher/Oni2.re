@@ -16,7 +16,11 @@ let passthroughString = Arg.String(_ => ());
 
 let spec = [
   ("-f", Arg.Set(stayAttached), "Stay attached to the foreground terminal"),
-  ("--nofork", Arg.Set(stayAttached), "Stay attached to the foreground termina"),
+  (
+    "--nofork",
+    Arg.Set(stayAttached),
+    "Stay attached to the foreground termina",
+  ),
   ("--debug", passthrough, ""),
   ("--log-file", passthroughString, "Specify a file to output logs"),
   ("--log-filter", passthroughString, "A "),
@@ -35,7 +39,7 @@ Usage:
 
   oni2 [options][paths...]
 
-Options: 
+Options:
 |};
 
 let anonArg = _ => ();

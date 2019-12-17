@@ -1,6 +1,6 @@
 /*
  * Utility.re
- * 
+ *
  * Various store-level utilities
  */
 
@@ -14,18 +14,16 @@ module Log = (val Log.withNamespace("Oni2.StoreUtility"));
 let getUserExtensionsDirectory = (cli: Cli.t) => {
   let overriddenExtensionsDir = cli.overriddenExtensionsDir;
 
-    switch (overriddenExtensionsDir) {
-    | Some(p) => Some(p)
-    | None =>
-      switch (Filesystem.getExtensionsFolder()) {
-      | Ok(p) => Some(p)
-      | Error(msg) =>
-        Log.errorf(m =>
-          m("Error discovering user extensions: %s", msg)
-        );
-        None;
-      }
+  switch (overriddenExtensionsDir) {
+  | Some(p) => Some(p)
+  | None =>
+    switch (Filesystem.getExtensionsFolder()) {
+    | Ok(p) => Some(p)
+    | Error(msg) =>
+      Log.errorf(m => m("Error discovering user extensions: %s", msg));
+      None;
     }
+  };
 };
 
 let getUserExtensions = (cli: Cli.t) => {

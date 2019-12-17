@@ -19,11 +19,11 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 let cliOptions =
   Core.Cli.parse(
     ~checkHealth=HealthCheck.run,
-    ~listExtensions=(cli) => {
+    ~listExtensions=cli => {
       let extensions = Store.Utility.getUserExtensions(cli);
-      let printExtension = ((ext: Ext.ExtensionScanner.t) => {
-        print_endline (ext.manifest.name); 
-      });
+      let printExtension = (ext: Ext.ExtensionScanner.t) => {
+        print_endline(ext.manifest.name);
+      };
       List.iter(printExtension, extensions);
       1;
     },
