@@ -4,7 +4,7 @@ type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float)],
-  focus: option(string) // path
+  active: option(string) // path
 };
 
 [@deriving show]

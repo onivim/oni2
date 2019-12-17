@@ -53,13 +53,13 @@ module Styles = {
     bottom(0),
   ];
 
-  let item = (~itemHeight, ~isFocused, ~theme: Theme.t) => [
+  let item = (~itemHeight, ~isActive, ~theme: Theme.t) => [
     height(itemHeight),
     cursor(Revery.MouseCursors.pointer),
     flexDirection(`Row),
     overflow(`Hidden),
     backgroundColor(
-      isFocused ? theme.menuSelectionBackground : Colors.transparentWhite,
+      isActive ? theme.menuSelectionBackground : Colors.transparentWhite,
     ),
   ];
 
@@ -91,7 +91,7 @@ module Make = (Model: TreeModel) => {
   let rec nodeView =
           (
             ~renderContent,
-            ~focus,
+            ~active,
             ~itemHeight,
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
@@ -101,8 +101,8 @@ module Make = (Model: TreeModel) => {
           ) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
 
-    let (isFocused, childFocus) =
-      switch (focus) {
+    let (isActive, descendantActive) =
+      switch (active) {
       | Some([last]) when last == node => (true, None)
       | Some([head, ...tail]) when head == node => (false, Some(tail))
       | Some(_) => (false, None)
@@ -115,7 +115,7 @@ module Make = (Model: TreeModel) => {
     let item = (~arrow, ()) =>
       <Clickable
         onClick={() => onClick(node)}
-        style={Styles.item(~itemHeight, ~isFocused, ~theme)}>
+        style={Styles.item(~itemHeight, ~isActive, ~theme)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -127,7 +127,7 @@ module Make = (Model: TreeModel) => {
           let element =
             <nodeView
               renderContent
-              focus=childFocus
+              active=descendantActive
               itemHeight
               clipRange=(clipStart - count, clipEnd - count)
               onClick
@@ -173,7 +173,7 @@ module Make = (Model: TreeModel) => {
   let%component make =
                 (
                   ~children as renderContent,
-                  ~focus: option(list(Model.t)),
+                  ~active: option(list(Model.t)),
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
@@ -266,7 +266,7 @@ module Make = (Model: TreeModel) => {
         <View style={Styles.content(~scrollTop)}>
           <nodeView
             renderContent
-            focus
+            active
             itemHeight
             clipRange
             onClick

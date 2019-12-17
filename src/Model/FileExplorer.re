@@ -6,7 +6,7 @@ type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float)],
-  focus: option(string) // path
+  active: option(string) // path
 };
 
 [@deriving show({with_path: false})]
@@ -136,5 +136,5 @@ let initial = {
   tree: None,
   isOpen: true,
   scrollOffset: `Start(0.),
-  focus: None,
+  active: None,
 };

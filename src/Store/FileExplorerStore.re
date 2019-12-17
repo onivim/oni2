@@ -67,8 +67,8 @@ let setTree = (tree, state) =>
   updateFileExplorer(s => {...s, tree: Some(tree)}, state);
 let setOpen = (isOpen, state) =>
   updateFileExplorer(s => {...s, isOpen}, state);
-let setFocus = (focus, state) =>
-  updateFileExplorer(s => {...s, focus}, state);
+let setActive = (maybePath, state) =>
+  updateFileExplorer(s => {...s, active: maybePath}, state);
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
@@ -144,14 +144,14 @@ let start = () => {
     | NodeLoaded(id, node) => (replaceNode(id, node), Isolinear.Effect.none)
 
     | FocusNodeLoaded(id, node) =>
-      switch (state.fileExplorer.focus) {
+      switch (state.fileExplorer.active) {
       | Some(path) => revealPath(replaceNode(id, node), path)
       | None => (state, Isolinear.Effect.none)
       }
 
     | NodeClicked(node) =>
-      // Set focus here to avoid scrolling in BufferEnter
-      let state = setFocus(Some(node.path), state);
+      // Set active here to avoid scrolling in BufferEnter
+      let state = setActive(Some(node.path), state);
 
       switch (node) {
       | {kind: File, path, _} => (state, openFileByPathEffect(path))
@@ -212,8 +212,8 @@ let start = () => {
 
       | BufferEnter({filePath, _}, _) =>
         switch (state.fileExplorer) {
-        | {focus, _} when focus != filePath =>
-          let state = setFocus(filePath, state);
+        | {active, _} when active != filePath =>
+          let state = setActive(filePath, state);
           switch (filePath) {
           | Some(path) => revealPath(state, path)
           | None => (state, Isolinear.Effect.none)

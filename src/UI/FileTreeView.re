@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Model;
 
 open Revery;
@@ -24,7 +25,7 @@ module Styles = {
 
   let item = [flexDirection(`Row), alignItems(`Center)];
 
-  let text = (~fg, ~font: Core.UiFont.t) => [
+  let text = (~fg, ~font: UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
     color(fg),
@@ -49,7 +50,7 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: Core.UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
+let nodeView = (~font: UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -95,8 +96,8 @@ let make =
 
   let fg = state.theme.sideBarForeground;
 
-  let focus =
-    switch (focus, state.workspace) {
+  let active =
+    switch (active, state.workspace) {
     | (Some(path), Some(workspace)) => toNodePath(workspace, tree, path)
     | _ => None
     };
@@ -112,7 +113,7 @@ let make =
       scrollOffset
       onScrollOffsetChange
       tree
-      focus
+      active
       theme
       itemHeight=22
       onClick=onNodeClick>
