@@ -238,7 +238,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
     "@esy-ocaml/reason": "github:facebook/reason#474900e",
-    "revery": "github:revery-ui/revery#b0021ec",
+    "revery": "github:revery-ui/revery#7c9df26",
     "reason-libvim": "onivim/reason-libvim#4919011",
     "editor-core-types": "onivim/editor-core-types#16dd98e"
   },
