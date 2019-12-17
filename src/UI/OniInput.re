@@ -223,9 +223,8 @@ let%component make =
     ];
   };
 
-  let measureTextWidth = text =>
-    switch (Revery_UI.getActiveWindow()) {
-    | Some(window) =>
+  let measureTextWidth = text => {
+    let window = Revery_UI.getActiveWindow();
       let dimensions =
         Revery_Draw.Text.measure(
           ~window,
@@ -235,7 +234,6 @@ let%component make =
         );
 
       dimensions.width;
-    | None => Styles.fontSize
     };
 
   let%hook (cursorOpacity, resetCursor) =

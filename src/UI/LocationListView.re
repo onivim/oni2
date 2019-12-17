@@ -8,17 +8,14 @@ open Oni_Model;
 module Option = Utility.Option;
 
 // TODO: move to Revery
-let getFontAdvance = (fontFile, fontSize) => {
-  open Revery.Draw;
-
-  let scaledFontSize =
-    Text._getScaledFontSizeFromWindow(Revery.UI.getActiveWindow(), fontSize);
-  let font = FontCache.load(fontFile, scaledFontSize);
-  let shapedText = FontRenderer.shape(font, "x");
-  let Fontkit.{advance, _} =
-    FontRenderer.getGlyph(font, shapedText[0].glyphId);
-
-  float(advance) /. 64.;
+let getFontAdvance = (fontFamily, fontSize) => {
+    let window = Revery.UI.getActiveWindow();
+      Revery.Draw.Text.measure(
+        ~window,
+        ~fontSize,
+        ~fontFamily,
+        "x",
+      ).width |> float_of_int;
 };
 
 module Styles = {
@@ -82,9 +79,8 @@ let item =
       Index.toOneBased(item.location.line),
     );
 
-  let locationWidth =
-    switch (Revery.UI.getActiveWindow()) {
-    | Some(window) =>
+  let locationWidth = {
+    let window = Revery.UI.getActiveWindow();
       Revery.Draw.Text.measure(
         ~window,
         ~fontSize=uiFont.fontSize,
@@ -92,7 +88,6 @@ let item =
         locationText,
       ).
         width
-    | None => String.length(locationText) * uiFont.fontSize
     };
 
   let location = () =>
@@ -117,6 +112,7 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       open Utility.StringUtil;
+
 
       let availableWidth = float(width - locationWidth);
       let maxLength =
