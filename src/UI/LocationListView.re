@@ -7,10 +7,24 @@ open Oni_Model;
 
 module Option = Utility.Option;
 
-let getFontAdvance = (fontFamily, fontSize) => {
-  let window = Revery.UI.getActiveWindow();
-  Revery.Draw.Text.measure(~window, ~fontSize, ~fontFamily, "x").width
-  |> float_of_int;
+// TODO: move to Revery
+let getFontAdvance = (fontFile, fontSize) => {
+  open Revery.Draw;
+
+  let maybeWindow = Revery.UI.getActiveWindow();
+  let scaledFontSize =
+    Text._getScaledFontSizeFromWindow(maybeWindow, fontSize);
+  let font = FontCache.load(fontFile, scaledFontSize);
+  let shapedText = FontRenderer.shape(font, "x");
+  let Fontkit.{advance, _} =
+    FontRenderer.getGlyph(font, shapedText[0].glyphId);
+
+  let multiplier =
+    switch (maybeWindow) {
+    | None => 1.0
+    | Some(w) => Window.getScaleAndZoom(w) *. Window.getDevicePixelRatio(w)
+    };
+  float(advance) /. 64. /. multiplier;
 };
 
 module Styles = {
