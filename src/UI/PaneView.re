@@ -37,27 +37,30 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
          | Pane.Diagnostics => <DiagnosticsPane theme uiFont />
          };
        [
-       <WindowHandle theme direction=Horizontal />,
-       <View style={Styles.pane(~theme)}>
-         <View style=Style.[flexDirection(`Row)]>
-           <PaneTab
-             uiFont
-             theme
-             title="Search"
-             onClick=showSearch
-             active={paneType == Pane.Search}
-           />
-           <PaneTab
-             uiFont
-             theme
-             title="Problems"
-             onClick=showProblems
-             active={paneType == Pane.Diagnostics}
-           />
-         </View>
-         <View style=Style.[flexDirection(`Column), flexGrow(1)]> childPane </View>
-       </View>
-       ] |> React.listToElement;
+         <WindowHandle theme direction=Horizontal />,
+         <View style={Styles.pane(~theme)}>
+           <View style=Style.[flexDirection(`Row)]>
+             <PaneTab
+               uiFont
+               theme
+               title="Search"
+               onClick=showSearch
+               active={paneType == Pane.Search}
+             />
+             <PaneTab
+               uiFont
+               theme
+               title="Problems"
+               onClick=showProblems
+               active={paneType == Pane.Diagnostics}
+             />
+           </View>
+           <View style=Style.[flexDirection(`Column), flexGrow(1)]>
+             childPane
+           </View>
+         </View>,
+       ]
+       |> React.listToElement;
      })
   |> Option.value(~default=<View />);
 };
