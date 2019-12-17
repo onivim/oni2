@@ -9,6 +9,7 @@ open Revery;
 open Oni_UI;
 
 module Core = Oni_Core;
+module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -18,8 +19,12 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 let cliOptions =
   Core.Cli.parse(
     ~checkHealth=HealthCheck.run,
-    ~listExtensions=() => {
-      print_endline("Listing extensions...");
+    ~listExtensions=(cli) => {
+      let extensions = Store.Utility.getUserExtensions(cli);
+      let printExtension = ((ext: Ext.ExtensionScanner.t) => {
+        print_endline (ext.manifest.name); 
+      });
+      List.iter(printExtension, extensions);
       1;
     },
   );

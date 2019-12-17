@@ -50,13 +50,11 @@ let parse = (~checkHealth, ~listExtensions) => {
   let extensionsDir = ref(None);
   let shouldClose = ref(false);
 
+  let queuedJob = ref(None);
   let runAndExit = f =>
-    Arg.Unit(
-      () => {
-        Log.enablePrinting();
-        f() |> exit;
-      },
-    );
+    Arg.Unit(() => queuedJob := Some((cli) => {
+        f(cli) |> exit;
+    }));
 
   Arg.parse(
     [
@@ -152,7 +150,7 @@ let parse = (~checkHealth, ~listExtensions) => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {
+  let cli = {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
@@ -160,4 +158,11 @@ let parse = (~checkHealth, ~listExtensions) => {
     overriddenExtensionsDir: extensionsDir^,
     shouldClose: shouldClose^,
   };
+
+  switch (queuedJob^) {
+  | None => ();
+  | Some(job) => job(cli);
+  }
+
+  cli;
 };
