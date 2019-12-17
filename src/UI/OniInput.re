@@ -225,16 +225,16 @@ let%component make =
 
   let measureTextWidth = text => {
     let window = Revery_UI.getActiveWindow();
-      let dimensions =
-        Revery_Draw.Text.measure(
-          ~window,
-          ~fontFamily=Styles.fontFamily,
-          ~fontSize=Styles.fontSize,
-          text,
-        );
+    let dimensions =
+      Revery_Draw.Text.measure(
+        ~window,
+        ~fontFamily=Styles.fontFamily,
+        ~fontSize=Styles.fontSize,
+        text,
+      );
 
-      dimensions.width;
-    };
+    dimensions.width;
+  };
 
   let%hook (cursorOpacity, resetCursor) =
     Cursor.use(~interval=Time.ms(500), ~isFocused=state.isFocused);

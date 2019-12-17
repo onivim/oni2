@@ -9,13 +9,9 @@ module Option = Utility.Option;
 
 // TODO: move to Revery
 let getFontAdvance = (fontFamily, fontSize) => {
-    let window = Revery.UI.getActiveWindow();
-      Revery.Draw.Text.measure(
-        ~window,
-        ~fontSize,
-        ~fontFamily,
-        "x",
-      ).width |> float_of_int;
+  let window = Revery.UI.getActiveWindow();
+  Revery.Draw.Text.measure(~window, ~fontSize, ~fontFamily, "x").width
+  |> float_of_int;
 };
 
 module Styles = {
@@ -79,8 +75,9 @@ let item =
       Index.toOneBased(item.location.line),
     );
 
-  let locationWidth = Oni_Core.EditorFont.(
-    int_of_float(editorFont.measuredWidth) * String.length(locationText)
+  let locationWidth =
+    Oni_Core.EditorFont.(
+      int_of_float(editorFont.measuredWidth) * String.length(locationText)
     );
 
   let location = () =>
@@ -105,7 +102,6 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       open Utility.StringUtil;
-
 
       let availableWidth = float(width - locationWidth);
       let maxLength =
