@@ -7,7 +7,6 @@ open Oni_Model;
 
 module Option = Utility.Option;
 
-// TODO: move to Revery
 let getFontAdvance = (fontFamily, fontSize) => {
   let window = Revery.UI.getActiveWindow();
   Revery.Draw.Text.measure(~window, ~fontSize, ~fontFamily, "x").width
