@@ -74,10 +74,16 @@ let item =
       Index.toOneBased(item.location.line),
     );
 
-  let locationWidth =
-    Oni_Core.EditorFont.(
-      int_of_float(editorFont.measuredWidth) * String.length(locationText)
-    );
+  let locationWidth = {
+    let window = Revery.UI.getActiveWindow();
+    Revery.Draw.Text.measure(
+      ~window,
+      ~fontSize=uiFont.fontSize,
+      ~fontFamily=uiFont.fontFile,
+      locationText,
+    ).
+      width;
+  };
 
   let location = () =>
     <Text
