@@ -39,7 +39,7 @@ steps:
   #  displayName: "Bench: build"
   # - script: esy @bench run
   #  displayName: "Bench: run"
-   - script: esy x Oni2 --help
+  - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy create-release
     displayName: "esy create-release"
