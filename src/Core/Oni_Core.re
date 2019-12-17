@@ -28,7 +28,6 @@ module IntMap = IntMap;
 module Job = Job;
 module LineNumber = LineNumber;
 module Log = Log;
-module Node = Node;
 module Ripgrep = Ripgrep;
 module Setup = Setup;
 module StringMap = StringMap;

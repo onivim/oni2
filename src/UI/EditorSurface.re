@@ -729,37 +729,6 @@ let%component make =
                );
              }};
 
-          if (Definition.isAvailable(
-                bufferId,
-                cursorPosition,
-                state.definition,
-              )) {
-            let () =
-              getTokenAtPosition(
-                ~startIndex=leftVisibleColumn,
-                ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
-                cursorPosition,
-              )
-              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
-                   let range =
-                     Range.{
-                       start:
-                         Location.{
-                           line: cursorPosition.line,
-                           column: token.startPosition,
-                         },
-                       stop:
-                         Location.{
-                           line: cursorPosition.line,
-                           column: token.endPosition,
-                         },
-                     };
-                   let () = renderUnderline(~color=token.color, range);
-                   ();
-                 });
-            ();
-          };
-
           ImmediateList.render(
             ~scrollY,
             ~rowHeight,
@@ -819,6 +788,37 @@ let%component make =
               },
             (),
           );
+
+          if (Definition.isAvailable(
+                bufferId,
+                cursorPosition,
+                state.definition,
+              )) {
+            let () =
+              getTokenAtPosition(
+                ~startIndex=leftVisibleColumn,
+                ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+                cursorPosition,
+              )
+              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+                   let range =
+                     Range.{
+                       start:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.startPosition,
+                         },
+                       stop:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.endPosition,
+                         },
+                     };
+                   let () = renderUnderline(~color=token.color, range);
+                   ();
+                 });
+            ();
+          };
 
           ImmediateList.render(
             ~scrollY,
