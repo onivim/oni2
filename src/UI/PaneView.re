@@ -56,5 +56,5 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
          <View style=Style.[flexDirection(`Column)]> childPane </View>
        </View>;
      })
-  |> Option.value(~default=React.empty);
+  |> Option.value(~default=<View />);
 };
