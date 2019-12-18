@@ -1,0 +1,37 @@
+{
+	"name": "laserwave",
+	"displayName": "LaserWave",
+	"description": "Retro outrun syntax theme",
+	"version": "1.2.5",
+	"publisher": "jaredkent",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Jaredk3nt/laserwave"
+	},
+	"icon": "laserwave-logo.png",
+	"galleryBanner": {
+		"color": "#242029",
+		"theme": "dark"
+	},
+	"engines": {
+		"vscode": "^1.25.0"
+	},
+	"categories": [
+		"Themes"
+	],
+	"contributes": {
+		"themes": [
+			{
+				"label": "LaserWave",
+				"uiTheme": "vs-dark",
+				"path": "./themes/LaserWave-color-theme.json"
+			}
+		]
+	},
+	"license": "MIT",
+	"__metadata": {
+		"id": "b7a6a44f-8a58-4a19-836f-00ab41d8056d",
+		"publisherDisplayName": "Jared Jones",
+		"publisherId": "74caceac-ea4c-4ffc-bf36-7bf8eee7a6d2"
+	}
+}

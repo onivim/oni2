@@ -223,20 +223,18 @@ let%component make =
     ];
   };
 
-  let measureTextWidth = text =>
-    switch (Revery_UI.getActiveWindow()) {
-    | Some(window) =>
-      let dimensions =
-        Revery_Draw.Text.measure(
-          ~window,
-          ~fontFamily=Styles.fontFamily,
-          ~fontSize=Styles.fontSize,
-          text,
-        );
+  let measureTextWidth = text => {
+    let window = Revery_UI.getActiveWindow();
+    let dimensions =
+      Revery_Draw.Text.measure(
+        ~window,
+        ~fontFamily=Styles.fontFamily,
+        ~fontSize=Styles.fontSize,
+        text,
+      );
 
-      dimensions.width;
-    | None => Styles.fontSize
-    };
+    dimensions.width;
+  };
 
   let%hook (cursorOpacity, resetCursor) =
     Cursor.use(~interval=Time.ms(500), ~isFocused=state.isFocused);
