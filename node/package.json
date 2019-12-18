@@ -10,7 +10,7 @@
   "dependencies": {
     "sudo-prompt": "^9.0.0",
     "vscode-exthost": "1.33.4",
-    "yazl": "^2.5.1"
+    "yauzl": "^2.5.1"
   },
   "jest": {
     "testRegex": "./lib/test/*.*"
