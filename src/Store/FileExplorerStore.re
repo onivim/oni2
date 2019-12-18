@@ -30,7 +30,7 @@ module Effects = {
 let nodeOffsetByPath = (tree, path) => {
   let rec loop = (node: FsTreeNode.t, path) =>
     switch (path) {
-    | [] => `NotFound(0)
+    | [] => `Found(0)
     | [(focus: FsTreeNode.t), ...focusTail] =>
       if (focus.id != node.id) {
         `NotFound(node.expandedSubtreeSize);
