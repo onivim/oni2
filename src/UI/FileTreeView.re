@@ -6,12 +6,6 @@ open Revery.UI;
 
 module Option = Utility.Option;
 
-let findNodeByPath = (workspace: Workspace.workspace, tree, path) => {
-  let localPath = Workspace.toRelativePath(workspace.workingDirectory, path);
-
-  FsTreeNode.findByLocalPath(localPath, tree);
-};
-
 module Styles = {
   open Style;
 
@@ -36,7 +30,9 @@ module Styles = {
     flexDirection(`Row),
     flexGrow(1),
     alignItems(`Center),
-    backgroundColor(isFocus ? theme.menuSelectionBackground : theme.sideBarBackground)
+    backgroundColor(
+      isFocus ? theme.menuSelectionBackground : theme.sideBarBackground,
+    ),
   ];
 
   let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
@@ -64,7 +60,15 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~isFocus, ~isActive, ~font: UiFont.t, ~theme: Theme.t, ~node: FsTreeNode.t, ()) => {
+let nodeView =
+    (
+      ~isFocus,
+      ~isActive,
+      ~font: UiFont.t,
+      ~theme: Theme.t,
+      ~node: FsTreeNode.t,
+      (),
+    ) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -82,42 +86,49 @@ let nodeView = (~isFocus, ~isActive, ~font: UiFont.t, ~theme: Theme.t, ~node: Fs
     switch (node.kind) {
     | Directory({isOpen, _}) =>
       <FontIcon
-        color=theme.sideBarForeground
+        color={theme.sideBarForeground}
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
         backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
 
-  <View style=Styles.item(~isFocus, ~theme)>
+  <View style={Styles.item(~isFocus, ~theme)}>
     <icon />
-    <Text text={node.displayName} style={Styles.text(~theme, ~isActive, ~font)} />
+    <Text
+      text={node.displayName}
+      style={Styles.text(~theme, ~isActive, ~font)}
+    />
   </View>;
 };
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
 
-let make =
-    (
-      ~tree: FsTreeNode.t,
-      ~active: option(string),
-      ~focus: option(int),
-      ~onNodeClick,
-      ~state: State.t,
-      (),
-    ) => {
+let%component make =
+              (
+                ~tree: FsTreeNode.t,
+                ~active: option(string),
+                ~focus: option(string),
+                ~onNodeClick,
+                ~state: State.t,
+                (),
+              ) => {
+  let%hook (containerRef, setContainerRef) = Hooks.ref(None);
+
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
   let fg = state.theme.sideBarForeground;
 
   let active =
-    switch (active, state.workspace) {
-    | (Some(path), Some(workspace)) =>
-      findNodeByPath(workspace, tree, path)
-      |> Option.map((node: FsTreeNode.t) => node.id)
-    | _ => None
-    };
+    active
+    |> Option.bind(path => FsTreeNode.findByPath(path, tree))
+    |> Option.map((node: FsTreeNode.t) => node.id);
+
+  let focus =
+    focus
+    |> Option.bind(path => FsTreeNode.findByPath(path, tree))
+    |> Option.map((node: FsTreeNode.t) => node.id);
 
   let FileExplorer.{scrollOffset, _} = state.fileExplorer;
   let onScrollOffsetChange = offset =>
@@ -125,16 +136,39 @@ let make =
       FileExplorer(ScrollOffsetChanged(offset)),
     );
 
-  <View style=Styles.container>
+  let onNodeClick = node => {
+    Option.iter(Revery.UI.Focus.focus, containerRef);
+    onNodeClick(node);
+  };
+
+  let onKeyDown = (event: NodeEvents.keyEventParams) => {
+    switch (event.keycode) {
+    | v when v == 1073741906 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(FocusPrev))
+    | v when v == 1073741905 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(FocusNext))
+    | _ => ()
+    };
+  };
+
+  <View
+    onKeyDown style=Styles.container ref={ref => setContainerRef(Some(ref))}>
     <TreeView
       scrollOffset
       onScrollOffsetChange
       tree
-      active
       theme
       itemHeight=22
       onClick=onNodeClick>
-      ...{node => <nodeView isFocus={Some(node.id) == focus} isActive={Some(node.id) == active} font theme node />}
+      ...{node =>
+        <nodeView
+          isFocus={Some(node.id) == focus}
+          isActive={Some(node.id) == active}
+          font
+          theme
+          node
+        />
+      }
     </TreeView>
   </View>;
 };

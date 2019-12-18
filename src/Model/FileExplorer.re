@@ -7,7 +7,7 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float)],
   active: option(string), // path
-  focus: option(int), // node id
+  focus: option(string) // node id
 };
 
 [@deriving show({with_path: false})]
@@ -16,7 +16,9 @@ type action =
   | NodeLoaded(int, [@opaque] FsTreeNode.t)
   | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
-  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)]);
+  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
+  | FocusPrev
+  | FocusNext;
 
 module ExplorerId =
   UniqueId.Make({});
@@ -138,4 +140,5 @@ let initial = {
   isOpen: true,
   scrollOffset: `Start(0.),
   active: None,
+  focus: None,
 };

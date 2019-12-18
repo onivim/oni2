@@ -69,17 +69,15 @@ let setOpen = (isOpen, state) =>
   updateFileExplorer(s => {...s, isOpen}, state);
 let setActive = (maybePath, state) =>
   updateFileExplorer(s => {...s, active: maybePath}, state);
-let setFocus = (maybeId, state) =>
-  updateFileExplorer(s => {...s, focus: maybeId}, state);
+let setFocus = (maybePath, state) =>
+  updateFileExplorer(s => {...s, focus: maybePath}, state);
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
 let revealPath = (state: State.t, path) => {
-  switch (state.fileExplorer.tree, state.workspace) {
-  | (Some(tree), Some({workingDirectory, _})) =>
-    let localPath = Workspace.toRelativePath(workingDirectory, path);
-
-    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
+  switch (state.fileExplorer.tree) {
+  | Some(tree) =>
+    switch (FsTreeNode.findNodesByPath(path, tree)) {
     // Nothing to do
     | `Success([])
     | `Failed => (state, Isolinear.Effect.none)
@@ -115,11 +113,18 @@ let revealPath = (state: State.t, path) => {
         state |> setTree(tree) |> setScrollOffset(offset),
         Isolinear.Effect.none,
       );
-    };
+    }
 
-  | _ => (state, Isolinear.Effect.none)
+  | None => (state, Isolinear.Effect.none)
   };
 };
+
+let replaceNode = (nodeId, node, state: State.t) =>
+  switch (state.fileExplorer.tree) {
+  | Some(tree) =>
+    setTree(FsTreeNode.update(nodeId, ~tree, ~updater=_ => node), state)
+  | None => state
+  };
 
 let start = () => {
   let (stream, _) = Isolinear.Stream.create();
@@ -133,36 +138,32 @@ let start = () => {
   };
 
   let updater = (state: State.t, action: FileExplorer.action) => {
-    let replaceNode = (nodeId, node) =>
-      switch (state.fileExplorer.tree) {
-      | Some(tree) =>
-        setTree(FsTreeNode.update(nodeId, ~tree, ~updater=_ => node), state)
-      | None => state
-      };
-
     switch (action) {
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
-    | NodeLoaded(id, node) => (replaceNode(id, node), Isolinear.Effect.none)
+    | NodeLoaded(id, node) => (
+        replaceNode(id, node, state),
+        Isolinear.Effect.none,
+      )
 
     | FocusNodeLoaded(id, node) =>
       switch (state.fileExplorer.active) {
-      | Some(path) => revealPath(replaceNode(id, node), path)
+      | Some(path) =>
+        let state = replaceNode(id, node, state);
+        revealPath(state, path);
       | None => (state, Isolinear.Effect.none)
       }
 
     | NodeClicked(node) =>
-      let state = 
-        state
-      // Set active here to avoid scrolling in BufferEnter
-        |> setActive(Some(node.path))
-        |> setFocus(Some(node.id));
+      let state = state |> setFocus(Some(node.path));
 
       switch (node) {
-      | {kind: File, path, _} => (state, openFileByPathEffect(path))
+      | {kind: File, path, _} =>
+        // Set active here to avoid scrolling in BufferEnter
+        (state |> setActive(Some(node.path)), openFileByPathEffect(path))
 
       | {kind: Directory({isOpen, _}), _} => (
-          replaceNode(node.id, FsTreeNode.toggleOpen(node)),
+          replaceNode(node.id, FsTreeNode.toggleOpen(node), state),
           isOpen
             ? Isolinear.Effect.none
             : Effects.load(
@@ -180,6 +181,34 @@ let start = () => {
         setScrollOffset(offset, state),
         Isolinear.Effect.none,
       )
+
+    | FocusPrev =>
+      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+      | (Some(tree), Some(path)) =>
+        switch (FsTreeNode.prevExpandedNode(path, tree)) {
+        | Some(node) => (
+            setFocus(Some(node.path), state),
+            Isolinear.Effect.none,
+          )
+        | None => (state, Isolinear.Effect.none)
+        }
+
+      | _ => (state, Isolinear.Effect.none)
+      }
+
+    | FocusNext =>
+      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+      | (Some(tree), Some(path)) =>
+        switch (FsTreeNode.nextExpandedNode(path, tree)) {
+        | Some(node) => (
+            setFocus(Some(node.path), state),
+            Isolinear.Effect.none,
+          )
+        | None => (state, Isolinear.Effect.none)
+        }
+
+      | _ => (state, Isolinear.Effect.none)
+      }
     };
   };
 
