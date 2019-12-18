@@ -93,8 +93,8 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
           };
 
         Lwt.return(
-          FsTreeNode.directory(path, ~icon=getIcon(path), ~children)
-        )
+          FsTreeNode.directory(path, ~icon=getIcon(path), ~children),
+        );
       } else {
         FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
       };
@@ -121,12 +121,7 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> Lwt_main.run
     |> List.sort(sortByLoweredDisplayName);
 
-  FsTreeNode.directory(
-    cwd,
-    ~icon=getIcon(cwd),
-    ~children,
-    ~isOpen=true,
-  );
+  FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
 };
 
 let initial = {

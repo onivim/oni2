@@ -142,11 +142,7 @@ let%component make =
   <View
     onKeyDown style=Styles.container ref={ref => setContainerRef(Some(ref))}>
     <TreeView
-      scrollOffset
-      onScrollOffsetChange
-      tree
-      itemHeight=22
-      onClick=onNodeClick>
+      scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick>
       ...{node =>
         <nodeView
           isFocus={Some(node.path) == focus}

@@ -101,8 +101,7 @@ module Make = (Model: TreeModel) => {
 
     let item = (~arrow, ()) =>
       <Clickable
-        onClick={() => onClick(node)}
-        style={Styles.item(~itemHeight)}>
+        onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -247,13 +246,7 @@ module Make = (Model: TreeModel) => {
       onMouseWheel=scroll>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
-          <nodeView
-            renderContent
-            itemHeight
-            clipRange
-            onClick
-            node=tree
-          />
+          <nodeView renderContent itemHeight clipRange onClick node=tree />
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}

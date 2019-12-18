@@ -73,10 +73,10 @@ let findNodesByPath = (path, tree) => {
       | [] =>
         let last = List.hd(focusedNodes);
         if (equals(last, tree)) {
-          `Failed
+          `Failed;
         } else {
           `Partial(last);
-        }
+        };
 
       | [node, ...children] =>
         if (node.hash == hash) {
