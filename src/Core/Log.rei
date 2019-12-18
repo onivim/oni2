@@ -1,5 +1,7 @@
 type msgf('a, 'b) = (format4('a, Format.formatter, unit, 'b) => 'a) => 'b;
 
+let disableColors: unit => unit;
+
 let enablePrinting: unit => unit;
 let isPrintingEnabled: unit => bool;
 
