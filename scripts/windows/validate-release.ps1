@@ -1,7 +1,8 @@
 mkdir -p _unpacked
 
-$SHORT_COMMIT_ID_UNTRIMMED = (git rev-parse --short HEAD) | Out-String
-$SHORT_COMMIT_ID = $SHORT_COMMIT_ID_UNTRIMMED.Trim()
+$SHORT_COMMIT_ID = $env:ONI2_SHORT_COMMIT_ID.Trim()
+
+Write-Host $SHORT_COMMIT_ID
 
 ls $env:SYSTEM_ARTIFACTSDIRECTORY
 ls $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows
