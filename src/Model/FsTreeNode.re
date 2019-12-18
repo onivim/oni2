@@ -3,7 +3,6 @@ open Oni_Core;
 module ArrayEx = Utility.ArrayEx;
 
 type t = {
-  id: int,
   path: string,
   displayName: string,
   hash: int, // hash of basename, so only comparable locally
@@ -30,34 +29,34 @@ let rec countExpandedSubtree =
 
   | _ => 1;
 
-let file = (path, ~id, ~icon) => {
+let file = (path, ~icon) => {
   let basename = Filename.basename(path);
 
   {
-    id,
     path,
-    displayName: basename,
     hash: Hashtbl.hash(basename),
+    displayName: basename,
     icon,
     kind: File,
     expandedSubtreeSize: 1,
   };
 };
 
-let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
+let directory = (~isOpen=false, path, ~icon, ~children) => {
   let kind = Directory({isOpen, children});
   let basename = Filename.basename(path);
 
   {
-    id,
     path,
-    displayName: basename,
     hash: Hashtbl.hash(basename),
+    displayName: basename,
     icon,
     kind,
     expandedSubtreeSize: countExpandedSubtree(kind),
   };
 };
+
+let equals = (a, b) => a.hash == b.hash && a.path == b.path;
 
 let findNodesByPath = (path, tree) => {
   let path = Workspace.toRelativePath(tree.path, path);
@@ -68,12 +67,16 @@ let findNodesByPath = (path, tree) => {
 
   let rec loop = (focusedNodes, children, pathSegments) =>
     switch (pathSegments) {
-    | [] => `Success(focusedNodes |> List.rev)
+    | [] => `Success(List.rev(focusedNodes))
     | [hash, ...rest] =>
       switch (children) {
       | [] =>
-        let last = focusedNodes |> List.hd;
-        last.id == tree.id ? `Failed : `Partial(last);
+        let last = List.hd(focusedNodes);
+        if (equals(last, tree)) {
+          `Failed
+        } else {
+          `Partial(last);
+        }
 
       | [node, ...children] =>
         if (node.hash == hash) {
@@ -136,7 +139,7 @@ let prevExpandedNode = (path, tree) =>
     // Has a parent, and therefore also siblings
     | [focus, {kind: Directory({children, _}), _} as parent, ..._] =>
       let children = children |> Array.of_list;
-      let index = children |> ArrayEx.findIndex(child => child.id == focus.id);
+      let index = children |> ArrayEx.findIndex(equals(focus));
 
       switch (index) {
       // is first child
@@ -174,8 +177,7 @@ let nextExpandedNode = (path, tree) =>
           ...[{kind: Directory({children, _}), _}, ..._] as ancestors,
         ] =>
         let children = children |> Array.of_list;
-        let index =
-          children |> ArrayEx.findIndex(child => child.id == focus.id);
+        let index = children |> ArrayEx.findIndex(equals(focus));
 
         switch (index) {
         // is last child
@@ -205,10 +207,10 @@ let nextExpandedNode = (path, tree) =>
   | `Failed => None // path does not exist in this tree
   };
 
-let update = (~tree, ~updater, nodeId) => {
+let update = (~tree, ~updater, targetPath) => {
   let rec loop =
     fun
-    | {id, _} as node when id == nodeId => updater(node)
+    | {path, _} as node when path == targetPath => updater(node)
 
     | {kind: Directory({children, _} as dir), _} as node => {
         let kind = Directory({...dir, children: List.map(loop, children)});
@@ -223,7 +225,7 @@ let update = (~tree, ~updater, nodeId) => {
 let updateNodesInPath = (~tree, ~updater, nodes) => {
   let rec loop = (nodes, node) =>
     switch (nodes) {
-    | [{id, kind, _}, ...rest] when id == node.id =>
+    | [{hash, kind, _}, ...rest] when hash == node.hash =>
       switch (kind) {
       | Directory({children, _} as dir) =>
         let newChildren = List.map(loop(rest), children);

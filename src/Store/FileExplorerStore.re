@@ -28,11 +28,11 @@ module Effects = {
 
 // Counts the number of axpanded nodes before the node specified by the given path
 let nodeOffsetByPath = (tree, path) => {
-  let rec loop = (node: FsTreeNode.t, path) =>
+  let rec loop = (node, path) =>
     switch (path) {
     | [] => `Found(0)
-    | [(focus: FsTreeNode.t), ...focusTail] =>
-      if (focus.id != node.id) {
+    | [focus, ...focusTail] =>
+      if (FsTreeNode.equals(focus, node)) {
         `NotFound(node.expandedSubtreeSize);
       } else {
         switch (node.kind) {
@@ -91,7 +91,7 @@ let revealPath = (state: State.t, path) => {
           state.iconTheme,
           state.configuration,
           ~onComplete=node =>
-          Actions.FileExplorer(FocusNodeLoaded(lastNode.id, node))
+          Actions.FileExplorer(FocusNodeLoaded(lastNode.path, node))
         ),
       )
 
@@ -119,10 +119,10 @@ let revealPath = (state: State.t, path) => {
   };
 };
 
-let replaceNode = (nodeId, node, state: State.t) =>
+let replaceNode = (path, node, state: State.t) =>
   switch (state.fileExplorer.tree) {
   | Some(tree) =>
-    setTree(FsTreeNode.update(nodeId, ~tree, ~updater=_ => node), state)
+    setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
   | None => state
   };
 
@@ -141,15 +141,15 @@ let start = () => {
     switch (action) {
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
-    | NodeLoaded(id, node) => (
-        replaceNode(id, node, state),
+    | NodeLoaded(path, node) => (
+        replaceNode(path, node, state),
         Isolinear.Effect.none,
       )
 
-    | FocusNodeLoaded(id, node) =>
+    | FocusNodeLoaded(path, node) =>
       switch (state.fileExplorer.active) {
       | Some(path) =>
-        let state = replaceNode(id, node, state);
+        let state = replaceNode(path, node, state);
         revealPath(state, path);
       | None => (state, Isolinear.Effect.none)
       }
@@ -163,7 +163,7 @@ let start = () => {
         (state |> setActive(Some(node.path)), openFileByPathEffect(path))
 
       | {kind: Directory({isOpen, _}), _} => (
-          replaceNode(node.id, FsTreeNode.toggleOpen(node), state),
+          replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
           isOpen
             ? Isolinear.Effect.none
             : Effects.load(
@@ -172,7 +172,7 @@ let start = () => {
                 state.iconTheme,
                 state.configuration,
                 ~onComplete=newNode =>
-                Actions.FileExplorer(NodeLoaded(node.id, newNode))
+                Actions.FileExplorer(NodeLoaded(node.path, newNode))
               ),
         )
       };

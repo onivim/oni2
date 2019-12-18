@@ -118,18 +118,6 @@ let%component make =
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
-  let fg = state.theme.sideBarForeground;
-
-  let active =
-    active
-    |> Option.bind(path => FsTreeNode.findByPath(path, tree))
-    |> Option.map((node: FsTreeNode.t) => node.id);
-
-  let focus =
-    focus
-    |> Option.bind(path => FsTreeNode.findByPath(path, tree))
-    |> Option.map((node: FsTreeNode.t) => node.id);
-
   let FileExplorer.{scrollOffset, _} = state.fileExplorer;
   let onScrollOffsetChange = offset =>
     GlobalContext.current().dispatch(
@@ -162,8 +150,8 @@ let%component make =
       onClick=onNodeClick>
       ...{node =>
         <nodeView
-          isFocus={Some(node.id) == focus}
-          isActive={Some(node.id) == active}
+          isFocus={Some(node.path) == focus}
+          isActive={Some(node.path) == active}
           font
           theme
           node

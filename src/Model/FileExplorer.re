@@ -1,4 +1,3 @@
-open Revery;
 open Oni_Core;
 open Oni_Extensions;
 
@@ -13,15 +12,12 @@ type t = {
 [@deriving show({with_path: false})]
 type action =
   | TreeLoaded([@opaque] FsTreeNode.t)
-  | NodeLoaded(int, [@opaque] FsTreeNode.t)
-  | FocusNodeLoaded(int, [@opaque] FsTreeNode.t)
+  | NodeLoaded(string, [@opaque] FsTreeNode.t)
+  | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
   | FocusPrev
   | FocusNext;
-
-module ExplorerId =
-  UniqueId.Make({});
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
@@ -82,7 +78,6 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
   let rec getDirContent = (~loadChildren=false, cwd) => {
     let toFsTreeNode = file => {
       let path = Filename.concat(cwd, file);
-      let id = ExplorerId.getUniqueId();
 
       if (isDirectory(path)) {
         let%lwt children =
@@ -97,10 +92,11 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
             Lwt.return([]);
           };
 
-        FsTreeNode.directory(path, ~id, ~icon=getIcon(path), ~children)
-        |> Lwt.return;
+        Lwt.return(
+          FsTreeNode.directory(path, ~icon=getIcon(path), ~children)
+        )
       } else {
-        FsTreeNode.file(path, ~id, ~icon=getIcon(path)) |> Lwt.return;
+        FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
       };
     };
 
@@ -119,7 +115,6 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
-  let id = ExplorerId.getUniqueId();
   let getIcon = getFileIcon(languageInfo, iconTheme);
   let children =
     getFilesAndFolders(~ignored, cwd, getIcon)
@@ -128,7 +123,6 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
 
   FsTreeNode.directory(
     cwd,
-    ~id,
     ~icon=getIcon(cwd),
     ~children,
     ~isOpen=true,
