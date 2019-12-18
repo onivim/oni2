@@ -110,10 +110,11 @@ let rec removeSplit = (id, currentTree) =>
       |> List.map(child => removeSplit(id, child))
       |> List.filter(filterEmpty);
 
-    if (List.length(newChildren) > 0)
-    Parent(direction, newChildren) 
-    else
-    Empty
+    if (List.length(newChildren) > 0) {
+      Parent(direction, newChildren);
+    } else {
+      Empty;
+    };
   | Leaf(split) when split.id == id => Empty
   | Leaf(_) as leaf => leaf
   | Empty => Empty
