@@ -231,11 +231,11 @@ let start =
           Range.{
             start: {
               ...range.start,
-              column: Index.(range.start.column + 1),
+              column: range.start.column,
             },
             stop: {
               ...range.stop,
-              column: Index.(range.stop.column + 1),
+              column: range.stop.column,
             },
           },
         );
