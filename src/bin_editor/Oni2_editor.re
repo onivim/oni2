@@ -16,18 +16,22 @@ module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 
-let cliOptions: Core.Cli.t = Core.Cli.parse(
-  ~installExtension=(s) => {
-    let _: Lwt.t(unit) = ExtM.install(~extensionFolder=s, ~extensionPath=s);
-    print_endline ("install: " ++ s);
-    exit(0);
-  },
-  ~uninstallExtension=(s) => {
-    print_endline ("uninstall: " ++ s); 
-    exit(0);
-  },
-  ~checkHealth=HealthCheck.run
-);
+let cliOptions: Core.Cli.t =
+  Core.Cli.parse(
+    ~installExtension=
+      s => {
+        let _: Lwt.t(unit) =
+          ExtM.install(~extensionFolder=s, ~extensionPath=s);
+        print_endline("install: " ++ s);
+        exit(0);
+      },
+    ~uninstallExtension=
+      s => {
+        print_endline("uninstall: " ++ s);
+        exit(0);
+      },
+    ~checkHealth=HealthCheck.run,
+  );
 Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start();

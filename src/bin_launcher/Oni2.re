@@ -26,8 +26,16 @@ let spec = [
   ("--log-file", passthroughString, ""),
   ("--log-filter", passthroughString, ""),
   ("--checkhealth", passthrough, ""),
-  ("--install-extension", passthroughString, "Install extension by specifying a path to the .vsix file"),
-  ("--uninstall-extension", passthroughString, "Uninstall extension by specifying an extension id."),
+  (
+    "--install-extension",
+    passthroughString,
+    "Install extension by specifying a path to the .vsix file",
+  ),
+  (
+    "--uninstall-extension",
+    passthroughString,
+    "Uninstall extension by specifying an extension id.",
+  ),
   ("--extensions-dir", passthroughString, ""),
   ("--force-device-scale-factor", passthroughFloat, ""),
   ("--working-directory", passthrough, ""),

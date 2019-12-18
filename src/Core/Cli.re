@@ -40,11 +40,7 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = (
-  ~checkHealth,
-  ~installExtension,
-  ~uninstallExtension,
-  ) => {
+let parse = (~checkHealth, ~installExtension, ~uninstallExtension) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);

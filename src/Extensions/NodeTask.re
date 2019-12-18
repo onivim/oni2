@@ -8,17 +8,19 @@ exception TaskFailed;
 
 module Log = (val Log.withNamespace("Oni2.NodeTask"));
 
-let run = (
-  ~name="Anonymous",
-  ~scheduler: (unit => unit => unit),
-  ~onMessage: (string => unit),
-  ~scriptPath: string, 
-  ~args=[], 
-  ~setup: Setup.t) => {
-   
-   let (promise, resolver) = Lwt.task();
+let run =
+    (
+      ~name="Anonymous",
+      ~scheduler: (unit, unit) => unit,
+      ~onMessage: string => unit,
+      ~scriptPath: string,
+      ~args=[],
+      ~setup: Setup.t,
+    ) => {
+  let (promise, resolver) = Lwt.task();
 
-  let {pid, stdout, stderr, _ }: NodeProcess.t = NodeProcess.start(~args, setup, scriptPath);
+  let {pid, stdout, stderr, _}: NodeProcess.t =
+    NodeProcess.start(~args, setup, scriptPath);
 
   let shouldClose = ref(false);
   let _readStdout =
@@ -26,7 +28,7 @@ let run = (
       () => {
         while (! shouldClose^) {
           let str = input_line(stdout);
-          print_endline ("STR: " ++ str);
+          print_endline("STR: " ++ str);
         }
       },
       (),
@@ -37,12 +39,12 @@ let run = (
       () => {
         while (! shouldClose^) {
           let str = input_line(stderr);
-          print_endline ("STR ERROR: " ++ str);
+          print_endline("STR ERROR: " ++ str);
         }
       },
       (),
     );
-  
+
   let _waitThread =
     Thread.create(
       () => {
@@ -54,12 +56,11 @@ let run = (
         } else {
           Log.info("Task failed: " ++ name);
           Lwt.wakeup_exn(resolver, TaskFailed);
-        }
+        };
         shouldClose := true;
       },
       (),
     );
-   
 
-   promise;
+  promise;
 };
