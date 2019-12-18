@@ -32,12 +32,13 @@ steps:
       buildPlatform: ${{ parameters.platform }}
       testRunTitle: ${{ parameters.platform }}
       failTaskOnFailedTests: true
-  - script: esy @bench install
-    displayName: "Bench: install"
-  - script: esy @bench build
-    displayName: "Bench: build"
-  - script: esy @bench run
-    displayName: "Bench: run"
+  # TODO: Why is esy '@bench' install taking so long, and why is esy '@bench' build hanging on Linux / MacOS?
+  # - script: esy @bench install
+  #  displayName: "Bench: install"
+  # - script: esy @bench build -v -v
+  #  displayName: "Bench: build"
+  # - script: esy @bench run
+  #  displayName: "Bench: run"
   - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy create-release

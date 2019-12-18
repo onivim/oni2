@@ -55,6 +55,11 @@ let runTest =
       ~name="AnonymousTest",
       test: testCallback,
     ) => {
+  // Disable colors on windows to prevent hanging on CI
+  if (Sys.win32) {
+    Log.disableColors();
+  };
+
   Printexc.record_backtrace(true);
   Log.enablePrinting();
   Log.enableDebugLogging();
