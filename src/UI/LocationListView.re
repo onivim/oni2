@@ -24,7 +24,7 @@ let getFontAdvance = (fontFile, fontSize) => {
     | None => 1.0
     | Some(w) => Window.getScaleAndZoom(w) *. Window.getDevicePixelRatio(w)
     };
-  float(advance) /. 64. /. multiplier;
+  float(advance) /. (64. *. multiplier);
 };
 
 module Styles = {
