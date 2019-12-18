@@ -108,7 +108,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
-  timeoutInMinutes: 0
+  timeoutInMinutes: 90
   pool:
     vmImage: 'vs2017-win2016'
 
@@ -185,7 +185,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
-  timeoutInMinutes: 0
+  timeoutInMinutes: 10
   displayName: "Windows: Validate Release"
   dependsOn: 
   - Kickoff
