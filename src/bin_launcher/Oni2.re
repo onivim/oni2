@@ -23,7 +23,12 @@ let spec = [
   ),
   ("--debug", passthrough, ""),
   ("--log-file", passthroughString, "Specify a file to output logs"),
-  ("--log-filter", passthroughString, "A "),
+  ("--log-filter", passthroughString, "Filter log output"),
+  (
+    "--no-log-colors",
+    passthrough,
+    "Turn off colors and rich formatting in logs.",
+  ),
   ("--checkhealth", passthrough, ""),
   ("--extensions-dir", passthroughString, ""),
   ("--list-extensions", Arg.Set(stayAttached), ""),
