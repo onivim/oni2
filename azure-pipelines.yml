@@ -108,7 +108,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
-  timeoutInMinutes: 0
+  timeoutInMinutes: 90
   pool:
     vmImage: 'vs2017-win2016'
 
@@ -130,7 +130,7 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --checkhealth
+  - script: Oni2.exe -f --no-log-colors --checkhealth
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
@@ -185,7 +185,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
-  timeoutInMinutes: 0
+  timeoutInMinutes: 10
   displayName: "Windows: Validate Release"
   dependsOn: 
   - Kickoff
@@ -213,5 +213,5 @@ jobs:
   # but we need to check from the command prompt, too via %PATH% - for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --checkhealth 
+      Oni2.exe -f --no-log-colors --checkhealth
     displayName: "Oni2.exe - run installed"

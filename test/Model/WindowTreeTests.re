@@ -6,7 +6,35 @@ module WindowTree = Oni_Model.WindowTree;
 
 open WindowTree;
 
-describe("WindowTreeTests", ({describe, _}) =>
+describe("WindowTreeTests", ({describe, _}) => {
+  describe("removeSplit", ({test, _}) => {
+    test("empty parent splits are removed", ({expect, _}) => {
+      let splits = WindowTree.empty;
+
+      let split1 = createSplit(~editorGroupId=1, ());
+      let split2 = createSplit(~editorGroupId=2, ());
+      let split3 = createSplit(~editorGroupId=2, ());
+      let split4 = createSplit(~editorGroupId=1, ());
+
+      let splits =
+        splits
+        |> addSplit(~target=None, Vertical, split1)
+        |> addSplit(~target=Some(split1.id), Vertical, split2)
+        |> addSplit(~target=Some(split2.id), Horizontal, split3)
+        |> addSplit(~target=Some(split1.id), Horizontal, split4);
+
+      let newSplits =
+        splits
+        |> removeSplit(split4.id)
+        |> removeSplit(split3.id)
+        |> removeSplit(split2.id);
+
+      expect.equal(
+        newSplits,
+        Parent(Vertical, [Parent(Horizontal, [Leaf(split1)])]),
+      );
+    })
+  });
   describe("addSplit", ({test, _}) => {
     test("add vertical split", ({expect}) => {
       let splits = WindowTree.empty;
@@ -77,8 +105,8 @@ describe("WindowTreeTests", ({describe, _}) =>
         true,
       );
     });
-  })
-);
+  });
+});
 
 describe("rotateForward", ({test, _}) => {
   test("simple tree", ({expect}) => {
