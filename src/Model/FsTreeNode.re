@@ -202,6 +202,42 @@ let nextExpandedNode = (path, tree) =>
   | `Failed => None // path does not exist in this tree
   };
 
+// Counts the number of expanded nodes before the node specified by the given path
+let expandedIndex = (tree, path) => {
+  let rec loop = (node, path) =>
+    switch (path) {
+    | [] => `Found(0)
+    | [focus, ...focusTail] =>
+      if (equals(focus, node)) {
+        `NotFound(node.expandedSubtreeSize);
+      } else {
+        switch (node.kind) {
+        | Directory({isOpen: false, _})
+        | File => `Found(0)
+
+        | Directory({isOpen: true, children}) =>
+          let rec loopChildren = (count, children) =>
+            switch (children) {
+            | [] => `NotFound(count)
+            | [child, ...childTail] =>
+              switch (loop(child, focusTail)) {
+              | `Found(subtreeCount) => `Found(count + subtreeCount)
+              | `NotFound(subtreeCount) =>
+                loopChildren(count + subtreeCount, childTail)
+              }
+            };
+
+          loopChildren(1, children);
+        };
+      }
+    };
+
+  switch (loop(tree, path)) {
+  | `Found(count) => Some(count)
+  | `NotFound(_) => None
+  };
+};
+
 let update = (~tree, ~updater, targetPath) => {
   let rec loop =
     fun

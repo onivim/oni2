@@ -26,41 +26,6 @@ module Effects = {
   };
 };
 
-// Counts the number of axpanded nodes before the node specified by the given path
-let nodeOffsetByPath = (tree, path) => {
-  let rec loop = (node, path) =>
-    switch (path) {
-    | [] => `Found(0)
-    | [focus, ...focusTail] =>
-      if (FsTreeNode.equals(focus, node)) {
-        `NotFound(node.expandedSubtreeSize);
-      } else {
-        switch (node.kind) {
-        | Directory({isOpen: false, _})
-        | File => `Found(0)
-
-        | Directory({isOpen: true, children}) =>
-          let rec loopChildren = (count, children) =>
-            switch (children) {
-            | [] => `NotFound(count)
-            | [child, ...childTail] =>
-              switch (loop(child, focusTail)) {
-              | `Found(subtreeCount) => `Found(count + subtreeCount)
-              | `NotFound(subtreeCount) =>
-                loopChildren(count + subtreeCount, childTail)
-              }
-            };
-          loopChildren(1, children);
-        };
-      }
-    };
-
-  switch (loop(tree, path)) {
-  | `Found(count) => Some(count)
-  | `NotFound(_) => None
-  };
-};
-
 let updateFileExplorer = (updater, state) =>
   State.{...state, fileExplorer: updater(state.fileExplorer)};
 let setTree = (tree, state) =>
@@ -104,7 +69,7 @@ let revealPath = (state: State.t, path) => {
           ~updater=FsTreeNode.setOpen,
         );
       let offset =
-        switch (nodeOffsetByPath(tree, nodes)) {
+        switch (FsTreeNode.expandedIndex(tree, nodes)) {
         | Some(offset) => `Middle(float(offset))
         | None => state.fileExplorer.scrollOffset
         };
