@@ -9,6 +9,10 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
+  - script: esy x Oni2 --version
+    displayName: "esy x Oni2 --version"
+  - script: esy create-release
+    displayName: "esy create-release"
   - script: esy build-env
     displayName: "Esy: show build env"
   - script: esy @test install
@@ -39,7 +43,3 @@ steps:
   #  displayName: "Bench: build"
   # - script: esy @bench run
   #  displayName: "Bench: run"
-  - script: esy x Oni2 --help
-    displayName: "esy x Oni2 --help"
-  - script: esy create-release
-    displayName: "esy create-release"
