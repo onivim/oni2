@@ -3,6 +3,7 @@ type t =
     id: int,
     path: string,
     displayName: string,
+    hash: int, // hash of basename, so only comparable locally
     icon: option(IconTheme.IconDefinition.t),
     kind,
     expandedSubtreeSize: int,
@@ -27,8 +28,13 @@ let directory:
   ) =>
   t;
 
+let findNodesByLocalPath:
+  (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+
 let update: (~tree: t, ~updater: t => t, int) => t;
-let toggleOpenState: t => t;
+let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;
+let toggleOpen: t => t;
+let setOpen: t => t;
 
 module Model: {
   type nonrec t = t;

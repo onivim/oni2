@@ -532,6 +532,19 @@ let%component make =
         </View>
       : React.empty;
 
+  let hoverElements =
+    isActiveSplit
+      ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
+          <HoverView x=cursorPixelX y=cursorPixelY state />
+          <CompletionsView
+            x=cursorPixelX
+            y=cursorPixelY
+            lineHeight=fontHeight
+            state
+          />
+        </View>
+      : React.empty;
+
   /* TODO: Selection! */
   /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     };*/
@@ -716,37 +729,6 @@ let%component make =
                );
              }};
 
-          if (Definition.isAvailable(
-                bufferId,
-                cursorPosition,
-                state.definition,
-              )) {
-            let () =
-              getTokenAtPosition(
-                ~startIndex=leftVisibleColumn,
-                ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
-                cursorPosition,
-              )
-              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
-                   let range =
-                     Range.{
-                       start:
-                         Location.{
-                           line: cursorPosition.line,
-                           column: token.startPosition,
-                         },
-                       stop:
-                         Location.{
-                           line: cursorPosition.line,
-                           column: token.endPosition,
-                         },
-                     };
-                   let () = renderUnderline(~color=token.color, range);
-                   ();
-                 });
-            ();
-          };
-
           ImmediateList.render(
             ~scrollY,
             ~rowHeight,
@@ -806,6 +788,37 @@ let%component make =
               },
             (),
           );
+
+          if (Definition.isAvailable(
+                bufferId,
+                cursorPosition,
+                state.definition,
+              )) {
+            let () =
+              getTokenAtPosition(
+                ~startIndex=leftVisibleColumn,
+                ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+                cursorPosition,
+              )
+              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+                   let range =
+                     Range.{
+                       start:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.startPosition,
+                         },
+                       stop:
+                         Location.{
+                           line: cursorPosition.line,
+                           column: token.endPosition,
+                         },
+                     };
+                   let () = renderUnderline(~color=token.color, range);
+                   ();
+                 });
+            ();
+          };
 
           ImmediateList.render(
             ~scrollY,
@@ -939,15 +952,7 @@ let%component make =
       </View>
     </View>
     minimapLayout
-    <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
-      <HoverView x=cursorPixelX y=cursorPixelY state />
-      <CompletionsView
-        x=cursorPixelX
-        y=cursorPixelY
-        lineHeight=fontHeight
-        state
-      />
-    </View>
+    hoverElements
     <View style=verticalScrollBarStyle>
       <EditorVerticalScrollbar
         state

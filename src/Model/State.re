@@ -25,6 +25,7 @@ type t = {
   hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
+  sideBar: SideBar.t,
   // Theme is the UI shell theming
   theme: Theme.t,
   // Token theme is theming for syntax highlights
@@ -38,6 +39,7 @@ type t = {
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
+  references: References.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -77,7 +79,7 @@ let create: unit => t =
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
-    // TODO: Remove
+    sideBar: SideBar.initial,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
@@ -86,6 +88,7 @@ let create: unit => t =
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.default,
+    references: References.initial,
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",

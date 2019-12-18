@@ -5,47 +5,42 @@ open Revery.UI;
 
 module Core = Oni_Core;
 
+let toNodePath = (workspace: Workspace.workspace, tree, path) =>
+  Core.Log.perf("FileTreeview.toNodePath", () => {
+    let localPath =
+      Workspace.toRelativePath(workspace.workingDirectory, path);
+
+    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
+    | `Success(nodes) => Some(nodes)
+    | `Partial(_)
+    | `Failed => None
+    };
+  });
+
 module Styles = {
   open Style;
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
-    fontSize(font.fontSize),
-    fontFamily(font.fontFile),
-    backgroundColor(bg),
-    color(fg),
-  ];
-
-  let heading = (theme: Core.Theme.t) => [
-    flexDirection(`Row),
-    justifyContent(`Center),
-    alignItems(`Center),
-    backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
-  ];
-
   let item = [flexDirection(`Row), alignItems(`Center)];
 
-  let text = (~fg, ~bg, ~font: Core.UiFont.t) => [
+  let text = (~fg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
     color(fg),
-    backgroundColor(bg),
     marginLeft(10),
     marginVertical(2),
     textWrap(TextWrapping.NoWrap),
   ];
 };
 
-let setiIcon = (~icon, ~fontSize as size, ~bg, ~fg, ()) => {
+let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   <Text
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
       fontFamily("seti.ttf"),
       fontSize(int_of_float(float(size) *. 2.)),
       color(fg),
-      backgroundColor(bg),
       width(int_of_float(float(size) *. 1.5)),
       height(int_of_float(float(size) *. 1.75)),
       textWrap(TextWrapping.NoWrap),
@@ -54,7 +49,7 @@ let setiIcon = (~icon, ~fontSize as size, ~bg, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: Core.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
+let nodeView = (~font: Core.UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -62,7 +57,6 @@ let nodeView = (~font: Core.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
         fontSize={font.fontSize}
         fg={icon.fontColor}
         icon={icon.fontCharacter}
-        bg
       />
     | None => React.empty
     };
@@ -75,32 +69,54 @@ let nodeView = (~font: Core.UiFont.t, ~fg, ~bg, ~node: FsTreeNode.t, ()) => {
       <FontIcon
         color=fg
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-        backgroundColor=bg
+        backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
 
   <View style=Styles.item>
     <icon />
-    <Text text={node.displayName} style={Styles.text(~fg, ~bg, ~font)} />
+    <Text text={node.displayName} style={Styles.text(~fg, ~font)} />
   </View>;
 };
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
 
-let make = (~title, ~tree: FsTreeNode.t, ~onNodeClick, ~state: State.t, ()) => {
+let make =
+    (
+      ~tree: FsTreeNode.t,
+      ~focus: option(string),
+      ~onNodeClick,
+      ~state: State.t,
+      (),
+    ) => {
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
-  let bg = state.theme.sideBarBackground;
   let fg = state.theme.sideBarForeground;
 
+  let focus =
+    switch (focus, state.workspace) {
+    | (Some(path), Some(workspace)) => toNodePath(workspace, tree, path)
+    | _ => None
+    };
+
+  let FileExplorer.{scrollOffset, _} = state.fileExplorer;
+  let onScrollOffsetChange = offset =>
+    GlobalContext.current().dispatch(
+      FileExplorer(ScrollOffsetChanged(offset)),
+    );
+
   <View style=Styles.container>
-    <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
-    </View>
-    <TreeView tree itemHeight=20 onClick=onNodeClick>
-      ...{node => <nodeView font bg fg node />}
+    <TreeView
+      scrollOffset
+      onScrollOffsetChange
+      tree
+      focus
+      theme
+      itemHeight=22
+      onClick=onNodeClick>
+      ...{node => <nodeView font fg node />}
     </TreeView>
   </View>;
 };

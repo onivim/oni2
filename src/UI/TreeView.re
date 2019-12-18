@@ -4,6 +4,10 @@ open Revery.UI.Components;
 
 open Oni_Core;
 
+module Option = Utility.Option;
+
+module Log = (val Log.withNamespace("TreeView"));
+
 module type TreeModel = {
   type t;
 
@@ -49,11 +53,14 @@ module Styles = {
     bottom(0),
   ];
 
-  let item = (~itemHeight) => [
+  let item = (~itemHeight, ~isFocused, ~theme: Theme.t) => [
     height(itemHeight),
     cursor(Revery.MouseCursors.pointer),
     flexDirection(`Row),
     overflow(`Hidden),
+    backgroundColor(
+      isFocused ? theme.menuSelectionBackground : Colors.transparentWhite,
+    ),
   ];
 
   let placeholder = (~height) => [Style.height(height)];
@@ -84,20 +91,31 @@ module Make = (Model: TreeModel) => {
   let rec nodeView =
           (
             ~renderContent,
+            ~focus,
             ~itemHeight,
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
             ~node,
+            ~theme,
             (),
           ) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
+
+    let (isFocused, childFocus) =
+      switch (focus) {
+      | Some([last]) when last == node => (true, None)
+      | Some([head, ...tail]) when head == node => (false, Some(tail))
+      | Some(_) => (false, None)
+      | _ => (false, None)
+      };
 
     let placeholder = (~size, ()) =>
       <View style={Styles.placeholder(~height=size * itemHeight)} />;
 
     let item = (~arrow, ()) =>
       <Clickable
-        onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
+        onClick={() => onClick(node)}
+        style={Styles.item(~itemHeight, ~isFocused, ~theme)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -109,10 +127,12 @@ module Make = (Model: TreeModel) => {
           let element =
             <nodeView
               renderContent
+              focus=childFocus
               itemHeight
               clipRange=(clipStart - count, clipEnd - count)
               onClick
               node=child
+              theme
             />;
 
           loop(
@@ -153,10 +173,15 @@ module Make = (Model: TreeModel) => {
   let%component make =
                 (
                   ~children as renderContent,
+                  ~focus: option(list(Model.t)),
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
+                  ~scrollOffset: option([ | `Start(float) | `Middle(float)])=?,
+                  ~onScrollOffsetChange:
+                     [ | `Start(float) | `Middle(float)] => unit=_ => (),
                   ~tree,
+                  ~theme,
                   (),
                 ) => {
     let%hook (outerRef, setOuterRef) = Hooks.ref(None);
@@ -170,6 +195,26 @@ module Make = (Model: TreeModel) => {
       };
 
     let%hook (scrollTop, setScrollTop) = Hooks.state(0);
+    let setScrollTop = callback =>
+      setScrollTop(scrollTop => {
+        let newScrollTop = callback(scrollTop);
+        onScrollOffsetChange(
+          `Start(float(newScrollTop) /. float(itemHeight)),
+        );
+        newScrollTop;
+      });
+    let scrollTop =
+      scrollOffset
+      |> Option.map(
+           fun
+           | `Start(offset) => int_of_float(offset *. float(itemHeight))
+           | `Middle(offset) => {
+               let pixelOffset = int_of_float(offset *. float(itemHeight));
+               let halfHeight = (menuHeight - itemHeight) / 2;
+               pixelOffset - halfHeight;
+             },
+         )
+      |> Option.value(~default=scrollTop);
 
     let count = Model.expandedSubtreeSize(tree);
 
@@ -219,7 +264,15 @@ module Make = (Model: TreeModel) => {
       onMouseWheel=scroll>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
-          <nodeView renderContent itemHeight clipRange onClick node=tree />
+          <nodeView
+            renderContent
+            focus
+            itemHeight
+            clipRange
+            onClick
+            node=tree
+            theme
+          />
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}

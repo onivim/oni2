@@ -231,11 +231,11 @@ let start =
           Range.{
             start: {
               ...range.start,
-              column: Index.(range.start.column + 1),
+              column: range.start.column,
             },
             stop: {
               ...range.stop,
-              column: Index.(range.stop.column + 1),
+              column: range.stop.column,
             },
           },
         );
@@ -800,25 +800,22 @@ let start =
       ();
     });
 
-  let updater = (state: State.t, action) => {
+  let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.ConfigurationSet(configuration) => (
+    | ConfigurationSet(configuration) => (
         state,
         synchronizeViml(configuration),
       )
-    | Actions.Command("editor.action.clipboardPasteAction") => (
+    | Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
       )
-    | Actions.Command("insertBestCompletion") => (
-        state,
-        applyCompletion(state),
-      )
-    | Actions.Command("undo") => (state, undoEffect)
-    | Actions.Command("redo") => (state, redoEffect)
-    | Actions.ListFocusUp
-    | Actions.ListFocusDown
-    | Actions.ListFocus(_) =>
+    | Command("insertBestCompletion") => (state, applyCompletion(state))
+    | Command("undo") => (state, undoEffect)
+    | Command("redo") => (state, redoEffect)
+    | ListFocusUp
+    | ListFocusDown
+    | ListFocus(_) =>
       // IFFY: Depends on the ordering of "updater"s>
       let eff =
         switch (state.quickmenu) {
@@ -830,34 +827,28 @@ let start =
         };
       (state, eff);
 
-    | Actions.Init => (state, initEffect)
-    | Actions.OpenFileByPath(path, direction, location) => (
+    | Init => (state, initEffect)
+    | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
-    | Actions.BufferEnter(_)
-    | Actions.SetEditorFont(_)
-    | Actions.WindowSetActive(_, _)
-    | Actions.EditorGroupSetSize(_, _) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Actions.BufferSetIndentation(_, indent) => (
+    | BufferEnter(_)
+    | SetEditorFont(_)
+    | WindowSetActive(_, _)
+    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
       )
-    | Actions.ViewSetActiveEditor(_) => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Actions.ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
-    | Actions.KeyboardInput(s) => (state, inputEffect(s))
-    | Actions.CopyActiveFilepathToClipboard => (
+    | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
+    | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | KeyboardInput(s) => (state, inputEffect(s))
+    | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
       )
 
-    | Actions.VimDirectoryChanged(directory) =>
+    | VimDirectoryChanged(directory) =>
       let newState = {
         ...state,
         workspace:
@@ -874,6 +865,8 @@ let start =
             state.languageInfo,
             state.iconTheme,
             state.configuration,
+            ~onComplete=tree =>
+            Actions.FileExplorer(TreeLoaded(tree))
           ),
           TitleStoreConnector.Effects.updateTitle(newState),
         ]),
