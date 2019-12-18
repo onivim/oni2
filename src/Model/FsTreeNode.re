@@ -1,6 +1,7 @@
 open Oni_Core;
 
 module ArrayEx = Utility.ArrayEx;
+module Path = Utility.Path;
 
 type t = {
   path: string,
@@ -59,10 +60,10 @@ let directory = (~isOpen=false, path, ~icon, ~children) => {
 let equals = (a, b) => a.hash == b.hash && a.path == b.path;
 
 let findNodesByPath = (path, tree) => {
-  let path = Workspace.toRelativePath(tree.path, path);
   let pathHashes =
     path
-    |> String.split_on_char(Filename.dir_sep.[0])
+    |> Path.toRelative(~base=tree.path)
+    |> Path.explode
     |> List.map(Hashtbl.hash);
 
   let rec loop = (focusedNodes, children, pathSegments) =>
@@ -99,10 +100,10 @@ let findNodesByPath = (path, tree) => {
 };
 
 let findByPath = (path, tree) => {
-  let path = Workspace.toRelativePath(tree.path, path);
   let pathHashes =
     path
-    |> String.split_on_char(Filename.dir_sep.[0])
+    |> Path.toRelative(~base=tree.path)
+    |> Path.explode
     |> List.map(Hashtbl.hash);
 
   let rec loop = (node, children, pathHashes) =>
