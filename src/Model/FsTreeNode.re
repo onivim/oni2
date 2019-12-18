@@ -19,6 +19,10 @@ and kind =
     })
   | File;
 
+let _hash = Hashtbl.hash;
+let _pathHashes = (~base, path) =>
+  path |> Path.toRelative(~base) |> Path.explode |> List.map(_hash);
+
 let rec countExpandedSubtree =
   fun
   | Directory({isOpen: true, children}) =>
@@ -35,7 +39,7 @@ let file = (path, ~icon) => {
 
   {
     path,
-    hash: Hashtbl.hash(basename),
+    hash: _hash(basename),
     displayName: basename,
     icon,
     kind: File,
@@ -49,7 +53,7 @@ let directory = (~isOpen=false, path, ~icon, ~children) => {
 
   {
     path,
-    hash: Hashtbl.hash(basename),
+    hash: _hash(basename),
     displayName: basename,
     icon,
     kind,
@@ -60,14 +64,8 @@ let directory = (~isOpen=false, path, ~icon, ~children) => {
 let equals = (a, b) => a.hash == b.hash && a.path == b.path;
 
 let findNodesByPath = (path, tree) => {
-  let pathHashes =
-    path
-    |> Path.toRelative(~base=tree.path)
-    |> Path.explode
-    |> List.map(Hashtbl.hash);
-
-  let rec loop = (focusedNodes, children, pathSegments) =>
-    switch (pathSegments) {
+  let rec loop = (focusedNodes, children, pathHashes) =>
+    switch (pathHashes) {
     | [] => `Success(List.rev(focusedNodes))
     | [hash, ...rest] =>
       switch (children) {
@@ -88,24 +86,19 @@ let findNodesByPath = (path, tree) => {
             };
           loop([node, ...focusedNodes], children, rest);
         } else {
-          loop(focusedNodes, children, pathSegments);
+          loop(focusedNodes, children, pathHashes);
         }
       }
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop([tree], children, pathHashes)
+  | Directory({children, _}) =>
+    loop([tree], children, _pathHashes(~base=tree.path, path))
   | File => `Failed
   };
 };
 
 let findByPath = (path, tree) => {
-  let pathHashes =
-    path
-    |> Path.toRelative(~base=tree.path)
-    |> Path.explode
-    |> List.map(Hashtbl.hash);
-
   let rec loop = (node, children, pathHashes) =>
     switch (pathHashes) {
     | [] => Some(node)
@@ -128,7 +121,8 @@ let findByPath = (path, tree) => {
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop(tree, children, pathHashes)
+  | Directory({children, _}) =>
+    loop(tree, children, _pathHashes(~base=tree.path, path))
   | File => None
   };
 };
