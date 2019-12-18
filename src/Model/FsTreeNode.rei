@@ -28,9 +28,12 @@ let directory:
   ) =>
   t;
 
-let findNodesByLocalPath:
+let findNodesByPath:
   (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
-let findByLocalPath: (string, t) => option(t);
+let findByPath: (string, t) => option(t);
+
+let prevExpandedNode: (string, t) => option(t);
+let nextExpandedNode: (string, t) => option(t);
 
 let update: (~tree: t, ~updater: t => t, int) => t;
 let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;
