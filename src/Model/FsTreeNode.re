@@ -97,17 +97,20 @@ let findNodesByPath = (path, tree) => {
 
 let findByPath = (path, tree) => {
   let path = Workspace.toRelativePath(tree.path, path);
-  let pathSegments = path |> String.split_on_char(Filename.dir_sep.[0]);
+  let pathHashes =
+    path
+    |> String.split_on_char(Filename.dir_sep.[0])
+    |> List.map(Hashtbl.hash);
 
-  let rec loop = (node, children, pathSegments) =>
-    switch (pathSegments) {
+  let rec loop = (node, children, pathHashes) =>
+    switch (pathHashes) {
     | [] => Some(node)
-    | [pathSegment, ...rest] =>
+    | [hash, ...rest] =>
       switch (children) {
       | [] => None
 
       | [node, ...children] =>
-        if (node.displayName == pathSegment) {
+        if (node.hash == hash) {
           let children =
             switch (node.kind) {
             | Directory({children, _}) => children
@@ -115,13 +118,13 @@ let findByPath = (path, tree) => {
             };
           loop(node, children, rest);
         } else {
-          loop(node, children, pathSegments);
+          loop(node, children, pathHashes);
         }
       }
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop(tree, children, pathSegments)
+  | Directory({children, _}) => loop(tree, children, pathHashes)
   | File => None
   };
 };
