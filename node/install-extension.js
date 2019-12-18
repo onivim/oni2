@@ -48,28 +48,24 @@ yauzl.open(zipFilePath, {lazyEntries: true}, (err, zipfile) => {
 			// file entry
 			console.log("Opening read stream: " + entry.fileName);
 			const fileName = entry.fileName.replace(sourcePathRegex, '');
-			const outputDirectory = path.join(destPath, extensionDestFolder);
-			const outputPath = path.join(outputDirectory, fileName);
+			const outputPath = path.join(destPath, extensionDestFolder, fileName);
+			const outputDirectory = path.dirname(outputPath);
 			console.log("Creating directory: " + outputDirectory);
 			fse.mkdirpSync(outputDirectory);
 
-			console.log("Filename after mod: " + outputPath);
 			zipfile.openReadStream(entry, (err, readStream) => {
-				//console.dir(entry);
 				if (err) throw err;
-				readStream.on("end", () => {
-					zipfile.readEntry();
-				});
 				const mode = modeFromEntry(entry);
 				const istream = fs.createWriteStream(outputPath, { mode });
 				readStream.pipe(istream);
-				istream.once("error", e => { throw e});
-				readStream.once("error", e => { throw e});
-
-				zipfile.readEntry();
+				readStream.on("end", () => {
+					zipfile.readEntry();
+				});
+				istream.once("error", e => { console.error(e) });
+				readStream.once("error", e => console.error(e));
 			})
 		}
 	})
 });
 
-console.log("Install extension");
+console.log("Installing extension...");
