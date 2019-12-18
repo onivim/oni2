@@ -18,6 +18,11 @@ let spec = [
   ("-f", Arg.Set(stayAttached), ""),
   ("--nofork", Arg.Set(stayAttached), ""),
   ("--debug", passthrough, ""),
+  (
+    "--no-log-colors",
+    passthrough,
+    "Turn off colors and rich formatting in logs.",
+  ),
   ("--log-file", passthroughString, ""),
   ("--log-filter", passthroughString, ""),
   ("--checkhealth", passthrough, ""),

@@ -5,6 +5,15 @@
 
 name: $(Build.SourceVersion)
 jobs:
+- job: Kickoff
+  displayName: "Kickoff"
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  - script: ./scripts/set-short-commit-variable.sh
+    name: shortCommitVariableStep
+
 - job: Hygiene_Checks
   displayName: 'Hygiene Checks'
   timeoutInMinutes: 0
@@ -121,7 +130,7 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --checkhealth
+  - script: Oni2.exe -f --checkhealth --no-log-colors
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
@@ -129,11 +138,16 @@ jobs:
 
 - job: ValidateLinuxRelease
   displayName: "Linux: Validate Release"
-  dependsOn: CentOS
+  dependsOn: 
+  - Kickoff
+  - CentOS
   pool:
     vmImage: 'Ubuntu 16.04'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
   steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
   - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
     displayName: 'Echo artifact dir'
   - task: DownloadBuildArtifacts@0
@@ -148,11 +162,16 @@ jobs:
 
 - job: ValidateMacOSRelease
   displayName: "MacOS: Validate Release"
-  dependsOn: MacOS
+  dependsOn: 
+  - Kickoff
+  - MacOS
   pool:
     vmImage: 'macOS 10.14'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
   steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
   - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
     displayName: 'Echo artifact dir'
   - task: DownloadBuildArtifacts@0
@@ -168,11 +187,16 @@ jobs:
 - job: ValidateWindowsRelease
   timeoutInMinutes: 0
   displayName: "Windows: Validate Release"
-  dependsOn: Windows
+  dependsOn: 
+  - Kickoff
+  - Windows
   pool:
     vmImage: 'vs2017-win2016'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
   steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
   - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
     displayName: 'Echo artifact dir'
   - task: DownloadBuildArtifacts@0
@@ -189,5 +213,5 @@ jobs:
   # but we need to check from the command prompt, too via %PATH% - for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --checkhealth 
+      Oni2.exe -f --checkhealth --no-log-colors
     displayName: "Oni2.exe - run installed"
