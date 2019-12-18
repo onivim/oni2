@@ -52,6 +52,7 @@ let parse = (~checkHealth) => {
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--debug", Unit(Log.enableDebugLogging), ""),
+      ("--no-log-colors", Unit(Log.disableColors), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
       ("--checkhealth", Unit(checkHealth), ""),
