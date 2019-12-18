@@ -53,7 +53,7 @@ module Styles = {
     bottom(0),
   ];
 
-  let item = (~itemHeight, ~theme: Theme.t) => [
+  let item = (~itemHeight) => [
     height(itemHeight),
     cursor(Revery.MouseCursors.pointer),
     flexDirection(`Row),
@@ -92,7 +92,6 @@ module Make = (Model: TreeModel) => {
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
             ~node,
-            ~theme,
             (),
           ) => {
     let subtreeSize = Model.expandedSubtreeSize(node);
@@ -103,7 +102,7 @@ module Make = (Model: TreeModel) => {
     let item = (~arrow, ()) =>
       <Clickable
         onClick={() => onClick(node)}
-        style={Styles.item(~itemHeight, ~theme)}>
+        style={Styles.item(~itemHeight)}>
         <arrow />
         {renderContent(node)}
       </Clickable>;
@@ -119,7 +118,6 @@ module Make = (Model: TreeModel) => {
               clipRange=(clipStart - count, clipEnd - count)
               onClick
               node=child
-              theme
             />;
 
           loop(
@@ -167,7 +165,6 @@ module Make = (Model: TreeModel) => {
                   ~onScrollOffsetChange:
                      [ | `Start(float) | `Middle(float)] => unit=_ => (),
                   ~tree,
-                  ~theme,
                   (),
                 ) => {
     let%hook (outerRef, setOuterRef) = Hooks.ref(None);
@@ -256,7 +253,6 @@ module Make = (Model: TreeModel) => {
             clipRange
             onClick
             node=tree
-            theme
           />
         </View>
       </View>

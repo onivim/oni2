@@ -145,7 +145,6 @@ let%component make =
       scrollOffset
       onScrollOffsetChange
       tree
-      theme
       itemHeight=22
       onClick=onNodeClick>
       ...{node =>

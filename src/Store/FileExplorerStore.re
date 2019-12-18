@@ -148,9 +148,9 @@ let start = () => {
 
     | FocusNodeLoaded(path, node) =>
       switch (state.fileExplorer.active) {
-      | Some(path) =>
+      | Some(activePath) =>
         let state = replaceNode(path, node, state);
-        revealPath(state, path);
+        revealPath(state, activePath);
       | None => (state, Isolinear.Effect.none)
       }
 
