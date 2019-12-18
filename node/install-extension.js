@@ -3,8 +3,23 @@ const fs = require("fs");
 const fse = require("fs-extra");
 const path = require("path");
 
-const zipFilePath = "/Users/bryphe/oni2/test/collateral/oni-test-extension-0.0.1.vsix";
-const destPath = "/Users/bryphe/oni2/node/__test_unpack__";
+const extensionPath = process.argv[2];
+const extensionFolder = process.argv[3];
+const extensionName = process.argv[4] || path.basename(extensionPath, path.extname(extensionPath));
+const extensionVersion = process.argv[5] || "";
+
+const extensionDestFolder = extensionName + extensionVersion;
+
+if (!path.isAbsolute(extensionPath) || !fs.existsSync(extensionPath) || fs.lstatSync(extensionPath).isDirectory()) {
+	throw "Extension path must be an absolute path to an extension"
+}
+
+if (!path.isAbsolute(extensionFolder) || !fs.lstatSync(extensionFolder).isDirectory()) {
+	throw "Extension folder must be an absolute path"
+}
+
+const zipFilePath = extensionPath;
+const destPath = extensionFolder;
 
 const sourcePathRegex = new RegExp("^extension/");
 
@@ -33,8 +48,8 @@ yauzl.open(zipFilePath, {lazyEntries: true}, (err, zipfile) => {
 			// file entry
 			console.log("Opening read stream: " + entry.fileName);
 			const fileName = entry.fileName.replace(sourcePathRegex, '');
-			const outputPath = path.join(destPath, fileName);
-			const outputDirectory = path.dirname(outputPath);
+			const outputDirectory = path.join(destPath, extensionDestFolder);
+			const outputPath = path.join(outputDirectory, fileName);
 			console.log("Creating directory: " + outputDirectory);
 			fse.mkdirpSync(outputDirectory);
 
