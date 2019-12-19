@@ -29,6 +29,7 @@ steps:
   # - script: esy x OniUnitTestRunner
   #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
   # - task: PublishTestResults@2
+  # TODO: Why is this hanging on Linux?
   #  displayName: 'Publish JUnit file'
   #  inputs:
   #    testResultsFormat: JUnit
