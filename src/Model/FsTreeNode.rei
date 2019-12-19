@@ -1,6 +1,5 @@
 type t =
   pri {
-    id: int,
     path: string,
     displayName: string,
     hash: int, // hash of basename, so only comparable locally
@@ -17,24 +16,31 @@ and kind =
       })
     | File;
 
-let file: (string, ~id: int, ~icon: option(IconTheme.IconDefinition.t)) => t;
+let file: (string, ~icon: option(IconTheme.IconDefinition.t)) => t;
 let directory:
   (
     ~isOpen: bool=?,
     string,
-    ~id: int,
     ~icon: option(IconTheme.IconDefinition.t),
     ~children: list(t)
   ) =>
   t;
 
-let findNodesByLocalPath:
+let findNodesByPath:
   (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+let findByPath: (string, t) => option(t);
 
-let update: (~tree: t, ~updater: t => t, int) => t;
+let prevExpandedNode: (string, t) => option(t);
+let nextExpandedNode: (string, t) => option(t);
+
+let expandedIndex: (t, list(t)) => option(int);
+
+let update: (~tree: t, ~updater: t => t, string) => t;
 let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;
 let toggleOpen: t => t;
 let setOpen: t => t;
+
+let equals: (t, t) => bool;
 
 module Model: {
   type nonrec t = t;

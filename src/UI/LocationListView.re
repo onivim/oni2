@@ -6,6 +6,7 @@ open Oni_Core;
 open Oni_Model;
 
 module Option = Utility.Option;
+module Path = Utility.Path;
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {
@@ -84,7 +85,7 @@ let item =
   let locationText =
     Printf.sprintf(
       "%s:%n - ",
-      Workspace.toRelativePath(workingDirectory, item.file),
+      Path.toRelative(~base=workingDirectory, item.file),
       Index.toOneBased(item.location.line),
     );
 
