@@ -17,14 +17,13 @@ type t;
 
 type connectedCallback = unit => unit;
 type closeCallback = int => unit;
-type scheduler = (unit => unit) => unit;
 type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 let start:
   (
     ~onConnected: connectedCallback=?,
     ~onClose: closeCallback=?,
-    ~scheduler: scheduler,
+    ~scheduler: Core.Scheduler.t,
     ~onHighlights: highlightsCallback,
     Ext.LanguageInfo.t,
     Core.Setup.t

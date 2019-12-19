@@ -8,20 +8,17 @@ let install: (~extensionFolder: string, ~extensionPath: string) => Lwt.t(unit) =
     
     let promise: Lwt.t(unit) = NodeTask.run(
       ~name="Install",
-      ~onMessage=(_) => (),
-      ~scheduler=(f) => f(),
-      ~script="install-extension.js",
       ~setup,
       ~args=[
         extensionPath, 
         "/Users/bryphe/test-extensions"
       ],
+      "install-extension.js"
     );
     promise;
   };
 
 let uninstall: (~extensionFolder: string, ~extensionId: string) => Lwt.t(unit) =
   (~extensionFolder, ~extensionId) => {
-    print_endline("Uninstall");
     Lwt.return();
   };

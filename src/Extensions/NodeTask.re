@@ -13,11 +13,10 @@ type callback = unit => unit;
 let run =
     (
       ~name="Anonymous",
-      ~scheduler: (callback) => unit,
-      ~onMessage: string => unit,
-      ~script: string,
+      ~scheduler=Scheduler.mainThread,
       ~args=[],
       ~setup: Setup.t,
+      script: string,
     ) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
@@ -34,7 +33,7 @@ let run =
         while (running^) {
           try ({
           let str = input_line(stdout);
-          scheduler(() => Log.info(str));
+          Scheduler.run(() => Log.info(str), scheduler);
           }) {
           | End_of_file => running := false
           }

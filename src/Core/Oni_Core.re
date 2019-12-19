@@ -29,6 +29,7 @@ module Job = Job;
 module LineNumber = LineNumber;
 module Log = Log;
 module Ripgrep = Ripgrep;
+module Scheduler = Scheduler;
 module Setup = Setup;
 module StringMap = StringMap;
 module Subscription = Subscription;
