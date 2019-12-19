@@ -120,6 +120,7 @@ type t =
   | CopyActiveFilepathToClipboard
   | SearchShow
   | SearchHide
+  | SearchHotkey
   | SearchInput(string, int)
   | SearchStart
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))

@@ -71,6 +71,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {
       </View>
       <View style=Styles.row>
         <OniInput
+          autofocus=true
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
           cursorPosition={state.cursorPosition}

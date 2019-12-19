@@ -34,6 +34,16 @@ let start = () => {
         condition: "quickmenuCursorEnd" |> parseExp,
       },
       {
+        key: "<S-C-F>",
+        command: "workbench.action.findInFiles",
+        condition: "editorTextFocus" |> parseExp,
+      },
+      {
+        key: "<D-S-F>",
+        command: "workbench.action.findInFiles",
+        condition: "editorTextFocus" |> parseExp,
+      },
+      {
         key: "<C-TAB>",
         command: "workbench.action.openNextRecentlyUsedEditorInGroup",
         condition: "editorTextFocus" |> parseExp,

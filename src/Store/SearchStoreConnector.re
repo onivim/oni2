@@ -36,16 +36,27 @@ let start = () => {
         {...state, searchPane: None},
         Isolinear.Effect.none,
       )
+
     | ActivityBar(Model.ActivityBar.SearchClick) when state.searchPane == None => (
         {...state, searchPane: Some(Model.Search.initial)},
         Isolinear.Effect.none,
       )
+
     | SearchShow => (
         {...state, searchPane: Some(Model.Search.initial)},
         Isolinear.Effect.none,
       )
 
     | SearchHide => ({...state, searchPane: None}, Isolinear.Effect.none)
+
+    | SearchHotkey =>
+      switch (state.searchPane) {
+      | Some(_) => ({...state, searchPane: None}, Isolinear.Effect.none)
+      | None => (
+          {...state, searchPane: Some(Model.Search.initial)},
+          Isolinear.Effect.none,
+        )
+      }
 
     | _ =>
       switch (state.searchPane) {
