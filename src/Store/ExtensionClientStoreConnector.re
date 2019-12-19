@@ -281,7 +281,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
-    dispatch(Model.Actions.ExtensionActivated(id));
+    dispatch(Model.Actions.Extension(Model.Extensions.Activated(id)));
   };
 
   let onShowMessage = message => {

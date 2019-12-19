@@ -46,7 +46,7 @@ type t =
       Location.t,
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
-  | ExtensionActivated(string)
+  | Extension(Extensions.action)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration

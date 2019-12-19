@@ -30,16 +30,6 @@ let readFileSync = path => {
   };
 };
 
-let remapManifest = (directory: string, manifest: ExtensionManifest.t) => {
-  let m =
-    switch (manifest.main) {
-    | None => manifest
-    | Some(v) => {...manifest, main: Some(Path.join(directory, v))}
-    };
-
-  ExtensionManifest.remapPaths(directory, m);
-};
-
 let scan = (~prefix=None, directory: string) => {
   let items = Sys.readdir(directory) |> Array.to_list;
 
@@ -55,7 +45,7 @@ let scan = (~prefix=None, directory: string) => {
     let manifest =
       json
       |> ExtensionManifest.of_yojson_exn
-      |> remapManifest(path)
+      |> ExtensionManifest.remapPaths(path)
       |> ExtensionManifest.updateName(prevName =>
            prefix
            |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
