@@ -330,6 +330,14 @@ module Option = {
     | Some(_) => ()
     | None => f();
 
+  let tap_none = f =>
+    fun
+    | Some(_) as v => v
+    | None => {
+        f();
+        None;
+      };
+
   let some = x => Some(x);
 
   let bind = f =>

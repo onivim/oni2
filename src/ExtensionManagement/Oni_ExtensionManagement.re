@@ -16,7 +16,7 @@ let install: (~extensionFolder: string, ~extensionPath: string) => Lwt.t(unit) =
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[extensionPath, "/Users/bryphe/test-extensions"],
+        ~args=[extensionPath, extensionFolder],
         "install-extension.js",
       );
 
