@@ -25,8 +25,12 @@ let cliOptions =
 
         let result = Core.Utility.LwtUtil.sync(promise);
         switch (result) {
-        | Ok(_) => 0
-        | Error(_) => 1;
+        | Ok(_) =>
+          Printf.printf("Successfully installed extension: %s\n", s);
+          0;
+        | Error(_) =>
+          Printf.printf("Failed to install extension: %s\n", s);
+          1;
         };
       },
     ~uninstallExtension=
@@ -35,14 +39,15 @@ let cliOptions =
         0;
       },
     ~checkHealth=HealthCheck.run,
-    ~listExtensions=cli => {
-      let extensions = Store.Utility.getUserExtensions(cli);
-      let printExtension = (ext: Ext.ExtensionScanner.t) => {
-        print_endline(ext.manifest.name);
-      };
-      List.iter(printExtension, extensions);
-      1;
-    },
+    ~listExtensions=
+      cli => {
+        let extensions = Store.Utility.getUserExtensions(cli);
+        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+          print_endline(ext.manifest.name);
+        };
+        List.iter(printExtension, extensions);
+        1;
+      },
   );
 Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {

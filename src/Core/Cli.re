@@ -42,7 +42,8 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
+let parse =
+    (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -55,7 +56,7 @@ let parse = (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtensi
     Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
 
   let runAndExitString = f =>
-    Arg.String((s) => queuedJob := Some(cli => {f(s, cli) |> exit}));
+    Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
 
   Arg.parse(
     [

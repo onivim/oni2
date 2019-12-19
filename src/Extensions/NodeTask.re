@@ -19,7 +19,7 @@ let run =
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
 
-  let scriptPath = Setup.getNodeScriptPath(script, setup);
+  let scriptPath = Setup.getNodeScriptPath(~script, setup);
   let {pid, stdout, _}: NodeProcess.t =
     NodeProcess.start(~args, setup, scriptPath);
 
