@@ -185,6 +185,7 @@ let start = (getState, contributedCommands) => {
       "workbench.action.gotoSymbol",
       _ => singleActionEffect(QuickmenuShow(DocumentSymbols)),
     ),
+    ("workbench.action.findInFiles", _ => singleActionEffect(SearchHotkey)),
     (
       "workbench.action.openNextRecentlyUsedEditorInGroup",
       _ => singleActionEffect(QuickmenuShow(EditorsPicker)),
