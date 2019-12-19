@@ -36,6 +36,12 @@ type t = {
   contributes: ExtensionContributions.t,
 };
 
+let getDisplayName = (manifest: t) => {
+  manifest.displayName |> Option.value(~default="Unknown Extension");
+};
+
+let getIcon = (manifest: t) => manifest.icon;
+
 let remapPaths = (rootPath: string, manifest: t) => {
   ...manifest,
   main: Option.map(mainPath => Path.join(rootPath, mainPath), manifest.main),

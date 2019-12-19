@@ -442,6 +442,14 @@ let start = (extensions, setup: Core.Setup.t) => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
     });
 
+  let discoveredExtensionsEffect = extensions =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.discoverExtensions", dispatch =>
+      dispatch(
+        Model.Actions.Extension(Model.Extensions.Discovered(extensions)),
+      )
+    );
+
   let registerQuitCleanupEffect =
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.registerQuitCleanup", dispatch =>
@@ -462,7 +470,13 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let updater = (state: Model.State.t, action) =>
     switch (action) {
-    | Model.Actions.Init => (state, registerQuitCleanupEffect)
+    | Model.Actions.Init => (
+        state,
+        Isolinear.Effect.batch([
+          registerQuitCleanupEffect,
+          discoveredExtensionsEffect(extensions),
+        ]),
+      )
     | Model.Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),

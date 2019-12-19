@@ -18,7 +18,14 @@ type action =
 
 let empty = {activatedIds: [], extensions: []};
 
-let activateExtension = (id: string, v: t) => {
-  ...v,
-  activatedIds: [id, ...v.activatedIds],
+let activateExtension = (id: string, model: t) => {
+  ...model,
+  activatedIds: [id, ...model.activatedIds],
 };
+
+let addExtensions = (extensions, model) => {
+  ...model,
+  extensions: extensions @ model.extensions,
+};
+
+let getExtensions = model => model.extensions;
