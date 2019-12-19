@@ -21,6 +21,11 @@ This can be overridden via the `--extensions-dir`, like:
 oni2 --extensions-dir /some/path/with/extensions
 ```
 
+Extensions can be listed with:
+```
+oni2 --list-extensions
+```
+
 ### Logging
 
 The `-f` argument can be used to keep Onivim 2 attached to the terminal,

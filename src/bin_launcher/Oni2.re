@@ -15,22 +15,37 @@ let passthroughFloat = Arg.Float(_ => ());
 let passthroughString = Arg.String(_ => ());
 
 let spec = [
-  ("-f", Arg.Set(stayAttached), ""),
-  ("--nofork", Arg.Set(stayAttached), ""),
+  ("-f", Arg.Set(stayAttached), "Stay attached to the foreground terminal"),
+  (
+    "--nofork",
+    Arg.Set(stayAttached),
+    "Stay attached to the foreground termina",
+  ),
   ("--debug", passthrough, ""),
+  ("--log-file", passthroughString, "Specify a file to output logs"),
+  ("--log-filter", passthroughString, "Filter log output"),
   (
     "--no-log-colors",
     passthrough,
     "Turn off colors and rich formatting in logs.",
   ),
-  ("--log-file", passthroughString, ""),
-  ("--log-filter", passthroughString, ""),
   ("--checkhealth", passthrough, ""),
   ("--extensions-dir", passthroughString, ""),
+  ("--list-extensions", Arg.Set(stayAttached), ""),
   ("--force-device-scale-factor", passthroughFloat, ""),
   ("--working-directory", passthrough, ""),
-  ("-version", Arg.Unit(version), ""),
+  ("-version", Arg.Unit(version), "Print version"),
 ];
+
+let usage = {|
+Onivim 2
+
+Usage:
+
+  oni2 [options][paths...]
+
+Options:
+|};
 
 let anonArg = _ => ();
 
@@ -55,7 +70,7 @@ let filterPsnArgument = args => {
 let args = Sys.argv |> filterPsnArgument;
 
 let () = {
-  switch (Arg.parse_argv(args, spec, anonArg, "Usage: ")) {
+  switch (Arg.parse_argv(args, spec, anonArg, usage)) {
   | exception (Arg.Bad(err)) =>
     prerr_endline(err);
     exit(1);

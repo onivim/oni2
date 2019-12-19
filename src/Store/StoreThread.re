@@ -23,7 +23,6 @@ module DispatchLog = (
 );
 
 let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
-  open Core.Cli;
   let extensions =
     Core.Log.perf("Discover extensions", () => {
       let extensions =
@@ -39,29 +38,9 @@ let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
         | None => []
         };
 
-      let overriddenExtensionsDir =
-        cli |> Option.bind(cli => cli.overriddenExtensionsDir);
-
       let userExtensions =
-        (
-          switch (overriddenExtensionsDir) {
-          | Some(p) => Some(p)
-          | None =>
-            switch (Core.Filesystem.getExtensionsFolder()) {
-            | Ok(p) => Some(p)
-            | Error(msg) =>
-              Log.errorf(m =>
-                m("Error discovering user extensions: %s", msg)
-              );
-              None;
-            }
-          }
-        )
-        |> Option.map(p => {
-             Log.infof(m => m("Searching for user extensions in: %s", p));
-             p;
-           })
-        |> Option.map(ExtensionScanner.scan)
+        cli
+        |> Option.map(Utility.getUserExtensions)
         |> Option.value(~default=[]);
 
       Log.debugf(m =>
