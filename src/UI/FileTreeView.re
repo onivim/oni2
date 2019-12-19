@@ -1,33 +1,44 @@
+open Oni_Core;
 open Oni_Model;
 
 open Revery;
 open Revery.UI;
 
-module Core = Oni_Core;
-
-let toNodePath = (workspace: Workspace.workspace, tree, path) =>
-  Core.Log.perf("FileTreeview.toNodePath", () => {
-    let localPath =
-      Workspace.toRelativePath(workspace.workingDirectory, path);
-
-    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
-    | `Success(nodes) => Some(nodes)
-    | `Partial(_)
-    | `Failed => None
-    };
-  });
+module Option = Utility.Option;
 
 module Styles = {
   open Style;
 
   let container = [flexGrow(1)];
 
-  let item = [flexDirection(`Row), alignItems(`Center)];
-
-  let text = (~fg, ~font: Core.UiFont.t) => [
+  let title = (~fg, ~bg, ~font: UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
+    backgroundColor(bg),
     color(fg),
+  ];
+
+  let heading = (theme: Theme.t) => [
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    backgroundColor(theme.sideBarBackground),
+    height(Constants.default.tabHeight),
+  ];
+
+  let item = (~isFocus, ~theme: Theme.t) => [
+    flexDirection(`Row),
+    flexGrow(1),
+    alignItems(`Center),
+    backgroundColor(
+      isFocus ? theme.menuSelectionBackground : theme.sideBarBackground,
+    ),
+  ];
+
+  let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
+    fontSize(font.fontSize),
+    fontFamily(font.fontFile),
+    color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
     marginLeft(10),
     marginVertical(2),
     textWrap(TextWrapping.NoWrap),
@@ -49,7 +60,15 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
   />;
 };
 
-let nodeView = (~font: Core.UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
+let nodeView =
+    (
+      ~isFocus,
+      ~isActive,
+      ~font: UiFont.t,
+      ~theme: Theme.t,
+      ~node: FsTreeNode.t,
+      (),
+    ) => {
   let icon = () =>
     switch (node.icon) {
     | Some(icon) =>
@@ -67,39 +86,37 @@ let nodeView = (~font: Core.UiFont.t, ~fg, ~node: FsTreeNode.t, ()) => {
     switch (node.kind) {
     | Directory({isOpen, _}) =>
       <FontIcon
-        color=fg
+        color={theme.sideBarForeground}
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
         backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
 
-  <View style=Styles.item>
+  <View style={Styles.item(~isFocus, ~theme)}>
     <icon />
-    <Text text={node.displayName} style={Styles.text(~fg, ~font)} />
+    <Text
+      text={node.displayName}
+      style={Styles.text(~theme, ~isActive, ~font)}
+    />
   </View>;
 };
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
 
-let make =
-    (
-      ~tree: FsTreeNode.t,
-      ~focus: option(string),
-      ~onNodeClick,
-      ~state: State.t,
-      (),
-    ) => {
+let%component make =
+              (
+                ~tree: FsTreeNode.t,
+                ~active: option(string),
+                ~focus: option(string),
+                ~onNodeClick,
+                ~state: State.t,
+                (),
+              ) => {
+  let%hook (containerRef, setContainerRef) = Hooks.ref(None);
+
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
-
-  let fg = state.theme.sideBarForeground;
-
-  let focus =
-    switch (focus, state.workspace) {
-    | (Some(path), Some(workspace)) => toNodePath(workspace, tree, path)
-    | _ => None
-    };
 
   let FileExplorer.{scrollOffset, _} = state.fileExplorer;
   let onScrollOffsetChange = offset =>
@@ -107,16 +124,42 @@ let make =
       FileExplorer(ScrollOffsetChanged(offset)),
     );
 
-  <View style=Styles.container>
+  let onNodeClick = node => {
+    Option.iter(Revery.UI.Focus.focus, containerRef);
+    onNodeClick(node);
+  };
+
+  let onKeyDown = (event: NodeEvents.keyEventParams) => {
+    switch (event.keycode) {
+    // Enter
+    | v when v == 13 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(Select))
+
+    // arrow up
+    | v when v == 1073741906 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(FocusPrev))
+
+    // arrow down
+    | v when v == 1073741905 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(FocusNext))
+
+    | _ => ()
+    };
+  };
+
+  <View
+    onKeyDown style=Styles.container ref={ref => setContainerRef(Some(ref))}>
     <TreeView
-      scrollOffset
-      onScrollOffsetChange
-      tree
-      focus
-      theme
-      itemHeight=22
-      onClick=onNodeClick>
-      ...{node => <nodeView font fg node />}
+      scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick>
+      ...{node =>
+        <nodeView
+          isFocus={Some(node.path) == focus}
+          isActive={Some(node.path) == active}
+          font
+          theme
+          node
+        />
+      }
     </TreeView>
   </View>;
 };

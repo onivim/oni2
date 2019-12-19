@@ -259,6 +259,24 @@ module RangeUtil = {
     };
 };
 
+module ArrayEx = {
+  exception Found(int);
+
+  let findIndex = (predicate, array) =>
+    try(
+      {
+        for (i in 0 to Array.length(array) - 1) {
+          if (predicate(array[i])) {
+            raise(Found(i));
+          };
+        };
+        None;
+      }
+    ) {
+    | Found(i) => Some(i)
+    };
+};
+
 // TODO: Remove after 4.08 upgrade
 module List = {
   include List;
@@ -687,4 +705,16 @@ module ChunkyQueue: {
 
   let toList = ({front, rear, _}) =>
     front @ (Queue.toList(rear) |> List.concat);
+};
+
+module Path = {
+  // Not very robust path-handling utilities.
+  // TODO: Make good
+
+  let toRelative = (~base, path) => {
+    let base = base == "/" ? base : base ++ Filename.dir_sep;
+    Str.replace_first(Str.regexp_string(base), "", path);
+  };
+
+  let explode = String.split_on_char(Filename.dir_sep.[0]);
 };

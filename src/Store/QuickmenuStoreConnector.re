@@ -12,6 +12,7 @@ module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module Utility = Core.Utility;
+module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
 
@@ -69,7 +70,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            Some(
              Actions.{
                category: None,
-               name: Model.Workspace.toRelativePath(currentDirectory, path),
+               name: Path.toRelative(~base=currentDirectory, path),
                command: () => {
                  Model.Actions.OpenFileByPath(path, None, None);
                },
@@ -375,7 +376,7 @@ let subscriptions = ripgrep => {
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>
       Actions.{
         category: None,
-        name: Model.Workspace.toRelativePath(directory, fullPath),
+        name: Path.toRelative(~base=directory, fullPath),
         command: () => Model.Actions.OpenFileByPath(fullPath, None, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
