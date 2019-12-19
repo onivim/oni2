@@ -28,14 +28,14 @@ steps:
   #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
   # - script: esy x OniUnitTestRunner
   #   displayName: 'Unit Tests: esy x OniUnitTestRunner (round 3)'
-  - task: PublishTestResults@2
-    displayName: 'Publish JUnit file'
-    inputs:
-      testResultsFormat: JUnit
-      testResultsFiles: '**/*junit.xml'
-      buildPlatform: ${{ parameters.platform }}
-      testRunTitle: ${{ parameters.platform }}
-      failTaskOnFailedTests: true
+  # - task: PublishTestResults@2
+  #  displayName: 'Publish JUnit file'
+  #  inputs:
+  #    testResultsFormat: JUnit
+  #    testResultsFiles: '**/*junit.xml'
+  #    buildPlatform: ${{ parameters.platform }}
+  #    testRunTitle: ${{ parameters.platform }}
+  #    failTaskOnFailedTests: true
   # TODO: Why is esy '@bench' install taking so long, and why is esy '@bench' build hanging on Linux / MacOS?
   # - script: esy @bench install
   #  displayName: "Bench: install"
