@@ -185,7 +185,7 @@
     "test": "esy @test run"
   },
   "dependencies": {
-    "@esy-ocaml/reason": "3.4.0",
+    "@esy-ocaml/reason": "3.5.2",
     "@opam/camomile": "^1.0.1",
     "@opam/charInfo_width": "*",
     "@opam/dune": "*",
@@ -216,7 +216,6 @@
   },
   "resolutions": {
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
-    "flex": "github:jordwalke/flex#7ca8f51",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "3.5.2",
@@ -225,7 +224,6 @@
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:CrossR/reasonFuzz#d36e084",
     "pesy": "0.4.1",
-    "reason-fontkit": "2.7.0",
     "@opam/camomile": "1.0.1",
     "@opam/ocamlfind": "1.8.0",
     "@opam/biniou": "1.2.0",
@@ -234,7 +232,6 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "@esy-ocaml/reason": "github:facebook/reason#474900e",
     "revery": "github:revery-ui/revery#d2fd73b",
     "reason-libvim": "onivim/reason-libvim#4919011",
     "editor-core-types": "onivim/editor-core-types#16dd98e"
