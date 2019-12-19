@@ -42,7 +42,7 @@ let installExtension = (extensionPath, cli) => {
   |> Option.value(~default=1);
 };
 
-let uninstallExtension = (extensionId, cli) => {
+let uninstallExtension = (_extensionId, _cli) => {
   prerr_endline("Not implemented yet.");
   1;
 };
