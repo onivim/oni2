@@ -232,6 +232,11 @@ let ranges = indices =>
   )
   |> List.rev;
 
+let tap = (f, x) => {
+  f(x);
+  x;
+};
+
 module RangeUtil = {
   let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
     ranges => {

@@ -36,10 +36,10 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Linux
-  displayName: 'Linux - Ubuntu 18.04'
-  timeoutInMinutes: 0
+  displayName: 'Linux - Ubuntu 16.04'
+  timeoutInMinutes: 60
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'ubuntu-16.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -56,7 +56,7 @@ jobs:
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: linux
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-build-cache.yml
 

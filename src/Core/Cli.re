@@ -11,6 +11,7 @@ type t = {
   forceScaleFactor: option(float),
   syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
+  shouldClose: bool,
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
@@ -19,6 +20,7 @@ let create = (~folder, ~filesToOpen, ()) => {
   forceScaleFactor: None,
   syntaxHighlightService: false,
   overriddenExtensionsDir: None,
+  shouldClose: false,
 };
 
 let newline = "\n";
@@ -40,12 +42,20 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = (~checkHealth, ~installExtension, ~uninstallExtension) => {
+let parse = (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
   let syntaxHighlightService = ref(false);
   let extensionsDir = ref(None);
+  let shouldClose = ref(false);
+
+  let queuedJob = ref(None);
+  let runAndExitUnit = f =>
+    Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
+
+  let runAndExitString = f =>
+    Arg.String((s) => queuedJob := Some(cli => {f(s, cli) |> exit}));
 
   Arg.parse(
     [
@@ -55,9 +65,10 @@ let parse = (~checkHealth, ~installExtension, ~uninstallExtension) => {
       ("--no-log-colors", Unit(Log.disableColors), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
-      ("--checkhealth", Unit(checkHealth), ""),
-      ("--install-extension", String(installExtension), ""),
-      ("--uninstall-extension", String(uninstallExtension), ""),
+      ("--checkhealth", checkHealth |> runAndExitUnit, ""),
+      ("--list-extensions", listExtensions |> runAndExitUnit, ""),
+      ("--install-extension", installExtension |> runAndExitString, ""),
+      ("--uninstall-extension", uninstallExtension |> runAndExitString, ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
         "--force-device-scale-factor",
@@ -143,11 +154,19 @@ let parse = (~checkHealth, ~installExtension, ~uninstallExtension) => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {
+  let cli = {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
     syntaxHighlightService: syntaxHighlightService^,
     overriddenExtensionsDir: extensionsDir^,
+    shouldClose: shouldClose^,
   };
+
+  switch (queuedJob^) {
+  | None => ()
+  | Some(job) => job(cli)
+  };
+
+  cli;
 };
