@@ -8,8 +8,6 @@ exception TaskFailed;
 
 module Log = (val Log.withNamespace("Oni2.NodeTask"));
 
-type callback = unit => unit;
-
 let run =
     (
       ~name="Anonymous",
@@ -31,17 +29,16 @@ let run =
       () => {
         let running = ref(true);
         while (running^) {
-          try ({
-          let str = input_line(stdout);
-          Scheduler.run(() => Log.info(str), scheduler);
+          try({
+            let str = input_line(stdout);
+            Scheduler.run(() => Log.info(str), scheduler);
           }) {
           | End_of_file => running := false
-          }
-        }
+          };
+        };
       },
       (),
     );
-
 
   let _waitThread: Thread.t =
     Thread.create(
@@ -55,7 +52,7 @@ let run =
         | _ =>
           Log.info("Task failed: " ++ name);
           Lwt.wakeup_exn(resolver, TaskFailed);
-        }
+        };
 
         shouldClose := true;
       },

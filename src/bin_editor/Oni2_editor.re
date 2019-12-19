@@ -24,9 +24,9 @@ let cliOptions: Core.Cli.t =
 
         let result = Core.Utility.LwtUtil.sync(promise);
         switch (result) {
-        | Ok(_) => exit(0);
-        | Error(_) => exit(1);
-        }
+        | Ok(_) => exit(0)
+        | Error(_) => exit(1)
+        };
       },
     ~uninstallExtension=
       s => {

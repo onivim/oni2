@@ -80,7 +80,7 @@ let start =
   Stdlib.set_binary_mode_in(in_channel, true);
   Stdlib.set_binary_mode_out(out_channel, true);
 
-  let scheduler = cb => Core.Scheduler.run(cb, scheduler)
+  let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
   let _waitThread =
     Thread.create(

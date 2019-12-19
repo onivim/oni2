@@ -89,7 +89,10 @@ let getNodeHealthCheckPath = (v: t) => {
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-  getNodeScriptPath(~script="node_modules/vscode-exthost/out/bootstrap-fork.js", v);
+  getNodeScriptPath(
+    ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+    v,
+  );
 };
 
 let init = () => {
