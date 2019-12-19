@@ -149,7 +149,7 @@ let start =
   let (languageFeatureUpdater, languageFeatureStream) =
     LanguageFeatureConnector.start();
 
-  let inputStream =
+  let (inputUpdater, inputStream) =
     InputStoreConnector.start(getState, window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
@@ -160,6 +160,7 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Reducer.reduce),
+          inputUpdater,
           quickmenuUpdater,
           vimUpdater,
           syntaxUpdater,

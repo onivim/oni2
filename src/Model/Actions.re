@@ -51,6 +51,9 @@ type t =
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
+  | KeyDown([@opaque] Revery.Key.KeyEvent.t)
+  | KeyUp([@opaque] Revery.Key.KeyEvent.t)
+  | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
