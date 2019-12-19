@@ -32,6 +32,7 @@ module EditorVisibleRanges = EditorVisibleRanges;
 module Extensions = Extensions;
 module FileExplorer = FileExplorer;
 module Filter = Filter;
+module Focus = Focus;
 module FsTreeNode = FsTreeNode;
 module KeyDisplayer = KeyDisplayer;
 module Hover = Hover;
