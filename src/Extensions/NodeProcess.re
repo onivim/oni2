@@ -56,8 +56,7 @@ let start = (~args=[], ~env=[], setup: Setup.t, scriptPath: string) => {
 
           switch (input_line(err_channel)) {
           | exception End_of_file => shouldClose := true
-          | v =>
-            Log.isDebugLoggingEnabled() ? Log.debug(() => logPrefix ++ v) : ()
+          | v => Log.isDebugLoggingEnabled() ? Log.debug(() => logPrefix ++ v) : ()
           };
         };
       },

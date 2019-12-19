@@ -8,55 +8,56 @@ exception TaskFailed;
 
 module Log = (val Log.withNamespace("Oni2.NodeTask"));
 
+type callback = unit => unit;
+
 let run =
     (
       ~name="Anonymous",
-      ~scheduler: (unit, unit) => unit,
+      ~scheduler: (callback) => unit,
       ~onMessage: string => unit,
-      ~scriptPath: string,
+      ~script: string,
       ~args=[],
       ~setup: Setup.t,
     ) => {
+  Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
 
-  let {pid, stdout, stderr, _}: NodeProcess.t =
+  let scriptPath = Setup.getNodeScriptPath(script, setup);
+  let {pid, stdout, _}: NodeProcess.t =
     NodeProcess.start(~args, setup, scriptPath);
 
   let shouldClose = ref(false);
-  let _readStdout =
+  let _readStdout: Thread.t =
     Thread.create(
       () => {
-        while (! shouldClose^) {
+        let running = ref(true);
+        while (running^) {
+          try ({
           let str = input_line(stdout);
-          print_endline("STR: " ++ str);
+          scheduler(() => Log.info(str));
+          }) {
+          | End_of_file => running := false
+          }
         }
       },
       (),
     );
 
-  let _readStderr =
+
+  let _waitThread: Thread.t =
     Thread.create(
       () => {
-        while (! shouldClose^) {
-          let str = input_line(stderr);
-          print_endline("STR ERROR: " ++ str);
-        }
-      },
-      (),
-    );
+        let (_code, status: Unix.process_status) = Unix.waitpid([], pid);
 
-  let _waitThread =
-    Thread.create(
-      () => {
-        let (code, _status: Unix.process_status) = Unix.waitpid([], pid);
-
-        if (code == 0) {
+        switch (status) {
+        | WEXITED(0) =>
           Log.info("Task completed successfully: " ++ name);
           Lwt.wakeup(resolver, ());
-        } else {
+        | _ =>
           Log.info("Task failed: " ++ name);
           Lwt.wakeup_exn(resolver, TaskFailed);
-        };
+        }
+
         shouldClose := true;
       },
       (),
