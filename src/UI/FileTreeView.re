@@ -131,10 +131,18 @@ let%component make =
 
   let onKeyDown = (event: NodeEvents.keyEventParams) => {
     switch (event.keycode) {
+    // Enter
+    | v when v == 13 =>
+      GlobalContext.current().dispatch(Actions.FileExplorer(Select))
+
+    // arrow up
     | v when v == 1073741906 =>
       GlobalContext.current().dispatch(Actions.FileExplorer(FocusPrev))
+
+    // arrow down
     | v when v == 1073741905 =>
       GlobalContext.current().dispatch(Actions.FileExplorer(FocusNext))
+
     | _ => ()
     };
   };

@@ -16,6 +16,7 @@ type action =
   | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
+  | Select
   | FocusPrev
   | FocusNext;
 

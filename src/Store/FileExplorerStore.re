@@ -84,13 +84,6 @@ let revealPath = (state: State.t, path) => {
   };
 };
 
-let replaceNode = (path, node, state: State.t) =>
-  switch (state.fileExplorer.tree) {
-  | Some(tree) =>
-    setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
-  | None => state
-  };
-
 let start = () => {
   let (stream, _) = Isolinear.Stream.create();
 
@@ -101,6 +94,34 @@ let start = () => {
       dispatch(Actions.OpenFileByPath(path, None, None))
     });
   };
+
+  let replaceNode = (path, node, state: State.t) =>
+    switch (state.fileExplorer.tree) {
+    | Some(tree) =>
+      setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
+    | None => state
+    };
+
+  let selectNode = (node: FsTreeNode.t, state) =>
+    switch (node) {
+    | {kind: File, path, _} =>
+      // Set active here to avoid scrolling in BufferEnter
+      (state |> setActive(Some(node.path)), openFileByPathEffect(path))
+
+    | {kind: Directory({isOpen, _}), _} => (
+        replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
+        isOpen
+          ? Isolinear.Effect.none
+          : Effects.load(
+              node.path,
+              state.languageInfo,
+              state.iconTheme,
+              state.configuration,
+              ~onComplete=newNode =>
+              Actions.FileExplorer(NodeLoaded(node.path, newNode))
+            ),
+      )
+    };
 
   let updater = (state: State.t, action: FileExplorer.action) => {
     switch (action) {
@@ -121,31 +142,22 @@ let start = () => {
 
     | NodeClicked(node) =>
       let state = state |> setFocus(Some(node.path));
-
-      switch (node) {
-      | {kind: File, path, _} =>
-        // Set active here to avoid scrolling in BufferEnter
-        (state |> setActive(Some(node.path)), openFileByPathEffect(path))
-
-      | {kind: Directory({isOpen, _}), _} => (
-          replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
-          isOpen
-            ? Isolinear.Effect.none
-            : Effects.load(
-                node.path,
-                state.languageInfo,
-                state.iconTheme,
-                state.configuration,
-                ~onComplete=newNode =>
-                Actions.FileExplorer(NodeLoaded(node.path, newNode))
-              ),
-        )
-      };
+      selectNode(node, state);
 
     | ScrollOffsetChanged(offset) => (
         setScrollOffset(offset, state),
         Isolinear.Effect.none,
       )
+
+    | Select =>
+      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+      | (Some(tree), Some(path)) =>
+        switch (FsTreeNode.findByPath(path, tree)) {
+        | Some(node) => selectNode(node, state)
+        | None => (state, Isolinear.Effect.none)
+        }
+      | _ => (state, Isolinear.Effect.none)
+      }
 
     | FocusPrev =>
       switch (state.fileExplorer.tree, state.fileExplorer.focus) {
