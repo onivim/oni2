@@ -164,6 +164,39 @@ let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
     }
   );
 
+/**
+ * Create a temporary directory
+ * Adapted from: https://discuss.ocaml.org/t/how-to-create-a-temporary-directory-in-ocaml/1815/4
+ */
+let rand_digits = () => {
+  let rand = Random.State.(bits(make_self_init()) land 0xFFFFFF);
+  Printf.sprintf("%06x", rand);
+};
+
+let mkTempDir = (~prefix="mktempdir", ()) => {
+  let tmp = Filename.get_temp_dir_name();
+
+  let raise_err = msg => raise(Sys_error(msg));
+  let rec loop = count =>
+    if (count < 0) {
+      raise_err("mkTempDir: Too many failing attempts");
+    } else {
+      let dir = Printf.sprintf("%s/%s%s", tmp, prefix, rand_digits());
+      try(
+        {
+          Unix.mkdir(dir, 0o700);
+          dir;
+        }
+      ) {
+      | Unix.Unix_error(Unix.EEXIST, _, _) => loop(count - 1)
+      | Unix.Unix_error(Unix.EINTR, _, _) => loop(count)
+      | Unix.Unix_error(e, _, _) =>
+        raise_err("mkTempDir: " ++ Unix.error_message(e))
+      };
+    };
+  loop(1000);
+};
+
 let rmdir = path =>
   Unix.(
     try(rmdir(path) |> return) {

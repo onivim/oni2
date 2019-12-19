@@ -8,18 +8,23 @@
     "test": "jest"
   },
   "dependencies": {
+    "fs-extra": "^8.1.0",
+    "sudo-prompt": "^9.0.0",
     "vscode-exthost": "1.33.4",
-    "sudo-prompt": "^9.0.0"
+    "yauzl": "^2.5.1"
   },
   "jest": {
-      "testRegex": "./lib/test/*.*"
+    "testRegex": "./lib/test/*.*"
   },
   "author": "",
   "license": "SEE LICENSE IN README.md",
   "devDependencies": {
+    "@types/jest": "*",
     "@types/node": "^11.9.5",
-    "typescript": "^3.3.3333",
     "jest": "*",
-    "@types/jest": "*"
+    "typescript": "^3.3.3333"
+  },
+  "resolutions": {
+    "graceful-fs": "4.1.11"
   }
 }

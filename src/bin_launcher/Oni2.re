@@ -30,6 +30,16 @@ let spec = [
     "Turn off colors and rich formatting in logs.",
   ),
   ("--checkhealth", passthrough, ""),
+  (
+    "--install-extension",
+    passthroughString,
+    "Install extension by specifying a path to the .vsix file",
+  ),
+  (
+    "--uninstall-extension",
+    passthroughString,
+    "Uninstall extension by specifying an extension id.",
+  ),
   ("--extensions-dir", passthroughString, ""),
   ("--list-extensions", Arg.Set(stayAttached), ""),
   ("--force-device-scale-factor", passthroughFloat, ""),

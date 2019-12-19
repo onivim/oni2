@@ -27,7 +27,7 @@ let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
 
   let _syntaxClient =
     Oni_Syntax_Client.start(
-      ~scheduler=Revery.App.runOnMainThread,
+      ~scheduler=Core.Scheduler.mainThread,
       ~onHighlights,
       languageInfo,
       setup,

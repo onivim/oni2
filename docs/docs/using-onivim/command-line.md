@@ -8,7 +8,7 @@ sidebar_label: Command Line
 
 ### Getting help
 
-### Managing extensions
+### Extension Management
 
 By default, user extension are loaded from the following paths:
 
@@ -21,9 +21,19 @@ This can be overridden via the `--extensions-dir`, like:
 oni2 --extensions-dir /some/path/with/extensions
 ```
 
+#### List Extensions
+
 Extensions can be listed with:
 ```
 oni2 --list-extensions
+```
+
+#### Install an Extension
+
+You can manually install a Visual Studio Code extension packaged in a `.vsix` file:
+
+```
+oni2 --install-extension myextension.vsix
 ```
 
 ### Logging

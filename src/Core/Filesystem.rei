@@ -24,6 +24,8 @@ let chmod: (string, ~perm: int=?, unit) => t(unit);
 
 let mkdir: (string, ~perm: int=?, unit) => t(unit);
 
+let mkTempDir: (~prefix: string=?, unit) => string;
+
 let rmdir: string => t(unit);
 
 let unsafeFindHome: unit => string;

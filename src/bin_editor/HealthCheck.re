@@ -73,7 +73,7 @@ let checks = [
       let closed = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
-          ~scheduler=f => f(),
+          ~scheduler=Scheduler.immediate,
           ~onConnected=() => connected := true,
           ~onClose=_ => closed := true,
           ~onHighlights=_ => (),
