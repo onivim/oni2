@@ -39,4 +39,3 @@ Oni_ExtensionManagement_Test.TestFramework.run(
     Rely.RunConfig.initialize(),
   ),
 );
-
