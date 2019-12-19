@@ -350,6 +350,26 @@ module LwtUtil = {
       promises,
     );
   };
+
+  exception Timeout;
+  
+  let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) = (~timeout=10.0, promise) => {
+    let completed = ref(None);
+
+    Lwt.on_success(promise, (v) => {
+      completed := Some(Ok(v));
+    });
+
+    Lwt.on_failure(promise, (v) => {
+      completed := Some(Error(v));
+    });
+
+    waitForCondition(~timeout, () => {
+      completed^ != None; 
+    });
+
+    Option.value(~default=Error(Timeout), completed^);
+  };
 };
 
 module Result = {

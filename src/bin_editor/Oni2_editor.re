@@ -20,10 +20,13 @@ let cliOptions: Core.Cli.t =
   Core.Cli.parse(
     ~installExtension=
       s => {
-        let _: Lwt.t(unit) =
-          ExtM.install(~extensionFolder=s, ~extensionPath=s);
-        print_endline("install: " ++ s);
-        exit(0);
+        let promise = ExtM.install(~extensionFolder=s, ~extensionPath=s);
+
+        let result = Core.Utility.LwtUtil.sync(promise);
+        switch (result) {
+        | Ok(_) => exit(0);
+        | Error(_) => exit(1);
+        }
       },
     ~uninstallExtension=
       s => {
