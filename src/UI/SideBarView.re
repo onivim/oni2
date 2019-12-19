@@ -41,7 +41,7 @@ let make = (~state: State.t, ()) => {
   let elem =
     switch (sideBarType) {
     | FileExplorer => <FileExplorerView state />
-    | Extensions => React.empty
+    | Extensions => <ExtensionListView state />
     };
 
   <View style={Styles.container(~bg)}>
