@@ -9,6 +9,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Option = Core.Utility.Option;
+module Path = Core.Utility.Path;
 
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);
@@ -40,20 +41,28 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
 
     let activeEditorShort =
       Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
+    let activeEditorMedium =
+      filePath
+      |> Option.bind(fp =>
+           switch (rootPath) {
+           | Some((_, base)) => Some(Path.toRelative(base, fp))
+           | _ => None
+           }
+         )
+      |> withTag("activeEditorMedium");
     let activeEditorLong = filePath |> withTag("activeEditorLong");
 
     let activeFolderShort =
       Option.(filePath |> map(Filename.dirname) |> map(Filename.basename))
       |> withTag("activeFolderShort");
     let activeFolderLong =
-      filePath
-      |> Option.map(Filename.dirname)
-      |> withTag("activeFolderLong");
+      filePath |> Option.map(Filename.dirname) |> withTag("activeFolderLong");
 
     [
       appName,
       dirty,
       activeEditorShort,
+      activeEditorMedium,
       activeEditorLong,
       activeFolderShort,
       activeFolderLong,
