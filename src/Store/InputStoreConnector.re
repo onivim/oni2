@@ -165,6 +165,10 @@ let start =
           | Some(Editor)
           | Some(Wildmenu) => [Actions.KeyboardInput(k)]
 
+          | Some(FileExplorer) => [
+              Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+            ]
+
           | _ => []
           };
         };

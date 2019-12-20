@@ -6,7 +6,7 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float)],
   active: option(string), // path
-  focus: option(string) // node id
+  focus: option(string) // path
 };
 
 [@deriving show({with_path: false})]
@@ -16,9 +16,7 @@ type action =
   | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
-  | Select
-  | FocusPrev
-  | FocusNext;
+  | KeyboardInput(string);
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =

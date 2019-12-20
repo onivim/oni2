@@ -39,7 +39,7 @@ let setFocus = (maybePath, state) =>
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
-let revealPath = (state: State.t, path) => {
+let revealPath = (path, state: State.t) => {
   switch (state.fileExplorer.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -135,55 +135,61 @@ let start = () => {
     | FocusNodeLoaded(path, node) =>
       switch (state.fileExplorer.active) {
       | Some(activePath) =>
-        let state = replaceNode(path, node, state);
-        revealPath(state, activePath);
+        state |> replaceNode(path, node) |> revealPath(activePath)
+
       | None => (state, Isolinear.Effect.none)
       }
 
     | NodeClicked(node) =>
-      let state = state |> setFocus(Some(node.path));
-      selectNode(node, state);
+      state
+      |> setFocus(Some(node.path))
+      |> FocusManager.push(Focus.FileExplorer)
+      |> selectNode(node)
 
     | ScrollOffsetChanged(offset) => (
         setScrollOffset(offset, state),
         Isolinear.Effect.none,
       )
 
-    | Select =>
-      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-      | (Some(tree), Some(path)) =>
-        switch (FsTreeNode.findByPath(path, tree)) {
-        | Some(node) => selectNode(node, state)
-        | None => (state, Isolinear.Effect.none)
-        }
-      | _ => (state, Isolinear.Effect.none)
-      }
-
-    | FocusPrev =>
-      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-      | (Some(tree), Some(path)) =>
-        switch (FsTreeNode.prevExpandedNode(path, tree)) {
-        | Some(node) => (
-            setFocus(Some(node.path), state),
-            Isolinear.Effect.none,
-          )
-        | None => (state, Isolinear.Effect.none)
+    | KeyboardInput(key) =>
+      switch (key) {
+      | "<CR>" =>
+        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+        | (Some(tree), Some(path)) =>
+          switch (FsTreeNode.findByPath(path, tree)) {
+          | Some(node) => selectNode(node, state)
+          | None => (state, Isolinear.Effect.none)
+          }
+        | _ => (state, Isolinear.Effect.none)
         }
 
-      | _ => (state, Isolinear.Effect.none)
-      }
+      | "<UP>" =>
+        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+        | (Some(tree), Some(path)) =>
+          switch (FsTreeNode.prevExpandedNode(path, tree)) {
+          | Some(node) => (
+              setFocus(Some(node.path), state),
+              Isolinear.Effect.none,
+            )
+          | None => (state, Isolinear.Effect.none)
+          }
 
-    | FocusNext =>
-      switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-      | (Some(tree), Some(path)) =>
-        switch (FsTreeNode.nextExpandedNode(path, tree)) {
-        | Some(node) => (
-            setFocus(Some(node.path), state),
-            Isolinear.Effect.none,
-          )
-        | None => (state, Isolinear.Effect.none)
+        | _ => (state, Isolinear.Effect.none)
         }
 
+      | "<DOWN>" =>
+        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
+        | (Some(tree), Some(path)) =>
+          switch (FsTreeNode.nextExpandedNode(path, tree)) {
+          | Some(node) => (
+              setFocus(Some(node.path), state),
+              Isolinear.Effect.none,
+            )
+          | None => (state, Isolinear.Effect.none)
+          }
+
+        | _ => (state, Isolinear.Effect.none)
+        }
       | _ => (state, Isolinear.Effect.none)
       }
     };
@@ -226,7 +232,7 @@ let start = () => {
         | {active, _} when active != filePath =>
           let state = setActive(filePath, state);
           switch (filePath) {
-          | Some(path) => revealPath(state, path)
+          | Some(path) => revealPath(path, state)
           | None => (state, Isolinear.Effect.none)
           };
 
