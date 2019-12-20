@@ -55,6 +55,16 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
     let activeFolderShort =
       Option.(filePath |> map(Filename.dirname) |> map(Filename.basename))
       |> withTag("activeFolderShort");
+    let activeFolderMedium =
+      filePath
+      |> Option.map(Filename.dirname)
+      |> Option.bind(fp =>
+           switch (rootPath) {
+           | Some((_, base)) => Some(Path.toRelative(base, fp))
+           | _ => None
+           }
+         )
+      |> withTag("activeFolderMedium");
     let activeFolderLong =
       filePath |> Option.map(Filename.dirname) |> withTag("activeFolderLong");
 
@@ -65,6 +75,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       activeEditorMedium,
       activeEditorLong,
       activeFolderShort,
+      activeFolderMedium,
       activeFolderLong,
       rootName,
       rootPath,
