@@ -11,6 +11,7 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
+module InputModel = Model.InputModel;
 module Utility = Core.Utility;
 module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
@@ -163,7 +164,25 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuInput({text, cursorPosition}) => (
+    | QuickmenuInput(key) => (
+        Option.map(
+          (Quickmenu.{query, cursorPosition, _} as state) => {
+            let (text, cursorPosition) =
+              InputModel.handleInput(~text=query, ~cursorPosition, key);
+
+            Quickmenu.{...state, query: text, cursorPosition};
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuInputClicked(cursorPosition) => (
+        Option.map(state => Quickmenu.{...state, cursorPosition}, state),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
           state => Quickmenu.{...state, query: text, cursorPosition},
           state,

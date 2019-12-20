@@ -57,12 +57,7 @@ let conditionsOfState = (state: State.t) => {
   ret;
 };
 
-let start =
-    (
-      getState: unit => Model.State.t,
-      window: option(Revery.Window.t),
-      runEffects,
-    ) => {
+let start = (window: option(Revery.Window.t), runEffects) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let immediateDispatchEffect = actions =>
@@ -146,8 +141,7 @@ let start =
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state, key) => {
-    let state = getState();
+  let handleKeyPress = (state: State.t, key) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
@@ -160,16 +154,17 @@ let start =
         if (bindingActions != []) {
           bindingActions;
         } else {
-          switch (FocusManager.current(state)) {
-          | None
-          | Some(Editor)
-          | Some(Wildmenu) => [Actions.KeyboardInput(k)]
+          switch (Model.FocusManager.current(state)) {
+          | Editor
+          | Wildmenu => [Actions.KeyboardInput(k)]
 
-          | Some(FileExplorer) => [
+          | Quickmenu => [Actions.QuickmenuInput(k)]
+
+          | FileExplorer => [
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
 
-          | _ => []
+          | Search => [Actions.SearchInput(k)]
           };
         };
 
@@ -185,8 +180,7 @@ let start =
     };
   };
 
-  let handleKeyUp = (state, event: Revery.Key.KeyEvent.t) => {
-    let state = getState();
+  let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
 

@@ -1,4 +1,6 @@
-open Oni_Model;
+open Oni_Core;
+
+module Option = Utility.Option;
 
 let push = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
@@ -18,7 +20,7 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
 
 let current = (state: State.t) =>
   switch (state.quickmenu) {
-  | Some({variant: Actions.Wildmenu(_)}) => Some(Focus.Wildmenu)
-  | Some(_) => Some(Focus.Quickmenu)
-  | _ => Focus.current(state.focus)
+  | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
+  | Some(_) => Focus.Quickmenu
+  | _ => Focus.current(state.focus) |> Option.value(~default=Focus.Editor)
   };

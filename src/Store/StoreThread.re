@@ -150,7 +150,7 @@ let start =
     LanguageFeatureConnector.start();
 
   let (inputUpdater, inputStream) =
-    InputStoreConnector.start(getState, window, runRunEffects);
+    InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
 
