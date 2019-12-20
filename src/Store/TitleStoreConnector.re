@@ -8,58 +8,56 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 
 module Actions = Model.Actions;
+module Option = Core.Utility.Option;
 
-let getDirectory = (fp: string): option(string) => {
-  let dirs =
-    Filename.dirname(fp) |> String.split_on_char(Filename.dir_sep.[0]);
-
-  List.length(dirs) - 1 |> List.nth_opt(dirs);
-};
+let withTag = (tag: string, value: option(string)) =>
+  Option.map(v => (tag, v), value);
 
 let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
   state => {
-    let initialValues = [("appName", "Onivim 2")];
+    let buffer = Model.Selectors.getActiveBuffer(state);
+    let filePath = Option.bind(Core.Buffer.getFilePath, buffer);
 
-    let initialValues =
-      switch (Model.Selectors.getActiveBuffer(state)) {
-      | None => initialValues
-      | Some(buf) =>
-        let fp = Core.Buffer.getFilePath(buf);
-        let ret =
-          switch (fp) {
-          | None => initialValues
-          | Some(fp) =>
-            let activeEditorShort = Filename.basename(fp);
-            let parentDir = getDirectory(fp);
+    let appName = Option.some("Onivim 2") |> withTag("appName");
 
-            let initialValues = [
-              ("activeEditorShort", activeEditorShort),
-              ("activeEditorLong", fp),
-              ...initialValues,
-            ];
+    let dirty =
+      Option.map(Core.Buffer.isModified, buffer)
+      |> (
+        fun
+        | Some(true) => Some("*")
+        | _ => None
+      )
+      |> withTag("dirty");
 
-            switch (parentDir) {
-            | None => initialValues
-            | Some(dir) => [("activeFolderShort", dir), ...initialValues]
-            };
-          };
-        switch (Core.Buffer.isModified(buf)) {
-        | false => ret
-        | true => [("dirty", "*"), ...ret]
-        };
-      };
-
-    let initialValues =
+    let (rootName, rootPath) =
       switch (state.workspace) {
-      | None => initialValues
-      | Some(workspace) => [
-          ("rootName", workspace.rootName),
-          ("rootPath", workspace.workingDirectory),
-          ...initialValues,
-        ]
+      | Some({rootName, workingDirectory}) => (
+          Some(rootName) |> withTag("rootName"),
+          Some(workingDirectory) |> withTag("rootPath"),
+        )
+      | None => (None, None)
       };
 
-    initialValues |> List.to_seq |> Core.StringMap.of_seq;
+    let activeEditorShort =
+      Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
+    let activeEditorLong = filePath |> withTag("activeEditorLong");
+
+    let activeFolderShort =
+      Option.(filePath |> map(Filename.dirname) |> map(Filename.basename))
+      |> withTag("activeFolderShort");
+
+    [
+      appName,
+      dirty,
+      activeEditorShort,
+      activeEditorLong,
+      activeFolderShort,
+      rootName,
+      rootPath,
+    ]
+    |> Option.values
+    |> List.to_seq
+    |> Core.StringMap.of_seq;
   };
 
 module Effects = {
