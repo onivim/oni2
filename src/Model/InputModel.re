@@ -1,54 +1,37 @@
-let splitAt = (index, str) => {
-  switch (index) {
-  | 0 => ("", str)
-  | _ =>
-    let before =
-      try(Str.string_before(str, index)) {
-      | _ => str
-      };
-    let after =
-      try(Str.string_after(str, index)) {
-      | _ => ""
-      };
-    (before, after);
-  };
+open Oni_Core;
+
+let slice = (~start=0, ~stop=?, str) => {
+  let length = String.length(str);
+  let start = Utility.clamp(~lo=0, ~hi=length, start);
+  let stop =
+    switch (stop) {
+    | Some(index) => Utility.clamp(~lo=0, ~hi=length, index)
+    | None => length
+    };
+
+  String.sub(str, start, stop - start);
 };
 
-let getSafeStringBounds = (str, index, delta) => {
-  let newIndex = index + delta;
-  let currentLength = String.length(str);
-  newIndex > currentLength ? currentLength : newIndex < 0 ? 0 : newIndex;
-};
+let removeBefore = (~count=1, index, text) => (
+  slice(text, ~stop=index - count) ++ slice(text, ~start=index),
+  max(0, index - count),
+);
 
-let removeBefore = (~count=1, index, text) => {
-  let (before, after) = splitAt(index, text);
-  let nextPosition = getSafeStringBounds(before, index, - count);
-  let newText = Str.string_before(before, nextPosition) ++ after;
-  (newText, nextPosition);
-};
+let removeAfter = (~count=1, index, text) => (
+  slice(text, ~stop=index) ++ slice(text, ~start=index + count),
+  index,
+);
 
-let removeAfter = (~count=1, index, text) => {
-  let (before, after) = splitAt(index, text);
-  let newText =
-    before ++ Str.last_chars(after, max(0, String.length(after) - count));
-  (newText, index);
-};
-
-let add = (~at as index, insert, text) => {
-  let (before, after) = splitAt(index, text);
-  (before ++ insert ++ after, index + String.length(insert));
-};
+let add = (~at as index, insert, text) => (
+  slice(text, ~stop=index) ++ insert ++ slice(text, ~start=index),
+  index + String.length(insert),
+);
 
 let handleInput = (~text, ~cursorPosition) =>
   fun
   | "<LEFT>" => (text, max(0, cursorPosition - 1))
-
   | "<RIGHT>" => (text, min(String.length(text), cursorPosition + 1))
-
   | "<BS>" => removeBefore(cursorPosition, text)
-
   | "<DEL>" => removeAfter(cursorPosition, text)
-
   | key when String.length(key) == 1 => add(~at=cursorPosition, key, text)
-
   | _ => (text, cursorPosition);
