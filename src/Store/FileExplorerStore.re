@@ -152,46 +152,30 @@ let start = () => {
       )
 
     | KeyboardInput(key) =>
-      switch (key) {
-      | "<CR>" =>
-        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-        | (Some(tree), Some(path)) =>
-          switch (FsTreeNode.findByPath(path, tree)) {
-          | Some(node) => selectNode(node, state)
-          | None => (state, Isolinear.Effect.none)
-          }
-        | _ => (state, Isolinear.Effect.none)
-        }
+      let handleKey = ((path, tree)) =>
+        switch (key) {
+        | "<CR>" =>
+          FsTreeNode.findByPath(path, tree)
+          |> Option.map(node => selectNode(node, state))
 
-      | "<UP>" =>
-        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-        | (Some(tree), Some(path)) =>
-          switch (FsTreeNode.prevExpandedNode(path, tree)) {
-          | Some(node) => (
-              setFocus(Some(node.path), state),
-              Isolinear.Effect.none,
-            )
-          | None => (state, Isolinear.Effect.none)
-          }
+        | "<UP>" =>
+          FsTreeNode.prevExpandedNode(path, tree)
+          |> Option.map((node: FsTreeNode.t) =>
+               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+             )
 
-        | _ => (state, Isolinear.Effect.none)
-        }
+        | "<DOWN>" =>
+          FsTreeNode.nextExpandedNode(path, tree)
+          |> Option.map((node: FsTreeNode.t) =>
+               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+             )
 
-      | "<DOWN>" =>
-        switch (state.fileExplorer.tree, state.fileExplorer.focus) {
-        | (Some(tree), Some(path)) =>
-          switch (FsTreeNode.nextExpandedNode(path, tree)) {
-          | Some(node) => (
-              setFocus(Some(node.path), state),
-              Isolinear.Effect.none,
-            )
-          | None => (state, Isolinear.Effect.none)
-          }
+        | _ => None
+        };
 
-        | _ => (state, Isolinear.Effect.none)
-        }
-      | _ => (state, Isolinear.Effect.none)
-      }
+      Option.zip(state.fileExplorer.focus, state.fileExplorer.tree)
+      |> Option.bind(handleKey)
+      |> Option.value(~default=(state, Isolinear.Effect.none));
     };
   };
 

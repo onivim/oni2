@@ -1,6 +1,6 @@
 [@deriving show]
 type focusable =
-  | Editor // TODO: Carry editor/buffer id
+  | Editor
   | Wildmenu
   | Quickmenu
   | Search

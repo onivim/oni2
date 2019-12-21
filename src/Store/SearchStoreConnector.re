@@ -27,30 +27,24 @@ let start = () => {
   };
 
   let updater = (state: State.t, action) => {
+    let show = (
+      {...state, searchPane: Some(Search.initial)}
+      |> FocusManager.push(Search),
+      Isolinear.Effect.none,
+    );
+
+    let hide = (
+      {...state, searchPane: None} |> FocusManager.pop(Search),
+      Isolinear.Effect.none,
+    );
+
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
 
-    | ActivityBar(ActivityBar.SearchClick) when state.searchPane != None => (
-        {...state, searchPane: None} |> FocusManager.pop(Search),
-        Isolinear.Effect.none,
-      )
-
-    | ActivityBar(ActivityBar.SearchClick) when state.searchPane == None => (
-        {...state, searchPane: Some(Search.initial)}
-        |> FocusManager.push(Search),
-        Isolinear.Effect.none,
-      )
-
-    | SearchShow => (
-        {...state, searchPane: Some(Search.initial)}
-        |> FocusManager.push(Search),
-        Isolinear.Effect.none,
-      )
-
-    | SearchHide => (
-        {...state, searchPane: None} |> FocusManager.pop(Search),
-        Isolinear.Effect.none,
-      )
+    | ActivityBar(ActivityBar.SearchClick) when state.searchPane != None => hide
+    | ActivityBar(ActivityBar.SearchClick) when state.searchPane == None => show
+    | SearchShow => show
+    | SearchHide => hide
 
     | SearchInputClicked(_) =>
       switch (state.searchPane) {
