@@ -14,18 +14,18 @@ open Oni_Model;
 
 open Oni_Model.StatusBarModel;
 
-let getTextStyle = uiFont => {
-  UiFont.(
-    Style.[
-      fontFamily(uiFont.fontFile),
-      fontSize(11),
-      textWrap(TextWrapping.NoWrap),
-    ]
-  );
-};
+module Option = Utility.Option;
 
-let viewStyle = (bgColor, transition) =>
-  Style.[
+module Styles = {
+  open Style;
+
+  let text = (uiFont: UiFont.t) => [
+    fontFamily(uiFont.fontFile),
+    fontSize(11),
+    textWrap(TextWrapping.NoWrap),
+  ];
+
+  let view = (bgColor, transition) => [
     backgroundColor(bgColor),
     flexDirection(`Row),
     alignItems(`Center),
@@ -39,7 +39,25 @@ let viewStyle = (bgColor, transition) =>
     transform(Transform.[TranslateY(transition)]),
   ];
 
-let convertPositionToString =
+  let section = alignment => [
+    flexDirection(`Row),
+    justifyContent(alignment),
+    alignItems(alignment),
+    flexGrow(1),
+  ];
+
+  let item = (height, bg) => [
+    flexDirection(`Column),
+    justifyContent(`Center),
+    alignItems(`Center),
+    Style.height(height),
+    backgroundColor(bg),
+    paddingHorizontal(10),
+    minWidth(50),
+  ];
+};
+
+let positionToString =
   fun
   | Some((loc: Location.t)) =>
     Printf.sprintf(
@@ -49,35 +67,66 @@ let convertPositionToString =
     )
   | None => "";
 
-module StatusBarSection = {
-  let make = (~children=React.empty, ~direction, ()) =>
+let section = (~children=React.empty, ~align, ()) =>
+  <View style={Styles.section(align)}> children </View>;
+
+let item = (~children, ~height, ~backgroundColor, ()) =>
+  <View style={Styles.item(height, backgroundColor)}> children </View>;
+
+let textItem = (~height, ~font, ~theme: Theme.t, ~text, ()) =>
+  <item height backgroundColor={theme.statusBarBackground}>
+    <Text
+      style=Style.[
+        backgroundColor(theme.statusBarBackground),
+        color(theme.statusBarForeground),
+        ...Styles.text(font),
+      ]
+      text
+    />
+  </item>;
+
+let diagnosticsItem = (~height, ~font, ~theme: Theme.t, ~diagnostics, ()) => {
+  let count =
+    diagnostics |> Diagnostics.count |> string_of_int;
+
+  <item height backgroundColor={theme.statusBarBackground}>
     <View
       style=Style.[
         flexDirection(`Row),
-        justifyContent(direction),
-        alignItems(direction),
-        flexGrow(1),
+        justifyContent(`Center),
+        alignItems(`Center),
       ]>
-      children
-    </View>;
+      <FontIcon
+        icon=FontAwesome.timesCircle
+        backgroundColor={theme.statusBarBackground}
+        color={theme.statusBarForeground}
+        margin=4
+      />
+      <Text
+        style=Style.[
+          backgroundColor(theme.statusBarBackground),
+          color(theme.statusBarForeground),
+          ...Styles.text(font),
+        ]
+        text=count
+      />
+    </View>
+  </item>
 };
 
-module StatusBarItem = {
-  let getStyle = (h, bg: Color.t) =>
-    Style.[
-      flexDirection(`Column),
-      justifyContent(`Center),
-      alignItems(`Center),
-      height(h),
-      backgroundColor(bg),
-      paddingHorizontal(10),
-      minWidth(50),
-    ];
+let modeItem = (~height, ~font, ~theme, ~mode, ()) => {
+  let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
-  let make = (~children, ~height, ~backgroundColor, ~onClick=() => (), ()) =>
-    <Clickable style={getStyle(height, backgroundColor)} onClick>
-      children
-    </Clickable>;
+  <item height backgroundColor=background>
+    <Text
+      style=Style.[
+        backgroundColor(background),
+        color(foreground),
+        ...Styles.text(font),
+      ]
+      text={Vim.Mode.show(mode)}
+    />
+  </item>;
 };
 
 let animation =
@@ -89,147 +138,63 @@ let animation =
   );
 
 let%component make = (~height, ~state: State.t, ()) => {
-  let mode = state.mode;
-  let theme = state.theme;
-  let editor =
-    Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-
-  let position = editor |> Utility.Option.map(Editor.getPrimaryCursor);
-
-  let textStyle = getTextStyle(state.uiFont);
-
-  let (background, foreground) = Theme.getColorsForMode(theme, mode);
-
-  let toStatusBarElement = (statusBarItem: Item.t) => {
-    <StatusBarItem height backgroundColor={theme.statusBarBackground}>
-      <Text
-        style=Style.[
-          backgroundColor(theme.statusBarBackground),
-          color(theme.statusBarForeground),
-          ...textStyle,
-        ]
-        text={statusBarItem.text}
-      />
-    </StatusBarItem>;
-  };
+  let State.{mode, theme, uiFont: font, diagnostics, } = state;
 
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
-  let filterFunction = (alignment: Alignment.t, item: Item.t) => {
-    item.alignment === alignment;
-  };
+  let toStatusBarElement = (statusBarItem: Item.t) =>
+    <textItem height font theme text={statusBarItem.text} />;
 
-  let buffer = Selectors.getActiveBuffer(state);
-  let fileType =
-    switch (buffer) {
-    | Some(v) =>
-      switch (Buffer.getFileType(v)) {
-      | Some(fp) => fp
-      | None => "plaintext"
-      }
-    | None => "plaintext"
-    };
-
-  let statusBarItems = state.statusBar;
   let leftItems =
-    statusBarItems
-    |> List.filter(filterFunction(Alignment.Left))
-    |> List.map(toStatusBarElement);
-
-  let diagnosticsCount =
-    state.diagnostics |> Diagnostics.count |> string_of_int;
-
-  let diagnosticsItem =
-    <StatusBarItem
-      height
-      backgroundColor={theme.statusBarBackground}
-      onClick={() =>
-        GlobalContext.current().dispatch(
-          Actions.StatusBar(StatusBarModel.DiagnosticsClicked),
-        )
-      }>
-      <View
-        style=Style.[
-          flexDirection(`Row),
-          justifyContent(`Center),
-          alignItems(`Center),
-        ]>
-        <FontIcon
-          icon=FontAwesome.timesCircle
-          backgroundColor={theme.statusBarBackground}
-          color={theme.statusBarForeground}
-          margin=4
-        />
-        <Text
-          style=Style.[
-            backgroundColor(theme.statusBarBackground),
-            color(theme.statusBarForeground),
-            ...textStyle,
-          ]
-          text=diagnosticsCount
-        />
-      </View>
-    </StatusBarItem>;
-
-  let leftItems = leftItems @ [diagnosticsItem];
-
-  let leftItems = leftItems |> React.listToElement;
+    state.statusBar
+    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
+    |> List.map(toStatusBarElement)
+    |> items => List.append(items, [<diagnosticsItem height font theme diagnostics />])
+    |> React.listToElement;
 
   let rightItems =
-    statusBarItems
-    |> List.filter(filterFunction(Alignment.Right))
+    state.statusBar
+    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
-  let indentation =
-    Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
+  let indentationItem = () => {
+    let text = Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
-  <View style={viewStyle(theme.statusBarBackground, transition)}>
-    <StatusBarSection direction=`FlexStart> leftItems </StatusBarSection>
-    <StatusBarSection direction=`Center />
-    <StatusBarSection direction=`FlexEnd> rightItems </StatusBarSection>
-    <StatusBarSection direction=`FlexEnd>
-      <StatusBarItem height backgroundColor={theme.statusBarBackground}>
-        <Text
-          style=Style.[
-            backgroundColor(theme.statusBarBackground),
-            color(theme.statusBarForeground),
-            ...textStyle,
-          ]
-          text=indentation
-        />
-      </StatusBarItem>
-      <StatusBarItem height backgroundColor={theme.statusBarBackground}>
-        <Text
-          style=Style.[
-            backgroundColor(theme.statusBarBackground),
-            color(theme.statusBarForeground),
-            ...textStyle,
-          ]
-          text=fileType
-        />
-      </StatusBarItem>
-      <StatusBarItem height backgroundColor={theme.statusBarBackground}>
-        <Text
-          style=Style.[
-            backgroundColor(theme.statusBarBackground),
-            color(theme.statusBarForeground),
-            ...textStyle,
-          ]
-          text={convertPositionToString(position)}
-        />
-      </StatusBarItem>
-      <StatusBarItem height backgroundColor=background>
-        <Text
-          style=Style.[
-            backgroundColor(background),
-            color(foreground),
-            ...textStyle,
-          ]
-          text={Vim.Mode.show(mode)}
-        />
-      </StatusBarItem>
-    </StatusBarSection>
+    <textItem height font theme text />
+  };
+
+  let fileTypeItem = () => {
+    let text =
+      state
+      |> Selectors.getActiveBuffer
+      |> Option.bind(Buffer.getFileType)
+      |> Option.value(~default="plaintext");
+
+    <textItem height font theme text />
+  };
+
+  let positionItem = () => {
+    let text =
+      state
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
+      |> Option.map(Editor.getPrimaryCursor)
+      |> positionToString;
+
+      <textItem height font theme text />
+  };
+
+  <View style={Styles.view(theme.statusBarBackground, transition)}>
+    <section align=`FlexStart> leftItems </section>
+    <section align=`Center />
+    <section align=`FlexEnd> rightItems </section>
+    <section align=`FlexEnd>
+      <indentationItem />
+      <fileTypeItem />
+      <positionItem />
+      <modeItem height font theme mode />
+    </section>
   </View>;
 };
