@@ -89,7 +89,6 @@ type t =
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
   | QuickmenuSearch(string)
-  | QuickmenuMaybeLoseFocus
   | QuickmenuClose
   | ListFocus(int)
   | ListFocusUp
