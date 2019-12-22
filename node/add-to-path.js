@@ -27,7 +27,7 @@ const addToPath = async () => {
 
     if (!isAddedToPath() && !isWindows()) {
         const appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
-        const options = { name: "Oni2", icns: path.join(appDirectory, "assets", "images", "Onivim2.icns") };
+        const options = { name: "Oni2", icns: path.join(appDirectory, "assets", "images", "Onivim2.icns") }; // TODO: I need to check this in AppImage.
         let linkPath = "";
 
         if (isMac()) {
@@ -36,9 +36,6 @@ const addToPath = async () => {
             linkPath = ""; // TODO.
         }
 
-        console.log(`The app directory is ${appDirectory}`);
-        console.log(`The options are ${options.icns}`);
-        console.log(`The link path is ${linkPath}`);
         await _runSudoCommand(`ln -fs ${linkPath} ${getLinkPath()}`, options);
     }
 
@@ -46,7 +43,6 @@ const addToPath = async () => {
 }
 
 const _runSudoCommand = async (command, options) => {
-    console.log("In Run....");
     return new Promise(resolve => {
         sudo.exec(command, options, (error, stdout, stderr) => {
             resolve({ error, stdout, stderr });
@@ -54,7 +50,6 @@ const _runSudoCommand = async (command, options) => {
     });
 }
 
-console.log("We are in node land...");
 (async () => {
     try {
         await Promise.resolve(addToPath());
