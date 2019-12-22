@@ -6,13 +6,31 @@ sidebar_label: Command Line
 
 ## Command Line Interface
 
+The `oni2` command line executable is currently only added to the user's `PATH` on
+Windows. However, it can be added manually by updating the `PATH` environment variable
+to point to the folder where the `oni2` executable lives, or adding an alias to `oni2`:
+
+```sh
+# Linux
+alias oni2="${HOME}/path/to/Onivim2-x86_64.AppImage"
+
+# macOS
+alias oni2='/Applications/Onivim2.app/Contents/MacOS/Oni2'
+```
+
+This should be added to one of the shell files that is loaded on shell start up, such as
+the `.bashrc` or equivalent for other shells.
+
 ### Getting help
+
+Launching `oni2` with the `--help` flag should give a brief outline on all command line
+flags.
 
 ### Extension Management
 
 By default, user extension are loaded from the following paths:
 
-- Windows: `%LOCALAPPDATA%/Oni2/extensions` 
+- Windows: `%LOCALAPPDATA%/Oni2/extensions`
 - OSX & Linux: `~/.config/oni2/extensions`
 
 This can be overridden via the `--extensions-dir`, like:
