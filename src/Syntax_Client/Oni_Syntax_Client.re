@@ -48,7 +48,7 @@ let start =
   Unix.set_close_on_exec(stderr);
 
   let parentPid = Unix.getpid() |> string_of_int;
-  let camomilePath = "derp"; //Core.Setup.(setup.camomilePath);
+  let camomilePath = Core.Setup.(setup.camomilePath);
 
   let env = [
     Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
