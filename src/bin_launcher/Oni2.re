@@ -29,6 +29,17 @@ let spec = [
     passthrough,
     "Turn off colors and rich formatting in logs.",
   ),
+  (
+    "--disable-syntax-highlighting",
+    passthrough,
+    "Turn off syntax highlighting.",
+  ),
+  ("--disable-extensions", passthrough, "Turn off extension loading."),
+  (
+    "--disable-configuration",
+    passthrough,
+    "Do not load user configuration (use default configuration).",
+  ),
   ("--checkhealth", passthrough, ""),
   (
     "--install-extension",
