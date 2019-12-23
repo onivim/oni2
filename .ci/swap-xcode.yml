@@ -6,6 +6,6 @@ steps:
   - script: xcodebuild -version
     displayName: 'List current Xcode version'
   - script: sudo xcode-select -s /Applications/Xcode_9.app
-    displayName: 'Swap to Xcode8'
+    displayName: 'Swap to Xcode9'
   - script: xcodebuild -version
     displayName: 'List swapped Xcode version'
