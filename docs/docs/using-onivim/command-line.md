@@ -21,12 +21,17 @@ alias oni2='/Applications/Onivim2.app/Contents/MacOS/Oni2'
 This should be added to one of the shell files that is loaded on shell start up, such as
 the `.bashrc` or equivalent for other shells.
 
+> __NOTE:__ It is currently preferable to alias `oni2`, rather than adding a symlink to it.
+
 ### Getting help
 
 Launching `oni2` with the `--help` flag should give a brief outline on all command line
 flags.
 
 ### Extension Management
+
+A more in detail explanation of the VSCode extension management can be found
+[here](./../configuration/extensions.md).
 
 By default, user extension are loaded from the following paths:
 
@@ -77,6 +82,6 @@ oni2 -f --checkhealth
 
 ### Miscellaneous
 
-- `-force-device-scale-factor` overrides the current scaling. 
+- `-force-device-scale-factor` overrides the current scaling.
 
 > Example: `oni2 --force-device-scale-factor 2`
