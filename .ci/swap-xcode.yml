@@ -1,0 +1,11 @@
+# Swap XCode version to 8 for 10.12 support.
+
+steps:
+  - script: env | grep XCODE
+    displayName: 'List Xcode versions'
+  - script: xcodebuild -version
+    displayName: 'List current Xcode version'
+  - script: sudo xcode-select -s $XCODE_8_DEVELOPER_DIR
+    displayName: 'Swap to Xcode8'
+  - script: xcodebuild -version
+    displayName: 'List swapped Xcode version'
