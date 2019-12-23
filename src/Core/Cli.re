@@ -12,6 +12,9 @@ type t = {
   syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
   shouldClose: bool,
+  shouldLoadExtensions: bool,
+  shouldSyntaxHighlight: bool,
+  shouldLoadConfiguration: bool,
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
@@ -21,6 +24,9 @@ let create = (~folder, ~filesToOpen, ()) => {
   syntaxHighlightService: false,
   overriddenExtensionsDir: None,
   shouldClose: false,
+  shouldLoadExtensions: true,
+  shouldSyntaxHighlight: true,
+  shouldLoadConfiguration: true,
 };
 
 let newline = "\n";
@@ -51,6 +57,10 @@ let parse =
   let extensionsDir = ref(None);
   let shouldClose = ref(false);
 
+  let shouldLoadExtensions = ref(true);
+  let shouldLoadConfiguration = ref(true);
+  let shouldSyntaxHighlight = ref(true);
+
   let queuedJob = ref(None);
   let runAndExitUnit = f =>
     Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
@@ -58,12 +68,19 @@ let parse =
   let runAndExitString = f =>
     Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
 
+  let disableExtensionLoading = () => shouldLoadExtensions := false;
+  let disableLoadConfiguration = () => shouldLoadConfiguration := false;
+  let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
+
   Arg.parse(
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--debug", Unit(Log.enableDebugLogging), ""),
       ("--no-log-colors", Unit(Log.disableColors), ""),
+      ("--disable-extensions", Unit(disableExtensionLoading), ""),
+      ("--disable-configuration", Unit(disableLoadConfiguration), ""),
+      ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
       ("--checkhealth", checkHealth |> runAndExitUnit, ""),
@@ -162,6 +179,9 @@ let parse =
     syntaxHighlightService: syntaxHighlightService^,
     overriddenExtensionsDir: extensionsDir^,
     shouldClose: shouldClose^,
+    shouldSyntaxHighlight: shouldSyntaxHighlight^,
+    shouldLoadExtensions: shouldLoadExtensions^,
+    shouldLoadConfiguration: shouldLoadConfiguration^,
   };
 
   switch (queuedJob^) {

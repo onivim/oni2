@@ -36,6 +36,17 @@ let spec =
     ),
     ("--checkhealth", passthrough, " Check the health of the Oni2 editor."),
     (
+      "--disable-syntax-highlighting",
+      passthrough,
+      "Turn off syntax highlighting.",
+    ),
+    ("--disable-extensions", passthrough, "Turn off extension loading."),
+    (
+      "--disable-configuration",
+      passthrough,
+      "Do not load user configuration (use default configuration).",
+    ),
+    (
       "--install-extension",
       passthroughString,
       " Install extension by specifying a path to the .vsix file",
