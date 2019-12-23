@@ -83,6 +83,7 @@ let start =
   let shouldClose = ref(false);
 
   let in_channel = Unix.in_channel_of_descr(stdout);
+  let err_channel = Unix.in_channel_of_descr(stderr);
   let out_channel = Unix.out_channel_of_descr(stdin);
 
   Stdlib.set_binary_mode_in(in_channel, true);
@@ -142,6 +143,23 @@ let start =
             })
           };
         }
+      },
+      (),
+    );
+
+  let _readStderr =
+    Thread.create(
+      () => {
+        let shouldClose = ref(false);
+        while (! shouldClose^) {
+          Thread.wait_read(stderr);
+
+          switch (input_line(err_channel)) {
+          | exception End_of_file => shouldClose := true
+          | v => scheduler(() => ServerLog.info(v))
+          };
+        };
+        scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
     );
