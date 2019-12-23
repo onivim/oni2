@@ -99,7 +99,7 @@ jobs:
   - script: brew install libpng ragel
   - script: env
   - script: xcodebuild -version
-  - script: xcode-select -s $XCODE_8_DEVELOPER_DIR
+  - script: sudo xcode-select -s $XCODE_8_DEVELOPER_DIR
   - script: xcodebuild -version
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
