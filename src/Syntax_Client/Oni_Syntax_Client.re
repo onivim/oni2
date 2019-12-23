@@ -52,9 +52,7 @@ let start =
 
   let env = [
     Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
-    Core.EnvironmentVariables.camomilePath
-    ++ "="
-    ++ camomilePath,
+    Core.EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
     ...Array.to_list(Unix.environment()),
   ];
 
@@ -63,7 +61,14 @@ let start =
     ++ "Oni2_editor"
     ++ (Sys.win32 ? ".exe" : "");
 
-  ClientLog.infof(m => m("Starting executable: %s with camomilePath: %s and parentPid: %s", executableName, camomilePath, parentPid));
+  ClientLog.infof(m =>
+    m(
+      "Starting executable: %s with camomilePath: %s and parentPid: %s",
+      executableName,
+      camomilePath,
+      parentPid,
+    )
+  );
 
   let pid =
     Unix.create_process_env(
@@ -89,17 +94,27 @@ let start =
     Thread.create(
       () => {
         let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
-        let code = switch (status) {
-        | Unix.WEXITED(0) => 
+        let code =
+          switch (status) {
+          | Unix.WEXITED(0) =>
             ClientLog.info("Syntax process exited safely.");
-            0
-        | Unix.WEXITED(code) => ClientLog.error("Syntax process exited with code: " ++ string_of_int(code))
-          code
-        | Unix.WSIGNALED(signal) => ClientLog.error("Syntax process stopped with signal: " ++ string_of_int(signal))
-        signal
-        | Unix.WSTOPPED(signal) => ClientLog.error("Syntax process stopped with signal: " ++ string_of_int(signal));
-        signal
-        }
+            0;
+          | Unix.WEXITED(code) =>
+            ClientLog.error(
+              "Syntax process exited with code: " ++ string_of_int(code),
+            );
+            code;
+          | Unix.WSIGNALED(signal) =>
+            ClientLog.error(
+              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            );
+            signal;
+          | Unix.WSTOPPED(signal) =>
+            ClientLog.error(
+              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            );
+            signal;
+          };
         scheduler(() => onClose(code));
       },
       (),
@@ -174,7 +189,7 @@ let notifyBufferUpdate =
 let notifyVisibilityChanged = (v: t, visibility) => {
   ClientLog.info("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
-}
+};
 
 let close = (syntaxClient: t) => {
   ClientLog.info("Sending close request...");

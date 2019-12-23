@@ -21,12 +21,38 @@ let start = () => {
   // And a semaphore for signaling when we have a new message
   let messageCondition = Condition.create();
 
+  let outputMutex = Mutex.create();
+
   let queue = msg => {
     Mutex.lock(messageMutex);
     messageQueue := [msg, ...messageQueue^];
     Condition.signal(messageCondition);
     Mutex.unlock(messageMutex);
   };
+
+  let write = (msg: Protocol.ServerToClient.t) => {
+    Mutex.lock(outputMutex);
+    Marshal.to_channel(Stdlib.stdout, msg, []);
+    Stdlib.flush(Stdlib.stdout);
+    Mutex.unlock(outputMutex);
+  };
+
+  let log = msg => write(Protocol.ServerToClient.Log(msg));
+
+  let buffer = Buffer.create(0);
+
+  // Route Core.Log logging to be sent
+  // to main process.
+  let formatter =
+    Format.make_formatter(
+      Buffer.add_substring(buffer),
+      () => {
+        log(Buffer.contents(buffer));
+        Buffer.clear(buffer);
+      },
+    );
+  Logs.format_reporter(~app=formatter, ~dst=formatter, ())
+  |> Logs.set_reporter;
 
   let hasPendingMessage = () =>
     switch (messageQueue^) {
@@ -47,13 +73,6 @@ let start = () => {
   let _runThread: Thread.t =
     Thread.create(
       () => {
-        let write = (msg: Protocol.ServerToClient.t) => {
-          Marshal.to_channel(Stdlib.stdout, msg, []);
-          Stdlib.flush(Stdlib.stdout);
-        };
-
-        let log = msg => write(Protocol.ServerToClient.Log(msg));
-
         log(
           "Starting up server. Parent PID is: " ++ string_of_int(parentPid),
         );
