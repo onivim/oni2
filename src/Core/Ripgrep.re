@@ -60,6 +60,7 @@ module Log = (val Log.withNamespace("Oni2.Ripgrep"));
 type t = {
   search:
     (
+      ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
       ~onComplete: unit => unit
@@ -200,7 +201,8 @@ let process = (rgPath, args, onUpdate, onComplete) => {
    order of the last time they were accessed, alternative sort order includes
    path, modified, created
  */
-let search = (~executablePath, ~directory, ~onUpdate, ~onComplete) => {
+let search =
+    (~executablePath, ~filesExclude, ~directory, ~onUpdate, ~onComplete) => {
   let dedup = {
     let seen = Hashtbl.create(1000);
 
@@ -214,9 +216,20 @@ let search = (~executablePath, ~directory, ~onUpdate, ~onComplete) => {
     });
   };
 
+  let globs =
+    filesExclude
+    |> List.map(x => "!" ++ x)
+    |> List.map(x => ["-g", x])
+    |> List.concat;
+
+  let args =
+    globs
+    @ ["--smart-case", "--hidden", "--files", "--", directory]
+    |> Array.of_list;
+
   process(
     executablePath,
-    [|"--smart-case", "--files", "--", directory|],
+    args,
     items => items |> dedup |> onUpdate,
     onComplete,
   );
