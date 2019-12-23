@@ -80,12 +80,19 @@ let ofString = str => Yojson.Safe.from_string(str) |> of_yojson_exn;
 
 let ofFile = filePath => Yojson.Safe.from_file(filePath) |> of_yojson_exn;
 
+let getNodeScriptPath = (~script: string, v: t) => {
+  v.nodeScriptPath ++ "/" ++ script;
+};
+
 let getNodeHealthCheckPath = (v: t) => {
-  v.nodeScriptPath ++ "/check-health.js";
+  getNodeScriptPath(~script="check-health.js", v);
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-  v.nodeScriptPath ++ "/node_modules/vscode-exthost/out/bootstrap-fork.js";
+  getNodeScriptPath(
+    ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+    v,
+  );
 };
 
 let init = () => {

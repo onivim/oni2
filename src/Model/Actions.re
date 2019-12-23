@@ -51,6 +51,9 @@ type t =
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
+  | KeyDown([@opaque] Revery.Key.KeyEvent.t)
+  | KeyUp([@opaque] Revery.Key.KeyEvent.t)
+  | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
@@ -80,14 +83,12 @@ type t =
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
-  | QuickmenuInput({
-      text: string,
-      cursorPosition: int,
-    })
+  | QuickmenuInput(string)
+  | QuickmenuInputClicked(int)
+  | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
   | QuickmenuSearch(string)
-  | QuickmenuMaybeLoseFocus
   | QuickmenuClose
   | ListFocus(int)
   | ListFocusUp
@@ -121,11 +122,10 @@ type t =
   | SearchShow
   | SearchHide
   | SearchHotkey
-  | SearchInput(string, int)
-  | SearchStart
+  | SearchInput(string)
+  | SearchInputClicked(int)
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
-  | SearchSelectResult([@opaque] Ripgrep.Match.t)
   | VimDirectoryChanged(string)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)

@@ -17,5 +17,7 @@ module ExtensionManifest = ExtensionManifest;
 module ExtensionScanner = ExtensionScanner;
 module LanguageInfo = LanguageInfo;
 module LocationWithUri = LocationWithUri;
+module NodeProcess = NodeProcess;
+module NodeTask = NodeTask;
 module ProviderUtility = ProviderUtility;
 module SymbolKind = SymbolKind;

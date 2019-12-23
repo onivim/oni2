@@ -42,7 +42,8 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = (~checkHealth, ~listExtensions) => {
+let parse =
+    (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -51,8 +52,11 @@ let parse = (~checkHealth, ~listExtensions) => {
   let shouldClose = ref(false);
 
   let queuedJob = ref(None);
-  let runAndExit = f =>
+  let runAndExitUnit = f =>
     Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
+
+  let runAndExitString = f =>
+    Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
 
   Arg.parse(
     [
@@ -62,8 +66,10 @@ let parse = (~checkHealth, ~listExtensions) => {
       ("--no-log-colors", Unit(Log.disableColors), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
-      ("--checkhealth", checkHealth |> runAndExit, ""),
-      ("--list-extensions", listExtensions |> runAndExit, ""),
+      ("--checkhealth", checkHealth |> runAndExitUnit, ""),
+      ("--list-extensions", listExtensions |> runAndExitUnit, ""),
+      ("--install-extension", installExtension |> runAndExitString, ""),
+      ("--uninstall-extension", uninstallExtension |> runAndExitString, ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
         "--force-device-scale-factor",

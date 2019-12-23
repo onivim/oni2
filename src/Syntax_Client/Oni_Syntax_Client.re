@@ -14,7 +14,6 @@ module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
 
 type connectedCallback = unit => unit;
 type closeCallback = int => unit;
-type scheduler = (unit => unit) => unit;
 type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 type t = {
@@ -80,6 +79,8 @@ let start =
 
   Stdlib.set_binary_mode_in(in_channel, true);
   Stdlib.set_binary_mode_out(out_channel, true);
+
+  let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
   let _waitThread =
     Thread.create(

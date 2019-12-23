@@ -61,7 +61,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
       )),
   };
 
-let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {
+let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
   let items = state.hits |> List.map(matchToLocListItem) |> Array.of_list;
 
   <View style={Styles.searchPane(~theme)}>
@@ -71,19 +71,14 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: Search.t, ()) => {
       </View>
       <View style=Styles.row>
         <OniInput
-          autofocus=true
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
           cursorPosition={state.cursorPosition}
           value={state.queryInput}
           placeholder="Search"
-          onKeyDown={(event: NodeEvents.keyEventParams) =>
-            if (event.keycode == 13) {
-              GlobalContext.current().dispatch(Actions.SearchStart);
-            }
-          }
-          onChange={(text, pos) =>
-            GlobalContext.current().dispatch(Actions.SearchInput(text, pos))
+          isFocused
+          onClick={pos =>
+            GlobalContext.current().dispatch(Actions.SearchInputClicked(pos))
           }
         />
       </View>

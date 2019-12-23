@@ -5,7 +5,7 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float)],
   active: option(string), // path
-  focus: option(string) // node id
+  focus: option(string) // path
 };
 
 [@deriving show]
@@ -15,9 +15,7 @@ type action =
   | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
   | NodeClicked([@opaque] FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
-  | Select
-  | FocusPrev
-  | FocusNext;
+  | KeyboardInput(string);
 
 let initial: t;
 
