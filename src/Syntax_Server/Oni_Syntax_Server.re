@@ -115,7 +115,7 @@ let start = () => {
               }
             | Close => {
                 write(Protocol.ServerToClient.Closing);
-                exit(1);
+                exit(0);
               }
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );
@@ -150,7 +150,6 @@ let start = () => {
           if (State.anyPendingWork(state^)) {
             log("Running unit of work...");
             map(State.doPendingWork);
-
             log("Unit of work completed.");
           } else {
             log("No pending work.");

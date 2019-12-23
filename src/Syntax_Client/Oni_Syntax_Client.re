@@ -47,11 +47,14 @@ let start =
   Unix.set_close_on_exec(pstderr);
   Unix.set_close_on_exec(stderr);
 
+  let parentPid = Unix.getpid() |> string_of_int;
+  let camomilePath = "derp"; //Core.Setup.(setup.camomilePath);
+
   let env = [
-    Core.EnvironmentVariables.parentPid ++ "=" ++ string_of_int(Unix.getpid()),
+    Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
     Core.EnvironmentVariables.camomilePath
     ++ "="
-    ++ Core.Setup.(setup.camomilePath),
+    ++ camomilePath,
     ...Array.to_list(Unix.environment()),
   ];
 
@@ -60,7 +63,7 @@ let start =
     ++ "Oni2_editor"
     ++ (Sys.win32 ? ".exe" : "");
 
-  ClientLog.info("Starting executable: " ++ executableName);
+  ClientLog.infof(m => m("Starting executable: %s with camomilePath: %s and parentPid: %s", executableName, camomilePath, parentPid));
 
   let pid =
     Unix.create_process_env(
@@ -85,10 +88,18 @@ let start =
   let _waitThread =
     Thread.create(
       () => {
-        let (code, _status: Unix.process_status) = Unix.waitpid([], pid);
-        ClientLog.error(
-          "Syntax process closed with exit code: " ++ string_of_int(code),
-        );
+        let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
+        let code = switch (status) {
+        | Unix.WEXITED(0) => 
+            ClientLog.info("Syntax process exited safely.");
+            0
+        | Unix.WEXITED(code) => ClientLog.error("Syntax process exited with code: " ++ string_of_int(code))
+          code
+        | Unix.WSIGNALED(signal) => ClientLog.error("Syntax process stopped with signal: " ++ string_of_int(signal))
+        signal
+        | Unix.WSTOPPED(signal) => ClientLog.error("Syntax process stopped with signal: " ++ string_of_int(signal));
+        signal
+        }
         scheduler(() => onClose(code));
       },
       (),
@@ -132,6 +143,7 @@ let start =
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
+  ClientLog.info("Sending bufferUpdate notification...");
   write(v, message);
 };
 
@@ -155,12 +167,16 @@ let notifyBufferUpdate =
       lines: array(string),
       scope,
     ) => {
+  ClientLog.info("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
-let notifyVisibilityChanged = (v: t, visibility) =>
+let notifyVisibilityChanged = (v: t, visibility) => {
+  ClientLog.info("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+}
 
 let close = (syntaxClient: t) => {
+  ClientLog.info("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
 };
