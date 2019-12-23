@@ -67,7 +67,13 @@ let make = (~state: State.t, ()) => {
   let searchPane =
     switch (state.searchPane) {
     | Some(searchPane) =>
-      <SearchPane state=searchPane uiFont editorFont theme />
+      <SearchPane
+        state=searchPane
+        isFocused={FocusManager.current(state) == Focus.Search}
+        uiFont
+        editorFont
+        theme
+      />
     // TODO: BUG - Why is this needed? Why can't it be 'React.empty'?
     // Without this: when switching out of zen mode, the entire
     // editor surface will be empty. Seems like a reconciliation bug.

@@ -16,11 +16,6 @@ module Log = (val Log.withNamespace("Oni2.InputStore"));
 module Option = Utility.Option;
 module List = Utility.List;
 
-type captureMode =
-  | Normal
-  | Wildmenu
-  | Quickmenu;
-
 let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
 let conditionsOfState = (state: State.t) => {
@@ -62,19 +57,30 @@ let conditionsOfState = (state: State.t) => {
   ret;
 };
 
-let start =
-    (
-      getState: unit => Model.State.t,
-      window: option(Revery.Window.t),
-      runEffects,
-    ) => {
+let start = (window: option(Revery.Window.t), runEffects) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let immediateDispatchEffect = actions =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="input.immediateDispatch", dispatch => {
+      actions |> List.iter(dispatch);
+
+      // Run input effects _immediately_
+      runEffects();
+    });
 
   // We also use 'text input' mode for SDL2.
   // This enables us to get resolved keyboard events, and IME.
 
   // For IME: Is this sufficient? Or will we need a way to turn off / toggle IME when switching modes?
   Sdl2.TextInput.start();
+
+  let isTextInputActive = () => {
+    switch (window) {
+    | None => false
+    | Some(v) => Revery.Window.isTextInputActive(v)
+    };
+  };
 
   let getKeyUpBindings = {
     let containsCtrl = Re.execp(Re.compile(Re.str("C-")));
@@ -135,53 +141,46 @@ let start =
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let keyEventListener = key => {
-    let state = getState();
+  let handleKeyPress = (state: State.t, key) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
     let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
 
-    let captureMode =
-      switch (state.quickmenu) {
-      | Some({variant: Wildmenu(_), _}) => Wildmenu
-
-      | Some({variant: DocumentSymbols, _})
-      | Some({variant: CommandPalette, _})
-      | Some({variant: EditorsPicker, _})
-      | Some({variant: FilesPicker, _})
-      | Some({variant: ThemesPicker, _}) => Quickmenu
-
-      | None => Normal
-      };
-
     switch (key) {
-    | None => ()
-
     | Some(k) =>
       let bindingActions = getActionsForBinding(k, bindings, conditions);
 
       let actions =
-        switch (captureMode) {
-        | Normal
-        | Wildmenu
-            when bindingActions == [] && Revery.UI.Focus.focused^ == None =>
-          Log.info("handle - sending raw input: " ++ k);
-          [Actions.KeyboardInput(k)];
-
-        | _ =>
-          Log.info("handle - sending bound actions.");
+        if (bindingActions != []) {
           bindingActions;
+        } else {
+          switch (Model.FocusManager.current(state)) {
+          | Editor
+          | Wildmenu => [Actions.KeyboardInput(k)]
+
+          | Quickmenu => [Actions.QuickmenuInput(k)]
+
+          | FileExplorer => [
+              Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+            ]
+
+          | Search => [Actions.SearchInput(k)]
+          };
         };
 
-      [Actions.NotifyKeyPressed(time, k), ...actions] |> List.iter(dispatch);
-    };
+      (
+        state,
+        immediateDispatchEffect([
+          Actions.NotifyKeyPressed(time, k),
+          ...actions,
+        ]),
+      );
 
-    // Run input effects _immediately_
-    runEffects();
+    | None => (state, Isolinear.Effect.none)
+    };
   };
 
-  let keyUpEventListener = (event: Revery.Key.KeyEvent.t) => {
-    let state = getState();
+  let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
 
@@ -199,61 +198,49 @@ let start =
       let bindings = getKeyUpBindings(bindings);
       let actions = getActionsForBinding(keyString, bindings, conditions);
 
-      Log.info("handle keyup - sending bound actions.");
-      actions |> List.iter(dispatch);
+      (state, immediateDispatchEffect(actions));
 
-      // Run input effects _immediately_
-      runEffects();
-
-    | None => ()
+    | None => (state, Isolinear.Effect.none)
     };
   };
 
-  let isTextInputActive = () => {
-    switch (window) {
-    | None => false
-    | Some(v) => Revery.Window.isTextInputActive(v)
+  let updater = (state: State.t, action: Actions.t) => {
+    switch (action) {
+    | KeyDown(event) =>
+      let isTextInputActive = isTextInputActive();
+      event
+      |> Handler.keyPressToCommand(~isTextInputActive)
+      |> handleKeyPress(state);
+
+    | KeyUp(event) => handleKeyUp(state, event)
+
+    | TextInput(event) => handleKeyPress(state, Some(event.text))
+
+    | _ => (state, Isolinear.Effect.none)
     };
   };
+
+  //  SUBSCRIPTIONS
 
   switch (window) {
-  | None => Log.info("no window to subscribe to events")
+  | None => Log.error("no window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Event.subscribe(
-        window.onKeyDown,
-        keyEvent => {
-          let isTextInputActive = isTextInputActive();
-          Log.info(
-            "got keydown - text input:" ++ string_of_bool(isTextInputActive),
-          );
-          Handler.keyPressToCommand(~isTextInputActive, keyEvent)
-          |> keyEventListener;
-        },
+      Revery.Event.subscribe(window.onKeyDown, event =>
+        dispatch(Actions.KeyDown(event))
       );
 
     let _: unit => unit =
-      Revery.Event.subscribe(
-        window.onKeyUp,
-        keyEvent => {
-          let isTextInputActive = isTextInputActive();
-          Log.info(
-            "got keyup - text input:" ++ string_of_bool(isTextInputActive),
-          );
-          keyUpEventListener(keyEvent);
-        },
+      Revery.Event.subscribe(window.onKeyUp, event =>
+        dispatch(Actions.KeyUp(event))
       );
 
     let _: unit => unit =
-      Revery.Event.subscribe(
-        window.onTextInputCommit,
-        textEvent => {
-          Log.info("onTextInputCommit: " ++ textEvent.text);
-          keyEventListener(Some(textEvent.text));
-        },
+      Revery.Event.subscribe(window.onTextInputCommit, event =>
+        dispatch(Actions.TextInput(event))
       );
     ();
   };
 
-  stream;
+  (updater, stream);
 };

@@ -78,8 +78,6 @@ let item =
     GlobalContext.current().dispatch(
       OpenFileByPath(item.file, None, Some(item.location)),
     );
-
-    Revery.UI.Focus.loseFocus();
   };
 
   let locationText =

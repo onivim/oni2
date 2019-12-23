@@ -367,6 +367,12 @@ module Option = {
 
   let values: list(option('a)) => list('a) =
     items => List.filter_map(v => v, items);
+
+  let zip = (a, b) =>
+    switch (a, b) {
+    | (Some(a), Some(b)) => Some((a, b))
+    | _ => None
+    };
 };
 
 module LwtUtil = {
