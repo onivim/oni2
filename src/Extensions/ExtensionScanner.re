@@ -52,6 +52,8 @@ let scan = (~prefix=None, directory: string) => {
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
     let path = Path.dirname(pkg);
 
+    let localizationDictionary = LocalizationDictionary.initial;
+
     let manifest =
       json
       |> ExtensionManifest.of_yojson_exn
@@ -60,7 +62,8 @@ let scan = (~prefix=None, directory: string) => {
            prefix
            |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
            |> Option.value(~default=prevName)
-         );
+         )
+      |> ExtensionManifest.localize(localizationDictionary);
 
     {manifest, path};
   };
