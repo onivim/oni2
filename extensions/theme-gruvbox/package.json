@@ -3,7 +3,8 @@
 	"displayName": "Gruvbox Theme",
 	"description": "Gruvbox Theme",
 	"version": "1.3.11",
-	"author": "jdinhify (https://github.com/jdinhify)",
+	"author": "jdinhify",
+	"author_ext": "jdinhify (https://github.com/jdinhify)",
 	"contributors": [
 		"eximus (https://github.com/3ximus)",
 		"JoshAddington (https://github.com/JoshAddington)",
