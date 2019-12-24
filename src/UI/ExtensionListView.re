@@ -28,21 +28,21 @@ let make = (~state: State.t, ()) => {
     Extensions.getExtensions(
       ~category=ExtensionScanner.Bundled,
       state.extensions,
-    )
-    |> Array.of_list;
+    );
+    
 
   let userExtensions =
     Extensions.getExtensions(
       ~category=ExtensionScanner.User,
       state.extensions,
-    )
-    |> Array.of_list;
+    );
+    
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
 
-  let bundledCount = Array.length(bundledExtensions);
-  let userCount = Array.length(userExtensions);
+  let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
+  let allExtensionCount = Array.length(allExtensions);
   //let developmentCount = Array.length(developmentExtensions);
 
   let {theme, uiFont, _}: State.t = state;
@@ -99,25 +99,11 @@ let make = (~state: State.t, ()) => {
   };
 
   <View style=Styles.container>
-    <Accordion
-      title="User"
+    <FlatList
       rowHeight=50
-      count=userCount
-      renderItem={renderItem(userExtensions)}
+      count=allExtensionCount
+      render={renderItem(allExtensions)}
       focused=None
-      expanded=true
-      theme
-      uiFont
-    />
-    <Accordion
-      title="Bundled"
-      rowHeight=50
-      count=bundledCount
-      renderItem={renderItem(bundledExtensions)}
-      focused=None
-      expanded=true
-      theme
-      uiFont
     />
   </View>;
 };
