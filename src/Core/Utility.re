@@ -232,6 +232,11 @@ let ranges = indices =>
   )
   |> List.rev;
 
+let tap = (f, x) => {
+  f(x);
+  x;
+};
+
 module RangeUtil = {
   let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
     ranges => {
@@ -251,6 +256,24 @@ module RangeUtil = {
         IntMap.empty,
         ranges,
       );
+    };
+};
+
+module ArrayEx = {
+  exception Found(int);
+
+  let findIndex = (predicate, array) =>
+    try(
+      {
+        for (i in 0 to Array.length(array) - 1) {
+          if (predicate(array[i])) {
+            raise(Found(i));
+          };
+        };
+        None;
+      }
+    ) {
+    | Found(i) => Some(i)
     };
 };
 
@@ -311,6 +334,14 @@ module Option = {
     | Some(_) => ()
     | None => f();
 
+  let tap_none = f =>
+    fun
+    | Some(_) as v => v
+    | None => {
+        f();
+        None;
+      };
+
   let some = x => Some(x);
 
   let bind = f =>
@@ -340,6 +371,12 @@ module Option = {
 
   let values: list(option('a)) => list('a) =
     items => List.filter_map(v => v, items);
+
+  let zip = (a, b) =>
+    switch (a, b) {
+    | (Some(a), Some(b)) => Some((a, b))
+    | _ => None
+    };
 };
 
 module LwtUtil = {
@@ -354,6 +391,21 @@ module LwtUtil = {
       promises,
     );
   };
+
+  exception Timeout;
+
+  let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
+    (~timeout=10.0, promise) => {
+      let completed = ref(None);
+
+      Lwt.on_success(promise, v => {completed := Some(Ok(v))});
+
+      Lwt.on_failure(promise, v => {completed := Some(Error(v))});
+
+      waitForCondition(~timeout, () => {completed^ != None});
+
+      Option.value(~default=Error(Timeout), completed^);
+    };
 };
 
 module Result = {
@@ -686,4 +738,16 @@ module ChunkyQueue: {
 
   let toList = ({front, rear, _}) =>
     front @ (Queue.toList(rear) |> List.concat);
+};
+
+module Path = {
+  // Not very robust path-handling utilities.
+  // TODO: Make good
+
+  let toRelative = (~base, path) => {
+    let base = base == "/" ? base : base ++ Filename.dir_sep;
+    Str.replace_first(Str.regexp_string(base), "", path);
+  };
+
+  let explode = String.split_on_char(Filename.dir_sep.[0]);
 };

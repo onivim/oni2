@@ -30,18 +30,22 @@ let start = () => {
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | WindowSetActive(splitId, _) => {
+    | WindowSetActive(splitId, _) =>
+      {
         ...s,
         windowManager: {
           ...s.windowManager,
           activeWindowId: splitId,
         },
       }
+      |> FocusManager.push(Editor)
+
     | WindowTreeSetSize(width, height) => {
         ...s,
         windowManager:
           WindowManager.setTreeSize(width, height, s.windowManager),
       }
+
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
@@ -61,6 +65,7 @@ let start = () => {
             ),
         },
       }
+
     | RemoveSplit(id) => {
         ...s,
         zenMode: false,
@@ -69,6 +74,7 @@ let start = () => {
           windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
         },
       }
+
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
@@ -89,6 +95,9 @@ let start = () => {
         WindowManager.ensureActive({...s.windowManager, windowTree});
 
       {...s, windowManager};
+
+    | OpenFileByPath(_) => FocusManager.push(Editor, s)
+
     | Command("view.rotateForward") => {
         ...s,
         windowManager: {
@@ -100,6 +109,7 @@ let start = () => {
             ),
         },
       }
+
     | Command("view.rotateBackward") => {
         ...s,
         windowManager: {
@@ -111,15 +121,9 @@ let start = () => {
             ),
         },
       }
+
     | _ => s
     };
-
-  // This effect 'steals' focus from Revery. When we're selecting an active editor,
-  // we want to be sure the editor has focus, not a Revery UI component.
-  let getFocusEffect =
-    Isolinear.Effect.create(~name="windows.getFocus", () => {
-      Revery.UI.Focus.loseFocus()
-    });
 
   let updater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
@@ -131,7 +135,6 @@ let start = () => {
         switch (action) {
         | Init => initializeDefaultViewEffect(state)
         // When opening a file, ensure that the active editor is getting focus
-        | OpenFileByPath(_) => getFocusEffect
         | ViewCloseEditor(_) =>
           if (List.length(
                 WindowTree.getSplits(state.windowManager.windowTree),

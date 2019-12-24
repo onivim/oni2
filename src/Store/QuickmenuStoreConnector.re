@@ -11,7 +11,9 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
+module InputModel = Model.InputModel;
 module Utility = Core.Utility;
+module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
 
@@ -28,7 +30,6 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
       dispatch(action);
-      dispatch(Actions.QuickmenuMaybeLoseFocus);
     });
 
   let executeVimCommandEffect =
@@ -69,7 +70,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
            Some(
              Actions.{
                category: None,
-               name: Model.Workspace.toRelativePath(currentDirectory, path),
+               name: Path.toRelative(~base=currentDirectory, path),
                command: () => {
                  Model.Actions.OpenFileByPath(path, None, None);
                },
@@ -162,7 +163,25 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuInput({text, cursorPosition}) => (
+    | QuickmenuInput(key) => (
+        Option.map(
+          (Quickmenu.{query, cursorPosition, _} as state) => {
+            let (text, cursorPosition) =
+              InputModel.handleInput(~text=query, ~cursorPosition, key);
+
+            Quickmenu.{...state, query: text, cursorPosition};
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuInputClicked(cursorPosition) => (
+        Option.map(state => Quickmenu.{...state, cursorPosition}, state),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
           state => Quickmenu.{...state, query: text, cursorPosition},
           state,
@@ -289,20 +308,11 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
       | _ => (state, Isolinear.Effect.none)
       }
 
-    // Triggered by selectItemEffect in order to lose focus iff the item command
-    // has resulted in the menu being closed
-    | QuickmenuMaybeLoseFocus =>
-      if (state == None) {
-        Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
-      };
-      (state, Isolinear.Effect.none);
-
     | QuickmenuClose =>
-      Revery_UI.Focus.loseFocus(); // TODO: Remove once revery-ui/revery#412 has been fixed
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, exitModeEffect)
       | _ => (None, Isolinear.Effect.none)
-      };
+      }
 
     | _ => (state, Isolinear.Effect.none)
     };
@@ -375,7 +385,7 @@ let subscriptions = ripgrep => {
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>
       Actions.{
         category: None,
-        name: Model.Workspace.toRelativePath(directory, fullPath),
+        name: Path.toRelative(~base=directory, fullPath),
         command: () => Model.Actions.OpenFileByPath(fullPath, None, None),
         icon:
           Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),

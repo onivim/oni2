@@ -73,7 +73,7 @@ let checks = [
       let closed = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
-          ~scheduler=f => f(),
+          ~scheduler=Scheduler.immediate,
           ~onConnected=() => connected := true,
           ~onClose=_ => closed := true,
           ~onHighlights=_ => (),
@@ -109,7 +109,7 @@ let checks = [
   ),
 ];
 
-let run = () => {
+let run = _cli => {
   let setup = Setup.init();
 
   let result =
@@ -132,5 +132,5 @@ let run = () => {
   Log.info("");
 
   Log.info("All systems go.");
-  exit(result ? 0 : 1);
+  result ? 0 : 1;
 };

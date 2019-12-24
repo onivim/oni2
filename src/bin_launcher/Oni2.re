@@ -7,30 +7,88 @@
 let stayAttached = ref(false);
 
 let version = () => {
-  print_endline("Onivim 2 0.0.0");
+  print_endline("Onivim 2 0.2.0");
 };
 
 let passthrough = Arg.Unit(() => ());
 let passthroughFloat = Arg.Float(_ => ());
 let passthroughString = Arg.String(_ => ());
 
-let spec = [
-  ("-f", Arg.Set(stayAttached), ""),
-  ("--nofork", Arg.Set(stayAttached), ""),
-  ("--debug", passthrough, ""),
-  (
-    "--no-log-colors",
-    passthrough,
-    "Turn off colors and rich formatting in logs.",
-  ),
-  ("--log-file", passthroughString, ""),
-  ("--log-filter", passthroughString, ""),
-  ("--checkhealth", passthrough, ""),
-  ("--extensions-dir", passthroughString, ""),
-  ("--force-device-scale-factor", passthroughFloat, ""),
-  ("--working-directory", passthrough, ""),
-  ("-version", Arg.Unit(version), ""),
-];
+let spec =
+  Arg.align([
+    (
+      "-f",
+      Arg.Set(stayAttached),
+      " Stay attached to the foreground terminal.",
+    ),
+    (
+      "--nofork",
+      Arg.Set(stayAttached),
+      " Stay attached to the foreground terminal.",
+    ),
+    ("--debug", passthrough, " Enable debug logging."),
+    ("--log-file", passthroughString, " Specify a file for the output logs."),
+    ("--log-filter", passthroughString, " Filter log output."),
+    (
+      "--no-log-colors",
+      passthrough,
+      " Turn off colors and rich formatting in logs.",
+    ),
+    ("--checkhealth", passthrough, " Check the health of the Oni2 editor."),
+    (
+      "--disable-syntax-highlighting",
+      passthrough,
+      "Turn off syntax highlighting.",
+    ),
+    ("--disable-extensions", passthrough, "Turn off extension loading."),
+    (
+      "--disable-configuration",
+      passthrough,
+      "Do not load user configuration (use default configuration).",
+    ),
+    (
+      "--install-extension",
+      passthroughString,
+      " Install extension by specifying a path to the .vsix file",
+    ),
+    (
+      "--uninstall-extension",
+      passthroughString,
+      " Uninstall extension by specifying an extension id.",
+    ),
+    (
+      "--extensions-dir",
+      passthroughString,
+      " The folder to store/load VSCode extensions.",
+    ),
+    (
+      "--list-extensions",
+      Arg.Set(stayAttached),
+      " List the currently installed extensions.",
+    ),
+    (
+      "--force-device-scale-factor",
+      passthroughFloat,
+      " Force the DPI scaling for the editor.",
+    ),
+    (
+      "--working-directory",
+      passthrough,
+      " Set the current working for Oni2.",
+    ),
+    ("--version", Arg.Unit(version), " Print version information."),
+    ("-v", Arg.Unit(version), " Print version information."),
+  ]);
+
+let usage = {|
+Onivim 2 0.2.0
+
+Usage:
+
+  oni2 [options][paths...]
+
+Options:
+|};
 
 let anonArg = _ => ();
 
@@ -55,7 +113,7 @@ let filterPsnArgument = args => {
 let args = Sys.argv |> filterPsnArgument;
 
 let () = {
-  switch (Arg.parse_argv(args, spec, anonArg, "Usage: ")) {
+  switch (Arg.parse_argv(args, spec, anonArg, usage)) {
   | exception (Arg.Bad(err)) =>
     prerr_endline(err);
     exit(1);

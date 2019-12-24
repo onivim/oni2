@@ -56,8 +56,8 @@ module Styles = {
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
-let onInput = (text, cursorPosition) =>
-  GlobalContext.current().dispatch(QuickmenuInput({text, cursorPosition}));
+let onInputClicked = cursorPosition =>
+  GlobalContext.current().dispatch(QuickmenuInputClicked(cursorPosition));
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
@@ -93,10 +93,8 @@ let make =
       ~font: UiFont.t,
       ~theme: Theme.t,
       ~configuration: Configuration.t,
-      ~autofocus: bool=true,
       ~state: Quickmenu.t,
       ~placeholder: string="type here to search the menu",
-      ~onInput: (string, int) => unit=onInput,
       ~onFocusedChange: int => unit=onFocusedChange,
       ~onSelect: int => unit=onSelect,
       (),
@@ -155,12 +153,12 @@ let make =
       <View style={Styles.container(theme)}>
         <View style=Style.[width(Constants.menuWidth), padding(5)]>
           <OniInput
-            autofocus
             placeholder
             ?prefix
             cursorColor=Colors.white
             style={Styles.input(font.fontFile)}
-            onChange=onInput
+            isFocused=true
+            onClick=onInputClicked
             value=query
             cursorPosition
           />

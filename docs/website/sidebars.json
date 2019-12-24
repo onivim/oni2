@@ -14,7 +14,8 @@
     ],
     "Configuration": [
       "configuration/settings",
-      "configuration/key-bindings"
+      "configuration/key-bindings",
+      "configuration/extensions"
     ],
     "For Developers": [
       "for-developers/architecture",

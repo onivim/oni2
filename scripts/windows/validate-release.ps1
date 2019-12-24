@@ -11,7 +11,7 @@ Write-Host "** Validating .zip package **"
 Expand-Archive -Path $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim2-$SHORT_COMMIT_ID.zip -DestinationPath _unpacked/
 ls _unpacked
 $env:ONI2_DEBUG=1
-./_unpacked/win32/Oni2.exe -f --checkhealth
+./_unpacked/win32/Oni2.exe -f --no-log-colors --checkhealth
 
 Write-Host "** Validating .exe installer **"
 rm -r _unpacked
@@ -31,5 +31,5 @@ ls D:/
 ls D:/a/1/s
 ls D:/a/1/s/Onivim2
 
-D:/a/1/s/Onivim2/Oni2.exe -f --checkhealth
+D:/a/1/s/Onivim2/Oni2.exe -f --no-log-colors --checkhealth
 

@@ -51,6 +51,7 @@ type t = {
   // Generally controlled by the theme.
   darkMode: bool,
   searchPane: option(Search.t),
+  focus: Focus.stack,
 };
 
 let create: unit => t =
@@ -97,4 +98,5 @@ let create: unit => t =
     zenMode: false,
     darkMode: true,
     searchPane: None,
+    focus: Focus.initial,
   };

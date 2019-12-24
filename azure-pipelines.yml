@@ -30,16 +30,17 @@ jobs:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libpng ragel
+  - template: .ci/swap-xcode.yml
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
   - template: .ci/publish-build-cache.yml
 
 - job: Linux
-  displayName: 'Linux - Ubuntu 18.04'
-  timeoutInMinutes: 0
+  displayName: 'Linux - Ubuntu 16.04'
+  timeoutInMinutes: 60
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'ubuntu-16.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -56,7 +57,7 @@ jobs:
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: linux
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-build-cache.yml
 
@@ -97,6 +98,7 @@ jobs:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libpng ragel
+  - template: .ci/swap-xcode.yml
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
@@ -130,7 +132,7 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --checkhealth --no-log-colors
+  - script: Oni2.exe -f --no-log-colors --checkhealth
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
@@ -213,5 +215,5 @@ jobs:
   # but we need to check from the command prompt, too via %PATH% - for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --checkhealth --no-log-colors
+      Oni2.exe -f --no-log-colors --checkhealth
     displayName: "Oni2.exe - run installed"

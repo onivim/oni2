@@ -22,61 +22,42 @@ module DispatchLog = (
   val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
 );
 
-let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
-  open Core.Cli;
-  let extensions =
-    Core.Log.perf("Discover extensions", () => {
-      let extensions =
-        ExtensionScanner.scan(
-          // The extension host assumes bundled extensions start with 'vscode.'
-          ~prefix=Some("vscode"),
-          setup.bundledExtensionsPath,
+let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
+  if (cli.shouldLoadExtensions) {
+    let extensions =
+      Core.Log.perf("Discover extensions", () => {
+        let extensions =
+          ExtensionScanner.scan(
+            // The extension host assumes bundled extensions start with 'vscode.'
+            ~prefix=Some("vscode"),
+            setup.bundledExtensionsPath,
+          );
+
+        let developmentExtensions =
+          switch (setup.developmentExtensionsPath) {
+          | Some(p) => ExtensionScanner.scan(p)
+          | None => []
+          };
+
+        let userExtensions = Utility.getUserExtensions(cli);
+
+        Log.debugf(m =>
+          m(
+            "discoverExtensions - discovered %n user extensions.",
+            List.length(userExtensions),
+          )
         );
+        [extensions, developmentExtensions, userExtensions] |> List.flatten;
+      });
 
-      let developmentExtensions =
-        switch (setup.developmentExtensionsPath) {
-        | Some(p) => ExtensionScanner.scan(p)
-        | None => []
-        };
-
-      let overriddenExtensionsDir =
-        cli |> Option.bind(cli => cli.overriddenExtensionsDir);
-
-      let userExtensions =
-        (
-          switch (overriddenExtensionsDir) {
-          | Some(p) => Some(p)
-          | None =>
-            switch (Core.Filesystem.getExtensionsFolder()) {
-            | Ok(p) => Some(p)
-            | Error(msg) =>
-              Log.errorf(m =>
-                m("Error discovering user extensions: %s", msg)
-              );
-              None;
-            }
-          }
-        )
-        |> Option.map(p => {
-             Log.infof(m => m("Searching for user extensions in: %s", p));
-             p;
-           })
-        |> Option.map(ExtensionScanner.scan)
-        |> Option.value(~default=[]);
-
-      Log.debugf(m =>
-        m(
-          "discoverExtensions - discovered %n user extensions.",
-          List.length(userExtensions),
-        )
-      );
-      [extensions, developmentExtensions, userExtensions] |> List.flatten;
-    });
-
-  Log.infof(m => m("-- Discovered: %n extensions", List.length(extensions)));
-
-  extensions;
-};
+    Log.infof(m =>
+      m("-- Discovered: %n extensions", List.length(extensions))
+    );
+    extensions;
+  } else {
+    Log.info("Not loading extensions; disabled via CLI");
+    [];
+  };
 
 let start =
     (
@@ -98,6 +79,12 @@ let start =
       (),
     ) => {
   ignore(executingDirectory);
+
+  let cliOptions =
+    Option.value(
+      ~default=Core.Cli.create(~folder="", ~filesToOpen=[], ()),
+      cliOptions,
+    );
 
   let state = Model.State.create();
 
@@ -131,7 +118,7 @@ let start =
     );
 
   let (syntaxUpdater, syntaxStream) =
-    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
+    SyntaxHighlightingStoreConnector.start(languageInfo, setup, cliOptions);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostUpdater, extHostStream) =
@@ -170,8 +157,8 @@ let start =
   let (languageFeatureUpdater, languageFeatureStream) =
     LanguageFeatureConnector.start();
 
-  let inputStream =
-    InputStoreConnector.start(getState, window, runRunEffects);
+  let (inputUpdater, inputStream) =
+    InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
 
@@ -181,6 +168,7 @@ let start =
       ~updater=
         Isolinear.Updater.combine([
           Isolinear.Updater.ofReducer(Reducer.reduce),
+          inputUpdater,
           quickmenuUpdater,
           vimUpdater,
           syntaxUpdater,
