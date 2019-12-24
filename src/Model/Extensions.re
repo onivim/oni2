@@ -18,14 +18,37 @@ type action =
 
 let empty = {activatedIds: [], extensions: []};
 
-let activateExtension = (id: string, model: t) => {
+let notifyActivated = (id: string, model: t) => {
   ...model,
   activatedIds: [id, ...model.activatedIds],
 };
 
-let addExtensions = (extensions, model) => {
+let notifyDiscovered = (extensions, model) => {
   ...model,
   extensions: extensions @ model.extensions,
 };
 
-let getExtensions = model => model.extensions;
+let _filterBundled = (scanner: ExtensionScanner.t) => {
+  let name = scanner.manifest.name;
+
+  name == "vscode.typescript-language-features"
+  || name == "vscode.markdown-language-features"
+  || name == "vscode.css-language-features"
+  || name == "vscode.html-language-features"
+  || name == "vscode.laserwave"
+  || name == "vscode.Material-theme"
+  || name == "vscode.reason-vscode"
+  || name == "vscode.gruvbox"
+  || name == "vscode.nord-visual-studio-code";
+};
+
+let getExtensions = (~category, model) => {
+  let results =
+    model.extensions
+    |> List.filter((ext: ExtensionScanner.t) => ext.category == category);
+
+  switch (category) {
+  | ExtensionScanner.Bundled => List.filter(_filterBundled, results)
+  | _ => results
+  };
+};

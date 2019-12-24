@@ -58,7 +58,7 @@ describe("ExtHostTransport", ({test, _}) => {
     let testExtensionsPath =
       Rench.Path.join(rootPath, "test/test_extensions");
     let extensions =
-      ExtensionScanner.scan(testExtensionsPath)
+      ExtensionScanner.scan(~category=Development, testExtensionsPath)
       |> List.map(ext =>
            ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
          );

@@ -4,33 +4,26 @@
  * Module to get and discover extension manifests
  */
 
+open Oni_Core;
 open Rench;
 
 module Option = Oni_Core.Utility.Option;
 
+module Log = (val Log.withNamespace("Oni2.ExtensionScanner"));
+
+type category =
+  | Default
+  | Bundled
+  | User
+  | Development;
+
 type t = {
+  category,
   manifest: ExtensionManifest.t,
   path: string,
 };
 
-let readFileSync = path => {
-  let chan = open_in_bin(path);
-  let data = ref("");
-  try(
-    {
-      while (true) {
-        data := data^ ++ "\n" ++ input_line(chan);
-      };
-      data^;
-    }
-  ) {
-  | End_of_file =>
-    close_in(chan);
-    data^;
-  };
-};
-
-let scan = (~prefix=None, directory: string) => {
+let scan = (~prefix=None, ~category, directory: string) => {
   let items = Sys.readdir(directory) |> Array.to_list;
 
   let isDirectory = Sys.is_directory;
@@ -39,20 +32,28 @@ let scan = (~prefix=None, directory: string) => {
   let packageManifestPath = d => Path.join(d, "package.json");
 
   let loadPackageJson = pkg => {
-    let json = readFileSync(pkg) |> Yojson.Safe.from_string;
+    let json = Yojson.Safe.from_file(pkg);
     let path = Path.dirname(pkg);
 
-    let manifest =
-      json
-      |> ExtensionManifest.of_yojson_exn
-      |> ExtensionManifest.remapPaths(path)
-      |> ExtensionManifest.updateName(prevName =>
-           prefix
-           |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
-           |> Option.value(~default=prevName)
-         );
+    try({
+      let manifest =
+        json
+        |> ExtensionManifest.of_yojson_exn
+        |> ExtensionManifest.remapPaths(path)
+        |> ExtensionManifest.updateName(prevName =>
+             prefix
+             |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
+             |> Option.value(~default=prevName)
+           );
 
-    {manifest, path};
+      Some({category, manifest, path});
+    }) {
+    | ex =>
+      Log.errorf(m =>
+        m("Exception parsing %s : %s", pkg, Printexc.to_string(ex))
+      );
+      None;
+    };
   };
 
   items
@@ -60,5 +61,6 @@ let scan = (~prefix=None, directory: string) => {
   |> List.filter(isDirectory)
   |> List.map(packageManifestPath)
   |> List.filter(Sys.file_exists)
-  |> List.map(loadPackageJson);
+  |> List.map(loadPackageJson)
+  |> Utility.List.filter_map(Utility.identity);
 };

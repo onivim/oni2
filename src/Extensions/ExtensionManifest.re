@@ -22,8 +22,10 @@ module Engine = {
 type t = {
   name: string,
   version: string,
+  author: [@default None] option(string),
   displayName: [@default None] option(string),
   description: [@default None] option(string),
+  publisher: [@default None] option(string),
   main: [@default None] option(string),
   icon: [@default None] option(string),
   categories: [@default []] list(string),
@@ -37,15 +39,23 @@ type t = {
 };
 
 let getDisplayName = (manifest: t) => {
-  manifest.displayName |> Option.value(~default="Unknown Extension");
+  manifest.displayName |> Option.value(~default=manifest.name);
 };
+
+let getAuthor = manifest => {
+  manifest.author
+  |> Option.fallback(~fallback=manifest.publisher)
+  |> Option.value(~default="Unknown Author");
+};
+
+let getVersion = manifest => manifest.version;
 
 let getIcon = (manifest: t) => manifest.icon;
 
 let remapPaths = (rootPath: string, manifest: t) => {
   ...manifest,
-  main: Option.map(mainPath => Path.join(rootPath, mainPath), manifest.main),
-  icon: Option.map(iconPath => Path.join(rootPath, iconPath), manifest.icon),
+  main: Option.map(Path.join(rootPath), manifest.main),
+  icon: Option.map(Path.join(rootPath), manifest.icon),
   contributes:
     ExtensionContributions.remapPaths(rootPath, manifest.contributes),
 };

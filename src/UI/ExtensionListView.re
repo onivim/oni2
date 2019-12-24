@@ -19,17 +19,35 @@ module Styles = {
       marginLeft(10),
       marginVertical(2),
       textWrap(TextWrapping.NoWrap),
+      textOverflow(`Ellipsis),
     ];
 };
 
 let make = (~state: State.t, ()) => {
-  let extensions =
-    Extensions.getExtensions(state.extensions) |> Array.of_list;
-  let count = Array.length(extensions);
+  let bundledExtensions =
+    Extensions.getExtensions(
+      ~category=ExtensionScanner.Bundled,
+      state.extensions,
+    )
+    |> Array.of_list;
+
+  let userExtensions =
+    Extensions.getExtensions(
+      ~category=ExtensionScanner.User,
+      state.extensions,
+    )
+    |> Array.of_list;
+
+  //let developmentExtensions =
+  //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
+
+  let bundledCount = Array.length(bundledExtensions);
+  let userCount = Array.length(userExtensions);
+  //let developmentCount = Array.length(developmentExtensions);
 
   let {theme, uiFont, _}: State.t = state;
 
-  let renderItem = idx => {
+  let renderItem = (extensions: array(ExtensionScanner.t), idx) => {
     let extension = extensions[idx];
 
     let icon =
@@ -52,11 +70,54 @@ let make = (~state: State.t, ()) => {
           style={Styles.text(~font=uiFont, ~theme)}
           text={ExtensionManifest.getDisplayName(extension.manifest)}
         />
+        <View style=Style.[flexDirection(`Row), flexGrow(1)]>
+          <View
+            style=Style.[
+              flexDirection(`Column),
+              flexGrow(1),
+              overflow(`Hidden),
+            ]>
+            <Text
+              style={Styles.text(~font=uiFont, ~theme)}
+              text={ExtensionManifest.getAuthor(extension.manifest)}
+            />
+          </View>
+          <View
+            style=Style.[
+              flexDirection(`Column),
+              flexGrow(1),
+              overflow(`Hidden),
+            ]>
+            <Text
+              style={Styles.text(~font=uiFont, ~theme)}
+              text={ExtensionManifest.getVersion(extension.manifest)}
+            />
+          </View>
+        </View>
       </View>
     </View>;
   };
 
   <View style=Styles.container>
-    <FlatList rowHeight=50 count render=renderItem focused=None />
+    <Accordion
+      title="User"
+      rowHeight=50
+      count=userCount
+      renderItem={renderItem(userExtensions)}
+      focused=None
+      expanded=true
+      theme
+      uiFont
+    />
+    <Accordion
+      title="Bundled"
+      rowHeight=50
+      count=bundledCount
+      renderItem={renderItem(bundledExtensions)}
+      focused=None
+      expanded=true
+      theme
+      uiFont
+    />
   </View>;
 };

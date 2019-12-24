@@ -5,9 +5,9 @@ open Oni_Model;
 
 let reduce = (action: Actions.t, v: Extensions.t) => {
   switch (action) {
-  | Extension(Activated(id)) => Extensions.activateExtension(id, v)
+  | Extension(Activated(id)) => Extensions.notifyActivated(id, v)
   | Extension(Discovered(extensions)) =>
-    Extensions.addExtensions(extensions, v)
+    Extensions.notifyDiscovered(extensions, v)
   | _ => v
   };
 };

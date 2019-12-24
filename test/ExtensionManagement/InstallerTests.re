@@ -14,7 +14,8 @@ let createExtensionsDirectory = () =>
 describe("Installer", ({test, _}) => {
   test("simple install test", ({expect, _}) => {
     let extensionFolder = createExtensionsDirectory();
-    let startExtensions = ExtensionScanner.scan(extensionFolder);
+    let startExtensions =
+      ExtensionScanner.scan(~category=Development, extensionFolder);
 
     expect.equal(List.length(startExtensions), 0);
 
@@ -24,7 +25,8 @@ describe("Installer", ({test, _}) => {
 
     expect.equal(result, Ok());
 
-    let afterInstallExtensions = ExtensionScanner.scan(extensionFolder);
+    let afterInstallExtensions =
+      ExtensionScanner.scan(~category=Development, extensionFolder);
     expect.equal(List.length(afterInstallExtensions), 1);
   })
 });
