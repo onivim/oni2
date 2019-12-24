@@ -32,7 +32,7 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
 
   let toCommand = (v: ExtensionContributions.Commands.t) => {
     Command.create(
-      ~name=v.title,
+      ~name=v.title |> LocalizedToken.to_string,
       ~action=Actions.CommandExecuteContributed(v.command),
       ~category=v.category,
       (),
