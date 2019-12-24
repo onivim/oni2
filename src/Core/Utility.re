@@ -781,6 +781,24 @@ module Json = {
     };
   };
 
+  let getKeys = json => {
+    let rec loop = (curr, json) => {
+      switch (json) {
+      | `Assoc(items) =>
+        items
+        |> List.map(item => {
+             let (key, v) = item;
+             let prefix = curr == "" ? key : curr ++ "." ++ key;
+             loop(prefix, v);
+           })
+        |> List.flatten
+      | _ => [curr]
+      };
+    };
+
+    loop("", json);
+  };
+
   let explode_key = String.split_on_char('.');
   /*
    [explode(json)] takes a JSON structure like:

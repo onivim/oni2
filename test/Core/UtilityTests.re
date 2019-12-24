@@ -32,20 +32,31 @@ describe("dropLast", ({test, _}) => {
 });
 
 describe("JsonUtil", ({describe, _}) => {
-  describe("explode", ({test, _}) => {
-    let explodedAbc =
-      `Assoc([("a", `Assoc([("b", `Assoc([("c", `Int(1))]))]))]);
-    let explodedAbcdef =
-      `Assoc([
-        (
-          "a",
-          `Assoc([
-            ("b", `Assoc([("c", `Int(1)), ("d", `Int(2))])),
-            ("e", `Assoc([("f", `Int(3))])),
-          ]),
-        ),
-      ]);
+  let explodedAbc =
+    `Assoc([("a", `Assoc([("b", `Assoc([("c", `Int(1))]))]))]);
+  let explodedAbcdef =
+    `Assoc([
+      (
+        "a",
+        `Assoc([
+          ("b", `Assoc([("c", `Int(1)), ("d", `Int(2))])),
+          ("e", `Assoc([("f", `Int(3))])),
+        ]),
+      ),
+    ]);
+  describe("getKeys", ({test, _}) => {
+    test("simple a.b.c case", ({expect, _}) => {
+      let keys = explodedAbc |> Json.getKeys;
 
+      expect.equal(keys, ["a.b.c"]);
+    });
+    test("abcdef case", ({expect, _}) => {
+      let keys = explodedAbcdef |> Json.getKeys;
+
+      expect.equal(keys, ["a.b.c", "a.b.d", "a.e.f"]);
+    });
+  });
+  describe("explode", ({test, _}) => {
     test("simple a.b.c case", ({expect, _}) => {
       let json = `Assoc([("a.b.c", `Int(1))]);
 
@@ -69,7 +80,7 @@ describe("JsonUtil", ({describe, _}) => {
       let result = Json.explode(json);
       expect.bool(Yojson.Safe.equal(result, explodedAbcdef)).toBe(true);
     });
-  })
+  });
 });
 
 describe("StringUtil", ({describe, _}) => {
