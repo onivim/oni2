@@ -20,29 +20,29 @@ const isAddedToPath = () => {
     }
     return true
 }
-const removeFromPath = () => (isMac() || isLinux ? fs.unlinkSync(getLinkPath()) : false)
+const removeFromPath = () => {
+    if (isAddedToPath() && !isWindows()) {
+        fs.unlinkSync(getLinkPath())
+    }
+}
 
 const addToPath = async () => {
-    console.log("Starting...");
-
     if (!isAddedToPath() && !isWindows()) {
         const appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
         const options = { name: "Oni2", icns: path.join(appDirectory, "assets", "images", "Onivim2.icns") }; // TODO: I need to check this in AppImage.
-        let linkPath = "";
+        let linkDest = "";
 
         if (isMac()) {
-            linkPath = "/Applications/Onivim2.app/Contents/MacOS/Oni2";
+            linkDest = "/Applications/Onivim2.app/Contents/Resources/run.sh";
         } else {
-            linkPath = ""; // TODO.
+            linkDest = ""; // TODO.
         }
 
-        await _runSudoCommand(`ln -fs ${linkPath} ${getLinkPath()}`, options);
+        await runSudoCommand(`ln -fs ${linkDest} ${getLinkPath()}`, options);
     }
-
-    console.log("Done!");
 }
 
-const _runSudoCommand = async (command, options) => {
+const runSudoCommand = async (command, options) => {
     return new Promise(resolve => {
         sudo.exec(command, options, (error, stdout, stderr) => {
             resolve({ error, stdout, stderr });
@@ -50,8 +50,16 @@ const _runSudoCommand = async (command, options) => {
     });
 }
 
+const toggleAddToPath = async () => {
+    if (isAddedToPath()) {
+        removeFromPath()
+    } else {
+        await addToPath()
+    }
+}
+
 (async () => {
     try {
-        await Promise.resolve(addToPath());
+        await Promise.resolve(toggleAddToPath());
     } catch (_) {}
 })();
