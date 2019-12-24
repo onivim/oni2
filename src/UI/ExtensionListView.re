@@ -29,14 +29,12 @@ let make = (~state: State.t, ()) => {
       ~category=ExtensionScanner.Bundled,
       state.extensions,
     );
-    
 
   let userExtensions =
     Extensions.getExtensions(
       ~category=ExtensionScanner.User,
       state.extensions,
     );
-    
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
