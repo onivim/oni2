@@ -2,6 +2,7 @@
  * LocalizedToken.re
  */
 
+[@deriving show]
 type t = {
   raw: string,
   token: option(string),
@@ -29,8 +30,6 @@ let localize = (dictionary: LocalizationDictionary.t, {raw, token, _}: t) => {
 
 exception LocalizedTokenParseException;
 
-let pp = (formatter, v) => "";
-
 let of_yojson =
   fun
   | `String(v) => Ok(parse(v))
@@ -41,7 +40,7 @@ let of_yojson_exn =
   | `String(v) => parse(v)
   | _ => raise(LocalizedTokenParseException);
 
-let to_yojson = v => `Null;
+let to_yojson = _ => `Null;
 
 let to_string = ({raw, localized, _}: t) => {
   Option.value(~default=raw, localized);
