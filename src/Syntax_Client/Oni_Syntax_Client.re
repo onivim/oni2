@@ -50,10 +50,18 @@ let start =
   let parentPid = Unix.getpid() |> string_of_int;
   let camomilePath = Core.Setup.(setup.camomilePath);
 
+  // Remove ONI2_LOG_FILE from environment of syntax server
+  let envList =
+    Unix.environment()
+    |> Array.to_list
+    |> List.filter(str =>
+         !Core.Utility.StringUtil.contains("ONI2_LOG_FILE", str)
+       );
+
   let env = [
     Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
     Core.EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
-    ...Array.to_list(Unix.environment()),
+    ...envList,
   ];
 
   let executableName =
