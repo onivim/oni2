@@ -8,6 +8,8 @@ open Rench;
 
 module Option = Oni_Core.Utility.Option;
 
+module Log = (val Oni_Core.Log.withNamespace("Oni2.ExtensionScanner"));
+
 type t = {
   manifest: ExtensionManifest.t,
   path: string,
@@ -40,6 +42,13 @@ let remapManifest = (directory: string, manifest: ExtensionManifest.t) => {
   ExtensionManifest.remapPaths(directory, m);
 };
 
+let _getLocalizations = path =>
+  if (Sys.file_exists(path)) {
+    path |> Yojson.Safe.from_file |> LocalizationDictionary.of_yojson;
+  } else {
+    LocalizationDictionary.initial;
+  };
+
 let scan = (~prefix=None, directory: string) => {
   let items = Sys.readdir(directory) |> Array.to_list;
 
@@ -52,7 +61,16 @@ let scan = (~prefix=None, directory: string) => {
     let json = readFileSync(pkg) |> Yojson.Safe.from_string;
     let path = Path.dirname(pkg);
 
-    let localizationDictionary = LocalizationDictionary.initial;
+    let localizationJsonPath = Path.join(path, "package.nls.json");
+
+    let locDic = _getLocalizations(localizationJsonPath);
+    Log.infof(m =>
+      m(
+        "Loaded %d localizations from %s",
+        LocalizationDictionary.count(locDic),
+        localizationJsonPath,
+      )
+    );
 
     let manifest =
       json
@@ -63,7 +81,7 @@ let scan = (~prefix=None, directory: string) => {
            |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
            |> Option.value(~default=prevName)
          )
-      |> ExtensionManifest.localize(localizationDictionary);
+      |> ExtensionManifest.localize(locDic);
 
     {manifest, path};
   };

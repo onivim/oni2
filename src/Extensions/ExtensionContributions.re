@@ -9,7 +9,7 @@ module Commands = {
   [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {
     command: string,
-    title: string,
+    title: LocalizedToken.t,
     category: [@default None] option(string),
   };
 };
@@ -98,10 +98,22 @@ let _remapIconThemes = (path: string, themes: list(IconTheme.t)) => {
   List.map(t => IconTheme.{...t, path: Path.join(path, t.path)}, themes);
 };
 
+let _localizeCommands = (loc, cmds) => {
+  cmds
+  |> List.map(cmd =>
+       Commands.{...cmd, title: LocalizedToken.localize(loc, cmd.title)}
+     );
+};
+
 let remapPaths = (path: string, contributions: t) => {
   ...contributions,
   grammars: _remapGrammars(path, contributions.grammars),
   themes: _remapThemes(path, contributions.themes),
   languages: _remapLanguages(path, contributions.languages),
   iconThemes: _remapIconThemes(path, contributions.iconThemes),
+};
+
+let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
+  ...contributions,
+  commands: _localizeCommands(locDictionary, contributions.commands),
 };

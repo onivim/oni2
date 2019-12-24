@@ -49,5 +49,7 @@ let updateName = (nameSetter, manifest: t) => {
 
 let localize = (loc: LocalizationDictionary.t, manifest: t) => {
   ...manifest,
-  displayName: Option.map(LocalizedToken.localize(loc), manifest.displayName),
-}
+  displayName:
+    Option.map(LocalizedToken.localize(loc), manifest.displayName),
+  contributes: ExtensionContributions.localize(loc, manifest.contributes),
+};
