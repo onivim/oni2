@@ -3,8 +3,10 @@
  *
  * Module to describing metadata about an extension
  */
-module Path = Rench.Path;
 module Option = Oni_Core.Utility.Option;
+
+open Oni_Core.Utility;
+module Path = Rench.Path;
 
 module ExtensionKind = {
   [@deriving (show, yojson({strict: false, exn: true}))]
@@ -23,7 +25,7 @@ type t = {
   name: string,
   version: string,
   author: [@default None] option(string),
-  displayName: [@default None] option(string),
+  displayName: [@default None] option(LocalizedToken.t),
   description: [@default None] option(string),
   publisher: [@default None] option(string),
   main: [@default None] option(string),
@@ -39,7 +41,9 @@ type t = {
 };
 
 let getDisplayName = (manifest: t) => {
-  manifest.displayName |> Option.value(~default=manifest.name);
+  manifest.displayName
+  |> Option.map(tok => LocalizedToken.to_string(tok))
+  |> Option.value(~default=manifest.name);
 };
 
 let getAuthor = manifest => {
@@ -63,4 +67,11 @@ let remapPaths = (rootPath: string, manifest: t) => {
 let updateName = (nameSetter, manifest: t) => {
   ...manifest,
   name: nameSetter(manifest.name),
+};
+
+let localize = (loc: LocalizationDictionary.t, manifest: t) => {
+  ...manifest,
+  displayName:
+    Option.map(LocalizedToken.localize(loc), manifest.displayName),
+  contributes: ExtensionContributions.localize(loc, manifest.contributes),
 };

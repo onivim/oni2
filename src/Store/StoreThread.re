@@ -22,41 +22,43 @@ module DispatchLog = (
   val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
 );
 
-let discoverExtensions = (setup: Core.Setup.t, cli: option(Core.Cli.t)) => {
-  let extensions =
-    Core.Log.perf("Discover extensions", () => {
-      let extensions =
-        ExtensionScanner.scan(
-          // The extension host assumes bundled extensions start with 'vscode.'
-          ~category=Bundled,
-          ~prefix=Some("vscode"),
-          setup.bundledExtensionsPath,
+let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
+  if (cli.shouldLoadExtensions) {
+    let extensions =
+      Core.Log.perf("Discover extensions", () => {
+        let extensions =
+          ExtensionScanner.scan(
+            // The extension host assumes bundled extensions start with 'vscode.'
+            ~category=Bundled,
+            ~prefix=Some("vscode"),
+            setup.bundledExtensionsPath,
+          );
+
+        let developmentExtensions =
+          switch (setup.developmentExtensionsPath) {
+          | Some(p) => ExtensionScanner.scan(~category=Development, p)
+          | None => []
+          };
+
+        let userExtensions = Utility.getUserExtensions(cli);
+
+        Log.debugf(m =>
+          m(
+            "discoverExtensions - discovered %n user extensions.",
+            List.length(userExtensions),
+          )
         );
+        [extensions, developmentExtensions, userExtensions] |> List.flatten;
+      });
 
-      let developmentExtensions =
-        switch (setup.developmentExtensionsPath) {
-        | Some(p) => ExtensionScanner.scan(~category=Development, p)
-        | None => []
-        };
-
-      let userExtensions =
-        cli
-        |> Option.map(Utility.getUserExtensions)
-        |> Option.value(~default=[]);
-
-      Log.debugf(m =>
-        m(
-          "discoverExtensions - discovered %n user extensions.",
-          List.length(userExtensions),
-        )
-      );
-      [extensions, developmentExtensions, userExtensions] |> List.flatten;
-    });
-
-  Log.infof(m => m("-- Discovered: %n extensions", List.length(extensions)));
-
-  extensions;
-};
+    Log.infof(m =>
+      m("-- Discovered: %n extensions", List.length(extensions))
+    );
+    extensions;
+  } else {
+    Log.info("Not loading extensions; disabled via CLI");
+    [];
+  };
 
 let start =
     (
@@ -78,6 +80,12 @@ let start =
       (),
     ) => {
   ignore(executingDirectory);
+
+  let cliOptions =
+    Option.value(
+      ~default=Core.Cli.create(~folder="", ~filesToOpen=[], ()),
+      cliOptions,
+    );
 
   let state = Model.State.create();
 
@@ -111,7 +119,7 @@ let start =
     );
 
   let (syntaxUpdater, syntaxStream) =
-    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
+    SyntaxHighlightingStoreConnector.start(languageInfo, setup, cliOptions);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostUpdater, extHostStream) =

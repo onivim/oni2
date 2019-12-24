@@ -52,8 +52,8 @@ let make = (~state: State.t, ()) => {
 
     let icon =
       switch (ExtensionManifest.getIcon(extension.manifest)) {
-      | None => <Container color=Colors.darkGray width=45 height=45 />
-      | Some(iconPath) => <Image src=iconPath width=45 height=45 />
+      | None => <Container color=Colors.darkGray width=32 height=32 />
+      | Some(iconPath) => <Image src=iconPath width=32 height=32 />
       };
 
     <View
