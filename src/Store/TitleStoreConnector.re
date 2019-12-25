@@ -45,7 +45,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       filePath
       |> Option.bind(fp =>
            switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(base, fp))
+           | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
            }
          )
@@ -60,7 +60,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       |> Option.map(Filename.dirname)
       |> Option.bind(fp =>
            switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(base, fp))
+           | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
            }
          )
