@@ -145,30 +145,30 @@ let make = (~state: State.t, ()) => {
     state.notifications
     |> List.map((n: Notification.t) => {
          let (icon, background, foreground) =
-           switch (n.notificationType) {
-           | Actions.Success => (
+           switch (n.kind) {
+           | Success => (
                FontAwesome.checkCircle,
                notificationSuccessBackground,
                notificationSuccessForeground,
              )
-           | Actions.Warning => (
+           | Warning => (
                FontAwesome.exclamationTriangle,
                notificationWarningBackground,
                notificationWarningForeground,
              )
-           | Actions.Error => (
+           | Error => (
                FontAwesome.exclamationCircle,
                notificationErrorBackground,
                notificationErrorForeground,
              )
-           | _ => (
+           | Info => (
                FontAwesome.infoCircle,
                notificationInfoBackground,
                notificationInfoForeground,
              )
            };
 
-         let onClose = () => GlobalContext.current().hideNotification(n.id);
+         let onClose = () => GlobalContext.current().hideNotification(n);
 
          <notification
            background
@@ -176,7 +176,7 @@ let make = (~state: State.t, ()) => {
            onClose
            uiFont
            icon
-           title={n.title}
+           title="Notification"
            message={n.message}
            theme={state.theme}
            configuration={state.configuration}

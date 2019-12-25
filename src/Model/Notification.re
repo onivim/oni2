@@ -1,12 +1,13 @@
-open Actions;
+[@deriving show({with_path: false})]
+type t = {
+  kind,
+  message: string,
+}
 
-let nextId = ref(0);
+and kind =
+  | Success
+  | Info
+  | Warning
+  | Error;
 
-type t = Actions.notification;
-
-let create = (~notificationType=Actions.Info, ~message, ~title, ()) => {
-  let id = nextId^;
-  incr(nextId);
-
-  {id, notificationType, message, title};
-};
+let create = (~kind=Info, message) => {kind, message};
