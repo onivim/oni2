@@ -53,6 +53,7 @@ module Search = Search;
 module Selection = Selection;
 module Selectors = Selectors;
 module SideBar = SideBar;
+module Sneak = Sneak;
 module StatusBarModel = StatusBarModel;
 module StatusBarReducer = StatusBarReducer;
 module State = State;

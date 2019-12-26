@@ -106,6 +106,12 @@ let createDefaultCommands = getState => {
         ~action=QuickmenuShow(DocumentSymbols),
         (),
       ),
+      Command.create(
+        ~category=Some("Sneak"),
+        ~name="Start sneak (keyboard-accessible UI)",
+        ~action=Command("sneak.start"),
+        (),
+      )
     ]
   );
 };
@@ -259,6 +265,7 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
+    ("sneak.start", _ => singleActionEffect(Actions.Sneak(Sneak.Initiated))),
   ];
 
   let commandMap =

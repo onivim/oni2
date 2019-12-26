@@ -163,6 +163,11 @@ let start = () => {
         command: "redo",
         condition: "editorTextFocus" |> parseExp,
       },
+      {
+        key: "<C-G>",
+        command: "sneak.start",
+        condition: Expression.True,
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
