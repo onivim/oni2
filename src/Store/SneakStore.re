@@ -15,7 +15,10 @@ let start = () => {
     switch (action) {
     | Model.Actions.Sneak(sneakAction) => 
       switch (sneakAction) {
-        | Sneak.Initiated => prerr_endline ("start")
+        | Sneak.Initiated => 
+          
+          prerr_endline ("start")
+          let _ = Oni_UI.SneakRegistry.getSneaks();
       };
       default;
     | _ => default

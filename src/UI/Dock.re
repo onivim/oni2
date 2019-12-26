@@ -29,14 +29,14 @@ let make = (~state: State.t, ()) => {
       alignItems(`Center),
       width(50),
     ]>
-    <Clickable onClick=onExplorerClick style=button>
+    <Sneakable onClick=onExplorerClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
-    </Clickable>
-    <Clickable onClick=onSearchClick style=button>
+    </Sneakable>
+    <Sneakable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
-    </Clickable>
-    <Clickable onClick=onExtensionsClick style=button>
+    </Sneakable>
+    <Sneakable onClick=onExtensionsClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
-    </Clickable>
+    </Sneakable>
   </View>;
 };

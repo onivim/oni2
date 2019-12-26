@@ -114,7 +114,7 @@ let make =
   };
 
   <View style=containerStyle>
-    <Clickable
+    <Sneakable
       onAnyClick
       style=Style.[
         width(proportion(0.80)),
@@ -125,14 +125,14 @@ let make =
       ]>
       <View style=iconContainerStyle> fileIconView </View>
       <Text style=textStyle text=title />
-    </Clickable>
-    <Clickable onClick=onClose style=iconContainerStyle>
+    </Sneakable>
+    <Sneakable onClick=onClose style=iconContainerStyle>
       <FontIcon
         icon
         backgroundColor={theme.editorBackground}
         color={theme.tabActiveForeground}
         fontSize={modified ? 10 : 12}
       />
-    </Clickable>
+    </Sneakable>
   </View>;
 };
