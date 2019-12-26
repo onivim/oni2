@@ -54,6 +54,10 @@ let conditionsOfState = (state: State.t) => {
   | _ => ()
   };
 
+  if (state.sneak |> Model.Sneak.isActive) {
+      Hashtbl.add(ret, "sneakMode", true);
+  }
+
   ret;
 };
 

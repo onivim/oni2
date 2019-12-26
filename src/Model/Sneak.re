@@ -4,7 +4,7 @@ type action =
 
 type sneak = {
   callback: unit => unit,
-  boundingBox: Revery.Match.BoundingBox2d.t,
+  boundingBox: Revery.Math.BoundingBox2d.t,
   id: string,
 }
 
@@ -22,7 +22,18 @@ let initial: t = {
   filteredSneaks: [],
 };
 
-let refine = (characterToAdd: string, prefix: sneaks: t) => {
+let setActive = (active: bool, sneaks: t) => {
+  if (active) {
+    ...sneaks,
+    active
+  } else {
+    initial
+  }
+}
+
+let isActive = sneaks => sneaks.active;
+
+let refine = (characterToAdd: string, prefix: string, sneaks: t) => {
   // TODO
 };
 
@@ -30,4 +41,4 @@ let add = (callback, boundingBox, sneaks: t) => {
   // TODO
 };
 
-let getFiltered = (sneaks: t) => filteredSneaks;
+let getFiltered = (sneaks: t) => sneaks.filteredSneaks;

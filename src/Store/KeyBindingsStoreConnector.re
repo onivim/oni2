@@ -168,6 +168,11 @@ let start = () => {
         command: "sneak.start",
         condition: Expression.True,
       },
+      {
+        key: "<Esc>",
+        command: "sneak.stop",
+        condition: "sneakMode" |> parseExp,
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
