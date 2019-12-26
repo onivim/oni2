@@ -1,6 +1,7 @@
 [@deriving show({with_path: false})]
 type action =
-  | Initiated;
+  | Initiated
+  | Stopped;
 
 type sneak = {
   callback: unit => unit,

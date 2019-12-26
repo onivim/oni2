@@ -19,8 +19,17 @@ let start = () => {
           
           prerr_endline ("start")
           let _ = Oni_UI.SneakRegistry.getSneaks();
+          ({
+            ...state,
+            sneak: Model.Sneak.setActive(true, state.sneak),
+          }, Isolinear.Effect.none);
+       | Sneak.Stopped => {
+          ({
+            ...state,
+            sneak: Model.Sneak.setActive(false, state.sneak),
+          }, Isolinear.Effect.none);
+       }
       };
-      default;
     | _ => default
     };
   };
