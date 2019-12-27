@@ -27,11 +27,11 @@ let toTab =
       index,
       t: tabInfo,
     ) => {
-
-  let title = switch(t.renderer) {
-  | Welcome => "Welcome"
-  | _ => Path.filename(t.title)
-  };
+  let title =
+    switch (t.renderer) {
+    | Welcome => "Welcome"
+    | _ => Path.filename(t.title)
+    };
 
   <Tab
     theme
