@@ -124,8 +124,8 @@ let item =
       let availableWidth = float(width - locationWidth);
       let maxLength =
         int_of_float(availableWidth /. editorFont.measuredWidth);
-      let charStart = Index.toOneBased(indexStart);
-      let charEnd = Index.toOneBased(indexEnd);
+      let charStart = Index.toZeroBased(indexStart);
+      let charEnd = Index.toZeroBased(indexEnd);
 
       try({
         let (text, charStart, charEnd) =
