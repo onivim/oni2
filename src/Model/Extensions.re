@@ -18,12 +18,12 @@ type action =
 
 let empty = {activatedIds: [], extensions: []};
 
-let notifyActivated = (id: string, model: t) => {
+let markActivated = (id: string, model: t) => {
   ...model,
   activatedIds: [id, ...model.activatedIds],
 };
 
-let notifyDiscovered = (extensions, model) => {
+let add = (extensions, model) => {
   ...model,
   extensions: extensions @ model.extensions,
 };
