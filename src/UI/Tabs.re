@@ -13,6 +13,7 @@ type tabInfo = {
   editorId: int,
   title: string,
   modified: bool,
+  renderer: Oni_Model.BufferRenderer.t,
 };
 
 let toTab =
@@ -25,12 +26,18 @@ let toTab =
       activeEditorId,
       index,
       t: tabInfo,
-    ) =>
+    ) => {
+
+  let title = switch(t.renderer) {
+  | Welcome => "Welcome"
+  | _ => Path.filename(t.title)
+  };
+
   <Tab
     theme
     tabPosition={index + 1}
     numberOfTabs
-    title={Path.filename(t.title)}
+    title
     active={Some(t.editorId) == activeEditorId}
     showHighlight=active
     modified={t.modified}
@@ -39,6 +46,7 @@ let toTab =
     onClick={() => GlobalContext.current().openEditorById(t.editorId)}
     onClose={() => GlobalContext.current().closeEditorById(t.editorId)}
   />;
+};
 
 let measureWidth: option(node) => int =
   fun
