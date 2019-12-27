@@ -41,8 +41,6 @@ module Configuration = {
   let of_yojson_exn = json => {
     Yojson.Safe.(
       {
-        prerr_endline("Starting parse: " ++ Yojson.Safe.to_string(json));
-
         let parseConfigSection = json => {
           let properties = Util.member("properties", json) |> Util.to_assoc;
           properties
