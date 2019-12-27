@@ -24,12 +24,17 @@ let checks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(~scheduler=Scheduler.immediate, ~setup, 
-      "check-health.js")
+      Oni_Extensions.NodeTask.run(
+        ~scheduler=Scheduler.immediate,
+        ~setup,
+        "check-health.js",
+      )
       |> Utility.LwtUtil.sync
-      |> fun 
-      | Ok(_) => true
-      | Error(_) => false;
+      |> (
+        fun
+        | Ok(_) => true
+        | Error(_) => false
+      );
     },
   ),
   (
