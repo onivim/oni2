@@ -47,12 +47,21 @@ let start =
   Unix.set_close_on_exec(pstderr);
   Unix.set_close_on_exec(stderr);
 
+  let parentPid = Unix.getpid() |> string_of_int;
+  let camomilePath = Core.Setup.(setup.camomilePath);
+
+  // Remove ONI2_LOG_FILE from environment of syntax server
+  let envList =
+    Unix.environment()
+    |> Array.to_list
+    |> List.filter(str =>
+         !Core.Utility.StringUtil.contains("ONI2_LOG_FILE", str)
+       );
+
   let env = [
-    Core.EnvironmentVariables.parentPid ++ "=" ++ string_of_int(Unix.getpid()),
-    Core.EnvironmentVariables.camomilePath
-    ++ "="
-    ++ Core.Setup.(setup.camomilePath),
-    ...Array.to_list(Unix.environment()),
+    Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
+    Core.EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
+    ...envList,
   ];
 
   let executableName =
@@ -60,7 +69,14 @@ let start =
     ++ "Oni2_editor"
     ++ (Sys.win32 ? ".exe" : "");
 
-  ClientLog.info("Starting executable: " ++ executableName);
+  ClientLog.infof(m =>
+    m(
+      "Starting executable: %s with camomilePath: %s and parentPid: %s",
+      executableName,
+      camomilePath,
+      parentPid,
+    )
+  );
 
   let pid =
     Unix.create_process_env(
@@ -75,6 +91,7 @@ let start =
   let shouldClose = ref(false);
 
   let in_channel = Unix.in_channel_of_descr(stdout);
+  let err_channel = Unix.in_channel_of_descr(stderr);
   let out_channel = Unix.out_channel_of_descr(stdin);
 
   Stdlib.set_binary_mode_in(in_channel, true);
@@ -85,10 +102,28 @@ let start =
   let _waitThread =
     Thread.create(
       () => {
-        let (code, _status: Unix.process_status) = Unix.waitpid([], pid);
-        ClientLog.error(
-          "Syntax process closed with exit code: " ++ string_of_int(code),
-        );
+        let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
+        let code =
+          switch (status) {
+          | Unix.WEXITED(0) =>
+            ClientLog.info("Syntax process exited safely.");
+            0;
+          | Unix.WEXITED(code) =>
+            ClientLog.error(
+              "Syntax process exited with code: " ++ string_of_int(code),
+            );
+            code;
+          | Unix.WSIGNALED(signal) =>
+            ClientLog.error(
+              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            );
+            signal;
+          | Unix.WSTOPPED(signal) =>
+            ClientLog.error(
+              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            );
+            signal;
+          };
         scheduler(() => onClose(code));
       },
       (),
@@ -120,6 +155,23 @@ let start =
       (),
     );
 
+  let _readStderr =
+    Thread.create(
+      () => {
+        let shouldClose = ref(false);
+        while (! shouldClose^) {
+          Thread.wait_read(stderr);
+
+          switch (input_line(err_channel)) {
+          | exception End_of_file => shouldClose := true
+          | v => scheduler(() => ServerLog.info(v))
+          };
+        };
+        scheduler(() => ServerLog.info("stderr thread done!"));
+      },
+      (),
+    );
+
   ClientLog.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
@@ -132,6 +184,7 @@ let start =
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
+  ClientLog.info("Sending bufferUpdate notification...");
   write(v, message);
 };
 
@@ -155,12 +208,16 @@ let notifyBufferUpdate =
       lines: array(string),
       scope,
     ) => {
+  ClientLog.info("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
-let notifyVisibilityChanged = (v: t, visibility) =>
+let notifyVisibilityChanged = (v: t, visibility) => {
+  ClientLog.info("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+};
 
 let close = (syntaxClient: t) => {
+  ClientLog.info("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
 };
