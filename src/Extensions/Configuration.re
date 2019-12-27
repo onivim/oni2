@@ -34,6 +34,10 @@ module Model = {
       ("overrides", emptyJsonArray),
     ]);
   };
+
+  let ofExtensions = (extensions: list(ExtensionManifest.t)) => {
+  
+  }
 };
 
 type t = {
