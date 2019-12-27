@@ -40,34 +40,44 @@ module Styles = {
       color(theme.editorForeground),
     ];
 
+  let header =
+    Style.[
+      flexGrow(1),
+      flexDirection(`Column),
+      justifyContent(`Center),
+      alignItems(`Center),
+      margin(0),
+    ];
+
   let controls =
     Style.[
       flexGrow(0),
       flexDirection(`Column),
       justifyContent(`Center),
       alignItems(`Center),
-      margin(64),
+      marginTop(32),
+      marginBottom(128),
     ];
 };
 
 module KeyBindingView = {
   module Styles = {
-    let container =
-      Style.[
-        flexDirection(`Row),
-        justifyContent(`Center),
-        alignItems(`Center),
-        height(25),
-        width(300),
-      ];
+    open Style;
 
-    let commandText = (~theme: Theme.t, ~fontFile, ~fontSize as fs) =>
-      Style.[
-        fontFamily(fontFile),
-        fontSize(fs),
-        backgroundColor(theme.background),
-        color(theme.editorForeground),
-      ];
+    let container = [
+      flexDirection(`Row),
+      justifyContent(`Center),
+      alignItems(`Center),
+      height(25),
+      width(300),
+    ];
+
+    let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
+      fontFamily(fontFile),
+      Style.fontSize(fontSize),
+      backgroundColor(theme.background),
+      color(theme.editorForeground),
+    ];
 
     let spacer = Style.[flexGrow(1)];
   };
@@ -111,13 +121,20 @@ let%component make = (~state: State.t, ()) => {
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
-  <Opacity opacity=transition>
-    <View style={Styles.container(~theme)}>
-      <Image src="./title-logo.png" width=456 height=250 opacity=transition />
-      <Text
-        style={Styles.titleText(~theme, ~font=state.uiFont)}
-        text="Modal Editing from the Future"
-      />
+  <View style={Styles.container(~theme)}>
+    <Opacity opacity=transition>
+      <View style=Styles.header>
+        <Image
+          src="./title-logo.png"
+          width=456
+          height=250
+          opacity=transition
+        />
+        <Text
+          style={Styles.titleText(~theme, ~font=state.uiFont)}
+          text="Modal Editing from the Future"
+        />
+      </View>
       <View style=Styles.controls>
         <KeyBindingView name="Quick open" shortcut="Cmd + P" state />
         <KeyBindingView
@@ -127,6 +144,6 @@ let%component make = (~state: State.t, ()) => {
         />
         <KeyBindingView name="Vim command" shortcut=":" state />
       </View>
-    </View>
-  </Opacity>;
+    </Opacity>
+  </View>;
 };
