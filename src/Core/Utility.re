@@ -308,11 +308,10 @@ module Option = {
     | _ => None
     };
 
-  let fallback = (~fallback, opt) =>
-    switch (opt) {
-    | Some(_) as v => v
-    | None => fallback
-    };
+  let fallback = f =>
+    fun
+    | Some(_) as orig => orig
+    | None => f();
 
   let value = (~default) =>
     fun
