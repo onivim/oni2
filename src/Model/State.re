@@ -12,6 +12,7 @@ module Ext = Oni_Extensions;
 
 type t = {
   buffers: Buffers.t,
+  bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
@@ -59,6 +60,7 @@ let create: unit => t =
   () => {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
+    bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     completions: Completions.default,

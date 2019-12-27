@@ -51,7 +51,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
     text: hit.text,
     highlight:
       Some((
-        Index.fromOneBased(hit.charStart),
+        Index.fromZeroBased(hit.charStart),
         Index.fromZeroBased(hit.charEnd),
       )),
   };

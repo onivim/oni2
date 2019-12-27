@@ -47,14 +47,27 @@ let getBufferMetadata = (buffer: option(Buffer.t)) => {
   };
 };
 
-let toUiTabs = (editorGroup: Model.EditorGroup.t, buffers: Model.Buffers.t) => {
+let toUiTabs =
+    (
+      editorGroup: Model.EditorGroup.t,
+      buffers: Model.Buffers.t,
+      renderers: Model.BufferRenderers.t,
+    ) => {
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(v) =>
       let (modified, title) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
-      let ret: Tabs.tabInfo = {editorId: v.editorId, title, modified};
+
+      let renderer = Model.BufferRenderers.getById(v.bufferId, renderers);
+
+      let ret: Tabs.tabInfo = {
+        editorId: v.editorId,
+        title,
+        modified,
+        renderer,
+      };
       Some(ret);
     };
   };
@@ -96,21 +109,26 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
 
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
-    let tabs = toUiTabs(editorGroup, state.buffers);
+    let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
     let uiFont = state.uiFont;
 
     let metrics = editorGroup.metrics;
-
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
-        <EditorSurface
-          isActiveSplit=isActive
-          editorGroup
-          metrics
-          editor
-          state
-        />
+        let renderer =
+          BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
+        switch (renderer) {
+        | BufferRenderer.Editor =>
+          <EditorSurface
+            isActiveSplit=isActive
+            editorGroup
+            metrics
+            editor
+            state
+          />
+        | BufferRenderer.Welcome => <WelcomeView state />
+        };
       | None => React.empty
       };
 
