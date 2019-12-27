@@ -2,7 +2,6 @@
  * BufferRendererReducer
  */
 
-open Oni_Core;
 open Oni_Model;
 
 let reduce = (state: BufferRenderers.t, action) => {
