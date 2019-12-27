@@ -14,6 +14,60 @@ module Commands = {
   };
 };
 
+module Configuration = {
+  [@deriving show]
+  type config = {
+    name: string,
+    [@opaque]
+    default: Yojson.Safe.json,
+    // TODO:
+    // type
+    // description
+    // scope
+  };
+
+  let config_of_yojson_exn = (~name, json) => {
+    Yojson.Safe.(
+      {
+        let default = Util.member("default", json);
+        {name, default};
+      }
+    );
+  };
+
+  [@deriving show]
+  type t = list(config);
+
+  let of_yojson_exn = json => {
+    Yojson.Safe.(
+      {
+        prerr_endline("Starting parse: " ++ Yojson.Safe.to_string(json));
+
+        let parseConfigSection = json => {
+          let properties = Util.member("properties", json) |> Util.to_assoc;
+          properties
+          |> List.map(prop => {
+               let (key, configJson) = prop;
+               config_of_yojson_exn(~name=key, configJson);
+             });
+        };
+
+        switch (json) {
+        | `List(items) => List.map(parseConfigSection, items) |> List.flatten
+        | json => parseConfigSection(json)
+        };
+      }
+    );
+  };
+
+  let of_yojson = json =>
+    Oni_Core.Utility.tryToResult(~msg="Error parsing", () =>
+      of_yojson_exn(json)
+    );
+
+  let to_yojson = _v => `Null;
+};
+
 module Language = {
   [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {
@@ -71,6 +125,8 @@ type t = {
   grammars: [@default []] list(Grammar.t),
   themes: [@default []] list(Theme.t),
   iconThemes: [@default []] list(IconTheme.t),
+  [@default None]
+  configuration: option(Configuration.t),
 };
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
