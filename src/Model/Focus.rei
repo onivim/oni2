@@ -4,7 +4,8 @@ type focusable =
   | Wildmenu
   | Quickmenu
   | Search
-  | FileExplorer;
+  | FileExplorer
+  | Sneak;
 
 type stack;
 
