@@ -1,0 +1,443 @@
+{
+    "name": "LaserWave",
+    "colors": {
+        "focusBorder": "#EB64B9",
+
+        "editor.foreground": "#ffffff",
+        "editor.background": "#27212e",
+
+        "titleBar.activeBackground": "#27212e",
+
+        "sideBar.background": "#27212e",
+        "sideBar.foreground": "#ddd",
+        "sideBarSectionHeader.background": "#27212e",
+        "sideBarTitle.foreground": "#EB64B9",
+
+        "activityBar.background": "#27212e",
+        "activityBar.foreground": "#ddd",
+        "activityBarBadge.background": "#EB64B9",
+
+        "statusBar.background": "#EB64B9",
+        "statusBar.noFolderBackground": "#EB64B9",
+        "statusBar.foreground": "#27212e",
+        "statusBar.debuggingBackground": "#74dfc4",
+
+        "editorGroupHeader.tabsBackground": "#242029",
+
+        "tab.activeBorder": "#EB64B9",
+        "tab.inactiveBackground": "#242029",
+
+        "editor.wordHighlightBackground": "#eb64b927",
+        "editor.selectionBackground":"#eb64b927",
+        "editor.findMatchBackground":"#40b4c48c",
+        "editor.findMatchHighlightBackground":"#40b4c460",
+        "editorSuggestWidget.border": "#b4dce7",
+
+        "gitDecoration.modifiedResourceForeground": "#74dfc4",
+        "gitDecoration.untrackedResourceForeground": "#40b4c4",
+        "gitDecoration.conflictingResourceForeground": "#EB64B9",
+        "gitDecoration.deletedResourceForeground": "#b381c5",
+        "gitDecoration.ignoredResourceForeground": "#4e415c",
+
+        "button.background": "#EB64B9",
+
+        "progressBar.background": "#40b4c4",
+
+        "merge.currentHeaderBackground": "#74dfc4cc",
+        "merge.currentContentBackground": "#74dfc433",
+        "merge.incomingHeaderBackground": "#40b4c4cc",
+        "merge.incomingContentBackground": "#40b4c433",
+        
+        "notifications.background": "#3e3549",
+
+        "terminal.ansiBlue": "#40b4c4",
+        "terminal.ansiCyan": "#b4dce7",
+        "terminal.ansiGreen": "#74dfc4",
+        "terminal.ansiMagenta": "#b381c5",
+        "terminal.ansiRed": "#EB64B9",
+        "terminal.ansiYellow": "#ffe261",
+
+        "input.background": "#3a3242",
+        "input.border": "#964c7b",
+        "inputOption.activeBorder": "#EB64B9",
+
+        "list.activeSelectionBackground": "#eb64b9",
+        "list.activeSelectionForeground": "#eee",
+        "list.hoverBackground": "#eb64ba60",
+        "list.hoverForeground": "#eee",
+        "list.inactiveSelectionBackground": "#eb64b9",
+        "list.inactiveSelectionForeground": "#ddd",
+        "list.dropBackground": "#74dfc466",
+        "list.invalidItemForeground": "#fff",
+        "list.highlightForeground": "#eb64b9",
+        "list.focusBackground": "#91889b80",
+
+        "tree.indentGuidesStroke": "#ffffff33",
+
+        "diffEditor.border": "#b4dce7",
+        "diffEditor.removedTextBackground": "#eb64b940",
+        "diffEditor.insertedTextBackground": "#74dfc440",
+
+        "peekViewEditor.background": "#40b5c449",
+        "peekView.border": "#40b4c4",
+        "peekViewResult.matchHighlightBackground": "#27212e",
+        "peekViewEditor.matchHighlightBackground": "#40b5c460",
+        "peekViewResult.selectionBackground": "#40b4c43f",
+
+        "titleBar.inactiveBackground": "#27212e"
+    },
+    "tokenColors": [
+        {
+            "name": "keywords",
+            "scope": [
+                "keyword.control",
+                "keyword.other",
+                "keyword.control.module.js",
+                "storage.type.class.js",
+                "storage.type.extends.js",
+                "variable.language.this.js",
+                "keyword.control.switch.js",
+                "keyword.control.loop.js",
+                "keyword.control.conditional.js",
+                "keyword.control.flow.js",
+                "keyword.operator.accessor.js",
+                "keyword.other.important.css",
+                "keyword.control.at-rule.media.scss",
+                "entity.name.tag.reference.scss",
+                "meta.class.python",
+                "storage.type.function.python",
+                "keyword.control.flow.python",
+                "storage.type.function.js",
+                "keyword.control.export.ts",
+                "keyword.control.flow.ts",
+                "keyword.control.from.ts",
+                "keyword.control.import.ts",
+                "storage.type.class.ts",
+                "keyword.control.loop.ts",
+                "keyword.control.ruby",
+                "keyword.control.module.ruby",
+                "keyword.control.class.ruby",
+                "keyword.other.special-method.ruby",
+                "keyword.control.def.ruby",
+                "markup.heading",
+                "keyword.other.import.java",
+                "keyword.other.package.java",
+                "storage.modifier.java",
+                "storage.modifier.extends.java",
+                "storage.modifier.cs",
+                "keyword.package.go",
+                "keyword.import.go",
+                "storage.modifier.js"
+            ],
+            "settings": {
+                "foreground": "#40b4c4"
+            }
+        },
+        {
+            "name": "functions",
+            "scope": [
+                "entity.name.function",
+                "entity.name.function.js",
+                "entity.name.function.method.js",
+                "entity.name.function.python",
+                "meta.method.declaration.ts",
+                "entity.name.function.ts",
+                "entity.name.function.ruby",
+                "support.function.misc.scss",
+                "support.function.go",
+                "support.function.console.js",
+                "support.function.dom.js",
+                "support.function"
+            ],
+            "settings": {
+                "foreground": "#EB64B9"
+            }
+        },
+        {
+            "name": "strings",
+            "scope": [
+                "string",
+                "string.quoted.module.js",
+                "string.quoted.double.js",
+                "string.quoted.single.js",
+                "string.quoted.template.js",
+                "string.unquoted.js",
+                "string.quoted.double.json.comments",
+                "string.quoted.double.html",
+                "string.quoted.double.css",
+                "string.other.link.title.markdown"
+            ],
+            "settings": {
+                "foreground": "#b4dce7"
+            }
+        },
+        {
+            "name": "numbers",
+            "scope": [
+                "constant.numeric",
+                "constant.numeric.js",
+                "constant.numeric.css"
+            ],
+            "settings": {
+                "foreground": "#b381c5"
+            }
+        },
+        {
+            "name": "punctuation",
+            "scope": [
+                "punctuation.bracket",
+                "punctuation.terminator",
+                "punctuation.separator",
+                "punctuation.definition",
+                "punctuation.parenthesis",
+                "punctuation.definition.string",
+                "meta.brace.curly.litobj.js",
+                "meta.brace.round.js",
+                "meta.brace.curly.js",
+                "meta.delimiter.comma.js",
+                "punctuation.separator.key-value.js",
+                "meta.brace.square.js",
+                "punctuation.definition.tag.jsx",
+                "punctuation.definition.tag.html",
+                "punctuation.section.property-list.end.bracket.curly.css",
+                "punctuation.section.property-list.begin.bracket.curly.css",
+                "punctuation.terminator.rule.css",
+                "punctuation.separator.key-value.css",
+                "punctuation.section.embedded",
+                "punctuation.definition.string.begin.js",
+                "punctuation.definition.string.end.js",
+                "punctuation.definition.parameters.begin.python",
+                "punctuation.definition.parameters.end.python",
+                "punctuation.section.function.begin.python",
+                "punctuation.separator.parameters.python",
+                "punctuation.section.class.begin.python",
+                "punctuation.separator.dict.python",
+                "punctuation.definition.arguments.begin.python",
+                "punctuation.definition.block.ts",
+                "punctuation.definition.parameters.begin.ts",
+                "punctuation.definition.parameters.end.ts",
+                "meta.brace.round.ts",
+                "punctuation.definition.tag.end",
+                "punctuation.definition.tag.begin",
+                "punctuation.definition.tag",
+                "punctuation.definition.parameters.ruby",
+                "punctuation.section.array.begin.ruby",
+                "punctuation.section.array.end.ruby",
+                "punctuation.section.scope.begin.ruby",
+                "punctuation.section.scope.end.ruby",
+                "punctuation.definition.markdown",
+                "punctuation.definition.parameters.begin.bracket.round.java",
+                "punctuation.definition.parameters.end.bracket.round.java",
+                "punctuation.definition.typeparameters.begin.cs",
+                "punctuation.definition.typeparameters.end.cs",
+                "punctuation.squarebracket.open.cs",
+                "punctuation.squarebracket.close.cs",
+                "punctuation.section.function.scss",
+                "punctuation.definition.map.begin.bracket.round.scss",
+                "punctuation.definition.constant.css",
+                "puncatuation.other.comma.go",
+                "punctuation.section.class.begin.js",
+                "punctuation.section.class.end.js",
+                "punctuation.section.bracket.begin.powershell",
+                "punctuation.section.bracket.end.powershell",
+                "punctuation.section.braces.begin.powershell",
+                "punctuation.section.braces.end.powershell",
+                "punctuation.section.group.begin.powershell",
+                "punctuation.section.group.end.powershell"
+            ],
+            "settings": {
+                "foreground": "#716385"
+            }
+        },
+        {
+            "name": "operators",
+            "scope": [
+                "keyword.operator.comparison",
+                "keyword.operator.arithmetic",
+                "keyword.operator.assignment",
+                "keyword.operator.logical",
+                "storage.type.function.arrow.js",
+                "keyword.operator.relational.js",
+                "keyword.operator.ternary.js",
+                "keyword.operator.arithmetic.js",
+                "keyword.operator.assignment.js",
+                "keyword.operator.logical.js",
+                "meta.tag.inline.any.html",
+                "keyword.operator.assignment.python",
+                "keyword.operator.arithmetic.python",
+                "keyword.operator.logical.python",
+                "punctuation.accessor.ts",
+                "storage.type.function.arrow.ts",
+                "entity.name.type.ts",
+                "keyword.operator.increment.ts",
+                "keyword.operator.increment.js",
+                "keyword.operator.relational.ts",
+                "meta.decorator.ts",
+                "punctuation.separator.method.ruby",
+                "keyword.operator.other.ruby",
+                "keyword.operator",
+                "keyword.operator.increment-decrement.java",
+                "punctuation.accessor.cs",
+                "punctuation.separator.java",
+                "punctuation.separator.period.java",
+                "punctuation.other.period.go"
+            ],
+            "settings": {
+                "foreground": "#74dfc4"
+            }
+        },
+        {
+            "name": "comment",
+            "scope": [
+                "comment",
+                "punctuation.definition.comment"
+            ],
+            "settings": {
+                "foreground": "#91889b"
+            }
+        },
+        {
+            "name": "tags",
+            "scope": [
+                "entity.name.tag.open.jsx",
+                "entity.name.tag.close.jsx",
+                "entity.name.tag.structure.any.html",
+                "entity.name.tag.inline.any.html",
+                "entity.name.tag",
+                "meta.tag.sgml"
+            ],
+            "settings": {
+                "foreground": "#74dfc4"
+            }
+        },
+        {
+            "name": "attributes",
+            "scope": [
+                "entity.other.attribute-name",
+                "entity.other.attribute-name.jsx",
+                "entity.other.attribute-name.id.html",
+                "entity.other.attribute-name.html",
+                "entity.other.attribute-name.id.css",
+                "entity.other.attribute-name.class.css"
+            ],
+            "settings": {
+                "foreground": "#EB64B9"
+            }
+        },
+        {
+            "name": "properties",
+            "scope": [
+                "variable.other.property",
+                "support.type.property-name.css",
+                "support.type.property-name.json",
+                "variable.other.property.js",
+                "variable.other.property.ts",
+                "support.variable.property.dom.js",
+                "support.variable.property.js"
+            ],
+            "settings": {
+                "foreground": "#40b4c4"
+            }
+        },
+        {
+            "name": "builtins",
+            "scope": [
+                "variable.language.this",
+                "support.class.builtin.js",
+                "constant.language.boolean.false.js",
+                "constant.language.boolean.true.js",
+                "support.type.object.console.js",
+                "support.type.object.dom.js",
+                "variable.language.special.self.python",
+                "support.function.builtin.python",
+                "variable.other.constant.js",
+                "variable.language.this.js",
+                "support.constant.json.ts",
+                "variable.language.this.ts",
+                "support.class.console.ts",
+                "support.class.console.js",
+                "constant.language",
+                "constant.language.undefined.js",
+                "variable.language.self.ruby",
+                "variable.other.constant.ruby",
+                "constant.other.elm",
+                "support.constant.automatic.powershell"
+            ],
+            "settings": {
+                "foreground": "#ffe261"
+            }
+        },
+        {
+            "name": "variables",
+            "scope": [
+                "variable.other.readwrite.js",
+                "variable.other.object.js",
+                "variable.parameter.ts",
+                "variable.other.readwrite.ts",
+                "variable.other.object.ts",
+                "variable.other.property.dom.ts",
+                "support.function.json.ts",
+                "support.function.console.ts",
+                "support.variable.property.dom.ts",
+                "variable.scss",
+                "variable.other.readwrite.powershell"
+            ],
+            "settings": {
+                "foreground": "#fff"
+            }
+        },
+        {
+            "name": "Types",
+            "scope": [
+                "keyword.type.js",
+                "storage.type.js",
+                "storage.type.ts",
+                "storage.type",
+                "storage.modifier.ts",
+                "keyword.operator.new.ts",
+                "meta.type.annotation.ts",
+                "punctuation.definition.variable.ruby",
+                "punctuation.definition.constant.ruby",
+                "keyword.type.cs",
+                "keyword.var.go",
+                "keyword.const.go",
+                "keyword.type.go",
+                "keyword.function.go",
+                "keyword.struct.go",
+                "storage.modifier.async.js"
+            ],
+            "settings": {
+                "foreground": "#a96bc0"
+            }
+        },
+        {
+            "name": "Highlights",
+            "scope": [
+                "markup.bold",
+                "markup.italic"
+            ],
+            "settings": {
+                "foreground":"#EB64B9"
+            }
+        },
+        {
+            "name": "Object keys",
+            "scope": [
+                "meta.object-literal.key.js",
+                "constant.other.object.key.js"
+            ],
+            "settings": {
+                "foreground": "#40b4c4"
+            }
+        },
+        {
+            "name": "Orange",
+            "scope": [
+
+            ],
+            "settings": {
+                "foreground": "#ffb85b"
+            }
+        }
+    ]
+}

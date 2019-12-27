@@ -232,6 +232,11 @@ let ranges = indices =>
   )
   |> List.rev;
 
+let tap = (f, x) => {
+  f(x);
+  x;
+};
+
 module RangeUtil = {
   let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
     ranges => {
@@ -251,6 +256,24 @@ module RangeUtil = {
         IntMap.empty,
         ranges,
       );
+    };
+};
+
+module ArrayEx = {
+  exception Found(int);
+
+  let findIndex = (predicate, array) =>
+    try(
+      {
+        for (i in 0 to Array.length(array) - 1) {
+          if (predicate(array[i])) {
+            raise(Found(i));
+          };
+        };
+        None;
+      }
+    ) {
+    | Found(i) => Some(i)
     };
 };
 
@@ -307,6 +330,14 @@ module Option = {
     | Some(_) => ()
     | None => f();
 
+  let tap_none = f =>
+    fun
+    | Some(_) as v => v
+    | None => {
+        f();
+        None;
+      };
+
   let some = x => Some(x);
 
   let bind = f =>
@@ -336,6 +367,12 @@ module Option = {
 
   let values: list(option('a)) => list('a) =
     items => List.filter_map(v => v, items);
+
+  let zip = (a, b) =>
+    switch (a, b) {
+    | (Some(a), Some(b)) => Some((a, b))
+    | _ => None
+    };
 };
 
 module LwtUtil = {
@@ -350,6 +387,21 @@ module LwtUtil = {
       promises,
     );
   };
+
+  exception Timeout;
+
+  let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
+    (~timeout=10.0, promise) => {
+      let completed = ref(None);
+
+      Lwt.on_success(promise, v => {completed := Some(Ok(v))});
+
+      Lwt.on_failure(promise, v => {completed := Some(Error(v))});
+
+      waitForCondition(~timeout, () => {completed^ != None});
+
+      Option.value(~default=Error(Timeout), completed^);
+    };
 };
 
 module Result = {
@@ -682,4 +734,115 @@ module ChunkyQueue: {
 
   let toList = ({front, rear, _}) =>
     front @ (Queue.toList(rear) |> List.concat);
+};
+
+module Path = {
+  // Not very robust path-handling utilities.
+  // TODO: Make good
+
+  let toRelative = (~base, path) => {
+    let base = base == "/" ? base : base ++ Filename.dir_sep;
+    Str.replace_first(Str.regexp_string(base), "", path);
+  };
+
+  let explode = String.split_on_char(Filename.dir_sep.[0]);
+};
+
+module Json = {
+  /*
+    update method adapted from: https://github.com/ocaml-community/yojson/issues/54
+   */
+  let update = (key, f, json) => {
+    let rec update_json_obj =
+      fun
+      | [] =>
+        switch (f(None)) {
+        | None => []
+        | Some(v) => [(key, v)]
+        }
+      | [(k, v) as m, ...tail] as original =>
+        if (String.equal(k, key)) {
+          switch (f(Some(v))) {
+          | None => update_json_obj(tail)
+          | Some(v') =>
+            if (v' == v) {
+              original;
+            } else {
+              [(k, v'), ...tail];
+            }
+          };
+        } else {
+          [m, ...update_json_obj(tail)];
+        };
+
+    switch (json) {
+    | `Assoc(items) => `Assoc(update_json_obj(items))
+    | _ => json
+    };
+  };
+
+  let getKeys = json => {
+    let rec loop = (curr, json) => {
+      switch (json) {
+      | `Assoc(items) =>
+        items
+        |> List.map(item => {
+             let (key, v) = item;
+             let prefix = curr == "" ? key : curr ++ "." ++ key;
+             loop(prefix, v);
+           })
+        |> List.flatten
+      | _ => [curr]
+      };
+    };
+
+    loop("", json);
+  };
+
+  let explode_key = String.split_on_char('.');
+  /*
+   [explode(json)] takes a JSON structure like:
+   [{ "a.b.c": 1}]
+
+   and converts it to:
+   [{"a": { "b": { "c": 1 }}}]
+   */
+
+  let explode = json => {
+    let rec expand_item = (currJson, keys, jsonValue) => {
+      switch (keys) {
+      | [key] => update(key, _ => Some(jsonValue), currJson)
+      | [key, ...remaining] =>
+        update(
+          key,
+          fun
+          | None => Some(expand_item(`Assoc([]), remaining, jsonValue))
+          | Some(json) => Some(expand_item(json, remaining, jsonValue)),
+          currJson,
+        )
+
+      | [] => jsonValue // Shouldn't hit this case...
+      };
+    }
+    and expand_items = items => {
+      List.fold_left(
+        (acc, curr) => {
+          let (key, jsonValue) = curr;
+
+          let explodedKey = explode_key(key);
+          expand_item(acc, explodedKey, loop(jsonValue));
+        },
+        `Assoc([]),
+        items,
+      );
+    }
+    and loop = json => {
+      switch (json) {
+      | `Assoc(items) => expand_items(items)
+      | v => v
+      };
+    };
+
+    loop(json);
+  };
 };

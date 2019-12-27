@@ -54,6 +54,7 @@ type t = {
   editorLineHighlightBackground: Color.t,
   editorLineNumberBackground: Color.t,
   editorLineNumberForeground: Color.t,
+  editorRulerForeground: Color.t,
   editorSelectionBackground: Color.t,
   editorSuggestWidgetBackground: Color.t,
   editorSuggestWidgetBorder: Color.t,
@@ -71,7 +72,6 @@ type t = {
   menuForeground: Color.t,
   menuSelectionBackground: Color.t,
   editorOverviewRulerBracketMatchForeground: Color.t,
-  editorRulerForeground: Color.t,
   editorWhitespaceForeground: Color.t,
   tabActiveForeground: Color.t,
   oniVisualModeBackground: Color.t,
@@ -118,6 +118,7 @@ let default: t = {
   editorLineHighlightBackground: Color.hex("#495162"),
   editorLineNumberBackground: Color.hex("#2F3440"),
   editorLineNumberForeground: Color.hex("#495162"),
+  editorRulerForeground: Color.rgba(0.78, 0.78, 0.78, 0.78),
   editorSuggestWidgetBackground: Color.hex("#282C35"),
   editorSuggestWidgetBorder: Color.hex("#ECEFF4"),
   editorSuggestWidgetHighlightForeground: Color.hex("#ECEFF4"),
@@ -132,7 +133,6 @@ let default: t = {
   menuBackground: Color.hex("#2F3440"),
   menuForeground: Color.hex("#FFFFFF"),
   menuSelectionBackground: Color.hex("#495162"),
-  editorRulerForeground: Color.rgba(0.78, 0.78, 0.78, 0.78),
   editorWhitespaceForeground: Color.hex("#3b4048"),
   tabActiveForeground: Color.hex("#DCDCDC"),
   oniVisualModeBackground: Color.hex("#56b6c2"),
@@ -214,6 +214,12 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(
       defaultForeground,
       ["editorLineNumber.foreground", "editor.foreground", "foreground"],
+    );
+
+  let editorRulerForeground =
+    getColor(
+      defaultForeground,
+      ["editorRuler.foreground", "editor.foreground", "foreground"],
     );
 
   let editorLineHighlightBackground =
@@ -358,6 +364,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorLineHighlightBackground,
     editorLineNumberForeground,
     editorLineNumberBackground,
+    editorRulerForeground,
     editorSuggestWidgetBackground,
     editorSuggestWidgetBorder,
     editorSuggestWidgetHighlightForeground,

@@ -6,19 +6,26 @@ open Oni_Core;
 open Oni_Model;
 
 module Option = Utility.Option;
+module Path = Utility.Path;
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {
   open Revery.Draw;
 
+  let maybeWindow = Revery.UI.getActiveWindow();
   let scaledFontSize =
-    Text._getScaledFontSizeFromWindow(Revery.UI.getActiveWindow(), fontSize);
+    Text._getScaledFontSizeFromWindow(maybeWindow, fontSize);
   let font = FontCache.load(fontFile, scaledFontSize);
   let shapedText = FontRenderer.shape(font, "x");
   let Fontkit.{advance, _} =
     FontRenderer.getGlyph(font, shapedText[0].glyphId);
 
-  float(advance) /. 64.;
+  let multiplier =
+    switch (maybeWindow) {
+    | None => 1.0
+    | Some(w) => Window.getScaleAndZoom(w) *. Window.getDevicePixelRatio(w)
+    };
+  float(advance) /. (64. *. multiplier);
 };
 
 module Styles = {
@@ -71,29 +78,25 @@ let item =
     GlobalContext.current().dispatch(
       OpenFileByPath(item.file, None, Some(item.location)),
     );
-
-    Revery.UI.Focus.loseFocus();
   };
 
   let locationText =
     Printf.sprintf(
       "%s:%n - ",
-      Workspace.toRelativePath(workingDirectory, item.file),
+      Path.toRelative(~base=workingDirectory, item.file),
       Index.toOneBased(item.location.line),
     );
 
-  let locationWidth =
-    switch (Revery.UI.getActiveWindow()) {
-    | Some(window) =>
-      Revery.Draw.Text.measure(
-        ~window,
-        ~fontSize=uiFont.fontSize,
-        ~fontFamily=uiFont.fontFile,
-        locationText,
-      ).
-        width
-    | None => String.length(locationText) * uiFont.fontSize
-    };
+  let locationWidth = {
+    let window = Revery.UI.getActiveWindow();
+    Revery.Draw.Text.measure(
+      ~window,
+      ~fontSize=uiFont.fontSize,
+      ~fontFamily=uiFont.fontFile,
+      locationText,
+    ).
+      width;
+  };
 
   let location = () =>
     <Text

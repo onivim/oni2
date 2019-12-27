@@ -9,13 +9,67 @@ open Revery;
 open Oni_UI;
 
 module Core = Oni_Core;
+module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
+module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
+module Option = Core.Utility.Option;
 
-let cliOptions = Core.Cli.parse(~checkHealth=HealthCheck.run);
+let installExtension = (extensionPath, cli) => {
+  Store.Utility.getUserExtensionsDirectory(cli)
+  |> Option.map(extensionFolder => {
+       let promise = ExtM.install(~extensionFolder, ~extensionPath);
+
+       let result = Core.Utility.LwtUtil.sync(promise);
+       switch (result) {
+       | Ok(_) =>
+         Printf.printf(
+           "Successfully installed extension: %s\n",
+           extensionPath,
+         );
+         0;
+       | Error(_) =>
+         Printf.printf("Failed to install extension: %s\n", extensionPath);
+         1;
+       };
+     })
+  |> Option.tap_none(() => {
+       prerr_endline("Error locating user extension folder.")
+     })
+  |> Option.value(~default=1);
+};
+
+let uninstallExtension = (_extensionId, _cli) => {
+  prerr_endline("Not implemented yet.");
+  1;
+};
+
+let listExtensions = cli => {
+  let extensions = Store.Utility.getUserExtensions(cli);
+  let printExtension = (ext: Ext.ExtensionScanner.t) => {
+    print_endline(ext.manifest.name);
+  };
+  List.iter(printExtension, extensions);
+  0;
+};
+
+let cliOptions =
+  Core.Cli.parse(
+    ~installExtension,
+    ~uninstallExtension,
+    ~checkHealth=HealthCheck.run,
+    ~listExtensions=cli => {
+      let extensions = Store.Utility.getUserExtensions(cli);
+      let printExtension = (ext: Ext.ExtensionScanner.t) => {
+        print_endline(ext.manifest.name);
+      };
+      List.iter(printExtension, extensions);
+      1;
+    },
+  );
 Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start();

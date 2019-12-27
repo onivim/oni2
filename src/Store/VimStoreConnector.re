@@ -231,11 +231,11 @@ let start =
           Range.{
             start: {
               ...range.start,
-              column: Index.(range.start.column + 1),
+              column: range.start.column,
             },
             stop: {
               ...range.stop,
-              column: Index.(range.stop.column + 1),
+              column: range.stop.column,
             },
           },
         );
@@ -411,12 +411,11 @@ let start =
 
   let _ =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
-      dispatch(Actions.QuickmenuInput({text, cursorPosition}));
+      dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
       | Ex =>
-        ();
         let text =
           switch (Vim.CommandLine.getText()) {
           | Some(v) => v
@@ -427,6 +426,7 @@ let start =
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
+
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -440,6 +440,7 @@ let start =
         let highlightList =
           highlights |> Array.to_list |> List.filter(sameLineFilter);
         dispatch(SearchSetHighlights(id, highlightList));
+
       | _ => ()
       };
     });

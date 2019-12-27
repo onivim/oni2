@@ -11,6 +11,10 @@ type t = {
   forceScaleFactor: option(float),
   syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
+  shouldClose: bool,
+  shouldLoadExtensions: bool,
+  shouldSyntaxHighlight: bool,
+  shouldLoadConfiguration: bool,
 };
 
 let create = (~folder, ~filesToOpen, ()) => {
@@ -19,6 +23,10 @@ let create = (~folder, ~filesToOpen, ()) => {
   forceScaleFactor: None,
   syntaxHighlightService: false,
   overriddenExtensionsDir: None,
+  shouldClose: false,
+  shouldLoadExtensions: true,
+  shouldSyntaxHighlight: true,
+  shouldLoadConfiguration: true,
 };
 
 let newline = "\n";
@@ -40,21 +48,45 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
-let parse = (~checkHealth) => {
+let parse =
+    (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
   let syntaxHighlightService = ref(false);
   let extensionsDir = ref(None);
+  let shouldClose = ref(false);
+
+  let shouldLoadExtensions = ref(true);
+  let shouldLoadConfiguration = ref(true);
+  let shouldSyntaxHighlight = ref(true);
+
+  let queuedJob = ref(None);
+  let runAndExitUnit = f =>
+    Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
+
+  let runAndExitString = f =>
+    Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
+
+  let disableExtensionLoading = () => shouldLoadExtensions := false;
+  let disableLoadConfiguration = () => shouldLoadConfiguration := false;
+  let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
   Arg.parse(
     [
       ("-f", Unit(Log.enablePrinting), ""),
       ("--nofork", Unit(Log.enablePrinting), ""),
       ("--debug", Unit(Log.enableDebugLogging), ""),
+      ("--no-log-colors", Unit(Log.disableColors), ""),
+      ("--disable-extensions", Unit(disableExtensionLoading), ""),
+      ("--disable-configuration", Unit(disableLoadConfiguration), ""),
+      ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
       ("--log-file", String(Log.setLogFile), ""),
       ("--log-filter", String(Log.Namespace.setFilter), ""),
-      ("--checkhealth", Unit(checkHealth), ""),
+      ("--checkhealth", checkHealth |> runAndExitUnit, ""),
+      ("--list-extensions", listExtensions |> runAndExitUnit, ""),
+      ("--install-extension", installExtension |> runAndExitString, ""),
+      ("--uninstall-extension", uninstallExtension |> runAndExitString, ""),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
         "--force-device-scale-factor",
@@ -140,11 +172,22 @@ let parse = (~checkHealth) => {
     | ([], [], workingDirectory) => workingDirectory
     };
 
-  {
+  let cli = {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
     syntaxHighlightService: syntaxHighlightService^,
     overriddenExtensionsDir: extensionsDir^,
+    shouldClose: shouldClose^,
+    shouldSyntaxHighlight: shouldSyntaxHighlight^,
+    shouldLoadExtensions: shouldLoadExtensions^,
+    shouldLoadConfiguration: shouldLoadConfiguration^,
   };
+
+  switch (queuedJob^) {
+  | None => ()
+  | Some(job) => job(cli)
+  };
+
+  cli;
 };

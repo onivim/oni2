@@ -46,12 +46,6 @@ module Cursor = {
   };
 };
 
-type state = {
-  isFocused: bool, // TODO: Violates single source of truth
-  value: string,
-  cursorPosition: int,
-};
-
 type changeEvent = {
   value: string,
   character: string,
@@ -61,11 +55,6 @@ type changeEvent = {
   shiftKey: bool,
   superKey: bool,
 };
-
-type action =
-  | Focus
-  | Blur
-  | TextInput(string, int);
 
 let getStringParts = (index, str) => {
   switch (index) {
@@ -115,13 +104,6 @@ let addCharacter = (word, char, index) => {
   (startStr ++ char ++ endStr, String.length(startStr) + 1);
 };
 
-let reducer = (action, state) =>
-  switch (action) {
-  | Focus => {...state, isFocused: true}
-  | Blur => {...state, isFocused: false}
-  | TextInput(value, cursorPosition) => {...state, value, cursorPosition}
-  };
-
 module Constants = {
   let cursorWidth = 2;
 };
@@ -145,32 +127,17 @@ let%component make =
                 ~style=Styles.default,
                 ~placeholderColor=Styles.defaultPlaceholderColor,
                 ~cursorColor=Styles.defaultCursorColor,
-                ~autofocus=false,
                 ~placeholder="",
                 ~prefix="",
-                ~onFocus=() => (),
-                ~onBlur=() => (),
-                ~onKeyDown=_ => (),
-                ~onChange=(_, _) => (),
-                ~value=?,
-                ~cursorPosition=?,
+                ~isFocused,
+                ~value,
+                ~cursorPosition,
+                ~onClick,
                 (),
               ) => {
-  let%hook (state, dispatch) =
-    Hooks.reducer(
-      ~initialState={
-        isFocused: false,
-        value: Option.value(value, ~default=""),
-        cursorPosition: Option.value(cursorPosition, ~default=0),
-      },
-      reducer,
-    );
   let%hook (textRef, setTextRef) = Hooks.ref(None);
   let%hook (scrollOffset, _setScrollOffset) = Hooks.state(ref(0));
 
-  let value = Option.value(value, ~default=state.value);
-  let cursorPosition =
-    Option.value(cursorPosition, ~default=state.cursorPosition);
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
 
@@ -223,23 +190,30 @@ let%component make =
     ];
   };
 
-  let measureTextWidth = text =>
-    switch (Revery_UI.getActiveWindow()) {
-    | Some(window) =>
-      let dimensions =
-        Revery_Draw.Text.measure(
-          ~window,
-          ~fontFamily=Styles.fontFamily,
-          ~fontSize=Styles.fontSize,
-          text,
-        );
+  let measureTextWidth = text => {
+    let window = Revery_UI.getActiveWindow();
+    let dimensions =
+      Revery_Draw.Text.measure(
+        ~window,
+        ~fontFamily=Styles.fontFamily,
+        ~fontSize=Styles.fontSize,
+        text,
+      );
 
-      dimensions.width;
-    | None => Styles.fontSize
-    };
+    dimensions.width;
+  };
 
   let%hook (cursorOpacity, resetCursor) =
-    Cursor.use(~interval=Time.ms(500), ~isFocused=state.isFocused);
+    Cursor.use(~interval=Time.ms(500), ~isFocused);
+
+  let%hook () =
+    Hooks.effect(
+      If((!=), (value, cursorPosition, isFocused)),
+      () => {
+        resetCursor();
+        None;
+      },
+    );
 
   let () = {
     let cursorOffset =
@@ -258,63 +232,6 @@ let%component make =
       };
 
     | None => ()
-    };
-  };
-
-  let handleFocus = () => {
-    resetCursor();
-    onFocus();
-    dispatch(Focus);
-  };
-
-  let handleBlur = () => {
-    resetCursor();
-    onBlur();
-    dispatch(Blur);
-  };
-
-  // TODO:This ought to be in the reducer, but since reducer calls are deferred
-  // the ordering of side-effects can't be guaranteed.
-  //
-  // Refactor when https://github.com/briskml/brisk-reconciler/issues/54 has been fixed
-  let update = (value, cursorPosition) => {
-    onChange(value, cursorPosition);
-    dispatch(TextInput(value, cursorPosition));
-  };
-
-  let handleTextInput = (event: NodeEvents.textInputEventParams) => {
-    resetCursor();
-    let (value, cursorPosition) =
-      addCharacter(value, event.text, cursorPosition);
-    update(value, cursorPosition);
-  };
-
-  let handleKeyDown = (event: NodeEvents.keyEventParams) => {
-    resetCursor();
-    onKeyDown(event);
-
-    switch (event.keycode) {
-    | v when Key.Keycode.left == v =>
-      let cursorPosition = getSafeStringBounds(value, cursorPosition, -1);
-      update(value, cursorPosition);
-
-    | v when Key.Keycode.right == v =>
-      let cursorPosition = getSafeStringBounds(value, cursorPosition, 1);
-      update(value, cursorPosition);
-
-    | v when Key.Keycode.delete == v =>
-      let (value, cursorPosition) =
-        removeCharacterAfter(value, cursorPosition);
-      update(value, cursorPosition);
-
-    | v when Key.Keycode.backspace == v =>
-      let (value, cursorPosition) =
-        removeCharacterBefore(value, cursorPosition);
-      update(value, cursorPosition);
-
-    | v when Key.Keycode.escape == v => Focus.loseFocus()
-
-    | _ => ()
     };
   };
 
@@ -351,7 +268,7 @@ let%component make =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
       let cursorPosition = indexNearestOffset(offset);
       resetCursor();
-      update(value, cursorPosition);
+      onClick(cursorPosition);
 
     | None => ()
     };
@@ -382,13 +299,7 @@ let%component make =
       style=Styles.text
     />;
 
-  <Clickable
-    onFocus=handleFocus
-    onBlur=handleBlur
-    componentRef={autofocus ? Focus.focus : ignore}
-    onAnyClick=handleClick
-    onKeyDown=handleKeyDown
-    onTextInput=handleTextInput>
+  <Clickable onAnyClick=handleClick>
     <View style=Styles.box>
       <View style=Styles.marginContainer>
         <cursor />

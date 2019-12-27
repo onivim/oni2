@@ -2,6 +2,8 @@ open Revery.UI;
 open Oni_Core;
 module Model = Oni_Model;
 module Actions = Model.Actions;
+module Focus = Model.Focus;
+module FocusManager = Model.FocusManager;
 module Pane = Model.Pane;
 module State = Model.State;
 
@@ -33,7 +35,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
        let childPane =
          switch (paneType) {
          | Pane.Search =>
-           <SearchPane theme uiFont editorFont state={state.searchPane} />
+           <SearchPane isFocused={FocusManager.current(state) == Focus.Search} theme uiFont editorFont state={state.searchPane} />
          | Pane.Diagnostics => <DiagnosticsPane theme uiFont />
          };
        [

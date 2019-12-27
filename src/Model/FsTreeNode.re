@@ -1,5 +1,9 @@
+open Oni_Core;
+
+module ArrayEx = Utility.ArrayEx;
+module Path = Utility.Path;
+
 type t = {
-  id: int,
   path: string,
   displayName: string,
   hash: int, // hash of basename, so only comparable locally
@@ -15,6 +19,10 @@ and kind =
     })
   | File;
 
+let _hash = Hashtbl.hash;
+let _pathHashes = (~base, path) =>
+  path |> Path.toRelative(~base) |> Path.explode |> List.map(_hash);
+
 let rec countExpandedSubtree =
   fun
   | Directory({isOpen: true, children}) =>
@@ -26,49 +34,48 @@ let rec countExpandedSubtree =
 
   | _ => 1;
 
-let file = (path, ~id, ~icon) => {
+let file = (path, ~icon) => {
   let basename = Filename.basename(path);
 
   {
-    id,
     path,
+    hash: _hash(basename),
     displayName: basename,
-    hash: Hashtbl.hash(basename),
     icon,
     kind: File,
     expandedSubtreeSize: 1,
   };
 };
 
-let directory = (~isOpen=false, path, ~id, ~icon, ~children) => {
+let directory = (~isOpen=false, path, ~icon, ~children) => {
   let kind = Directory({isOpen, children});
   let basename = Filename.basename(path);
 
   {
-    id,
     path,
+    hash: _hash(basename),
     displayName: basename,
-    hash: Hashtbl.hash(basename),
     icon,
     kind,
     expandedSubtreeSize: countExpandedSubtree(kind),
   };
 };
 
-let findNodesByLocalPath = (path, tree) => {
-  let pathHashes =
-    path
-    |> String.split_on_char(Filename.dir_sep.[0])
-    |> List.map(Hashtbl.hash);
+let equals = (a, b) => a.hash == b.hash && a.path == b.path;
 
-  let rec loop = (focusedNodes, children, pathSegments) =>
-    switch (pathSegments) {
-    | [] => `Success(focusedNodes |> List.rev)
+let findNodesByPath = (path, tree) => {
+  let rec loop = (focusedNodes, children, pathHashes) =>
+    switch (pathHashes) {
+    | [] => `Success(List.rev(focusedNodes))
     | [hash, ...rest] =>
       switch (children) {
       | [] =>
-        let last = focusedNodes |> List.hd;
-        last.id == tree.id ? `Failed : `Partial(last);
+        let last = List.hd(focusedNodes);
+        if (equals(last, tree)) {
+          `Failed;
+        } else {
+          `Partial(last);
+        };
 
       | [node, ...children] =>
         if (node.hash == hash) {
@@ -79,21 +86,162 @@ let findNodesByLocalPath = (path, tree) => {
             };
           loop([node, ...focusedNodes], children, rest);
         } else {
-          loop(focusedNodes, children, pathSegments);
+          loop(focusedNodes, children, pathHashes);
         }
       }
     };
 
   switch (tree.kind) {
-  | Directory({children, _}) => loop([tree], children, pathHashes)
+  | Directory({children, _}) =>
+    loop([tree], children, _pathHashes(~base=tree.path, path))
   | File => `Failed
   };
 };
 
-let update = (~tree, ~updater, nodeId) => {
+let findByPath = (path, tree) => {
+  let rec loop = (node, children, pathHashes) =>
+    switch (pathHashes) {
+    | [] => Some(node)
+    | [hash, ...rest] =>
+      switch (children) {
+      | [] => None
+
+      | [node, ...children] =>
+        if (node.hash == hash) {
+          let children =
+            switch (node.kind) {
+            | Directory({children, _}) => children
+            | File => []
+            };
+          loop(node, children, rest);
+        } else {
+          loop(node, children, pathHashes);
+        }
+      }
+    };
+
+  switch (tree.kind) {
+  | Directory({children, _}) =>
+    loop(tree, children, _pathHashes(~base=tree.path, path))
+  | File => None
+  };
+};
+
+let prevExpandedNode = (path, tree) =>
+  switch (findNodesByPath(path, tree)) {
+  | `Success(nodePath) =>
+    switch (List.rev(nodePath)) {
+    // Has a parent, and therefore also siblings
+    | [focus, {kind: Directory({children, _}), _} as parent, ..._] =>
+      let children = children |> Array.of_list;
+      let index = children |> ArrayEx.findIndex(equals(focus));
+
+      switch (index) {
+      // is first child
+      | Some(index) when index == 0 => Some(parent)
+
+      | Some(index) =>
+        switch (children[index - 1]) {
+        // is open directory with at least one child
+        | {
+            kind: Directory({isOpen: true, children: [_, ..._] as children}),
+            _,
+          } =>
+          let children = children |> Array.of_list;
+          let lastChild = children[Array.length(children) - 1];
+          Some(lastChild);
+
+        | prev => Some(prev)
+        }
+
+      | None => None // is not a child of its parent (?!)
+      };
+    | _ => None // has neither parent or siblings
+    }
+  | `Partial(_)
+  | `Failed => None // path does not exist in this ree
+  };
+
+let nextExpandedNode = (path, tree) =>
+  switch (findNodesByPath(path, tree)) {
+  | `Success(nodePath) =>
+    let rec loop = revNodePath =>
+      switch (revNodePath) {
+      | [
+          focus,
+          ...[{kind: Directory({children, _}), _}, ..._] as ancestors,
+        ] =>
+        let children = children |> Array.of_list;
+        let index = children |> ArrayEx.findIndex(equals(focus));
+
+        switch (index) {
+        // is last child
+        | Some(index) when index == Array.length(children) - 1 =>
+          loop(ancestors)
+
+        | Some(index) =>
+          let next = children[index + 1];
+          Some(next);
+
+        | None => None // is not a child of its parent (?!)
+        };
+      | _ => None // has neither parent or siblings
+      };
+
+    switch (List.rev(nodePath)) {
+    // Focus is open directory with at least one child
+    | [
+        {kind: Directory({isOpen: true, children: [firstChild, ..._]}), _},
+        ..._,
+      ] =>
+      Some(firstChild)
+    | revNodePath => loop(revNodePath)
+    };
+
+  | `Partial(_)
+  | `Failed => None // path does not exist in this tree
+  };
+
+// Counts the number of expanded nodes before the node specified by the given path
+let expandedIndex = (tree, path) => {
+  let rec loop = (node, path) =>
+    switch (path) {
+    | [] => `Found(0)
+    | [focus, ...focusTail] =>
+      if (equals(focus, node)) {
+        `NotFound(node.expandedSubtreeSize);
+      } else {
+        switch (node.kind) {
+        | Directory({isOpen: false, _})
+        | File => `Found(0)
+
+        | Directory({isOpen: true, children}) =>
+          let rec loopChildren = (count, children) =>
+            switch (children) {
+            | [] => `NotFound(count)
+            | [child, ...childTail] =>
+              switch (loop(child, focusTail)) {
+              | `Found(subtreeCount) => `Found(count + subtreeCount)
+              | `NotFound(subtreeCount) =>
+                loopChildren(count + subtreeCount, childTail)
+              }
+            };
+
+          loopChildren(1, children);
+        };
+      }
+    };
+
+  switch (loop(tree, path)) {
+  | `Found(count) => Some(count)
+  | `NotFound(_) => None
+  };
+};
+
+let update = (~tree, ~updater, targetPath) => {
   let rec loop =
     fun
-    | {id, _} as node when id == nodeId => updater(node)
+    | {path, _} as node when path == targetPath => updater(node)
 
     | {kind: Directory({children, _} as dir), _} as node => {
         let kind = Directory({...dir, children: List.map(loop, children)});
@@ -108,7 +256,7 @@ let update = (~tree, ~updater, nodeId) => {
 let updateNodesInPath = (~tree, ~updater, nodes) => {
   let rec loop = (nodes, node) =>
     switch (nodes) {
-    | [{id, kind, _}, ...rest] when id == node.id =>
+    | [{hash, kind, _}, ...rest] when hash == node.hash =>
       switch (kind) {
       | Directory({children, _} as dir) =>
         let newChildren = List.map(loop(rest), children);

@@ -26,58 +26,23 @@ module Effects = {
   };
 };
 
-// Counts the number of axpanded nodes before the node specified by the given path
-let nodeOffsetByPath = (tree, path) => {
-  let rec loop = (node: FsTreeNode.t, path) =>
-    switch (path) {
-    | [] => failwith("Well, this is awkward (ie. unreachable)")
-    | [(focus: FsTreeNode.t), ...focusTail] =>
-      if (focus.id != node.id) {
-        `NotFound(node.expandedSubtreeSize);
-      } else {
-        switch (node.kind) {
-        | Directory({isOpen: false, _})
-        | File => `Found(0)
-
-        | Directory({isOpen: true, children}) =>
-          let rec loopChildren = (count, children) =>
-            switch (children) {
-            | [] => `NotFound(count)
-            | [child, ...childTail] =>
-              switch (loop(child, focusTail)) {
-              | `Found(subtreeCount) => `Found(count + subtreeCount)
-              | `NotFound(subtreeCount) =>
-                loopChildren(count + subtreeCount, childTail)
-              }
-            };
-          loopChildren(1, children);
-        };
-      }
-    };
-
-  switch (loop(tree, path)) {
-  | `Found(count) => Some(count)
-  | `NotFound(_) => None
-  };
-};
-
 let updateFileExplorer = (updater, state) =>
   State.{...state, fileExplorer: updater(state.fileExplorer)};
 let setTree = (tree, state) =>
   updateFileExplorer(s => {...s, tree: Some(tree)}, state);
 let setOpen = (isOpen, state) =>
   updateFileExplorer(s => {...s, isOpen}, state);
-let setFocus = (focus, state) =>
-  updateFileExplorer(s => {...s, focus}, state);
+let setActive = (maybePath, state) =>
+  updateFileExplorer(s => {...s, active: maybePath}, state);
+let setFocus = (maybePath, state) =>
+  updateFileExplorer(s => {...s, focus: maybePath}, state);
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
-let revealPath = (state: State.t, path) => {
-  switch (state.fileExplorer.tree, state.workspace) {
-  | (Some(tree), Some({workingDirectory, _})) =>
-    let localPath = Workspace.toRelativePath(workingDirectory, path);
-
-    switch (FsTreeNode.findNodesByLocalPath(localPath, tree)) {
+let revealPath = (path, state: State.t) => {
+  switch (state.fileExplorer.tree) {
+  | Some(tree) =>
+    switch (FsTreeNode.findNodesByPath(path, tree)) {
     // Nothing to do
     | `Success([])
     | `Failed => (state, Isolinear.Effect.none)
@@ -91,7 +56,7 @@ let revealPath = (state: State.t, path) => {
           state.iconTheme,
           state.configuration,
           ~onComplete=node =>
-          Actions.FileExplorer(FocusNodeLoaded(lastNode.id, node))
+          Actions.FileExplorer(FocusNodeLoaded(lastNode.path, node))
         ),
       )
 
@@ -104,7 +69,7 @@ let revealPath = (state: State.t, path) => {
           ~updater=FsTreeNode.setOpen,
         );
       let offset =
-        switch (nodeOffsetByPath(tree, nodes)) {
+        switch (FsTreeNode.expandedIndex(tree, nodes)) {
         | Some(offset) => `Middle(float(offset))
         | None => state.fileExplorer.scrollOffset
         };
@@ -113,9 +78,9 @@ let revealPath = (state: State.t, path) => {
         state |> setTree(tree) |> setScrollOffset(offset),
         Isolinear.Effect.none,
       );
-    };
+    }
 
-  | _ => (state, Isolinear.Effect.none)
+  | None => (state, Isolinear.Effect.none)
   };
 };
 
@@ -130,51 +95,87 @@ let start = () => {
     });
   };
 
-  let updater = (state: State.t, action: FileExplorer.action) => {
-    let replaceNode = (nodeId, node) =>
-      switch (state.fileExplorer.tree) {
-      | Some(tree) =>
-        setTree(FsTreeNode.update(nodeId, ~tree, ~updater=_ => node), state)
-      | None => state
-      };
+  let replaceNode = (path, node, state: State.t) =>
+    switch (state.fileExplorer.tree) {
+    | Some(tree) =>
+      setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
+    | None => state
+    };
 
+  let selectNode = (node: FsTreeNode.t, state) =>
+    switch (node) {
+    | {kind: File, path, _} =>
+      // Set active here to avoid scrolling in BufferEnter
+      (state |> setActive(Some(node.path)), openFileByPathEffect(path))
+
+    | {kind: Directory({isOpen, _}), _} => (
+        replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
+        isOpen
+          ? Isolinear.Effect.none
+          : Effects.load(
+              node.path,
+              state.languageInfo,
+              state.iconTheme,
+              state.configuration,
+              ~onComplete=newNode =>
+              Actions.FileExplorer(NodeLoaded(node.path, newNode))
+            ),
+      )
+    };
+
+  let updater = (state: State.t, action: FileExplorer.action) => {
     switch (action) {
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
-    | NodeLoaded(id, node) => (replaceNode(id, node), Isolinear.Effect.none)
+    | NodeLoaded(path, node) => (
+        replaceNode(path, node, state),
+        Isolinear.Effect.none,
+      )
 
-    | FocusNodeLoaded(id, node) =>
-      switch (state.fileExplorer.focus) {
-      | Some(path) => revealPath(replaceNode(id, node), path)
+    | FocusNodeLoaded(path, node) =>
+      switch (state.fileExplorer.active) {
+      | Some(activePath) =>
+        state |> replaceNode(path, node) |> revealPath(activePath)
+
       | None => (state, Isolinear.Effect.none)
       }
 
     | NodeClicked(node) =>
-      // Set focus here to avoid scrolling in BufferEnter
-      let state = setFocus(Some(node.path), state);
-
-      switch (node) {
-      | {kind: File, path, _} => (state, openFileByPathEffect(path))
-
-      | {kind: Directory({isOpen, _}), _} => (
-          replaceNode(node.id, FsTreeNode.toggleOpen(node)),
-          isOpen
-            ? Isolinear.Effect.none
-            : Effects.load(
-                node.path,
-                state.languageInfo,
-                state.iconTheme,
-                state.configuration,
-                ~onComplete=newNode =>
-                Actions.FileExplorer(NodeLoaded(node.id, newNode))
-              ),
-        )
-      };
+      state
+      |> setFocus(Some(node.path))
+      |> FocusManager.push(Focus.FileExplorer)
+      |> selectNode(node)
 
     | ScrollOffsetChanged(offset) => (
         setScrollOffset(offset, state),
         Isolinear.Effect.none,
       )
+
+    | KeyboardInput(key) =>
+      let handleKey = ((path, tree)) =>
+        switch (key) {
+        | "<CR>" =>
+          FsTreeNode.findByPath(path, tree)
+          |> Option.map(node => selectNode(node, state))
+
+        | "<UP>" =>
+          FsTreeNode.prevExpandedNode(path, tree)
+          |> Option.map((node: FsTreeNode.t) =>
+               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+             )
+
+        | "<DOWN>" =>
+          FsTreeNode.nextExpandedNode(path, tree)
+          |> Option.map((node: FsTreeNode.t) =>
+               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+             )
+
+        | _ => None
+        };
+
+      Option.zip(state.fileExplorer.focus, state.fileExplorer.tree)
+      |> Option.bind(handleKey)
+      |> Option.value(~default=(state, Isolinear.Effect.none));
     };
   };
 
@@ -212,10 +213,10 @@ let start = () => {
 
       | BufferEnter({filePath, _}, _) =>
         switch (state.fileExplorer) {
-        | {focus, _} when focus != filePath =>
-          let state = setFocus(filePath, state);
+        | {active, _} when active != filePath =>
+          let state = setActive(filePath, state);
           switch (filePath) {
-          | Some(path) => revealPath(state, path)
+          | Some(path) => revealPath(path, state)
           | None => (state, Isolinear.Effect.none)
           };
 

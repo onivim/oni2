@@ -1,40 +1,64 @@
-module Core = Oni_Core;
-module Model = Oni_Model;
-
-open Model.Actions;
+open Oni_Model;
+open Actions;
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
-  let searchUpdater = (state: Model.Search.t, action) => {
+  let searchUpdater = (state: Search.t, action) => {
     switch (action) {
-    | SearchInput(text, cursorPosition) => {
-        ...state,
-        queryInput: text,
-        cursorPosition,
-      }
+    | SearchInput(key) =>
+      let Search.{queryInput, cursorPosition, _} = state;
 
-    | SearchStart => {...state, query: state.queryInput, hits: []}
+      switch (key) {
+      | "<CR>" => {...state, query: state.queryInput, hits: []}
+
+      | _ =>
+        let (queryInput, cursorPosition) =
+          InputModel.handleInput(~text=queryInput, ~cursorPosition, key);
+        {...state, queryInput, cursorPosition};
+      };
+
+    | SearchInputClicked(cursorPosition) => {...state, cursorPosition}
 
     | SearchUpdate(items) => {...state, hits: state.hits @ items}
-
-    // | SearchComplete
-
-    // | SearchSelectResult(match) =>
-    //   print_endline("!! SELECT: " ++ match.file);
-    //   state;
 
     | _ => state
     };
   };
 
-  let updater = (state: Model.State.t, action) => {
+  let updater = (state: State.t, action) => {
+    // TODO: Port focus!
+    /*let show = (
+      {...state, searchPane: Some(Search.initial)}
+      |> FocusManager.push(Search),
+      Isolinear.Effect.none,
+    );*/
+
+    /*let hide = (
+      {...state, searchPane: None} |> FocusManager.pop(Search),
+      Isolinear.Effect.none,
+    );*/
+
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
-    | _ => (
-        {...state, searchPane: searchUpdater(state.searchPane, action)},
-        Isolinear.Effect.none,
+
+    //| SearchShow => show
+    //| SearchHide => hide
+
+    | SearchInputClicked(_) =>
+          ({...state, searchPane: searchUpdater(state.searchPane, action)}
+          |> FocusManager.push(Search),
+          Isolinear.Effect.none,
+        )
+    | SearchHotkey =>
+      (
+          state |> FocusManager.push(Search),
+          Isolinear.Effect.none,
       )
+
+    | _ =>
+          ({...state, searchPane: searchUpdater(state.searchPane, action)},
+          Isolinear.Effect.none,)
     };
   };
 
@@ -59,7 +83,7 @@ let subscriptions = ripgrep => {
     );
   };
 
-  let updater = (state: Model.State.t) => {
+  let updater = (state: State.t) => {
     switch (state.searchPane) {
     | {query: "", _} => []
     | {query, _} => [search(query)]

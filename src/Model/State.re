@@ -52,6 +52,7 @@ type t = {
   // State of the bottom pane
   pane: Pane.t,
   searchPane: Search.t,
+  focus: Focus.stack,
 };
 
 let create: unit => t =
@@ -98,4 +99,5 @@ let create: unit => t =
     darkMode: true,
     pane: Pane.initial,
     searchPane: Search.initial,
+    focus: Focus.initial,
   };
