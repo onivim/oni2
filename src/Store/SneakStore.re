@@ -24,6 +24,7 @@ let start = () => {
             sneak: Model.Sneak.setActive(true, state.sneak),
           }, Isolinear.Effect.none);
        | Sneak.Stopped => {
+          prerr_endline ("STOPPED!");
           ({
             ...state,
             sneak: Model.Sneak.setActive(false, state.sneak),

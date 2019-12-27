@@ -118,5 +118,8 @@ let make = (~state: State.t, ()) => {
       <NotificationsView state />
     </Overlay>
     statusBar
+    <Overlay>
+      <SneakView state />
+    </Overlay>
   </View>;
 };

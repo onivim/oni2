@@ -169,7 +169,7 @@ let start = () => {
         condition: Expression.True,
       },
       {
-        key: "<Esc>",
+        key: "<ESC>",
         command: "sneak.stop",
         condition: "sneakMode" |> parseExp,
       },
