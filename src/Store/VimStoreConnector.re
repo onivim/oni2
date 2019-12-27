@@ -460,10 +460,11 @@ let start =
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
-      dispatch(Actions.BufferRenderer(
-        BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome)
-      ))
-      
+      dispatch(
+        Actions.BufferRenderer(
+          BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome),
+        ),
+      );
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
