@@ -22,25 +22,14 @@ let checks = [
     (setup: Setup.t) => Sys.file_exists(setup.nodePath),
   ),
   (
-    "Verify node executable can execute simple script",
-    (setup: Setup.t) => {
-      let ret =
-        Rench.ChildProcess.spawnSync(
-          setup.nodePath,
-          [|"-e", "console.log(\"test\")"|],
-        );
-      ret.stdout |> String.trim |> String.equal("test");
-    },
-  ),
-  (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      let ret =
-        Rench.ChildProcess.spawnSync(
-          setup.nodePath,
-          [|Setup.getNodeHealthCheckPath(setup)|],
-        );
-      ret.stdout |> String.trim |> String.equal("Success!");
+      Oni_Extensions.NodeTask.run(~scheduler=Scheduler.immediate, ~setup, 
+      "check-health.js")
+      |> Utility.LwtUtil.sync
+      |> fun 
+      | Ok(_) => true
+      | Error(_) => false;
     },
   ),
   (
