@@ -90,12 +90,12 @@ let make =
     | `Custom(view) => view
     };
 
-  <Clickable style=Styles.clickable onClick>
+  <Sneakable style=Styles.clickable onClick>
     <View
       onMouseOver={_ => onMouseOver()}
       style={Styles.container(~theme, ~isFocused)}>
       iconView
       labelView
     </View>
-  </Clickable>;
+  </Sneakable>;
 };

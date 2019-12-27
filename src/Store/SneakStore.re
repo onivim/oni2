@@ -16,18 +16,25 @@ let start = () => {
   let discoverSneakEffect = Isolinear.Effect.createWithDispatch(
   ~name="sneak.discover",
   (_dispatch) => {
-
-     let sneakFromBBox: Revery.Math.BoundingBox2d.t => Sneak.sneakInfo = (boundingBox2d: Revery.Math.BoundingBox2d.t) => {
-       Sneak.{
-          callback: () => (),
-          boundingBox: boundingBox2d,
-       };
-     };
-
      let sneaks = SneakRegistry.getSneaks()
-     |> List.map(sneakFromBBox);
      _dispatch(Model.Actions.Sneak(Sneak.Discover(sneaks)));
   });
+
+  let completeSneakEffect = (state: Model.State.t) => Isolinear.Effect.createWithDispatch(
+    ~name="sneak.discover",
+    (dispatch) => {
+      let filteredSneaks = Sneak.getFiltered(state.sneak);
+
+      switch (filteredSneaks) {
+      | [] => dispatch(Model.Actions.Sneak(Sneak.Stopped))
+      | [sneak] => 
+        let {callback, _}: Sneak.sneak = sneak;
+        callback();
+        dispatch(Model.Actions.Sneak(Sneak.Stopped));
+      | _ => ();
+      };
+    }
+  );
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
@@ -42,10 +49,11 @@ let start = () => {
             sneak: Model.Sneak.reset(state.sneak),
           }, discoverSneakEffect);
        | Sneak.KeyboardInput(k) =>
-        ({
+        let newState = {
           ...state,
           sneak: Model.Sneak.refine(k, state.sneak)
-        }, Isolinear.Effect.none)
+        };
+        (newState, completeSneakEffect(newState))
        | Sneak.Stopped => {
           prerr_endline ("STOPPED!");
           ({

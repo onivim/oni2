@@ -19,7 +19,7 @@ let%component make = (
                 ~onClick= Utility.noop,
                 ~onRightClick= Utility.noop,
                 ~onAnyClick= Utility.noop1,
-                ~onSneak= Utility.noop,
+                ~onSneak=?,
                 ~onBlur=?,
                 ~onFocus=?,
                 ~tabindex=?,
@@ -30,8 +30,6 @@ let%component make = (
                 ~children,  
                 (),
 ) => {
-  let _ = onSneak;
-
   let%hook (holder: ref(option(Revery.UI.node)), _) = Hooks.state(ref(None));
 
   let componentRef = (node: Revery.UI.node) => {
@@ -39,7 +37,10 @@ let%component make = (
   };
 
   let%hook () = Hooks.effect(OnMount, () => {
-      SneakRegistry.register(holder)
+      switch (onSneak) {
+      | Some(cb) => SneakRegistry.register(holder, cb)
+      | None => SneakRegistry.register(holder, onClick)
+      };
 
       Some(() => {
         holder := None; 

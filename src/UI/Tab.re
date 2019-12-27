@@ -115,6 +115,7 @@ let make =
 
   <View style=containerStyle>
     <Sneakable
+      onSneak=onClick
       onAnyClick
       style=Style.[
         width(proportion(0.80)),
