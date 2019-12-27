@@ -21,13 +21,12 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
   };
 
 let current = (state: State.t) =>
-
   if (Sneak.isActive(state.sneak)) {
-    Focus.Sneak
+    Focus.Sneak;
   } else {
     switch (state.quickmenu) {
     | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
     | Some(_) => Focus.Quickmenu
     | _ => Focus.current(state.focus) |> Option.value(~default=Focus.Editor)
     };
-  }
+  };

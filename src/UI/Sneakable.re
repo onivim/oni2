@@ -1,24 +1,22 @@
 /*
- [<Sneakable />] is analagous to [<Clickable />], but also supports
- registering as a provider for sneak mode.
+  [<Sneakable />] is analagous to [<Clickable />], but also supports
+  registering as a provider for sneak mode.
 
- When sneak-mode is activated, the element will be measured, and
- if visible and available, allowed to participate in the sneak session.
-*/
+  When sneak-mode is activated, the element will be measured, and
+  if visible and available, allowed to participate in the sneak session.
+ */
 
 open Revery.UI;
 open Revery.UI.Components;
 
-open Oni_Core;
-open Oni_Model;
-
 module Utility = Oni_Core.Utility;
 
-let%component make = (
+let%component make =
+              (
                 ~style=[],
-                ~onClick= Utility.noop,
-                ~onRightClick= Utility.noop,
-                ~onAnyClick= Utility.noop1,
+                ~onClick=Utility.noop,
+                ~onRightClick=Utility.noop,
+                ~onAnyClick=Utility.noop1,
                 ~onSneak=?,
                 ~onBlur=?,
                 ~onFocus=?,
@@ -27,26 +25,33 @@ let%component make = (
                 ~onKeyUp=?,
                 ~onTextEdit=?,
                 ~onTextInput=?,
-                ~children,  
+                ~children,
                 (),
-) => {
-  let%hook (holder: ref(option(Revery.UI.node)), _) = Hooks.state(ref(None));
+              ) => {
+  let%hook (holder: ref(option(Revery.UI.node)), _) =
+    Hooks.state(ref(None));
 
   let componentRef = (node: Revery.UI.node) => {
-    holder := Some(node); 
+    holder := Some(node);
   };
 
-  let%hook () = Hooks.effect(OnMount, () => {
-      switch (onSneak) {
-      | Some(cb) => SneakRegistry.register(holder, cb)
-      | None => SneakRegistry.register(holder, onClick)
-      };
+  let%hook () =
+    Hooks.effect(
+      OnMount,
+      () => {
+        switch (onSneak) {
+        | Some(cb) => SneakRegistry.register(holder, cb)
+        | None => SneakRegistry.register(holder, onClick)
+        };
 
-      Some(() => {
-        holder := None; 
-        SneakRegistry.unregister(holder);
-      });
-  });
+        Some(
+          () => {
+            holder := None;
+            SneakRegistry.unregister(holder);
+          },
+        );
+      },
+    );
 
   <Clickable
     style
@@ -60,6 +65,7 @@ let%component make = (
     ?onKeyDown
     ?onKeyUp
     ?onTextEdit
-    ?onTextInput
-  >children</Clickable>
+    ?onTextInput>
+    children
+  </Clickable>;
 };

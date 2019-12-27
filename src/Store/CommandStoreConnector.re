@@ -111,7 +111,7 @@ let createDefaultCommands = getState => {
         ~name="Start sneak (keyboard-accessible UI)",
         ~action=Command("sneak.start"),
         (),
-      )
+      ),
     ]
   );
 };
@@ -265,7 +265,10 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
-    ("sneak.start", _ => singleActionEffect(Actions.Sneak(Sneak.Initiated))),
+    (
+      "sneak.start",
+      _ => singleActionEffect(Actions.Sneak(Sneak.Initiated)),
+    ),
     ("sneak.stop", _ => singleActionEffect(Actions.Sneak(Sneak.Stopped))),
   ];
 

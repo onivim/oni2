@@ -163,11 +163,7 @@ let start = () => {
         command: "redo",
         condition: "editorTextFocus" |> parseExp,
       },
-      {
-        key: "<C-G>",
-        command: "sneak.start",
-        condition: Expression.True,
-      },
+      {key: "<C-G>", command: "sneak.start", condition: Expression.True},
       {
         key: "<ESC>",
         command: "sneak.stop",

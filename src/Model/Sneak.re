@@ -4,12 +4,12 @@ type callback = unit => unit;
 type bounds = unit => option(Rectangle.t);
 
 type sneakInfo = {
-  callback: callback,
+  callback,
   boundingBox: BoundingBox2d.t,
 };
 
 type sneak = {
-  callback: callback,
+  callback,
   boundingBox: BoundingBox2d.t,
   id: string,
 };
@@ -35,39 +35,38 @@ let initial: t = {
   filteredSneaks: [],
 };
 
-let reset = (_sneak) => {
-    ...initial,
-    active: true,
-};
+let reset = _sneak => {...initial, active: true};
 
-let hide = (_sneak) => initial;
+let hide = _sneak => initial;
 
 let isActive = sneaks => sneaks.active;
 
 let _filter = (prefix: string, sneak: sneak) => {
-   Oni_Core.Utility.StringUtil.contains(prefix, sneak.id);
+  Oni_Core.Utility.StringUtil.contains(prefix, sneak.id);
 };
 
-let _applyFilter = (sneaks: t) => {
+let _applyFilter = (sneaks: t) =>
   if (sneaks.prefix == "") {
-    ...sneaks,
-    filteredSneaks: sneaks.allSneaks
+    {...sneaks, filteredSneaks: sneaks.allSneaks};
   } else {
-    ...sneaks,
-    filteredSneaks: List.filter(_filter(sneaks.prefix), sneaks.allSneaks),
-  }
-}
+    {
+      ...sneaks,
+      filteredSneaks: List.filter(_filter(sneaks.prefix), sneaks.allSneaks),
+    };
+  };
 
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
 
-  let (prefix, _) = InputModel.handleInput(~text=sneaks.prefix, ~cursorPosition=String.length(sneaks.prefix), characterToAdd);
+  let (prefix, _) =
+    InputModel.handleInput(
+      ~text=sneaks.prefix,
+      ~cursorPosition=String.length(sneaks.prefix),
+      characterToAdd,
+    );
 
-  print_endline ("NEW TEXT: " ++ prefix);
-  {
-    ...sneaks,
-    prefix
-  } |> _applyFilter;
+  print_endline("NEW TEXT: " ++ prefix);
+  {...sneaks, prefix} |> _applyFilter;
 };
 
 // Ported from: https://github.com/onivim/oni/blob/74a4dc7f2240a1f5f7a799b2f3f9d01d69b01bac/browser/src/Services/Sneak/SneakStore.ts#L95
@@ -76,20 +75,20 @@ let refine = (characterToAdd: string, sneaks: t) => {
 let _getLabelFromIndex = (i: int) => {
   let aChar = Char.code('A');
   let firstDigit = i / 26;
-  let secondDigit = i - (firstDigit * 26);
-  
+  let secondDigit = i - firstDigit * 26;
+
   let firstChar = Char.chr(firstDigit + aChar);
   let secondChar = Char.chr(secondDigit + aChar);
   String.make(1, firstChar) ++ String.make(1, secondChar);
-}
+};
 
 let add = (sneaksToAdd: list(sneakInfo), sneaks: t) => {
   let toSneakInfo = (index: int, sneak: sneakInfo) => {
-      {
-        boundingBox: sneak.boundingBox,
-        callback: sneak.callback,
-        id: _getLabelFromIndex(index),
-      }
+    {
+      boundingBox: sneak.boundingBox,
+      callback: sneak.callback,
+      id: _getLabelFromIndex(index),
+    };
   };
 
   let sort = (sneakA: sneakInfo, sneakB: sneakInfo) => {
@@ -99,20 +98,13 @@ let add = (sneaksToAdd: list(sneakInfo), sneaks: t) => {
     let (aX, aY, _, _) = Revery.Math.BoundingBox2d.getBounds(bboxA);
     let (bX, bY, _, _) = Revery.Math.BoundingBox2d.getBounds(bboxB);
 
-    (aX -. bX) +. (aY -. bY) |> int_of_float;
-  }
+    aX -. bX +. (aY -. bY) |> int_of_float;
+  };
 
-  let allSneaks = 
-  sneaksToAdd
-  |> List.sort(sort)
-  |> List.mapi(toSneakInfo)
+  let allSneaks = sneaksToAdd |> List.sort(sort) |> List.mapi(toSneakInfo);
   let filteredSneaks = allSneaks;
-  
-  {
-  ...sneaks,
-  allSneaks,
-  filteredSneaks,
-  }
+
+  {...sneaks, allSneaks, filteredSneaks};
 };
 
 let getFiltered = (sneaks: t) => sneaks.filteredSneaks;
