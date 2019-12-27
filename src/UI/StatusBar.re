@@ -23,7 +23,7 @@ let getTextStyle = uiFont => {
   );
 };
 
-let viewStyle = bgColor =>
+let viewStyle = (bgColor, transition) =>
   Style.[
     backgroundColor(bgColor),
     flexDirection(`Row),
@@ -35,6 +35,7 @@ let viewStyle = bgColor =>
     bottom(0),
     left(0),
     right(0),
+    transform(Transform.[TranslateY(transition)]),
   ];
 
 let convertPositionToString =
@@ -76,7 +77,15 @@ module StatusBarItem = {
     <View style={getStyle(height, backgroundColor)}> children </View>;
 };
 
-let make = (~height, ~state: State.t, ()) => {
+let animation =
+  Revery.UI.Animation.(
+    animate(Revery.Time.milliseconds(150))
+    |> ease(Easing.ease)
+    |> tween(50.0, 0.)
+    |> delay(Revery.Time.milliseconds(0))
+  );
+
+let%component make = (~height, ~state: State.t, ()) => {
   let mode = state.mode;
   let theme = state.theme;
   let editor =
@@ -100,6 +109,9 @@ let make = (~height, ~state: State.t, ()) => {
       />
     </StatusBarItem>;
   };
+
+  let%hook (transition, _animationState, _reset) =
+    Hooks.animation(animation, ~active=true);
 
   let filterFunction = (alignment: Alignment.t, item: Item.t) => {
     item.alignment === alignment;
@@ -163,7 +175,7 @@ let make = (~height, ~state: State.t, ()) => {
   let indentation =
     Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
-  <View style={viewStyle(theme.statusBarBackground)}>
+  <View style={viewStyle(theme.statusBarBackground, transition)}>
     <StatusBarSection direction=`FlexStart> leftItems </StatusBarSection>
     <StatusBarSection direction=`Center />
     <StatusBarSection direction=`FlexEnd> rightItems </StatusBarSection>
