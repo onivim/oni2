@@ -17,12 +17,16 @@ let unregister = (node: ref(option(Revery.UI.node))) => {
 };
 
 let getSneaks = () => {
- let iter = (node) => {
+ /*let iter = (node) => {
     let bbox = (node)#getBoundingBox();
     prerr_endline ("NODE BBOX: " ++ Revery.Math.BoundingBox2d.toString(bbox));
- } ;
+ } ;*/
+ let map = (node) => {
+    (node)#getBoundingBox();
+ };
  _singleton^
  |> List.map(({node}) => node^)
  |> Utility.List.filter_map(Utility.identity)
- |> List.iter(iter);
+ |> List.map(map);
+ //|> List.iter(iter);
 };

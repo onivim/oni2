@@ -1,11 +1,16 @@
+open Revery.Math;
+
+type callback = unit => unit;
+
 [@deriving show({with_path: false})]
 type action =
   | Initiated
-  | Stopped;
+  | Stopped
+  | Discover([@opaque] BoundingBox2d.t);
 
 type sneak = {
-  callback: unit => unit,
-  boundingBox: Revery.Math.BoundingBox2d.t,
+  callback: callback,
+  boundingBox: BoundingBox2d.t,
   id: string,
 }
 
@@ -23,23 +28,37 @@ let initial: t = {
   filteredSneaks: [],
 };
 
-let setActive = (active: bool, sneaks: t) => {
-  if (active) {
-    ...sneaks,
-    active
-  } else {
-    initial
-  }
-}
+let reset = (_sneak) => {
+    ...initial,
+    active: true,
+};
+
+let hide = (_sneak) => initial;
 
 let isActive = sneaks => sneaks.active;
+
+let _filter = (_prefix: string, _sneak: sneak) => {
+  // StringUtil.contains(prefix, sneak.id);
+  true
+};
+
+let _applyFilter = (sneaks: t) => {
+  ...sneaks,
+  filteredSneaks: List.filter(_filter(sneaks.prefix), sneaks.filteredSneaks),
+}
 
 let refine = (characterToAdd: string, prefix: string, sneaks: t) => {
   // TODO
 };
 
 let add = (callback, boundingBox, sneaks: t) => {
-  // TODO
+  let allSneaks = [{callback, boundingBox, id: "AA"}, ...sneaks.allSneaks];
+  let filteredSneaks = allSneaks;
+  {
+  ...sneaks,
+  allSneaks,
+  filteredSneaks,
+  }
 };
 
 let getFiltered = (sneaks: t) => sneaks.filteredSneaks;
