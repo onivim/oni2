@@ -379,7 +379,9 @@ let subscriptions = ripgrep => {
     });
   };
 
-  let ripgrep = (languageInfo, iconTheme) => {
+  let ripgrep = (languageInfo, iconTheme, configuration) => {
+    let filesExclude =
+      Core.Configuration.getValue(c => c.filesExclude, configuration);
     let directory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>
@@ -394,6 +396,7 @@ let subscriptions = ripgrep => {
 
     RipgrepSubscription.create(
       ~id="workspace-search",
+      ~filesExclude,
       ~directory,
       ~ripgrep,
       ~onUpdate=
@@ -418,7 +421,7 @@ let subscriptions = ripgrep => {
 
       | FilesPicker => [
           filter(quickmenu.query, quickmenu.items),
-          ripgrep(state.languageInfo, state.iconTheme),
+          ripgrep(state.languageInfo, state.iconTheme, state.configuration),
         ]
 
       | Wildmenu(_) => []
