@@ -9,6 +9,7 @@ module Log = (val Core.Log.withNamespace("Oni2.RipgrepSubscription"));
 module Provider = {
   type action = Actions.t;
   type params = {
+    filesExclude: list(string),
     directory: string,
     ripgrep: Ripgrep.t, // TODO: Necessary dependency?
     onUpdate: list(string) => unit, // TODO: Should return action
@@ -20,13 +21,14 @@ module Provider = {
   let start =
       (
         ~id,
-        ~params as {directory, ripgrep, onUpdate, onComplete},
+        ~params as {filesExclude, directory, ripgrep, onUpdate, onComplete},
         ~dispatch: _,
       ) => {
     Log.info("Starting Ripgrep search subscription " ++ id);
 
     let dispose =
       ripgrep.Ripgrep.search(
+        ~filesExclude,
         ~directory,
         ~onUpdate,
         ~onComplete=() => {
@@ -52,9 +54,10 @@ module Provider = {
   };
 };
 
-let create = (~id, ~directory, ~ripgrep, ~onUpdate, ~onComplete) =>
+let create =
+    (~id, ~filesExclude, ~directory, ~ripgrep, ~onUpdate, ~onComplete) =>
   Subscription.create(
     id,
     (module Provider),
-    {directory, ripgrep, onUpdate, onComplete},
+    {filesExclude, directory, ripgrep, onUpdate, onComplete},
   );

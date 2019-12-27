@@ -11,6 +11,7 @@ module Match: {
 type t = {
   search:
     (
+      ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
       ~onComplete: unit => unit
