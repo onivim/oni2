@@ -163,6 +163,16 @@ let start = () => {
         command: "redo",
         condition: "editorTextFocus" |> parseExp,
       },
+      {
+        key: "<S-C-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      },
+      {
+        key: "<D-S-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      }
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

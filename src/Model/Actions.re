@@ -57,6 +57,7 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
