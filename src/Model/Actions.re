@@ -122,8 +122,6 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | PaneOpen(Pane.paneType)
-  | PaneClosed
   | SearchStart
   | SearchHotkey
   | SearchInput(string)

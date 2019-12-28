@@ -27,32 +27,13 @@ let start = () => {
   };
 
   let updater = (state: State.t, action) => {
-    // TODO: Port focus!
-    /*let show = (
-        {...state, searchPane: Some(Search.initial)}
-        |> FocusManager.push(Search),
-        Isolinear.Effect.none,
-      );*/
-    /*let hide = (
-        {...state, searchPane: None} |> FocusManager.pop(Search),
-        Isolinear.Effect.none,
-      );*/
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
-
-    //| SearchShow => show
-    //| SearchHide => hide
-
     | SearchInputClicked(_) => (
         {...state, searchPane: searchUpdater(state.searchPane, action)}
         |> FocusManager.push(Search),
         Isolinear.Effect.none,
       )
-    | SearchHotkey => (
-        state |> FocusManager.push(Search),
-        Isolinear.Effect.none,
-      )
-
     | _ => (
         {...state, searchPane: searchUpdater(state.searchPane, action)},
         Isolinear.Effect.none,

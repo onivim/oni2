@@ -20,10 +20,9 @@ module Styles = {
     ];
 };
 
-let showSearch = _ =>
-  GlobalContext.current().dispatch(Actions.PaneOpen(Pane.Search));
+let showSearch = _ => GlobalContext.current().dispatch(Actions.SearchHotkey);
 let showProblems = _ =>
-  GlobalContext.current().dispatch(Actions.PaneOpen(Pane.Diagnostics));
+  GlobalContext.current().dispatch(Actions.DiagnosticsHotKey);
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
   ignore(uiFont);

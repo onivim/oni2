@@ -32,26 +32,29 @@ let reduce: (State.t, Actions.t) => State.t =
         notifications: Notifications.reduce(s.notifications, a),
       };
 
-      switch (a) {
-      | DarkModeSet(darkMode) => {...s, darkMode}
-      | DiagnosticsSet(buffer, key, diags) => {
-          ...s,
-          diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
+      (
+        switch (a) {
+        | DarkModeSet(darkMode) => {...s, darkMode}
+        | DiagnosticsSet(buffer, key, diags) => {
+            ...s,
+            diagnostics:
+              Diagnostics.change(s.diagnostics, buffer, key, diags),
+          }
+        | DiagnosticsClear(key) => {
+            ...s,
+            diagnostics: Diagnostics.clear(s.diagnostics, key),
+          }
+        | KeyBindingsSet(keyBindings) => {...s, keyBindings}
+        | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+        | SetIconTheme(iconTheme) => {...s, iconTheme}
+        | SetColorTheme(theme) => {...s, theme}
+        | ChangeMode(m) => {...s, mode: m}
+        | SetEditorFont(font) => {...s, editorFont: font}
+        | EnableZenMode => {...s, zenMode: true}
+        | DisableZenMode => {...s, zenMode: false}
+        | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
+        | _ => s
         }
-      | DiagnosticsClear(key) => {
-          ...s,
-          diagnostics: Diagnostics.clear(s.diagnostics, key),
-        }
-      | KeyBindingsSet(keyBindings) => {...s, keyBindings}
-      | SetLanguageInfo(languageInfo) => {...s, languageInfo}
-      | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | SetColorTheme(theme) => {...s, theme}
-      | ChangeMode(m) => {...s, mode: m}
-      | SetEditorFont(font) => {...s, editorFont: font}
-      | EnableZenMode => {...s, zenMode: true}
-      | DisableZenMode => {...s, zenMode: false}
-      | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
-      | _ => s
-      }
+      )
       |> PaneReducer.reduce(a);
     };
