@@ -172,7 +172,7 @@ let start = () => {
         key: "<D-S-M>",
         command: "workbench.actions.view.problems",
         condition: Expression.True,
-      }
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

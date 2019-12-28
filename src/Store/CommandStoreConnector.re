@@ -192,7 +192,10 @@ let start = (getState, contributedCommands) => {
       _ => singleActionEffect(QuickmenuShow(DocumentSymbols)),
     ),
     ("workbench.action.findInFiles", _ => singleActionEffect(SearchHotkey)),
-    ("workbench.actions.view.problems", _ => singleActionEffect(DiagnosticsHotKey)),
+    (
+      "workbench.actions.view.problems",
+      _ => singleActionEffect(DiagnosticsHotKey),
+    ),
     (
       "workbench.action.openNextRecentlyUsedEditorInGroup",
       _ => singleActionEffect(QuickmenuShow(EditorsPicker)),

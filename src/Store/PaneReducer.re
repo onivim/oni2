@@ -13,9 +13,9 @@ let reduce = (state: Pane.t, action: Actions.t) => {
   | ActivityBar(ActivityBar.SearchClick) when pt != Some(Pane.Search) =>
     Pane.setOpen(Pane.Search)
   | DiagnosticsHotKey when pt == Some(Pane.Diagnostics) =>
-      Pane.setClosed(state)
+    Pane.setClosed(state)
   | DiagnosticsHotKey when pt !== Some(Pane.Diagnostics) =>
-      Pane.setOpen(Pane.Diagnostics)
+    Pane.setOpen(Pane.Diagnostics)
   | StatusBar(StatusBarModel.DiagnosticsClicked)
       when pt == Some(Pane.Diagnostics) =>
     Pane.setClosed(state)

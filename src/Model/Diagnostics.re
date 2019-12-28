@@ -129,14 +129,6 @@ let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
 
 let _value = ((_key, v)) => v;
 
-let getDiagnosticsUri = ({diagnosticsMap, _}, uri) => {
-  let key = getKeyForUri(uri);
-  switch (StringMap.find_opt(key, diagnosticsMap)) {
-  | None => []
-  | Some(v) => StringMap.bindings(v) |> List.map(_value) |> List.flatten
-  };
-};
-
 let getAllDiagnostics = (diagnostics: t) => {
   let extractBindings = map => {
     StringMap.bindings(map) |> List.map(_value) |> List.flatten;
