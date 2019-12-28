@@ -37,3 +37,5 @@ let count: t => int;
 let getDiagnostics: (t, Buffer.t) => list(Diagnostic.t);
 let getDiagnosticsAtPosition: (t, Buffer.t, Location.t) => list(Diagnostic.t);
 let getDiagnosticsMap: (t, Buffer.t) => IntMap.t(list(Diagnostic.t));
+
+let getAllDiagnostics: t => list((Uri.t, Diagnostic.t));
