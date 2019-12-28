@@ -29,13 +29,14 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
         let extensions =
           ExtensionScanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
+            ~category=Bundled,
             ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 
         let developmentExtensions =
           switch (setup.developmentExtensionsPath) {
-          | Some(p) => ExtensionScanner.scan(p)
+          | Some(p) => ExtensionScanner.scan(~category=Development, p)
           | None => []
           };
 
