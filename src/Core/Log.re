@@ -216,6 +216,10 @@ let isPrintingEnabled = () => Logs.reporter() !== Logs.nop_reporter;
 let disableColors = () =>
   Fmt_tty.setup_std_outputs(~style_renderer=`None, ());
 
+if (Sys.win32) {
+  disableColors();
+}
+
 let enableDebugLogging = () =>
   Logs.Src.set_level(Logs.default, Some(Logs.Debug));
 let isDebugLoggingEnabled = () =>
