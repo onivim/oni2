@@ -218,7 +218,7 @@ let disableColors = () =>
 
 if (Sys.win32) {
   disableColors();
-}
+};
 
 let enableDebugLogging = () =>
   Logs.Src.set_level(Logs.default, Some(Logs.Debug));
