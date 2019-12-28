@@ -562,10 +562,10 @@ module OutgoingNotifications = {
           ),
         ]);
 
-      // TODO: Pull from our defaults + user defaults
       let initialConfiguration =
         ModelConfig.create(
-          ~defaults=ModelConfig.Model.create(~keys, contents),
+          ~defaults=ModelConfig.Model.create(~keys=[], `Assoc([])),
+          ~user=ModelConfig.Model.create(~keys, contents),
           (),
         );
 

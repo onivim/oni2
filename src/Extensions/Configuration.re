@@ -48,7 +48,7 @@ module Model = {
 
         ExtensionContributions.Configuration.(
           {
-            let _keys =
+            let keys =
               List.map(
                 (configModel: config) => configModel.name,
                 configModels,
@@ -62,11 +62,18 @@ module Model = {
                 ),
               );
 
-            Oni_Core.Utility.Json.explode(json);
+            let contents = Oni_Core.Utility.Json.explode(json);
+            { keys, contents }
           }
         );
       }
     );
+  };
+
+  let toString = (model: t) => {
+   Printf.sprintf("Keys: %s \n JSON: %s\n", 
+    model.keys |> String.concat("\n"),
+    model.contents |> Yojson.Safe.to_string);
   };
 };
 
