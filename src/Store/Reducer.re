@@ -23,7 +23,7 @@ let reduce: (State.t, Actions.t) => State.t =
         completions: Completions.reduce(s.completions, a),
         definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
-        extensions: Extensions.reduce(a, s.extensions),
+        extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),

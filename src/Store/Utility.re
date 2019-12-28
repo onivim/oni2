@@ -35,6 +35,6 @@ let getUserExtensions = (cli: Cli.t) => {
          Log.infof(m => m("Searching for user extensions in: %s", p))
        ),
      )
-  |> Option.map(ExtensionScanner.scan)
+  |> Option.map(ExtensionScanner.scan(~category=User))
   |> Option.value(~default=[]);
 };
