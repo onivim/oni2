@@ -30,7 +30,6 @@ let reduce: (State.t, Actions.t) => State.t =
         sideBar: SideBarReducer.reduce(s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
         notifications: Notifications.reduce(s.notifications, a),
-        pane: PaneReducer.reduce(s.pane, a),
       };
 
       switch (a) {
@@ -53,5 +52,6 @@ let reduce: (State.t, Actions.t) => State.t =
       | DisableZenMode => {...s, zenMode: false}
       | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
       | _ => s
-      };
+      }
+      |> PaneReducer.reduce(a);
     };
