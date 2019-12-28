@@ -19,10 +19,6 @@ let unregister = (node: ref(option(Revery.UI.node))) => {
 };
 
 let getSneaks = () => {
-  /*let iter = (node) => {
-       let bbox = (node)#getBoundingBox();
-       prerr_endline ("NODE BBOX: " ++ Revery.Math.BoundingBox2d.toString(bbox));
-    } ;*/
   _singleton^
   |> Utility.List.filter_map(item => {
        switch (item.node^) {

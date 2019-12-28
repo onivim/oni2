@@ -38,7 +38,6 @@ let start = () => {
     | Model.Actions.Sneak(sneakAction) =>
       switch (sneakAction) {
       | Sneak.Initiated =>
-        prerr_endline("start");
         (
           {...state, sneak: Model.Sneak.reset(state.sneak)},
           discoverSneakEffect,
@@ -47,7 +46,6 @@ let start = () => {
         let newState = {...state, sneak: Model.Sneak.refine(k, state.sneak)};
         (newState, completeSneakEffect(newState));
       | Sneak.Stopped =>
-        prerr_endline("STOPPED!");
         (
           {...state, sneak: Model.Sneak.hide(state.sneak)},
           Isolinear.Effect.none,
