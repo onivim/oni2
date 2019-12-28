@@ -114,6 +114,11 @@ let resultToException = r => {
   };
 };
 
+let tryToResult = (~msg, f) =>
+  try(Ok(f())) {
+  | _exn => Error(msg)
+  };
+
 type commandLineCompletionMeet = {
   prefix: string,
   position: int,

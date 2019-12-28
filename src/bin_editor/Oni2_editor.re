@@ -70,7 +70,6 @@ let cliOptions =
       1;
     },
   );
-Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start();
 } else {
