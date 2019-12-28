@@ -63,7 +63,7 @@ module Model = {
               );
 
             let contents = Oni_Core.Utility.Json.explode(json);
-            { keys, contents }
+            {keys, contents};
           }
         );
       }
@@ -71,9 +71,11 @@ module Model = {
   };
 
   let toString = (model: t) => {
-   Printf.sprintf("Keys: %s \n JSON: %s\n", 
-    model.keys |> String.concat("\n"),
-    model.contents |> Yojson.Safe.to_string);
+    Printf.sprintf(
+      "Keys: %s \n JSON: %s\n",
+      model.keys |> String.concat("\n"),
+      model.contents |> Yojson.Safe.to_string,
+    );
   };
 };
 

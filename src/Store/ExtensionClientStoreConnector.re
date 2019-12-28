@@ -150,11 +150,14 @@ module ExtensionDocumentSymbolProvider = {
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let manifests = List.map((ext: ExtensionScanner.t) => ext.manifest, extensions);
+  let manifests =
+    List.map((ext: ExtensionScanner.t) => ext.manifest, extensions);
 
   let configurationModel = Configuration.Model.ofExtensions(manifests);
 
-  let defaults = Configuration.Model.toString(configurationModel) |> prerr_endline;
+  // TODO: Plumb through all the way
+  let _defaults =
+    Configuration.Model.toString(configurationModel) |> prerr_endline;
 
   let onExtHostClosed = () => Log.info("ext host closed");
 
