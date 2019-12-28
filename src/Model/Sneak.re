@@ -42,7 +42,7 @@ let hide = _sneak => initial;
 let isActive = sneaks => sneaks.active;
 
 let _filter = (prefix: string, sneak: sneak) => {
-  Oni_Core.Utility.StringUtil.contains(prefix, sneak.id);
+  Oni_Core.Utility.StringUtil.startsWith(~prefix, sneak.id);
 };
 
 let _applyFilter = (sneaks: t) =>
