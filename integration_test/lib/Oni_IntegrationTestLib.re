@@ -1,5 +1,6 @@
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
+module Utility = Core.Utility;
+module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -53,6 +54,7 @@ let runTest =
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
+      ~onAfterDispatch=Utility.noop1,
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
@@ -93,6 +95,7 @@ let runTest =
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~setup,
+      ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
       ~getScaleFactor,
@@ -167,9 +170,10 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, f: testCallbackWithInput) => {
+let runTestWithInput = (~name, ~onAfterDispatch=?, f: testCallbackWithInput) => {
   runTest(
     ~name,
+    ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {
         dispatch(Model.Actions.KeyboardInput(key));

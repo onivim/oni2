@@ -23,6 +23,7 @@
            RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
+           Regression1097Test
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
            TickTest
@@ -62,6 +63,7 @@
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe
         QuickOpenEventuallyCompletesTest.exe
+        Regression1097Test.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
