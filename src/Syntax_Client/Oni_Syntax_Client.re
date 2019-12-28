@@ -149,6 +149,7 @@ let start =
               onHighlights(tokens);
               ClientLog.info("Tokens applied");
             })
+          | ServerToClient.KeywordResponse(id, keywords) => ()
           };
         }
       },
@@ -215,6 +216,10 @@ let notifyBufferUpdate =
 let notifyVisibilityChanged = (v: t, visibility) => {
   ClientLog.info("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+};
+
+let requestKeywords = (_client: t, _fileType) => {
+  Lwt.return(["Hello", "World"]);
 };
 
 let close = (syntaxClient: t) => {

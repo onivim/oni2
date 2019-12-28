@@ -37,6 +37,7 @@ module ServerToClient = {
     | TokenUpdate([@opaque] list(TokenUpdate.t))
     | EchoReply(string)
     | Log(string)
+    | KeywordResponse(int, list(string))
     | Closing;
 };
 
@@ -52,6 +53,7 @@ module ClientToServer = {
         [@opaque] array(string),
         string,
       )
+    | KeywordRequest(int, string)
     | ConfigurationChanged([@opaque] Configuration.t)
     | ThemeChanged([@opaque] TokenTheme.t)
     | VisibleRangesChanged(

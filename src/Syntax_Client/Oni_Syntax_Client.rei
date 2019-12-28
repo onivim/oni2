@@ -38,4 +38,7 @@ let notifyBufferUpdate:
   (t, Core.BufferUpdate.t, array(string), string) => unit;
 
 let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
+
+let requestKeywords: (t, string) => Lwt.t(list(string));
+
 let close: t => unit;

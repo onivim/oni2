@@ -18,6 +18,26 @@ module Protocol = Oni_Syntax.Protocol;
 
 module Log = Core.Log;
 
+module KeywordCompletionProvider = {
+  let toCompletionItem = keyword => {
+    Model.CompletionItem.create(~kind=None, ~detail=None, keyword);
+  };
+
+  let create =
+      (client: Oni_Syntax_Client.t, (buffer, _completionMeet, _location)) => {
+    buffer
+    |> Core.Buffer.getFileType
+    |> Option.map(ft => {
+         print_endline("QUERYING!!");
+         let promise =
+           Oni_Syntax_Client.requestKeywords(client, ft)
+           |> Lwt.map(v => List.map(toCompletionItem, v));
+         Some(promise);
+       })
+    |> Option.value(~default=None);
+  };
+};
+
 let start =
     (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -30,13 +50,28 @@ let start =
       dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates));
     };
 
-    let _syntaxClient =
+    let syntaxClient =
       Oni_Syntax_Client.start(
         ~scheduler=Core.Scheduler.mainThread,
         ~onHighlights,
         languageInfo,
         setup,
       );
+
+    let registerCompletionProvider =
+      Isolinear.Effect.createWithDispatch(
+        ~name="syntax.registerCompletionProvider", dispatch => {
+        let completionProvider =
+          KeywordCompletionProvider.create(syntaxClient);
+        dispatch(
+          Model.Actions.LanguageFeature(
+            Model.LanguageFeatures.CompletionProviderAvailable(
+              "syntax.keywordProvider",
+              completionProvider,
+            ),
+          ),
+        );
+      });
 
     let getLines = (state: Model.State.t, id: int) => {
       switch (Model.Buffers.getBuffer(id, state.buffers)) {
@@ -56,7 +91,7 @@ let start =
       Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
         fileType
         |> Option.iter(fileType =>
-             Oni_Syntax_Client.notifyBufferEnter(_syntaxClient, id, fileType)
+             Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
            )
       });
 
@@ -67,7 +102,7 @@ let start =
         | None => ()
         | Some(scope) =>
           Oni_Syntax_Client.notifyBufferUpdate(
-            _syntaxClient,
+            syntaxClient,
             bufferUpdate,
             lines,
             scope,
@@ -77,20 +112,17 @@ let start =
 
     let configurationChangeEffect = (config: Core.Configuration.t) =>
       Isolinear.Effect.create(~name="syntax.configurationChange", () => {
-        Oni_Syntax_Client.notifyConfigurationChanged(_syntaxClient, config)
+        Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config)
       });
 
     let themeChangeEffect = theme =>
       Isolinear.Effect.create(~name="syntax.theme", () => {
-        Oni_Syntax_Client.notifyThemeChanged(_syntaxClient, theme)
+        Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)
       });
 
     let visibilityChangedEffect = visibleRanges =>
       Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
-        Oni_Syntax_Client.notifyVisibilityChanged(
-          _syntaxClient,
-          visibleRanges,
-        )
+        Oni_Syntax_Client.notifyVisibilityChanged(syntaxClient, visibleRanges)
       });
 
     let isVersionValid = (updateVersion, bufferVersion) => {
@@ -109,6 +141,7 @@ let start =
     let updater = (state: Model.State.t, action) => {
       let default = (state, Isolinear.Effect.none);
       switch (action) {
+      | Model.Actions.Init => (state, registerCompletionProvider)
       | Model.Actions.ConfigurationSet(config) => (
           state,
           configurationChangeEffect(config),
