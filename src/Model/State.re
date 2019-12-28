@@ -12,6 +12,7 @@ module Ext = Oni_Extensions;
 
 type t = {
   buffers: Buffers.t,
+  bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
@@ -50,12 +51,14 @@ type t = {
   // Generally controlled by the theme.
   darkMode: bool,
   searchPane: option(Search.t),
+  focus: Focus.stack,
 };
 
 let create: unit => t =
   () => {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
+    bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     completions: Completions.default,
@@ -95,4 +98,5 @@ let create: unit => t =
     zenMode: false,
     darkMode: true,
     searchPane: None,
+    focus: Focus.initial,
   };

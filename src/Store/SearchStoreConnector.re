@@ -1,59 +1,70 @@
-module Core = Oni_Core;
-module Model = Oni_Model;
-
-open Model.Actions;
+open Oni_Model;
+open Actions;
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 
-  let searchUpdater = (state: Model.Search.t, action) => {
+  let searchUpdater = (state: Search.t, action) => {
     switch (action) {
-    | SearchInput(text, cursorPosition) => {
-        ...state,
-        queryInput: text,
-        cursorPosition,
-      }
+    | SearchInput(key) =>
+      let Search.{queryInput, cursorPosition, _} = state;
 
-    | SearchStart => {...state, query: state.queryInput, hits: []}
+      switch (key) {
+      | "<CR>" => {...state, query: state.queryInput, hits: []}
+
+      | _ =>
+        let (queryInput, cursorPosition) =
+          InputModel.handleInput(~text=queryInput, ~cursorPosition, key);
+        {...state, queryInput, cursorPosition};
+      };
+
+    | SearchInputClicked(cursorPosition) => {...state, cursorPosition}
 
     | SearchUpdate(items) => {...state, hits: state.hits @ items}
-
-    // | SearchComplete
-
-    // | SearchSelectResult(match) =>
-    //   print_endline("!! SELECT: " ++ match.file);
-    //   state;
 
     | _ => state
     };
   };
 
-  let updater = (state: Model.State.t, action) => {
+  let updater = (state: State.t, action) => {
+    let show = (
+      {...state, searchPane: Some(Search.initial)}
+      |> FocusManager.push(Search),
+      Isolinear.Effect.none,
+    );
+
+    let hide = (
+      {...state, searchPane: None} |> FocusManager.pop(Search),
+      Isolinear.Effect.none,
+    );
+
     switch (action) {
     | Tick(_) => (state, Isolinear.Effect.none)
 
-    | ActivityBar(Model.ActivityBar.SearchClick) when state.searchPane != None => (
-        {...state, searchPane: None},
-        Isolinear.Effect.none,
-      )
+    | ActivityBar(ActivityBar.SearchClick) when state.searchPane != None => hide
+    | ActivityBar(ActivityBar.SearchClick) when state.searchPane == None => show
+    | SearchShow => show
+    | SearchHide => hide
 
-    | ActivityBar(Model.ActivityBar.SearchClick) when state.searchPane == None => (
-        {...state, searchPane: Some(Model.Search.initial)},
-        Isolinear.Effect.none,
-      )
-
-    | SearchShow => (
-        {...state, searchPane: Some(Model.Search.initial)},
-        Isolinear.Effect.none,
-      )
-
-    | SearchHide => ({...state, searchPane: None}, Isolinear.Effect.none)
+    | SearchInputClicked(_) =>
+      switch (state.searchPane) {
+      | Some(searchPane) => (
+          {...state, searchPane: Some(searchUpdater(searchPane, action))}
+          |> FocusManager.push(Search),
+          Isolinear.Effect.none,
+        )
+      | None => (state, Isolinear.Effect.none)
+      }
 
     | SearchHotkey =>
       switch (state.searchPane) {
-      | Some(_) => ({...state, searchPane: None}, Isolinear.Effect.none)
+      | Some(_) => (
+          state |> FocusManager.push(Search),
+          Isolinear.Effect.none,
+        )
       | None => (
-          {...state, searchPane: Some(Model.Search.initial)},
+          {...state, searchPane: Some(Search.initial)}
+          |> FocusManager.push(Search),
           Isolinear.Effect.none,
         )
       }
@@ -90,7 +101,7 @@ let subscriptions = ripgrep => {
     );
   };
 
-  let updater = (state: Model.State.t) => {
+  let updater = (state: State.t) => {
     switch (state.searchPane) {
     | None
     | Some({query: "", _}) => []

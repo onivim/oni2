@@ -10,7 +10,7 @@ open Oni_Model;
 let start =
     (
       ~configurationFilePath: option(string),
-      ~cliOptions: option(Cli.t),
+      ~cliOptions: Cli.t,
       ~getZoom,
       ~setZoom,
       ~setVsync,
@@ -93,34 +93,38 @@ let start =
     });
 
   let initConfigurationEffect =
-    Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch => {
-      let configPath = getConfigurationFile(defaultConfigurationFileName);
-      switch (configPath) {
-      | Ok(configPathAsString) =>
-        Log.info(
-          "ConfigurationStoreConnector - Loading configuration: "
-          ++ configPathAsString,
-        );
-        switch (ConfigurationParser.ofFile(configPathAsString), cliOptions) {
-        | (Ok(configuration), Some(cliOptions)) =>
-          dispatch(Actions.ConfigurationSet(configuration));
+    Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
+      if (cliOptions.shouldLoadConfiguration) {
+        let configPath = getConfigurationFile(defaultConfigurationFileName);
+        switch (configPath) {
+        | Ok(configPathAsString) =>
+          Log.info(
+            "ConfigurationStoreConnector - Loading configuration: "
+            ++ configPathAsString,
+          );
+          switch (ConfigurationParser.ofFile(configPathAsString)) {
+          | Ok(configuration) =>
+            dispatch(Actions.ConfigurationSet(configuration));
 
-          let zenModeSingleFile =
-            Configuration.getValue(c => c.zenModeSingleFile, configuration);
+            let zenModeSingleFile =
+              Configuration.getValue(c => c.zenModeSingleFile, configuration);
 
-          if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
-            dispatch(Actions.EnableZenMode);
+            if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+              dispatch(Actions.EnableZenMode);
+            };
+          | Error(err) =>
+            Log.error("Error loading configuration file: " ++ err)
           };
-        | (Ok(configuration), None) =>
-          dispatch(Actions.ConfigurationSet(configuration))
-        | (Error(err), _) =>
-          Log.error("Error loading configuration file: " ++ err)
+          reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
+        | Error(err) => Log.error("Error loading configuration file: " ++ err)
         };
-        reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
-      | Error(err) => Log.error("Error loading configuration file: " ++ err)
-      };
-      ();
-    });
+        ();
+      } else {
+        Log.info(
+          "Not loading configuration initially; disabled from command line.",
+        );
+      }
+    );
 
   let openConfigurationFileEffect = filePath =>
     Isolinear.Effect.createWithDispatch(

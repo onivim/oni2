@@ -104,17 +104,15 @@ let nodeView =
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
 
-let%component make =
-              (
-                ~tree: FsTreeNode.t,
-                ~active: option(string),
-                ~focus: option(string),
-                ~onNodeClick,
-                ~state: State.t,
-                (),
-              ) => {
-  let%hook (containerRef, setContainerRef) = Hooks.ref(None);
-
+let make =
+    (
+      ~tree: FsTreeNode.t,
+      ~active: option(string),
+      ~focus: option(string),
+      ~onNodeClick,
+      ~state: State.t,
+      (),
+    ) => {
   [@warning "-27"]
   let State.{theme, uiFont as font, _} = state;
 
@@ -124,31 +122,7 @@ let%component make =
       FileExplorer(ScrollOffsetChanged(offset)),
     );
 
-  let onNodeClick = node => {
-    Option.iter(Revery.UI.Focus.focus, containerRef);
-    onNodeClick(node);
-  };
-
-  let onKeyDown = (event: NodeEvents.keyEventParams) => {
-    switch (event.keycode) {
-    // Enter
-    | v when v == 13 =>
-      GlobalContext.current().dispatch(Actions.FileExplorer(Select))
-
-    // arrow up
-    | v when v == 1073741906 =>
-      GlobalContext.current().dispatch(Actions.FileExplorer(FocusPrev))
-
-    // arrow down
-    | v when v == 1073741905 =>
-      GlobalContext.current().dispatch(Actions.FileExplorer(FocusNext))
-
-    | _ => ()
-    };
-  };
-
-  <View
-    onKeyDown style=Styles.container ref={ref => setContainerRef(Some(ref))}>
+  <View style=Styles.container>
     <TreeView
       scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick>
       ...{node =>

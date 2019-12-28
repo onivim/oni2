@@ -11,7 +11,6 @@ let make =
   <QuickmenuView
     font={GlobalContext.current().state.uiFont}
     theme
-    autofocus=false
     configuration
     state
   />;

@@ -18,11 +18,12 @@ let reduce: (State.t, Actions.t) => State.t =
           BufferSyntaxHighlightsReducer.reduce(s.bufferSyntaxHighlights, a),
         bufferHighlights:
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
+        bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         commands: Commands.reduce(s.commands, a),
         completions: Completions.reduce(s.completions, a),
         definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
-        extensions: Extensions.reduce(a, s.extensions),
+        extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),

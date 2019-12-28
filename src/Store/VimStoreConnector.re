@@ -411,12 +411,11 @@ let start =
 
   let _ =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
-      dispatch(Actions.QuickmenuInput({text, cursorPosition}));
+      dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
       let cmdlineType = Vim.CommandLine.getType();
       switch (cmdlineType) {
       | Ex =>
-        ();
         let text =
           switch (Vim.CommandLine.getText()) {
           | Some(v) => v
@@ -427,6 +426,7 @@ let start =
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
+
       | SearchForward
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
@@ -440,6 +440,7 @@ let start =
         let highlightList =
           highlights |> Array.to_list |> List.filter(sameLineFilter);
         dispatch(SearchSetHighlights(id, highlightList));
+
       | _ => ()
       };
     });
@@ -457,6 +458,13 @@ let start =
       Vim.init();
       let _ = Vim.command("e untitled");
       hasInitialized := true;
+
+      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+      dispatch(
+        Actions.BufferRenderer(
+          BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome),
+        ),
+      );
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
