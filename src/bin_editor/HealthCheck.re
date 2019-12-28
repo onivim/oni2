@@ -62,40 +62,51 @@ let checks = [
   ),
   (
     "Verify oniguruma dependency",
-    (_) => {
-      Oniguruma.({
+    _ => {
+      Oniguruma.(
+        {
           OnigRegExp.create("(@selector\\()(.*?)(\\))")
-          |> Utility.Result.map(OnigRegExp.search("@selector(windowWillClose:)", 0))
-          |> Utility.Result.map((result) => {
-            OnigRegExp.(
-            Match.getText(result[1]) == "@selector(" 
-            && Match.getText(result[3]) == ")");
-          })
+          |> Utility.Result.map(
+               OnigRegExp.search("@selector(windowWillClose:)", 0),
+             )
+          |> Utility.Result.map(result => {
+               OnigRegExp.(
+                 Match.getText(result[1]) == "@selector("
+                 && Match.getText(result[3]) == ")"
+               )
+             })
           |> Utility.Result.default(~value=false);
-      })
-    }
+        }
+      );
+    },
   ),
   (
     "Verify textmate dependency",
-    (_) => {
-      Textmate.({
-        let matchRegex = RegExpFactory.create("a|b|c");
-        let grammar = Grammar.create(
-          ~scopeName="source.abc",
-          ~patterns=[Match({
-            matchRegex,
-            matchName: Some("keyword.letter"),
-            captures: [],
-          })],
-          ~repository=[],
-          (),
-        );
+    _ => {
+      Textmate.(
+        {
+          let matchRegex = RegExpFactory.create("a|b|c");
+          let grammar =
+            Grammar.create(
+              ~scopeName="source.abc",
+              ~patterns=[
+                Match({
+                  matchRegex,
+                  matchName: Some("keyword.letter"),
+                  captures: [],
+                }),
+              ],
+              ~repository=[],
+              (),
+            );
 
-        let grammarRepository = _ => None;
-        let (tokens, _) = Grammar.tokenize(~grammarRepository, ~grammar, "a");
-        List.length(tokens) > 0;
-      });
-    }
+          let grammarRepository = _ => None;
+          let (tokens, _) =
+            Grammar.tokenize(~grammarRepository, ~grammar, "a");
+          List.length(tokens) > 0;
+        }
+      );
+    },
   ),
   (
     "Verify bundled syntax server",

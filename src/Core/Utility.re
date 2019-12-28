@@ -420,21 +420,25 @@ module Result = {
     | Ok(v) => Some(v)
     | Error(_) => None;
 
-  let bind = f => fun
-  | Ok(v) => f(v)
-  | Error(_) as err => err;
+  let bind = f =>
+    fun
+    | Ok(v) => f(v)
+    | Error(_) as err => err;
 
-  let map = f => fun
-  | Ok(v) => Ok(f(v))
-  | Error(_) as err => err;
+  let map = f =>
+    fun
+    | Ok(v) => Ok(f(v))
+    | Error(_) as err => err;
 
-  let default = (~value) => fun
-  | Ok(v) => v
-  | Error(_) => value;
+  let default = (~value) =>
+    fun
+    | Ok(v) => v
+    | Error(_) => value;
 
-  let exn = fun
-  | Ok(v) => v
-  | Error(msg) => raise(ResultError(msg));
+  let exn =
+    fun
+    | Ok(v) => v
+    | Error(msg) => raise(ResultError(msg));
 };
 
 module StringUtil = {
