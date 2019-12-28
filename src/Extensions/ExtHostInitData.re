@@ -40,7 +40,7 @@ module ExtensionInfo = {
   };
 
   let ofScannedExtension = (extensionInfo: ExtensionScanner.t) => {
-    let {path, manifest} = extensionInfo;
+    let {path, manifest, _} = extensionInfo;
 
     {
       identifier: manifest.name,
