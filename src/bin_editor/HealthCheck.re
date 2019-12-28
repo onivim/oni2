@@ -1,6 +1,10 @@
 open Oni_Core;
 
-let checks = [
+type checks =
+  | Common
+  | All;
+
+let commonChecks = [
   (
     "Verify camomile:datadir",
     _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
@@ -16,49 +20,6 @@ let checks = [
   (
     "Verify camomile:unimapdir",
     _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
-  ),
-  (
-    "Verify node executable",
-    (setup: Setup.t) => Sys.file_exists(setup.nodePath),
-  ),
-  (
-    "Verify node dependencies",
-    (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(
-        ~scheduler=Scheduler.immediate,
-        ~setup,
-        "check-health.js",
-      )
-      |> Utility.LwtUtil.sync
-      |> (
-        fun
-        | Ok(_) => true
-        | Error(_) => false
-      );
-    },
-  ),
-  (
-    "Verify ripgrep (rg) executable",
-    (setup: Setup.t) => Sys.file_exists(setup.rgPath),
-  ),
-  (
-    "Verify bundled extensions path exists",
-    (setup: Setup.t) => Sys.is_directory(setup.bundledExtensionsPath),
-  ),
-  (
-    "Verify bundled font exists",
-    _ =>
-      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
-  ),
-  (
-    "Verify bundled reason-language-server executable",
-    (setup: Setup.t) => {
-      let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
-
-      ret.stdout
-      |> String.trim
-      |> Utility.StringUtil.contains("Reason Language Server");
-    },
   ),
   (
     "Verify oniguruma dependency",
@@ -108,17 +69,65 @@ let checks = [
       );
     },
   ),
+];
+
+let mainChecks = [
+  (
+    "Verify node executable",
+    (setup: Setup.t) => Sys.file_exists(setup.nodePath),
+  ),
+  (
+    "Verify node dependencies",
+    (setup: Setup.t) => {
+      Oni_Extensions.NodeTask.run(
+        ~scheduler=Scheduler.immediate,
+        ~setup,
+        "check-health.js",
+      )
+      |> Utility.LwtUtil.sync
+      |> (
+        fun
+        | Ok(_) => true
+        | Error(_) => false
+      );
+    },
+  ),
+  (
+    "Verify ripgrep (rg) executable",
+    (setup: Setup.t) => Sys.file_exists(setup.rgPath),
+  ),
+  (
+    "Verify bundled extensions path exists",
+    (setup: Setup.t) => Sys.is_directory(setup.bundledExtensionsPath),
+  ),
+  (
+    "Verify bundled font exists",
+    _ =>
+      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
+  ),
+  (
+    "Verify bundled reason-language-server executable",
+    (setup: Setup.t) => {
+      let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
+
+      ret.stdout
+      |> String.trim
+      |> Utility.StringUtil.contains("Reason Language Server");
+    },
+  ),
   (
     "Verify bundled syntax server",
     (setup: Setup.t) => {
       let connected = ref(false);
       let closed = ref(false);
+      let healthCheckResult = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
           ~scheduler=Scheduler.immediate,
           ~onConnected=() => connected := true,
           ~onClose=_ => closed := true,
           ~onHighlights=_ => (),
+          ~onHealthCheckResult=res => healthCheckResult := res,
           Oni_Extensions.LanguageInfo.initial,
           setup,
         );
@@ -142,6 +151,11 @@ let checks = [
       // Verify the syntax client spins up and emits a connection message
       waitForRef(connected);
 
+      // Run health check for syntax server
+      Oni_Syntax_Client.healthCheck(syntaxClient);
+
+      waitForRef(healthCheckResult);
+
       // Verify we are able to close it
       Oni_Syntax_Client.close(syntaxClient);
       waitForRef(closed);
@@ -151,8 +165,14 @@ let checks = [
   ),
 ];
 
-let run = _cli => {
+let run = (~checks, _cli) => {
   let setup = Setup.init();
+
+  let checks =
+    switch (checks) {
+    | All => commonChecks @ mainChecks
+    | Common => commonChecks
+    };
 
   let result =
     List.fold_left(

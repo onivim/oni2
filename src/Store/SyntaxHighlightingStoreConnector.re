@@ -34,6 +34,7 @@ let start =
       Oni_Syntax_Client.start(
         ~scheduler=Core.Scheduler.mainThread,
         ~onHighlights,
+        ~onHealthCheckResult=_ => (),
         languageInfo,
         setup,
       );

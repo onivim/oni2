@@ -60,7 +60,7 @@ let cliOptions =
   Core.Cli.parse(
     ~installExtension,
     ~uninstallExtension,
-    ~checkHealth=HealthCheck.run,
+    ~checkHealth=HealthCheck.run(~checks=All),
     ~listExtensions=cli => {
       let extensions = Store.Utility.getUserExtensions(cli);
       let printExtension = (ext: Ext.ExtensionScanner.t) => {
@@ -72,7 +72,9 @@ let cliOptions =
   );
 Log.info("Startup: Parsing CLI options complete");
 if (cliOptions.syntaxHighlightService) {
-  Oni_Syntax_Server.start();
+  Oni_Syntax_Server.start(~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  );
 } else {
   Log.info("Starting Onivim 2.");
 
