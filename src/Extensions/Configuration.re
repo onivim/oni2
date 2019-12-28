@@ -36,8 +36,38 @@ module Model = {
   };
 
   let ofExtensions = (extensions: list(ExtensionManifest.t)) => {
-  
-  }
+    ExtensionManifest.(
+      {
+        let configModels: ExtensionContributions.Configuration.t =
+          extensions
+          |> List.map(manifest => manifest.contributes)
+          |> List.map(contributes =>
+               ExtensionContributions.getConfiguration(contributes)
+             )
+          |> List.flatten;
+
+        ExtensionContributions.Configuration.(
+          {
+            let _keys =
+              List.map(
+                (configModel: config) => configModel.name,
+                configModels,
+              );
+
+            let json: Yojson.Safe.json =
+              `Assoc(
+                List.map(
+                  ({name, default}: config) => (name, default),
+                  configModels,
+                ),
+              );
+
+            Oni_Core.Utility.Json.explode(json);
+          }
+        );
+      }
+    );
+  };
 };
 
 type t = {
