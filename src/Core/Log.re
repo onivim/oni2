@@ -288,11 +288,12 @@ let withNamespace = namespace => {
 };
 
 // init
-let () = if (Sys.win32) {
-  Fmt_tty.setup_std_outputs(~style_renderer=`None, ());
-} else {
-  Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
-}
+let () =
+  if (Sys.win32) {
+    Fmt_tty.setup_std_outputs(~style_renderer=`None, ());
+  } else {
+    Fmt_tty.setup_std_outputs(~style_renderer=`Ansi_tty, ());
+  };
 
 switch (Env.debug, Env.logFile) {
 | (None, None) => Logs.set_level(Some(Logs.Info))
