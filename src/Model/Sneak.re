@@ -35,6 +35,15 @@ let initial: t = {
   filteredSneaks: [],
 };
 
+let getTextHighlight = (text: string, model: t) => {
+  let prefixLength = model.prefix |> String.length;
+  let idLength = text |> String.length;
+
+  let remainder = String.sub(text, prefixLength, idLength - prefixLength);
+
+  (model.prefix, remainder);
+};
+
 let reset = _sneak => {...initial, active: true};
 
 let hide = _sneak => initial;
@@ -65,7 +74,6 @@ let refine = (characterToAdd: string, sneaks: t) => {
       characterToAdd,
     );
 
-  print_endline("NEW TEXT: " ++ prefix);
   {...sneaks, prefix} |> _applyFilter;
 };
 

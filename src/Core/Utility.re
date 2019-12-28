@@ -445,12 +445,12 @@ module StringUtil = {
   let startsWith = (~prefix, str) => {
     let prefixLength = String.length(prefix);
     let strLength = String.length(str);
-    
+
     if (prefixLength > strLength) {
       false;
     } else {
       String.sub(str, 0, prefixLength) == prefix;
-    }
+    };
   };
 
   let trimLeft = str => {

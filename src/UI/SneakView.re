@@ -30,11 +30,12 @@ module Constants = {
 };
 
 let make = (~state: State.t, ()) => {
+  let {theme, _}: State.t = state;
   let makeSneak = (bbox, text) => {
     open Style;
     let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
     let sneakStyle = [
-      backgroundColor(Colors.red),
+      backgroundColor(theme.sneakBackground),
       position(`Absolute),
       top(int_of_float(y) - Constants.size / 2),
       left(int_of_float(x) + Constants.size / 2),
@@ -46,12 +47,23 @@ let make = (~state: State.t, ()) => {
     ];
 
     let textStyle = [
-      backgroundColor(Colors.red),
-      color(Colors.white),
+      backgroundColor(theme.sneakBackground),
+      color(theme.sneakForeground),
       fontFamily(state.uiFont.fontFile),
       fontSize(12),
     ];
-    <View style=sneakStyle> <Text style=textStyle text /> </View>;
+    let highlightStyle = [
+      backgroundColor(theme.sneakBackground),
+      color(theme.sneakHighlight),
+      fontFamily(state.uiFont.fontFile),
+      fontSize(12),
+    ];
+    let (highlightText, remainingText) =
+      Sneak.getTextHighlight(text, state.sneak);
+    <View style=sneakStyle>
+      <Text style=highlightStyle text=highlightText />
+      <Text style=textStyle text=remainingText />
+    </View>;
   };
 
   let sneaks = Sneak.getFiltered(state.sneak);
