@@ -7,6 +7,7 @@
 open EditorCoreTypes;
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 
 open Oni_Core;
 open Oni_Model;
@@ -73,8 +74,10 @@ module StatusBarItem = {
       minWidth(50),
     ];
 
-  let make = (~children, ~height, ~backgroundColor, ()) =>
-    <View style={getStyle(height, backgroundColor)}> children </View>;
+  let make = (~children, ~height, ~backgroundColor, ~onClick=() => (), ()) =>
+    <Clickable style={getStyle(height, backgroundColor)} onClick>
+      children
+    </Clickable>;
 };
 
 let animation =
@@ -138,7 +141,14 @@ let%component make = (~height, ~state: State.t, ()) => {
     state.diagnostics |> Diagnostics.count |> string_of_int;
 
   let diagnosticsItem =
-    <StatusBarItem height backgroundColor={theme.statusBarBackground}>
+    <StatusBarItem
+      height
+      backgroundColor={theme.statusBarBackground}
+      onClick={() =>
+        GlobalContext.current().dispatch(
+          Actions.StatusBar(StatusBarModel.DiagnosticsClicked),
+        )
+      }>
       <View
         style=Style.[
           flexDirection(`Row),

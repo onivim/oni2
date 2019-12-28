@@ -115,6 +115,7 @@ type t =
   | SetColorTheme([@opaque] Theme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
+  | StatusBar(StatusBarModel.action)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | EnableZenMode

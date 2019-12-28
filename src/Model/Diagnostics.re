@@ -24,7 +24,11 @@ type t = {
   count: int,
 };
 
-let create = () => {keyToUri: StringMap.empty, diagnosticsMap: StringMap.empty, count: 0};
+let create = () => {
+  keyToUri: StringMap.empty,
+  diagnosticsMap: StringMap.empty,
+  count: 0,
+};
 
 let count = (diags: t) => diags.count;
 
@@ -134,24 +138,25 @@ let getDiagnosticsUri = ({diagnosticsMap, _}, uri) => {
 };
 
 let getAllDiagnostics = (diagnostics: t) => {
-  let extractBindings = (map) => {
-    StringMap.bindings(map)
-    |> List.map(_value)
-    |> List.flatten;
+  let extractBindings = map => {
+    StringMap.bindings(map) |> List.map(_value) |> List.flatten;
   };
 
-  StringMap.fold((k, v, accum) => {
+  StringMap.fold(
+    (k, v, accum) => {
       let uri = StringMap.find_opt(k, diagnostics.keyToUri);
       switch (uri) {
       | None => accum
-      | Some(uri) => 
-        let diags = extractBindings(v)
-        |> List.map((v) => (uri, v));
-        [diags, ...accum]
-      }
-  }, diagnostics.diagnosticsMap, [])
+      | Some(uri) =>
+        let diags = extractBindings(v) |> List.map(v => (uri, v));
+        [diags, ...accum];
+      };
+    },
+    diagnostics.diagnosticsMap,
+    [],
+  )
   |> List.flatten;
-}
+};
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
   getDiagnostics(instance, buffer)

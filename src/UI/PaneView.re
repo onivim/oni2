@@ -35,7 +35,13 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
        let childPane =
          switch (paneType) {
          | Pane.Search =>
-           <SearchPane isFocused={FocusManager.current(state) == Focus.Search} theme uiFont editorFont state={state.searchPane} />
+           <SearchPane
+             isFocused={FocusManager.current(state) == Focus.Search}
+             theme
+             uiFont
+             editorFont
+             state={state.searchPane}
+           />
          | Pane.Diagnostics => <DiagnosticsPane state />
          };
        [
