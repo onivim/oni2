@@ -300,6 +300,12 @@ module List = {
   };
 };
 
+module ListEx = {
+  let safeConcat = lists => lists |> List.fold_left(List.append, []);
+
+  let safeMap = (f, list) => list |> List.rev |> List.rev_map(f);
+};
+
 // TODO: Remove after 4.08 upgrade
 module Option = {
   let map = f =>
@@ -763,7 +769,7 @@ module ChunkyQueue: {
     };
 
   let toList = ({front, rear, _}) =>
-    front @ (Queue.toList(rear) |> List.concat);
+    front @ (Queue.toList(rear) |> ListEx.safeConcat);
 };
 
 module Path = {
