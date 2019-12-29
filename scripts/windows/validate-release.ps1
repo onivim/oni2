@@ -31,5 +31,3 @@ ls D:/
 ls D:/a/1/s
 ls D:/a/1/s/Onivim2
 
-D:/a/1/s/Onivim2/Oni2.exe -f --no-log-colors --checkhealth
-
