@@ -35,7 +35,8 @@ let defaultMessageHandler = (_, _, _) => Ok(None);
 
 let start =
     (
-      ~initData=ExtHostInitData.create(),
+      ~initialConfiguration,
+      ~initData,
       ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
@@ -156,7 +157,8 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration(setup) |> sendNotification;
+    Configuration.initializeConfiguration(initialConfiguration)
+    |> sendNotification;
     Workspace.initializeWorkspace(initialWorkspace) |> sendNotification;
 
     initialized := true;
