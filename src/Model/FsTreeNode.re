@@ -208,7 +208,7 @@ let expandedIndex = (tree, path) => {
     switch (path) {
     | [] => `Found(0)
     | [focus, ...focusTail] =>
-      if (equals(focus, node)) {
+      if (!equals(focus, node)) {
         `NotFound(node.expandedSubtreeSize);
       } else {
         switch (node.kind) {
