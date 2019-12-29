@@ -2,6 +2,7 @@ open Rench;
 
 module Time = Revery_Core.Time;
 module List = Utility.List;
+module ListEx = Utility.ListEx;
 module Queue = Utility.Queue;
 
 module Match = {
@@ -243,7 +244,7 @@ let findInFiles =
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
-      |> List.concat  // TODO: This causes a stack overflow
+      |> ListEx.safeConcat
       |> onUpdate
     },
     onComplete,
