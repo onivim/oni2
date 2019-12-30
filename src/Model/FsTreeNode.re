@@ -253,11 +253,11 @@ let update = (~tree, ~updater, targetPath) => {
   loop(tree);
 };
 
-let updateNodesInPath = (~tree, ~updater, nodes) => {
-  let rec loop = (nodes, node) =>
-    switch (nodes) {
-    | [{hash, kind, _}, ...rest] when hash == node.hash =>
-      switch (kind) {
+let updateNodesInPath = (updater, path, tree) => {
+  let rec loop = (pathHashes, node) =>
+    switch (pathHashes) {
+    | [hash, ...rest] when hash == node.hash =>
+      switch (node.kind) {
       | Directory({children, _} as dir) =>
         let newChildren = List.map(loop(rest), children);
         let newNode =
@@ -277,7 +277,7 @@ let updateNodesInPath = (~tree, ~updater, nodes) => {
     | _ => node
     };
 
-  loop(nodes, tree);
+  loop(_pathHashes(~base=Filename.dirname(tree.path), path), tree);
 };
 
 let toggleOpen =

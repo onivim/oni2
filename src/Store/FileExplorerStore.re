@@ -61,13 +61,8 @@ let revealPath = (path, state: State.t) => {
       )
 
     // Open ALL the nodes (in the path)!
-    | `Success(nodes) =>
-      let tree =
-        FsTreeNode.updateNodesInPath(
-          ~tree,
-          nodes,
-          ~updater=FsTreeNode.setOpen,
-        );
+    | `Success(_) =>
+      let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
       let offset =
         switch (FsTreeNode.expandedIndex(path, tree)) {
         | Some(offset) => `Middle(float(offset))
