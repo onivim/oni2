@@ -3,11 +3,12 @@ open Oni_Core;
 module ArrayEx = Utility.ArrayEx;
 module Path = Utility.Path;
 
+[@deriving show({with_path: false})]
 type t = {
   path: string,
   displayName: string,
   hash: int, // hash of basename, so only comparable locally
-  icon: option(IconTheme.IconDefinition.t),
+  icon: option([@opaque] IconTheme.IconDefinition.t),
   kind,
   expandedSubtreeSize: int,
 }
@@ -15,7 +16,7 @@ type t = {
 and kind =
   | Directory({
       isOpen: bool,
-      children: list(t),
+      children: [@opaque] list(t),
     })
   | File;
 
@@ -241,22 +242,15 @@ let expandedIndex = (path, tree) => {
 let replace = (~replacement, tree) => {
   let rec loop = (pathHashes, node) =>
     switch (pathHashes) {
-    | [hash] when hash == node.hash =>
-      replacement
+    | [hash] when hash == node.hash => replacement
 
     | [hash, ...rest] when hash == node.hash =>
       switch (node.kind) {
       | Directory({children, _} as dir) =>
         let newChildren = List.map(loop(rest), children);
-        let newNode = {
-            ...node,
-            kind: Directory({...dir, children: newChildren}),
-          };
+        let kind = Directory({...dir, children: newChildren});
 
-        {
-          ...newNode,
-          expandedSubtreeSize: countExpandedSubtree(newNode.kind),
-        };
+        {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
 
       | File => node
       }
@@ -264,7 +258,10 @@ let replace = (~replacement, tree) => {
     | _ => node
     };
 
-  loop(_pathHashes(~base=Filename.dirname(tree.path), replacement.path), tree);
+  loop(
+    _pathHashes(~base=Filename.dirname(tree.path), replacement.path),
+    tree,
+  );
 };
 
 let updateNodesInPath = (updater, path, tree) => {

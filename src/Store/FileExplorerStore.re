@@ -56,7 +56,7 @@ let revealPath = (path, state: State.t) => {
           state.iconTheme,
           state.configuration,
           ~onComplete=node =>
-          Actions.FileExplorer(FocusNodeLoaded(lastNode.path, node))
+          Actions.FileExplorer(FocusNodeLoaded(node))
         ),
       )
 
@@ -103,7 +103,7 @@ let start = () => {
     });
   };
 
-  let replaceNode = (path, node, state: State.t) =>
+  let replaceNode = (node, state: State.t) =>
     switch (state.fileExplorer.tree) {
     | Some(tree) =>
       setTree(FsTreeNode.replace(~replacement=node, tree), state)
@@ -117,7 +117,7 @@ let start = () => {
       (state |> setActive(Some(node.path)), openFileByPathEffect(path))
 
     | {kind: Directory({isOpen, _}), _} => (
-        replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
+        replaceNode(FsTreeNode.toggleOpen(node), state),
         isOpen
           ? Isolinear.Effect.none
           : Effects.load(
@@ -126,7 +126,7 @@ let start = () => {
               state.iconTheme,
               state.configuration,
               ~onComplete=newNode =>
-              Actions.FileExplorer(NodeLoaded(node.path, newNode))
+              Actions.FileExplorer(NodeLoaded(newNode))
             ),
       )
     };
@@ -135,15 +135,12 @@ let start = () => {
     switch (action) {
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
-    | NodeLoaded(path, node) => (
-        replaceNode(path, node, state),
-        Isolinear.Effect.none,
-      )
+    | NodeLoaded(node) => (replaceNode(node, state), Isolinear.Effect.none)
 
-    | FocusNodeLoaded(path, node) =>
+    | FocusNodeLoaded(node) =>
       switch (state.fileExplorer.active) {
       | Some(activePath) =>
-        state |> replaceNode(path, node) |> revealPath(activePath)
+        state |> replaceNode(node) |> revealPath(activePath)
 
       | None => (state, Isolinear.Effect.none)
       }

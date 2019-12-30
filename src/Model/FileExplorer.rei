@@ -10,10 +10,10 @@ type t = {
 
 [@deriving show]
 type action =
-  | TreeLoaded([@opaque] FsTreeNode.t)
-  | NodeLoaded(string, [@opaque] FsTreeNode.t)
-  | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
-  | NodeClicked([@opaque] FsTreeNode.t)
+  | TreeLoaded(FsTreeNode.t)
+  | NodeLoaded(FsTreeNode.t)
+  | FocusNodeLoaded(FsTreeNode.t)
+  | NodeClicked(FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
   | KeyboardInput(string);
 
