@@ -16,13 +16,17 @@ let measure = (~text, v: t) => {
   float_of_int(Zed_utf8.length(text)) *. v.measuredWidth;
 };
 
-let create = (~fontFile, 
-  ~boldFontFile,
-  ~italicFontFile,
-  ~boldItalicFontFile,
-  ~fontSize, 
-  ~measuredWidth, 
-  ~measuredHeight, ()) => {
+let create =
+    (
+      ~fontFile,
+      ~boldFontFile,
+      ~italicFontFile,
+      ~boldItalicFontFile,
+      ~fontSize,
+      ~measuredWidth,
+      ~measuredHeight,
+      (),
+    ) => {
   boldFontFile,
   italicFontFile,
   boldItalicFontFile,

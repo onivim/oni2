@@ -139,7 +139,7 @@ let start = (~getScaleFactor, ()) => {
                       v,
                     );
 
-                  let boldItalic = 
+                  let boldItalic =
                     Revery.Font.find(
                       ~italic=true,
                       ~mono=true,

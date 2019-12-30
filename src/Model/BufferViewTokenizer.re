@@ -47,11 +47,12 @@ let filterRuns = (r: Tokenizer.TextRun.t) => {
   };
 };
 
-type colorizer = int => (Color.t, Color.t);
+type colorizer = int => BufferLineColorizer.tokenColor;
 
 let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   let startIndex = Index.toZeroBased(r.startIndex);
-  let (bg, fg) = colorizer(startIndex);
+  let BufferLineColorizer.{backgroundColor as bg, foregroundColor as fg, _} =
+    colorizer(startIndex);
 
   let firstChar = ZedBundled.get(r.text, 0);
 
@@ -121,8 +122,18 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
 let tokenize =
     (~startIndex=0, ~endIndex=(-1), s, indentationSettings, colorizer) => {
   let split = (i0, c0, i1, c1) => {
-    let (bg1, fg1) = colorizer(i0);
-    let (bg2, fg2) = colorizer(i1);
+    let BufferLineColorizer.{
+          backgroundColor as bg1,
+          foregroundColor as fg1,
+          _,
+        } =
+      colorizer(i0);
+    let BufferLineColorizer.{
+          backgroundColor as bg2,
+          foregroundColor as fg2,
+          _,
+        } =
+      colorizer(i1);
 
     !colorEqual(bg1, bg2)
     || !colorEqual(fg1, fg2)
