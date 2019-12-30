@@ -232,9 +232,10 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "github:revery-ui/revery#d2fd73b",
+    "revery": "github:revery-ui/revery#4181d78",
     "reason-libvim": "onivim/reason-libvim#4919011",
-    "editor-core-types": "onivim/editor-core-types#16dd98e"
+    "editor-core-types": "onivim/editor-core-types#16dd98e",
+    "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",
