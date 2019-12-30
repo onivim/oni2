@@ -69,7 +69,7 @@ let revealPath = (path, state: State.t) => {
           ~updater=FsTreeNode.setOpen,
         );
       let offset =
-        switch (FsTreeNode.expandedIndex(tree, nodes)) {
+        switch (FsTreeNode.expandedIndex(path, tree)) {
         | Some(offset) => `Middle(float(offset))
         | None => state.fileExplorer.scrollOffset
         };
@@ -88,14 +88,9 @@ let revealFocus =
   updateFileExplorer(state => {
     switch (state.focus, state.tree) {
     | (Some(focus), Some(tree)) =>
-      switch (FsTreeNode.findNodesByPath(focus, tree)) {
-      | `Success(nodes) =>
-        switch (FsTreeNode.expandedIndex(tree, nodes)) {
-        | Some(index) => {...state, scrollOffset: `Reveal(index)}
-        | None => state
-        }
-      | `Partial(_)
-      | `Failed => state
+      switch (FsTreeNode.expandedIndex(focus, tree)) {
+      | Some(index) => {...state, scrollOffset: `Reveal(index)}
+      | None => state
       }
 
     | _ => state

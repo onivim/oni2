@@ -33,7 +33,7 @@ let findByPath: (string, t) => option(t);
 let prevExpandedNode: (string, t) => option(t);
 let nextExpandedNode: (string, t) => option(t);
 
-let expandedIndex: (t, list(t)) => option(int);
+let expandedIndex: (string, t) => option(int);
 
 let update: (~tree: t, ~updater: t => t, string) => t;
 let updateNodesInPath: (~tree: t, ~updater: t => t, list(t)) => t;

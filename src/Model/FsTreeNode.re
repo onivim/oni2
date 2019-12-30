@@ -203,12 +203,12 @@ let nextExpandedNode = (path, tree) =>
   };
 
 // Counts the number of expanded nodes before the node specified by the given path
-let expandedIndex = (tree, path) => {
-  let rec loop = (node, path) =>
-    switch (path) {
+let expandedIndex = (path, tree) => {
+  let rec loop = (node, pathHashes) =>
+    switch (pathHashes) {
     | [] => `Found(0)
-    | [focus, ...focusTail] =>
-      if (!equals(focus, node)) {
+    | [hash, ...pathTail] =>
+      if (node.hash != hash) {
         `NotFound(node.expandedSubtreeSize);
       } else {
         switch (node.kind) {
@@ -220,7 +220,7 @@ let expandedIndex = (tree, path) => {
             switch (children) {
             | [] => `NotFound(count)
             | [child, ...childTail] =>
-              switch (loop(child, focusTail)) {
+              switch (loop(child, pathTail)) {
               | `Found(subtreeCount) => `Found(count + subtreeCount)
               | `NotFound(subtreeCount) =>
                 loopChildren(count + subtreeCount, childTail)
@@ -232,7 +232,7 @@ let expandedIndex = (tree, path) => {
       }
     };
 
-  switch (loop(tree, path)) {
+  switch (loop(tree, _pathHashes(~base=Filename.dirname(tree.path), path))) {
   | `Found(count) => Some(count)
   | `NotFound(_) => None
   };
