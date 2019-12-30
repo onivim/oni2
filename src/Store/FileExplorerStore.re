@@ -84,6 +84,24 @@ let revealPath = (path, state: State.t) => {
   };
 };
 
+let revealFocus =
+  updateFileExplorer(state => {
+    switch (state.focus, state.tree) {
+    | (Some(focus), Some(tree)) =>
+      switch (FsTreeNode.findNodesByPath(focus, tree)) {
+      | `Success(nodes) =>
+        switch (FsTreeNode.expandedIndex(tree, nodes)) {
+        | Some(index) => {...state, scrollOffset: `Reveal(index)}
+        | None => state
+        }
+      | `Partial(_)
+      | `Failed => state
+      }
+
+    | _ => state
+    }
+  });
+
 let start = () => {
   let (stream, _) = Isolinear.Stream.create();
 
@@ -161,13 +179,19 @@ let start = () => {
         | "<UP>" =>
           FsTreeNode.prevExpandedNode(path, tree)
           |> Option.map((node: FsTreeNode.t) =>
-               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+               (
+                 state |> setFocus(Some(node.path)) |> revealFocus,
+                 Isolinear.Effect.none,
+               )
              )
 
         | "<DOWN>" =>
           FsTreeNode.nextExpandedNode(path, tree)
           |> Option.map((node: FsTreeNode.t) =>
-               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+               (
+                 state |> setFocus(Some(node.path)) |> revealFocus,
+                 Isolinear.Effect.none,
+               )
              )
 
         | _ => None
