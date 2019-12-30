@@ -207,7 +207,7 @@
     "rench": "1.7.1",
     "revery": "0.27.0",
     "reason-tree-sitter": "*",
-    "reason-textmate": "^2.1.0",
+    "reason-textmate": "^2.3.0",
     "esy-sdl2": "*",
     "@opam/fmt": "^0.8.8",
     "@opam/logs": "^0.7.0",
