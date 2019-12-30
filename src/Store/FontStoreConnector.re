@@ -116,10 +116,32 @@ let start = (~getScaleFactor, ()) => {
               Rench.Path.isAbsolute(v)
                 ? (v, v)
                 : {
-                  let descriptor =
+                  let normal =
                     Revery.Font.find(
                       ~mono=true,
                       ~weight=Revery.Font.Weight.Normal,
+                      v,
+                    );
+                  let bold =
+                    Revery.Font.find(
+                      ~mono=true,
+                      ~weight=Revery.Font.Weight.Bold,
+                      v,
+                    );
+                  let italic =
+                    Revery.Font.find(
+                      ~italic=true,
+                      ~mono=true,
+                      ~weight=Revery.Font.Weight.Normal,
+                      v,
+                    );
+
+                  let boldItalic = 
+                  let italic =
+                    Revery.Font.find(
+                      ~italic=true,
+                      ~mono=true,
+                      ~weight=Revery.Font.Weight.Bold,
                       v,
                     );
                   Log.info(
