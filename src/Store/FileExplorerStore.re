@@ -106,7 +106,7 @@ let start = () => {
   let replaceNode = (path, node, state: State.t) =>
     switch (state.fileExplorer.tree) {
     | Some(tree) =>
-      setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
+      setTree(FsTreeNode.replace(~replacement=node, tree), state)
     | None => state
     };
 

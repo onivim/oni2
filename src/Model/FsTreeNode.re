@@ -238,19 +238,33 @@ let expandedIndex = (path, tree) => {
   };
 };
 
-let update = (~tree, ~updater, targetPath) => {
-  let rec loop =
-    fun
-    | {path, _} as node when path == targetPath => updater(node)
+let replace = (~replacement, tree) => {
+  let rec loop = (pathHashes, node) =>
+    switch (pathHashes) {
+    | [hash] when hash == node.hash =>
+      replacement
 
-    | {kind: Directory({children, _} as dir), _} as node => {
-        let kind = Directory({...dir, children: List.map(loop, children)});
-        {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
+    | [hash, ...rest] when hash == node.hash =>
+      switch (node.kind) {
+      | Directory({children, _} as dir) =>
+        let newChildren = List.map(loop(rest), children);
+        let newNode = {
+            ...node,
+            kind: Directory({...dir, children: newChildren}),
+          };
+
+        {
+          ...newNode,
+          expandedSubtreeSize: countExpandedSubtree(newNode.kind),
+        };
+
+      | File => node
       }
 
-    | node => node;
+    | _ => node
+    };
 
-  loop(tree);
+  loop(_pathHashes(~base=Filename.dirname(tree.path), replacement.path), tree);
 };
 
 let updateNodesInPath = (updater, path, tree) => {

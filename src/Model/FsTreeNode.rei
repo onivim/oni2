@@ -35,6 +35,7 @@ let nextExpandedNode: (string, t) => option(t);
 
 let expandedIndex: (string, t) => option(int);
 
+let replace: (~replacement: t, t) => t;
 let updateNodesInPath: (t => t, string, t) => t;
 let toggleOpen: t => t;
 let setOpen: t => t;
