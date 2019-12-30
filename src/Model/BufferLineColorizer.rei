@@ -9,7 +9,12 @@ open Oni_Core;
 /*
  * Type [tokenColor] is a tuple of [(backgroundColor, foregroundColor)]
  */
-type tokenColor = (Color.t, Color.t);
+type tokenColor = {
+ backgroundColor: Color.t,
+ foregroundColor: Color.t,
+ bold: bool,
+ italic: bool,
+};
 
 /*
  * Type [t] is a function of [(int) => tokenColor)].

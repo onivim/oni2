@@ -7,7 +7,13 @@ open Revery;
 
 open Oni_Core;
 
-type tokenColor = (Color.t, Color.t);
+type tokenColor = {
+  backgroundColor: Color.t,
+  foregroundColor: Color.t,
+  bold: bool,
+  italic: bool,
+};
+
 type t = int => tokenColor;
 
 let create =
@@ -101,7 +107,12 @@ let create =
     let backgroundColor =
       isSearchHighlight ? searchHighlightColor : backgroundColor;
 
-    let color = colorIndex.foregroundColor;
-    (backgroundColor, color);
+    let foregroundColor = colorIndex.foregroundColor;
+    {
+      backgroundColor,
+      foregroundColor,
+      bold: colorIndex.bold,
+      italic: colorIndex.italic,
+    };
   };
 };
