@@ -73,6 +73,9 @@ let loadAndValidateEditorFont =
           requestId,
           EditorFont.create(
             ~fontFile=fullPath,
+            ~boldFontFile=fullPath,
+            ~italicFontFile=fullPath,
+            ~boldItalicFontFile=fullPath,
             ~fontSize,
             ~measuredWidth,
             ~measuredHeight,
@@ -137,7 +140,6 @@ let start = (~getScaleFactor, ()) => {
                     );
 
                   let boldItalic = 
-                  let italic =
                     Revery.Font.find(
                       ~italic=true,
                       ~mono=true,
@@ -145,9 +147,9 @@ let start = (~getScaleFactor, ()) => {
                       v,
                     );
                   Log.info(
-                    "setFont - discovering font at path: " ++ descriptor.path,
+                    "setFont - discovering font at path: " ++ normal.path,
                   );
-                  (v, descriptor.path);
+                  (v, normal.path);
                 };
             };
 

@@ -71,6 +71,8 @@ let doWork = (context: context, line: int) => {
         ~index=Index.toZeroBased(loc.column),
         ~backgroundColor=Revery.Color.hex(resolvedColor.background),
         ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
+        ~bold=false,
+        ~italic=false,
         (),
       );
     },

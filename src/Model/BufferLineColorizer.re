@@ -28,6 +28,8 @@ let create =
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=defaultForegroundColor,
+      ~bold=false,
+      ~italic=false,
       (),
     );
 
