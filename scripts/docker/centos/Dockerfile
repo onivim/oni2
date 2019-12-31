@@ -21,6 +21,5 @@ RUN yum -y remove git
 RUN rpm -U https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y install git2u
 
-RUN yum -y install centos-release-scl llvm-toolset-7 scl-utils
-RUN scl enable llvm-toolset-7 bash
+RUN rpm -i https://dl.fedoraproject.org/pub/epel/6/x86_64/Packages/c/clang-3.4.2-4.el6.x86_64.rpm
 RUN clang --version
