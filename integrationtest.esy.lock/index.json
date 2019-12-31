@@ -1,5 +1,5 @@
 {
-  "checksum": "1096b78f69216ab6aa26d9f34b7002b6",
+  "checksum": "f899d750fb72ecfe2edf0918cc1d15f7",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -75,34 +75,20 @@
       ],
       "devDependencies": []
     },
-    "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9": {
-      "id":
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
-      "name": "revery-text-wrap",
-      "version": "github:revery-ui/revery-text-wrap#005385c",
-      "source": {
-        "type": "install",
-        "source": [ "github:revery-ui/revery-text-wrap#005385c" ]
-      },
-      "overrides": [],
-      "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
-      "devDependencies": []
-    },
-    "revery@github:revery-ui/revery#99441c7@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#99441c7@d41d8cd9",
+    "revery@github:revery-ui/revery#d2fd73b@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#99441c7",
+      "version": "github:revery-ui/revery#d2fd73b",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#99441c7" ]
+        "source": [ "github:revery-ui/revery#d2fd73b" ]
       },
       "overrides": [],
       "dependencies": [
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-sdl2@2.10.3012@d41d8cd9",
+        "reason-sdl2@2.10.3011@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
         "reason-fontkit@2.8.3@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
@@ -164,7 +150,7 @@
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4",
-        "@opam/lambda-term@opam:2.0.3@9465cf1c",
+        "@opam/lambda-term@opam:2.0.2@119fb081",
         "@opam/fpath@opam:0.7.2@45477b93", "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
@@ -279,21 +265,20 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@2.10.3012@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3012@d41d8cd9",
+    "reason-sdl2@2.10.3011@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3011@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3012",
+      "version": "2.10.3011",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3012.tgz#sha1:3de856a603dc82ac0d6b36caab5155f59621bfd9"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3011.tgz#sha1:4b03fa4ba56fe15050168545ac4d6ac7277b6fc1"
         ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "reason-gl-matrix@0.9.9306@d41d8cd9",
-        "esy-sdl2@2.0.10005@d41d8cd9",
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
+        "esy-sdl2@2.0.10005@d41d8cd9", "esy-cmake@0.3.5@d41d8cd9",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/js_of_ocaml-lwt@opam:3.5.2@6ea3e3c2",
         "@opam/js_of_ocaml-compiler@opam:3.5.0@9ea7292f",
@@ -818,9 +803,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9"
-      ],
+      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
     "esy-harfbuzz@1.9.1005@d41d8cd9": {
@@ -834,9 +817,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9"
-      ],
+      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
     "esy-freetype2@2.9.1006@d41d8cd9": {
@@ -850,19 +831,18 @@
         ]
       },
       "overrides": [],
-      "dependencies": [
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9"
-      ],
+      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
-    "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9": {
-      "id":
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
+    "esy-cmake@0.3.5@d41d8cd9": {
+      "id": "esy-cmake@0.3.5@d41d8cd9",
       "name": "esy-cmake",
-      "version": "github:prometheansacrifice/esy-cmake#2a47392def755",
+      "version": "0.3.5",
       "source": {
         "type": "install",
-        "source": [ "github:prometheansacrifice/esy-cmake#2a47392def755" ]
+        "source": [
+          "archive:https://registry.npmjs.org/esy-cmake/-/esy-cmake-0.3.5.tgz#sha1:2df0bdfe9317fbcded5f463fca1f346464494c7a"
+        ]
       },
       "overrides": [],
       "dependencies": [],
@@ -984,11 +964,11 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#99441c7@d41d8cd9",
+        "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
-        "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3012@d41d8cd9",
+        "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3011@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#4919011@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
@@ -1087,20 +1067,20 @@
       ],
       "devDependencies": []
     },
-    "@opam/zed@opam:2.0.4@f9f7c80f": {
-      "id": "@opam/zed@opam:2.0.4@f9f7c80f",
+    "@opam/zed@opam:2.0.3@62853a38": {
+      "id": "@opam/zed@opam:2.0.3@62853a38",
       "name": "@opam/zed",
-      "version": "opam:2.0.4",
+      "version": "opam:2.0.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/c6/c65b4de9f1374e72a8f80cc9cf752d90#md5:c65b4de9f1374e72a8f80cc9cf752d90",
-          "archive:https://github.com/ocaml-community/zed/releases/download/2.0.4/zed-2.0.4.tbz#md5:c65b4de9f1374e72a8f80cc9cf752d90"
+          "archive:https://opam.ocaml.org/cache/md5/87/878123c9114bf3c0bd18a19fb1af73cd#md5:878123c9114bf3c0bd18a19fb1af73cd",
+          "archive:https://github.com/ocaml-community/zed/releases/download/2.0.3/zed-2.0.3.tbz#md5:878123c9114bf3c0bd18a19fb1af73cd"
         ],
         "opam": {
           "name": "zed",
-          "version": "2.0.4",
-          "path": "integrationtest.esy.lock/opam/zed.2.0.4"
+          "version": "2.0.3",
+          "path": "integrationtest.esy.lock/opam/zed.2.0.3"
         }
       },
       "overrides": [],
@@ -1475,8 +1455,8 @@
         "@opam/base-bytes@opam:base@19d0c2ff"
       ]
     },
-    "@opam/ppxlib@opam:0.8.1@e7b0b240": {
-      "id": "@opam/ppxlib@opam:0.8.1@e7b0b240",
+    "@opam/ppxlib@opam:0.8.1@67aec471": {
+      "id": "@opam/ppxlib@opam:0.8.1@67aec471",
       "name": "@opam/ppxlib",
       "version": "opam:0.8.1",
       "source": {
@@ -1608,14 +1588,14 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@e7b0b240",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@67aec471",
         "@opam/ocaml-migrate-parsetree@opam:1.5.0@3e319dbc",
         "@opam/jbuilder@opam:transition@20522f05",
         "@opam/base@opam:v0.11.1@36e7ad4c",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@e7b0b240",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@67aec471",
         "@opam/ocaml-migrate-parsetree@opam:1.5.0@3e319dbc",
         "@opam/jbuilder@opam:transition@20522f05",
         "@opam/base@opam:v0.11.1@36e7ad4c"
@@ -2113,25 +2093,25 @@
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
     },
-    "@opam/lambda-term@opam:2.0.3@9465cf1c": {
-      "id": "@opam/lambda-term@opam:2.0.3@9465cf1c",
+    "@opam/lambda-term@opam:2.0.2@119fb081": {
+      "id": "@opam/lambda-term@opam:2.0.2@119fb081",
       "name": "@opam/lambda-term",
-      "version": "opam:2.0.3",
+      "version": "opam:2.0.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/90/903b6cc234598d67c7c905dfb5230209#md5:903b6cc234598d67c7c905dfb5230209",
-          "archive:https://github.com/ocaml-community/lambda-term/releases/download/2.0.3/lambda-term-2.0.3.tbz#md5:903b6cc234598d67c7c905dfb5230209"
+          "archive:https://opam.ocaml.org/cache/md5/46/4602aa4355705909e406513322b4b27e#md5:4602aa4355705909e406513322b4b27e",
+          "archive:https://github.com/ocaml-community/lambda-term/releases/download/2.0.2/lambda-term-2.0.2.tbz#md5:4602aa4355705909e406513322b4b27e"
         ],
         "opam": {
           "name": "lambda-term",
-          "version": "2.0.3",
-          "path": "integrationtest.esy.lock/opam/lambda-term.2.0.3"
+          "version": "2.0.2",
+          "path": "integrationtest.esy.lock/opam/lambda-term.2.0.2"
         }
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.4@f9f7c80f",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.3@62853a38",
         "@opam/react@opam:1.2.1@0e11855f",
         "@opam/lwt_react@opam:1.1.3@72987fcf",
         "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:4.5.0@677655b4",
@@ -2140,7 +2120,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.4@f9f7c80f",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/zed@opam:2.0.3@62853a38",
         "@opam/react@opam:1.2.1@0e11855f",
         "@opam/lwt_react@opam:1.1.3@72987fcf",
         "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:4.5.0@677655b4",
@@ -2884,7 +2864,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@e7b0b240",
+        "ocaml@4.7.1004@d41d8cd9", "@opam/ppxlib@opam:0.8.1@67aec471",
         "@opam/dune@opam:1.11.4@a7ccb7ae", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
