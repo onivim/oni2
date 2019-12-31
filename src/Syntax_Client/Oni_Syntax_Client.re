@@ -89,6 +89,10 @@ let start =
       pstderr,
     );
 
+  Unix.close(pstdout);
+  Unix.close(pstdin);
+  Unix.close(pstderr);
+
   let shouldClose = ref(false);
 
   let in_channel = Unix.in_channel_of_descr(stdout);
@@ -127,6 +131,7 @@ let start =
             signal;
           };
         shouldClose := true;
+        Unix.close(stdin);
         scheduler(() => onClose(code));
       },
       (),
@@ -137,27 +142,28 @@ let start =
       ~name="SyntaxThread.read",
       () => {
         while (! shouldClose^) {
-          if (Thread.wait_timed_read(stdout, 5.0)) {
-            let result: ServerToClient.t = Marshal.from_channel(in_channel);
-            switch (result) {
-            | ServerToClient.Initialized => scheduler(onConnected)
-            | ServerToClient.EchoReply(result) =>
-              scheduler(() =>
-                ClientLog.info("got message from channel: |" ++ result ++ "|")
-              )
-            | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
-            | ServerToClient.Closing =>
-              scheduler(() => ServerLog.info("Closing"))
-            | ServerToClient.HealthCheckPass(res) =>
-              scheduler(() => onHealthCheckResult(res))
-            | ServerToClient.TokenUpdate(tokens) =>
-              scheduler(() => {
-                onHighlights(tokens);
-                ClientLog.info("Tokens applied");
-              })
-            };
+          Thread.wait_read(stdout);
+          let result: ServerToClient.t = Marshal.from_channel(in_channel);
+          switch (result) {
+          | ServerToClient.Initialized => scheduler(onConnected)
+          | ServerToClient.EchoReply(result) =>
+            scheduler(() =>
+              ClientLog.info("got message from channel: |" ++ result ++ "|")
+            )
+          | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
+          | ServerToClient.Closing =>
+            scheduler(() => ServerLog.info("Closing"))
+          | ServerToClient.HealthCheckPass(res) =>
+            scheduler(() => onHealthCheckResult(res))
+          | ServerToClient.TokenUpdate(tokens) =>
+            scheduler(() => {
+              onHighlights(tokens);
+              ClientLog.info("Tokens applied");
+            })
           };
-        }
+        };
+
+        Unix.close(stdout);
       },
       (),
     );
@@ -167,13 +173,13 @@ let start =
       ~name="SyntaxThread.stderr",
       () => {
         while (! shouldClose^) {
-          if (Thread.wait_timed_read(stderr, 5.0)) {
-            switch (input_line(err_channel)) {
-            | exception End_of_file => shouldClose := true
-            | v => scheduler(() => ServerLog.info(v))
-            };
+          Thread.wait_read(stderr);
+          switch (input_line(err_channel)) {
+          | exception End_of_file => shouldClose := true
+          | v => scheduler(() => ServerLog.info(v))
           };
         };
+        Unix.close(stderr);
         scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
