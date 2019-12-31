@@ -16,7 +16,7 @@ RUN npm -v
 
 RUN npm install --global --unsafe-perm=true esy@0.5.8
 
-RUN yum install epel-release
+RUN yum -y install epel-release
 RUN yum -y remove git
 RUN rpm -U https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y install git2u
