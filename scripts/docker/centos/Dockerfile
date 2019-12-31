@@ -17,9 +17,10 @@ RUN npm -v
 RUN npm install --global --unsafe-perm=true esy@0.5.8
 
 RUN yum -y install epel-release
+RUN yum -y install clang
+RUN clang --version
+
 RUN yum -y remove git
 RUN rpm -U https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y install git2u
 
-RUN rpm -i https://dl.fedoraproject.org/pub/epel/6/x86_64/Packages/c/clang-3.4.2-4.el6.x86_64.rpm
-RUN clang --version
