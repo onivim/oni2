@@ -107,8 +107,7 @@ let start = setTitle => {
       if (!String.equal(_lastTitle^, title)) {
         _lastTitle := title;
 
-        //setTitle(title);
-        setTitle(ShellUtility.getShellPath());
+        setTitle(title);
       }
     );
 
