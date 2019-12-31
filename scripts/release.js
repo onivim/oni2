@@ -165,6 +165,7 @@ if (process.platform == "linux") {
   fs.copySync(eulaFile, path.join(resourcesDirectory, "EULA.md"));
   fs.copySync(thirdPartyFile, path.join(resourcesDirectory, "ThirdPartyLicenses.txt"));
   fs.copySync("scripts/osx/run.sh", path.join(resourcesDirectory, "run.sh"));
+  fs.copySync("assets/images/Onivim2.icns", path.join(resourcesDirectory, "Onivim2.icns"));
 
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));

@@ -29,7 +29,7 @@ const removeFromPath = () => {
 const addToPath = async () => {
     if (!isAddedToPath() && !isWindows()) {
         const appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
-        const options = { name: "Oni2", icns: path.join(appDirectory, "assets", "images", "Onivim2.icns") }; // TODO: I need to check this in AppImage.
+        const options = { name: "Oni2", icns: path.join(appDirectory, "Onivim2.icns") }; // TODO: I need to check this in AppImage.
         let linkDest = "";
 
         if (isMac()) {
