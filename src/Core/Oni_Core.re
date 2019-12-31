@@ -34,6 +34,7 @@ module Setup = Setup;
 module StringMap = StringMap;
 module Subscription = Subscription;
 module Theme = Theme;
+module ThreadHelper = ThreadHelper;
 module Tokenizer = Tokenizer;
 module UiFont = UiFont;
 module Uri = Uri;

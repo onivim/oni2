@@ -101,7 +101,8 @@ let start =
   let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
   let _waitThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.wait",
       () => {
         let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
         let code =
@@ -125,33 +126,36 @@ let start =
             );
             signal;
           };
+        shouldClose := true;
         scheduler(() => onClose(code));
       },
       (),
     );
 
   let readThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.read",
       () => {
         while (! shouldClose^) {
-          Thread.wait_read(stdout);
-          let result: ServerToClient.t = Marshal.from_channel(in_channel);
-          switch (result) {
-          | ServerToClient.Initialized => scheduler(onConnected)
-          | ServerToClient.EchoReply(result) =>
-            scheduler(() =>
-              ClientLog.info("got message from channel: |" ++ result ++ "|")
-            )
-          | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
-          | ServerToClient.Closing =>
-            scheduler(() => ServerLog.info("Closing"))
-          | ServerToClient.HealthCheckPass(res) =>
-            scheduler(() => onHealthCheckResult(res))
-          | ServerToClient.TokenUpdate(tokens) =>
-            scheduler(() => {
-              onHighlights(tokens);
-              ClientLog.info("Tokens applied");
-            })
+          if (Thread.wait_timed_read(stdout, 5.0)) {
+            let result: ServerToClient.t = Marshal.from_channel(in_channel);
+            switch (result) {
+            | ServerToClient.Initialized => scheduler(onConnected)
+            | ServerToClient.EchoReply(result) =>
+              scheduler(() =>
+                ClientLog.info("got message from channel: |" ++ result ++ "|")
+              )
+            | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
+            | ServerToClient.Closing =>
+              scheduler(() => ServerLog.info("Closing"))
+            | ServerToClient.HealthCheckPass(res) =>
+              scheduler(() => onHealthCheckResult(res))
+            | ServerToClient.TokenUpdate(tokens) =>
+              scheduler(() => {
+                onHighlights(tokens);
+                ClientLog.info("Tokens applied");
+              })
+            };
           };
         }
       },
@@ -159,22 +163,21 @@ let start =
     );
 
   let _readStderr =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.stderr",
       () => {
-        let shouldClose = ref(false);
         while (! shouldClose^) {
-          Thread.wait_read(stderr);
-
-          switch (input_line(err_channel)) {
-          | exception End_of_file => shouldClose := true
-          | v => scheduler(() => ServerLog.info(v))
+          if (Thread.wait_timed_read(stderr, 5.0)) {
+            switch (input_line(err_channel)) {
+            | exception End_of_file => shouldClose := true
+            | v => scheduler(() => ServerLog.info(v))
+            };
           };
         };
         scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
     );
-
   ClientLog.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
