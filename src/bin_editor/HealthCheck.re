@@ -1,6 +1,10 @@
 open Oni_Core;
 
-let checks = [
+type checks =
+  | Common
+  | All;
+
+let commonChecks = [
   (
     "Verify camomile:datadir",
     _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
@@ -17,6 +21,57 @@ let checks = [
     "Verify camomile:unimapdir",
     _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
   ),
+  (
+    "Verify oniguruma dependency",
+    _ => {
+      Oniguruma.(
+        {
+          OnigRegExp.create("(@selector\\()(.*?)(\\))")
+          |> Utility.Result.map(
+               OnigRegExp.search("@selector(windowWillClose:)", 0),
+             )
+          |> Utility.Result.map(result => {
+               OnigRegExp.(
+                 Match.getText(result[1]) == "@selector("
+                 && Match.getText(result[3]) == ")"
+               )
+             })
+          |> Utility.Result.default(~value=false);
+        }
+      );
+    },
+  ),
+  (
+    "Verify textmate dependency",
+    _ => {
+      Textmate.(
+        {
+          let matchRegex = RegExpFactory.create("a|b|c");
+          let grammar =
+            Grammar.create(
+              ~scopeName="source.abc",
+              ~patterns=[
+                Match({
+                  matchRegex,
+                  matchName: Some("keyword.letter"),
+                  captures: [],
+                }),
+              ],
+              ~repository=[],
+              (),
+            );
+
+          let grammarRepository = _ => None;
+          let (tokens, _) =
+            Grammar.tokenize(~grammarRepository, ~grammar, "a");
+          List.length(tokens) > 0;
+        }
+      );
+    },
+  ),
+];
+
+let mainChecks = [
   (
     "Verify node executable",
     (setup: Setup.t) => Sys.file_exists(setup.nodePath),
@@ -65,12 +120,14 @@ let checks = [
     (setup: Setup.t) => {
       let connected = ref(false);
       let closed = ref(false);
+      let healthCheckResult = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
           ~scheduler=Scheduler.immediate,
           ~onConnected=() => connected := true,
           ~onClose=_ => closed := true,
           ~onHighlights=_ => (),
+          ~onHealthCheckResult=res => healthCheckResult := res,
           Oni_Extensions.LanguageInfo.initial,
           setup,
         );
@@ -94,6 +151,11 @@ let checks = [
       // Verify the syntax client spins up and emits a connection message
       waitForRef(connected);
 
+      // Run health check for syntax server
+      Oni_Syntax_Client.healthCheck(syntaxClient);
+
+      waitForRef(healthCheckResult);
+
       // Verify we are able to close it
       Oni_Syntax_Client.close(syntaxClient);
       waitForRef(closed);
@@ -103,8 +165,14 @@ let checks = [
   ),
 ];
 
-let run = _cli => {
+let run = (~checks, _cli) => {
   let setup = Setup.init();
+
+  let checks =
+    switch (checks) {
+    | All => commonChecks @ mainChecks
+    | Common => commonChecks
+    };
 
   let result =
     List.fold_left(

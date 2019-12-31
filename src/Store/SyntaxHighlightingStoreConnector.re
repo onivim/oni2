@@ -35,6 +35,7 @@ let start =
         ~onClose=_ => dispatch(Model.Actions.SyntaxServerClosed),
         ~scheduler=Core.Scheduler.mainThread,
         ~onHighlights,
+        ~onHealthCheckResult=_ => (),
         languageInfo,
         setup,
       );
