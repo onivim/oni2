@@ -37,19 +37,17 @@ let start = () => {
     switch (action) {
     | Model.Actions.Sneak(sneakAction) =>
       switch (sneakAction) {
-      | Sneak.Initiated =>
-        (
+      | Sneak.Initiated => (
           {...state, sneak: Model.Sneak.reset(state.sneak)},
           discoverSneakEffect,
-        );
+        )
       | Sneak.KeyboardInput(k) =>
         let newState = {...state, sneak: Model.Sneak.refine(k, state.sneak)};
         (newState, completeSneakEffect(newState));
-      | Sneak.Stopped =>
-        (
+      | Sneak.Stopped => (
           {...state, sneak: Model.Sneak.hide(state.sneak)},
           Isolinear.Effect.none,
-        );
+        )
       | Sneak.Discover(sneaks) => (
           {...state, sneak: Model.Sneak.add(sneaks, state.sneak)},
           Isolinear.Effect.none,

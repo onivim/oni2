@@ -50,19 +50,34 @@ let hide = _sneak => initial;
 
 let isActive = sneaks => sneaks.active;
 
-let _filter = (prefix: string, sneak: sneak) => {
-  Oni_Core.Utility.StringUtil.startsWith(~prefix, sneak.id);
-};
-
-let _applyFilter = (sneaks: t) =>
-  if (sneaks.prefix == "") {
-    {...sneaks, filteredSneaks: sneaks.allSneaks};
-  } else {
-    {
-      ...sneaks,
-      filteredSneaks: List.filter(_filter(sneaks.prefix), sneaks.allSneaks),
-    };
+module Internal = {
+  let filter = (prefix: string, sneak: sneak) => {
+    Oni_Core.Utility.StringUtil.startsWith(~prefix, sneak.id);
   };
+
+  let applyFilter = (sneaks: t) =>
+    if (sneaks.prefix == "") {
+      {...sneaks, filteredSneaks: sneaks.allSneaks};
+    } else {
+      {
+        ...sneaks,
+        filteredSneaks: List.filter(filter(sneaks.prefix), sneaks.allSneaks),
+      };
+    };
+
+  // Ported from: https://github.com/onivim/oni/blob/74a4dc7f2240a1f5f7a799b2f3f9d01d69b01bac/browser/src/Services/Sneak/SneakStore.ts#L95
+  // But could be improved:
+  // - Preference for home row
+  let getLabelFromIndex = (i: int) => {
+    let aChar = Char.code('A');
+    let firstDigit = i / 26;
+    let secondDigit = i - firstDigit * 26;
+
+    let firstChar = Char.chr(firstDigit + aChar);
+    let secondChar = Char.chr(secondDigit + aChar);
+    String.make(1, firstChar) ++ String.make(1, secondChar);
+  };
+};
 
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
@@ -74,20 +89,7 @@ let refine = (characterToAdd: string, sneaks: t) => {
       characterToAdd,
     );
 
-  {...sneaks, prefix} |> _applyFilter;
-};
-
-// Ported from: https://github.com/onivim/oni/blob/74a4dc7f2240a1f5f7a799b2f3f9d01d69b01bac/browser/src/Services/Sneak/SneakStore.ts#L95
-// But could be improved:
-// - Preference for home row
-let _getLabelFromIndex = (i: int) => {
-  let aChar = Char.code('A');
-  let firstDigit = i / 26;
-  let secondDigit = i - firstDigit * 26;
-
-  let firstChar = Char.chr(firstDigit + aChar);
-  let secondChar = Char.chr(secondDigit + aChar);
-  String.make(1, firstChar) ++ String.make(1, secondChar);
+  {...sneaks, prefix} |> Internal.applyFilter;
 };
 
 let add = (sneaksToAdd: list(sneakInfo), sneaks: t) => {
@@ -95,7 +97,7 @@ let add = (sneaksToAdd: list(sneakInfo), sneaks: t) => {
     {
       boundingBox: sneak.boundingBox,
       callback: sneak.callback,
-      id: _getLabelFromIndex(index),
+      id: Internal.getLabelFromIndex(index),
     };
   };
 

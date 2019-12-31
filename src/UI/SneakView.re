@@ -13,6 +13,10 @@ open Oni_Model;
 
 let bgc = Color.rgba(0.1, 0.1, 0.1, 0.25);
 
+module Constants = {
+  let size = 25;
+};
+
 module Styles = {
   let containerStyle =
     Style.[
@@ -23,22 +27,13 @@ module Styles = {
       right(0),
       bottom(0),
     ];
-};
 
-module Constants = {
-  let size = 25;
-};
-
-let make = (~state: State.t, ()) => {
-  let {theme, _}: State.t = state;
-  let makeSneak = (bbox, text) => {
-    open Style;
-    let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
-    let sneakStyle = [
+  let sneakItem = (x, y, theme: Core.Theme.t) =>
+    Style.[
       backgroundColor(theme.sneakBackground),
       position(`Absolute),
-      top(int_of_float(y) - Constants.size / 2),
-      left(int_of_float(x) + Constants.size / 2),
+      top(y - Constants.size / 2),
+      left(x + Constants.size / 2),
       Style.height(Constants.size),
       Style.width(Constants.size),
       flexDirection(`Row),
@@ -46,23 +41,33 @@ let make = (~state: State.t, ()) => {
       alignItems(`Center),
     ];
 
-    let textStyle = [
+  let textStyle = (theme: Core.Theme.t, uiFont: Core.UiFont.t) =>
+    Style.[
       backgroundColor(theme.sneakBackground),
       color(theme.sneakForeground),
-      fontFamily(state.uiFont.fontFile),
+      fontFamily(uiFont.fontFile),
       fontSize(12),
     ];
-    let highlightStyle = [
+  let highlightStyle = (theme: Core.Theme.t, uiFont: Core.UiFont.t) =>
+    Style.[
       backgroundColor(theme.sneakBackground),
       color(theme.sneakHighlight),
-      fontFamily(state.uiFont.fontFile),
+      fontFamily(uiFont.fontFile),
       fontSize(12),
     ];
+};
+
+let make = (~state: State.t, ()) => {
+  let {theme, uiFont, _}: State.t = state;
+  let makeSneak = (bbox, text) => {
+    open Style;
+    let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
+
     let (highlightText, remainingText) =
       Sneak.getTextHighlight(text, state.sneak);
-    <View style=sneakStyle>
-      <Text style=highlightStyle text=highlightText />
-      <Text style=textStyle text=remainingText />
+    <View style={Styles.sneakItem(int_of_float(x), int_of_float(y), theme)}>
+      <Text style={Styles.highlightStyle(theme, uiFont)} text=highlightText />
+      <Text style={Styles.textStyle(theme, uiFont)} text=remainingText />
     </View>;
   };
 
