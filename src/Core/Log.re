@@ -202,26 +202,10 @@ let consoleReporter = {
   };
 };
 
-// Something is broken with the [consoleReporter] on Windows -
-// it can cause the terminal to hang. This happens on CI, but
-// also reproduces intermittently when run locally.
-// Switching to a simpler formatter solves the issue - but it'd be nice to have our
-// colors back on Windows!
-let winConsoleReporter = {
-  Logs.format_reporter(
-    ~app=Format.std_formatter,
-    ~dst=Format.std_formatter,
-    (),
-  );
-};
-
 let reporter =
   Logs.{
     report: (src, level, ~over, k, msgf) => {
-      let kret =
-        Sys.win32
-          ? winConsoleReporter.report(src, level, ~over=() => (), k, msgf)
-          : consoleReporter.report(src, level, ~over=() => (), k, msgf);
+      let kret = consoleReporter.report(src, level, ~over=() => (), k, msgf);
       fileReporter.report(src, level, ~over, () => kret, msgf);
     },
   };
