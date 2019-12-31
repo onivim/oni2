@@ -5,8 +5,6 @@ type sneakInfo = {
   callback,
 };
 
-type t = list(sneakInfo);
-
 let _singleton = ref([]);
 
 let register = (node: ref(option(Revery.UI.node)), callback) => {

@@ -60,7 +60,6 @@ module Styles = {
 let make = (~state: State.t, ()) => {
   let {theme, uiFont, _}: State.t = state;
   let makeSneak = (bbox, text) => {
-    open Style;
     let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
 
     let (highlightText, remainingText) =
