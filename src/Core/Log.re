@@ -202,10 +202,20 @@ let consoleReporter = {
   };
 };
 
+let winConsoleReporter = {
+  Logs.format_reporter(
+    ~app=Format.std_formatter,
+    ~dst=Format.std_formatter,
+    ()
+  );
+};
+
 let reporter =
   Logs.{
     report: (src, level, ~over, k, msgf) => {
-      let kret = consoleReporter.report(src, level, ~over=() => (), k, msgf);
+      let kret = Sys.win32 ? 
+      winConsoleReporter.report(src, level, ~over=() => (), k, msgf)
+      : consoleReporter.report(src, level, ~over=() => (), k, msgf);
       fileReporter.report(src, level, ~over, () => kret, msgf);
     },
   };
