@@ -20,3 +20,7 @@ RUN yum -y install epel-release
 RUN yum -y remove git
 RUN rpm -U https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y install git2u
+
+RUN yum -y install centos-release-scl llvm-toolset-7
+RUN scl enable llvm-toolset-7 bash
+RUN clang --version
