@@ -4,6 +4,8 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
+module ListEx = Utility.ListEx;
+
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];
 
@@ -57,7 +59,8 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   };
 
 let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
-  let items = state.hits |> List.map(matchToLocListItem) |> Array.of_list;
+  let items =
+    state.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
 
   <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
