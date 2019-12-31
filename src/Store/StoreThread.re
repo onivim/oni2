@@ -63,6 +63,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 let start =
     (
       ~configurationFilePath=None,
+      ~onAfterDispatch=Core.Utility.noop1,
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -229,6 +230,8 @@ let start =
     QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
     let searchSubs = searchSubscriptionsUpdater(newState);
     SearchSubscriptionRunner.run(~dispatch, searchSubs);
+
+    onAfterDispatch(action);
   };
 
   let runEffects = () => {
