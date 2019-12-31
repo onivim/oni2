@@ -150,6 +150,23 @@ module ExtensionDocumentSymbolProvider = {
 let start = (extensions, setup: Core.Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  let manifests =
+    List.map((ext: ExtensionScanner.t) => ext.manifest, extensions);
+
+  let defaults = Configuration.Model.ofExtensions(manifests);
+  let keys = ["reason_language_server.location"];
+
+  let contents =
+    `Assoc([
+      (
+        "reason_language_server",
+        `Assoc([("location", `String(setup.rlsPath))]),
+      ),
+    ]);
+  let user = Configuration.Model.create(~keys, contents);
+
+  let initialConfiguration = Configuration.create(~defaults, ~user, ());
+
   let onExtHostClosed = () => Log.info("ext host closed");
 
   let extensionInfo =
@@ -295,6 +312,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
   let extHostClient =
     Extensions.ExtHostClient.start(
+      ~initialConfiguration,
       ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,
