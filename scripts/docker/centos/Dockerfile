@@ -5,8 +5,7 @@ RUN yum -y update
 RUN yum -y install centos-release-scl
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
 RUN yum -y install llvm-toolset-7.0
-RUN scl enable llvm-toolset-7.0 bash
-RUN clang --version
+RUN scl enable llvm-toolset-7.0 clang --version
 
 RUN yum -y install gcc-c++ make sudo
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
