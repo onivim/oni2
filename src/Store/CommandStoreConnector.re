@@ -38,6 +38,12 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("View"),
+        ~name="Toggle Problems (Errors, Warnings)",
+        ~action=Command("workbench.actions.view.problems"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
         ~name="Split Editor Vertically",
         ~action=Command("view.splitVertical"),
         (),
@@ -186,6 +192,10 @@ let start = (getState, contributedCommands) => {
       _ => singleActionEffect(QuickmenuShow(DocumentSymbols)),
     ),
     ("workbench.action.findInFiles", _ => singleActionEffect(SearchHotkey)),
+    (
+      "workbench.actions.view.problems",
+      _ => singleActionEffect(DiagnosticsHotKey),
+    ),
     (
       "workbench.action.openNextRecentlyUsedEditorInGroup",
       _ => singleActionEffect(QuickmenuShow(EditorsPicker)),

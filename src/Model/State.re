@@ -50,7 +50,9 @@ type t = {
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,
-  searchPane: option(Search.t),
+  // State of the bottom pane
+  pane: Pane.t,
+  searchPane: Search.t,
   focus: Focus.stack,
 };
 
@@ -97,6 +99,7 @@ let create: unit => t =
     fileExplorer: FileExplorer.initial,
     zenMode: false,
     darkMode: true,
-    searchPane: None,
+    pane: Pane.initial,
+    searchPane: Search.initial,
     focus: Focus.initial,
   };
