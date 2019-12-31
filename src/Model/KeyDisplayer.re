@@ -27,16 +27,7 @@ module Constants = {
   let timeToGroup = 0.3;
 };
 
-let launchAddToPath = () => {
-  let setup = Oni_Core.Setup.init();
-  let scriptPath =  Oni_Core.Setup.getNodeScriptPath(~script="add-to-path.js", setup);
-  let ret = Rench.ChildProcess.spawnSync(setup.nodePath, [|scriptPath|]);
-  Console.log(ret.stdout);
-  Console.log(ret.stderr);
-};
-
 let setEnabled = (enabled, _v: t) => {
-  launchAddToPath();
   {...empty, enabled};
 };
 

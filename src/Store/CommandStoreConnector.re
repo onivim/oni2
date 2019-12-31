@@ -107,6 +107,12 @@ let createDefaultCommands = getState => {
         (),
       ),
       Command.create(
+        ~category=Some("System"),
+        ~name="Add Oni2 to System PATH", /* TODO: This should be dynamic (Add/Remove) */
+        ~action=Command("system.addToPath"),
+        (),
+      ),
+      Command.create(
         ~category=None,
         ~name="Goto symbol in file...",
         ~action=QuickmenuShow(DocumentSymbols),
@@ -176,9 +182,20 @@ let start = (getState, contributedCommands) => {
     });
   };
 
+  let launchAddToPath = (_) => {
+    let setup = Oni_Core.Setup.init();
+    let scriptPath =  Oni_Core.Setup.getNodeScriptPath(~script="add-to-path.js", setup);
+    let ret = Rench.ChildProcess.spawnSync(setup.nodePath, [|scriptPath|]);
+    Console.log(ret.stdout);
+    Console.log(ret.stderr);
+
+    Isolinear.Effect.none
+  };
+
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
+    ("system.addToPath", _ => launchAddToPath),
     (
       "references-view.find",
       _ => singleActionEffect(References(References.Requested)),

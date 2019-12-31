@@ -29,10 +29,18 @@ const removeFromPath = () => {
 const addToPath = async () => {
     if (!isAddedToPath() && !isWindows()) {
         const appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
-        const options = { name: "Oni2", icns: path.join(appDirectory, "Onivim2.icns") }; // TODO: I need to check this in AppImage.
+        let imgPath = path.join(appDirectory, "Onivim2.icns");
+
+        // TODO: Check this is valid for all use cases.
+        if (!fs.existsSync(imgPath)) {
+            imgPath = path.join(appDirectory, "assets", "images", "Onivim2.icns");
+        }
+
+        const options = { name: "Oni2", icns: imgPath };
         let linkDest = "";
 
         if (isMac()) {
+            // TODO: This isn't valid for dev builds, does that matter?
             linkDest = "/Applications/Onivim2.app/Contents/Resources/run.sh";
         } else {
             linkDest = ""; // TODO.
