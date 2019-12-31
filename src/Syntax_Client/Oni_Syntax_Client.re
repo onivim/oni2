@@ -33,6 +33,7 @@ let start =
       ~onClose=Core.Utility.noop1,
       ~scheduler,
       ~onHighlights,
+      ~onHealthCheckResult,
       languageInfo,
       setup,
     ) => {
@@ -144,6 +145,8 @@ let start =
           | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
           | ServerToClient.Closing =>
             scheduler(() => ServerLog.info("Closing"))
+          | ServerToClient.HealthCheckPass(res) =>
+            scheduler(() => onHealthCheckResult(res))
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
@@ -199,6 +202,10 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
 let notifyConfigurationChanged =
     (v: t, configuration: Oni_Core.Configuration.t) => {
   write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
+};
+
+let healthCheck = (v: t) => {
+  write(v, Protocol.ClientToServer.RunHealthCheck);
 };
 
 let notifyBufferUpdate =
