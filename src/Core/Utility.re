@@ -300,6 +300,12 @@ module List = {
   };
 };
 
+module ListEx = {
+  let safeConcat = lists => lists |> List.fold_left(List.append, []);
+
+  let safeMap = (f, list) => list |> List.rev |> List.rev_map(f);
+};
+
 // TODO: Remove after 4.08 upgrade
 module Option = {
   let map = f =>
@@ -419,6 +425,26 @@ module Result = {
     fun
     | Ok(v) => Some(v)
     | Error(_) => None;
+
+  let bind = f =>
+    fun
+    | Ok(v) => f(v)
+    | Error(_) as err => err;
+
+  let map = f =>
+    fun
+    | Ok(v) => Ok(f(v))
+    | Error(_) as err => err;
+
+  let default = (~value) =>
+    fun
+    | Ok(v) => v
+    | Error(_) => value;
+
+  let exn =
+    fun
+    | Ok(v) => v
+    | Error(msg) => raise(ResultError(msg));
 };
 
 module StringUtil = {
@@ -754,7 +780,7 @@ module ChunkyQueue: {
     };
 
   let toList = ({front, rear, _}) =>
-    front @ (Queue.toList(rear) |> List.concat);
+    front @ (Queue.toList(rear) |> ListEx.safeConcat);
 };
 
 module Path = {

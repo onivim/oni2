@@ -25,6 +25,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
+  | SyntaxServerClosed
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
