@@ -169,6 +169,16 @@ let start = () => {
         command: "sneak.stop",
         condition: "sneakMode" |> parseExp,
       },
+      {
+        key: "<S-C-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      },
+      {
+        key: "<D-S-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

@@ -78,12 +78,12 @@ Onivim-specific contexts:
 | `commandLineFocus` | The Vim commandline is open |
 | `menuFocus` | A pop-up menu has focus |
 
-
 ## Commands
 
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
 | Command+Shift+P / Control+Shift+P | Show Command Palette | `workbench.action.showCommands` |
+| Command+Shift+M / Control+Shift+M | Show Problems Pane | `workbench.actions.view.problems` |
 | Command+P / Control+P | Quick Open (File Picker) | `workbench.action.quickOpen` | 
 | Control+Tab | Navigate to next editor in group | `workbench.action.quickOpenNavigateNextInEditorPicker` |
 | Shift+Control+Tab | Navigate to previous editor in group | `workbench.action.quickOpenNavigatePreviousInEditorPicker` | 

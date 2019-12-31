@@ -7,7 +7,8 @@ let noop2 = (_, _) => ();
 
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
-    Thread.create(
+    ThreadHelper.create(
+      ~name="Utility.waitForCondition",
       () => {
         let s = Unix.gettimeofday();
         while (!f() && Unix.gettimeofday() -. s < timeout) {

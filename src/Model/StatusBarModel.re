@@ -4,6 +4,10 @@
  * Model for status bar items
  */
 
+[@deriving show({with_path: false})]
+type action =
+  | DiagnosticsClicked;
+
 module Alignment = {
   type t =
     | Left

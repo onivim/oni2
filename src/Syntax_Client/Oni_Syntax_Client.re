@@ -89,6 +89,10 @@ let start =
       pstderr,
     );
 
+  Unix.close(pstdout);
+  Unix.close(pstdin);
+  Unix.close(pstderr);
+
   let shouldClose = ref(false);
 
   let in_channel = Unix.in_channel_of_descr(stdout);
@@ -101,7 +105,8 @@ let start =
   let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
   let _waitThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.wait",
       () => {
         let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
         let code =
@@ -125,13 +130,16 @@ let start =
             );
             signal;
           };
+        shouldClose := true;
+        Unix.close(stdin);
         scheduler(() => onClose(code));
       },
       (),
     );
 
   let readThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.read",
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stdout);
@@ -153,28 +161,29 @@ let start =
               ClientLog.info("Tokens applied");
             })
           };
-        }
+        };
+
+        Unix.close(stdout);
       },
       (),
     );
 
   let _readStderr =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.stderr",
       () => {
-        let shouldClose = ref(false);
         while (! shouldClose^) {
           Thread.wait_read(stderr);
-
           switch (input_line(err_channel)) {
           | exception End_of_file => shouldClose := true
           | v => scheduler(() => ServerLog.info(v))
           };
         };
+        Unix.close(stderr);
         scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
     );
-
   ClientLog.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(

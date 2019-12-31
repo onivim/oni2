@@ -135,7 +135,8 @@ let mainChecks = [
       let waitForRef = (condition: ref(bool)) => {
         let tries = ref(0);
         let waitThread: Thread.t =
-          Thread.create(
+          ThreadHelper.create(
+            ~name="HealthCheck.waitThread",
             () => {
               while (condition^ == false && tries^ < 10) {
                 Unix.sleepf(0.2);
@@ -194,5 +195,7 @@ let run = (~checks, _cli) => {
   Log.info("");
 
   Log.info("All systems go.");
+  Log.info("Checking for remaining threads...");
+  ThreadHelper.showRunningThreads() |> Log.info;
   result ? 0 : 1;
 };
