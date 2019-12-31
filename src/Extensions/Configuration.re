@@ -34,6 +34,49 @@ module Model = {
       ("overrides", emptyJsonArray),
     ]);
   };
+
+  let ofExtensions = (extensions: list(ExtensionManifest.t)) => {
+    ExtensionManifest.(
+      {
+        let configModels: ExtensionContributions.Configuration.t =
+          extensions
+          |> List.map(manifest => manifest.contributes)
+          |> List.map(contributes =>
+               ExtensionContributions.getConfiguration(contributes)
+             )
+          |> List.flatten;
+
+        ExtensionContributions.Configuration.(
+          {
+            let keys =
+              List.map(
+                (configModel: config) => configModel.name,
+                configModels,
+              );
+
+            let json: Yojson.Safe.json =
+              `Assoc(
+                List.map(
+                  ({name, default}: config) => (name, default),
+                  configModels,
+                ),
+              );
+
+            let contents = Oni_Core.Utility.Json.explode(json);
+            {keys, contents};
+          }
+        );
+      }
+    );
+  };
+
+  let toString = (model: t) => {
+    Printf.sprintf(
+      "Keys: %s \n JSON: %s\n",
+      model.keys |> String.concat("\n"),
+      model.contents |> Yojson.Safe.to_string,
+    );
+  };
 };
 
 type t = {

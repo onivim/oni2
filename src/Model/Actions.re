@@ -58,6 +58,7 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
@@ -116,13 +117,13 @@ type t =
   | SetColorTheme([@opaque] Theme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
+  | StatusBar(StatusBarModel.action)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | SearchShow
-  | SearchHide
+  | SearchStart
   | SearchHotkey
   | SearchInput(string)
   | SearchInputClicked(int)

@@ -17,13 +17,18 @@ open Oni_Core;
  * - Diagnostic list corresponding to the buffer, key pair
  */
 type t = {
+  keyToUri: StringMap.t(Uri.t),
   diagnosticsMap: StringMap.t(StringMap.t(list(Diagnostic.t))),
   // Keep a cached count so we don't have to recalculate when
   // querying UI
   count: int,
 };
 
-let create = () => {diagnosticsMap: StringMap.empty, count: 0};
+let create = () => {
+  keyToUri: StringMap.empty,
+  diagnosticsMap: StringMap.empty,
+  count: 0,
+};
 
 let count = (diags: t) => diags.count;
 
@@ -93,6 +98,8 @@ let clear = (instance, key) => {
 let change = (instance, uri, diagKey, diagnostics) => {
   let bufferKey = getKeyForUri(uri);
 
+  let keyToUri = StringMap.add(bufferKey, uri, instance.keyToUri);
+
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
     switch (bufferMap) {
@@ -104,6 +111,7 @@ let change = (instance, uri, diagKey, diagnostics) => {
 
   {
     ...instance,
+    keyToUri,
     diagnosticsMap:
       StringMap.update(bufferKey, updateBufferMap, instance.diagnosticsMap),
   }
@@ -117,6 +125,29 @@ let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
   | None => []
   | Some(v) => StringMap.bindings(v) |> List.map(f) |> List.flatten
   };
+};
+
+let _value = ((_key, v)) => v;
+
+let getAllDiagnostics = (diagnostics: t) => {
+  let extractBindings = map => {
+    StringMap.bindings(map) |> List.map(_value) |> List.flatten;
+  };
+
+  StringMap.fold(
+    (k, v, accum) => {
+      let uri = StringMap.find_opt(k, diagnostics.keyToUri);
+      switch (uri) {
+      | None => accum
+      | Some(uri) =>
+        let diags = extractBindings(v) |> List.map(v => (uri, v));
+        [diags, ...accum];
+      };
+    },
+    diagnostics.diagnosticsMap,
+    [],
+  )
+  |> List.flatten;
 };
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
