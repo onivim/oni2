@@ -16,10 +16,10 @@ type sneak = {
 
 [@deriving show({with_path: false})]
 type action =
-  | Initiated
-  | Discover([@opaque] list(sneakInfo))
-  | KeyboardInput(string)
-  | Stopped;
+  | NoneAvailable
+  | Executed([@opaque] sneak)
+  | Discovered([@opaque] list(sneakInfo))
+  | KeyboardInput(string);
 
 type t;
 
