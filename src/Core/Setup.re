@@ -24,7 +24,7 @@ type t = {
   version: [@default "Unknown"] string,
 };
 
-let version = "0.2.0";
+let version = "0.3.0";
 
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
