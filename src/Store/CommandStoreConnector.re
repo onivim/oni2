@@ -112,6 +112,12 @@ let createDefaultCommands = getState => {
         ~action=QuickmenuShow(DocumentSymbols),
         (),
       ),
+      Command.create(
+        ~category=Some("Sneak"),
+        ~name="Start sneak (keyboard-accessible UI)",
+        ~action=Command("sneak.start"),
+        (),
+      ),
     ]
   );
 };

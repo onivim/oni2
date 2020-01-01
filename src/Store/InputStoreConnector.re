@@ -54,6 +54,10 @@ let conditionsOfState = (state: State.t) => {
   | _ => ()
   };
 
+  if (state.sneak |> Model.Sneak.isActive) {
+    Hashtbl.add(ret, "sneakMode", true);
+  };
+
   ret;
 };
 
@@ -159,6 +163,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           | Wildmenu => [Actions.KeyboardInput(k)]
 
           | Quickmenu => [Actions.QuickmenuInput(k)]
+
+          | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
 
           | FileExplorer => [
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),

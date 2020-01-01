@@ -15,6 +15,26 @@ module ExtensionKind = {
     | [@name "workspace"] Workspace;
 };
 
+module Author = {
+  [@deriving show]
+  type t = option(string);
+
+  let of_yojson_exn =
+    fun
+    | `String(v) => Some(v)
+    | v =>
+      Yojson.Safe.(
+        {
+          Util.member("name", v) |> Util.to_string_option;
+        }
+      );
+
+  let of_yojson = json =>
+    tryToResult(~msg="Error parsing author", () => of_yojson_exn(json));
+
+  let to_yojson = _author => `Null;
+};
+
 module Engine = {
   [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {vscode: string};
@@ -24,7 +44,7 @@ module Engine = {
 type t = {
   name: string,
   version: string,
-  author: [@default None] option(string),
+  author: [@default None] Author.t,
   displayName: [@default None] option(LocalizedToken.t),
   description: [@default None] option(string),
   publisher: [@default None] option(string),

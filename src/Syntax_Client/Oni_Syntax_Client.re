@@ -104,6 +104,13 @@ let start =
 
   let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
+  let safeClose = channel =>
+    switch (Unix.close(channel)) {
+    // We may get a BADF if this is called too soon after opening a process
+    | exception (Unix.Unix_error(_)) => ()
+    | _ => ()
+    };
+
   let _waitThread =
     Core.ThreadHelper.create(
       ~name="SyntaxThread.wait",
@@ -131,7 +138,7 @@ let start =
             signal;
           };
         shouldClose := true;
-        Unix.close(stdin);
+        safeClose(stdin);
         scheduler(() => onClose(code));
       },
       (),
@@ -163,7 +170,7 @@ let start =
           };
         };
 
-        Unix.close(stdout);
+        safeClose(stdout);
       },
       (),
     );
@@ -179,7 +186,7 @@ let start =
           | v => scheduler(() => ServerLog.info(v))
           };
         };
-        Unix.close(stderr);
+        safeClose(stderr);
         scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
