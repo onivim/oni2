@@ -182,21 +182,21 @@ let start = (getState, contributedCommands) => {
     });
   };
 
-  let launchAddToPath = _ => {
-    let _ =
-      Oni_Extensions.NodeTask.run(
-        ~scheduler=Scheduler.immediate,
-        ~setup=Oni_Core.Setup.init(),
-        "add-to-path.js",
-      );
-
-    Isolinear.Effect.none;
-  };
+  let addToPathEffect = _ =>
+    Isolinear.Effect.create(~name="system.addToPath", () => {
+      let _ =
+        Oni_Extensions.NodeTask.run(
+          ~scheduler=Scheduler.immediate,
+          ~setup=Oni_Core.Setup.init(),
+          "add-to-path.js",
+        );
+      ();
+    });
 
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
-    ("system.addToPath", _ => launchAddToPath),
+    ("system.addToPath", _ => addToPathEffect),
     (
       "references-view.find",
       _ => singleActionEffect(References(References.Requested)),
