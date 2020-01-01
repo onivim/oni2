@@ -40,8 +40,7 @@ const addToPath = async () => {
         let linkDest = "";
 
         if (isMac()) {
-            // TODO: This isn't valid for dev builds, does that matter?
-            linkDest = "/Applications/Onivim2.app/Contents/Resources/run.sh";
+            linkDest = path.join(appDirectory, "run.sh");
         } else {
             linkDest = ""; // TODO.
         }
