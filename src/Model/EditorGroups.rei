@@ -5,6 +5,7 @@ let create: unit => t;
 let activeGroupId: t => int; // TODO: Should return an option, or be removed entirely
 let getEditorGroupById: (t, int) => option(EditorGroup.t);
 let getActiveEditorGroup: t => option(EditorGroup.t);
+let setActive: (int, t) => t;
 
 let getFirstEditorGroup: t => EditorGroup.t;
 

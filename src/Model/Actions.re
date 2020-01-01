@@ -99,6 +99,13 @@ type t =
   | KeyboardInput(string)
   | WindowTitleSet(string)
   | EditorGroupSelected(int)
+  | WindowTreeSetSize(int, int)
+  | WindowMoveLeft
+  | WindowMoveRight
+  | WindowMoveUp
+  | WindowMoveDown
+  | WindowRotateForward
+  | WindowRotateBackward
   | EditorGroupSizeChanged({
       id: int,
       width: int,

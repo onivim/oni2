@@ -333,34 +333,19 @@ let start =
 
   let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
-      Log.trace("Vim.Window.onMovement");
-      let state = getState();
-
-      let move = moveFunc => {
-        let maybeEditorGroupId =
-          EditorGroups.getActiveEditorGroup(state.editorGroups)
-          |> Option.map((group: EditorGroup.t) =>
-               moveFunc(group.editorGroupId, state.layout)
-             );
-
-        switch (maybeEditorGroupId) {
-        | Some(editorGroupId) =>
-          dispatch(Actions.EditorGroupSelected(editorGroupId))
-        | None => ()
-        };
-      };
+      Log.info("Vim.Window.onMovement");
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(Feature_Layout.moveLeft)
+      | OneLeft => dispatch(Actions.WindowMoveLeft)
       | FullRight
-      | OneRight => move(Feature_Layout.moveRight)
+      | OneRight => dispatch(Actions.WindowMoveRight)
       | FullDown
-      | OneDown => move(Feature_Layout.moveDown)
+      | OneDown => dispatch(Actions.WindowMoveDown)
       | FullUp
-      | OneUp => move(Feature_Layout.moveUp)
-      | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
-      | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
+      | OneUp => dispatch(Actions.WindowMoveUp)
+      | RotateDownwards => dispatch(Actions.WindowRotateForward)
+      | RotateUpwards => dispatch(Actions.WindowRotateBackward)
       | TopLeft
       | BottomRight
       | Previous => Log.error("Window movement not implemented")
@@ -923,6 +908,7 @@ let start =
         state,
         synchronizeViml(configuration),
       )
+
     | Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
@@ -936,7 +922,19 @@ let start =
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
+    | Command("view.splitHorizontal") =>
+      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editorGroup = EditorGroup.create();
+      let state' = addSplit(`Horizontal, state, editorGroup);
+      (state', splitExistingBufferEffect(maybeBuffer));
+    | Command("view.splitVertical") =>
+      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editorGroup = EditorGroup.create();
+      let state' = addSplit(`Vertical, state, editorGroup);
+      (state', splitExistingBufferEffect(maybeBuffer));
+
     | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -952,18 +950,8 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
-    | Command("view.splitHorizontal") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Horizontal, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
 
-    | Command("view.splitVertical") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Vertical, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
+    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
 
     | OpenFileByPath(path, maybeDirection, location) =>
       /* If a split was requested, create that first! */
@@ -975,6 +963,7 @@ let start =
           addSplit(direction, state, editorGroup);
         };
       (state', openFileByPathEffect(state', path, location));
+
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state
@@ -1046,6 +1035,7 @@ let start =
       (state, effect);
 
     | KeyboardInput(s) => (state, inputEffect(s))
+
     | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,

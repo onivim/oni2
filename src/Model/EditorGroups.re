@@ -53,6 +53,8 @@ let getFirstEditorGroup = ({idToGroup, _}) => {
 
 let getActiveEditorGroup = model => getEditorGroupById(model, model.activeId);
 
+let setActive = (id, model) => {...model, activeId: id};
+
 let isActive = (model, group: EditorGroup.t) =>
   group.editorGroupId == model.activeId;
 
