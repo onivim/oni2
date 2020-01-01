@@ -3,6 +3,13 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
+let pathSymlinkEnabled = (~addingLink) =>
+  (
+    Revery.Environment.os == Revery.Environment.Mac
+    && !Sys.file_exists("/usr/local/bin/oni2")
+  )
+  == addingLink;
+
 let createDefaultCommands = getState => {
   State.(
     Actions.[
@@ -108,8 +115,16 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("System"),
-        ~name="Add Oni2 to System PATH", /* TODO: This should be dynamic (Add/Remove) */
+        ~name="Add Oni2 to System PATH",
+        ~enabled=() => pathSymlinkEnabled(~addingLink=true),
         ~action=Command("system.addToPath"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("System"),
+        ~name="Remove Oni2 from System PATH",
+        ~enabled=() => pathSymlinkEnabled(~addingLink=false),
+        ~action=Command("system.removeFromPath"),
         (),
       ),
       Command.create(
@@ -182,8 +197,8 @@ let start = (getState, contributedCommands) => {
     });
   };
 
-  let addToPathEffect = _ =>
-    Isolinear.Effect.create(~name="system.addToPath", () => {
+  let togglePathEffect = name =>
+    Isolinear.Effect.create(~name, () => {
       let _ =
         Oni_Extensions.NodeTask.run(
           ~scheduler=Scheduler.immediate,
@@ -196,7 +211,8 @@ let start = (getState, contributedCommands) => {
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
-    ("system.addToPath", _ => addToPathEffect),
+    ("system.addToPath", _ => togglePathEffect),
+    ("system.removeFromPath", _ => togglePathEffect),
     (
       "references-view.find",
       _ => singleActionEffect(References(References.Requested)),
