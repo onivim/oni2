@@ -4,6 +4,7 @@ module Option = Utility.Option;
 
 let push = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
+  | Sneak
   | Quickmenu
   | Wildmenu =>
     failwith("Not allowed to push " ++ Focus.show_focusable(focusable))
@@ -12,6 +13,7 @@ let push = (focusable: Focus.focusable, state: State.t) =>
 
 let pop = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
+  | Sneak
   | Quickmenu
   | Wildmenu =>
     failwith("Not allowed to pop " ++ Focus.show_focusable(focusable))
@@ -19,8 +21,12 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
   };
 
 let current = (state: State.t) =>
-  switch (state.quickmenu) {
-  | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
-  | Some(_) => Focus.Quickmenu
-  | _ => Focus.current(state.focus) |> Option.value(~default=Focus.Editor)
+  if (Sneak.isActive(state.sneak)) {
+    Focus.Sneak;
+  } else {
+    switch (state.quickmenu) {
+    | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
+    | Some(_) => Focus.Quickmenu
+    | _ => Focus.current(state.focus) |> Option.value(~default=Focus.Editor)
+    };
   };

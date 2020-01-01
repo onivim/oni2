@@ -129,6 +129,7 @@ type t =
   | SearchInputClicked(int)
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
+  | Sneak(Sneak.action)
   | VimDirectoryChanged(string)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)

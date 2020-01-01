@@ -163,6 +163,7 @@ let start =
     InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
+  let sneakUpdater = SneakStore.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -190,6 +191,7 @@ let start =
           languageFeatureUpdater,
           completionUpdater,
           titleUpdater,
+          sneakUpdater,
         ]),
       (),
     );
