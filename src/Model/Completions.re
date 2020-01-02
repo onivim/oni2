@@ -95,8 +95,7 @@ let filter = (filter: string, v: t) => {
   {
     ...v,
     filter: Some(filter),
-    filteredCompletions:
-      _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
+    filteredCompletions: _applyFilter(Some(filter), v.completions),
   };
 };
 
@@ -105,8 +104,7 @@ let addItems = (items: list(CompletionItem.t), v: t) => {
   {
     ...v,
     completions: newItems,
-    filteredCompletions:
-      _applyFilter(v.filter, newItems) |> Utility.firstk(5),
+    filteredCompletions: _applyFilter(v.filter, newItems),
   };
 };
 
