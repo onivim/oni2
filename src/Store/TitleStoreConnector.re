@@ -106,6 +106,7 @@ let start = setTitle => {
     Isolinear.Effect.createWithDispatch(~name="title.set", _dispatch =>
       if (!String.equal(_lastTitle^, title)) {
         _lastTitle := title;
+
         setTitle(title);
       }
     );

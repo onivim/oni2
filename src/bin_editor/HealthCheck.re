@@ -42,6 +42,14 @@ let commonChecks = [
     },
   ),
   (
+    "Verify PATH is available",
+    _ => {
+      let path = ShellUtility.getShellPath();
+      Log.info("Got PATH: " ++ path);
+      true;
+    },
+  ),
+  (
     "Verify textmate dependency",
     _ => {
       Textmate.(

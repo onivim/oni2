@@ -31,6 +31,7 @@ module Log = Log;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
 module Setup = Setup;
+module ShellUtility = ShellUtility;
 module StringMap = StringMap;
 module Subscription = Subscription;
 module Theme = Theme;
