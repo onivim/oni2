@@ -198,15 +198,18 @@ let start = (getState, contributedCommands) => {
   };
 
   let togglePathEffect = name =>
-    Isolinear.Effect.create(~name, () => {
-      let _ =
-        Oni_Extensions.NodeTask.run(
-          ~scheduler=Scheduler.immediate,
-          ~setup=Oni_Core.Setup.init(),
-          "add-to-path.js",
-        );
-      ();
-    });
+    Isolinear.Effect.create(
+      ~name,
+      () => {
+        let _ =
+          Oni_Extensions.NodeTask.run(
+            ~scheduler=Scheduler.immediate,
+            ~setup=Oni_Core.Setup.init(),
+            "add-to-path.js",
+          );
+        ();
+      },
+    );
 
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
