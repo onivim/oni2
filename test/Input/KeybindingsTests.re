@@ -35,7 +35,7 @@ bindings: [{key: "<F2>", command: "explorer.toggle", when: [["editorTextFocus"]]
 }
 |}
   |> Yojson.Safe.from_string;
-  
+
 let isOk = v =>
   switch (v) {
   | Ok(_) => true
@@ -49,9 +49,9 @@ let bindingCount = v =>
   };
 
 let getFirstBinding = v =>
-  switch(v) {
+  switch (v) {
   | Ok(([firstBinding], _)) => firstBinding
-  | _ => failwith("No binding found");
+  | _ => failwith("No binding found")
   };
 
 let errorCount = v =>
@@ -82,18 +82,21 @@ describe("Keybindings", ({describe, _}) => {
       expect.int(errorCount(result)).toBe(0);
     });
     test("regression test: #1152 (legacy expression)", ({expect}) => {
-      let result =
-        of_yojson_with_errors(regressionTest1152);
+      let result = of_yojson_with_errors(regressionTest1152);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
 
       let binding = getFirstBinding(result);
-      expect.equal(binding, Keybinding.{
-        key: "<F2>",
-        command: "explorer.toggle",
-        condition: Expression.Variable("editorTextFocus"),
-      });
+      expect.equal(
+        binding,
+        Keybinding.{
+          key: "<F2>",
+          command: "explorer.toggle",
+          condition:
+            Expression.Or(And(Variable("editorTextFocus"), True), False),
+        },
+      );
     });
   })
 });
