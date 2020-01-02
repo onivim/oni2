@@ -1,5 +1,5 @@
 {
-  "checksum": "1096b78f69216ab6aa26d9f34b7002b6",
+  "checksum": "bc6b43d01ff2fcb6521a477737639525",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -75,30 +75,16 @@
       ],
       "devDependencies": []
     },
-    "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9": {
-      "id":
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
-      "name": "revery-text-wrap",
-      "version": "github:revery-ui/revery-text-wrap#005385c",
-      "source": {
-        "type": "install",
-        "source": [ "github:revery-ui/revery-text-wrap#005385c" ]
-      },
-      "overrides": [],
-      "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
-      "devDependencies": []
-    },
-    "revery@github:revery-ui/revery#99441c7@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#99441c7@d41d8cd9",
+    "revery@github:revery-ui/revery#d2fd73b@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#99441c7",
+      "version": "github:revery-ui/revery#d2fd73b",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#99441c7" ]
+        "source": [ "github:revery-ui/revery#d2fd73b" ]
       },
       "overrides": [],
       "dependencies": [
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
@@ -984,7 +970,7 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery@github:revery-ui/revery#99441c7@d41d8cd9",
+        "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
