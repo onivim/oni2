@@ -1,6 +1,7 @@
 open TestFramework;
 
 open Oni_Input.Keybindings;
+module Expression = Oni_Input.Expression;
 
 let keybindingsJSON =
   {|
@@ -27,6 +28,14 @@ bindings: [{key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}]
 |}
   |> Yojson.Safe.from_string;
 
+let regressionTest1152 =
+  {|
+{
+bindings: [{key: "<F2>", command: "explorer.toggle", when: [["editorTextFocus"]]}]
+}
+|}
+  |> Yojson.Safe.from_string;
+  
 let isOk = v =>
   switch (v) {
   | Ok(_) => true
@@ -37,6 +46,12 @@ let bindingCount = v =>
   switch (v) {
   | Ok((bindings, _)) => List.length(bindings)
   | Error(_) => 0
+  };
+
+let getFirstBinding = v =>
+  switch(v) {
+  | Ok(([firstBinding], _)) => firstBinding
+  | _ => failwith("No binding found");
   };
 
 let errorCount = v =>
@@ -65,6 +80,20 @@ describe("Keybindings", ({describe, _}) => {
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
+    });
+    test("regression test: #1152 (legacy expression)", ({expect}) => {
+      let result =
+        of_yojson_with_errors(regressionTest1152);
+      expect.bool(isOk(result)).toBe(true);
+      expect.int(bindingCount(result)).toBe(1);
+      expect.int(errorCount(result)).toBe(0);
+
+      let binding = getFirstBinding(result);
+      expect.equal(binding, Keybinding.{
+        key: "<F2>",
+        command: "explorer.toggle",
+        condition: Expression.Variable("editorTextFocus"),
+      });
     });
   })
 });
