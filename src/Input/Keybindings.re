@@ -9,8 +9,35 @@ module Keybinding = {
     condition: Expression.t,
   };
 
+  let parseAndExpression = (json: Yojson.Safe.t) =>
+    switch (json) {
+    | `String(expr) => Expression.Variable(expr)
+    | `List(andExpressions) =>
+      List.fold_left(
+        (acc, curr) => {
+          let result =
+            switch (curr) {
+            | `String(expr) => Expression.Variable(expr)
+            | _ => Expression.False
+            };
+          Expression.And(result, acc);
+        },
+        Expression.True,
+        andExpressions,
+      )
+    | _ => Expression.False
+    };
+
   let condition_of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
+    | `List(orExpressions) =>
+      Ok(
+        List.fold_left(
+          (acc, curr) => {Expression.Or(parseAndExpression(curr), acc)},
+          Expression.False,
+          orExpressions,
+        ),
+      )
     | `String(v) =>
       switch (When.parse(v)) {
       | Error(err) => Error(err)
