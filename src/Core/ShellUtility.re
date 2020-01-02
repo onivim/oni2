@@ -9,6 +9,12 @@ module Internal = {
     | None => Sys.win32 ? "cmd.exe" : "/usr/bin/bash"
     };
   };
+
+  let getShellFromPath = () => {
+    Sys.getenv_opt("PATH")
+    |> Option.tap_none(() => Log.error("Unable to get PATH!"))
+    |> Option.value(~default="");
+  };
 };
 
 let getShellPath = () => {
@@ -17,14 +23,19 @@ let getShellPath = () => {
     | Mac =>
       let shell = Internal.getDefaultShell();
       let shellCmd = Printf.sprintf("%s -lc 'echo $PATH'", shell);
-      let ic = Unix.open_process_in(shellCmd);
-      let path = input_line(ic);
-      let () = close_in(ic);
-      path;
-    | _ =>
-      Sys.getenv_opt("PATH")
-      |> Option.tap_none(() => Log.error("Unable to get PATH!"))
-      |> Option.value(~default="")
+      try({
+        let (stdOut, stdIn, stdErr) = Unix.open_process_full(shellCmd, [||]);
+        let path = input_line(stdOut);
+        let () = close_in(stdOut);
+        let () = close_out(stdIn);
+        let () = close_in(stdErr);
+        path;
+      }) {
+      | ex =>
+        Log.error("Unable to retrive path: " ++ Printexc.to_string(ex));
+        Internal.getShellFromPath();
+      };
+    | _ => Internal.getShellFromPath()
     };
 
   Log.info("Path is: " ++ res);
