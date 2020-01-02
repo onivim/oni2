@@ -45,6 +45,10 @@ const addToPath = async () => {
             linkDest = ""; // TODO.
         }
 
+        if (!fs.existsSync(linkDest)) {
+            return
+        }
+
         await runSudoCommand(`ln -fs ${linkDest} ${getLinkPath()}`, options);
     }
 }
