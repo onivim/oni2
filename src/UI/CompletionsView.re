@@ -131,7 +131,7 @@ module Styles = {
   ];
 };
 
-let item =
+let itemView =
     (~text, ~kind, ~highlight, ~theme: Theme.t, ~tokenTheme, ~editorFont, ()) => {
   let icon =
     kind
@@ -165,7 +165,7 @@ let item =
   </View>;
 };
 
-let detail =
+let detailView =
     (~text, ~width, ~lineHeight, ~editorFont, ~theme, ~tokenTheme, ()) =>
   <View style={Styles.detail(~width, ~lineHeight, ~theme)}>
     <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
@@ -194,15 +194,10 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
   let height =
     min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
 
-  let renderItem = index => {
-    let Filter.{highlight, item: CompletionItem.{label: text, kind, _}} = items[index];
-    <item text kind highlight theme tokenTheme editorFont />;
-  };
-
-  let detailView =
+  let detail =
     switch (Completions.getBestCompletion(completions)) {
     | Some({item: {detail: Some(text), _}, _}) =>
-      <detail text width lineHeight theme tokenTheme editorFont />
+      <detailView text width lineHeight theme tokenTheme editorFont />
     | _ => React.empty
     };
 
@@ -214,11 +209,15 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
           rowHeight=Constants.itemHeight
           initialRowsToRender=5
           count={Array.length(items)}
-          focused=None
-          render=renderItem
-        />
+          focused=None>
+          ...{index => {
+            let Filter.{highlight, item} = items[index];
+            let CompletionItem.{label: text, kind, _} = item;
+            <itemView text kind highlight theme tokenTheme editorFont />;
+          }}
+        </FlatList>
       </View>
-      detailView
+      detail
     </Opacity>
   </View>;
 };
