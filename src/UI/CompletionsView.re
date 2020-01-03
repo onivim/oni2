@@ -16,6 +16,8 @@ open Ext.CompletionItemKind;
 module Constants = {
   let maxCompletionWidth = 225;
   let maxDetailWidth = 225;
+  let itemHeight = 22;
+  let maxHeight = itemHeight * 5;
   let opacity = 1.0;
   let padding = 8;
 };
@@ -71,19 +73,17 @@ module Styles = {
     left(x + 4),
   ];
 
-  let innerPosition = (~width, ~lineHeight, ~theme: Theme.t) => [
+  let innerPosition = (~height, ~width, ~lineHeight, ~theme: Theme.t) => [
     position(`Absolute),
     top(int_of_float(lineHeight +. 0.5)),
     left(0),
     Style.width(width),
-    flexDirection(`Column),
-    alignItems(`FlexStart),
-    justifyContent(`Center),
+    Style.height(height),
     border(~color=theme.editorSuggestWidgetBorder, ~width=1),
     backgroundColor(theme.editorSuggestWidgetBackground),
   ];
 
-  let item = [flexDirection(`Row), justifyContent(`Center)];
+  let item = [flexDirection(`Row)];
 
   let icon = (~color) => [
     flexDirection(`Row),
@@ -188,15 +188,16 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
          Constants.maxCompletionWidth,
        );
 
-  let width = maxWidth + Constants.padding * 2;
+  let items = completions.filteredCompletions |> Array.of_list;
 
-  let items =
-    completions.filteredCompletions
-    |> List.map(
-         (Filter.{highlight, item: CompletionItem.{label: text, kind, _}}) =>
-         <item text kind highlight theme tokenTheme editorFont />
-       )
-    |> React.listToElement;
+  let width = maxWidth + Constants.padding * 2;
+  let height =
+    min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
+
+  let renderItem = index => {
+    let Filter.{highlight, item: CompletionItem.{label: text, kind, _}} = items[index];
+    <item text kind highlight theme tokenTheme editorFont />;
+  };
 
   let detailView =
     switch (Completions.getBestCompletion(completions)) {
@@ -207,8 +208,15 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
 
   <View style={Styles.outerPosition(~x, ~y)}>
     <Opacity opacity=Constants.opacity>
-      <View style={Styles.innerPosition(~width, ~lineHeight, ~theme)}>
-        items
+      <View
+        style={Styles.innerPosition(~height, ~width, ~lineHeight, ~theme)}>
+        <FlatList
+          rowHeight=Constants.itemHeight
+          initialRowsToRender=5
+          count={Array.length(items)}
+          focused=None
+          render=renderItem
+        />
       </View>
       detailView
     </Opacity>
