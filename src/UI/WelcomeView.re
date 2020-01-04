@@ -20,7 +20,7 @@ module Styles = {
       flexDirection(`Column),
       justifyContent(`Center),
       alignItems(`Center),
-      overflow(`Hidden)
+      overflow(`Hidden),
     ];
 
   let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
