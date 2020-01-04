@@ -4,7 +4,6 @@
  * Component for the 'welcome' experience
  */
 
-open Revery;
 open Revery.UI;
 open Oni_Model;
 open Oni_Core;
