@@ -2,7 +2,6 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Syntax;
 open Oni_Model;
 
@@ -83,7 +82,12 @@ module Styles = {
     backgroundColor(theme.editorSuggestWidgetBackground),
   ];
 
-  let item = [flexDirection(`Row)];
+  let item = (~isFocused, ~theme: Theme.t) => [
+    isFocused
+      ? backgroundColor(theme.editorSuggestWidgetSelectedBackground)
+      : backgroundColor(theme.editorSuggestWidgetBackground),
+    flexDirection(`Row),
+  ];
 
   let icon = (~color) => [
     flexDirection(`Row),
@@ -132,7 +136,16 @@ module Styles = {
 };
 
 let itemView =
-    (~text, ~kind, ~highlight, ~theme: Theme.t, ~tokenTheme, ~editorFont, ()) => {
+    (
+      ~isFocused,
+      ~text,
+      ~kind,
+      ~highlight,
+      ~theme: Theme.t,
+      ~tokenTheme,
+      ~editorFont,
+      (),
+    ) => {
   let icon =
     kind
     |> Option.map(kindToIcon)
@@ -143,7 +156,7 @@ let itemView =
     |> Option.bind(kindToColor(tokenTheme))
     |> Option.value(~default=theme.editorForeground);
 
-  <View style=Styles.item>
+  <View style={Styles.item(~isFocused, ~theme)}>
     <View style={Styles.icon(~color=iconColor)}>
       <FontIcon
         icon
@@ -175,10 +188,11 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
   /*let hoverEnabled =
     Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
   let {theme, tokenTheme, editorFont, completions, _}: State.t = state;
+  let items = completions.filtered;
 
   let maxWidth =
-    completions.filteredCompletions
-    |> List.fold_left(
+    items
+    |> Array.fold_left(
          (maxWidth, this: Filter.result(CompletionItem.t)) => {
            let textWidth =
              EditorFont.measure(~text=this.item.label, editorFont);
@@ -188,17 +202,20 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
          Constants.maxCompletionWidth,
        );
 
-  let items = completions.filteredCompletions |> Array.of_list;
-
   let width = maxWidth + Constants.padding * 2;
   let height =
     min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
 
   let detail =
-    switch (Completions.getBestCompletion(completions)) {
-    | Some({item: {detail: Some(text), _}, _}) =>
-      <detailView text width lineHeight theme tokenTheme editorFont />
-    | _ => React.empty
+    switch (completions.focused) {
+    | Some(index) =>
+      let focused: Filter.result(CompletionItem.t) = items[index];
+      switch (focused.item.detail) {
+      | Some(text) =>
+        <detailView text width lineHeight theme tokenTheme editorFont />
+      | None => React.empty
+      };
+    | None => React.empty
     };
 
   <View style={Styles.outerPosition(~x, ~y)}>
@@ -209,11 +226,19 @@ let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
           rowHeight=Constants.itemHeight
           initialRowsToRender=5
           count={Array.length(items)}
-          focused=None>
+          focused={completions.focused}>
           ...{index => {
             let Filter.{highlight, item} = items[index];
             let CompletionItem.{label: text, kind, _} = item;
-            <itemView text kind highlight theme tokenTheme editorFont />;
+            <itemView
+              isFocused={Some(index) == completions.focused}
+              text
+              kind
+              highlight
+              theme
+              tokenTheme
+              editorFont
+            />;
           }}
         </FlatList>
       </View>

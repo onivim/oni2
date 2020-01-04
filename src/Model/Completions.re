@@ -14,123 +14,91 @@ type filteredCompletion = Filter.result(CompletionItem.t);
 type t = {
   // The last completion meet we found
   meet: option(CompletionMeet.t),
-  completions: list(CompletionItem.t),
-  filteredCompletions: list(filteredCompletion),
+  all: list(CompletionItem.t),
+  filtered: array(filteredCompletion),
   filter: option(string),
-  selected: option(int),
+  focused: option(int),
 };
 
-let toString = (completions: t) => {
+let toString = model => {
   let filter =
-    switch (completions.filter) {
-    | Some(f) => f
+    switch (model.filter) {
+    | Some(filter) => filter
     | None => "(None)"
     };
   Printf.sprintf(
     "Completions - meet: %s filter: %s",
-    Option.toString(CompletionMeet.toString, completions.meet),
+    Option.toString(CompletionMeet.toString, model.meet),
     filter,
   );
 };
 
-let default: t = {
+let initial = {
   meet: None,
-  selected: None,
+  focused: None,
   filter: None,
-  filteredCompletions: [],
-  completions: [],
+  filtered: [||],
+  all: [],
 };
 
-let isActive = (v: t) => {
-  v.meet != None && v.filteredCompletions != [];
-};
+let isActive = model => model.meet != None && model.filtered != [||];
 
-let endCompletions = (_v: t) => {
-  default;
-};
-
-let startCompletions = (meet: CompletionMeet.t, v: t) => {
-  {
-    ...v,
-    meet: Some(meet),
-    completions: default.completions,
-    filteredCompletions: default.filteredCompletions,
-  };
-};
-
-let getMeet = (v: t) => v.meet;
-
-let getBestCompletion = (v: t) => {
-  List.nth_opt(v.filteredCompletions, 0);
-};
-
-let _toFilterResult = (items: list(CompletionItem.t)) => {
-  Filter.(items |> List.map(item => {item, highlight: []}));
-};
-
-let getCompletions = (v: t) => v.filteredCompletions;
-
-let _applyFilter = (filter: option(string), items: list(CompletionItem.t)) => {
+let filterItems = (filter, items) => {
   switch (filter) {
-  | None => items |> _toFilterResult
+  | None =>
+    items |> List.map(item => Filter.{item, highlight: []}) |> Array.of_list
+
   | Some(filter) =>
     open CompletionItem;
 
     let query = Zed_utf8.explode(filter);
 
     let toString = (item, ~shouldLower) =>
-      if (shouldLower) {
-        item.label |> String.lowercase_ascii;
-      } else {
-        item.label;
-      };
+      shouldLower ? String.lowercase_ascii(item.label) : item.label;
 
     items
     |> List.filter(item => Filter.fuzzyMatches(query, item.label))
-    |> Filter.rank(filter, toString);
+    |> Filter.rank(filter, toString)
+    |> Array.of_list;
   };
 };
 
-let filter = (filter: string, v: t) => {
-  {
-    ...v,
-    filter: Some(filter),
-    filteredCompletions: _applyFilter(Some(filter), v.completions),
-  };
+let getMeet = model => model.meet;
+
+let setFilter = (filter, model) => {
+  ...model,
+  filter: Some(filter),
+  filtered: filterItems(Some(filter), model.all),
 };
 
-let addItems = (items: list(CompletionItem.t), v: t) => {
-  let newItems = List.concat([items, v.completions]);
-  {
-    ...v,
-    completions: newItems,
-    filteredCompletions: _applyFilter(v.filter, newItems),
-  };
-};
+let reduce = (model, action: Actions.t) => {
+  switch (action) {
+  | ChangeMode(mode) when mode != Vim.Types.Insert => initial
 
-let reduce = (v: t, action: Actions.t) => {
-  let newV =
-    switch (action) {
-    | Actions.ChangeMode(mode) when mode != Vim.Types.Insert =>
-      endCompletions(v)
-    | Actions.CompletionStart(meet) => startCompletions(meet, v)
-    | Actions.CompletionAddItems(_meet, items) => addItems(items, v)
-    | Actions.CompletionBaseChanged(base) => filter(base, v)
-    | Actions.CompletionEnd => endCompletions(v)
-    | _ => v
+  | CompletionStart(meet) => {
+      ...model,
+      meet: Some(meet),
+      all: initial.all,
+      filtered: initial.filtered,
+    }
+
+  | CompletionAddItems(_meet, items) =>
+    let all = List.concat([items, model.all]);
+    let filtered = filterItems(model.filter, all);
+    {
+      ...model,
+      all,
+      focused:
+        model.focused == None && Array.length(filtered) > 0
+          ? Some(0) : model.focused,
+      filtered,
     };
 
-  if (isActive(newV)) {
-    switch (action) {
-    | Actions.Command("selectNextSuggestion") =>
-      // TODO
-      newV
-    | Actions.Command("selectPrevSuggestion") =>
-      // TODO
-      newV
-    | _ => newV
-    };
-  } else {
-    newV;
+  | CompletionBaseChanged(base) => setFilter(base, model)
+  | CompletionEnd => initial
+
+  | Command("selectNextSuggestion") => model
+  | Command("selectPrevSuggestion") => model
+  | _ => model
   };
 };

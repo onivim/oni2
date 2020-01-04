@@ -6,11 +6,11 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
 
-module Zed_utf8 = ZedBundled;
+module Option = Utility.Option;
+module VimEx = Utility.VimEx;
 
 module Log = (val Log.withNamespace("Oni2.CompletionStore"));
 
@@ -30,7 +30,7 @@ let lastMeet = ref(defaultMeet);
 
 let lastBase = ref("");
 
-let equals = (~line, ~column, ~bufferId, oldMeet: lastCompletionMeet) => {
+let equals = (~line, ~column, ~bufferId, oldMeet) => {
   oldMeet.completionMeetLine == line
   && oldMeet.completionMeetColumn == column
   && oldMeet.completionMeetBufferId == bufferId;
@@ -38,46 +38,39 @@ let equals = (~line, ~column, ~bufferId, oldMeet: lastCompletionMeet) => {
 
 let applyCompletion = (state: State.t) =>
   Isolinear.Effect.createWithDispatch(~name="vim.applyCompletion", dispatch => {
-    let completions = state.completions;
-    let bestMatch = Completions.getBestCompletion(completions);
+    let maybeFocused =
+      Option.map(
+        i => state.completions.filtered[i],
+        state.completions.focused,
+      );
+
     let maybeMeetPosition =
-      completions
+      state.completions
       |> Completions.getMeet
       |> Option.map(CompletionMeet.getLocation);
-    switch (bestMatch, maybeMeetPosition) {
-    | (Some(completion), Some(meetPosition)) =>
-      let meet = Location.(meetPosition.column);
-      let cursorLocation = Vim.Cursor.getLocation();
+
+    switch (maybeFocused, maybeMeetPosition) {
+    | (Some(completion), Some({column, _})) =>
+      let cursor = Vim.Cursor.get();
       let delta =
-        Index.(toZeroBased(cursorLocation.column - toOneBased(meet)));
+        Index.toZeroBased(cursor.column) - Index.toZeroBased(column);
+
       Log.infof(m =>
         m(
           "Completing at cursor position: %s | meet: %s",
-          Index.show(cursorLocation.column),
-          Index.show(meet),
+          Index.show(cursor.column),
+          Index.show(column),
         )
       );
 
-      let idx = ref(delta);
-      while (idx^ >= 0) {
-        let _ = Vim.input("<BS>");
-        decr(idx);
-      };
-
-      let latestCursors = ref([]);
-      Zed_utf8.iter(
-        s => {
-          latestCursors := Vim.input(Zed_utf8.singleton(s));
-          ();
-        },
-        completion.item.label,
-      );
+      let _: list(Vim.Cursor.t) = VimEx.repeatInput(delta, "<BS>");
+      let cursors = VimEx.inputString(completion.item.label);
 
       state
       |> Selectors.getActiveEditorGroup
       |> Selectors.getActiveEditor
       |> Option.map(Editor.getId)
-      |> Option.iter(id => {dispatch(EditorCursorMove(id, latestCursors^))});
+      |> Option.iter(id => {dispatch(EditorCursorMove(id, cursors))});
     | _ => ()
     };
   });
@@ -139,7 +132,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Command("insertBestCompletion") => (state, applyCompletion(state))
+    | Command("acceptSelectedSuggestion") => (state, applyCompletion(state))
     | ChangeMode(mode) when mode == Vim.Types.Insert => (
         state,
         checkCompletionMeet(state),
