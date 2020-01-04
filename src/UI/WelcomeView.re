@@ -4,6 +4,7 @@
  * Component for the 'welcome' experience
  */
 
+open Revery;
 open Revery.UI;
 open Oni_Model;
 open Oni_Core;
@@ -19,6 +20,7 @@ module Styles = {
       flexDirection(`Column),
       justifyContent(`Center),
       alignItems(`Center),
+      overflow(`Hidden)
     ];
 
   let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
@@ -67,7 +69,8 @@ module KeyBindingView = {
       justifyContent(`Center),
       alignItems(`Center),
       height(25),
-      width(300),
+      maxWidth(300),
+      minWidth(150),
     ];
 
     let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
