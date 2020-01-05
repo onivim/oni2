@@ -7,6 +7,7 @@
 open EditorCoreTypes;
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 
 open Oni_Core;
 open Oni_Model;
@@ -163,8 +164,14 @@ let sectionGroup = (~children, ()) =>
 let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
 
-let item = (~children, ~backgroundColor, ()) =>
-  <View style={Styles.item(backgroundColor)}> children </View>;
+let item = (~children, ~backgroundColor, ~onClick=?, ()) => {
+  let style = Styles.item(backgroundColor);
+
+  switch (onClick) {
+  | Some(onClick) => <Clickable onClick style> children </Clickable>
+  | None => <View style> children </View>
+  };
+};
 
 let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
   <item backgroundColor={theme.statusBarBackground}>
@@ -209,7 +216,10 @@ let notificationsItem = (~font, ~theme: Theme.t, ~notifications, ()) => {
 let diagnosticsItem = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
-  <item backgroundColor={theme.statusBarBackground}>
+  let onClick = () =>
+    GlobalContext.current().dispatch(Actions.StatusBar(DiagnosticsClicked));
+
+  <item backgroundColor={theme.statusBarBackground} onClick>
     <View
       style=Style.[
         flexDirection(`Row),
