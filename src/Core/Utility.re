@@ -362,6 +362,12 @@ module Option = {
     | Some(x) => f(x)
     | None => None;
 
+  let bind2 = (f, a, b) =>
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => f(aVal, bVal)
+    | _ => None
+    };
+
   let flatten =
     fun
     | Some(x) => x

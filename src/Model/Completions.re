@@ -6,7 +6,6 @@
 
 open Oni_Core;
 module Option = Utility.Option;
-module IndexEx = Utility.IndexEx;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
@@ -70,52 +69,4 @@ let setFilter = (filter, model) => {
   ...model,
   filter: Some(filter),
   filtered: filterItems(Some(filter), model.all),
-};
-
-let reduce = (model, action: Actions.t) => {
-  switch (action) {
-  | ChangeMode(mode) when mode != Vim.Types.Insert => initial
-
-  | CompletionStart(meet) => {
-      ...model,
-      meet: Some(meet),
-      all: initial.all,
-      filtered: initial.filtered,
-    }
-
-  | CompletionAddItems(_meet, items) =>
-    let all = List.concat([items, model.all]);
-    let filtered = filterItems(model.filter, all);
-    {
-      ...model,
-      all,
-      focused:
-        model.focused == None && Array.length(filtered) > 0
-          ? Some(0) : model.focused,
-      filtered,
-    };
-
-  | CompletionBaseChanged(base) => setFilter(base, model)
-  | CompletionEnd => initial
-
-  | Command("selectPrevSuggestion") => {
-      ...model,
-      focused:
-        IndexEx.prevRollOverOpt(
-          model.focused,
-          ~last=Array.length(model.filtered) - 1,
-        ),
-    }
-
-  | Command("selectNextSuggestion") => {
-      ...model,
-      focused:
-        IndexEx.nextRollOverOpt(
-          model.focused,
-          ~last=Array.length(model.filtered) - 1,
-        ),
-    }
-
-  | _ => model
-  };
 };

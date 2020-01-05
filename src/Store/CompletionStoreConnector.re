@@ -11,139 +11,192 @@ open Actions;
 
 module Option = Utility.Option;
 module VimEx = Utility.VimEx;
+module IndexEx = Utility.IndexEx;
 
 module Log = (val Log.withNamespace("Oni2.CompletionStore"));
 
-type lastCompletionMeet = {
-  completionMeetBufferId: int,
-  completionMeetLine: Index.t,
-  completionMeetColumn: Index.t,
+module Effects = {
+  let requestCompletions =
+      (~languageFeatures, ~buffer, ~meet: CompletionMeet.t) =>
+    Isolinear.Effect.createWithDispatch(~name="requestCompletions", dispatch => {
+      Log.info("Requesting for " ++ Uri.toString(Buffer.getUri(buffer)));
+
+      let completionPromise =
+        LanguageFeatures.requestCompletions(~buffer, ~meet, languageFeatures);
+
+      Lwt.on_success(completionPromise, completions => {
+        dispatch(CompletionAddItems(meet, completions))
+      });
+    });
+
+  let applyCompletion =
+      (~editor, ~meet: CompletionMeet.t, completion: CompletionItem.t) =>
+    Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
+      let cursor = Vim.Cursor.get();
+      let delta =
+        Index.toZeroBased(cursor.column)
+        - Index.toZeroBased(meet.location.column);
+
+      let _: list(Vim.Cursor.t) = VimEx.repeatInput(delta, "<BS>");
+      let cursors = VimEx.inputString(completion.label);
+
+      dispatch(EditorCursorMove(Editor.getId(editor), cursors));
+    });
 };
 
-let defaultMeet = {
-  completionMeetBufferId: (-1),
-  completionMeetLine: Index.fromZeroBased(-1),
-  completionMeetColumn: Index.fromZeroBased(-1),
-};
+module Actions = {
+  let noop = state => (state, Isolinear.Effect.none);
 
-let lastMeet = ref(defaultMeet);
+  let start = (~buffer, ~meet: CompletionMeet.t, state: State.t) => (
+    {
+      ...state,
+      completions: {
+        ...state.completions,
+        meet: Some(meet),
+        filter: Some(meet.base),
+        all: Completions.initial.all,
+        filtered: Completions.initial.filtered,
+      },
+    },
+    Effects.requestCompletions(
+      ~languageFeatures=state.languageFeatures,
+      ~buffer,
+      ~meet,
+    ),
+  );
 
-let lastBase = ref("");
+  let narrow = (~meet: CompletionMeet.t, state: State.t) => (
+    {
+      ...state,
+      completions: Completions.setFilter(meet.base, state.completions),
+    },
+    Isolinear.Effect.none,
+  );
 
-let equals = (~line, ~column, ~bufferId, oldMeet) => {
-  oldMeet.completionMeetLine == line
-  && oldMeet.completionMeetColumn == column
-  && oldMeet.completionMeetBufferId == bufferId;
-};
+  let stop = state => (
+    State.{...state, completions: Completions.initial},
+    Isolinear.Effect.none,
+  );
 
-let applyCompletion = (state: State.t) =>
-  Isolinear.Effect.createWithDispatch(~name="vim.applyCompletion", dispatch => {
+  let checkCompletionMeet = (state: State.t) => {
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let maybeBuffer =
+      Option.bind(
+        editor => Buffers.getBuffer(editor.bufferId, state.buffers),
+        maybeEditor,
+      );
+    let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
+    let maybeMeet =
+      Option.bind2(
+        (location, buffer) =>
+          CompletionMeet.fromBufferLocation(~location, buffer),
+        maybeCursor,
+        maybeBuffer,
+      );
+
+    switch (maybeBuffer, maybeMeet) {
+    | (Some(buffer), Some(meet)) =>
+      switch (state.completions.meet) {
+      | None => start(~buffer, ~meet, state)
+
+      | Some(lastMeet) when meet != lastMeet && meet.base == lastMeet.base =>
+        start(~buffer, ~meet, state)
+
+      | Some(lastMeet) when meet.base != lastMeet.base =>
+        narrow(~meet, state)
+
+      | _ => noop(state)
+      }
+
+    | _ => stop(state)
+    };
+  };
+
+  let applyCompletion = state => {
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+
     let maybeFocused =
       Option.map(
-        i => state.completions.filtered[i],
+        i => state.completions.filtered[i].item,
         state.completions.focused,
       );
 
-    let maybeMeetPosition =
-      state.completions
-      |> Completions.getMeet
-      |> Option.map(CompletionMeet.getLocation);
-
-    switch (maybeFocused, maybeMeetPosition) {
-    | (Some(completion), Some({column, _})) =>
-      let cursor = Vim.Cursor.get();
-      let delta =
-        Index.toZeroBased(cursor.column) - Index.toZeroBased(column);
-
-      Log.infof(m =>
-        m(
-          "Completing at cursor position: %s | meet: %s",
-          Index.show(cursor.column),
-          Index.show(column),
-        )
-      );
-
-      let _: list(Vim.Cursor.t) = VimEx.repeatInput(delta, "<BS>");
-      let cursors = VimEx.inputString(completion.item.label);
-
-      state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getId)
-      |> Option.iter(id => {dispatch(EditorCursorMove(id, cursors))});
-    | _ => ()
-    };
-  });
-
-let start = () => {
-  let checkCompletionMeet = (state: State.t) =>
-    Isolinear.Effect.createWithDispatch(~name="completion.checkMeet", dispatch => {
-      let editor =
-        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
-
-      editor
-      |> Option.iter(ed => {
-           let bufferId = ed.bufferId;
-           let bufferOpt = Buffers.getBuffer(bufferId, state.buffers);
-           switch (bufferOpt) {
-           | None => ()
-           | Some(buffer) =>
-             let cursorPosition = Editor.getPrimaryCursor(ed);
-             let meetOpt =
-               CompletionMeet.createFromBufferLocation(
-                 ~location=cursorPosition,
-                 buffer,
-               );
-             switch (meetOpt) {
-             | None =>
-               lastMeet := defaultMeet;
-               dispatch(Actions.CompletionEnd);
-             | Some(meet) =>
-               open CompletionMeet;
-               let {line, column}: Location.t = getLocation(meet);
-               let base = getBase(meet);
-               // Check if our 'meet' position has changed
-               let newMeet = {
-                 completionMeetBufferId: bufferId,
-                 completionMeetLine: line,
-                 completionMeetColumn: column,
-               };
-               if (!equals(~line, ~column, ~bufferId, lastMeet^)) {
-                 Log.infof(m =>
-                   m(
-                     "New completion meet: %s",
-                     CompletionMeet.toString(meet),
-                   )
-                 );
-                 dispatch(CompletionStart(meet));
-                 dispatch(CompletionBaseChanged(base));
-               } else if (!String.equal(base, lastBase^)) {
-                 // If we're at the same position... but our base is different...
-                 // fire a base change
-                 lastBase := base;
-                 dispatch(CompletionBaseChanged(base));
-                 Log.info("New completion base: " ++ base);
-               };
-               lastMeet := newMeet;
-             };
-           };
-         });
-    });
-
-  let updater = (state: State.t, action: Actions.t) => {
-    switch (action) {
-    | Command("acceptSelectedSuggestion") => (state, applyCompletion(state))
-    | ChangeMode(mode) when mode == Vim.Types.Insert => (
+    switch (maybeEditor, maybeFocused, state.completions.meet) {
+    | (Some(editor), Some(completion), Some(meet)) => (
         state,
-        checkCompletionMeet(state),
+        Effects.applyCompletion(~editor, ~meet, completion),
       )
-    | EditorCursorMove(_) when state.mode == Vim.Types.Insert => (
-        state,
-        checkCompletionMeet(state),
-      )
-    | _ => (state, Isolinear.Effect.none)
+    | _ => noop(state)
     };
   };
+
+  let update = (f, state: State.t) => (
+    {...state, completions: f(state.completions)},
+    Isolinear.Effect.none,
+  );
+};
+
+let start = () => {
+  let updater = (state: State.t) =>
+    fun
+    | Command("acceptSelectedSuggestion") => Actions.applyCompletion(state)
+
+    | ChangeMode(mode) when mode == Vim.Types.Insert =>
+      Actions.checkCompletionMeet(state)
+
+    | ChangeMode(mode) when mode != Vim.Types.Insert => Actions.stop(state)
+
+    | EditorCursorMove(_) when state.mode == Vim.Types.Insert =>
+      Actions.checkCompletionMeet(state)
+
+    | CompletionAddItems(_meet, items) => {
+        let all = List.concat([items, state.completions.all]);
+        let filtered = Completions.filterItems(state.completions.filter, all);
+        Actions.update(
+          model =>
+            {
+              ...model,
+              all,
+              focused:
+                model.focused == None && Array.length(filtered) > 0
+                  ? Some(0) : model.focused,
+              filtered,
+            },
+          state,
+        );
+      }
+
+    | Command("selectPrevSuggestion") =>
+      Actions.update(
+        model =>
+          {
+            ...model,
+            focused:
+              IndexEx.prevRollOverOpt(
+                model.focused,
+                ~last=Array.length(model.filtered) - 1,
+              ),
+          },
+        state,
+      )
+
+    | Command("selectNextSuggestion") =>
+      Actions.update(
+        model =>
+          {
+            ...model,
+            focused:
+              IndexEx.nextRollOverOpt(
+                model.focused,
+                ~last=Array.length(model.filtered) - 1,
+              ),
+          },
+        state,
+      )
+
+    | _ => Actions.noop(state);
 
   updater;
 };
