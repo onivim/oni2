@@ -6,6 +6,7 @@
 
 open Oni_Core;
 module Option = Utility.Option;
+module IndexEx = Utility.IndexEx;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
@@ -97,8 +98,24 @@ let reduce = (model, action: Actions.t) => {
   | CompletionBaseChanged(base) => setFilter(base, model)
   | CompletionEnd => initial
 
-  | Command("selectNextSuggestion") => model
-  | Command("selectPrevSuggestion") => model
+  | Command("selectPrevSuggestion") => {
+      ...model,
+      focused:
+        IndexEx.prevRollOverOpt(
+          model.focused,
+          ~last=Array.length(model.filtered) - 1,
+        ),
+    }
+
+  | Command("selectNextSuggestion") => {
+      ...model,
+      focused:
+        IndexEx.nextRollOverOpt(
+          model.focused,
+          ~last=Array.length(model.filtered) - 1,
+        ),
+    }
+
   | _ => model
   };
 };
