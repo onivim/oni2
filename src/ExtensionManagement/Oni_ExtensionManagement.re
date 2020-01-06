@@ -9,11 +9,15 @@ let install: (~extensionFolder: string, ~extensionPath: string) => Lwt.t(unit) =
     let setup = Setup.init();
     let extensionName = Rench.Path.filename(extensionPath);
 
-    let absoluteExtensionPath = if (Rench.Path.isAbsolute(extensionPath)) {
-      extensionPath
-    } else {
-      Rench.Path.join(Rench.Environment.getWorkingDirectory(), extensionPath);
-    };
+    let absoluteExtensionPath =
+      if (Rench.Path.isAbsolute(extensionPath)) {
+        extensionPath;
+      } else {
+        Rench.Path.join(
+          Rench.Environment.getWorkingDirectory(),
+          extensionPath,
+        );
+      };
 
     Log.infof(m =>
       m("Installing extension %s to %s", extensionName, extensionFolder)
