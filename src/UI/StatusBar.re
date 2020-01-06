@@ -15,14 +15,19 @@ open Oni_Model;
 open Oni_Model.StatusBarModel;
 
 module Option = Utility.Option;
+module Animation = Revery.UI.Animation;
 
-module Notification = {
-  include Notification;
+module Notifications = {
+  open Notification;
+
+  module Constants = {
+    let popupDuration = Time.ms(3000);
+  };
 
   module Styles = {
     open Style;
 
-    let container = (~background) => [
+    let container = (~background, ~yOffset) => [
       position(`Absolute),
       top(0),
       bottom(0),
@@ -32,6 +37,7 @@ module Notification = {
       flexDirection(`Row),
       alignItems(`Center),
       paddingHorizontal(10),
+      transform(Transform.[TranslateY(yOffset)]),
     ];
 
     let text = (font: UiFont.t) => [
@@ -42,7 +48,27 @@ module Notification = {
     ];
   };
 
-  let make = (~item, ~theme, ~font, ()) => {
+  module Animations = {
+    open Animation;
+
+    let transitionDuration = Time.ms(150);
+    let totalDuration =
+      Time.(Constants.popupDuration + transitionDuration *. 2.);
+
+    let enter =
+      animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
+
+    let exit =
+      animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
+
+    let sequence =
+      enter |> andThen(~next=exit |> delay(Constants.popupDuration));
+  };
+
+  let%component notification = (~item, ~theme, ~font, ()) => {
+    let%hook (yOffset, _animationState, _reset) =
+      Hooks.animation(Animations.sequence, ~active=true);
+
     let Theme.{
           notificationInfoBackground,
           notificationInfoForeground,
@@ -81,17 +107,70 @@ module Notification = {
 
     let icon = () =>
       <FontIcon
-        fontFamily={Constants.default.fontAwesomeSolidPath}
         icon
         fontSize=16
         backgroundColor=background
         color=foreground
       />;
 
-    <View style={Styles.container(~background)}>
+    <View style={Styles.container(~background, ~yOffset)}>
       <icon />
       <Text style={Styles.text(font)} text={item.message} />
     </View>;
+  };
+
+  let useExpiration = items => {
+    let%hook (active, setActive) = Hooks.state([]);
+    let%hook (expired, setExpired) = Hooks.ref([]);
+    let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
+
+    let (stillActive, freshlyExpired) =
+      List.partition(
+        ((_, _, t)) => Time.(time - t < Animations.totalDuration),
+        active,
+      );
+
+    if (freshlyExpired != []) {
+      setActive(_ => stillActive);
+
+      freshlyExpired
+      |> List.map(((item, _, _)) => item.id)
+      |> List.rev_append(expired)
+      |> setExpired;
+    };
+
+    let%hook () =
+      Hooks.effect(
+        If((!==), items),
+        () => {
+          let untracked =
+            items
+            |> List.filter(item => !List.mem(item.id, expired))
+            |> List.filter(item =>
+                 !List.exists(((it, _, _)) => it.id == item.id, active)
+               );
+
+          if (untracked != []) {
+            let init = item => (item, React.Key.create(), time);
+            setActive(tracked => List.map(init, untracked) @ tracked);
+          };
+
+          // TODO: Garbage collection of expired, but on what condition?
+
+          None;
+        },
+      );
+
+    stillActive;
+  };
+
+  let%component make = (~notifications, ~theme, ~font, ()) => {
+    let%hook active = useExpiration(notifications);
+
+    active
+    |> List.rev
+    |> List.map(((item, key, _)) => <notification key item theme font />)
+    |> React.listToElement;
   };
 };
 
@@ -104,7 +183,7 @@ module Styles = {
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let view = (bgColor, transition) => [
+  let view = (bgColor, yOffset) => [
     backgroundColor(bgColor),
     flexDirection(`Row),
     flexGrow(1),
@@ -114,7 +193,7 @@ module Styles = {
     bottom(0),
     left(0),
     right(0),
-    transform(Transform.[TranslateY(transition)]),
+    transform(Transform.[TranslateY(yOffset)]),
   ];
 
   let sectionGroup = [
@@ -185,7 +264,7 @@ let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
     />
   </item>;
 
-let notificationsItem = (~font, ~theme: Theme.t, ~notifications, ()) => {
+let notificationCount = (~font, ~theme: Theme.t, ~notifications, ()) => {
   let text = notifications |> List.length |> string_of_int;
 
   <item backgroundColor={theme.statusBarBackground}>
@@ -213,7 +292,7 @@ let notificationsItem = (~font, ~theme: Theme.t, ~notifications, ()) => {
   </item>;
 };
 
-let diagnosticsItem = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
+let diagnosticCount = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -244,7 +323,7 @@ let diagnosticsItem = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
   </item>;
 };
 
-let modeItem = (~font, ~theme, ~mode, ()) => {
+let modeIndicator = (~font, ~theme, ~mode, ()) => {
   let (background, foreground) = Theme.getColorsForMode(theme, mode);
 
   <item backgroundColor=background>
@@ -259,19 +338,16 @@ let modeItem = (~font, ~theme, ~mode, ()) => {
   </item>;
 };
 
-let animation =
-  Revery.UI.Animation.(
-    animate(Revery.Time.milliseconds(150))
-    |> ease(Easing.ease)
-    |> tween(50.0, 0.)
-    |> delay(Revery.Time.milliseconds(0))
+let transitionAnimation =
+  Animation.(
+    animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
   );
 
 let%component make = (~state: State.t, ()) => {
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
 
-  let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
+  let%hook (yOffset, _animationState, _reset) =
+    Hooks.animation(transitionAnimation);
 
   let toStatusBarElement = (statusBarItem: Item.t) =>
     <textItem font theme text={statusBarItem.text} />;
@@ -288,14 +364,14 @@ let%component make = (~state: State.t, ()) => {
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
-  let indentationItem = () => {
+  let indentation = () => {
     let text =
       Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
     <textItem font theme text />;
   };
 
-  let fileTypeItem = () => {
+  let fileType = () => {
     let text =
       state
       |> Selectors.getActiveBuffer
@@ -305,7 +381,7 @@ let%component make = (~state: State.t, ()) => {
     <textItem font theme text />;
   };
 
-  let positionItem = () => {
+  let position = () => {
     let text =
       state
       |> Selectors.getActiveEditorGroup
@@ -316,26 +392,24 @@ let%component make = (~state: State.t, ()) => {
     <textItem font theme text />;
   };
 
-  <View style={Styles.view(theme.statusBarBackground, transition)}>
+  <View style={Styles.view(theme.statusBarBackground, yOffset)}>
     <section align=`FlexStart>
-      <notificationsItem font theme notifications />
+      <notificationCount font theme notifications />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
       <section align=`FlexStart>
-        <diagnosticsItem font theme diagnostics />
+        <diagnosticCount font theme diagnostics />
       </section>
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
       <section align=`FlexEnd>
-        <indentationItem />
-        <fileTypeItem />
-        <positionItem />
+        <indentation />
+        <fileType />
+        <position />
       </section>
-      {notifications
-       |> List.map(item => <Notification item theme font />)
-       |> React.listToElement}
+      <Notifications notifications theme font />
     </sectionGroup>
-    <section align=`FlexEnd> <modeItem font theme mode /> </section>
+    <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
   </View>;
 };

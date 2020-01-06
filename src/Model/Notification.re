@@ -1,5 +1,6 @@
 [@deriving show({with_path: false})]
 type t = {
+  id: int,
   kind,
   message: string,
 }
@@ -10,4 +11,19 @@ and kind =
   | Warning
   | Error;
 
-let create = (~kind=Info, message) => {kind, message};
+module Internal = {
+  let generateId = {
+    let lastId = ref(0);
+
+    () => {
+      lastId := lastId^ + 1;
+      lastId^;
+    };
+  };
+};
+
+let create = (~kind=Info, message) => {
+  id: Internal.generateId(),
+  kind,
+  message,
+};
