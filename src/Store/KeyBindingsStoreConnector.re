@@ -179,11 +179,7 @@ let start = () => {
         command: "workbench.actions.view.problems",
         condition: Expression.True,
       },
-      {
-        key: "<D-W>",
-        command: "view.closeEditor",
-        condition: Expression.True,
-      },
+      {key: "<D-W>", command: "view.closeEditor", condition: Expression.True},
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
