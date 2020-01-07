@@ -34,6 +34,7 @@ module Setup = Setup;
 module ShellUtility = ShellUtility;
 module StringMap = StringMap;
 module Subscription = Subscription;
+module SyntaxScope = SyntaxScope;
 module Theme = Theme;
 module ThreadHelper = ThreadHelper;
 module Tokenizer = Tokenizer;

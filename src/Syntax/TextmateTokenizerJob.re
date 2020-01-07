@@ -140,6 +140,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
             ~index=col,
             ~backgroundColor=Revery.Color.hex(resolvedColor.background),
             ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
+            ~syntaxScope=SyntaxScope.None,
             (),
           );
         },
