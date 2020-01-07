@@ -27,3 +27,18 @@ let ofScopes = (scopes: list(string)) => {
 		StringAndComment
 	}
 };
+
+let ofScope = scope => {
+	let isString = StringUtil.startsWith(~prefix="string", scope);
+	let isComment = StringUtil.startsWith(~prefix="comments", scope);
+
+	if (anyStrings && anyComments) {
+		StringAndComment
+	} else if(anyStrings) {
+		String
+	} else if (anyComments) {
+		Comment
+	} else {
+		StringAndComment
+	}
+}

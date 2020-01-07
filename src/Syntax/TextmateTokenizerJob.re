@@ -128,19 +128,19 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       List.map(
         token => {
           let {position, scopes, _}: Textmate.Token.t = token;
-          let scopes =
+          let combinedScopes =
             scopes
             |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
             |> String.trim;
 
-          let resolvedColor = TokenTheme.match(pending.theme, scopes);
+          let resolvedColor = TokenTheme.match(pending.theme, combinedScopes);
 
           let col = position;
           ColorizedToken.create(
             ~index=col,
             ~backgroundColor=Revery.Color.hex(resolvedColor.background),
             ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-            ~syntaxScope=SyntaxScope.None,
+            ~syntaxScope=SyntaxScope.ofScopes(scopes),
             (),
           );
         },
