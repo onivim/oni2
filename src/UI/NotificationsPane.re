@@ -24,6 +24,10 @@ module Notification = {
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
     ];
+
+    let message = font => [flexGrow(1), ...text(font)];
+
+    let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
   };
 
   let colorFor = (item, ~theme: Theme.t) =>
@@ -42,7 +46,7 @@ module Notification = {
     | Info => FontAwesome.infoCircle
     };
 
-  let make = (~item, ~theme, ~font, ()) => {
+  let make = (~item, ~theme: Theme.t, ~font, ()) => {
     let icon = () =>
       <FontIcon
         icon={iconFor(item)}
@@ -51,9 +55,23 @@ module Notification = {
         color={colorFor(item, ~theme)}
       />;
 
+    let closeButton = () => {
+      let onClick = () => GlobalContext.current().hideNotification(item);
+
+      <Clickable onClick style=Styles.closeButton>
+        <FontIcon
+          icon=FontAwesome.times
+          fontSize=13
+          backgroundColor=Colors.transparentWhite
+          color={theme.foreground}
+        />
+      </Clickable>;
+    };
+
     <View style=Styles.container>
       <icon />
-      <Text style={Styles.text(font)} text={item.message} />
+      <Text style={Styles.message(font)} text={item.message} />
+      <closeButton />
     </View>;
   };
 };
