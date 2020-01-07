@@ -10,7 +10,7 @@ type message =
   | Message(ClientToServer.t)
   | Exception(string);
 
-let start = () => {
+let start = (~healthCheck) => {
   Stdlib.set_binary_mode_out(Stdlib.stdout, true);
   Stdlib.set_binary_mode_in(Stdlib.stdin, true);
 
@@ -92,6 +92,10 @@ let start = () => {
             | Initialize(languageInfo, setup) => {
                 map(State.initialize(~log, languageInfo, setup));
                 log("Initialized!");
+              }
+            | RunHealthCheck => {
+                let res = healthCheck();
+                write(Protocol.ServerToClient.HealthCheckPass(res == 0));
               }
             | BufferEnter(id, filetype) => {
                 log(

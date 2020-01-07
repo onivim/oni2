@@ -14,6 +14,9 @@ module Model: {
   let empty: t;
   let create: (~keys: list(string), Yojson.Safe.t) => t;
   let to_yojson: t => Yojson.Safe.t;
+
+  let ofExtensions: list(ExtensionManifest.t) => t;
+  let toString: t => string;
 };
 
 type t;

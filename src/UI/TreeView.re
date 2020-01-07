@@ -100,11 +100,11 @@ module Make = (Model: TreeModel) => {
       <View style={Styles.placeholder(~height=size * itemHeight)} />;
 
     let item = (~arrow, ()) =>
-      <Clickable
+      <Sneakable
         onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
         <arrow />
         {renderContent(node)}
-      </Clickable>;
+      </Sneakable>;
 
     let renderChildren = children => {
       let rec loop = (count, elements, children) =>

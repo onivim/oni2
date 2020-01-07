@@ -25,7 +25,8 @@ let run =
 
   let shouldClose = ref(false);
   let _readStdout: Thread.t =
-    Thread.create(
+    ThreadHelper.create(
+      ~name="NodeTask.stdout",
       () => {
         let running = ref(true);
         while (running^) {
@@ -41,7 +42,8 @@ let run =
     );
 
   let _waitThread: Thread.t =
-    Thread.create(
+    ThreadHelper.create(
+      ~name="NodeTask.wait",
       () => {
         let (_code, status: Unix.process_status) = Unix.waitpid([], pid);
 

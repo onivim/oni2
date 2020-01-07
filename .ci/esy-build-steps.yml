@@ -11,6 +11,8 @@ steps:
     displayName: 'Build: esy build'
   - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
+  - script: esy x Oni2 -f --checkhealth
+    displayName: "esy x Oni2 -f --checkhealth"
   - script: esy create-release
     displayName: "esy create-release"
   - script: esy build-env

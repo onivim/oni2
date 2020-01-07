@@ -163,6 +163,23 @@ let start = () => {
         command: "redo",
         condition: "editorTextFocus" |> parseExp,
       },
+      {key: "<C-G>", command: "sneak.start", condition: Expression.True},
+      {
+        key: "<ESC>",
+        command: "sneak.stop",
+        condition: "sneakMode" |> parseExp,
+      },
+      {
+        key: "<S-C-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      },
+      {
+        key: "<D-S-M>",
+        command: "workbench.actions.view.problems",
+        condition: Expression.True,
+      },
+      {key: "<D-W>", command: "view.closeEditor", condition: Expression.True},
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

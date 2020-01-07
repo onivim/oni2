@@ -6,6 +6,8 @@ steps:
       versionSpec: '8.9'
   - script: npm install -g esy@0.5.6
     displayName: 'npm install -g esy@0.5.6'
+  - script: npm install -g yarn
+    displayName: 'npm install -g yarn'
   - script: esy install
     displayName: 'esy install'
   - script: git diff --exit-code
@@ -30,3 +32,9 @@ steps:
     displayName: esy format
   - script: git diff --exit-code
     displayName: 'check that formatting is correct. If this fails, run `esy format` and re-submit PR.'
+  - script: yarn audit
+    workingDirectory: node
+    displayName: 'yarn audit: node'
+  - script: yarn audit
+    workingDirectory: extensions
+    displayName: 'yarn audit: extensions'

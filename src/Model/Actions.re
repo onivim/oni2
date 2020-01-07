@@ -25,6 +25,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
+  | SyntaxServerClosed
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
@@ -57,6 +58,7 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
@@ -115,18 +117,19 @@ type t =
   | SetColorTheme([@opaque] Theme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
+  | StatusBar(StatusBarModel.action)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | SearchShow
-  | SearchHide
+  | SearchStart
   | SearchHotkey
   | SearchInput(string)
   | SearchInputClicked(int)
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
+  | Sneak(Sneak.action)
   | VimDirectoryChanged(string)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
