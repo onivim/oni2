@@ -24,7 +24,7 @@ let hideSearchPane = (state: State.t, isSearchFocused) => {
   };
 };
 
-let closeDiagnosticsPane = (state: State.t) => {
+let closePane = (state: State.t) => {
   ...state,
   pane: Pane.setClosed(state.pane),
 };
@@ -53,14 +53,22 @@ let reduce = (action: Actions.t, state: State.t) =>
 
   | (DiagnosticsHotKey, Some(Pane.Diagnostics))
   | (StatusBar(StatusBarModel.DiagnosticsClicked), Some(Pane.Diagnostics)) =>
-    closeDiagnosticsPane(state)
+    closePane(state)
 
   | (DiagnosticsHotKey, _)
   | (PaneTabClicked(Pane.Diagnostics), _)
   | (StatusBar(StatusBarModel.DiagnosticsClicked), _) =>
     openDiagnosticsPane(state)
 
-  | (PaneTabClicked(Pane.Notifications), _) => openNotificationsPane(state)
+  | (
+      StatusBar(StatusBarModel.NotificationCountClicked),
+      Some(Pane.Notifications),
+    ) =>
+    closePane(state)
+
+  | (PaneTabClicked(Pane.Notifications), _)
+  | (StatusBar(StatusBarModel.NotificationCountClicked), _) =>
+    openNotificationsPane(state)
 
   | _ => state
   };

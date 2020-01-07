@@ -234,7 +234,12 @@ let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
 let notificationCount = (~font, ~foreground as color, ~notifications, ()) => {
   let text = notifications |> List.length |> string_of_int;
 
-  <item>
+  let onClick = () =>
+    GlobalContext.current().dispatch(
+      Actions.StatusBar(NotificationCountClicked),
+    );
+
+  <item onClick>
     <View
       style=Style.[
         flexDirection(`Row),
