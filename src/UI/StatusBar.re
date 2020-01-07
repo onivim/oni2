@@ -17,7 +17,52 @@ open Oni_Model.StatusBarModel;
 module Option = Utility.Option;
 module Animation = Revery.UI.Animation;
 
-module Notifications = {
+let useExpiration = (~equals=(==), ~expireAfter, items) => {
+  let%hook (active, setActive) = Hooks.state([]);
+  let%hook (expired, setExpired) = Hooks.ref([]);
+  let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
+
+  let (stillActive, freshlyExpired) =
+    List.partition(
+      ((_item, activated)) => Time.(time - activated < expireAfter),
+      active,
+    );
+
+  if (freshlyExpired != []) {
+    setActive(_ => stillActive);
+
+    freshlyExpired
+    |> List.map(((item, _t)) => item)
+    |> List.rev_append(expired)
+    |> setExpired;
+  };
+
+  let%hook () =
+    Hooks.effect(
+      If((!==), items),
+      () => {
+        let untracked =
+          items
+          |> List.filter(item => !List.exists(equals(item), expired))
+          |> List.filter(item =>
+               !List.exists(((it, _t)) => equals(it, item), active)
+             );
+
+        if (untracked != []) {
+          let init = item => (item, time);
+          setActive(tracked => List.map(init, untracked) @ tracked);
+        };
+
+        // TODO: Garbage collection of expired, but on what condition?
+
+        None;
+      },
+    );
+
+  List.map(((item, _t)) => item, stillActive);
+};
+
+module Notification = {
   open Notification;
 
   module Constants = {
@@ -27,24 +72,25 @@ module Notifications = {
   module Styles = {
     open Style;
 
-    let container = (~background, ~yOffset) => [
+    let container = (~backgroundColor, ~yOffset) => [
       position(`Absolute),
       top(0),
       bottom(0),
       left(0),
       right(0),
-      backgroundColor(background),
+      Style.backgroundColor(backgroundColor),
       flexDirection(`Row),
       alignItems(`Center),
       paddingHorizontal(10),
       transform(Transform.[TranslateY(yOffset)]),
     ];
 
-    let text = (font: UiFont.t) => [
+    let text = (~color, font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(11),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
+      Style.color(color),
     ];
   };
 
@@ -65,126 +111,53 @@ module Notifications = {
       enter |> andThen(~next=exit |> delay(Constants.popupDuration));
   };
 
-  let%component notification = (~item, ~theme, ~font, ()) => {
+  let backgroundColorFor = (item, ~theme: Theme.t) =>
+    switch (item.kind) {
+    | Success => theme.notificationSuccessBackground
+    | Warning => theme.notificationWarningBackground
+    | Error => theme.notificationErrorBackground
+    | Info => theme.notificationInfoBackground
+    };
+
+  let foregroundColorFor = (item, ~theme: Theme.t) => {
+    switch (item.kind) {
+    | Success => theme.notificationSuccessForeground
+    | Warning => theme.notificationWarningForeground
+    | Error => theme.notificationErrorForeground
+    | Info => theme.notificationInfoForeground
+    };
+  };
+
+  let iconFor = item =>
+    switch (item.kind) {
+    | Success => FontAwesome.checkCircle
+    | Warning => FontAwesome.exclamationTriangle
+    | Error => FontAwesome.exclamationCircle
+    | Info => FontAwesome.infoCircle
+    };
+
+  let%component make = (~item, ~theme, ~font, ()) => {
     let%hook (yOffset, _animationState, _reset) =
       Hooks.animation(Animations.sequence, ~active=true);
 
-    let Theme.{
-          notificationInfoBackground,
-          notificationInfoForeground,
-          notificationSuccessBackground,
-          notificationSuccessForeground,
-          notificationWarningBackground,
-          notificationWarningForeground,
-          notificationErrorBackground,
-          notificationErrorForeground,
-          _,
-        } = theme;
-
-    let (icon, background, foreground) =
-      switch (item.kind) {
-      | Success => (
-          FontAwesome.checkCircle,
-          notificationSuccessBackground,
-          notificationSuccessForeground,
-        )
-      | Warning => (
-          FontAwesome.exclamationTriangle,
-          notificationWarningBackground,
-          notificationWarningForeground,
-        )
-      | Error => (
-          FontAwesome.exclamationCircle,
-          notificationErrorBackground,
-          notificationErrorForeground,
-        )
-      | Info => (
-          FontAwesome.infoCircle,
-          notificationInfoBackground,
-          notificationInfoForeground,
-        )
-      };
+    let backgroundColor = backgroundColorFor(item, ~theme);
+    let color = foregroundColorFor(item, ~theme);
 
     let icon = () =>
-      <FontIcon
-        icon
-        fontSize=16
-        backgroundColor=background
-        color=foreground
-      />;
+      <FontIcon icon={iconFor(item)} fontSize=16 backgroundColor color />;
 
-    <View style={Styles.container(~background, ~yOffset)}>
+    <View style={Styles.container(~backgroundColor, ~yOffset)}>
       <icon />
-      <Text style={Styles.text(font)} text={item.message} />
+      <Text style={Styles.text(~color, font)} text={item.message} />
     </View>;
-  };
-
-  let useExpiration = items => {
-    let%hook (active, setActive) = Hooks.state([]);
-    let%hook (expired, setExpired) = Hooks.ref([]);
-    let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
-
-    let (stillActive, freshlyExpired) =
-      List.partition(
-        ((_, _, t)) => Time.(time - t < Animations.totalDuration),
-        active,
-      );
-
-    if (freshlyExpired != []) {
-      setActive(_ => stillActive);
-
-      freshlyExpired
-      |> List.map(((item, _, _)) => item.id)
-      |> List.rev_append(expired)
-      |> setExpired;
-    };
-
-    let%hook () =
-      Hooks.effect(
-        If((!==), items),
-        () => {
-          let untracked =
-            items
-            |> List.filter(item => !List.mem(item.id, expired))
-            |> List.filter(item =>
-                 !List.exists(((it, _, _)) => it.id == item.id, active)
-               );
-
-          if (untracked != []) {
-            let init = item => (item, React.Key.create(), time);
-            setActive(tracked => List.map(init, untracked) @ tracked);
-          };
-
-          // TODO: Garbage collection of expired, but on what condition?
-
-          None;
-        },
-      );
-
-    stillActive;
-  };
-
-  let%component make = (~notifications, ~theme, ~font, ()) => {
-    let%hook active = useExpiration(notifications);
-
-    active
-    |> List.rev
-    |> List.map(((item, key, _)) => <notification key item theme font />)
-    |> React.listToElement;
   };
 };
 
 module Styles = {
   open Style;
 
-  let text = (uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    fontSize(11),
-    textWrap(TextWrapping.NoWrap),
-  ];
-
-  let view = (bgColor, yOffset) => [
-    backgroundColor(bgColor),
+  let view = (background, yOffset) => [
+    backgroundColor(background),
     flexDirection(`Row),
     flexGrow(1),
     justifyContent(`SpaceBetween),
@@ -217,13 +190,11 @@ module Styles = {
     minWidth(50),
   ];
 
-  let notification = (~background) => [
-    position(`Absolute),
-    top(0),
-    bottom(0),
-    left(0),
-    right(0),
-    backgroundColor(background),
+  let text = (~color, uiFont: UiFont.t) => [
+    fontFamily(uiFont.fontFile),
+    fontSize(11),
+    textWrap(TextWrapping.NoWrap),
+    Style.color(color),
   ];
 };
 
@@ -243,7 +214,8 @@ let sectionGroup = (~children, ()) =>
 let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
 
-let item = (~children, ~backgroundColor, ~onClick=?, ()) => {
+let item =
+    (~children, ~backgroundColor=Colors.transparentWhite, ~onClick=?, ()) => {
   let style = Styles.item(backgroundColor);
 
   switch (onClick) {
@@ -253,21 +225,15 @@ let item = (~children, ~backgroundColor, ~onClick=?, ()) => {
 };
 
 let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
-  <item backgroundColor={theme.statusBarBackground}>
-    <Text
-      style=Style.[
-        backgroundColor(theme.statusBarBackground),
-        color(theme.statusBarForeground),
-        ...Styles.text(font),
-      ]
-      text
-    />
+  <item>
+    <Text style={Styles.text(~color=theme.statusBarForeground, font)} text />
   </item>;
 
-let notificationCount = (~font, ~theme: Theme.t, ~notifications, ()) => {
+let notificationCount =
+    (~font, ~theme: Theme.t, ~foreground as color, ~notifications, ()) => {
   let text = notifications |> List.length |> string_of_int;
 
-  <item backgroundColor={theme.statusBarBackground}>
+  <item>
     <View
       style=Style.[
         flexDirection(`Row),
@@ -276,18 +242,11 @@ let notificationCount = (~font, ~theme: Theme.t, ~notifications, ()) => {
       ]>
       <FontIcon
         icon=FontAwesome.bell
-        backgroundColor={theme.statusBarBackground}
-        color={theme.statusBarForeground}
+        backgroundColor=Colors.transparentWhite
+        color
         margin=4
       />
-      <Text
-        style=Style.[
-          backgroundColor(theme.statusBarBackground),
-          color(theme.statusBarForeground),
-          ...Styles.text(font),
-        ]
-        text
-      />
+      <Text style={Styles.text(~color, font)} text />
     </View>
   </item>;
 };
@@ -298,7 +257,7 @@ let diagnosticCount = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
   let onClick = () =>
     GlobalContext.current().dispatch(Actions.StatusBar(DiagnosticsClicked));
 
-  <item backgroundColor={theme.statusBarBackground} onClick>
+  <item onClick>
     <View
       style=Style.[
         flexDirection(`Row),
@@ -307,16 +266,12 @@ let diagnosticCount = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
       ]>
       <FontIcon
         icon=FontAwesome.timesCircle
-        backgroundColor={theme.statusBarBackground}
+        backgroundColor=Colors.transparentWhite
         color={theme.statusBarForeground}
         margin=4
       />
       <Text
-        style=Style.[
-          backgroundColor(theme.statusBarBackground),
-          color(theme.statusBarForeground),
-          ...Styles.text(font),
-        ]
+        style={Styles.text(~color=theme.statusBarForeground, font)}
         text
       />
     </View>
@@ -328,11 +283,7 @@ let modeIndicator = (~font, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style=Style.[
-        backgroundColor(background),
-        color(foreground),
-        ...Styles.text(font),
-      ]
+      style={Styles.text(~color=foreground, font)}
       text={Vim.Mode.show(mode)}
     />
   </item>;
@@ -392,9 +343,31 @@ let%component make = (~state: State.t, ()) => {
     <textItem font theme text />;
   };
 
-  <View style={Styles.view(theme.statusBarBackground, yOffset)}>
+  let%hook activeNotifications =
+    useExpiration(
+      ~expireAfter=Notification.Animations.totalDuration,
+      ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
+      notifications,
+    );
+
+  let notificationPopups = () =>
+    activeNotifications
+    |> List.rev
+    |> List.map(item => <Notification item theme font />)
+    |> React.listToElement;
+
+  let (background, foreground) =
+    switch (activeNotifications) {
+    | [] => (theme.statusBarBackground, theme.statusBarForeground)
+    | [last, ..._] => (
+        Notification.backgroundColorFor(last, ~theme),
+        Notification.foregroundColorFor(last, ~theme),
+      )
+    };
+
+  <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
-      <notificationCount font theme notifications />
+      <notificationCount font theme foreground notifications />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
@@ -408,7 +381,7 @@ let%component make = (~state: State.t, ()) => {
         <fileType />
         <position />
       </section>
-      <Notifications notifications theme font />
+      <notificationPopups />
     </sectionGroup>
     <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
   </View>;
