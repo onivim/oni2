@@ -1,0 +1,50 @@
+{
+	"name": "php",
+	"displayName": "%displayName%",
+	"description": "%description%",
+	"version": "1.0.0",
+	"publisher": "vscode",
+	"license": "MIT",
+	"engines": {
+		"vscode": "0.10.x"
+	},
+	"contributes": {
+		"languages": [
+			{
+				"id": "php",
+				"extensions": [
+					".php",
+					".php4",
+					".php5",
+					".phtml",
+					".ctp"
+				],
+				"aliases": [
+					"PHP",
+					"php"
+				],
+				"firstLine": "^#!\\s*/.*\\bphp\\b",
+				"mimetypes": [
+					"application/x-php"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "php",
+				"scopeName": "source.php",
+				"path": "./syntaxes/php.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "php",
+				"path": "./snippets/php.snippets.json"
+			}
+		]
+	},
+	"scripts": {
+		"update-grammar": "node ./build/update-grammar.js"
+	}
+}
