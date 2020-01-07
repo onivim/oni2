@@ -7,7 +7,8 @@
 [@deriving show({with_path: false})]
 type paneType =
   | Search
-  | Diagnostics;
+  | Diagnostics
+  | Notifications;
 
 type t = {
   activePane: paneType,

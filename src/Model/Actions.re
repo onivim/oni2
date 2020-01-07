@@ -130,6 +130,7 @@ type t =
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
   | Sneak(Sneak.action)
+  | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
