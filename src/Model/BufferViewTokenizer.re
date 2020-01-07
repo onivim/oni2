@@ -125,19 +125,23 @@ let tokenize =
     let BufferLineColorizer.{
           backgroundColor as bg1,
           foregroundColor as fg1,
-          _,
+          bold as bold1,
+          italic as italic1,
         } =
       colorizer(i0);
     let BufferLineColorizer.{
           backgroundColor as bg2,
           foregroundColor as fg2,
-          _,
+          bold as bold2,
+          italic as italic2,
         } =
       colorizer(i1);
 
     !colorEqual(bg1, bg2)
     || !colorEqual(fg1, fg2)
     || _isWhitespace(c0) != _isWhitespace(c1)
+    || bold1 !== bold2
+    || italic1 !== italic2
     /* Always split on tabs */
     || UChar.eq(c0, tab)
     || UChar.eq(c1, tab);
