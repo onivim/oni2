@@ -72,25 +72,25 @@ module Notification = {
   module Styles = {
     open Style;
 
-    let container = (~backgroundColor, ~yOffset) => [
+    let container = (~background, ~yOffset) => [
       position(`Absolute),
       top(0),
       bottom(0),
       left(0),
       right(0),
-      Style.backgroundColor(backgroundColor),
+      backgroundColor(background),
       flexDirection(`Row),
       alignItems(`Center),
       paddingHorizontal(10),
       transform(Transform.[TranslateY(yOffset)]),
     ];
 
-    let text = (~color, font: UiFont.t) => [
+    let text = (~foreground, font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(11),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
-      Style.color(color),
+      color(foreground),
     ];
   };
 
@@ -136,19 +136,21 @@ module Notification = {
     | Info => FontAwesome.infoCircle
     };
 
-  let%component make = (~item, ~theme, ~font, ()) => {
+  let%component make = (~item, ~background, ~foreground, ~font, ()) => {
     let%hook (yOffset, _animationState, _reset) =
       Hooks.animation(Animations.sequence, ~active=true);
 
-    let backgroundColor = backgroundColorFor(item, ~theme);
-    let color = foregroundColorFor(item, ~theme);
-
     let icon = () =>
-      <FontIcon icon={iconFor(item)} fontSize=16 backgroundColor color />;
+      <FontIcon
+        icon={iconFor(item)}
+        fontSize=16
+        backgroundColor=background
+        color=foreground
+      />;
 
-    <View style={Styles.container(~backgroundColor, ~yOffset)}>
+    <View style={Styles.container(~background, ~yOffset)}>
       <icon />
-      <Text style={Styles.text(~color, font)} text={item.message} />
+      <Text style={Styles.text(~foreground, font)} text={item.message} />
     </View>;
   };
 };
@@ -229,8 +231,7 @@ let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
     <Text style={Styles.text(~color=theme.statusBarForeground, font)} text />
   </item>;
 
-let notificationCount =
-    (~font, ~theme: Theme.t, ~foreground as color, ~notifications, ()) => {
+let notificationCount = (~font, ~foreground as color, ~notifications, ()) => {
   let text = notifications |> List.length |> string_of_int;
 
   <item>
@@ -350,12 +351,6 @@ let%component make = (~state: State.t, ()) => {
       notifications,
     );
 
-  let notificationPopups = () =>
-    activeNotifications
-    |> List.rev
-    |> List.map(item => <Notification item theme font />)
-    |> React.listToElement;
-
   let (background, foreground) =
     switch (activeNotifications) {
     | [] => (theme.statusBarBackground, theme.statusBarForeground)
@@ -365,9 +360,26 @@ let%component make = (~state: State.t, ()) => {
       )
     };
 
+  let%hook background =
+    CustomHooks.colorTransition(
+      ~duration=Notification.Animations.transitionDuration,
+      background,
+    );
+  let%hook foreground =
+    CustomHooks.colorTransition(
+      ~duration=Notification.Animations.transitionDuration,
+      foreground,
+    );
+
+  let notificationPopups = () =>
+    activeNotifications
+    |> List.rev
+    |> List.map(item => <Notification item background foreground font />)
+    |> React.listToElement;
+
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
-      <notificationCount font theme foreground notifications />
+      <notificationCount font foreground notifications />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
