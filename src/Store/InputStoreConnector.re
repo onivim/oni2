@@ -42,6 +42,12 @@ let conditionsOfState = (state: State.t) => {
     Hashtbl.add(ret, "suggestWidgetVisible", true);
   };
 
+  switch (state.configuration.default.editorAcceptSuggestionOnEnter) {
+  | `on
+  | `smart => Hashtbl.add(ret, "acceptSuggestionOnEnter", true)
+  | `off => ()
+  };
+
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
