@@ -97,7 +97,7 @@ let start = () => {
         });
 
         Lwt.on_failure(promise, _err => {
-          dispatch(Actions.References(Model.References.NotAvailable)) 
+          dispatch(Actions.References(Model.References.NotAvailable))
         });
       };
 

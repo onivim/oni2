@@ -29,10 +29,7 @@ let toLocListItem = (locationWithUri: Ext.LocationWithUri.t) => {
 let make = (~state: State.t, ()) => {
   let {theme, uiFont, editorFont, _}: State.t = state;
 
-  let items =
-    state.references
-    |> List.map(toLocListItem)
-    |> Array.of_list;
+  let items = state.references |> List.map(toLocListItem) |> Array.of_list;
 
   let innerElement =
     if (Array.length(items) == 0) {

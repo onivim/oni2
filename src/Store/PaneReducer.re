@@ -58,6 +58,16 @@ let openDiagnosticsPane = (state: State.t) => {
   pane: Pane.setOpen(Pane.Diagnostics),
 };
 
+let closeReferencesPane = (state: State.t) => {
+  ...state,
+  pane: Pane.setClosed(state.pane),
+};
+
+let openReferencesPane = (state: State.t) => {
+  ...state,
+  pane: Pane.setOpen(Pane.References),
+};
+
 let diagnosticsPaneReducer = (action, state: State.t) => {
   let isDiagnosticsOpen = Pane.getType(state.pane) == Some(Pane.Diagnostics);
 
@@ -71,6 +81,21 @@ let diagnosticsPaneReducer = (action, state: State.t) => {
   };
 };
 
+let referencesPaneReducer = (action, state: State.t) => {
+  let isReferencesOpen = Pane.getType(state.pane) == Some(Pane.References);
+
+  switch (action, isReferencesOpen) {
+  | (ReferencesHotKey, true) => closeReferencesPane(state)
+  | (ReferencesHotKey, false) => openReferencesPane(state)
+  | (References(References.Available(_)), _openOrClosed) =>
+    openReferencesPane(state)
+  | _ => state
+  };
+};
+
 let reduce = (action: Actions.t, state: State.t) => {
-  state |> searchPaneReducer(action) |> diagnosticsPaneReducer(action);
+  state
+  |> searchPaneReducer(action)
+  |> diagnosticsPaneReducer(action)
+  |> referencesPaneReducer(action);
 };
