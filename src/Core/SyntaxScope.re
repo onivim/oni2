@@ -32,11 +32,11 @@ let ofScope = scope => {
 	let isString = StringUtil.startsWith(~prefix="string", scope);
 	let isComment = StringUtil.startsWith(~prefix="comments", scope);
 
-	if (anyStrings && anyComments) {
+	if (isString && isComment) {
 		StringAndComment
-	} else if(anyStrings) {
+	} else if(isString) {
 		String
-	} else if (anyComments) {
+	} else if (isComment) {
 		Comment
 	} else {
 		StringAndComment
