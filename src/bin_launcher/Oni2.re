@@ -15,8 +15,8 @@ let passthroughFloat = Arg.Float(_ => ());
 let passthroughString = Arg.String(_ => ());
 
 let passthroughAndStayAttached = Arg.Set(stayAttached);
-let passthroughFloatAndStayAttached = Arg.Float((_) => stayAttached := true);
-let passthroughStringAndStayAttached = Arg.String((_) => stayAttached := true);
+let passthroughFloatAndStayAttached = Arg.Float(_ => stayAttached := true);
+let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
 
 let spec =
   Arg.align([
