@@ -103,7 +103,6 @@ let make = (~state: State.t, ()) => {
          }
        }}
       <KeyDisplayerView state />
-      <NotificationsView state />
     </Overlay>
     statusBar
     <Overlay> <SneakView state /> </Overlay>
