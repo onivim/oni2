@@ -105,6 +105,7 @@ type t =
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   | RegisterQuitCleanup(unit => unit)
+  | ReferencesHotKey
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))

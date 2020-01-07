@@ -24,6 +24,8 @@ module Styles = {
 let showSearch = _ => GlobalContext.current().dispatch(Actions.SearchHotkey);
 let showProblems = _ =>
   GlobalContext.current().dispatch(Actions.DiagnosticsHotKey);
+let showReferences = _ =>
+  GlobalContext.current().dispatch(Actions.ReferencesHotKey);
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
   ignore(uiFont);
@@ -43,6 +45,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
              state={state.searchPane}
            />
          | Pane.Diagnostics => <DiagnosticsPane state />
+         | Pane.References => <ReferencesPane state />
          };
        [
          <WindowHandle theme direction=Horizontal />,
@@ -61,6 +64,13 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
                title="Problems"
                onClick=showProblems
                active={paneType == Pane.Diagnostics}
+             />
+             <PaneTab
+               uiFont
+               theme
+               title="References"
+               onClick=showReferences
+               active={paneType == Pane.References}
              />
            </View>
            <View style=Style.[flexDirection(`Column), flexGrow(1)]>

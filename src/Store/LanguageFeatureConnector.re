@@ -93,7 +93,11 @@ let start = () => {
           );
 
         Lwt.on_success(promise, result => {
-          dispatch(Actions.References(Model.References.Set(result)))
+          dispatch(Actions.References(Model.References.Available(result)))
+        });
+
+        Lwt.on_failure(promise, _err => {
+          dispatch(Actions.References(Model.References.NotAvailable)) 
         });
       };
 
@@ -117,7 +121,7 @@ let start = () => {
         state,
         findAllReferences(state),
       )
-    | Actions.References(Model.References.Set(references)) => (
+    | Actions.References(Model.References.Available(references)) => (
         {...state, references},
         Isolinear.Effect.none,
       )

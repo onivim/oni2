@@ -12,4 +12,5 @@ let initial: t = [];
 [@deriving show({with_path: false})]
 type actions =
   | Requested
-  | Set([@opaque] list(Ext.LocationWithUri.t));
+  | Available([@opaque] list(Ext.LocationWithUri.t))
+  | NotAvailable;
