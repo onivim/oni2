@@ -8,6 +8,7 @@ type unitCallback = unit => unit;
 
 let start:
   (
+    ~initialConfiguration: Configuration.t,
     ~initData: ExtHostInitData.t=?,
     ~initialWorkspace: Workspace.t=?,
     ~onInitialized: unitCallback=?,

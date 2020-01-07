@@ -26,6 +26,7 @@ let noop2 = Utility.noop2;
 
 let start =
     (
+      ~initialConfiguration,
       ~initData=ExtHostInitData.create(),
       ~initialWorkspace=Workspace.empty,
       ~onInitialized=noop,
@@ -154,6 +155,7 @@ let start =
 
   let transport =
     ExtHostTransport.start(
+      ~initialConfiguration,
       ~initData,
       ~initialWorkspace,
       ~onInitialized,

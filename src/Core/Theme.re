@@ -99,6 +99,9 @@ type t = {
   notificationWarningForeground: Color.t,
   notificationErrorForeground: Color.t,
   notificationErrorBackground: Color.t,
+  sneakBackground: Color.t,
+  sneakForeground: Color.t,
+  sneakHighlight: Color.t,
 };
 
 let default: t = {
@@ -158,6 +161,9 @@ let default: t = {
   notificationWarningForeground: Colors.white,
   notificationErrorBackground: Color.hex("#ff3860"),
   notificationErrorForeground: Colors.white,
+  sneakBackground: Colors.red,
+  sneakForeground: Colors.white,
+  sneakHighlight: Colors.white,
 };
 
 let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
@@ -349,6 +355,10 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       ["scrollbarSlider.hoverBackground", "scrollbarSlider.background"],
     );
 
+  let sneakBackground = menuSelectionBackground;
+  let sneakForeground = menuForeground;
+  let sneakHighlight = default.oniNormalModeBackground;
+
   {
     ...default,
     background,
@@ -379,6 +389,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sideBarForeground,
     statusBarBackground,
     statusBarForeground,
+    sneakBackground,
+    sneakForeground,
+    sneakHighlight,
   };
 };
 

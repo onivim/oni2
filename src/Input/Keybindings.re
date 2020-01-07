@@ -1,6 +1,7 @@
 open Oni_Core;
 
 module List = Utility.List;
+module Result = Utility.Result;
 
 module Keybinding = {
   type t = {
@@ -9,8 +10,35 @@ module Keybinding = {
     condition: Expression.t,
   };
 
+  let parseAndExpression = (json: Yojson.Safe.t) =>
+    switch (json) {
+    | `String(expr) => Expression.Variable(expr)
+    | `List(andExpressions) =>
+      List.fold_left(
+        (acc, curr) => {
+          let result =
+            switch (curr) {
+            | `String(expr) => Expression.Variable(expr)
+            | _ => Expression.False
+            };
+          Expression.And(result, acc);
+        },
+        Expression.True,
+        andExpressions,
+      )
+    | _ => Expression.False
+    };
+
   let condition_of_yojson = (json: Yojson.Safe.t) => {
     switch (json) {
+    | `List(orExpressions) =>
+      Ok(
+        List.fold_left(
+          (acc, curr) => {Expression.Or(parseAndExpression(curr), acc)},
+          Expression.False,
+          orExpressions,
+        ),
+      )
     | `String(v) =>
       switch (When.parse(v)) {
       | Error(err) => Error(err)
@@ -41,29 +69,12 @@ module Keybinding = {
   };
 };
 
-let empty = [];
-
-type t = list(Keybinding.t);
-
-let of_yojson_with_errors:
-  Yojson.Safe.t => result((list(Keybinding.t), list(string)), string) =
-  json => {
-    let bindingsJson =
-      switch (json) {
-      // Current format:
-      // [ ...bindings ]
-      | `List(bindingsJson) => Ok(bindingsJson)
-      // Legacy format:
-      // { bindings: [ ..bindings. ] }
-      | `Assoc([("bindings", `List(bindingsJson))]) => Ok(bindingsJson)
-      | _ => Error("Unable to parse keybindings - not a JSON array.")
-      };
-
-    switch (bindingsJson) {
-    | Error(msg) => Error(msg)
-    | Ok(bindings) =>
+module Internal = {
+  let of_yojson_with_errors:
+    list(Yojson.Safe.t) => (list(Keybinding.t), list(string)) =
+    bindingsJson => {
       let parsedBindings =
-        bindings
+        bindingsJson
         // Parse each binding
         |> List.map(Keybinding.of_yojson);
 
@@ -89,6 +100,53 @@ let of_yojson_with_errors:
           parsedBindings,
         );
 
-      Ok((bindings, errors));
+      (bindings, errors);
     };
+};
+
+let empty = [];
+
+type t = list(Keybinding.t);
+
+// Old version of keybindings - the legacy format:
+// { bindings: [ ..bindings. ] }
+module Legacy = {
+  let upgrade: list(Keybinding.t) => list(Keybinding.t) =
+    keys => {
+      let upgradeBinding = (binding: Keybinding.t) => {
+        switch (binding.command) {
+        | "quickOpen.open" => {
+            ...binding,
+            command: "workbench.action.quickOpen",
+          }
+        | "commandPalette.open" => {
+            ...binding,
+            command: "workbench.action.showCommands",
+          }
+        | _ => binding
+        };
+      };
+
+      keys |> List.map(upgradeBinding);
+    };
+};
+
+let of_yojson_with_errors = json => {
+  switch (json) {
+  // Current format:
+  // [ ...bindings ]
+  | `List(bindingsJson) =>
+    let res = bindingsJson |> Internal.of_yojson_with_errors;
+    Ok(res);
+  // Legacy format:
+  // { bindings: [ ..bindings. ] }
+  | `Assoc([("bindings", `List(bindingsJson))]) =>
+    let res = bindingsJson |> Internal.of_yojson_with_errors;
+
+    Ok(res)
+    |> Result.map(((bindings, errors)) => {
+         (Legacy.upgrade(bindings), errors)
+       });
+  | _ => Error("Unable to parse keybindings - not a JSON array.")
   };
+};

@@ -63,6 +63,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 let start =
     (
       ~configurationFilePath=None,
+      ~onAfterDispatch=Core.Utility.noop1,
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -162,6 +163,7 @@ let start =
     InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
+  let sneakUpdater = SneakStore.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -189,6 +191,7 @@ let start =
           languageFeatureUpdater,
           completionUpdater,
           titleUpdater,
+          sneakUpdater,
         ]),
       (),
     );
@@ -229,6 +232,8 @@ let start =
     QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
     let searchSubs = searchSubscriptionsUpdater(newState);
     SearchSubscriptionRunner.run(~dispatch, searchSubs);
+
+    onAfterDispatch(action);
   };
 
   let runEffects = () => {

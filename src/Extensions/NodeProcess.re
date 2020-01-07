@@ -48,7 +48,8 @@ let start = (~args=[], ~env=[], setup: Setup.t, scriptPath: string) => {
     ++ "]: ";
 
   let _ =
-    Thread.create(
+    ThreadHelper.create(
+      ~name="NodeProcess.stdErr",
       () => {
         let shouldClose = ref(false);
         while (! shouldClose^) {

@@ -24,6 +24,8 @@ module Styles = {
 
   let surface = Style.[flexGrow(1), flexDirection(`Row)];
 
+  let workspace = Style.[flexGrow(1), flexDirection(`Column)];
+
   let statusBar = statusBarHeight =>
     Style.[
       backgroundColor(Color.hex("#21252b")),
@@ -64,22 +66,6 @@ let make = (~state: State.t, ()) => {
         </View>
       : React.empty;
 
-  let searchPane =
-    switch (state.searchPane) {
-    | Some(searchPane) =>
-      <SearchPane
-        state=searchPane
-        isFocused={FocusManager.current(state) == Focus.Search}
-        uiFont
-        editorFont
-        theme
-      />
-    // TODO: BUG - Why is this needed? Why can't it be 'React.empty'?
-    // Without this: when switching out of zen mode, the entire
-    // editor surface will be empty. Seems like a reconciliation bug.
-    | None => <View />
-    };
-
   let activityBar =
     activityBarVisible
       ? React.listToElement([
@@ -97,12 +83,14 @@ let make = (~state: State.t, ()) => {
       : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.surface>
-      activityBar
-      sideBar
-      <EditorView state />
+    <View style=Styles.workspace>
+      <View style=Styles.surface>
+        activityBar
+        sideBar
+        <EditorView state />
+      </View>
+      <PaneView theme uiFont editorFont state />
     </View>
-    searchPane
     <Overlay>
       {switch (state.quickmenu) {
        | None => React.empty
@@ -118,5 +106,6 @@ let make = (~state: State.t, ()) => {
       <NotificationsView state />
     </Overlay>
     statusBar
+    <Overlay> <SneakView state /> </Overlay>
   </View>;
 };

@@ -100,7 +100,8 @@ let start = (~getScaleFactor, ()) => {
 
     // We load the font asynchronously
     let _ =
-      Thread.create(
+      ThreadHelper.create(
+        ~name="FontStore.loadThread",
         () => {
           let fontSize = max(fontSize, minFontSize);
 

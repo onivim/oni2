@@ -4,13 +4,22 @@ open Oni_Extensions;
 
 open TestFramework;
 
+let initialConfiguration = Oni_Extensions.Configuration.empty;
+let initData = ExtHostInitData.create();
+
 describe("ExtHostTransport", ({test, _}) => {
   test("gets initialized message", ({expect}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
       let initialized = ref(false);
       let onInitialized = () => initialized := true;
-      let extClient = ExtHostTransport.start(~onInitialized, setup);
+      let extClient =
+        ExtHostTransport.start(
+          ~initData,
+          ~initialConfiguration,
+          ~onInitialized,
+          setup,
+        );
       Oni_Core.Utility.waitForCondition(() => {
         Revery.App.flushPendingCallbacks();
         initialized^;
@@ -25,7 +34,14 @@ describe("ExtHostTransport", ({test, _}) => {
     let closed = ref(false);
     let onClosed = () => closed := true;
     let onInitialized = () => initialized := true;
-    let _extClient = ExtHostTransport.start(~onInitialized, ~onClosed, setup);
+    let _extClient =
+      ExtHostTransport.start(
+        ~initData,
+        ~initialConfiguration,
+        ~onInitialized,
+        ~onClosed,
+        setup,
+      );
     Oni_Core.Utility.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       initialized^;
@@ -42,7 +58,14 @@ describe("ExtHostTransport", ({test, _}) => {
     let closed = ref(false);
     let onClosed = () => closed := true;
     let onInitialized = () => initialized := true;
-    let extClient = ExtHostTransport.start(~onInitialized, ~onClosed, setup);
+    let extClient =
+      ExtHostTransport.start(
+        ~initData,
+        ~initialConfiguration,
+        ~onInitialized,
+        ~onClosed,
+        setup,
+      );
     Oni_Core.Utility.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       initialized^;
@@ -75,7 +98,13 @@ describe("ExtHostTransport", ({test, _}) => {
       Ok(None);
     };
     let initData = ExtHostInitData.create(~extensions, ());
-    let extClient = ExtHostTransport.start(~initData, ~onMessage, setup);
+    let extClient =
+      ExtHostTransport.start(
+        ~initialConfiguration,
+        ~initData,
+        ~onMessage,
+        setup,
+      );
     Oni_Core.Utility.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       gotWillActivateMessage^;

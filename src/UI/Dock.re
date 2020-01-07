@@ -1,5 +1,4 @@
 open Revery.UI;
-open Revery.UI.Components;
 
 open Oni_Model;
 
@@ -41,14 +40,14 @@ let%component make = (~state: State.t, ()) => {
       width(50),
       transform(Transform.[TranslateX(transition)]),
     ]>
-    <Clickable onClick=onExplorerClick style=button>
+    <Sneakable onClick=onExplorerClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
-    </Clickable>
-    <Clickable onClick=onSearchClick style=button>
+    </Sneakable>
+    <Sneakable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
-    </Clickable>
-    <Clickable onClick=onExtensionsClick style=button>
+    </Sneakable>
+    <Sneakable onClick=onExtensionsClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
-    </Clickable>
+    </Sneakable>
   </View>;
 };

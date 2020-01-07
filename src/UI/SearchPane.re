@@ -7,12 +7,7 @@ open Oni_Model;
 module ListEx = Utility.ListEx;
 
 module Styles = {
-  let searchPane = (~theme: Theme.t) =>
-    Style.[
-      flexDirection(`Row),
-      height(200),
-      borderTop(~color=theme.sideBarBackground, ~width=1),
-    ];
+  let pane = Style.[flexGrow(1), flexDirection(`Row)];
 
   let queryPane = (~theme: Theme.t) =>
     Style.[
@@ -67,7 +62,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
   let items =
     state.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
 
-  <View style={Styles.searchPane(~theme)}>
+  <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
         <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
