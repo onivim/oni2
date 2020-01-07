@@ -133,7 +133,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
             |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
             |> String.trim;
 
-          let {background, foreground, bold, italic}: Textmate.ThemeScopes.ResolvedStyle.t = TokenTheme.match(pending.theme, scopes);
+          let {background, foreground, bold, italic}: Textmate.ThemeScopes.ResolvedStyle.t =
+            TokenTheme.match(pending.theme, scopes);
 
           let col = position;
           ColorizedToken.create(
