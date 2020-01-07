@@ -12,6 +12,7 @@ type t = {
   languages: list(ExtensionContributions.Language.t),
   extToLanguage: StringMap.t(string),
   languageToScope: StringMap.t(string),
+  languageToConfiguration: StringMap.t(LanguageConfiguration.t),
   scopeToGrammarPath: StringMap.t(string),
   scopeToTreesitterPath: StringMap.t(option(string)),
 };
@@ -20,6 +21,7 @@ let initial = {
   grammars: [],
   languages: [],
   extToLanguage: StringMap.empty,
+  languageToConfiguration: StringMap.empty,
   languageToScope: StringMap.empty,
   scopeToGrammarPath: StringMap.empty,
   scopeToTreesitterPath: StringMap.empty,
@@ -122,10 +124,13 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          StringMap.empty,
        );
 
+  let languageToConfiguration = StringMap.empty;
+
   {
     grammars,
     languages,
     extToLanguage,
+    languageToConfiguration,
     languageToScope,
     scopeToGrammarPath,
     scopeToTreesitterPath,
