@@ -133,15 +133,15 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
             |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
             |> String.trim;
 
-          let resolvedColor = TokenTheme.match(pending.theme, scopes);
+          let {background, foreground, bold, italic}: Textmate.ThemeScopes.ResolvedStyle.t = TokenTheme.match(pending.theme, scopes);
 
           let col = position;
           ColorizedToken.create(
             ~index=col,
-            ~backgroundColor=Revery.Color.hex(resolvedColor.background),
-            ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-            ~bold=false,
-            ~italic=false,
+            ~backgroundColor=Revery.Color.hex(background),
+            ~foregroundColor=Revery.Color.hex(foreground),
+            ~bold,
+            ~italic,
             (),
           );
         },

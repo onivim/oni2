@@ -65,14 +65,14 @@ let doWork = (context: context, line: int) => {
           context.scopeConverter,
         );
 
-      let resolvedColor = TokenTheme.match(context.theme, tmScope);
+      let {background, foreground, bold, italic}: Textmate.ThemeScopes.ResolvedStyle.t = TokenTheme.match(pending.theme, scopes);
 
       ColorizedToken.create(
         ~index=Index.toZeroBased(loc.column),
-        ~backgroundColor=Revery.Color.hex(resolvedColor.background),
-        ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-        ~bold=false,
-        ~italic=false,
+        ~backgroundColor=Revery.Color.hex(background),
+        ~foregroundColor=Revery.Color.hex(foreground),
+        ~bold,
+        ~italic,
         (),
       );
     },
