@@ -66,7 +66,7 @@ let doWork = (context: context, line: int) => {
         );
 
       let {background, foreground, bold, italic}: Textmate.ThemeScopes.ResolvedStyle.t =
-        TokenTheme.match(pending.theme, scopes);
+        TokenTheme.match(context.theme, tmScope);
 
       ColorizedToken.create(
         ~index=Index.toZeroBased(loc.column),
