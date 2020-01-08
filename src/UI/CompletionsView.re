@@ -107,9 +107,10 @@ module Styles = {
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
     textWrap(TextWrapping.NoWrap),
-    Style.color(
+    color(
       highlighted ? theme.oniNormalModeBackground : theme.editorForeground,
     ),
+    backgroundColor(theme.editorBackground),
   ];
 
   let highlightedText = (~theme: Theme.t, ~editorFont: EditorFont.t) =>
@@ -127,12 +128,14 @@ module Styles = {
     backgroundColor(theme.editorSuggestWidgetBackground),
   ];
 
-  let detailText = (~editorFont: EditorFont.t, ~tokenTheme: TokenTheme.t) => [
+  let detailText =
+      (~editorFont: EditorFont.t, ~theme: Theme.t, ~tokenTheme: TokenTheme.t) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
-    Style.color(tokenTheme.commentColor),
+    color(tokenTheme.commentColor),
     margin(3),
+    backgroundColor(theme.editorBackground),
   ];
 };
 
@@ -182,7 +185,7 @@ let itemView =
 let detailView =
     (~text, ~width, ~lineHeight, ~editorFont, ~theme, ~tokenTheme, ()) =>
   <View style={Styles.detail(~width, ~lineHeight, ~theme)}>
-    <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
+    <Text style={Styles.detailText(~editorFont, ~theme, ~tokenTheme)} text />
   </View>;
 
 let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
