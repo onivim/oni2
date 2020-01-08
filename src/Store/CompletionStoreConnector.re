@@ -47,16 +47,15 @@ module Effects = {
 module Actions = {
   let noop = state => (state, Isolinear.Effect.none);
 
+  let update = (f, state: State.t) => (
+    {...state, completions: f(state.completions)},
+    Isolinear.Effect.none,
+  );
+
   let start = (~buffer, ~meet: CompletionMeet.t, state: State.t) => (
     {
       ...state,
-      completions: {
-        ...state.completions,
-        meet: Some(meet),
-        filter: Some(meet.base),
-        all: Completions.initial.all,
-        filtered: Completions.initial.filtered,
-      },
+      completions: Completions.initial |> Completions.setMeet(meet),
     },
     Effects.requestCompletions(
       ~languageFeatures=state.languageFeatures,
@@ -65,13 +64,8 @@ module Actions = {
     ),
   );
 
-  let narrow = (~meet: CompletionMeet.t, state: State.t) => (
-    {
-      ...state,
-      completions: Completions.setFilter(meet.base, state.completions),
-    },
-    Isolinear.Effect.none,
-  );
+  let narrow = (~meet: CompletionMeet.t) =>
+    update(Completions.setMeet(meet));
 
   let stop = state => (
     State.{...state, completions: Completions.initial},
@@ -131,11 +125,6 @@ module Actions = {
     | _ => noop(state)
     };
   };
-
-  let update = (f, state: State.t) => (
-    {...state, completions: f(state.completions)},
-    Isolinear.Effect.none,
-  );
 };
 
 let start = () => {
@@ -151,50 +140,14 @@ let start = () => {
     | EditorCursorMove(_) when state.mode == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
-    | CompletionAddItems(_meet, items) => {
-        let all = List.concat([items, state.completions.all]);
-        let filtered = Completions.filterItems(state.completions.filter, all);
-        Actions.update(
-          model =>
-            {
-              ...model,
-              all,
-              focused:
-                model.focused == None && Array.length(filtered) > 0
-                  ? Some(0) : model.focused,
-              filtered,
-            },
-          state,
-        );
-      }
+    | CompletionAddItems(_meet, items) =>
+      Actions.update(Completions.addItems(items), state)
 
     | Command("selectPrevSuggestion") =>
-      Actions.update(
-        model =>
-          {
-            ...model,
-            focused:
-              IndexEx.prevRollOverOpt(
-                model.focused,
-                ~last=Array.length(model.filtered) - 1,
-              ),
-          },
-        state,
-      )
+      Actions.update(Completions.focusPrevious, state)
 
     | Command("selectNextSuggestion") =>
-      Actions.update(
-        model =>
-          {
-            ...model,
-            focused:
-              IndexEx.nextRollOverOpt(
-                model.focused,
-                ~last=Array.length(model.filtered) - 1,
-              ),
-          },
-        state,
-      )
+      Actions.update(Completions.focusNext, state)
 
     | _ => Actions.noop(state);
 

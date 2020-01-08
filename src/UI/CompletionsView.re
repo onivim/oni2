@@ -9,6 +9,7 @@ open Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Ext = Oni_Extensions;
+module Option = Utility.Option;
 
 open Ext.CompletionItemKind;
 
