@@ -85,12 +85,13 @@ module Notification = {
       transform(Transform.[TranslateY(yOffset)]),
     ];
 
-    let text = (~foreground, font: UiFont.t) => [
+    let text = (~foreground, ~background, font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(11),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
       color(foreground),
+      backgroundColor(background),
     ];
   };
 
@@ -150,7 +151,10 @@ module Notification = {
 
     <View style={Styles.container(~background, ~yOffset)}>
       <icon />
-      <Text style={Styles.text(~foreground, font)} text={item.message} />
+      <Text
+        style={Styles.text(~foreground, ~background, font)}
+        text={item.message}
+      />
     </View>;
   };
 };
@@ -192,11 +196,12 @@ module Styles = {
     minWidth(50),
   ];
 
-  let text = (~color, uiFont: UiFont.t) => [
+  let text = (~color, ~background, uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
     fontSize(11),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
+    backgroundColor(background),
   ];
 };
 
@@ -226,12 +231,16 @@ let item =
   };
 };
 
-let textItem = (~font, ~theme: Theme.t, ~text, ()) =>
+let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
   <item>
-    <Text style={Styles.text(~color=theme.statusBarForeground, font)} text />
+    <Text
+      style={Styles.text(~color=theme.statusBarForeground, ~background, font)}
+      text
+    />
   </item>;
 
-let notificationCount = (~font, ~foreground as color, ~notifications, ()) => {
+let notificationCount =
+    (~font, ~foreground as color, ~background, ~notifications, ()) => {
   let text = notifications |> List.length |> string_of_int;
 
   let onClick = () =>
@@ -248,16 +257,17 @@ let notificationCount = (~font, ~foreground as color, ~notifications, ()) => {
       ]>
       <FontIcon
         icon=FontAwesome.bell
-        backgroundColor=Colors.transparentWhite
+        backgroundColor=background
         color
         margin=4
       />
-      <Text style={Styles.text(~color, font)} text />
+      <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
 };
 
-let diagnosticCount = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
+let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) => {
+  let color = theme.statusBarForeground;
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -272,14 +282,11 @@ let diagnosticCount = (~font, ~theme: Theme.t, ~diagnostics, ()) => {
       ]>
       <FontIcon
         icon=FontAwesome.timesCircle
-        backgroundColor=Colors.transparentWhite
-        color={theme.statusBarForeground}
+        backgroundColor=background
+        color
         margin=4
       />
-      <Text
-        style={Styles.text(~color=theme.statusBarForeground, font)}
-        text
-      />
+      <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
 };
@@ -289,7 +296,7 @@ let modeIndicator = (~font, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, font)}
+      style={Styles.text(~color=foreground, ~background, font)}
       text={Vim.Mode.show(mode)}
     />
   </item>;
@@ -302,52 +309,6 @@ let transitionAnimation =
 
 let%component make = (~state: State.t, ()) => {
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
-
-  let%hook (yOffset, _animationState, _reset) =
-    Hooks.animation(transitionAnimation);
-
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font theme text={statusBarItem.text} />;
-
-  let leftItems =
-    state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
-    |> List.map(toStatusBarElement)
-    |> React.listToElement;
-
-  let rightItems =
-    state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
-    |> List.map(toStatusBarElement)
-    |> React.listToElement;
-
-  let indentation = () => {
-    let text =
-      Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
-
-    <textItem font theme text />;
-  };
-
-  let fileType = () => {
-    let text =
-      state
-      |> Selectors.getActiveBuffer
-      |> Option.bind(Buffer.getFileType)
-      |> Option.value(~default="plaintext");
-
-    <textItem font theme text />;
-  };
-
-  let position = () => {
-    let text =
-      state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getPrimaryCursor)
-      |> positionToString;
-
-    <textItem font theme text />;
-  };
 
   let%hook activeNotifications =
     useExpiration(
@@ -376,6 +337,52 @@ let%component make = (~state: State.t, ()) => {
       foreground,
     );
 
+  let%hook (yOffset, _animationState, _reset) =
+    Hooks.animation(transitionAnimation);
+
+  let toStatusBarElement = (statusBarItem: Item.t) =>
+    <textItem font background theme text={statusBarItem.text} />;
+
+  let leftItems =
+    state.statusBar
+    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
+    |> List.map(toStatusBarElement)
+    |> React.listToElement;
+
+  let rightItems =
+    state.statusBar
+    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
+    |> List.map(toStatusBarElement)
+    |> React.listToElement;
+
+  let indentation = () => {
+    let text =
+      Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
+
+    <textItem font background theme text />;
+  };
+
+  let fileType = () => {
+    let text =
+      state
+      |> Selectors.getActiveBuffer
+      |> Option.bind(Buffer.getFileType)
+      |> Option.value(~default="plaintext");
+
+    <textItem font background theme text />;
+  };
+
+  let position = () => {
+    let text =
+      state
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
+      |> Option.map(Editor.getPrimaryCursor)
+      |> positionToString;
+
+    <textItem font background theme text />;
+  };
+
   let notificationPopups = () =>
     activeNotifications
     |> List.rev
@@ -384,12 +391,12 @@ let%component make = (~state: State.t, ()) => {
 
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
-      <notificationCount font foreground notifications />
+      <notificationCount font foreground background notifications />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
       <section align=`FlexStart>
-        <diagnosticCount font theme diagnostics />
+        <diagnosticCount font background theme diagnostics />
       </section>
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
