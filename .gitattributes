@@ -5,6 +5,9 @@
 # gets choked up on the extra `\r` character.
 *.sh text eol=lf
 
+# Recognize all re files as Reason
+*.re linguist-language=Reason
+
 # Hide lockfile updates
 *esy.lock/* linguist-generated
 
