@@ -40,6 +40,7 @@ type t = {
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   references: References.t,
+  sneak: Sneak.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -50,7 +51,9 @@ type t = {
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
   // Generally controlled by the theme.
   darkMode: bool,
-  searchPane: option(Search.t),
+  // State of the bottom pane
+  pane: Pane.t,
+  searchPane: Search.t,
   focus: Focus.stack,
 };
 
@@ -90,6 +93,7 @@ let create: unit => t =
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.default,
     references: References.initial,
+    sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",
@@ -97,6 +101,7 @@ let create: unit => t =
     fileExplorer: FileExplorer.initial,
     zenMode: false,
     darkMode: true,
-    searchPane: None,
+    pane: Pane.initial,
+    searchPane: Search.initial,
     focus: Focus.initial,
   };

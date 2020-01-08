@@ -35,7 +35,8 @@ let defaultMessageHandler = (_, _, _) => Ok(None);
 
 let start =
     (
-      ~initData=ExtHostInitData.create(),
+      ~initialConfiguration,
+      ~initData,
       ~initialWorkspace=Workspace.empty,
       ~onInitialized=defaultCallback,
       ~onMessage=defaultMessageHandler,
@@ -44,6 +45,7 @@ let start =
     ) => {
   let args = ["--type=extensionHost"];
   let env = [
+    "PATH=" ++ ShellUtility.getShellPath(),
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
     "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
@@ -156,7 +158,8 @@ let start =
     /* Send workspace and configuration info to get the extensions started */
     open ExtHostProtocol.OutgoingNotifications;
 
-    Configuration.initializeConfiguration(setup) |> sendNotification;
+    Configuration.initializeConfiguration(initialConfiguration)
+    |> sendNotification;
     Workspace.initializeWorkspace(initialWorkspace) |> sendNotification;
 
     initialized := true;

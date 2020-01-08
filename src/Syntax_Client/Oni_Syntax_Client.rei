@@ -25,6 +25,7 @@ let start:
     ~onClose: closeCallback=?,
     ~scheduler: Core.Scheduler.t,
     ~onHighlights: highlightsCallback,
+    ~onHealthCheckResult: bool => unit,
     Ext.LanguageInfo.t,
     Core.Setup.t
   ) =>
@@ -41,4 +42,5 @@ let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 
 let requestKeywords: (t, string) => Lwt.t(list(string));
 
+let healthCheck: t => unit;
 let close: t => unit;

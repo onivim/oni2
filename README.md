@@ -5,10 +5,10 @@
 
 ### Lightweight, Modal Code Editor
 
-:warning: Pre-alpha - not yet usable! :warning: 
+:warning: Alpha - may be bugs or instability - use with caution :warning: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/13532591/61331099-1d6c7d80-a7d6-11e9-8c5d-e3c95def6144.png" alt="Onivim 2" />
+  <img src="https://user-images.githubusercontent.com/13532591/71643323-375b2900-2c6d-11ea-974e-03361046402d.png" alt="Onivim 2" />
  </p>
 
 

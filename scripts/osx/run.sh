@@ -11,4 +11,4 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-open "$DIR/Onivim2.app" --args --working-directory "$CWD" "$@"
+"$DIR"/../MacOS/Oni2 --working-directory "$CWD" "$@"

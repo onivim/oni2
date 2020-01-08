@@ -35,6 +35,7 @@ module ServerToClient = {
   type t =
     | Initialized
     | TokenUpdate([@opaque] list(TokenUpdate.t))
+    | HealthCheckPass(bool)
     | EchoReply(string)
     | Log(string)
     | KeywordResponse(int, list(string))
@@ -56,6 +57,7 @@ module ClientToServer = {
     | KeywordRequest(int, string)
     | ConfigurationChanged([@opaque] Configuration.t)
     | ThemeChanged([@opaque] TokenTheme.t)
+    | RunHealthCheck
     | VisibleRangesChanged(
         [@opaque] list((int /* buffer id */, list(Range.t))),
       )

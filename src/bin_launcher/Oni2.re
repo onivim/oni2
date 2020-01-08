@@ -7,7 +7,7 @@
 let stayAttached = ref(false);
 
 let version = () => {
-  print_endline("Onivim 2 0.2.0");
+  print_endline("Onivim 2 0.3.0");
 };
 
 let passthrough = Arg.Unit(() => ());

@@ -1,6 +1,5 @@
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
@@ -90,12 +89,12 @@ let make =
     | `Custom(view) => view
     };
 
-  <Clickable style=Styles.clickable onClick>
+  <Sneakable style=Styles.clickable onClick>
     <View
       onMouseOver={_ => onMouseOver()}
       style={Styles.container(~theme, ~isFocused)}>
       iconView
       labelView
     </View>
-  </Clickable>;
+  </Sneakable>;
 };

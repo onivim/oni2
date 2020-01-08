@@ -33,6 +33,7 @@ let start =
       ~onClose=Core.Utility.noop1,
       ~scheduler,
       ~onHighlights,
+      ~onHealthCheckResult,
       languageInfo,
       setup,
     ) => {
@@ -88,6 +89,10 @@ let start =
       pstderr,
     );
 
+  Unix.close(pstdout);
+  Unix.close(pstdin);
+  Unix.close(pstderr);
+
   let shouldClose = ref(false);
 
   let in_channel = Unix.in_channel_of_descr(stdout);
@@ -99,8 +104,16 @@ let start =
 
   let scheduler = cb => Core.Scheduler.run(cb, scheduler);
 
+  let safeClose = channel =>
+    switch (Unix.close(channel)) {
+    // We may get a BADF if this is called too soon after opening a process
+    | exception (Unix.Unix_error(_)) => ()
+    | _ => ()
+    };
+
   let _waitThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.wait",
       () => {
         let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
         let code =
@@ -124,13 +137,16 @@ let start =
             );
             signal;
           };
+        shouldClose := true;
+        safeClose(stdin);
         scheduler(() => onClose(code));
       },
       (),
     );
 
   let readThread =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.read",
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stdout);
@@ -144,6 +160,8 @@ let start =
           | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
           | ServerToClient.Closing =>
             scheduler(() => ServerLog.info("Closing"))
+          | ServerToClient.HealthCheckPass(res) =>
+            scheduler(() => onHealthCheckResult(res))
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
@@ -151,28 +169,29 @@ let start =
             })
           | ServerToClient.KeywordResponse(id, keywords) => ()
           };
-        }
+        };
+
+        safeClose(stdout);
       },
       (),
     );
 
   let _readStderr =
-    Thread.create(
+    Core.ThreadHelper.create(
+      ~name="SyntaxThread.stderr",
       () => {
-        let shouldClose = ref(false);
         while (! shouldClose^) {
           Thread.wait_read(stderr);
-
           switch (input_line(err_channel)) {
           | exception End_of_file => shouldClose := true
           | v => scheduler(() => ServerLog.info(v))
           };
         };
+        safeClose(stderr);
         scheduler(() => ServerLog.info("stderr thread done!"));
       },
       (),
     );
-
   ClientLog.info("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
@@ -200,6 +219,10 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
 let notifyConfigurationChanged =
     (v: t, configuration: Oni_Core.Configuration.t) => {
   write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
+};
+
+let healthCheck = (v: t) => {
+  write(v, Protocol.ClientToServer.RunHealthCheck);
 };
 
 let notifyBufferUpdate =

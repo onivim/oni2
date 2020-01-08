@@ -9,48 +9,47 @@ module Constants = {
 };
 
 module Styles = {
-  let container = (theme: Theme.t) =>
-    Style.[
-      backgroundColor(theme.menuBackground),
-      color(theme.menuForeground),
-    ];
+  open Style;
 
-  let input = font =>
-    Style.[
-      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.white),
-      fontFamily(font),
-      fontSize(14),
-    ];
+  let container = (theme: Theme.t) => [
+    backgroundColor(theme.menuBackground),
+    color(theme.menuForeground),
+    width(Constants.menuWidth),
+  ];
 
-  let dropdown = Style.[height(Constants.menuHeight), overflow(`Hidden)];
+  let inputContainer = [padding(5)];
 
-  let menuItem = Style.[fontSize(14), cursor(Revery.MouseCursors.pointer)];
+  let input = font => [
+    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+    color(Colors.white),
+    fontFamily(font),
+    fontSize(14),
+  ];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) =>
-    Style.[
-      fontFamily(font.fontFile),
-      textOverflow(`Ellipsis),
-      fontSize(12),
-      backgroundColor(
-        isFocused ? theme.menuSelectionBackground : theme.menuBackground,
-      ),
-      color(
-        highlighted ? theme.oniNormalModeBackground : theme.menuForeground,
-      ),
-      textWrap(TextWrapping.NoWrap),
-    ];
+  let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
-  let progressBarTrack = Style.[height(2), overflow(`Hidden)];
+  let menuItem = [fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
-  let progressBarIndicator = (~width as barWidth, ~offset, ~theme: Theme.t) =>
-    Style.[
-      height(2),
-      width(barWidth),
-      transform(Transform.[TranslateX(offset)]),
-      backgroundColor(theme.oniNormalModeBackground),
-    ];
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
+    fontFamily(font.fontFile),
+    textOverflow(`Ellipsis),
+    fontSize(12),
+    backgroundColor(
+      isFocused ? theme.menuSelectionBackground : theme.menuBackground,
+    ),
+    color(highlighted ? theme.oniNormalModeBackground : theme.menuForeground),
+    textWrap(TextWrapping.NoWrap),
+  ];
+
+  let progressBarTrack = [height(2), overflow(`Hidden)];
+
+  let progressBarIndicator = (~width, ~offset, ~theme: Theme.t) => [
+    height(2),
+    Style.width(width),
+    transform(Transform.[TranslateX(offset)]),
+    backgroundColor(theme.oniNormalModeBackground),
+  ];
 };
 
 let onFocusedChange = index =>
@@ -107,6 +106,7 @@ let make =
         query,
         cursorPosition,
         prefix,
+        variant,
         _,
       } = state;
 
@@ -148,34 +148,43 @@ let make =
     />;
   };
 
+  let input = () =>
+    <View style=Styles.inputContainer>
+      <OniInput
+        placeholder
+        ?prefix
+        cursorColor=Colors.white
+        style={Styles.input(font.fontFile)}
+        isFocused=true
+        onClick=onInputClicked
+        value=query
+        cursorPosition
+      />
+    </View>;
+
+  let dropdown = () =>
+    <View style=Styles.dropdown>
+      <FlatList
+        rowHeight=40
+        count={Array.length(items)}
+        focused
+        render=renderItem
+      />
+      {switch (progress) {
+       | Complete => React.empty
+       | InProgress(progress) => <progressBar progress theme />
+       | Loading => <progressBar theme />
+       }}
+    </View>;
+
   <AllowPointer>
     <OniBoxShadow configuration theme>
       <View style={Styles.container(theme)}>
-        <View style=Style.[width(Constants.menuWidth), padding(5)]>
-          <OniInput
-            placeholder
-            ?prefix
-            cursorColor=Colors.white
-            style={Styles.input(font.fontFile)}
-            isFocused=true
-            onClick=onInputClicked
-            value=query
-            cursorPosition
-          />
-        </View>
-        <View style=Styles.dropdown>
-          <FlatList
-            rowHeight=40
-            count={Array.length(items)}
-            focused
-            render=renderItem
-          />
-          {switch (progress) {
-           | Complete => React.empty
-           | InProgress(progress) => <progressBar progress theme />
-           | Loading => <progressBar theme />
-           }}
-        </View>
+        {switch (variant) {
+         | EditorsPicker => React.empty
+         | _ => <input />
+         }}
+        <dropdown />
       </View>
     </OniBoxShadow>
   </AllowPointer>;

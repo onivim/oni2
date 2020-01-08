@@ -270,6 +270,61 @@ describe("StringUtil", ({describe, _}) => {
   });
 });
 
+describe("ListEx.safeMap", ({test, _}) => {
+  test("empty", ({expect}) =>
+    expect.list(ListEx.safeMap(x => x, [])).toEqual([])
+  );
+
+  test("one", ({expect}) =>
+    expect.list(ListEx.safeMap(x => x, [1])).toEqual([1])
+  );
+
+  test("many", ({expect}) => {
+    expect.list(ListEx.safeMap(x => x, [1, 2, 3])).toEqual([1, 2, 3])
+  });
+
+  test("int_to_string", ({expect}) => {
+    expect.list(ListEx.safeMap(string_of_int, [1, 2, 3])).toEqual([
+      "1",
+      "2",
+      "3",
+    ])
+  });
+});
+
+describe("ListEx.safeConcat", ({test, _}) => {
+  test("empty", ({expect}) =>
+    expect.list(ListEx.safeConcat([])).toEqual([])
+  );
+
+  test("one of one", ({expect}) =>
+    expect.list(ListEx.safeConcat([[1]])).toEqual([1])
+  );
+
+  test("one of many", ({expect}) => {
+    expect.list(ListEx.safeConcat([[1, 2, 3]])).toEqual([1, 2, 3])
+  });
+
+  test("many of one", ({expect}) => {
+    expect.list(ListEx.safeConcat([[1], [2], [3]])).toEqual([1, 2, 3])
+  });
+
+  test("many of many", ({expect}) => {
+    expect.list(ListEx.safeConcat([[1, 2, 3], [4, 5, 6], [7, 8, 9]])).
+      toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+    ])
+  });
+});
+
 let testQueue = (describe: Rely.Describe.describeFn(_), module Queue: Queue) => {
   describe("length", ({test, _}) => {
     test("empty", ({expect}) => {

@@ -52,8 +52,10 @@ let start =
 
     let syntaxClient =
       Oni_Syntax_Client.start(
+        ~onClose=_ => dispatch(Model.Actions.SyntaxServerClosed),
         ~scheduler=Core.Scheduler.mainThread,
         ~onHighlights,
+        ~onHealthCheckResult=_ => (),
         languageInfo,
         setup,
       );
