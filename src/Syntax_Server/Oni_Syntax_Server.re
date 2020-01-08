@@ -123,6 +123,14 @@ let start = (~healthCheck) => {
                 map(State.updateTheme(theme));
                 log("handled theme changed");
               }
+            | KeywordRequest(id, fileType) => {
+                write(
+                  Protocol.ServerToClient.KeywordResponse(
+                    id,
+                    ["Hello", "From", "Syntax"],
+                  ),
+                );
+              }
             | BufferUpdate(bufferUpdate, lines, scope) => {
                 map(State.bufferUpdate(~bufferUpdate, ~lines, ~scope));
                 log(

@@ -3,6 +3,7 @@
  */
 
 module Core = Oni_Core;
+module Utility = Core.Utility;
 module Ext = Oni_Extensions;
 
 open Oni_Syntax;
@@ -17,6 +18,7 @@ type closeCallback = int => unit;
 type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 type t = {
+  pendingKeywordRequests: Hashtbl.t(int, Lwt.u(list(string))),
   in_channel: Stdlib.in_channel,
   out_channel: Stdlib.out_channel,
   readThread: Thread.t,
@@ -144,6 +146,8 @@ let start =
       (),
     );
 
+  let pendingKeywordRequests = Hashtbl.create(16);
+
   let readThread =
     Core.ThreadHelper.create(
       ~name="SyntaxThread.read",
@@ -162,12 +166,19 @@ let start =
             scheduler(() => ServerLog.info("Closing"))
           | ServerToClient.HealthCheckPass(res) =>
             scheduler(() => onHealthCheckResult(res))
+          | ServerToClient.KeywordResponse(id, keywords) =>
+            scheduler(() => {
+              ClientLog.infof(m => m("Received keywords for id: %d", id));
+              Hashtbl.find_opt(pendingKeywordRequests, id)
+              |> Utility.Option.iter(resolver => {
+                   Lwt.wakeup(resolver, keywords)
+                 });
+            })
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
               ClientLog.info("Tokens applied");
             })
-          | ServerToClient.KeywordResponse(id, keywords) => ()
           };
         };
 
@@ -193,7 +204,12 @@ let start =
       (),
     );
   ClientLog.info("started syntax client");
-  let syntaxClient = {in_channel, out_channel, readThread};
+  let syntaxClient = {
+    in_channel,
+    out_channel,
+    readThread,
+    pendingKeywordRequests,
+  };
   write(
     syntaxClient,
     Protocol.ClientToServer.Initialize(languageInfo, setup),
@@ -241,8 +257,12 @@ let notifyVisibilityChanged = (v: t, visibility) => {
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
-let requestKeywords = (_client: t, _fileType) => {
-  Lwt.return(["Hello", "World"]);
+let requestKeywords = (client: t, _fileType) => {
+  let (promise, resolver) = Lwt.task();
+  Hashtbl.add(client.pendingKeywordRequests, 1, resolver);
+  write(client, Protocol.ClientToServer.KeywordRequest(1, "javascript"));
+  promise;
+  //Lwt.return(["Hello", "World"]);
 };
 
 let close = (syntaxClient: t) => {

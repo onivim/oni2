@@ -38,7 +38,7 @@ module ServerToClient = {
     | HealthCheckPass(bool)
     | EchoReply(string)
     | Log(string)
-    | KeywordResponse(int, list(string))
+    | KeywordResponse(int, [@opaque] list(string))
     | Closing;
 };
 
