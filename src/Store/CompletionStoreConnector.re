@@ -94,13 +94,14 @@ module Actions = {
       switch (state.completions.meet) {
       | None => start(~buffer, ~meet, state)
 
-      | Some(lastMeet) when meet != lastMeet && meet.base == lastMeet.base =>
-        start(~buffer, ~meet, state)
-
-      | Some(lastMeet) when meet.base != lastMeet.base =>
+      | Some(lastMeet)
+          when
+            meet.base != lastMeet.base
+            && meet == {...lastMeet, base: meet.base} =>
+        // Only base has changed, so narrow instead of requesting new completions
         narrow(~meet, state)
 
-      | _ => noop(state)
+      | Some(_) => start(~buffer, ~meet, state)
       }
 
     | _ => stop(state)
