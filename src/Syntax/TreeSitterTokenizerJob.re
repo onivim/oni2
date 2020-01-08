@@ -26,6 +26,9 @@ let isComplete = Job.isComplete;
 let getUpdatedLines = BufferLineJob.getUpdatedLines;
 let clearUpdatedLines = BufferLineJob.clearUpdatedLines;
 
+let getDiscoveredKeywords = v => [];
+let clearDiscoveredKeywords = v => v;
+
 let noTokens = [];
 let getTokensForLine = (line: int, v: t) => {
   switch (BufferLineJob.getCompletedWork(line, v)) {

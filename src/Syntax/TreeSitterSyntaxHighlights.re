@@ -51,6 +51,9 @@ let clearUpdatedLines = ts => {
 
 let getUpdatedLines = ts => TreeSitterTokenizerJob.getUpdatedLines(ts.job);
 
+let getDiscoveredKeywords = _v => [];
+let clearDiscoveredKeywords = v => v;
+
 let hasPendingWork = v => !TreeSitterTokenizerJob.isComplete(v.job);
 let doWork = v => {
   switch (hasPendingWork(v)) {

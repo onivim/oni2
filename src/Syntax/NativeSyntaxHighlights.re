@@ -22,6 +22,9 @@ module type SyntaxHighlighter = {
   // Get a list of lines that have been updated since last clear
   let getUpdatedLines: t => list(int);
   let clearUpdatedLines: t => t;
+
+  let getDiscoveredKeywords: t => list(string);
+  let clearDiscoveredKeywords: t => t;
 };
 
 type highlighter('a) = (module SyntaxHighlighter with type t = 'a);
