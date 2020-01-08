@@ -13,11 +13,6 @@ type t = {
   lastLines: array(string),
   job: TreeSitterTokenizerJob.t,
 };
-let someOrNone = v =>
-  switch (v) {
-  | Some(v) => v
-  | None => ""
-  };
 
 let scopesToStrings = (scopes: list(TreeSitter.Syntax.scope)) => {
   List.map(

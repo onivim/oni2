@@ -23,6 +23,8 @@ type t = {
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
   visibleBuffers: list(int),
+  bufferIdToScope: IntMap.t(string),
+  scopeToKeywords: StringMap.t(list(string)),
   highlightsMap: IntMap.t(NativeSyntaxHighlights.t),
 };
 
@@ -35,6 +37,8 @@ let empty = {
   languageInfo: Ext.LanguageInfo.initial,
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
+  bufferIdToScope: IntMap.empty,
+  scopeToKeywords: StringMap.empty,
 };
 
 let initialize = (~log, languageInfo, setup, state) => {
@@ -148,6 +152,15 @@ let clearTokenUpdates = state => {
 
 let bufferUpdate =
     (~scope, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
+  let bufferIdToScope =
+    IntMap.update(
+      bufferUpdate.id,
+      fun
+      | None => Some(scope)
+      | Some(_) => Some(scope),
+      state.bufferIdToScope,
+    );
+
   let highlightsMap =
     IntMap.update(
       bufferUpdate.id,
@@ -179,7 +192,7 @@ let bufferUpdate =
         },
       state.highlightsMap,
     );
-  {...state, highlightsMap};
+  {...state, bufferIdToScope, highlightsMap};
 };
 
 let updateVisibility = (visibility: list((int, list(Range.t))), state) => {
