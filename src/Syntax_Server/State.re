@@ -24,7 +24,7 @@ type t = {
   theme: TokenTheme.t,
   visibleBuffers: list(int),
   bufferIdToScope: IntMap.t(string),
-  scopeToKeywords: StringMap.t(list(string)),
+  keywordMap: KeywordMap.t,
   highlightsMap: IntMap.t(NativeSyntaxHighlights.t),
 };
 
@@ -38,7 +38,7 @@ let empty = {
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
   bufferIdToScope: IntMap.empty,
-  scopeToKeywords: StringMap.empty,
+  keywordMap: KeywordMap.empty,
 };
 
 let initialize = (~log, languageInfo, setup, state) => {
