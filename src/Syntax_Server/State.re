@@ -101,7 +101,45 @@ let doPendingWork = state => {
       state.visibleBuffers,
     );
 
-  {...state, highlightsMap};
+  // Apply any newly discovered keywords
+  let scopeToKeywords =
+    List.fold_left(
+      (acc, curr) => {
+        let discoveredKeywords =
+          state.highlightsMap
+          |> IntMap.find_opt(curr)
+          |> Option.map(NativeSyntaxHighlights.getDiscoveredKeywords);
+
+        let scope = state.bufferIdToScope |> IntMap.find_opt(curr);
+
+        Option.map2(
+          (keywords: list(string), scope: string) => {
+            StringMap.update(
+              scope,
+              fun
+              | None => Some(keywords)
+              // TODO: Dedup
+              | Some(v) => Some(v @ keywords),
+              acc,
+            )
+          },
+          discoveredKeywords,
+          scope,
+        )
+        |> Option.value(~default=acc);
+      },
+      state.scopeToKeywords,
+      state.visibleBuffers,
+    );
+
+  // TODO: Clear keyword discovery
+  {...state, scopeToKeywords, highlightsMap};
+};
+
+let getKeywordsForScope = (~scope, state) => {
+  state.scopeToKeywords
+  |> StringMap.find_opt(scope)
+  |> Option.value(~default=[]);
 };
 
 let getTokenUpdates = state => {

@@ -257,12 +257,11 @@ let notifyVisibilityChanged = (v: t, visibility) => {
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
-let requestKeywords = (client: t, _fileType) => {
+let requestKeywords = (client: t, scope) => {
   let (promise, resolver) = Lwt.task();
   Hashtbl.add(client.pendingKeywordRequests, 1, resolver);
-  write(client, Protocol.ClientToServer.KeywordRequest(1, "javascript"));
+  write(client, Protocol.ClientToServer.KeywordRequest(1, scope));
   promise;
-  //Lwt.return(["Hello", "World"]);
 };
 
 let close = (syntaxClient: t) => {

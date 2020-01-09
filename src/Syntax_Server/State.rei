@@ -21,6 +21,8 @@ let getVisibleBuffers: t => list(int);
 let getVisibleHighlighters: t => list(NativeSyntaxHighlights.t);
 let getActiveHighlighters: t => list(NativeSyntaxHighlights.t);
 
+let getKeywordsForScope: (~scope: string, t) => list(string);
+
 let anyPendingWork: t => bool;
 
 let bufferEnter: (int, t) => t;

@@ -24,13 +24,19 @@ module KeywordCompletionProvider = {
   };
 
   let create =
-      (client: Oni_Syntax_Client.t, (buffer, _completionMeet, _location)) => {
+      (
+        client: Oni_Syntax_Client.t,
+        languageInfo: Ext.LanguageInfo.t,
+        (buffer, _completionMeet, _location),
+      ) => {
     buffer
     |> Core.Buffer.getFileType
-    |> Option.map(ft => {
-         print_endline("QUERYING!!");
+    |> Option.bind(ft =>
+         Ext.LanguageInfo.getScopeFromLanguage(languageInfo, ft)
+       )
+    |> Option.map(scope => {
          let promise =
-           Oni_Syntax_Client.requestKeywords(client, ft)
+           Oni_Syntax_Client.requestKeywords(client, scope)
            |> Lwt.map(v => List.map(toCompletionItem, v));
          Some(promise);
        })
@@ -64,7 +70,7 @@ let start =
       Isolinear.Effect.createWithDispatch(
         ~name="syntax.registerCompletionProvider", dispatch => {
         let completionProvider =
-          KeywordCompletionProvider.create(syntaxClient);
+          KeywordCompletionProvider.create(syntaxClient, languageInfo);
         dispatch(
           Model.Actions.LanguageFeature(
             Model.LanguageFeatures.CompletionProviderAvailable(

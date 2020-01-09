@@ -132,6 +132,18 @@ let getUpdatedLines = (hl: t) => {
   SyntaxHighlighter.getUpdatedLines(state);
 };
 
+let getDiscoveredKeywords = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+  SyntaxHighlighter.getDiscoveredKeywords(state);
+};
+
+let clearDiscoveredKeywords = (hl: t) => {
+  let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  let newState = SyntaxHighlighter.clearDiscoveredKeywords(state);
+  Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
+};
+
 let clearUpdatedLines = (hl: t) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
