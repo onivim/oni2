@@ -4,7 +4,7 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: '8.9'
-  - script: npm install -g esy@0.5.6
+  - script: npm install -g @esy-nightly/esy
     displayName: 'npm install -g esy@0.5.6'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
