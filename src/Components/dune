@@ -1,5 +1,15 @@
 (library
     (name Oni_Components)
     (public_name Oni2.components)
-    (libraries editor-core-types Oni2.core Revery)
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))
+    (preprocess (pps brisk-reconciler.ppx))
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Oni2.core
+        Rench
+        Revery
+        editor-core-types
+    ))
