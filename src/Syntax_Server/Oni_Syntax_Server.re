@@ -207,10 +207,12 @@ let start = (~healthCheck) => {
   // If we don't do this, the app will never close.
   if (Sys.win32) {
     let (_exitCode, _status) = Thread.wait_pid(parentPid);
+    ();
   } else {
     // On Linux / OSX, the syntax process will close when
     // the parent closes.
     let () = Thread.join(_readThread);
+    ();
   };
 
   isRunning := false;

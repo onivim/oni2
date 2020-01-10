@@ -121,10 +121,7 @@ let start =
     let updater = (state: Model.State.t, action) => {
       let default = (state, Isolinear.Effect.none);
       switch (action) {
-      | Model.Actions.Init => (
-        state,
-        registerQuitCleanupEffect,
-      )
+      | Model.Actions.Init => (state, registerQuitCleanupEffect)
       | Model.Actions.ConfigurationSet(config) => (
           state,
           configurationChangeEffect(config),
