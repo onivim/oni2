@@ -214,7 +214,7 @@ let%component make =
     rowHeight=20
     count={Array.length(items)}
     focused=None
-    render=renderItem
-    ref={ref => setOuterRef(Some(ref))}
-  />;
+    ref={ref => setOuterRef(Some(ref))}>
+    ...renderItem
+  </FlatList>;
 };

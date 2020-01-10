@@ -50,7 +50,8 @@ let make =
     ) => {
   let list =
     expanded
-      ? <FlatList rowHeight count render=renderItem focused /> : React.empty;
+      ? <FlatList rowHeight count focused> ...renderItem </FlatList>
+      : React.empty;
 
   <View style={Styles.container(expanded)}>
     <View style={Styles.titleBar(theme)}>

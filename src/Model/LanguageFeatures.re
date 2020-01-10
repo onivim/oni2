@@ -134,10 +134,9 @@ let requestDocumentHighlights =
   |> DocumentHighlightProvider.request((buffer, location));
 };
 
-let requestCompletions =
-    (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
+let requestCompletions = (~buffer: Buffer.t, ~meet: CompletionMeet.t, lf: t) => {
   lf.completionProviders
-  |> CompletionProvider.request((buffer, meet, location));
+  |> CompletionProvider.request((buffer, meet, meet.location));
 };
 
 let requestFindAllReferences =

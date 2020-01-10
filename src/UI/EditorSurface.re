@@ -532,16 +532,21 @@ let%component make =
         </View>
       : React.empty;
 
+  let completions = () =>
+    Completions.isActive(state.completions)
+      ? <CompletionsView
+          x=cursorPixelX
+          y=cursorPixelY
+          lineHeight=fontHeight
+          state
+        />
+      : React.empty;
+
   let hoverElements =
     isActiveSplit
       ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
           <HoverView x=cursorPixelX y=cursorPixelY state />
-          <CompletionsView
-            x=cursorPixelX
-            y=cursorPixelY
-            lineHeight=fontHeight
-            state
-          />
+          <completions />
         </View>
       : React.empty;
 

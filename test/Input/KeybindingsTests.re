@@ -36,6 +36,19 @@ bindings: [{key: "<F2>", command: "explorer.toggle", when: [["editorTextFocus"]]
 |}
   |> Yojson.Safe.from_string;
 
+let regressionTest1160 =
+  {|
+{
+bindings: [
+  {key: "<C-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
+  {key: "<D-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
+  {key: "<S-C-P>", command: "commandPalette.open", when: [["editorTextFocus"]]},
+  {key: "<D-S-P>", command: "commandPalette.open", when: [["editorTextFocus"]]}
+]
+}
+|}
+  |> Yojson.Safe.from_string;
+
 let isOk = v =>
   switch (v) {
   | Ok(_) => true
@@ -53,6 +66,13 @@ let getFirstBinding = v =>
   | Ok(([firstBinding], _)) => firstBinding
   | _ => failwith("No binding found")
   };
+
+let getNthBinding = (~index, v) => {
+  switch (v) {
+  | Ok((bindings, _)) => List.nth(bindings, index)
+  | _ => failwith("No binding found")
+  };
+};
 
 let errorCount = v =>
   switch (v) {
@@ -96,6 +116,29 @@ describe("Keybindings", ({describe, _}) => {
           condition:
             Expression.Or(And(Variable("editorTextFocus"), True), False),
         },
+      );
+    });
+    test("regression test: #1160 (legacy binding)", ({expect}) => {
+      let result = of_yojson_with_errors(regressionTest1160);
+      expect.bool(isOk(result)).toBe(true);
+      expect.int(bindingCount(result)).toBe(4);
+      expect.int(errorCount(result)).toBe(0);
+
+      Keybinding.(
+        {
+          let binding0 = getNthBinding(~index=0, result);
+          let binding1 = getNthBinding(~index=1, result);
+          let binding2 = getNthBinding(~index=2, result);
+          let binding3 = getNthBinding(~index=3, result);
+
+          // Validate quickOpen.open gets upgraded to workbench.action.quickOpen
+          expect.equal(binding0.command, "workbench.action.quickOpen");
+          expect.equal(binding1.command, "workbench.action.quickOpen");
+
+          // Validate commandPalette.open gets upgraded to workbench.action.quickOpen
+          expect.equal(binding2.command, "workbench.action.showCommands");
+          expect.equal(binding3.command, "workbench.action.showCommands");
+        }
       );
     });
   })

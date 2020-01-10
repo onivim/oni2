@@ -145,12 +145,23 @@ let start = () => {
       },
       {
         key: "<CR>",
-        command: "insertBestCompletion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        command: "acceptSelectedSuggestion",
+        condition:
+          "acceptSuggestionOnEnter && suggestWidgetVisible" |> parseExp,
       },
       {
         key: "<TAB>",
-        command: "insertBestCompletion",
+        command: "acceptSelectedSuggestion",
+        condition: "suggestWidgetVisible" |> parseExp,
+      },
+      {
+        key: "<S-TAB>",
+        command: "acceptSelectedSuggestion",
+        condition: "suggestWidgetVisible" |> parseExp,
+      },
+      {
+        key: "<S-CR>",
+        command: "acceptSelectedSuggestion",
         condition: "suggestWidgetVisible" |> parseExp,
       },
       {
@@ -179,6 +190,7 @@ let start = () => {
         command: "workbench.actions.view.problems",
         condition: Expression.True,
       },
+      {key: "<D-W>", command: "view.closeEditor", condition: Expression.True},
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

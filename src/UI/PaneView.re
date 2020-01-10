@@ -18,6 +18,7 @@ module Styles = {
       flexDirection(`Column),
       height(225),
       borderTop(~color=theme.sideBarBackground, ~width=1),
+      backgroundColor(theme.editorBackground),
     ];
 };
 
