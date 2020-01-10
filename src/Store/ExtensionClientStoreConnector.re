@@ -304,7 +304,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let onShowMessage = message => {
     dispatch(
       Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(~title="Extension", ~message, ()),
+        Oni_Model.Notification.create(message),
       ),
     );
   };

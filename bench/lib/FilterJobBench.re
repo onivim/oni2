@@ -14,7 +14,7 @@ let createItem = name => {
     name,
     command: () =>
       Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(~title="derp", ~message=name, ()),
+        Oni_Model.Notification.create(name),
       ),
     icon: None,
     highlight: [],

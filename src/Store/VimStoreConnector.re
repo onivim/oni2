@@ -98,9 +98,8 @@ let start =
     Vim.onUnhandledEscape(() => {
       let state = getState();
       if (Notifications.any(state.notifications)) {
-        let oldestNotificationId =
-          Notifications.getOldestId(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotificationId));
+        let oldestNotification = Notifications.getOldest(state.notifications);
+        dispatch(Actions.HideNotification(oldestNotification));
       };
     });
 
@@ -115,25 +114,16 @@ let start =
   let _ =
     Vim.onMessage((priority, t, msg) => {
       open Vim.Types;
-      let (priorityString, notificationType) =
+      let (priorityString, kind) =
         switch (priority) {
-        | Error => ("ERROR", Actions.Error)
-        | Warning => ("WARNING", Actions.Warning)
-        | Info => ("INFO", Actions.Info)
+        | Error => ("ERROR", Notification.Error)
+        | Warning => ("WARNING", Notification.Warning)
+        | Info => ("INFO", Notification.Info)
         };
 
       Log.infof(m => m("Message - %s [%s]: %s", priorityString, t, msg));
 
-      dispatch(
-        ShowNotification(
-          Notification.create(
-            ~notificationType,
-            ~title="libvim",
-            ~message=msg,
-            (),
-          ),
-        ),
-      );
+      dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
 
   let _ =

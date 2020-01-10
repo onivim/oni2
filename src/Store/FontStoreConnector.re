@@ -141,10 +141,12 @@ let start = (~getScaleFactor, ()) => {
             dispatch(
               ShowNotification(
                 Notification.create(
-                  ~notificationType=Actions.Error,
-                  ~title="Unable to load font",
-                  ~message=name ++ ": " ++ errorMsg,
-                  (),
+                  ~kind=Error,
+                  Printf.sprintf(
+                    "Unable to load font: %s: %s",
+                    name,
+                    errorMsg,
+                  ),
                 ),
               ),
             );

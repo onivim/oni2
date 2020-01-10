@@ -62,7 +62,7 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar height=statusBarHeight state />
+          <StatusBar state />
         </View>
       : React.empty;
 
@@ -103,7 +103,6 @@ let make = (~state: State.t, ()) => {
          }
        }}
       <KeyDisplayerView state />
-      <NotificationsView state />
     </Overlay>
     statusBar
     <Overlay> <SneakView state /> </Overlay>

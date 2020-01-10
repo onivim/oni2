@@ -78,8 +78,8 @@ type t =
   | EditorScroll(EditorId.t, float)
   | EditorScrollToLine(EditorId.t, int)
   | EditorScrollToColumn(EditorId.t, int)
-  | ShowNotification(notification)
-  | HideNotification(int)
+  | ShowNotification(Notification.t)
+  | HideNotification(Notification.t)
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -127,6 +127,7 @@ type t =
   | SearchUpdate([@opaque] list(Ripgrep.Match.t))
   | SearchComplete
   | Sneak(Sneak.action)
+  | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
@@ -140,20 +141,9 @@ and command = {
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
-and notificationType =
-  | Success
-  | Info
-  | Warning
-  | Error
 and tick = {
   deltaTime: float,
   totalTime: float,
-}
-and notification = {
-  id: int,
-  notificationType,
-  title: string,
-  message: string,
 }
 and editor = {
   editorId: EditorId.t,

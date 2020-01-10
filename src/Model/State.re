@@ -91,7 +91,7 @@ let create: unit => t =
     keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: Ext.LanguageInfo.initial,
-    notifications: Notifications.default,
+    notifications: Notifications.initial,
     references: References.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),

@@ -24,7 +24,7 @@ type t = {
   setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
-  hideNotification: int => unit,
+  hideNotification: Notification.t => unit,
   dispatch: Actions.t => unit,
   getState: unit => State.t,
   state: State.t,

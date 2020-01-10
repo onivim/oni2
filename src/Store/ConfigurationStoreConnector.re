@@ -67,11 +67,8 @@ let start =
           dispatch(
             Actions.ShowNotification(
               Notification.create(
-                ~notificationType=Actions.Error,
-                ~title="Theme",
-                ~message=
-                  "Unable to save theme selection to configuration; configuration file is modified.",
-                (),
+                ~kind=Error,
+                "Unable to save theme selection to configuration; configuration file is modified.",
               ),
             ),
           );
