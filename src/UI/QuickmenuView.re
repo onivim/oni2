@@ -164,12 +164,9 @@ let make =
 
   let dropdown = () =>
     <View style=Styles.dropdown>
-      <FlatList
-        rowHeight=40
-        count={Array.length(items)}
-        focused
-        render=renderItem
-      />
+      <FlatList rowHeight=40 count={Array.length(items)} focused>
+        ...renderItem
+      </FlatList>
       {switch (progress) {
        | Complete => React.empty
        | InProgress(progress) => <progressBar progress theme />

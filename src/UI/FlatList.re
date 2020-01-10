@@ -13,8 +13,6 @@ module Utility = Oni_Core.Utility;
 // TODO: Remove after 4.08 upgrade
 module Option = Utility.Option;
 
-type renderFunction = int => React.element(React.node);
-
 module Constants = {
   let scrollWheelMultiplier = 25;
   let additionalRowsToRender = 1;
@@ -93,7 +91,7 @@ let%component make =
               (
                 ~rowHeight: int,
                 ~initialRowsToRender=20,
-                ~render as renderItem: renderFunction,
+                ~children as renderItem: int => React.element(React.node),
                 ~count: int,
                 ~focused: option(int),
                 ~ref as onRef=_ => (),

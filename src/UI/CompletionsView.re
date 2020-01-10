@@ -1,20 +1,26 @@
-/*
- * HoverView.re
- *
- */
-
+open Revery;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Syntax;
+open Oni_Model;
+
+open Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
-module Model = Oni_Model;
 module Ext = Oni_Extensions;
+module Option = Utility.Option;
 
 open Ext.CompletionItemKind;
-open Model.Completions;
+
+module Constants = {
+  let maxCompletionWidth = 225;
+  let maxDetailWidth = 225;
+  let itemHeight = 22;
+  let maxHeight = itemHeight * 5;
+  let opacity = 1.0;
+  let padding = 8;
+};
 
 let kindToIcon =
   fun
@@ -35,31 +41,21 @@ let kindToIcon =
   | Color => FontAwesome.paintBrush
   | _ => FontAwesome.code;
 
-let kindToColor =
-    (
-      ~textColor,
-      ~functionColor,
-      ~entityColor,
-      ~typeColor,
-      ~keywordColor,
-      ~constantColor,
-      default,
-    ) =>
+let kindToColor = (tokenTheme: TokenTheme.t) =>
   fun
-  | Text => textColor
-  | Value => functionColor
-  | Method => functionColor
-  | Function => functionColor
-  | Constructor => entityColor
-  | Struct => typeColor
-  | Module => entityColor
-  | Unit => entityColor
-  | Keyword => keywordColor
-  | Enum => entityColor
-  | Constant => constantColor
-  | Property => entityColor
-  | Interface => entityColor
-  | _ => default;
+  | Text => Some(tokenTheme.textColor)
+  | Method => Some(tokenTheme.functionColor)
+  | Function => Some(tokenTheme.functionColor)
+  | Constructor => Some(tokenTheme.entityColor)
+  | Struct => Some(tokenTheme.typeColor)
+  | Module => Some(tokenTheme.entityColor)
+  | Unit => Some(tokenTheme.entityColor)
+  | Keyword => Some(tokenTheme.keywordColor)
+  | Enum => Some(tokenTheme.entityColor)
+  | Constant => Some(tokenTheme.constantColor)
+  | Property => Some(tokenTheme.entityColor)
+  | Interface => Some(tokenTheme.entityColor)
+  | _ => None;
 
 let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
   maybeCompletionKind => {
@@ -68,192 +64,189 @@ let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
     |> Option.value(~default=FontAwesome.question);
   };
 
-let completionKindToColor =
-    (
-      default: Revery.Color.t,
-      theme: TokenTheme.t,
-      maybeKind: option(Ext.CompletionItemKind.t),
-    ) => {
-  let textColor = TokenTheme.getTextColor(theme);
-  let constantColor = TokenTheme.getConstantColor(theme);
-  let keywordColor = TokenTheme.getKeywordColor(theme);
-  let entityColor = TokenTheme.getEntityColor(theme);
-  let functionColor = TokenTheme.getFunctionColor(theme);
-  let typeColor = TokenTheme.getTypeColor(theme);
+module Styles = {
+  open Style;
 
-  let toColor =
-    kindToColor(
-      ~textColor,
-      ~constantColor,
-      ~keywordColor,
-      ~entityColor,
-      ~functionColor,
-      ~typeColor,
-      default,
-    );
+  let outerPosition = (~x, ~y) => [
+    position(`Absolute),
+    top(y - 4),
+    left(x + 4),
+  ];
 
-  maybeKind |> Option.map(toColor) |> Option.value(~default);
+  let innerPosition = (~height, ~width, ~lineHeight, ~theme: Theme.t) => [
+    position(`Absolute),
+    top(int_of_float(lineHeight +. 0.5)),
+    left(0),
+    Style.width(width),
+    Style.height(height),
+    border(~color=theme.editorSuggestWidgetBorder, ~width=1),
+    backgroundColor(theme.editorSuggestWidgetBackground),
+  ];
+
+  let item = (~isFocused, ~theme: Theme.t) => [
+    isFocused
+      ? backgroundColor(theme.editorSuggestWidgetSelectedBackground)
+      : backgroundColor(theme.editorSuggestWidgetBackground),
+    flexDirection(`Row),
+  ];
+
+  let icon = (~color) => [
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    flexGrow(0),
+    backgroundColor(color),
+    width(25),
+  ];
+
+  let label = [flexGrow(1), margin(4)];
+
+  let text =
+      (~highlighted=false, ~theme: Theme.t, ~editorFont: EditorFont.t, ()) => [
+    textOverflow(`Ellipsis),
+    fontFamily(editorFont.fontFile),
+    fontSize(editorFont.fontSize),
+    textWrap(TextWrapping.NoWrap),
+    color(
+      highlighted ? theme.oniNormalModeBackground : theme.editorForeground,
+    ),
+    backgroundColor(theme.editorBackground),
+  ];
+
+  let highlightedText = (~theme: Theme.t, ~editorFont: EditorFont.t) =>
+    text(~highlighted=true, ~theme, ~editorFont, ());
+
+  let detail = (~width, ~lineHeight, ~theme: Theme.t) => [
+    position(`Absolute),
+    left(width),
+    top(int_of_float(lineHeight +. 0.5)),
+    Style.width(Constants.maxDetailWidth),
+    flexDirection(`Column),
+    alignItems(`FlexStart),
+    justifyContent(`Center),
+    border(~color=theme.editorSuggestWidgetBorder, ~width=1),
+    backgroundColor(theme.editorSuggestWidgetBackground),
+  ];
+
+  let detailText =
+      (~editorFont: EditorFont.t, ~theme: Theme.t, ~tokenTheme: TokenTheme.t) => [
+    textOverflow(`Ellipsis),
+    fontFamily(editorFont.fontFile),
+    fontSize(editorFont.fontSize),
+    color(tokenTheme.commentColor),
+    margin(3),
+    backgroundColor(theme.editorBackground),
+  ];
 };
 
-let make = (~x: int, ~y: int, ~lineHeight: float, ~state: Model.State.t, ()) => {
+let itemView =
+    (
+      ~isFocused,
+      ~text,
+      ~kind,
+      ~highlight,
+      ~theme: Theme.t,
+      ~tokenTheme,
+      ~editorFont,
+      (),
+    ) => {
+  let icon =
+    kind
+    |> Option.map(kindToIcon)
+    |> Option.value(~default=FontAwesome.question);
+
+  let iconColor =
+    kind
+    |> Option.bind(kindToColor(tokenTheme))
+    |> Option.value(~default=theme.editorForeground);
+
+  <View style={Styles.item(~isFocused, ~theme)}>
+    <View style={Styles.icon(~color=iconColor)}>
+      <FontIcon
+        icon
+        backgroundColor=iconColor
+        color={theme.editorSuggestWidgetBackground}
+        margin=4
+        // Not sure why, but specifying a font size fails to render the icon!
+        // Might be a bug with Revery font loading / re - rendering in this case?
+      />
+    </View>
+    <View style=Styles.label>
+      <HighlightText
+        highlights=highlight
+        style={Styles.text(~theme, ~editorFont, ())}
+        highlightStyle={Styles.highlightedText(~theme, ~editorFont)}
+        text
+      />
+    </View>
+  </View>;
+};
+
+let detailView =
+    (~text, ~width, ~lineHeight, ~editorFont, ~theme, ~tokenTheme, ()) =>
+  <View style={Styles.detail(~width, ~lineHeight, ~theme)}>
+    <Text style={Styles.detailText(~editorFont, ~theme, ~tokenTheme)} text />
+  </View>;
+
+let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
   /*let hoverEnabled =
     Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
+  let {theme, tokenTheme, editorFont, completions, _}: State.t = state;
+  let items = completions.filtered;
 
-  let completions = state.completions;
-  switch (Model.Completions.isActive(completions)) {
-  | false => React.empty
-  | true =>
-    let {theme, editorFont, completions, _}: Model.State.t = state;
+  let maxWidth =
+    items
+    |> Array.fold_left(
+         (maxWidth, this: Filter.result(CompletionItem.t)) => {
+           let textWidth =
+             EditorFont.measure(~text=this.item.label, editorFont);
+           let thisWidth = int_of_float(textWidth +. 0.5) + Constants.padding;
+           max(maxWidth, thisWidth);
+         },
+         Constants.maxCompletionWidth,
+       );
 
-    let outerPositionStyle =
-      Style.[position(`Absolute), top(y - 4), left(x + 4)];
+  let width = maxWidth + Constants.padding * 2;
+  let height =
+    min(Constants.maxHeight, Array.length(items) * Constants.itemHeight);
 
-    let opacity = 1.0;
+  let detail =
+    switch (completions.focused) {
+    | Some(index) =>
+      let focused: Filter.result(CompletionItem.t) = items[index];
+      switch (focused.item.detail) {
+      | Some(text) =>
+        <detailView text width lineHeight theme tokenTheme editorFont />
+      | None => React.empty
+      };
+    | None => React.empty
+    };
 
-    let bgColor = theme.editorSuggestWidgetBackground;
-    let fgColor = theme.editorForeground;
-    let borderColor = theme.editorSuggestWidgetBorder;
-
-    let commentColor =
-      Oni_Syntax.TokenTheme.getCommentColor(state.tokenTheme);
-
-    let padding = 8;
-
-    let textStyle = (~highlighted) =>
-      Style.[
-        textWrap(Revery.TextWrapping.NoWrap),
-        textOverflow(`Ellipsis),
-        fontFamily(editorFont.fontFile),
-        fontSize(editorFont.fontSize),
-        color(highlighted ? theme.oniNormalModeBackground : fgColor),
-        backgroundColor(bgColor),
-      ];
-
-    let detailTextStyle =
-      Style.[
-        textOverflow(`Ellipsis),
-        fontFamily(editorFont.fontFile),
-        fontSize(editorFont.fontSize),
-        color(commentColor),
-        backgroundColor(bgColor),
-        margin(3),
-      ];
-
-    let lineHeight_ = lineHeight;
-    let innerPositionStyle = width_ =>
-      Style.[
-        position(`Absolute),
-        top(int_of_float(lineHeight_ +. 0.5)),
-        left(0),
-        width(width_),
-        flexDirection(`Column),
-        alignItems(`FlexStart),
-        justifyContent(`Center),
-        border(~color=borderColor, ~width=1),
-        backgroundColor(bgColor),
-      ];
-
-    let maxCompletionWidth = 225;
-    let maxDetailWidth = 225;
-
-    let lineHeightInt = int_of_float(lineHeight_ +. 0.5);
-
-    let detailStyle = width_ =>
-      Style.[
-        position(`Absolute),
-        left(width_),
-        top(lineHeightInt),
-        width(maxDetailWidth),
-        flexDirection(`Column),
-        alignItems(`FlexStart),
-        justifyContent(`Center),
-        border(~color=borderColor, ~width=1),
-        backgroundColor(bgColor),
-      ];
-
-    let (_maxWidth, completionItems) =
-      List.fold_left(
-        (acc, curr: Model.Filter.result(Model.CompletionItem.t)) => {
-          let (prevWidth, prevDiags) = acc;
-
-          let message = curr.item.label;
-          let width =
-            EditorFont.measure(~text=message, editorFont)
-            +. 0.5
-            |> int_of_float;
-
-          let newWidth = max(prevWidth, width + padding);
-          let completionColor =
-            completionKindToColor(fgColor, state.tokenTheme, curr.item.kind);
-
-          let normalStyle = textStyle(~highlighted=false);
-          let highlightStyle = textStyle(~highlighted=true);
-          let newElem =
-            <View
-              style=Style.[flexDirection(`Row), justifyContent(`Center)]>
-              <View
-                style=Style.[
-                  flexDirection(`Row),
-                  justifyContent(`Center),
-                  alignItems(`Center),
-                  flexGrow(0),
-                  backgroundColor(completionColor),
-                  width(25),
-                ]>
-                <FontIcon
-                  icon={completionKindToIcon(curr.item.kind)}
-                  backgroundColor=completionColor
-                  color=bgColor
-                  margin=4
-                  // Not sure why, but specifying a font size fails to render the icon!
-                  // Might be a bug with Revery font loading / re - rendering in this case?
-                />
-              </View>
-              <View style=Style.[flexGrow(1), margin(4)]>
-                <HighlightText
-                  highlights={curr.highlight}
-                  style=normalStyle
-                  highlightStyle
-                  text=message
-                />
-              </View>
-            </View>;
-          let newDiags = [newElem, ...prevDiags];
-          (newWidth, newDiags);
-        },
-        (maxCompletionWidth, []),
-        completions.filteredCompletions,
-      );
-
-    let totalWidth = _maxWidth + padding * 2;
-
-    let detailElem =
-      completions
-      |> Model.Completions.getBestCompletion
-      |> Option.bind(
-           (filteredCompletion: Model.Completions.filteredCompletion) =>
-           filteredCompletion.item.detail
-         )
-      |> Option.bind(text =>
-           if (String.length(text) > 0) {
-             Some(
-               <View style={detailStyle(totalWidth)}>
-                 <Text style=detailTextStyle text />
-               </View>,
-             );
-           } else {
-             None;
-           }
-         )
-      |> Option.value(~default=React.empty);
-
-    let completionItems = List.rev(completionItems) |> React.listToElement;
-
-    <View style=outerPositionStyle>
-      <Opacity opacity>
-        <View style={innerPositionStyle(totalWidth)}> completionItems </View>
-        detailElem
-      </Opacity>
-    </View>;
-  };
+  <View style={Styles.outerPosition(~x, ~y)}>
+    <Opacity opacity=Constants.opacity>
+      <View
+        style={Styles.innerPosition(~height, ~width, ~lineHeight, ~theme)}>
+        <FlatList
+          rowHeight=Constants.itemHeight
+          initialRowsToRender=5
+          count={Array.length(items)}
+          focused={completions.focused}>
+          ...{index => {
+            let Filter.{highlight, item} = items[index];
+            let CompletionItem.{label: text, kind, _} = item;
+            <itemView
+              isFocused={Some(index) == completions.focused}
+              text
+              kind
+              highlight
+              theme
+              tokenTheme
+              editorFont
+            />;
+          }}
+        </FlatList>
+      </View>
+      detail
+    </Opacity>
+  </View>;
 };

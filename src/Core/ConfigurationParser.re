@@ -145,6 +145,19 @@ let configurationParsers: list(configurationTuple) = [
     (s, v) => {...s, editorMatchBrackets: parseBool(v)},
   ),
   (
+    "editor.acceptSuggestionOnEnter",
+    (s, v) => {
+      ...s,
+      editorAcceptSuggestionOnEnter:
+        switch (v) {
+        | `String("on") => `on
+        | `String("off") => `off
+        | `String("smart") => `smart
+        | _ => `on
+        },
+    },
+  ),
+  (
     "editor.minimap.enabled",
     (s, v) => {...s, editorMinimapEnabled: parseBool(v)},
   ),

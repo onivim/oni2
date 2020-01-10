@@ -15,6 +15,8 @@ module InputModel = Model.InputModel;
 module Utility = Core.Utility;
 module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module IndexEx = Utility.IndexEx;
+
 module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
@@ -230,27 +232,15 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListFocusUp => (
         Option.map(
-          (state: Quickmenu.t) => {
-            let count = Array.length(state.items);
-
+          (state: Quickmenu.t) =>
             {
               ...state,
               focused:
-                Option.map(
-                  focused =>
-                    if (count == 0) {
-                      0;
-                    } else if (focused <= 0) {
-                      count - 1; // "roll over" to end of list
-                    } else {
-                      focused - 1;
-                    },
+                IndexEx.prevRollOverOpt(
                   state.focused,
-                )
-                |> Option.value(~default=max(count - 1, 0))  // default to end of list
-                |> Option.some,
-            };
-          },
+                  ~last=Array.length(state.items) - 1,
+                ),
+            },
           state,
         ),
         Isolinear.Effect.none,
@@ -258,25 +248,15 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | ListFocusDown => (
         Option.map(
-          (state: Quickmenu.t) => {
-            let count = Array.length(state.items);
-
+          (state: Quickmenu.t) =>
             {
               ...state,
               focused:
-                Option.map(
-                  focused =>
-                    if (count == 0) {
-                      0;
-                    } else {
-                      (focused + 1) mod count;
-                    },
+                IndexEx.nextRollOverOpt(
                   state.focused,
-                )
-                |> Option.value(~default=0)  // default to start of list
-                |> Option.some,
-            };
-          },
+                  ~last=Array.length(state.items) - 1,
+                ),
+            },
           state,
         ),
         Isolinear.Effect.none,

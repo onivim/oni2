@@ -64,7 +64,7 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    completions: Completions.default,
+    completions: Completions.initial,
     configuration: Configuration.default,
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
