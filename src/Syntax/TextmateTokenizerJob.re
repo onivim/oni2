@@ -114,7 +114,6 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 
     Log.debug(() => "Tokenizing line: " ++ string_of_int(currentLine));
 
-
     let lineString = pending.lines[currentLine];
     // Get new tokens & scopes
     let (tokens, scopes) =
@@ -151,19 +150,18 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     let _words =
       tokens
       |> List.map((token: Textmate.Token.t) => {
-        let { position, length, _ }: Textmate.Token.t = token;
-        if (length > 2) {
-        Some(String.sub(lineString, position, length))
-        } else {
-        None
-        }
-      })
+           let {position, length, _}: Textmate.Token.t = token;
+           if (length > 2) {
+             Some(String.sub(lineString, position, length));
+           } else {
+             None;
+           };
+         })
       |> Utility.List.filter_map(Utility.identity);
 
     let joinedWords = String.concat("|", _words);
 
     Log.info("WORDS: " ++ joinedWords);
-      
 
     let newLineInfo = {
       tokens: colorizedTokens,

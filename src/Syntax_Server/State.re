@@ -121,7 +121,7 @@ let doPendingWork = state => {
               ~line=0,
               ~words=keywords,
               acc,
-            );
+            )
           },
           discoveredKeywords,
           scope,
@@ -137,10 +137,7 @@ let doPendingWork = state => {
 };
 
 let getKeywordsForScope = (~scope, state) => {
-  state.keywordMap
-  |> KeywordMap.get(
-    ~scope
-  );
+  state.keywordMap |> KeywordMap.get(~scope);
 };
 
 let getTokenUpdates = state => {
