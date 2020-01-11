@@ -102,7 +102,7 @@ let doPendingWork = state => {
     );
 
   // Apply any newly discovered keywords
-  let scopeToKeywords =
+  let keywordMap =
     List.fold_left(
       (acc, curr) => {
         let discoveredKeywords =
@@ -114,32 +114,33 @@ let doPendingWork = state => {
 
         Option.map2(
           (keywords: list(string), scope: string) => {
-            StringMap.update(
-              scope,
-              fun
-              | None => Some(keywords)
-              // TODO: Dedup
-              | Some(v) => Some(v @ keywords),
+            KeywordMap.set(
+              ~bufferId=curr,
+              ~scope,
+              // TODO: Get lines from keywords
+              ~line=0,
+              ~words=keywords,
               acc,
-            )
+            );
           },
           discoveredKeywords,
           scope,
         )
         |> Option.value(~default=acc);
       },
-      state.scopeToKeywords,
+      state.keywordMap,
       state.visibleBuffers,
     );
 
   // TODO: Clear keyword discovery
-  {...state, scopeToKeywords, highlightsMap};
+  {...state, keywordMap, highlightsMap};
 };
 
 let getKeywordsForScope = (~scope, state) => {
-  state.scopeToKeywords
-  |> StringMap.find_opt(scope)
-  |> Option.value(~default=[]);
+  state.keywordMap
+  |> KeywordMap.get(
+    ~scope
+  );
 };
 
 let getTokenUpdates = state => {
