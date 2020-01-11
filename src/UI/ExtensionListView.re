@@ -24,25 +24,6 @@ module Styles = {
 };
 
 let make = (~state: State.t, ()) => {
-  let bundledExtensions =
-    Extensions.getExtensions(
-      ~category=ExtensionScanner.Bundled,
-      state.extensions,
-    );
-
-  let userExtensions =
-    Extensions.getExtensions(
-      ~category=ExtensionScanner.User,
-      state.extensions,
-    );
-
-  //let developmentExtensions =
-  //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
-
-  let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
-  let allExtensionCount = Array.length(allExtensions);
-  //let developmentCount = Array.length(developmentExtensions);
-
   let {theme, uiFont, _}: State.t = state;
 
   let renderItem = (extensions: array(ExtensionScanner.t), idx) => {
@@ -96,12 +77,27 @@ let make = (~state: State.t, ()) => {
     </View>;
   };
 
+  let bundledExtensions =
+    Extensions.getExtensions(
+      ~category=ExtensionScanner.Bundled,
+      state.extensions,
+    );
+
+  let userExtensions =
+    Extensions.getExtensions(
+      ~category=ExtensionScanner.User,
+      state.extensions,
+    );
+
+  //let developmentExtensions =
+  //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
+
+  let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
+  //let developmentCount = Array.length(developmentExtensions);
+
   <View style=Styles.container>
-    <FlatList
-      rowHeight=50
-      count=allExtensionCount
-      render={renderItem(allExtensions)}
-      focused=None
-    />
+    <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
+      ...{renderItem(allExtensions)}
+    </FlatList>
   </View>;
 };

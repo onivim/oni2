@@ -13,9 +13,9 @@ module Option = Core.Utility.Option;
 open Oni_Model;
 
 module Ext = Oni_Extensions;
+module Zed_utf8 = Core.ZedBundled;
 
 module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
-module Zed_utf8 = Core.ZedBundled;
 
 let start =
     (
@@ -98,9 +98,8 @@ let start =
     Vim.onUnhandledEscape(() => {
       let state = getState();
       if (Notifications.any(state.notifications)) {
-        let oldestNotificationId =
-          Notifications.getOldestId(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotificationId));
+        let oldestNotification = Notifications.getOldest(state.notifications);
+        dispatch(Actions.HideNotification(oldestNotification));
       };
     });
 
@@ -115,25 +114,16 @@ let start =
   let _ =
     Vim.onMessage((priority, t, msg) => {
       open Vim.Types;
-      let (priorityString, notificationType) =
+      let (priorityString, kind) =
         switch (priority) {
-        | Error => ("ERROR", Actions.Error)
-        | Warning => ("WARNING", Actions.Warning)
-        | Info => ("INFO", Actions.Info)
+        | Error => ("ERROR", Notification.Error)
+        | Warning => ("WARNING", Notification.Warning)
+        | Info => ("INFO", Notification.Info)
         };
 
       Log.infof(m => m("Message - %s [%s]: %s", priorityString, t, msg));
 
-      dispatch(
-        ShowNotification(
-          Notification.create(
-            ~notificationType,
-            ~title="libvim",
-            ~message=msg,
-            (),
-          ),
-        ),
-      );
+      dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
 
   let _ =
@@ -724,47 +714,6 @@ let start =
       }
     );
 
-  let applyCompletion = (state: State.t) =>
-    Isolinear.Effect.create(~name="vim.applyCompletion", () => {
-      let completions = state.completions;
-      let bestMatch = Completions.getBestCompletion(completions);
-      let maybeMeetPosition =
-        completions
-        |> Completions.getMeet
-        |> Option.map(CompletionMeet.getLocation);
-      switch (bestMatch, maybeMeetPosition) {
-      | (Some(completion), Some(meetPosition)) =>
-        let meet = Location.(meetPosition.column);
-        let cursorLocation = Vim.Cursor.getLocation();
-        let delta =
-          Index.(toZeroBased(cursorLocation.column - toOneBased(meet)));
-        Log.infof(m =>
-          m(
-            "Completing at cursor position: %s | meet: %s",
-            Index.show(cursorLocation.column),
-            Index.show(meet),
-          )
-        );
-
-        let idx = ref(delta);
-        while (idx^ >= 0) {
-          let _ = Vim.input("<BS>");
-          decr(idx);
-        };
-
-        let latestCursors = ref([]);
-        Zed_utf8.iter(
-          s => {
-            latestCursors := Vim.input(Zed_utf8.singleton(s));
-            ();
-          },
-          completion.item.label,
-        );
-        updateActiveEditorCursors(latestCursors^);
-      | _ => ()
-      };
-    });
-
   let prevViml = ref([]);
   let synchronizeViml = configuration =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
@@ -812,7 +761,6 @@ let start =
         state,
         pasteIntoEditorAction,
       )
-    | Command("insertBestCompletion") => (state, applyCompletion(state))
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | ListFocusUp

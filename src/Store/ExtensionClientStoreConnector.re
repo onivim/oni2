@@ -304,7 +304,7 @@ let start = (extensions, setup: Core.Setup.t) => {
   let onShowMessage = message => {
     dispatch(
       Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(~title="Extension", ~message, ()),
+        Oni_Model.Notification.create(message),
       ),
     );
   };
@@ -406,55 +406,6 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let getAndDispatchCompletions =
-      (~languageFeatures, ~buffer, ~meet, ~location, ()) => {
-    let completionPromise =
-      Model.LanguageFeatures.requestCompletions(
-        ~buffer,
-        ~meet,
-        ~location,
-        languageFeatures,
-      );
-
-    Lwt.on_success(completionPromise, completions => {
-      dispatch(Model.Actions.CompletionAddItems(meet, completions))
-    });
-  };
-
-  let checkCompletionsEffect = state =>
-    Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
-      Model.Selectors.getActiveBuffer(state)
-      |> Option.iter(buf => {
-           let uri = Core.Buffer.getUri(buf);
-           let maybeMeet = Model.Completions.getMeet(state.completions);
-
-           let maybeLocation =
-             maybeMeet |> Option.map(Model.CompletionMeet.getLocation);
-
-           let request = (meet: Model.CompletionMeet.t, location: Location.t) => {
-             Log.infof(m =>
-               m(
-                 "Completions - requesting at %s for %s",
-                 Core.Uri.toString(uri),
-                 Location.show(location),
-               )
-             );
-             let languageFeatures = state.languageFeatures;
-             let () =
-               getAndDispatchCompletions(
-                 ~languageFeatures,
-                 ~buffer=buf,
-                 ~meet,
-                 ~location,
-                 (),
-               );
-             ();
-           };
-
-           Option.iter2(request, maybeMeet, maybeLocation);
-         })
-    });
-
   let executeContributedCommandEffect = cmd =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
@@ -502,10 +453,6 @@ let start = (extensions, setup: Core.Setup.t) => {
     | Model.Actions.CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
-      )
-    | Model.Actions.CompletionStart(_completionMeet) => (
-        state,
-        checkCompletionsEffect(state),
       )
     | Model.Actions.VimDirectoryChanged(path) => (
         state,

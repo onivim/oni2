@@ -68,10 +68,8 @@ let start = (themeInfo: ThemeInfo.t) => {
       dispatch(
         Actions.ShowNotification(
           Notification.create(
-            ~notificationType=Actions.Error,
-            ~title="Error",
-            ~message="Unable to find theme: " ++ themeName,
-            (),
+            ~kind=Error,
+            "Unable to find theme: " ++ themeName,
           ),
         ),
       )

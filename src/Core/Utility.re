@@ -362,6 +362,12 @@ module Option = {
     | Some(x) => f(x)
     | None => None;
 
+  let bind2 = (f, a, b) =>
+    switch (a, b) {
+    | (Some(aVal), Some(bVal)) => f(aVal, bVal)
+    | _ => None
+    };
+
   let flatten =
     fun
     | Some(x) => x
@@ -893,4 +899,68 @@ module Json = {
 
     loop(json);
   };
+};
+
+module ColorEx = {
+  open Revery;
+
+  let mix = (~start, ~stop, ~amount) =>
+    Color.{
+      r: (stop.r -. start.r) *. amount +. start.r,
+      g: (stop.g -. start.g) *. amount +. start.g,
+      b: (stop.b -. start.b) *. amount +. start.b,
+      a: (stop.a -. start.a) *. amount +. start.a,
+    };
+};
+
+module VimEx = {
+  module Zed_utf8 = ZedBundled;
+
+  let repeatInput = (reps, input) => {
+    let rec loop = (reps, cursors) =>
+      if (reps > 0) {
+        loop(reps - 1, Vim.input(input));
+      } else {
+        cursors;
+      };
+
+    loop(reps, []);
+  };
+
+  let inputString = input =>
+    Zed_utf8.fold(
+      (char, _) => Vim.input(Zed_utf8.singleton(char)),
+      input,
+      [],
+    );
+};
+
+module IndexEx = {
+  let prevRollOver = (~first=0, ~last, current) =>
+    if (first >= last) {
+      first;
+    } else if (current <= first) {
+      last;
+    } else {
+      current - 1;
+    };
+
+  let prevRollOverOpt = (~first=0, ~last) =>
+    fun
+    | Some(index) => Some(prevRollOver(index, ~first, ~last))
+    | None => Some(last);
+
+  let nextRollOver = (~first=0, ~last, current) =>
+    if (first >= last) {
+      first;
+    } else if (current >= last) {
+      first;
+    } else {
+      current + 1;
+    };
+
+  let nextRollOverOpt = (~first=0, ~last) =>
+    fun
+    | Some(index) => Some(nextRollOver(index, ~first, ~last))
+    | None => Some(first);
 };

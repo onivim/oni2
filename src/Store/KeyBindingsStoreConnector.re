@@ -145,12 +145,23 @@ let start = () => {
       },
       {
         key: "<CR>",
-        command: "insertBestCompletion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        command: "acceptSelectedSuggestion",
+        condition:
+          "acceptSuggestionOnEnter && suggestWidgetVisible" |> parseExp,
       },
       {
         key: "<TAB>",
-        command: "insertBestCompletion",
+        command: "acceptSelectedSuggestion",
+        condition: "suggestWidgetVisible" |> parseExp,
+      },
+      {
+        key: "<S-TAB>",
+        command: "acceptSelectedSuggestion",
+        condition: "suggestWidgetVisible" |> parseExp,
+      },
+      {
+        key: "<S-CR>",
+        command: "acceptSelectedSuggestion",
         condition: "suggestWidgetVisible" |> parseExp,
       },
       {

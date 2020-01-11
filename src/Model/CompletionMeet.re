@@ -12,6 +12,7 @@ open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
 type t = {
+  bufferId: int,
   // Base is the prefix string
   base: string,
   // Meet is the location where we request completions
@@ -25,17 +26,13 @@ let toString = (meet: t) =>
     meet.location |> Location.show,
   );
 
-let create = (~location, ~base) => {location, base};
-
 let defaultTriggerCharacters = [UChar.of_char('.')];
 
-let getLocation = meet => meet.location;
-let getBase = meet => meet.base;
-
-let createFromLine =
+let fromLine =
     (
       ~triggerCharacters=defaultTriggerCharacters,
       ~lineNumber=0,
+      ~bufferId,
       ~index: Index.t,
       line: string,
     ) => {
@@ -75,6 +72,7 @@ let createFromLine =
   | (-1) =>
     if (baseLength == cursorIdx && baseLength > 0) {
       Some({
+        bufferId,
         location:
           Location.{
             line: Index.fromZeroBased(lineNumber),
@@ -87,6 +85,7 @@ let createFromLine =
     }
   | v =>
     Some({
+      bufferId,
       location:
         Location.{
           line: Index.fromZeroBased(lineNumber),
@@ -97,7 +96,7 @@ let createFromLine =
   };
 };
 
-let createFromBufferLocation =
+let fromBufferLocation =
     (
       ~triggerCharacters=defaultTriggerCharacters,
       ~location: Location.t,
@@ -108,7 +107,8 @@ let createFromBufferLocation =
 
   if (line0 < bufferLines) {
     let line = Buffer.getLine(buffer, line0);
-    createFromLine(
+    fromLine(
+      ~bufferId=Buffer.getId(buffer),
       ~lineNumber=line0,
       ~triggerCharacters,
       ~index=location.column,
