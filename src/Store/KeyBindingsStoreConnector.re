@@ -8,6 +8,8 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Model;
 
+module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
+
 let start = () => {
   // Helper function for parsing default expressions
   let parseExp = stringExpression =>
@@ -202,7 +204,7 @@ let start = () => {
           | Some(fileName) => fileName
           };
         if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
-          Oni_Core.Log.info("Reloading key bindings from: " ++ configPath);
+          Log.info("Reloading key bindings from: " ++ configPath);
           dispatch(Actions.KeyBindingsReload);
         };
       });

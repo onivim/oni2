@@ -4,6 +4,7 @@
  * Helpers for implementing configuration 'transformers' -
  * functions that update configurations.
  */
+module Log = (val Log.withNamespace("Oni2.Core.ConfigurationTransformer"));
 
 let logError = msg => Log.error("ConfigurationTransformer: " ++ msg);
 

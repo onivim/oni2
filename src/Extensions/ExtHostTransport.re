@@ -10,7 +10,7 @@ open Reason_jsonrpc;
 open Rench;
 /* open Revery; */
 
-module Log = (val Log.withNamespace("Oni2.ExtHostTransport"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostTransport"));
 
 module Protocol = ExtHostProtocol;
 

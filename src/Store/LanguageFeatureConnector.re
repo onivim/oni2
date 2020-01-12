@@ -15,9 +15,7 @@ module Animation = Model.Animation;
 module BufferHighlights = Model.BufferHighlights;
 module Quickmenu = Model.Quickmenu;
 
-module Log = (
-  val Oni_Core.Log.withNamespace("Oni2.LanguageFeatureConnector")
-);
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();

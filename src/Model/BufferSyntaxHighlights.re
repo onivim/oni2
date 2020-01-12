@@ -9,7 +9,6 @@ open Oni_Core.Utility;
 open Oni_Syntax;
 
 module BufferMap = IntMap;
-
 module LineMap = IntMap;
 
 type t = BufferMap.t(LineMap.t(list(ColorizedToken.t)));
@@ -19,7 +18,7 @@ let empty = BufferMap.empty;
 let noTokens = [];
 
 module ClientLog = (
-  val Oni_Core.Log.withNamespace("BufferSyntaxHighlights - TESTING")
+  val Oni_Core.Log.withNamespace("Oni2.Model.BufferSyntaxHighlights:TESTING")
 );
 
 let getTokens = (bufferId: int, line: Index.t, highlights: t) => {

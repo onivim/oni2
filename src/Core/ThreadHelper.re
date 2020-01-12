@@ -7,7 +7,7 @@
 let activeThreadMutex = Mutex.create();
 let activeThreads: ref(list(Thread.t)) = ref([]);
 
-module Log = (val Log.withNamespace("Oni2.ThreadHelper"));
+module Log = (val Log.withNamespace("Oni2.Core.ThreadHelper"));
 
 let create = (~name="Anonymous", f, args) => {
   let thread =

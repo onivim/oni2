@@ -1,10 +1,10 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
-module Log = Core.Log;
 
 module Actions = Model.Actions;
 module Ripgrep = Core.Ripgrep;
 module Subscription = Core.Subscription;
+module Log = (val Core.Log.withNamespace("Oni2.Store.SearchSubscription"));
 
 module Provider = {
   type action = Actions.t;

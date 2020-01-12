@@ -15,7 +15,7 @@ open Oni_Model;
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
 
-module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
+module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (

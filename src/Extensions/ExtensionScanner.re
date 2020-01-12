@@ -9,7 +9,7 @@ open Rench;
 
 module Option = Oni_Core.Utility.Option;
 
-module Log = (val Log.withNamespace("Oni2.ExtensionScanner"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionScanner"));
 
 type category =
   | Default

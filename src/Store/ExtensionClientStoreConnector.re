@@ -12,9 +12,7 @@ module Uri = Core.Uri;
 open Oni_Core.Utility;
 module Model = Oni_Model;
 
-module Log = (
-  val Core.Log.withNamespace("Oni2.ExtensionClientStoreConnector")
-);
+module Log = (val Core.Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;

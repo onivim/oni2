@@ -7,7 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.FontStoreConnector"));
+module Log = (val Log.withNamespace("Oni2.Store.Font"));
 
 let minFontSize = 6;
 let defaultFontFamily = "FiraCode-Regular.ttf";

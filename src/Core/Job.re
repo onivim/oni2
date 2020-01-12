@@ -1,4 +1,5 @@
 module Time = Revery.Time;
+module Log = (val Log.withNamespace("Oni2.Core.Job"));
 
 type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);
 type doWork('p, 'c) = mapFn('p, 'c);
@@ -93,7 +94,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   let current = ref(v);
   let iterations = ref(0);
 
-  Log.debug(() => "[Job] Starting " ++ v.name);
+  Log.debug("[Job] Starting " ++ v.name);
   while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
     current := doWork(current^);
     incr(iterations);
@@ -102,8 +103,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   let endTime = Unix.gettimeofday();
 
   Log.info(
-    "[Job] "
-    ++ v.name
+    v.name
     ++ " ran "
     ++ string_of_int(iterations^)
     ++ " iterations for "
@@ -111,9 +111,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
     ++ "s",
   );
 
-  if (Log.isDebugLoggingEnabled()) {
-    Log.debug(() => "[Job] Detailed report: " ++ show(v));
-  };
+  Log.debugf(m => m("Detailed report: %s", show(v)));
 
   current^;
 };

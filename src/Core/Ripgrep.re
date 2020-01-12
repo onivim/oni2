@@ -6,7 +6,7 @@ module ListEx = Utility.ListEx;
 module Queue = Utility.Queue;
 
 module Match = {
-  module Log = (val Log.withNamespace("Oni2.Ripgrep.Match"));
+  module Log = (val Log.withNamespace("Oni2.Core.Ripgrep.Match"));
 
   type t = {
     file: string,
@@ -56,7 +56,7 @@ module Match = {
   };
 };
 
-module Log = (val Log.withNamespace("Oni2.Ripgrep"));
+module Log = (val Log.withNamespace("Oni2.Core.Ripgrep"));
 
 type t = {
   search:

@@ -1,6 +1,5 @@
-open Utility;
-
-module Log = (val Log.withNamespace("Oni2.ShellUtility"));
+module Option = Utility.Option;
+module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
   let getDefaultShell = () => {

@@ -6,7 +6,7 @@ open Oni_Core;
 
 module Option = Utility.Option;
 
-module Log = (val Log.withNamespace("TreeView"));
+module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
 module type TreeModel = {
   type t;

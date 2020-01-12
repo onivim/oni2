@@ -2,7 +2,7 @@ open Oni_Core;
 
 module NodeTask = Oni_Extensions.NodeTask;
 
-module Log = (val Log.withNamespace("Oni2.ExtensionManagement"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionManagement"));
 
 let install: (~extensionFolder: string, ~extensionPath: string) => Lwt.t(unit) =
   (~extensionFolder, ~extensionPath) => {

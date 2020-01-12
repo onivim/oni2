@@ -17,10 +17,8 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("Oni2.StoreThread"));
-module DispatchLog = (
-  val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
-);
+module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
+module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
 let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
   if (cli.shouldLoadExtensions) {

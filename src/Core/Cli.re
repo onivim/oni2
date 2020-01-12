@@ -5,6 +5,9 @@
  */
 open Rench;
 
+module CoreLog = Log;
+module Log = (val Log.withNamespace("Oni2.Core.Cli"));
+
 type t = {
   folder: string,
   filesToOpen: list(string),
@@ -105,7 +108,7 @@ let parse =
     "",
   );
 
-  if (!Log.isPrintingEnabled()) {
+  if (!CoreLog.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
     Utility.freeConsole();
   };

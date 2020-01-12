@@ -9,8 +9,8 @@ open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module ServerToClient = Protocol.ServerToClient;
 
-module ClientLog = (val Core.Log.withNamespace("Oni2.SyntaxClient"));
-module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
+module ClientLog = (val Core.Log.withNamespace("Oni2.Syntax.Client"));
+module ServerLog = (val Core.Log.withNamespace("Oni2.Syntax.Server"));
 
 type connectedCallback = unit => unit;
 type closeCallback = int => unit;

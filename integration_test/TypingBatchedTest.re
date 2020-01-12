@@ -2,6 +2,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
+module Log = (val Log.withNamespace("IntegrationTest.TypingBatched"));
+
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {

@@ -7,6 +7,7 @@ open Oni_Model;
 
 module Option = Utility.Option;
 module Path = Utility.Path;
+module Log = (val Log.withNamespace("Oni2.UI.LocationListView"));
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {

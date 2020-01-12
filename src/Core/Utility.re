@@ -1,5 +1,7 @@
 open EditorCoreTypes;
 
+module Log = (val Log.withNamespace("Oni2.Core.Utility"));
+
 let identity = v => v;
 let noop = () => ();
 let noop1 = _ => ();

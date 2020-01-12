@@ -6,7 +6,7 @@ open Oni_Core;
 
 type t = TextmateTokenizerJob.t;
 
-module Log = (val Log.withNamespace("Oni2.TextMateSyntaxHighlights"));
+module Log = (val Log.withNamespace("Oni2.Syntax.TextMateSyntaxHighlights"));
 
 let hasPendingWork = (v: t) => !Job.isComplete(v);
 

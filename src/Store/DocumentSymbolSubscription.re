@@ -3,7 +3,9 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Subscription = Core.Subscription;
-module Log = (val Core.Log.withNamespace("Oni2.DocumentSymbolSubscription"));
+module Log = (
+  val Core.Log.withNamespace("Oni2.Store.DocumentSymbolSubscription")
+);
 
 module Provider = {
   type action = Actions.t;

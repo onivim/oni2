@@ -10,7 +10,7 @@ open Oni_Extensions;
 module Utility = Oni_Core.Utility;
 module Option = Oni_Core.Utility.Option;
 
-module Log = (val Log.withNamespace("Oni2.StoreUtility"));
+module Log = (val Log.withNamespace("Oni2.Store.Utility"));
 
 let getUserExtensionsDirectory = (cli: Cli.t) => {
   let overriddenExtensionsDir = cli.overriddenExtensionsDir;

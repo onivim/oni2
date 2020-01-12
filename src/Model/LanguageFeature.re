@@ -15,7 +15,9 @@ module Make =
            let aggregate: list(Lwt.t(response)) => Lwt.t(response);
          },
        ) => {
-  module Log = (val Log.withNamespace(Provider.namespace));
+  module Log = (
+    val Log.withNamespace("Oni2.Model.LanguageFeature:" ++ Provider.namespace)
+  );
 
   module Params = {
     type t = Provider.params;
