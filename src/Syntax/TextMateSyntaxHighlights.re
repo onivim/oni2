@@ -55,8 +55,6 @@ let getUpdatedLines = (tm: t) => {
 let clearUpdatedLines = (tm: t) =>
   TextmateTokenizerJob.clearUpdatedLines(tm);
 
-let getDiscoveredKeywords = (_tm: t) => {
-  [(1, ["Keyword", "Discovery", "ByLine"])];
-};
+let getDiscoveredKeywords = TextmateTokenizerJob.getKeywords;
 
-let clearDiscoveredKeywords = tm => tm;
+let clearDiscoveredKeywords = TextmateTokenizerJob.clearKeywords;

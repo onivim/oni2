@@ -28,9 +28,14 @@ type lineInfo = {
 type completedWork = {
   tokens: IntMap.t(lineInfo),
   latestLines: list(int),
+  latestKeywords: IntMap.t(list(string)),
 };
 
-let initialCompletedWork = {tokens: IntMap.empty, latestLines: []};
+let initialCompletedWork = {
+  tokens: IntMap.empty,
+  latestLines: [],
+  latestKeywords: IntMap.empty,
+};
 
 type t = Job.t(pendingWork, completedWork);
 
@@ -49,6 +54,21 @@ let clearUpdatedLines = (tm: t) => {
   };
 
   Job.map(f, tm);
+};
+
+let clearKeywords = (tm: t) => {
+  let isComplete = Job.isComplete(tm);
+  let f = (p: pendingWork, c: completedWork) => {
+    (isComplete, p, {...c, latestKeywords: IntMap.empty});
+  };
+
+  Job.map(f, tm);
+};
+
+let getKeywords = (tm: t) => {
+  let completed = Job.getCompletedWork(tm);
+
+  completed.latestKeywords |> IntMap.bindings;
 };
 
 let onTheme = (theme: TokenTheme.t, v: t) => {
@@ -148,7 +168,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       );
 
     let strLength = String.length(lineString);
-    let _words =
+    let words =
       tokens
       |> List.map((token: Textmate.Token.t) => {
            let {position, length, _}: Textmate.Token.t = token;
@@ -161,16 +181,24 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
                  strLength,
                ),
              );
-             Some(String.sub(lineString, position, length));
+             // TODO: Clean up
+             if (position + length < strLength) {
+               Some(String.sub(lineString, position, length));
+             } else {
+               None;
+             };
            } else {
              None;
            };
          })
       |> Utility.List.filter_map(Utility.identity);
 
-    let joinedWords = String.concat("|", _words);
+    let joinedWords = String.concat("|", words);
 
     Log.info("WORDS: " ++ joinedWords);
+
+    let latestKeywords =
+      completed.latestKeywords |> IntMap.add(currentLine, words);
 
     let newLineInfo = {
       tokens: colorizedTokens,
@@ -195,7 +223,11 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
     (
       isComplete,
       {...pending, hasRun: true, currentLine: nextLine},
-      {tokens, latestLines: [currentLine, ...completed.latestLines]},
+      {
+        tokens,
+        latestLines: [currentLine, ...completed.latestLines],
+        latestKeywords,
+      },
     );
   };
 };
