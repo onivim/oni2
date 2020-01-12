@@ -62,6 +62,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
       Option.iter(
         client => {
@@ -71,6 +72,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerReferenceSupport", args) =>
       Option.iter(
         client => {
@@ -80,6 +82,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | (
         "MainThreadLanguageFeatures",
         "$registerDocumentHighlightProvider",
@@ -93,6 +96,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       Option.iter(
         client => {
@@ -102,19 +106,24 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args)
       |> Option.iter(onDiagnosticsChangeMany);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$clear", args) =>
       In.Diagnostics.parseClear(args) |> Option.iter(onDiagnosticsClear);
       Ok(None);
+
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
+
     | (
         "MainThreadMessageService",
         "$showMessage",
@@ -122,10 +131,12 @@ let start =
       ) =>
       onShowMessage(s);
       Ok(None);
+
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
+
     | (
         "MainThreadExtensionService",
         "$onExtensionActivationFailed",
@@ -134,12 +145,20 @@ let start =
       let id = Protocol.PackedString.parse(v);
       onExtensionActivationFailed(id);
       Ok(None);
+
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
       Ok(None);
+
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> Option.iter(onStatusBarSetEntry);
       Ok(None);
+
+    // | ("MainThreadSCM", "$registerSourceControl") =>
+    //   onRegisterSCM()
+
+    // | ("MainThreadSCM", "$updateSourceControl") =>
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -293,9 +312,22 @@ let provideReferences = (id, uri, position, client) => {
   promise;
 };
 
-let send = (client, msg) => {
-  let _ = ExtHostTransport.send(client, msg);
-  ();
+let provideOriginalResource = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.SCM.provideOriginalResource(id, uri),
+      json => {
+        Console.log(json);
+        // Core.Uri.of_yojson(json) |> Utility.Result.exn
+        Uri.fromPath("test.js");
+      }
+    );
+  promise;
 };
+
+let send = (client, msg) =>
+  ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);

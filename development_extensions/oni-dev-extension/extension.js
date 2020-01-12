@@ -113,7 +113,34 @@ function activate(context) {
     // This helps us create a test case to validate buffer manipulations
 	cleanup(vscode.commands.registerCommand('developer.oni.getBufferText', () => {
 		vscode.window.showInformationMessage("fulltext:" + latestText);
-	}));
+    }));
+    
+    function createResourceUri(relativePath) {
+        const absolutePath = path.join(vscode.workspace.rootPath, relativePath);
+        return vscode.Uri.file(absolutePath);
+    }
+
+    const testSCM = vscode.scm.createSourceControl('test', 'Test');
+
+    const index = testSCM.createResourceGroup('index', 'Index');
+    index.resourceStates = [
+        { resourceUri: createResourceUri('README.md') },
+        { resourceUri: createResourceUri('src/test/api.ts') }
+    ];
+
+    const workingTree = testSCM.createResourceGroup('workingTree', 'Changes');
+    workingTree.resourceStates = [
+        { resourceUri: createResourceUri('.travis.yml') },
+        { resourceUri: createResourceUri('README.md') }
+    ];
+
+    testSCM.quickDiffProvider = {
+        provideOriginalResource: (uri, _token) => {
+            console.log("1");
+            Uri.file("/home/glennsl/elm-package.json");
+            console.log("2");
+        }
+    };
 }
 
 // this method is called when your extension is deactivated

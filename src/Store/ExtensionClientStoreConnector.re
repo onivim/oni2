@@ -335,6 +335,10 @@ let start = (extensions, setup: Core.Setup.t) => {
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Log.info("Creating model for filetype: " ++ ft);
+      Printexc.record_backtrace(true);
+      let promise = Oni_Extensions.ExtHostClient.provideOriginalResource(0, Core.Uri.fromPath(fp), extHostClient);
+      Lwt.on_success(promise, uri => print_endline(Core.Uri.toString(uri)));
+
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Core.Uri.fromPath(fp),

@@ -56,5 +56,6 @@ let provideDocumentSymbols:
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
+let provideOriginalResource: (int, Core.Uri.t, t) => Lwt.t(Core.Uri.t);
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
