@@ -6,6 +6,8 @@ open EditorCoreTypes;
 module Core = Oni_Core;
 module ColorizedToken = Core.ColorizedToken;
 
+type keywordsByLine = (int, list(string));
+
 module type SyntaxHighlighter = {
   type t;
 
@@ -23,7 +25,7 @@ module type SyntaxHighlighter = {
   let getUpdatedLines: t => list(int);
   let clearUpdatedLines: t => t;
 
-  let getDiscoveredKeywords: t => list(string);
+  let getDiscoveredKeywords: t => list(keywordsByLine);
   let clearDiscoveredKeywords: t => t;
 };
 

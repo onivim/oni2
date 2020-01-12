@@ -104,23 +104,30 @@ let doPendingWork = state => {
   // Apply any newly discovered keywords
   let keywordMap =
     List.fold_left(
-      (acc, curr) => {
+      (acc, bufferId) => {
         let discoveredKeywords =
           state.highlightsMap
-          |> IntMap.find_opt(curr)
+          |> IntMap.find_opt(bufferId)
           |> Option.map(NativeSyntaxHighlights.getDiscoveredKeywords);
 
-        let scope = state.bufferIdToScope |> IntMap.find_opt(curr);
+        let scope = state.bufferIdToScope |> IntMap.find_opt(bufferId);
 
         Option.map2(
-          (keywords: list(string), scope: string) => {
-            KeywordMap.set(
-              ~bufferId=curr,
-              ~scope,
-              // TODO: Get lines from keywords
-              ~line=0,
-              ~words=keywords,
+          (keywords: list((int, list(string))), scope: string) => {
+            List.fold_left(
+              (acc, curr) => {
+                let (line, words) = curr;
+                KeywordMap.set(
+                  ~bufferId,
+                  ~scope,
+                  // TODO: Get lines from keywords
+                  ~line,
+                  ~words,
+                  acc,
+                );
+              },
               acc,
+              keywords,
             )
           },
           discoveredKeywords,

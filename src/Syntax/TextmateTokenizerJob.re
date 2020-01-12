@@ -147,11 +147,20 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
         tokens,
       );
 
+    let strLength = String.length(lineString);
     let _words =
       tokens
       |> List.map((token: Textmate.Token.t) => {
            let {position, length, _}: Textmate.Token.t = token;
            if (length > 2) {
+             Log.info(
+               Printf.sprintf(
+                 "Sub!: %d -> %d (%d)",
+                 position,
+                 length - 1,
+                 strLength,
+               ),
+             );
              Some(String.sub(lineString, position, length));
            } else {
              None;
