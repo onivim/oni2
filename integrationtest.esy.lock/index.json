@@ -1,5 +1,5 @@
 {
-  "checksum": "74ade899f69f85c086abca508f18f207",
+  "checksum": "db90707007fb9f110da1d434c3b5e59d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -58,6 +58,23 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "timber@github:glennsl/timber#37ffa07@d41d8cd9": {
+      "id": "timber@github:glennsl/timber#37ffa07@d41d8cd9",
+      "name": "timber",
+      "version": "github:glennsl/timber#37ffa07",
+      "source": {
+        "type": "install",
+        "source": [ "github:glennsl/timber#37ffa07" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.3.0@d41d8cd9", "ocaml@4.7.1004@d41d8cd9",
+        "@opam/re@opam:1.9.0@d4d5e13d", "@opam/logs@opam:0.7.0@1d03143e",
+        "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "@esy-ocaml/reason@3.5.2@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
+    },
     "shelljs@0.8.3@d41d8cd9": {
       "id": "shelljs@0.8.3@d41d8cd9",
       "name": "shelljs",
@@ -103,14 +120,14 @@
       ],
       "devDependencies": []
     },
-    "resolve@1.14.1@d41d8cd9": {
-      "id": "resolve@1.14.1@d41d8cd9",
+    "resolve@1.14.2@d41d8cd9": {
+      "id": "resolve@1.14.2@d41d8cd9",
       "name": "resolve",
-      "version": "1.14.1",
+      "version": "1.14.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.14.1.tgz#sha1:9e018c540fcf0c427d678b9931cbf45e984bcaff"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.14.2.tgz#sha1:dbf31d0fa98b1f29aa5169783b9c290cb865fea2"
         ]
       },
       "overrides": [],
@@ -187,7 +204,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.14.1@d41d8cd9" ],
+      "dependencies": [ "resolve@1.14.2@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9": {
@@ -588,20 +605,6 @@
       ],
       "devDependencies": []
     },
-    "is-buffer@2.0.4@d41d8cd9": {
-      "id": "is-buffer@2.0.4@d41d8cd9",
-      "name": "is-buffer",
-      "version": "2.0.4",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/is-buffer/-/is-buffer-2.0.4.tgz#sha1:3e572f23c8411a5cfd9557c849e3665e0b290623"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
-      "devDependencies": []
-    },
     "interpret@1.2.0@d41d8cd9": {
       "id": "interpret@1.2.0@d41d8cd9",
       "name": "interpret",
@@ -942,20 +945,18 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "axios@0.19.0@d41d8cd9": {
-      "id": "axios@0.19.0@d41d8cd9",
+    "axios@0.19.1@d41d8cd9": {
+      "id": "axios@0.19.1@d41d8cd9",
       "name": "axios",
-      "version": "0.19.0",
+      "version": "0.19.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/axios/-/axios-0.19.0.tgz#sha1:8e09bff3d9122e133f7b8101c8fbdd00ed3d2ab8"
+          "archive:https://registry.npmjs.org/axios/-/axios-0.19.1.tgz#sha1:8a6a04eed23dfe72747e1dd43c604b8f1677b5aa"
         ]
       },
       "overrides": [],
-      "dependencies": [
-        "is-buffer@2.0.4@d41d8cd9", "follow-redirects@1.5.10@d41d8cd9"
-      ],
+      "dependencies": [ "follow-redirects@1.5.10@d41d8cd9" ],
       "devDependencies": []
     },
     "Oni2@link-dev:./package.json": {
@@ -969,6 +970,7 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
+        "timber@github:glennsl/timber#37ffa07@d41d8cd9",
         "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
@@ -980,7 +982,7 @@
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
-        "axios@0.19.0@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
+        "axios@0.19.1@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/ppx_let@opam:v0.11.0@d6ec0fc1",
