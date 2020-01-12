@@ -95,6 +95,16 @@ let start =
         )
       });
 
+    let registerQuitCleanupEffect =
+      Isolinear.Effect.createWithDispatch(
+        ~name="syntax.registerQuitCleanup", dispatch =>
+        dispatch(
+          Model.Actions.RegisterQuitCleanup(
+            () => Oni_Syntax_Client.close(_syntaxClient),
+          ),
+        )
+      );
+
     let isVersionValid = (updateVersion, bufferVersion) => {
       bufferVersion != (-1) && updateVersion == bufferVersion;
     };
@@ -111,6 +121,7 @@ let start =
     let updater = (state: Model.State.t, action) => {
       let default = (state, Isolinear.Effect.none);
       switch (action) {
+      | Model.Actions.Init => (state, registerQuitCleanupEffect)
       | Model.Actions.ConfigurationSet(config) => (
           state,
           configurationChangeEffect(config),

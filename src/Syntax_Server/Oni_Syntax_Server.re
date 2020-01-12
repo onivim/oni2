@@ -214,4 +214,9 @@ let start = (~healthCheck) => {
     let () = Thread.join(_readThread);
     ();
   };
+
+  isRunning := false;
+  Stdlib.close_out_noerr(Stdlib.stdout);
+  Stdlib.close_in_noerr(Stdlib.stdin);
+  ();
 };
