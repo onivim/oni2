@@ -42,8 +42,8 @@ module KeywordCount = {
             acc,
           )
         },
-        newMap,
         oldMap,
+        newMap,
       );
     };
 
