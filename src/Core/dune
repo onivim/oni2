@@ -22,5 +22,6 @@
         logs.fmt
         re
         editor-core-types
+        timber
     )
     (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))
