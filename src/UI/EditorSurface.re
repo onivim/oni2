@@ -557,6 +557,8 @@ let%component make =
     };*/
 
   let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
+    Log.debug("editorMouseUp");
+
     switch (elementRef) {
     | None => ()
     | Some(r) =>
@@ -575,17 +577,9 @@ let%component make =
         );
 
       if (line < numberOfLines) {
-        Log.debug(
-          "EditorSurface - editorMouseUp: topVisibleLine is "
-          ++ string_of_int(topVisibleLine),
-        );
-        Log.debug(
-          "EditorSurface - editorMouseUp: setPosition ("
-          ++ string_of_int(line + 1)
-          ++ ", "
-          ++ string_of_int(col)
-          ++ ")",
-        );
+        Log.debugf(m => m("  topVisibleLine is %i", topVisibleLine));
+        Log.debugf(m => m("  setPosition (%i, %i)", line + 1, col));
+
         let cursor =
           Vim.Cursor.create(
             ~line=Index.fromOneBased(line + 1),

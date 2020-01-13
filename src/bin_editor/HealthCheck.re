@@ -185,15 +185,13 @@ let run = (~checks, _cli) => {
     | Common => commonChecks
     };
 
-  let result =
+  let passed =
     List.fold_left(
-      (prev, curr) => {
-        let (name, f) = curr;
+      (acc, (name, f)) => {
         Log.info("RUNNING CHECK: " ++ name);
-        let result = f(setup);
-        let resultString = result ? "PASS" : "FAIL";
-        Log.info(" -- RESULT: " ++ resultString);
-        prev && result;
+        let passed = f(setup);
+        Log.infof(m => m(" -- RESULT: %s", passed ? "PASS" : "FAIL"));
+        acc && passed;
       },
       true,
       checks,
@@ -201,11 +199,16 @@ let run = (~checks, _cli) => {
 
   Log.info("");
 
-  result ? Log.info("** PASSED **") : Log.info("** FAILED **");
+  if (passed) {
+    Log.info("** PASSED **");
+  } else {
+    Log.info("** FAILED **");
+  };
+
   Log.info("");
 
   Log.info("All systems go.");
   Log.info("Checking for remaining threads...");
   ThreadHelper.showRunningThreads() |> Log.info;
-  result ? 0 : 1;
+  passed ? 0 : 1;
 };

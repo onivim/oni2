@@ -7,6 +7,7 @@
 open Oni_Core;
 open Oni_Model;
 
+module Result = Utility.Result;
 module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
 
 let start =
@@ -19,18 +20,20 @@ let start =
     ) => {
   let defaultConfigurationFileName = "configuration.json";
   let getConfigurationFile = fileName => {
-    let errorLoading = path => {
-      Log.error("Error loading configuration file at: " ++ path);
-      Filesystem.getOrCreateConfigFile(fileName);
-    };
-
     switch (configurationFilePath) {
     | None => Filesystem.getOrCreateConfigFile(fileName)
-    | Some(v) =>
-      switch (Sys.file_exists(v)) {
-      | exception _ => errorLoading(v)
-      | false => errorLoading(v)
-      | true => Ok(v)
+    | Some(path) =>
+      switch (Sys.file_exists(path)) {
+      | exception ex =>
+        Log.error("Error loading configuration file at: " ++ path);
+        Log.error("  " ++ Printexc.to_string(ex));
+        Filesystem.getOrCreateConfigFile(fileName);
+
+      | false =>
+        Log.error("Error loading configuration file at: " ++ path);
+        Filesystem.getOrCreateConfigFile(fileName);
+
+      | true => Ok(path)
       }
     };
   };
@@ -80,28 +83,24 @@ let start =
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
-      let configPath = getConfigurationFile(defaultConfigurationFileName);
-      switch (configPath) {
-      | Ok(configPathAsString) =>
-        switch (ConfigurationParser.ofFile(configPathAsString)) {
-        | Ok(v) => dispatch(Actions.ConfigurationSet(v))
+      defaultConfigurationFileName
+      |> getConfigurationFile
+      |> Result.bind(ConfigurationParser.ofFile)
+      |> (
+        fun
+        | Ok(config) => dispatch(Actions.ConfigurationSet(config))
         | Error(err) => Log.error("Error loading configuration file: " ++ err)
-        }
-      | Error(err) => Log.error("Error loading configuration file: " ++ err)
-      };
+      )
     });
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (cliOptions.shouldLoadConfiguration) {
-        let configPath = getConfigurationFile(defaultConfigurationFileName);
-        switch (configPath) {
-        | Ok(configPathAsString) =>
-          Log.info(
-            "ConfigurationStoreConnector - Loading configuration: "
-            ++ configPathAsString,
-          );
-          switch (ConfigurationParser.ofFile(configPathAsString)) {
+        switch (getConfigurationFile(defaultConfigurationFileName)) {
+        | Ok(path) =>
+          Log.info("Loading configuration: " ++ path);
+
+          switch (ConfigurationParser.ofFile(path)) {
           | Ok(configuration) =>
             dispatch(Actions.ConfigurationSet(configuration));
 
@@ -114,14 +113,12 @@ let start =
           | Error(err) =>
             Log.error("Error loading configuration file: " ++ err)
           };
-          reloadConfigOnWritePost(~configPath=configPathAsString, dispatch);
+          reloadConfigOnWritePost(~configPath=path, dispatch);
         | Error(err) => Log.error("Error loading configuration file: " ++ err)
         };
         ();
       } else {
-        Log.info(
-          "Not loading configuration initially; disabled from command line.",
-        );
+        Log.info("Not loading configuration initially; disabled via CLI.");
       }
     );
 
@@ -142,19 +139,14 @@ let start =
       let zoomValue =
         max(1.0, Configuration.getValue(c => c.uiZoom, configuration));
       if (zoomValue != zoom^) {
-        Log.info(
-          "Configuration - setting zoom: " ++ string_of_float(zoomValue),
-        );
+        Log.infof(m => m("Setting zoom: %f", zoomValue));
         setZoom(zoomValue);
         zoom := zoomValue;
       };
 
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
-        Log.info(
-          "Configuration - setting vsync: "
-          ++ Revery.Vsync.toString(vsyncValue),
-        );
+        Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));
         setVsync(vsyncValue);
         vsync := vsyncValue;
       };

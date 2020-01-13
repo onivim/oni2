@@ -50,7 +50,7 @@ let convertUTF8string = str =>
 let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
   try(List.fold_left2(fn, accum, list1, list2)) {
   | Invalid_argument(reason) =>
-    Log.error("fold_left2 failing because: " ++ reason);
+    Log.warn("fold_left2 failing because: " ++ reason);
     default;
   };
 
@@ -400,6 +400,10 @@ module Option = {
     };
 };
 
+module OptionEx = {
+  let values = list => List.filter_map(identity, list);
+};
+
 module LwtUtil = {
   let all = (join, promises) => {
     List.fold_left(
@@ -454,6 +458,16 @@ module Result = {
     fun
     | Ok(v) => v
     | Error(msg) => raise(ResultError(msg));
+
+  let iter = f =>
+    fun
+    | Ok(v) => f(v)
+    | Error(_) => ();
+
+  let iter_error = f =>
+    fun
+    | Ok(_) => ()
+    | Error(err) => f(err);
 };
 
 module StringUtil = {

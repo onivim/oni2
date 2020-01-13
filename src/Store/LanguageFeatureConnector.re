@@ -5,17 +5,17 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Utility = Core.Utility;
+open Oni_Core;
+open Oni_Model;
+open Actions;
+
+module Utility = Utility;
 module Ext = Oni_Extensions;
-module Model = Oni_Model;
 
-module Actions = Model.Actions;
-module Animation = Model.Animation;
-module BufferHighlights = Model.BufferHighlights;
-module Quickmenu = Model.Quickmenu;
+module DefinitionResult = LanguageFeatures.DefinitionResult;
+module Option = Utility.Option;
 
-module Log = (val Oni_Core.Log.withNamespace("Oni2.Store.LanguageFeatures"));
+module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
@@ -23,87 +23,76 @@ let start = () => {
   let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.checkForDefinition", dispatch => {
-      Log.info("Checking for definition...");
+      Log.debug("Checking for definition...");
 
       let getDefinitionPromise =
-        Model.LanguageFeatures.requestDefinition(
+        LanguageFeatures.requestDefinition(
           ~buffer,
           ~location,
           languageFeatures,
         );
 
       let getHighlightsPromise =
-        Model.LanguageFeatures.requestDocumentHighlights(
+        LanguageFeatures.requestDocumentHighlights(
           ~buffer,
           ~location,
           languageFeatures,
         );
 
-      let id = Core.Buffer.getId(buffer);
-      let () =
-        Lwt.on_success(getHighlightsPromise, result => {
-          dispatch(
-            Actions.BufferHighlights(
-              BufferHighlights.DocumentHighlightsAvailable(id, result),
-            ),
-          )
-        });
-      let () =
-        Lwt.on_failure(getHighlightsPromise, _exn => {
-          dispatch(
-            Actions.BufferHighlights(
-              BufferHighlights.DocumentHighlightsCleared(id),
-            ),
-          )
-        });
+      let id = Buffer.getId(buffer);
 
-      let () =
-        Lwt.on_success(
-          getDefinitionPromise,
-          result => {
-            Log.info(
-              "Got definition:"
-              ++ Model.LanguageFeatures.DefinitionResult.toString(result),
-            );
-            dispatch(Actions.DefinitionAvailable(id, location, result));
-          },
-        );
-      ();
+      Lwt.on_success(getHighlightsPromise, result => {
+        dispatch(
+          BufferHighlights(
+            BufferHighlights.DocumentHighlightsAvailable(id, result),
+          ),
+        )
+      });
+
+      Lwt.on_failure(getHighlightsPromise, _exn => {
+        dispatch(
+          BufferHighlights(BufferHighlights.DocumentHighlightsCleared(id)),
+        )
+      });
+
+      Lwt.on_success(getDefinitionPromise, result =>
+        dispatch(DefinitionAvailable(id, location, result))
+      );
     });
 
   let findAllReferences = state =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.findAllReferences", dispatch => {
-      let maybeBuffer = state |> Model.Selectors.getActiveBuffer;
+      let maybeBuffer = state |> Selectors.getActiveBuffer;
 
       let maybeEditor =
-        state
-        |> Model.Selectors.getActiveEditorGroup
-        |> Model.Selectors.getActiveEditor;
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-      let request = (buffer, editor) => {
-        let location = Model.Editor.getPrimaryCursor(editor);
-        let promise =
-          Model.LanguageFeatures.requestFindAllReferences(
-            ~buffer,
-            ~location,
-            state.languageFeatures,
-          );
+      Option.iter2(
+        (buffer, editor) => {
+          let location = Editor.getPrimaryCursor(editor);
+          let promise =
+            LanguageFeatures.requestFindAllReferences(
+              ~buffer,
+              ~location,
+              state.languageFeatures,
+            );
 
-        Lwt.on_success(promise, result => {
-          dispatch(Actions.References(Model.References.Set(result)))
-        });
-      };
-
-      Utility.Option.iter2(request, maybeBuffer, maybeEditor);
+          Lwt.on_success(promise, result => {
+            dispatch(References(References.Set(result)))
+          });
+        },
+        maybeBuffer,
+        maybeEditor,
+      );
     });
 
-  let updater = (state: Model.State.t, action: Actions.t) => {
+  let updater = (state: State.t, action: Actions.t) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Actions.Tick({deltaTime, _}) =>
-      if (Model.Hover.isAnimationActive(state.hover)) {
-        let hover = state.hover |> Model.Hover.tick(deltaTime);
+    | Tick({deltaTime, _}) =>
+      if (Hover.isAnimationActive(state.hover)) {
+        let hover = state.hover |> Hover.tick(deltaTime);
         let newState = {...state, hover};
 
         (newState, Isolinear.Effect.none);
@@ -111,21 +100,18 @@ let start = () => {
         default;
       }
 
-    | Actions.References(Model.References.Requested) => (
-        state,
-        findAllReferences(state),
-      )
-    | Actions.References(Model.References.Set(references)) => (
+    | References(References.Requested) => (state, findAllReferences(state))
+    | References(References.Set(references)) => (
         {...state, references},
         Isolinear.Effect.none,
       )
-    | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
-      switch (Model.Selectors.getActiveBuffer(state)) {
+    | EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
+      switch (Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)
       | Some(buf) =>
-        let bufferId = Core.Buffer.getId(buf);
+        let bufferId = Buffer.getId(buf);
         let delay =
-          Core.Configuration.getValue(
+          Configuration.getValue(
             c => c.editorHoverDelay,
             state.configuration,
           );
@@ -138,7 +124,7 @@ let start = () => {
         let newState = {
           ...state,
           hover:
-            Model.Hover.show(
+            Hover.show(
               ~bufferId,
               ~location,
               ~currentTime=Unix.gettimeofday(),

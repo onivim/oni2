@@ -48,7 +48,7 @@ module Make =
            let result = provider(params);
            switch (result) {
            | Some(_) => Log.infof(m => m("Querying provider: %s", id))
-           | None => Log.infof(m => m("Provider skipped: %s", id))
+           | None => Log.debugf(m => m("Provider skipped: %s", id))
            };
            result;
          })

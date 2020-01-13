@@ -19,13 +19,6 @@ let map = IntMap.map;
 let update = IntMap.update;
 let remove = IntMap.remove;
 
-let log = (m: t) =>
-  IntMap.iter(
-    (_, b) =>
-      Buffer.show(b) |> (++)("Buffer ======================: \n") |> Log.info,
-    m,
-  );
-
 let getBuffer = (id, map) => IntMap.find_opt(id, map);
 
 let anyModified = (buffers: t) => {

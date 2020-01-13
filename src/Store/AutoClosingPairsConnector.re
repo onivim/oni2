@@ -25,7 +25,7 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
         );
       if (autoClosingPairsEnabled^ != acp) {
         autoClosingPairsEnabled := acp;
-        Log.info("AutoClosingPairs: Setting to " ++ string_of_bool(acp));
+        Log.debugf(m => m("AutoClosingPairs: Setting to %b", acp));
 
         switch (acp) {
         | false => Vim.Options.setAutoClosingPairs(false)

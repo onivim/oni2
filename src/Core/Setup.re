@@ -100,7 +100,7 @@ let getNodeExtensionHostPath = (v: t) => {
 let init = () => {
   let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
-  Log.debug("Setup: Looking for setupJson at: " ++ setupJsonPath);
+  Log.debug("Looking for setup configuration at: " ++ setupJsonPath);
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);

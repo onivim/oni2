@@ -65,15 +65,13 @@ let start =
     ...envList,
   ];
 
-  let executableName =
-    Revery.Environment.executingDirectory
-    ++ "Oni2_editor"
-    ++ (Sys.win32 ? ".exe" : "");
+  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
-  ClientLog.infof(m =>
+  ClientLog.debugf(m =>
     m(
       "Starting executable: %s with camomilePath: %s and parentPid: %s",
-      executableName,
+      executablePath,
       camomilePath,
       parentPid,
     )
@@ -81,8 +79,8 @@ let start =
 
   let pid =
     Unix.create_process_env(
-      executableName,
-      [|executableName, "--syntax-highlight-service"|],
+      executablePath,
+      [|executablePath, "--syntax-highlight-service"|],
       Array.of_list(env),
       pstdin,
       pstdout,
@@ -119,21 +117,21 @@ let start =
         let code =
           switch (status) {
           | Unix.WEXITED(0) =>
-            ClientLog.info("Syntax process exited safely.");
+            ClientLog.debug("Syntax process exited safely.");
             0;
           | Unix.WEXITED(code) =>
-            ClientLog.error(
-              "Syntax process exited with code: " ++ string_of_int(code),
+            ClientLog.errorf(m =>
+              m("Syntax process exited with code: %i", code)
             );
             code;
           | Unix.WSIGNALED(signal) =>
-            ClientLog.error(
-              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            ClientLog.errorf(m =>
+              m("Syntax process stopped with signal: %i", signal)
             );
             signal;
           | Unix.WSTOPPED(signal) =>
-            ClientLog.error(
-              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            ClientLog.errorf(m =>
+              m("Syntax process stopped with signal: %i", signal)
             );
             signal;
           };
@@ -150,22 +148,30 @@ let start =
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stdout);
+
           let result: ServerToClient.t = Marshal.from_channel(in_channel);
           switch (result) {
           | ServerToClient.Initialized => scheduler(onConnected)
+
           | ServerToClient.EchoReply(result) =>
             scheduler(() =>
-              ClientLog.info("got message from channel: |" ++ result ++ "|")
+              ClientLog.debugf(m =>
+                m("got message from channel: |%s|", result)
+              )
             )
-          | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
+
+          | ServerToClient.Log(msg) => scheduler(() => ServerLog.debug(msg))
+
           | ServerToClient.Closing =>
-            scheduler(() => ServerLog.info("Closing"))
+            scheduler(() => ServerLog.debug("Closing"))
+
           | ServerToClient.HealthCheckPass(res) =>
             scheduler(() => onHealthCheckResult(res))
+
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
-              ClientLog.info("Tokens applied");
+              ClientLog.debug("Tokens applied");
             })
           };
         };
@@ -183,15 +189,15 @@ let start =
           Thread.wait_read(stderr);
           switch (input_line(err_channel)) {
           | exception End_of_file => shouldClose := true
-          | v => scheduler(() => ServerLog.info(v))
+          | msg => scheduler(() => ServerLog.debug(msg))
           };
         };
         safeClose(stderr);
-        scheduler(() => ServerLog.info("stderr thread done!"));
+        scheduler(() => ServerLog.debug("stderr thread done!"));
       },
       (),
     );
-  ClientLog.info("started syntax client");
+  ClientLog.debug("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
     syntaxClient,
@@ -203,12 +209,12 @@ let start =
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
-  ClientLog.info("Sending bufferUpdate notification...");
+  ClientLog.debug("Sending bufferUpdate notification...");
   write(v, message);
 };
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  ClientLog.info("TODO - Send Buffer leave.");
+  ClientLog.warn("TODO - Send Buffer leave.");
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
@@ -231,16 +237,16 @@ let notifyBufferUpdate =
       lines: array(string),
       scope,
     ) => {
-  ClientLog.info("Sending bufferUpdate notification...");
+  ClientLog.debug("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
 let notifyVisibilityChanged = (v: t, visibility) => {
-  ClientLog.info("Sending visibleRangesChanged notification...");
+  ClientLog.debug("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
 let close = (syntaxClient: t) => {
-  ClientLog.info("Sending close request...");
+  ClientLog.debug("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
 };

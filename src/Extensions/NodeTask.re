@@ -52,7 +52,7 @@ let run =
           Log.info("Task completed successfully: " ++ name);
           Lwt.wakeup(resolver, ());
         | _ =>
-          Log.info("Task failed: " ++ name);
+          Log.warn("Task failed: " ++ name);
           Lwt.wakeup_exn(resolver, TaskFailed);
         };
 

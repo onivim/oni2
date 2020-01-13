@@ -24,7 +24,7 @@ module Provider = {
         ~params as {filesExclude, directory, ripgrep, onUpdate, onComplete},
         ~dispatch: _,
       ) => {
-    Log.info("Starting Ripgrep search subscription " ++ id);
+    Log.debug("Starting: " ++ id);
 
     let dispose =
       ripgrep.Ripgrep.search(
@@ -45,11 +45,11 @@ module Provider = {
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some(dispose) =>
-      Log.info("Disposing subscription " ++ id);
+      Log.debug("Disposing: " ++ id);
       dispose();
       Hashtbl.remove(jobs, id);
 
-    | None => Log.error("Tried to dispose non-existing Ripgrep subscription")
+    | None => Log.warn("Tried to dispose non-existing instance " ++ id)
     };
   };
 };

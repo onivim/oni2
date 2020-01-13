@@ -238,11 +238,7 @@ let start = () => {
           };
         };
 
-      Log.info(
-        "Loading "
-        ++ string_of_int(List.length(keyBindings))
-        ++ " keybindings",
-      );
+      Log.infof(m => m("Loading %i keybindings", List.length(keyBindings)));
 
       dispatch(Actions.KeyBindingsSet(defaultBindings @ keyBindings));
     });

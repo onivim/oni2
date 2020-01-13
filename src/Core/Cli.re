@@ -44,7 +44,7 @@ let show = (v: t) => {
 let noop = () => ();
 
 let setWorkingDirectory = s => {
-  Log.info("--working-directory - chdir: " ++ s);
+  Log.debug("--working-directory - chdir: " ++ s);
   Sys.chdir(s);
 };
 

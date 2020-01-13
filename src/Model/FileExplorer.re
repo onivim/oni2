@@ -33,19 +33,16 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
 
 let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
 
-let printUnixError = (error, fn, arg) =>
-  Printf.sprintf(
-    "Error: %s encountered in %s called with %s",
-    Unix.error_message(error),
-    fn,
-    arg,
-  )
-  |> Log.error;
+let logUnixError = (error, fn, arg) =>
+  Log.errorf(m => {
+    let msg = Unix.error_message(error);
+    m("%s encountered in %s called with %s", msg, fn, arg);
+  });
 
 let attempt = (~defaultValue, func) => {
   try%lwt(func()) {
   | Unix.Unix_error(error, fn, arg) =>
-    printUnixError(error, fn, arg);
+    logUnixError(error, fn, arg);
     Lwt.return(defaultValue);
   | Failure(e) =>
     Log.error(e);

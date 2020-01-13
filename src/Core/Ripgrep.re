@@ -46,10 +46,10 @@ module Match = {
         };
       }) {
       | Type_error(message, _) =>
-        Log.error("Error decoding JSON: " ++ message);
+        Log.warn("Error decoding JSON: " ++ message);
         None;
       | Yojson.Json_error(message) =>
-        Log.error("Error parsing JSON: " ++ message);
+        Log.warn("Error parsing JSON: " ++ message);
         None;
       }
     );
@@ -143,7 +143,7 @@ module RipgrepProcessingJob = {
 
 let process = (rgPath, args, onUpdate, onComplete) => {
   let argsStr = String.concat("|", Array.to_list(args));
-  Log.infof(m => m("Starting process: %s with args: |%s|", rgPath, argsStr));
+  Log.debugf(m => m("Starting process: %s with args: |%s|", rgPath, argsStr));
 
   // Mutex to
   let jobMutex = Mutex.create();
@@ -180,11 +180,11 @@ let process = (rgPath, args, onUpdate, onComplete) => {
 
   let disposeOnClose =
     Event.subscribe(childProcess.onClose, exitCode => {
-      Log.infof(m => m("Process completed - exit code: %n", exitCode))
+      Log.debugf(m => m("Process completed - exit code: %n", exitCode))
     });
 
   let dispose = () => {
-    Log.info("Session complete.");
+    Log.debug("Session complete.");
     disposeOnData();
     disposeOnClose();
     switch (disposeTick^) {

@@ -66,7 +66,7 @@ let start =
 
   let _ =
     Vim.onGoto((_position, _definitionType) => {
-      Log.info("Goto definition requested");
+      Log.debug("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
@@ -121,7 +121,7 @@ let start =
         | Info => ("INFO", Notification.Info)
         };
 
-      Log.infof(m => m("Message - %s [%s]: %s", priorityString, t, msg));
+      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, t, msg));
 
       dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
@@ -150,7 +150,7 @@ let start =
 
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
-      Log.infof(m => m("Buffer metadata changed: %n", meta.id));
+      Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
         ...meta,
         /*
@@ -172,7 +172,7 @@ let start =
 
   let _ =
     Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.infof(m => m("Buffer metadata changed: %n | %b", id, modified));
+      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
 
@@ -245,7 +245,7 @@ let start =
         | v => v
         };
 
-      Log.info("Vim.Window.onSplit: " ++ buf);
+      Log.debug("Vim.Window.onSplit: " ++ buf);
 
       let command =
         switch (splitType) {
@@ -260,7 +260,7 @@ let start =
 
   let _ =
     Vim.Window.onMovement((movementType, _count) => {
-      Log.info("Vim.Window.onMovement");
+      Log.debug("Vim.Window.onMovement");
       let currentState = getState();
 
       let move = moveFunc => {
@@ -315,7 +315,7 @@ let start =
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
-      Log.infof(m => m("Vim - Buffer update: %n", update.id));
+      Log.debugf(m => m("Buffer update: %n", update.id));
       open State;
 
       let isFull = update.endLine == (-1);
@@ -360,10 +360,7 @@ let start =
       if (shouldApply) {
         dispatch(Actions.BufferUpdate(bu));
       } else {
-        Log.info(
-          "Skipped buffer update at version: "
-          ++ string_of_int(update.version),
-        );
+        Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
     });
 
@@ -376,14 +373,12 @@ let start =
   let isCompleting = ref(false);
 
   let checkCommandLineCompletions = () => {
-    Log.info("checkCommandLineCompletions");
+    Log.debug("checkCommandLineCompletions");
+
     let completions = Vim.CommandLine.getCompletions();
-    Log.infof(m =>
-      m(
-        "checkCommandLineCompletions - got %n completions.",
-        Array.length(completions),
-      )
-    );
+
+    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+
     let items =
       Array.map(
         name =>
@@ -396,6 +391,7 @@ let start =
           },
         completions,
       );
+
     dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 

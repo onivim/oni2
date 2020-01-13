@@ -71,17 +71,13 @@ let map = (f: mapFn('p, 'c), v: t('p, 'c)) => {
 
 let doWork = (v: t('p, 'c)) => map(v.f, v);
 
-let show = (v: t('p, 'c)) => {
-  "Name: "
-  ++ v.name
-  ++ "\n"
-  ++ " - Pending work: "
-  ++ v.pendingWorkPrinter(v.pendingWork)
-  ++ "\n"
-  ++ " - Completed work: "
-  ++ v.completedWorkPrinter(v.completedWork)
-  ++ "\n";
-};
+let show = (v: t('p, 'c)) =>
+  Printf.sprintf(
+    "Name: %s\n - Pending work: %s\n - Completed work: %s\n",
+    v.name,
+    v.pendingWorkPrinter(v.pendingWork),
+    v.completedWorkPrinter(v.completedWork),
+  );
 
 let tick = (~budget=None, v: t('p, 'c)) => {
   let budget =
@@ -94,7 +90,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   let current = ref(v);
   let iterations = ref(0);
 
-  Log.debug("[Job] Starting " ++ v.name);
+  Log.debug("Starting " ++ v.name);
   while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
     current := doWork(current^);
     incr(iterations);
@@ -102,13 +98,13 @@ let tick = (~budget=None, v: t('p, 'c)) => {
 
   let endTime = Unix.gettimeofday();
 
-  Log.info(
-    v.name
-    ++ " ran "
-    ++ string_of_int(iterations^)
-    ++ " iterations for "
-    ++ string_of_float(endTime -. startTime)
-    ++ "s",
+  Log.debugf(m =>
+    m(
+      "%s ran %i iterations for %fs",
+      v.name,
+      iterations^,
+      endTime -. startTime,
+    )
   );
 
   Log.debugf(m => m("Detailed report: %s", show(v)));

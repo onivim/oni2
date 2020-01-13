@@ -235,7 +235,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   //  SUBSCRIPTIONS
 
   switch (window) {
-  | None => Log.error("no window to subscribe to events")
+  | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
       Revery.Event.subscribe(window.onKeyDown, event =>

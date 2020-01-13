@@ -11,8 +11,10 @@ module Log = (val Log.withNamespace("Oni2.Syntax.TextMateSyntaxHighlights"));
 let hasPendingWork = (v: t) => !Job.isComplete(v);
 
 let doWork = (v: t) => {
-  Log.info("Starting job...");
+  Log.debug("Starting job...");
+
   let hasRun = Job.getPendingWork(v).hasRun;
+
   // For first render of a buffer, spend a little extra time on the tokenization
   // so that can minimize flicker.
   let result =
@@ -21,7 +23,9 @@ let doWork = (v: t) => {
     } else {
       Job.tick(v);
     };
+
   Log.info("Finished job.");
+
   result;
 };
 
@@ -30,13 +34,18 @@ let updateTheme = (theme, v) => TextmateTokenizerJob.onTheme(theme, v);
 let updateVisibleRanges = (_ranges, v) => v;
 
 let create = (~scope, ~theme, ~getTextmateGrammar, lines) => {
-  Log.info("Creating highlighter for scope: " ++ scope);
+  Log.debug("Creating highlighter for scope: " ++ scope);
+
   let grammarRepository =
     Textmate.GrammarRepository.create(scope => getTextmateGrammar(scope));
-  Log.info("- Created grammar repository.");
+
+  Log.debug("- Created grammar repository.");
+
   let ret =
     TextmateTokenizerJob.create(~scope, ~theme, ~grammarRepository, lines);
-  Log.info("Finished creating highligher for scope: " ++ scope);
+
+  Log.debug("Finished creating highligher for scope: " ++ scope);
+
   ret;
 };
 

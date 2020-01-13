@@ -41,12 +41,10 @@ let evaluate = (v: t, getValue) => {
     };
 
   let ret = eval(v);
-  Log.debug(
-    Printf.sprintf(
-      "Expression %s evaluated to: %s",
-      toString(v),
-      ret ? "true" : "false",
-    ),
+
+  Log.debugf(m =>
+    m("Expression %s evaluated to: %s", toString(v), ret ? "true" : "false")
   );
+
   ret;
 };

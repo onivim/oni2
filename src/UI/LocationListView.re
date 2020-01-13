@@ -143,13 +143,8 @@ let item =
       }) {
       | Invalid_argument(message) =>
         // TODO: This shouldn't happen, but you never know. Consider a sane implementation of `String.sub` instead, to avoid this
-        Log.error(
-          Printf.sprintf(
-            "[SearchPane.highlightedText] \"%s\" - (%n, %n)\n%!",
-            message,
-            charStart,
-            charEnd,
-          ),
+        Log.errorf(m =>
+          m("\"%s\" - (%n, %n)\n%!", message, charStart, charEnd)
         );
         <unstyled text={item.text} />;
       };

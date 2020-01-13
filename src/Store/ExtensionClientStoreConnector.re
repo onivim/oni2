@@ -7,12 +7,12 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Uri = Core.Uri;
-open Oni_Core.Utility;
-module Model = Oni_Model;
+open Oni_Core;
+open Oni_Model;
 
-module Log = (val Core.Log.withNamespace("Oni2.Extension.ClientStore"));
+module Uri = Oni_Core.Uri;
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Option = Utility.Option;
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
@@ -22,7 +22,7 @@ module Workspace = Protocol.Workspace;
 
 module ExtensionCompletionProvider = {
   let suggestionItemToCompletionItem:
-    Protocol.SuggestionItem.t => Model.CompletionItem.t =
+    Protocol.SuggestionItem.t => CompletionItem.t =
     suggestion => {
       let completionKind =
         suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
@@ -35,7 +35,7 @@ module ExtensionCompletionProvider = {
     };
 
   let suggestionsToCompletionItems:
-    option(Protocol.Suggestions.t) => list(Model.CompletionItem.t) =
+    option(Protocol.Suggestions.t) => list(CompletionItem.t) =
     fun
     | Some(suggestions) =>
       List.map(suggestionItemToCompletionItem, suggestions)
@@ -51,7 +51,7 @@ module ExtensionCompletionProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
         ExtHostClient.provideCompletions(id, uri, position, client)
         |> Lwt.map(suggestionsToCompletionItems);
@@ -67,7 +67,7 @@ module ExtensionDefinitionProvider = {
     let originRange =
       originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
 
-    Model.LanguageFeatures.DefinitionResult.create(
+    LanguageFeatures.DefinitionResult.create(
       ~originRange,
       ~uri,
       ~location=start,
@@ -80,7 +80,7 @@ module ExtensionDefinitionProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
         ExtHostClient.provideDefinition(id, uri, position, client)
         |> Lwt.map(definitionToModel);
@@ -105,7 +105,7 @@ module ExtensionDocumentHighlightProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
 
         ExtHostClient.provideDocumentHighlights(id, uri, position, client)
@@ -122,7 +122,7 @@ module ExtensionFindAllReferencesProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
 
         ExtHostClient.provideReferences(id, uri, position, client);
@@ -138,14 +138,14 @@ module ExtensionDocumentSymbolProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         ExtHostClient.provideDocumentSymbols(id, uri, client);
       },
     );
   };
 };
 
-let start = (extensions, setup: Core.Setup.t) => {
+let start = (extensions, setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let manifests =
@@ -165,7 +165,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let initialConfiguration = Configuration.create(~defaults, ~user, ());
 
-  let onExtHostClosed = () => Log.info("ext host closed");
+  let onExtHostClosed = () => Log.debug("ext host closed");
 
   let extensionInfo =
     extensions
@@ -174,22 +174,22 @@ let start = (extensions, setup: Core.Setup.t) => {
        );
 
   let onDiagnosticsClear = owner => {
-    dispatch(Model.Actions.DiagnosticsClear(owner));
+    dispatch(Actions.DiagnosticsClear(owner));
   };
 
   let onDiagnosticsChangeMany =
       (diagCollection: Protocol.DiagnosticsCollection.t) => {
-    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Diagnostic.t =
       d => {
         let range = Protocol.OneBasedRange.toRange(d.range);
         let message = d.message;
-        Model.Diagnostic.create(~range, ~message, ());
+        Diagnostic.create(~range, ~message, ());
       };
 
     let f = (d: Protocol.Diagnostics.t) => {
       let diagnostics = List.map(protocolDiagToDiag, snd(d));
       let uri = fst(d);
-      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
+      Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
     };
 
     diagCollection.perFileDiagnostics
@@ -199,11 +199,11 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
-      Model.Actions.StatusBarAddItem(
-        Model.StatusBarModel.Item.create(
+      Actions.StatusBarAddItem(
+        StatusBarModel.Item.create(
           ~id,
           ~text,
-          ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+          ~alignment=StatusBarModel.Alignment.ofInt(alignment),
           ~priority,
           (),
         ),
@@ -216,15 +216,12 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let definitionProvider =
       ExtensionDefinitionProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DefinitionProviderAvailable(
-          id,
-          definitionProvider,
-        ),
+      Actions.LanguageFeature(
+        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
   let onRegisterDocumentSymbolProvider = (client, provider) => {
@@ -234,9 +231,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       );
     let documentSymbolProvider =
       ExtensionDocumentSymbolProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DocumentSymbolProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentSymbolProviderAvailable(
           id,
           documentSymbolProvider,
         ),
@@ -249,9 +247,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let findAllReferencesProvider =
       ExtensionFindAllReferencesProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.FindAllReferencesProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.FindAllReferencesProviderAvailable(
           id,
           findAllReferencesProvider,
         ),
@@ -264,16 +263,14 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let documentHighlightProvider =
       ExtensionDocumentHighlightProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DocumentHighlightProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentHighlightProviderAvailable(
           id,
           documentHighlightProvider,
         ),
       ),
-    );
-    Log.infof(m =>
-      m("Registered document highlight provider with ID: %n", provider.id)
     );
   };
 
@@ -282,29 +279,22 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
     let completionProvider =
       ExtensionCompletionProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.CompletionProviderAvailable(
-          id,
-          completionProvider,
-        ),
+      Actions.LanguageFeature(
+        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
-    dispatch(Model.Actions.Extension(Model.Extensions.Activated(id)));
+    dispatch(Actions.Extension(Oni_Model.Extensions.Activated(id)));
   };
 
   let onShowMessage = message => {
-    dispatch(
-      Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(message),
-      ),
-    );
+    dispatch(Actions.ShowNotification(Notification.create(message)));
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -332,10 +322,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Log.info("Creating model for filetype: " ++ ft);
+      Log.debug("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
-          ~uri=Core.Uri.fromPath(fp),
+          ~uri=Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
           ~modeId=ft,
@@ -373,12 +363,12 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Buffers.t, bu: BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Model.Buffers.getBuffer(bu.id, buffers)) {
+      switch (Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        Core.Log.perf("exthost.bufferUpdate", () => {
+        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Protocol.ModelContentChange.ofBufferUpdate(
               bu,
@@ -392,7 +382,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               (),
             );
 
-          let uri = Core.Buffer.getUri(v);
+          let uri = Buffer.getUri(v);
 
           ExtHostClient.updateDocument(
             uri,
@@ -413,7 +403,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
       dispatch(
-        Model.Actions.Extension(Model.Extensions.Discovered(extensions)),
+        Actions.Extension(Oni_Model.Extensions.Discovered(extensions)),
       )
     );
 
@@ -421,7 +411,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
-        Model.Actions.RegisterQuitCleanup(
+        Actions.RegisterQuitCleanup(
           () => ExtHostClient.close(extHostClient),
         ),
       )
@@ -435,28 +425,28 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     });
 
-  let updater = (state: Model.State.t, action) =>
+  let updater = (state: State.t, action) =>
     switch (action) {
-    | Model.Actions.Init => (
+    | Actions.Init => (
         state,
         Isolinear.Effect.batch([
           registerQuitCleanupEffect,
           discoveredExtensionsEffect(extensions),
         ]),
       )
-    | Model.Actions.BufferUpdate(bu) => (
+    | Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
       )
-    | Model.Actions.CommandExecuteContributed(cmd) => (
+    | Actions.CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
       )
-    | Model.Actions.VimDirectoryChanged(path) => (
+    | Actions.VimDirectoryChanged(path) => (
         state,
         changeWorkspaceEffect(path),
       )
-    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
+    | Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
