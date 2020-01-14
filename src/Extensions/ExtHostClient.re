@@ -313,13 +313,15 @@ let provideReferences = (id, uri, position, client) => {
 };
 
 let provideOriginalResource = (id, uri, client) => {
+  prerr_endline ("provideOriginalResource - 1");
   let promise =
     ExtHostTransport.request(
       ~msgType=MessageType.requestJsonArgsWithCancellation,
       client,
       Out.SCM.provideOriginalResource(id, uri),
       json => {
-        Console.log(json);
+      prerr_endline ("provideOriginalResource - got json");
+      //  Console.log(json);
         // Core.Uri.of_yojson(json) |> Utility.Result.exn
         Uri.fromPath("test.js");
       }

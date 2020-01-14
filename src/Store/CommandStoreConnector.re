@@ -139,6 +139,12 @@ let createDefaultCommands = getState => {
         ~action=Command("sneak.start"),
         (),
       ),
+      Command.create(
+        ~category=Some("Developer"),
+        ~name="Test SCM API",
+        ~action=Command("testscm"),
+        (),
+      ),
     ]
   );
 };

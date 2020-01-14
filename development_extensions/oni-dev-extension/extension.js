@@ -137,8 +137,9 @@ function activate(context) {
     testSCM.quickDiffProvider = {
         provideOriginalResource: (uri, _token) => {
             console.log("1");
-            Uri.file("/home/glennsl/elm-package.json");
+            let ret = vscode.Uri.file("/home/glennsl/elm-package.json");
             console.log("2");
+            return ret;
         }
     };
 }

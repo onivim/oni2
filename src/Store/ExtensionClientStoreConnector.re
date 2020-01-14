@@ -335,9 +335,6 @@ let start = (extensions, setup: Core.Setup.t) => {
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Log.info("Creating model for filetype: " ++ ft);
-      Printexc.record_backtrace(true);
-      let promise = Oni_Extensions.ExtHostClient.provideOriginalResource(0, Core.Uri.fromPath(fp), extHostClient);
-      Lwt.on_success(promise, uri => print_endline(Core.Uri.toString(uri)));
 
       Some(
         Protocol.ModelAddedDelta.create(
@@ -490,6 +487,16 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     });
 
+  let testSCM = state => Isolinear.Effect.create(~name="exthost.testSCM", () => {
+    state
+    |> Model.Selectors.getActiveBuffer
+    |> Option.iter((buf) => {
+      let uri = Core.Buffer.getUri(buf);
+      let promise = Oni_Extensions.ExtHostClient.provideOriginalResource(0, uri, extHostClient);
+      Lwt.on_success(promise, uri => print_endline(Core.Uri.toString(uri)));
+    });
+  });
+
   let updater = (state: Model.State.t, action) =>
     switch (action) {
     | Model.Actions.Init => (
@@ -519,6 +526,7 @@ let start = (extensions, setup: Core.Setup.t) => {
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
+    | Model.Actions.Command("testscm") => (state, testSCM(state))
     | _ => (state, Isolinear.Effect.none)
     };
 

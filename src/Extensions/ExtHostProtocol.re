@@ -671,16 +671,16 @@ module OutgoingNotifications = {
   };
 
   module SCM = {
-    let provideOriginalResource = (handle: int, resource: Uri.t) =>
+    let provideOriginalResource = (handle: int, resource: Uri.t) => {
       _buildNotification(
         "ExtHostSCM",
         "$provideOriginalResource",
         `List([
           `Int(handle),
           Uri.to_yojson(resource),
-          `Assoc([]),
         ]),
       );
+    };
 
   };
 
