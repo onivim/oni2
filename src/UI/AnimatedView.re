@@ -1,44 +1,22 @@
 open Revery;
 open Revery.UI;
-open Oni_Model;
-
-type action =
-  | Tick(Time.t)
-  | Pause
-  | Resume;
-
-let reducer =
-  fun
-  | Tick(dt) => Animation.tick(Time.toFloatSeconds(dt))
-  | Pause => Animation.pause
-  | Resume => Animation.resume;
 
 let%component make =
               (
                 ~children as renderFunc: float => React.element(React.node),
                 ~isActive=true,
-                ~duration=?,
-                ~repeat=?,
-                ~delay=?,
+                ~duration=Time.seconds(1),
+                ~repeat=false,
+                ~delay=Time.zero,
                 (),
               ) => {
-  let%hook (animation, dispatch) =
-    Hooks.reducer(
-      ~initialState=
-        Animation.create(~isActive, ~duration?, ~repeat?, ~delay?, ()),
-      reducer,
-    );
+  let animation =
+    Animation.animate(duration)
+    |> (repeat ? Animation.repeat : (x => x))
+    |> Animation.delay(delay)
+    |> Animation.tween(0., 1.);
 
-  let%hook () =
-    Hooks.effect(
-      If((!=), isActive),
-      () => {
-        dispatch(isActive ? Resume : Pause);
-        None;
-      },
-    );
+  let%hook (value, _, _) = Hooks.animation(~active=isActive, animation);
 
-  let%hook () = Hooks.tick(~tickRate=Time.zero, dt => dispatch(Tick(dt)));
-
-  renderFunc(Animation.getValue(animation));
+  renderFunc(value);
 };

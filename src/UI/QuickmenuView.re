@@ -64,7 +64,7 @@ let progressBar = (~progress=?, ~theme, ()) => {
   let indicatorWidth = 100.;
   let menuWidth = float_of_int(Constants.menuWidth);
   let trackWidth = menuWidth +. indicatorWidth;
-  <AnimatedView duration=1.5 repeat=true>
+  <AnimatedView duration={Time.ms(1500)} repeat=true>
     ...{t => {
       let (width, offset) =
         switch (progress) {
