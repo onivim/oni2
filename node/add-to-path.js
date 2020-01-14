@@ -20,58 +20,63 @@ const isAddedToPath = () => {
     }
     return true
 }
-const removeFromPath = () => {
+
+const getOptions = () => {
+    let appDirectory = "";
+
+    if (isMac()) {
+        // Valid for an install from a dmg.
+        appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
+    } else {
+        // Valid path for an AppImage or Linux tar.gz
+        appDirectory = path.join(path.dirname(process.mainModule.filename), "..", "..");
+    }
+
+    // Valid for an install from a dmg.
+    let imgPath = path.join(appDirectory, "Onivim2.icns");
+
+    if (!fs.existsSync(imgPath)) {
+        // Valid path when in a development build.
+        imgPath = path.join(appDirectory, "assets", "images", "Onivim2.icns");
+    }
+
+    if (!fs.existsSync(imgPath)) {
+        // Valid path for an AppImage or Linux tar.gz
+        imgPath = path.join(appDirectory, "..", "Onivim2.icns");
+    }
+
+    const options = { name: "Oni2", icns: imgPath };
+
+    return options;
+}
+
+const removeFromPath = async () => {
     if (isAddedToPath() && !isWindows()) {
-        fs.unlinkSync(getLinkPath())
+        await runSudoCommand(`rm ${getLinkPath()}`, getOptions());
     }
 }
 
 const addToPath = async () => {
     if (!isAddedToPath() && !isWindows()) {
 
-        let appDirectory = "";
-
-        if (isMac()) {
-            // Valid for an install from a dmg.
-            appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
-        } else {
-            // Valid path for an AppImage or Linux tar.gz
-            appDirectory = path.join(path.dirname(process.mainModule.filename), "..", "..");
-        }
-
-        console.log(`The appDirectory is apparently : ${appDirectory}`);
-
-        // Valid for an install from a dmg.
-        let imgPath = path.join(appDirectory, "Onivim2.icns");
-
-        if (!fs.existsSync(imgPath)) {
-            // Valid path when in a development build.
-            imgPath = path.join(appDirectory, "assets", "images", "Onivim2.icns");
-        }
-
-        if (!fs.existsSync(imgPath)) {
-            // Valid path for an AppImage or Linux tar.gz
-            imgPath = path.join(appDirectory, "..", "Onivim2.png"); // TODO: Should be an icon file.
-        }
-
-        console.log(`The imgPath is apparently : ${imgPath}`);
-
-        const options = { name: "Oni2", icns: imgPath };
         let linkDest = "";
 
         if (isMac()) {
             // Valid for an install from a dmg.
             linkDest = path.join(appDirectory, "run.sh");
+        } else if (process.env.APPIMAGE) {
+            // Valid path for an AppImage.
+            linkDest = process.env.APPIMAGE;
         } else {
-            // Valid path for an AppImage or Linux tar.gz
-            linkDest = path.join(appDirectory, "..", "AppRun"); // TODO: This currently points to a /tmp/ location of the virtual file system. We actually want to point to the real AppImage in the AppImage case.
+            // Valid path for Linux tar.gz
+            linkDest = path.join(appDirectory, "..", "AppRun");
         }
 
         if (!fs.existsSync(linkDest)) {
             return
         }
 
-        await runSudoCommand(`ln -fs ${linkDest} ${getLinkPath()}`, options);
+        await runSudoCommand(`ln -fs ${linkDest} ${getLinkPath()}`, getOptions());
     }
 }
 
@@ -85,7 +90,7 @@ const runSudoCommand = async (command, options) => {
 
 const toggleAddToPath = async () => {
     if (isAddedToPath()) {
-        removeFromPath()
+        await removeFromPath()
     } else {
         await addToPath()
     }

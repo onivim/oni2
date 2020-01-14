@@ -29,6 +29,7 @@ cp scripts/linux/Onivim2.desktop _release/Onivim2.AppDir/Onivim2.desktop
 cp scripts/linux/AppRun _release/Onivim2.AppDir/AppRun
 chmod +x _release/Onivim2.AppDir/AppRun
 cp assets/images/icon512.png _release/Onivim2.AppDir/Onivim2.png
+cp assets/images/Onivim2.icns _release/Onivim2.AppDir/Onivim2.icns
 
 cp Outrun-Labs-EULA-v1.1.md _release/Onivim2.AppDir/EULA.md
 cp ThirdPartyLicenses.txt _release/Onivim2.AppDir/ThirdPartyLicenses.txt
