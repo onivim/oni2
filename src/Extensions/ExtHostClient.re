@@ -320,7 +320,7 @@ let provideOriginalResource = (id, uri, client) => {
       client,
       Out.SCM.provideOriginalResource(id, uri),
       json => {
-      prerr_endline ("provideOriginalResource - got json");
+      prerr_endline ("provideOriginalResource - got json: " ++ Yojson.Safe.to_string(json));
       //  Console.log(json);
         // Core.Uri.of_yojson(json) |> Utility.Result.exn
         Uri.fromPath("test.js");
