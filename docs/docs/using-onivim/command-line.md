@@ -4,14 +4,16 @@ title: Command Line
 sidebar_label: Command Line
 ---
 
-## Command Line Interface
+# Command Line Interface
 
-### Windows 
+## Getting the oni2 Executable
+
+## Windows 
 
 The `oni2` command line executable is added to the user's `PATH` on Windows
 during the Installation process, if the option is selected during installation.
 
-### macOS
+## macOS
 
 On macOS, `oni2` can be added manually with the "Add to System PATH" command in the
 command pallette, by pressing `Cmd-Shift-P` and searching for `System`.
@@ -23,7 +25,7 @@ should be accessible.
 > should already be in your default path, but if it is not it can be added to
 > your `.bashrc`/`.zshrc`, depending on your shell.
 
-### Linux
+## Linux
 
 On Linux, you should add an alias to `oni2`:
 
@@ -40,12 +42,27 @@ the `.bashrc` or equivalent for other shells.
 
 > __NOTE:__ It is currently preferable to alias `oni2`, rather than adding a symlink to it.
 
-### Getting help
+## Getting help
 
 Launching `oni2` with the `--help` flag should give a brief outline on all command line
 flags.
 
-### Extension Management
+## General Usage
+
+Passing `oni2` a file will open that file in Oni2, and set the open folder in Oni2 to the folder
+that file is in. That is, `oni2 ~/my_project/docs/cli.md` will open `cli.md` in Oni2, and set the folder
+to `~/my_project/docs/`. There is also a Zen mode configuration options around this single file mode, which
+is outlined over [here](./../configuration/settings.md). By default, when opening with 1 file, `oni2` will
+enter Zen mode, which can be disabled from the command pallette.
+
+You can also pass over multiple files to open at once, and the first folder will be used as the current
+working directory (unless over-ridden with the `--working-directory` flag.)
+
+Launching `oni2` with a folder will open that folder. That is, `oni2 ~/git` will open `~/git` in Oni2
+(for the file explorer, quick open and more). Launching without a folder will open Oni2 in the current
+folder.
+
+## Extension Management
 
 A more in detail explanation of the VSCode extension management can be found
 [here](./../configuration/extensions.md).
@@ -61,14 +78,14 @@ This can be overridden via the `--extensions-dir`, like:
 oni2 --extensions-dir /some/path/with/extensions
 ```
 
-#### List Extensions
+### List Extensions
 
 Extensions can be listed with:
 ```
 oni2 --list-extensions
 ```
 
-#### Install an Extension
+### Install an Extension
 
 You can manually install a Visual Studio Code extension packaged in a `.vsix` file:
 
@@ -76,7 +93,7 @@ You can manually install a Visual Studio Code extension packaged in a `.vsix` fi
 oni2 --install-extension myextension.vsix
 ```
 
-### Logging
+## Logging
 
 The `-f` argument can be used to keep Onivim 2 attached to the terminal,
 and provide logging output.
@@ -88,7 +105,7 @@ There are a also few options that can be specified using either environment vari
 
 > __NOTE:__ Enabling debug logging will impact performance.
 
-### Healthcheck
+## Health check
 
 There is a health-check utility bundled with Onivim 2, to verify the install
 state. This can be run via:
@@ -97,7 +114,7 @@ state. This can be run via:
 oni2 -f --checkhealth
 ```
 
-### Miscellaneous
+## Miscellaneous
 
 - `-force-device-scale-factor` overrides the current scaling.
 
