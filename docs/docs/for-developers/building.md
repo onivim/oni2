@@ -12,7 +12,23 @@ sidebar_label: Building from Source
 - Install [Node](https://nodejs.org/en)
 - Install [Esy](https://esy.sh) (__0.5.6__ is required)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
-- [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
+- Install any other system packages required by Oni2 dependencies, as outlined below.
+
+## Dependencies
+
+### Windows, macOS
+
+There should be no required system dependencies, outside of `git`, `node` and `esy` and the
+ones outlined in the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing)
+
+### Linux
+
+Like the other platforms, `git`, `node` and `esy` are required, as well as any outlined in
+the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing).
+
+Some Linux distributions may need other packages:
+
+ - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
 
 ## Build and Run
 
