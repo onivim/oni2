@@ -21,16 +21,19 @@ const isAddedToPath = () => {
     return true
 }
 
-const getOptions = () => {
-    let appDirectory = "";
-
+const getAppDirectory = () => {
     if (isMac()) {
         // Valid for an install from a dmg.
-        appDirectory = path.join(path.dirname(process.mainModule.filename), "..");
+        return path.join(path.dirname(process.mainModule.filename), "..");
     } else {
         // Valid path for an AppImage or Linux tar.gz
-        appDirectory = path.join(path.dirname(process.mainModule.filename), "..", "..");
+        return path.join(path.dirname(process.mainModule.filename), "..", "..");
     }
+}
+
+const getOptions = () => {
+
+    let appDirectory = getAppDirectory();
 
     // Valid for an install from a dmg.
     let imgPath = path.join(appDirectory, "Onivim2.icns");
@@ -59,6 +62,7 @@ const removeFromPath = async () => {
 const addToPath = async () => {
     if (!isAddedToPath() && !isWindows()) {
 
+        let appDirectory = getAppDirectory();
         let linkDest = "";
 
         if (isMac()) {
