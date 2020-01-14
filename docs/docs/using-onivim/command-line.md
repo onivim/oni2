@@ -6,16 +6,33 @@ sidebar_label: Command Line
 
 ## Command Line Interface
 
-The `oni2` command line executable is currently only added to the user's `PATH` on
-Windows. However, it can be added manually by updating the `PATH` environment variable
-to point to the folder where the `oni2` executable lives, or adding an alias to `oni2`:
+### Windows 
+
+The `oni2` command line executable is added to the user's `PATH` on Windows
+during the Installation process, if the option is selected during installation.
+
+### macOS
+
+On macOS, `oni2` can be added manually with the "Add to System PATH" command in the
+command pallette, by pressing `Cmd-Shift-P` and searching for `System`.
+
+After selecting the option and giving admin permissions, the `oni2` executable
+should be accessible.
+
+> __NOTE:__ Admin access is required to add a symlink in `/usr/bin/local`. This
+> should already be in your default path, but if it is not it can be added to
+> your `.bashrc`/`.zshrc`, depending on your shell.
+
+### Linux
+
+On Linux, you should add an alias to `oni2`:
 
 ```sh
-# Linux
+# Linux AppImage
 alias oni2="${HOME}/path/to/Onivim2-x86_64.AppImage"
 
-# macOS
-alias oni2='/Applications/Onivim2.app/Contents/MacOS/Oni2'
+# Linux tar.gz
+alias oni2="${HOME}/path/to/oni2/AppRun"
 ```
 
 This should be added to one of the shell files that is loaded on shell start up, such as
