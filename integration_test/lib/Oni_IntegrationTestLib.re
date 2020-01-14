@@ -59,12 +59,12 @@ let runTest =
     ) => {
   // Disable colors on windows to prevent hanging on CI
   if (Sys.win32) {
-    Log.disableColors();
+    Timber.App.disableColors();
   };
 
   Printexc.record_backtrace(true);
-  Log.enablePrinting();
-  Log.enableDebugLogging();
+  Timber.App.enablePrinting();
+  Timber.App.enableDebugLogging();
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;

@@ -74,15 +74,15 @@ let parse =
 
   Arg.parse(
     [
-      ("-f", Unit(Log.enablePrinting), ""),
-      ("--nofork", Unit(Log.enablePrinting), ""),
-      ("--debug", Unit(Log.enableDebugLogging), ""),
-      ("--no-log-colors", Unit(Log.disableColors), ""),
+      ("-f", Unit(Timber.App.enablePrinting), ""),
+      ("--nofork", Unit(Timber.App.enablePrinting), ""),
+      ("--debug", Unit(Timber.App.enableDebugLogging), ""),
+      ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
       ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
-      ("--log-file", String(Log.setLogFile), ""),
-      ("--log-filter", String(Log.Namespace.setFilter), ""),
+      ("--log-file", String(Timber.App.setLogFile), ""),
+      ("--log-filter", String(Timber.App.setNamespaceFilter), ""),
       ("--checkhealth", checkHealth |> runAndExitUnit, ""),
       ("--list-extensions", listExtensions |> runAndExitUnit, ""),
       ("--install-extension", installExtension |> runAndExitString, ""),
