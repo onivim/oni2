@@ -51,7 +51,7 @@ flags.
 
 Passing `oni2` a file will open that file in Oni2, and set the open folder in Oni2 to the folder
 that file is in. That is, `oni2 ~/my_project/docs/cli.md` will open `cli.md` in Oni2, and set the folder
-to `~/my_project/docs/`. There is also a Zen mode configuration options around this single file mode, which
+to `~/my_project/docs/`. There is also a Zen mode configuration option around this single file mode, which
 is outlined over [here](./../configuration/settings.md). By default, when opening with 1 file, `oni2` will
 enter Zen mode, which can be disabled from the command pallette.
 
@@ -60,7 +60,7 @@ working directory (unless over-ridden with the `--working-directory` flag.)
 
 Launching `oni2` with a folder will open that folder. That is, `oni2 ~/git` will open `~/git` in Oni2
 (for the file explorer, quick open and more). Launching without a folder will open Oni2 in the current
-folder.
+folder. The current folder can be changed once inside Oni2 by using the normal vim `:cd` command.
 
 ## Extension Management
 
