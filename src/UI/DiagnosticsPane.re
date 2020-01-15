@@ -49,7 +49,7 @@ let make = (~state: State.t, ()) => {
         />
       </View>;
     } else {
-      <LocationList theme uiFont editorFont items onSelectItem/>;
+      <LocationList theme uiFont editorFont items onSelectItem />;
     };
 
   <View style=Styles.pane> innerElement </View>;

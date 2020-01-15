@@ -47,7 +47,6 @@ module Notification = Notification;
 module Notifications = Notifications;
 module Pane = Pane;
 module References = References;
-module Search = Search;
 module Selection = Selection;
 module Selectors = Selectors;
 module SideBar = SideBar;

@@ -140,8 +140,6 @@ let start =
 
   let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
 
-  let (searchUpdater, searchStream) = SearchStoreConnector.start();
-
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
@@ -162,6 +160,25 @@ let start =
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
 
+  let update = (state: Model.State.t, action: Model.Actions.t) =>
+    switch (action) {
+    | Model.Actions.Search(model) =>
+      let (model, maybeOutmsg) =
+        Feature_Search.update(state.searchPane, model);
+      let state = {...state, searchPane: model};
+
+      let state =
+        switch (maybeOutmsg) {
+        | Some(Feature_Search.Focus) =>
+          Model.FocusManager.push(Model.Focus.Search, state)
+        | None => state
+        };
+
+      (state, Isolinear.Effect.none);
+
+    | _ => (state, Isolinear.Effect.none)
+    };
+
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
       ~initialState=state,
@@ -179,7 +196,6 @@ let start =
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
-          searchUpdater,
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
@@ -189,6 +205,7 @@ let start =
           completionUpdater,
           titleUpdater,
           sneakUpdater,
+          update,
         ]),
       (),
     );
@@ -203,11 +220,9 @@ let start =
 
   module SearchSubscriptionRunner =
     Core.Subscription.Runner({
-      type action = Model.Actions.t;
+      type action = Feature_Search.msg;
       let id = "search-subscription";
     });
-  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
-    SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     switch (action) {
@@ -227,8 +242,15 @@ let start =
     // TODO: Wire this up properly
     let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
     QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
-    let searchSubs = searchSubscriptionsUpdater(newState);
-    SearchSubscriptionRunner.run(~dispatch, searchSubs);
+
+    let searchDispatch = msg => dispatch(Model.Actions.Search(msg));
+    let searchSubs =
+      Feature_Search.subscriptions(
+        ripgrep,
+        searchDispatch,
+        newState.searchPane,
+      );
+    SearchSubscriptionRunner.run(~dispatch=searchDispatch, searchSubs);
 
     onAfterDispatch(action);
   };
@@ -278,8 +300,6 @@ let start =
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
   let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, lifecycleStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, windowStream);
@@ -287,8 +307,6 @@ let start =
     Isolinear.Stream.connect(dispatch, languageFeatureStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

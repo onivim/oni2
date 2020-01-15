@@ -38,13 +38,23 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
        let childPane =
          switch (paneType) {
          | Pane.Search =>
-           <SearchPane
+           let onSelectResult = (file, location) =>
+             GlobalContext.current().dispatch(
+               Actions.OpenFileByPath(file, None, Some(location)),
+             );
+           let dispatch = msg =>
+             GlobalContext.current().dispatch(Actions.Search(msg));
+
+           <Feature_Search
              isFocused={FocusManager.current(state) == Focus.Search}
              theme
              uiFont
              editorFont
-             state={state.searchPane}
-           />
+             model={state.searchPane}
+             onSelectResult
+             dispatch
+           />;
+
          | Pane.Diagnostics => <DiagnosticsPane state />
          | Pane.Notifications => <NotificationsPane state />
          };
