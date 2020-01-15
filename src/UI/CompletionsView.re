@@ -4,6 +4,7 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Syntax;
 open Oni_Model;
+open Oni_Components;
 
 open Completions;
 

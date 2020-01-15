@@ -4,6 +4,7 @@ open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module Option = Utility.Option;
 module Path = Utility.Path;

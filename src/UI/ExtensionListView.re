@@ -3,6 +3,7 @@ open Oni_Model;
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
+open Oni_Components;
 
 open Oni_Extensions;
 

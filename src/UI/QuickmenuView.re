@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module Constants = {
   let menuWidth = 400;
