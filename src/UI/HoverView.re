@@ -80,40 +80,44 @@ let%component hoverItem =
   let diagnostics =
     Diagnostics.getDiagnosticsAtPosition(diagnostics, buffer, location);
 
-  let width = {
-    let measure = text =>
-      int_of_float(EditorFont.measure(~text, editorFont) +. 0.5);
-    let maxElementWidth =
-      List.fold_left(
-        (maxWidth, {message, _}: Diagnostic.t) =>
-          max(maxWidth, measure(message) + Constants.padding),
-        0,
-        diagnostics,
-      );
-    maxElementWidth + Constants.padding * 2;
+  if (diagnostics == []) {
+    React.empty;
+  } else {
+    let width = {
+      let measure = text =>
+        int_of_float(EditorFont.measure(~text, editorFont) +. 0.5);
+      let maxElementWidth =
+        List.fold_left(
+          (maxWidth, {message, _}: Diagnostic.t) =>
+            max(maxWidth, measure(message) + Constants.padding),
+          0,
+          diagnostics,
+        );
+      maxElementWidth + Constants.padding * 2;
+    };
+
+    let height = {
+      let fontHeight = int_of_float(EditorFont.getHeight(editorFont) +. 0.5);
+      let elementHeight = fontHeight + Constants.innerPadding;
+      elementHeight * List.length(diagnostics) + Constants.padding * 2;
+    };
+
+    let elements =
+      diagnostics
+      |> List.map(({message, _}: Diagnostic.t) =>
+           <Text style={Styles.text(~theme, ~editorFont)} text=message />
+         )
+      |> List.rev
+      |> React.listToElement;
+
+    <View style={Styles.outerPosition(~x, ~y)}>
+      <Opacity opacity>
+        <View style={Styles.innerPosition(~width, ~height, ~theme)}>
+          elements
+        </View>
+      </Opacity>
+    </View>;
   };
-
-  let height = {
-    let fontHeight = int_of_float(EditorFont.getHeight(editorFont) +. 0.5);
-    let elementHeight = fontHeight + Constants.innerPadding;
-    elementHeight * List.length(diagnostics) + Constants.padding * 2;
-  };
-
-  let elements =
-    diagnostics
-    |> List.map(({message, _}: Diagnostic.t) =>
-         <Text style={Styles.text(~theme, ~editorFont)} text=message />
-       )
-    |> List.rev
-    |> React.listToElement;
-
-  <View style={Styles.outerPosition(~x, ~y)}>
-    <Opacity opacity>
-      <View style={Styles.innerPosition(~width, ~height, ~theme)}>
-        elements
-      </View>
-    </Opacity>
-  </View>;
 };
 
 let make = (~x, ~y, ~state: State.t, ()) => {
