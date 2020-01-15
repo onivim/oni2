@@ -14,6 +14,10 @@ let passthrough = Arg.Unit(() => ());
 let passthroughFloat = Arg.Float(_ => ());
 let passthroughString = Arg.String(_ => ());
 
+let passthroughAndStayAttached = Arg.Set(stayAttached);
+let passthroughFloatAndStayAttached = Arg.Float(_ => stayAttached := true);
+let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
+
 let spec =
   Arg.align([
     (
@@ -48,12 +52,12 @@ let spec =
     ),
     (
       "--install-extension",
-      passthroughString,
+      passthroughStringAndStayAttached,
       " Install extension by specifying a path to the .vsix file",
     ),
     (
       "--uninstall-extension",
-      passthroughString,
+      passthroughStringAndStayAttached,
       " Uninstall extension by specifying an extension id.",
     ),
     (
@@ -63,7 +67,7 @@ let spec =
     ),
     (
       "--list-extensions",
-      Arg.Set(stayAttached),
+      passthroughAndStayAttached,
       " List the currently installed extensions.",
     ),
     (
