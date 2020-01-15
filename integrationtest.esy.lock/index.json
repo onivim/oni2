@@ -1,5 +1,5 @@
 {
-  "checksum": "d6de7f766fbb0f9df2be9817570daa82",
+  "checksum": "17738442581bffef983633a3f73fd530",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -406,7 +406,7 @@
       "overrides": [],
       "dependencies": [
         "reason-gl-matrix@0.9.9306@d41d8cd9",
-        "esy-harfbuzz@1.9.1005@d41d8cd9", "esy-freetype2@2.9.1006@d41d8cd9",
+        "esy-harfbuzz@1.9.1005@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/dune@opam:1.11.4@a7ccb7ae"
       ],
       "devDependencies": []
@@ -602,14 +602,14 @@
       "dependencies": [ "graceful-fs@4.2.3@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@2.2.0@d41d8cd9": {
-      "id": "isolinear@2.2.0@d41d8cd9",
+    "isolinear@2.3.0@d41d8cd9": {
+      "id": "isolinear@2.3.0@d41d8cd9",
       "name": "isolinear",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.2.0.tgz#sha1:a490bbb35a9e5e58f29973386b16912e828a5130"
+          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.3.0.tgz#sha1:8f24a935b901c3fd097ec264575ca2b50288c5aa"
         ]
       },
       "overrides": [],
@@ -841,14 +841,14 @@
       ],
       "devDependencies": []
     },
-    "esy-freetype2@2.9.1006@d41d8cd9": {
-      "id": "esy-freetype2@2.9.1006@d41d8cd9",
+    "esy-freetype2@2.9.1007@d41d8cd9": {
+      "id": "esy-freetype2@2.9.1007@d41d8cd9",
       "name": "esy-freetype2",
-      "version": "2.9.1006",
+      "version": "2.9.1007",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-freetype2/-/esy-freetype2-2.9.1006.tgz#sha1:6c32a49543c273b427bbfb56c563e148006978bc"
+          "archive:https://registry.npmjs.org/esy-freetype2/-/esy-freetype2-2.9.1007.tgz#sha1:6ef0ac0142837e44cc6e845868b0fb592dd72b74"
         ]
       },
       "overrides": [],
@@ -992,7 +992,7 @@
         "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3012@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
-        "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
+        "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
