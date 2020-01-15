@@ -41,7 +41,6 @@ module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageFeatures = LanguageFeatures;
 module Lifecycle = Lifecycle;
-module LocationListItem = LocationListItem;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module Notification = Notification;

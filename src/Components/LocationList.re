@@ -3,12 +3,17 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
-open Oni_Model;
-open Oni_Components;
 
 module Option = Utility.Option;
 module Path = Utility.Path;
 module Log = (val Log.withNamespace("Oni2.UI.LocationListView"));
+
+type item = {
+  file: string,
+  location: Location.t,
+  text: string,
+  highlight: option((Index.t, Index.t)),
+};
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {
@@ -71,16 +76,13 @@ let item =
       ~onMouseOut,
       ~width,
       ~isHovered,
-      ~item: LocationListItem.t,
+      ~item,
+      ~onSelect,
       (),
     ) => {
   let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
-  let onClick = () => {
-    GlobalContext.current().dispatch(
-      OpenFileByPath(item.file, None, Some(item.location)),
-    );
-  };
+  let onClick = () => onSelect(item);
 
   let locationText =
     Printf.sprintf(
@@ -166,7 +168,8 @@ let%component make =
                 ~theme: Theme.t,
                 ~uiFont: UiFont.t,
                 ~editorFont: EditorFont.t,
-                ~items: array(LocationListItem.t),
+                ~items: array(item),
+                ~onSelectItem: item => unit,
                 (),
               ) => {
   let%hook (outerRef, setOuterRef) = Hooks.ref(None);
@@ -204,6 +207,7 @@ let%component make =
       width
       isHovered={hovered == i}
       item={Array.get(items, i)}
+      onSelect=onSelectItem
     />;
   };
 

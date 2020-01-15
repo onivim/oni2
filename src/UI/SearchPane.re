@@ -5,6 +5,7 @@ open Oni_Core;
 open Oni_Model;
 
 module ListEx = Utility.ListEx;
+module LocationList = Oni_Components.LocationList;
 
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];
@@ -43,7 +44,7 @@ module Styles = {
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
-  LocationListItem.{
+  LocationList.{
     file: hit.file,
     location:
       Location.{
@@ -61,6 +62,11 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
 let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
   let items =
     state.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
+
+  let onSelectItem = (item: LocationList.item) =>
+    GlobalContext.current().dispatch(
+      Actions.OpenFileByPath(item.file, None, Some(item.location)),
+    );
 
   <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
@@ -86,7 +92,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
         style={Styles.title(~font=uiFont)}
         text={Printf.sprintf("%n results", List.length(state.hits))}
       />
-      <LocationListView theme uiFont editorFont items />
+      <LocationList theme uiFont editorFont items onSelectItem />
     </View>
   </View>;
 };
