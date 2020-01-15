@@ -39,7 +39,6 @@ module FsTreeNode = FsTreeNode;
 module KeyDisplayer = KeyDisplayer;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
-module InputModel = InputModel;
 module LanguageFeatures = LanguageFeatures;
 module Lifecycle = Lifecycle;
 module LocationListItem = LocationListItem;

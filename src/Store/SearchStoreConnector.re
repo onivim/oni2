@@ -1,6 +1,8 @@
 open Oni_Model;
 open Actions;
 
+module InputModel = Oni_Components.InputModel;
+
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();
 

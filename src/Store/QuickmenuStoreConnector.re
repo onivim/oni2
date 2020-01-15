@@ -10,7 +10,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Quickmenu = Model.Quickmenu;
-module InputModel = Model.InputModel;
+module InputModel = Oni_Components.InputModel;
 module Utility = Core.Utility;
 module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
