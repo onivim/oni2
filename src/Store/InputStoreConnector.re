@@ -11,7 +11,7 @@ module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-module Log = (val Log.withNamespace("Oni2.InputStore"));
+module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
 module Option = Utility.Option;
 module List = Utility.List;
@@ -235,7 +235,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   //  SUBSCRIPTIONS
 
   switch (window) {
-  | None => Log.error("no window to subscribe to events")
+  | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
       Revery.Event.subscribe(window.onKeyDown, event =>

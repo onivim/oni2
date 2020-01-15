@@ -16,8 +16,6 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-module Log = Core.Log;
-
 let start =
     (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();

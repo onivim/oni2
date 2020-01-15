@@ -15,7 +15,7 @@ module Core = Oni_Core;
 module In = Protocol.IncomingNotifications;
 module Out = Protocol.OutgoingNotifications;
 
-module Log = (val Log.withNamespace("Oni2.ExtHostClient"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
 

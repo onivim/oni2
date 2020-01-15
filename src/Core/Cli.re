@@ -5,6 +5,9 @@
  */
 open Rench;
 
+module CoreLog = Log;
+module Log = (val Log.withNamespace("Oni2.Core.Cli"));
+
 type t = {
   folder: string,
   filesToOpen: list(string),
@@ -41,7 +44,7 @@ let show = (v: t) => {
 let noop = () => ();
 
 let setWorkingDirectory = s => {
-  Log.info("--working-directory - chdir: " ++ s);
+  Log.debug("--working-directory - chdir: " ++ s);
   Sys.chdir(s);
 };
 
@@ -105,7 +108,7 @@ let parse =
     "",
   );
 
-  if (!Log.isPrintingEnabled()) {
+  if (!CoreLog.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
     Utility.freeConsole();
   };

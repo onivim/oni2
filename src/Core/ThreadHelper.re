@@ -7,7 +7,7 @@
 let activeThreadMutex = Mutex.create();
 let activeThreads: ref(list(Thread.t)) = ref([]);
 
-module Log = (val Log.withNamespace("Oni2.ThreadHelper"));
+module Log = (val Log.withNamespace("Oni2.Core.ThreadHelper"));
 
 let create = (~name="Anonymous", f, args) => {
   let thread =
@@ -20,7 +20,7 @@ let create = (~name="Anonymous", f, args) => {
         activeThreads := [self, ...activeThreads^];
         Mutex.unlock(activeThreadMutex);
 
-        Log.infof(m => m("Starting thread: %d (%s)", id, name));
+        Log.debugf(m => m("Starting thread: %d (%s)", id, name));
         try(f(threadArgs)) {
         | ex =>
           Log.errorf(m =>
@@ -33,7 +33,7 @@ let create = (~name="Anonymous", f, args) => {
           )
         };
 
-        Log.infof(m => m("Closing thread: %d (%s)", id, name));
+        Log.debugf(m => m("Closing thread: %d (%s)", id, name));
         Mutex.lock(activeThreadMutex);
         activeThreads := List.filter(t => t !== self, activeThreads^);
         Mutex.unlock(activeThreadMutex);

@@ -17,10 +17,8 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("Oni2.StoreThread"));
-module DispatchLog = (
-  val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
-);
+module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
+module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
 let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
   if (cli.shouldLoadExtensions) {
@@ -42,18 +40,17 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
         let userExtensions = Utility.getUserExtensions(cli);
 
-        Log.debugf(m =>
-          m(
-            "discoverExtensions - discovered %n user extensions.",
-            List.length(userExtensions),
-          )
+        Log.infof(m =>
+          m("Discovered %n user extensions.", List.length(userExtensions))
         );
+
         [extensions, developmentExtensions, userExtensions] |> List.flatten;
       });
 
     Log.infof(m =>
       m("-- Discovered: %n extensions", List.length(extensions))
     );
+
     extensions;
   } else {
     Log.info("Not loading extensions; disabled via CLI");

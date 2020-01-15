@@ -39,6 +39,15 @@ To enable us to quickly review and accept your pull requests, follow these guide
 
 To avoid duplicate work, if you decide to start working on an issue, please leave a comment on the issue.
 
+### Log levels
+
+The following conventions are used to determine the priority level of log messages, based on [the conventions suggested by @dbuenzli/logs](https://erratique.ch/software/logs/doc/Logs/index.html#usage):
+
+- __Error__ if it WILL cause unexpected behaviour
+- __Warn__ if it MIGHT cause unexpected behaviour, but also might not, i.e. it's suspicious, but not a definite problem.
+- __Info__ if it is both understandable AND actionable by the end-user
+- __Debug__ otherwise
+
 ### Branch Naming
 
 We recommend this scheme for naming branches: `<type>/<area>/<description>`

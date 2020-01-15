@@ -13,7 +13,7 @@ module Option = Utility.Option;
 module VimEx = Utility.VimEx;
 module IndexEx = Utility.IndexEx;
 
-module Log = (val Log.withNamespace("Oni2.CompletionStore"));
+module Log = (val Log.withNamespace("Oni2.Store.Completions"));
 
 module Effects = {
   let requestCompletions =

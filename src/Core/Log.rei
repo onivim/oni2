@@ -1,9 +1,6 @@
 let isPrintingEnabled: unit => bool;
 let isDebugLoggingEnabled: unit => bool;
 
-let info: string => unit;
-let debug: (unit => string) => unit;
-let error: string => unit;
 let perf: (string, unit => 'a) => 'a;
 let fn: (string, 'a => 'b, 'a) => 'b;
 

@@ -4,6 +4,8 @@
  * Runtime configuration of dependencies
  */
 
+module Log = (val Log.withNamespace("Oni2.Core.Setup"));
+
 [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
   [@key "node"]
@@ -98,7 +100,7 @@ let getNodeExtensionHostPath = (v: t) => {
 let init = () => {
   let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
-  Log.debug(() => "Setup: Looking for setupJson at: " ++ setupJsonPath);
+  Log.debug("Looking for setup configuration at: " ++ setupJsonPath);
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);

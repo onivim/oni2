@@ -7,6 +7,7 @@
 open Oni_Core;
 
 module Option = Utility.Option;
+module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type t = IntMap.t(Buffer.t);
 
@@ -17,13 +18,6 @@ type mapFunction = Buffer.t => Buffer.t;
 let map = IntMap.map;
 let update = IntMap.update;
 let remove = IntMap.remove;
-
-let log = (m: t) =>
-  IntMap.iter(
-    (_, b) =>
-      Buffer.show(b) |> (++)("Buffer ======================: \n") |> Log.info,
-    m,
-  );
 
 let getBuffer = (id, map) => IntMap.find_opt(id, map);
 

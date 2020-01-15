@@ -4,7 +4,7 @@ module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
-module Log = Core.Log;
+module Log = (val Core.Log.withNamespace("IntegrationTest"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
 
@@ -65,6 +65,7 @@ let runTest =
   Printexc.record_backtrace(true);
   Timber.App.enablePrinting();
   Timber.App.enableDebugLogging();
+
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
@@ -76,7 +77,7 @@ let runTest =
     currentState := v;
   };
 
-  let logInit = s => Log.debug(() => "[INITIALIZATION] " ++ s);
+  let logInit = s => Log.debug("[INITIALIZATION] " ++ s);
 
   logInit("Starting store...");
 

@@ -1,6 +1,5 @@
-open Utility;
-
-module Log = (val Log.withNamespace("Oni2.ShellUtility"));
+module Option = Utility.Option;
+module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
   let getDefaultShell = () => {
@@ -18,7 +17,7 @@ module Internal = {
 };
 
 let getShellPath = () => {
-  let res =
+  let path =
     switch (Revery.Environment.os) {
     | Mac =>
       let shell = Internal.getDefaultShell();
@@ -32,12 +31,12 @@ let getShellPath = () => {
         path;
       }) {
       | ex =>
-        Log.error("Unable to retrive path: " ++ Printexc.to_string(ex));
+        Log.warn("Unable to retrive path: " ++ Printexc.to_string(ex));
         Internal.getShellFromPath();
       };
     | _ => Internal.getShellFromPath()
     };
 
-  Log.info("Path is: " ++ res);
-  res;
+  Log.debug("Path detected as: " ++ path);
+  path;
 };

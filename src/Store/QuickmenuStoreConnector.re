@@ -17,7 +17,7 @@ module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 module IndexEx = Utility.IndexEx;
 
-module Log = (val Core.Log.withNamespace("Oni2.QuickmenuStore"));
+module Log = (val Core.Log.withNamespace("Oni2.Store.Quickmenu"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun

@@ -1,10 +1,10 @@
 module Core = Oni_Core;
 module Model = Oni_Model;
-module Log = Core.Log;
 
 module Actions = Model.Actions;
 module Ripgrep = Core.Ripgrep;
 module Subscription = Core.Subscription;
+module Log = (val Core.Log.withNamespace("Oni2.Store.SearchSubscription"));
 
 module Provider = {
   type action = Actions.t;
@@ -24,18 +24,13 @@ module Provider = {
         ~params as {directory, query, ripgrep, onUpdate, onCompleted},
         ~dispatch: _,
       ) => {
-    Log.info("Starting Search subscription " ++ id);
+    Log.debug("Starting: " ++ id);
 
     let dispose =
       ripgrep.Ripgrep.findInFiles(
-        ~directory,
-        ~query,
-        ~onUpdate,
-        ~onComplete=() => {
-          Log.info("Ripgrep completed.");
-          dispatch(onCompleted());
-        },
-      );
+        ~directory, ~query, ~onUpdate, ~onComplete=() => {
+        dispatch(onCompleted())
+      });
 
     Hashtbl.replace(jobs, id, (query, dispose));
   };
@@ -44,23 +39,23 @@ module Provider = {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some((currentQuery, dispose)) =>
       if (currentQuery != params.query) {
-        Log.info("Updating Search subscription " ++ id);
+        Log.info("Updating " ++ id);
         dispose();
         start(~id, ~params, ~dispatch);
       }
 
-    | None => Log.error("Tried to dispose non-existing Search subscription")
+    | None => Log.warn("Tried to dispose non-existing instance " ++ id)
     };
   };
 
   let dispose = (~id) => {
     switch (Hashtbl.find_opt(jobs, id)) {
     | Some((_, dispose)) =>
-      Log.info("Disposing Search subscription " ++ id);
+      Log.debug("Disposing: " ++ id);
       dispose();
       Hashtbl.remove(jobs, id);
 
-    | None => Log.error("Tried to dispose non-existing Search subscription")
+    | None => Log.warn("Tried to dispose non-existing instance " ++ id)
     };
   };
 };

@@ -15,7 +15,9 @@ module Make =
            let aggregate: list(Lwt.t(response)) => Lwt.t(response);
          },
        ) => {
-  module Log = (val Log.withNamespace(Provider.namespace));
+  module Log = (
+    val Log.withNamespace("Oni2.Model.LanguageFeature:" ++ Provider.namespace)
+  );
 
   module Params = {
     type t = Provider.params;
@@ -46,7 +48,7 @@ module Make =
            let result = provider(params);
            switch (result) {
            | Some(_) => Log.infof(m => m("Querying provider: %s", id))
-           | None => Log.infof(m => m("Provider skipped: %s", id))
+           | None => Log.debugf(m => m("Provider skipped: %s", id))
            };
            result;
          })

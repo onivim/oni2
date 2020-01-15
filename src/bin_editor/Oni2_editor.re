@@ -14,32 +14,30 @@ module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
-module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
+module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module Option = Core.Utility.Option;
 
-let installExtension = (extensionPath, cli) => {
-  Store.Utility.getUserExtensionsDirectory(cli)
-  |> Option.map(extensionFolder => {
-       let promise = ExtM.install(~extensionFolder, ~extensionPath);
+let installExtension = (path, cli) => {
+  switch (Store.Utility.getUserExtensionsDirectory(cli)) {
+  | Some(extensionsFolder) =>
+    let result =
+      ExtM.install(~extensionsFolder, ~path) |> Core.Utility.LwtUtil.sync;
 
-       let result = Core.Utility.LwtUtil.sync(promise);
-       switch (result) {
-       | Ok(_) =>
-         Printf.printf(
-           "Successfully installed extension: %s\n",
-           extensionPath,
-         );
-         0;
-       | Error(_) =>
-         Printf.printf("Failed to install extension: %s\n", extensionPath);
-         1;
-       };
-     })
-  |> Option.tap_none(() => {
-       prerr_endline("Error locating user extension folder.")
-     })
-  |> Option.value(~default=1);
+    switch (result) {
+    | Ok(_) =>
+      Printf.printf("Successfully installed extension: %s\n", path);
+      0;
+
+    | Error(_) =>
+      Printf.printf("Failed to install extension: %s\n", path);
+      1;
+    };
+
+  | None =>
+    prerr_endline("Error locating user extension folder.");
+    1;
+  };
 };
 
 let uninstallExtension = (_extensionId, _cli) => {
@@ -79,9 +77,9 @@ if (cliOptions.syntaxHighlightService) {
 
   /* The 'main' function for our app */
   let init = app => {
-    Log.info("Init");
+    Log.debug("Init");
 
-    let _ = Revery.Log.listen((_, msg) => ReveryLog.info(msg));
+    let _ = Revery.Log.listen((_, msg) => ReveryLog.debug(msg));
 
     let w =
       App.createWindow(
@@ -97,9 +95,9 @@ if (cliOptions.syntaxHighlightService) {
         "Oni2",
       );
 
-    Log.info("Initializing setup.");
+    Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-    Log.info("Startup: Parsing CLI options");
+    Log.debug("Startup: Parsing CLI options");
 
     Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
     switch (Sys.chdir(cliOptions.folder)) {
@@ -155,7 +153,7 @@ if (cliOptions.syntaxHighlightService) {
       App.quit(~code, app);
     };
 
-    Log.info("Startup: Starting StoreThread");
+    Log.debug("Startup: Starting StoreThread");
     let (dispatch, runEffects) =
       Store.StoreThread.start(
         ~setup,
@@ -174,7 +172,7 @@ if (cliOptions.syntaxHighlightService) {
         ~quit,
         (),
       );
-    Log.info("Startup: StoreThread started!");
+    Log.debug("Startup: StoreThread started!");
 
     GlobalContext.set({
       getState: () => currentState^,
@@ -216,6 +214,6 @@ if (cliOptions.syntaxHighlightService) {
   };
 
   /* Let's get this party started! */
-  Log.info("Calling App.start");
+  Log.debug("Calling App.start");
   App.start(init);
 };

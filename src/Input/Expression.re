@@ -1,3 +1,5 @@
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Expression"));
+
 type t =
   | Variable(string)
   | And(t, t)
@@ -39,12 +41,10 @@ let evaluate = (v: t, getValue) => {
     };
 
   let ret = eval(v);
-  Oni_Core.Log.debug(() =>
-    Printf.sprintf(
-      "Expression %s evaluated to: %s",
-      toString(v),
-      ret ? "true" : "false",
-    )
+
+  Log.debugf(m =>
+    m("Expression %s evaluated to: %s", toString(v), ret ? "true" : "false")
   );
+
   ret;
 };

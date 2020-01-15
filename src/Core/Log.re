@@ -34,14 +34,17 @@ let writeExceptionLog = (e, bt) => {
 };
 
 if (isDebugLoggingEnabled()) {
-  debug(() => "Recording backtraces");
+  module Log = (val withNamespace("Oni2.Exception"));
+
+  Log.debug("Recording backtraces");
   Printexc.record_backtrace(true);
   Printexc.set_uncaught_exception_handler((e, bt) => {
-    error(
-      "Exception "
-      ++ Printexc.to_string(e)
-      ++ ":\n"
-      ++ Printexc.raw_backtrace_to_string(bt),
+    Log.errorf(m =>
+      m(
+        "Exception %s:\n%s",
+        Printexc.to_string(e),
+        Printexc.raw_backtrace_to_string(bt),
+      )
     );
     flush_all();
     writeExceptionLog(e, bt);
