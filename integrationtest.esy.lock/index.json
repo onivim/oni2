@@ -1,5 +1,5 @@
 {
-  "checksum": "d6de7f766fbb0f9df2be9817570daa82",
+  "checksum": "0501c6e4c4209d19025abfec3aca49bb",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -406,7 +406,7 @@
       "overrides": [],
       "dependencies": [
         "reason-gl-matrix@0.9.9306@d41d8cd9",
-        "esy-harfbuzz@1.9.1005@d41d8cd9", "esy-freetype2@2.9.1006@d41d8cd9",
+        "esy-harfbuzz@1.9.1005@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/dune@opam:1.11.4@a7ccb7ae"
       ],
       "devDependencies": []
@@ -841,14 +841,14 @@
       ],
       "devDependencies": []
     },
-    "esy-freetype2@2.9.1006@d41d8cd9": {
-      "id": "esy-freetype2@2.9.1006@d41d8cd9",
+    "esy-freetype2@2.9.1007@d41d8cd9": {
+      "id": "esy-freetype2@2.9.1007@d41d8cd9",
       "name": "esy-freetype2",
-      "version": "2.9.1006",
+      "version": "2.9.1007",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-freetype2/-/esy-freetype2-2.9.1006.tgz#sha1:6c32a49543c273b427bbfb56c563e148006978bc"
+          "archive:https://registry.npmjs.org/esy-freetype2/-/esy-freetype2-2.9.1007.tgz#sha1:6ef0ac0142837e44cc6e845868b0fb592dd72b74"
         ]
       },
       "overrides": [],
@@ -987,6 +987,7 @@
         "timber@github:glennsl/timber#37ffa07@d41d8cd9",
         "revery@github:revery-ui/revery#7f3bc06@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3012@d41d8cd9",
