@@ -112,7 +112,7 @@ let start =
     );
 
   let _ =
-    Vim.onMessage((priority, t, msg) => {
+    Vim.onMessage((priority, title, msg) => {
       open Vim.Types;
       let (priorityString, kind) =
         switch (priority) {
@@ -121,7 +121,7 @@ let start =
         | Info => ("INFO", Notification.Info)
         };
 
-      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, t, msg));
+      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, title, msg));
 
       dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
