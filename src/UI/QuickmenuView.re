@@ -156,7 +156,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <OniInput
+      <Input
         placeholder
         ?prefix
         cursorColor=Colors.white

@@ -3,9 +3,9 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module ListEx = Utility.ListEx;
-module LocationList = Oni_Components.LocationList;
 
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];
@@ -74,7 +74,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~isFocused, ~state: Search.t, ()) => {
         <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
       </View>
       <View style=Styles.row>
-        <OniInput
+        <Input
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
           cursorPosition={state.cursorPosition}
