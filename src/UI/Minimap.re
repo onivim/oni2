@@ -22,7 +22,7 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 let renderLine =
     (
       shouldHighlight,
-      transform,
+      canvasContext,
       yOffset,
       tokens: list(BufferViewTokenizer.t),
     ) => {
@@ -50,7 +50,7 @@ let renderLine =
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      Shapes.drawRect(~transform, ~y, ~x, ~color, ~width, ~height, ());
+      CanvasContext.Deprecated.drawRect(~y, ~x, ~color, ~width, ~height, canvasContext);
     | _ => ()
     };
   };
@@ -171,16 +171,15 @@ let%component make =
   };
 
   <View style=absoluteStyle onMouseDown>
-    <OpenGL
+    <Canvas
       style=absoluteStyle
-      render={(transform, _) => {
+      render={(canvasContext) => {
         if (Configuration.getValue(
               c => c.editorMinimapShowSlider,
               state.configuration,
             )) {
           /* Draw current view */
-          Shapes.drawRect(
-            ~transform,
+          CanvasContext.Deprecated.drawRect(
             ~x=0.,
             ~y=
               rowHeight
@@ -190,14 +189,13 @@ let%component make =
               rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
             ~width=float_of_int(width),
             ~color=state.theme.scrollbarSliderHoverBackground,
-            (),
+            canvasContext
           );
         };
 
         let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
-        Shapes.drawRect(
-          ~transform,
+        CanvasContext.Deprecated.drawRect(
           ~x=0.,
           ~y=
             rowHeight
@@ -206,7 +204,7 @@ let%component make =
           ~height=float_of_int(Constants.default.minimapCharacterHeight),
           ~width=float_of_int(width),
           ~color=state.theme.editorLineHighlightBackground,
-          (),
+          canvasContext
         );
 
         let renderRange = (~color, ~offset, range: Range.t) =>
@@ -219,15 +217,14 @@ let%component make =
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
-           Shapes.drawRect(
-             ~transform,
+           CanvasContext.Deprecated.drawRect(
              ~x=startX -. 1.0,
              ~y=offset -. 1.0,
              ~height=
                float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
              ~width=endX -. startX +. 2.,
              ~color,
-             (),
+             canvasContext,
            )};
 
         let renderUnderline = (~color, ~offset, range: Range.t) =>
@@ -240,8 +237,7 @@ let%component make =
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
-           Shapes.drawRect(
-             ~transform,
+           CanvasContext.Deprecated.drawRect(
              ~x=startX -. 1.0,
              ~y=
                offset
@@ -249,7 +245,7 @@ let%component make =
              ~height=1.0,
              ~width=endX -. startX +. 2.,
              ~color,
-             (),
+             canvasContext,
            )};
 
         ImmediateList.render(
@@ -289,8 +285,7 @@ let%component make =
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
               | Some(_) =>
-                Shapes.drawRect(
-                  ~transform,
+                CanvasContext.Deprecated.drawRect(
                   ~x=0.,
                   ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
                   ~height=
@@ -298,12 +293,12 @@ let%component make =
                     +. 2.0,
                   ~width=float_of_int(width),
                   ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
-                  (),
+                  canvasContext,
                 )
               | None => ()
               };
 
-              renderLine(shouldHighlight, transform, offset, tokens);
+              renderLine(shouldHighlight, canvasContext, offset, tokens);
             },
           (),
         );

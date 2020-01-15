@@ -191,10 +191,8 @@ let%component make =
   };
 
   let measureTextWidth = text => {
-    let window = Revery_UI.getActiveWindow();
     let dimensions =
       Revery_Draw.Text.measure(
-        ~window,
         ~fontFamily=Styles.fontFamily,
         ~fontSize=Styles.fontSize,
         text,

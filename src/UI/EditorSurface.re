@@ -52,7 +52,7 @@ let renderLineNumber =
       lineSetting,
       cursorLine: int,
       yOffset: float,
-      transform,
+      canvasContext,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
@@ -81,16 +81,14 @@ let renderLineNumber =
         *. fontWidth
         /. 2.;
 
-  Revery.Draw.Text.drawString(
-    ~window=Revery.UI.getActiveWindow(),
-    ~transform,
+  CanvasContext.Deprecated.drawString(
     ~x=lineNumberXOffset,
     ~y=yF,
-    ~backgroundColor=theme.editorLineNumberBackground,
     ~color=lineNumberTextColor,
     ~fontFamily,
     ~fontSize,
-    lineNumber,
+    ~text=lineNumber,
+    canvasContext,
   );
 };
 
@@ -100,7 +98,7 @@ let renderSpaces =
       ~fontHeight: float,
       ~x: float,
       ~y: float,
-      ~transform,
+      ~canvasContext,
       ~count: int,
       ~theme: Theme.t,
       (),
@@ -115,14 +113,13 @@ let renderSpaces =
     let iF = float_of_int(i^);
     let xPos = x +. fontWidth *. iF;
 
-    Shapes.drawRect(
-      ~transform,
+    CanvasContext.Deprecated.drawRect(
       ~x=xPos +. xOffset,
       ~y=y +. yOffset,
       ~width=size,
       ~height=size,
       ~color=theme.editorWhitespaceForeground,
-      (),
+      canvasContext,
     );
 
     incr(i);
@@ -140,7 +137,7 @@ let renderTokens =
       tokens,
       xOffset: float,
       yOffset: float,
-      transform,
+      canvasContext,
       whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
     ) => {
   let yF = yOffset;
@@ -154,32 +151,26 @@ let renderTokens =
       -. xF;
     let y = yF;
 
-    let backgroundColor = token.backgroundColor;
-
     switch (token.tokenType) {
     | Text =>
-      Revery.Draw.Text.drawString(
-        ~window=Revery.UI.getActiveWindow(),
-        ~transform,
+      CanvasContext.Deprecated.drawString(
         ~x,
         ~y,
-        ~backgroundColor,
         ~color=token.color,
         ~fontFamily,
         ~fontSize,
-        token.text,
+        ~text=token.text,
+        canvasContext,
       )
     | Tab =>
-      Revery.Draw.Text.drawString(
-        ~window=Revery.UI.getActiveWindow(),
-        ~transform,
+      CanvasContext.Deprecated.drawString(
         ~x=x +. fontWidth /. 4.,
         ~y=y +. fontHeight /. 4.,
-        ~backgroundColor,
         ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10,
-        FontIcon.codeToIcon(0xf30b),
+        ~text=FontIcon.codeToIcon(0xf30b),
+        canvasContext,
       )
     | Whitespace =>
       renderSpaces(
@@ -187,7 +178,7 @@ let renderTokens =
         ~fontHeight,
         ~x,
         ~y,
-        ~transform,
+        ~canvasContext,
         ~count=String.length(token.text),
         ~theme,
         (),
@@ -608,17 +599,16 @@ let%component make =
       style={Styles.bufferViewClipped(bufferPixelWidth)}
       onMouseUp=editorMouseUp
       onMouseWheel=scrollSurface>
-      <OpenGL
+      <Canvas
         style={Styles.bufferViewClipped(bufferPixelWidth)}
-        render={(transform, _ctx) => {
+        render={(canvasContext) => {
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
           let scrollY = editor.scrollY;
 
           /* Draw background for cursor line */
-          Shapes.drawRect(
-            ~transform,
+          CanvasContext.Deprecated.drawRect(
             ~x=lineNumberWidth,
             ~y=
               fontHeight
@@ -627,19 +617,18 @@ let%component make =
             ~height=fontHeight,
             ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
             ~color=theme.editorLineHighlightBackground,
-            (),
+            canvasContext,
           );
 
           /* Draw configured rulers */
           let renderRuler = ruler =>
-            Shapes.drawRect(
-              ~transform,
+            CanvasContext.Deprecated.drawRect(
               ~x=fst(bufferPositionToPixel(0, ruler)),
               ~y=0.0,
               ~height=float_of_int(metrics.pixelHeight),
               ~width=float_of_int(1),
               ~color=theme.editorRulerForeground,
-              (),
+              canvasContext,
             );
 
           List.iter(renderRuler, rulers);
@@ -666,8 +655,7 @@ let%component make =
                  endC,
                );
 
-             Shapes.drawRect(
-               ~transform,
+             CanvasContext.Deprecated.drawRect(
                ~x=
                  lineNumberWidth
                  +. float_of_int(startOffset)
@@ -685,7 +673,7 @@ let%component make =
                  +. max(float_of_int(endOffset - startOffset), 1.0)
                  *. fontWidth,
                ~color,
-               (),
+               canvasContext,
              )};
 
           let renderRange = (~offset=0., ~color=Colors.black, r: Range.t) =>
@@ -712,8 +700,7 @@ let%component make =
                    endC,
                  );
 
-               Shapes.drawRect(
-                 ~transform,
+               CanvasContext.Deprecated.drawRect(
                  ~x=
                    lineNumberWidth
                    +. float_of_int(startOffset)
@@ -730,7 +717,7 @@ let%component make =
                    +. max(float_of_int(endOffset - startOffset), 1.0)
                    *. fontWidth,
                  ~color,
-                 (),
+                 canvasContext,
                );
              }};
 
@@ -861,7 +848,7 @@ let%component make =
                     tokens,
                     editor.scrollX,
                     offset,
-                    transform,
+                    canvasContext,
                     Configuration.getValue(
                       c => c.editorRenderWhitespace,
                       state.configuration,
@@ -874,14 +861,13 @@ let%component make =
 
           /* Draw background for line numbers */
           if (showLineNumbers) {
-            Shapes.drawRect(
-              ~transform,
+            CanvasContext.Deprecated.drawRect(
               ~x=0.,
               ~y=0.,
               ~width=lineNumberWidth,
               ~height=float_of_int(height),
               ~color=theme.editorLineNumberBackground,
-              (),
+              canvasContext,
             );
 
             ImmediateList.render(
@@ -905,7 +891,7 @@ let%component make =
                       ),
                       cursorLine,
                       offset,
-                      transform,
+                      canvasContext,
                     );
                   ();
                 },
@@ -929,7 +915,7 @@ let%component make =
             | None => ()
             | Some(buffer) =>
               IndentLineRenderer.render(
-                ~transform,
+                ~canvasContext,
                 ~buffer,
                 ~startLine=topVisibleLine - 1,
                 ~endLine=bottomVisibleLine + 1,

@@ -61,7 +61,7 @@ let rec getIndentLevel =
 
 let render =
     (
-      ~transform,
+      ~canvasContext,
       ~buffer: Buffer.t,
       ~startLine: int,
       ~endLine: int,
@@ -103,14 +103,13 @@ let render =
 
     let i = ref(0);
     while (i^ < level) {
-      Shapes.drawRect(
-        ~transform,
+      CanvasContext.Deprecated.drawRect(
         ~x=x +. indentationWidthInPixels *. float_of_int(i^),
         ~y,
         ~width=1.,
         ~height=lineHeight,
         ~color=theme.editorIndentGuideBackground,
-        (),
+        canvasContext,
       );
 
       incr(i);
@@ -177,8 +176,7 @@ let render =
     let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
     if (cursorLineIndentLevel^ >= 1) {
-      Shapes.drawRect(
-        ~transform,
+      CanvasContext.Deprecated.drawRect(
         ~x=
           x
           +. indentationWidthInPixels
@@ -187,7 +185,7 @@ let render =
         ~width=1.,
         ~height=bottomY -. topY -. lineHeight,
         ~color=theme.editorIndentGuideActiveBackground,
-        (),
+        canvasContext,
       );
     };
   };
