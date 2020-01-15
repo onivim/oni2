@@ -87,21 +87,18 @@ let start = () => {
       );
     });
 
-  let updater = (state: State.t, action: Actions.t) => {
+  let updater = (state: State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Actions.References(Model.References.Requested) => (
-        state,
-        findAllReferences(state),
-      )
+    | References(References.Requested) => (state, findAllReferences(state))
 
-    | Actions.References(Model.References.Set(references)) => (
+    | References(References.Set(references)) => (
         {...state, references},
         Isolinear.Effect.none,
       )
 
-    | Actions.EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
-      switch (Model.Selectors.getActiveBuffer(state)) {
+    | EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
+      switch (Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)
       | Some(buf) =>
         let location =
