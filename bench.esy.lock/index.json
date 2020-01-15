@@ -1,5 +1,5 @@
 {
-  "checksum": "db90707007fb9f110da1d434c3b5e59d",
+  "checksum": "d6de7f766fbb0f9df2be9817570daa82",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -92,16 +92,30 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#d2fd73b@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
-      "name": "revery",
-      "version": "github:revery-ui/revery#d2fd73b",
+    "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9": {
+      "id":
+        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
+      "name": "revery-text-wrap",
+      "version": "github:revery-ui/revery-text-wrap#005385c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#d2fd73b" ]
+        "source": [ "github:revery-ui/revery-text-wrap#005385c" ]
+      },
+      "overrides": [],
+      "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
+      "devDependencies": []
+    },
+    "revery@github:revery-ui/revery#7f3bc06@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#7f3bc06@d41d8cd9",
+      "name": "revery",
+      "version": "github:revery-ui/revery#7f3bc06",
+      "source": {
+        "type": "install",
+        "source": [ "github:revery-ui/revery#7f3bc06" ]
       },
       "overrides": [],
       "dependencies": [
+        "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
@@ -971,7 +985,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "timber@github:glennsl/timber#37ffa07@d41d8cd9",
-        "revery@github:revery-ui/revery#d2fd73b@d41d8cd9",
+        "revery@github:revery-ui/revery#7f3bc06@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
