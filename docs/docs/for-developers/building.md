@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.5.6__ is required)
+- Install [Esy](https://esy.sh) (__0.6.0__ is required)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
 
