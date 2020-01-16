@@ -16,4 +16,5 @@ module type Logger = {
   let fn: (string, 'a => 'b, 'a) => 'b;
 };
 
+let enableDebugLogging: unit => unit;
 let withNamespace: string => (module Logger);
