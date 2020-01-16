@@ -33,12 +33,16 @@ type item('data) = {
   data: [@opaque] 'data,
 };
 
-type t('data) = {
-  id: Id.t,
+type placement = {
   x: int,
   y: int,
   originX: [ | `Left | `Middle | `Right],
   originY: [ | `Top | `Middle | `Bottom],
+};
+
+type t('data) = {
+  id: Id.t,
+  placement: option(placement),
   items: list(item('data)),
 };
 
@@ -142,15 +146,15 @@ module Menu = {
   };
 
   let component = React.Expert.component("Menu");
-  let make = (~model, ~theme, ~font, ~onItemSelect, ()) =>
+  let make = (~items, ~placement, ~theme, ~font, ~onItemSelect, ()) =>
     component(hooks => {
       let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
-      let {x, y, originX, originY, items, _} = model;
+      let {x, y, originX, originY} = placement;
 
       let height =
         switch (maybeRef) {
         | Some((node: node)) => node#measurements().height
-        | None => List.length(model.items) * 20
+        | None => List.length(items) * 20
         };
       let width = Constants.menuWidth;
 
@@ -211,24 +215,20 @@ module Overlay = {
     ];
   };
 
-  let make = (~model, ~theme, ~font, ~onOverlayClick, ~onItemSelect, ()) => {
-    <Clickable onClick=onOverlayClick style=Styles.overlay>
-      <Menu model theme font onItemSelect />
-    </Clickable>;
-  };
+  let make = (~model, ~theme, ~font, ~onOverlayClick, ~onItemSelect, ()) =>
+    switch (model) {
+    | {items, placement: Some(placement), _} =>
+      <Clickable onClick=onOverlayClick style=Styles.overlay>
+        <Menu items placement theme font onItemSelect />
+      </Clickable>
+    | _ => React.empty
+    };
 };
 
 module Make = (()) => {
   let id = Id.create();
 
-  let init = items => {
-    id,
-    x: 0,
-    y: 0,
-    originX: `Left,
-    originY: `Bottom,
-    items,
-  };
+  let init = items => {id, placement: None, items};
 
   module Anchor = {
     let component = React.Expert.component("Anchor");
@@ -248,12 +248,19 @@ module Make = (()) => {
           if (model.id == id) {
             let (x, y, _, _) =
               Math.BoundingBox2d.getBounds(node#getBoundingBox());
-            let (x, y) = (int_of_float(x), int_of_float(y));
+            let placement =
+              Some({
+                x: int_of_float(x),
+                y: int_of_float(y),
+                originX,
+                originY,
+              });
 
-            if (x != model.x || y != model.y) {
-              onUpdate({...model, x, y, originX, originY});
+            if (model.placement != placement) {
+              onUpdate({...model, placement});
             };
           }
+
         | _ => ()
         };
 
