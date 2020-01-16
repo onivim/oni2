@@ -54,19 +54,26 @@ let listExtensions = cli => {
   0;
 };
 
+let printVersion = _cli => {
+  print_endline("Onivim 2." ++ Core.BuildInfo.version);
+  0;
+};
+
 let cliOptions =
   Core.Cli.parse(
     ~installExtension,
     ~uninstallExtension,
     ~checkHealth=HealthCheck.run(~checks=All),
-    ~listExtensions=cli => {
-      let extensions = Store.Utility.getUserExtensions(cli);
-      let printExtension = (ext: Ext.ExtensionScanner.t) => {
-        print_endline(ext.manifest.name);
-      };
-      List.iter(printExtension, extensions);
-      1;
-    },
+    ~listExtensions=
+      cli => {
+        let extensions = Store.Utility.getUserExtensions(cli);
+        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+          print_endline(ext.manifest.name);
+        };
+        List.iter(printExtension, extensions);
+        1;
+      },
+    ~printVersion,
   );
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start(~healthCheck=() =>
