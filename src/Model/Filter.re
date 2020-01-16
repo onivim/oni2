@@ -22,38 +22,23 @@ type result('a) = {
   highlight: list((int, int)),
 };
 
-let makeResult = ((maybeMatch, item)) =>
-  switch (maybeMatch) {
-  | Some(match) => {
+let makeResult = (item, match: Fzy.Result.t) => {
       item,
-      highlight: Utility.ranges(match.IndexMatchResult.indicies),
-    }
-  | None => {item, highlight: []}
+      highlight: Utility.ranges(match.positions),
   };
 
 let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
   let format = item => format(item, ~shouldLower);
 
-  let compareScore = (x, y) => {
-    let scoreObject = ((match, item)) => (
-      Option.map(m => MatchResult.create(m.IndexMatchResult.score), match),
-      format(item),
-    );
-    compareScores(scoreObject(x), scoreObject(y));
-  };
-
-  let processItem = (pattern, item) => {
-    let line = format(item);
-    let match = PathMatcher.fuzzyIndicies(~line, ~pattern);
-
-    (match, item);
-  };
+  let passThroughFzy = (query, items) => {
+    Fzy.fzySearchList(items, query)
+  }
 
   items
-  |> List.map(processItem(query))
-  |> List.sort(compareScore)
-  |> List.map(makeResult);
+  |> List.map(format)
+  |> passThroughFzy(query)
+  |> List.map(makeResult(query));
 };
 
 // Check whether the query matches...
