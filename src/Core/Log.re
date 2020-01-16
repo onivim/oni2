@@ -33,7 +33,8 @@ let writeExceptionLog = (e, bt) => {
   Stdlib.close_out(oc);
 };
 
-if (isDebugLoggingEnabled()) {
+let enableDebugLogging = () => {
+  Timber.App.enableDebugLogging();
   module Log = (val withNamespace("Oni2.Exception"));
 
   Log.debug("Recording backtraces");
@@ -49,6 +50,10 @@ if (isDebugLoggingEnabled()) {
     flush_all();
     writeExceptionLog(e, bt);
   });
+};
+
+if (Timber.isDebugLoggingEnabled()) {
+  enableDebugLogging();
 } else {
   // Even if we're not debugging.... at least emit the exception
   Printexc.set_uncaught_exception_handler((e, bt) => {
