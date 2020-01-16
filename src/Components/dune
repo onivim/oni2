@@ -1,7 +1,7 @@
 (library
     (name Oni_Components)
     (public_name Oni2.components)
-    (preprocess (pps brisk-reconciler.ppx))
+    (preprocess (pps brisk-reconciler.ppx ppx_deriving.show))
     (libraries 
         str
         bigarray

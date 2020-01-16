@@ -2,24 +2,14 @@ open Oni_Core;
 
 open Revery.UI;
 
-type identity;
-
+[@deriving show]
 type item('data) = {
   label: string,
   // icon: option(IconTheme.IconDefinition.t),
-  data: 'data,
+  data: [@opaque] 'data,
 };
 
 type t('data);
-
-let create:
-  (
-    ~originX: [ | `Left | `Middle | `Right]=?,
-    ~originY: [ | `Top | `Middle | `Bottom]=?,
-    identity,
-    list(item('data))
-  ) =>
-  t('data);
 
 module Overlay: {
   let make:
@@ -34,19 +24,20 @@ module Overlay: {
     React.element(React.node);
 };
 
-module Identity: {
-  let make:
-    (~children: identity => React.element(React.node), unit) =>
-    React.element(React.node);
-};
+module Make:
+  () =>
+   {
+    let init: list(item('data)) => t('data);
 
-module Anchor: {
-  let make:
-    (
-      ~identity: identity,
-      ~model: option(t('data)),
-      ~onUpdate: t('data) => unit,
-      unit
-    ) =>
-    React.element(React.node);
-};
+    module Anchor: {
+      let make:
+        (
+          ~model: option(t('data)),
+          ~originX: [ | `Left | `Middle | `Right]=?,
+          ~originY: [ | `Top | `Middle | `Bottom]=?,
+          ~onUpdate: t('data) => unit,
+          unit
+        ) =>
+        React.element(React.node);
+    };
+  };

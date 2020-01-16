@@ -13,30 +13,33 @@ module Constants = {
 
 // TYPES
 
-type identity = int;
+module Id: {
+  type t;
+  let create: unit => t;
+} = {
+  type t = int;
 
+  let lastId = ref(0);
+  let create = () => {
+    incr(lastId);
+    lastId^;
+  };
+};
+
+[@deriving show({with_path: false})]
 type item('data) = {
   label: string,
   // icon: option(IconTheme.IconDefinition.t),
-  data: 'data,
+  data: [@opaque] 'data,
 };
 
 type t('data) = {
-  identity,
+  id: Id.t,
   x: int,
   y: int,
   originX: [ | `Left | `Middle | `Right],
   originY: [ | `Top | `Middle | `Bottom],
   items: list(item('data)),
-};
-
-let create = (~originX=`Left, ~originY=`Bottom, identity, items) => {
-  identity,
-  x: 0,
-  y: 0,
-  originX,
-  originY,
-  items,
 };
 
 // MENUITEM
@@ -72,8 +75,6 @@ module MenuItem = {
       color(theme.menuForeground),
       backgroundColor(bg(~theme, ~isFocused)),
     ];
-
-    let clickable = [cursor(Revery.MouseCursors.pointer)];
   };
 
   let make:
@@ -108,14 +109,13 @@ module MenuItem = {
         <Text style text={item.label} />;
       };
 
-      <Clickable style=Styles.clickable onClick>
-        // onMouseOver={_ => setIsFocused(_ => true)}
-        // onMouseOut={_ => setIsFocused(_ => false)}
-
-          <View style={Styles.container(~theme, ~isFocused)}>
-            // iconView
-             labelView </View>
-        </Clickable>;
+      <Clickable onClick>
+        <View style={Styles.container(~theme, ~isFocused)}>
+          // iconView
+           labelView </View>
+      </Clickable>;
+      // onMouseOut={_ => setIsFocused(_ => false)}
+      // onMouseOver={_ => setIsFocused(_ => true)}
     };
 };
 
@@ -163,26 +163,27 @@ module Menu = {
         };
 
       (
-        <BoxShadow
-          boxShadow={Style.BoxShadow.make(
-            ~xOffset=-11.,
-            ~yOffset=-11.,
-            ~blurRadius=25.,
-            ~spreadRadius=0.,
-            ~color=Color.rgba(0., 0., 0., 0.2),
-            (),
-          )}>
-          <View
-            style={Styles.container(~x, ~y, ~theme)}
-            ref={node => setRef(_ => Some(node))}>
-            {items
-             |> List.map(item => {
-                  let onClick = () => onItemSelect(item);
-                  <MenuItem item theme font onClick />;
-                })
-             |> React.listToElement}
-          </View>
-        </BoxShadow>,
+        // TODO: BoxShadow apparently blocks mouse events. Figure out why before adding back
+        // <BoxShadow
+        //   boxShadow={Style.BoxShadow.make(
+        //     ~xOffset=-11.,
+        //     ~yOffset=-11.,
+        //     ~blurRadius=25.,
+        //     ~spreadRadius=0.,
+        //     ~color=Color.rgba(0., 0., 0., 0.2),
+        //     (),
+        //   )}>
+        <View
+          style={Styles.container(~x, ~y, ~theme)}
+          ref={node => setRef(_ => Some(node))}>
+          {items
+           |> List.map(item => {
+                let onClick = () => onItemSelect(item);
+                <MenuItem item theme font onClick />;
+              })
+           |> React.listToElement}
+        </View>,
+        // </BoxShadow>,
         hooks,
       );
     });
@@ -211,48 +212,46 @@ module Overlay = {
   };
 };
 
-// IDENTITY
+module Make = (()) => {
+  let id = Id.create();
 
-module Identity = {
-  let generateId = {
-    let lastId = ref(0);
-    () => {
-      lastId := lastId^ + 1;
-      lastId^;
-    };
+  let init = items => {
+    id,
+    x: 0,
+    y: 0,
+    originX: `Left,
+    originY: `Bottom,
+    items,
   };
 
-  let component = React.Expert.component("Anchor");
-  let make = (~children as render, ()) =>
-    component(hooks => {
-      let ((id, _), hooks) = Hooks.state(generateId(), hooks);
+  module Anchor = {
+    let component = React.Expert.component("Anchor");
+    let make =
+        (
+          ~model as maybeModel,
+          ~originX=`Left,
+          ~originY=`Bottom,
+          ~onUpdate,
+          (),
+        ) =>
+      component(hooks => {
+        let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
 
-      (render(id), hooks);
-    });
-};
+        switch (maybeModel, maybeRef) {
+        | (Some(model), Some(node)) =>
+          if (model.id == id) {
+            let (x, y, _, _) =
+              Math.BoundingBox2d.getBounds(node#getBoundingBox());
+            let (x, y) = (int_of_float(x), int_of_float(y));
 
-// ANCHOR
+            if (x != model.x || y != model.y) {
+              onUpdate({...model, x, y, originX, originY});
+            };
+          }
+        | _ => ()
+        };
 
-module Anchor = {
-  let component = React.Expert.component("Anchor");
-  let make = (~identity, ~model as maybeModel, ~onUpdate, ()) =>
-    component(hooks => {
-      let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
-
-      switch (maybeModel, maybeRef) {
-      | (Some(model), Some(node)) =>
-        if (model.identity == identity) {
-          let (x, y, _, _) =
-            Math.BoundingBox2d.getBounds(node#getBoundingBox());
-          let (x, y) = (int_of_float(x), int_of_float(y));
-
-          if (x != model.x || y != model.y) {
-            onUpdate({...model, x, y});
-          };
-        }
-      | _ => ()
-      };
-
-      (<View ref={node => setRef(Some(node))} />, hooks);
-    });
+        (<View ref={node => setRef(Some(node))} />, hooks);
+      });
+  };
 };
