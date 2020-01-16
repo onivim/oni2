@@ -16,7 +16,6 @@
         Oni2.syntax_client
         Oni2.syntax_server
         Oni2.ui
-        dune-build-info
     )
     (preprocess (
         pps
