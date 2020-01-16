@@ -52,7 +52,13 @@ let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
 let parse =
-    (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
+    (
+      ~checkHealth,
+      ~listExtensions,
+      ~installExtension,
+      ~uninstallExtension,
+      ~printVersion,
+    ) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -80,6 +86,7 @@ let parse =
       ("-f", Unit(Timber.App.enablePrinting), ""),
       ("--nofork", Unit(Timber.App.enablePrinting), ""),
       ("--debug", Unit(CoreLog.enableDebugLogging), ""),
+      ("--version", printVersion |> runAndExitUnit, ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
