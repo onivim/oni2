@@ -224,7 +224,7 @@
     "@opam/js_of_ocaml-compiler": "3.5.0",
     "@opam/js_of_ocaml-lwt": "3.5.2",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reasonFuzz": "github:CrossR/reasonFuzz#d36e084",
+    "reasonFuzz": "github:CrossR/reasonFuzz#4b60fbc",
     "pesy": "0.4.1",
     "@opam/camomile": "1.0.1",
     "@opam/ocamlfind": "1.8.0",

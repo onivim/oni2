@@ -45,7 +45,7 @@ let rank = (query, format, items) => {
 
   let processItem = (pattern, item) => {
     let line = format(item);
-    let match = pathIndexMatch(~line, ~pattern);
+    let match = PathMatcher.fuzzyIndicies(~line, ~pattern);
 
     (match, item);
   };
