@@ -3,97 +3,158 @@
  *
  */
 
+open Revery;
 open Revery.UI;
 
 open Oni_Core;
-module Model = Oni_Model;
+open Oni_Model;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
+module Option = Utility.Option;
 
-let make = (~x: int, ~y: int, ~state: Model.State.t, ()) => {
-  let hoverEnabled =
-    Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
+module Constants = {
+  let padding = 8;
+  let innerPadding = 1;
+};
 
-  switch (Model.HoverCollector.get(state)) {
-  | None => React.empty
-  | Some(hoverInfo) when hoverEnabled && state.mode != Vim.Types.Insert =>
-    open Model.HoverCollector;
-    let {theme, editorFont, hover, _}: Model.State.t = state;
+module Styles = {
+  open Style;
 
-    let outerPositionStyle =
-      Style.[position(`Absolute), top(y - 4), left(x + 4)];
+  let container = [
+    position(`Absolute),
+    top(0),
+    left(0),
+    bottom(0),
+    right(0),
+  ];
 
-    let opacity = Model.Hover.getOpacity(hover);
+  let text = (~theme: Theme.t, ~editorFont: EditorFont.t) => [
+    //width(width_),
+    //height(height_),
+    //textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
+    fontFamily(editorFont.fontFile),
+    fontSize(editorFont.fontSize),
+    color(theme.editorForeground),
+    backgroundColor(theme.editorHoverWidgetBackground),
+  ];
 
-    let bgColor = theme.editorHoverWidgetBackground;
-    let fgColor = theme.editorForeground;
-    let borderColor = theme.editorHoverWidgetBorder;
+  let outerPosition = (~x, ~y) => [
+    position(`Absolute),
+    top(y - 4),
+    left(x + 4),
+  ];
 
-    let padding = 8;
-    let innerPadding = 1;
+  let innerPosition = (~width, ~height, ~theme: Theme.t) => [
+    position(`Absolute),
+    bottom(0),
+    left(0),
+    Style.width(width),
+    Style.height(height),
+    flexDirection(`Column),
+    alignItems(`Center),
+    justifyContent(`Center),
+    border(~color=theme.editorHoverWidgetBorder, ~width=1),
+    backgroundColor(theme.editorHoverWidgetBackground),
+  ];
+};
 
-    let textStyle =
-      Style.[
-        //width(width_),
-        //height(height_),
-        //textWrap(TextWrapping.NoWrap),
-        textOverflow(`Ellipsis),
-        fontFamily(editorFont.fontFile),
-        fontSize(editorFont.fontSize),
-        color(fgColor),
-        backgroundColor(bgColor),
-      ];
+let%component hoverItem =
+              (
+                ~x,
+                ~y,
+                ~diagnostics,
+                ~buffer,
+                ~location,
+                ~delay,
+                ~theme,
+                ~editorFont,
+                (),
+              ) => {
+  let%hook (opacity, _, _) =
+    Animation.animate(Time.ms(250))
+    |> Animation.delay(delay)
+    |> Animation.tween(0., 1.)
+    |> Hooks.animation;
 
-    let innerPositionStyle = (width_, height_) =>
-      Style.[
-        position(`Absolute),
-        bottom(0),
-        left(0),
-        width(width_),
-        height(height_),
-        flexDirection(`Column),
-        alignItems(`Center),
-        justifyContent(`Center),
-        border(~color=borderColor, ~width=1),
-        backgroundColor(bgColor),
-      ];
+  let diagnostics =
+    Diagnostics.getDiagnosticsAtPosition(diagnostics, buffer, location);
 
-    let (_maxWidth, height, diags) =
-      List.fold_left(
-        (prev, curr: Model.Diagnostic.t) => {
-          let (prevWidth, prevHeight, prevDiags) = prev;
+  if (diagnostics == []) {
+    React.empty;
+  } else {
+    let width = {
+      let measure = text =>
+        int_of_float(EditorFont.measure(~text, editorFont) +. 0.5);
+      let maxElementWidth =
+        List.fold_left(
+          (maxWidth, {message, _}: Diagnostic.t) =>
+            max(maxWidth, measure(message) + Constants.padding),
+          0,
+          diagnostics,
+        );
+      maxElementWidth + Constants.padding * 2;
+    };
 
-          let message = curr.message;
-          let width =
-            EditorFont.measure(~text=message, editorFont)
-            +. 0.5
-            |> int_of_float;
-          let height =
-            EditorFont.getHeight(editorFont) +. 0.5 |> int_of_float;
+    let height = {
+      let fontHeight = int_of_float(EditorFont.getHeight(editorFont) +. 0.5);
+      let elementHeight = fontHeight + Constants.innerPadding;
+      elementHeight * List.length(diagnostics) + Constants.padding * 2;
+    };
 
-          let newWidth = max(prevWidth, width + padding);
-          let newHeight = height + prevHeight + innerPadding;
-          let newElem = <Text style=textStyle text=message />;
-          let newDiags = [newElem, ...prevDiags];
-          (newWidth, newHeight, newDiags);
-        },
-        (0, 0, []),
-        hoverInfo.diagnostics,
-      );
+    let elements =
+      diagnostics
+      |> List.map(({message, _}: Diagnostic.t) =>
+           <Text style={Styles.text(~theme, ~editorFont)} text=message />
+         )
+      |> List.rev
+      |> React.listToElement;
 
-    let diags = List.rev(diags) |> React.listToElement;
-
-    <View style=outerPositionStyle>
+    <View style={Styles.outerPosition(~x, ~y)}>
       <Opacity opacity>
-        <View
-          style={innerPositionStyle(
-            _maxWidth + padding * 2,
-            height + padding * 2,
-          )}>
-          diags
+        <View style={Styles.innerPosition(~width, ~height, ~theme)}>
+          elements
         </View>
       </Opacity>
     </View>;
+  };
+};
+
+let make = (~x, ~y, ~state: State.t, ()) => {
+  let delay =
+    Configuration.getValue(c => c.editorHoverDelay, state.configuration)
+    |> Time.ms;
+  let hoverEnabled =
+    Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
+
+  let State.{theme, editorFont, diagnostics, _} = state;
+  let maybeEditor =
+    state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+
+  switch (maybeEditor) {
+  | Some(editor) when hoverEnabled && state.mode != Vim.Types.Insert =>
+    switch (Buffers.getBuffer(editor.bufferId, state.buffers)) {
+    | Some(buffer) =>
+      <View style=Styles.container>
+        {editor.cursors
+         |> List.map(cursor =>
+              <hoverItem
+                x
+                y
+                diagnostics
+                buffer
+                location=cursor
+                delay
+                theme
+                editorFont
+              />
+            )
+         |> React.listToElement}
+      </View>
+
+    | None => React.empty
+    }
+
   | _ => React.empty
   };
 };
