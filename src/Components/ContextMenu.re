@@ -77,6 +77,7 @@ module MenuItem = {
     ];
   };
 
+  let component = React.Expert.component("MenuItem");
   let make:
     'data.
     (
@@ -86,37 +87,42 @@ module MenuItem = {
       ~onClick: unit => unit,
       unit
     ) =>
-    React.element(React.node)
+    _
    =
-    (~item, ~theme, ~font, ~onClick, ()) => {
-      let isFocused = false;
+    (~item, ~theme, ~font, ~onClick, ()) =>
+      component(hooks => {
+        let ((isFocused, setIsFocused), hooks) = Hooks.state(false, hooks);
 
-      // let iconView =
-      //   switch (item.icon) {
-      //   | Some(icon) =>
-      //     IconTheme.IconDefinition.(
-      //       <Text
-      //         style={Styles.icon(icon.fontColor)}
-      //         text={FontIcon.codeToIcon(icon.fontCharacter)}
-      //       />
-      //     )
+        // let iconView =
+        //   switch (item.icon) {
+        //   | Some(icon) =>
+        //     IconTheme.IconDefinition.(
+        //       <Text
+        //         style={Styles.icon(icon.fontColor)}
+        //         text={FontIcon.codeToIcon(icon.fontCharacter)}
+        //       />
+        //     )
 
-      //   | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
-      //   };
+        //   | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
+        //   };
 
-      let labelView = {
-        let style = Styles.label(~font, ~theme, ~isFocused);
-        <Text style text={item.label} />;
-      };
+        let labelView = {
+          let style = Styles.label(~font, ~theme, ~isFocused);
+          <Text style text={item.label} />;
+        };
 
-      <Clickable onClick>
-        <View style={Styles.container(~theme, ~isFocused)}>
-          // iconView
-           labelView </View>
-      </Clickable>;
-      // onMouseOut={_ => setIsFocused(_ => false)}
-      // onMouseOver={_ => setIsFocused(_ => true)}
-    };
+        (
+          <Clickable onClick>
+            <View
+              style={Styles.container(~theme, ~isFocused)}
+              onMouseOut={_ => setIsFocused(_ => false)}
+              onMouseOver={_ => setIsFocused(_ => true)}>
+              // iconView
+               labelView </View>
+          </Clickable>,
+          hooks,
+        );
+      });
 };
 
 // MENU
