@@ -87,56 +87,32 @@ let start = () => {
       );
     });
 
-  let updater = (state: State.t, action: Actions.t) => {
+  let updater = (state: State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Tick({deltaTime, _}) =>
-      if (Hover.isAnimationActive(state.hover)) {
-        let hover = state.hover |> Hover.tick(deltaTime);
-        let newState = {...state, hover};
-
-        (newState, Isolinear.Effect.none);
-      } else {
-        default;
-      }
-
     | References(References.Requested) => (state, findAllReferences(state))
+
     | References(References.Set(references)) => (
         {...state, references},
         Isolinear.Effect.none,
       )
+
     | EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
       switch (Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)
       | Some(buf) =>
-        let bufferId = Buffer.getId(buf);
-        let delay =
-          Configuration.getValue(
-            c => c.editorHoverDelay,
-            state.configuration,
-          );
-
         let location =
           switch (cursors) {
           | [cursor, ..._] => (cursor :> Location.t)
           | [] => Location.{line: Index.zero, column: Index.zero}
           };
-        let newState = {
-          ...state,
-          hover:
-            Hover.show(
-              ~bufferId,
-              ~location,
-              ~currentTime=Unix.gettimeofday(),
-              ~delay=float_of_int(delay) /. 1000.,
-              (),
-            ),
-        };
+
         (
-          newState,
+          state,
           checkForDefinitionEffect(state.languageFeatures, buf, location),
         );
       }
+
     | _ => default
     };
   };

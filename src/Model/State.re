@@ -22,7 +22,6 @@ type t = {
   definition: Definition.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   sideBar: SideBar.t,
@@ -68,7 +67,6 @@ let create: unit => t =
     configuration: Configuration.default,
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
     editorFont:

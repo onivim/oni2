@@ -1,5 +1,5 @@
 {
-  "checksum": "0501c6e4c4209d19025abfec3aca49bb",
+  "checksum": "00c03915a35922af22f85aa426beebbf",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -602,14 +602,14 @@
       "dependencies": [ "graceful-fs@4.2.3@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@2.2.0@d41d8cd9": {
-      "id": "isolinear@2.2.0@d41d8cd9",
+    "isolinear@2.3.0@d41d8cd9": {
+      "id": "isolinear@2.3.0@d41d8cd9",
       "name": "isolinear",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.2.0.tgz#sha1:a490bbb35a9e5e58f29973386b16912e828a5130"
+          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.3.0.tgz#sha1:8f24a935b901c3fd097ec264575ca2b50288c5aa"
         ]
       },
       "overrides": [],
@@ -993,7 +993,7 @@
         "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3012@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
-        "ocaml@4.7.1004@d41d8cd9", "isolinear@2.2.0@d41d8cd9",
+        "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",

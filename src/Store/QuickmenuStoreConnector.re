@@ -9,7 +9,6 @@ module Option = Core.Utility.Option;
 module Model = Oni_Model;
 
 module Actions = Model.Actions;
-module Animation = Model.Animation;
 module Quickmenu = Model.Quickmenu;
 module InputModel = Model.InputModel;
 module Utility = Core.Utility;

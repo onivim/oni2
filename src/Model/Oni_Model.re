@@ -8,7 +8,6 @@
 
 module Actions = Actions;
 module ActivityBar = ActivityBar;
-module Animation = Animation;
 module BufferHighlights = BufferHighlights;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
@@ -38,8 +37,6 @@ module Focus = Focus;
 module FocusManager = FocusManager;
 module FsTreeNode = FsTreeNode;
 module KeyDisplayer = KeyDisplayer;
-module Hover = Hover;
-module HoverCollector = HoverCollector;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module InputModel = InputModel;
