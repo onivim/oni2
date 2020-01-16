@@ -1,5 +1,5 @@
 {
-  "checksum": "d78f90f134f8a91028224717f6b043ed",
+  "checksum": "17738442581bffef983633a3f73fd530",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -1004,9 +1004,7 @@
         "@opam/ppx_deriving@opam:4.4@21d6c7a5",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/logs@opam:0.7.0@1d03143e",
-        "@opam/fmt@opam:0.8.8@01c3a23c",
-        "@opam/dune-build-info@opam:1.11.4@f1376eed",
-        "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@opam/camomile@opam:1.0.1@c82ecdb5",
         "@esy-ocaml/reason@3.5.2@d41d8cd9"
@@ -2433,31 +2431,6 @@
         "@opam/dune@opam:1.11.4@a7ccb7ae", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ]
-    },
-    "@opam/dune-build-info@opam:1.11.4@f1376eed": {
-      "id": "@opam/dune-build-info@opam:1.11.4@f1376eed",
-      "name": "@opam/dune-build-info",
-      "version": "opam:1.11.4",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/77/77cb5f483221b266ded2b85fc84173ae0089a25134a086be922e82c131456ce6#sha256:77cb5f483221b266ded2b85fc84173ae0089a25134a086be922e82c131456ce6",
-          "archive:https://github.com/ocaml/dune/releases/download/1.11.4/dune-build-info-1.11.4.tbz#sha256:77cb5f483221b266ded2b85fc84173ae0089a25134a086be922e82c131456ce6"
-        ],
-        "opam": {
-          "name": "dune-build-info",
-          "version": "1.11.4",
-          "path": "esy.lock/opam/dune-build-info.1.11.4"
-        }
-      },
-      "overrides": [],
-      "dependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae",
-        "@esy-ocaml/substs@0.0.1@d41d8cd9"
-      ],
-      "devDependencies": [
-        "ocaml@4.7.1004@d41d8cd9", "@opam/dune@opam:1.11.4@a7ccb7ae"
-      ]
     },
     "@opam/dune@opam:1.11.4@a7ccb7ae": {
       "id": "@opam/dune@opam:1.11.4@a7ccb7ae",
