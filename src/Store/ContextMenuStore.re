@@ -21,7 +21,8 @@ let contextMenu =
 
 let start = () => {
   let selectItemEffect = (item: ContextMenu.item(_)) =>
-    Isolinear.Effect.createWithDispatch("contextMenu.selectItem", dispatch =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="contextMenu.selectItem", dispatch =>
       dispatch(item.data)
     );
 
