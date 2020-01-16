@@ -3,6 +3,22 @@ open Actions;
 
 module ContextMenu = Oni_Components.ContextMenu;
 
+let contextMenu =
+  Notifications.ContextMenu.init(
+    ContextMenu.[
+      {
+        label: "Clear All",
+        // icon: None,
+        data: ClearNotifications,
+      },
+      {
+        label: "Open",
+        // icon: None,
+        data: StatusBar(NotificationCountClicked),
+      },
+    ],
+  );
+
 let start = () => {
   let selectItemEffect = (item: ContextMenu.item(_)) =>
     Isolinear.Effect.createWithDispatch("contextMenu.selectItem", dispatch =>
@@ -26,6 +42,11 @@ let start = () => {
     | ContextMenuItemSelected(item) => (
         {...state, contextMenu: None},
         selectItemEffect(item),
+      )
+
+    | StatusBar(NotificationsContextMenu) => (
+        {...state, contextMenu: Some(contextMenu)},
+        Isolinear.Effect.none,
       )
 
     | _ => default

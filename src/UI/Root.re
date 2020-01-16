@@ -9,6 +9,8 @@ open Revery.UI;
 open Oni_Model;
 open Oni_Components;
 
+module ContextMenu = Oni_Components.ContextMenu;
+
 module Styles = {
   open Style;
 
@@ -48,6 +50,9 @@ let make = (~state: State.t, ()) => {
         _,
       } = state;
 
+  let onContextMenuUpdate = model =>
+    GlobalContext.current().dispatch(ContextMenuUpdate(model));
+
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
       c.workbenchStatusBarVisible
@@ -72,7 +77,7 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state />
+          <StatusBar state contextMenu onContextMenuUpdate />
         </View>
       : React.empty;
 
