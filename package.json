@@ -213,7 +213,8 @@
     "@opam/logs": "^0.7.0",
     "@opam/re": "*",
     "editor-core-types": "*",
-    "timber": "*"
+    "timber": "*",
+    "@opam/dune-build-info": "*"
   },
   "resolutions": {
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",

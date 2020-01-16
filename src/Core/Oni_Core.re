@@ -25,6 +25,7 @@ module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module Input = Input;
 module IntMap = IntMap;
+module Foo = Foo;
 module Job = Job;
 module LineNumber = LineNumber;
 module Log = Log;

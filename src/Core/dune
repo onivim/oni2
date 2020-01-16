@@ -1,3 +1,9 @@
+(rule
+    (targets foo.re)
+    (deps (:generator ../BuildInfo/generator.exe))
+    (action (run %{generator}))
+)
+
 (library
     (name Oni_Core)
     (public_name Oni2.core)

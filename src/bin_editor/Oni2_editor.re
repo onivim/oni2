@@ -74,6 +74,11 @@ if (cliOptions.syntaxHighlightService) {
   );
 } else {
   Log.info("Starting Onivim 2.");
+Core.Foo.hello();
+prerr_endline ("VERSION: " ++ Core.Foo.commitId);
+prerr_endline ("VERSION: " ++ Core.Foo.version);
+failwith("oh no");
+
 
   /* The 'main' function for our app */
   let init = app => {
