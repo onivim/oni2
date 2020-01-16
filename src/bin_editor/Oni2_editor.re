@@ -73,11 +73,13 @@ if (cliOptions.syntaxHighlightService) {
     HealthCheck.run(~checks=Common, cliOptions)
   );
 } else {
-  Log.info("Starting Onivim 2.");
-  Core.Foo.hello();
-  prerr_endline("VERSION: " ++ Core.Foo.commitId);
-  prerr_endline("VERSION: " ++ Core.Foo.version);
-  failwith("oh no");
+  Log.infof(m =>
+    m(
+      "Starting Onivim 2.%s (%s)",
+      Core.BuildInfo.version,
+      Core.BuildInfo.commitId,
+    )
+  );
 
   /* The 'main' function for our app */
   let init = app => {

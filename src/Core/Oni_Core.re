@@ -6,6 +6,7 @@
 
 module Buffer = Buffer;
 module BufferUpdate = BufferUpdate;
+module BuildInfo = BuildInfo;
 module CamomileBundled = CamomileBundled;
 module Cli = Cli;
 module ColorizedToken = ColorizedToken;
@@ -25,7 +26,6 @@ module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module Input = Input;
 module IntMap = IntMap;
-module Foo = Foo;
 module Job = Job;
 module LineNumber = LineNumber;
 module Log = Log;
