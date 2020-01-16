@@ -7,6 +7,7 @@
 open Revery;
 open Revery.UI;
 open Oni_Model;
+open Oni_Components;
 
 module Styles = {
   open Style;
@@ -39,6 +40,7 @@ let make = (~state: State.t, ()) => {
   let State.{
         theme,
         configuration,
+        contextMenu,
         uiFont as font,
         editorFont,
         sideBar,
@@ -112,6 +114,22 @@ let make = (~state: State.t, ()) => {
       <KeyDisplayerView state />
     </Overlay>
     statusBar
+    {switch (contextMenu) {
+     | Some(model) =>
+       let onOverlayClick = () =>
+         GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+       let onItemSelect = item =>
+         GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+
+       <ContextMenu.Overlay
+         theme
+         font=uiFont
+         model
+         onOverlayClick
+         onItemSelect
+       />;
+     | None => React.empty
+     }}
     <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
