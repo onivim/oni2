@@ -1,6 +1,6 @@
 (rule
-    (targets foo.re)
-    (deps (:generator ../BuildInfo/generator.exe))
+    (targets BuildInfo.re)
+    (deps (:generator ../gen_buildinfo/generator.exe))
     (action (run %{generator}))
 )
 
