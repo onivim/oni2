@@ -2,10 +2,6 @@ open Kernel;
 
 module Log = (val Timber.withNamespace("Oni2.Core.Utility"));
 
-let noop = () => ();
-let noop1 = _ => ();
-let noop2 = (_, _) => ();
-
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =
     ThreadHelper.create(

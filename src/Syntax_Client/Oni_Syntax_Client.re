@@ -32,8 +32,8 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
 
 let start =
     (
-      ~onConnected=Utility.noop,
-      ~onClose=Utility.noop1,
+      ~onConnected=() => (),
+      ~onClose=_ => (),
       ~scheduler,
       ~onHighlights,
       ~onHealthCheckResult,
