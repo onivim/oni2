@@ -16,3 +16,4 @@ module Json = Json;
 module ColorEx = ColorEx;
 module VimEx = VimEx;
 module IndexEx = IndexEx;
+module Fun = Fun; // TODO: Remove after 4.08 upgrade
