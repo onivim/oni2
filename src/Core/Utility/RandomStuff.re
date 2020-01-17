@@ -1,5 +1,3 @@
-open Kernel;
-
 let getFileContents = (path, ~handler) => {
   let contents = ref([]);
 
@@ -21,9 +19,6 @@ let getFileContents = (path, ~handler) => {
   contents^;
 };
 
-let convertUTF8string = str =>
-  CamomileBundled.Camomile.(UChar.code(UTF8.get(str, 0)));
-
 let join = paths => {
   let sep = Filename.dir_sep;
   let (head, rest) =
@@ -32,42 +27,6 @@ let join = paths => {
     | [head, ...rest] => (head, rest)
     };
   List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
-};
-
-/**
-  This is a very rudimentary search, which works case insensitvely
-  to see if a substring is contained in a larger string.
- */
-let stringContains = (word, substring) => {
-  let re = Str.regexp_string_case_fold(substring);
-  try(Str.search_forward(re, word, 0) |> ignore |> (_ => true)) {
-  | Not_found => false
-  };
-};
-
-/**
-   Get a slice from a list between two indices
- */
-let rec sublist = (beginning, terminus, l) =>
-  switch (l) {
-  | [] => failwith("sublist")
-  | [h, ...t] =>
-    let tail =
-      if (terminus == 0) {
-        [];
-      } else {
-        sublist(beginning - 1, terminus - 1, t);
-      };
-    if (beginning > 0) {
-      tail;
-    } else {
-      [h, ...tail];
-    };
-  };
-
-let escapeSpaces = str => {
-  let whitespace = Str.regexp(" ");
-  Str.global_replace(whitespace, "\\ ", str);
 };
 
 // TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
