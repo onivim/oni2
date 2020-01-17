@@ -4,6 +4,8 @@
    */
 open Oni_Core;
 
+module ListEx = Utility.ListEx;
+
 module Constants = {
   let itemsPerFrame = 250;
   let maxItemsToFilter = 250;
@@ -80,7 +82,7 @@ module Make = (Config: Config) => {
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = Utility.firstk(Constants.maxItemsToFilter, filtered);
+    let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
 
     // If the new query matches the old one... we can re-use results
     if (pending.filter != ""
@@ -162,7 +164,7 @@ module Make = (Config: Config) => {
     // Rank a limited nuumber of filtered items
     let ranked =
       filtered
-      |> Utility.firstk(Constants.maxItemsToFilter)
+      |> ListEx.firstk(Constants.maxItemsToFilter)
       |> Filter.rank(filter, format);
 
     (

@@ -1,7 +1,5 @@
 open Kernel;
 
-module Log = (val Timber.withNamespace("Oni2.Core.Utility"));
-
 let getFileContents = (path, ~handler) => {
   let contents = ref([]);
 
@@ -25,13 +23,6 @@ let getFileContents = (path, ~handler) => {
 
 let convertUTF8string = str =>
   CamomileBundled.Camomile.(UChar.code(UTF8.get(str, 0)));
-
-let safe_fold_left2 = (fn, accum, list1, list2, ~default) =>
-  try(List.fold_left2(fn, accum, list1, list2)) {
-  | Invalid_argument(reason) =>
-    Log.warn("fold_left2 failing because: " ++ reason);
-    default;
-  };
 
 let join = paths => {
   let sep = Filename.dir_sep;
@@ -143,35 +134,6 @@ let trimTrailingSlash = (item: string) => {
 };
 
 let executingDirectory = Revery.Environment.executingDirectory;
-
-/**
- * Return the last element in a list.
- */
-let rec last =
-  fun
-  | [] => None
-  | [x] => Some(x)
-  | [_, ...t] => last(t);
-
-/**
- * Return all but the last element in a list.
- */
-let rec dropLast =
-  fun
-  | [] => []
-  | [_] => []
-  | [head, ...tail] => [head, ...dropLast(tail)];
-
-let rec firstk = (k, v) =>
-  switch (v) {
-  | [] => []
-  | [hd, ...tail] =>
-    if (k <= 1) {
-      [hd];
-    } else {
-      [hd, ...firstk(k - 1, tail)];
-    }
-  };
 
 external freeConsole: unit => unit = "win32_free_console";
 

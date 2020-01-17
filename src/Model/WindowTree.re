@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module ListEx = Utility.ListEx;
+
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
@@ -150,9 +152,9 @@ let rotateForward = (id, currentTree) => {
     | [] => []
     | [a] => [a]
     | [a, b] => [b, a]
-    | l =>
-      switch (Utility.last(l)) {
-      | Some(x) => [x, ...Utility.dropLast(l)]
+    | list =>
+      switch (ListEx.last(list)) {
+      | Some(x) => [x, ...ListEx.dropLast(list)]
       | None => []
       };
 
