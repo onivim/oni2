@@ -5,6 +5,11 @@ let to_option =
   | Ok(v) => Some(v)
   | Error(_) => None;
 
+let get_ok =
+  fun
+  | Ok(v) => v
+  | Error(_) => invalid_arg("result is Error _");
+
 let bind = f =>
   fun
   | Ok(v) => f(v)
