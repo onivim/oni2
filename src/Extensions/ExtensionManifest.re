@@ -58,6 +58,7 @@ type t = {
   extensionPack: [@default []] list(string),
   extensionKind: [@default Ui] ExtensionKind.t,
   contributes: ExtensionContributions.t,
+  enableProposedApi: [@default false] bool,
 };
 
 let getDisplayName = (manifest: t) => {
