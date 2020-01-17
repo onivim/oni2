@@ -62,7 +62,7 @@ let clearMatchingPair = (bufferId, state: t) => {
 };
 
 let setSearchHighlights = (bufferId, ranges, state) => {
-  let searchHighlightsByLine = Utility.RangeUtil.toLineMap(ranges);
+  let searchHighlightsByLine = RangeEx.toLineMap(ranges);
 
   IntMap.update(
     bufferId,
@@ -93,7 +93,7 @@ let clearSearchHighlights = (bufferId, state) => {
 };
 
 let setDocumentHighlights = (bufferId, ranges, state) => {
-  let documentHighlightsByLine = Utility.RangeUtil.toLineMap(ranges);
+  let documentHighlightsByLine = RangeEx.toLineMap(ranges);
 
   IntMap.update(
     bufferId,

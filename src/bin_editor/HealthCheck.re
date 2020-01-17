@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module LwtEx = Utility.LwtEx;
+module StringEx = Utility.StringEx;
 module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
 
 type checks =
@@ -94,7 +96,7 @@ let mainChecks = [
         ~setup,
         "check-health.js",
       )
-      |> Utility.LwtUtil.sync
+      |> LwtEx.sync
       |> (
         fun
         | Ok(_) => true
@@ -120,9 +122,7 @@ let mainChecks = [
     (setup: Setup.t) => {
       let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
 
-      ret.stdout
-      |> String.trim
-      |> Utility.StringUtil.contains("Reason Language Server");
+      ret.stdout |> String.trim |> StringEx.contains("Reason Language Server");
     },
   ),
   (
