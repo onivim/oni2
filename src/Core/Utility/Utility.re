@@ -1,6 +1,7 @@
 open EditorCoreTypes;
+open Kernel;
 
-module Log = (val Log.withNamespace("Oni2.Core.Utility"));
+module Log = (val Timber.withNamespace("Oni2.Core.Utility"));
 
 let identity = v => v;
 let noop = () => ();
