@@ -30,7 +30,8 @@ module Author = {
       );
 
   let of_yojson = json =>
-    tryToResult(~msg="Error parsing author", () => of_yojson_exn(json));
+    ResultEx.guard(() => of_yojson_exn(json))
+    |> Result.map_error(_ => "Error parsing author");
 
   let to_yojson = _author => `Null;
 };
