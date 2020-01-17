@@ -20,6 +20,11 @@ let map = f =>
   | Ok(v) => Ok(f(v))
   | Error(_) as err => err;
 
+let map_error = f =>
+  fun
+  | Ok(v) => Ok(v)
+  | Error(e) => Error(f(e));
+
 let default = (~value) =>
   fun
   | Ok(v) => v
