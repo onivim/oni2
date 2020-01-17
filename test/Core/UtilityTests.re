@@ -3,6 +3,8 @@ open TestFramework;
 open Oni_Core.Utility;
 
 describe("last", ({test, _}) => {
+  open ListEx;
+
   test("empty", ({expect}) =>
     expect.bool(last([]) == None).toBe(true)
   );
@@ -17,6 +19,8 @@ describe("last", ({test, _}) => {
 });
 
 describe("dropLast", ({test, _}) => {
+  open ListEx;
+
   test("empty", ({expect}) =>
     expect.list(dropLast([])).toEqual([])
   );
