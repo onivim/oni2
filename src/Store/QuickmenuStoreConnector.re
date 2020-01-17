@@ -10,7 +10,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Quickmenu = Model.Quickmenu;
-module InputModel = Model.InputModel;
+module InputModel = Oni_Components.InputModel;
 module Utility = Core.Utility;
 module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
@@ -320,15 +320,14 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
   (updater, stream);
 };
 
-let subscriptions = ripgrep => {
-  let (stream, dispatch) = Isolinear.Stream.create();
-  let (itemStream, addItems) = Isolinear.Stream.create();
+module QuickmenuFilterSubscription =
+  FilterSubscription.Make({
+    type item = Actions.menuItem;
+    let format = Model.Quickmenu.getLabel;
+  });
 
-  module QuickmenuFilterSubscription =
-    FilterSubscription.Make({
-      type item = Actions.menuItem;
-      let format = Model.Quickmenu.getLabel;
-    });
+let subscriptions = (ripgrep, dispatch) => {
+  let (itemStream, addItems) = Isolinear.Stream.create();
 
   let filter = (query, items) => {
     QuickmenuFilterSubscription.create(
@@ -418,5 +417,5 @@ let subscriptions = ripgrep => {
     };
   };
 
-  (updater, stream);
+  updater;
 };

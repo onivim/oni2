@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module Constants = {
   let menuWidth = 400;
@@ -155,7 +156,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <OniInput
+      <Input
         placeholder
         ?prefix
         cursorColor=Colors.white

@@ -176,7 +176,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
 
-          | Search => [Actions.SearchInput(k)]
+          | Search => [Actions.Search(Feature_Search.Input(k))]
           };
         };
 

@@ -1,5 +1,7 @@
 open Revery.Math;
 
+module InputModel = Oni_Components.InputModel;
+
 type callback = unit => unit;
 type bounds = unit => option(Rectangle.t);
 

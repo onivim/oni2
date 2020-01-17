@@ -1,0 +1,10 @@
+(library
+    (name Feature_Search)
+    (public_name Oni2.feature.search)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.components
+      Revery
+    )
+    (preprocess (pps ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))

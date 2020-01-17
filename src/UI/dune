@@ -10,6 +10,8 @@
         lwt.unix
         Oni2.core
         Oni2.model
+        Oni2.components
+        Oni2.feature.search
         Rench
         Revery
         editor-core-types

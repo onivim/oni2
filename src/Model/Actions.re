@@ -122,10 +122,7 @@ type t =
   | CopyActiveFilepathToClipboard
   | SearchStart
   | SearchHotkey
-  | SearchInput(string)
-  | SearchInputClicked(int)
-  | SearchUpdate([@opaque] list(Ripgrep.Match.t))
-  | SearchComplete
+  | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
   | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)

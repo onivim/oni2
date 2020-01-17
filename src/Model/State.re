@@ -52,7 +52,7 @@ type t = {
   darkMode: bool,
   // State of the bottom pane
   pane: Pane.t,
-  searchPane: Search.t,
+  searchPane: Feature_Search.model,
   focus: Focus.stack,
 };
 
@@ -100,6 +100,6 @@ let create: unit => t =
     zenMode: false,
     darkMode: true,
     pane: Pane.initial,
-    searchPane: Search.initial,
+    searchPane: Feature_Search.initial,
     focus: Focus.initial,
   };
