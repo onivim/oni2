@@ -22,7 +22,7 @@ type result('a) = {
   highlight: list((int, int)),
 };
 
-let makeResult = (item, match: Fzy.Result.t) => {
+let makeResult = ((item, match: Fzy.Result.t)) => {
       item,
       highlight: Utility.ranges(match.positions),
   };
@@ -32,13 +32,27 @@ let rank = (query, format, items) => {
   let format = item => format(item, ~shouldLower);
 
   let passThroughFzy = (query, items) => {
-    Fzy.fzySearchList(items, query)
+    Console.log("Starting search...");
+    let result = Fzy.fzySearchList(items, query);
+    Console.log("Returning from search...");
+    Console.log(result);
+    
+    result
+  }
+
+  let tempMapItemsToStrings = (originalItems, format, match: Fzy.Result.t) => {
+    Console.log("Starting matching...");
+    let matchingItem = List.find(i => format(i) == match.term, originalItems);
+    Console.log("Done matching...");
+
+    (matchingItem, match)
   }
 
   items
   |> List.map(format)
   |> passThroughFzy(query)
-  |> List.map(makeResult(query));
+  |> List.map(tempMapItemsToStrings(items, format))
+  |> List.map(makeResult);
 };
 
 // Check whether the query matches...
