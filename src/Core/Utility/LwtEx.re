@@ -1,5 +1,3 @@
-open RandomStuff;
-
 let all = (join, promises) => {
   List.fold_left(
     (accPromise, promise) => {
@@ -22,7 +20,7 @@ let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
 
     Lwt.on_failure(promise, v => {completed := Some(Error(v))});
 
-    waitForCondition(~timeout, () => {completed^ != None});
+    ThreadEx.waitForCondition(~timeout, () => {completed^ != None});
 
     Option.value(~default=Error(Timeout), completed^);
   };
