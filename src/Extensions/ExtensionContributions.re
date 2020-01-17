@@ -6,6 +6,9 @@
 open Oni_Core;
 open Rench;
 
+module Result = Utility.Result;
+module ResultEx = Utility.ResultEx;
+
 module Commands = {
   [@deriving (show, yojson({strict: false, exn: true}))]
   type t = {
@@ -60,9 +63,8 @@ module Configuration = {
   };
 
   let of_yojson = json =>
-    Oni_Core.Utility.tryToResult(~msg="Error parsing", () =>
-      of_yojson_exn(json)
-    );
+    ResultEx.guard(() => of_yojson_exn(json))
+    |> Result.map_error(_ => "Error parsing");
 
   let to_yojson = _v => `Null;
 };

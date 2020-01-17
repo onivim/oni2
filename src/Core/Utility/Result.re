@@ -1,4 +1,4 @@
-open RandomStuff;
+exception ResultError(string);
 
 let to_option =
   fun

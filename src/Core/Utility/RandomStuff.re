@@ -1,26 +1,3 @@
-
-// TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
-let resultToOption = r => {
-  switch (r) {
-  | Ok(v) => Some(v)
-  | Error(_) => None
-  };
-};
-
-exception ResultError(string);
-
-let resultToException = r => {
-  switch (r) {
-  | Ok(v) => v
-  | Error(msg) => raise(ResultError(msg))
-  };
-};
-
-let tryToResult = (~msg, f) =>
-  try(Ok(f())) {
-  | _exn => Error(msg)
-  };
-
 type commandLineCompletionMeet = {
   prefix: string,
   position: int,
@@ -50,7 +27,6 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
     Some({prefix: String.sub(str, pos, len - pos), position: pos});
   };
 };
-
 
 let executingDirectory = Revery.Environment.executingDirectory;
 
