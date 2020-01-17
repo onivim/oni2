@@ -7,12 +7,14 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+module LwtEx = Utility.LwtEx;
+
 module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;
 module LocationWithUri = Oni_Extensions.LocationWithUri;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
-  promises => Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
+  promises => LwtEx.all((acc, curr) => acc @ curr, promises);
 
 module CompletionProvider =
   LanguageFeature.Make({
