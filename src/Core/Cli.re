@@ -3,6 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
+open Kernel;
 open Rench;
 
 module CoreLog = Log;
