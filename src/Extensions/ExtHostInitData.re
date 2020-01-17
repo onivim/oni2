@@ -24,7 +24,6 @@ module ExtensionInfo = {
     /* TODO:  */
     /* isBuiltIn: bool, */
     /* isUnderDevelopment: bool, */
-    /* enableProposedApi: bool */
     identifier: string,
     extensionLocationPath: string,
     name: string,
@@ -37,6 +36,7 @@ module ExtensionInfo = {
     extensionDependencies: list(string),
     extensionKind: ExtensionKind.t,
     contributes: ExtensionContributions.t,
+    enableProposedApi: bool,
   };
 
   let ofScannedExtension = (extensionInfo: ExtensionScanner.t) => {
@@ -54,6 +54,7 @@ module ExtensionInfo = {
       extensionDependencies: manifest.extensionDependencies,
       extensionKind: manifest.extensionKind,
       contributes: manifest.contributes,
+      enableProposedApi: manifest.enableProposedApi,
     };
   };
 };
