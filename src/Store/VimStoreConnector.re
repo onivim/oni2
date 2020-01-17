@@ -7,10 +7,11 @@
  */
 
 open EditorCoreTypes;
+open Oni_Model;
+
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
-
-open Oni_Model;
+module Path = Core.Utility.Path;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
@@ -583,7 +584,7 @@ let start =
             currentPos := Vim.CommandLine.getPosition();
           };
 
-          let completion = Core.Utility.trimTrailingSlash(completion);
+          let completion = Path.trimTrailingSeparator(completion);
           let latestCursors = ref([]);
           String.iter(
             c => {
