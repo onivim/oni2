@@ -125,6 +125,7 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SCM(SCM.msg)
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
