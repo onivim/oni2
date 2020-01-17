@@ -1,23 +1,4 @@
-let getFileContents = (path, ~handler) => {
-  let contents = ref([]);
 
-  let fileInChannel = Pervasives.open_in(path);
-
-  let fileStream =
-    Stream.from(_i =>
-      switch (Pervasives.input_line(fileInChannel)) {
-      | line => Some(line)
-      | exception End_of_file => None
-      }
-    );
-  fileStream
-  |> Stream.iter(line => {
-       let parts = handler(line);
-       contents := [parts, ...contents^];
-     });
-
-  contents^;
-};
 // TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
 let resultToOption = r => {
   switch (r) {
