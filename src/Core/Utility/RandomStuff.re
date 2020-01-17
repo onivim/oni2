@@ -18,17 +18,6 @@ let getFileContents = (path, ~handler) => {
 
   contents^;
 };
-
-let join = paths => {
-  let sep = Filename.dir_sep;
-  let (head, rest) =
-    switch (paths) {
-    | [] => ("", [])
-    | [head, ...rest] => (head, rest)
-    };
-  List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
-};
-
 // TODO: Remove / replace with Result.to_option when upgraded to OCaml 4.08
 let resultToOption = r => {
   switch (r) {
@@ -81,16 +70,6 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
   };
 };
 
-let trimTrailingSlash = (item: string) => {
-  let len = String.length(item);
-  let lastC = item.[len - 1];
-  /* Remove trailing slashes */
-  if (lastC == '\\' || lastC == '/') {
-    String.sub(item, 0, len - 1);
-  } else {
-    item;
-  };
-};
 
 let executingDirectory = Revery.Environment.executingDirectory;
 
