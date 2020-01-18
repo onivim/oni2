@@ -51,7 +51,7 @@ let make = (~state: State.t, ()) => {
       } = state;
 
   let onContextMenuUpdate = model =>
-    GlobalContext.current().dispatch(ContextMenuUpdate(model));
+    GlobalContext.current().dispatch(ContextMenuUpdated(model));
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>

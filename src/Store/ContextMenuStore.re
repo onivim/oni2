@@ -30,7 +30,7 @@ let start = () => {
     let default = (state, Isolinear.Effect.none);
 
     switch (action) {
-    | ContextMenuUpdate(model) => (
+    | ContextMenuUpdated(model) => (
         {...state, contextMenu: Some(model)},
         Isolinear.Effect.none,
       )
