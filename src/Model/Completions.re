@@ -8,6 +8,7 @@ open Oni_Core;
 
 module Option = Utility.Option;
 module IndexEx = Utility.IndexEx;
+module IntEx = Utility.IntEx;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
 type filteredCompletion = Filter.result(CompletionItem.t);
@@ -51,7 +52,7 @@ module Internal = {
         | None => Some(0)
         | Some(index) =>
           index
-          |> Utility.clamp(~lo=0, ~hi=Array.length(model.filtered) - 1)
+          |> IntEx.clamp(~lo=0, ~hi=Array.length(model.filtered) - 1)
           |> Option.some
         };
       },

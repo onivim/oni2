@@ -5,6 +5,7 @@ open Revery.UI.Components;
 open Oni_Core;
 
 module Option = Utility.Option;
+module IntEx = Utility.IntEx;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
@@ -185,7 +186,7 @@ module Make = (Model: TreeModel) => {
          )
       |> Option.value(~default=internalScrollTop)
       // Make sure we're not scrolled past the items
-      |> Utility.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
+      |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
 
     setPrevScrollTop(targetScrollTop);
 
@@ -200,7 +201,7 @@ module Make = (Model: TreeModel) => {
       setInternalScrollTop(_ => {
         let scrollTop' =
           updater(targetScrollTop)
-          |> Utility.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
+          |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
         setScrollTopImmediately(float(scrollTop'));
         scrollTop';
       });

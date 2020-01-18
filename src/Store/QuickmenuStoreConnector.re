@@ -15,6 +15,7 @@ module Utility = Core.Utility;
 module Path = Utility.Path;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 module IndexEx = Utility.IndexEx;
+module IntEx = Utility.IntEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Quickmenu"));
 
@@ -219,10 +220,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
           (state: Quickmenu.t) => {
             let count = Array.length(state.items);
 
-            {
-              ...state,
-              focused: Some(Utility.clamp(index, ~lo=0, ~hi=count)),
-            };
+            {...state, focused: Some(IntEx.clamp(index, ~lo=0, ~hi=count))};
           },
           state,
         ),
