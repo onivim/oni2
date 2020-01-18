@@ -7,6 +7,7 @@ open Oni_Core;
 open Oni_Model;
 
 module Option = Utility.Option;
+module OptionEx = Utility.OptionEx;
 
 module Effects = {
   let load = (directory, languageInfo, iconTheme, configuration, ~onComplete) => {
@@ -184,8 +185,8 @@ let start = () => {
         | _ => None
         };
 
-      Option.zip(state.fileExplorer.focus, state.fileExplorer.tree)
-      |> Option.bind(handleKey)
+      OptionEx.zip(state.fileExplorer.focus, state.fileExplorer.tree)
+      |> OptionEx.flatMap(handleKey)
       |> Option.value(~default=(state, Isolinear.Effect.none));
     };
   };

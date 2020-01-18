@@ -46,7 +46,7 @@ let setMatchingPair = (bufferId, loc0, loc1, state) => {
 
 let getMatchingPair = (bufferId, state: t) => {
   IntMap.find_opt(bufferId, state)
-  |> Option.bind(highlights => highlights.matchingPair);
+  |> OptionEx.flatMap(highlights => highlights.matchingPair);
 };
 
 let clearMatchingPair = (bufferId, state: t) => {
@@ -78,7 +78,7 @@ let setSearchHighlights = (bufferId, ranges, state) => {
 let getSearchHighlights = (~bufferId, ~line, state) => {
   IntMap.find_opt(bufferId, state)
   |> Option.map(highlights => highlights.searchHighlightsByLine)
-  |> Option.bind(IntMap.find_opt(Index.toZeroBased(line)))
+  |> OptionEx.flatMap(IntMap.find_opt(Index.toZeroBased(line)))
   |> Option.value(~default=[]);
 };
 
@@ -109,7 +109,7 @@ let setDocumentHighlights = (bufferId, ranges, state) => {
 let getDocumentHighlights = (~bufferId, ~line, state) => {
   IntMap.find_opt(bufferId, state)
   |> Option.map(highlights => highlights.documentHighlightsByLine)
-  |> Option.bind(IntMap.find_opt(Index.toZeroBased(line)))
+  |> OptionEx.flatMap(IntMap.find_opt(Index.toZeroBased(line)))
   |> Option.value(~default=[]);
 };
 

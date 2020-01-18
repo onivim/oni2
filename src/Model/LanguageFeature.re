@@ -52,7 +52,7 @@ module Make =
            };
            result;
          })
-      |> Utility.Option.values;
+      |> Utility.OptionEx.values;
 
     Provider.aggregate(promises);
   };

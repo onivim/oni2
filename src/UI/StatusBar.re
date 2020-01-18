@@ -15,6 +15,7 @@ open Oni_Model;
 open Oni_Model.StatusBarModel;
 
 module Option = Utility.Option;
+module OptionEx = Utility.OptionEx;
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
 
@@ -399,7 +400,7 @@ let%component make =
     let text =
       state
       |> Selectors.getActiveBuffer
-      |> Option.bind(Buffer.getFileType)
+      |> OptionEx.flatMap(Buffer.getFileType)
       |> Option.value(~default="plaintext");
 
     <textItem font background theme text />;

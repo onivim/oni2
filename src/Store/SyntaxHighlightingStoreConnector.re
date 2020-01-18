@@ -110,8 +110,8 @@ let start =
     let getScopeForBuffer = (state: Model.State.t, id: int) => {
       state.buffers
       |> Model.Buffers.getBuffer(id)
-      |> Option.bind(buf => Core.Buffer.getFileType(buf))
-      |> Option.bind(fileType =>
+      |> OptionEx.flatMap(buf => Core.Buffer.getFileType(buf))
+      |> OptionEx.flatMap(fileType =>
            Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
          );
     };

@@ -43,7 +43,7 @@ module DefinitionResult = {
       "Definition - uri: %s position: %s originRange: %s",
       Uri.toString(def.uri),
       Location.show(def.location),
-      def.originRange |> Utility.Option.toString(Range.show),
+      def.originRange |> Utility.OptionEx.toString(Range.show),
     );
 };
 

@@ -14,6 +14,7 @@ module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
 module Option = Utility.Option;
+module OptionEx = Utility.OptionEx;
 
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
@@ -68,7 +69,7 @@ let start = () => {
       let maybeEditor =
         state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-      Option.iter2(
+      OptionEx.iter2(
         (buffer, editor) => {
           let location = Editor.getPrimaryCursor(editor);
           let promise =
