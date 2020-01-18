@@ -118,7 +118,7 @@ let parse =
 
   if (!CoreLog.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
-    Utility.freeConsole();
+    Utility.Win32.freeConsole();
   };
 
   let paths = args^ |> List.rev;

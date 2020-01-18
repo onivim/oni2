@@ -21,3 +21,4 @@ module ThreadEx = ThreadEx;
 module ResultEx = ResultEx;
 module IntEx = IntEx;
 module FunEx = FunEx;
+module Win32 = Win32;
