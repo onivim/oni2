@@ -120,7 +120,7 @@ let start =
       };
 
       OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> OptionEx.flatten
+      |> Option.join
       |> Option.iter(action => dispatch(action));
     });
 

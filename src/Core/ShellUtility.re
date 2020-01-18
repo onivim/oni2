@@ -11,11 +11,13 @@ module Internal = {
     };
   };
 
-  let getShellFromPath = () => {
-    Sys.getenv_opt("PATH")
-    |> OptionEx.tap_none(() => Log.error("Unable to get PATH!"))
-    |> Option.value(~default="");
-  };
+  let getShellFromPath = () =>
+    switch (Sys.getenv_opt("PATH")) {
+    | Some(path) => path
+    | None =>
+      Log.error("Unable to get PATH!");
+      "";
+    };
 };
 
 let getShellPath = () => {

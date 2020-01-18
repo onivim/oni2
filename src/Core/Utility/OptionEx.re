@@ -22,28 +22,15 @@ let iter2 = (f, a, b) => {
   };
 };
 
-let fallback = f =>
+let or_ = other =>
+  fun
+  | Some(_) as orig => orig
+  | None => other;
+
+let or_lazy = f =>
   fun
   | Some(_) as orig => orig
   | None => f();
-
-let tap_none = f =>
-  fun
-  | Some(_) as v => v
-  | None => {
-      f();
-      None;
-    };
-
-let iter_none = f =>
-  fun
-  | Some(_) => ()
-  | None => f();
-
-let flatten =
-  fun
-  | Some(x) => x
-  | None => None;
 
 let of_list =
   fun
