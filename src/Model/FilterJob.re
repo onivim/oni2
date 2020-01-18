@@ -3,8 +3,7 @@
      items across multiple frames.
    */
 open Oni_Core;
-
-module ListEx = Utility.ListEx;
+open Utility;
 
 module Constants = {
   let itemsPerFrame = 250;
@@ -21,7 +20,7 @@ module Make = (Config: Config) => {
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
-  module Queue = Utility.ChunkyQueue;
+  module Queue = ChunkyQueue;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);

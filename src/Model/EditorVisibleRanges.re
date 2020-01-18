@@ -1,8 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 open Actions;
-
-module List = Utility.List;
 
 type individualRange = {
   editorRanges: list(Range.t),

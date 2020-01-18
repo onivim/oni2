@@ -6,8 +6,8 @@
  */
 
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
 module Core = Oni_Core;

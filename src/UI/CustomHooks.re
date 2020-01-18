@@ -1,9 +1,8 @@
 open Oni_Core;
+open Utility;
 
 open Revery;
 open Revery.UI;
-
-module ColorEx = Utility.ColorEx;
 
 let colorTransition =
     (

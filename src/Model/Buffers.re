@@ -5,8 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type t = IntMap.t(Buffer.t);

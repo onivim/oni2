@@ -4,10 +4,8 @@
  * Types for VSCode Extension contribution points
  */
 open Oni_Core;
+open Utility;
 open Rench;
-
-module Result = Utility.Result;
-module ResultEx = Utility.ResultEx;
 
 module Commands = {
   [@deriving (show, yojson({strict: false, exn: true}))]

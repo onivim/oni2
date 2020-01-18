@@ -1,7 +1,6 @@
 open Oni_Core;
+open Utility;
 open Oni_Extensions;
-
-module LwtEx = Utility.LwtEx;
 
 module ExtM = Oni_ExtensionManagement;
 

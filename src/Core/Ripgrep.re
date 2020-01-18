@@ -1,10 +1,8 @@
 open Kernel;
 open Rench;
+open Utility;
 
 module Time = Revery_Core.Time;
-module List = Utility.List;
-module ListEx = Utility.ListEx;
-module Queue = Utility.Queue;
 
 module Match = {
   module Log = (val Log.withNamespace("Oni2.Core.Ripgrep.Match"));

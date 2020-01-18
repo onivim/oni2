@@ -1,8 +1,6 @@
 open Oni_Core;
+open Utility;
 
-module LwtEx = Utility.LwtEx;
-module StringEx = Utility.StringEx;
-module Result = Utility.Result;
 module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
 
 type checks =
@@ -32,10 +30,8 @@ let commonChecks = [
       Oniguruma.(
         {
           OnigRegExp.create("(@selector\\()(.*?)(\\))")
-          |> Utility.Result.map(
-               OnigRegExp.search("@selector(windowWillClose:)", 0),
-             )
-          |> Utility.Result.map(result => {
+          |> Result.map(OnigRegExp.search("@selector(windowWillClose:)", 0))
+          |> Result.map(result => {
                OnigRegExp.(
                  Match.getText(result[1]) == "@selector("
                  && Match.getText(result[3]) == ")"

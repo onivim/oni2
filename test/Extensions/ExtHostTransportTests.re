@@ -1,10 +1,9 @@
 open Oni_Core;
+open Utility;
 open Oni_Core_Test;
 open Oni_Extensions;
 
 open TestFramework;
-
-module ThreadEx = Utility.ThreadEx;
 
 let initialConfiguration = Oni_Extensions.Configuration.empty;
 let initData = ExtHostInitData.create();

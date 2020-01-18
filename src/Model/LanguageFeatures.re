@@ -6,8 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-
-module LwtEx = Utility.LwtEx;
+open Utility;
 
 module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;
@@ -43,7 +42,7 @@ module DefinitionResult = {
       "Definition - uri: %s position: %s originRange: %s",
       Uri.toString(def.uri),
       Location.show(def.location),
-      def.originRange |> Utility.OptionEx.toString(Range.show),
+      def.originRange |> OptionEx.toString(Range.show),
     );
 };
 

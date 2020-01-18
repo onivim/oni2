@@ -10,9 +10,7 @@ open EditorCoreTypes;
 open Oni_Model;
 
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
-module OptionEx = Core.Utility.OptionEx;
-module Path = Core.Utility.Path;
+open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
@@ -516,7 +514,7 @@ let start =
 
         let () =
           editor
-          |> Core.Utility.Option.iter(e => {
+          |> Option.iter(e => {
                let () =
                  getState()
                  |> Selectors.getActiveEditorGroup
@@ -604,30 +602,28 @@ let start =
 
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
-      Core.Utility.(
-        switch (lastCompletionMeet^) {
-        | None => ()
-        | Some({position, _}) =>
-          isCompleting := true;
-          let currentPos = ref(Vim.CommandLine.getPosition());
-          while (currentPos^ > position) {
-            let _ = Vim.input(~cursors=[], "<bs>");
-            currentPos := Vim.CommandLine.getPosition();
-          };
+      switch (lastCompletionMeet^) {
+      | None => ()
+      | Some({position, _}) =>
+        isCompleting := true;
+        let currentPos = ref(Vim.CommandLine.getPosition());
+        while (currentPos^ > position) {
+          let _ = Vim.input(~cursors=[], "<bs>");
+          currentPos := Vim.CommandLine.getPosition();
+        };
 
-          let completion = Path.trimTrailingSeparator(completion);
-          let latestCursors = ref([]);
-          String.iter(
-            c => {
-              latestCursors := Vim.input(~cursors=[], String.make(1, c));
-              ();
-            },
-            completion,
-          );
-          updateActiveEditorCursors(latestCursors^);
-          isCompleting := false;
-        }
-      )
+        let completion = Path.trimTrailingSeparator(completion);
+        let latestCursors = ref([]);
+        String.iter(
+          c => {
+            latestCursors := Vim.input(~cursors=[], String.make(1, c));
+            ();
+          },
+          completion,
+        );
+        updateActiveEditorCursors(latestCursors^);
+        isCompleting := false;
+      }
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>

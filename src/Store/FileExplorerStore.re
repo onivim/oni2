@@ -5,9 +5,7 @@
  */
 open Oni_Core;
 open Oni_Model;
-
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
+open Utility;
 
 module Effects = {
   let load = (directory, languageInfo, iconTheme, configuration, ~onComplete) => {

@@ -7,14 +7,13 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 open Actions;
 
 module Utility = Utility;
 module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
 
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 

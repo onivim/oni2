@@ -1,7 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
-
-module Result = Utility.Result;
+open Utility;
 
 [@deriving show({with_path: false})]
 type t = {

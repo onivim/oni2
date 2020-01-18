@@ -5,10 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
 open Rench;
-
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionScanner"));
 

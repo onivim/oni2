@@ -5,10 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
 open Oni_Extensions;
-
-module FunEx = Oni_Core.Utility.FunEx;
-module Option = Oni_Core.Utility.Option;
 
 module Log = (val Log.withNamespace("Oni2.Store.Utility"));
 

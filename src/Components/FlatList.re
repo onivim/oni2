@@ -3,16 +3,12 @@
  *
  * Virtualized list helper
  */
+open Oni_Core;
+open Utility;
 
 open Revery;
 open Revery.UI;
 open Revery_UI_Components;
-
-module Utility = Oni_Core.Utility;
-module IntEx = Utility.IntEx;
-
-// TODO: Remove after 4.08 upgrade
-module Option = Utility.Option;
 
 module Constants = {
   let scrollWheelMultiplier = 25;

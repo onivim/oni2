@@ -11,11 +11,10 @@ open Revery.UI.Components;
 
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
 open Oni_Model.StatusBarModel;
 
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
 

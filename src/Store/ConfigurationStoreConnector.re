@@ -6,8 +6,8 @@
 
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
-module Result = Utility.Result;
 module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
 
 let start =
