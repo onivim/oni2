@@ -219,7 +219,7 @@ let%component make =
     let cursorOffset =
       measureTextWidth(String.sub(displayValue, 0, cursorPosition));
 
-    switch (Option.bind(r => r#getParent(), textRef)) {
+    switch (Option.bind(textRef, r => r#getParent())) {
     | Some(containerNode) =>
       let container: Dimensions.t = containerNode#measurements();
 

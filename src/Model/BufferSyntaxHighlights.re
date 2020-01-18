@@ -24,7 +24,7 @@ module ClientLog = (
 let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
   highlights
   |> BufferMap.find_opt(bufferId)
-  |> Option.bind(LineMap.find_opt(line |> Index.toZeroBased))
+  |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
   |> Option.value(~default=noTokens);
 };
 

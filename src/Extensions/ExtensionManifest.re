@@ -3,8 +3,6 @@
  *
  * Module to describing metadata about an extension
  */
-module Option = Oni_Core.Utility.Option;
-
 open Oni_Core.Utility;
 module Path = Rench.Path;
 
@@ -70,7 +68,7 @@ let getDisplayName = (manifest: t) => {
 
 let getAuthor = manifest => {
   manifest.author
-  |> Option.fallback(() => manifest.publisher)
+  |> OptionEx.fallback(() => manifest.publisher)
   |> Option.value(~default="Unknown Author");
 };
 

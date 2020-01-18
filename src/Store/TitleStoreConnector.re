@@ -9,6 +9,7 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Option = Core.Utility.Option;
+module OptionEx = Core.Utility.OptionEx;
 module Path = Core.Utility.Path;
 
 let withTag = (tag: string, value: option(string)) =>
@@ -17,7 +18,7 @@ let withTag = (tag: string, value: option(string)) =>
 let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
   state => {
     let buffer = Model.Selectors.getActiveBuffer(state);
-    let filePath = Option.bind(Core.Buffer.getFilePath, buffer);
+    let filePath = Option.bind(buffer, Core.Buffer.getFilePath);
 
     let appName = Option.some("Onivim 2") |> withTag("appName");
 
@@ -43,7 +44,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
     let activeEditorMedium =
       filePath
-      |> Option.bind(fp =>
+      |> OptionEx.flatMap(fp =>
            switch (rootPath) {
            | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
@@ -58,7 +59,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
     let activeFolderMedium =
       filePath
       |> Option.map(Filename.dirname)
-      |> Option.bind(fp =>
+      |> OptionEx.flatMap(fp =>
            switch (rootPath) {
            | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
@@ -80,7 +81,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       rootName,
       rootPath,
     ]
-    |> Option.values
+    |> OptionEx.values
     |> List.to_seq
     |> Core.StringMap.of_seq;
   };

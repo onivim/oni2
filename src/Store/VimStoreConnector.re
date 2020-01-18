@@ -11,6 +11,7 @@ open Oni_Model;
 
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
+module OptionEx = Core.Utility.OptionEx;
 module Path = Core.Utility.Path;
 
 module Ext = Oni_Extensions;
@@ -118,8 +119,8 @@ let start =
            });
       };
 
-      Option.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> Option.flatten
+      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> OptionEx.flatten
       |> Option.iter(action => dispatch(action));
     });
 

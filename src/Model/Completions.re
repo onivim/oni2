@@ -7,6 +7,7 @@
 open Oni_Core;
 
 module Option = Utility.Option;
+module OptionEx = Utility.OptionEx;
 module IndexEx = Utility.IndexEx;
 module IntEx = Utility.IntEx;
 module Zed_utf8 = Oni_Core.ZedBundled;
@@ -103,7 +104,7 @@ let toString = model => {
     };
   Printf.sprintf(
     "Completions - meet: %s filter: %s",
-    Option.toString(CompletionMeet.toString, model.meet),
+    OptionEx.toString(CompletionMeet.toString, model.meet),
     filter,
   );
 };
