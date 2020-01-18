@@ -7,7 +7,6 @@
 open Revery;
 open Revery.UI;
 open Oni_Model;
-open Oni_Components;
 
 module ContextMenu = Oni_Components.ContextMenu;
 
