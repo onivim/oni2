@@ -18,6 +18,36 @@ module Zed_utf8 = Core.ZedBundled;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
+type commandLineCompletionMeet = {
+  prefix: string,
+  position: int,
+};
+
+let getCommandLineCompletionsMeet = (str: string, position: int) => {
+  let len = String.length(str);
+
+  if (len == 0 || position < len) {
+    None;
+  } else {
+    /* Look backwards for '/' or ' ' */
+    let found = ref(false);
+    let meet = ref(position);
+
+    while (meet^ > 0 && ! found^) {
+      let pos = meet^ - 1;
+      let c = str.[pos];
+      if (c == ' ') {
+        found := true;
+      } else {
+        decr(meet);
+      };
+    };
+
+    let pos = meet^;
+    Some({prefix: String.sub(str, pos, len - pos), position: pos});
+  };
+};
+
 let start =
     (
       languageInfo: Ext.LanguageInfo.t,
@@ -409,7 +439,7 @@ let start =
           | None => ""
           };
         let position = Vim.CommandLine.getPosition();
-        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        let meet = getCommandLineCompletionsMeet(text, position);
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
