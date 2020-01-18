@@ -31,8 +31,3 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
 let executingDirectory = Revery.Environment.executingDirectory;
 
 external freeConsole: unit => unit = "win32_free_console";
-
-let tap = (f, x) => {
-  f(x);
-  x;
-};
