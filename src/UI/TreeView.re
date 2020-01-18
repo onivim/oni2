@@ -5,6 +5,7 @@ open Revery.UI.Components;
 open Oni_Core;
 
 module Option = Utility.Option;
+module IntEx = Utility.IntEx;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
@@ -202,7 +203,7 @@ module Make = (Model: TreeModel) => {
 
     // Make sure we're not scrolled past the items
     let scrollTop =
-      scrollTop |> Utility.clamp(~lo=0, ~hi=itemHeight * count - menuHeight);
+      scrollTop |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - menuHeight);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let delta =
