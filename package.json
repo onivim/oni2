@@ -182,7 +182,8 @@
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js #{@opam/camomile.install}",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
-    "test": "esy @test run"
+    "test": "esy @test run",
+    "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
     "@esy-ocaml/reason": "3.5.2",
