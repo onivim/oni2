@@ -2,6 +2,7 @@ open Oni_Core;
 
 module LwtEx = Utility.LwtEx;
 module StringEx = Utility.StringEx;
+module Result = Utility.Result;
 module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
 
 type checks =
@@ -40,7 +41,7 @@ let commonChecks = [
                  && Match.getText(result[3]) == ")"
                )
              })
-          |> Utility.Result.default(~value=false);
+          |> Result.value(~default=false);
         }
       );
     },
