@@ -1,7 +1,5 @@
 open Oni_Core;
-
-module List = Utility.List;
-module Result = Utility.Result;
+open Utility;
 
 module Keybinding = {
   type t = {

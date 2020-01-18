@@ -1,6 +1,5 @@
 open Kernel;
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
+
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {

@@ -7,12 +7,8 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 open Actions;
-
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
-module VimEx = Utility.VimEx;
-module IndexEx = Utility.IndexEx;
 
 module Log = (val Log.withNamespace("Oni2.Store.Completions"));
 

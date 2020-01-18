@@ -5,11 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
-module OptionEx = Utility.OptionEx;
-module IndexEx = Utility.IndexEx;
-module IntEx = Utility.IntEx;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
 type filteredCompletion = Filter.result(CompletionItem.t);

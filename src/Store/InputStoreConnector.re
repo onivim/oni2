@@ -6,15 +6,13 @@
 
 open Oni_Core;
 open Oni_Input;
+open Utility;
 
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
-
-module Option = Utility.Option;
-module List = Utility.List;
 
 let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 

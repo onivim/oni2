@@ -3,8 +3,7 @@
  */
 
 open Oni_Core;
-
-module StringEx = Utility.StringEx;
+open Utility;
 
 module Ext = Oni_Extensions;
 

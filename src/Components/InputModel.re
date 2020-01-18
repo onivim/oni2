@@ -1,6 +1,5 @@
 open Oni_Core;
-
-module IntEx = Utility.IntEx;
+open Utility;
 
 let slice = (~start=0, ~stop=?, str) => {
   let length = String.length(str);

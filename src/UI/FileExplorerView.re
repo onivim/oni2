@@ -1,8 +1,6 @@
 open Oni_Model;
 open Revery_UI;
 
-module Option = Oni_Core.Utility.Option;
-
 let make = (~state: State.t, ()) => {
   let onNodeClick = node =>
     GlobalContext.current().dispatch(

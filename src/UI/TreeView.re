@@ -3,9 +3,7 @@ open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
-
-module Option = Utility.Option;
-module IntEx = Utility.IntEx;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 

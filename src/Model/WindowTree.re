@@ -1,6 +1,5 @@
 open Oni_Core;
-
-module ListEx = Utility.ListEx;
+open Utility;
 
 module WindowSplitId =
   Revery.UniqueId.Make({});

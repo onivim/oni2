@@ -4,8 +4,6 @@ open Oni_Model;
 open Revery;
 open Revery.UI;
 
-module Option = Utility.Option;
-
 module Styles = {
   open Style;
 

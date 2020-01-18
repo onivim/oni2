@@ -6,9 +6,8 @@
  */
 
 open Oni_Core;
+open Utility;
 open Oni_Extensions;
-
-module ThreadEx = Utility.ThreadEx;
 
 module JsonInformationMessageFormat = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
