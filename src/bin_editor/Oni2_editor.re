@@ -92,8 +92,6 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
-    let _ = Revery.Log.listen((_, msg) => ReveryLog.debug(msg));
-
     let w =
       App.createWindow(
         ~createOptions=
