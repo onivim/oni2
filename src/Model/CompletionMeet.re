@@ -34,10 +34,10 @@ let fromLine =
       ~lineNumber=0,
       ~bufferId,
       ~index: Index.t,
-      line: string,
+      line: Buffer.BufferLine.t,
     ) => {
   let cursorIdx = Index.toZeroBased(index);
-  let idx = Stdlib.min(Zed_utf8.length(line) - 1, cursorIdx);
+  let idx = Stdlib.min(Buffer.BufferLine.boundedLengthUtf8(~max=cursorIdx + 1, line) - 1, cursorIdx);
   let pos = ref(idx);
 
   let matchesTriggerCharacters = c => {
@@ -50,7 +50,7 @@ let fromLine =
   let candidateBase = ref([]);
 
   while (pos^ >= 0 && ! found^) {
-    let c = Zed_utf8.get(line, pos^);
+    let c = Buffer.BufferLine.unsafeGetUChar(pos^, line);
     lastCharacter := Some(c);
 
     if (matchesTriggerCharacters(c)
@@ -106,7 +106,7 @@ let fromBufferLocation =
   let line0 = Index.toZeroBased(location.line);
 
   if (line0 < bufferLines) {
-    let line = Buffer.getLine(buffer, line0);
+    let line = Buffer.getLine(line0, buffer);
     fromLine(
       ~bufferId=Buffer.getId(buffer),
       ~lineNumber=line0,

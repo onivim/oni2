@@ -265,12 +265,12 @@ let%component make =
 
   let (cursorOffset, cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorStr = Buffer.getLine(buffer, cursorLine);
+      let cursorLine = Buffer.getLine(cursorLine, buffer);
 
       let (cursorOffset, width) =
         BufferViewTokenizer.getCharacterPositionAndWidth(
           ~indentation,
-          cursorStr,
+          cursorLine,
           Index.toZeroBased(cursorPosition.column),
         );
       (cursorOffset, width);

@@ -78,37 +78,28 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   ret;
 };
 
-let measure = (indentationSettings: IndentationSettings.t, c) =>
-  if (UChar.eq(c, tab)) {
-    indentationSettings.tabSize;
-  } else {
-    1;
-  };
+    // TODO: Remove duplication between here and BufferLine
+    let measure = (indentationSettings: IndentationSettings.t, c) =>
+      if (UChar.eq(c, tab)) {
+        indentationSettings.tabSize;
+      } else {
+        // TODO: Integrate charWidth / wcwidth
+        1;
+      };
 
 let getCharacterPositionAndWidth =
-    (~indentation: IndentationSettings.t, ~viewOffset: int=0, str, i) => {
-  let x = ref(0);
-  let totalOffset = ref(0);
-  let len = ZedBundled.length(str);
+    (~indentation: IndentationSettings.t, ~viewOffset: int=0, line: BufferLine.t, i) => {
 
-  let measure = measure(indentation);
+  let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
 
-  while (x^ < len && x^ < i) {
-    let c = ZedBundled.get(str, x^);
-    let width = measure(c);
 
-    totalOffset := totalOffset^ + width;
-
-    incr(x);
+  let actualOffset = if (viewOffset > 0) {
+     totalOffset - viewOffset
+  } else {
+     totalOffset
   };
 
-  if (viewOffset > 0) {
-    totalOffset := totalOffset^ - viewOffset;
-  };
-
-  let width = i < len && i >= 0 ? measure(ZedBundled.get(str, i)) : 1;
-
-  (totalOffset^, width);
+  (actualOffset, width);
 };
 
 let colorEqual = (c1: Color.t, c2: Color.t) => {
@@ -119,7 +110,7 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
 };
 
 let tokenize =
-    (~startIndex=0, ~endIndex=(-1), s, indentationSettings, colorizer) => {
+    (~startIndex=0, ~endIndex=(-1), line, indentationSettings, colorizer) => {
   let split = (i0, c0, i1, c1) => {
     let (bg1, fg1) = colorizer(i0);
     let (bg2, fg2) = colorizer(i1);
