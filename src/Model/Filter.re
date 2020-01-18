@@ -31,27 +31,19 @@ let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
   let format = item => format(item, ~shouldLower);
 
-  let passThroughFzy = (query, items) => {
+  let search = (query, format, item) => {
     Console.log("Starting search...");
-    let result = Fzy.fzySearchList(items, query);
+    let searchStr = format(item);
+    Console.log("Checking " ++ searchStr ++ " against " ++ query);
+    let result = Fzy.fzySearchList([searchStr], query);
     Console.log("Returning from search...");
     Console.log(result);
-    
-    result
-  }
 
-  let tempMapItemsToStrings = (originalItems, format, match: Fzy.Result.t) => {
-    Console.log("Starting matching...");
-    let matchingItem = List.find(i => format(i) == match.term, originalItems);
-    Console.log("Done matching...");
-
-    (matchingItem, match)
+    (item, List.hd(result))
   }
 
   items
-  |> List.map(format)
-  |> passThroughFzy(query)
-  |> List.map(tempMapItemsToStrings(items, format))
+  |> List.map(search(query, format))
   |> List.map(makeResult);
 };
 
