@@ -27,5 +27,3 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
     Some({prefix: String.sub(str, pos, len - pos), position: pos});
   };
 };
-
-let executingDirectory = Revery.Environment.executingDirectory;
