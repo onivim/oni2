@@ -3,6 +3,8 @@
 steps:
   - script: npm install -g esy@0.6.0
     displayName: 'Install Esy: npm install -g esy@0.6.0'
+  - script: npm install -g node-gyp
+    displayName: 'Install node-gyp: npm install -g node-gyp'
   - script: esy install
     displayName: 'Install Dependencies: esy install'
   - script: esy bootstrap
