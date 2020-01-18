@@ -81,7 +81,7 @@ let spec =
   ]);
 
 let usage = {|
-Onivim 2
+Onivim 2 0.2.0
 
 Usage:
 

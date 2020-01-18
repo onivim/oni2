@@ -55,7 +55,7 @@ let listExtensions = cli => {
 };
 
 let printVersion = _cli => {
-  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
+  print_endline("Onivim 2." ++ Core.BuildInfo.version);
   0;
 };
 
