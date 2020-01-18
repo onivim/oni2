@@ -20,3 +20,4 @@ module Fun = Fun; // TODO: Remove after 4.08 upgrade
 module ThreadEx = ThreadEx;
 module ResultEx = ResultEx;
 module IntEx = IntEx;
+module FunEx = FunEx;
