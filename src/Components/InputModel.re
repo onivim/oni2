@@ -33,5 +33,7 @@ let handleInput = (~text, ~cursorPosition) =>
   | "<RIGHT>" => (text, min(String.length(text), cursorPosition + 1))
   | "<BS>" => removeBefore(cursorPosition, text)
   | "<DEL>" => removeAfter(cursorPosition, text)
+  | "<HOME>" => (text, 0)
+  | "<END>" => (text, String.length(text))
   | key when String.length(key) == 1 => add(~at=cursorPosition, key, text)
   | _ => (text, cursorPosition);
