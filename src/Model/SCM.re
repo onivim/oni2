@@ -19,6 +19,8 @@ module Provider = {
     rootUri: option(Uri.t),
     groups: list(Group.t),
     hasQuickDiffProvider: bool,
+    count: int,
+    commitTemplate: string,
   };
 };
 
@@ -34,4 +36,17 @@ type msg =
       id: string,
       label: string,
       rootUri: option(Uri.t),
+    })
+  | LostProvider({handle: int})
+  | CountChanged({
+      handle: int,
+      count: int,
+    })
+  | QuickDiffProviderChanged({
+      handle: int,
+      available: bool,
+    })
+  | CommitTemplateChanged({
+      handle: int,
+      template: string,
     });

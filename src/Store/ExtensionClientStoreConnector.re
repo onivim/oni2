@@ -287,6 +287,38 @@ let start = (extensions, setup: Setup.t) => {
     );
   };
 
+  let onClientMessage = (msg: ExtHostClient.msg) =>
+    switch (msg) {
+    | RegisterSourceControl({handle, id, label, rootUri}) =>
+      dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
+    | UnregisterSourceControl({handle}) =>
+      dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
+    | UpdateSourceControl({
+        handle,
+        hasQuickDiffProvider,
+        count,
+        commitTemplate,
+      }) =>
+      Option.iter(
+        available =>
+          dispatch(
+            Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})),
+          ),
+        hasQuickDiffProvider,
+      );
+      Option.iter(
+        count => dispatch(Actions.SCM(SCM.CountChanged({handle, count}))),
+        count,
+      );
+      Option.iter(
+        template =>
+          dispatch(
+            Actions.SCM(SCM.CommitTemplateChanged({handle, template})),
+          ),
+        commitTemplate,
+      );
+    };
+
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
@@ -315,6 +347,7 @@ let start = (extensions, setup: Setup.t) => {
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,
+      ~dispatch=onClientMessage,
       setup,
     );
 
@@ -323,6 +356,7 @@ let start = (extensions, setup: Setup.t) => {
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Log.trace("Creating model for filetype: " ++ ft);
+
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Uri.fromPath(fp),
@@ -430,22 +464,110 @@ let start = (extensions, setup: Setup.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
+
     | Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
       )
+
     | Actions.CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
       )
+
     | Actions.VimDirectoryChanged(path) => (
         state,
         changeWorkspaceEffect(path),
       )
+
     | Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
+
+    | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (
+        {
+          ...state,
+          scm: {
+            providers: [
+              SCM.Provider.{
+                handle,
+                id,
+                label,
+                rootUri,
+                groups: [],
+                hasQuickDiffProvider: false,
+                count: 0,
+                commitTemplate: "",
+              },
+              ...state.scm.providers,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostProvider({handle})) => (
+        {
+          ...state,
+          scm: {
+            providers:
+              List.filter(
+                (it: SCM.Provider.t) => it.handle != handle,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})) => (
+        {
+          ...state,
+          scm: {
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle
+                    ? {...it, hasQuickDiffProvider: available} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.CountChanged({handle, count})) => (
+        {
+          ...state,
+          scm: {
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle ? {...it, count} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.CommitTemplateChanged({handle, template})) => (
+        {
+          ...state,
+          scm: {
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle
+                    ? {...it, commitTemplate: template} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
 

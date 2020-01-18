@@ -4,6 +4,23 @@ module Core = Oni_Core;
 
 type t;
 
+type msg =
+  | RegisterSourceControl({
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Core.Uri.t),
+    })
+  | UnregisterSourceControl({handle: int})
+  | UpdateSourceControl({
+      handle: int,
+      hasQuickDiffProvider: option(bool),
+      count: option(int),
+      commitTemplate: option(string),
+    });
+// acceptInputCommand: option(_),
+// statusBarCommands: option(_),
+
 type unitCallback = unit => unit;
 
 let start:
@@ -33,6 +50,7 @@ let start:
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
+    ~dispatch: msg => unit,
     Core.Setup.t
   ) =>
   t;
