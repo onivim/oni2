@@ -171,7 +171,7 @@ if (cliOptions.syntaxHighlightService) {
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
         ~getTime,
-        ~executingDirectory=Core.Utility.executingDirectory,
+        ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
         ~getScaleFactor,
         ~getZoom,

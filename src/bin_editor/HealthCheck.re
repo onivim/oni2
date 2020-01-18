@@ -115,7 +115,9 @@ let mainChecks = [
   (
     "Verify bundled font exists",
     _ =>
-      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
+      Sys.file_exists(
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+      ),
   ),
   (
     "Verify bundled reason-language-server executable",

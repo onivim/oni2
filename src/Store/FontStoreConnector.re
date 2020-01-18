@@ -97,12 +97,12 @@ let start = (~getScaleFactor, ()) => {
             switch (maybeFontFamily) {
             | None => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
 
             | Some(fontFamily) when fontFamily == "FiraCode-Regular.ttf" => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
 
             | Some(fontFamily) =>
