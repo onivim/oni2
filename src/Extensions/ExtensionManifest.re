@@ -68,7 +68,7 @@ let getDisplayName = (manifest: t) => {
 
 let getAuthor = manifest => {
   manifest.author
-  |> OptionEx.fallback(() => manifest.publisher)
+  |> OptionEx.or_(manifest.publisher)
   |> Option.value(~default="Unknown Author");
 };
 
