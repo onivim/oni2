@@ -4,6 +4,9 @@ module Core = Oni_Core;
 
 type t;
 
+type msg =
+  | RegisterSCMProvider({handle: int, id: string, label: string, rootUri: option(Core.Uri.t)});
+
 type unitCallback = unit => unit;
 
 let start:
@@ -33,6 +36,7 @@ let start:
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
+    ~dispatch: msg => unit,
     Core.Setup.t
   ) =>
   t;

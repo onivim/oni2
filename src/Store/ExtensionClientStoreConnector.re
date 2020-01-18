@@ -287,6 +287,12 @@ let start = (extensions, setup: Setup.t) => {
     );
   };
 
+  let onClientMessage = (msg: ExtHostClient.msg) =>
+    switch (msg) {
+      | RegisterSCMProvider({handle, id, label, rootUri}) =>
+        dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
+    };
+
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
@@ -315,6 +321,7 @@ let start = (extensions, setup: Setup.t) => {
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,
+      ~dispatch=onClientMessage,
       setup,
     );
 
@@ -323,6 +330,7 @@ let start = (extensions, setup: Setup.t) => {
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Log.debug("Creating model for filetype: " ++ ft);
+
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Uri.fromPath(fp),
@@ -434,22 +442,47 @@ let start = (extensions, setup: Setup.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
+
     | Actions.BufferUpdate(bu) => (
         state,
         modelChangedEffect(state.buffers, bu),
       )
+
     | Actions.CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
       )
+
     | Actions.VimDirectoryChanged(path) => (
         state,
         changeWorkspaceEffect(path),
       )
+
     | Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
+
+    | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (
+        {
+          ...state,
+          scm: {
+            providers: [
+              SCM.Provider.{
+                handle,
+                id,
+                label,
+                rootUri,
+                groups: [],
+                hasQuickDiffProvider: false,
+              },
+              ...state.scm.providers,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
 
