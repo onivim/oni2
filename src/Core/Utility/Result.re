@@ -1,14 +1,12 @@
-exception ResultError(string);
-
-let to_option =
-  fun
-  | Ok(v) => Some(v)
-  | Error(_) => None;
-
 let get_ok =
   fun
   | Ok(v) => v
   | Error(_) => invalid_arg("result is Error _");
+
+let value = (~default) =>
+  fun
+  | Ok(v) => v
+  | Error(_) => default;
 
 let bind = f =>
   fun
@@ -25,16 +23,6 @@ let map_error = f =>
   | Ok(v) => Ok(v)
   | Error(e) => Error(f(e));
 
-let default = (~value) =>
-  fun
-  | Ok(v) => v
-  | Error(_) => value;
-
-let exn =
-  fun
-  | Ok(v) => v
-  | Error(msg) => raise(ResultError(msg));
-
 let iter = f =>
   fun
   | Ok(v) => f(v)
@@ -44,3 +32,8 @@ let iter_error = f =>
   fun
   | Ok(_) => ()
   | Error(err) => f(err);
+
+let to_option =
+  fun
+  | Ok(v) => Some(v)
+  | Error(_) => None;
