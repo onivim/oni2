@@ -232,7 +232,14 @@ module Make = (()) => {
   module Anchor = {
     let component = React.Expert.component("Anchor");
     let make =
-        (~model as maybeModel, ~orientation=(`Bottom, `Left), ~onUpdate, ()) =>
+        (
+          ~model as maybeModel,
+          ~orientation=(`Bottom, `Left),
+          ~offsetX=0,
+          ~offsetY=0,
+          ~onUpdate,
+          (),
+        ) =>
       component(hooks => {
         let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
 
@@ -242,7 +249,11 @@ module Make = (()) => {
             let (x, y, _, _) =
               Math.BoundingBox2d.getBounds(node#getBoundingBox());
             let placement =
-              Some({x: int_of_float(x), y: int_of_float(y), orientation});
+              Some({
+                x: int_of_float(x) + offsetX,
+                y: int_of_float(y) + offsetY,
+                orientation,
+              });
 
             if (model.placement != placement) {
               onUpdate({...model, placement});

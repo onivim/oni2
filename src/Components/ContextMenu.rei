@@ -38,6 +38,8 @@ module Make:
                           [ | `Left | `Middle | `Right],
                         )
                           =?,
+          ~offsetX: int=?,
+          ~offsetY: int=?,
           ~onUpdate: t('data) => unit,
           unit
         ) =>

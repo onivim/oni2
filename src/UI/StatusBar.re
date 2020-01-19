@@ -272,6 +272,7 @@ let notificationCount =
   <item onClick onRightClick>
     <Notifications.ContextMenu.Anchor
       orientation=(`Top, `Left)
+      offsetX=(-10) // correct for item padding
       model=contextMenu
       onUpdate=onContextMenuUpdate
     />
