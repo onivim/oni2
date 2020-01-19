@@ -33,8 +33,11 @@ module Make:
       let make:
         (
           ~model: option(t('data)),
-          ~originX: [ | `Left | `Middle | `Right]=?,
-          ~originY: [ | `Top | `Middle | `Bottom]=?,
+          ~orientation: (
+                          [ | `Top | `Middle | `Bottom],
+                          [ | `Left | `Middle | `Right],
+                        )
+                          =?,
           ~onUpdate: t('data) => unit,
           unit
         ) =>

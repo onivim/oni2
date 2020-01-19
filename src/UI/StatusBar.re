@@ -271,7 +271,7 @@ let notificationCount =
 
   <item onClick onRightClick>
     <Notifications.ContextMenu.Anchor
-      originY=`Top
+      orientation=(`Top, `Left)
       model=contextMenu
       onUpdate=onContextMenuUpdate
     />

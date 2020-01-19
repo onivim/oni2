@@ -36,8 +36,7 @@ type item('data) = {
 type placement = {
   x: int,
   y: int,
-  originX: [ | `Left | `Middle | `Right],
-  originY: [ | `Top | `Middle | `Bottom],
+  orientation: ([ | `Top | `Middle | `Bottom], [ | `Left | `Middle | `Right]),
 };
 
 type t('data) = {
@@ -149,7 +148,7 @@ module Menu = {
   let make = (~items, ~placement, ~theme, ~font, ~onItemSelect, ()) =>
     component(hooks => {
       let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
-      let {x, y, originX, originY} = placement;
+      let {x, y, orientation: (orientY, orientX)} = placement;
 
       let height =
         switch (maybeRef) {
@@ -159,14 +158,14 @@ module Menu = {
       let width = Constants.menuWidth;
 
       let x =
-        switch (originX) {
+        switch (orientX) {
         | `Left => x
         | `Middle => x - width / 2
         | `Right => x - width
         };
 
       let y =
-        switch (originY) {
+        switch (orientY) {
         | `Top => y - height
         | `Middle => y - height / 2
         | `Bottom => y
@@ -233,13 +232,7 @@ module Make = (()) => {
   module Anchor = {
     let component = React.Expert.component("Anchor");
     let make =
-        (
-          ~model as maybeModel,
-          ~originX=`Left,
-          ~originY=`Bottom,
-          ~onUpdate,
-          (),
-        ) =>
+        (~model as maybeModel, ~orientation=(`Bottom, `Left), ~onUpdate, ()) =>
       component(hooks => {
         let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
 
@@ -249,12 +242,7 @@ module Make = (()) => {
             let (x, y, _, _) =
               Math.BoundingBox2d.getBounds(node#getBoundingBox());
             let placement =
-              Some({
-                x: int_of_float(x),
-                y: int_of_float(y),
-                originX,
-                originY,
-              });
+              Some({x: int_of_float(x), y: int_of_float(y), orientation});
 
             if (model.placement != placement) {
               onUpdate({...model, placement});
