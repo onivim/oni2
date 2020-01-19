@@ -246,8 +246,16 @@ module Make = (()) => {
         switch (maybeModel, maybeRef) {
         | (Some(model), Some(node)) =>
           if (model.id == id) {
-            let (x, y, _, _) =
+            let (x, y, width, _) =
               Math.BoundingBox2d.getBounds(node#getBoundingBox());
+
+            let x =
+              switch (orientation) {
+              | (_, `Left) => x
+              | (_, `Middle) => x -. width /. 2.
+              | (_, `Right) => x -. width
+              };
+
             let placement =
               Some({
                 x: int_of_float(x) + offsetX,
