@@ -5,19 +5,28 @@
  * - Handling quit cleanup
  */
 
-module Core = Oni_Core;
-module Model = Oni_Model;
+open Oni_Model;
 
 let start = quit => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let quitAllEffect = (state: Model.State.t, force) => {
+  let saveAllAndQuitEffect =
+    Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () => {
+      Vim.input("<ESC>") |> (ignore: list(Vim.Cursor.t) => unit);
+      Vim.input("<ESC>") |> (ignore: list(Vim.Cursor.t) => unit);
+      Vim.input(":") |> (ignore: list(Vim.Cursor.t) => unit);
+      Vim.input("x") |> (ignore: list(Vim.Cursor.t) => unit);
+      Vim.input("a") |> (ignore: list(Vim.Cursor.t) => unit);
+      Vim.input("<CR>") |> (ignore: list(Vim.Cursor.t) => unit);
+    });
+
+  let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
-    let anyModified = Model.Buffers.anyModified(state.buffers);
+    let anyModified = Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
 
-    Isolinear.Effect.create(~name="lifecycle.quit", () =>
+    Isolinear.Effect.create(~name="lifecycle.quitAll", () =>
       if (canClose) {
         List.iter(h => h(), handlers);
         quit(0);
@@ -25,29 +34,48 @@ let start = quit => {
     );
   };
 
-  let quitBufferEffect = (state: Model.State.t, buffer: Vim.Buffer.t, force) => {
+  let quitBufferEffect = (state: State.t, buffer: Vim.Buffer.t, force) => {
     Isolinear.Effect.create(~name="lifecycle.quitBuffer", () => {
-      let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-      switch (Model.Selectors.getActiveEditor(editorGroup)) {
+      let editorGroup = Selectors.getActiveEditorGroup(state);
+      switch (Selectors.getActiveEditor(editorGroup)) {
       | None => ()
       | Some(editor) =>
         let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
         if (editor.bufferId == bufferMeta.id) {
           if (force || !bufferMeta.modified) {
-            dispatch(Model.Actions.ViewCloseEditor(editor.editorId));
+            dispatch(Actions.ViewCloseEditor(editor.editorId));
           };
         };
       };
     });
   };
 
-  let updater = (state: Model.State.t, action) => {
+  let updater = (state: State.t, action) => {
     switch (action) {
-    | Model.Actions.QuitBuffer(buffer, force) => (
+    | Actions.QuitBuffer(buffer, force) => (
         state,
         quitBufferEffect(state, buffer, force),
       )
-    | Model.Actions.Quit(force) => (state, quitAllEffect(state, force))
+
+    | Actions.Quit(force) => (state, quitAllEffect(state, force))
+
+    | WindowCloseBlocked => (
+        {...state, modal: Some(UnsavedBuffersWarning)},
+        Isolinear.Effect.none,
+      )
+
+    | WindowCloseDiscardConfirmed => (
+        {...state, modal: None},
+        quitAllEffect(state, true),
+      )
+
+    | WindowCloseSaveAllConfirmed => (
+        {...state, modal: None},
+        saveAllAndQuitEffect,
+      )
+
+    | WindowCloseCanceled => ({...state, modal: None}, Isolinear.Effect.none)
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

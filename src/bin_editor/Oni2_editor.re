@@ -161,7 +161,7 @@ if (cliOptions.syntaxHighlightService) {
     let setVsync = vsync => Window.setVsync(w, vsync);
 
     let quit = code => {
-      App.quit(~code, app);
+      App.quit(~askNicely=false, ~code, app);
     };
 
     Log.debug("Startup: Starting StoreThread");
