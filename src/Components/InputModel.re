@@ -27,6 +27,12 @@ let add = (~at as index, insert, text) => (
   index + String.length(insert),
 );
 
+let getClipboardText = () =>
+  switch (Sdl2.Clipboard.getText()) {
+  | Some(value) => value
+  | None => ""
+  };
+
 let handleInput = (~text, ~cursorPosition) =>
   fun
   | "<LEFT>" => (text, max(0, cursorPosition - 1))
@@ -35,5 +41,6 @@ let handleInput = (~text, ~cursorPosition) =>
   | "<DEL>" => removeAfter(cursorPosition, text)
   | "<HOME>" => (text, 0)
   | "<END>" => (text, String.length(text))
+  | "<C-v>" => (text ++ getClipboardText(), String.length(text))
   | key when String.length(key) == 1 => add(~at=cursorPosition, key, text)
   | _ => (text, cursorPosition);
