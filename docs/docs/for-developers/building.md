@@ -47,6 +47,7 @@ esy build
 ### Install node dependencies
 
 ```sh
+npm install -g node-gyp
 node install-node-deps.js
 ```
 
