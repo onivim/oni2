@@ -276,7 +276,7 @@ let%component make =
 
   let cursor = () => {
     let (startStr, _) =
-      getStringParts(cursorPosition + String.length(prefix), value);
+      getStringParts(cursorPosition + String.length(prefix), displayValue);
     let textWidth = measureTextWidth(startStr);
 
     let offset = textWidth - scrollOffset^;
