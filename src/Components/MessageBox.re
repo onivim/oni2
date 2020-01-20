@@ -13,13 +13,9 @@ module Styles = {
 
   let container = (~theme: Theme.t) => [backgroundColor(theme.background)];
 
-  let message = [padding(10)];
-
-  let messageText = (~theme: Theme.t, ~font: UiFont.t) => [
-    fontFamily(font.fontFile),
-    color(theme.foreground),
-    backgroundColor(theme.editorBackground),
-    fontSize(14),
+  let message = [
+    padding(20),
+    paddingBottom(30) // I don't know why this is needed, but it is
   ];
 
   let actions = [flexDirection(`Row)];
@@ -57,11 +53,9 @@ let%component button = (~text, ~onClick, ~theme, ~font, ()) => {
   </Clickable>;
 };
 
-let make = (~message, ~theme, ~font, ~actions, ~onAction, ()) =>
+let make = (~children as message, ~theme, ~font, ~actions, ~onAction, ()) =>
   <View style={Styles.container(~theme)}>
-    <View style=Styles.message>
-      <Text style={Styles.messageText(~theme, ~font)} text=message />
-    </View>
+    <View style=Styles.message> message </View>
     <View style=Styles.actions>
       {actions
        |> List.map(action =>
