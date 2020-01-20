@@ -3,6 +3,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module Trie = Textmate.Trie;
 

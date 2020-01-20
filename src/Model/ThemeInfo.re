@@ -3,6 +3,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 open Oni_Extensions;
 
 open Oni_Extensions.ExtensionScanner;

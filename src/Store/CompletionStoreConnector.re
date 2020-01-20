@@ -6,11 +6,13 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Oni_Model;
 open Utility;
 open Actions;
 
-module Log = (val Log.withNamespace("Oni2.Store.Completions"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.Completions"));
 
 module Effects = {
   let requestCompletions =

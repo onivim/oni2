@@ -7,6 +7,8 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Oni_Model;
 
 let absoluteStyle =
@@ -97,7 +99,7 @@ let make =
 
   let matchingPairElements =
     BufferHighlights.getMatchingPair(editor.bufferId, state.bufferHighlights)
-    |> Utility.Option.map(mp => {
+    |> Option.map(mp => {
          let (startPos, endPos) = mp;
          let topLine =
            bufferLineToScrollbarPixel(
@@ -112,7 +114,7 @@ let make =
            <View style={matchingPairStyle(botLine)} />,
          ]);
        })
-    |> Utility.Option.value(~default=React.empty);
+    |> Option.value(~default=React.empty);
 
   let selectionStyle = (t, bot) => {
     Style.[

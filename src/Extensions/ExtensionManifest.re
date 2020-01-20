@@ -3,7 +3,7 @@
  *
  * Module to describing metadata about an extension
  */
-open Oni_Core.Utility;
+open Oni_Core_Utility;
 module Path = Rench.Path;
 
 module ExtensionKind = {

@@ -6,8 +6,8 @@
 
 open Revery;
 
-module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Handler"));
-module Zed_utf8 = Oni_Core.ZedBundled;
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Input.Handler"));
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 let keyCodeToVimString = (keycode, keyString) => {
   let len = Zed_utf8.length(keyString);

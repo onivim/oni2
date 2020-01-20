@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 open Oni_Model;
 open Oni_Syntax;
 
@@ -46,13 +47,13 @@ let start = (themeInfo: ThemeInfo.t) => {
   Log.info(ThemeInfo.show(themeInfo));
 
   let loadThemeByPath = (uiTheme, themePath, dispatch) => {
-    Oni_Core.Log.perf("theme.load", () => {
+    Oni_Core_Kernel.Log.perf("theme.load", () => {
       let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
       let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
       let colors = Textmate.Theme.getColors(theme);
       let isDark = Textmate.Theme.isDark(theme);
       let tokenColors = Textmate.Theme.getTokenColors(theme);
-      let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
+      let colors = Theme.ofColorTheme(uiTheme, colors);
       let tokenTheme = TokenTheme.create(tokenColors);
 
       dispatch(Actions.SetColorTheme(colors));
@@ -83,7 +84,7 @@ let start = (themeInfo: ThemeInfo.t) => {
       dispatch(
         Actions.ConfigurationTransform(
           "configuration.json",
-          Oni_Core.ConfigurationTransformer.setField(
+          ConfigurationTransformer.setField(
             "workbench.colorTheme",
             `String(name),
           ),

@@ -5,6 +5,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 module Ext = Oni_Extensions;
 
 module TokenUpdate = {

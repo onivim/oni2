@@ -3,7 +3,8 @@
      items across multiple frames.
    */
 open Oni_Core;
-open Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 
 module Constants = {
   let itemsPerFrame = 250;
@@ -18,7 +19,7 @@ module type Config = {
 
 module Make = (Config: Config) => {
   open CamomileBundled.Camomile;
-  module Zed_utf8 = Oni_Core.ZedBundled;
+  module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
   module Time = Revery_Core.Time;
   module Queue = ChunkyQueue;
 

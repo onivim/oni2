@@ -9,7 +9,7 @@ type t = {
   localized: option(string),
 };
 
-open Oni_Core.Utility;
+open Oni_Core_Utility;
 
 let regex = Re.Posix.re("^%(.*)%$") |> Re.compile;
 

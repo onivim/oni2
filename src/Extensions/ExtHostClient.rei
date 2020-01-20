@@ -33,7 +33,7 @@ let start:
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
-    Core.Setup.t
+    Oni_Core_Kernel.Setup.t
   ) =>
   t;
 let activateByEvent: (string, t) => unit;

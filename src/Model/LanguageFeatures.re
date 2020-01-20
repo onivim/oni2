@@ -6,7 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
 
 module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;

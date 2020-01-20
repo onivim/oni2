@@ -2,7 +2,7 @@ module Core = Oni_Core;
 
 module Ripgrep = Core.Ripgrep;
 module Subscription = Core.Subscription;
-module Log = (val Core.Log.withNamespace("Oni2.Search.SearchSubscription"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Search.SearchSubscription"));
 
 module Make = (Config: {type action;}) => {
   module Provider = {

@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});

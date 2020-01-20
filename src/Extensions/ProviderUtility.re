@@ -3,7 +3,7 @@
  */
 
 module Core = Oni_Core;
-module Utility = Core.Utility;
+module Utility = Oni_Core_Utility;
 
 let runIfSelectorPasses = (~buffer, ~selector, f) => {
   Core.Buffer.getFileType(buffer)

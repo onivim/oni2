@@ -1,4 +1,4 @@
-module Zed_utf8 = Kernel.ZedBundled;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 let repeatInput = (reps, input) => {
   let rec loop = (reps, cursors) =>

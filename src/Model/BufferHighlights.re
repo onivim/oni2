@@ -7,7 +7,8 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
+open Oni_Core_Utility;
+open Oni_Core_Kernel;
 
 type matchingPair = (Location.t, Location.t);
 

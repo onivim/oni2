@@ -1,5 +1,5 @@
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
 
 open Revery;
 open Revery.UI;

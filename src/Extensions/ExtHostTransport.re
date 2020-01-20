@@ -6,6 +6,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 open Reason_jsonrpc;
 open Rench;
 /* open Revery; */

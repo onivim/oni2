@@ -1,7 +1,7 @@
 /*
  * IndentationGuesser.re
  */
-open Kernel;
+open Oni_Core_Kernel;
 
 let getLeadingWhitespace = (s: string) => {
   let len = String.length(s);

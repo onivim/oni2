@@ -8,7 +8,7 @@
  */
 
 module Core = Oni_Core;
-open Core.Utility;
+open Oni_Core_Utility;
 
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
@@ -17,7 +17,7 @@ module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
 let start =
-    (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
+    (languageInfo: Ext.LanguageInfo.t, setup: Oni_Core_Kernel.Setup.t, cli: Core.Cli.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   if (!cli.shouldSyntaxHighlight) {

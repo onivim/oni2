@@ -3,6 +3,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module Make =
        (
@@ -52,7 +53,7 @@ module Make =
            };
            result;
          })
-      |> Utility.OptionEx.values;
+      |> Oni_Core_Utility.OptionEx.values;
 
     Provider.aggregate(promises);
   };

@@ -9,7 +9,7 @@
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
-open Utility;
+open Oni_Core_Utility;
 module Model = Oni_Model;
 
 module Window = WindowManager;

@@ -62,7 +62,7 @@ module Model = {
                 ),
               );
 
-            let contents = Oni_Core.Utility.Json.explode(json);
+            let contents = Oni_Core_Utility.Json.explode(json);
             {keys, contents};
           }
         );

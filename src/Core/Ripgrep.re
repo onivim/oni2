@@ -1,6 +1,6 @@
-open Kernel;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Rench;
-open Utility;
 
 module Time = Revery_Core.Time;
 

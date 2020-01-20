@@ -6,7 +6,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
   module Subscription = Core.Subscription;
   module Job = Core.Job;
   module Time = Revery_Core.Time;
-  module Log = (val Core.Log.withNamespace("Oni2.Store.FilterSubscription"));
+  module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.FilterSubscription"));
 
   module FilterJob = Model.FilterJob.Make(JobConfig);
 

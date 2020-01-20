@@ -4,13 +4,14 @@
  * This implements an updater (reducer + side effects) for the Quickmenu
  */
 open Oni_Core;
+open Oni_Core_Kernel;
 open Oni_Model;
-open Utility;
+open Oni_Core_Utility;
 
 module InputModel = Oni_Components.InputModel;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
 
-module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.Quickmenu"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun

@@ -3,7 +3,7 @@
  *
  * Resilient parsing for Configuration
  */
-open Kernel;
+open Oni_Core_Kernel;
 open ConfigurationValues;
 open LineNumber;
 

@@ -8,9 +8,9 @@ open Revery.UI;
 
 open Oni_Core;
 open Oni_Model;
-open Utility;
+open Oni_Core_Utility;
 
-module Zed_utf8 = Oni_Core.ZedBundled;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 module Constants = {
   let padding = 8;

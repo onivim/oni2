@@ -1,4 +1,4 @@
-open Kernel;
+open Oni_Core_Kernel;
 module Zed_utf8 = ZedBundled;
 
 type t = {

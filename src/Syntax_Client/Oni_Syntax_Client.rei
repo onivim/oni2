@@ -6,6 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;

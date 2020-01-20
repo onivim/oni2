@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core_Kernel;
 
 open Oni_Model;
 open Oni_Model.Actions;
@@ -210,7 +211,7 @@ let start = (getState, contributedCommands) => {
         let _ =
           Oni_Extensions.NodeTask.run(
             ~scheduler=Scheduler.immediate,
-            ~setup=Oni_Core.Setup.init(),
+            ~setup=Oni_Core_Kernel.Setup.init(),
             "add-to-path.js",
           );
         ();

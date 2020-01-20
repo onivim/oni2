@@ -5,7 +5,8 @@
  */
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Oni_Syntax;
 
 module BufferMap = IntMap;
@@ -18,7 +19,7 @@ let empty = BufferMap.empty;
 let noTokens = [];
 
 module ClientLog = (
-  val Oni_Core.Log.withNamespace("Oni2.Model.BufferSyntaxHighlights:TESTING")
+  val Log.withNamespace("Oni2.Model.BufferSyntaxHighlights:TESTING")
 );
 
 let getTokens = (bufferId: int, line: Index.t, highlights: t) => {

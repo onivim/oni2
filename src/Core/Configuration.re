@@ -3,7 +3,7 @@
  *
  * Configuration settings for the editor
  */
-open Kernel;
+open Oni_Core_Kernel;
 
 type t = {
   default: ConfigurationValues.t,

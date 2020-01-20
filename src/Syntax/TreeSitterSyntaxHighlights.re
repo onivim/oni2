@@ -4,6 +4,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 open Treesitter;
 
 module Log = (
@@ -84,7 +85,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
     );
 
   let (tree, newBaseline) =
-    Oni_Core.Log.perf("TreeSitter::parse", () =>
+    Oni_Core_Kernel.Log.perf("TreeSitter::parse", () =>
       TreeSitter.ArrayParser.parse(parser, Some(delta), lines)
     );
 

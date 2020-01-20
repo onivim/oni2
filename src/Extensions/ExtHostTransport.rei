@@ -29,7 +29,7 @@ let start:
     ~onInitialized: simpleCallback=?,
     ~onMessage: messageHandler=?,
     ~onClosed: simpleCallback=?,
-    Oni_Core.Setup.t
+    Oni_Core_Kernel.Setup.t
   ) =>
   t;
 

@@ -1,5 +1,6 @@
 open Oni_Core;
 open Oni_Extensions;
+open Oni_Core_Kernel;
 
 module Log = (val Log.withNamespace("Oni2.Model.FileExplorer"));
 

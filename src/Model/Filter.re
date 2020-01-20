@@ -5,10 +5,10 @@
  */
 open ReasonFuzz;
 
-open Oni_Core.CamomileBundled.Camomile;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
 
-module IndexEx = Oni_Core.Utility.IndexEx;
-module Zed_utf8 = Oni_Core.ZedBundled;
+module IndexEx = Oni_Core_Utility.IndexEx;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 module Option = {
   let map = f =>

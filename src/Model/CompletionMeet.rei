@@ -1,6 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
-open CamomileBundled.Camomile;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
 
 // A [meet] is information about where a completion should be requested
 // (where the candidate completions _meet_ the text). It includes

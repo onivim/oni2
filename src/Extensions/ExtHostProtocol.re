@@ -9,7 +9,7 @@ module ModelConfig = Configuration;
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
+open Oni_Core_Utility;
 
 module MessageType = {
   let initialized = 0;

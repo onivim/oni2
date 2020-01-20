@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 
 let reduce = (v: EditorGroup.t, action: Actions.t) => {
   let metrics = EditorMetricsReducer.reduce(v.metrics, action);

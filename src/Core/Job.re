@@ -1,4 +1,4 @@
-open Kernel;
+open Oni_Core_Kernel;
 module Time = Revery.Time;
 module Log = (val Log.withNamespace("Oni2.Core.Job"));
 

@@ -1,4 +1,4 @@
-open Kernel;
+open Oni_Core_Kernel;
 
 let waitForCondition = (~timeout=1.0, f) => {
   let thread =

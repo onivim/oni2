@@ -7,6 +7,7 @@
 open Revery;
 
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module FontSource = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]

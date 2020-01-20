@@ -1,6 +1,6 @@
 open TestFramework;
 
-open Oni_Core.Utility;
+open Oni_Core_Utility;
 
 describe("last", ({test, _}) => {
   open ListEx;

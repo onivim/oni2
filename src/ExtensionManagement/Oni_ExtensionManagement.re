@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module NodeTask = Oni_Extensions.NodeTask;
 

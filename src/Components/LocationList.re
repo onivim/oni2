@@ -3,7 +3,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
+open Oni_Core_Kernel;
 
 module Log = (val Log.withNamespace("Oni2.UI.LocationListView"));
 

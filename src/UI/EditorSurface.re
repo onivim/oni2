@@ -11,8 +11,11 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Core.CamomileBundled.Camomile;
+open Oni_Core_Kernel;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
 open Oni_Model;
+
+module Utility = Oni_Core_Utility;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
@@ -430,7 +433,7 @@ let%component make =
          let tokenEnd = token.endPosition |> Index.toZeroBased;
          index >= tokenStart && index < tokenEnd;
        })
-    |> Utility.OptionEx.of_list;
+    |> Oni_Core_Utility.OptionEx.of_list;
   };
 
   let style =

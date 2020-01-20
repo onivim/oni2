@@ -10,20 +10,20 @@
 open Revery;
 
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
+module Option = Oni_Core_Utility.Option;
 
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
-module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.StoreThread"));
+module DispatchLog = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.dispatch"));
 
-let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
+let discoverExtensions = (setup: Oni_Core_Kernel.Setup.t, cli: Core.Cli.t) =>
   if (cli.shouldLoadExtensions) {
     let extensions =
-      Core.Log.perf("Discover extensions", () => {
+      Oni_Core_Kernel.Log.perf("Discover extensions", () => {
         let extensions =
           ExtensionScanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
@@ -61,7 +61,7 @@ let start =
     (
       ~configurationFilePath=None,
       ~onAfterDispatch=_ => (),
-      ~setup: Core.Setup.t,
+      ~setup: Oni_Core_Kernel.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
       ~getClipboardText,

@@ -10,12 +10,12 @@ open EditorCoreTypes;
 open Oni_Model;
 
 module Core = Oni_Core;
-open Core.Utility;
+open Oni_Core_Utility;
 
 module Ext = Oni_Extensions;
-module Zed_utf8 = Core.ZedBundled;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
-module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.Vim"));
 
 type commandLineCompletionMeet = {
   prefix: string,
@@ -486,7 +486,7 @@ let start =
   let currentBufferId: ref(option(int)) = ref(None);
 
   let updateActiveEditorCursors = cursors => {
-    open Oni_Core.Utility;
+    open Oni_Core_Utility;
     let () =
       getState()
       |> Selectors.getActiveEditorGroup
@@ -499,7 +499,7 @@ let start =
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
-        open Oni_Core.Utility;
+        open Oni_Core_Utility;
 
         // Set cursors based on current editor
         let editor =
@@ -546,7 +546,7 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      open Oni_Core.Utility;
+      open Oni_Core_Utility;
 
       /* If a split was requested, create that first! */
       switch (dir) {

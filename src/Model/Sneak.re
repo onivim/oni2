@@ -1,7 +1,7 @@
 open Revery.Math;
 
 module InputModel = Oni_Components.InputModel;
-module StringEx = Oni_Core.Utility.StringEx;
+module StringEx = Oni_Core_Utility.StringEx;
 
 type callback = unit => unit;
 type bounds = unit => option(Rectangle.t);

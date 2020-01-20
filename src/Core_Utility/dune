@@ -1,5 +1,5 @@
 (library
-    (name Utility)
+    (name Oni_Core_Utility)
     (public_name Oni2.core_utility)
     (libraries 
         Revery

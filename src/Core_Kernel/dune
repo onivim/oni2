@@ -1,5 +1,5 @@
 (library
-    (name Kernel)
+    (name Oni_Core_Kernel)
     (public_name Oni2.core_kernel)
     (libraries 
         yojson

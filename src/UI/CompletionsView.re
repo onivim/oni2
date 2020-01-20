@@ -5,11 +5,12 @@ open Oni_Core;
 open Oni_Syntax;
 open Oni_Model;
 open Oni_Components;
-open Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 
 open Completions;
 
-module Zed_utf8 = Oni_Core.ZedBundled;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 module Ext = Oni_Extensions;
 
 open Ext.CompletionItemKind;

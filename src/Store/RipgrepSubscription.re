@@ -4,7 +4,7 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Ripgrep = Core.Ripgrep;
 module Subscription = Core.Subscription;
-module Log = (val Core.Log.withNamespace("Oni2.Store.RipgrepSubscription"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.RipgrepSubscription"));
 
 module Provider = {
   type action = Actions.t;

@@ -5,8 +5,8 @@
  */
 
 open Revery.UI;
-open Oni_Core.CamomileBundled.Camomile;
-module ZedBundled = Oni_Core.ZedBundled;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
+module ZedBundled = Oni_Core_Kernel.ZedBundled;
 
 let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
 

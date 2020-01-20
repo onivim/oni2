@@ -8,11 +8,13 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Oni_Model;
 open Utility;
 
 module Uri = Oni_Core.Uri;
-module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
@@ -364,7 +366,7 @@ let start = (extensions, setup: Setup.t) => {
       switch (Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
+        Oni_Core_Kernel.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Protocol.ModelContentChange.ofBufferUpdate(
               bu,

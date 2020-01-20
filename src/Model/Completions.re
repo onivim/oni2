@@ -5,9 +5,9 @@
  */
 
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
 
-module Zed_utf8 = Oni_Core.ZedBundled;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 type filteredCompletion = Filter.result(CompletionItem.t);
 

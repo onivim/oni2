@@ -4,7 +4,7 @@
  * Module to filter & rank items using various strategies.
  */
 
-open Oni_Core.CamomileBundled.Camomile;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
 
 type result('a) = {
   item: 'a,

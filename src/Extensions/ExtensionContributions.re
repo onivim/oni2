@@ -4,7 +4,8 @@
  * Types for VSCode Extension contribution points
  */
 open Oni_Core;
-open Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 open Rench;
 
 module Commands = {
@@ -174,5 +175,5 @@ let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
 };
 
 let getConfiguration = (manifest: t) => {
-  Utility.Option.value(~default=[], manifest.configuration);
+  Oni_Core_Utility.Option.value(~default=[], manifest.configuration);
 };

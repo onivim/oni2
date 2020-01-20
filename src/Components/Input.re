@@ -2,7 +2,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Option = Oni_Core.Utility.Option;
+module Option = Oni_Core_Utility.Option;
 
 module Cursor = {
   type state = {

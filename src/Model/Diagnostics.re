@@ -8,6 +8,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 
 /*
  * The type for diagnostics is a nested map:

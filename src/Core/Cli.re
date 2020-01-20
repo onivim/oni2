@@ -3,7 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
-open Kernel;
+open Oni_Core_Kernel;
 open Rench;
 
 module CoreLog = Log;
@@ -118,7 +118,7 @@ let parse =
 
   if (!CoreLog.isPrintingEnabled()) {
     /* On Windows, detach the application from the console if we're not logging to console */
-    Utility.Win32.freeConsole();
+    Oni_Core_Utility.Win32.freeConsole();
   };
 
   let paths = args^ |> List.rev;

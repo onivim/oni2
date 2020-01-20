@@ -1,5 +1,5 @@
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
 
 module WindowSplitId =
   Revery.UniqueId.Make({});

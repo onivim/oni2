@@ -4,6 +4,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 
 module Time = Revery_Core.Time;
 module Log = (val Log.withNamespace("Oni2.Syntax.TextmateTokenizerJob"));

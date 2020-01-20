@@ -10,6 +10,7 @@ open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Core_Kernel;
 module BufferHighlights = Oni_Model.BufferHighlights;
 module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
 module Diagnostic = Oni_Model.Diagnostic;

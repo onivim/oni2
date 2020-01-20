@@ -7,6 +7,8 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
+        Oni2.core_kernel
+        Oni2.core_utility
         Oni2.core
         Oni2.model
         Oni2.input

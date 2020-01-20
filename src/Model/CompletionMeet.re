@@ -8,8 +8,8 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-open CamomileBundled.Camomile;
-module Zed_utf8 = ZedBundled;
+open Oni_Core_Kernel.CamomileBundled.Camomile;
+module Zed_utf8 = Oni_Core_Kernel.ZedBundled;
 
 type t = {
   bufferId: int,

@@ -5,7 +5,8 @@
  */
 open Oni_Core;
 open Oni_Model;
-open Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);

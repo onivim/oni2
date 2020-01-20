@@ -14,10 +14,10 @@ module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
-module Log = (val Core.Log.withNamespace("Oni2_editor"));
-module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
-module LwtEx = Core.Utility.LwtEx;
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2_editor"));
+module ReveryLog = (val Oni_Core_Kernel.Log.withNamespace("Revery"));
+module Option = Oni_Core_Utility.Option;
+module LwtEx = Oni_Core_Utility.LwtEx;
 
 let installExtension = (path, cli) => {
   switch (Store.Utility.getUserExtensionsDirectory(cli)) {
@@ -109,7 +109,7 @@ if (cliOptions.syntaxHighlightService) {
       );
 
     Log.debug("Initializing setup.");
-    let setup = Core.Setup.init();
+    let setup = Oni_Core_Kernel.Setup.init();
     Log.debug("Startup: Parsing CLI options");
 
     Log.info("Startup: Changing folder to: " ++ cliOptions.folder);

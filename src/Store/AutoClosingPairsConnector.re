@@ -6,10 +6,11 @@
  */
 
 module Core = Oni_Core;
+open Oni_Core_Kernel;
 module Ext = Oni_Extensions;
 module Model = Oni_Model;
 
-module Log = (val Core.Log.withNamespace("Oni2.Store.AutoClosingPairs"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.AutoClosingPairs"));
 
 let start = (languageInfo: Ext.LanguageInfo.t) => {
   ignore(languageInfo);

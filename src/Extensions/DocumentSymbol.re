@@ -30,7 +30,7 @@ let rec of_yojson_exn: Yojson.Safe.t => t =
           json
           |> member("detail")
           |> to_string_option
-          |> Utility.Option.value(~default="");
+          |> Oni_Core_Utility.Option.value(~default="");
         let range =
           json
           |> member("range")

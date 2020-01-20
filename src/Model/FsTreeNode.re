@@ -1,5 +1,5 @@
 open Oni_Core;
-open Utility;
+open Oni_Core_Utility;
 
 type t = {
   path: string,

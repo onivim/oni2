@@ -6,8 +6,9 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core_Kernel;
 open Oni_Model;
-open Utility;
+open Oni_Core_Utility;
 open Actions;
 
 module Utility = Utility;
@@ -15,7 +16,7 @@ module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
 
-module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
   let (stream, _dispatch) = Isolinear.Stream.create();

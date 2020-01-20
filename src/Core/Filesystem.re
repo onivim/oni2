@@ -6,7 +6,7 @@
 
    reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
  */
-module Path = Utility.Path;
+module Path = Oni_Core_Utility.Path;
 
 type t('a) = result('a, string);
 

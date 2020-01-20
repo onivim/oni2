@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Store.Font"));

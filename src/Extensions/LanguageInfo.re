@@ -3,6 +3,7 @@
  */
 
 open Oni_Core;
+open Oni_Core_Kernel;
 open Rench;
 
 open ExtensionScanner;
@@ -62,7 +63,7 @@ let getGrammarPathFromScope = (li: t, scope: string) => {
 };
 
 let getTreesitterPathFromScope = (li: t, scope: string) => {
-  li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Utility.Option.join;
+  li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Oni_Core_Utility.Option.join;
 };
 
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {

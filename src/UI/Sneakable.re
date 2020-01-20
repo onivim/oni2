@@ -9,7 +9,7 @@
 open Revery.UI;
 open Revery.UI.Components;
 
-module Utility = Oni_Core.Utility;
+module Utility = Oni_Core_Utility;
 
 let%component make =
               (

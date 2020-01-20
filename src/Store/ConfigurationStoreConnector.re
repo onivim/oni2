@@ -5,10 +5,11 @@
  */
 
 open Oni_Core;
+open Oni_Core_Utility;
 open Oni_Model;
 open Utility;
 
-module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2.Store.Configuration"));
 
 let start =
     (
@@ -61,7 +62,7 @@ let start =
       | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
       | Ok(configPath) =>
         if (!Buffers.isModifiedByPath(buffers, configPath)) {
-          Oni_Core.Log.perf("Apply configuration transform", () => {
+          Oni_Core_Kernel.Log.perf("Apply configuration transform", () => {
             let parsedJson = Yojson.Safe.from_file(configPath);
             let newJson = transformer(parsedJson);
             let oc = open_out(configPath);

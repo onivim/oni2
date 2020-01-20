@@ -1,5 +1,5 @@
 open EditorCoreTypes;
-open Kernel;
+open Oni_Core_Kernel;
 
 let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
   ranges => {

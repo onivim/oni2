@@ -1,7 +1,8 @@
 open Oni_Core;
-open Utility;
+open Oni_Core_Kernel;
+open Oni_Core_Utility;
 
-module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
+module Log = (val Oni_Core_Kernel.Log.withNamespace("Oni2_editor.HealthCheck"));
 
 type checks =
   | Common
