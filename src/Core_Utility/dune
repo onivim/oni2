@@ -1,8 +1,9 @@
 (library
     (name Utility)
-    (public_name Oni2.core.utility)
+    (public_name Oni2.core_utility)
     (libraries 
-        Oni2.core.kernel
+        Revery
+        Oni2.core_kernel
         libvim
         lwt
         timber)

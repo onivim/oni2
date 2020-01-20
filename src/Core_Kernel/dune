@@ -1,6 +1,6 @@
 (library
     (name Kernel)
-    (public_name Oni2.core.kernel)
+    (public_name Oni2.core_kernel)
     (libraries 
         yojson
         ppx_deriving.runtime

@@ -9,8 +9,6 @@
     (public_name Oni2.core)
     (c_names bindings)
     (libraries 
-        Oni2.core.kernel
-        Oni2.core.utility
         Rench
         yojson
         ppx_deriving.runtime
@@ -18,5 +16,8 @@
         textmate
         editor-core-types
         timber
+        Oni2.core_kernel
+        Oni2.core_utility
+        Revery
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
