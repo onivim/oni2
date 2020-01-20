@@ -1,0 +1,9 @@
+(library
+    (name Utility)
+    (public_name Oni2.core.utility)
+    (libraries 
+        Oni2.core.kernel
+        libvim
+        lwt
+        timber)
+    (preprocess (pps lwt_ppx)))
