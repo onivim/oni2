@@ -126,6 +126,10 @@ type t =
   | Sneak(Sneak.action)
   | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
+  | WindowCloseBlocked
+  | WindowCloseDiscardConfirmed
+  | WindowCloseSaveAllConfirmed
+  | WindowCloseCanceled
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | Noop
