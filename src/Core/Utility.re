@@ -809,11 +809,27 @@ module Path = {
   // TODO: Make good
 
   let toRelative = (~base, path) => {
+    Printf.printf("[toRelative] base: %s path: %s\n", base, path);
     let base = base == "/" ? base : base ++ Filename.dir_sep;
-    Str.replace_first(Str.regexp_string(base), "", path);
+    let result = Str.replace_first(Str.regexp_string(base), "", path);
+    Printf.printf("[toRelative] result: %s\n", result);
+    result;
   };
 
-  let explode = String.split_on_char(Filename.dir_sep.[0]);
+  let explode = str => {
+    Printf.printf(
+      "[explode] DIR SEP: |%c| (%d)\n",
+      Filename.dir_sep.[0],
+      String.length(Filename.dir_sep),
+    );
+    print_endline("[explode] STR: " ++ str);
+    let result = String.split_on_char(Filename.dir_sep.[0], str);
+    List.iter(
+      m => Printf.printf("[explode] result: %s (%d)\n", m, String.length(m)),
+      result,
+    );
+    result;
+  };
 };
 
 module Json = {
