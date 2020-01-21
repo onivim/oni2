@@ -4,7 +4,9 @@ module Scheme = {
     | File
     | Http
     | Https
-    | Memory;
+    | Memory
+    | Git
+    | Custom(string);
 
   let create = () => {
     let strToScheme = Hashtbl.create(8);
@@ -12,6 +14,7 @@ module Scheme = {
     Hashtbl.add(strToScheme, "http", Http);
     Hashtbl.add(strToScheme, "https", Https);
     Hashtbl.add(strToScheme, "memory", Memory);
+    Hashtbl.add(strToScheme, "git", Git);
     strToScheme;
   };
 
@@ -22,7 +25,9 @@ module Scheme = {
     | File => "file"
     | Http => "http"
     | Https => "https"
-    | Memory => "memory";
+    | Memory => "memory"
+    | Git => "git"
+    | Custom(scheme) => scheme;
 
   let _isAllowedScheme = Hashtbl.mem(strToScheme);
 
@@ -34,6 +39,7 @@ module Scheme = {
       Ok(scheme |> _ofString)
     | `List([`String(scheme), ..._]) when _isAllowedScheme(scheme) =>
       Ok(scheme |> _ofString)
+    | `String(scheme) => Ok(Custom(scheme))
     | _ => Error("Invalid scheme")
     };
 
@@ -92,7 +98,9 @@ let _addSlash = (scheme: Scheme.t, path: string) => {
     } else {
       path;
     }
-  | Memory => path
+  | Memory
+  | Git
+  | Custom(_) => path
   };
 };
 

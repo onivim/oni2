@@ -10,7 +10,6 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
 
-module Uri = Oni_Core.Uri;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 module Option = Utility.Option;
 
@@ -289,8 +288,8 @@ let start = (extensions, setup: Setup.t) => {
 
   let onClientMessage = (msg: ExtHostClient.msg) =>
     switch (msg) {
-      | RegisterSCMProvider({handle, id, label, rootUri}) =>
-        dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
+    | RegisterSCMProvider({handle, id, label, rootUri}) =>
+      dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
     };
 
   let onOutput = Log.info;
@@ -433,6 +432,49 @@ let start = (extensions, setup: Setup.t) => {
       )
     });
 
+  let testSCM = state =>
+    Isolinear.Effect.create(~name="exthost.testSCM", () => {
+      state
+      |> Selectors.getActiveBuffer
+      |> Option.iter(buf => {
+           let uri = Buffer.getUri(buf);
+           state.scm.providers
+           |> List.iter((provider: SCM.Provider.t) => {
+                Console.log("--");
+                Console.log(provider);
+
+                let _ =
+                  Oni_Extensions.ExtHostClient.provideDecorations(
+                    0,
+                    Uri.fromPath("/home/glennsl/dev/remote/glennsl/oni2/src/Store/CommandStoreConnector.re"),
+                    extHostClient,
+                  );
+
+                let promise =
+                  Oni_Extensions.ExtHostClient.provideOriginalResource(
+                    provider.handle,
+                    uri,
+                    extHostClient,
+                  );
+
+                Lwt.on_success(promise, uri => {
+                  print_endline(Uri.toString(uri));
+
+                  let _ =
+                    Oni_Extensions.ExtHostClient.provideTextDocumentContent(
+                      1,
+                      uri,
+                      extHostClient,
+                    );
+
+                  // Lwt.on_success(promise, uri =>
+                  //   print_endline(Uri.toString(uri))
+                  // );
+                });
+              });
+         })
+    });
+
   let updater = (state: State.t, action) =>
     switch (action) {
     | Actions.Init => (
@@ -463,6 +505,7 @@ let start = (extensions, setup: Setup.t) => {
         sendBufferEnterEffect(bm, fileTypeOpt),
       )
 
+    | Actions.Command("testscm") => (state, testSCM(state))
     | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (
         {
           ...state,

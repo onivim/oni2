@@ -20,7 +20,12 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 type t = ExtHostTransport.t;
 
 type msg =
-  | RegisterSCMProvider({handle: int, id: string, label: string, rootUri: option(Uri.t)});
+  | RegisterSCMProvider({
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Uri.t),
+    });
 
 type unitCallback = unit => unit;
 let noop = Utility.noop;
@@ -170,6 +175,8 @@ let start =
       };
       Ok(None);
 
+    // | ("MainThreadSCM", "$updateSourceControl") =>
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -245,6 +252,20 @@ let provideCompletions = (id, uri, position, client) => {
   promise;
 };
 
+let provideDecorations = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.Decorations.provideDecorations(id, uri),
+      json =>
+      print_endline(Yojson.Safe.to_string(json))
+      // Core.Uri.of_yojson(json) |> Utility.Result.exn
+    );
+  promise;
+};
+
+
 let provideDefinition = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let json =
@@ -303,6 +324,18 @@ let provideDocumentSymbols = (id, uri, client) => {
   promise;
 };
 
+let provideOriginalResource = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.SCM.provideOriginalResource(id, uri),
+      json =>
+      Core.Uri.of_yojson(json) |> Utility.Result.exn
+    );
+  promise;
+};
+
 let provideReferences = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(LocationWithUri.t) = [];
@@ -323,9 +356,21 @@ let provideReferences = (id, uri, position, client) => {
   promise;
 };
 
-let send = (client, msg) => {
-  let _ = ExtHostTransport.send(client, msg);
-  ();
+let provideTextDocumentContent = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.DocumentContent.provideTextDocumentContent(id, uri),
+      json => {
+      print_endline(Yojson.Safe.to_string(json));
+      ""
+      // Core.Uri.of_yojson(json) |> Utility.Result.exn
+      }
+    );
+  promise;
 };
+
+let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);

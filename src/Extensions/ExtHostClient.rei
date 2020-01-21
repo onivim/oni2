@@ -5,7 +5,12 @@ module Core = Oni_Core;
 type t;
 
 type msg =
-  | RegisterSCMProvider({handle: int, id: string, label: string, rootUri: option(Core.Uri.t)});
+  | RegisterSCMProvider({
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Core.Uri.t),
+    });
 
 type unitCallback = unit => unit;
 
@@ -49,6 +54,7 @@ let updateDocument:
 let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
+let provideDecorations: (int, Core.Uri.t, t) => Lwt.t(unit);
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);
@@ -57,8 +63,10 @@ let provideDocumentHighlights:
   Lwt.t(list(Protocol.DocumentHighlight.t));
 let provideDocumentSymbols:
   (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
+let provideOriginalResource: (int, Core.Uri.t, t) => Lwt.t(Core.Uri.t);
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
+let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;

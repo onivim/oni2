@@ -139,6 +139,14 @@ function activate(context) {
             return vscode.Uri.file("README.md.old");
         }
     };
+
+    const textContentProvider = class {
+        provideTextDocumentContent(uri) {
+            console.log("CONTENT!");
+            return "Hello. This is content.";
+        }
+    };
+    vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)
 }
 
 // this method is called when your extension is deactivated

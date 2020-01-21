@@ -548,6 +548,23 @@ module OutgoingNotifications = {
     };
   };
 
+  module Decorations = {
+    let provideDecorations = (handle: int, uri: Uri.t) =>
+      _buildNotification(
+        "ExtHostDecorations",
+        "$provideDecorations",
+        `List([
+          `List([
+            `Assoc([
+              ("id", `Int(0)),
+              ("handle", `Int(handle)),
+              ("uri", Uri.to_yojson(uri)),
+            ])
+          ])
+        ]),
+      );
+  }
+
   module Documents = {
     let acceptModelChanged =
         (uri: Uri.t, modelChangedEvent: ModelChangedEvent.t, isDirty: bool) => {
@@ -601,6 +618,16 @@ module OutgoingNotifications = {
       );
     };
   };
+
+  module DocumentContent = {
+    let provideTextDocumentContent = (handle: int, resource: Uri.t) =>
+      _buildNotification(
+        "ExtHostDocumentContentProviders",
+        "$provideTextDocumentContent",
+        `List([`Int(handle), Uri.to_yojson(resource)]),
+      );
+  };
+
 
   module ExtensionService = {
     let activateByEvent = (event: string) => {
@@ -666,6 +693,15 @@ module OutgoingNotifications = {
       _buildNotification(
         "ExtHostLanguageFeatures",
         "$provideDocumentSymbols",
+        `List([`Int(handle), Uri.to_yojson(resource)]),
+      );
+  };
+
+  module SCM = {
+    let provideOriginalResource = (handle: int, resource: Uri.t) =>
+      _buildNotification(
+        "ExtHostSCM",
+        "$provideOriginalResource",
         `List([`Int(handle), Uri.to_yojson(resource)]),
       );
   };

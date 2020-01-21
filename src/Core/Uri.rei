@@ -3,7 +3,9 @@ module Scheme: {
     | File
     | Http
     | Https
-    | Memory;
+    | Memory
+    | Git
+    | Custom(string);
 
   let toString: t => string;
 
