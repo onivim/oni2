@@ -116,7 +116,7 @@ let parse =
   );
 
   if (CoreLog.isPrintingEnabled()) {
-    /* On Windows, detach the application from the console if we're not logging to console */
+    /* On Windows, we need to create a console instance if possible */
     Revery.App.initConsole();
   };
 
