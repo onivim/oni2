@@ -54,6 +54,7 @@ type t = {
   pane: Pane.t,
   searchPane: Feature_Search.model,
   focus: Focus.stack,
+  modal: option(Modal.t),
 };
 
 let create: unit => t =
@@ -102,4 +103,5 @@ let create: unit => t =
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
+    modal: None,
   };

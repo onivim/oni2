@@ -226,6 +226,19 @@ let start =
 
   latestRunEffects := Some(runEffects);
 
+  Option.iter(
+    window =>
+      Revery.Window.setCanQuitCallback(window, () =>
+        if (Model.Buffers.anyModified(latestState^.buffers)) {
+          dispatch(Model.Actions.WindowCloseBlocked);
+          false;
+        } else {
+          true;
+        }
+      ),
+    window,
+  );
+
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
