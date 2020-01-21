@@ -207,6 +207,7 @@ module Overlay = {
       left(0),
       right(0),
       pointerEvents(`Allow),
+      cursor(MouseCursors.arrow),
     ];
   };
 
