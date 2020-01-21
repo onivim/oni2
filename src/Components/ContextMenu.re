@@ -141,6 +141,13 @@ module Menu = {
       backgroundColor(theme.menuBackground),
       color(theme.menuForeground),
       width(Constants.menuWidth),
+      boxShadow(
+        ~xOffset=-5.,
+        ~yOffset=-5.,
+        ~blurRadius=25.,
+        ~spreadRadius=-10.,
+        ~color=Color.rgba(0., 0., 0., 0.0001),
+      ),
     ];
   };
 
@@ -172,16 +179,6 @@ module Menu = {
         };
 
       (
-        // TODO: BoxShadow apparently blocks mouse events. Figure out why before adding back
-        // <BoxShadow
-        //   boxShadow={Style.BoxShadow.make(
-        //     ~xOffset=-11.,
-        //     ~yOffset=-11.,
-        //     ~blurRadius=25.,
-        //     ~spreadRadius=0.,
-        //     ~color=Color.rgba(0., 0., 0., 0.2),
-        //     (),
-        //   )}>
         <View
           style={Styles.container(~x, ~y, ~theme)}
           ref={node => setRef(_ => Some(node))}>
@@ -192,7 +189,6 @@ module Menu = {
               })
            |> React.listToElement}
         </View>,
-        // </BoxShadow>,
         hooks,
       );
     });
