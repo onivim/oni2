@@ -12,7 +12,7 @@ steps:
   - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy x Oni2 -f --version
-    displayName: "esy x Oni2 -f --version"
+    displayName: "esy x Oni2_editor -f --version"
   - script: esy x Oni2 -f --checkhealth --debug
     displayName: "esy x Oni2 -f --checkhealth --debug"
   - script: esy create-release
