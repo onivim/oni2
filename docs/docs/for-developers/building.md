@@ -107,12 +107,12 @@ If you want to develop, or debug, the extension host back-end, follow these step
 
 > You can use the `yarn watch` command too - this is useful for iterating quickly!
 
-To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log.
+To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
 
 ### Testing
 
 You can use the `ONI2_EXTHOST` environment variable to override the default extension host with your local extension host:
-- `ONI2_DEBUG=1 ONI2_EXTHOST=/Users/<your-username>/vscode-exthost esy run -f`
+- `ONI2_EXTHOST=/Users/<your-username>/vscode-exthost esy run -f --debug``
 
 For example, adding the logging here (the [`$executeContributedCommand`](https://github.com/onivim/vscode-exthost/blob/a25f426a04fe427beab7465be660f89a794605b5/src/vs/workbench/api/node/extHostCommands.ts#L165) proxy method)
 
