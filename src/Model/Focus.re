@@ -5,7 +5,8 @@ type focusable =
   | Quickmenu
   | Search
   | FileExplorer
-  | Sneak;
+  | Sneak
+  | Modal;
 
 type stack = list(focusable);
 
