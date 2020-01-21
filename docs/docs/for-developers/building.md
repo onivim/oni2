@@ -115,10 +115,13 @@ You can use the `ONI2_EXTHOST` environment variable to override the default exte
 - `ONI2_DEBUG=1 ONI2_EXTHOST=/Users/<your-username>/vscode-exthost esy run -f`
 
 For example, adding the logging here (the [`$executeContributedCommand`](https://github.com/onivim/vscode-exthost/blob/a25f426a04fe427beab7465be660f89a794605b5/src/vs/workbench/api/node/extHostCommands.ts#L165) proxy method)
+
 ![image](https://user-images.githubusercontent.com/13532591/72770589-3013a500-3bb3-11ea-9c24-805bfe1cb7d1.png)
 
 Results in this debug logging:
-![image](https://user-images.githubusercontent.com/13532591/72770508-ea56dc80-3bb2-11ea-96a4-4afefcb282da.png)
+
+![image](https://user-images.githubusercontent.com/13532591/72770839-ed9e9800-3bb3-11ea-9cb9-317223fb2dbb.png)
+
 
 # Building the Documentation Website
 
