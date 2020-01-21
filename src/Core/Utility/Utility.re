@@ -19,4 +19,3 @@ module ResultEx = ResultEx;
 module StringEx = StringEx;
 module ThreadEx = ThreadEx;
 module VimEx = VimEx;
-module Win32 = Win32;
