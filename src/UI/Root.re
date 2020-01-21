@@ -9,34 +9,42 @@ open Revery.UI;
 open Oni_Model;
 
 module Styles = {
-  let root = (background, foreground) =>
-    Style.[
-      backgroundColor(background),
-      color(foreground),
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-      justifyContent(`Center),
-      alignItems(`Stretch),
-    ];
+  open Style;
 
-  let surface = Style.[flexGrow(1), flexDirection(`Row)];
+  let root = (background, foreground) => [
+    backgroundColor(background),
+    color(foreground),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+    justifyContent(`Center),
+    alignItems(`Stretch),
+  ];
+
+  let surface = [flexGrow(1), flexDirection(`Row)];
 
   let workspace = Style.[flexGrow(1), flexDirection(`Column)];
 
-  let statusBar = statusBarHeight =>
-    Style.[
-      backgroundColor(Color.hex("#21252b")),
-      height(statusBarHeight),
-      justifyContent(`Center),
-      alignItems(`Center),
-    ];
+  let statusBar = statusBarHeight => [
+    backgroundColor(Color.hex("#21252b")),
+    height(statusBarHeight),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{theme, configuration, uiFont, editorFont, sideBar, zenMode, _} = state;
+  let State.{
+        theme,
+        configuration,
+        uiFont as font,
+        editorFont,
+        sideBar,
+        zenMode,
+        _,
+      } = state;
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -98,13 +106,13 @@ let make = (~state: State.t, ()) => {
          switch (quickmenu.variant) {
          | Wildmenu(_) => <WildmenuView theme configuration state=quickmenu />
 
-         | _ =>
-           <QuickmenuView theme configuration state=quickmenu font=uiFont />
+         | _ => <QuickmenuView theme configuration state=quickmenu font />
          }
        }}
       <KeyDisplayerView state />
     </Overlay>
     statusBar
+    <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
 };

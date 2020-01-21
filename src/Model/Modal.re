@@ -1,0 +1,2 @@
+type t =
+  | UnsavedBuffersWarning;
