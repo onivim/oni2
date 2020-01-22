@@ -152,7 +152,7 @@ let parse =
     Internal.usage(),
   )) {
   | exception (Arg.Bad(err)) => runAndExit((_) => { prerr_endline(err); 1 })
-  | exception (Arg.Help(msg)) => runAndExit((_) => { print_endline(msg); 1 })
+  | exception (Arg.Help(msg)) => runAndExit((_) => { print_endline(msg); 0 })
   | _ => ()
   };
 
