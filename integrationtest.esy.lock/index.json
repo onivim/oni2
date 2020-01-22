@@ -1,5 +1,5 @@
 {
-  "checksum": "3076357990862c8bc691cd82ff1ad9d2",
+  "checksum": "7e5115175531a3601f6dcc2ce272bb16",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -836,23 +836,6 @@
       ],
       "devDependencies": []
     },
-    "esy-skia@0.6.0@d41d8cd9": {
-      "id": "esy-skia@0.6.0@d41d8cd9",
-      "name": "esy-skia",
-      "version": "0.6.0",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/esy-skia/-/esy-skia-0.6.0.tgz#sha1:8afebb69ad8e60b71da3f45b63b30bdd9315a330"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9",
-        "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
     "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9": {
       "id": "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
       "name": "esy-sdl2",
@@ -891,22 +874,6 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9": {
-      "id":
-        "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
-      "name": "esy-nasm",
-      "version":
-        "github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a",
-      "source": {
-        "type": "install",
-        "source": [
-          "github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
-      "devDependencies": []
-    },
     "esy-macdylibbundler@0.4.5@d41d8cd9": {
       "id": "esy-macdylibbundler@0.4.5@d41d8cd9",
       "name": "esy-macdylibbundler",
@@ -935,23 +902,6 @@
       "overrides": [],
       "dependencies": [
         "esy-nasm@github:revery-ui/esy-nasm#64a802b@d41d8cd9",
-        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
-        "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9": {
-      "id":
-        "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9",
-      "name": "esy-libjpeg-turbo",
-      "version": "github:prometheansacrifice/libjpeg-turbo#50e8e32c48",
-      "source": {
-        "type": "install",
-        "source": [ "github:prometheansacrifice/libjpeg-turbo#50e8e32c48" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
         "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
         "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
       ],
@@ -1126,7 +1076,7 @@
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
-        "esy-skia@0.6.0@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",

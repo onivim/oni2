@@ -245,6 +245,7 @@
     "editor-core-types": "onivim/editor-core-types#16dd98e",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-sdl2": "revery-ui/esy-sdl2#b63892b",
+    "esy-skia": "revery-ui/esy-skia#91b10c9",
     "timber": "glennsl/timber#ae5de6c",
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6"
   },
