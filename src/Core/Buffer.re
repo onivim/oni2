@@ -4,8 +4,14 @@
  * In-memory text buffer representation
  */
 open EditorCoreTypes;
+module Option = Utility.Option;
 
 module BufferLine = {
+  open CamomileBundled.Camomile;
+  let space = UChar.of_char(' ');
+  let tab = UChar.of_char('\t');
+  let cr = UChar.of_char('\r');
+  let lf = UChar.of_char('\n');
   type t = {
     raw: string,
     indentation: IndentationSettings.t,
@@ -16,13 +22,14 @@ module BufferLine = {
   let lengthInBytes = ({raw, _}) => String.length(raw);
 
   let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
+  let slowGetString = ({raw, _}) => raw;
 
   // TODO: Make this faster...
   let boundedLengthUtf8 = (~max, {raw, _}) =>
     min(max, ZedBundled.length(raw));
 
   // TODO: Make this faster...
-  let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(index, raw);
+  let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(raw, index);
 
   module Internal = {
     let measure = (indentationSettings: IndentationSettings.t, c) =>
@@ -37,12 +44,12 @@ module BufferLine = {
   let getPositionAndWidth = (~index: int, {raw, indentation}) => {
     let x = ref(0);
     let totalOffset = ref(0);
-    let len = ZedBundled.length(str);
+    let len = ZedBundled.length(raw);
 
     let measure = Internal.measure(indentation);
 
-    while (x^ < len && x^ < i) {
-      let c = ZedBundled.get(str, x^);
+    while (x^ < len && x^ < index) {
+      let c = ZedBundled.get(raw, x^);
       let width = measure(c);
 
       totalOffset := totalOffset^ + width;
@@ -50,7 +57,7 @@ module BufferLine = {
       incr(x);
     };
 
-    let width = i < len && i >= 0 ? measure(ZedBundled.get(str, i)) : 1;
+    let width = index < len && index >= 0 ? measure(ZedBundled.get(raw, index)) : 1;
     (totalOffset^, width);
   };
 };
@@ -109,7 +116,9 @@ let setFileType = (fileType: option(string), buffer: t) => {
 
 let getId = (buffer: t) => buffer.id;
 
-let getLine = (line: int, buffer: t) => BufferLine.make(buffer.lines[line]);
+let getLine = (line: int, buffer: t) => BufferLine.make(
+~indentation=Option.value(~default=IndentationSettings.default, buffer.indentation)
+, buffer.lines[line]);
 let getLines = (buffer: t) => buffer.lines;
 
 let getVersion = (buffer: t) => buffer.version;

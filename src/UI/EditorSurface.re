@@ -356,7 +356,7 @@ let%component make =
     if (i >= lineCount) {
       [];
     } else {
-      let line = Buffer.getLine(buffer, i);
+      let line = Buffer.getLine(i, buffer);
 
       let idx = Index.fromZeroBased(i);
       let highlights =

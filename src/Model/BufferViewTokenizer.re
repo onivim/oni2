@@ -132,7 +132,7 @@ let tokenize =
     ~endIndex,
     ~f=split,
     ~measure=measure(indentationSettings),
-    s,
+    line,
   )
   |> List.filter(filterRuns)
   |> List.map(textRunToToken(colorizer));

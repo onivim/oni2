@@ -18,7 +18,8 @@ let rec getIndentLevel =
           line,
           previousIndentLevel,
         ) => {
-  let lineText = Buffer.getLine(buffer, line);
+  let lineText = Buffer.getLine(line, buffer)
+  |> Buffer.BufferLine.slowGetString;
 
   /*
    * If the line isn't empty, we should use that lines indent level.
@@ -30,6 +31,8 @@ let rec getIndentLevel =
    * If we hit the top or bottom of the buffer, just set the next line indent
    * to 0.
    */
+  
+  // TODO: Speed this up - no need to copy / allocate to check this!
   if (String.trim(lineText) != "") {
     Indentation.getLevel(indentationSettings, lineText);
   } else {
