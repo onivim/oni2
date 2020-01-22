@@ -66,8 +66,6 @@ let _getNextBreak =
 let defaultMeasure: measureFunc = _ => 1;
 
 let getOffsetFromStart = (~measure, ~idx, bufferLine) => {
-  // TODO: Fix this
-  ignore(measure);
   if (idx <= 0) {
     0;
   } else {
@@ -75,8 +73,7 @@ let getOffsetFromStart = (~measure, ~idx, bufferLine) => {
     let i = ref(0);
 
     while (i^ < idx) {
-      let (_position, width) =
-        BufferLine.getPositionAndWidth(~index=i^, bufferLine);
+      let width = measure(BufferLine.unsafeGetUChar(~index=i^, bufferLine));
       offset := offset^ + width;
       incr(i);
     };
