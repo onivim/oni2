@@ -1,38 +1,18 @@
 {
-  "checksum": "1759bd0fea3bf73be7980afb02e4539b",
+  "checksum": "3076357990862c8bc691cd82ff1ad9d2",
   "root": "Oni2@link-dev:./package.json",
   "node": {
-    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9": {
+    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
       "id":
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
       "name": "yarn-pkg-config",
-      "version":
-        "github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0",
+      "version": "github:esy-ocaml/yarn-pkg-config#db3a0b6",
       "source": {
         "type": "install",
-        "source": [
-          "github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0"
-        ]
+        "source": [ "github:esy-ocaml/yarn-pkg-config#db3a0b6" ]
       },
       "overrides": [],
       "dependencies": [],
-      "devDependencies": []
-    },
-    "yarn-pkg-config@0.29.5@d41d8cd9": {
-      "id": "yarn-pkg-config@0.29.5@d41d8cd9",
-      "name": "yarn-pkg-config",
-      "version": "0.29.5",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/yarn-pkg-config/-/yarn-pkg-config-0.29.5.tgz#sha1:e5695e932cfb8fcae9f8c08aabc08a5ba7996a37"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "nopam@git:https://github.com/yunxing/nopam.git#7cd19f068ac9aaf75010cd6961f7c65c779a1d4a@d41d8cd9",
-        "dependency-env@git:https://github.com/npm-ml/dependency-env.git#94c75aff3a71587afb570d89bcf2eef7996bb67f@d41d8cd9"
-      ],
       "devDependencies": []
     },
     "xmldom@0.1.31@d41d8cd9": {
@@ -342,7 +322,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "yarn-pkg-config@0.29.5@d41d8cd9", "refmterr@3.3.0@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-freetype2@2.9.1007@d41d8cd9", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/lambda-term@opam:2.0.3@9465cf1c",
@@ -583,22 +564,6 @@
         "type": "install",
         "source": [
           "archive:https://registry.npmjs.org/ocaml/-/ocaml-4.7.1004.tgz#sha1:731ca0ddb4d845d2ed2da8af50f70c5ba9092114"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
-      "devDependencies": []
-    },
-    "nopam@git:https://github.com/yunxing/nopam.git#7cd19f068ac9aaf75010cd6961f7c65c779a1d4a@d41d8cd9": {
-      "id":
-        "nopam@git:https://github.com/yunxing/nopam.git#7cd19f068ac9aaf75010cd6961f7c65c779a1d4a@d41d8cd9",
-      "name": "nopam",
-      "version":
-        "git:https://github.com/yunxing/nopam.git#7cd19f068ac9aaf75010cd6961f7c65c779a1d4a",
-      "source": {
-        "type": "install",
-        "source": [
-          "git:https://github.com/yunxing/nopam.git#7cd19f068ac9aaf75010cd6961f7c65c779a1d4a"
         ]
       },
       "overrides": [],
@@ -871,6 +836,23 @@
       ],
       "devDependencies": []
     },
+    "esy-skia@0.6.0@d41d8cd9": {
+      "id": "esy-skia@0.6.0@d41d8cd9",
+      "name": "esy-skia",
+      "version": "0.6.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/esy-skia/-/esy-skia-0.6.0.tgz#sha1:8afebb69ad8e60b71da3f45b63b30bdd9315a330"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9",
+        "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
     "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9": {
       "id": "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
       "name": "esy-sdl2",
@@ -909,6 +891,22 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9": {
+      "id":
+        "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
+      "name": "esy-nasm",
+      "version":
+        "github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "esy-macdylibbundler@0.4.5@d41d8cd9": {
       "id": "esy-macdylibbundler@0.4.5@d41d8cd9",
       "name": "esy-macdylibbundler",
@@ -937,6 +935,23 @@
       "overrides": [],
       "dependencies": [
         "esy-nasm@github:revery-ui/esy-nasm#64a802b@d41d8cd9",
+        "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
+        "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9": {
+      "id":
+        "esy-libjpeg-turbo@github:prometheansacrifice/libjpeg-turbo#50e8e32c48@d41d8cd9",
+      "name": "esy-libjpeg-turbo",
+      "version": "github:prometheansacrifice/libjpeg-turbo#50e8e32c48",
+      "source": {
+        "type": "install",
+        "source": [ "github:prometheansacrifice/libjpeg-turbo#50e8e32c48" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-nasm@github:prometheansacrifice/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
         "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
         "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
       ],
@@ -1003,22 +1018,6 @@
         "@opam/dune@opam:1.11.4@a7ccb7ae", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.7.1004@d41d8cd9" ]
-    },
-    "dependency-env@git:https://github.com/npm-ml/dependency-env.git#94c75aff3a71587afb570d89bcf2eef7996bb67f@d41d8cd9": {
-      "id":
-        "dependency-env@git:https://github.com/npm-ml/dependency-env.git#94c75aff3a71587afb570d89bcf2eef7996bb67f@d41d8cd9",
-      "name": "dependency-env",
-      "version":
-        "git:https://github.com/npm-ml/dependency-env.git#94c75aff3a71587afb570d89bcf2eef7996bb67f",
-      "source": {
-        "type": "install",
-        "source": [
-          "git:https://github.com/npm-ml/dependency-env.git#94c75aff3a71587afb570d89bcf2eef7996bb67f"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [ "resolve@1.15.0@d41d8cd9" ],
-      "devDependencies": []
     },
     "debug@3.1.0@d41d8cd9": {
       "id": "debug@3.1.0@d41d8cd9",
@@ -1127,6 +1126,7 @@
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
+        "esy-skia@0.6.0@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#16dd98e@d41d8cd9",
@@ -1141,7 +1141,8 @@
         "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@opam/camomile@opam:1.0.1@c82ecdb5",
-        "@esy-ocaml/reason@3.5.2@d41d8cd9"
+        "@esy-ocaml/reason@3.5.2@d41d8cd9",
+        "@esy-ocaml/libffi@github:esy-ocaml/libffi#599bc3567@d41d8cd9"
       ],
       "devDependencies": [
         "shelljs@0.8.3@d41d8cd9", "reperf@1.4.0@d41d8cd9",
@@ -2666,7 +2667,7 @@
         "@opam/conf-pkg-config@opam:1.1@67c69c0c",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9",
-        "@esy-ocaml/libffi@3.2.10@d41d8cd9"
+        "@esy-ocaml/libffi@github:esy-ocaml/libffi#599bc3567@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.7.1004@d41d8cd9", "@opam/integers@opam:0.3.0@d6eefd3a",
@@ -2737,7 +2738,7 @@
         }
       ],
       "dependencies": [
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": []
@@ -3113,15 +3114,13 @@
       ],
       "devDependencies": []
     },
-    "@esy-ocaml/libffi@3.2.10@d41d8cd9": {
-      "id": "@esy-ocaml/libffi@3.2.10@d41d8cd9",
+    "@esy-ocaml/libffi@github:esy-ocaml/libffi#599bc3567@d41d8cd9": {
+      "id": "@esy-ocaml/libffi@github:esy-ocaml/libffi#599bc3567@d41d8cd9",
       "name": "@esy-ocaml/libffi",
-      "version": "3.2.10",
+      "version": "github:esy-ocaml/libffi#599bc3567",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/@esy-ocaml/libffi/-/libffi-3.2.10.tgz#sha1:72697f135ee228b94294ec32f0d5b0fa313de403"
-        ]
+        "source": [ "github:esy-ocaml/libffi#599bc3567" ]
       },
       "overrides": [],
       "dependencies": [],
