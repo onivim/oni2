@@ -55,7 +55,7 @@ let listExtensions = cli => {
 };
 
 let printVersion = _cli => {
-  print_endline("Onivim 2." ++ Core.BuildInfo.version);
+  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
   0;
 };
 
@@ -91,8 +91,6 @@ if (cliOptions.syntaxHighlightService) {
   /* The 'main' function for our app */
   let init = app => {
     Log.debug("Init");
-
-    let _ = Revery.Log.listen((_, msg) => ReveryLog.debug(msg));
 
     let w =
       App.createWindow(
@@ -163,7 +161,7 @@ if (cliOptions.syntaxHighlightService) {
     let setVsync = vsync => Window.setVsync(w, vsync);
 
     let quit = code => {
-      App.quit(~code, app);
+      App.quit(~askNicely=false, ~code, app);
     };
 
     Log.debug("Startup: Starting StoreThread");

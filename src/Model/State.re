@@ -9,6 +9,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
 
 type t = {
   buffers: Buffers.t,
@@ -16,6 +17,7 @@ type t = {
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
+  contextMenu: option(ContextMenu.t(Actions.t)),
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
@@ -54,6 +56,7 @@ type t = {
   pane: Pane.t,
   searchPane: Feature_Search.model,
   focus: Focus.stack,
+  modal: option(Modal.t(Actions.t)),
 };
 
 let create: unit => t =
@@ -63,6 +66,7 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
+    contextMenu: None,
     completions: Completions.initial,
     configuration: Configuration.default,
     definition: Definition.empty,
@@ -102,4 +106,5 @@ let create: unit => t =
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
+    modal: None,
   };

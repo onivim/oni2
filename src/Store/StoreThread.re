@@ -157,6 +157,7 @@ let start =
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
+  let contextMenuUpdater = ContextMenuStore.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -185,6 +186,7 @@ let start =
           titleUpdater,
           sneakUpdater,
           Features.update,
+          contextMenuUpdater,
         ]),
       (),
     );
@@ -225,6 +227,19 @@ let start =
   };
 
   latestRunEffects := Some(runEffects);
+
+  Option.iter(
+    window =>
+      Revery.Window.setCanQuitCallback(window, () =>
+        if (Model.Buffers.anyModified(latestState^.buffers)) {
+          dispatch(Model.Actions.WindowCloseBlocked);
+          false;
+        } else {
+          true;
+        }
+      ),
+    window,
+  );
 
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>

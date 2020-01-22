@@ -1,5 +1,5 @@
 {
-  "checksum": "00c03915a35922af22f85aa426beebbf",
+  "checksum": "5ca46dd2af4bbaeaeb4bc368e7285543",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -58,13 +58,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "timber@github:glennsl/timber#37ffa07@d41d8cd9": {
-      "id": "timber@github:glennsl/timber#37ffa07@d41d8cd9",
+    "timber@github:glennsl/timber#ae5de6c@d41d8cd9": {
+      "id": "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
       "name": "timber",
-      "version": "github:glennsl/timber#37ffa07",
+      "version": "github:glennsl/timber#ae5de6c",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/timber#37ffa07" ]
+        "source": [ "github:glennsl/timber#ae5de6c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -105,16 +105,17 @@
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#7f3bc06@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#7f3bc06@d41d8cd9",
+    "revery@github:revery-ui/revery#8aa55f3@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#8aa55f3@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#7f3bc06",
+      "version": "github:revery-ui/revery#8aa55f3",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#7f3bc06" ]
+        "source": [ "github:revery-ui/revery#8aa55f3" ]
       },
       "overrides": [],
       "dependencies": [
+        "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
         "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
@@ -125,6 +126,7 @@
         "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
+        "@opam/ppx_deriving@opam:4.4@21d6c7a5",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/js_of_ocaml-lwt@opam:3.5.2@6ea3e3c2",
         "@opam/js_of_ocaml-compiler@opam:3.5.0@9ea7292f",
@@ -984,8 +986,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "timber@github:glennsl/timber#37ffa07@d41d8cd9",
-        "revery@github:revery-ui/revery#7f3bc06@d41d8cd9",
+        "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
+        "revery@github:revery-ui/revery#8aa55f3@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",

@@ -43,6 +43,7 @@ module LanguageFeatures = LanguageFeatures;
 module Lifecycle = Lifecycle;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
+module Modal = Modal;
 module Notification = Notification;
 module Notifications = Notifications;
 module Pane = Pane;

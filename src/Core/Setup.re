@@ -91,10 +91,15 @@ let getNodeHealthCheckPath = (v: t) => {
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-  getNodeScriptPath(
-    ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
-    v,
-  );
+  switch (Sys.getenv_opt("ONI2_EXTHOST")) {
+  | Some(extHostPath) =>
+    Rench.Path.join(extHostPath, "out/bootstrap-fork.js")
+  | None =>
+    getNodeScriptPath(
+      ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+      v,
+    )
+  };
 };
 
 let init = () => {

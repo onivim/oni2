@@ -20,6 +20,15 @@ let update = (state: State.t, action: Actions.t) =>
 
     (state, Effect.none);
 
+  | Modal(msg) =>
+    switch (state.modal) {
+    | Some(model) =>
+      let (model', eff) = Oni_UI.Modals.update(model, msg);
+      ({...state, modal: Some(model')}, eff);
+
+    | None => (state, Effect.none)
+    }
+
   | _ => (state, Effect.none)
   };
 
