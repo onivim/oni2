@@ -30,7 +30,7 @@ let start = () => {
                   state.configuration,
                 )) {
               let f = line =>
-                Buffer.getLine(line, b) |> Buffer.BufferLine.slowGetString;
+                Buffer.getLine(line, b) |> BufferLine.slowGetString;
               let count = Buffer.getNumberOfLines(b);
 
               let defaultInsertSpaces =

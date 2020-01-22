@@ -19,7 +19,7 @@ let explode = (buffer, diagnostic) => {
     Index.toZeroBased(n) < lineCount
       ? buffer
         |> Buffer.getLine(Index.toZeroBased(n))
-        |> Buffer.BufferLine.lengthInBytes
+        |> BufferLine.lengthInBytes
       : 0;
   };
 

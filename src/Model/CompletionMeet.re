@@ -34,12 +34,12 @@ let fromLine =
       ~lineNumber=0,
       ~bufferId,
       ~index: Index.t,
-      line: Buffer.BufferLine.t,
+      line: BufferLine.t,
     ) => {
   let cursorIdx = Index.toZeroBased(index);
   let idx =
     Stdlib.min(
-      Buffer.BufferLine.boundedLengthUtf8(~max=cursorIdx + 1, line) - 1,
+      BufferLine.boundedLengthUtf8(~max=cursorIdx + 1, line) - 1,
       cursorIdx,
     );
   let pos = ref(idx);
@@ -54,7 +54,7 @@ let fromLine =
   let candidateBase = ref([]);
 
   while (pos^ >= 0 && ! found^) {
-    let c = Buffer.BufferLine.unsafeGetUChar(~index=pos^, line);
+    let c = BufferLine.unsafeGetUChar(~index=pos^, line);
     lastCharacter := Some(c);
 
     if (matchesTriggerCharacters(c)

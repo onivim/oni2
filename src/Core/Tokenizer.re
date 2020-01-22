@@ -41,16 +41,15 @@ type splitFunc = (int, UChar.t, int, UChar.t) => bool;
 type measureFunc = UChar.t => int;
 
 let _getNextBreak =
-    (bufferLine: Buffer.BufferLine.t, start: int, max: int, f: splitFunc) => {
+    (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
   let pos = ref(start);
   let found = ref(false);
 
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
-    let char = Buffer.BufferLine.unsafeGetUChar(~index=firstPos, bufferLine);
-    let nextChar =
-      Buffer.BufferLine.unsafeGetUChar(~index=secondPos, bufferLine);
+    let char = BufferLine.unsafeGetUChar(~index=firstPos, bufferLine);
+    let nextChar = BufferLine.unsafeGetUChar(~index=secondPos, bufferLine);
 
     if (f(firstPos, char, secondPos, nextChar)) {
       found := true;
@@ -77,7 +76,7 @@ let getOffsetFromStart = (~measure, ~idx, bufferLine) => {
 
     while (i^ < idx) {
       let (_position, width) =
-        Buffer.BufferLine.getPositionAndWidth(~index=i^, bufferLine);
+        BufferLine.getPositionAndWidth(~index=i^, bufferLine);
       offset := offset^ + width;
       incr(i);
     };
@@ -92,10 +91,10 @@ let tokenize =
       ~endIndex=(-1),
       ~f: splitFunc,
       ~measure=defaultMeasure,
-      bufferLine: Buffer.BufferLine.t,
+      bufferLine: BufferLine.t,
     ) => {
   // TODO: Switch to bounded version
-  let len = Buffer.BufferLine.slowLengthUtf8(bufferLine);
+  let len = BufferLine.slowLengthUtf8(bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
@@ -116,7 +115,7 @@ let tokenize =
       let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
       let text =
-        Buffer.BufferLine.unsafeSub(
+        BufferLine.unsafeSub(
           ~index=startToken,
           ~length=endToken - startToken,
           bufferLine,
