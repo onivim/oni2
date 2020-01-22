@@ -74,16 +74,20 @@ let parse =
 
   let queuedJob = ref(None);
   let runAndExitUnit = f =>
-    Arg.Unit(() => {
-      needsConsole := true;
-      queuedJob := Some(cli => {f(cli) |> exit});
-    });
+    Arg.Unit(
+      () => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(cli) |> exit});
+      },
+    );
 
   let runAndExitString = f =>
-    Arg.String(s => {
-      needsConsole := true;
-      queuedJob := Some(cli => {f(s, cli) |> exit})
-    });
+    Arg.String(
+      s => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(s, cli) |> exit});
+      },
+    );
 
   let disableExtensionLoading = () => shouldLoadExtensions := false;
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
