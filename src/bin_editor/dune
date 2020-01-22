@@ -1,7 +1,7 @@
 (executable
     (name Oni2_editor)
     (package Oni2)
-    (public_name Oni2_editor)
+    (public_name Oni2)
     (libraries
         bigarray
         zed_oni

@@ -1,6 +1,6 @@
 (executable
     (name Oni2)
     (package Oni2)
-    (public_name Oni2)
+    (public_name Oni2_launcher)
     (libraries unix str)
 )
