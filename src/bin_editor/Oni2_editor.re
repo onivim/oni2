@@ -14,7 +14,7 @@ module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
-module Log = (val Core.Log.withNamespace("Oni2_editor"));
+module Log = (val Core.Log.withNamespace("Oni2"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module Option = Core.Utility.Option;
 

@@ -96,7 +96,6 @@ if (process.platform == "linux") {
 } else if (process.platform == "darwin") {
   const executables = [
     "Oni2",
-    "Oni2_editor",
     "rg",
     "node"
   ];
@@ -170,7 +169,7 @@ if (process.platform == "linux") {
   // Copy icon
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
-  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
+  shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
 
   const entitlementsPath = path.join(releaseDirectory, "entitlements.plist");
   const entitlementsContents = {
@@ -235,5 +234,4 @@ if (process.platform == "linux") {
   // The image path here does not need to be in the release dir, as its just to do the embed.
   const rcedit = require("rcedit");
   updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2.exe"), iconFile);
-  updateIcon(rcedit, path.join(platformReleaseDirectory, "Oni2_editor.exe"), iconFile);
 }

@@ -184,7 +184,7 @@ let executingDirectory = {
   };
 };
 
-let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
+let executable = Sys.win32 ? "Oni2.exe" : "Oni2";
 
 let startProcess = (stdio, stdout, stderr) => {
   let cmdToRun = executingDirectory ++ executable;

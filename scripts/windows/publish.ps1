@@ -13,7 +13,6 @@ if (Test-Path env:CODESIGN_CERTIFICATE) {
     Write-Host "Code signing enabled."
 
     CodeSign("_release/win32/Oni2.exe")
-    CodeSign("_release/win32/Oni2_editor.exe")
     CodeSign("_release/win32/rg.exe")
     CodeSign("_release/win32/node.exe")
 }
