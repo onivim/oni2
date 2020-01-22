@@ -180,6 +180,7 @@
     "format": "esy dune build @fmt --auto-promote",
     "checkhealth": "esy x Oni2 -f --checkhealth",
     "run": "esy x Oni2",
+    "watch": "dune build --watch -p Oni2 -j4",
     "create-release": "esy node ./scripts/release.js #{@opam/camomile.install}",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
     "test": "esy @test run",

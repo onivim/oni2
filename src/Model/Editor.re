@@ -217,7 +217,7 @@ let _getMaxLineLength = (buffer: Buffer.t) => {
     // TODO: This is approximate, beacuse the length in bytes isn't actually
     // the max length. But the length in bytes is quicker to calculate.
     let length =
-      buffer |> Buffer.getLine(line) |> Buffer.BufferLine.lengthInBytes;
+      buffer |> Buffer.getLine(line) |> BufferLine.lengthInBytes;
 
     if (length > max^) {
       max := length;
