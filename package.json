@@ -217,7 +217,6 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "reason-sdl2": "github:revery-ui/reason-sdl2#2e3179c",
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
@@ -235,7 +234,7 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "github:revery-ui/revery#be2c079",
+    "revery": "github:revery-ui/revery#758631f",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
