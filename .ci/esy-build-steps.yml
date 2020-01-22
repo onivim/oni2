@@ -13,6 +13,8 @@ steps:
     displayName: "esy x Oni2 --help"
   - script: esy x Oni2 -f --checkhealth
     displayName: "esy x Oni2 -f --checkhealth"
+  - script: esy x Oni2 -f --version --psn552
+    displayName: "esy x Oni2 -f --version --checkhealth (#552 regression test)"
   - script: esy create-release
     displayName: "esy create-release"
   - script: esy build-env
