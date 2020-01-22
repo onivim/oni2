@@ -94,6 +94,8 @@ let getCharacterPositionAndWidth =
       line: BufferLine.t,
       i,
     ) => {
+  // TODO: Remove this, carried implicitly with BufferLine
+  ignore(indentation);
   let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
 
   let actualOffset =

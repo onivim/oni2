@@ -66,7 +66,9 @@ let _getNextBreak =
 
 let defaultMeasure: measureFunc = _ => 1;
 
-let getOffsetFromStart = (~measure, ~idx, bufferLine) =>
+let getOffsetFromStart = (~measure, ~idx, bufferLine) => {
+  // TODO: Fix this
+  ignore(measure);
   if (idx <= 0) {
     0;
   } else {
@@ -82,6 +84,7 @@ let getOffsetFromStart = (~measure, ~idx, bufferLine) =>
 
     offset^;
   };
+};
 
 let tokenize =
     (

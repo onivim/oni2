@@ -54,7 +54,7 @@ let fromLine =
   let candidateBase = ref([]);
 
   while (pos^ >= 0 && ! found^) {
-    let c = Buffer.BufferLine.unsafeGetUChar(pos^, line);
+    let c = Buffer.BufferLine.unsafeGetUChar(~index=pos^, line);
     lastCharacter := Some(c);
 
     if (matchesTriggerCharacters(c)

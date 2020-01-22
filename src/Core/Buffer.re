@@ -8,10 +8,10 @@ module Option = Utility.Option;
 
 module BufferLine = {
   open CamomileBundled.Camomile;
-  let space = UChar.of_char(' ');
+  let _space = UChar.of_char(' ');
   let tab = UChar.of_char('\t');
-  let cr = UChar.of_char('\r');
-  let lf = UChar.of_char('\n');
+  let _cr = UChar.of_char('\r');
+  let _lf = UChar.of_char('\n');
   type t = {
     raw: string,
     indentation: IndentationSettings.t,
