@@ -6,21 +6,21 @@
 
 open CamomileBundled.Camomile;
 
-module BufferLine {
- type t;
+module BufferLine: {
+  type t;
 
- let lengthInBytes: t => int;
+  let lengthInBytes: t => int;
 
- let slowLengthUtf8: t => int;
- let boundedLengthUtf8: (~max: int, t) => int;
+  let slowLengthUtf8: t => int;
+  let boundedLengthUtf8: (~max: int, t) => int;
 
- /*let char(~byteIndex, t) => option(Char.t);
- let unsafeChar(~byteIndex, t) => Char.t;*/
+  /*let char(~byteIndex, t) => option(Char.t);
+    let unsafeChar(~byteIndex, t) => Char.t;*/
 
- let unsafeGetUChar: (~index: int, t) => UChar.t;
+  let unsafeGetUChar: (~index: int, t) => UChar.t;
 
- let getPositionAndWidth: (~index: int, t) => (int, int);
-}
+  let getPositionAndWidth: (~index: int, t) => (int, int);
+};
 
 type t;
 

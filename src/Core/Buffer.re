@@ -5,35 +5,36 @@
  */
 open EditorCoreTypes;
 
-module BufferLine {
+module BufferLine = {
   type t = {
     raw: string,
     indentation: IndentationSettings.t,
   };
 
-  let make = (~indentation, str) => { indentation, raw: str };
+  let make = (~indentation, str) => {indentation, raw: str};
 
   let lengthInBytes = ({raw, _}) => String.length(raw);
-  
+
   let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
 
   // TODO: Make this faster...
-  let boundedLengthUtf8 = (~max, {raw, _}) => min(max, ZedBundled.length(raw));
+  let boundedLengthUtf8 = (~max, {raw, _}) =>
+    min(max, ZedBundled.length(raw));
 
   // TODO: Make this faster...
   let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(index, raw);
 
-  module Internal {
+  module Internal = {
     let measure = (indentationSettings: IndentationSettings.t, c) =>
       if (UChar.eq(c, tab)) {
         indentationSettings.tabSize;
       } else {
-        // TODO: Integrate charWidth / wcwidth
         1;
+        // TODO: Integrate charWidth / wcwidth
       };
   };
 
-  let getPositionAndWidth = (~index: int, { raw, indentation }) => {
+  let getPositionAndWidth = (~index: int, {raw, indentation}) => {
     let x = ref(0);
     let totalOffset = ref(0);
     let len = ZedBundled.length(str);
@@ -48,11 +49,11 @@ module BufferLine {
 
       incr(x);
     };
-  
+
     let width = i < len && i >= 0 ? measure(ZedBundled.get(str, i)) : 1;
     (totalOffset^, width);
-  }
-}
+  };
+};
 
 type t = {
   id: int,
@@ -140,9 +141,9 @@ let getUri = (buffer: t) => {
  * - Handle multibyte characters
  */
 /*let getLineLength = (buffer: t, line: int) => {
-  let line = getLine(buffer, line);
-  String.length(line);
-};*/
+    let line = getLine(buffer, line);
+    String.length(line);
+  };*/
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 

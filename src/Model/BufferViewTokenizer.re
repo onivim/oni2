@@ -78,26 +78,30 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   ret;
 };
 
-    // TODO: Remove duplication between here and BufferLine
-    let measure = (indentationSettings: IndentationSettings.t, c) =>
-      if (UChar.eq(c, tab)) {
-        indentationSettings.tabSize;
-      } else {
-        // TODO: Integrate charWidth / wcwidth
-        1;
-      };
+// TODO: Remove duplication between here and BufferLine
+let measure = (indentationSettings: IndentationSettings.t, c) =>
+  if (UChar.eq(c, tab)) {
+    indentationSettings.tabSize;
+  } else {
+    1;
+    // TODO: Integrate charWidth / wcwidth
+  };
 
 let getCharacterPositionAndWidth =
-    (~indentation: IndentationSettings.t, ~viewOffset: int=0, line: BufferLine.t, i) => {
-
+    (
+      ~indentation: IndentationSettings.t,
+      ~viewOffset: int=0,
+      line: BufferLine.t,
+      i,
+    ) => {
   let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
 
-
-  let actualOffset = if (viewOffset > 0) {
-     totalOffset - viewOffset
-  } else {
-     totalOffset
-  };
+  let actualOffset =
+    if (viewOffset > 0) {
+      totalOffset - viewOffset;
+    } else {
+      totalOffset;
+    };
 
   (actualOffset, width);
 };
