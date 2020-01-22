@@ -194,8 +194,6 @@ let rec firstk = (k, v) =>
     }
   };
 
-external freeConsole: unit => unit = "win32_free_console";
-
 /**
  * Returns `n` bounded by `hi` and `lo`
  *
