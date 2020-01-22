@@ -140,10 +140,10 @@ function activate(context) {
         }
     };
 
-    const textContentProvider = class {
-        provideTextDocumentContent(uri) {
-            console.log("CONTENT!");
-            return "Hello. This is content.";
+    const textContentProvider = {
+        provideTextDocumentContent: (uri, _token) => {
+            console.error("CONTENT: " + uri);
+            return Promise.resolve("Hello. This is content.");
         }
     };
     vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)

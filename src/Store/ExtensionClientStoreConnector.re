@@ -458,11 +458,11 @@ let start = (extensions, setup: Setup.t) => {
                   );
 
                 Lwt.on_success(promise, uri => {
-                  print_endline(Uri.toString(uri));
+                  prerr_endline("DONE: " ++ Uri.toString(uri));
 
                   let _ =
                     Oni_Extensions.ExtHostClient.provideTextDocumentContent(
-                      1,
+                      0,
                       uri,
                       extHostClient,
                     );
