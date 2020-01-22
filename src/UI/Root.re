@@ -8,6 +8,8 @@ open Revery;
 open Revery.UI;
 open Oni_Model;
 
+module ContextMenu = Oni_Components.ContextMenu;
+
 module Styles = {
   open Style;
 
@@ -39,12 +41,16 @@ let make = (~state: State.t, ()) => {
   let State.{
         theme,
         configuration,
+        contextMenu,
         uiFont as font,
         editorFont,
         sideBar,
         zenMode,
         _,
       } = state;
+
+  let onContextMenuUpdate = model =>
+    GlobalContext.current().dispatch(ContextMenuUpdated(model));
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -70,7 +76,7 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state />
+          <StatusBar state contextMenu onContextMenuUpdate />
         </View>
       : React.empty;
 
@@ -112,6 +118,22 @@ let make = (~state: State.t, ()) => {
       <KeyDisplayerView state />
     </Overlay>
     statusBar
+    {switch (contextMenu) {
+     | Some(model) =>
+       let onOverlayClick = () =>
+         GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+       let onItemSelect = item =>
+         GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+
+       <ContextMenu.Overlay
+         theme
+         font=uiFont
+         model
+         onOverlayClick
+         onItemSelect
+       />;
+     | None => React.empty
+     }}
     <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
