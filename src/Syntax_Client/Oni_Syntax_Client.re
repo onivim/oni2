@@ -65,7 +65,7 @@ let start =
     ...envList,
   ];
 
-  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executableName = "Oni2" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
   ClientLog.debugf(m =>
