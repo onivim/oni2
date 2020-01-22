@@ -157,6 +157,7 @@ let start =
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
+  let contextMenuUpdater = ContextMenuStore.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -185,6 +186,7 @@ let start =
           titleUpdater,
           sneakUpdater,
           Features.update,
+          contextMenuUpdater,
         ]),
       (),
     );
