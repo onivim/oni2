@@ -1,5 +1,5 @@
 (executable
-    (name Oni2_editor)
+    (name Oni2)
     (package Oni2)
     (public_name Oni2)
     (libraries
