@@ -56,7 +56,7 @@ type t = {
   pane: Pane.t,
   searchPane: Feature_Search.model,
   focus: Focus.stack,
-  modal: option(Modal.t),
+  modal: option(Modal.t(Actions.t)),
 };
 
 let create: unit => t =

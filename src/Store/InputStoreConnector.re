@@ -177,6 +177,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
             ]
 
           | Search => [Actions.Search(Feature_Search.Input(k))]
+
+          | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
           };
         };
 

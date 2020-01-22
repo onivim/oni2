@@ -135,6 +135,7 @@ type t =
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed
   | WindowCloseCanceled
+  | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | Noop

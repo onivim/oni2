@@ -4,8 +4,34 @@ open Revery.UI;
 open Oni_Core;
 open Utility;
 open Oni_Model;
-open Oni_Components;
 open Actions;
+open Oni_Components;
+open Modal;
+
+let unsavedBuffersWarning =
+  UnsavedBuffersWarning({
+    input: "",
+    actions: [
+      {
+        label: "Discard Changes",
+        msg: WindowCloseDiscardConfirmed,
+        shortcut: Sequence(":qa!"),
+      },
+      {label: "Cancel", msg: WindowCloseCanceled, shortcut: Key("<ESC>")},
+      {
+        label: "Save All",
+        msg: WindowCloseSaveAllConfirmed,
+        shortcut: Sequence(":xa"),
+      },
+    ],
+  });
+
+let update = (state, msg) =>
+  switch (state, msg) {
+  | (UnsavedBuffersWarning(model), KeyPressed(key)) =>
+    let (model, eff) = MessageBox.update(model, MessageBox.KeyPressed(key));
+    (UnsavedBuffersWarning(model), eff);
+  };
 
 module Styles = {
   open Style;
@@ -29,6 +55,7 @@ module Styles = {
     color(theme.editorForeground),
     backgroundColor(theme.editorBackground),
     fontSize(14),
+    textWrap(TextWrapping.NoWrap),
   ];
 
   let files = [padding(10)];
@@ -38,11 +65,12 @@ module Styles = {
     color(theme.foreground),
     backgroundColor(theme.editorBackground),
     fontSize(14),
+    textWrap(TextWrapping.NoWrap),
   ];
 };
 
 let unsavedBufferWarning =
-    (~workingDirectory, ~buffers, ~theme, ~uiFont as font, ()) => {
+    (~model, ~workingDirectory, ~buffers, ~theme, ~uiFont as font, ()) => {
   let modifiedFiles =
     buffers
     |> IntMap.to_seq
@@ -55,15 +83,7 @@ let unsavedBufferWarning =
          Path.toRelative(~base=Option.value(workingDirectory, ~default="")),
        );
 
-  <MessageBox
-    actions=MessageBox.[
-      {label: "Discard Changes", msg: WindowCloseDiscardConfirmed},
-      {label: "Cancel", msg: WindowCloseCanceled},
-      {label: "Save All", msg: WindowCloseSaveAllConfirmed},
-    ]
-    onAction={GlobalContext.current().dispatch}
-    theme
-    font>
+  <MessageBox model onAction={GlobalContext.current().dispatch} theme font>
     <Text
       style={Styles.text(~theme, ~font)}
       text="You have unsaved changes in the following files:"
@@ -90,8 +110,8 @@ let make = (~state: State.t, ()) => {
   | Some(modal) =>
     <View style=Styles.overlay>
       {switch (modal) {
-       | UnsavedBuffersWarning =>
-         <unsavedBufferWarning workingDirectory buffers theme uiFont />
+       | UnsavedBuffersWarning(model) =>
+         <unsavedBufferWarning model workingDirectory buffers theme uiFont />
        }}
     </View>
   };

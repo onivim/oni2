@@ -10,3 +10,4 @@ module EditorSurface = EditorSurface;
 module FileExplorerView = FileExplorerView;
 module Root = Root;
 module SneakRegistry = SneakRegistry;
+module Modals = Modals;

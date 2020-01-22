@@ -60,21 +60,25 @@ let start = quit => {
     | Actions.Quit(force) => (state, quitAllEffect(state, force))
 
     | WindowCloseBlocked => (
-        {...state, modal: Some(UnsavedBuffersWarning)},
+        {...state, modal: Some(Oni_UI.Modals.unsavedBuffersWarning)}
+        |> FocusManager.push(Focus.Modal),
         Isolinear.Effect.none,
       )
 
     | WindowCloseDiscardConfirmed => (
-        {...state, modal: None},
+        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
         quitAllEffect(state, true),
       )
 
     | WindowCloseSaveAllConfirmed => (
-        {...state, modal: None},
+        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
         saveAllAndQuitEffect,
       )
 
-    | WindowCloseCanceled => ({...state, modal: None}, Isolinear.Effect.none)
+    | WindowCloseCanceled => (
+        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };
