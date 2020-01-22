@@ -1,5 +1,5 @@
 {
-  "checksum": "d5b543b976e7f5889d0188598a323398",
+  "checksum": "022c75598615a5aebb74c754a724f5a3",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "xmldom@0.1.31@d41d8cd9": {
@@ -120,7 +120,7 @@
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#518047b@d41d8cd9",
+        "reason-sdl2@github:revery-ui/reason-sdl2#2e3179c@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
         "reason-fontkit@2.8.3@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
@@ -298,13 +298,13 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@github:revery-ui/reason-sdl2#518047b@d41d8cd9": {
-      "id": "reason-sdl2@github:revery-ui/reason-sdl2#518047b@d41d8cd9",
+    "reason-sdl2@github:revery-ui/reason-sdl2#2e3179c@d41d8cd9": {
+      "id": "reason-sdl2@github:revery-ui/reason-sdl2#2e3179c@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "github:revery-ui/reason-sdl2#518047b",
+      "version": "github:revery-ui/reason-sdl2#2e3179c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-sdl2#518047b" ]
+        "source": [ "github:revery-ui/reason-sdl2#2e3179c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -991,7 +991,7 @@
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@2.3.0@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#518047b@d41d8cd9",
+        "reason-sdl2@github:revery-ui/reason-sdl2#2e3179c@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",

@@ -217,7 +217,7 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "reason-sdl2": "github:revery-ui/reason-sdl2#518047b",
+    "reason-sdl2": "github:revery-ui/reason-sdl2#2e3179c",
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
