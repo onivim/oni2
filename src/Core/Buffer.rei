@@ -19,6 +19,7 @@ module BufferLine: {
     let unsafeChar(~byteIndex, t) => Char.t;*/
 
   let unsafeGetUChar: (~index: int, t) => UChar.t;
+  let unsafeSub: (~index: int, ~length: int, t) => string;
 
   let getPositionAndWidth: (~index: int, t) => (int, int);
 };

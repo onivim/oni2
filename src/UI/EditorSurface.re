@@ -646,7 +646,7 @@ let%component make =
              let start = Index.toZeroBased(r.start.column);
              let endC = Index.toZeroBased(r.stop.column);
 
-             let text = Buffer.getLine(buffer, line);
+             let text = Buffer.getLine(line, buffer);
              let (startOffset, _) =
                BufferViewTokenizer.getCharacterPositionAndWidth(
                  ~indentation,
@@ -692,7 +692,7 @@ let%component make =
 
              let lines = Buffer.getNumberOfLines(buffer);
              if (line < lines) {
-               let text = Buffer.getLine(buffer, line);
+               let text = Buffer.getLine(line, buffer);
                let (startOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(
                    ~indentation,

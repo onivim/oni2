@@ -40,15 +40,17 @@ type splitFunc = (int, UChar.t, int, UChar.t) => bool;
 
 type measureFunc = UChar.t => int;
 
-let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
+let _getNextBreak =
+    (bufferLine: Buffer.BufferLine.t, start: int, max: int, f: splitFunc) => {
   let pos = ref(start);
   let found = ref(false);
 
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
-    let char = Zed_utf8.get(s, firstPos);
-    let nextChar = Zed_utf8.get(s, secondPos);
+    let char = Buffer.BufferLine.unsafeGetUChar(~index=firstPos, bufferLine);
+    let nextChar =
+      Buffer.BufferLine.unsafeGetUChar(~index=secondPos, bufferLine);
 
     if (f(firstPos, char, secondPos, nextChar)) {
       found := true;
@@ -64,7 +66,7 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
 
 let defaultMeasure: measureFunc = _ => 1;
 
-let getOffsetFromStart = (~measure, ~idx, s) =>
+let getOffsetFromStart = (~measure, ~idx, bufferLine) =>
   if (idx <= 0) {
     0;
   } else {
@@ -72,7 +74,9 @@ let getOffsetFromStart = (~measure, ~idx, s) =>
     let i = ref(0);
 
     while (i^ < idx) {
-      offset := offset^ + measure(Zed_utf8.get(s, i^));
+      let (_position, width) =
+        Buffer.BufferLine.getPositionAndWidth(~index=i^, bufferLine);
+      offset := offset^ + width;
       incr(i);
     };
 
@@ -85,16 +89,19 @@ let tokenize =
       ~endIndex=(-1),
       ~f: splitFunc,
       ~measure=defaultMeasure,
-      s: string,
+      bufferLine: Buffer.BufferLine.t,
     ) => {
-  let len = Zed_utf8.length(s);
+  // TODO: Switch to bounded version
+  let len = Buffer.BufferLine.slowLengthUtf8(bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
+    // TODO: Just replace this entire function with `position`
+    let initialOffset =
+      getOffsetFromStart(~measure, ~idx=startIndex, bufferLine);
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
@@ -103,9 +110,14 @@ let tokenize =
     while (idx^ < maxIndex) {
       let startToken = idx^;
       let startOffset = offset^;
-      let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
+      let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
-      let text = Zed_utf8.sub(s, startToken, endToken - startToken);
+      let text =
+        Buffer.BufferLine.unsafeSub(
+          ~index=startToken,
+          ~length=endToken - startToken,
+          bufferLine,
+        );
       let endOffset =
         startOffset
         + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);

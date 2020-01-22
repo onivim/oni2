@@ -31,6 +31,9 @@ module BufferLine = {
   // TODO: Make this faster...
   let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(raw, index);
 
+  let unsafeSub = (~index: int, ~length: int, {raw, _}) =>
+    ZedBundled.sub(raw, index, length);
+
   module Internal = {
     let measure = (indentationSettings: IndentationSettings.t, c) =>
       if (UChar.eq(c, tab)) {
@@ -57,7 +60,8 @@ module BufferLine = {
       incr(x);
     };
 
-    let width = index < len && index >= 0 ? measure(ZedBundled.get(raw, index)) : 1;
+    let width =
+      index < len && index >= 0 ? measure(ZedBundled.get(raw, index)) : 1;
     (totalOffset^, width);
   };
 };
@@ -116,9 +120,12 @@ let setFileType = (fileType: option(string), buffer: t) => {
 
 let getId = (buffer: t) => buffer.id;
 
-let getLine = (line: int, buffer: t) => BufferLine.make(
-~indentation=Option.value(~default=IndentationSettings.default, buffer.indentation)
-, buffer.lines[line]);
+let getLine = (line: int, buffer: t) =>
+  BufferLine.make(
+    ~indentation=
+      Option.value(~default=IndentationSettings.default, buffer.indentation),
+    buffer.lines[line],
+  );
 let getLines = (buffer: t) => buffer.lines;
 
 let getVersion = (buffer: t) => buffer.version;
