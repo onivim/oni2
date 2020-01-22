@@ -4,8 +4,6 @@
  * In-memory text buffer representation
  */
 
-open CamomileBundled.Camomile;
-
 type t;
 
 let show: t => string;

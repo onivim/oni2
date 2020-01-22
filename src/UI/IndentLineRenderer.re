@@ -18,8 +18,7 @@ let rec getIndentLevel =
           line,
           previousIndentLevel,
         ) => {
-  let lineText =
-    Buffer.getLine(line, buffer) |> BufferLine.slowGetString;
+  let lineText = Buffer.getLine(line, buffer) |> BufferLine.raw;
 
   /*
    * If the line isn't empty, we should use that lines indent level.

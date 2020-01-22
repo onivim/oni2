@@ -16,6 +16,9 @@ let thickB = c =>
   | _ => 1
   };
 
+let makeLine = str =>
+  BufferLine.make(~indentation=IndentationSettings.default, str);
+
 let validateToken =
     (
       expect: Rely__DefaultMatchers.matchers(unit),
@@ -63,7 +66,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endIndex=3,
           ~f=noSplit,
           ~measure,
-          "",
+          "" |> makeLine,
         );
 
       let runs = [];
@@ -79,7 +82,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endIndex=8,
           ~f=noSplit,
           ~measure,
-          "abc",
+          "abc" |> makeLine,
         );
 
       let runs = [];
@@ -97,7 +100,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endIndex=3,
           ~f=noSplit,
           ~measure,
-          "abcd",
+          "abcd" |> makeLine,
         );
 
       let runs = [
@@ -123,7 +126,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endIndex=4,
           ~f=noSplit,
           ~measure,
-          "bbbcd",
+          "bbbcd" |> makeLine,
         );
 
       let runs = [
@@ -145,7 +148,11 @@ describe("Tokenizer", ({test, describe, _}) => {
     test("wide b", ({expect}) => {
       let str = "abab";
       let result =
-        Tokenizer.tokenize(~f=splitOnCharacter, ~measure=thickB, str);
+        Tokenizer.tokenize(
+          ~f=splitOnCharacter,
+          ~measure=thickB,
+          str |> makeLine,
+        );
 
       let runs = [
         TextRun.create(
@@ -187,12 +194,12 @@ describe("Tokenizer", ({test, describe, _}) => {
   );
 
   test("empty string", ({expect}) => {
-    let result = Tokenizer.tokenize(~f=alwaysSplit, "");
+    let result = Tokenizer.tokenize(~f=alwaysSplit, "" |> makeLine);
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string broken up by characters", ({expect}) => {
-    let str = "abab";
+    let str = "abab" |> makeLine;
     let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
 
     let runs = [
@@ -235,7 +242,7 @@ describe("Tokenizer", ({test, describe, _}) => {
 
   test("string broken up by characters", ({expect}) => {
     let str = "aabbbbaa";
-    let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
+    let result = Tokenizer.tokenize(~f=splitOnCharacter, str |> makeLine);
 
     let runs = [
       TextRun.create(

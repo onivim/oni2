@@ -24,7 +24,7 @@ runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line1 = Buffer.getLine(buf, 0);
+      let line1 = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Line1 is: " ++ line1 ++ "|");
       String.equal(line1, "b");
     }

@@ -9,8 +9,9 @@ let createGiantString = iter => {
 
   f("", iter);
 };
+let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
-let giantString = createGiantString(50);
+let giantString = createGiantString(50) |> makeLine;
 
 let splitEverything = (_, _, _, _) => true;
 let splitNothing = (_, _, _, _) => false;

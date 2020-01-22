@@ -34,7 +34,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "abc");
     }
@@ -52,15 +52,15 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let a = String.equal(line, "1");
 
-      let line = Buffer.getLine(buf, 1);
+      let line = Buffer.getLine(1, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let b = String.equal(line, "2");
 
-      let line = Buffer.getLine(buf, 2);
+      let line = Buffer.getLine(2, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let c = String.equal(line, "3");
       a && b && c;
@@ -79,15 +79,15 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let a = String.equal(line, "4");
 
-      let line = Buffer.getLine(buf, 1);
+      let line = Buffer.getLine(1, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let b = String.equal(line, "5");
 
-      let line = Buffer.getLine(buf, 2);
+      let line = Buffer.getLine(2, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       let c = String.equal(line, "6");
       a && b && c;
@@ -105,7 +105,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "def");
     }
@@ -130,7 +130,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "def");
     }
@@ -170,7 +170,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "jkl");
     }
@@ -210,7 +210,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "jkl");
     }

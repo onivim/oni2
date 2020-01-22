@@ -31,8 +31,8 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line1 = Buffer.getLine(buf, 0);
-      let line2 = Buffer.getLine(buf, 1);
+      let line1 = Buffer.getLine(0, buf) |> BufferLine.raw;
+      let line2 = Buffer.getLine(1, buf) |> BufferLine.raw;
       Log.info("Line1 is: " ++ line1 ++ "|");
       Log.info("Line2 is: " ++ line2 ++ "|");
       String.equal(line1, "Adef") && String.equal(line2, "ghiB");

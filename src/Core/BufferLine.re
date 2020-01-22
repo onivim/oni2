@@ -3,7 +3,6 @@
  *
  * In-memory text buffer representation
  */
-open EditorCoreTypes;
 module Option = Utility.Option;
 
 open CamomileBundled.Camomile;
@@ -21,7 +20,7 @@ let make = (~indentation, str) => {indentation, raw: str};
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
 let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
-let slowGetString = ({raw, _}) => raw;
+let raw = ({raw, _}) => raw;
 
 // TODO: Make this faster...
 let boundedLengthUtf8 = (~max, {raw, _}) =>

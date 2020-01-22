@@ -12,7 +12,8 @@ let make: (~indentation: IndentationSettings.t, string) => t;
 
 let lengthInBytes: t => int;
 
-let slowGetString: t => string;
+let raw: t => string;
+
 let slowLengthUtf8: t => int;
 let boundedLengthUtf8: (~max: int, t) => int;
 
