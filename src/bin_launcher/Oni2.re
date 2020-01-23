@@ -1,128 +1,32 @@
 /*
- * Oni2.re
- *
- * This is the launcher for the editor.
+  Oni2.re
+ 
+  This is the launcher for the editor.
+  There are two specific, but different (almost inverse!) use cases, depending on the platform:
+
+  - OSX / Linux:'detach' the editor process from the terminal, unless '-f' or '--nofork' is passed - then pass through stdio
+  - Windows: 'attach' stdio pipes to the GUI process, if '-f' or '--nofork' is passed  - otherwise, spawn and detach.
  */
 
-let stayAttached = ref(false);
+let commandsThatForceAttach = [
+  "-f",
+  "--nofork",
+  "--install-extension",
+  "--uninstall-extension",
+  "--list-extensions",
+  "--version",
+  "-v",
+  "--help",
+  "-h"
+]
+|> List.map((item) => (item, true))
+|> List.to_seq
+|> Hashtbl.of_seq;
 
-let passthrough = Arg.Unit(() => ());
-let passthroughFloat = Arg.Float(_ => ());
-let passthroughString = Arg.String(_ => ());
-
-let passthroughAndStayAttached = Arg.Set(stayAttached);
-let passthroughFloatAndStayAttached = Arg.Float(_ => stayAttached := true);
-let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
-
-let spec =
-  Arg.align([
-    (
-      "-f",
-      Arg.Set(stayAttached),
-      " Stay attached to the foreground terminal.",
-    ),
-    (
-      "--nofork",
-      Arg.Set(stayAttached),
-      " Stay attached to the foreground terminal.",
-    ),
-    ("--debug", passthrough, " Enable debug logging."),
-    ("--log-file", passthroughString, " Specify a file for the output logs."),
-    ("--log-filter", passthroughString, " Filter log output."),
-    (
-      "--no-log-colors",
-      passthrough,
-      " Turn off colors and rich formatting in logs.",
-    ),
-    ("--checkhealth", passthrough, " Check the health of the Oni2 editor."),
-    (
-      "--disable-syntax-highlighting",
-      passthrough,
-      "Turn off syntax highlighting.",
-    ),
-    ("--disable-extensions", passthrough, "Turn off extension loading."),
-    (
-      "--disable-configuration",
-      passthrough,
-      "Do not load user configuration (use default configuration).",
-    ),
-    (
-      "--install-extension",
-      passthroughStringAndStayAttached,
-      " Install extension by specifying a path to the .vsix file",
-    ),
-    (
-      "--uninstall-extension",
-      passthroughStringAndStayAttached,
-      " Uninstall extension by specifying an extension id.",
-    ),
-    (
-      "--extensions-dir",
-      passthroughString,
-      " The folder to store/load VSCode extensions.",
-    ),
-    (
-      "--list-extensions",
-      passthroughAndStayAttached,
-      " List the currently installed extensions.",
-    ),
-    (
-      "--force-device-scale-factor",
-      passthroughFloat,
-      " Force the DPI scaling for the editor.",
-    ),
-    (
-      "--working-directory",
-      passthrough,
-      " Set the current working for Oni2.",
-    ),
-    ("--version", passthroughAndStayAttached, " Print version information."),
-    ("-v", passthroughAndStayAttached, " Print version information."),
-  ]);
-
-let usage = {|
-Onivim 2
-
-Usage:
-
-  oni2 [options][paths...]
-
-Options:
-|};
-
-let anonArg = _ => ();
-
-/* NOTE: On MacOS, when launching the app through GateKeeper,
- * there is a legacy parameter parsed in: -psn_X_XXXXXX
- * Apparently this is a legacy ProcessSerialNumber - more info here:
- * http://mirror.informatimago.com/next/developer.apple.com/documentation/Carbon/Reference/Process_Manager/prmref_main/data_type_5.html#//apple_ref/doc/uid/TP30000208/C001951
- * https://stackoverflow.com/questions/10242115/os-x-strange-psn-command-line-parameter-when-launched-from-finder
- *
- * We fail and show an error message if we get an unrecognized parameter, so we need to filter this out, otherwise we get a crash on first launch:
- * https://github.com/onivim/oni2/issues/552
- */
-let filterPsnArgument = args => {
-  let psnRegex = Str.regexp("^-psn.*");
-  let f = s => {
-    !Str.string_match(psnRegex, s, 0);
-  };
-
-  args |> Array.to_list |> List.filter(f) |> Array.of_list;
-};
-
-let args = Sys.argv |> filterPsnArgument;
-
-let () = {
-  switch (Arg.parse_argv(args, spec, anonArg, usage)) {
-  | exception (Arg.Bad(err)) =>
-    prerr_endline(err);
-    exit(1);
-  | exception (Arg.Help(msg)) =>
-    print_endline(msg);
-    exit(0);
-  | _ => ()
-  };
-};
+let stayAttached = Sys.argv
+|> Array.to_list
+|> List.map(String.lowercase_ascii)
+|> List.exists(Hashtbl.mem(commandsThatForceAttach));
 
 type platform =
   | Windows
@@ -189,12 +93,13 @@ let executable = Sys.win32 ? "Oni2_editor.exe" : "Oni2_editor";
 let startProcess = (stdio, stdout, stderr) => {
   let cmdToRun = executingDirectory ++ executable;
   // The first argument is the executable, so we need to update that to point to 'Oni2_editor'
+  let args = Sys.argv;
   args[0] = cmdToRun;
   Unix.create_process(cmdToRun, args, stdio, stdout, stderr);
 };
 
 let launch = () =>
-  if (stayAttached^) {
+  if (stayAttached) {
     let pid = startProcess(Unix.stdin, Unix.stdout, Unix.stderr);
     let (_, status) = Unix.waitpid([], pid);
     let exitCode =
