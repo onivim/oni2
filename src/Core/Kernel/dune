@@ -6,7 +6,7 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         zed_oni
-        Revery
+        threads
         editor-core-types
         timber)
     (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

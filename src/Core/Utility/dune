@@ -4,6 +4,7 @@
     (libraries 
         Oni2.core.kernel
         libvim
+        str
         lwt
         timber)
     (preprocess (pps lwt_ppx)))

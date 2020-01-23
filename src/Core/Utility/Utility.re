@@ -1,6 +1,5 @@
 module ArrayEx = ArrayEx;
 module ChunkyQueue = ChunkyQueue;
-module ColorEx = ColorEx;
 module Fun = Fun; // TODO: Remove after 4.08 upgrade
 module FunEx = FunEx;
 module IndexEx = IndexEx;
@@ -18,4 +17,3 @@ module Result = Result;
 module ResultEx = ResultEx;
 module StringEx = StringEx;
 module ThreadEx = ThreadEx;
-module VimEx = VimEx;

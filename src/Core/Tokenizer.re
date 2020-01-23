@@ -2,7 +2,6 @@
  * Tokenizer.re
  */
 
-open Kernel;
 open CamomileLibrary;
 open EditorCoreTypes;
 
