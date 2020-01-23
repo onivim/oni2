@@ -20,6 +20,7 @@ RUN node -v
 RUN npm -v
 
 RUN npm install --global --unsafe-perm=true esy@0.5.8
+RUN npm install --global node-gyp
 
 RUN yum -y install epel-release
 RUN yum -y remove git
