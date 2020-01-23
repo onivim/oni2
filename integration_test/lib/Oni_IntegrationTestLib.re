@@ -63,8 +63,8 @@ let runTest =
   };
 
   Printexc.record_backtrace(true);
-  Timber.App.enablePrinting();
-  Timber.App.enableDebugLogging();
+  Timber.App.enable();
+  Timber.App.setLevel(Timber.Level.trace);
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 

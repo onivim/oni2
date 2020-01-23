@@ -1,5 +1,5 @@
 {
-  "checksum": "3a35b92386effc889a92266d100a2de5",
+  "checksum": "5942212a4a0bd717e12a0af71f89383a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -71,13 +71,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "timber@github:glennsl/timber#ae5de6c@d41d8cd9": {
-      "id": "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
+    "timber@github:glennsl/timber#ae065bb@d41d8cd9": {
+      "id": "timber@github:glennsl/timber#ae065bb@d41d8cd9",
       "name": "timber",
-      "version": "github:glennsl/timber#ae5de6c",
+      "version": "github:glennsl/timber#ae065bb",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/timber#ae5de6c" ]
+        "source": [ "github:glennsl/timber#ae065bb" ]
       },
       "overrides": [],
       "dependencies": [
@@ -118,17 +118,17 @@
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#eeda678@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#eeda678@d41d8cd9",
+    "revery@github:glennsl/revery#6a9fbd6@d41d8cd9": {
+      "id": "revery@github:glennsl/revery#6a9fbd6@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#eeda678",
+      "version": "github:glennsl/revery#6a9fbd6",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#eeda678" ]
+        "source": [ "github:glennsl/revery#6a9fbd6" ]
       },
       "overrides": [],
       "dependencies": [
-        "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
+        "timber@github:glennsl/timber#ae065bb@d41d8cd9",
         "revery-text-wrap@github:revery-ui/revery-text-wrap#005385c@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
@@ -1066,8 +1066,8 @@
       },
       "overrides": [ "test.json" ],
       "dependencies": [
-        "timber@github:glennsl/timber#ae5de6c@d41d8cd9",
-        "revery@github:revery-ui/revery#eeda678@d41d8cd9",
+        "timber@github:glennsl/timber#ae065bb@d41d8cd9",
+        "revery@github:glennsl/revery#6a9fbd6@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
