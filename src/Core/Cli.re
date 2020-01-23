@@ -32,6 +32,31 @@ let create = (~folder, ~filesToOpen, ()) => {
   shouldLoadConfiguration: true,
 };
 
+module Internal = {
+  let filterPsnArgument = args => {
+    let psnRegex = Str.regexp("^-psn.*");
+    let f = s => {
+      !Str.string_match(psnRegex, s, 0);
+    };
+
+    args |> Array.to_list |> List.filter(f) |> Array.of_list;
+  };
+
+  let usage = () =>
+    Printf.sprintf(
+      {|
+  Onivim 2 (%s)
+
+  Usage:
+
+    oni2 [options][paths...]
+
+  Options:
+  |},
+      BuildInfo.version,
+    );
+};
+
 let newline = "\n";
 
 let show = (v: t) => {
@@ -50,6 +75,8 @@ let setWorkingDirectory = s => {
 
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
+
+external native_exit: int => unit = "oni2c_native_exit";
 
 let parse =
     (
@@ -73,6 +100,25 @@ let parse =
   let needsConsole = ref(false);
 
   let queuedJob = ref(None);
+
+  let _realExit = exit;
+
+  let exit = code => {
+    Log.infof(m => m("Exit: %d\n", code));
+    // HACK: On Windows, there seem still to be some piping issues
+    // with the stdout / stdin. In certain cases, depending on the
+    // pipes provided, OCaml's `exit` will fail with a Sys_error("Invalid argument")
+    // exception. This is not recoverable, and causes an exit code of 2 to be returned.
+    // As a workaround, we'll use the native C API to flush channels and exit.
+    if (Sys.win32) {
+      native_exit(code);
+    } else {
+      exit(code);
+    };
+  };
+
+  let runAndExit = f => queuedJob := Some(cli => {f(cli) |> exit});
+
   let runAndExitUnit = f =>
     Arg.Unit(
       () => {
@@ -93,39 +139,124 @@ let parse =
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
-  Arg.parse(
-    [
-      ("-f", Unit(Timber.App.enablePrinting), ""),
-      ("--nofork", Unit(Timber.App.enablePrinting), ""),
-      ("--debug", Unit(CoreLog.enableDebugLogging), ""),
-      ("--version", printVersion |> runAndExitUnit, ""),
-      ("--no-log-colors", Unit(Timber.App.disableColors), ""),
-      ("--disable-extensions", Unit(disableExtensionLoading), ""),
-      ("--disable-configuration", Unit(disableLoadConfiguration), ""),
-      ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
-      ("--log-file", String(Timber.App.setLogFile), ""),
-      ("--log-filter", String(Timber.App.setNamespaceFilter), ""),
-      ("--checkhealth", checkHealth |> runAndExitUnit, ""),
-      ("--list-extensions", listExtensions |> runAndExitUnit, ""),
-      ("--install-extension", installExtension |> runAndExitString, ""),
-      ("--uninstall-extension", uninstallExtension |> runAndExitString, ""),
-      ("--working-directory", String(setWorkingDirectory), ""),
+  let incomingArgs = Sys.argv |> Internal.filterPsnArgument;
+
+  let spec =
+    Arg.[
+      (
+        "-f",
+        Unit(Timber.App.enablePrinting),
+        " Stay attached to the foreground terminal.",
+      ),
+      (
+        "--nofork",
+        Unit(Timber.App.enablePrinting),
+        " Stay attached to the foreground terminal.",
+      ),
+      (
+        "--debug",
+        Unit(CoreLog.enableDebugLogging),
+        " Enable debug logging.",
+      ),
+      (
+        "--version",
+        printVersion |> runAndExitUnit,
+        " Print version information.",
+      ),
+      (
+        "--no-log-colors",
+        Unit(Timber.App.disableColors),
+        " Turn off colors and rich formatting in logs.",
+      ),
+      (
+        "--disable-extensions",
+        Unit(disableExtensionLoading),
+        " Turn off extension loading.",
+      ),
+      (
+        "--disable-configuration",
+        Unit(disableLoadConfiguration),
+        " Do not load user configuration (use default configuration).",
+      ),
+      (
+        "--disable-syntax-highlighting",
+        Unit(disableSyntaxHighlight),
+        " Turn off syntax highlighting.",
+      ),
+      (
+        "--log-file",
+        String(Timber.App.setLogFile),
+        " Specify a file for the output logs.",
+      ),
+      (
+        "--log-filter",
+        String(Timber.App.setNamespaceFilter),
+        " Filter log output.",
+      ),
+      (
+        "--checkhealth",
+        checkHealth |> runAndExitUnit,
+        " Check the health of the Oni2 editor.",
+      ),
+      (
+        "--list-extensions",
+        listExtensions |> runAndExitUnit,
+        " List the currently installed extensions.",
+      ),
+      (
+        "--install-extension",
+        installExtension |> runAndExitString,
+        " Install extension by specifying a path to the .vsix file",
+      ),
+      (
+        "--uninstall-extension",
+        uninstallExtension |> runAndExitString,
+        " Uninstall extension by specifying an extension id.",
+      ),
+      (
+        "--working-directory",
+        String(setWorkingDirectory),
+        " Set the current working for Oni2.",
+      ),
       (
         "--force-device-scale-factor",
         Float(f => scaleFactor := Some(f)),
-        "",
+        " Force the DPI scaling for the editor.",
       ),
       (
         "--syntax-highlight-service",
         Unit(() => syntaxHighlightService := true),
-        "",
+        "" // Internal option only
       ),
-      ("--extensions-dir", String(setRef(extensionsDir)), ""),
-      ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
-    ],
-    arg => args := [arg, ...args^],
-    "",
-  );
+      (
+        "--extensions-dir",
+        String(setRef(extensionsDir)),
+        " The folder to store/load VSCode extensions.",
+      ),
+      (
+        "--force-device-scale-factor",
+        Float(setRef(scaleFactor)),
+        " Force the DPI scaling for the editor.",
+      ),
+    ];
+
+  let handleAnonymousArgs = arg => args := [arg, ...args^];
+
+  switch (
+    Arg.parse_argv(incomingArgs, spec, handleAnonymousArgs, Internal.usage())
+  ) {
+  | exception (Arg.Bad(err)) =>
+    runAndExit(_ => {
+      prerr_endline(err);
+      1;
+    })
+  | exception (Arg.Help(msg)) =>
+    runAndExit(_ => {
+      print_endline(msg);
+      0;
+    })
+  | _ => ()
+  };
 
   if (CoreLog.isPrintingEnabled() || needsConsole^) {
     /* On Windows, we need to create a console instance if possible */
