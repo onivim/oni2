@@ -4,6 +4,7 @@
  * Helpers for implementing configuration 'transformers' -
  * functions that update configurations.
  */
+open Core_Kernel;
 module Log = (val Log.withNamespace("Oni2.Core.ConfigurationTransformer"));
 
 type t = Yojson.Safe.t => Yojson.Safe.t;

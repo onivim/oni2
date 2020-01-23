@@ -4,6 +4,8 @@
  * Simple console logger
  */
 
+open Core_Kernel;
+
 let activeThreadMutex = Mutex.create();
 let activeThreads: ref(list(Thread.t)) = ref([]);
 

@@ -1,3 +1,4 @@
+open Core_Kernel;
 module Zed_utf8 = ZedBundled;
 
 type t = {

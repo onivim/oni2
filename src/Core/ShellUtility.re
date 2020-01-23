@@ -1,3 +1,4 @@
+open Core_Kernel;
 module Option = Utility.Option;
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 

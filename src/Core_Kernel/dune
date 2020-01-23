@@ -1,0 +1,14 @@
+(library
+    (name Core_Kernel)
+    (public_name Oni2.core_kernel)
+    (libraries 
+		str
+		zed_oni
+        Revery
+		fmt
+		fmt.tty
+		logs
+		logs.fmt
+		timber
+    )
+    (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

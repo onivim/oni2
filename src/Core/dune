@@ -16,6 +16,7 @@
         lwt.unix
         Rench
         Revery
+        Oni2.core_kernel
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
