@@ -1,4 +1,3 @@
-open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -26,7 +25,7 @@ runTest(
       !
         String.equal(
           state.editorFont.fontFile,
-          Utility.executingDirectory ++ "FiraCode-Regular.ttf",
+          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
         )
     );
   },

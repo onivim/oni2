@@ -7,8 +7,6 @@ open Oni_Components;
 
 open Oni_Extensions;
 
-module Option = Oni_Core.Utility.Option;
-
 module Styles = {
   let container = Style.[flexGrow(1)];
 

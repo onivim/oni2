@@ -22,8 +22,9 @@ let parse = raw => {
 
 let localize = (dictionary: LocalizationDictionary.t, {raw, token, _}: t) => {
   let localized =
-    token
-    |> Option.bind(token => {LocalizationDictionary.get(token, dictionary)});
+    Option.bind(token, token => {
+      LocalizationDictionary.get(token, dictionary)
+    });
 
   {raw, token, localized};
 };

@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 open Oni_Components;
 
 // MODEL
@@ -86,8 +87,6 @@ let subscriptions = (ripgrep, dispatch) => {
 
 open Revery;
 open Revery.UI;
-
-module ListEx = Utility.ListEx;
 
 module Styles = {
   open Style;

@@ -54,7 +54,7 @@ let runTest =
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      ~onAfterDispatch=Utility.noop1,
+      ~onAfterDispatch=_ => (),
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI

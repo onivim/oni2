@@ -3,26 +3,22 @@
  *
  * This implements an updater (reducer + side effects) for the window title
  */
-
-module Core = Oni_Core;
-module Model = Oni_Model;
-
-module Actions = Model.Actions;
-module Option = Core.Utility.Option;
-module Path = Core.Utility.Path;
+open Oni_Core;
+open Oni_Model;
+open Utility;
 
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);
 
-let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
+let getTemplateVariables: State.t => StringMap.t(string) =
   state => {
-    let buffer = Model.Selectors.getActiveBuffer(state);
-    let filePath = Option.bind(Core.Buffer.getFilePath, buffer);
+    let buffer = Selectors.getActiveBuffer(state);
+    let filePath = Option.bind(buffer, Buffer.getFilePath);
 
     let appName = Option.some("Onivim 2") |> withTag("appName");
 
     let dirty =
-      Option.map(Core.Buffer.isModified, buffer)
+      Option.map(Buffer.isModified, buffer)
       |> (
         fun
         | Some(true) => Some("*")
@@ -43,7 +39,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
     let activeEditorMedium =
       filePath
-      |> Option.bind(fp =>
+      |> OptionEx.flatMap(fp =>
            switch (rootPath) {
            | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
@@ -58,7 +54,7 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
     let activeFolderMedium =
       filePath
       |> Option.map(Filename.dirname)
-      |> Option.bind(fp =>
+      |> OptionEx.flatMap(fp =>
            switch (rootPath) {
            | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
@@ -80,9 +76,9 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       rootName,
       rootPath,
     ]
-    |> Option.values
+    |> OptionEx.values
     |> List.to_seq
-    |> Core.StringMap.of_seq;
+    |> StringMap.of_seq;
   };
 
 module Effects = {
@@ -90,10 +86,10 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="title.update", dispatch => {
       let templateVariables = getTemplateVariables(state);
       let titleTemplate =
-        Core.Configuration.getValue(c => c.windowTitle, state.configuration);
+        Configuration.getValue(c => c.windowTitle, state.configuration);
 
-      let titleModel = Model.Title.ofString(titleTemplate);
-      let title = Model.Title.toString(titleModel, templateVariables);
+      let titleModel = Title.ofString(titleTemplate);
+      let title = Title.toString(titleModel, templateVariables);
 
       dispatch(Actions.SetTitle(title));
     });
@@ -111,7 +107,7 @@ let start = setTitle => {
       }
     );
 
-  let updater = (state: Model.State.t, action: Actions.t) => {
+  let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Init => (state, Effects.updateTitle(state))
     | BufferEnter(_) => (state, Effects.updateTitle(state))

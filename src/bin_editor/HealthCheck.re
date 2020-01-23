@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
 
@@ -29,16 +30,14 @@ let commonChecks = [
       Oniguruma.(
         {
           OnigRegExp.create("(@selector\\()(.*?)(\\))")
-          |> Utility.Result.map(
-               OnigRegExp.search("@selector(windowWillClose:)", 0),
-             )
-          |> Utility.Result.map(result => {
+          |> Result.map(OnigRegExp.search("@selector(windowWillClose:)", 0))
+          |> Result.map(result => {
                OnigRegExp.(
                  Match.getText(result[1]) == "@selector("
                  && Match.getText(result[3]) == ")"
                )
              })
-          |> Utility.Result.default(~value=false);
+          |> Result.value(~default=false);
         }
       );
     },
@@ -94,7 +93,7 @@ let mainChecks = [
         ~setup,
         "check-health.js",
       )
-      |> Utility.LwtUtil.sync
+      |> LwtEx.sync
       |> (
         fun
         | Ok(_) => true
@@ -113,16 +112,16 @@ let mainChecks = [
   (
     "Verify bundled font exists",
     _ =>
-      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
+      Sys.file_exists(
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+      ),
   ),
   (
     "Verify bundled reason-language-server executable",
     (setup: Setup.t) => {
       let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
 
-      ret.stdout
-      |> String.trim
-      |> Utility.StringUtil.contains("Reason Language Server");
+      ret.stdout |> String.trim |> StringEx.contains("Reason Language Server");
     },
   ),
   (

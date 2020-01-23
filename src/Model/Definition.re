@@ -5,7 +5,8 @@
  */
 open EditorCoreTypes;
 open Oni_Core;
-module Option = Utility.Option;
+open Utility;
+
 module Ext = Oni_Extensions;
 
 type definition = {
@@ -29,13 +30,13 @@ let getAt = (bufferId, position, definition: t) => {
       None;
     };
 
-  definition |> Utility.Option.bind(getHover);
+  Option.bind(definition, getHover);
 };
 
 let getRange = (definition: t) => {
   definition
-  |> Option.bind(def => def.result)
-  |> Option.bind((res: LanguageFeatures.DefinitionResult.t) =>
+  |> OptionEx.flatMap(def => def.result)
+  |> OptionEx.flatMap((res: LanguageFeatures.DefinitionResult.t) =>
        res.originRange
      );
 };

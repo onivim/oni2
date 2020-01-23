@@ -17,12 +17,12 @@ module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module Option = Core.Utility.Option;
+module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, cli) => {
   switch (Store.Utility.getUserExtensionsDirectory(cli)) {
   | Some(extensionsFolder) =>
-    let result =
-      ExtM.install(~extensionsFolder, ~path) |> Core.Utility.LwtUtil.sync;
+    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
 
     switch (result) {
     | Ok(_) =>
@@ -171,7 +171,7 @@ if (cliOptions.syntaxHighlightService) {
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
         ~getTime,
-        ~executingDirectory=Core.Utility.executingDirectory,
+        ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
         ~getScaleFactor,
         ~getZoom,

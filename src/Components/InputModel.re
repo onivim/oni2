@@ -1,11 +1,12 @@
 open Oni_Core;
+open Utility;
 
 let slice = (~start=0, ~stop=?, str) => {
   let length = String.length(str);
-  let start = Utility.clamp(~lo=0, ~hi=length, start);
+  let start = IntEx.clamp(~lo=0, ~hi=length, start);
   let stop =
     switch (stop) {
-    | Some(index) => Utility.clamp(~lo=0, ~hi=length, index)
+    | Some(index) => IntEx.clamp(~lo=0, ~hi=length, index)
     | None => length
     };
 

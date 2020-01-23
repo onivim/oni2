@@ -60,7 +60,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 let start =
     (
       ~configurationFilePath=None,
-      ~onAfterDispatch=Core.Utility.noop1,
+      ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,

@@ -3,9 +3,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
-module Path = Utility.Path;
 module Log = (val Log.withNamespace("Oni2.UI.LocationListView"));
 
 type item = {
@@ -123,8 +122,6 @@ let item =
 
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
-      open Utility.StringUtil;
-
       let availableWidth = float(width - locationWidth);
       let maxLength =
         int_of_float(availableWidth /. editorFont.measuredWidth);
@@ -133,7 +130,12 @@ let item =
 
       try({
         let (text, charStart, charEnd) =
-          extractSnippet(~maxLength, ~charStart, ~charEnd, item.text);
+          StringEx.extractSnippet(
+            ~maxLength,
+            ~charStart,
+            ~charEnd,
+            item.text,
+          );
         let before = String.sub(text, 0, charStart);
         let matchedText = String.sub(text, charStart, charEnd - charStart);
         let after = String.sub(text, charEnd, String.length(text) - charEnd);
@@ -141,7 +143,7 @@ let item =
         <View style=Style.[flexDirection(`Row)]>
           <unstyled text=before />
           <highlighted text=matchedText />
-          <unstyled text={trimRight(after)} />
+          <unstyled text={StringEx.trimRight(after)} />
         </View>;
       }) {
       | Invalid_argument(message) =>

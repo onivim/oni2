@@ -1,7 +1,5 @@
 open Oni_Core;
-
-module ArrayEx = Utility.ArrayEx;
-module Path = Utility.Path;
+open Utility;
 
 [@deriving show({with_path: false})]
 type t = {

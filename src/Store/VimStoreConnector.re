@@ -7,15 +7,45 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Option = Core.Utility.Option;
-
 open Oni_Model;
+
+module Core = Oni_Core;
+open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
+
+type commandLineCompletionMeet = {
+  prefix: string,
+  position: int,
+};
+
+let getCommandLineCompletionsMeet = (str: string, position: int) => {
+  let len = String.length(str);
+
+  if (len == 0 || position < len) {
+    None;
+  } else {
+    /* Look backwards for '/' or ' ' */
+    let found = ref(false);
+    let meet = ref(position);
+
+    while (meet^ > 0 && ! found^) {
+      let pos = meet^ - 1;
+      let c = str.[pos];
+      if (c == ' ') {
+        found := true;
+      } else {
+        decr(meet);
+      };
+    };
+
+    let pos = meet^;
+    Some({prefix: String.sub(str, pos, len - pos), position: pos});
+  };
+};
 
 let start =
     (
@@ -87,8 +117,8 @@ let start =
            });
       };
 
-      Option.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> Option.flatten
+      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.join
       |> Option.iter(action => dispatch(action));
     });
 
@@ -408,7 +438,7 @@ let start =
           | None => ""
           };
         let position = Vim.CommandLine.getPosition();
-        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        let meet = getCommandLineCompletionsMeet(text, position);
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
@@ -484,7 +514,7 @@ let start =
 
         let () =
           editor
-          |> Core.Utility.Option.iter(e => {
+          |> Option.iter(e => {
                let () =
                  getState()
                  |> Selectors.getActiveEditorGroup
@@ -572,30 +602,28 @@ let start =
 
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
-      Core.Utility.(
-        switch (lastCompletionMeet^) {
-        | None => ()
-        | Some({position, _}) =>
-          isCompleting := true;
-          let currentPos = ref(Vim.CommandLine.getPosition());
-          while (currentPos^ > position) {
-            let _ = Vim.input(~cursors=[], "<bs>");
-            currentPos := Vim.CommandLine.getPosition();
-          };
+      switch (lastCompletionMeet^) {
+      | None => ()
+      | Some({position, _}) =>
+        isCompleting := true;
+        let currentPos = ref(Vim.CommandLine.getPosition());
+        while (currentPos^ > position) {
+          let _ = Vim.input(~cursors=[], "<bs>");
+          currentPos := Vim.CommandLine.getPosition();
+        };
 
-          let completion = Core.Utility.trimTrailingSlash(completion);
-          let latestCursors = ref([]);
-          String.iter(
-            c => {
-              latestCursors := Vim.input(~cursors=[], String.make(1, c));
-              ();
-            },
-            completion,
-          );
-          updateActiveEditorCursors(latestCursors^);
-          isCompleting := false;
-        }
-      )
+        let completion = Path.trimTrailingSeparator(completion);
+        let latestCursors = ref([]);
+        String.iter(
+          c => {
+            latestCursors := Vim.input(~cursors=[], String.make(1, c));
+            ();
+          },
+          completion,
+        );
+        updateActiveEditorCursors(latestCursors^);
+        isCompleting := false;
+      }
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>

@@ -1,0 +1,12 @@
+(library
+    (name Kernel)
+    (public_name Oni2.core.kernel)
+    (libraries 
+        yojson
+        ppx_deriving.runtime
+        ppx_deriving_yojson.runtime
+        zed_oni
+        threads
+        editor-core-types
+        timber)
+    (preprocess (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

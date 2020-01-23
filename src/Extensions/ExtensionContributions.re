@@ -4,6 +4,7 @@
  * Types for VSCode Extension contribution points
  */
 open Oni_Core;
+open Utility;
 open Rench;
 
 module Commands = {
@@ -60,9 +61,8 @@ module Configuration = {
   };
 
   let of_yojson = json =>
-    Oni_Core.Utility.tryToResult(~msg="Error parsing", () =>
-      of_yojson_exn(json)
-    );
+    ResultEx.guard(() => of_yojson_exn(json))
+    |> Result.map_error(_ => "Error parsing");
 
   let to_yojson = _v => `Null;
 };

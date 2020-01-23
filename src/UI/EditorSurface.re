@@ -430,7 +430,7 @@ let%component make =
          let tokenEnd = token.endPosition |> Index.toZeroBased;
          index >= tokenStart && index < tokenEnd;
        })
-    |> Utility.Option.of_list;
+    |> Utility.OptionEx.of_list;
   };
 
   let style =

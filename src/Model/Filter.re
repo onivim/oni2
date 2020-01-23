@@ -7,7 +7,7 @@ open ReasonFuzz;
 
 open Oni_Core.CamomileBundled.Camomile;
 
-module Utility = Oni_Core.Utility;
+module IndexEx = Oni_Core.Utility.IndexEx;
 module Zed_utf8 = Oni_Core.ZedBundled;
 
 module Option = {
@@ -26,7 +26,7 @@ let makeResult = ((maybeMatch, item)) =>
   switch (maybeMatch) {
   | Some(match) => {
       item,
-      highlight: Utility.ranges(match.IndexMatchResult.indicies),
+      highlight: IndexEx.ranges(match.IndexMatchResult.indicies),
     }
   | None => {item, highlight: []}
   };

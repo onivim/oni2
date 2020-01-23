@@ -3,15 +3,12 @@
  *
  * Virtualized list helper
  */
+open Oni_Core;
+open Utility;
 
 open Revery;
 open Revery.UI;
 open Revery_UI_Components;
-
-module Utility = Oni_Core.Utility;
-
-// TODO: Remove after 4.08 upgrade
-module Option = Utility.Option;
 
 module Constants = {
   let scrollWheelMultiplier = 25;
@@ -68,7 +65,7 @@ let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
       menuHeight
       / rowHeight
       + Constants.additionalRowsToRender
-      |> Utility.clamp(~lo=0, ~hi=count - startRow);
+      |> IntEx.clamp(~lo=0, ~hi=count - startRow);
     let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
     let itemView = i => {
@@ -132,8 +129,7 @@ let%component make =
 
   // Make sure we're not scrolled past the items
   let actualScrollTop =
-    actualScrollTop
-    |> Utility.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
+    actualScrollTop |> IntEx.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
 
   let%hook () =
     Hooks.effect(

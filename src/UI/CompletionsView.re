@@ -5,12 +5,12 @@ open Oni_Core;
 open Oni_Syntax;
 open Oni_Model;
 open Oni_Components;
+open Utility;
 
 open Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Ext = Oni_Extensions;
-module Option = Utility.Option;
 
 open Ext.CompletionItemKind;
 
@@ -158,7 +158,7 @@ let itemView =
 
   let iconColor =
     kind
-    |> Option.bind(kindToColor(tokenTheme))
+    |> OptionEx.flatMap(kindToColor(tokenTheme))
     |> Option.value(~default=theme.editorForeground);
 
   <View style={Styles.item(~isFocused, ~theme)}>

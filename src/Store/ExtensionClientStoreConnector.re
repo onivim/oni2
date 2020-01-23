@@ -9,10 +9,10 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
 module Uri = Oni_Core.Uri;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
-module Option = Utility.Option;
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
@@ -25,7 +25,7 @@ module ExtensionCompletionProvider = {
     Protocol.SuggestionItem.t => CompletionItem.t =
     suggestion => {
       let completionKind =
-        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+        Option.bind(suggestion.kind, CompletionItemKind.ofInt);
 
       {
         label: suggestion.label,
@@ -341,15 +341,11 @@ let start = (extensions, setup: Setup.t) => {
   let activateFileType = (fileType: option(string)) =>
     fileType
     |> Option.iter(ft =>
-         Hashtbl.find_opt(activatedFileTypes, ft)
-         // If no entry, we haven't activated yet
-         |> Option.iter_none(() => {
-              ExtHostClient.activateByEvent(
-                "onLanguage:" ++ ft,
-                extHostClient,
-              );
-              Hashtbl.add(activatedFileTypes, ft, true);
-            })
+         if (!Hashtbl.mem(activatedFileTypes, ft)) {
+           // If no entry, we haven't activated yet
+           ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
+           Hashtbl.add(activatedFileTypes, ft, true);
+         }
        );
 
   let sendBufferEnterEffect =

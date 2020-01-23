@@ -1,5 +1,7 @@
 open Oni_Core;
+open Utility;
 open Oni_Extensions;
+
 module ExtM = Oni_ExtensionManagement;
 
 open TestFramework;
@@ -21,8 +23,7 @@ describe("Installer", ({test, _}) => {
     expect.equal(List.length(startExtensions), 0);
 
     let result =
-      ExtM.install(~extensionsFolder, ~path=markdownExtension)
-      |> Utility.LwtUtil.sync;
+      ExtM.install(~extensionsFolder, ~path=markdownExtension) |> LwtEx.sync;
 
     expect.equal(result, Ok());
 
