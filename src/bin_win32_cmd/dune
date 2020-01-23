@@ -1,0 +1,6 @@
+(executable
+    (name Oni2_win32_cmd)
+    (package Oni2)
+    (public_name Oni2_win32_cmd)
+    (libraries unix str)
+)
