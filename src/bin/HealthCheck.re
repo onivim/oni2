@@ -210,5 +210,6 @@ let run = (~checks, _cli) => {
   Log.info("All systems go.");
   Log.info("Checking for remaining threads...");
   ThreadHelper.showRunningThreads() |> Log.info;
+  Log.info("Done checking threads!");
   passed ? 0 : 1;
 };
