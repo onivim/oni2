@@ -94,22 +94,35 @@ Once you have a release build created, you can create an `oni2` symlink to point
 Run the following from the `oni2` directory:
 - `./scripts/osx/create-symlink.sh`
 
-## Extension Host
 
-If you want to develop, or debug, the extension host back-end, follow these steps:
+## Extension Integration
 
-### Build the extension host
+If you want to develop, or debug, an extension integration, the following tips may help:
+
+### Testing with oni-dev-extenion
+
+There is a development extension in `src/development_extensions/oni-dev-extension` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
+
+### Intrumenting extensions
+
+To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
+
+Both the oni-dev-extension and any other extension can be instrumented, as they're usually included in non-minified form.
+
+### Extension host
+
+If there's a problem in-between Oni2 and the extension, it can be helpful to build and instrument your own copy of the extension host.
+
+#### Building
 
 - Navigate to your home directory (ie, `cd ~` on Linux / OSX, or `cd /` on Windows)
 - `git clone https://github.com/onivim/vscode-exthost`
 - `yarn install`
 - `yarn compile`
 
-> You can use the `yarn watch` command too - this is useful for iterating quickly!
+You can use the `yarn watch` command too - this is useful for iterating quickly!
 
-To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
-
-### Testing
+#### Testing
 
 You can use the `ONI2_EXTHOST` environment variable to override the default extension host with your local extension host:
 - `ONI2_EXTHOST=/Users/<your-username>/vscode-exthost esy run -f --debug``
