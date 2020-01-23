@@ -44,3 +44,5 @@ module Utility = Utility;
 module Views = Views;
 module VisualRange = VisualRange;
 module ZedBundled = Kernel.ZedBundled;
+
+module Kernel = Kernel;
