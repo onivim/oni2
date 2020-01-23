@@ -76,6 +76,8 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
+external native_exit: int => unit = "oni2c_native_exit";
+
 let parse =
     (
       ~checkHealth,
@@ -98,6 +100,22 @@ let parse =
   let needsConsole = ref(false);
 
   let queuedJob = ref(None);
+
+  let _realExit = exit;
+
+  let exit = code => {
+    Log.infof(m => m("Exit: %d\n", code));
+    // HACK: On Windows, there seem still to be some piping issues
+    // with the stdout / stdin. In certain cases, depending on the
+    // pipes provided, OCaml's `exit` will fail with a Sys_error("Invalid argument")
+    // exception. This is not recoverable, and causes an exit code of 2 to be returned.
+    // As a workaround, we'll use the native C API to flush channels and exit.
+    if (Sys.win32) {
+      native_exit(code);
+    } else {
+      exit(code);
+    };
+  };
 
   let runAndExit = f => queuedJob := Some(cli => {f(cli) |> exit});
 

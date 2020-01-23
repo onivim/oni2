@@ -7,6 +7,7 @@
 (library
     (name Oni_Core)
     (public_name Oni2.core)
+    (c_names bindings)
     (libraries 
         str
         bigarray

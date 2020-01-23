@@ -216,5 +216,4 @@ jobs:
       set PATH=%PATH%;D:/a/1/s/Onivim2
       Oni2.exe -f --debug --log-file=healthcheck.log --no-log-colors --checkhealth
     displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
-    continueOnError: true
   - script: type healthcheck.log
