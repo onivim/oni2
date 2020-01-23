@@ -110,7 +110,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
-  timeoutInMinutes: 90
+  timeoutInMinutes: 150
   pool:
     vmImage: 'vs2017-win2016'
 
