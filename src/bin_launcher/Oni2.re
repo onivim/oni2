@@ -1,6 +1,6 @@
 /*
   Oni2.re
- 
+
   This is the launcher for the editor.
   There are two specific, but different (almost inverse!) use cases, depending on the platform:
 
@@ -8,25 +8,28 @@
   - Windows: 'attach' stdio pipes to the GUI process, if '-f' or '--nofork' is passed  - otherwise, spawn and detach.
  */
 
-let commandsThatForceAttach = [
-  "-f",
-  "--nofork",
-  "--install-extension",
-  "--uninstall-extension",
-  "--list-extensions",
-  "--version",
-  "-v",
-  "--help",
-  "-h"
-]
-|> List.map((item) => (item, true))
-|> List.to_seq
-|> Hashtbl.of_seq;
+let commandsThatForceAttach =
+  [
+    "-f",
+    "--nofork",
+    "--checkhealth",
+    "--install-extension",
+    "--uninstall-extension",
+    "--list-extensions",
+    "--version",
+    "-v",
+    "--help",
+    "-h",
+  ]
+  |> List.map(item => (item, true))
+  |> List.to_seq
+  |> Hashtbl.of_seq;
 
-let stayAttached = Sys.argv
-|> Array.to_list
-|> List.map(String.lowercase_ascii)
-|> List.exists(Hashtbl.mem(commandsThatForceAttach));
+let stayAttached =
+  Sys.argv
+  |> Array.to_list
+  |> List.map(String.lowercase_ascii)
+  |> List.exists(Hashtbl.mem(commandsThatForceAttach));
 
 type platform =
   | Windows
