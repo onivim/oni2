@@ -216,4 +216,4 @@ jobs:
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
       Oni2.exe -f --no-log-colors --checkhealth
-    displayName: "Oni2.exe - run installed"
+    displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
