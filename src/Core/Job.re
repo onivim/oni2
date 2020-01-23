@@ -1,5 +1,5 @@
 module Time = Revery.Time;
-open Core_Kernel;
+open Kernel;
 module Log = (val Log.withNamespace("Oni2.Core.Job"));
 
 type mapFn('p, 'c) = ('p, 'c) => (bool, 'p, 'c);

@@ -1,5 +1,5 @@
 open EditorCoreTypes;
-open Core_Kernel;
+open Kernel;
 
 module Log = (val Log.withNamespace("Oni2.Core.Utility"));
 

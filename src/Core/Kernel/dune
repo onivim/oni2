@@ -1,5 +1,5 @@
 (library
-    (name Core_Kernel)
+    (name Kernel)
     (public_name Oni2.core_kernel)
     (libraries 
 		str
