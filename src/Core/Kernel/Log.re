@@ -35,7 +35,7 @@ let writeExceptionLog = (e, bt) => {
   Stdlib.close_out(oc);
 };
 
-let enableDebugLogging = () => {
+let enableDebug = () => {
   Timber.App.setLevel(Timber.Level.debug);
   module Log = (val withNamespace("Oni2.Exception"));
 
@@ -54,8 +54,13 @@ let enableDebugLogging = () => {
   });
 };
 
+let enableTrace = () => {
+  enableDebug();
+  Timber.App.setLevel(Timber.Level.trace);
+};
+
 if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
-  enableDebugLogging();
+  enableDebug();
 } else {
   // Even if we're not debugging.... at least emit the exception
   Printexc.set_uncaught_exception_handler((e, bt) => {

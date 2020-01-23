@@ -16,4 +16,5 @@ module type Logger = {
 
 let withNamespace: string => (module Logger);
 
-let enableDebugLogging: unit => unit;
+let enableDebug: unit => unit;
+let enableTrace: unit => unit;

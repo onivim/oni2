@@ -27,6 +27,7 @@ let spec =
       " Stay attached to the foreground terminal.",
     ),
     ("--debug", passthrough, " Enable debug logging."),
+    ("--trace", passthrough, " Enable trace logging."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
