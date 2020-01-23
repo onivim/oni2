@@ -211,9 +211,10 @@ jobs:
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
   - script: echo %PATH%
-  # The validate-release.ps1 installs Onivim 2 and checks it,
-  # but we need to check from the command prompt, too via %PATH% - for #872
+  # Regression test for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --no-log-colors --checkhealth
-    displayName: "Oni2.exe - run installed"
+      Oni2.exe -f --debug --log-file=healthcheck.log --no-log-colors --checkhealth
+    displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
+    continueOnError: true
+  - script: type healthcheck.log
