@@ -101,7 +101,7 @@ If you want to develop, or debug, an extension integration, the following tips m
 
 ### Testing with oni-dev-extenion
 
-There is a development extension in `src/development_extensions/oni-dev-extensioin` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
+There is a development extension in `src/development_extensions/oni-dev-extension` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
 
 ### Intrumenting extensions
 
@@ -111,7 +111,7 @@ Both the oni-dev-extension and any other extension can be instrumented, as they'
 
 ### Extension host
 
-If there's a problem in-between Oni2 and the extension, it can be helpful to build and instrument your won copy of the extension host.
+If there's a problem in-between Oni2 and the extension, it can be helpful to build and instrument your own copy of the extension host.
 
 #### Building
 
