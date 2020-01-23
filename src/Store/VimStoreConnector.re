@@ -275,7 +275,7 @@ let start =
         | v => v
         };
 
-      Log.debug("Vim.Window.onSplit: " ++ buf);
+      Log.trace("Vim.Window.onSplit: " ++ buf);
 
       let command =
         switch (splitType) {
@@ -290,7 +290,7 @@ let start =
 
   let _ =
     Vim.Window.onMovement((movementType, _count) => {
-      Log.debug("Vim.Window.onMovement");
+      Log.trace("Vim.Window.onMovement");
       let currentState = getState();
 
       let move = moveFunc => {

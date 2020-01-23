@@ -91,7 +91,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
   let current = ref(v);
   let iterations = ref(0);
 
-  Log.debug("Starting " ++ v.name);
+  Log.trace("Starting " ++ v.name);
   while (Unix.gettimeofday() -. startTime < budget && !current^.isComplete) {
     current := doWork(current^);
     incr(iterations);
@@ -99,7 +99,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
 
   let endTime = Unix.gettimeofday();
 
-  Log.debugf(m =>
+  Log.tracef(m =>
     m(
       "%s ran %i iterations for %fs",
       v.name,
@@ -108,7 +108,7 @@ let tick = (~budget=None, v: t('p, 'c)) => {
     )
   );
 
-  Log.debugf(m => m("Detailed report: %s", show(v)));
+  Log.tracef(m => m("Detailed report: %s", show(v)));
 
   current^;
 };

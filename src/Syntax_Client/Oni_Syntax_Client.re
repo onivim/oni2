@@ -155,12 +155,12 @@ let start =
 
           | ServerToClient.EchoReply(result) =>
             scheduler(() =>
-              ClientLog.debugf(m =>
+              ClientLog.tracef(m =>
                 m("got message from channel: |%s|", result)
               )
             )
 
-          | ServerToClient.Log(msg) => scheduler(() => ServerLog.debug(msg))
+          | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
 
           | ServerToClient.Closing =>
             scheduler(() => ServerLog.debug("Closing"))
@@ -171,7 +171,7 @@ let start =
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
-              ClientLog.debug("Tokens applied");
+              ClientLog.trace("Tokens applied");
             })
           };
         };
@@ -209,7 +209,7 @@ let start =
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
-  ClientLog.debug("Sending bufferUpdate notification...");
+  ClientLog.trace("Sending bufferUpdate notification...");
   write(v, message);
 };
 
@@ -231,12 +231,12 @@ let healthCheck = (v: t) => {
 
 let notifyBufferUpdate =
     (v: t, bufferUpdate: BufferUpdate.t, lines: array(string), scope) => {
-  ClientLog.debug("Sending bufferUpdate notification...");
+  ClientLog.trace("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
 let notifyVisibilityChanged = (v: t, visibility) => {
-  ClientLog.debug("Sending visibleRangesChanged notification...");
+  ClientLog.trace("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 

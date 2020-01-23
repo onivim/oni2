@@ -42,7 +42,7 @@ let evaluate = (v: t, getValue) => {
 
   let ret = eval(v);
 
-  Log.debugf(m =>
+  Log.tracef(m =>
     m("Expression %s evaluated to: %s", toString(v), ret ? "true" : "false")
   );
 

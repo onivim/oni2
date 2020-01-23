@@ -5,6 +5,7 @@ module Option = Utility.Option;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = (val Core.Log.withNamespace("IntegrationTest"));
+module InitLog = (val Core.Log.withNamespace("IntegrationTest.Init"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
 
@@ -77,14 +78,12 @@ let runTest =
     currentState := v;
   };
 
-  let logInit = s => Log.debug("[INITIALIZATION] " ++ s);
-
-  logInit("Starting store...");
+  InitLog.info("Starting store...");
 
   let configurationFilePath = Filename.temp_file("configuration", ".json");
   let oc = open_out(configurationFilePath);
 
-  logInit("Writing configuration file: " ++ configurationFilePath);
+  InitLog.info("Writing configuration file: " ++ configurationFilePath);
 
   let () =
     configuration
@@ -114,9 +113,9 @@ let runTest =
       (),
     );
 
-  logInit("Store started!");
+  InitLog.info("Store started!");
 
-  logInit("Sending init event");
+  InitLog.info("Sending init event");
 
   dispatch(Model.Actions.Init);
 

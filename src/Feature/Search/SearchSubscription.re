@@ -24,7 +24,7 @@ module Make = (Config: {type action;}) => {
           ~params as {directory, query, ripgrep, onUpdate, onCompleted},
           ~dispatch: _,
         ) => {
-      Log.debug("Starting " ++ id);
+      Log.info("Starting " ++ id);
 
       let dispose =
         ripgrep.Ripgrep.findInFiles(

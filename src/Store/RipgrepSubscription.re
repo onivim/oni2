@@ -32,7 +32,7 @@ module Provider = {
         ~directory,
         ~onUpdate,
         ~onComplete=() => {
-          Log.info("Ripgrep completed.");
+          Log.debug("Ripgrep completed.");
           dispatch(onComplete());
         },
       );
