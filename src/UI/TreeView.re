@@ -3,10 +3,9 @@ open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
-
-module Log = (val Log.withNamespace("TreeView"));
+module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
 module type TreeModel = {
   type t;
@@ -154,15 +153,73 @@ module Make = (Model: TreeModel) => {
     };
   };
 
+  let useScroll = (~itemHeight, ~count, ~viewportHeight, ~scrollOffset) => {
+    // We need to keep the previous value to know which edge to align a revealed item to
+    let%hook (prevScrollTop, setPrevScrollTop) = Hooks.ref(0);
+    // The internal value is used if scrollOffset isn't being passed in
+    let%hook (internalScrollTop, setInternalScrollTop) = Hooks.state(0);
+
+    let targetScrollTop =
+      scrollOffset
+      |> Option.map(
+           fun
+           | `Start(offset) => int_of_float(offset *. float(itemHeight))
+           | `Middle(offset) => {
+               let pixelOffset = int_of_float(offset *. float(itemHeight));
+               let halfHeight = (viewportHeight - itemHeight) / 2;
+               pixelOffset - halfHeight;
+             }
+           | `Reveal(index) => {
+               let offset = index * itemHeight;
+               if (offset < prevScrollTop) {
+                 // out of view above, so align with top edge
+                 offset;
+               } else if (offset + itemHeight > prevScrollTop + viewportHeight) {
+                 // out of view below, so align with bottom edge
+                 offset + itemHeight - viewportHeight;
+               } else {
+                 prevScrollTop;
+               };
+             },
+         )
+      |> Option.value(~default=internalScrollTop)
+      // Make sure we're not scrolled past the items
+      |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
+
+    setPrevScrollTop(targetScrollTop);
+
+    let%hook (actualScrollTop, setScrollTopImmediately) =
+      Hooks.spring(
+        ~target=float(targetScrollTop),
+        ~restThreshold=3.,
+        Spring.Options.stiff,
+      );
+
+    let setScrollTopImmediately = updater =>
+      setInternalScrollTop(_ => {
+        let scrollTop' =
+          updater(targetScrollTop)
+          |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
+        setScrollTopImmediately(float(scrollTop'));
+        scrollTop';
+      });
+
+    (int_of_float(actualScrollTop), setScrollTopImmediately);
+  };
+
   let%component make =
                 (
                   ~children as renderContent,
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
-                  ~scrollOffset: option([ | `Start(float) | `Middle(float)])=?,
+                  ~scrollOffset:
+                     option(
+                       [ | `Start(float) | `Middle(float) | `Reveal(int)],
+                     )=?,
                   ~onScrollOffsetChange:
-                     [ | `Start(float) | `Middle(float)] => unit=_ => (),
+                     [ | `Start(float) | `Middle(float) | `Reveal(int)] =>
+                     unit=_ => (),
                   ~tree,
                   (),
                 ) => {
@@ -176,39 +233,29 @@ module Make = (Model: TreeModel) => {
       | None => itemHeight * initialRowsToRender
       };
 
-    let%hook (scrollTop, setScrollTop) = Hooks.state(0);
-    let setScrollTop = callback =>
-      setScrollTop(scrollTop => {
-        let newScrollTop = callback(scrollTop);
-        onScrollOffsetChange(
-          `Start(float(newScrollTop) /. float(itemHeight)),
-        );
-        newScrollTop;
-      });
-    let scrollTop =
-      scrollOffset
-      |> Option.map(
-           fun
-           | `Start(offset) => int_of_float(offset *. float(itemHeight))
-           | `Middle(offset) => {
-               let pixelOffset = int_of_float(offset *. float(itemHeight));
-               let halfHeight = (menuHeight - itemHeight) / 2;
-               pixelOffset - halfHeight;
-             },
-         )
-      |> Option.value(~default=scrollTop);
-
     let count = Model.expandedSubtreeSize(tree);
 
-    // Make sure we're not scrolled past the items
-    let scrollTop =
-      scrollTop |> Utility.clamp(~lo=0, ~hi=itemHeight * count - menuHeight);
+    let%hook (scrollTop, setScrollTop) =
+      useScroll(
+        ~itemHeight,
+        ~count,
+        ~viewportHeight=menuHeight,
+        ~scrollOffset,
+      );
+    let setScrollTop = updater =>
+      setScrollTop(scrollTop => {
+        let scrollTop' = updater(scrollTop);
+        onScrollOffsetChange(
+          `Start(float(scrollTop') /. float(itemHeight)),
+        );
+        scrollTop';
+      });
 
-    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let delta =
         int_of_float(wheelEvent.deltaY) * (- Constants.scrollWheelMultiplier);
 
-      setScrollTop(_ => scrollTop + delta);
+      setScrollTop(target => target + delta);
     };
 
     let maxHeight = count * itemHeight - menuHeight;
@@ -219,12 +266,12 @@ module Make = (Model: TreeModel) => {
 
       <View style=Styles.slider>
         <Slider
-          onValueChanged={v => setScrollTop(_ => int_of_float(v))}
+          onValueChanged={value => setScrollTop(_ => int_of_float(value))}
           minimumValue=0.
           maximumValue={float_of_int(maxHeight)}
           sliderLength=menuHeight
           thumbLength=thumbHeight
-          value={float_of_int(scrollTop)}
+          value={float(scrollTop)}
           trackThickness=Constants.scrollBarThickness
           thumbThickness=Constants.scrollBarThickness
           minimumTrackColor=Constants.scrollTrackColor
@@ -243,7 +290,7 @@ module Make = (Model: TreeModel) => {
     <View
       style=Styles.container
       ref={ref => setOuterRef(Some(ref))}
-      onMouseWheel=scroll>
+      onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
           <nodeView renderContent itemHeight clipRange onClick node=tree />

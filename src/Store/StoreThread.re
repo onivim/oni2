@@ -17,10 +17,8 @@ module Model = Oni_Model;
 
 open Oni_Extensions;
 
-module Log = (val Core.Log.withNamespace("Oni2.StoreThread"));
-module DispatchLog = (
-  val Core.Log.withNamespace("Oni2.StoreThread.dispatch")
-);
+module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
+module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
 let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
   if (cli.shouldLoadExtensions) {
@@ -42,18 +40,17 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
         let userExtensions = Utility.getUserExtensions(cli);
 
-        Log.debugf(m =>
-          m(
-            "discoverExtensions - discovered %n user extensions.",
-            List.length(userExtensions),
-          )
+        Log.infof(m =>
+          m("Discovered %n user extensions.", List.length(userExtensions))
         );
+
         [extensions, developmentExtensions, userExtensions] |> List.flatten;
       });
 
     Log.infof(m =>
       m("-- Discovered: %n extensions", List.length(extensions))
     );
+
     extensions;
   } else {
     Log.info("Not loading extensions; disabled via CLI");
@@ -63,7 +60,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 let start =
     (
       ~configurationFilePath=None,
-      ~onAfterDispatch=Core.Utility.noop1,
+      ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
       ~onStateChanged,
@@ -139,11 +136,7 @@ let start =
     );
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
-  let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
-
   let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
-
-  let (searchUpdater, searchStream) = SearchStoreConnector.start();
 
   let (lifecycleUpdater, lifecycleStream) =
     LifecycleStoreConnector.start(quit);
@@ -164,6 +157,7 @@ let start =
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
+  let contextMenuUpdater = ContextMenuStore.start();
 
   let (storeDispatch, storeStream) =
     Isolinear.Store.create(
@@ -182,7 +176,6 @@ let start =
           commandUpdater,
           lifecycleUpdater,
           fileExplorerUpdater,
-          searchUpdater,
           indentationUpdater,
           windowUpdater,
           keyDisplayerUpdater,
@@ -192,25 +185,11 @@ let start =
           completionUpdater,
           titleUpdater,
           sneakUpdater,
+          Features.update,
+          contextMenuUpdater,
         ]),
       (),
     );
-
-  module QuickmenuSubscriptionRunner =
-    Core.Subscription.Runner({
-      type action = Model.Actions.t;
-      let id = "quickmenu-subscription";
-    });
-  let (quickmenuSubscriptionsUpdater, quickmenuSubscriptionsStream) =
-    QuickmenuStoreConnector.subscriptions(ripgrep);
-
-  module SearchSubscriptionRunner =
-    Core.Subscription.Runner({
-      type action = Model.Actions.t;
-      let id = "search-subscription";
-    });
-  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
-    SearchStoreConnector.subscriptions(ripgrep);
 
   let rec dispatch = (action: Model.Actions.t) => {
     switch (action) {
@@ -227,11 +206,7 @@ let start =
       onStateChanged(newState);
     };
 
-    // TODO: Wire this up properly
-    let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
-    QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
-    let searchSubs = searchSubscriptionsUpdater(newState);
-    SearchSubscriptionRunner.run(~dispatch, searchSubs);
+    Features.updateSubscriptions(setup, newState, dispatch);
 
     onAfterDispatch(action);
   };
@@ -252,6 +227,19 @@ let start =
   };
 
   latestRunEffects := Some(runEffects);
+
+  Option.iter(
+    window =>
+      Revery.Window.setCanQuitCallback(window, () =>
+        if (Model.Buffers.anyModified(latestState^.buffers)) {
+          dispatch(Model.Actions.WindowCloseBlocked);
+          false;
+        } else {
+          true;
+        }
+      ),
+    window,
+  );
 
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
@@ -281,17 +269,11 @@ let start =
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
   let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, lifecycleStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, windowStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, languageFeatureStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 

@@ -1,5 +1,8 @@
 open Revery.Math;
 
+module InputModel = Oni_Components.InputModel;
+module StringEx = Oni_Core.Utility.StringEx;
+
 type callback = unit => unit;
 type bounds = unit => option(Rectangle.t);
 
@@ -52,7 +55,7 @@ let isActive = sneaks => sneaks.active;
 
 module Internal = {
   let filter = (prefix: string, sneak: sneak) => {
-    Oni_Core.Utility.StringUtil.startsWith(~prefix, sneak.id);
+    StringEx.startsWith(~prefix, sneak.id);
   };
 
   let applyFilter = (sneaks: t) =>

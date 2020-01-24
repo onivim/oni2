@@ -20,7 +20,7 @@ const packageJsonContents = fs.readFileSync(path.join(__dirname, "..", "..", "pa
 const packageMeta = JSON.parse(packageJsonContents)
 const { version, name } = packageMeta
 const prodName = packageMeta.build.productName
-const executableName = `Oni2.exe`
+const executableName = `Oni2_editor.exe`
 const pathVariable = "{app}"
 const appIcon = `${pathVariable}\\oni2.ico`
 

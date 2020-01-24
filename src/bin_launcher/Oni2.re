@@ -6,13 +6,13 @@
 
 let stayAttached = ref(false);
 
-let version = () => {
-  print_endline("Onivim 2 0.3.0");
-};
-
 let passthrough = Arg.Unit(() => ());
 let passthroughFloat = Arg.Float(_ => ());
 let passthroughString = Arg.String(_ => ());
+
+let passthroughAndStayAttached = Arg.Set(stayAttached);
+let passthroughFloatAndStayAttached = Arg.Float(_ => stayAttached := true);
+let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
 
 let spec =
   Arg.align([
@@ -27,6 +27,7 @@ let spec =
       " Stay attached to the foreground terminal.",
     ),
     ("--debug", passthrough, " Enable debug logging."),
+    ("--trace", passthrough, " Enable trace logging."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
@@ -48,12 +49,12 @@ let spec =
     ),
     (
       "--install-extension",
-      passthroughString,
+      passthroughStringAndStayAttached,
       " Install extension by specifying a path to the .vsix file",
     ),
     (
       "--uninstall-extension",
-      passthroughString,
+      passthroughStringAndStayAttached,
       " Uninstall extension by specifying an extension id.",
     ),
     (
@@ -63,7 +64,7 @@ let spec =
     ),
     (
       "--list-extensions",
-      Arg.Set(stayAttached),
+      passthroughAndStayAttached,
       " List the currently installed extensions.",
     ),
     (
@@ -76,12 +77,12 @@ let spec =
       passthrough,
       " Set the current working for Oni2.",
     ),
-    ("--version", Arg.Unit(version), " Print version information."),
-    ("-v", Arg.Unit(version), " Print version information."),
+    ("--version", passthroughAndStayAttached, " Print version information."),
+    ("-v", passthroughAndStayAttached, " Print version information."),
   ]);
 
 let usage = {|
-Onivim 2 0.2.0
+Onivim 2
 
 Usage:
 

@@ -3,6 +3,7 @@
  *
  * Resilient parsing for Configuration
  */
+open Kernel;
 open ConfigurationValues;
 open LineNumber;
 
@@ -143,6 +144,19 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.matchBrackets",
     (s, v) => {...s, editorMatchBrackets: parseBool(v)},
+  ),
+  (
+    "editor.acceptSuggestionOnEnter",
+    (s, v) => {
+      ...s,
+      editorAcceptSuggestionOnEnter:
+        switch (v) {
+        | `String("on") => `on
+        | `String("off") => `off
+        | `String("smart") => `smart
+        | _ => `on
+        },
+    },
   ),
   (
     "editor.minimap.enabled",

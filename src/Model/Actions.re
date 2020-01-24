@@ -10,6 +10,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
 
 [@deriving show({with_path: false})]
 type t =
@@ -30,13 +31,10 @@ type t =
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart([@opaque] CompletionMeet.t)
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
-  | CompletionBaseChanged(string)
-  | CompletionEnd
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -58,6 +56,9 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
+  | ContextMenuOverlayClicked
+  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
@@ -81,8 +82,9 @@ type t =
   | EditorScroll(EditorId.t, float)
   | EditorScrollToLine(EditorId.t, int)
   | EditorScrollToColumn(EditorId.t, int)
-  | ShowNotification(notification)
-  | HideNotification(int)
+  | ShowNotification(Notification.t)
+  | HideNotification(Notification.t)
+  | ClearNotifications
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -125,12 +127,15 @@ type t =
   | CopyActiveFilepathToClipboard
   | SearchStart
   | SearchHotkey
-  | SearchInput(string)
-  | SearchInputClicked(int)
-  | SearchUpdate([@opaque] list(Ripgrep.Match.t))
-  | SearchComplete
+  | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
+  | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
+  | WindowCloseBlocked
+  | WindowCloseDiscardConfirmed
+  | WindowCloseSaveAllConfirmed
+  | WindowCloseCanceled
+  | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | Noop
@@ -143,20 +148,9 @@ and command = {
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
-and notificationType =
-  | Success
-  | Info
-  | Warning
-  | Error
 and tick = {
   deltaTime: float,
   totalTime: float,
-}
-and notification = {
-  id: int,
-  notificationType,
-  title: string,
-  message: string,
 }
 and editor = {
   editorId: EditorId.t,

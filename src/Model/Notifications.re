@@ -1,13 +1,18 @@
 open Actions;
+open Notification;
 
 type t = list(Notification.t);
 
-let default: t = [];
+module ContextMenu =
+  Oni_Components.ContextMenu.Make({});
 
-let reduce = (state: t, action: Actions.t) => {
+let initial: t = [];
+
+let reduce = (state, action: Actions.t) => {
   switch (action) {
-  | ShowNotification(n) => [n, ...state]
-  | HideNotification(id) => List.filter(n => n.id != id, state)
+  | ShowNotification(item) => [item, ...state]
+  | HideNotification(item) => List.filter(it => it.id != item.id, state)
+  | ClearNotifications => initial
   | _ => state
   };
 };
@@ -19,8 +24,4 @@ let any = (state: t) => {
   };
 };
 
-let getOldestId = (state: t) => {
-  let n = state |> List.rev |> List.hd;
-
-  n.id;
-};
+let getOldest = (state: t) => state |> List.rev |> List.hd;

@@ -3,6 +3,9 @@
  *
  * Runtime configuration of dependencies
  */
+open Kernel;
+
+module Log = (val Log.withNamespace("Oni2.Core.Setup"));
 
 [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
@@ -89,16 +92,21 @@ let getNodeHealthCheckPath = (v: t) => {
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-  getNodeScriptPath(
-    ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
-    v,
-  );
+  switch (Sys.getenv_opt("ONI2_EXTHOST")) {
+  | Some(extHostPath) =>
+    Rench.Path.join(extHostPath, "out/bootstrap-fork.js")
+  | None =>
+    getNodeScriptPath(
+      ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+      v,
+    )
+  };
 };
 
 let init = () => {
   let setupJsonPath = Revery.Environment.executingDirectory ++ "setup.json";
 
-  Log.debug(() => "Setup: Looking for setupJson at: " ++ setupJsonPath);
+  Log.debug("Looking for setup configuration at: " ++ setupJsonPath);
 
   if (Sys.file_exists(setupJsonPath)) {
     ofFile(setupJsonPath);

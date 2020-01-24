@@ -1,4 +1,7 @@
 open Oni_Core;
+open Oni_Model;
+open Utility;
+
 type callback = unit => unit;
 type sneakInfo = {
   node: ref(option(Revery.UI.node)),
@@ -18,13 +21,13 @@ let unregister = (node: ref(option(Revery.UI.node))) => {
 
 let getSneaks = () => {
   _singleton^
-  |> Utility.List.filter_map(item => {
+  |> List.filter_map(item => {
        switch (item.node^) {
        | Some(node) => Some((node, item.callback))
        | None => None
        }
      })
   |> List.map(((node, callback)) => {
-       Oni_Model.Sneak.{callback, boundingBox: node#getBoundingBox()}
+       Sneak.{callback, boundingBox: node#getBoundingBox()}
      });
 };

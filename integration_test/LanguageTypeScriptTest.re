@@ -25,9 +25,8 @@ runTestWithInput(
         ~name="Validate we have a TypeScript filetype",
         (state: State.t) => {
           let fileType =
-            Some(state)
-            |> Option.bind(Selectors.getActiveBuffer)
-            |> Option.bind(Buffer.getFileType);
+            Selectors.getActiveBuffer(state)
+            |> OptionEx.flatMap(Buffer.getFileType);
 
           switch (fileType) {
           | Some("typescript") => true
@@ -83,10 +82,9 @@ runTestWithInput(
   wait(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
-    (state: State.t) => {
-    Model.Completions.getCompletions(state.completions)
-    |> (comp => List.length(comp) > 0)
-  });
+    (state: State.t) =>
+    Array.length(state.completions.filtered) > 0
+  );
 
   // Fix error, finish identifier
   input("indow");

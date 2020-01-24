@@ -6,13 +6,14 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;
 module LocationWithUri = Oni_Extensions.LocationWithUri;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
-  promises => Utility.LwtUtil.all((acc, curr) => acc @ curr, promises);
+  promises => LwtEx.all((acc, curr) => acc @ curr, promises);
 
 module CompletionProvider =
   LanguageFeature.Make({
@@ -41,7 +42,7 @@ module DefinitionResult = {
       "Definition - uri: %s position: %s originRange: %s",
       Uri.toString(def.uri),
       Location.show(def.location),
-      def.originRange |> Utility.Option.toString(Range.show),
+      def.originRange |> OptionEx.toString(Range.show),
     );
 };
 
@@ -134,10 +135,9 @@ let requestDocumentHighlights =
   |> DocumentHighlightProvider.request((buffer, location));
 };
 
-let requestCompletions =
-    (~buffer: Buffer.t, ~meet: CompletionMeet.t, ~location: Location.t, lf: t) => {
+let requestCompletions = (~buffer: Buffer.t, ~meet: CompletionMeet.t, lf: t) => {
   lf.completionProviders
-  |> CompletionProvider.request((buffer, meet, location));
+  |> CompletionProvider.request((buffer, meet, meet.location));
 };
 
 let requestFindAllReferences =

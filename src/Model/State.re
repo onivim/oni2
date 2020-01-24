@@ -9,6 +9,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
 
 type t = {
   buffers: Buffers.t,
@@ -16,13 +17,13 @@ type t = {
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
+  contextMenu: option(ContextMenu.t(Actions.t)),
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   sideBar: SideBar.t,
@@ -53,8 +54,9 @@ type t = {
   darkMode: bool,
   // State of the bottom pane
   pane: Pane.t,
-  searchPane: Search.t,
+  searchPane: Feature_Search.model,
   focus: Focus.stack,
+  modal: option(Modal.t(Actions.t)),
 };
 
 let create: unit => t =
@@ -64,11 +66,11 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    completions: Completions.default,
+    contextMenu: None,
+    completions: Completions.initial,
     configuration: Configuration.default,
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
     editorFont:
@@ -91,7 +93,7 @@ let create: unit => t =
     keyBindings: Keybindings.empty,
     keyDisplayer: KeyDisplayer.empty,
     languageInfo: Ext.LanguageInfo.initial,
-    notifications: Notifications.default,
+    notifications: Notifications.initial,
     references: References.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
@@ -102,6 +104,7 @@ let create: unit => t =
     zenMode: false,
     darkMode: true,
     pane: Pane.initial,
-    searchPane: Search.initial,
+    searchPane: Feature_Search.initial,
     focus: Focus.initial,
+    modal: None,
   };

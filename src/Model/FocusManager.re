@@ -1,6 +1,5 @@
 open Oni_Core;
-
-module Option = Utility.Option;
+open Utility;
 
 let push = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {

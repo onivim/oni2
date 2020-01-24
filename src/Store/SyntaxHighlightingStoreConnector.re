@@ -16,8 +16,6 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-module Log = Core.Log;
-
 let start =
     (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -95,6 +93,16 @@ let start =
         )
       });
 
+    let registerQuitCleanupEffect =
+      Isolinear.Effect.createWithDispatch(
+        ~name="syntax.registerQuitCleanup", dispatch =>
+        dispatch(
+          Model.Actions.RegisterQuitCleanup(
+            () => Oni_Syntax_Client.close(_syntaxClient),
+          ),
+        )
+      );
+
     let isVersionValid = (updateVersion, bufferVersion) => {
       bufferVersion != (-1) && updateVersion == bufferVersion;
     };
@@ -102,8 +110,8 @@ let start =
     let getScopeForBuffer = (state: Model.State.t, id: int) => {
       state.buffers
       |> Model.Buffers.getBuffer(id)
-      |> Option.bind(buf => Core.Buffer.getFileType(buf))
-      |> Option.bind(fileType =>
+      |> OptionEx.flatMap(buf => Core.Buffer.getFileType(buf))
+      |> OptionEx.flatMap(fileType =>
            Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
          );
     };
@@ -111,6 +119,7 @@ let start =
     let updater = (state: Model.State.t, action) => {
       let default = (state, Isolinear.Effect.none);
       switch (action) {
+      | Model.Actions.Init => (state, registerQuitCleanupEffect)
       | Model.Actions.ConfigurationSet(config) => (
           state,
           configurationChangeEffect(config),

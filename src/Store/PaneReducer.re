@@ -24,31 +24,7 @@ let hideSearchPane = (state: State.t, isSearchFocused) => {
   };
 };
 
-let searchPaneReducer = (action, state: State.t) => {
-  let paneType = Pane.getType(state.pane);
-
-  let isSearchOpen = paneType == Some(Pane.Search);
-  let isSearchFocused = FocusManager.current(state) == Search;
-
-  switch (action, isSearchOpen, isSearchFocused) {
-  // Search pane open, and focused
-  | (SearchHotkey, true, true)
-  | (ActivityBar(ActivityBar.SearchClick), true, true) =>
-    hideSearchPane(state, true)
-
-  // Search pane not open, not focused
-  | (SearchHotkey, true, false)
-  | (ActivityBar(ActivityBar.SearchClick), true, false) =>
-    showSearchPane(state, false)
-
-  | (SearchHotkey, false, _)
-  | (ActivityBar(ActivityBar.SearchClick), false, _) =>
-    showSearchPane(state, isSearchFocused)
-  | _ => state
-  };
-};
-
-let closeDiagnosticsPane = (state: State.t) => {
+let closePane = (state: State.t) => {
   ...state,
   pane: Pane.setClosed(state.pane),
 };
@@ -58,19 +34,41 @@ let openDiagnosticsPane = (state: State.t) => {
   pane: Pane.setOpen(Pane.Diagnostics),
 };
 
-let diagnosticsPaneReducer = (action, state: State.t) => {
-  let isDiagnosticsOpen = Pane.getType(state.pane) == Some(Pane.Diagnostics);
+let openNotificationsPane = (state: State.t) => {
+  ...state,
+  pane: Pane.setOpen(Pane.Notifications),
+};
 
-  switch (action, isDiagnosticsOpen) {
-  // Diagnostics already open
-  | (StatusBar(StatusBarModel.DiagnosticsClicked), true)
-  | (DiagnosticsHotKey, true) => closeDiagnosticsPane(state)
-  | (StatusBar(StatusBarModel.DiagnosticsClicked), false)
-  | (DiagnosticsHotKey, false) => openDiagnosticsPane(state)
+let reduce = (action: Actions.t, state: State.t) =>
+  switch (action, Pane.getType(state.pane)) {
+  | (SearchHotkey, Some(Pane.Search))
+  | (ActivityBar(ActivityBar.SearchClick), Some(Pane.Search)) =>
+    FocusManager.current(state) == Search
+      ? hideSearchPane(state, true) : showSearchPane(state, false)
+
+  | (SearchHotkey, _)
+  | (PaneTabClicked(Pane.Search), _)
+  | (ActivityBar(ActivityBar.SearchClick), _) =>
+    showSearchPane(state, FocusManager.current(state) == Search)
+
+  | (DiagnosticsHotKey, Some(Pane.Diagnostics))
+  | (StatusBar(StatusBarModel.DiagnosticsClicked), Some(Pane.Diagnostics)) =>
+    closePane(state)
+
+  | (DiagnosticsHotKey, _)
+  | (PaneTabClicked(Pane.Diagnostics), _)
+  | (StatusBar(StatusBarModel.DiagnosticsClicked), _) =>
+    openDiagnosticsPane(state)
+
+  | (
+      StatusBar(StatusBarModel.NotificationCountClicked),
+      Some(Pane.Notifications),
+    ) =>
+    closePane(state)
+
+  | (PaneTabClicked(Pane.Notifications), _)
+  | (StatusBar(StatusBarModel.NotificationCountClicked), _) =>
+    openNotificationsPane(state)
+
   | _ => state
   };
-};
-
-let reduce = (action: Actions.t, state: State.t) => {
-  state |> searchPaneReducer(action) |> diagnosticsPaneReducer(action);
-};

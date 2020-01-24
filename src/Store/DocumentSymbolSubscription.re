@@ -3,7 +3,9 @@ module Model = Oni_Model;
 
 module Actions = Model.Actions;
 module Subscription = Core.Subscription;
-module Log = (val Core.Log.withNamespace("Oni2.DocumentSymbolSubscription"));
+module Log = (
+  val Core.Log.withNamespace("Oni2.Store.DocumentSymbolSubscription")
+);
 
 module Provider = {
   type action = Actions.t;
@@ -15,7 +17,7 @@ module Provider = {
 
   let start =
       (~id, ~params as {languageFeatures, onUpdate, buffer}, ~dispatch as _) => {
-    Log.info("Starting DocumentSymbol subscription " ++ id);
+    Log.debug("Starting: " ++ id);
 
     let promise =
       Model.LanguageFeatures.requestDocumentSymbol(~buffer, languageFeatures);
@@ -51,7 +53,7 @@ module Provider = {
   };
 
   let dispose = (~id) => {
-    Log.info("Disposing: " ++ id);
+    Log.debug("Disposing: " ++ id);
   };
 };
 

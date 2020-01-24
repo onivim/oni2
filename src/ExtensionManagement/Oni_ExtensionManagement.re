@@ -2,38 +2,43 @@ open Oni_Core;
 
 module NodeTask = Oni_Extensions.NodeTask;
 
-module Log = (val Log.withNamespace("Oni2.ExtensionManagement"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionManagement"));
 
-let install: (~extensionFolder: string, ~extensionPath: string) => Lwt.t(unit) =
-  (~extensionFolder, ~extensionPath) => {
-    let setup = Setup.init();
+let install = (~extensionsFolder, ~path) => {
+  let setup = Setup.init();
+  let name = Rench.Path.filename(path);
 
-    Log.infof(m =>
-      m("Installing extension %s to %s", extensionPath, extensionFolder)
+  let absolutePath =
+    if (Rench.Path.isAbsolute(path)) {
+      path;
+    } else {
+      Rench.Path.join(Rench.Environment.getWorkingDirectory(), path);
+    };
+
+  Log.debugf(m => m("Installing extension %s to %s", name, extensionsFolder));
+
+  let promise: Lwt.t(unit) =
+    NodeTask.run(
+      ~name="Install",
+      ~setup,
+      ~args=[absolutePath, extensionsFolder],
+      "install-extension.js",
     );
 
-    let promise: Lwt.t(unit) =
-      NodeTask.run(
-        ~name="Install",
-        ~setup,
-        ~args=[extensionPath, extensionFolder],
-        "install-extension.js",
-      );
+  Lwt.on_success(promise, () => {
+    Log.debugf(m => m("Successfully installed extension: %s", name))
+  });
 
-    Lwt.on_success(promise, () => {
-      Log.infof(m => m("Successfully installed extension: %s", extensionPath))
-    });
+  Lwt.on_failure(promise, _ => {
+    Log.errorf(m => m("Unable to install extension: %s", name))
+  });
+  promise;
+};
 
-    Lwt.on_failure(promise, _ => {
-      Log.errorf(m => m("Unable to install extension: %s", extensionPath))
-    });
-    promise;
-  };
-
-let uninstall: (~extensionFolder: string, ~extensionId: string) => Lwt.t(unit) =
-  (~extensionFolder, ~extensionId) => {
+let uninstall: (~extensionsFolder: string, ~id: string) => Lwt.t(unit) =
+  (~extensionsFolder, ~id) => {
     // TODO: Implement this
-    ignore(extensionFolder);
-    ignore(extensionId);
+    ignore(extensionsFolder);
+    ignore(id);
     Lwt.return();
   };

@@ -4,7 +4,8 @@ module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
-module Log = Core.Log;
+module Log = (val Core.Log.withNamespace("IntegrationTest"));
+module InitLog = (val Core.Log.withNamespace("IntegrationTest.Init"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
 
@@ -54,17 +55,18 @@ let runTest =
       ~configuration=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      ~onAfterDispatch=Utility.noop1,
+      ~onAfterDispatch=_ => (),
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
   if (Sys.win32) {
-    Log.disableColors();
+    Timber.App.disableColors();
   };
 
   Printexc.record_backtrace(true);
-  Log.enablePrinting();
-  Log.enableDebugLogging();
+  Timber.App.enable();
+  Timber.App.setLevel(Timber.Level.trace);
+
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
@@ -76,14 +78,12 @@ let runTest =
     currentState := v;
   };
 
-  let logInit = s => Log.debug(() => "[INITIALIZATION] " ++ s);
-
-  logInit("Starting store...");
+  InitLog.info("Starting store...");
 
   let configurationFilePath = Filename.temp_file("configuration", ".json");
   let oc = open_out(configurationFilePath);
 
-  logInit("Writing configuration file: " ++ configurationFilePath);
+  InitLog.info("Writing configuration file: " ++ configurationFilePath);
 
   let () =
     configuration
@@ -113,9 +113,9 @@ let runTest =
       (),
     );
 
-  logInit("Store started!");
+  InitLog.info("Store started!");
 
-  logInit("Sending init event");
+  InitLog.info("Sending init event");
 
   dispatch(Model.Actions.Init);
 

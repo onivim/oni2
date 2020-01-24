@@ -5,7 +5,7 @@
  */
 
 open Oni_Core;
-module Option = Utility.Option;
+open Utility;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 
@@ -14,125 +14,94 @@ type filteredCompletion = Filter.result(CompletionItem.t);
 type t = {
   // The last completion meet we found
   meet: option(CompletionMeet.t),
-  completions: list(CompletionItem.t),
-  filteredCompletions: list(filteredCompletion),
-  filter: option(string),
-  selected: option(int),
+  all: list(CompletionItem.t),
+  filtered: array(filteredCompletion),
+  focused: option(int),
 };
 
-let toString = (completions: t) => {
+module Internal = {
+  let filterItems = (maybeMeet, items) => {
+    switch (maybeMeet) {
+    | None =>
+      items |> List.map(item => Filter.{item, highlight: []}) |> Array.of_list
+
+    | Some((meet: CompletionMeet.t)) =>
+      open CompletionItem;
+
+      let query = Zed_utf8.explode(meet.base);
+
+      let toString = (item, ~shouldLower) =>
+        shouldLower ? String.lowercase_ascii(item.label) : item.label;
+
+      items
+      |> List.filter(item => Filter.fuzzyMatches(query, item.label))
+      |> Filter.rank(meet.base, toString)
+      |> Array.of_list;
+    };
+  };
+
+  let ensureValidFocus = model => {
+    ...model,
+    focused:
+      if (model.filtered == [||]) {
+        None;
+      } else {
+        switch (model.focused) {
+        | None => Some(0)
+        | Some(index) =>
+          index
+          |> IntEx.clamp(~lo=0, ~hi=Array.length(model.filtered) - 1)
+          |> Option.some
+        };
+      },
+  };
+};
+
+let initial = {meet: None, focused: None, filtered: [||], all: []};
+
+let isActive = model => model.meet != None && model.filtered != [||];
+
+let setMeet = (meet, model) =>
+  Internal.ensureValidFocus({
+    ...model,
+    meet: Some(meet),
+    filtered: Internal.filterItems(Some(meet), model.all),
+  });
+
+let addItems = (items, model) => {
+  let all = List.concat([items, model.all]);
+  let filtered = Internal.filterItems(model.meet, all);
+
+  Internal.ensureValidFocus({...model, all, filtered});
+};
+
+let focusPrevious = model => {
+  ...model,
+  focused:
+    IndexEx.prevRollOverOpt(
+      model.focused,
+      ~last=Array.length(model.filtered) - 1,
+    ),
+};
+
+let focusNext = model => {
+  ...model,
+  focused:
+    IndexEx.nextRollOverOpt(
+      model.focused,
+      ~last=Array.length(model.filtered) - 1,
+    ),
+};
+
+let toString = model => {
   let filter =
-    switch (completions.filter) {
-    | Some(f) => f
+    switch (model.meet) {
+    | Some((meet: CompletionMeet.t)) => meet.base
     | None => "(None)"
     };
   Printf.sprintf(
     "Completions - meet: %s filter: %s",
-    Option.toString(CompletionMeet.toString, completions.meet),
+    OptionEx.toString(CompletionMeet.toString, model.meet),
     filter,
   );
-};
-
-let default: t = {
-  meet: None,
-  selected: None,
-  filter: None,
-  filteredCompletions: [],
-  completions: [],
-};
-
-let isActive = (v: t) => {
-  v.meet != None && v.filteredCompletions != [];
-};
-
-let endCompletions = (_v: t) => {
-  default;
-};
-
-let startCompletions = (meet: CompletionMeet.t, v: t) => {
-  {
-    ...v,
-    meet: Some(meet),
-    completions: default.completions,
-    filteredCompletions: default.filteredCompletions,
-  };
-};
-
-let getMeet = (v: t) => v.meet;
-
-let getBestCompletion = (v: t) => {
-  List.nth_opt(v.filteredCompletions, 0);
-};
-
-let _toFilterResult = (items: list(CompletionItem.t)) => {
-  Filter.(items |> List.map(item => {item, highlight: []}));
-};
-
-let getCompletions = (v: t) => v.filteredCompletions;
-
-let _applyFilter = (filter: option(string), items: list(CompletionItem.t)) => {
-  switch (filter) {
-  | None => items |> _toFilterResult
-  | Some(filter) =>
-    open CompletionItem;
-
-    let query = Zed_utf8.explode(filter);
-
-    let toString = (item, ~shouldLower) =>
-      if (shouldLower) {
-        item.label |> String.lowercase_ascii;
-      } else {
-        item.label;
-      };
-
-    items
-    |> List.filter(item => Filter.fuzzyMatches(query, item.label))
-    |> Filter.rank(filter, toString);
-  };
-};
-
-let filter = (filter: string, v: t) => {
-  {
-    ...v,
-    filter: Some(filter),
-    filteredCompletions:
-      _applyFilter(Some(filter), v.completions) |> Utility.firstk(5),
-  };
-};
-
-let addItems = (items: list(CompletionItem.t), v: t) => {
-  let newItems = List.concat([items, v.completions]);
-  {
-    ...v,
-    completions: newItems,
-    filteredCompletions:
-      _applyFilter(v.filter, newItems) |> Utility.firstk(5),
-  };
-};
-
-let reduce = (v: t, action: Actions.t) => {
-  let newV =
-    switch (action) {
-    | Actions.ChangeMode(mode) when mode != Vim.Types.Insert =>
-      endCompletions(v)
-    | Actions.CompletionStart(meet) => startCompletions(meet, v)
-    | Actions.CompletionAddItems(_meet, items) => addItems(items, v)
-    | Actions.CompletionBaseChanged(base) => filter(base, v)
-    | Actions.CompletionEnd => endCompletions(v)
-    | _ => v
-    };
-
-  if (isActive(newV)) {
-    switch (action) {
-    | Actions.Command("selectNextSuggestion") =>
-      // TODO
-      newV
-    | Actions.Command("selectPrevSuggestion") =>
-      // TODO
-      newV
-    | _ => newV
-    };
-  } else {
-    newV;
-  };
 };

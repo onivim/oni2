@@ -1,13 +1,7 @@
 open Revery.UI;
 open Oni_Core;
-module Model = Oni_Model;
-module Actions = Model.Actions;
-module Focus = Model.Focus;
-module FocusManager = Model.FocusManager;
-module Pane = Model.Pane;
-module State = Model.State;
-
-module Option = Utility.Option;
+open Oni_Model;
+open Utility;
 
 let paneTabHeight = 25;
 
@@ -21,28 +15,41 @@ module Styles = {
     ];
 };
 
-let showSearch = _ => GlobalContext.current().dispatch(Actions.SearchHotkey);
-let showProblems = _ =>
-  GlobalContext.current().dispatch(Actions.DiagnosticsHotKey);
+let showSearch = () =>
+  GlobalContext.current().dispatch(Actions.PaneTabClicked(Pane.Search));
+let showProblems = () =>
+  GlobalContext.current().dispatch(Actions.PaneTabClicked(Pane.Diagnostics));
+let showNotifications = () =>
+  GlobalContext.current().dispatch(
+    Actions.PaneTabClicked(Pane.Notifications),
+  );
 
 let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
-  ignore(uiFont);
-  ignore(editorFont);
-
   state.pane
   |> Pane.getType
   |> Option.map(paneType => {
        let childPane =
          switch (paneType) {
          | Pane.Search =>
-           <SearchPane
+           let onSelectResult = (file, location) =>
+             GlobalContext.current().dispatch(
+               Actions.OpenFileByPath(file, None, Some(location)),
+             );
+           let dispatch = msg =>
+             GlobalContext.current().dispatch(Actions.Search(msg));
+
+           <Feature_Search
              isFocused={FocusManager.current(state) == Focus.Search}
              theme
              uiFont
              editorFont
-             state={state.searchPane}
-           />
+             model={state.searchPane}
+             onSelectResult
+             dispatch
+           />;
+
          | Pane.Diagnostics => <DiagnosticsPane state />
+         | Pane.Notifications => <NotificationsPane state />
          };
        [
          <WindowHandle theme direction=Horizontal />,
@@ -61,6 +68,13 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
                title="Problems"
                onClick=showProblems
                active={paneType == Pane.Diagnostics}
+             />
+             <PaneTab
+               uiFont
+               theme
+               title="Notifications"
+               onClick=showNotifications
+               active={paneType == Pane.Notifications}
              />
            </View>
            <View style=Style.[flexDirection(`Column), flexGrow(1)]>

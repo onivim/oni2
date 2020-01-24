@@ -6,6 +6,7 @@
  */
 
 open Oni_Core;
+open Utility;
 open Oni_Extensions;
 
 module JsonInformationMessageFormat = {
@@ -50,7 +51,7 @@ let isStringValueInList = (r: ref(list(string)), match: string) => {
 
 module Waiters = {
   let wait = (f, _client: ExtHostClient.t) => {
-    Oni_Core.Utility.waitForCondition(
+    ThreadEx.waitForCondition(
       ~timeout=10.0,
       () => {
         Revery.App.flushPendingCallbacks();
@@ -99,7 +100,7 @@ let withExtensionClient =
       setup,
     );
 
-  Oni_Core.Utility.waitForCondition(
+  ThreadEx.waitForCondition(
     ~timeout=30.0,
     () => {
       Revery.App.flushPendingCallbacks();

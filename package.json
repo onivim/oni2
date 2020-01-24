@@ -8,7 +8,9 @@
     "install": [
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
-      "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
+      "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
+      "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
+      "bash -c \"cp #{@esy-ocaml/libffi.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {
@@ -182,9 +184,11 @@
     "run": "esy x Oni2",
     "create-release": "esy node ./scripts/release.js #{@opam/camomile.install}",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
-    "test": "esy @test run"
+    "test": "esy @test run",
+    "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
+    "@esy-ocaml/libffi": "*",
     "@esy-ocaml/reason": "3.5.2",
     "@opam/camomile": "^1.0.1",
     "@opam/charInfo_width": "*",
@@ -198,7 +202,8 @@
     "@reason-native/rely": "^1.3.1",
     "axios": "^0.19.0",
     "esy-macdylibbundler": "*",
-    "isolinear": "2.2.0",
+    "esy-skia": "*",
+    "isolinear": "2.3.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "*",
     "reason-jsonrpc": "1.3.0",
@@ -212,9 +217,12 @@
     "@opam/fmt": "^0.8.8",
     "@opam/logs": "^0.7.0",
     "@opam/re": "*",
-    "editor-core-types": "*"
+    "editor-core-types": "*",
+    "timber": "*",
+    "refmterr": "*"
   },
   "resolutions": {
+    "@esy-ocaml/libffi": "esy-ocaml/libffi#599bc3567",
     "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
@@ -232,11 +240,14 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "github:revery-ui/revery#d2fd73b",
+    "revery": "revery-ui/revery#1ccda2b",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
-    "esy-sdl2": "revery-ui/esy-sdl2#b63892b"
+    "esy-sdl2": "revery-ui/esy-sdl2#b63892b",
+    "esy-skia": "revery-ui/esy-skia#91b10c9",
+    "timber": "glennsl/timber#ae065bb",
+    "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6"
   },
   "devDependencies": {
     "ocaml": "~4.7.0",

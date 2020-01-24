@@ -1,9 +1,8 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 open Oni_Model;
 open Oni_Store;
-
-module Option = Utility.Option;
 
 let metrics = EditorMetrics.create();
 
