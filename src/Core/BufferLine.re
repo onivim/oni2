@@ -20,18 +20,20 @@ type characterCacheInfo = {
   width: int,
 };
 
+let emptyArray = Array.make(0, None);
+
 type t = {
   indentation: IndentationSettings.t,
   // [raw] is the raw string (byte array)
   raw: string,
   // [characters] is a cache of discovered characters we've found in the string so far
-  characters: array(option(characterCacheInfo)),
+  mutable characters: array(option(characterCacheInfo)),
   // nextByte is the nextByte to work from, or -1 if complete
-  nextByte: ref(int),
+  mutable nextByte: int,
   // nextIndex is the nextIndex to work from
-  nextIndex: ref(int),
+  mutable nextIndex: int,
   // nextPosition is the graphical position (based on character width)
-  nextPosition: ref(int),
+  mutable nextPosition: int,
 };
 
 module Internal = {
@@ -43,23 +45,28 @@ module Internal = {
       // TODO: Integrate charWidth / wcwidth
     };
 
-  let resolveTo = (~index, cache: t) =>
+  let resolveTo = (~index, cache: t) => {
+    // First, allocate our cache, if necessary
+    if (cache.characters === emptyArray) {
+      cache.characters = Array.make(String.length(cache.raw), None);
+    };
+
     // We've already resolved to this point,
     // no work needed!
-    if (index < cache.nextIndex^) {
+    if (index < cache.nextIndex) {
       ();
     } else {
       // Requested an index we haven't discovered yet - so we'll need to compute up to the point
-      let len = String.length(cache.raw)
+      let len = String.length(cache.raw);
 
-      let i: ref(int) = ref(cache.nextIndex^);
-      let byte: ref(int) = ref(cache.nextByte^);
-      let position: ref(int) = ref(cache.nextPosition^);
+      let i: ref(int) = ref(cache.nextIndex);
+      let byte: ref(int) = ref(cache.nextByte);
+      let position: ref(int) = ref(cache.nextPosition);
       while (i^ <= index && byte^ < len) {
-        let (uchar, offset) = ZedBundled.unsafe_extract_next(cache.raw, byte^);
+        let (uchar, offset) =
+          ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
-        let characterWidth =
-          measure(cache.indentation, uchar);
+        let characterWidth = measure(cache.indentation, uchar);
 
         cache.characters[i^] =
           Some({
@@ -74,22 +81,21 @@ module Internal = {
         incr(i);
       };
 
-      cache.nextIndex := i^;
-      cache.nextByte := byte^;
-      cache.nextPosition := position^;
+      cache.nextIndex = i^;
+      cache.nextByte = byte^;
+      cache.nextPosition = position^;
     };
+  };
 };
 
 let make = (~indentation, raw: string) => {
   // Create a cache the size of the string - this would be the max length
   // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
-  let len = String.length(raw);
-  let characters = Array.make(len, None);
-  {indentation, raw, characters, nextByte: ref(0), nextIndex: ref(0), nextPosition: ref(0)};
+  let characters = emptyArray;
+  {indentation, raw, characters, nextByte: 0, nextIndex: 0, nextPosition: 0};
 };
 
 let empty = make(~indentation=IndentationSettings.default, "");
-
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
@@ -99,45 +105,48 @@ let raw = ({raw, _}) => raw;
 
 let boundedLengthUtf8 = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
-  min(bufferLine.nextIndex^, max);
+  min(bufferLine.nextIndex, max);
 };
 
 let unsafeGetUChar = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
-  switch(bufferLine.characters[index]) {
-  | Some({ uchar, _}) => uchar
-  | None => raise(OutOfBounds);
-  }
-}
+  let characters = bufferLine.characters;
+  switch (characters[index]) {
+  | Some({uchar, _}) => uchar
+  | None => raise(OutOfBounds)
+  };
+};
 
 let getByteOffset = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
-  if (index >= Array.length(bufferLine.characters)) {
+  let characters = bufferLine.characters;
+  if (index >= Array.length(characters)) {
     rawLength;
   } else {
-    switch (bufferLine.characters[index]) {
+    switch (characters[index]) {
     | Some({byteOffset, _}) => byteOffset
     | None => rawLength
     };
-  }
-}
+  };
+};
 
 let unsafeSub = (~index: int, ~length: int, bufferLine) => {
   let startOffset = getByteOffset(~index, bufferLine);
-  let endOffset = getByteOffset(~index=index+length, bufferLine);
+  let endOffset = getByteOffset(~index=index + length, bufferLine);
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
-}
+};
 
 let getPositionAndWidth = (~index: int, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
+  let characters = bufferLine.characters;
 
-  if (index >= Array.length(bufferLine.characters)) {
-    (bufferLine.nextPosition^, 1)
+  if (index >= Array.length(characters)) {
+    (bufferLine.nextPosition, 1);
   } else {
-    switch (bufferLine.characters[index]) {
+    switch (characters[index]) {
     | Some({positionOffset, width, _}) => (positionOffset, width)
     | None => (0, 1)
-    }
-  }
+    };
+  };
 };

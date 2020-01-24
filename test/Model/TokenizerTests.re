@@ -195,7 +195,8 @@ describe("Tokenizer", ({test, describe, _}) => {
   );
 
   test("empty string", ({expect}) => {
-    let result = Tokenizer.tokenize(~endIndex=0, ~f=alwaysSplit, "" |> makeLine);
+    let result =
+      Tokenizer.tokenize(~endIndex=0, ~f=alwaysSplit, "" |> makeLine);
     expect.int(List.length(result)).toBe(0);
   });
 
@@ -243,9 +244,12 @@ describe("Tokenizer", ({test, describe, _}) => {
 
   test("string broken up by characters", ({expect}) => {
     let str = "aabbbbaa";
-    let result = Tokenizer.tokenize(
-    ~endIndex=String.length(str),
-    ~f=splitOnCharacter, str |> makeLine);
+    let result =
+      Tokenizer.tokenize(
+        ~endIndex=String.length(str),
+        ~f=splitOnCharacter,
+        str |> makeLine,
+      );
 
     let runs = [
       TextRun.create(

@@ -21,21 +21,21 @@ type t = {
 let show = _ => "TODO";
 
 let ofLines = (~id=0, rawLines: array(string)) => {
-
-  let lines = rawLines
+  let lines =
+    rawLines
     |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
 
   {
-  id,
-  version: 0,
-  filePath: None,
-  fileType: None,
-  modified: false,
-  lines,
-  indentation: None,
-  syntaxHighlightingEnabled: true,
-  lastUsed: 0.,
-  }
+    id,
+    version: 0,
+    filePath: None,
+    fileType: None,
+    modified: false,
+    lines,
+    indentation: None,
+    syntaxHighlightingEnabled: true,
+    lastUsed: 0.,
+  };
 };
 
 let empty = ofLines([||]);
@@ -68,7 +68,7 @@ let getId = (buffer: t) => buffer.id;
 
 let getLine = (line: int, buffer: t) => {
   buffer.lines[line];
-}
+};
 
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
@@ -122,7 +122,8 @@ let slice = (~lines: array('a), ~start, ~length, ()) => {
   };
 };
 
-let applyUpdate = (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+let applyUpdate =
+    (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
   let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
@@ -154,12 +155,13 @@ let isIndentationSet = buf => {
   };
 };
 let setIndentation = (indentation, buf) => {
-  let lines = buf.lines
-  |> Array.map((line) => 
-    BufferLine.raw(line)
-    |> BufferLine.make(~indentation));
-  {...buf, lines, indentation: Some(indentation)}
-}
+  let lines =
+    buf.lines
+    |> Array.map(line =>
+         BufferLine.raw(line) |> BufferLine.make(~indentation)
+       );
+  {...buf, lines, indentation: Some(indentation)};
+};
 
 let getIndentation = buf => buf.indentation;
 
@@ -168,13 +170,18 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
 };
 
 let update = (buf: t, update: BufferUpdate.t) => {
-  let indentation = Option.value(~default=IndentationSettings.default, buf.indentation);
+  let indentation =
+    Option.value(~default=IndentationSettings.default, buf.indentation);
   if (shouldApplyUpdate(update, buf)) {
     /***
      If it's a full update, just apply the lines in the entire update
      */
     if (update.isFull) {
-      {...buf, version: update.version, lines: update.lines |> Array.map(BufferLine.make(~indentation))};
+      {
+        ...buf,
+        version: update.version,
+        lines: update.lines |> Array.map(BufferLine.make(~indentation)),
+      };
     } else {
       {
         ...buf,
@@ -184,5 +191,5 @@ let update = (buf: t, update: BufferUpdate.t) => {
     };
   } else {
     buf;
-  }
+  };
 };
