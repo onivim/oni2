@@ -84,13 +84,13 @@ let getOffsetFromStart = (~measure, ~idx, bufferLine) =>
 let tokenize =
     (
       ~startIndex=0,
-      ~endIndex=(-1),
+      ~endIndex,
       ~f: splitFunc,
       ~measure=defaultMeasure,
       bufferLine: BufferLine.t,
     ) => {
   // TODO: Switch to bounded version
-  let len = BufferLine.slowLengthUtf8(bufferLine);
+  let len = BufferLine.boundedLengthUtf8(~max=endIndex, bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];

@@ -24,7 +24,7 @@ module Internal = {
 type characterCacheInfo = {
   byteOffset: int,
   positionOffset: int,
-  char: UChar.t,
+  uchar: UChar.t,
   width: int,
 };
 
@@ -35,11 +35,11 @@ type t = {
   // [characters] is a cache of discovered characters we've found in the string so far
   characters: array(option(characterCacheInfo)),
   // nextByte is the nextByte to work from, or -1 if complete
-  nextByte: int,
+  nextByte: ref(int),
   // nextIndex is the nextIndex to work from
-  nextIndex: int,
+  nextIndex: ref(int),
   // nextPosition is the graphical position (based on character width)
-  nextPosition: int,
+  nextPosition: ref(int),
 };
 
 let make = (~indentation, raw: string) => {
@@ -47,7 +47,7 @@ let make = (~indentation, raw: string) => {
   // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
   let len = String.length(raw);
   let characters = Array.make(len, None);
-  {indentation, raw, characters, nextByte: 0, nextIndex: 0, nextPosition: 0};
+  {indentation, raw, characters, nextByte: ref(0), nextIndex: ref(0), nextPosition: ref(0)};
 };
 
 let empty = make(~indentation=IndentationSettings.default, "");
@@ -55,30 +55,31 @@ let empty = make(~indentation=IndentationSettings.default, "");
 let _resolveTo = (~index, cache: t) =>
   // We've already resolved to this point,
   // no work needed!
-  if (index < cache.nextIndex) {
-    cache;
+  if (index < cache.nextIndex^) {
+    ();
   } else {
     // Requested an index we haven't discovered yet - so we'll need to compute up to the point
 
     // Create an immutable copy of the array...
     // TODO: Switch to mutable approach for perf?
-    let characters = Array.copy(cache.characters);
+    //let characters = Array.copy(cache.characters);
 
-    let i: ref(int) = ref(cache.nextIndex);
-    let byte: ref(int) = ref(cache.nextByte);
-    let position: ref(int) = ref(cache.nextPosition);
-    while (i^ < index) {
-      let (char, offset) = ZedBundled.unsafe_extract_next(cache.raw, byte^);
+    let len = String.length(cache.raw)
 
-      // TODO: Indentation settings
+    let i: ref(int) = ref(cache.nextIndex^);
+    let byte: ref(int) = ref(cache.nextByte^);
+    let position: ref(int) = ref(cache.nextPosition^);
+    while (i^ <= index && byte^ < len) {
+      let (uchar, offset) = ZedBundled.unsafe_extract_next(cache.raw, byte^);
+
       let characterWidth =
-        Internal.measure(IndentationSettings.default, char);
+        Internal.measure(cache.indentation, uchar);
 
-      characters[i^] =
+      cache.characters[i^] =
         Some({
           byteOffset: byte^,
           positionOffset: position^,
-          char,
+          uchar,
           width: characterWidth,
         });
 
@@ -87,14 +88,9 @@ let _resolveTo = (~index, cache: t) =>
       incr(i);
     };
 
-    {
-      indentation: cache.indentation,
-      raw: cache.raw,
-      characters,
-      nextIndex: i^,
-      nextByte: byte^,
-      nextPosition: position^,
-    };
+    cache.nextIndex := i^;
+    cache.nextByte := byte^;
+    cache.nextPosition := position^;
   };
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
@@ -103,33 +99,35 @@ let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
 
 let raw = ({raw, _}) => raw;
 
-let boundedLengthUtf8 = (~max, {raw, _}) => {
-  // TODO: Make this faster...
-  min(max, ZedBundled.length(raw));
+let boundedLengthUtf8 = (~max, bufferLine) => {
+  _resolveTo(~index=max, bufferLine)
+  bufferLine.nextIndex^;
 };
 
-let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(raw, index);
+let unsafeGetUChar = (~index, bufferLine) => {
+  _resolveTo(~index, bufferLine);
+  switch(bufferLine.characters[index]) {
+  | Some({ uchar, _}) => uchar
+  | None => failwith("invalid index (out of bounds)")
+  }
+}
 
 let unsafeSub = (~index: int, ~length: int, {raw, _}) =>
   ZedBundled.sub(raw, index, length);
 
-let getPositionAndWidth = (~index: int, {raw, indentation, _}) => {
-  let x = ref(0);
-  let totalOffset = ref(0);
-  let len = ZedBundled.length(raw);
+let getPositionAndWidth = (~index: int, bufferLine: t) => {
+  /*Printf.fprintf(stderr, "INDEX: %d rawLength: %d charactersLength: %d\n",
+  index,
+  String.length(bufferLine.raw),
+  Array.length(bufferLine.characters));*/
+  _resolveTo(~index, bufferLine);
 
-  let measure = Internal.measure(indentation);
-
-  while (x^ < len && x^ < index) {
-    let c = ZedBundled.get(raw, x^);
-    let width = measure(c);
-
-    totalOffset := totalOffset^ + width;
-
-    incr(x);
-  };
-
-  let width =
-    index < len && index >= 0 ? measure(ZedBundled.get(raw, index)) : 1;
-  (totalOffset^, width);
+  if (index >= Array.length(bufferLine.characters)) {
+    (bufferLine.nextPosition^, 1)
+  } else {
+    switch (bufferLine.characters[index]) {
+    | Some({positionOffset, width, _}) => (positionOffset, width)
+    | None => (0, 1)
+    }
+  }
 };
