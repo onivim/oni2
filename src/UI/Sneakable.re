@@ -14,9 +14,9 @@ module Utility = Oni_Core.Utility;
 let%component make =
               (
                 ~style=[],
-                ~onClick=Utility.noop,
-                ~onRightClick=Utility.noop,
-                ~onAnyClick=Utility.noop1,
+                ~onClick=() => (),
+                ~onRightClick=() => (),
+                ~onAnyClick=_ => (),
                 ~onSneak=?,
                 ~onBlur=?,
                 ~onFocus=?,

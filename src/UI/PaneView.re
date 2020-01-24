@@ -1,14 +1,7 @@
 open Revery.UI;
 open Oni_Core;
-
-module Model = Oni_Model;
-module Actions = Model.Actions;
-module Focus = Model.Focus;
-module FocusManager = Model.FocusManager;
-module Pane = Model.Pane;
-module State = Model.State;
-
-module Option = Utility.Option;
+open Oni_Model;
+open Utility;
 
 let paneTabHeight = 25;
 

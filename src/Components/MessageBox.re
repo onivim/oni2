@@ -64,7 +64,7 @@ let update = (model, msg) =>
                | Key(_) => None
                | Sequence(seq) => Some(seq),
              )
-          |> List.exists(StringUtil.startsWith(~prefix=input'));
+          |> List.exists(StringEx.startsWith(~prefix=input'));
 
         matchesSomeSequence
           ? ({...model, input: input'}, Isolinear.Effect.none)
@@ -158,7 +158,7 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
     | Key(key) => <shortcutView text=key isHovered theme font />
 
     | Sequence(sequence) =>
-      if (input != "" && StringUtil.startsWith(~prefix=input, sequence)) {
+      if (input != "" && StringEx.startsWith(~prefix=input, sequence)) {
         <shortcutView text=sequence isHovered input theme font />;
       } else {
         <shortcutView text=sequence isHovered theme font />;

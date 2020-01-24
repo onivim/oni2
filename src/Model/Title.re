@@ -3,10 +3,8 @@
  *
  * Model for working with the window title
  */
-
 open Oni_Core;
-
-module List = Utility.List;
+open Utility;
 
 type titleSections =
   | Text(string, bool)

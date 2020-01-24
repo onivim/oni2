@@ -3,6 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
+open Kernel;
 open Rench;
 
 module CoreLog = Log;
@@ -95,9 +96,10 @@ let parse =
 
   Arg.parse(
     [
-      ("-f", Unit(Timber.App.enablePrinting), ""),
-      ("--nofork", Unit(Timber.App.enablePrinting), ""),
-      ("--debug", Unit(CoreLog.enableDebugLogging), ""),
+      ("-f", Unit(Timber.App.enable), ""),
+      ("--nofork", Unit(Timber.App.enable), ""),
+      ("--debug", Unit(CoreLog.enableDebug), ""),
+      ("--trace", Unit(CoreLog.enableTrace), ""),
       ("--version", printVersion |> runAndExitUnit, ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
@@ -127,7 +129,7 @@ let parse =
     "",
   );
 
-  if (CoreLog.isPrintingEnabled() || needsConsole^) {
+  if (Timber.App.isEnabled() || needsConsole^) {
     /* On Windows, we need to create a console instance if possible */
     Revery.App.initConsole();
   };

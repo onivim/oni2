@@ -3,6 +3,7 @@
  *
  * Resilient parsing for Configuration
  */
+open Kernel;
 open ConfigurationValues;
 open LineNumber;
 

@@ -17,7 +17,7 @@ let requestId = ref(0);
 
 let loadAndValidateEditorFont =
     (~onSuccess, ~onError, ~requestId: int, scaleFactor, fullPath, fontSize) => {
-  Log.debugf(m =>
+  Log.tracef(m =>
     m("loadAndValidateEditorFont path: %s | size: %i", fullPath, fontSize)
   );
 
@@ -32,7 +32,7 @@ let loadAndValidateEditorFont =
       let firstShape = shapedText[0];
       let secondShape = shapedText[1];
 
-      Log.debugf(m =>
+      Log.tracef(m =>
         m("glyph1: %i glyph2: %i", firstShape.glyphId, secondShape.glyphId)
       );
 
@@ -97,12 +97,12 @@ let start = (~getScaleFactor, ()) => {
             switch (maybeFontFamily) {
             | None => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
 
             | Some(fontFamily) when fontFamily == "FiraCode-Regular.ttf" => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
 
             | Some(fontFamily) =>
@@ -162,14 +162,14 @@ let start = (~getScaleFactor, ()) => {
 
   let synchronizeConfiguration = (configuration: Configuration.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
+      Log.trace("synchronizeConfiguration");
+
       // TODO
       let editorFontFamily =
         Configuration.getValue(c => c.editorFontFamily, configuration);
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
-
-      Log.debug("synchronizeConfiguration");
 
       setFont(dispatch, editorFontFamily, editorFontSize);
     });

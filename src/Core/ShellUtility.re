@@ -1,4 +1,5 @@
-module Option = Utility.Option;
+open Kernel;
+
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
@@ -9,11 +10,13 @@ module Internal = {
     };
   };
 
-  let getShellFromPath = () => {
-    Sys.getenv_opt("PATH")
-    |> Option.tap_none(() => Log.error("Unable to get PATH!"))
-    |> Option.value(~default="");
-  };
+  let getShellFromPath = () =>
+    switch (Sys.getenv_opt("PATH")) {
+    | Some(path) => path
+    | None =>
+      Log.error("Unable to get PATH!");
+      "";
+    };
 };
 
 let getShellPath = () => {

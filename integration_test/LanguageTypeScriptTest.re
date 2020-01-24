@@ -25,9 +25,8 @@ runTestWithInput(
         ~name="Validate we have a TypeScript filetype",
         (state: State.t) => {
           let fileType =
-            Some(state)
-            |> Option.bind(Selectors.getActiveBuffer)
-            |> Option.bind(Buffer.getFileType);
+            Selectors.getActiveBuffer(state)
+            |> OptionEx.flatMap(Buffer.getFileType);
 
           switch (fileType) {
           | Some("typescript") => true

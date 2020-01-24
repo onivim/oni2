@@ -6,8 +6,8 @@
  */
 
 open Oni_Core;
+open Utility;
 
-module Option = Utility.Option;
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
 module Core = Oni_Core;
@@ -20,9 +20,9 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 type t = ExtHostTransport.t;
 
 type unitCallback = unit => unit;
-let noop = Utility.noop;
-let noop1 = Utility.noop1;
-let noop2 = Utility.noop2;
+let noop = () => ();
+let noop1 = _ => ();
+let noop2 = (_, _) => ();
 
 let start =
     (

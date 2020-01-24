@@ -1,9 +1,5 @@
-open Oni_Core;
-
 open Revery;
 open Revery.UI;
-
-module ColorEx = Utility.ColorEx;
 
 let colorTransition =
     (
@@ -15,7 +11,7 @@ let colorTransition =
   let%hook ((start, stop), setTarget) = Hooks.state((target, target));
 
   let gradient = (value: Animation.NormalizedTime.t) =>
-    ColorEx.mix(~start, ~stop, ~amount=(value :> float));
+    Color.mix(~start, ~stop, ~amount=(value :> float));
 
   let anim =
     Animation.(

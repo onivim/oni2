@@ -113,7 +113,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       | Some(v) => Some(v.scopeStack)
       };
 
-    Log.debugf(m => m("Tokenizing line: %i", currentLine));
+    Log.tracef(m => m("Tokenizing line: %i", currentLine));
 
     // Get new tokens & scopes
     let (tokens, scopes) =

@@ -1,5 +1,3 @@
-include Timber;
-
 // TODO: Remove after 4.08
 module Option = {
   let iter = f =>
@@ -7,6 +5,10 @@ module Option = {
     | Some(x) => f(x)
     | None => ();
 };
+
+include Timber.Log;
+
+module type Logger = Timber.Logger;
 
 module Env = {
   let logFile = Sys.getenv_opt("ONI2_LOG_FILE");
@@ -33,8 +35,8 @@ let writeExceptionLog = (e, bt) => {
   Stdlib.close_out(oc);
 };
 
-let enableDebugLogging = () => {
-  Timber.App.enableDebugLogging();
+let enableDebug = () => {
+  Timber.App.setLevel(Timber.Level.debug);
   module Log = (val withNamespace("Oni2.Exception"));
 
   Log.debug("Recording backtraces");
@@ -52,8 +54,13 @@ let enableDebugLogging = () => {
   });
 };
 
-if (Timber.isDebugLoggingEnabled()) {
-  enableDebugLogging();
+let enableTrace = () => {
+  enableDebug();
+  Timber.App.setLevel(Timber.Level.trace);
+};
+
+if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
+  enableDebug();
 } else {
   // Even if we're not debugging.... at least emit the exception
   Printexc.set_uncaught_exception_handler((e, bt) => {

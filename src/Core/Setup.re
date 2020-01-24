@@ -3,6 +3,7 @@
  *
  * Runtime configuration of dependencies
  */
+open Kernel;
 
 module Log = (val Log.withNamespace("Oni2.Core.Setup"));
 

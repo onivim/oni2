@@ -79,7 +79,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
       switch (Hashtbl.find_opt(jobs, id)) {
       | Some({job, _} as state) when query != job.pendingWork.filter =>
         // Query changed
-        Log.debug("Updating " ++ id ++ " with query: " ++ query);
+        Log.tracef(m => m("Updating %s with query: %s", id, query));
 
         let job = Job.map(FilterJob.updateQuery(query), job);
         Hashtbl.replace(jobs, id, {...state, job});

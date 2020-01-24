@@ -430,7 +430,7 @@ let%component make =
          let tokenEnd = token.endPosition |> Index.toZeroBased;
          index >= tokenStart && index < tokenEnd;
        })
-    |> Utility.Option.of_list;
+    |> Utility.OptionEx.of_list;
   };
 
   let style =
@@ -557,7 +557,7 @@ let%component make =
     };*/
 
   let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-    Log.debug("editorMouseUp");
+    Log.trace("editorMouseUp");
 
     switch (elementRef) {
     | None => ()
@@ -577,8 +577,8 @@ let%component make =
         );
 
       if (line < numberOfLines) {
-        Log.debugf(m => m("  topVisibleLine is %i", topVisibleLine));
-        Log.debugf(m => m("  setPosition (%i, %i)", line + 1, col));
+        Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+        Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
         let cursor =
           Vim.Cursor.create(

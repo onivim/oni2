@@ -11,8 +11,6 @@ open Oni_Syntax;
 
 module Ext = Oni_Extensions;
 
-module List = Utility.List;
-
 type logFunc = string => unit;
 
 type t = {
