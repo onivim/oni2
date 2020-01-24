@@ -153,7 +153,13 @@ let isIndentationSet = buf => {
   | None => false
   };
 };
-let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
+let setIndentation = (indentation, buf) => {
+  let lines = buf.lines
+  |> Array.map((line) => 
+    BufferLine.raw(line)
+    |> BufferLine.make(~indentation));
+  {...buf, lines, indentation: Some(indentation)}
+}
 
 let getIndentation = buf => buf.indentation;
 
