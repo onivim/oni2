@@ -94,6 +94,7 @@ module Notification = {
       color(foreground),
       backgroundColor(background),
     ];
+
   };
 
   module Animations = {
@@ -204,6 +205,14 @@ module Styles = {
     Style.color(color),
     backgroundColor(background),
   ];
+
+    let textBold = (~color, ~background, font: UiFont.t) => [
+      fontFamily(font.fontFileSemiBold),
+      fontSize(11),
+      textWrap(TextWrapping.NoWrap),
+      Style.color(color),
+      backgroundColor(background),
+    ];
 };
 
 let positionToString =
@@ -323,7 +332,7 @@ let modeIndicator = (~font, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background, font)}
+      style={Styles.textBold(~color=foreground, ~background, font)}
       text={Vim.Mode.show(mode)}
     />
   </item>;
