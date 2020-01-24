@@ -5,21 +5,13 @@
  */
 module Option = Utility.Option;
 
+exception OutOfBounds;
+
 open CamomileBundled.Camomile;
 let _space = UChar.of_char(' ');
 let tab = UChar.of_char('\t');
 let _cr = UChar.of_char('\r');
 let _lf = UChar.of_char('\n');
-
-module Internal = {
-  let measure = (indentationSettings: IndentationSettings.t, c) =>
-    if (UChar.eq(c, tab)) {
-      indentationSettings.tabSize;
-    } else {
-      1;
-      // TODO: Integrate charWidth / wcwidth
-    };
-};
 
 type characterCacheInfo = {
   byteOffset: int,
@@ -42,6 +34,52 @@ type t = {
   nextPosition: ref(int),
 };
 
+module Internal = {
+  let measure = (indentationSettings: IndentationSettings.t, c) =>
+    if (UChar.eq(c, tab)) {
+      indentationSettings.tabSize;
+    } else {
+      1;
+      // TODO: Integrate charWidth / wcwidth
+    };
+
+  let resolveTo = (~index, cache: t) =>
+    // We've already resolved to this point,
+    // no work needed!
+    if (index < cache.nextIndex^) {
+      ();
+    } else {
+      // Requested an index we haven't discovered yet - so we'll need to compute up to the point
+      let len = String.length(cache.raw)
+
+      let i: ref(int) = ref(cache.nextIndex^);
+      let byte: ref(int) = ref(cache.nextByte^);
+      let position: ref(int) = ref(cache.nextPosition^);
+      while (i^ <= index && byte^ < len) {
+        let (uchar, offset) = ZedBundled.unsafe_extract_next(cache.raw, byte^);
+
+        let characterWidth =
+          measure(cache.indentation, uchar);
+
+        cache.characters[i^] =
+          Some({
+            byteOffset: byte^,
+            positionOffset: position^,
+            uchar,
+            width: characterWidth,
+          });
+
+        position := position^ + characterWidth;
+        byte := offset;
+        incr(i);
+      };
+
+      cache.nextIndex := i^;
+      cache.nextByte := byte^;
+      cache.nextPosition := position^;
+    };
+};
+
 let make = (~indentation, raw: string) => {
   // Create a cache the size of the string - this would be the max length
   // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
@@ -52,41 +90,6 @@ let make = (~indentation, raw: string) => {
 
 let empty = make(~indentation=IndentationSettings.default, "");
 
-let _resolveTo = (~index, cache: t) =>
-  // We've already resolved to this point,
-  // no work needed!
-  if (index < cache.nextIndex^) {
-    ();
-  } else {
-    // Requested an index we haven't discovered yet - so we'll need to compute up to the point
-    let len = String.length(cache.raw)
-
-    let i: ref(int) = ref(cache.nextIndex^);
-    let byte: ref(int) = ref(cache.nextByte^);
-    let position: ref(int) = ref(cache.nextPosition^);
-    while (i^ <= index && byte^ < len) {
-      let (uchar, offset) = ZedBundled.unsafe_extract_next(cache.raw, byte^);
-
-      let characterWidth =
-        Internal.measure(cache.indentation, uchar);
-
-      cache.characters[i^] =
-        Some({
-          byteOffset: byte^,
-          positionOffset: position^,
-          uchar,
-          width: characterWidth,
-        });
-
-      position := position^ + characterWidth;
-      byte := offset;
-      incr(i);
-    };
-
-    cache.nextIndex := i^;
-    cache.nextByte := byte^;
-    cache.nextPosition := position^;
-  };
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
@@ -95,20 +98,20 @@ let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
 let raw = ({raw, _}) => raw;
 
 let boundedLengthUtf8 = (~max, bufferLine) => {
-  _resolveTo(~index=max, bufferLine)
+  Internal.resolveTo(~index=max, bufferLine);
   min(bufferLine.nextIndex^, max);
 };
 
 let unsafeGetUChar = (~index, bufferLine) => {
-  _resolveTo(~index, bufferLine);
+  Internal.resolveTo(~index, bufferLine);
   switch(bufferLine.characters[index]) {
   | Some({ uchar, _}) => uchar
-  | None => failwith("invalid index (out of bounds)")
+  | None => raise(OutOfBounds);
   }
 }
 
 let getByteOffset = (~index, bufferLine) => {
-  _resolveTo(~index, bufferLine);
+  Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   if (index >= Array.length(bufferLine.characters)) {
     rawLength;
@@ -127,7 +130,7 @@ let unsafeSub = (~index: int, ~length: int, bufferLine) => {
 }
 
 let getPositionAndWidth = (~index: int, bufferLine: t) => {
-  _resolveTo(~index, bufferLine);
+  Internal.resolveTo(~index, bufferLine);
 
   if (index >= Array.length(bufferLine.characters)) {
     (bufferLine.nextPosition^, 1)

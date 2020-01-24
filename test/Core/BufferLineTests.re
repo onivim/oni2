@@ -14,6 +14,12 @@ describe("BufferLine", ({describe, _}) => {
       let str = BufferLine.unsafeSub(~index=1, ~length=2, bufferLine);
       expect.string(str).toEqual("bc");
     });
+    test("clamps to end of string", ({expect}) => {
+      let bufferLine = makeLine("abcd"); 
+
+      let str = BufferLine.unsafeSub(~index=1, ~length=10, bufferLine);
+      expect.string(str).toEqual("bcd");
+    });
   });
   describe("boundedLengthUtf8", ({test, _}) => {
     test("max less than total length", ({expect}) => {

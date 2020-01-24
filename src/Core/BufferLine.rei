@@ -6,6 +6,8 @@
 
 open CamomileBundled.Camomile;
 
+exception OutOfBounds;
+
 type t;
 
 let empty: t;
