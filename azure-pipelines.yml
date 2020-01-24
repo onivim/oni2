@@ -18,7 +18,7 @@ jobs:
   displayName: 'Hygiene Checks'
   timeoutInMinutes: 0
   pool:
-    vmImage: 'macOS 10.13'
+    vmImage: 'macOS 10.14'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -84,9 +84,10 @@ jobs:
   - template: .ci/publish-linux.yml
 
 - job: MacOS
+  displayName: "MacOS 10.14"
   timeoutInMinutes: 0
   pool:
-    vmImage: 'macOS 10.13'
+    vmImage: 'macOS 10.14'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -163,12 +164,12 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateMacOSRelease
-  displayName: "MacOS: Validate Release"
+  displayName: "MacOS: Validate Release (10.13)"
   dependsOn: 
   - Kickoff
   - MacOS
   pool:
-    vmImage: 'macOS 10.14'
+    vmImage: 'macOS 10.13'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
