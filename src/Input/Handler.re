@@ -47,7 +47,7 @@ let keyCodeToVimString = (keycode, keyString) => {
 let keyPressToString =
     (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
   let keyString = Revery.Key.Keycode.getName(keycode);
-  Log.debug("keyPressToString - key name: " ++ keyString);
+  Log.trace("keyPressToString - key name: " ++ keyString);
 
   let keyString =
     if (!shiftKey && String.length(keyString) == 1) {
@@ -56,7 +56,7 @@ let keyPressToString =
       keyString;
     };
 
-  Log.debugf(m => m("Processing keycode: %i|%s", keycode, keyString));
+  Log.tracef(m => m("Processing keycode: %i|%s", keycode, keyString));
 
   let vimString = keyCodeToVimString(keycode, keyString);
   let vimStringLength =
@@ -89,11 +89,11 @@ let keyPressToString =
 
       let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
 
-      Log.debug("Sending key: " ++ ret);
+      Log.trace("Sending key: " ++ ret);
       Some(ret);
     };
   } else {
-    Log.debug("Key blocked: " ++ keyString);
+    Log.trace("Key blocked: " ++ keyString);
     None;
   };
 };

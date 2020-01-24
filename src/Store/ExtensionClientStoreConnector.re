@@ -322,7 +322,7 @@ let start = (extensions, setup: Setup.t) => {
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Log.debug("Creating model for filetype: " ++ ft);
+      Log.trace("Creating model for filetype: " ++ ft);
       Some(
         Protocol.ModelAddedDelta.create(
           ~uri=Uri.fromPath(fp),
