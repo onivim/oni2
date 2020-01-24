@@ -38,8 +38,6 @@ module TextRun = {
 
 type splitFunc = (int, UChar.t, int, UChar.t) => bool;
 
-type measureFunc = UChar.t => int;
-
 let _getNextBreak =
     (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
   let pos = ref(start);
@@ -63,33 +61,13 @@ let _getNextBreak =
   pos^;
 };
 
-let defaultMeasure: measureFunc = _ => 1;
-
-let getOffsetFromStart = (~measure, ~idx, bufferLine) =>
-  if (idx <= 0) {
-    0;
-  } else {
-    let offset = ref(0);
-    let i = ref(0);
-
-    while (i^ < idx) {
-      let width = measure(BufferLine.unsafeGetUChar(~index=i^, bufferLine));
-      offset := offset^ + width;
-      incr(i);
-    };
-
-    offset^;
-  };
-
 let tokenize =
     (
       ~startIndex=0,
       ~endIndex,
       ~f: splitFunc,
-      ~measure=defaultMeasure,
       bufferLine: BufferLine.t,
     ) => {
-  // TODO: Switch to bounded version
   let len = BufferLine.boundedLengthUtf8(~max=endIndex, bufferLine);
 
   if (len == 0 || startIndex >= len) {
@@ -97,9 +75,8 @@ let tokenize =
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    // TODO: Just replace this entire function with `position`
-    let initialOffset =
-      getOffsetFromStart(~measure, ~idx=startIndex, bufferLine);
+    let (initialOffset, _) = BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
+
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
@@ -110,15 +87,14 @@ let tokenize =
       let startOffset = offset^;
       let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
+      let (endOffset, _) = BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
+
       let text =
         BufferLine.unsafeSub(
           ~index=startToken,
           ~length=endToken - startToken,
           bufferLine,
         );
-      let endOffset =
-        startOffset
-        + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
 
       let textRun =
         TextRun.create(

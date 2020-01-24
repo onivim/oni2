@@ -410,7 +410,6 @@ let%component make =
         ~startIndex,
         ~endIndex,
         line,
-        IndentationSettings.default,
         colorizer,
       );
     };

@@ -78,15 +78,6 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   ret;
 };
 
-// TODO: Remove duplication between here and BufferLine
-let measure = (indentationSettings: IndentationSettings.t, c) =>
-  if (UChar.eq(c, tab)) {
-    indentationSettings.tabSize;
-  } else {
-    1;
-    // TODO: Integrate charWidth / wcwidth
-  };
-
 let getCharacterPositionAndWidth =
     (
       ~indentation: IndentationSettings.t,
@@ -116,7 +107,7 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
 };
 
 let tokenize =
-    (~startIndex=0, ~endIndex, line, indentationSettings, colorizer) => {
+    (~startIndex=0, ~endIndex, line, colorizer) => {
   let split = (i0, c0, i1, c1) => {
     let (bg1, fg1) = colorizer(i0);
     let (bg2, fg2) = colorizer(i1);
@@ -133,7 +124,6 @@ let tokenize =
     ~startIndex,
     ~endIndex,
     ~f=split,
-    ~measure=measure(indentationSettings),
     line,
   )
   |> List.filter(filterRuns)

@@ -17,8 +17,8 @@ let simpleColorizer = _ => (Colors.black, Colors.white);
 let tokenizeLine = () => {
   let _ =
     BufferViewTokenizer.tokenize(
+      ~endIndex=1000,
       giantString,
-      indentationSettings,
       simpleColorizer,
     );
   ();
