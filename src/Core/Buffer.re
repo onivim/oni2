@@ -12,7 +12,7 @@ type t = {
   fileType: option(string),
   modified: bool,
   version: int,
-  lines: array(string),
+  lines: array(BufferLine.t),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
@@ -20,7 +20,12 @@ type t = {
 
 let show = _ => "TODO";
 
-let ofLines = (~id=0, lines: array(string)) => {
+let ofLines = (~id=0, rawLines: array(string)) => {
+
+  let lines = rawLines
+    |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
+
+  {
   id,
   version: 0,
   filePath: None,
@@ -30,6 +35,7 @@ let ofLines = (~id=0, lines: array(string)) => {
   indentation: None,
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
+  }
 };
 
 let empty = ofLines([||]);
@@ -60,13 +66,11 @@ let setFileType = (fileType: option(string), buffer: t) => {
 
 let getId = (buffer: t) => buffer.id;
 
-let getLine = (line: int, buffer: t) =>
-  BufferLine.make(
-    ~indentation=
-      Option.value(~default=IndentationSettings.default, buffer.indentation),
-    buffer.lines[line],
-  );
-let getLines = (buffer: t) => buffer.lines;
+let getLine = (line: int, buffer: t) => {
+  buffer.lines[line];
+}
+
+let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
 let getVersion = (buffer: t) => buffer.version;
 let setVersion = (version: int, buffer: t) => {...buffer, version};
@@ -103,7 +107,7 @@ let getUri = (buffer: t) => {
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
-let slice = (~lines: array(string), ~start, ~length, ()) => {
+let slice = (~lines: array('a), ~start, ~length, ()) => {
   let len = Array.length(lines);
   if (start >= len) {
     [||];
@@ -118,8 +122,8 @@ let slice = (~lines: array(string), ~start, ~length, ()) => {
   };
 };
 
-let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
-  let updateLines = update.lines;
+let applyUpdate = (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+  let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
   if (Array.length(lines) == 0) {
@@ -137,7 +141,7 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
         (),
       );
 
-    let lines = update.lines;
+    let lines = updateLines;
 
     Array.concat([prev, lines, post]);
   };
@@ -157,20 +161,22 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
+let update = (buf: t, update: BufferUpdate.t) => {
+  let indentation = Option.value(~default=IndentationSettings.default, buf.indentation);
   if (shouldApplyUpdate(update, buf)) {
     /***
-     If it's a full update, just apply the lines in their entiretupdate.endLiney
+     If it's a full update, just apply the lines in the entire update
      */
     if (update.isFull) {
-      {...buf, version: update.version, lines: update.lines};
+      {...buf, version: update.version, lines: update.lines |> Array.map(BufferLine.make(~indentation))};
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(buf.lines, update),
+        lines: applyUpdate(~indentation, buf.lines, update),
       };
     };
   } else {
     buf;
-  };
+  }
+};

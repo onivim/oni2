@@ -8,6 +8,8 @@ open CamomileBundled.Camomile;
 
 type t;
 
+let empty: t;
+
 let make: (~indentation: IndentationSettings.t, string) => t;
 
 let lengthInBytes: t => int;

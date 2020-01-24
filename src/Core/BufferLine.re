@@ -50,9 +50,9 @@ let make = (~indentation, raw: string) => {
   {indentation, raw, characters, nextByte: 0, nextIndex: 0, nextPosition: 0};
 };
 
-let empty = make("");
+let empty = make(~indentation=IndentationSettings.default, "");
 
-let resolveTo = (~index, cache: t) =>
+let _resolveTo = (~index, cache: t) =>
   // We've already resolved to this point,
   // no work needed!
   if (index < cache.nextIndex) {
@@ -101,7 +101,7 @@ let lengthInBytes = ({raw, _}) => String.length(raw);
 
 let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
 
-let raw = ({raw}) => raw;
+let raw = ({raw, _}) => raw;
 
 let boundedLengthUtf8 = (~max, {raw, _}) => {
   // TODO: Make this faster...
@@ -112,7 +112,8 @@ let unsafeGetUChar = (~index, {raw, _}) => ZedBundled.get(raw, index);
 
 let unsafeSub = (~index: int, ~length: int, {raw, _}) =>
   ZedBundled.sub(raw, index, length);
-let getPositionAndWidth = (~index: int, {raw, indentation}) => {
+
+let getPositionAndWidth = (~index: int, {raw, indentation, _}) => {
   let x = ref(0);
   let totalOffset = ref(0);
   let len = ZedBundled.length(raw);
