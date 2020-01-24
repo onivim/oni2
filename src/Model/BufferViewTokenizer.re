@@ -116,7 +116,7 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
 };
 
 let tokenize =
-    (~startIndex=0, ~endIndex=(-1), line, indentationSettings, colorizer) => {
+    (~startIndex=0, ~endIndex, line, indentationSettings, colorizer) => {
   let split = (i0, c0, i1, c1) => {
     let (bg1, fg1) = colorizer(i0);
     let (bg2, fg2) = colorizer(i1);
