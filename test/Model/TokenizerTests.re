@@ -16,7 +16,11 @@ let thickB = c =>
   | _ => 1
   };
 
-let makeLine = BufferLine.make(~indentation=IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=2, ()));
+let makeLine =
+  BufferLine.make(
+    ~indentation=
+      IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=2, ()),
+  );
 
 let validateToken =
     (
@@ -135,11 +139,7 @@ describe("Tokenizer", ({test, describe, _}) => {
     test("wide tab", ({expect}) => {
       let str = "a\ta\t";
       let result =
-        Tokenizer.tokenize(
-          ~endIndex=4,
-          ~f=splitOnCharacter,
-          str |> makeLine,
-        );
+        Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str |> makeLine);
 
       let runs = [
         TextRun.create(

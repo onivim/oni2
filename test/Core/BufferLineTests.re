@@ -1,8 +1,6 @@
-//open EditorCoreTypes;
 open Oni_Core;
 
 open TestFramework;
-//open Helpers;
 
 let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 

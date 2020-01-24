@@ -62,12 +62,7 @@ let _getNextBreak =
 };
 
 let tokenize =
-    (
-      ~startIndex=0,
-      ~endIndex,
-      ~f: splitFunc,
-      bufferLine: BufferLine.t,
-    ) => {
+    (~startIndex=0, ~endIndex, ~f: splitFunc, bufferLine: BufferLine.t) => {
   let len = BufferLine.boundedLengthUtf8(~max=endIndex, bufferLine);
 
   if (len == 0 || startIndex >= len) {
@@ -75,7 +70,8 @@ let tokenize =
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    let (initialOffset, _) = BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
+    let (initialOffset, _) =
+      BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
 
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
@@ -87,7 +83,8 @@ let tokenize =
       let startOffset = offset^;
       let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
-      let (endOffset, _) = BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
+      let (endOffset, _) =
+        BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
 
       let text =
         BufferLine.unsafeSub(

@@ -269,7 +269,6 @@ let%component make =
 
       let (cursorOffset, width) =
         BufferViewTokenizer.getCharacterPositionAndWidth(
-          ~indentation,
           cursorLine,
           Index.toZeroBased(cursorPosition.column),
         );
@@ -406,12 +405,7 @@ let%component make =
           tokenColors,
         );
 
-      BufferViewTokenizer.tokenize(
-        ~startIndex,
-        ~endIndex,
-        line,
-        colorizer,
-      );
+      BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
     };
 
   let getTokenAtPosition = (~startIndex, ~endIndex, position: Location.t) => {
@@ -648,14 +642,12 @@ let%component make =
              let text = Buffer.getLine(line, buffer);
              let (startOffset, _) =
                BufferViewTokenizer.getCharacterPositionAndWidth(
-                 ~indentation,
                  ~viewOffset=leftVisibleColumn,
                  text,
                  start,
                );
              let (endOffset, _) =
                BufferViewTokenizer.getCharacterPositionAndWidth(
-                 ~indentation,
                  ~viewOffset=leftVisibleColumn,
                  text,
                  endC,
@@ -694,14 +686,12 @@ let%component make =
                let text = Buffer.getLine(line, buffer);
                let (startOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(
-                   ~indentation,
                    ~viewOffset=leftVisibleColumn,
                    text,
                    start,
                  );
                let (endOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(
-                   ~indentation,
                    ~viewOffset=leftVisibleColumn,
                    text,
                    endC,

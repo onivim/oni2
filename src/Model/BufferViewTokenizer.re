@@ -78,15 +78,7 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
   ret;
 };
 
-let getCharacterPositionAndWidth =
-    (
-      ~indentation: IndentationSettings.t,
-      ~viewOffset: int=0,
-      line: BufferLine.t,
-      i,
-    ) => {
-  // TODO: Remove this, carried implicitly with BufferLine
-  ignore(indentation);
+let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) => {
   let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
 
   let actualOffset =
@@ -106,8 +98,7 @@ let colorEqual = (c1: Color.t, c2: Color.t) => {
   && Float.equal(c1.a, c2.a);
 };
 
-let tokenize =
-    (~startIndex=0, ~endIndex, line, colorizer) => {
+let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
   let split = (i0, c0, i1, c1) => {
     let (bg1, fg1) = colorizer(i0);
     let (bg2, fg2) = colorizer(i1);
@@ -120,12 +111,7 @@ let tokenize =
     || UChar.eq(c1, tab);
   };
 
-  Tokenizer.tokenize(
-    ~startIndex,
-    ~endIndex,
-    ~f=split,
-    line,
-  )
+  Tokenizer.tokenize(~startIndex, ~endIndex, ~f=split, line)
   |> List.filter(filterRuns)
   |> List.map(textRunToToken(colorizer));
 };
