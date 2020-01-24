@@ -59,11 +59,6 @@ let _resolveTo = (~index, cache: t) =>
     ();
   } else {
     // Requested an index we haven't discovered yet - so we'll need to compute up to the point
-
-    // Create an immutable copy of the array...
-    // TODO: Switch to mutable approach for perf?
-    //let characters = Array.copy(cache.characters);
-
     let len = String.length(cache.raw)
 
     let i: ref(int) = ref(cache.nextIndex^);
@@ -101,7 +96,7 @@ let raw = ({raw, _}) => raw;
 
 let boundedLengthUtf8 = (~max, bufferLine) => {
   _resolveTo(~index=max, bufferLine)
-  bufferLine.nextIndex^;
+  min(bufferLine.nextIndex^, max);
 };
 
 let unsafeGetUChar = (~index, bufferLine) => {
@@ -112,14 +107,26 @@ let unsafeGetUChar = (~index, bufferLine) => {
   }
 }
 
-let unsafeSub = (~index: int, ~length: int, {raw, _}) =>
-  ZedBundled.sub(raw, index, length);
+let getByteOffset = (~index, bufferLine) => {
+  _resolveTo(~index, bufferLine);
+  let rawLength = String.length(bufferLine.raw);
+  if (index >= Array.length(bufferLine.characters)) {
+    rawLength;
+  } else {
+    switch (bufferLine.characters[index]) {
+    | Some({byteOffset, _}) => byteOffset
+    | None => rawLength
+    };
+  }
+}
+
+let unsafeSub = (~index: int, ~length: int, bufferLine) => {
+  let startOffset = getByteOffset(~index, bufferLine);
+  let endOffset = getByteOffset(~index=index+length, bufferLine);
+  String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
+}
 
 let getPositionAndWidth = (~index: int, bufferLine: t) => {
-  /*Printf.fprintf(stderr, "INDEX: %d rawLength: %d charactersLength: %d\n",
-  index,
-  String.length(bufferLine.raw),
-  Array.length(bufferLine.characters));*/
   _resolveTo(~index, bufferLine);
 
   if (index >= Array.length(bufferLine.characters)) {
