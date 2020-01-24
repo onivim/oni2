@@ -18,6 +18,21 @@ let contains = (query, str) => {
   };
 };
 
+let isEmpty = str => {
+  let len = String.length(str);
+
+  let rec loop = (str, index) =>
+    if (index == len) {
+      true;
+    } else {
+      let c = str.[index];
+
+      !isSpace(c) ? false : loop(str, index + 1);
+    };
+
+  loop(str, 0);
+};
+
 let startsWith = (~prefix, str) => {
   let prefixLength = String.length(prefix);
   let strLength = String.length(str);

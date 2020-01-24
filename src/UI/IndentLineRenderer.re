@@ -7,6 +7,7 @@
 open Revery.Draw;
 
 open Oni_Core;
+open Oni_Core.Utility;
 
 let rec getIndentLevel =
         (
@@ -30,7 +31,7 @@ let rec getIndentLevel =
    * If we hit the top or bottom of the buffer, just set the next line indent
    * to 0.
    */
-  if (String.trim(lineText) != "") {
+  if (!StringEx.isEmpty(lineText)) {
     Indentation.getLevel(indentationSettings, lineText);
   } else {
     let newLine = reverse ? line - 1 : line + 1;
