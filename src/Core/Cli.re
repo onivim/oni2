@@ -70,12 +70,24 @@ let parse =
   let shouldLoadConfiguration = ref(true);
   let shouldSyntaxHighlight = ref(true);
 
+  let needsConsole = ref(false);
+
   let queuedJob = ref(None);
   let runAndExitUnit = f =>
-    Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
+    Arg.Unit(
+      () => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(cli) |> exit});
+      },
+    );
 
   let runAndExitString = f =>
-    Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
+    Arg.String(
+      s => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(s, cli) |> exit});
+      },
+    );
 
   let disableExtensionLoading = () => shouldLoadExtensions := false;
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
@@ -115,9 +127,9 @@ let parse =
     "",
   );
 
-  if (!CoreLog.isPrintingEnabled()) {
-    /* On Windows, detach the application from the console if we're not logging to console */
-    Utility.freeConsole();
+  if (CoreLog.isPrintingEnabled() || needsConsole^) {
+    /* On Windows, we need to create a console instance if possible */
+    Revery.App.initConsole();
   };
 
   let paths = args^ |> List.rev;
