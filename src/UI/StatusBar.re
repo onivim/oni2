@@ -94,7 +94,6 @@ module Notification = {
       color(foreground),
       backgroundColor(background),
     ];
-
   };
 
   module Animations = {
@@ -206,13 +205,13 @@ module Styles = {
     backgroundColor(background),
   ];
 
-    let textBold = (~color, ~background, font: UiFont.t) => [
-      fontFamily(font.fontFileSemiBold),
-      fontSize(11),
-      textWrap(TextWrapping.NoWrap),
-      Style.color(color),
-      backgroundColor(background),
-    ];
+  let textBold = (~color, ~background, font: UiFont.t) => [
+    fontFamily(font.fontFileSemiBold),
+    fontSize(11),
+    textWrap(TextWrapping.NoWrap),
+    Style.color(color),
+    backgroundColor(background),
+  ];
 };
 
 let positionToString =
