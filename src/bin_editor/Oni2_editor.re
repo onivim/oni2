@@ -100,6 +100,7 @@ if (cliOptions.syntaxHighlightService) {
             ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
+            ~titlebarStyle=WindowStyles.Transparent,
             (),
           ),
         app,
@@ -116,6 +117,8 @@ if (cliOptions.syntaxHighlightService) {
       Log.error("Folder does not exist: " ++ msg)
     | v => v
     };
+
+    Revery.Window.setBackgroundColor(w, Colors.black);
 
     PreflightChecks.run();
 

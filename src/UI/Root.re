@@ -35,6 +35,12 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
   ];
+
+  let titleBar = (background) => Style.[
+    flexGrow(0),
+    height(22),
+    backgroundColor(background),
+  ];
 };
 
 let make = (~state: State.t, ()) => {
@@ -97,6 +103,7 @@ let make = (~state: State.t, ()) => {
       : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
+    <View style=Styles.titleBar(theme.background)/>
     <View style=Styles.workspace>
       <View style=Styles.surface>
         activityBar
