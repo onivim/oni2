@@ -103,7 +103,7 @@ let make = (~state: State.t, ()) => {
       : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
-    <View style=Styles.titleBar(theme.background)/>
+    <Titlebar font={state.uiFont} title={state.windowTitle} theme={state.theme} />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         activityBar
