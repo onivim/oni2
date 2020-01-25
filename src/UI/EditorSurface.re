@@ -256,12 +256,11 @@ let%component make =
 
   let (cursorOffset, cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorStr = Buffer.getLine(buffer, cursorLine);
+      let cursorLine = Buffer.getLine(cursorLine, buffer);
 
       let (cursorOffset, width) =
         BufferViewTokenizer.getCharacterPositionAndWidth(
-          ~indentation,
-          cursorStr,
+          cursorLine,
           Index.toZeroBased(cursorPosition.column),
         );
       (cursorOffset, width);
@@ -347,7 +346,7 @@ let%component make =
     if (i >= lineCount) {
       [];
     } else {
-      let line = Buffer.getLine(buffer, i);
+      let line = Buffer.getLine(i, buffer);
 
       let idx = Index.fromZeroBased(i);
       let highlights =
@@ -397,13 +396,7 @@ let%component make =
           tokenColors,
         );
 
-      BufferViewTokenizer.tokenize(
-        ~startIndex,
-        ~endIndex,
-        line,
-        IndentationSettings.default,
-        colorizer,
-      );
+      BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
     };
 
   let getTokenAtPosition = (~startIndex, ~endIndex, position: Location.t) => {
@@ -635,17 +628,15 @@ let%component make =
              let start = Index.toZeroBased(r.start.column);
              let endC = Index.toZeroBased(r.stop.column);
 
-             let text = Buffer.getLine(buffer, line);
+             let text = Buffer.getLine(line, buffer);
              let (startOffset, _) =
                BufferViewTokenizer.getCharacterPositionAndWidth(
-                 ~indentation,
                  ~viewOffset=leftVisibleColumn,
                  text,
                  start,
                );
              let (endOffset, _) =
                BufferViewTokenizer.getCharacterPositionAndWidth(
-                 ~indentation,
                  ~viewOffset=leftVisibleColumn,
                  text,
                  endC,
@@ -680,17 +671,15 @@ let%component make =
 
              let lines = Buffer.getNumberOfLines(buffer);
              if (line < lines) {
-               let text = Buffer.getLine(buffer, line);
+               let text = Buffer.getLine(line, buffer);
                let (startOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(
-                   ~indentation,
                    ~viewOffset=leftVisibleColumn,
                    text,
                    start,
                  );
                let (endOffset, _) =
                  BufferViewTokenizer.getCharacterPositionAndWidth(
-                   ~indentation,
                    ~viewOffset=leftVisibleColumn,
                    text,
                    endC,

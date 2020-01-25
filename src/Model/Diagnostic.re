@@ -15,9 +15,13 @@ let create = (~range, ~message, ()) => {range, message};
 
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
-  let measure = n =>
+  let measure = n => {
     Index.toZeroBased(n) < lineCount
-      ? Buffer.getLineLength(buffer, Index.toZeroBased(n)) : 0;
+      ? buffer
+        |> Buffer.getLine(Index.toZeroBased(n))
+        |> BufferLine.lengthInBytes
+      : 0;
+  };
 
   Range.explode(measure, diagnostic.range)
   |> List.map(range => create(~range, ~message=diagnostic.message, ()));
