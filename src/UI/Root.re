@@ -101,6 +101,8 @@ let make = (~state: State.t, ()) => {
 
   <View style={Styles.root(theme.background, theme.foreground)}>
     <Titlebar
+      focused=true
+      maximized=false
       font={state.uiFont}
       title={state.windowTitle}
       theme={state.theme}

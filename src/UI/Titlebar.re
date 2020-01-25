@@ -30,26 +30,31 @@ module Styles = {
   ];
 };
 
-let make = (~title, ~theme: Theme.t, ~font: UiFont.t, ()) => {
-  switch (Revery.Environment.os) {
-  | Mac =>
-    let {
-      titleBarActiveBackground,
-      titleBarActiveForeground,
-      titleBarInactiveBackground,
-      titleBarInactiveForeground,
-      _,
-    }: Theme.t = theme;
-    <View style={Styles.container(titleBarActiveBackground)}>
-      <Text
-        style={Styles.text(
-          ~background=titleBarActiveBackground,
-          ~foreground=titleBarActiveForeground,
-          ~font,
-        )}
-        text=title
-      />
-    </View>;
-  | _ => React.empty
+let make =
+    (~focused, ~maximized, ~title, ~theme: Theme.t, ~font: UiFont.t, ()) =>
+  if (maximized) {
+    React.empty;
+  } else {
+    switch (Revery.Environment.os) {
+    | Mac =>
+      let {
+        titleBarActiveBackground,
+        titleBarActiveForeground,
+        titleBarInactiveBackground,
+        titleBarInactiveForeground,
+        _,
+      }: Theme.t = theme;
+      let background =
+        focused ? titleBarActiveBackground : titleBarInactiveBackground;
+      let foreground =
+        focused ? titleBarActiveForeground : titleBarInactiveForeground;
+
+      <View style={Styles.container(background)}>
+        <Text
+          style={Styles.text(~background, ~foreground, ~font)}
+          text=title
+        />
+      </View>;
+    | _ => React.empty
+    };
   };
-};
