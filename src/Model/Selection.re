@@ -27,7 +27,9 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
               ~line=Index.fromZeroBased(currentPos),
               ~column=
                 Index.fromZeroBased(
-                  Buffer.getLineLength(buffer, currentPos),
+                  buffer
+                  |> Buffer.getLine(currentPos)
+                  |> BufferLine.lengthInBytes,
                 ),
             ),
         ),
@@ -68,7 +70,9 @@ let getRangesForVisualSelection =
                   {
                     endLine == currentPos
                       ? endColumn + 1
-                      : Buffer.getLineLength(buffer, currentPos);
+                      : buffer
+                        |> Buffer.getLine(currentPos)
+                        |> BufferLine.lengthInBytes;
                   },
                 ),
             ),
@@ -95,7 +99,8 @@ let getRangesForBlockSelection =
   while (pos^ <= endLine) {
     let currentPos = pos^;
 
-    let bufferLength = Buffer.getLineLength(buffer, currentPos);
+    let bufferLength =
+      buffer |> Buffer.getLine(currentPos) |> BufferLine.lengthInBytes;
 
     let newRange =
       if (startC < bufferLength) {

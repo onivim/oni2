@@ -1,7 +1,11 @@
 open EditorCoreTypes;
 open TestFramework;
+open Oni_Core;
 
 module CompletionMeet = Oni_Model.CompletionMeet;
+
+let makeLine = str =>
+  BufferLine.make(~indentation=IndentationSettings.default, str);
 
 describe("CompletionMeet", ({describe, _}) => {
   describe("createFromLine", ({test, _}) => {
@@ -12,13 +16,21 @@ describe("CompletionMeet", ({describe, _}) => {
 
     test("empty line - no meet", ({expect}) => {
       let result =
-        CompletionMeet.fromLine(~index=Index.zero, ~bufferId=0, "");
+        CompletionMeet.fromLine(
+          ~index=Index.zero,
+          ~bufferId=0,
+          "" |> makeLine,
+        );
       expect.equal(result, None);
     });
 
     test("single character at beginning", ({expect}) => {
       let result =
-        CompletionMeet.fromLine(~index=Index.(zero + 1), ~bufferId=0, "a");
+        CompletionMeet.fromLine(
+          ~index=Index.(zero + 1),
+          ~bufferId=0,
+          "a" |> makeLine,
+        );
 
       let expected =
         CompletionMeet.{location: line0column0, base: "a", bufferId: 0};
@@ -28,7 +40,11 @@ describe("CompletionMeet", ({describe, _}) => {
 
     test("spaces prior to character", ({expect}) => {
       let result =
-        CompletionMeet.fromLine(~index=Index.(zero + 1), ~bufferId=0, " a");
+        CompletionMeet.fromLine(
+          ~index=Index.(zero + 1),
+          ~bufferId=0,
+          " a" |> makeLine,
+        );
 
       let expected =
         CompletionMeet.{location: line0column1, base: "a", bufferId: 0};
@@ -37,7 +53,11 @@ describe("CompletionMeet", ({describe, _}) => {
 
     test("longer base", ({expect}) => {
       let result =
-        CompletionMeet.fromLine(~index=Index.(zero + 4), ~bufferId=0, " abc");
+        CompletionMeet.fromLine(
+          ~index=Index.(zero + 4),
+          ~bufferId=0,
+          " abc" |> makeLine,
+        );
       let expected =
         CompletionMeet.{location: line0column1, base: "abc", bufferId: 0};
       expect.equal(result, Some(expected));
@@ -45,7 +65,11 @@ describe("CompletionMeet", ({describe, _}) => {
 
     test("default trigger character", ({expect}) => {
       let result =
-        CompletionMeet.fromLine(~index=Index.(zero + 1), ~bufferId=0, " .");
+        CompletionMeet.fromLine(
+          ~index=Index.(zero + 1),
+          ~bufferId=0,
+          " ." |> makeLine,
+        );
       let expected =
         CompletionMeet.{location: line0column2, base: "", bufferId: 0};
       expect.equal(result, Some(expected));
@@ -56,7 +80,7 @@ describe("CompletionMeet", ({describe, _}) => {
         CompletionMeet.fromLine(
           ~index=Index.(zero + 10),
           ~bufferId=0,
-          "console.lo",
+          "console.lo" |> makeLine,
         );
       let expected =
         CompletionMeet.{location: line0column8, base: "lo", bufferId: 0};

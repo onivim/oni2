@@ -12,10 +12,16 @@ let indentation = IndentationSettings.default;
 
 let basicColorizer = _ => (Colors.black, Colors.white);
 
+let makeLine = str => BufferLine.make(~indentation, str);
+
 describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("empty string", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("", indentation, basicColorizer);
+      BufferViewTokenizer.tokenize(
+        ~endIndex=0,
+        "" |> makeLine,
+        basicColorizer,
+      );
     expect.int(List.length(result)).toBe(0);
   });
 
@@ -24,7 +30,11 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       let indentation =
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
       let result =
-        BufferViewTokenizer.tokenize("\tabc", indentation, basicColorizer);
+        BufferViewTokenizer.tokenize(
+          ~endIndex=4,
+          "\tabc" |> BufferLine.make(~indentation),
+          basicColorizer,
+        );
 
       let expectedTokens: list(BufferViewTokenizer.t) = [
         {
@@ -51,13 +61,21 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("string with only whitespace", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("   \t", indentation, basicColorizer);
+      BufferViewTokenizer.tokenize(
+        ~endIndex=4,
+        "   \t" |> makeLine,
+        basicColorizer,
+      );
     expect.int(List.length(result)).toBe(2);
   });
 
   test("single word token", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("testWord", indentation, basicColorizer);
+      BufferViewTokenizer.tokenize(
+        ~endIndex=8,
+        "testWord" |> makeLine,
+        basicColorizer,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -76,8 +94,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("single word token, surrounded by whitespace", ({expect}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        "  testWord  ",
-        indentation,
+        ~endIndex=12,
+        "  testWord  " |> makeLine,
         basicColorizer,
       );
 
@@ -113,7 +131,11 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("single letter token, no spaces", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize("a", indentation, basicColorizer);
+      BufferViewTokenizer.tokenize(
+        ~endIndex=1,
+        "a" |> makeLine,
+        basicColorizer,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {
@@ -135,8 +157,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
     let result =
       BufferViewTokenizer.tokenize(
-        "ab",
-        indentation,
+        ~endIndex=2,
+        "ab" |> makeLine,
         differentColorTokenizer,
       );
 
@@ -164,7 +186,11 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("multiple tokens", ({expect}) => {
     let result =
-      BufferViewTokenizer.tokenize(" a btest ", indentation, basicColorizer);
+      BufferViewTokenizer.tokenize(
+        ~endIndex=9,
+        " a btest " |> makeLine,
+        basicColorizer,
+      );
 
     let expectedTokens: list(BufferViewTokenizer.t) = [
       {

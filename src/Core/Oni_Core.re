@@ -5,6 +5,8 @@
  */
 
 module Buffer = Buffer;
+// TODO: Move to own module
+module BufferLine = BufferLine;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
 module CamomileBundled = CamomileBundled;
