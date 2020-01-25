@@ -103,6 +103,9 @@ If you want to develop, or debug, an extension integration, the following tips m
 
 There is a development extension in `src/development_extensions/oni-dev-extension` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
 
+#### Resources
+- [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api)
+
 ### Intrumenting extensions
 
 To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
@@ -135,6 +138,9 @@ Results in this debug logging:
 
 ![image](https://user-images.githubusercontent.com/13532591/72770839-ed9e9800-3bb3-11ea-9cb9-317223fb2dbb.png)
 
+#### Protocol
+
+The extension host protocol is defined in [extHost.protocol.ts](https://github.com/onivim/vscode-exthost/blob/master/src/vs/workbench/api/node/extHost.protocol.ts). Interfaces prefixed with `MainThread` refer to messages sent from the extension host to the "main thread", which in our case is Oni2. While interfaces prefixed with `ExtHost` refer to messages sent _to_ the extension host.
 
 # Building the Documentation Website
 
