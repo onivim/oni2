@@ -8,6 +8,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Syntax;
 
+module Log = (val Log.withNamespace("Oni2.Store.Theme"));
+
 let configurationWatcher =
     (configurationSelector: ConfigurationValues.t => 'a, f) => {
   let oldValue: ref(option('a)) = ref(None);
@@ -44,7 +46,7 @@ let start = (themeInfo: ThemeInfo.t) => {
   Log.info(ThemeInfo.show(themeInfo));
 
   let loadThemeByPath = (uiTheme, themePath, dispatch) => {
-    Log.perf("theme.load", () => {
+    Oni_Core.Log.perf("theme.load", () => {
       let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
       let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
       let colors = Textmate.Theme.getColors(theme);

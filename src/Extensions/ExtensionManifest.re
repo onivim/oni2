@@ -3,8 +3,6 @@
  *
  * Module to describing metadata about an extension
  */
-module Option = Oni_Core.Utility.Option;
-
 open Oni_Core.Utility;
 module Path = Rench.Path;
 
@@ -30,7 +28,8 @@ module Author = {
       );
 
   let of_yojson = json =>
-    tryToResult(~msg="Error parsing author", () => of_yojson_exn(json));
+    ResultEx.guard(() => of_yojson_exn(json))
+    |> Result.map_error(_ => "Error parsing author");
 
   let to_yojson = _author => `Null;
 };
@@ -58,6 +57,7 @@ type t = {
   extensionPack: [@default []] list(string),
   extensionKind: [@default Ui] ExtensionKind.t,
   contributes: ExtensionContributions.t,
+  enableProposedApi: [@default false] bool,
 };
 
 let getDisplayName = (manifest: t) => {
@@ -68,7 +68,7 @@ let getDisplayName = (manifest: t) => {
 
 let getAuthor = manifest => {
   manifest.author
-  |> Option.fallback(() => manifest.publisher)
+  |> OptionEx.or_(manifest.publisher)
   |> Option.value(~default="Unknown Author");
 };
 

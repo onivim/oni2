@@ -3,6 +3,7 @@
  *
  * Configuration settings for the editor
  */
+open Kernel;
 
 type t = {
   default: ConfigurationValues.t,

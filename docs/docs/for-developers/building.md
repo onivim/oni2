@@ -10,9 +10,25 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.5.6__ is required)
+- Install [Esy](https://esy.sh) (__0.6.0__ is required)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
-- [Check and install any system packages for Revery](https://github.com/revery-ui/revery/wiki/Building-&-Installing)
+- Install any other system packages required by Oni2 dependencies, as outlined below.
+
+## Dependencies
+
+### Windows, macOS
+
+There should be no required system dependencies, outside of `git`, `node` and `esy` and the
+ones outlined in the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
+
+### Linux
+
+Like the other platforms, `git`, `node` and `esy` are required, as well as any outlined in
+the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
+
+Some Linux distributions may need other packages:
+
+ - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
 
 ## Build and Run
 
@@ -31,6 +47,7 @@ esy build
 ### Install node dependencies
 
 ```sh
+npm install -g node-gyp
 node install-node-deps.js
 ```
 
@@ -76,6 +93,54 @@ Once you have a release build created, you can create an `oni2` symlink to point
 
 Run the following from the `oni2` directory:
 - `./scripts/osx/create-symlink.sh`
+
+
+## Extension Integration
+
+If you want to develop, or debug, an extension integration, the following tips may help:
+
+### Testing with oni-dev-extenion
+
+There is a development extension in `src/development_extensions/oni-dev-extension` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
+
+#### Resources
+- [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api)
+
+### Intrumenting extensions
+
+To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
+
+Both the oni-dev-extension and any other extension can be instrumented, as they're usually included in non-minified form.
+
+### Extension host
+
+If there's a problem in-between Oni2 and the extension, it can be helpful to build and instrument your own copy of the extension host.
+
+#### Building
+
+- Navigate to your home directory (ie, `cd ~` on Linux / OSX, or `cd /` on Windows)
+- `git clone https://github.com/onivim/vscode-exthost`
+- `yarn install`
+- `yarn compile`
+
+You can use the `yarn watch` command too - this is useful for iterating quickly!
+
+#### Testing
+
+You can use the `ONI2_EXTHOST` environment variable to override the default extension host with your local extension host:
+- `ONI2_EXTHOST=/Users/<your-username>/vscode-exthost esy run -f --debug``
+
+For example, adding the logging here (the [`$executeContributedCommand`](https://github.com/onivim/vscode-exthost/blob/a25f426a04fe427beab7465be660f89a794605b5/src/vs/workbench/api/node/extHostCommands.ts#L165) proxy method)
+
+![image](https://user-images.githubusercontent.com/13532591/72770589-3013a500-3bb3-11ea-9c24-805bfe1cb7d1.png)
+
+Results in this debug logging:
+
+![image](https://user-images.githubusercontent.com/13532591/72770839-ed9e9800-3bb3-11ea-9cb9-317223fb2dbb.png)
+
+#### Protocol
+
+The extension host protocol is defined in [extHost.protocol.ts](https://github.com/onivim/vscode-exthost/blob/master/src/vs/workbench/api/node/extHost.protocol.ts). Interfaces prefixed with `MainThread` refer to messages sent from the extension host to the "main thread", which in our case is Oni2. While interfaces prefixed with `ExtHost` refer to messages sent _to_ the extension host.
 
 # Building the Documentation Website
 

@@ -3,6 +3,8 @@ open TestFramework;
 open Oni_Core.Utility;
 
 describe("last", ({test, _}) => {
+  open ListEx;
+
   test("empty", ({expect}) =>
     expect.bool(last([]) == None).toBe(true)
   );
@@ -17,6 +19,8 @@ describe("last", ({test, _}) => {
 });
 
 describe("dropLast", ({test, _}) => {
+  open ListEx;
+
   test("empty", ({expect}) =>
     expect.list(dropLast([])).toEqual([])
   );
@@ -83,8 +87,8 @@ describe("JsonUtil", ({describe, _}) => {
   });
 });
 
-describe("StringUtil", ({describe, _}) => {
-  open StringUtil;
+describe("StringEx", ({describe, _}) => {
+  open StringEx;
 
   describe("trimLeft", ({test, _}) => {
     test("empty", ({expect}) =>
@@ -325,7 +329,8 @@ describe("ListEx.safeConcat", ({test, _}) => {
   });
 });
 
-let testQueue = (describe: Rely.Describe.describeFn(_), module Queue: Queue) => {
+let testQueue =
+    (describe: Rely.Describe.describeFn(_), module Queue: Queue.S) => {
   describe("length", ({test, _}) => {
     test("empty", ({expect}) => {
       let q = Queue.empty;

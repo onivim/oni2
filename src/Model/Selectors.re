@@ -50,7 +50,7 @@ let getActiveBuffer = (state: State.t) => {
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)
-    |> Option.bind(buf =>
+    |> OptionEx.flatMap(buf =>
          Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
        )
     |> Option.iter(((buf, ft)) => f(buf, ft));

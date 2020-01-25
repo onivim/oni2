@@ -1,0 +1,200 @@
+/*
+ * FlatList.re
+ *
+ * Virtualized list helper
+ */
+open Oni_Core;
+open Utility;
+
+open Revery;
+open Revery.UI;
+open Revery_UI_Components;
+
+module Constants = {
+  let scrollWheelMultiplier = 25;
+  let additionalRowsToRender = 1;
+  let scrollBarThickness = 6;
+  let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
+  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
+};
+
+module Styles = {
+  open Style;
+
+  let container = (~isHeightEstimated, ~height) => [
+    position(`Relative),
+    top(0),
+    left(0),
+    isHeightEstimated ? bottom(0) : Style.height(height),
+    overflow(`Hidden),
+    flexGrow(1),
+  ];
+
+  let slider = [
+    position(`Absolute),
+    right(0),
+    top(0),
+    bottom(0),
+    width(Constants.scrollBarThickness),
+  ];
+
+  let viewport = (~isScrollbarVisible) => [
+    position(`Absolute),
+    top(0),
+    left(0),
+    bottom(0),
+    right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
+  ];
+
+  let item = (~offset, ~rowHeight) => [
+    position(`Absolute),
+    top(offset),
+    left(0),
+    right(0),
+    height(rowHeight),
+  ];
+};
+
+let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
+  if (rowHeight <= 0) {
+    [];
+  } else {
+    let startRow = scrollTop / rowHeight;
+    let startY = scrollTop mod rowHeight;
+    let rowsToRender =
+      menuHeight
+      / rowHeight
+      + Constants.additionalRowsToRender
+      |> IntEx.clamp(~lo=0, ~hi=count - startRow);
+    let indicesToRender = List.init(rowsToRender, i => i + startRow);
+
+    let itemView = i => {
+      let rowY = (i - startRow) * rowHeight;
+      let offset = rowY - startY;
+
+      <View style={Styles.item(~offset, ~rowHeight)}>
+        {renderItem(i)}
+      </View>;
+    };
+
+    indicesToRender |> List.map(itemView) |> List.rev;
+  };
+
+type action =
+  | FocusedChanged
+  | SetScrollTop(int);
+
+let%component make =
+              (
+                ~rowHeight: int,
+                ~initialRowsToRender=20,
+                ~children as renderItem: int => React.element(React.node),
+                ~count: int,
+                ~focused: option(int),
+                ~ref as onRef=_ => (),
+                (),
+              ) => {
+  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+  let setOuterRef = ref => {
+    setOuterRef(Some(ref));
+    onRef(ref);
+  };
+
+  let menuHeight =
+    switch (outerRef) {
+    | Some(node) =>
+      let dimensions: Dimensions.t = node#measurements();
+      dimensions.height;
+    | None => rowHeight * initialRowsToRender
+    };
+
+  let reducer = (action, actualScrollTop) =>
+    switch (action) {
+    | FocusedChanged =>
+      let offset = Option.value(focused, ~default=0) * rowHeight;
+      if (offset < actualScrollTop) {
+        // out of view above, so align with top edge
+        offset;
+      } else if (offset + rowHeight > actualScrollTop + menuHeight) {
+        // out of view below, so align with bottom edge
+        offset + rowHeight - menuHeight;
+      } else {
+        actualScrollTop;
+      };
+    | SetScrollTop(scrollTop) => scrollTop
+    };
+
+  let%hook (actualScrollTop, dispatch) =
+    Hooks.reducer(~initialState=0, reducer);
+
+  // Make sure we're not scrolled past the items
+  let actualScrollTop =
+    actualScrollTop |> IntEx.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
+
+  let%hook () =
+    Hooks.effect(
+      If((!=), focused),
+      () => {
+        dispatch(FocusedChanged);
+        None;
+      },
+    );
+
+  let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+    let delta =
+      int_of_float(wheelEvent.deltaY) * (- Constants.scrollWheelMultiplier);
+
+    dispatch(SetScrollTop(actualScrollTop + delta));
+  };
+
+  let scrollbar = {
+    let maxHeight = count * rowHeight - menuHeight;
+    let thumbHeight = menuHeight * menuHeight / max(1, count * rowHeight);
+    let isVisible = maxHeight > 0;
+
+    if (isVisible) {
+      <View style=Styles.slider>
+        <Slider
+          onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
+          minimumValue=0.
+          maximumValue={float_of_int(maxHeight)}
+          sliderLength=menuHeight
+          thumbLength=thumbHeight
+          value={float_of_int(actualScrollTop)}
+          trackThickness=Constants.scrollBarThickness
+          thumbThickness=Constants.scrollBarThickness
+          minimumTrackColor=Constants.scrollTrackColor
+          maximumTrackColor=Constants.scrollTrackColor
+          thumbColor=Constants.scrollThumbColor
+          vertical=true
+        />
+      </View>;
+    } else {
+      React.empty;
+    };
+  };
+
+  let items =
+    render(
+      ~menuHeight,
+      ~rowHeight,
+      ~count,
+      ~scrollTop=actualScrollTop,
+      ~renderItem,
+    )
+    |> React.listToElement;
+
+  <View
+    style={Styles.container(
+      ~isHeightEstimated=outerRef == None,
+      ~height=min(menuHeight, count * rowHeight),
+    )}
+    ref=setOuterRef
+    onMouseWheel=scroll>
+    <View
+      style={Styles.viewport(~isScrollbarVisible=scrollbar == React.empty)}>
+      items
+    </View>
+    scrollbar
+  </View>;
+};

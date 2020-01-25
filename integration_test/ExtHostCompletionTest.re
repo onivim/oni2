@@ -33,9 +33,8 @@ runTestWithInput(
     ~name="Wait for oni-dev filetype to show up",
     (state: State.t) => {
       let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
+        Selectors.getActiveBuffer(state)
+        |> OptionEx.flatMap(Buffer.getFileType);
 
       switch (fileType) {
       | Some("oni-dev") => true

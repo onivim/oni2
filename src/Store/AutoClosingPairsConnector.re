@@ -9,7 +9,7 @@ module Core = Oni_Core;
 module Ext = Oni_Extensions;
 module Model = Oni_Model;
 
-module Log = Core.Log;
+module Log = (val Core.Log.withNamespace("Oni2.Store.AutoClosingPairs"));
 
 let start = (languageInfo: Ext.LanguageInfo.t) => {
   ignore(languageInfo);
@@ -25,7 +25,7 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
         );
       if (autoClosingPairsEnabled^ != acp) {
         autoClosingPairsEnabled := acp;
-        Log.info("AutoClosingPairs: Setting to " ++ string_of_bool(acp));
+        Log.debugf(m => m("AutoClosingPairs: Setting to %b", acp));
 
         switch (acp) {
         | false => Vim.Options.setAutoClosingPairs(false)

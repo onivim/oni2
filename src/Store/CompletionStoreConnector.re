@@ -7,13 +7,10 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 open Actions;
 
-module Option = Utility.Option;
-module VimEx = Utility.VimEx;
-module IndexEx = Utility.IndexEx;
-
-module Log = (val Log.withNamespace("Oni2.CompletionStore"));
+module Log = (val Log.withNamespace("Oni2.Store.Completions"));
 
 module Effects = {
   let requestCompletions =
@@ -76,17 +73,13 @@ module Actions = {
     let maybeEditor =
       state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
     let maybeBuffer =
-      Option.bind(
-        editor => Buffers.getBuffer(editor.bufferId, state.buffers),
-        maybeEditor,
+      Option.bind(maybeEditor, editor =>
+        Buffers.getBuffer(editor.bufferId, state.buffers)
       );
     let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
     let maybeMeet =
-      Option.bind2(
-        (location, buffer) =>
-          CompletionMeet.fromBufferLocation(~location, buffer),
-        maybeCursor,
-        maybeBuffer,
+      OptionEx.bind2(maybeCursor, maybeBuffer, (location, buffer) =>
+        CompletionMeet.fromBufferLocation(~location, buffer)
       );
 
     switch (maybeBuffer, maybeMeet) {

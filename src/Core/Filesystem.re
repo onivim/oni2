@@ -6,6 +6,8 @@
 
    reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
  */
+module Path = Utility.Path;
+
 type t('a) = result('a, string);
 
 /** [on_success] executes [f] unless we already hit an error. In
@@ -221,8 +223,8 @@ let unsafeFindHome = () =>
 let getOniDirectory = home =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows => Utility.join([home, "Oni2"]) |> return
-    | _ => Utility.join([home, ".config", "oni2"]) |> return
+    | Environment.Windows => Path.join([home, "Oni2"]) |> return
+    | _ => Path.join([home, ".config", "oni2"]) |> return
     }
   );
 
@@ -288,7 +290,7 @@ let copy = (source, dest) =>
   );
 
 let createOniConfiguration = (~configDir, ~file) => {
-  let userConfigPath = Utility.join([configDir, file]);
+  let userConfigPath = Path.join([configDir, file]);
 
   let configFile = open_out(userConfigPath);
   let configString = ConfigurationDefaults.getDefaultConfigString(file);
@@ -305,10 +307,10 @@ let createOniConfiguration = (~configDir, ~file) => {
   };
 };
 
-let getPath = (dir, file) => return(Utility.join([dir, file]));
+let getPath = (dir, file) => return(Path.join([dir, file]));
 
 let createConfigIfNecessary = (configDir, file) =>
-  Utility.join([configDir, file])
+  Path.join([configDir, file])
   |> (
     configPath =>
       stat(configDir)

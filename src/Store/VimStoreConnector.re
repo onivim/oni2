@@ -7,15 +7,45 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Option = Core.Utility.Option;
-
 open Oni_Model;
+
+module Core = Oni_Core;
+open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
 
-module Log = (val Core.Log.withNamespace("Oni2.VimStore"));
+module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
+
+type commandLineCompletionMeet = {
+  prefix: string,
+  position: int,
+};
+
+let getCommandLineCompletionsMeet = (str: string, position: int) => {
+  let len = String.length(str);
+
+  if (len == 0 || position < len) {
+    None;
+  } else {
+    /* Look backwards for '/' or ' ' */
+    let found = ref(false);
+    let meet = ref(position);
+
+    while (meet^ > 0 && ! found^) {
+      let pos = meet^ - 1;
+      let c = str.[pos];
+      if (c == ' ') {
+        found := true;
+      } else {
+        decr(meet);
+      };
+    };
+
+    let pos = meet^;
+    Some({prefix: String.sub(str, pos, len - pos), position: pos});
+  };
+};
 
 let start =
     (
@@ -66,7 +96,7 @@ let start =
 
   let _ =
     Vim.onGoto((_position, _definitionType) => {
-      Log.info("Goto definition requested");
+      Log.debug("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
@@ -87,8 +117,8 @@ let start =
            });
       };
 
-      Option.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> Option.flatten
+      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.join
       |> Option.iter(action => dispatch(action));
     });
 
@@ -112,7 +142,7 @@ let start =
     );
 
   let _ =
-    Vim.onMessage((priority, t, msg) => {
+    Vim.onMessage((priority, title, msg) => {
       open Vim.Types;
       let (priorityString, kind) =
         switch (priority) {
@@ -121,7 +151,7 @@ let start =
         | Info => ("INFO", Notification.Info)
         };
 
-      Log.infof(m => m("Message - %s [%s]: %s", priorityString, t, msg));
+      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, title, msg));
 
       dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
@@ -150,7 +180,7 @@ let start =
 
   let _ =
     Vim.Buffer.onFilenameChanged(meta => {
-      Log.infof(m => m("Buffer metadata changed: %n", meta.id));
+      Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
         ...meta,
         /*
@@ -172,7 +202,7 @@ let start =
 
   let _ =
     Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.infof(m => m("Buffer metadata changed: %n | %b", id, modified));
+      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
 
@@ -245,7 +275,7 @@ let start =
         | v => v
         };
 
-      Log.info("Vim.Window.onSplit: " ++ buf);
+      Log.trace("Vim.Window.onSplit: " ++ buf);
 
       let command =
         switch (splitType) {
@@ -260,7 +290,7 @@ let start =
 
   let _ =
     Vim.Window.onMovement((movementType, _count) => {
-      Log.info("Vim.Window.onMovement");
+      Log.trace("Vim.Window.onMovement");
       let currentState = getState();
 
       let move = moveFunc => {
@@ -315,7 +345,7 @@ let start =
   let _ =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
-      Log.infof(m => m("Vim - Buffer update: %n", update.id));
+      Log.debugf(m => m("Buffer update: %n", update.id));
       open State;
 
       let isFull = update.endLine == (-1);
@@ -360,10 +390,7 @@ let start =
       if (shouldApply) {
         dispatch(Actions.BufferUpdate(bu));
       } else {
-        Log.info(
-          "Skipped buffer update at version: "
-          ++ string_of_int(update.version),
-        );
+        Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
     });
 
@@ -376,14 +403,12 @@ let start =
   let isCompleting = ref(false);
 
   let checkCommandLineCompletions = () => {
-    Log.info("checkCommandLineCompletions");
+    Log.debug("checkCommandLineCompletions");
+
     let completions = Vim.CommandLine.getCompletions();
-    Log.infof(m =>
-      m(
-        "checkCommandLineCompletions - got %n completions.",
-        Array.length(completions),
-      )
-    );
+
+    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+
     let items =
       Array.map(
         name =>
@@ -396,6 +421,7 @@ let start =
           },
         completions,
       );
+
     dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 
@@ -412,7 +438,7 @@ let start =
           | None => ""
           };
         let position = Vim.CommandLine.getPosition();
-        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        let meet = getCommandLineCompletionsMeet(text, position);
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
@@ -488,7 +514,7 @@ let start =
 
         let () =
           editor
-          |> Core.Utility.Option.iter(e => {
+          |> Option.iter(e => {
                let () =
                  getState()
                  |> Selectors.getActiveEditorGroup
@@ -576,30 +602,28 @@ let start =
 
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
-      Core.Utility.(
-        switch (lastCompletionMeet^) {
-        | None => ()
-        | Some({position, _}) =>
-          isCompleting := true;
-          let currentPos = ref(Vim.CommandLine.getPosition());
-          while (currentPos^ > position) {
-            let _ = Vim.input(~cursors=[], "<bs>");
-            currentPos := Vim.CommandLine.getPosition();
-          };
+      switch (lastCompletionMeet^) {
+      | None => ()
+      | Some({position, _}) =>
+        isCompleting := true;
+        let currentPos = ref(Vim.CommandLine.getPosition());
+        while (currentPos^ > position) {
+          let _ = Vim.input(~cursors=[], "<bs>");
+          currentPos := Vim.CommandLine.getPosition();
+        };
 
-          let completion = Core.Utility.trimTrailingSlash(completion);
-          let latestCursors = ref([]);
-          String.iter(
-            c => {
-              latestCursors := Vim.input(~cursors=[], String.make(1, c));
-              ();
-            },
-            completion,
-          );
-          updateActiveEditorCursors(latestCursors^);
-          isCompleting := false;
-        }
-      )
+        let completion = Path.trimTrailingSeparator(completion);
+        let latestCursors = ref([]);
+        String.iter(
+          c => {
+            latestCursors := Vim.input(~cursors=[], String.make(1, c));
+            ();
+          },
+          completion,
+        );
+        updateActiveEditorCursors(latestCursors^);
+        isCompleting := false;
+      }
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>

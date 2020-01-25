@@ -16,8 +16,6 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-module Log = Core.Log;
-
 let start =
     (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -112,8 +110,8 @@ let start =
     let getScopeForBuffer = (state: Model.State.t, id: int) => {
       state.buffers
       |> Model.Buffers.getBuffer(id)
-      |> Option.bind(buf => Core.Buffer.getFileType(buf))
-      |> Option.bind(fileType =>
+      |> OptionEx.flatMap(buf => Core.Buffer.getFileType(buf))
+      |> OptionEx.flatMap(fileType =>
            Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
          );
     };

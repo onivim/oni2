@@ -11,11 +11,12 @@ open Revery.UI.Components;
 
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
 open Oni_Model.StatusBarModel;
 
-module Option = Utility.Option;
 module Animation = Revery.UI.Animation;
+module ContextMenu = Oni_Components.ContextMenu;
 
 let useExpiration = (~equals=(==), ~expireAfter, items) => {
   let%hook (active, setActive) = Hooks.state([]);
@@ -203,6 +204,14 @@ module Styles = {
     Style.color(color),
     backgroundColor(background),
   ];
+
+  let textBold = (~color, ~background, font: UiFont.t) => [
+    fontFamily(font.fontFileSemiBold),
+    fontSize(11),
+    textWrap(TextWrapping.NoWrap),
+    Style.color(color),
+    backgroundColor(background),
+  ];
 };
 
 let positionToString =
@@ -222,12 +231,20 @@ let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
 
 let item =
-    (~children, ~backgroundColor=Colors.transparentWhite, ~onClick=?, ()) => {
+    (
+      ~children,
+      ~backgroundColor=Colors.transparentWhite,
+      ~onClick=?,
+      ~onRightClick=?,
+      (),
+    ) => {
   let style = Styles.item(backgroundColor);
 
-  switch (onClick) {
-  | Some(onClick) => <Clickable onClick style> children </Clickable>
-  | None => <View style> children </View>
+  // Avoid cursor turning into pointer if there's no mouse interaction available
+  if (onClick == None && onRightClick == None) {
+    <View style> children </View>;
+  } else {
+    <Clickable ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
@@ -240,15 +257,33 @@ let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
   </item>;
 
 let notificationCount =
-    (~font, ~foreground as color, ~background, ~notifications, ()) => {
+    (
+      ~font,
+      ~foreground as color,
+      ~background,
+      ~notifications,
+      ~contextMenu,
+      ~onContextMenuUpdate,
+      (),
+    ) => {
   let text = notifications |> List.length |> string_of_int;
 
   let onClick = () =>
     GlobalContext.current().dispatch(
       Actions.StatusBar(NotificationCountClicked),
     );
+  let onRightClick = () =>
+    GlobalContext.current().dispatch(
+      Actions.StatusBar(NotificationsContextMenu),
+    );
 
-  <item onClick>
+  <item onClick onRightClick>
+    <Notifications.ContextMenu.Anchor
+      orientation=(`Top, `Left)
+      offsetX=(-10) // correct for item padding
+      model=contextMenu
+      onUpdate=onContextMenuUpdate
+    />
     <View
       style=Style.[
         flexDirection(`Row),
@@ -296,7 +331,7 @@ let modeIndicator = (~font, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background, font)}
+      style={Styles.textBold(~color=foreground, ~background, font)}
       text={Vim.Mode.show(mode)}
     />
   </item>;
@@ -307,7 +342,13 @@ let transitionAnimation =
     animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
   );
 
-let%component make = (~state: State.t, ()) => {
+let%component make =
+              (
+                ~state: State.t,
+                ~contextMenu: option(ContextMenu.t(Actions.t)),
+                ~onContextMenuUpdate,
+                (),
+              ) => {
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
 
   let%hook activeNotifications =
@@ -366,7 +407,7 @@ let%component make = (~state: State.t, ()) => {
     let text =
       state
       |> Selectors.getActiveBuffer
-      |> Option.bind(Buffer.getFileType)
+      |> OptionEx.flatMap(Buffer.getFileType)
       |> Option.value(~default="plaintext");
 
     <textItem font background theme text />;
@@ -391,7 +432,14 @@ let%component make = (~state: State.t, ()) => {
 
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
-      <notificationCount font foreground background notifications />
+      <notificationCount
+        font
+        foreground
+        background
+        notifications
+        contextMenu
+        onContextMenuUpdate
+      />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>

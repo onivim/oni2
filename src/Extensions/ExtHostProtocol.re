@@ -312,7 +312,7 @@ module DiagnosticsCollection = {
       let perFileDiagnostics =
         perFileDiagnostics
         |> List.map(Diagnostics.of_yojson)
-        |> List.filter_map(Utility.resultToOption);
+        |> List.filter_map(Result.to_option);
       Some({name, perFileDiagnostics});
     | _ => None
     };
@@ -352,7 +352,7 @@ module Suggestions = {
       let result =
         suggestions
         |> List.map(SuggestionItem.of_yojson)
-        |> List.map(resultToOption)
+        |> List.map(Result.to_option)
         |> List.filter_map(v => v);
       Ok(result);
     | _ => Error("Unable to parse Suggestions")

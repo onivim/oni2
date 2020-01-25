@@ -1,6 +1,6 @@
-open Utility;
+open Kernel;
 
-module Log = (val Log.withNamespace("Oni2.ShellUtility"));
+module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
   let getDefaultShell = () => {
@@ -10,15 +10,17 @@ module Internal = {
     };
   };
 
-  let getShellFromPath = () => {
-    Sys.getenv_opt("PATH")
-    |> Option.tap_none(() => Log.error("Unable to get PATH!"))
-    |> Option.value(~default="");
-  };
+  let getShellFromPath = () =>
+    switch (Sys.getenv_opt("PATH")) {
+    | Some(path) => path
+    | None =>
+      Log.error("Unable to get PATH!");
+      "";
+    };
 };
 
 let getShellPath = () => {
-  let res =
+  let path =
     switch (Revery.Environment.os) {
     | Mac =>
       let shell = Internal.getDefaultShell();
@@ -32,12 +34,12 @@ let getShellPath = () => {
         path;
       }) {
       | ex =>
-        Log.error("Unable to retrive path: " ++ Printexc.to_string(ex));
+        Log.warn("Unable to retrive path: " ++ Printexc.to_string(ex));
         Internal.getShellFromPath();
       };
     | _ => Internal.getShellFromPath()
     };
 
-  Log.info("Path is: " ++ res);
-  res;
+  Log.debug("Path detected as: " ++ path);
+  path;
 };

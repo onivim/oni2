@@ -5,11 +5,10 @@
  */
 
 open Oni_Core;
+open Utility;
 open Rench;
 
-module Option = Oni_Core.Utility.Option;
-
-module Log = (val Log.withNamespace("Oni2.ExtensionScanner"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionScanner"));
 
 type category =
   | Default
@@ -40,41 +39,35 @@ let _getLocalizations = path =>
   };
 
 let scan = (~prefix=None, ~category, directory: string) => {
-  let items = Sys.readdir(directory) |> Array.to_list;
-
-  let isDirectory = Sys.is_directory;
-
-  let fullDirectory = d => Path.join(directory, d);
-  let packageManifestPath = d => Path.join(d, "package.json");
-
-  let loadPackageJson = pkg => {
+  let loadManifest = pkg => {
     let json = Yojson.Safe.from_file(pkg);
-    let path = Path.dirname(pkg);
+    let directory = Path.dirname(pkg);
+    let nlsPath = Path.join(directory, "package.nls.json");
 
-    let localizationJsonPath = Path.join(path, "package.nls.json");
+    let localize = {
+      let dict = _getLocalizations(nlsPath);
 
-    let locDic = _getLocalizations(localizationJsonPath);
-    Log.infof(m =>
-      m(
-        "Loaded %d localizations from %s",
-        LocalizationDictionary.count(locDic),
-        localizationJsonPath,
-      )
-    );
+      Log.infof(m => {
+        let count = LocalizationDictionary.count(dict);
+        m("Loaded %d localizations from %s", count, nlsPath);
+      });
+
+      ExtensionManifest.localize(dict);
+    };
 
     try({
       let manifest =
         json
         |> ExtensionManifest.of_yojson_exn
-        |> remapManifest(path)
-        |> ExtensionManifest.updateName(prevName =>
+        |> remapManifest(directory)
+        |> ExtensionManifest.updateName(name =>
              prefix
-             |> Option.map(somePrefix => somePrefix ++ "." ++ prevName)
-             |> Option.value(~default=prevName)
+             |> Option.map(prefix => prefix ++ "." ++ name)
+             |> Option.value(~default=name)
            )
-        |> ExtensionManifest.localize(locDic);
+        |> localize;
 
-      Some({category, manifest, path});
+      Some({category, manifest, path: directory});
     }) {
     | ex =>
       Log.errorf(m =>
@@ -84,11 +77,12 @@ let scan = (~prefix=None, ~category, directory: string) => {
     };
   };
 
-  items
-  |> List.map(fullDirectory)
-  |> List.filter(isDirectory)
-  |> List.map(packageManifestPath)
+  Sys.readdir(directory)
+  |> Array.to_list
+  |> List.map(Path.join(directory))
+  |> List.filter(Sys.is_directory)
+  |> List.map(dir => Path.join(dir, "package.json"))
   |> List.filter(Sys.file_exists)
-  |> List.map(loadPackageJson)
-  |> Utility.List.filter_map(Utility.identity);
+  |> List.map(loadManifest)
+  |> OptionEx.values;
 };

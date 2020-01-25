@@ -4,6 +4,10 @@
 # https://aka.ms/yaml
 
 name: $(Build.SourceVersion)
+
+variables:
+  esy__ci_cache_version: v1
+
 jobs:
 - job: Kickoff
   displayName: "Kickoff"
@@ -51,7 +55,7 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: sudo apt-get update
-  - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev
+  - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
@@ -110,7 +114,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
-  timeoutInMinutes: 90
+  timeoutInMinutes: 150
   pool:
     vmImage: 'vs2017-win2016'
 
@@ -121,6 +125,9 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
+  - powershell: Write-Host "HOME DIRECTORY $env:HOME_DIRECTORY"
+    env:
+      HOME_DIRECTORY: $(Agent.HomeDirectory)
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
@@ -216,4 +223,4 @@ jobs:
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
       Oni2.exe -f --no-log-colors --checkhealth
-    displayName: "Oni2.exe - run installed"
+    displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"

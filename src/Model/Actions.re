@@ -10,6 +10,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
 
 [@deriving show({with_path: false})]
 type t =
@@ -55,6 +56,9 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
+  | ContextMenuOverlayClicked
+  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
@@ -80,6 +84,7 @@ type t =
   | EditorScrollToColumn(EditorId.t, int)
   | ShowNotification(Notification.t)
   | HideNotification(Notification.t)
+  | ClearNotifications
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -120,15 +125,18 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SCM(SCM.msg)
   | SearchStart
   | SearchHotkey
-  | SearchInput(string)
-  | SearchInputClicked(int)
-  | SearchUpdate([@opaque] list(Ripgrep.Match.t))
-  | SearchComplete
+  | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
   | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
+  | WindowCloseBlocked
+  | WindowCloseDiscardConfirmed
+  | WindowCloseSaveAllConfirmed
+  | WindowCloseCanceled
+  | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | Noop

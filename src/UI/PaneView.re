@@ -1,14 +1,7 @@
 open Revery.UI;
 open Oni_Core;
-
-module Model = Oni_Model;
-module Actions = Model.Actions;
-module Focus = Model.Focus;
-module FocusManager = Model.FocusManager;
-module Pane = Model.Pane;
-module State = Model.State;
-
-module Option = Utility.Option;
+open Oni_Model;
+open Utility;
 
 let paneTabHeight = 25;
 
@@ -38,13 +31,23 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) => {
        let childPane =
          switch (paneType) {
          | Pane.Search =>
-           <SearchPane
+           let onSelectResult = (file, location) =>
+             GlobalContext.current().dispatch(
+               Actions.OpenFileByPath(file, None, Some(location)),
+             );
+           let dispatch = msg =>
+             GlobalContext.current().dispatch(Actions.Search(msg));
+
+           <Feature_Search
              isFocused={FocusManager.current(state) == Focus.Search}
              theme
              uiFont
              editorFont
-             state={state.searchPane}
-           />
+             model={state.searchPane}
+             onSelectResult
+             dispatch
+           />;
+
          | Pane.Diagnostics => <DiagnosticsPane state />
          | Pane.Notifications => <NotificationsPane state />
          };

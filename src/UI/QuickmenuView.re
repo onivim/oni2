@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module Constants = {
   let menuWidth = 400;
@@ -32,7 +33,7 @@ module Styles = {
   let menuItem = [fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
   let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
-    fontFamily(font.fontFile),
+    fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
     fontSize(12),
     backgroundColor(
@@ -60,31 +61,36 @@ let onInputClicked = cursorPosition =>
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
-let progressBar = (~progress=?, ~theme, ()) => {
-  let indicatorWidth = 100.;
-  let menuWidth = float_of_int(Constants.menuWidth);
-  let trackWidth = menuWidth +. indicatorWidth;
-  <AnimatedView duration=1.5 repeat=true>
-    ...{t => {
-      let (width, offset) =
-        switch (progress) {
-        | Some(progress) =>
-          // Determinate
-          (int_of_float(menuWidth *. progress), 0.)
+let progressBar = (~progress, ~theme, ()) => {
+  let indicator = () => {
+    let width = int_of_float(float(Constants.menuWidth) *. progress);
+    let offset = 0.;
 
-        | None =>
-          // Indeterminate
-          (
-            int_of_float(indicatorWidth),
-            trackWidth *. Easing.easeInOut(t) -. indicatorWidth,
-          )
-        };
+    <View style={Styles.progressBarIndicator(~width, ~offset, ~theme)} />;
+  };
 
-      <View style=Styles.progressBarTrack>
-        <View style={Styles.progressBarIndicator(~width, ~offset, ~theme)} />
-      </View>;
-    }}
-  </AnimatedView>;
+  <View style=Styles.progressBarTrack> <indicator /> </View>;
+};
+
+let%component busyBar = (~theme, ()) => {
+  let%hook (time, _, _) =
+    Animation.(
+      animate(Time.ms(1500))
+      |> ease(Easing.easeInOut)
+      |> repeat
+      |> tween(0., 1.)
+      |> Hooks.animation
+    );
+
+  let indicator = () => {
+    let width = 100;
+    let trackWidth = float(Constants.menuWidth + width);
+    let offset = trackWidth *. Easing.easeInOut(time) -. float(width);
+
+    <View style={Styles.progressBarIndicator(~width, ~offset, ~theme)} />;
+  };
+
+  <View style=Styles.progressBarTrack> <indicator /> </View>;
 };
 
 let make =
@@ -150,7 +156,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <OniInput
+      <Input
         placeholder
         ?prefix
         cursorColor=Colors.white
@@ -168,9 +174,9 @@ let make =
         ...renderItem
       </FlatList>
       {switch (progress) {
-       | Complete => React.empty
+       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
        | InProgress(progress) => <progressBar progress theme />
-       | Loading => <progressBar theme />
+       | Loading => <busyBar theme />
        }}
     </View>;
 

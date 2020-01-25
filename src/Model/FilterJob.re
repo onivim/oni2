@@ -3,6 +3,7 @@
      items across multiple frames.
    */
 open Oni_Core;
+open Utility;
 
 module Constants = {
   let itemsPerFrame = 250;
@@ -19,7 +20,7 @@ module Make = (Config: Config) => {
   open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
-  module Queue = Utility.ChunkyQueue;
+  module Queue = ChunkyQueue;
 
   let format = (item, ~shouldLower) => {
     let s = Config.format(item);
@@ -80,7 +81,7 @@ module Make = (Config: Config) => {
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = Utility.firstk(Constants.maxItemsToFilter, filtered);
+    let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
 
     // If the new query matches the old one... we can re-use results
     if (pending.filter != ""
@@ -162,7 +163,7 @@ module Make = (Config: Config) => {
     // Rank a limited nuumber of filtered items
     let ranked =
       filtered
-      |> Utility.firstk(Constants.maxItemsToFilter)
+      |> ListEx.firstk(Constants.maxItemsToFilter)
       |> Filter.rank(filter, format);
 
     (

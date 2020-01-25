@@ -3,7 +3,11 @@
  *
  * Module for handling command-line arguments for Oni2
  */
+open Kernel;
 open Rench;
+
+module CoreLog = Log;
+module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
 type t = {
   folder: string,
@@ -41,7 +45,7 @@ let show = (v: t) => {
 let noop = () => ();
 
 let setWorkingDirectory = s => {
-  Log.info("--working-directory - chdir: " ++ s);
+  Log.debug("--working-directory - chdir: " ++ s);
   Sys.chdir(s);
 };
 
@@ -49,7 +53,13 @@ let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
 let parse =
-    (~checkHealth, ~listExtensions, ~installExtension, ~uninstallExtension) => {
+    (
+      ~checkHealth,
+      ~listExtensions,
+      ~installExtension,
+      ~uninstallExtension,
+      ~printVersion,
+    ) => {
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -61,12 +71,24 @@ let parse =
   let shouldLoadConfiguration = ref(true);
   let shouldSyntaxHighlight = ref(true);
 
+  let needsConsole = ref(false);
+
   let queuedJob = ref(None);
   let runAndExitUnit = f =>
-    Arg.Unit(() => queuedJob := Some(cli => {f(cli) |> exit}));
+    Arg.Unit(
+      () => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(cli) |> exit});
+      },
+    );
 
   let runAndExitString = f =>
-    Arg.String(s => queuedJob := Some(cli => {f(s, cli) |> exit}));
+    Arg.String(
+      s => {
+        needsConsole := true;
+        queuedJob := Some(cli => {f(s, cli) |> exit});
+      },
+    );
 
   let disableExtensionLoading = () => shouldLoadExtensions := false;
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
@@ -74,9 +96,11 @@ let parse =
 
   Arg.parse(
     [
-      ("-f", Unit(Timber.App.enablePrinting), ""),
-      ("--nofork", Unit(Timber.App.enablePrinting), ""),
-      ("--debug", Unit(Timber.App.enableDebugLogging), ""),
+      ("-f", Unit(Timber.App.enable), ""),
+      ("--nofork", Unit(Timber.App.enable), ""),
+      ("--debug", Unit(CoreLog.enableDebug), ""),
+      ("--trace", Unit(CoreLog.enableTrace), ""),
+      ("--version", printVersion |> runAndExitUnit, ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
@@ -105,9 +129,9 @@ let parse =
     "",
   );
 
-  if (!Log.isPrintingEnabled()) {
-    /* On Windows, detach the application from the console if we're not logging to console */
-    Utility.freeConsole();
+  if (Timber.App.isEnabled() || needsConsole^) {
+    /* On Windows, we need to create a console instance if possible */
+    Revery.App.initConsole();
   };
 
   let paths = args^ |> List.rev;

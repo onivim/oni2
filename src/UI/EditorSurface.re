@@ -14,6 +14,8 @@ open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
 open Oni_Model;
 
+module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
+
 /* Set up some styles */
 let textHeaderStyle =
   Style.[fontFamily("FiraCode-Regular.ttf"), fontSize(14)];
@@ -419,7 +421,7 @@ let%component make =
          let tokenEnd = token.endPosition |> Index.toZeroBased;
          index >= tokenStart && index < tokenEnd;
        })
-    |> Utility.Option.of_list;
+    |> Utility.OptionEx.of_list;
   };
 
   let style =
@@ -546,6 +548,8 @@ let%component make =
     };*/
 
   let editorMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
+    Log.trace("editorMouseUp");
+
     switch (elementRef) {
     | None => ()
     | Some(r) =>
@@ -564,17 +568,9 @@ let%component make =
         );
 
       if (line < numberOfLines) {
-        Log.debug(() =>
-          "EditorSurface - editorMouseUp: topVisibleLine is "
-          ++ string_of_int(topVisibleLine)
-        );
-        Log.debug(() =>
-          "EditorSurface - editorMouseUp: setPosition ("
-          ++ string_of_int(line + 1)
-          ++ ", "
-          ++ string_of_int(col)
-          ++ ")"
-        );
+        Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+        Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
+
         let cursor =
           Vim.Cursor.create(
             ~line=Index.fromOneBased(line + 1),

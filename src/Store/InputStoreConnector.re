@@ -6,15 +6,13 @@
 
 open Oni_Core;
 open Oni_Input;
+open Utility;
 
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
 
-module Log = (val Log.withNamespace("Oni2.InputStore"));
-
-module Option = Utility.Option;
-module List = Utility.List;
+module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
 let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
@@ -176,7 +174,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
 
-          | Search => [Actions.SearchInput(k)]
+          | Search => [Actions.Search(Feature_Search.Input(k))]
+
+          | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
           };
         };
 
@@ -235,7 +235,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   //  SUBSCRIPTIONS
 
   switch (window) {
-  | None => Log.error("no window to subscribe to events")
+  | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
       Revery.Event.subscribe(window.onKeyDown, event =>

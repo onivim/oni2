@@ -6,6 +6,7 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module Time = Revery_Core.Time;
+module Log = (val Log.withNamespace("Oni2.Syntax.TextmateTokenizerJob"));
 
 // open Textmate;
 
@@ -112,7 +113,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       | Some(v) => Some(v.scopeStack)
       };
 
-    Log.debug(() => "Tokenizing line: " ++ string_of_int(currentLine));
+    Log.tracef(m => m("Tokenizing line: %i", currentLine));
 
     // Get new tokens & scopes
     let (tokens, scopes) =
