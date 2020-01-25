@@ -463,6 +463,54 @@ let start = (extensions, setup: Setup.t) => {
       )
     });
 
+  let getOriginalUri = (bufferId, path, providers: list(SCM.Provider.t)) =>
+    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
+      // Try our luck with every provider. If several returns Last-Writer-Wins
+      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
+      providers
+      |> List.iter((provider: SCM.Provider.t) => {
+           let promise =
+             ExtHostClient.provideOriginalResource(
+               provider.handle,
+               Uri.fromPath(path),
+               extHostClient,
+             );
+
+           Lwt.on_success(promise, uri =>
+             dispatch(Actions.SCM(SCM.GotOriginalUri({bufferId, uri})))
+           );
+         })
+    });
+
+  let getOriginalContent = (bufferId, uri, providers) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="scm.getOriginalSourceLines", dispatch => {
+      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.iter(provider => {
+           let (handle, _) = provider;
+           let promise =
+             ExtHostClient.provideTextDocumentContent(
+               handle,
+               uri,
+               extHostClient,
+             );
+
+           Lwt.on_success(
+             promise,
+             content => {
+               let lines =
+                 content |> Str.(split(regexp_string("\n"))) |> Array.of_list;
+
+               dispatch(
+                 Actions.SCM(SCM.GotOriginalContent({bufferId, lines})),
+               );
+             },
+           );
+         });
+    });
+
   let updater = (state: State.t, action) =>
     switch (action) {
     | Actions.Init => (
@@ -488,10 +536,18 @@ let start = (extensions, setup: Setup.t) => {
         changeWorkspaceEffect(path),
       )
 
-    | Actions.BufferEnter(bm, fileTypeOpt) => (
-        state,
-        sendBufferEnterEffect(bm, fileTypeOpt),
-      )
+    | Actions.BufferEnter(metadata, fileTypeOpt) =>
+      let eff =
+        switch (metadata.filePath) {
+        | Some(path) =>
+          Isolinear.Effect.batch([
+            sendBufferEnterEffect(metadata, fileTypeOpt),
+            getOriginalUri(metadata.id, path, state.scm.providers),
+          ])
+
+        | None => sendBufferEnterEffect(metadata, fileTypeOpt)
+        };
+      (state, eff);
 
     | Actions.NewTextContentProvider({handle, scheme}) => (
         {
@@ -595,6 +651,32 @@ let start = (extensions, setup: Setup.t) => {
                 state.scm.providers,
               ),
           },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.GotOriginalUri({bufferId, uri})) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalUri(uri)),
+              state.buffers,
+            ),
+        },
+        getOriginalContent(bufferId, uri, state.textContentProviders),
+      )
+
+    | Actions.SCM(SCM.GotOriginalContent({bufferId, lines})) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalLines(lines)),
+              state.buffers,
+            ),
         },
         Isolinear.Effect.none,
       )
