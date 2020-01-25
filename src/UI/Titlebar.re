@@ -31,8 +31,11 @@ module Styles = {
 };
 
 let make = (~title, ~theme: Theme.t, ~font: UiFont.t, ()) => {
-  let {background, foreground, _}: Theme.t = theme;
+  switch (Revery.Environment.os) {
+  | Mac => let {background, foreground, _}: Theme.t = theme;
   <View style={Styles.container(background)}>
     <Text style={Styles.text(~background, ~foreground, ~font)} text=title />
   </View>;
+  | _ => React.empty
+  }
 };
