@@ -16,7 +16,7 @@ module Styles = {
 
   let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
-    fontFamily(font.fontFile),
+    fontFamily(font.fontFileSemiBold),
     backgroundColor(bg),
     color(fg),
   ];

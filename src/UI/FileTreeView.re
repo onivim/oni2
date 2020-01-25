@@ -34,7 +34,7 @@ module Styles = {
   ];
 
   let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
-    fontSize(font.fontSize),
+    fontSize(11),
     fontFamily(font.fontFile),
     color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
     marginLeft(10),

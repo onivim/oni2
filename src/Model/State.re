@@ -84,7 +84,7 @@ let create: unit => t =
     extensions: Extensions.empty,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
-    uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
+    uiFont: UiFont.default,
     sideBar: SideBar.initial,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,

@@ -33,7 +33,7 @@ module Styles = {
   let menuItem = [fontSize(14), cursor(Revery.MouseCursors.pointer)];
 
   let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
-    fontFamily(font.fontFile),
+    fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
     fontSize(12),
     backgroundColor(
