@@ -5,52 +5,40 @@ let largeBufferLine =
   String.make(10000, 'a')
   |> BufferLine.make(~indentation=IndentationSettings.default);
 
-let slowLengthUtf8 = () => {
-  let _ = largeBufferLine |> BufferLine.slowLengthUtf8;
+let lengthSlow = () => {
+  let _ = largeBufferLine |> BufferLine.lengthSlow;
   ();
 };
 
-let boundedLengthUtf8 = () => {
-  let _ = largeBufferLine |> BufferLine.boundedLengthUtf8(~max=5000);
+let lengthBounded = () => {
+  let _ = largeBufferLine |> BufferLine.lengthBounded(~max=5000);
   ();
 };
 
-let unsafeGetUChar = () => {
-  let _ = largeBufferLine |> BufferLine.unsafeGetUChar(~index=8000);
+let getUCharExn = () => {
+  let _ = largeBufferLine |> BufferLine.getUCharExn(~index=8000);
   ();
 };
 
 let getPositionAndWidth = () => {
-  let _ = largeBufferLine |> BufferLine.unsafeGetUChar(~index=9000);
+  let _ = largeBufferLine |> BufferLine.getUCharExn(~index=9000);
   ();
 };
 
 let setup = () => ();
 let options = Reperf.Options.create(~iterations=1000, ());
 
+bench(~name="BufferLine: lengthSlow", ~options, ~setup, ~f=lengthSlow, ());
+
 bench(
-  ~name="BufferLine: slowLengthUtf8",
+  ~name="BufferLine: lengthBounded",
   ~options,
   ~setup,
-  ~f=slowLengthUtf8,
+  ~f=lengthBounded,
   (),
 );
 
-bench(
-  ~name="BufferLine: boundedLengthUtf8",
-  ~options,
-  ~setup,
-  ~f=boundedLengthUtf8,
-  (),
-);
-
-bench(
-  ~name="BufferLine: unsafeGetUChar",
-  ~options,
-  ~setup,
-  ~f=unsafeGetUChar,
-  (),
-);
+bench(~name="BufferLine: getUCharExn", ~options, ~setup, ~f=getUCharExn, ());
 
 bench(
   ~name="BufferLine: getPositionAndWidth",

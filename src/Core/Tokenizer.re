@@ -46,8 +46,8 @@ let _getNextBreak =
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
-    let char = BufferLine.unsafeGetUChar(~index=firstPos, bufferLine);
-    let nextChar = BufferLine.unsafeGetUChar(~index=secondPos, bufferLine);
+    let char = BufferLine.getUCharExn(~index=firstPos, bufferLine);
+    let nextChar = BufferLine.getUCharExn(~index=secondPos, bufferLine);
 
     if (f(firstPos, char, secondPos, nextChar)) {
       found := true;
@@ -63,7 +63,7 @@ let _getNextBreak =
 
 let tokenize =
     (~startIndex=0, ~endIndex, ~f: splitFunc, bufferLine: BufferLine.t) => {
-  let len = BufferLine.boundedLengthUtf8(~max=endIndex, bufferLine);
+  let len = BufferLine.lengthBounded(~max=endIndex, bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
@@ -87,7 +87,7 @@ let tokenize =
         BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
 
       let text =
-        BufferLine.unsafeSub(
+        BufferLine.subExn(
           ~index=startToken,
           ~length=endToken - startToken,
           bufferLine,

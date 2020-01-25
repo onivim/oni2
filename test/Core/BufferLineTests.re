@@ -5,31 +5,31 @@ open TestFramework;
 let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
 describe("BufferLine", ({describe, _}) => {
-  describe("unsafeSub", ({test, _}) => {
+  describe("subExn", ({test, _}) => {
     test("sub in middle of string", ({expect}) => {
       let bufferLine = makeLine("abcd");
 
-      let str = BufferLine.unsafeSub(~index=1, ~length=2, bufferLine);
+      let str = BufferLine.subExn(~index=1, ~length=2, bufferLine);
       expect.string(str).toEqual("bc");
     });
     test("clamps to end of string", ({expect}) => {
       let bufferLine = makeLine("abcd");
 
-      let str = BufferLine.unsafeSub(~index=1, ~length=10, bufferLine);
+      let str = BufferLine.subExn(~index=1, ~length=10, bufferLine);
       expect.string(str).toEqual("bcd");
     });
   });
-  describe("boundedLengthUtf8", ({test, _}) => {
+  describe("lengthBounded", ({test, _}) => {
     test("max less than total length", ({expect}) => {
       let bufferLine = makeLine("abc");
 
-      let len = BufferLine.boundedLengthUtf8(~max=2, bufferLine);
+      let len = BufferLine.lengthBounded(~max=2, bufferLine);
       expect.int(len).toBe(2);
     });
     test("max greater than total length", ({expect}) => {
       let bufferLine = makeLine("abc");
 
-      let len = BufferLine.boundedLengthUtf8(~max=5, bufferLine);
+      let len = BufferLine.lengthBounded(~max=5, bufferLine);
       expect.int(len).toBe(3);
     });
   });

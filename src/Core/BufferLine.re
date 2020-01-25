@@ -99,16 +99,16 @@ let empty = make(~indentation=IndentationSettings.default, "");
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
-let slowLengthUtf8 = ({raw, _}) => ZedBundled.length(raw);
+let lengthSlow = ({raw, _}) => ZedBundled.length(raw);
 
 let raw = ({raw, _}) => raw;
 
-let boundedLengthUtf8 = (~max, bufferLine) => {
+let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
   min(bufferLine.nextIndex, max);
 };
 
-let unsafeGetUChar = (~index, bufferLine) => {
+let getUCharExn = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
   switch (characters[index]) {
@@ -131,7 +131,7 @@ let getByteOffset = (~index, bufferLine) => {
   };
 };
 
-let unsafeSub = (~index: int, ~length: int, bufferLine) => {
+let subExn = (~index: int, ~length: int, bufferLine) => {
   let startOffset = getByteOffset(~index, bufferLine);
   let endOffset = getByteOffset(~index=index + length, bufferLine);
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
