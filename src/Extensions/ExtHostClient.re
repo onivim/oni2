@@ -179,7 +179,7 @@ let start =
         dispatch(RegisterSourceControl({handle, id, label, rootUri}));
       | _ =>
         Log.error(
-          "Unexpected argsuments for MainThreadSCM.$registerSourceControl",
+          "Unexpected arguments for MainThreadSCM.$registerSourceControl",
         )
       };
       Ok(None);
