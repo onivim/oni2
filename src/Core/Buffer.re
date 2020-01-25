@@ -5,6 +5,7 @@
  */
 open EditorCoreTypes;
 module Option = Utility.Option;
+module ArrayEx = Utility.ArrayEx;
 
 type t = {
   id: int,
@@ -95,32 +96,7 @@ let getUri = (buffer: t) => {
   };
 };
 
-/*
- * TODO:
- * - Handle variable tab sizes, based on indentation settings
- * - Handle multibyte characters
- */
-/*let getLineLength = (buffer: t, line: int) => {
-    let line = getLine(buffer, line);
-    String.length(line);
-  };*/
-
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
-
-let slice = (~lines: array('a), ~start, ~length, ()) => {
-  let len = Array.length(lines);
-  if (start >= len) {
-    [||];
-  } else {
-    let start = max(start, 0);
-    let len = min(start + length, len) - start;
-    if (len <= 0) {
-      [||];
-    } else {
-      Array.sub(lines, start, len);
-    };
-  };
-};
 
 let applyUpdate =
     (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
@@ -133,9 +109,9 @@ let applyUpdate =
     let ret = Array.concat([lines, updateLines]);
     ret;
   } else {
-    let prev = slice(~lines, ~start=0, ~length=startLine, ());
+    let prev = ArrayEx.slice(~lines, ~start=0, ~length=startLine, ());
     let post =
-      slice(
+      ArrayEx.slice(
         ~lines,
         ~start=endLine,
         ~length=Array.length(lines) - endLine,

@@ -13,3 +13,19 @@ let findIndex = (predicate, array) =>
   ) {
   | Found(i) => Some(i)
   };
+
+let slice = (~lines: array(_), ~start, ~length, ()) => {
+  let len = Array.length(lines);
+  if (start >= len) {
+    [||];
+  } else {
+    let start = max(start, 0);
+    let len = min(start + length, len) - start;
+    if (len <= 0) {
+      [||];
+    } else {
+      Array.sub(lines, start, len);
+    };
+  };
+};
+
