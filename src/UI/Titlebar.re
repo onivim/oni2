@@ -11,13 +11,13 @@ module Model = Oni_Model;
 module Styles = {
   open Style;
 
-  let container = (background) => [
+  let container = background => [
     flexGrow(0),
     height(22),
     backgroundColor(background),
     flexDirection(`Row),
     justifyContent(`Center),
-    alignItems(`Center)
+    alignItems(`Center),
   ];
 
   let text = (~background, ~foreground, ~font: UiFont.t) => [
@@ -28,17 +28,11 @@ module Styles = {
     color(foreground),
     textWrap(TextWrapping.NoWrap),
   ];
-}
+};
 
-let make =
-    (
-      ~title,
-      ~theme: Theme.t,
-      ~font: UiFont.t,
-      (),
-    ) => {
-    let { background, foreground, _ }: Theme.t = theme;
-    <View style=Styles.container(background)>
-      <Text style=Styles.text(~background, ~foreground, ~font) text={title} />
-    </View>
+let make = (~title, ~theme: Theme.t, ~font: UiFont.t, ()) => {
+  let {background, foreground, _}: Theme.t = theme;
+  <View style={Styles.container(background)}>
+    <Text style={Styles.text(~background, ~foreground, ~font)} text=title />
+  </View>;
 };

@@ -118,10 +118,10 @@ let start = setTitle => {
     // general mechanism, like "Effect actions" handled by an injected dependency
     // or have effects parameterized by an "environment" passed in along with
     // `dispatch`
-    | SetTitle(title) => ({
-      ...state,
-      windowTitle: title,
-    }, internalSetTitleEffect(title))
+    | SetTitle(title) => (
+        {...state, windowTitle: title},
+        internalSetTitleEffect(title),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };
