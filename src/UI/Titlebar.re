@@ -13,7 +13,7 @@ module Styles = {
 
   let container = background => [
     flexGrow(0),
-    height(22),
+    height(25),
     backgroundColor(background),
     flexDirection(`Row),
     justifyContent(`Center),
@@ -22,8 +22,8 @@ module Styles = {
 
   let text = (~background, ~foreground, ~font: UiFont.t) => [
     flexGrow(0),
-    fontSize(font.fontSize),
-    fontFamily(font.fontFile),
+    fontSize(12),
+    fontFamily(font.fontFileSemiBold),
     backgroundColor(background),
     color(foreground),
     textWrap(TextWrapping.NoWrap),
@@ -33,9 +33,22 @@ module Styles = {
 let make = (~title, ~theme: Theme.t, ~font: UiFont.t, ()) => {
   switch (Revery.Environment.os) {
   | Mac =>
-    let {background, foreground, _}: Theme.t = theme;
-    <View style={Styles.container(background)}>
-      <Text style={Styles.text(~background, ~foreground, ~font)} text=title />
+    let {
+      titleBarActiveBackground,
+      titleBarActiveForeground,
+      titleBarInactiveBackground,
+      titleBarInactiveForeground,
+      _,
+    }: Theme.t = theme;
+    <View style={Styles.container(titleBarActiveBackground)}>
+      <Text
+        style={Styles.text(
+          ~background=titleBarActiveBackground,
+          ~foreground=titleBarActiveForeground,
+          ~font,
+        )}
+        text=title
+      />
     </View>;
   | _ => React.empty
   };
