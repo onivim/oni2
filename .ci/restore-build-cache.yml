@@ -19,8 +19,7 @@ steps:
         PROJ="$SYSTEM_TEAMPROJECT"
         ART_NAME="cache-${AGENT_OS}-install-${ESY__CI_CACHE_VERSION}"
         fetchLatestBuild() {
-          PREFIX="branchName=refs%2Fheads%2F"
-          BRANCH=${PREFIX}${SYSTEM_PULLREQUEST_TARGETBRANCH}
+          BRANCH="branchName=refs%2Fheads%2Fmaster"
           FILTER='deletedFilter=excludeDeleted&statusFilter=completed&resultFilter=partiallySucceeded'
           LATEST='queryOrder=finishTimeDescending&$top=1'
           REST_BUILDS="$REST_BASE/$PROJ/_apis/build/builds?${FILTER}&${BRANCH}&${LATEST}&api-version=4.1"
