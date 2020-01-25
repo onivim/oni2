@@ -32,9 +32,14 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
-    });
-// acceptInputCommand: option(_),
-// statusBarCommands: option(_),
+    })
+  // acceptInputCommand: option(_),
+  // statusBarCommands: option(_),
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int});
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -200,6 +205,22 @@ let start =
             features |> member("commitTemplate") |> to_string_option,
         }),
       );
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$registerTextContentProvider",
+        [`Int(handle), `String(scheme)],
+      ) =>
+      dispatch(RegisterTextContentProvider({handle, scheme}));
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$unregisterTextContentProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterTextContentProvider({handle: handle}));
       Ok(None);
 
     | (scope, method, argsAsJson) =>

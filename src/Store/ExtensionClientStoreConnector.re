@@ -291,8 +291,10 @@ let start = (extensions, setup: Setup.t) => {
     switch (msg) {
     | RegisterSourceControl({handle, id, label, rootUri}) =>
       dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
+
     | UnregisterSourceControl({handle}) =>
       dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
+
     | UpdateSourceControl({
         handle,
         hasQuickDiffProvider,
@@ -317,6 +319,12 @@ let start = (extensions, setup: Setup.t) => {
           ),
         commitTemplate,
       );
+
+    | RegisterTextContentProvider({handle, scheme}) =>
+      dispatch(NewTextContentProvider({handle, scheme}))
+
+    | UnregisterTextContentProvider({handle}) =>
+      dispatch(LostTextContentProvider({handle: handle}))
     };
 
   let onOutput = Log.info;
@@ -483,6 +491,29 @@ let start = (extensions, setup: Setup.t) => {
     | Actions.BufferEnter(bm, fileTypeOpt) => (
         state,
         sendBufferEnterEffect(bm, fileTypeOpt),
+      )
+
+    | Actions.NewTextContentProvider({handle, scheme}) => (
+        {
+          ...state,
+          textContentProviders: [
+            (handle, scheme),
+            ...state.textContentProviders,
+          ],
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.LostTextContentProvider({handle}) => (
+        {
+          ...state,
+          textContentProviders:
+            List.filter(
+              ((h, _)) => h != handle,
+              state.textContentProviders,
+            ),
+        },
+        Isolinear.Effect.none,
       )
 
     | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (

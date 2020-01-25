@@ -58,6 +58,7 @@ type t = {
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Modal.t(Actions.t)),
+  textContentProviders: list((int, string)),
 };
 
 let create: unit => t =
@@ -109,4 +110,5 @@ let create: unit => t =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    textContentProviders: [],
   };

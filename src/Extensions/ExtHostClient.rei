@@ -17,9 +17,14 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
-    });
-// acceptInputCommand: option(_),
-// statusBarCommands: option(_),
+    })
+  // acceptInputCommand: option(_),
+  // statusBarCommands: option(_),
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int});
 
 type unitCallback = unit => unit;
 
