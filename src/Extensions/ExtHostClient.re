@@ -19,6 +19,23 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
 
+type msg =
+  | RegisterSourceControl({
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Uri.t),
+    })
+  | UnregisterSourceControl({handle: int})
+  | UpdateSourceControl({
+      handle: int,
+      hasQuickDiffProvider: option(bool),
+      count: option(int),
+      commitTemplate: option(string),
+    });
+// acceptInputCommand: option(_),
+// statusBarCommands: option(_),
+
 type unitCallback = unit => unit;
 let noop = () => ();
 let noop1 = _ => ();
@@ -45,6 +62,7 @@ let start =
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
+      ~dispatch,
       setup: Setup.t,
     ) => {
   // Hold onto a reference of the client, so that we can pass it along with
@@ -62,6 +80,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
       Option.iter(
         client => {
@@ -71,6 +90,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerReferenceSupport", args) =>
       Option.iter(
         client => {
@@ -80,6 +100,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | (
         "MainThreadLanguageFeatures",
         "$registerDocumentHighlightProvider",
@@ -93,6 +114,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       Option.iter(
         client => {
@@ -102,19 +124,24 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args)
       |> Option.iter(onDiagnosticsChangeMany);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$clear", args) =>
       In.Diagnostics.parseClear(args) |> Option.iter(onDiagnosticsClear);
       Ok(None);
+
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
+
     | (
         "MainThreadMessageService",
         "$showMessage",
@@ -122,10 +149,12 @@ let start =
       ) =>
       onShowMessage(s);
       Ok(None);
+
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
+
     | (
         "MainThreadExtensionService",
         "$onExtensionActivationFailed",
@@ -134,12 +163,45 @@ let start =
       let id = Protocol.PackedString.parse(v);
       onExtensionActivationFailed(id);
       Ok(None);
+
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
       Ok(None);
+
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> Option.iter(onStatusBarSetEntry);
       Ok(None);
+
+    | ("MainThreadSCM", "$registerSourceControl", args) =>
+      switch (args) {
+      | [`Int(handle), `String(id), `String(label), rootUri] =>
+        let rootUri = Core.Uri.of_yojson(rootUri) |> Utility.Result.to_option;
+        dispatch(RegisterSourceControl({handle, id, label, rootUri}));
+      | _ =>
+        Log.error(
+          "Unexpected arguments for MainThreadSCM.$registerSourceControl",
+        )
+      };
+      Ok(None);
+
+    | ("MainThreadSCM", "$unregisterSourceControl", [`Int(handle)]) =>
+      dispatch(UnregisterSourceControl({handle: handle}));
+      Ok(None);
+
+    | ("MainThreadSCM", "$updateSourceControl", [`Int(handle), features]) =>
+      open Yojson.Safe.Util;
+      dispatch(
+        UpdateSourceControl({
+          handle,
+          hasQuickDiffProvider:
+            features |> member("hasQuickDiffProvider") |> to_bool_option,
+          count: features |> member("count") |> to_int_option,
+          commitTemplate:
+            features |> member("commitTemplate") |> to_string_option,
+        }),
+      );
+      Ok(None);
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -293,9 +355,6 @@ let provideReferences = (id, uri, position, client) => {
   promise;
 };
 
-let send = (client, msg) => {
-  let _ = ExtHostTransport.send(client, msg);
-  ();
-};
+let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);
