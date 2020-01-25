@@ -28,4 +28,3 @@ let slice = (~lines: array(_), ~start, ~length, ()) => {
     };
   };
 };
-
