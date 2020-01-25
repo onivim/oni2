@@ -2,13 +2,13 @@
 
 steps:
   - bash: 'mkdir -p $(Build.StagingDirectory)'
-    condition: and(eq(variables['Build.Reason'], 'PullRequest'), and(succeeded(), ne(variables['Build.SourceBranch'], variables['System.PullRequest.TargetBranch'])))
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Publish] Create cache directory'
 
   # TODO: This can be done in parallel with installing node, and esy
   # (which would save a bunch of time on windows)
   - task: Bash@3
-    condition: and(eq(variables['Build.Reason'], 'PullRequest'), and(succeeded(), ne(variables['Build.SourceBranch'], variables['System.PullRequest.TargetBranch'])))
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Restore] Restoring build cache using REST API'
     continueOnError: true
     inputs:
@@ -21,7 +21,7 @@ steps:
         fetchLatestBuild() {
           PREFIX="branchName=refs%2Fheads%2F"
           BRANCH=${PREFIX}${SYSTEM_PULLREQUEST_TARGETBRANCH}
-          FILTER='deletedFilter=excludeDeleted&statusFilter=completed&resultFilter=succeeded'
+          FILTER='deletedFilter=excludeDeleted&statusFilter=completed&resultFilter=partiallySucceeded'
           LATEST='queryOrder=finishTimeDescending&$top=1'
           REST_BUILDS="$REST_BASE/$PROJ/_apis/build/builds?${FILTER}&${BRANCH}&${LATEST}&api-version=4.1"
           echo "Rest call for builds: $REST_BUILDS"
@@ -89,11 +89,11 @@ steps:
       
   - bash: 'rm -rf _import'
     continueOnError: true
-    condition: and(eq(variables['Build.Reason'], 'PullRequest'), and(succeeded(), ne(variables['Build.SourceBranch'], variables['System.PullRequest.TargetBranch'])))
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: 'Remove import directory'
 
   - bash: 'rm -rf *'
     continueOnError: true
     workingDirectory: '$(Build.StagingDirectory)'
-    condition: and(eq(variables['Build.Reason'], 'PullRequest'), and(succeeded(), ne(variables['Build.SourceBranch'], variables['System.PullRequest.TargetBranch'])))
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Restore] Clean up staging dir'
