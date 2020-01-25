@@ -62,11 +62,13 @@ let make =
       ...horizontalBorderStyles(tabPosition, numberOfTabs),
     ];
 
+  let isBold = active && showHighlight;
+
   let textStyle =
     Style.[
       width(proportion(0.80) - 10),
       textOverflow(`Ellipsis),
-      fontFamily(uiFont.fontFile),
+      fontFamily(isBold ? uiFont.fontFileItalic : uiFont.fontFile),
       fontSize(uiFont.fontSize),
       color(theme.tabActiveForeground),
       backgroundColor(theme.editorBackground),
