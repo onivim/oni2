@@ -52,11 +52,11 @@ let reduce: (State.t, Actions.t) => State.t =
         | EnableZenMode => {...s, zenMode: true}
         | DisableZenMode => {...s, zenMode: false}
         | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
-        | WindowFocusGained => { ...s, windowIsFocused: true }
-        | WindowFocusLost => { ...s, windowIsFocused: false }
-        | WindowMaximized => { ...s, windowIsMaximized: true }
+        | WindowFocusGained => {...s, windowIsFocused: true}
+        | WindowFocusLost => {...s, windowIsFocused: false}
+        | WindowMaximized => {...s, windowIsMaximized: true}
         | WindowRestored
-        | WindowMinimized => { ...s, windowIsMaximized: false }
+        | WindowMinimized => {...s, windowIsMaximized: false}
         | _ => s
         }
       )
