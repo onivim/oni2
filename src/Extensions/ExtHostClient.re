@@ -376,6 +376,20 @@ let provideReferences = (id, uri, position, client) => {
   promise;
 };
 
+let provideTextDocumentContent = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.DocumentContent.provideTextDocumentContent(id, uri),
+      fun
+      | `String(content) => content
+      | json =>
+        failwith("Unexpected response: " ++ Yojson.Safe.to_string(json)),
+    );
+  promise;
+};
+
 let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);

@@ -602,6 +602,15 @@ module OutgoingNotifications = {
     };
   };
 
+  module DocumentContent = {
+    let provideTextDocumentContent = (handle: int, resource: Uri.t) =>
+      _buildNotification(
+        "ExtHostDocumentContentProviders",
+        "$provideTextDocumentContent",
+        `List([`Int(handle), Uri.to_yojson(resource)]),
+      );
+  };
+
   module ExtensionService = {
     let activateByEvent = (event: string) => {
       _buildNotification(
