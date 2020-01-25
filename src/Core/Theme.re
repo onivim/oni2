@@ -102,6 +102,11 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  titleBarActiveBackground: Color.t,
+  titleBarActiveForeground: Color.t,
+  titleBarInactiveBackground: Color.t,
+  titleBarInactiveForeground: Color.t,
+  titleBarBorder: Color.t,
 };
 
 let default: t = {
@@ -164,6 +169,11 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  titleBarActiveBackground: Color.hex("#282C35"),
+  titleBarActiveForeground: Color.hex("#ECEFF4"),
+  titleBarInactiveBackground: Color.hex("#282C35"),
+  titleBarInactiveForeground: Color.hex("#ECEFF4"),
+  titleBarBorder: Colors.transparentWhite,
 };
 
 let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
@@ -359,6 +369,42 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
 
+  let titleBarActiveBackground =
+    getColor(
+      defaultBackground,
+      ["titleBar.activeBackground", "background", "editor.background"],
+    );
+
+  let titleBarInactiveBackground =
+    getColor(
+      defaultBackground,
+      [
+        "titleBar.inactiveBackground",
+        "titleBar.activeBackground",
+        "background",
+        "editor.background",
+      ],
+    );
+
+  let titleBarActiveForeground =
+    getColor(
+      defaultForeground,
+      ["titleBar.activeForeground", "background", "editor.foreground"],
+    );
+
+  let titleBarInactiveForeground =
+    getColor(
+      defaultForeground,
+      [
+        "titleBar.inactiveForeground",
+        "titlebar.activeForeground",
+        "foreground",
+        "editor.foreground",
+      ],
+    );
+
+  let titleBarBorder = getColor("#0000", ["titleBar.border"]);
+
   {
     ...default,
     background,
@@ -392,6 +438,11 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    titleBarActiveForeground,
+    titleBarActiveBackground,
+    titleBarInactiveForeground,
+    titleBarInactiveBackground,
+    titleBarBorder,
   };
 };
 
