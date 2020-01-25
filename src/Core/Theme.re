@@ -311,9 +311,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       [
         "menu.selectionBackground",
         "list.activeSelectionBackground",
+        "editor.selectionHighlightBackground",
         "list.focusBackground",
         "list.hoverBackground",
-        "menu.background",
         "background",
         "editor.background",
       ],
