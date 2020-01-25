@@ -1,8 +1,6 @@
 # Cross-platform set of build steps for building esy projects
 
 steps:
-  - script: esy install
-    displayName: 'Install Dependencies: esy install'
   - script: esy bootstrap
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build

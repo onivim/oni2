@@ -1,3 +1,5 @@
 steps:
   - script: npm install -g esy@0.6.0
     displayName: 'Install Esy: npm install -g esy@0.6.0'
+  - script: esy install
+    displayName: 'Install Dependencies: esy install'
