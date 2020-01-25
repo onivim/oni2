@@ -679,6 +679,15 @@ module OutgoingNotifications = {
       );
   };
 
+  module SCM = {
+    let provideOriginalResource = (handle: int, resource: Uri.t) =>
+      _buildNotification(
+        "ExtHostSCM",
+        "$provideOriginalResource",
+        `List([`Int(handle), Uri.to_yojson(resource)]),
+      );
+  };
+
   module Workspace = {
     [@deriving yojson({strict: false, exn: true})]
     type workspaceInfo = {

@@ -76,6 +76,7 @@ let provideDocumentHighlights:
   Lwt.t(list(Protocol.DocumentHighlight.t));
 let provideDocumentSymbols:
   (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
+let provideOriginalResource: (int, Core.Uri.t, t) => Lwt.t(Core.Uri.t);
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));

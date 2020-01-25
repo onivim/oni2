@@ -356,6 +356,18 @@ let provideDocumentSymbols = (id, uri, client) => {
   promise;
 };
 
+let provideOriginalResource = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.SCM.provideOriginalResource(id, uri),
+      json =>
+      Core.Uri.of_yojson(json) |> Utility.Result.get_ok
+    );
+  promise;
+};
+
 let provideReferences = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(LocationWithUri.t) = [];
