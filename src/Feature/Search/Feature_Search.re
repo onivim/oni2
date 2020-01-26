@@ -9,10 +9,11 @@ type model = {
   queryInput: string,
   query: string,
   cursorPosition: int,
+  selectionPosition: int,
   hits: list(Ripgrep.Match.t),
 };
 
-let initial = {queryInput: "", query: "", cursorPosition: 0, hits: []};
+let initial = {queryInput: "", query: "", cursorPosition: 0, selectionPosition: 0, hits: []};
 
 // UPDATE
 
@@ -29,7 +30,7 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, cursorPosition, _} = model;
+    let {queryInput, cursorPosition, selectionPosition,_} = model;
 
     let model =
       switch (key) {
@@ -41,15 +42,15 @@ let update = (model, msg) => {
         }
 
       | _ =>
-        let (queryInput, cursorPosition) =
-          InputModel.handleInput(~text=queryInput, ~cursorPosition, key);
-        {...model, queryInput, cursorPosition};
+        let (queryInput, cursorPosition, selectionPosition) =
+          InputModel.handleInput(~text=queryInput, ~cursorPosition, ~selectionPosition, key);
+        {...model, queryInput, cursorPosition, selectionPosition};
       };
 
     (model, None);
 
   | InputClicked(cursorPosition) => (
-      {...model, cursorPosition},
+      {...model, cursorPosition, selectionPosition: cursorPosition},
       Some(Focus),
     )
 
@@ -172,6 +173,7 @@ let make =
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
           cursorPosition={model.cursorPosition}
+          selectionPosition={model.selectionPosition}
           value={model.queryInput}
           placeholder="Search"
           isFocused

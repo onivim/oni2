@@ -85,10 +85,11 @@ module Internal = {
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
 
-  let (prefix, _) =
+  let (prefix, _, _) =
     InputModel.handleInput(
       ~text=sneaks.prefix,
       ~cursorPosition=String.length(sneaks.prefix),
+      ~selectionPosition=String.length(sneaks.prefix),
       characterToAdd,
     );
 

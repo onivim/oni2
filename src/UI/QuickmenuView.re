@@ -111,6 +111,7 @@ let make =
         focused,
         query,
         cursorPosition,
+        selectionPosition,
         prefix,
         variant,
         _,
@@ -165,6 +166,7 @@ let make =
         onClick=onInputClicked
         value=query
         cursorPosition
+        selectionPosition
       />
     </View>;
 

@@ -70,45 +70,15 @@ let getStringParts = (index, str) => {
   };
 };
 
-let getSafeStringBounds = (str, cursorPosition, change) => {
-  let nextPosition = cursorPosition + change;
-  let currentLength = String.length(str);
-  nextPosition > currentLength
-    ? currentLength : nextPosition < 0 ? 0 : nextPosition;
-};
-
-let removeCharacterBefore = (word, cursorPosition) => {
-  let (startStr, endStr) = getStringParts(cursorPosition, word);
-  let nextPosition = getSafeStringBounds(startStr, cursorPosition, -1);
-  let newString = Str.string_before(startStr, nextPosition) ++ endStr;
-  (newString, nextPosition);
-};
-
-let removeCharacterAfter = (word, cursorPosition) => {
-  let (startStr, endStr) = getStringParts(cursorPosition, word);
-  let newString =
-    startStr
-    ++ (
-      switch (endStr) {
-      | "" => ""
-      | _ => Str.last_chars(endStr, String.length(endStr) - 1)
-      }
-    );
-  (newString, cursorPosition);
-};
-
-let addCharacter = (word, char, index) => {
-  let (startStr, endStr) = getStringParts(index, word);
-  (startStr ++ char ++ endStr, String.length(startStr) + 1);
-};
-
 module Constants = {
   let cursorWidth = 2;
+  let selectionOpacity = 0.75;
 };
 
 module Styles = {
   let defaultPlaceholderColor = Colors.grey;
   let defaultCursorColor = Colors.black;
+  let defaultSelectionColor = Color.hex("#42557b");
 
   let default =
     Style.[
@@ -125,11 +95,13 @@ let%component make =
                 ~style=Styles.default,
                 ~placeholderColor=Styles.defaultPlaceholderColor,
                 ~cursorColor=Styles.defaultCursorColor,
+                ~selectionColor=Styles.defaultSelectionColor,
                 ~placeholder="",
                 ~prefix="",
                 ~isFocused,
                 ~value,
                 ~cursorPosition,
+                ~selectionPosition,
                 ~onClick,
                 (),
               ) => {
@@ -170,6 +142,12 @@ let%component make =
     ];
 
     let cursor = offset => [
+      position(`Absolute),
+      marginTop(2),
+      transform(Transform.[TranslateX(float(offset))]),
+    ];
+
+    let selection = offset => [
       position(`Absolute),
       marginTop(2),
       transform(Transform.[TranslateX(float(offset))]),
@@ -291,6 +269,35 @@ let%component make =
     </View>;
   };
 
+  let selection =
+    cursorPosition == selectionPosition
+    ? () => { React.empty; }
+    : () => {
+      let startOffset = min(cursorPosition, selectionPosition)
+      let endOffset = max(cursorPosition, selectionPosition)
+
+      let (beginnigStartStr, _) =
+        getStringParts(startOffset + String.length(prefix), displayValue);
+      let beginnigTextWidth = measureTextWidth(beginnigStartStr);
+      let startOffset = beginnigTextWidth - scrollOffset^;
+
+      let (endingStartStr, _) =
+        getStringParts(endOffset + String.length(prefix), displayValue);
+      let endingTextWidth = measureTextWidth(endingStartStr);
+      let endOffset = endingTextWidth - scrollOffset^;
+      let width = endOffset - startOffset + Constants.cursorWidth;
+
+      <View style={Styles.selection(startOffset)}>
+        <Opacity opacity=Constants.selectionOpacity>
+          <Container
+            width
+            height=Styles.fontSize
+            color=selectionColor
+          />
+        </Opacity>
+      </View>;
+    };
+
   let text = () =>
     <Text
       ref={node => setTextRef(Some(node))}
@@ -301,6 +308,7 @@ let%component make =
   <Clickable onAnyClick=handleClick>
     <View style=Styles.box>
       <View style=Styles.marginContainer>
+        <selection />
         <cursor />
         <View style=Styles.textContainer> <text /> </View>
       </View>
