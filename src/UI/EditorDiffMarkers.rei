@@ -11,6 +11,7 @@ and marker =
   | Unmodified;
 
 let generate: Buffer.t => option(t);
+
 let render:
   (
     ~scrollY: float,
