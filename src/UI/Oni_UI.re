@@ -6,6 +6,7 @@
 
 module Dock = Dock;
 module GlobalContext = GlobalContext;
+module EditorDiffMarkers = EditorDiffMarkers;
 module EditorSurface = EditorSurface;
 module FileExplorerView = FileExplorerView;
 module Root = Root;
