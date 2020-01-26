@@ -210,7 +210,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       switch (actual) {
       | Some(actual) =>
         // Printf.printf("\n%s\n%!", EditorDiffMarkers.show(actual));
-        expect.array(actual).toEqual(expected);
+        expect.array(actual).toEqual(expected)
       | None => failwith("unreachable")
       };
     });
