@@ -490,7 +490,6 @@ let start =
   let currentBufferId: ref(option(int)) = ref(None);
 
   let updateActiveEditorCursors = cursors => {
-    open Oni_Core.Utility;
     let () =
       getState()
       |> Selectors.getActiveEditorGroup
@@ -503,8 +502,6 @@ let start =
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
-        open Oni_Core.Utility;
-
         // Set cursors based on current editor
         let editor =
           getState()
@@ -550,8 +547,6 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      open Oni_Core.Utility;
-
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>

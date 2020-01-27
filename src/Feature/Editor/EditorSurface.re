@@ -15,7 +15,6 @@ open Oni_Core.CamomileBundled.Camomile;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
-module Option = Utility.Option;
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Completions = Feature_LanguageSupport.Completions;
@@ -832,7 +831,7 @@ let%component make =
                 ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
                 cursorPosition,
               )
-              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+              |> Option.iter((token: BufferViewTokenizer.t) => {
                    let range =
                      Range.{
                        start:

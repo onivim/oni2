@@ -1,6 +1,3 @@
-open Oni_Core;
-open Utility;
-
 let push = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
   | Sneak

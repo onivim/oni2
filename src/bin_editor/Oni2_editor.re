@@ -16,7 +16,6 @@ module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, cli) => {

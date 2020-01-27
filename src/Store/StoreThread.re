@@ -8,7 +8,6 @@
  */
 
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
 
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;

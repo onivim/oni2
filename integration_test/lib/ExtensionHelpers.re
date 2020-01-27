@@ -3,7 +3,6 @@
  */
 module Core = Oni_Core;
 module Log = (val Core.Log.withNamespace("IntegrationTest.ExtensionHelpers"));
-module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 

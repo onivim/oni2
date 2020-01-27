@@ -143,7 +143,7 @@ module Decode = {
       },
     };
 
-  let default = default => map(Utility.Option.value(~default));
+  let default = default => map(Option.value(~default));
 };
 
 module Encode = {

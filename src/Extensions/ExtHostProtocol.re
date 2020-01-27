@@ -9,7 +9,6 @@ module ModelConfig = Configuration;
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
 
 module MessageType = {
   let initialized = 0;
@@ -312,7 +311,7 @@ module DiagnosticsCollection = {
       let perFileDiagnostics =
         perFileDiagnostics
         |> List.map(Diagnostics.of_yojson)
-        |> List.filter_map(Result.to_option);
+        |> List.filter_map(Stdlib.Result.to_option);
       Some({name, perFileDiagnostics});
     | _ => None
     };
@@ -352,7 +351,7 @@ module Suggestions = {
       let result =
         suggestions
         |> List.map(SuggestionItem.of_yojson)
-        |> List.map(Result.to_option)
+        |> List.map(Stdlib.Result.to_option)
         |> List.filter_map(v => v);
       Ok(result);
     | _ => Error("Unable to parse Suggestions")
@@ -490,7 +489,7 @@ module IncomingNotifications = {
       | [`Int(id), documentSelector] =>
         documentSelector
         |> DocumentSelector.of_yojson
-        |> Result.to_option
+        |> Stdlib.Result.to_option
         |> Option.map(selector => {BasicProvider.create(~selector, id)})
       | _ => None
       };
@@ -501,7 +500,7 @@ module IncomingNotifications = {
       | [`Int(id), documentSelector, `String(label)] =>
         documentSelector
         |> DocumentSelector.of_yojson
-        |> Result.to_option
+        |> Stdlib.Result.to_option
         |> Option.map(selector => {
              DocumentSymbolProvider.create(~selector, ~label, id)
            })
@@ -514,7 +513,7 @@ module IncomingNotifications = {
       | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
         documentSelector
         |> DocumentSelector.of_yojson
-        |> Result.to_option
+        |> Stdlib.Result.to_option
         |> Option.map(selector => {SuggestProvider.create(~selector, id)})
       // TODO: Finish parsing
       | _ => None

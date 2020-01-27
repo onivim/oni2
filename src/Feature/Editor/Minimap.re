@@ -12,7 +12,6 @@ open Revery.UI;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Option = Utility.Option;
 
 module Constants = {
   include Constants;

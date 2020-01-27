@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 
 module Editor = Feature_Editor.Editor;
 module EditorMetrics = Feature_Editor.EditorMetrics;

@@ -6,7 +6,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
@@ -189,7 +188,7 @@ let start =
     | ("MainThreadSCM", "$registerSourceControl", args) =>
       switch (args) {
       | [`Int(handle), `String(id), `String(label), rootUri] =>
-        let rootUri = Core.Uri.of_yojson(rootUri) |> Utility.Result.to_option;
+        let rootUri = Core.Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
         dispatch(RegisterSourceControl({handle, id, label, rootUri}));
       | _ =>
         Log.error(
@@ -256,7 +255,7 @@ let start =
       let uris =
         resources
         |> List.filter_map(json =>
-             Uri.of_yojson(json) |> Utility.Result.to_option
+             Uri.of_yojson(json) |> Stdlib.Result.to_option
            );
       dispatch(DecorationsDidChange({handle, uris}));
       Ok(None);
@@ -441,7 +440,7 @@ let provideOriginalResource = (id, uri, client) => {
       client,
       Out.SCM.provideOriginalResource(id, uri),
       json =>
-      Core.Uri.of_yojson(json) |> Utility.Result.get_ok
+      Core.Uri.of_yojson(json) |> Stdlib.Result.get_ok
     );
   promise;
 };

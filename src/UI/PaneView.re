@@ -1,7 +1,6 @@
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 
 let paneTabHeight = 25;
 

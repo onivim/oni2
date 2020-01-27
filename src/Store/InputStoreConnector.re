@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Oni_Input;
-open Utility;
 
 module Model = Oni_Model;
 module State = Model.State;
