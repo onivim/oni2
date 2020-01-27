@@ -17,11 +17,23 @@ let splitEverything = (_, _, _, _) => true;
 let splitNothing = (_, _, _, _) => false;
 
 let tokenizeWithSplits = () => {
-  let _: list(Tokenizer.TextRun.t) = Tokenizer.tokenize(~f=splitEverything, ~endIndex=BufferLine.lengthSlow(giantString), giantString);
+  let _: list(Tokenizer.TextRun.t) =
+    Tokenizer.tokenize(
+      ~f=splitEverything,
+      ~endIndex=BufferLine.lengthSlow(giantString),
+      giantString,
+    );
+  ();
 };
 
 let tokenizeWithoutSplits = () => {
-  let _: list(Tokenizer.TextRun.t) = Tokenizer.tokenize(~f=splitNothing, ~endIndex=BufferLine.lengthSlow(giantString), giantString);
+  let _: list(Tokenizer.TextRun.t) =
+    Tokenizer.tokenize(
+      ~f=splitNothing,
+      ~endIndex=BufferLine.lengthSlow(giantString),
+      giantString,
+    );
+  ();
 };
 
 let tokenizeWithSplitsSub = () => {
@@ -32,6 +44,7 @@ let tokenizeWithSplitsSub = () => {
       ~f=splitEverything,
       giantString,
     );
+  ();
 };
 
 let tokenizeWithoutSplitsSub = () => {
@@ -42,6 +55,7 @@ let tokenizeWithoutSplitsSub = () => {
       ~f=splitNothing,
       giantString,
     );
+  ();
 };
 
 let options = Reperf.Options.create(~iterations=100, ());
