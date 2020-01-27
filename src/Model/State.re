@@ -92,7 +92,7 @@ let create: unit => t =
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
-    keyDisplayer: KeyDisplayer.empty,
+    keyDisplayer: KeyDisplayer.initial,
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.initial,
     references: References.initial,

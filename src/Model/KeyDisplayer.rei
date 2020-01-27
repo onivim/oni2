@@ -7,16 +7,23 @@
 // We group key presses in time together,
 // so they show in the same line
 type groupedPresses = {
-  exclusive: bool,
+  isExclusive: bool,
   time: float,
   keys: list(string),
 };
 
-type t;
+type t =
+  pri {
+    // Enabled is whether or not the key displayer feature is turned on
+    isEnabled: bool,
+    // Active is whether or not there is a visible key press.
+    isActive: bool,
+    presses: list(groupedPresses),
+  };
 
-let empty: t;
+let initial: t;
 
-let setEnabled: (bool, t) => t;
+let enable: t => t;
 
 /*
    [update(time, v)] updates the current time of the key displayer.
@@ -30,20 +37,4 @@ let update: (float, t) => t;
  */
 let add: (float, string, t) => t;
 
-let show: t => string;
-
-/*
-   [getPresses(v)] returns a list of active presses
- */
-let getPresses: t => list(groupedPresses);
-
-/*
-   [getEnabled(v)] returns whether or not the key displayer is enabeld
- */
-let getEnabled: t => bool;
-
-/*
-   [getActive(v)] returns whether or not there are any active key presses.
-   An active key press is one that currently should be displayed (ie, hasn't expired).
- */
-let getActive: t => bool;
+let toString: t => string;

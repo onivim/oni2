@@ -81,7 +81,7 @@ let make = (~state: State.t, ()) => {
           String.concat("", keyGroup.keys |> List.map(f) |> List.rev);
         <keyGroupView uiFont text />;
       },
-      state.keyDisplayer |> KeyDisplayer.getPresses,
+      state.keyDisplayer.presses,
     )
     |> List.rev
     |> React.listToElement;

@@ -78,14 +78,14 @@ let createDefaultCommands = getState => {
       Command.create(
         ~category=Some("Input"),
         ~name="Disable Key Displayer",
-        ~enabled=() => KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~enabled=() => getState().keyDisplayer.isEnabled,
         ~action=DisableKeyDisplayer,
         (),
       ),
       Command.create(
         ~category=Some("Input"),
         ~name="Enable Key Displayer",
-        ~enabled=() => !KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~enabled=() => !getState().keyDisplayer.isEnabled,
         ~action=EnableKeyDisplayer,
         (),
       ),

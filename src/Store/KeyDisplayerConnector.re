@@ -11,25 +11,21 @@ module Actions = Model.Actions;
 module KeyDisplayer = Model.KeyDisplayer;
 
 let start = getTime => {
-  let reducer = (keyDisplayer: Model.KeyDisplayer.t, action: Actions.t) => {
+  let reducer = (model: Model.KeyDisplayer.t, action: Actions.t) => {
     switch (action) {
-    | Actions.EnableKeyDisplayer =>
-      KeyDisplayer.setEnabled(true, keyDisplayer)
-    | Actions.DisableKeyDisplayer =>
-      KeyDisplayer.setEnabled(false, keyDisplayer)
+    | Actions.EnableKeyDisplayer => KeyDisplayer.enable(model)
+    | Actions.DisableKeyDisplayer => KeyDisplayer.initial
     | Actions.NotifyKeyPressed(time, key)
-        when
-          KeyDisplayer.getEnabled(keyDisplayer)
-          && Oni_Input.Filter.filter(key) =>
-      KeyDisplayer.add(time, key, keyDisplayer)
-    | _ => keyDisplayer
+        when model.isEnabled && Oni_Input.Filter.filter(key) =>
+      KeyDisplayer.add(time, key, model)
+    | _ => model
     };
   };
 
   let updater = (state: Model.State.t, action: Actions.t) =>
     switch (action) {
     | Actions.Tick(_) =>
-      if (KeyDisplayer.getActive(state.keyDisplayer)) {
+      if (state.keyDisplayer.isActive) {
         let keyDisplayer = KeyDisplayer.update(getTime(), state.keyDisplayer);
         let newState = {...state, keyDisplayer};
         (newState, Isolinear.Effect.none);

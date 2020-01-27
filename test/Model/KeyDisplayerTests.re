@@ -7,29 +7,29 @@ open KeyDisplayer;
 describe("KeyDisplayer", ({describe, _}) => {
   describe("add", ({test, _}) => {
     test("keys typed close together get grouped", ({expect}) => {
-      let v =
-        KeyDisplayer.empty
+      let model =
+        KeyDisplayer.initial
         |> KeyDisplayer.add(1., "a")
-        |> KeyDisplayer.add(1.1, "b")
-        |> KeyDisplayer.getPresses;
+        |> KeyDisplayer.add(1.1, "b");
 
-      expect.bool(v == [{time: 1.1, exclusive: false, keys: ["b", "a"]}]).
+      expect.bool(
+        model.presses == [{time: 1.1, isExclusive: false, keys: ["b", "a"]}],
+      ).
         toBe(
         true,
       );
     });
     test("keys not close together don't get grouped", ({expect}) => {
-      let v =
-        KeyDisplayer.empty
+      let model =
+        KeyDisplayer.initial
         |> KeyDisplayer.add(1., "a")
-        |> KeyDisplayer.add(1.5, "b")
-        |> KeyDisplayer.getPresses;
+        |> KeyDisplayer.add(1.5, "b");
 
       expect.bool(
-        v
+        model.presses
         == [
-             {time: 1.5, exclusive: false, keys: ["b"]},
-             {time: 1., exclusive: false, keys: ["a"]},
+             {time: 1.5, isExclusive: false, keys: ["b"]},
+             {time: 1., isExclusive: false, keys: ["a"]},
            ],
       ).
         toBe(
@@ -39,15 +39,17 @@ describe("KeyDisplayer", ({describe, _}) => {
   });
   describe("update", ({test, _}) =>
     test("keys past the expiration time get filtered out", ({expect}) => {
-      let v =
-        KeyDisplayer.empty
+      let model =
+        KeyDisplayer.initial
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.5, "b")
-        |> KeyDisplayer.update(3.9)
-        |> KeyDisplayer.getPresses;
+        |> KeyDisplayer.update(3.9);
 
       // "a" should be filtered out
-      expect.bool(v == [{time: 1.5, exclusive: false, keys: ["b"]}]).toBe(
+      expect.bool(
+        model.presses == [{time: 1.5, isExclusive: false, keys: ["b"]}],
+      ).
+        toBe(
         true,
       );
     })
