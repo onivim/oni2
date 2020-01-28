@@ -60,7 +60,7 @@ let%component make = (~state: State.t, ()) => {
       (keyGroup: KeyDisplayer.groupedPresses) => {
         let text =
           keyGroup.keys
-          |> List.filter_map(Oni_Input.Parser.toFriendlyName)
+          |> List.map(Oni_Input.Parser.toFriendlyName)
           |> List.rev
           |> String.concat("");
         <keyGroupView uiFont text />;

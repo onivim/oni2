@@ -4,30 +4,35 @@ module Regexes = {
   let command = Str.regexp_case_fold(".*d-.*");
   let shift = Str.regexp_case_fold(".*s-.*");
   let compound = Str.regexp_case_fold({|<\(.-\)+\(.*\)>|});
+  let bracketized = Str.regexp_case_fold({|<\(.*\)>|});
 };
+
+let bracketize = key =>
+  if (String.length(key) > 1) {
+    "<" ++ key ++ ">";
+  } else {
+    key;
+  };
 
 /*
  [toFriendlyName(key)] takes a vim-style key description,
  like ["<C-v>"], and returns a friendly representation, like ["Ctrl+v"]
  */
-let toFriendlyName =
+let rec toFriendlyName =
   fun
-  | " " => Some("Space")
-  | "<BS>" => Some("Backspace")
-  | "<ESC>" => Some("Escape")
-  | "<TAB>" => Some("Tab")
-  | "<CR>" => Some("Enter")
-  | key when String.length(key) == 0 => None
-  | key when String.length(key) == 1 => Some(key)
+  | " " => "Space"
+  | "<BS>" => "Backspace"
+  | "<ESC>" => "Escape"
+  | "<CR>" => "Enter"
+  | key when String.length(key) == 0 => ""
+  | key when String.length(key) == 1 => key
   | key => {
       let isCompound = Str.string_match(Regexes.compound, key, 0);
 
       if (isCompound) {
         let buffer = Buffer.create(String.length(key));
         let significand =
-          Str.matched_group(2, key)
-          |> String.lowercase_ascii
-          |> String.capitalize_ascii;
+          Str.matched_group(2, key) |> bracketize |> toFriendlyName;
 
         let hasControl = Str.string_match(Regexes.control, key, 0);
         let hasShift = Str.string_match(Regexes.shift, key, 0);
@@ -49,8 +54,16 @@ let toFriendlyName =
 
         Buffer.add_string(buffer, significand);
 
-        Some(Buffer.contents(buffer));
+        Buffer.contents(buffer);
       } else {
-        None;
+        let isBracketized = Str.string_match(Regexes.bracketized, key, 0);
+
+        if (isBracketized) {
+          Str.matched_group(1, key)
+          |> String.lowercase_ascii
+          |> String.capitalize_ascii;
+        } else {
+          key;
+        };
       };
     };
