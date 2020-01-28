@@ -18,19 +18,11 @@ type item = {
 let getFontAdvance = (fontFile, fontSize) => {
   open Revery.Draw;
 
-  let maybeWindow = Revery.UI.getActiveWindow();
-  let scaledFontSize = fontSize;
-  let (font, _) = FontCache.load(fontFile, scaledFontSize);
-  let shapedText = FontRenderer.shape(font, "x");
-  let Fontkit.{advance, _} =
-    FontRenderer.getGlyph(font, shapedText[0].glyphId);
-
-  let multiplier =
-    switch (maybeWindow) {
-    | None => 1.0
-    | Some(w) => Window.getScaleAndZoom(w) *. Window.getDevicePixelRatio(w)
-    };
-  float(advance) /. (64. *. multiplier);
+  let dimensions = switch (FontCache.load(fontFile)) {
+  | Ok(font) => FontRenderer.measure(font, fontSize, "x");
+  | Error(msg)=> { width: 0., height: 0. };
+  }
+  dimensions;
 };
 
 module Styles = {
@@ -119,7 +111,7 @@ let item =
 
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
-      let availableWidth = float(width - locationWidth);
+      let availableWidth = float(width) -. locationWidth;
       let maxLength =
         int_of_float(availableWidth /. editorFont.measuredWidth);
       let charStart = Index.toZeroBased(indexStart);
@@ -177,7 +169,7 @@ let%component make =
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.fontSize,
-    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize),
+    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),

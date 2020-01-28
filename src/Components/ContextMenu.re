@@ -49,7 +49,7 @@ type t('data) = {
 
 module MenuItem = {
   module Constants = {
-    let fontSize = 12;
+    let fontSize = 12.;
   };
 
   module Styles = {

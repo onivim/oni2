@@ -25,7 +25,7 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
   wait(~name="Font is updated", (state: State.t) =>
     state.editorFont.measuredWidth == 5.0
     && state.editorFont.measuredHeight == 10.
-    && state.editorFont.fontSize == 8
+    && state.editorFont.fontSize == 8.
   );
 
   wait(~name="Set configuration to large font size", (state: State.t) => {
@@ -35,7 +35,7 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
         ...configuration,
         default: {
           ...configuration.default,
-          editorFontSize: 24,
+          editorFontSize: 24.,
         },
       }),
     );
@@ -46,6 +46,6 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
   wait(~name="Font is updated again", (state: State.t) =>
     state.editorFont.measuredWidth == 14.0
     && state.editorFont.measuredHeight == 29.
-    && state.editorFont.fontSize == 24
+    && state.editorFont.fontSize == 24.
   );
 });

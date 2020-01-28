@@ -2,7 +2,7 @@ module Zed_utf8 = ZedBundled;
 
 type t = {
   fontFile: string,
-  fontSize: int,
+  fontSize: float,
   measuredWidth: float,
   measuredHeight: float,
 };

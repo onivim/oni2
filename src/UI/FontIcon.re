@@ -14,7 +14,7 @@ let make =
     (
       ~icon,
       ~fontFamily=FontAwesome.fontFamily,
-      ~fontSize=15,
+      ~fontSize=15.,
       ~backgroundColor,
       ~color,
       ~margin=0,

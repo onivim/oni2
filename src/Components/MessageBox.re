@@ -106,7 +106,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 
@@ -118,7 +118,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 
@@ -128,7 +128,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 };
