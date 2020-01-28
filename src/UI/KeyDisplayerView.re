@@ -11,80 +11,70 @@ open Revery.UI.Components;
 module Core = Oni_Core;
 open Oni_Model;
 
-let bgc = Color.rgb(0.1, 0.1, 0.1);
-let fgc = Color.rgb(0.9, 0.9, 0.9);
+module List = Core.Utility.List;
 
-let containerStyle =
-  Style.[
-    backgroundColor(bgc),
+module Constants = {
+  let margin = 50;
+  let duration = Time.ms(2500);
+};
+
+module Styles = {
+  open Style;
+
+  let backgroundColor = Color.rgb(0.1, 0.1, 0.1);
+  let foregroundColor = Color.rgb(0.9, 0.9, 0.9);
+
+  let group = [
+    Style.backgroundColor(backgroundColor),
     justifyContent(`Center),
     alignItems(`Center),
     margin(8),
     flexGrow(0),
   ];
 
-let textStyle = uiFont => {
-  Style.[
+  let text = uiFont => [
     fontFamily(uiFont),
     fontSize(24),
     textWrap(TextWrapping.NoWrap),
-    backgroundColor(bgc),
-    color(fgc),
+    Style.backgroundColor(backgroundColor),
+    color(Colors.white),
     marginHorizontal(16),
     marginVertical(8),
     flexGrow(0),
   ];
 };
 
-let keyGroupView = (~uiFont, ~text: string, ()) => {
-  <View
-    style=Style.[
-      backgroundColor(bgc),
-      justifyContent(`Center),
-      alignItems(`Center),
-      margin(8),
-      flexGrow(0),
-    ]>
-    <Text
-      style=Style.[
-        fontFamily(uiFont),
-        fontSize(24),
-        textWrap(TextWrapping.NoWrap),
-        backgroundColor(bgc),
-        color(Colors.white),
-        marginHorizontal(16),
-        marginVertical(8),
-        flexGrow(0),
-      ]
-      text
-    />
-  </View>;
-};
+let keyGroupView = (~uiFont, ~text: string, ()) =>
+  <View style=Styles.group> <Text style={Styles.text(uiFont)} text /> </View>;
 
-let make = (~state: State.t, ()) => {
+let%component make = (~state: State.t, ()) => {
+  let%hook activePresses =
+    CustomHooks.useExpiration(
+      ~expireAfter=Constants.duration,
+      state.keyDisplayer.presses,
+    );
   let uiFont = state.uiFont.fontFile;
-
-  let anyNotifications = Notifications.any(state.notifications);
-
-  let extraSpacing =
-    anyNotifications ? Core.Constants.default.notificationWidth + 50 : 0;
 
   let groups =
     List.map(
       (keyGroup: KeyDisplayer.groupedPresses) => {
-        let f = s =>
-          switch (Oni_Input.Parser.toFriendlyName(s)) {
-          | None => ""
-          | Some(v) => v
-          };
         let text =
-          String.concat("", keyGroup.keys |> List.map(f) |> List.rev);
+          keyGroup.keys
+          |> List.filter_map(Oni_Input.Parser.toFriendlyName)
+          |> List.rev
+          |> String.concat("");
         <keyGroupView uiFont text />;
       },
-      state.keyDisplayer.presses,
+      activePresses,
     )
     |> List.rev
     |> React.listToElement;
 
-  <Positioned bottom=50 right={50 + extraSpacing}> groups </Positioned>;
+  let bottom = Constants.margin;
+  let right =
+    Notifications.any(state.notifications)
+      ? Core.Constants.default.notificationWidth + Constants.margin * 2
+      : Constants.margin;
+
+  <Positioned bottom right> groups </Positioned>;
 };

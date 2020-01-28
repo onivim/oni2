@@ -12,11 +12,9 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.1, "b");
 
-      expect.bool(
-        model.presses == [{time: 1.1, isExclusive: false, keys: ["b", "a"]}],
-      ).
-        toBe(
-        true,
+      expect.list([{time: 1.1, isExclusive: false, keys: ["b", "a"]}]).
+        toEqual(
+        model.presses,
       );
     });
     test("keys not close together don't get grouped", ({expect}) => {
@@ -25,15 +23,12 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.5, "b");
 
-      expect.bool(
-        model.presses
-        == [
-             {time: 1.5, isExclusive: false, keys: ["b"]},
-             {time: 1., isExclusive: false, keys: ["a"]},
-           ],
-      ).
-        toBe(
-        true,
+      expect.list([
+        {time: 1.5, isExclusive: false, keys: ["b"]},
+        {time: 1., isExclusive: false, keys: ["a"]},
+      ]).
+        toEqual(
+        model.presses,
       );
     });
   });
@@ -43,14 +38,15 @@ describe("KeyDisplayer", ({describe, _}) => {
         KeyDisplayer.initial
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.5, "b")
-        |> KeyDisplayer.update(3.9);
+        |> KeyDisplayer.add(3.9, "x");
 
       // "a" should be filtered out
-      expect.bool(
-        model.presses == [{time: 1.5, isExclusive: false, keys: ["b"]}],
-      ).
-        toBe(
-        true,
+      expect.list([
+        {time: 3.9, isExclusive: false, keys: ["x"]},
+        {time: 1.5, isExclusive: false, keys: ["b"]},
+      ]).
+        toEqual(
+        model.presses,
       );
     })
   );

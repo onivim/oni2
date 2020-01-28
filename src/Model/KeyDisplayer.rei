@@ -26,13 +26,6 @@ let initial: t;
 let enable: t => t;
 
 /*
-   [update(time, v)] updates the current time of the key displayer.
-   This will expire any key presses beyond a few seconds. If there
-   are no longer key presses to show, [getActive] will return false.
- */
-let update: (float, t) => t;
-
-/*
    [add(time, key, v)] adds a keypress [key]
  */
 let add: (float, string, t) => t;

@@ -10,7 +10,7 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module KeyDisplayer = Model.KeyDisplayer;
 
-let start = getTime => {
+let start = () => {
   let reducer = (model: Model.KeyDisplayer.t, action: Actions.t) => {
     switch (action) {
     | Actions.EnableKeyDisplayer => KeyDisplayer.enable(model)
@@ -22,20 +22,11 @@ let start = getTime => {
     };
   };
 
-  let updater = (state: Model.State.t, action: Actions.t) =>
-    switch (action) {
-    | Actions.Tick(_) =>
-      if (state.keyDisplayer.isActive) {
-        let keyDisplayer = KeyDisplayer.update(getTime(), state.keyDisplayer);
-        let newState = {...state, keyDisplayer};
-        (newState, Isolinear.Effect.none);
-      } else {
-        (state, Isolinear.Effect.none);
-      }
-    | action =>
-      let keyDisplayer = reducer(state.keyDisplayer, action);
-      let state = {...state, keyDisplayer};
-      (state, Isolinear.Effect.none);
-    };
+  let updater = (state: Model.State.t, action: Actions.t) => {
+    let keyDisplayer = reducer(state.keyDisplayer, action);
+    let state = {...state, keyDisplayer};
+    (state, Isolinear.Effect.none);
+  };
+
   updater;
 };
