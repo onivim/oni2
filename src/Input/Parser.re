@@ -1,50 +1,56 @@
-let cMinus = Str.regexp_case_fold(".*c-.*");
-let aMinus = Str.regexp_case_fold(".*a-.*");
-let dMinus = Str.regexp_case_fold(".*d-.*");
-let sMinus = Str.regexp_case_fold(".*s-.*");
+module Regexes = {
+  let control = Str.regexp_case_fold(".*c-.*");
+  let alt = Str.regexp_case_fold(".*a-.*");
+  let command = Str.regexp_case_fold(".*d-.*");
+  let shift = Str.regexp_case_fold(".*s-.*");
+  let compound = Str.regexp_case_fold({|<\(.-\)+\(.*\)>|});
+};
 
 /*
  [toFriendlyName(key)] takes a vim-style key description,
  like ["<C-v>"], and returns a friendly representation, like ["Ctrl+v"]
  */
-let toFriendlyName = (v: string) => {
-  let len = String.length(v);
-
-  switch (v) {
+let toFriendlyName =
+  fun
   | " " => Some("Space")
   | "<BS>" => Some("Backspace")
   | "<ESC>" => Some("Escape")
   | "<TAB>" => Some("Tab")
-  | "<C-TAB>" => Some("Control + Tab")
   | "<CR>" => Some("Enter")
-  | _ =>
-    if (len == 0) {
-      None;
-    } else if (len == 1) {
-      Some(v);
-    } else {
-      let firstCharacter = v.[0];
-      let lastCharacter = v.[len - 1];
+  | key when String.length(key) == 0 => None
+  | key when String.length(key) == 1 => Some(key)
+  | key => {
+      let isCompound = Str.string_match(Regexes.compound, key, 0);
 
-      if (firstCharacter == '<' && lastCharacter == '>') {
-        let hasControl = Str.string_match(cMinus, v, 0);
-        let hasShift = Str.string_match(sMinus, v, 0);
-        let hasAlt = Str.string_match(aMinus, v, 0);
-        let hasCommand = Str.string_match(dMinus, v, 0);
+      if (isCompound) {
+        let buffer = Buffer.create(String.length(key));
+        let significand =
+          Str.matched_group(2, key)
+          |> String.lowercase_ascii
+          |> String.capitalize_ascii;
 
-        let character = v.[len - 2];
+        let hasControl = Str.string_match(Regexes.control, key, 0);
+        let hasShift = Str.string_match(Regexes.shift, key, 0);
+        let hasAlt = Str.string_match(Regexes.alt, key, 0);
+        let hasCommand = Str.string_match(Regexes.command, key, 0);
 
-        let ret = hasCommand ? "Command + " : "";
-        let ret = ret ++ (hasControl ? "Control + " : "");
-        let ret = ret ++ (hasAlt ? "Alt + " : "");
+        if (hasCommand) {
+          Buffer.add_string(buffer, "Command + ");
+        };
+        if (hasControl) {
+          Buffer.add_string(buffer, "Control + ");
+        };
+        if (hasAlt) {
+          Buffer.add_string(buffer, "Alt + ");
+        };
+        if (hasShift) {
+          Buffer.add_string(buffer, "Shift + ");
+        };
 
-        let character =
-          !hasShift ? Char.lowercase_ascii(character) : character;
+        Buffer.add_string(buffer, significand);
 
-        Some(ret ++ String.make(1, character));
+        Some(Buffer.contents(buffer));
       } else {
         None;
       };
-    }
-  };
-};
+    };
