@@ -6,6 +6,7 @@
 open Kernel;
 open ConfigurationValues;
 open LineNumber;
+open Utility;
 
 let parseBool = json =>
   switch (json) {
@@ -29,13 +30,10 @@ let parseFloat = json =>
 let parseStringList = json => {
   switch (json) {
   | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `String(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
+    List.filter_map(
+      fun
+      | `String(v) => Some(v)
+      | _ => None,
       items,
     )
   | `String(v) => [v]
