@@ -1,5 +1,5 @@
 {
-  "checksum": "eec9070b20e7fa3359d6717652cf5558",
+  "checksum": "48587f180e6eda9e5f490ace82c8d0ab",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -118,13 +118,13 @@
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#1ccda2b@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#1ccda2b@d41d8cd9",
+    "revery@github:revery-ui/revery#74ff573@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#74ff573@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#1ccda2b",
+      "version": "github:revery-ui/revery#74ff573",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#1ccda2b" ]
+        "source": [ "github:revery-ui/revery#74ff573" ]
       },
       "overrides": [],
       "dependencies": [
@@ -134,7 +134,7 @@
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#dae5a5e@d41d8cd9",
-        "reason-sdl2@2.10.3014@d41d8cd9",
+        "reason-sdl2@2.10.3015@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
         "reason-fontkit@2.8.3@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
@@ -334,14 +334,14 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@2.10.3014@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3014@d41d8cd9",
+    "reason-sdl2@2.10.3015@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3015@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3014",
+      "version": "2.10.3015",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3014.tgz#sha1:85c5d86d37ed54154cd16e84f0594a03d107bea0"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3015.tgz#sha1:86fdd1b5e0702a8ba6ef0ada5be76405d449c78a"
         ]
       },
       "overrides": [],
@@ -1067,13 +1067,13 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "timber@github:glennsl/timber#ae065bb@d41d8cd9",
-        "revery@github:revery-ui/revery#1ccda2b@d41d8cd9",
+        "revery@github:revery-ui/revery#74ff573@d41d8cd9",
         "reperf@1.4.0@d41d8cd9",
         "rench@github:bryphe/rench#4860ef4@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
-        "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3014@d41d8cd9",
+        "reason-textmate@2.3.0@d41d8cd9", "reason-sdl2@2.10.3015@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",
         "ocaml@4.7.1004@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
