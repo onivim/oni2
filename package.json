@@ -244,6 +244,7 @@
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
     "revery": "link:../revery",
+    "reason-harfbuzz": "link:../reason-harfbuzz",
     "reason-skia": "link:../reason-skia",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
