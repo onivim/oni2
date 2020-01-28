@@ -23,9 +23,13 @@ let start = () => {
   };
 
   let updater = (state: Model.State.t, action: Actions.t) => {
-    let keyDisplayer = reducer(state.keyDisplayer, action);
-    let state = {...state, keyDisplayer};
-    (state, Isolinear.Effect.none);
+    switch (action) {
+    | Actions.Tick(_) => (state, Isolinear.Effect.none)
+    | _ =>
+      let keyDisplayer = reducer(state.keyDisplayer, action);
+      let state = {...state, keyDisplayer};
+      (state, Isolinear.Effect.none);
+    };
   };
 
   updater;
