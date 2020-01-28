@@ -97,6 +97,7 @@ let withExtensionClient =
       ~onRegisterCommand,
       ~onShowMessage,
       ~onClosed,
+      ~dispatch=_ => (),
       setup,
     );
 

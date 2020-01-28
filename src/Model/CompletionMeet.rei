@@ -22,7 +22,7 @@ let fromLine:
     ~lineNumber: int=?,
     ~bufferId: int,
     ~index: Index.t,
-    string
+    BufferLine.t
   ) =>
   option(t);
 

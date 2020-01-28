@@ -29,7 +29,7 @@ let start = () => {
                   c => c.editorDetectIndentation,
                   state.configuration,
                 )) {
-              let f = Buffer.getLine(b);
+              let f = line => Buffer.getLine(line, b) |> BufferLine.raw;
               let count = Buffer.getNumberOfLines(b);
 
               let defaultInsertSpaces =
