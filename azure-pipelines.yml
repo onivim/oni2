@@ -4,10 +4,6 @@
 # https://aka.ms/yaml
 
 name: $(Build.SourceVersion)
-
-variables:
-  esy__ci_cache_version: v1
-
 jobs:
 - job: Kickoff
   displayName: "Kickoff"
@@ -125,9 +121,6 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
-  - powershell: Write-Host "HOME DIRECTORY $env:HOME_DIRECTORY"
-    env:
-      HOME_DIRECTORY: $(Agent.HomeDirectory)
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
