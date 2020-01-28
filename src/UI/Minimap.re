@@ -50,7 +50,14 @@ let renderLine =
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      CanvasContext.Deprecated.drawRect(~y, ~x, ~color, ~width, ~height, canvasContext);
+      CanvasContext.Deprecated.drawRect(
+        ~y,
+        ~x,
+        ~color,
+        ~width,
+        ~height,
+        canvasContext,
+      );
     | _ => ()
     };
   };
@@ -173,7 +180,7 @@ let%component make =
   <View style=absoluteStyle onMouseDown>
     <Canvas
       style=absoluteStyle
-      render={(canvasContext) => {
+      render={canvasContext => {
         if (Configuration.getValue(
               c => c.editorMinimapShowSlider,
               state.configuration,
@@ -189,7 +196,7 @@ let%component make =
               rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
             ~width=float_of_int(width),
             ~color=state.theme.scrollbarSliderHoverBackground,
-            canvasContext
+            canvasContext,
           );
         };
 
@@ -204,7 +211,7 @@ let%component make =
           ~height=float_of_int(Constants.default.minimapCharacterHeight),
           ~width=float_of_int(width),
           ~color=state.theme.editorLineHighlightBackground,
-          canvasContext
+          canvasContext,
         );
 
         let renderRange = (~color, ~offset, range: Range.t) =>

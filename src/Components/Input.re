@@ -215,7 +215,8 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(displayValue, 0, cursorPosition)) |> int_of_float;
+      measureTextWidth(String.sub(displayValue, 0, cursorPosition))
+      |> int_of_float;
 
     switch (Option.bind(textRef, r => r#getParent())) {
     | Some(containerNode) =>
@@ -247,7 +248,8 @@ let%component make =
         if (i > String.length(value)) {
           i - 1;
         } else {
-          let width = measureTextWidth(String.sub(value, 0, i)) |> int_of_float;
+          let width =
+            measureTextWidth(String.sub(value, 0, i)) |> int_of_float;
 
           if (width > offset) {
             let isCurrentNearest = width - offset < offset - last;

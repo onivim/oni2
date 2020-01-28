@@ -590,7 +590,7 @@ let%component make =
       onMouseWheel=scrollSurface>
       <Canvas
         style={Styles.bufferViewClipped(bufferPixelWidth)}
-        render={(canvasContext) => {
+        render={canvasContext => {
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
