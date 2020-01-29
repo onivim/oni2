@@ -129,8 +129,9 @@ let renderSpaces =
 
 let renderTokens =
     (
-      fontFamily: string,
-      fontSize: float,
+      tokenFont: Revery.Font.t,
+      tokenPaint: Skia.Paint.t,
+      descenderHeight: float,
       fontWidth: float,
       fontHeight: float,
       lineNumberWidth: float,
@@ -154,15 +155,17 @@ let renderTokens =
 
     switch (token.tokenType) {
     | Text =>
-      CanvasContext.Deprecated.drawString(
+      Skia.Paint.setColor(tokenPaint, Color.toSkia(token.color));
+      let shapedText =
+        Revery.Font.shape(tokenFont, token.text)
+        |> Revery.Font.ShapeResult.getGlyphString;
+      CanvasContext.drawText(
+        ~paint=tokenPaint,
         ~x,
-        ~y=y +. fontHeight,
-        ~color=token.color,
-        ~fontFamily,
-        ~fontSize,
-        ~text=token.text,
+        ~y=yF +. fontHeight -. descenderHeight,
+        ~text=shapedText,
         canvasContext,
-      )
+      );
     | Tab =>
       CanvasContext.Deprecated.drawString(
         ~x=x +. fontWidth /. 4.,
@@ -235,6 +238,7 @@ let%component make =
   let fontHeight = state.editorFont.measuredHeight;
   let fontWidth = state.editorFont.measuredWidth;
   let fontFamily = state.editorFont.fontFile;
+  let descenderHeight = state.editorFont.descenderHeight;
   let fontSize =
     Configuration.getValue(c => c.editorFontSize, state.configuration);
 
@@ -591,9 +595,11 @@ let%component make =
       <Canvas
         style={Styles.bufferViewClipped(bufferPixelWidth)}
         render={canvasContext => {
+          let fontMaybe =
+            Revery.Font.load(fontFamily) |> Utility.Result.to_option;
+
           let lineNumberPaint =
-            Revery.Font.load(fontFamily)
-            |> Utility.Result.to_option
+            fontMaybe
             |> Utility.Option.map(font => {
                  let lineNumberPaint = Skia.Paint.make();
                  Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
@@ -605,6 +611,21 @@ let%component make =
                    Revery.Font.getSkiaTypeface(font),
                  );
                  lineNumberPaint;
+               });
+
+          let tokenPaint =
+            fontMaybe
+            |> Utility.Option.map(font => {
+                 let paint = Skia.Paint.make();
+                 Skia.Paint.setTextEncoding(paint, GlyphId);
+                 Skia.Paint.setAntiAlias(paint, true);
+                 Skia.Paint.setLcdRenderText(paint, true);
+                 Skia.Paint.setTextSize(paint, fontSize);
+                 Skia.Paint.setTypeface(
+                   paint,
+                   Revery.Font.getSkiaTypeface(font),
+                 );
+                 (font, paint);
                });
 
           let count = lineCount;
@@ -813,52 +834,56 @@ let%component make =
             ();
           };
 
-          ImmediateList.render(
-            ~scrollY,
-            ~rowHeight,
-            ~height=float_of_int(height),
-            ~count,
-            ~render=
-              (item, offset) => {
-                let index = Index.fromZeroBased(item);
-                let selectionRange =
-                  switch (Hashtbl.find_opt(selectionRanges, index)) {
-                  | None => None
-                  | Some(v) =>
-                    switch (List.length(v)) {
-                    | 0 => None
-                    | _ => Some(List.hd(v))
-                    }
-                  };
-                let tokens =
-                  getTokensForLine(
-                    ~selection=selectionRange,
-                    leftVisibleColumn,
-                    leftVisibleColumn + layout.bufferWidthInCharacters,
-                    item,
-                  );
+          tokenPaint
+          |> Utility.Option.iter(((font, paint)) => {
+               ImmediateList.render(
+                 ~scrollY,
+                 ~rowHeight,
+                 ~height=float_of_int(height),
+                 ~count,
+                 ~render=
+                   (item, offset) => {
+                     let index = Index.fromZeroBased(item);
+                     let selectionRange =
+                       switch (Hashtbl.find_opt(selectionRanges, index)) {
+                       | None => None
+                       | Some(v) =>
+                         switch (List.length(v)) {
+                         | 0 => None
+                         | _ => Some(List.hd(v))
+                         }
+                       };
+                     let tokens =
+                       getTokensForLine(
+                         ~selection=selectionRange,
+                         leftVisibleColumn,
+                         leftVisibleColumn + layout.bufferWidthInCharacters,
+                         item,
+                       );
 
-                let _ =
-                  renderTokens(
-                    fontFamily,
-                    fontSize,
-                    fontWidth,
-                    fontHeight,
-                    lineNumberWidth,
-                    theme,
-                    tokens,
-                    editor.scrollX,
-                    offset,
-                    canvasContext,
-                    Configuration.getValue(
-                      c => c.editorRenderWhitespace,
-                      state.configuration,
-                    ),
-                  );
-                ();
-              },
-            (),
-          );
+                     let _ =
+                       renderTokens(
+                         font,
+                         paint,
+                         descenderHeight,
+                         fontWidth,
+                         fontHeight,
+                         lineNumberWidth,
+                         theme,
+                         tokens,
+                         editor.scrollX,
+                         offset,
+                         canvasContext,
+                         Configuration.getValue(
+                           c => c.editorRenderWhitespace,
+                           state.configuration,
+                         ),
+                       );
+                     ();
+                   },
+                 (),
+               )
+             });
 
           /* Draw background for line numbers */
           if (showLineNumbers) {

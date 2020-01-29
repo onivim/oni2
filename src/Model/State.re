@@ -80,6 +80,7 @@ let create: unit => t =
         ~fontSize=14.,
         ~measuredWidth=1.,
         ~measuredHeight=1.,
+        ~descenderHeight=0.,
         (),
       ),
     extensions: Extensions.empty,
