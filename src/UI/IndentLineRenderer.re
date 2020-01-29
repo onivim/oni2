@@ -105,7 +105,7 @@ let render =
 
     let i = ref(0);
     while (i^ < level) {
-      CanvasContext.Deprecated.drawRect(
+      Minimap.drawRect(
         ~x=x +. indentationWidthInPixels *. float_of_int(i^),
         ~y,
         ~width=1.,
@@ -178,7 +178,7 @@ let render =
     let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
     if (cursorLineIndentLevel^ >= 1) {
-      CanvasContext.Deprecated.drawRect(
+      Minimap.drawRect(
         ~x=
           x
           +. indentationWidthInPixels

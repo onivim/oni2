@@ -24,7 +24,7 @@ let loadAndValidateEditorFont =
   let fontResult = Revery.Font.FontCache.load(fullPath);
 
   switch (fontResult) {
-  | Error(msg) => onError(msg);
+  | Error(msg) => onError(msg)
   | Ok(font) =>
     let character1 = Revery.Font.FontRenderer.measure(font, fontSize, "H");
     let character2 = Revery.Font.FontRenderer.measure(font, fontSize, "i");
@@ -47,9 +47,8 @@ let loadAndValidateEditorFont =
           (),
         ),
       ));
-    }
-
-  }
+    };
+  };
 };
 
 let start = () => {

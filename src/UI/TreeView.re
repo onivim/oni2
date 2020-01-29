@@ -82,7 +82,10 @@ module Make = (Model: TreeModel) => {
 
   let noArrow = () =>
     <View
-      style=Style.[width(Constants.arrowSizeI), height(Constants.arrowSizeI)]
+      style=Style.[
+        width(Constants.arrowSizeI),
+        height(Constants.arrowSizeI),
+      ]
     />;
 
   let rec nodeView =

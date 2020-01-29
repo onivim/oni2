@@ -45,8 +45,7 @@ module Styles = {
 
 let renderLineNumber =
     (
-      fontFamily: string,
-      fontSize: float,
+      paint: Skia.Paint.t,
       fontWidth: float,
       lineNumber: int,
       lineNumberWidth: float,
@@ -61,6 +60,8 @@ let renderLineNumber =
     isActiveLine
       ? theme.editorActiveLineNumberForeground
       : theme.editorLineNumberForeground;
+
+  Skia.Paint.setColor(paint, Color.toSkia(lineNumberTextColor));
 
   let yF = yOffset;
 
@@ -83,12 +84,10 @@ let renderLineNumber =
         *. fontWidth
         /. 2.;
 
-  CanvasContext.Deprecated.drawString(
+  CanvasContext.drawText(
     ~x=lineNumberXOffset,
     ~y=yF,
-    ~color=lineNumberTextColor,
-    ~fontFamily,
-    ~fontSize,
+    ~paint,
     ~text=lineNumber,
     canvasContext,
   );
@@ -592,6 +591,22 @@ let%component make =
       <Canvas
         style={Styles.bufferViewClipped(bufferPixelWidth)}
         render={canvasContext => {
+          let lineNumberPaint =
+            Revery.Font.load(fontFamily)
+            |> Utility.Result.to_option
+            |> Utility.Option.map(font => {
+                 let lineNumberPaint = Skia.Paint.make();
+                 Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
+                 Skia.Paint.setAntiAlias(lineNumberPaint, true);
+                 Skia.Paint.setLcdRenderText(lineNumberPaint, true);
+                 Skia.Paint.setTextSize(lineNumberPaint, fontSize);
+                 Skia.Paint.setTypeface(
+                   lineNumberPaint,
+                   Revery.Font.getSkiaTypeface(font),
+                 );
+                 lineNumberPaint;
+               });
+
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
@@ -856,33 +871,35 @@ let%component make =
               canvasContext,
             );
 
-            ImmediateList.render(
-              ~scrollY,
-              ~rowHeight,
-              ~height=float_of_int(height),
-              ~count,
-              ~render=
-                (item, offset) => {
-                  let _ =
-                    renderLineNumber(
-                      fontFamily,
-                      fontSize,
-                      fontWidth,
-                      item,
-                      lineNumberWidth,
-                      theme,
-                      Configuration.getValue(
-                        c => c.editorLineNumbers,
-                        state.configuration,
-                      ),
-                      cursorLine,
-                      offset,
-                      canvasContext,
-                    );
-                  ();
-                },
-              (),
-            );
+            lineNumberPaint
+            |> Utility.Option.iter(paint => {
+                 ImmediateList.render(
+                   ~scrollY,
+                   ~rowHeight,
+                   ~height=float_of_int(height),
+                   ~count,
+                   ~render=
+                     (item, offset) => {
+                       let _ =
+                         renderLineNumber(
+                           paint,
+                           fontWidth,
+                           item,
+                           lineNumberWidth,
+                           theme,
+                           Configuration.getValue(
+                             c => c.editorLineNumbers,
+                             state.configuration,
+                           ),
+                           cursorLine,
+                           offset,
+                           canvasContext,
+                         );
+                       ();
+                     },
+                   (),
+                 )
+               });
           };
 
           let renderIndentGuides =
