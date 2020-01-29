@@ -16,16 +16,14 @@ let defaultFontSize = 14;
 let requestId = ref(0);
 
 let loadAndValidateEditorFont =
-    (~onSuccess, ~onError, ~requestId: int, scaleFactor, fullPath, fontSize) => {
+    (~onSuccess, ~onError, ~requestId: int, fullPath, fontSize) => {
   Log.tracef(m =>
     m("loadAndValidateEditorFont path: %s | size: %i", fullPath, fontSize)
   );
 
-  let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
-
   Fontkit.fk_new_face(
     fullPath,
-    adjSize,
+    fontSize,
     font => {
       /* Measure text */
       let shapedText = Fontkit.fk_shape(font, "Hi");
@@ -76,12 +74,10 @@ let loadAndValidateEditorFont =
   );
 };
 
-let start = (~getScaleFactor, ()) => {
+let start = () => {
   let setFont = (dispatch1, maybeFontFamily, fontSize) => {
     let dispatch = action =>
       Revery.App.runOnMainThread(() => dispatch1(action));
-
-    let scaleFactor = getScaleFactor();
 
     incr(requestId);
     let req = requestId^;
@@ -150,7 +146,6 @@ let start = (~getScaleFactor, ()) => {
             ~onSuccess,
             ~onError,
             ~requestId=req,
-            scaleFactor,
             fullPath,
             fontSize,
           );

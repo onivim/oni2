@@ -143,7 +143,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
+  let fontUpdater = FontStoreConnector.start();
   let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
