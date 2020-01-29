@@ -238,17 +238,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyDown, event =>
+      Revery.Window.onKeyDown(window, event =>
         dispatch(Actions.KeyDown(event))
       );
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyUp, event =>
-        dispatch(Actions.KeyUp(event))
-      );
+      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event)));
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onTextInputCommit, event =>
+      Revery.Window.onTextInputCommit(window, event =>
         dispatch(Actions.TextInput(event))
       );
     ();

@@ -182,7 +182,9 @@ let%component make =
     |> Option.value(
          ~default=
            Revery.UI.getActiveWindow()
-           |> Option.map((window: Window.t) => Window.getRawSize(window).width)
+           |> Option.map((window: Window.t) =>
+                Revery.Window.getRawSize(window).width
+              )
            |> Option.value(~default=4000),
        );
 
