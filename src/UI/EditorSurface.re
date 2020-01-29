@@ -14,6 +14,9 @@ open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
 open Oni_Model;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 module Option = Utility.Option;
 

@@ -2,6 +2,9 @@ open Revery.UI;
 
 open Oni_Model;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 let button = Style.[marginVertical(24)];
 
 let onExplorerClick = _ => {

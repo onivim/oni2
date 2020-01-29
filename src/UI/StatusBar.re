@@ -18,6 +18,8 @@ open Oni_Model.StatusBarModel;
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
 module CustomHooks = Oni_Components.CustomHooks;
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
 
 module Notification = {
   open Notification;

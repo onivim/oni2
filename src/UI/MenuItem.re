@@ -3,6 +3,9 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Constants = {
   let fontSize = 20;
 };
