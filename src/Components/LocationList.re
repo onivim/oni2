@@ -19,8 +19,8 @@ let getFontAdvance = (fontFile, fontSize) => {
   open Revery.Draw;
 
   let dimensions =
-    switch (FontCache.load(fontFile)) {
-    | Ok(font) => FontRenderer.measure(font, fontSize, "x")
+    switch (Revery.Font.load(fontFile)) {
+    | Ok(font) => Revery.Font.FontRenderer.measure(font, fontSize, "x")
     | Error(msg) => {width: 0., height: 0.}
     };
   dimensions;

@@ -21,13 +21,13 @@ let loadAndValidateEditorFont =
     m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
 
-  let fontResult = Revery.Draw.FontCache.load(fullPath);
+  let fontResult = Revery.Font.FontCache.load(fullPath);
 
   switch (fontResult) {
   | Error(msg) => onError(msg);
   | Ok(font) =>
-    let character1 = Revery.Draw.FontRenderer.measure(font, fontSize, "H");
-    let character2 = Revery.Draw.FontRenderer.measure(font, fontSize, "i");
+    let character1 = Revery.Font.FontRenderer.measure(font, fontSize, "H");
+    let character2 = Revery.Font.FontRenderer.measure(font, fontSize, "i");
 
     if (!Float.equal(character1.width, character2.width)) {
       onError("Not a monospace font");
@@ -86,7 +86,7 @@ let start = () => {
                 (fontFamily, fontFamily);
               } else {
                 let descriptor =
-                  Revery.Font.find(
+                  Revery.Font.Discovery.find(
                     ~mono=true,
                     ~weight=Revery.Font.Weight.Normal,
                     fontFamily,

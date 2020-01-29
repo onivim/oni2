@@ -19,6 +19,14 @@ module State = Oni_Model.State;
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
+let minimapPaint = Skia.Paint.make();
+
+let drawRect = (~x, ~y, ~width, ~height, ~color, canvasContext) => {
+  Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+  let rect = Skia.Rect.makeLtrb(x, y, x +. width, y +. height);
+  CanvasContext.drawRect(canvasContext, rect, minimapPaint);
+};
+
 let renderLine =
     (
       shouldHighlight,
@@ -50,14 +58,7 @@ let renderLine =
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      CanvasContext.Deprecated.drawRect(
-        ~y,
-        ~x,
-        ~color,
-        ~width,
-        ~height,
-        canvasContext,
-      );
+      drawRect(~x, ~y, ~width, ~height, ~color, canvasContext);
     | _ => ()
     };
   };
@@ -186,7 +187,7 @@ let%component make =
               state.configuration,
             )) {
           /* Draw current view */
-          CanvasContext.Deprecated.drawRect(
+          drawRect(
             ~x=0.,
             ~y=
               rowHeight
@@ -202,7 +203,7 @@ let%component make =
 
         let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
-        CanvasContext.Deprecated.drawRect(
+        drawRect(
           ~x=0.,
           ~y=
             rowHeight
@@ -224,7 +225,7 @@ let%component make =
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
-           CanvasContext.Deprecated.drawRect(
+           drawRect(
              ~x=startX -. 1.0,
              ~y=offset -. 1.0,
              ~height=
@@ -244,7 +245,7 @@ let%component make =
              * Constants.default.minimapCharacterWidth
              |> float_of_int;
 
-           CanvasContext.Deprecated.drawRect(
+           drawRect(
              ~x=startX -. 1.0,
              ~y=
                offset
@@ -292,7 +293,7 @@ let%component make =
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
               | Some(_) =>
-                CanvasContext.Deprecated.drawRect(
+                drawRect(
                   ~x=0.,
                   ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
                   ~height=
