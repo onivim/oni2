@@ -1,0 +1,13 @@
+(library
+    (name Feature_Editor)
+    (public_name Oni2.feature.editor)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.components
+      Oni2.syntax
+      Revery
+      libvim
+      ReasonFuzz
+    )
+    (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))
