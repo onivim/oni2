@@ -129,7 +129,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.fontFamily",
     (s, v) => {...s, editorFontFamily: parseStringOption(v)},
   ),
-  ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
+  ("editor.fontSize", (s, v) => {...s, editorFontSize: parseFloat(v)}),
   ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
   (
     "editor.hover.enabled",

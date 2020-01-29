@@ -20,7 +20,7 @@ type vimUseSystemClipboard = {
 type t = {
   editorDetectIndentation: bool,
   editorFontFamily: option(string),
-  editorFontSize: int,
+  editorFontSize: float,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -65,7 +65,7 @@ type t = {
 let default = {
   editorDetectIndentation: true,
   editorFontFamily: Some("FiraCode-Regular.ttf"),
-  editorFontSize: 14,
+  editorFontSize: 14.,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,

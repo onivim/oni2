@@ -46,7 +46,7 @@ module Styles = {
 let renderLineNumber =
     (
       fontFamily: string,
-      fontSize: int,
+      fontSize: float,
       fontWidth: float,
       lineNumber: int,
       lineNumberWidth: float,
@@ -131,7 +131,7 @@ let renderSpaces =
 let renderTokens =
     (
       fontFamily: string,
-      fontSize: int,
+      fontSize: float,
       fontWidth: float,
       fontHeight: float,
       lineNumberWidth: float,
@@ -170,7 +170,7 @@ let renderTokens =
         ~y=y +. fontHeight /. 4.,
         ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
-        ~fontSize=10,
+        ~fontSize=10.,
         ~text=FontIcon.codeToIcon(0xf30b),
         canvasContext,
       )

@@ -65,7 +65,7 @@ type t =
   | SelectionChanged([@opaque] VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, int)
+  | LoadEditorFont(string, float)
   | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)

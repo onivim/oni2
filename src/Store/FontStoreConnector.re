@@ -9,73 +9,51 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Store.Font"));
 
-let minFontSize = 6;
+let minFontSize = 6.;
 let defaultFontFamily = "FiraCode-Regular.ttf";
-let defaultFontSize = 14;
+let defaultFontSize = 14.;
 
 let requestId = ref(0);
 
 let loadAndValidateEditorFont =
-    (~onSuccess, ~onError, ~requestId: int, fullPath, fontSize) => {
+    (~onSuccess, ~onError, ~requestId: int, fullPath, fontSize: float) => {
   Log.tracef(m =>
-    m("loadAndValidateEditorFont path: %s | size: %i", fullPath, fontSize)
+    m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
 
-  Fontkit.fk_new_face(
-    fullPath,
-    fontSize,
-    font => {
-      /* Measure text */
-      let shapedText = Fontkit.fk_shape(font, "Hi");
-      let firstShape = shapedText[0];
-      let secondShape = shapedText[1];
+  let fontResult = Revery.Draw.FontCache.load(fullPath);
 
-      Log.tracef(m =>
-        m("glyph1: %i glyph2: %i", firstShape.glyphId, secondShape.glyphId)
-      );
+  switch (fontResult) {
+  | Error(msg) => onError(msg);
+  | Ok(font) =>
+    let character1 = Revery.Draw.FontRenderer.measure(font, fontSize, "H");
+    let character2 = Revery.Draw.FontRenderer.measure(font, fontSize, "i");
 
-      let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
-      Log.debug("Got glyph for firstShape");
-      let secondGlyph = Fontkit.renderGlyph(font, secondShape.glyphId);
-      Log.debug("Got glyph for secondShape");
+    if (!Float.equal(character1.width, character2.width)) {
+      onError("Not a monospace font");
+    } else {
+      let measuredWidth = character1.width;
+      let measuredHeight = character1.height;
 
-      if (glyph.advance != secondGlyph.advance) {
-        onError("Not a monospace font.");
-      } else if (firstShape.glyphId == secondShape.glyphId) {
-        onError("Unable to load glyphs.");
-      } else {
-        let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight =
-          float_of_int(fontSize)
-          *. float_of_int(metrics.height)
-          /. float_of_int(metrics.unitsPerEm);
+      Log.debugf(m => m("Measured width: %f ", measuredWidth));
 
-        let measuredWidth =
-          float_of_int(glyph.advance) /. (64. *. scaleFactor);
-        let measuredHeight = floor(actualHeight +. 0.5);
+      onSuccess((
+        requestId,
+        EditorFont.create(
+          ~fontFile=fullPath,
+          ~fontSize,
+          ~measuredWidth,
+          ~measuredHeight,
+          (),
+        ),
+      ));
+    }
 
-        Log.debugf(m => m("Measured width: %f ", measuredWidth));
-        Log.debugf(m => m("Measured height: %f ", measuredHeight));
-
-        /* Set editor text based on measurements */
-        onSuccess((
-          requestId,
-          EditorFont.create(
-            ~fontFile=fullPath,
-            ~fontSize,
-            ~measuredWidth,
-            ~measuredHeight,
-            (),
-          ),
-        ));
-      };
-    },
-    _ => onError("Unable to load font."),
-  );
+  }
 };
 
 let start = () => {
-  let setFont = (dispatch1, maybeFontFamily, fontSize) => {
+  let setFont = (dispatch1, maybeFontFamily, fontSize: float) => {
     let dispatch = action =>
       Revery.App.runOnMainThread(() => dispatch1(action));
 
