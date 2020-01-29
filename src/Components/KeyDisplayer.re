@@ -33,7 +33,7 @@ module Constants = {
 
 // UPDATE-ish
 
-let remvoeExpired = (time, model) => {
+let removeExpired = (time, model) => {
   let groups =
     List.filter(
       press => time -. press.time < Constants.duration,
@@ -65,7 +65,7 @@ let add = (~time, key, model) => {
       ]
     };
 
-  {...model, groups} |> remvoeExpired(time);
+  {...model, groups} |> removeExpired(time);
 };
 
 // VIEW
