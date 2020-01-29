@@ -115,7 +115,7 @@ let renderSpaces =
     let iF = float_of_int(i^);
     let xPos = x +. fontWidth *. iF;
 
-    CanvasContext.Deprecated.drawRect(
+    Minimap.drawRect(
       ~x=xPos +. xOffset,
       ~y=y +. yOffset,
       ~width=size,
@@ -598,7 +598,7 @@ let%component make =
           let scrollY = editor.scrollY;
 
           /* Draw background for cursor line */
-          CanvasContext.Deprecated.drawRect(
+          Minimap.drawRect(
             ~x=lineNumberWidth,
             ~y=
               fontHeight
@@ -612,7 +612,7 @@ let%component make =
 
           /* Draw configured rulers */
           let renderRuler = ruler =>
-            CanvasContext.Deprecated.drawRect(
+            Minimap.drawRect(
               ~x=fst(bufferPositionToPixel(0, ruler)),
               ~y=0.0,
               ~height=float_of_int(metrics.pixelHeight),
@@ -643,7 +643,7 @@ let%component make =
                  endC,
                );
 
-             CanvasContext.Deprecated.drawRect(
+             Minimap.drawRect(
                ~x=
                  lineNumberWidth
                  +. float_of_int(startOffset)
@@ -686,7 +686,7 @@ let%component make =
                    endC,
                  );
 
-               CanvasContext.Deprecated.drawRect(
+               Minimap.drawRect(
                  ~x=
                    lineNumberWidth
                    +. float_of_int(startOffset)
@@ -847,7 +847,7 @@ let%component make =
 
           /* Draw background for line numbers */
           if (showLineNumbers) {
-            CanvasContext.Deprecated.drawRect(
+            Minimap.drawRect(
               ~x=0.,
               ~y=0.,
               ~width=lineNumberWidth,
