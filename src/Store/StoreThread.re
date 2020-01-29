@@ -201,10 +201,9 @@ let start =
     Features.updateSubscriptions(setup, newState, dispatch);
 
     onAfterDispatch(action);
-    runEffects();
-  }
+  };
 
-  and runEffects = () => {
+  let runEffects = () => {
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
@@ -299,6 +298,9 @@ let start =
   };
 
   setIconTheme("vs-seti");
+
+  let _: unit => unit =
+    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
 
   (dispatch, runEffects);
 };
