@@ -31,7 +31,7 @@ let enable = _model => {
   {...initial, isEnabled: true};
 };
 
-let collectGarbage = (time, model) => {
+let remvoeExpired = (time, model) => {
   let presses =
     List.filter(
       press => time -. press.time < Constants.timeToShow,
@@ -72,7 +72,7 @@ let add = (time, key, model) => {
   let ret = {...model, isActive: true, presses};
 
   // Also filter out old key presses, while we're here
-  collectGarbage(time, ret);
+  remvoeExpired(time, ret);
 };
 
 let toString = (v: t) => {
