@@ -157,7 +157,7 @@ let renderTokens =
     | Text =>
       CanvasContext.Deprecated.drawString(
         ~x,
-        ~y,
+        ~y=y +. fontHeight,
         ~color=token.color,
         ~fontFamily,
         ~fontSize,
