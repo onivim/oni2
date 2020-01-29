@@ -17,6 +17,7 @@ open Oni_Model.StatusBarModel;
 
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
+module CustomHooks = Oni_Components.CustomHooks;
 
 module Notification = {
   open Notification;

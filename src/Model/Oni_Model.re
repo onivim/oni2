@@ -36,7 +36,6 @@ module Filter = Filter;
 module Focus = Focus;
 module FocusManager = FocusManager;
 module FsTreeNode = FsTreeNode;
-module KeyDisplayer = KeyDisplayer;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module LanguageFeatures = LanguageFeatures;

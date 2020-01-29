@@ -10,6 +10,7 @@ open Oni_Syntax;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
 
 type t = {
   buffers: Buffers.t,
@@ -35,7 +36,7 @@ type t = {
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
-  keyDisplayer: KeyDisplayer.t,
+  keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
@@ -92,7 +93,7 @@ let create: unit => t =
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
-    keyDisplayer: KeyDisplayer.initial,
+    keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.initial,
     references: References.initial,

@@ -3,6 +3,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+
 let pathSymlinkEnabled = (~addingLink) =>
   (
     Revery.Environment.os == Revery.Environment.Mac
@@ -78,14 +80,14 @@ let createDefaultCommands = getState => {
       Command.create(
         ~category=Some("Input"),
         ~name="Disable Key Displayer",
-        ~enabled=() => getState().keyDisplayer.isEnabled,
+        ~enabled=() => getState().keyDisplayer != None,
         ~action=DisableKeyDisplayer,
         (),
       ),
       Command.create(
         ~category=Some("Input"),
         ~name="Enable Key Displayer",
-        ~enabled=() => !getState().keyDisplayer.isEnabled,
+        ~enabled=() => getState().keyDisplayer == None,
         ~action=EnableKeyDisplayer,
         (),
       ),
@@ -333,6 +335,17 @@ let start = (getState, contributedCommands) => {
   let updater = (state: State.t, action) => {
     switch (action) {
     | Init => (state, setInitialCommands)
+
+    | EnableKeyDisplayer => (
+        {...state, keyDisplayer: Some(KeyDisplayer.initial)},
+        Isolinear.Effect.none,
+      )
+
+    | DisableKeyDisplayer => (
+        {...state, keyDisplayer: None},
+        Isolinear.Effect.none,
+      )
+
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
