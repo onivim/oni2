@@ -40,10 +40,14 @@ let rec toFriendlyName =
         let hasCommand = Str.string_match(Regexes.command, key, 0);
 
         if (hasCommand) {
-          Buffer.add_string(buffer, "Command + ");
+          switch (Revery.Environment.os) {
+          | Windows => Buffer.add_string(buffer, "Win + ")
+          | Mac => Buffer.add_string(buffer, "Cmd + ")
+          | _ => Buffer.add_string(buffer, "Super + ")
+          };
         };
         if (hasControl) {
-          Buffer.add_string(buffer, "Control + ");
+          Buffer.add_string(buffer, "Ctrl + ");
         };
         if (hasAlt) {
           Buffer.add_string(buffer, "Alt + ");
