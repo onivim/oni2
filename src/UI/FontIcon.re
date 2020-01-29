@@ -28,8 +28,8 @@ let make =
       Style.color(color),
       Style.backgroundColor(backgroundColor),
       Style.margin(margin),
-      Style.height(fontSize),
-      Style.width(fontSize),
+      Style.height(fontSize |> int_of_float),
+      Style.width(fontSize |> int_of_float),
       Style.textWrap(Revery.TextWrapping.NoWrap),
     ]
   />;

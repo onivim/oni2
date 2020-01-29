@@ -546,10 +546,11 @@ let%component make =
     switch (elementRef) {
     | None => ()
     | Some(r) =>
-      let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
+      let rect = r#getBoundingBox();
+      let (minX, minY, _, _) = Revery.Math.BoundingBox2d.getBounds(rect);
 
-      let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
-      let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
+      let relY = evt.mouseY -. minY;
+      let relX = evt.mouseX -. minX;
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
