@@ -26,7 +26,7 @@ let containerStyle =
 let textStyle = uiFont => {
   Style.[
     fontFamily(uiFont),
-    fontSize(24),
+    fontSize(24.),
     textWrap(TextWrapping.NoWrap),
     backgroundColor(bgc),
     color(fgc),
@@ -48,7 +48,7 @@ let keyGroupView = (~uiFont, ~text: string, ()) => {
     <Text
       style=Style.[
         fontFamily(uiFont),
-        fontSize(24),
+        fontSize(24.),
         textWrap(TextWrapping.NoWrap),
         backgroundColor(bgc),
         color(Colors.white),

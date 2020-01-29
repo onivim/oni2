@@ -34,7 +34,7 @@ module Styles = {
   ];
 
   let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
-    fontSize(11),
+    fontSize(11.),
     fontFamily(font.fontFile),
     color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
     marginLeft(10),
@@ -48,10 +48,10 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
       fontFamily("seti.ttf"),
-      fontSize(int_of_float(float(size) *. 2.)),
+      fontSize(size *. 2.),
       color(fg),
-      width(int_of_float(float(size) *. 1.5)),
-      height(int_of_float(float(size) *. 1.75)),
+      width(int_of_float(size *. 1.5)),
+      height(int_of_float(size *. 1.75)),
       textWrap(TextWrapping.NoWrap),
       marginLeft(-4),
     ]

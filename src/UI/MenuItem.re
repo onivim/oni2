@@ -4,7 +4,7 @@ open Oni_Core;
 open Oni_Model;
 
 module Constants = {
-  let fontSize = 20;
+  let fontSize = 20.;
 };
 
 module Styles = {
@@ -41,7 +41,7 @@ module Styles = {
           Style.[
             fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
-            fontSize(12),
+            fontSize(12.),
             color(theme.menuForeground),
             backgroundColor(bg(~theme, ~isFocused)),
           ],

@@ -101,7 +101,7 @@ let make =
         backgroundColor={theme.editorBackground}
         color={v.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
-        fontSize={uiFont.fontSize *. 1.5)}
+        fontSize={uiFont.fontSize *. 1.5}
       />
     | None => React.empty
     };
@@ -133,7 +133,7 @@ let make =
         icon
         backgroundColor={theme.editorBackground}
         color={theme.tabActiveForeground}
-        fontSize={modified ? 10 : 12}
+        fontSize={modified ? 10. : 12.}
       />
     </Sneakable>
   </View>;

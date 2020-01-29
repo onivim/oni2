@@ -20,7 +20,7 @@ module Notification = {
 
     let text = (~background, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      fontSize(11),
+      fontSize(11.),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
       backgroundColor(background),
@@ -54,7 +54,7 @@ module Notification = {
     let icon = () =>
       <FontIcon
         icon={iconFor(item)}
-        fontSize=16
+        fontSize=16.
         backgroundColor={theme.background}
         color={colorFor(item, ~theme)}
       />;
@@ -65,7 +65,7 @@ module Notification = {
       <Clickable onClick style=Styles.closeButton>
         <FontIcon
           icon=FontAwesome.times
-          fontSize=13
+          fontSize=13.
           backgroundColor={theme.background}
           color={theme.foreground}
         />
