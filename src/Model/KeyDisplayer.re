@@ -6,25 +6,23 @@
 
 // We group key presses in time together,
 // so they show in the same line
-type groupedPresses = {
+type group = {
+  id: float, // use time of first keypress as id
   isExclusive: bool,
-  time: float,
-  keys: list(string),
+  mutable time: float,
+  mutable keys: list(string),
 };
 
 type t = {
-  // Enabled is whether or not the key displayer feature is turned on
   isEnabled: bool,
-  // Active is whether or not there is a visible key press.
-  isActive: bool,
-  presses: list(groupedPresses),
+  groups: list(group),
 };
 
-let initial: t = {isActive: false, presses: [], isEnabled: false};
+let initial: t = {groups: [], isEnabled: false};
 
 module Constants = {
   let timeToShow = 2.5;
-  let timeToGroup = 0.3;
+  let maxGroupInterval = 0.3;
 };
 
 let enable = _model => {
@@ -32,61 +30,52 @@ let enable = _model => {
 };
 
 let remvoeExpired = (time, model) => {
-  let presses =
+  let groups =
     List.filter(
       press => time -. press.time < Constants.timeToShow,
-      model.presses,
+      model.groups,
     );
-  let isActive = List.length(presses) > 0;
-  {...model, isActive, presses};
+  {...model, groups};
 };
 
 let add = (time, key, model) => {
-  let isExclusive = String.length(key) > 1 || key == " ";
-  let presses =
-    switch (model.presses) {
-    | [] => [{time, isExclusive, keys: [key]}]
-    | [hd, ...tail] =>
-      if (time
-          -. hd.time <= Constants.timeToGroup
-          && !hd.isExclusive
-          && String.length(key) == 1) {
-        [
-          // The key presses was within the group time,
-          // so we'll just add it to an existing group
-          {time, isExclusive, keys: [key, ...hd.keys]},
-          ...tail,
-        ];
-      } else {
-        let isExclusive = String.length(key) > 1;
-        [
-          // The time was past the group time..
-          // so we'll create a new group
-          {time, isExclusive, keys: [key]},
-          hd,
-          ...tail,
-        ];
-      }
+  let isCharKey = String.length(key) == 1;
+  let isExclusive = !isCharKey || key == " ";
+  let isWithinGroupInterval = group =>
+    time -. group.time <= Constants.maxGroupInterval;
+  let canGroupWith = group =>
+    !group.isExclusive && isCharKey && isWithinGroupInterval(group);
+
+  let groups =
+    switch (model.groups) {
+    | [] => [{id: time, time, isExclusive, keys: [key]}]
+
+    | [group, ..._] as groups when canGroupWith(group) =>
+      group.time = time;
+      group.keys = [key, ...group.keys];
+      groups;
+
+    | groups => [
+        {id: time, time, isExclusive: !isCharKey, keys: [key]},
+        ...groups,
+      ]
     };
 
-  let ret = {...model, isActive: true, presses};
-
-  // Also filter out old key presses, while we're here
-  remvoeExpired(time, ret);
+  {...model, groups} |> remvoeExpired(time);
 };
 
-let toString = (v: t) => {
-  let presses =
+let toString = model => {
+  let groups =
     String.concat(
       ",\n",
       List.map(
-        (gp: groupedPresses) =>
+        (group: group) =>
           Printf.sprintf(
             "{ time: %f keys: [\n%s]}\n",
-            gp.time,
-            String.concat(",\n", gp.keys),
+            group.time,
+            String.concat(",\n", group.keys),
           ),
-        v.presses,
+        model.groups,
       ),
     );
 
@@ -96,8 +85,8 @@ let toString = (v: t) => {
  - enabled: %b
 %s
 ]|},
-    v.isActive,
-    v.isEnabled,
-    presses,
+    model.groups != [],
+    model.isEnabled,
+    groups,
   );
 };

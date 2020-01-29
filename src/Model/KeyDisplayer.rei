@@ -6,19 +6,17 @@
 
 // We group key presses in time together,
 // so they show in the same line
-type groupedPresses = {
+type group = {
+  id: float,
   isExclusive: bool,
-  time: float,
-  keys: list(string),
+  mutable time: float,
+  mutable keys: list(string),
 };
 
 type t =
   pri {
-    // Enabled is whether or not the key displayer feature is turned on
     isEnabled: bool,
-    // Active is whether or not there is a visible key press.
-    isActive: bool,
-    presses: list(groupedPresses),
+    groups: list(group),
   };
 
 let initial: t;

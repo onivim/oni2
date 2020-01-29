@@ -12,11 +12,14 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1., "a")
         |> KeyDisplayer.add(1.1, "b");
 
-      expect.list([{time: 1.1, isExclusive: false, keys: ["b", "a"]}]).
+      expect.list([
+        {id: 1., time: 1.1, isExclusive: false, keys: ["b", "a"]},
+      ]).
         toEqual(
-        model.presses,
+        model.groups,
       );
     });
+
     test("keys not close together don't get grouped", ({expect}) => {
       let model =
         KeyDisplayer.initial
@@ -24,14 +27,15 @@ describe("KeyDisplayer", ({describe, _}) => {
         |> KeyDisplayer.add(1.5, "b");
 
       expect.list([
-        {time: 1.5, isExclusive: false, keys: ["b"]},
-        {time: 1., isExclusive: false, keys: ["a"]},
+        {id: 1.5, time: 1.5, isExclusive: false, keys: ["b"]},
+        {id: 1., time: 1., isExclusive: false, keys: ["a"]},
       ]).
         toEqual(
-        model.presses,
+        model.groups,
       );
     });
   });
+
   describe("update", ({test, _}) =>
     test("keys past the expiration time get filtered out", ({expect}) => {
       let model =
@@ -42,11 +46,11 @@ describe("KeyDisplayer", ({describe, _}) => {
 
       // "a" should be filtered out
       expect.list([
-        {time: 3.9, isExclusive: false, keys: ["x"]},
-        {time: 1.5, isExclusive: false, keys: ["b"]},
+        {id: 3.9, time: 3.9, isExclusive: false, keys: ["x"]},
+        {id: 1.5, time: 1.5, isExclusive: false, keys: ["b"]},
       ]).
         toEqual(
-        model.presses,
+        model.groups,
       );
     })
   );

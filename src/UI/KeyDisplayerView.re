@@ -48,24 +48,25 @@ let keyGroupView = (~uiFont, ~text: string, ()) =>
   <View style=Styles.group> <Text style={Styles.text(uiFont)} text /> </View>;
 
 let%component make = (~state: State.t, ()) => {
-  let%hook activePresses =
+  let%hook activeGroups =
     CustomHooks.useExpiration(
+      ~equals=(a, b) => KeyDisplayer.(a.id == b.id),
       ~expireAfter=Constants.duration,
-      state.keyDisplayer.presses,
+      state.keyDisplayer.groups,
     );
   let uiFont = state.uiFont.fontFile;
 
   let groups =
     List.map(
-      (keyGroup: KeyDisplayer.groupedPresses) => {
+      (group: KeyDisplayer.group) => {
         let text =
-          keyGroup.keys
+          group.keys
           |> List.map(Oni_Input.Parser.toFriendlyName)
           |> List.rev
           |> String.concat("");
         <keyGroupView uiFont text />;
       },
-      activePresses,
+      activeGroups,
     )
     |> List.rev
     |> React.listToElement;
