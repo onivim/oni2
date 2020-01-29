@@ -195,6 +195,22 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
+  test("list of strings", ({expect}) => {
+    let configuration = {|
+     { "experimental.viml": ["first thing", "second thing", "third thing"] }
+     |};
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.list(Configuration.getValue(c => c.experimentalVimL, v)).toEqual([
+        "first thing",
+        "second thing",
+        "third thing",
+      ])
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
   test("resiliency tests", ({expect}) => {
     let trailingCommaInObject = {|
       { "editor.rulers": [120, 80], }
