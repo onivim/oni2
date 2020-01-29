@@ -277,10 +277,22 @@ let%component make =
       (0, 1);
     };
 
+    let%hook (scrollY, _setScrollYImmediately) =
+      Hooks.spring(
+        ~target=editor.scrollY,
+        ~restThreshold=3.,
+        Spring.Options.stiff,
+      );
+
   let bufferPositionToPixel = (line, char) => {
+<<<<<<< Updated upstream
     let x =
       float_of_int(char) *. fontWidth -. editor.scrollX +. lineNumberWidth;
     let y = float_of_int(line) *. fontHeight -. editor.scrollY;
+=======
+    let x = float(char) *. fontWidth -. editor.scrollX +. gutterWidth;
+    let y = float(line) *. fontHeight -. scrollY;
+>>>>>>> Stashed changes
     (x, y);
   };
 
@@ -297,8 +309,13 @@ let%component make =
   let cursorPixelY =
     int_of_float(
       fontHeight
+<<<<<<< Updated upstream
       *. float_of_int(Index.toZeroBased(cursorPosition.line))
       -. editor.scrollY
+=======
+      *. float(Index.toZeroBased(cursorPosition.line))
+      -. scrollY
+>>>>>>> Stashed changes
       +. 0.5,
     );
 
@@ -603,7 +620,6 @@ let%component make =
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
-          let scrollY = editor.scrollY;
 
           /* Draw background for cursor line */
           Shapes.drawRect(
@@ -611,8 +627,13 @@ let%component make =
             ~x=lineNumberWidth,
             ~y=
               fontHeight
+<<<<<<< Updated upstream
               *. float_of_int(Index.toZeroBased(cursorPosition.line))
               -. editor.scrollY,
+=======
+              *. float(Index.toZeroBased(cursorPosition.line))
+              -. scrollY,
+>>>>>>> Stashed changes
             ~height=fontHeight,
             ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
             ~color=theme.editorLineHighlightBackground,
@@ -662,8 +683,13 @@ let%component make =
                  -. halfOffset,
                ~y=
                  fontHeight
+<<<<<<< Updated upstream
                  *. float_of_int(Index.toZeroBased(r.start.line))
                  -. editor.scrollY
+=======
+                 *. float(Index.toZeroBased(r.start.line))
+                 -. scrollY
+>>>>>>> Stashed changes
                  -. halfOffset
                  +. (fontHeight -. 2.),
                ~height=1.,
@@ -706,8 +732,13 @@ let%component make =
                    -. halfOffset,
                  ~y=
                    fontHeight
+<<<<<<< Updated upstream
                    *. float_of_int(Index.toZeroBased(r.start.line))
                    -. editor.scrollY
+=======
+                   *. float(Index.toZeroBased(r.start.line))
+                   -. scrollY
+>>>>>>> Stashed changes
                    -. halfOffset,
                  ~height=fontHeight +. offset,
                  ~width=
