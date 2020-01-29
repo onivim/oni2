@@ -15,7 +15,6 @@ module ContextMenu = Oni_Components.ContextMenu;
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | Tick(tick)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)

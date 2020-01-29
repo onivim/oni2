@@ -9,7 +9,6 @@ open Oni_Model;
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
     switch (a) {
-    | Actions.Tick(_) => s
     | a =>
       let s = {
         ...s,

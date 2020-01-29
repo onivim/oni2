@@ -7,8 +7,6 @@
  * so that we can eek out as much perf as we can in this architecture.
  */
 
-open Revery;
-
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
 
@@ -191,10 +189,7 @@ let start =
     );
 
   let rec dispatch = (action: Model.Actions.t) => {
-    switch (action) {
-    | Tick(_) => () // This gets a bit intense, so ignore it
-    | _ => DispatchLog.info(Model.Actions.show(action))
-    };
+    DispatchLog.info(Model.Actions.show(action));
 
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
@@ -208,9 +203,10 @@ let start =
     Features.updateSubscriptions(setup, newState, dispatch);
 
     onAfterDispatch(action);
-  };
+    runEffects();
+  }
 
-  let runEffects = () => {
+  and runEffects = () => {
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
@@ -305,18 +301,6 @@ let start =
   };
 
   setIconTheme("vs-seti");
-
-  let totalTime = ref(0.0);
-  let _ =
-    Tick.interval(
-      deltaT => {
-        let deltaTime = Time.toFloatSeconds(deltaT);
-        totalTime := totalTime^ +. deltaTime;
-        dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
-        runEffects();
-      },
-      Time.zero,
-    );
 
   (dispatch, runEffects);
 };

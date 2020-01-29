@@ -35,12 +35,9 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
     ~name="Quickmenu is loading is false",
     ~timeout=longWaitTime,
     (state: State.t) => {
-      dispatch(Tick({deltaTime: 0., totalTime: 0.}));
-      runEffects();
-      switch (state.quickmenu) {
-      | Some({filterProgress: Complete, _}) => true
-      | _ => false
-      };
-    },
-  );
+    switch (state.quickmenu) {
+    | Some({filterProgress: Complete, _}) => true
+    | _ => false
+    }
+  });
 });
