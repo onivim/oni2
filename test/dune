@@ -12,6 +12,7 @@
         Oni_Model_Test
         Oni_UI_Test
         Oni_Syntax_Test
+        Feature_Editor_Test
             ))
 
 (executable
