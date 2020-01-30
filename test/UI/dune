@@ -1,0 +1,5 @@
+(library
+    (name Oni_UI_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries Oni2.core Oni2.ui rely.lib))

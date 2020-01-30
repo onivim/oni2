@@ -135,6 +135,11 @@ type t =
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed
   | WindowCloseCanceled
+  | NewTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | LostTextContentProvider({handle: int})
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)

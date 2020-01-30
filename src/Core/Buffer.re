@@ -14,6 +14,8 @@ type t = {
   modified: bool,
   version: int,
   lines: array(BufferLine.t),
+  originalUri: option(Uri.t),
+  originalLines: option(array(string)),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
@@ -33,6 +35,8 @@ let ofLines = (~id=0, rawLines: array(string)) => {
     fileType: None,
     modified: false,
     lines,
+    originalUri: None,
+    originalLines: None,
     indentation: None,
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
@@ -48,6 +52,8 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   modified: metadata.modified,
   fileType: None,
   lines: [||],
+  originalUri: None,
+  originalLines: None,
   indentation: None,
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
@@ -72,6 +78,15 @@ let getLine = (line: int, buffer: t) => {
 };
 
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
+
+let getOriginalUri = buffer => buffer.originalUri;
+let setOriginalUri = (uri, buffer) => {...buffer, originalUri: Some(uri)};
+
+let getOriginalLines = buffer => buffer.originalLines;
+let setOriginalLines = (lines, buffer) => {
+  ...buffer,
+  originalLines: Some(lines),
+};
 
 let getVersion = (buffer: t) => buffer.version;
 let setVersion = (version: int, buffer: t) => {...buffer, version};

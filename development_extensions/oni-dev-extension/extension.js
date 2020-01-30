@@ -143,6 +143,15 @@ function activate(context) {
     };
 
     testSCM.dispose();
+
+    const textContentProvider = {
+        provideTextDocumentContent: (uri) => {
+            console.error("CONTENT!");
+            return "Hello. This is content.";
+        }
+    };
+    let disposable = vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)
+    disposable.dispose();
 }
 
 // this method is called when your extension is deactivated

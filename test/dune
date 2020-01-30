@@ -10,6 +10,7 @@
         Oni_ExtensionManagement_Test
         Oni_Input_Test
         Oni_Model_Test
+        Oni_UI_Test
         Oni_Syntax_Test
             ))
 
@@ -44,6 +45,13 @@
         Oni_Core_Test
         Oni_Model_Test
             ))
+
+(executable
+    (name OniUnitTestRunnerUI)
+    (public_name OniUnitTestRunnerUI)
+    (modules OniUnitTestRunnerUI)
+    (package OniUnitTestRunner)
+    (libraries Oni_UI_Test))
 
 (executable
     (name OniUnitTestRunnerCI)
