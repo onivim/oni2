@@ -142,10 +142,6 @@ if (cliOptions.syntaxHighlightService) {
         Time.seconds(0),
       );
 
-    let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
-    };
-
     let getTime = () => Time.now() |> Time.toFloatSeconds;
 
     let getZoom = () => {
@@ -173,7 +169,6 @@ if (cliOptions.syntaxHighlightService) {
         ~getTime,
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
-        ~getScaleFactor,
         ~getZoom,
         ~setZoom,
         ~setTitle,

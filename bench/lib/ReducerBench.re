@@ -37,6 +37,7 @@ let changeEditorFont = () => {
           ~fontSize=10.,
           ~measuredWidth=10.,
           ~measuredHeight=10.,
+          ~descenderHeight=1.,
           (),
         ),
       ),

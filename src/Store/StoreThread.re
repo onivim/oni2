@@ -74,7 +74,6 @@ let start =
       ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
-      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);

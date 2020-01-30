@@ -4,8 +4,6 @@
  * Logic for rendering indent lines in the buffer view
  */
 
-open Revery.Draw;
-
 open Oni_Core;
 
 let rec getIndentLevel =

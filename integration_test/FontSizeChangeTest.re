@@ -14,7 +14,7 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
         ...configuration,
         default: {
           ...configuration.default,
-          editorFontSize: 8,
+          editorFontSize: 8.,
         },
       }),
     );

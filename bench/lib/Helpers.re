@@ -28,6 +28,7 @@ let simpleState =
         ~fontSize=14.,
         ~measuredWidth=14.,
         ~measuredHeight=14.,
+        ~descenderHeight=1.,
         (),
       ),
     ),
