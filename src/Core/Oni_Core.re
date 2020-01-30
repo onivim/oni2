@@ -24,6 +24,7 @@ module EditorFont = EditorFont;
 module EditorSize = EditorSize;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
+module Filter = Filter;
 module Indentation = Indentation;
 module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;

@@ -32,7 +32,6 @@ module EditorMetrics = EditorMetrics;
 module EditorVisibleRanges = EditorVisibleRanges;
 module Extensions = Extensions;
 module FileExplorer = FileExplorer;
-module Filter = Filter;
 module Focus = Focus;
 module FocusManager = FocusManager;
 module FsTreeNode = FsTreeNode;
