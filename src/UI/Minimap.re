@@ -24,7 +24,7 @@ let minimapPaint = Skia.Paint.make();
 let drawRect = (~x, ~y, ~width, ~height, ~color, canvasContext) => {
   Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
   let rect = Skia.Rect.makeLtrb(x, y, x +. width, y +. height);
-  CanvasContext.drawRect(canvasContext, rect, minimapPaint);
+  CanvasContext.drawRect(~rect, ~paint=minimapPaint, canvasContext);
 };
 
 let renderLine =

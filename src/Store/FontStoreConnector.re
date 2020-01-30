@@ -33,7 +33,8 @@ let loadAndValidateEditorFont =
       onError("Not a monospace font");
     } else {
       let measuredWidth = character1.width;
-      let {lineHeight,descent, _}: Revery.Font.FontMetrics.t = Revery.Font.getMetrics(font, fontSize);
+      let {lineHeight, descent, _}: Revery.Font.FontMetrics.t =
+        Revery.Font.getMetrics(font, fontSize);
 
       Log.debugf(m => m("Measured width: %f ", measuredWidth));
       Log.debugf(m => m("Line height: %f ", lineHeight));

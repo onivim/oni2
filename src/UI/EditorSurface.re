@@ -46,7 +46,9 @@ module Styles = {
 let renderLineNumber =
     (
       paint: Skia.Paint.t,
+      descenderHeight: float,
       fontWidth: float,
+      fontHeight: float,
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
@@ -63,7 +65,7 @@ let renderLineNumber =
 
   Skia.Paint.setColor(paint, Color.toSkia(lineNumberTextColor));
 
-  let yF = yOffset;
+  let yF = yOffset +. fontHeight -. descenderHeight;
 
   let lineNumber =
     string_of_int(
@@ -153,6 +155,7 @@ let renderTokens =
       -. xF;
     let y = yF;
 
+    let offset = fontHeight -. descenderHeight;
     switch (token.tokenType) {
     | Text =>
       Skia.Paint.setColor(tokenPaint, Color.toSkia(token.color));
@@ -162,14 +165,14 @@ let renderTokens =
       CanvasContext.drawText(
         ~paint=tokenPaint,
         ~x,
-        ~y=yF +. fontHeight -. descenderHeight,
+        ~y=yF +. offset,
         ~text=shapedText,
         canvasContext,
       );
     | Tab =>
       CanvasContext.Deprecated.drawString(
         ~x=x +. fontWidth /. 4.,
-        ~y=y +. fontHeight /. 4.,
+        ~y=y +. fontHeight /. 4. +. offset,
         ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10.,
@@ -604,6 +607,7 @@ let%component make =
                  let lineNumberPaint = Skia.Paint.make();
                  Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
                  Skia.Paint.setAntiAlias(lineNumberPaint, true);
+                 //Skia.Paint.setSubpixel(lineNumberPaint, true);
                  Skia.Paint.setLcdRenderText(lineNumberPaint, true);
                  Skia.Paint.setTextSize(lineNumberPaint, fontSize);
                  Skia.Paint.setTypeface(
@@ -620,6 +624,7 @@ let%component make =
                  Skia.Paint.setTextEncoding(paint, GlyphId);
                  Skia.Paint.setAntiAlias(paint, true);
                  Skia.Paint.setLcdRenderText(paint, true);
+                 //Skia.Paint.setSubpixel(paint, true);
                  Skia.Paint.setTextSize(paint, fontSize);
                  Skia.Paint.setTypeface(
                    paint,
@@ -908,7 +913,9 @@ let%component make =
                        let _ =
                          renderLineNumber(
                            paint,
+                           descenderHeight,
                            fontWidth,
+                           fontHeight,
                            item,
                            lineNumberWidth,
                            theme,
