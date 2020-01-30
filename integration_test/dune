@@ -26,7 +26,6 @@
            Regression1097Test
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
-           TickTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -72,7 +71,6 @@
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
         AddRemoveSplitTest.exe
-        TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         VimlConfigurationTest.exe

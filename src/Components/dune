@@ -9,6 +9,7 @@
         lwt
         lwt.unix
         Oni2.core
+        Oni2.input
         Rench
         Revery
         editor-core-types

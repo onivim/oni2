@@ -146,8 +146,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
     };
 
-    let getTime = () => Time.now() |> Time.toFloatSeconds;
-
     let getZoom = () => {
       Window.getZoom(w);
     };
@@ -170,7 +168,6 @@ if (cliOptions.syntaxHighlightService) {
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
-        ~getTime,
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
         ~getScaleFactor,

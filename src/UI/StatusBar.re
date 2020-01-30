@@ -17,51 +17,7 @@ open Oni_Model.StatusBarModel;
 
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
-
-let useExpiration = (~equals=(==), ~expireAfter, items) => {
-  let%hook (active, setActive) = Hooks.state([]);
-  let%hook (expired, setExpired) = Hooks.ref([]);
-  let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
-
-  let (stillActive, freshlyExpired) =
-    List.partition(
-      ((_item, activated)) => Time.(time - activated < expireAfter),
-      active,
-    );
-
-  if (freshlyExpired != []) {
-    setActive(_ => stillActive);
-
-    freshlyExpired
-    |> List.map(((item, _t)) => item)
-    |> List.rev_append(expired)
-    |> setExpired;
-  };
-
-  let%hook () =
-    Hooks.effect(
-      If((!==), items),
-      () => {
-        let untracked =
-          items
-          |> List.filter(item => !List.exists(equals(item), expired))
-          |> List.filter(item =>
-               !List.exists(((it, _t)) => equals(it, item), active)
-             );
-
-        if (untracked != []) {
-          let init = item => (item, time);
-          setActive(tracked => List.map(init, untracked) @ tracked);
-        };
-
-        // TODO: Garbage collection of expired, but on what condition?
-
-        None;
-      },
-    );
-
-  List.map(((item, _t)) => item, stillActive);
-};
+module CustomHooks = Oni_Components.CustomHooks;
 
 module Notification = {
   open Notification;
@@ -352,7 +308,7 @@ let%component make =
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
 
   let%hook activeNotifications =
-    useExpiration(
+    CustomHooks.useExpiration(
       ~expireAfter=Notification.Animations.totalDuration,
       ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
       notifications,

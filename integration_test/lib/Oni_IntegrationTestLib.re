@@ -21,7 +21,6 @@ let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
 let setTime = v => _currentTime := v;
-let getTime = () => _currentTime^;
 
 let setTitle = title => _currentTitle := title;
 let getTitle = () => _currentTitle^;
@@ -99,7 +98,6 @@ let runTest =
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
       ~getScaleFactor,
-      ~getTime,
       ~setTitle,
       ~getZoom,
       ~setZoom,
