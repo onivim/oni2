@@ -5,8 +5,11 @@
  */
 
 open Oni_Core;
-open Utility;
 open Rench;
+
+module Option = Utility.Option;
+module OptionEx = Utility.OptionEx;
+module Result = Utility.Result;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionScanner"));
 
@@ -58,7 +61,9 @@ let scan = (~prefix=None, ~category, directory: string) => {
     try({
       let manifest =
         json
-        |> ExtensionManifest.of_yojson_exn
+        |> Json.Decode.decode_value(ExtensionManifest.decode)
+        |> Result.map_error(Json.Decode.string_of_error)
+        |> Result.get_ok
         |> remapManifest(directory)
         |> ExtensionManifest.updateName(name =>
              prefix

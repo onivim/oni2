@@ -24,13 +24,11 @@ let toQuickMenu = (v: t) => {
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
-  open ExtensionContributions;
-  open ExtensionContributions.Commands;
 
   let getContributedCommands = (v: ExtensionScanner.t) =>
     v.manifest.contributes.commands;
 
-  let toCommand = (v: ExtensionContributions.Commands.t) => {
+  let toCommand = (v: ExtensionContributions.Command.t) => {
     Command.create(
       ~name=v.title |> LocalizedToken.to_string,
       ~action=Actions.CommandExecuteContributed(v.command),
