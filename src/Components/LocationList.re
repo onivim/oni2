@@ -16,12 +16,10 @@ type item = {
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {
-  open Revery.Draw;
-
   let dimensions =
     switch (Revery.Font.load(fontFile)) {
     | Ok(font) => Revery.Font.FontRenderer.measure(font, fontSize, "x")
-    | Error(msg) => {width: 0., height: 0.}
+    | Error(_) => {width: 0., height: 0.}
     };
   dimensions;
 };
