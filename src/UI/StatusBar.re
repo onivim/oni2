@@ -20,6 +20,8 @@ module ContextMenu = Oni_Components.ContextMenu;
 module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 module Notification = {
   open Notification;

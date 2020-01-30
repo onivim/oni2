@@ -1,3 +1,5 @@
+open Oni_Core;
+
 type filteredCompletion = Filter.result(CompletionItem.t);
 
 type t =

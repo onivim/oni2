@@ -6,12 +6,13 @@ module Subscription = Core.Subscription;
 module Log = (
   val Core.Log.withNamespace("Oni2.Store.DocumentSymbolSubscription")
 );
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module Provider = {
   type action = Actions.t;
   type params = {
     buffer: Core.Buffer.t,
-    languageFeatures: Model.LanguageFeatures.t,
+    languageFeatures: LanguageFeatures.t,
     onUpdate: list(Actions.menuItem) => unit,
   };
 
@@ -20,12 +21,12 @@ module Provider = {
     Log.debug("Starting: " ++ id);
 
     let promise =
-      Model.LanguageFeatures.requestDocumentSymbol(~buffer, languageFeatures);
+      LanguageFeatures.requestDocumentSymbol(~buffer, languageFeatures);
 
     Lwt.on_success(
       promise,
       items => {
-        open Model.LanguageFeatures;
+        open LanguageFeatures;
 
         let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
           Actions.{

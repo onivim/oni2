@@ -11,6 +11,7 @@ open Utility;
 open Actions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Completions"));
+module Completions = Feature_LanguageSupport.Completions;
 
 module Effects = {
   let requestCompletions =

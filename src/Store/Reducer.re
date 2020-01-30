@@ -6,6 +6,8 @@
 
 open Oni_Model;
 
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
     switch (a) {

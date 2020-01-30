@@ -21,6 +21,7 @@
         Oni2.syntax
         Oni2.components
         Oni2.feature.search
+        Oni2.feature.language_support
         ReasonFuzz
         textmate
         editor-core-types

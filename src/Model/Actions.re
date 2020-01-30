@@ -11,6 +11,10 @@ open Oni_Syntax;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =

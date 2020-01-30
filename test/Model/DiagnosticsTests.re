@@ -1,9 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
-
-module Diagnostic = Oni_Model.Diagnostic;
-module Diagnostics = Oni_Model.Diagnostics;
+open Feature_LanguageSupport;
 
 let zeroRange =
   Range.{
