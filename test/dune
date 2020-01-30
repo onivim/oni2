@@ -13,6 +13,7 @@
         Oni_UI_Test
         Oni_Syntax_Test
         Feature_Editor_Test
+        Feature_LanguageSupport_Test
             ))
 
 (executable
