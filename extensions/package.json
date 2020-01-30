@@ -10,7 +10,8 @@
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver": "^5.2.1",
     "vscode-nls": "^4.0.0",
-    "vscode-uri": "*"
+    "vscode-uri": "*",
+    "which": "^1.3.0"
   },
   "devDependencies": {},
   "resolutions": {
