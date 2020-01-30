@@ -37,54 +37,141 @@ module Decode = {
   open Json.Decode;
 
   let kind =
-    string |> map(fun
-    | "ui" => Ui
-    | "workspace" => Workspace
-    | _ => Ui
-    );
+    string
+    |> map(
+         fun
+         | "ui" => Ui
+         | "workspace" => Workspace
+         | _ => Ui,
+       );
 
   let author =
-    one_of([
-      ("string", string),
-      ("object", field("name", string)),
-    ]);
+    one_of([("string", string), ("object", field("name", string))]);
 
-  let engine =
-    field("vscode", string);
+  let engine = field("vscode", string);
 
   let manifest =
-    field("name", string) >>= name =>
-    field("version", string) >>= version =>
-    one_of([
-      ("author", field("author", author)),
-      ("publisher", field("publisher", string)),
-      ("default", succeed("Unknown Author")),
-    ]) >>= author =>
-    field_opt("displayName", LocalizedToken.decode) >>= displayName =>
-    field_opt("description", string) >>= description =>
-    field_opt("main", string) >>= main =>
-    field_opt("icon", string) >>= icon =>
-    field_opt("categories", list(string)) |> default([]) >>= categories =>
-    field_opt("keywords", list(string)) |> default([]) >>= keywords =>
-    field("engines", engine) >>= engines =>
-    field_opt("activationEvents", list(string)) |> default([]) >>= activationEvents =>
-    field_opt("extensionDependencies", list(string)) |> default([]) >>= extensionDependencies =>
-    field_opt("extensionPack", list(string)) |> default([]) >>= extensionPack =>
-    field_opt("extensionKind", kind) |> default(Ui) >>= extensionKind =>
-    field("contributes", ExtensionContributions.decode) >>= contributes =>
-    field_opt("enableProposedApi", bool) |> default(false) >>= enableProposedApi =>
-    succeed({
-      name, version, author, displayName, description, main, icon,
-      categories, keywords, engines, activationEvents, extensionDependencies,
-      extensionPack, extensionKind, contributes, enableProposedApi
-    });
+    field("name", string)
+    >>= (
+      name =>
+        field("version", string)
+        >>= (
+          version =>
+            one_of([
+              ("author", field("author", author)),
+              ("publisher", field("publisher", string)),
+              ("default", succeed("Unknown Author")),
+            ])
+            >>= (
+              author =>
+                field_opt("displayName", LocalizedToken.decode)
+                >>= (
+                  displayName =>
+                    field_opt("description", string)
+                    >>= (
+                      description =>
+                        field_opt("main", string)
+                        >>= (
+                          main =>
+                            field_opt("icon", string)
+                            >>= (
+                              icon =>
+                                field_opt("categories", list(string))
+                                |> default([])
+                                >>= (
+                                  categories =>
+                                    field_opt("keywords", list(string))
+                                    |> default([])
+                                    >>= (
+                                      keywords =>
+                                        field("engines", engine)
+                                        >>= (
+                                          engines =>
+                                            field_opt(
+                                              "activationEvents",
+                                              list(string),
+                                            )
+                                            |> default([])
+                                            >>= (
+                                              activationEvents =>
+                                                field_opt(
+                                                  "extensionDependencies",
+                                                  list(string),
+                                                )
+                                                |> default([])
+                                                >>= (
+                                                  extensionDependencies =>
+                                                    field_opt(
+                                                      "extensionPack",
+                                                      list(string),
+                                                    )
+                                                    |> default([])
+                                                    >>= (
+                                                      extensionPack =>
+                                                        field_opt(
+                                                          "extensionKind",
+                                                          kind,
+                                                        )
+                                                        |> default(Ui)
+                                                        >>= (
+                                                          extensionKind =>
+                                                            field(
+                                                              "contributes",
+                                                              ExtensionContributions.decode,
+                                                            )
+                                                            >>= (
+                                                              contributes =>
+                                                                field_opt(
+                                                                  "enableProposedApi",
+                                                                  bool,
+                                                                )
+                                                                |> default(
+                                                                    false,
+                                                                   )
+                                                                >>= (
+                                                                  enableProposedApi =>
+                                                                    succeed({
+                                                                    name,
+                                                                    version,
+                                                                    author,
+                                                                    displayName,
+                                                                    description,
+                                                                    main,
+                                                                    icon,
+                                                                    categories,
+                                                                    keywords,
+                                                                    engines,
+                                                                    activationEvents,
+                                                                    extensionDependencies,
+                                                                    extensionPack,
+                                                                    extensionKind,
+                                                                    contributes,
+                                                                    enableProposedApi,
+                                                                    })
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    );
 };
 
 module Encode = {
   let kind =
-    Json.Encode.(fun
-    | Ui => string("ui")
-    | Workspace => string("workspace")
+    Json.Encode.(
+      fun
+      | Ui => string("ui")
+      | Workspace => string("workspace")
     );
 };
 

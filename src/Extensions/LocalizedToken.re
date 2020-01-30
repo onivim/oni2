@@ -13,7 +13,6 @@ type t = {
   localized: option(string),
 };
 
-
 let regex = Re.Posix.re("^%(.*)%$") |> Re.compile;
 
 let parse = raw => {
@@ -32,8 +31,7 @@ let localize = (dictionary: LocalizationDictionary.t, {raw, token, _}: t) => {
   {raw, token, localized};
 };
 
-let decode =
-  Json.Decode.(string |> map(parse));
+let decode = Json.Decode.(string |> map(parse));
 
 let to_string = ({raw, localized, _}: t) => {
   Option.value(~default=raw, localized);

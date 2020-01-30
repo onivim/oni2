@@ -5,8 +5,7 @@ type t = Yojson.Safe.json;
 module Decode = {
   include Decoders_yojson.Safe.Decode;
 
-  let default = default =>
-    map(Utility.Option.value(~default));
+  let default = default => map(Utility.Option.value(~default));
 };
 
 module Encode = {

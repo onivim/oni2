@@ -68,10 +68,16 @@ module ExtensionInfo = {
         ("version", data.version |> string),
         ("engines", data.engines |> string),
         ("activationEvents", data.activationEvents |> list(string)),
-        ("extensionDependencies", data.extensionDependencies |> list(string)),
-        ("extensionKind", data.extensionKind |> ExtensionManifest.Encode.kind),
+        (
+          "extensionDependencies",
+          data.extensionDependencies |> list(string),
+        ),
+        (
+          "extensionKind",
+          data.extensionKind |> ExtensionManifest.Encode.kind,
+        ),
         ("contributes", data.contributes |> ExtensionContributions.encode),
-      ])  
+      ])
     );
 };
 
@@ -80,11 +86,7 @@ module Workspace = {
   type t = {__test: string};
 
   let encode = workspace =>
-    Json.Encode.(
-      obj([
-        ("__test", workspace.__test |> string)
-      ])
-    );
+    Json.Encode.(obj([("__test", workspace.__test |> string)]));
 };
 
 module Environment = {
@@ -98,9 +100,7 @@ module Environment = {
 
   let encode = env =>
     Json.Encode.(
-      obj([
-        ("globalStorageHomePath", env.globalStorageHomePath |> string)
-      ])
+      obj([("globalStorageHomePath", env.globalStorageHomePath |> string)])
     );
 };
 
@@ -142,5 +142,5 @@ let encode = data =>
       ("logsLocationPath", data.logsLocationPath |> string),
       ("autoStart", data.autoStart |> bool),
       ("workspace", data.workspace |> Workspace.encode),
-    ])  
+    ])
   );

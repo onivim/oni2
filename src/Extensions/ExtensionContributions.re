@@ -19,10 +19,16 @@ module Command = {
 
   let decode =
     Json.Decode.(
-      field("command", string) >>= command =>
-      field("title", LocalizedToken.decode) >>= title =>
-      field_opt("category", string) >>= category =>
-      succeed({command, title, category})
+      field("command", string)
+      >>= (
+        command =>
+          field("title", LocalizedToken.decode)
+          >>= (
+            title =>
+              field_opt("category", string)
+              >>= (category => succeed({command, title, category}))
+          )
+      )
     );
 
   let encode = command =>
@@ -56,8 +62,7 @@ module Configuration = {
       |> default(Json.Encode.null)
       |> map(default => {name, default});
 
-    let properties =
-      key_value_pairs_seq(property);
+    let properties = key_value_pairs_seq(property);
 
     let configuration = {
       let simple = field("properties", properties);
@@ -83,11 +88,25 @@ module Language = {
 
   let decode =
     Json.Decode.(
-      field("id", string) >>= id =>
-      field_opt("extensions", list(string)) |> default([]) >>= extensions =>
-      field_opt("aliases", list(string)) |> default([]) >>= aliases =>
-      field_opt("configuration", string) >>= configuration =>
-      succeed({id, extensions, aliases, configuration})
+      field("id", string)
+      >>= (
+        id =>
+          field_opt("extensions", list(string))
+          |> default([])
+          >>= (
+            extensions =>
+              field_opt("aliases", list(string))
+              |> default([])
+              >>= (
+                aliases =>
+                  field_opt("configuration", string)
+                  >>= (
+                    configuration =>
+                      succeed({id, extensions, aliases, configuration})
+                  )
+              )
+          )
+      )
     );
 
   let encode = language =>
@@ -112,11 +131,23 @@ module Grammar = {
 
   let decode =
     Json.Decode.(
-      field_opt("language", string) >>= language =>
-      field("scopeName", string) >>= scopeName =>
-      field("path", string) >>= path =>
-      field_opt("treeSitterPath", string) >>= treeSitterPath =>
-      succeed({language, scopeName, path, treeSitterPath})
+      field_opt("language", string)
+      >>= (
+        language =>
+          field("scopeName", string)
+          >>= (
+            scopeName =>
+              field("path", string)
+              >>= (
+                path =>
+                  field_opt("treeSitterPath", string)
+                  >>= (
+                    treeSitterPath =>
+                      succeed({language, scopeName, path, treeSitterPath})
+                  )
+              )
+          )
+      )
     );
 
   let encode = grammar =>
@@ -149,10 +180,16 @@ module Theme = {
 
   let decode =
     Json.Decode.(
-      field("label", string) >>= label =>
-      field("uiTheme", string) >>= uiTheme =>
-      field("path", string) >>= path =>
-      succeed({label, uiTheme, path})
+      field("label", string)
+      >>= (
+        label =>
+          field("uiTheme", string)
+          >>= (
+            uiTheme =>
+              field("path", string)
+              >>= (path => succeed({label, uiTheme, path}))
+          )
+      )
     );
 
   let encode = theme =>
@@ -175,10 +212,15 @@ module IconTheme = {
 
   let decode =
     Json.Decode.(
-      field("id", string) >>= id =>
-      field("label", string) >>= label =>
-      field("path", string) >>= path =>
-      succeed({id, label, path})
+      field("id", string)
+      >>= (
+        id =>
+          field("label", string)
+          >>= (
+            label =>
+              field("path", string) >>= (path => succeed({id, label, path}))
+          )
+      )
     );
 
   let encode = theme =>
@@ -203,13 +245,44 @@ type t = {
 
 let decode =
   Json.Decode.(
-    field_opt("commands", list(Command.decode)) |> default([]) >>= commands =>
-    field_opt("languages", list(Language.decode)) |> default([]) >>= languages =>
-    field_opt("grammars", list(Grammar.decode)) |> default([]) >>= grammars =>
-    field_opt("themes", list(Theme.decode)) |> default([]) >>= themes =>
-    field_opt("iconThemes", list(IconTheme.decode)) |> default([]) >>= iconThemes =>
-    field_opt("configuration", Configuration.decode) |> default([]) >>= configuration =>
-    succeed({commands, languages, grammars, themes, iconThemes, configuration})
+    field_opt("commands", list(Command.decode))
+    |> default([])
+    >>= (
+      commands =>
+        field_opt("languages", list(Language.decode))
+        |> default([])
+        >>= (
+          languages =>
+            field_opt("grammars", list(Grammar.decode))
+            |> default([])
+            >>= (
+              grammars =>
+                field_opt("themes", list(Theme.decode))
+                |> default([])
+                >>= (
+                  themes =>
+                    field_opt("iconThemes", list(IconTheme.decode))
+                    |> default([])
+                    >>= (
+                      iconThemes =>
+                        field_opt("configuration", Configuration.decode)
+                        |> default([])
+                        >>= (
+                          configuration =>
+                            succeed({
+                              commands,
+                              languages,
+                              grammars,
+                              themes,
+                              iconThemes,
+                              configuration,
+                            })
+                        )
+                    )
+                )
+            )
+        )
+    )
   );
 
 let encode = data =>
@@ -222,7 +295,7 @@ let encode = data =>
       ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
       ("configuration", null),
     ])
-  )
+  );
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);

@@ -24,7 +24,6 @@ let toQuickMenu = (v: t) => {
 };
 
 let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
-
   let getContributedCommands = (v: ExtensionScanner.t) =>
     v.manifest.contributes.commands;
 
