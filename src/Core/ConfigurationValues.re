@@ -89,7 +89,7 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
-  filesExclude: ["node_modules", "_esy"],
+  filesExclude: ["_esy", "node_modules"],
   uiShadows: true,
   uiZoom: 1.0,
   vimUseSystemClipboard: {
