@@ -9,6 +9,7 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 open Actions;
+open Oni_Syntax;
 
 module Utility = Utility;
 module Ext = Oni_Extensions;

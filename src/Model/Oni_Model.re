@@ -8,7 +8,6 @@
 
 module Actions = Actions;
 module ActivityBar = ActivityBar;
-module BufferHighlights = BufferHighlights;
 module Buffers = Buffers;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferRenderer = BufferRenderer;
