@@ -501,7 +501,7 @@ let start = (extensions, setup: Setup.t) => {
              promise,
              content => {
                let lines =
-                 content |> Str.(split(regexp_string("\n"))) |> Array.of_list;
+                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
 
                dispatch(
                  Actions.SCM(SCM.GotOriginalContent({bufferId, lines})),
