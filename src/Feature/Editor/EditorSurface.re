@@ -12,12 +12,24 @@ open Revery.UI;
 
 open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
-open Oni_Model;
-
-module FontAwesome = Oni_Components.FontAwesome;
-module FontIcon = Oni_Components.FontIcon;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
+
+module Option = Utility.Option;
+module FontIcon = Oni_Components.FontIcon;
+module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Definition = Feature_LanguageSupport.Definition;
+
+module Constants = {
+  include Constants;
+
+  let diffMarkersMaxLineCount = 2000;
+  let diffMarkerWidth = 3.;
+  let gutterMargin = 3.;
+};
 
 /* Set up some styles */
 let textHeaderStyle =
@@ -82,7 +94,7 @@ let renderLineNumber =
       ? 0.
       : lineNumberWidth
         /. 2.
-        -. float_of_int(String.length(lineNumber))
+        -. float(String.length(lineNumber))
         *. fontWidth
         /. 2.;
 
@@ -117,7 +129,7 @@ let renderSpaces =
   let yOffset = fontHeight /. 2. -. 1.;
 
   while (i^ < count) {
-    let iF = float_of_int(i^);
+    let iF = float(i^);
     let xPos = x +. fontWidth *. iF;
 
     Shapes.drawRect(
@@ -155,7 +167,7 @@ let renderTokens =
     let x =
       lineNumberWidth
       +. fontWidth
-      *. float_of_int(Index.toZeroBased(token.startPosition))
+      *. float(Index.toZeroBased(token.startPosition))
       -. xF;
     let y = yF;
 
@@ -205,20 +217,38 @@ let renderTokens =
 
 let%component make =
               (
-                ~state: State.t,
+                ~activeBuffer,
+                ~onDimensionsChanged,
                 ~isActiveSplit: bool,
-                ~editorGroup: EditorGroup.t,
                 ~metrics: EditorMetrics.t,
                 ~editor: Editor.t,
+                ~theme: Theme.t,
+                ~rulers=[],
+                ~showLineNumbers=LineNumber.On,
+                ~editorFont: EditorFont.t,
+                ~fontSize=14,
+                ~mode: Vim.Mode.t,
+                ~showMinimap=true,
+                ~showMinimapSlider=true,
+                ~maxMinimapCharacters=50,
+                ~matchingPairsEnabled=true,
+                ~bufferHighlights,
+                ~bufferSyntaxHighlights,
+                ~onScroll,
+                ~diagnostics,
+                ~completions,
+                ~tokenTheme,
+                ~hoverDelay=Time.ms(1000),
+                ~isHoverEnabled=true,
+                ~onCursorChange,
+                ~definition,
+                ~shouldRenderWhitespace=ConfigurationValues.None,
+                ~shouldRenderIndentGuides=false,
+                ~shouldHighlightActiveIndentGuides=false,
                 (),
               ) => {
-  let theme = state.theme;
-
   let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
 
-  let activeBuffer = Selectors.getBufferForEditor(state, editor);
-
-  let editorId = Editor.getId(editor);
   let buffer =
     switch (activeBuffer) {
     | Some(buffer) => buffer
@@ -228,28 +258,21 @@ let%component make =
   let bufferId = Buffer.getId(buffer);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let rulers =
-    Configuration.getValue(c => c.editorRulers, state.configuration);
-
-  let showLineNumbers =
-    Configuration.getValue(
-      c => c.editorLineNumbers != LineNumber.Off,
-      state.configuration,
-    );
   let lineNumberWidth =
-    showLineNumbers
+    showLineNumbers != LineNumber.Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=lineCount,
-          ~fontPixelWidth=state.editorFont.measuredWidth,
+          ~fontPixelWidth=editorFont.measuredWidth,
           (),
         )
       : 0.0;
 
-  let fontHeight = state.editorFont.measuredHeight;
-  let fontWidth = state.editorFont.measuredWidth;
-  let fontFamily = state.editorFont.fontFile;
-  let fontSize =
-    Configuration.getValue(c => c.editorFontSize, state.configuration);
+  let gutterWidth =
+    lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
+
+  let fontHeight = editorFont.measuredHeight;
+  let fontWidth = editorFont.measuredWidth;
+  let fontFamily = editorFont.fontFile;
 
   let iFontHeight = int_of_float(fontHeight +. 0.5);
   let indentation =
@@ -281,16 +304,15 @@ let%component make =
     };
 
   let bufferPositionToPixel = (line, char) => {
-    let x =
-      float_of_int(char) *. fontWidth -. editor.scrollX +. lineNumberWidth;
-    let y = float_of_int(line) *. fontHeight -. editor.scrollY;
+    let x = float(char) *. fontWidth -. editor.scrollX +. gutterWidth;
+    let y = float(line) *. fontHeight -. editor.scrollY;
     (x, y);
   };
 
   let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
 
   let cursorWidth =
-    switch (state.mode, isActiveSplit) {
+    switch (mode, isActiveSplit) {
     | (Insert, true) => 2
     | _ => fullCursorWidth
     };
@@ -300,18 +322,14 @@ let%component make =
   let cursorPixelY =
     int_of_float(
       fontHeight
-      *. float_of_int(Index.toZeroBased(cursorPosition.line))
+      *. float(Index.toZeroBased(cursorPosition.line))
       -. editor.scrollY
       +. 0.5,
     );
 
   let cursorPixelX =
     int_of_float(
-      lineNumberWidth
-      +. fontWidth
-      *. float_of_int(cursorOffset)
-      -. editor.scrollX
-      +. 0.5,
+      gutterWidth +. fontWidth *. float(cursorOffset) -. editor.scrollX +. 0.5,
     );
 
   let cursorStyle =
@@ -324,33 +342,22 @@ let%component make =
       backgroundColor(Colors.white),
     ];
 
-  let isMinimapShown =
-    Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
-
   let layout =
     EditorLayout.getLayout(
-      ~showLineNumbers,
-      ~maxMinimapCharacters=
-        Configuration.getValue(
-          c => c.editorMinimapMaxColumn,
-          state.configuration,
-        ),
-      ~pixelWidth=float_of_int(metrics.pixelWidth),
-      ~pixelHeight=float_of_int(metrics.pixelHeight),
-      ~isMinimapShown,
-      ~characterWidth=state.editorFont.measuredWidth,
-      ~characterHeight=state.editorFont.measuredHeight,
+      ~showLineNumbers=showLineNumbers != LineNumber.Off,
+      ~maxMinimapCharacters,
+      ~pixelWidth=float(metrics.pixelWidth),
+      ~pixelHeight=float(metrics.pixelHeight),
+      ~isMinimapShown=showMinimap,
+      ~characterWidth=editorFont.measuredWidth,
+      ~characterHeight=editorFont.measuredHeight,
       ~bufferLineCount=lineCount,
       (),
     );
 
-  let matchingPairsEnabled =
-    Selectors.getConfigurationValue(state, buffer, c => c.editorMatchBrackets);
-
   let matchingPairs =
     !matchingPairsEnabled
-      ? None
-      : BufferHighlights.getMatchingPair(bufferId, state.bufferHighlights);
+      ? None : BufferHighlights.getMatchingPair(bufferId, bufferHighlights);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let getTokensForLine =
@@ -365,7 +372,7 @@ let%component make =
         BufferHighlights.getHighlightsByLine(
           ~bufferId,
           ~line=idx,
-          state.bufferHighlights,
+          bufferHighlights,
         );
 
       let isActiveLine = i == cursorLine;
@@ -391,7 +398,7 @@ let%component make =
         BufferSyntaxHighlights.getTokens(
           bufferId,
           Index.fromZeroBased(i),
-          state.bufferSyntaxHighlights,
+          bufferSyntaxHighlights,
         );
 
       let colorizer =
@@ -436,16 +443,6 @@ let%component make =
       flexGrow(1),
     ];
 
-  let onDimensionsChanged =
-      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-    GlobalContext.current().notifyEditorSizeChanged(
-      ~editorGroupId=editorGroup.editorGroupId,
-      ~width,
-      ~height,
-      (),
-    );
-  };
-
   let bufferPixelWidth =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
@@ -465,9 +462,7 @@ let%component make =
     Style.[
       position(`Absolute),
       top(0),
-      left(
-        int_of_float(bufferPixelWidth +. float_of_int(minimapPixelWidth)),
-      ),
+      left(int_of_float(bufferPixelWidth +. float(minimapPixelWidth))),
       width(Constants.default.scrollBarThickness),
       backgroundColor(theme.scrollbarSliderBackground),
       bottom(0),
@@ -482,68 +477,76 @@ let%component make =
       width(int_of_float(layout.bufferWidthInPixels)),
     ];
 
-  let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    let () =
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=wheelEvent.deltaY *. (-50.),
-        (),
-      );
-    ();
-  };
+  let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+    onScroll(wheelEvent.deltaY *. (-50.));
 
-  let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    let () =
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=wheelEvent.deltaY *. (-150.),
-        (),
-      );
-    ();
-  };
+  let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+    onScroll(wheelEvent.deltaY *. (-150.));
 
-  let diagnostics =
+  let diagnosticsMap =
     switch (activeBuffer) {
-    | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
+    | Some(b) => Diagnostics.getDiagnosticsMap(diagnostics, b)
     | None => IntMap.empty
     };
   let ranges = Selection.getRanges(editor.selection, buffer);
   let selectionRanges = Range.toHash(ranges);
 
+  let diffMarkers =
+    lineCount < Constants.diffMarkersMaxLineCount
+      ? EditorDiffMarkers.generate(buffer) : None;
+
   let minimapLayout =
-    isMinimapShown
+    showMinimap
       ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap
-            state
             editor
             width={layout.minimapWidthInPixels}
             height={metrics.pixelHeight}
             count=lineCount
-            diagnostics
+            diagnostics=diagnosticsMap
             metrics
             getTokensForLine={getTokensForLine(
               0,
               layout.bufferWidthInCharacters,
             )}
             selection=selectionRanges
+            showSlider=showMinimapSlider
+            onScroll
+            theme
+            bufferHighlights
+            diffMarkers
           />
         </View>
       : React.empty;
 
   let completions = () =>
-    Completions.isActive(state.completions)
+    Completions.isActive(completions)
       ? <CompletionsView
           x=cursorPixelX
           y=cursorPixelY
           lineHeight=fontHeight
-          state
+          theme
+          tokenTheme
+          editorFont
+          completions
         />
       : React.empty;
 
   let hoverElements =
     isActiveSplit
       ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
-          <HoverView x=cursorPixelX y=cursorPixelY state />
+          <HoverView
+            x=cursorPixelX
+            y=cursorPixelY
+            delay=hoverDelay
+            isEnabled=isHoverEnabled
+            theme
+            editorFont
+            diagnostics
+            editor
+            buffer
+            mode
+          />
           <completions />
         </View>
       : React.empty;
@@ -568,7 +571,7 @@ let%component make =
         Editor.pixelPositionToLineColumn(
           editor,
           metrics,
-          relX -. lineNumberWidth,
+          relX -. gutterWidth,
           relY,
         );
 
@@ -588,9 +591,7 @@ let%component make =
           GlobalContext.current().dispatch(
             Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
           );*/
-        GlobalContext.current().dispatch(
-          Actions.EditorCursorMove(editorId, [cursor]),
-        );
+        onCursorChange(cursor);
       };
     };
   };
@@ -611,13 +612,13 @@ let%component make =
           /* Draw background for cursor line */
           Shapes.drawRect(
             ~transform,
-            ~x=lineNumberWidth,
+            ~x=gutterWidth,
             ~y=
               fontHeight
-              *. float_of_int(Index.toZeroBased(cursorPosition.line))
+              *. float(Index.toZeroBased(cursorPosition.line))
               -. editor.scrollY,
             ~height=fontHeight,
-            ~width=float_of_int(metrics.pixelWidth) -. lineNumberWidth,
+            ~width=float(metrics.pixelWidth) -. gutterWidth,
             ~color=theme.editorLineHighlightBackground,
             (),
           );
@@ -628,8 +629,8 @@ let%component make =
               ~transform,
               ~x=fst(bufferPositionToPixel(0, ruler)),
               ~y=0.0,
-              ~height=float_of_int(metrics.pixelHeight),
-              ~width=float_of_int(1),
+              ~height=float(metrics.pixelHeight),
+              ~width=1.,
               ~color=theme.editorRulerForeground,
               (),
             );
@@ -659,20 +660,17 @@ let%component make =
              Shapes.drawRect(
                ~transform,
                ~x=
-                 lineNumberWidth
-                 +. float_of_int(startOffset)
-                 *. fontWidth
-                 -. halfOffset,
+                 gutterWidth +. float(startOffset) *. fontWidth -. halfOffset,
                ~y=
                  fontHeight
-                 *. float_of_int(Index.toZeroBased(r.start.line))
+                 *. float(Index.toZeroBased(r.start.line))
                  -. editor.scrollY
                  -. halfOffset
                  +. (fontHeight -. 2.),
                ~height=1.,
                ~width=
                  offset
-                 +. max(float_of_int(endOffset - startOffset), 1.0)
+                 +. max(float(endOffset - startOffset), 1.0)
                  *. fontWidth,
                ~color,
                (),
@@ -703,19 +701,19 @@ let%component make =
                Shapes.drawRect(
                  ~transform,
                  ~x=
-                   lineNumberWidth
-                   +. float_of_int(startOffset)
+                   gutterWidth
+                   +. float(startOffset)
                    *. fontWidth
                    -. halfOffset,
                  ~y=
                    fontHeight
-                   *. float_of_int(Index.toZeroBased(r.start.line))
+                   *. float(Index.toZeroBased(r.start.line))
                    -. editor.scrollY
                    -. halfOffset,
                  ~height=fontHeight +. offset,
                  ~width=
                    offset
-                   +. max(float_of_int(endOffset - startOffset), 1.0)
+                   +. max(float(endOffset - startOffset), 1.0)
                    *. fontWidth,
                  ~color,
                  (),
@@ -725,7 +723,7 @@ let%component make =
           ImmediateList.render(
             ~scrollY,
             ~rowHeight,
-            ~height=float_of_int(height),
+            ~height=float(height),
             ~count,
             ~render=
               (item, _offset) => {
@@ -734,7 +732,7 @@ let%component make =
                   renderUnderline(~color=Colors.red, d.range);
 
                 /* Draw error markers */
-                switch (IntMap.find_opt(item, diagnostics)) {
+                switch (IntMap.find_opt(item, diagnosticsMap)) {
                 | None => ()
                 | Some(v) => List.iter(renderDiagnostics, v)
                 };
@@ -769,7 +767,7 @@ let%component make =
                 BufferHighlights.getHighlightsByLine(
                   ~bufferId,
                   ~line=index,
-                  state.bufferHighlights,
+                  bufferHighlights,
                 )
                 |> List.iter(r =>
                      renderRange(
@@ -782,11 +780,7 @@ let%component make =
             (),
           );
 
-          if (Definition.isAvailable(
-                bufferId,
-                cursorPosition,
-                state.definition,
-              )) {
+          if (Definition.isAvailable(bufferId, cursorPosition, definition)) {
             let () =
               getTokenAtPosition(
                 ~startIndex=leftVisibleColumn,
@@ -816,7 +810,7 @@ let%component make =
           ImmediateList.render(
             ~scrollY,
             ~rowHeight,
-            ~height=float_of_int(height),
+            ~height=float(height),
             ~count,
             ~render=
               (item, offset) => {
@@ -844,16 +838,13 @@ let%component make =
                     fontSize,
                     fontWidth,
                     fontHeight,
-                    lineNumberWidth,
+                    gutterWidth,
                     theme,
                     tokens,
                     editor.scrollX,
                     offset,
                     transform,
-                    Configuration.getValue(
-                      c => c.editorRenderWhitespace,
-                      state.configuration,
-                    ),
+                    shouldRenderWhitespace,
                   );
                 ();
               },
@@ -861,13 +852,13 @@ let%component make =
           );
 
           /* Draw background for line numbers */
-          if (showLineNumbers) {
+          if (showLineNumbers != LineNumber.Off) {
             Shapes.drawRect(
               ~transform,
               ~x=0.,
               ~y=0.,
               ~width=lineNumberWidth,
-              ~height=float_of_int(height),
+              ~height=float(height),
               ~color=theme.editorLineNumberBackground,
               (),
             );
@@ -875,44 +866,42 @@ let%component make =
             ImmediateList.render(
               ~scrollY,
               ~rowHeight,
-              ~height=float_of_int(height),
+              ~height=float(height),
               ~count,
               ~render=
                 (item, offset) => {
-                  let _ =
-                    renderLineNumber(
-                      fontFamily,
-                      fontSize,
-                      fontWidth,
-                      item,
-                      lineNumberWidth,
-                      theme,
-                      Configuration.getValue(
-                        c => c.editorLineNumbers,
-                        state.configuration,
-                      ),
-                      cursorLine,
-                      offset,
-                      transform,
-                    );
-                  ();
+                  renderLineNumber(
+                    fontFamily,
+                    fontSize,
+                    fontWidth,
+                    item,
+                    lineNumberWidth,
+                    theme,
+                    showLineNumbers,
+                    cursorLine,
+                    offset,
+                    transform,
+                  )
                 },
               (),
             );
           };
 
-          let renderIndentGuides =
-            Configuration.getValue(
-              c => c.editorRenderIndentGuides,
-              state.configuration,
-            );
-          let showActive =
-            Configuration.getValue(
-              c => c.editorHighlightActiveIndentGuide,
-              state.configuration,
-            );
+          Option.iter(
+            EditorDiffMarkers.render(
+              ~scrollY,
+              ~rowHeight,
+              ~x=lineNumberWidth,
+              ~height=float(height),
+              ~width=Constants.diffMarkerWidth,
+              ~count,
+              ~transform,
+              ~theme,
+            ),
+            diffMarkers,
+          );
 
-          if (renderIndentGuides) {
+          if (shouldRenderIndentGuides) {
             switch (activeBuffer) {
             | None => ()
             | Some(buffer) =>
@@ -924,10 +913,10 @@ let%component make =
                 ~lineHeight=fontHeight,
                 ~fontWidth,
                 ~cursorLine=Index.toZeroBased(cursorPosition.line),
-                ~theme=state.theme,
+                ~theme,
                 ~indentationSettings=indentation,
                 ~bufferPositionToPixel,
-                ~showActive,
+                ~showActive=shouldHighlightActiveIndentGuides,
                 (),
               )
             };
@@ -938,9 +927,9 @@ let%component make =
       <View style=horizontalScrollBarStyle>
         <EditorHorizontalScrollbar
           editor
-          state
           metrics
           width={int_of_float(layout.bufferWidthInPixels)}
+          theme
         />
       </View>
     </View>
@@ -948,12 +937,14 @@ let%component make =
     hoverElements
     <View style=verticalScrollBarStyle>
       <EditorVerticalScrollbar
-        state
         editor
         metrics
         width={Constants.default.scrollBarThickness}
         height={metrics.pixelHeight}
-        diagnostics
+        diagnostics=diagnosticsMap
+        theme
+        editorFont
+        bufferHighlights
       />
     </View>
   </View>;

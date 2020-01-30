@@ -1,6 +1,6 @@
 open Oni_Core;
-open Oni_UI;
 open BenchFramework;
+open Feature_Editor;
 
 // DATA
 

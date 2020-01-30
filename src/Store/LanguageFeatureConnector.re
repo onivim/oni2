@@ -15,6 +15,7 @@ module Utility = Utility;
 module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 

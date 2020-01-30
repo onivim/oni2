@@ -22,6 +22,7 @@ module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Editor = Feature_Editor.Editor;
 
 module Notification = {
   open Notification;

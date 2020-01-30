@@ -3,6 +3,7 @@ open Oni_Core;
 open Utility;
 open Oni_Model;
 open Oni_Store;
+open Feature_Editor;
 
 let metrics = EditorMetrics.create();
 

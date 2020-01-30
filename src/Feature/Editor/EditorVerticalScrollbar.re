@@ -7,19 +7,23 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Model;
+
+module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
 let make =
     (
-      ~state: State.t,
       ~editor: Editor.t,
       ~height as totalHeight,
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
+      ~theme: Theme.t,
+      ~editorFont: EditorFont.t,
+      ~bufferHighlights,
       (),
     ) => {
   let scrollMetrics =
@@ -32,14 +36,14 @@ let make =
       left(0),
       width(totalWidth),
       height(scrollMetrics.thumbSize),
-      backgroundColor(state.theme.scrollbarSliderActiveBackground),
+      backgroundColor(theme.scrollbarSliderActiveBackground),
     ];
 
   let totalPixel =
     Editor.getTotalSizeInPixels(editor, metrics) |> float_of_int;
 
   let bufferLineToScrollbarPixel = line => {
-    let pixelY = float_of_int(line) *. state.editorFont.measuredHeight;
+    let pixelY = float_of_int(line) *. editorFont.measuredHeight;
     int_of_float(
       pixelY
       /. (totalPixel +. float_of_int(metrics.pixelHeight))
@@ -60,7 +64,7 @@ let make =
       left(0),
       width(totalWidth),
       height(cursorSize),
-      backgroundColor(state.theme.foreground),
+      backgroundColor(theme.foreground),
     ];
 
   let diagnosticElements =
@@ -92,11 +96,11 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(state.theme.editorOverviewRulerBracketMatchForeground),
+      backgroundColor(theme.editorOverviewRulerBracketMatchForeground),
     ];
 
   let matchingPairElements =
-    BufferHighlights.getMatchingPair(editor.bufferId, state.bufferHighlights)
+    BufferHighlights.getMatchingPair(editor.bufferId, bufferHighlights)
     |> Utility.Option.map(mp => {
          let (startPos, endPos) = mp;
          let topLine =
@@ -122,7 +126,7 @@ let make =
       right(0),
       height(bot - t),
       backgroundColor(
-        Color.multiplyAlpha(0.5, state.theme.editorSelectionBackground),
+        Color.multiplyAlpha(0.5, theme.editorSelectionBackground),
       ),
     ];
   };
@@ -152,7 +156,7 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(state.theme.editorFindMatchBackground),
+      backgroundColor(theme.editorFindMatchBackground),
     ];
 
   let searchHighlightToElement = line => {
@@ -163,7 +167,7 @@ let make =
   let searchMatchElements =
     BufferHighlights.getHighlights(
       ~bufferId=editor.bufferId,
-      state.bufferHighlights,
+      bufferHighlights,
     )
     |> List.map(searchHighlightToElement)
     |> React.listToElement;

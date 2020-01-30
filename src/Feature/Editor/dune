@@ -6,8 +6,8 @@
       Oni2.core
       Oni2.components
       Oni2.syntax
+      Oni2.feature.language_support
       Revery
       libvim
-      ReasonFuzz
     )
     (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))

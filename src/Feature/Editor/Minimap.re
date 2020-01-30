@@ -5,17 +5,23 @@
  */
 
 open EditorCoreTypes;
+open Oni_Core;
 open Revery;
 open Revery.Draw;
 open Revery.UI;
 
-open Oni_Core;
-module BufferHighlights = Oni_Model.BufferHighlights;
-module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
-module Diagnostic = Oni_Model.Diagnostic;
-module Editor = Oni_Model.Editor;
-module Selectors = Oni_Model.Selectors;
-module State = Oni_Model.State;
+module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Option = Utility.Option;
+
+module Constants = {
+  include Constants;
+
+  let leftMargin = 2.;
+  let diffMarkerWidth = 2.;
+  let gutterMargin = 2.;
+  let gutterWidth = diffMarkerWidth +. gutterMargin;
+};
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
@@ -33,11 +39,9 @@ let renderLine =
       let endPosition = Index.toZeroBased(token.endPosition);
       let tokenWidth = endPosition - startPosition;
 
-      let x =
-        float_of_int(Constants.default.minimapCharacterWidth * startPosition);
-      let height = float_of_int(Constants.default.minimapCharacterHeight);
-      let width =
-        float_of_int(tokenWidth * Constants.default.minimapCharacterWidth);
+      let x = float(Constants.default.minimapCharacterWidth * startPosition);
+      let height = float(Constants.default.minimapCharacterHeight);
+      let width = float(tokenWidth * Constants.default.minimapCharacterWidth);
 
       let emphasis = shouldHighlight(startPosition);
       let color =
@@ -46,7 +50,10 @@ let renderLine =
       let offset = 1.0;
       let halfOffset = offset /. 2.0;
 
-      let x = emphasis ? x -. halfOffset : x;
+      let x =
+        (emphasis ? x -. halfOffset : x)
+        +. Constants.leftMargin
+        +. Constants.gutterWidth;
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
@@ -88,7 +95,6 @@ let initialState = {isCapturing: false};
 
 let%component make =
               (
-                ~state: State.t,
                 ~editor: Editor.t,
                 ~width: int,
                 ~height: int,
@@ -97,15 +103,19 @@ let%component make =
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
                 ~metrics,
+                ~onScroll,
+                ~showSlider,
+                ~theme: Theme.t,
+                ~bufferHighlights,
+                ~diffMarkers,
                 (),
               ) => {
   let rowHeight =
-    float_of_int(
+    float(
       Constants.default.minimapCharacterHeight
       + Constants.default.minimapLineSpacing,
     );
 
-  let editorId = Editor.getId(editor);
   let%hook (mouseState, dispatch) =
     React.Hooks.reducer(~initialState, reducer);
 
@@ -114,9 +124,7 @@ let%component make =
     let visibleHeight: int = metrics.pixelHeight;
     let offsetMouseY: int =
       int_of_float(mouseY) - Constants.default.tabHeight;
-    float_of_int(offsetMouseY)
-    /. float_of_int(visibleHeight)
-    *. float_of_int(totalHeight);
+    float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
 
   let scrollComplete = () => {
@@ -143,11 +151,8 @@ let%component make =
       + Constants.default.minimapCharacterHeight;
     let linesInMinimap = metrics.pixelHeight / minimapLineSize;
     if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=scrollTo -. editor.scrollY -. float_of_int(linesInMinimap),
-        (),
-      );
+      onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
+
       Mouse.setCapture(
         ~onMouseMove=
           evt => {
@@ -156,12 +161,7 @@ let%component make =
               Constants.default.minimapLineSpacing
               + Constants.default.minimapCharacterHeight;
             let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-            let scrollTo = scrollTo -. float_of_int(linesInMinimap);
-            GlobalContext.current().editorSetScroll(
-              ~editorId,
-              ~scrollY=scrollTo,
-              (),
-            );
+            onScroll(scrollTo -. float(linesInMinimap));
           },
         ~onMouseUp=_evt => {scrollComplete()},
         (),
@@ -174,22 +174,18 @@ let%component make =
     <OpenGL
       style=absoluteStyle
       render={(transform, _) => {
-        if (Configuration.getValue(
-              c => c.editorMinimapShowSlider,
-              state.configuration,
-            )) {
-          /* Draw current view */
+        if (showSlider) {
+          /* Draw slider/viewport */
           Shapes.drawRect(
             ~transform,
             ~x=0.,
             ~y=
               rowHeight
-              *. float_of_int(Editor.getTopVisibleLine(editor, metrics) - 1)
+              *. float(Editor.getTopVisibleLine(editor, metrics) - 1)
               -. scrollY,
-            ~height=
-              rowHeight *. float_of_int(getMinimapSize(editor, metrics)),
-            ~width=float_of_int(width),
-            ~color=state.theme.scrollbarSliderHoverBackground,
+            ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
+            ~width=float(width),
+            ~color=theme.scrollbarSliderHoverBackground,
             (),
           );
         };
@@ -198,33 +194,32 @@ let%component make =
         /* Draw cursor line */
         Shapes.drawRect(
           ~transform,
-          ~x=0.,
+          ~x=Constants.leftMargin,
           ~y=
             rowHeight
-            *. float_of_int(Index.toZeroBased(cursorPosition.line))
+            *. float(Index.toZeroBased(cursorPosition.line))
             -. scrollY,
-          ~height=float_of_int(Constants.default.minimapCharacterHeight),
-          ~width=float_of_int(width),
-          ~color=state.theme.editorLineHighlightBackground,
+          ~height=float(Constants.default.minimapCharacterHeight),
+          ~width=float(width),
+          ~color=theme.editorLineHighlightBackground,
           (),
         );
 
         let renderRange = (~color, ~offset, range: Range.t) =>
           {let startX =
-             Index.toZeroBased(range.start.column)
-             * Constants.default.minimapCharacterWidth
-             |> float_of_int;
+             float(Index.toZeroBased(range.start.column))
+             *. float(Constants.default.minimapCharacterWidth)
+             +. Constants.leftMargin
+             +. Constants.gutterWidth;
            let endX =
-             Index.toZeroBased(range.stop.column)
-             * Constants.default.minimapCharacterWidth
-             |> float_of_int;
+             float(Index.toZeroBased(range.stop.column))
+             *. float(Constants.default.minimapCharacterWidth);
 
            Shapes.drawRect(
              ~transform,
              ~x=startX -. 1.0,
              ~y=offset -. 1.0,
-             ~height=
-               float_of_int(Constants.default.minimapCharacterHeight) +. 2.0,
+             ~height=float(Constants.default.minimapCharacterHeight) +. 2.0,
              ~width=endX -. startX +. 2.,
              ~color,
              (),
@@ -232,20 +227,18 @@ let%component make =
 
         let renderUnderline = (~color, ~offset, range: Range.t) =>
           {let startX =
-             Index.toZeroBased(range.start.column)
-             * Constants.default.minimapCharacterWidth
-             |> float_of_int;
+             float(Index.toZeroBased(range.start.column))
+             *. float(Constants.default.minimapCharacterWidth)
+             +. Constants.leftMargin
+             +. Constants.gutterWidth;
            let endX =
-             Index.toZeroBased(range.stop.column)
-             * Constants.default.minimapCharacterWidth
-             |> float_of_int;
+             float(Index.toZeroBased(range.stop.column))
+             *. float(Constants.default.minimapCharacterWidth);
 
            Shapes.drawRect(
              ~transform,
              ~x=startX -. 1.0,
-             ~y=
-               offset
-               +. float_of_int(Constants.default.minimapCharacterHeight),
+             ~y=offset +. float(Constants.default.minimapCharacterHeight),
              ~height=1.0,
              ~width=endX -. startX +. 2.,
              ~color,
@@ -255,7 +248,7 @@ let%component make =
         ImmediateList.render(
           ~scrollY,
           ~rowHeight,
-          ~height=float_of_int(height),
+          ~height=float(height),
           ~count,
           ~render=
             (item, offset) => {
@@ -265,7 +258,7 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let selectionColor = state.theme.editorSelectionBackground;
+                let selectionColor = theme.editorSelectionBackground;
                 List.iter(renderRange(~color=selectionColor, ~offset), v);
               };
 
@@ -275,7 +268,7 @@ let%component make =
                 BufferHighlights.getHighlightsByLine(
                   ~bufferId=editor.bufferId,
                   ~line=index,
-                  state.bufferHighlights,
+                  bufferHighlights,
                 );
 
               let shouldHighlight = i =>
@@ -292,11 +285,10 @@ let%component make =
                 Shapes.drawRect(
                   ~transform,
                   ~x=0.,
-                  ~y=rowHeight *. float_of_int(item) -. scrollY -. 1.0,
+                  ~y=rowHeight *. float(item) -. scrollY -. 1.0,
                   ~height=
-                    float_of_int(Constants.default.minimapCharacterHeight)
-                    +. 2.0,
-                  ~width=float_of_int(width),
+                    float(Constants.default.minimapCharacterHeight) +. 2.0,
+                  ~width=float(width),
                   ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
                   (),
                 )
@@ -311,7 +303,7 @@ let%component make =
         ImmediateList.render(
           ~scrollY,
           ~rowHeight,
-          ~height=float_of_int(height),
+          ~height=float(height),
           ~count,
           ~render=
             (item, offset) =>
@@ -329,6 +321,20 @@ let%component make =
               | None => ()
               },
           (),
+        );
+
+        Option.iter(
+          EditorDiffMarkers.render(
+            ~scrollY,
+            ~rowHeight,
+            ~x=Constants.leftMargin,
+            ~height=float(height),
+            ~width=2.,
+            ~count,
+            ~transform,
+            ~theme,
+          ),
+          diffMarkers,
         );
       }}
     />

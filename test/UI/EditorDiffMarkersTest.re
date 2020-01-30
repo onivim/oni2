@@ -2,7 +2,7 @@
 open TestFramework;
 
 module Buffer = Oni_Core.Buffer;
-module EditorDiffMarkers = Oni_UI.EditorDiffMarkers;
+module EditorDiffMarkers = Feature_Editor.EditorDiffMarkers;
 
 describe("EditorDiffMarkers", ({describe, _}) => {
   describe("generate", ({test, _}) => {
