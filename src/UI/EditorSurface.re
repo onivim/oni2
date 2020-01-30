@@ -20,6 +20,7 @@ module Option = Utility.Option;
 module Constants = {
   include Constants;
 
+  let diffMarkersMaxLineCount = 2000;
   let diffMarkerWidth = 3.;
   let gutterMargin = 3.;
 };
@@ -511,7 +512,9 @@ let%component make =
   let ranges = Selection.getRanges(editor.selection, buffer);
   let selectionRanges = Range.toHash(ranges);
 
-  let diffMarkers = EditorDiffMarkers.generate(buffer);
+  let diffMarkers =
+    lineCount < Constants.diffMarkersMaxLineCount
+      ? EditorDiffMarkers.generate(buffer) : None;
 
   let minimapLayout =
     isMinimapShown
