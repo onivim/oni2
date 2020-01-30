@@ -5,6 +5,8 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
+
 // Validate that textmate highlight runs
 runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>

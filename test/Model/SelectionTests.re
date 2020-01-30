@@ -3,7 +3,7 @@ open TestFramework;
 
 module VisualRange = Oni_Core.VisualRange;
 module Buffer = Oni_Core.Buffer;
-module Selection = Oni_Model.Selection;
+module Selection = Feature_Editor.Selection;
 
 open Oni_Core_Test.Helpers;
 

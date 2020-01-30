@@ -1,3 +1,8 @@
+module BufferLineColorizer = BufferLineColorizer;
+module BufferSyntaxHighlights = BufferSyntaxHighlights;
+module BufferViewTokenizer = BufferViewTokenizer;
+module Selection = Selection;
+
 module Editor = Editor;
 module EditorId = EditorId;
 module EditorLayout = EditorLayout;

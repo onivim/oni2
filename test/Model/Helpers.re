@@ -1,5 +1,5 @@
 open EditorCoreTypes;
-open Oni_Model;
+open Feature_Editor;
 
 let validateToken =
     (
