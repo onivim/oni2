@@ -7,8 +7,12 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
+
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
+
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
 
 type tabAction = unit => unit;
 

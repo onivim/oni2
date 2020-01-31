@@ -5,6 +5,9 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Notification = {
   open Notification;
 

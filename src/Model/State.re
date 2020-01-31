@@ -10,6 +10,12 @@ open Oni_Syntax;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 type t = {
   buffers: Buffers.t,
@@ -35,7 +41,7 @@ type t = {
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
-  keyDisplayer: KeyDisplayer.t,
+  keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
@@ -58,6 +64,7 @@ type t = {
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Modal.t(Actions.t)),
+  textContentProviders: list((int, string)),
 };
 
 let create: unit => t =
@@ -93,7 +100,7 @@ let create: unit => t =
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
-    keyDisplayer: KeyDisplayer.empty,
+    keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.initial,
     references: References.initial,
@@ -110,4 +117,5 @@ let create: unit => t =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    textContentProviders: [],
   };

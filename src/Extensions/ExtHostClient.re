@@ -32,9 +32,14 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
-    });
-// acceptInputCommand: option(_),
-// statusBarCommands: option(_),
+    })
+  // acceptInputCommand: option(_),
+  // statusBarCommands: option(_),
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int});
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -202,6 +207,22 @@ let start =
       );
       Ok(None);
 
+    | (
+        "MainThreadDocumentContentProviders",
+        "$registerTextContentProvider",
+        [`Int(handle), `String(scheme)],
+      ) =>
+      dispatch(RegisterTextContentProvider({handle, scheme}));
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$unregisterTextContentProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterTextContentProvider({handle: handle}));
+      Ok(None);
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -335,6 +356,18 @@ let provideDocumentSymbols = (id, uri, client) => {
   promise;
 };
 
+let provideOriginalResource = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.SCM.provideOriginalResource(id, uri),
+      json =>
+      Core.Uri.of_yojson(json) |> Utility.Result.get_ok
+    );
+  promise;
+};
+
 let provideReferences = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(LocationWithUri.t) = [];
@@ -351,6 +384,20 @@ let provideReferences = (id, uri, position, client) => {
       client,
       Out.LanguageFeatures.provideReferences(id, uri, position),
       f,
+    );
+  promise;
+};
+
+let provideTextDocumentContent = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.DocumentContent.provideTextDocumentContent(id, uri),
+      fun
+      | `String(content) => content
+      | json =>
+        failwith("Unexpected response: " ++ Yojson.Safe.to_string(json)),
     );
   promise;
 };

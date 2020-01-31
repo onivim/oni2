@@ -5,19 +5,20 @@
  */
 
 open Oni_Core;
+open Feature_Editor;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});
 
-type t =
-  Actions.editorGroup = {
-    editorGroupId: int,
-    activeEditorId: option(int),
-    editors: IntMap.t(Editor.t),
-    bufferIdToEditorId: IntMap.t(int),
-    reverseTabOrder: list(int),
-    metrics: EditorMetrics.t,
-  };
+[@deriving show]
+type t = {
+  editorGroupId: int,
+  activeEditorId: option(int),
+  editors: [@opaque] IntMap.t(Editor.t),
+  bufferIdToEditorId: [@opaque] IntMap.t(int),
+  reverseTabOrder: list(int),
+  metrics: EditorMetrics.t,
+};
 
 let create: unit => t =
   () => {

@@ -7,8 +7,6 @@
  * so that we can eek out as much perf as we can in this architecture.
  */
 
-open Revery;
-
 module Core = Oni_Core;
 module Option = Core.Utility.Option;
 
@@ -69,7 +67,6 @@ let start =
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~getTime,
       ~setTitle,
       ~setVsync,
       ~window: option(Revery.Window.t),
@@ -142,8 +139,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start();
-  let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
+  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
   let completionUpdater = CompletionStoreConnector.start();
@@ -177,7 +173,6 @@ let start =
           fileExplorerUpdater,
           indentationUpdater,
           windowUpdater,
-          keyDisplayerUpdater,
           themeUpdater,
           acpUpdater,
           languageFeatureUpdater,
@@ -191,10 +186,7 @@ let start =
     );
 
   let rec dispatch = (action: Model.Actions.t) => {
-    switch (action) {
-    | Tick(_) => () // This gets a bit intense, so ignore it
-    | _ => DispatchLog.info(Model.Actions.show(action))
-    };
+    DispatchLog.info(Model.Actions.show(action));
 
     let lastState = latestState^;
     let (newState, effect) = storeDispatch(action);
@@ -306,17 +298,8 @@ let start =
 
   setIconTheme("vs-seti");
 
-  let totalTime = ref(0.0);
-  let _ =
-    Tick.interval(
-      deltaT => {
-        let deltaTime = Time.toFloatSeconds(deltaT);
-        totalTime := totalTime^ +. deltaTime;
-        dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
-        runEffects();
-      },
-      Time.zero,
-    );
+  let _: unit => unit =
+    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
 
   (dispatch, runEffects);
 };

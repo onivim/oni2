@@ -280,23 +280,18 @@ let start = (themeInfo: ThemeInfo.t) => {
   };
 
   let updater = (state: State.t, action: Actions.t) => {
-    switch (action) {
-    | Tick(_) => (state, Isolinear.Effect.none)
+    let (menuState, menuEffect) =
+      menuUpdater(
+        state.quickmenu,
+        action,
+        state.buffers,
+        state.languageInfo,
+        state.iconTheme,
+        themeInfo,
+        state.commands,
+      );
 
-    | action =>
-      let (menuState, menuEffect) =
-        menuUpdater(
-          state.quickmenu,
-          action,
-          state.buffers,
-          state.languageInfo,
-          state.iconTheme,
-          themeInfo,
-          state.commands,
-        );
-
-      ({...state, quickmenu: menuState}, menuEffect);
-    };
+    ({...state, quickmenu: menuState}, menuEffect);
   };
 
   (updater, stream);

@@ -49,4 +49,12 @@ type msg =
   | CommitTemplateChanged({
       handle: int,
       template: string,
+    })
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: [@opaque] array(string),
     });

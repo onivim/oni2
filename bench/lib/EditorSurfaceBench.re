@@ -1,5 +1,6 @@
-open Oni_UI;
+open Oni_Model;
 open BenchFramework;
+open Feature_Editor;
 
 open Helpers;
 
@@ -21,10 +22,24 @@ let editorSurfaceMinimalState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroup
         editor=simpleEditor
-        state=simpleState
+        activeBuffer={Selectors.getBufferForEditor(
+          thousandLineState,
+          simpleEditor,
+        )}
         metrics
+        onScroll={_ => ()}
+        onDimensionsChanged={_ => ()}
+        onCursorChange={_ => ()}
+        bufferHighlights={thousandLineState.bufferHighlights}
+        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+        diagnostics={thousandLineState.diagnostics}
+        completions={thousandLineState.completions}
+        tokenTheme={thousandLineState.tokenTheme}
+        definition={thousandLineState.definition}
+        mode={thousandLineState.mode}
+        theme={thousandLineState.theme}
+        editorFont={thousandLineState.editorFont}
       />,
     );
   ();
@@ -36,10 +51,24 @@ let editorSurfaceThousandLineState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroup
         editor=simpleEditor
-        state=thousandLineState
+        activeBuffer={Selectors.getBufferForEditor(
+          thousandLineState,
+          simpleEditor,
+        )}
         metrics
+        onScroll={_ => ()}
+        onDimensionsChanged={_ => ()}
+        onCursorChange={_ => ()}
+        bufferHighlights={thousandLineState.bufferHighlights}
+        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+        diagnostics={thousandLineState.diagnostics}
+        completions={thousandLineState.completions}
+        tokenTheme={thousandLineState.tokenTheme}
+        definition={thousandLineState.definition}
+        mode={thousandLineState.mode}
+        theme={thousandLineState.theme}
+        editorFont={thousandLineState.editorFont}
       />,
     );
   ();
@@ -51,10 +80,24 @@ let editorSurfaceThousandLineStateWithIndents = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroup
         editor=simpleEditor
-        state=thousandLineStateWithIndents
+        activeBuffer={Selectors.getBufferForEditor(
+          thousandLineState,
+          simpleEditor,
+        )}
         metrics
+        onScroll={_ => ()}
+        onDimensionsChanged={_ => ()}
+        onCursorChange={_ => ()}
+        bufferHighlights={thousandLineState.bufferHighlights}
+        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+        diagnostics={thousandLineState.diagnostics}
+        completions={thousandLineState.completions}
+        tokenTheme={thousandLineState.tokenTheme}
+        definition={thousandLineState.definition}
+        mode={thousandLineState.mode}
+        theme={thousandLineState.theme}
+        editorFont={thousandLineState.editorFont}
       />,
     );
   ();
@@ -66,10 +109,24 @@ let editorSurfaceHundredThousandLineState = () => {
       rootNode,
       <EditorSurface
         isActiveSplit=true
-        editorGroup
         editor=simpleEditor
-        state=hundredThousandLineState
+        activeBuffer={Selectors.getBufferForEditor(
+          thousandLineState,
+          simpleEditor,
+        )}
         metrics
+        onScroll={_ => ()}
+        onDimensionsChanged={_ => ()}
+        onCursorChange={_ => ()}
+        bufferHighlights={thousandLineState.bufferHighlights}
+        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+        diagnostics={thousandLineState.diagnostics}
+        completions={thousandLineState.completions}
+        tokenTheme={thousandLineState.tokenTheme}
+        definition={thousandLineState.definition}
+        mode={thousandLineState.mode}
+        theme={thousandLineState.theme}
+        editorFont={thousandLineState.editorFont}
       />,
     );
   ();
@@ -87,10 +144,24 @@ let setupSurfaceThousandLineLayout = () => {
     container,
     <EditorSurface
       isActiveSplit=true
-      editorGroup
       editor=simpleEditor
-      state=thousandLineState
+      activeBuffer={Selectors.getBufferForEditor(
+        thousandLineState,
+        simpleEditor,
+      )}
       metrics
+      onScroll={_ => ()}
+      onDimensionsChanged={_ => ()}
+      onCursorChange={_ => ()}
+      bufferHighlights={thousandLineState.bufferHighlights}
+      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      diagnostics={thousandLineState.diagnostics}
+      completions={thousandLineState.completions}
+      tokenTheme={thousandLineState.tokenTheme}
+      definition={thousandLineState.definition}
+      mode={thousandLineState.mode}
+      theme={thousandLineState.theme}
+      editorFont={thousandLineState.editorFont}
     />,
   )
   |> ignore;

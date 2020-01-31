@@ -1,0 +1,5 @@
+(library
+    (name Feature_Editor_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries Oni2.core Oni2.feature.editor Oni_Core_Test rely.lib editor-core-types))

@@ -18,5 +18,6 @@
         textmate
         editor-core-types
         timber
+        ReasonFuzz
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

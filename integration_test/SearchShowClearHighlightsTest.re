@@ -1,6 +1,7 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Oni_Syntax;
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",

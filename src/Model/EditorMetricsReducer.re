@@ -3,6 +3,7 @@
  */
 
 open Actions;
+open Feature_Editor;
 
 let reduce = (v: EditorMetrics.t, action) => {
   switch (action) {

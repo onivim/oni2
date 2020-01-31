@@ -42,6 +42,14 @@ let getDefaults = uiTheme =>
   | _ => dark
   };
 
+type editorGutter = {
+  background: Color.t,
+  modifiedBackground: Color.t,
+  addedBackground: Color.t,
+  deletedBackground: Color.t,
+  commentRangeForeground: Color.t,
+};
+
 type t = {
   background: Color.t,
   foreground: Color.t,
@@ -102,6 +110,9 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  editorGutterModifiedBackground: Color.t,
+  editorGutterAddedBackground: Color.t,
+  editorGutterDeletedBackground: Color.t,
 };
 
 let default: t = {
@@ -164,6 +175,9 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  editorGutterModifiedBackground: Color.hex("#0C7D9D"),
+  editorGutterAddedBackground: Color.hex("#587C0C"),
+  editorGutterDeletedBackground: Color.hex("#94151B"),
 };
 
 let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {

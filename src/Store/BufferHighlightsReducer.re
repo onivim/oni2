@@ -6,6 +6,7 @@
  */
 
 open Oni_Model;
+open Oni_Syntax;
 
 let reduce = (state: BufferHighlights.t, action: Actions.t) => {
   switch (action) {

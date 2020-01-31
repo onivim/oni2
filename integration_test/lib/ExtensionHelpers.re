@@ -8,7 +8,7 @@ module Option = Core.Utility.Option;
 module Model = Oni_Model;
 
 module State = Model.State;
-module LanguageFeatures = Model.LanguageFeatures;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let waitForExtensionToActivate =
     (~extensionId, waitForState: Types.waitForState) => {
