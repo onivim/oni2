@@ -77,6 +77,7 @@ module ExtensionInfo = {
           data.extensionKind |> ExtensionManifest.Encode.kind,
         ),
         ("contributes", data.contributes |> ExtensionContributions.encode),
+        ("enableProposedApi", data.enableProposedApi |> bool),
       ])
     );
 };

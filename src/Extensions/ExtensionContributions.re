@@ -19,15 +19,12 @@ module Command = {
 
   let decode =
     Json.Decode.(
-      field("command", string)
-      >>= (
-        command =>
-          field("title", LocalizedToken.decode)
-          >>= (
-            title =>
-              field_opt("category", string)
-              >>= (category => succeed({command, title, category}))
-          )
+      obj(({field, _}) =>
+        {
+          command: field.required("command", string),
+          title: field.required("title", LocalizedToken.decode),
+          category: field.optional("category", string),
+        }
       )
     );
 
@@ -88,24 +85,13 @@ module Language = {
 
   let decode =
     Json.Decode.(
-      field("id", string)
-      >>= (
-        id =>
-          field_opt("extensions", list(string))
-          |> default([])
-          >>= (
-            extensions =>
-              field_opt("aliases", list(string))
-              |> default([])
-              >>= (
-                aliases =>
-                  field_opt("configuration", string)
-                  >>= (
-                    configuration =>
-                      succeed({id, extensions, aliases, configuration})
-                  )
-              )
-          )
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          extensions: field.withDefault("extensions", [], list(string)),
+          aliases: field.withDefault("aliases", [], list(string)),
+          configuration: field.optional("configuration", string),
+        }
       )
     );
 
@@ -131,22 +117,13 @@ module Grammar = {
 
   let decode =
     Json.Decode.(
-      field_opt("language", string)
-      >>= (
-        language =>
-          field("scopeName", string)
-          >>= (
-            scopeName =>
-              field("path", string)
-              >>= (
-                path =>
-                  field_opt("treeSitterPath", string)
-                  >>= (
-                    treeSitterPath =>
-                      succeed({language, scopeName, path, treeSitterPath})
-                  )
-              )
-          )
+      obj(({field, _}) =>
+        {
+          language: field.optional("language", string),
+          scopeName: field.required("scopeName", string),
+          path: field.required("path", string),
+          treeSitterPath: field.optional("treeSitterPath", string),
+        }
       )
     );
 
@@ -180,15 +157,12 @@ module Theme = {
 
   let decode =
     Json.Decode.(
-      field("label", string)
-      >>= (
-        label =>
-          field("uiTheme", string)
-          >>= (
-            uiTheme =>
-              field("path", string)
-              >>= (path => succeed({label, uiTheme, path}))
-          )
+      obj(({field, _}) =>
+        {
+          label: field.required("label", string),
+          uiTheme: field.required("uiTheme", string),
+          path: field.required("path", string),
+        }
       )
     );
 
@@ -212,14 +186,12 @@ module IconTheme = {
 
   let decode =
     Json.Decode.(
-      field("id", string)
-      >>= (
-        id =>
-          field("label", string)
-          >>= (
-            label =>
-              field("path", string) >>= (path => succeed({id, label, path}))
-          )
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          label: field.required("label", string),
+          path: field.required("path", string),
+        }
       )
     );
 
@@ -245,43 +217,17 @@ type t = {
 
 let decode =
   Json.Decode.(
-    field_opt("commands", list(Command.decode))
-    |> default([])
-    >>= (
-      commands =>
-        field_opt("languages", list(Language.decode))
-        |> default([])
-        >>= (
-          languages =>
-            field_opt("grammars", list(Grammar.decode))
-            |> default([])
-            >>= (
-              grammars =>
-                field_opt("themes", list(Theme.decode))
-                |> default([])
-                >>= (
-                  themes =>
-                    field_opt("iconThemes", list(IconTheme.decode))
-                    |> default([])
-                    >>= (
-                      iconThemes =>
-                        field_opt("configuration", Configuration.decode)
-                        |> default([])
-                        >>= (
-                          configuration =>
-                            succeed({
-                              commands,
-                              languages,
-                              grammars,
-                              themes,
-                              iconThemes,
-                              configuration,
-                            })
-                        )
-                    )
-                )
-            )
-        )
+    obj(({field, _}) =>
+      {
+        commands: field.withDefault("commands", [], list(Command.decode)),
+        languages: field.withDefault("languages", [], list(Language.decode)),
+        grammars: field.withDefault("grammars", [], list(Grammar.decode)),
+        themes: field.withDefault("themes", [], list(Theme.decode)),
+        iconThemes:
+          field.withDefault("iconThemes", [], list(IconTheme.decode)),
+        configuration:
+          field.withDefault("configuration", [], Configuration.decode),
+      }
     )
   );
 
