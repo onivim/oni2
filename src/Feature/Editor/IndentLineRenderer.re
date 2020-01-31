@@ -107,7 +107,10 @@ let render =
 
     let i = ref(0);
     while (i^ < level) {
-      Skia.Paint.setColor(paint, Color.toSkia(theme.editorIndentGuideBackground));
+      Skia.Paint.setColor(
+        paint,
+        Color.toSkia(theme.editorIndentGuideBackground),
+      );
       CanvasContext.drawRectLtwh(
         ~left=x +. indentationWidthInPixels *. float_of_int(i^),
         ~top=y,
@@ -181,7 +184,10 @@ let render =
     let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
     if (cursorLineIndentLevel^ >= 1) {
-      Skia.Paint.setColor(paint, Color.toSkia(theme.editorIndentGuideActiveBackground));
+      Skia.Paint.setColor(
+        paint,
+        Color.toSkia(theme.editorIndentGuideActiveBackground),
+      );
       CanvasContext.drawRectLtwh(
         ~left=
           x

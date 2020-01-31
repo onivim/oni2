@@ -131,7 +131,10 @@ let renderSpaces =
     let iF = float(i^);
     let xPos = x +. fontWidth *. iF;
 
-    Skia.Paint.setColor(spacesPaint, theme.editorWhitespaceForeground |> Color.toSkia);
+    Skia.Paint.setColor(
+      spacesPaint,
+      theme.editorWhitespaceForeground |> Color.toSkia,
+    );
     CanvasContext.drawRectLtwh(
       ~left=xPos +. xOffset,
       ~top=y +. yOffset,
@@ -181,11 +184,11 @@ let renderTokens =
         |> Revery.Font.ShapeResult.getGlyphString;
 
       CanvasContext.drawText(
-      ~paint=tokenPaint,
-      ~x,
-      ~y=yF +. offset,
-      ~text=shapedText,
-      canvasContext
+        ~paint=tokenPaint,
+        ~x,
+        ~y=yF +. offset,
+        ~text=shapedText,
+        canvasContext,
       );
     | Tab =>
       CanvasContext.Deprecated.drawString(
@@ -196,7 +199,7 @@ let renderTokens =
         ~fontSize=10.,
         ~text=FontIcon.codeToIcon(0xf30b),
         canvasContext,
-      );
+      )
     | Whitespace =>
       renderSpaces(
         ~fontWidth,
@@ -603,10 +606,9 @@ let%component make =
       onMouseWheel=scrollSurface>
       <Canvas
         style={Styles.bufferViewClipped(bufferPixelWidth)}
-        render={(canvasContext) => {
+        render={canvasContext => {
           let fontMaybe =
             Revery.Font.load(fontFamily) |> Utility.Result.to_option;
-
 
           let lineNumberPaint =
             fontMaybe
@@ -639,16 +641,19 @@ let%component make =
                  );
                  (font, paint);
                });
-  
+
           let rectPaint = Skia.Paint.make();
-               
+
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
           let scrollY = editor.scrollY;
 
           /* Draw background for cursor line */
-          Skia.Paint.setColor(rectPaint, theme.editorLineHighlightBackground |> Color.toSkia);
+          Skia.Paint.setColor(
+            rectPaint,
+            theme.editorLineHighlightBackground |> Color.toSkia,
+          );
           CanvasContext.drawRectLtwh(
             ~left=gutterWidth,
             ~top=
@@ -662,17 +667,19 @@ let%component make =
           );
 
           /* Draw configured rulers */
-          let renderRuler = ruler => {
-            Skia.Paint.setColor(rectPaint, theme.editorRulerForeground |> Color.toSkia);
-            CanvasContext.drawRectLtwh(
-              ~left=fst(bufferPositionToPixel(0, ruler)),
-              ~top=0.0,
-              ~height=float(metrics.pixelHeight),
-              ~width=1.,
-              ~paint=rectPaint,
-              canvasContext,
-            );
-          };
+          let renderRuler = ruler =>
+            {Skia.Paint.setColor(
+               rectPaint,
+               theme.editorRulerForeground |> Color.toSkia,
+             );
+             CanvasContext.drawRectLtwh(
+               ~left=fst(bufferPositionToPixel(0, ruler)),
+               ~top=0.0,
+               ~height=float(metrics.pixelHeight),
+               ~width=1.,
+               ~paint=rectPaint,
+               canvasContext,
+             )};
 
           List.iter(renderRuler, rulers);
 
@@ -848,56 +855,59 @@ let%component make =
 
           tokenPaint
           |> Utility.Option.iter(((font, paint)) => {
-            ImmediateList.render(
-              ~scrollY,
-              ~rowHeight,
-              ~height=float(height),
-              ~count,
-              ~render=
-                (item, offset) => {
-                  let index = Index.fromZeroBased(item);
-                  let selectionRange =
-                    switch (Hashtbl.find_opt(selectionRanges, index)) {
-                    | None => None
-                    | Some(v) =>
-                      switch (List.length(v)) {
-                      | 0 => None
-                      | _ => Some(List.hd(v))
-                      }
-                    };
-                  let tokens =
-                    getTokensForLine(
-                      ~selection=selectionRange,
-                      leftVisibleColumn,
-                      leftVisibleColumn + layout.bufferWidthInCharacters,
-                      item,
-                    );
+               ImmediateList.render(
+                 ~scrollY,
+                 ~rowHeight,
+                 ~height=float(height),
+                 ~count,
+                 ~render=
+                   (item, offset) => {
+                     let index = Index.fromZeroBased(item);
+                     let selectionRange =
+                       switch (Hashtbl.find_opt(selectionRanges, index)) {
+                       | None => None
+                       | Some(v) =>
+                         switch (List.length(v)) {
+                         | 0 => None
+                         | _ => Some(List.hd(v))
+                         }
+                       };
+                     let tokens =
+                       getTokensForLine(
+                         ~selection=selectionRange,
+                         leftVisibleColumn,
+                         leftVisibleColumn + layout.bufferWidthInCharacters,
+                         item,
+                       );
 
-                  let _ =
-                    renderTokens(
-                      font,
-                      paint,
-                      descenderHeight,
-                      fontSize,
-                      fontWidth,
-                      fontHeight,
-                      gutterWidth,
-                      theme,
-                      tokens,
-                      editor.scrollX,
-                      offset,
-                      canvasContext,
-                      shouldRenderWhitespace,
-                    );
-                  ();
-                },
-              (),
-            );
-          });
+                     let _ =
+                       renderTokens(
+                         font,
+                         paint,
+                         descenderHeight,
+                         fontSize,
+                         fontWidth,
+                         fontHeight,
+                         gutterWidth,
+                         theme,
+                         tokens,
+                         editor.scrollX,
+                         offset,
+                         canvasContext,
+                         shouldRenderWhitespace,
+                       );
+                     ();
+                   },
+                 (),
+               )
+             });
 
           /* Draw background for line numbers */
           if (showLineNumbers != LineNumber.Off) {
-            Skia.Paint.setColor(rectPaint, theme.editorLineNumberBackground |> Color.toSkia);
+            Skia.Paint.setColor(
+              rectPaint,
+              theme.editorLineNumberBackground |> Color.toSkia,
+            );
             CanvasContext.drawRectLtwh(
               ~left=0.,
               ~top=0.,
@@ -909,31 +919,30 @@ let%component make =
 
             lineNumberPaint
             |> Utility.Option.iter(paint => {
-
-              ImmediateList.render(
-                ~scrollY,
-                ~rowHeight,
-                ~height=float(height),
-                ~count,
-                ~render=
-                  (item, offset) => {
-                    renderLineNumber(
-                      paint,
-                      descenderHeight,
-                      fontWidth,
-                      fontHeight,
-                      item,
-                      lineNumberWidth,
-                      theme,
-                      showLineNumbers,
-                      cursorLine,
-                      offset,
-                      canvasContext,
-                    )
-                  },
-                (),
-              );
-            })
+                 ImmediateList.render(
+                   ~scrollY,
+                   ~rowHeight,
+                   ~height=float(height),
+                   ~count,
+                   ~render=
+                     (item, offset) => {
+                       renderLineNumber(
+                         paint,
+                         descenderHeight,
+                         fontWidth,
+                         fontHeight,
+                         item,
+                         lineNumberWidth,
+                         theme,
+                         showLineNumbers,
+                         cursorLine,
+                         offset,
+                         canvasContext,
+                       )
+                     },
+                   (),
+                 )
+               });
           };
 
           Option.iter(

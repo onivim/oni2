@@ -27,7 +27,6 @@ let lineStyle = Style.[position(`Absolute), top(0)];
 
 let minimapPaint = Skia.Paint.make();
 
-
 let renderLine =
     (
       shouldHighlight,
@@ -61,7 +60,14 @@ let renderLine =
       let width = emphasis ? width +. offset : width;
 
       Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
-      CanvasContext.drawRectLtwh(~top=y, ~left=x, ~paint=minimapPaint, ~width, ~height, canvasContext);
+      CanvasContext.drawRectLtwh(
+        ~top=y,
+        ~left=x,
+        ~paint=minimapPaint,
+        ~width,
+        ~height,
+        canvasContext,
+      );
     | _ => ()
     };
   };
@@ -177,10 +183,13 @@ let%component make =
   <View style=absoluteStyle onMouseDown>
     <Canvas
       style=absoluteStyle
-      render={(canvasContext) => {
+      render={canvasContext => {
         if (showSlider) {
           /* Draw slider/viewport */
-          Skia.Paint.setColor(minimapPaint, Color.toSkia(theme.scrollbarSliderHoverBackground));
+          Skia.Paint.setColor(
+            minimapPaint,
+            Color.toSkia(theme.scrollbarSliderHoverBackground),
+          );
           CanvasContext.drawRectLtwh(
             ~left=0.,
             ~top=
@@ -196,7 +205,10 @@ let%component make =
 
         let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
-        Skia.Paint.setColor(minimapPaint, Color.toSkia(theme.editorLineHighlightBackground));
+        Skia.Paint.setColor(
+          minimapPaint,
+          Color.toSkia(theme.editorLineHighlightBackground),
+        );
         CanvasContext.drawRectLtwh(
           ~left=Constants.leftMargin,
           ~top=
@@ -286,7 +298,7 @@ let%component make =
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
               | Some(_) =>
-                let color =Color.rgba(1.0, 0.0, 0.0, 0.3);
+                let color = Color.rgba(1.0, 0.0, 0.0, 0.3);
                 Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
                 CanvasContext.drawRectLtwh(
                   ~left=0.,
@@ -296,7 +308,7 @@ let%component make =
                   ~width=float(width),
                   ~paint=minimapPaint,
                   canvasContext,
-                )
+                );
               | None => ()
               };
 
