@@ -291,13 +291,13 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-textmate@github:glennsl/reason-textmate#0d86161@d41d8cd9": {
-      "id": "reason-textmate@github:glennsl/reason-textmate#0d86161@d41d8cd9",
+    "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9": {
+      "id": "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
       "name": "reason-textmate",
-      "version": "github:glennsl/reason-textmate#0d86161",
+      "version": "github:onivim/reason-textmate#5f0dc38",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/reason-textmate#0d86161" ]
+        "source": [ "github:onivim/reason-textmate#5f0dc38" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1075,7 +1075,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
-        "reason-textmate@github:glennsl/reason-textmate#0d86161@d41d8cd9",
+        "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
         "reason-sdl2@2.10.3016@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3782892@d41d8cd9",
         "reason-jsonrpc@github:bryphe/reason-jsonrpc#95f2427@d41d8cd9",

@@ -252,14 +252,13 @@
     "@esy-ocaml/libffi": "esy-ocaml/libffi#599bc3567",
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6",
     "rench": "bryphe/rench#a976fe5",
-
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
-    "reason-textmate": "glennsl/reason-textmate#0d86161"
+    "reason-textmate": "onivim/reason-textmate#5f0dc38"
   },
   "devDependencies": {
     "ocaml": "~4.8.1",
     "@opam/merlin": "~3.3.2",
-    "reperf": "^1.3.0",
+    "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
     "shelljs": "*",
