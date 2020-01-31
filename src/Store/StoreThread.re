@@ -64,7 +64,6 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
-      ~getScaleFactor,
       ~getZoom,
       ~setZoom,
       ~quit,
@@ -140,7 +139,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start(~getScaleFactor);
+  let fontUpdater = FontStoreConnector.start();
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
   let completionUpdater = CompletionStoreConnector.start();

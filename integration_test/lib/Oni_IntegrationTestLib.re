@@ -28,8 +28,6 @@ let getTitle = () => _currentTitle^;
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
-let getScaleFactor = () => 1.0;
-
 let setVsync = vsync => _currentVsync := vsync;
 
 let quit = code => exit(code);
@@ -97,7 +95,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getScaleFactor,
       ~setTitle,
       ~getZoom,
       ~setZoom,
