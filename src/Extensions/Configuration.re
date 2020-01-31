@@ -47,7 +47,7 @@ module Model = {
       configModels
       |> List.map(({name, default}) => (name, default))
       |> Json.Encode.obj
-      |> Oni_Core.Utility.Json.explode;
+      |> Utility.JsonEx.explode;
 
     {keys, contents};
   };
