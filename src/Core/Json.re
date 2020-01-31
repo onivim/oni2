@@ -1,5 +1,3 @@
-// API reference: https://mattjbray.github.io/ocaml-decoders/decoders/decoders-yojson/Decoders_yojson/index.html
-
 type t = Yojson.Safe.json;
 
 module Decode = {
