@@ -54,7 +54,10 @@ let loadAndValidateEditorFont =
   };
 };
 
-let start = () => {
+let start = (~getScaleFactor) => {
+  // TODO: Bring back scale for font measurement...
+  ignore(getScaleFactor);
+
   let setFont = (dispatch1, maybeFontFamily, fontSize: float) => {
     let dispatch = action =>
       Revery.App.runOnMainThread(() => dispatch1(action));
