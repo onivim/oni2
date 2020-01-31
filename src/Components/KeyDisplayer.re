@@ -89,7 +89,7 @@ module Styles = {
 
   let text = (uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(24),
+    fontSize(24.),
     textWrap(TextWrapping.NoWrap),
     Style.backgroundColor(backgroundColor),
     color(Colors.white),
