@@ -1,7 +1,10 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Utility;
-open Actions;
+
+module Editor = Feature_Editor.Editor;
+module EditorMetrics = Feature_Editor.EditorMetrics;
+module EditorLayout = Feature_Editor.EditorLayout;
 
 type individualRange = {
   editorRanges: list(Range.t),
@@ -82,7 +85,7 @@ let getVisibleBuffers = (state: State.t) => {
   |> List.map((split: WindowTree.split) => split.editorGroupId)
   |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
   |> List.filter_map(EditorGroup.getActiveEditor)
-  |> List.map(e => e.bufferId);
+  |> List.map(e => e.Editor.bufferId);
 };
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
@@ -98,7 +101,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
            Some(tup);
          }
        )
-    |> List.filter(((_, editor)) => editor.bufferId == bufferId);
+    |> List.filter(((_, editor)) => editor.Editor.bufferId == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {
     [curr.editorRanges, curr.minimapRanges, ...prev];

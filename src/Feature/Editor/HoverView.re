@@ -7,10 +7,11 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Model;
 open Utility;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 module Constants = {
   let padding = 8;
@@ -120,41 +121,37 @@ let%component hoverItem =
   };
 };
 
-let make = (~x, ~y, ~state: State.t, ()) => {
-  let delay =
-    Configuration.getValue(c => c.editorHoverDelay, state.configuration)
-    |> Time.ms;
-  let hoverEnabled =
-    Configuration.getValue(c => c.editorHoverEnabled, state.configuration);
-
-  let State.{theme, editorFont, diagnostics, _} = state;
-  let maybeEditor =
-    state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
-
-  switch (maybeEditor) {
-  | Some(editor) when hoverEnabled && state.mode != Vim.Types.Insert =>
-    switch (Buffers.getBuffer(editor.bufferId, state.buffers)) {
-    | Some(buffer) =>
-      <View style=Styles.container>
-        {editor.cursors
-         |> List.map(cursor =>
-              <hoverItem
-                x
-                y
-                diagnostics
-                buffer
-                location=cursor
-                delay
-                theme
-                editorFont
-              />
-            )
-         |> React.listToElement}
-      </View>
-
-    | None => React.empty
-    }
-
-  | _ => React.empty
+let make =
+    (
+      ~x,
+      ~y,
+      ~delay,
+      ~isEnabled,
+      ~theme,
+      ~editorFont,
+      ~diagnostics,
+      ~editor: Editor.t,
+      ~buffer,
+      ~mode,
+      (),
+    ) =>
+  if (isEnabled && mode != Vim.Types.Insert) {
+    <View style=Styles.container>
+      {editor.cursors
+       |> List.map(cursor =>
+            <hoverItem
+              x
+              y
+              diagnostics
+              buffer
+              location=cursor
+              delay
+              theme
+              editorFont
+            />
+          )
+       |> React.listToElement}
+    </View>;
+  } else {
+    React.empty;
   };
-};

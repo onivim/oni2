@@ -3,14 +3,14 @@ open Revery.UI;
 
 open Oni_Core;
 open Oni_Syntax;
-open Oni_Model;
 open Oni_Components;
 open Utility;
 
-open Completions;
+open Feature_LanguageSupport.Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Ext = Oni_Extensions;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
 
 open Ext.CompletionItemKind;
 
@@ -189,10 +189,19 @@ let detailView =
     <Text style={Styles.detailText(~editorFont, ~theme, ~tokenTheme)} text />
   </View>;
 
-let make = (~x: int, ~y: int, ~lineHeight: float, ~state: State.t, ()) => {
+let make =
+    (
+      ~x: int,
+      ~y: int,
+      ~lineHeight: float,
+      ~theme,
+      ~tokenTheme,
+      ~editorFont,
+      ~completions,
+      (),
+    ) => {
   /*let hoverEnabled =
     Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
-  let {theme, tokenTheme, editorFont, completions, _}: State.t = state;
   let items = completions.filtered;
 
   let maxWidth =

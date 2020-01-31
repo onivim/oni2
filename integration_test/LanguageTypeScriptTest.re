@@ -2,6 +2,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Feature_LanguageSupport;
 
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
@@ -70,8 +71,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -97,8 +97,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

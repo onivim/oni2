@@ -1,23 +1,23 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-type t =
-  Actions.editor = {
-    editorId: EditorId.t,
-    bufferId: int,
-    scrollX: float,
-    scrollY: float,
-    minimapMaxColumnWidth: int,
-    minimapScrollY: float,
-    /*
-     * The maximum line visible in the view.
-     * TODO: This will be dependent on line-wrap settings.
-     */
-    maxLineLength: int,
-    viewLines: int,
-    cursors: list(Vim.Cursor.t),
-    selection: VisualRange.t,
-  };
+[@deriving show]
+type t = {
+  editorId: EditorId.t,
+  bufferId: int,
+  scrollX: float,
+  scrollY: float,
+  minimapMaxColumnWidth: int,
+  minimapScrollY: float,
+  /*
+   * The maximum line visible in the view.
+   * TODO: This will be dependent on line-wrap settings.
+   */
+  maxLineLength: int,
+  viewLines: int,
+  cursors: [@opaque] list(Vim.Cursor.t),
+  selection: [@opaque] VisualRange.t,
+};
 
 type scrollbarMetrics = {
   visible: bool,
@@ -42,5 +42,3 @@ let pixelPositionToLineColumn:
   (t, EditorMetrics.t, float, float) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
 let getLinesAndColumns: (t, EditorMetrics.t) => (int, int);
-
-let reduce: (t, Actions.t, EditorMetrics.t) => t;

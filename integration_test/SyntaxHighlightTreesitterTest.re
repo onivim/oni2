@@ -5,6 +5,8 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
+
 let configuration = Some({|
 { "experimental.treeSitter": true }
 |});

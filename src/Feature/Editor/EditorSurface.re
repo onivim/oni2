@@ -12,10 +12,16 @@ open Revery.UI;
 
 open Oni_Core;
 open Oni_Core.CamomileBundled.Camomile;
-open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
+
 module Option = Utility.Option;
+module FontIcon = Oni_Components.FontIcon;
+module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Definition = Feature_LanguageSupport.Definition;
 
 module Constants = {
   include Constants;
@@ -211,20 +217,38 @@ let renderTokens =
 
 let%component make =
               (
-                ~state: State.t,
+                ~activeBuffer,
+                ~onDimensionsChanged,
                 ~isActiveSplit: bool,
-                ~editorGroup: EditorGroup.t,
                 ~metrics: EditorMetrics.t,
                 ~editor: Editor.t,
+                ~theme: Theme.t,
+                ~rulers=[],
+                ~showLineNumbers=LineNumber.On,
+                ~editorFont: EditorFont.t,
+                ~fontSize=14,
+                ~mode: Vim.Mode.t,
+                ~showMinimap=true,
+                ~showMinimapSlider=true,
+                ~maxMinimapCharacters=50,
+                ~matchingPairsEnabled=true,
+                ~bufferHighlights,
+                ~bufferSyntaxHighlights,
+                ~onScroll,
+                ~diagnostics,
+                ~completions,
+                ~tokenTheme,
+                ~hoverDelay=Time.ms(1000),
+                ~isHoverEnabled=true,
+                ~onCursorChange,
+                ~definition,
+                ~shouldRenderWhitespace=ConfigurationValues.None,
+                ~shouldRenderIndentGuides=false,
+                ~shouldHighlightActiveIndentGuides=false,
                 (),
               ) => {
-  let theme = state.theme;
-
   let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
 
-  let activeBuffer = Selectors.getBufferForEditor(state, editor);
-
-  let editorId = Editor.getId(editor);
   let buffer =
     switch (activeBuffer) {
     | Some(buffer) => buffer
@@ -234,19 +258,11 @@ let%component make =
   let bufferId = Buffer.getId(buffer);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let rulers =
-    Configuration.getValue(c => c.editorRulers, state.configuration);
-
-  let showLineNumbers =
-    Configuration.getValue(
-      c => c.editorLineNumbers != LineNumber.Off,
-      state.configuration,
-    );
   let lineNumberWidth =
-    showLineNumbers
+    showLineNumbers != LineNumber.Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=lineCount,
-          ~fontPixelWidth=state.editorFont.measuredWidth,
+          ~fontPixelWidth=editorFont.measuredWidth,
           (),
         )
       : 0.0;
@@ -254,11 +270,9 @@ let%component make =
   let gutterWidth =
     lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
 
-  let fontHeight = state.editorFont.measuredHeight;
-  let fontWidth = state.editorFont.measuredWidth;
-  let fontFamily = state.editorFont.fontFile;
-  let fontSize =
-    Configuration.getValue(c => c.editorFontSize, state.configuration);
+  let fontHeight = editorFont.measuredHeight;
+  let fontWidth = editorFont.measuredWidth;
+  let fontFamily = editorFont.fontFile;
 
   let iFontHeight = int_of_float(fontHeight +. 0.5);
   let indentation =
@@ -298,7 +312,7 @@ let%component make =
   let fullCursorWidth = cursorCharacterWidth * int_of_float(fontWidth);
 
   let cursorWidth =
-    switch (state.mode, isActiveSplit) {
+    switch (mode, isActiveSplit) {
     | (Insert, true) => 2
     | _ => fullCursorWidth
     };
@@ -328,33 +342,22 @@ let%component make =
       backgroundColor(Colors.white),
     ];
 
-  let isMinimapShown =
-    Configuration.getValue(c => c.editorMinimapEnabled, state.configuration);
-
   let layout =
     EditorLayout.getLayout(
-      ~showLineNumbers,
-      ~maxMinimapCharacters=
-        Configuration.getValue(
-          c => c.editorMinimapMaxColumn,
-          state.configuration,
-        ),
+      ~showLineNumbers=showLineNumbers != LineNumber.Off,
+      ~maxMinimapCharacters,
       ~pixelWidth=float(metrics.pixelWidth),
       ~pixelHeight=float(metrics.pixelHeight),
-      ~isMinimapShown,
-      ~characterWidth=state.editorFont.measuredWidth,
-      ~characterHeight=state.editorFont.measuredHeight,
+      ~isMinimapShown=showMinimap,
+      ~characterWidth=editorFont.measuredWidth,
+      ~characterHeight=editorFont.measuredHeight,
       ~bufferLineCount=lineCount,
       (),
     );
 
-  let matchingPairsEnabled =
-    Selectors.getConfigurationValue(state, buffer, c => c.editorMatchBrackets);
-
   let matchingPairs =
     !matchingPairsEnabled
-      ? None
-      : BufferHighlights.getMatchingPair(bufferId, state.bufferHighlights);
+      ? None : BufferHighlights.getMatchingPair(bufferId, bufferHighlights);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let getTokensForLine =
@@ -369,7 +372,7 @@ let%component make =
         BufferHighlights.getHighlightsByLine(
           ~bufferId,
           ~line=idx,
-          state.bufferHighlights,
+          bufferHighlights,
         );
 
       let isActiveLine = i == cursorLine;
@@ -395,7 +398,7 @@ let%component make =
         BufferSyntaxHighlights.getTokens(
           bufferId,
           Index.fromZeroBased(i),
-          state.bufferSyntaxHighlights,
+          bufferSyntaxHighlights,
         );
 
       let colorizer =
@@ -440,16 +443,6 @@ let%component make =
       flexGrow(1),
     ];
 
-  let onDimensionsChanged =
-      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-    GlobalContext.current().notifyEditorSizeChanged(
-      ~editorGroupId=editorGroup.editorGroupId,
-      ~width,
-      ~height,
-      (),
-    );
-  };
-
   let bufferPixelWidth =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
@@ -484,29 +477,15 @@ let%component make =
       width(int_of_float(layout.bufferWidthInPixels)),
     ];
 
-  let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    let () =
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=wheelEvent.deltaY *. (-50.),
-        (),
-      );
-    ();
-  };
+  let scrollSurface = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+    onScroll(wheelEvent.deltaY *. (-50.));
 
-  let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
-    let () =
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=wheelEvent.deltaY *. (-150.),
-        (),
-      );
-    ();
-  };
+  let scrollMinimap = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+    onScroll(wheelEvent.deltaY *. (-150.));
 
-  let diagnostics =
+  let diagnosticsMap =
     switch (activeBuffer) {
-    | Some(b) => Diagnostics.getDiagnosticsMap(state.diagnostics, b)
+    | Some(b) => Diagnostics.getDiagnosticsMap(diagnostics, b)
     | None => IntMap.empty
     };
   let ranges = Selection.getRanges(editor.selection, buffer);
@@ -517,41 +496,57 @@ let%component make =
       ? EditorDiffMarkers.generate(buffer) : None;
 
   let minimapLayout =
-    isMinimapShown
+    showMinimap
       ? <View style=minimapViewStyle onMouseWheel=scrollMinimap>
           <Minimap
-            state
             editor
             width={layout.minimapWidthInPixels}
             height={metrics.pixelHeight}
             count=lineCount
-            diagnostics
+            diagnostics=diagnosticsMap
             metrics
             getTokensForLine={getTokensForLine(
               0,
               layout.bufferWidthInCharacters,
             )}
             selection=selectionRanges
-            diffMarkers
+            showSlider=showMinimapSlider
+            onScroll
             theme
+            bufferHighlights
+            diffMarkers
           />
         </View>
       : React.empty;
 
   let completions = () =>
-    Completions.isActive(state.completions)
+    Completions.isActive(completions)
       ? <CompletionsView
           x=cursorPixelX
           y=cursorPixelY
           lineHeight=fontHeight
-          state
+          theme
+          tokenTheme
+          editorFont
+          completions
         />
       : React.empty;
 
   let hoverElements =
     isActiveSplit
       ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
-          <HoverView x=cursorPixelX y=cursorPixelY state />
+          <HoverView
+            x=cursorPixelX
+            y=cursorPixelY
+            delay=hoverDelay
+            isEnabled=isHoverEnabled
+            theme
+            editorFont
+            diagnostics
+            editor
+            buffer
+            mode
+          />
           <completions />
         </View>
       : React.empty;
@@ -596,9 +591,7 @@ let%component make =
           GlobalContext.current().dispatch(
             Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
           );*/
-        GlobalContext.current().dispatch(
-          Actions.EditorCursorMove(editorId, [cursor]),
-        );
+        onCursorChange(cursor);
       };
     };
   };
@@ -739,7 +732,7 @@ let%component make =
                   renderUnderline(~color=Colors.red, d.range);
 
                 /* Draw error markers */
-                switch (IntMap.find_opt(item, diagnostics)) {
+                switch (IntMap.find_opt(item, diagnosticsMap)) {
                 | None => ()
                 | Some(v) => List.iter(renderDiagnostics, v)
                 };
@@ -774,7 +767,7 @@ let%component make =
                 BufferHighlights.getHighlightsByLine(
                   ~bufferId,
                   ~line=index,
-                  state.bufferHighlights,
+                  bufferHighlights,
                 )
                 |> List.iter(r =>
                      renderRange(
@@ -787,11 +780,7 @@ let%component make =
             (),
           );
 
-          if (Definition.isAvailable(
-                bufferId,
-                cursorPosition,
-                state.definition,
-              )) {
+          if (Definition.isAvailable(bufferId, cursorPosition, definition)) {
             let () =
               getTokenAtPosition(
                 ~startIndex=leftVisibleColumn,
@@ -855,18 +844,15 @@ let%component make =
                     editor.scrollX,
                     offset,
                     transform,
-                    Configuration.getValue(
-                      c => c.editorRenderWhitespace,
-                      state.configuration,
-                    ),
+                    shouldRenderWhitespace,
                   );
                 ();
               },
             (),
           );
 
-          if (showLineNumbers) {
-            /* Draw background for line numbers */
+          /* Draw background for line numbers */
+          if (showLineNumbers != LineNumber.Off) {
             Shapes.drawRect(
               ~transform,
               ~x=0.,
@@ -883,7 +869,7 @@ let%component make =
               ~height=float(height),
               ~count,
               ~render=
-                (item, offset) =>
+                (item, offset) => {
                   renderLineNumber(
                     fontFamily,
                     fontSize,
@@ -891,14 +877,12 @@ let%component make =
                     item,
                     lineNumberWidth,
                     theme,
-                    Configuration.getValue(
-                      c => c.editorLineNumbers,
-                      state.configuration,
-                    ),
+                    showLineNumbers,
                     cursorLine,
                     offset,
                     transform,
-                  ),
+                  )
+                },
               (),
             );
           };
@@ -917,17 +901,6 @@ let%component make =
             diffMarkers,
           );
 
-          let shouldRenderIndentGuides =
-            Configuration.getValue(
-              c => c.editorRenderIndentGuides,
-              state.configuration,
-            );
-          let shouldShowActive =
-            Configuration.getValue(
-              c => c.editorHighlightActiveIndentGuide,
-              state.configuration,
-            );
-
           if (shouldRenderIndentGuides) {
             switch (activeBuffer) {
             | None => ()
@@ -940,10 +913,10 @@ let%component make =
                 ~lineHeight=fontHeight,
                 ~fontWidth,
                 ~cursorLine=Index.toZeroBased(cursorPosition.line),
-                ~theme=state.theme,
+                ~theme,
                 ~indentationSettings=indentation,
                 ~bufferPositionToPixel,
-                ~showActive=shouldShowActive,
+                ~showActive=shouldHighlightActiveIndentGuides,
                 (),
               )
             };
@@ -954,9 +927,9 @@ let%component make =
       <View style=horizontalScrollBarStyle>
         <EditorHorizontalScrollbar
           editor
-          state
           metrics
           width={int_of_float(layout.bufferWidthInPixels)}
+          theme
         />
       </View>
     </View>
@@ -964,12 +937,14 @@ let%component make =
     hoverElements
     <View style=verticalScrollBarStyle>
       <EditorVerticalScrollbar
-        state
         editor
         metrics
         width={Constants.default.scrollBarThickness}
         height={metrics.pixelHeight}
-        diagnostics
+        diagnostics=diagnosticsMap
+        theme
+        editorFont
+        bufferHighlights
       />
     </View>
   </View>;

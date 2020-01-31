@@ -14,6 +14,10 @@ open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 

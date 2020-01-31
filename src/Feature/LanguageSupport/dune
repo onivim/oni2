@@ -1,0 +1,10 @@
+(library
+    (name Feature_LanguageSupport)
+    (public_name Oni2.feature.language_support)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.extensions
+      Oni2.syntax
+    )
+    (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))

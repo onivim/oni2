@@ -3,6 +3,8 @@ open Oni_Core;
 open Oni_Model;
 
 module LocationList = Oni_Components.LocationList;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];

@@ -5,17 +5,13 @@
  */
 
 open EditorCoreTypes;
+open Oni_Core;
 open Revery;
 open Revery.Draw;
 open Revery.UI;
 
-open Oni_Core;
-module BufferHighlights = Oni_Model.BufferHighlights;
-module BufferViewTokenizer = Oni_Model.BufferViewTokenizer;
-module Diagnostic = Oni_Model.Diagnostic;
-module Editor = Oni_Model.Editor;
-module Selectors = Oni_Model.Selectors;
-module State = Oni_Model.State;
+module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Option = Utility.Option;
 
 module Constants = {
@@ -99,7 +95,6 @@ let initialState = {isCapturing: false};
 
 let%component make =
               (
-                ~state: State.t,
                 ~editor: Editor.t,
                 ~width: int,
                 ~height: int,
@@ -108,8 +103,11 @@ let%component make =
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
                 ~metrics,
+                ~onScroll,
+                ~showSlider,
+                ~theme: Theme.t,
+                ~bufferHighlights,
                 ~diffMarkers,
-                ~theme,
                 (),
               ) => {
   let rowHeight =
@@ -118,7 +116,6 @@ let%component make =
       + Constants.default.minimapLineSpacing,
     );
 
-  let editorId = Editor.getId(editor);
   let%hook (mouseState, dispatch) =
     React.Hooks.reducer(~initialState, reducer);
 
@@ -154,11 +151,8 @@ let%component make =
       + Constants.default.minimapCharacterHeight;
     let linesInMinimap = metrics.pixelHeight / minimapLineSize;
     if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
-      GlobalContext.current().editorScrollDelta(
-        ~editorId,
-        ~deltaY=scrollTo -. editor.scrollY -. float(linesInMinimap),
-        (),
-      );
+      onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
+
       Mouse.setCapture(
         ~onMouseMove=
           evt => {
@@ -167,12 +161,7 @@ let%component make =
               Constants.default.minimapLineSpacing
               + Constants.default.minimapCharacterHeight;
             let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-            let scrollTo = scrollTo -. float(linesInMinimap);
-            GlobalContext.current().editorSetScroll(
-              ~editorId,
-              ~scrollY=scrollTo,
-              (),
-            );
+            onScroll(scrollTo -. float(linesInMinimap));
           },
         ~onMouseUp=_evt => {scrollComplete()},
         (),
@@ -185,10 +174,7 @@ let%component make =
     <OpenGL
       style=absoluteStyle
       render={(transform, _) => {
-        if (Configuration.getValue(
-              c => c.editorMinimapShowSlider,
-              state.configuration,
-            )) {
+        if (showSlider) {
           /* Draw slider/viewport */
           Shapes.drawRect(
             ~transform,
@@ -199,13 +185,12 @@ let%component make =
               -. scrollY,
             ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
             ~width=float(width),
-            ~color=state.theme.scrollbarSliderHoverBackground,
+            ~color=theme.scrollbarSliderHoverBackground,
             (),
           );
         };
 
         let cursorPosition = Editor.getPrimaryCursor(editor);
-
         /* Draw cursor line */
         Shapes.drawRect(
           ~transform,
@@ -216,7 +201,7 @@ let%component make =
             -. scrollY,
           ~height=float(Constants.default.minimapCharacterHeight),
           ~width=float(width),
-          ~color=state.theme.editorLineHighlightBackground,
+          ~color=theme.editorLineHighlightBackground,
           (),
         );
 
@@ -273,7 +258,7 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let selectionColor = state.theme.editorSelectionBackground;
+                let selectionColor = theme.editorSelectionBackground;
                 List.iter(renderRange(~color=selectionColor, ~offset), v);
               };
 
@@ -283,7 +268,7 @@ let%component make =
                 BufferHighlights.getHighlightsByLine(
                   ~bufferId=editor.bufferId,
                   ~line=index,
-                  state.bufferHighlights,
+                  bufferHighlights,
                 );
 
               let shouldHighlight = i =>
@@ -299,7 +284,7 @@ let%component make =
               | Some(_) =>
                 Shapes.drawRect(
                   ~transform,
-                  ~x=Constants.leftMargin,
+                  ~x=0.,
                   ~y=rowHeight *. float(item) -. scrollY -. 1.0,
                   ~height=
                     float(Constants.default.minimapCharacterHeight) +. 2.0,

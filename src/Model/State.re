@@ -11,6 +11,11 @@ open Oni_Syntax;
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 type t = {
   buffers: Buffers.t,

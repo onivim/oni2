@@ -1,8 +1,7 @@
 open EditorCoreTypes;
 open TestFramework;
 open Oni_Core;
-
-module CompletionMeet = Oni_Model.CompletionMeet;
+open Feature_LanguageSupport;
 
 let makeLine = str =>
   BufferLine.make(~indentation=IndentationSettings.default, str);

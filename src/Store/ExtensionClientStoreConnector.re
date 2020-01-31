@@ -17,6 +17,9 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module Workspace = Protocol.Workspace;
 

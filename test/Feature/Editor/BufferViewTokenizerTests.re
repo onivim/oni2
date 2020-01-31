@@ -1,10 +1,11 @@
 open EditorCoreTypes;
 open Revery;
 open Oni_Core;
-open Oni_Model;
 open TestFramework;
 
 open Helpers;
+
+module BufferViewTokenizer = Feature_Editor.BufferViewTokenizer;
 
 let theme = Theme.default;
 

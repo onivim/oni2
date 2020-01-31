@@ -2,7 +2,7 @@ open Oni_Core;
 open TestFramework;
 open Revery;
 
-module BufferLineColorizer = Oni_Model.BufferLineColorizer;
+module BufferLineColorizer = Feature_Editor.BufferLineColorizer;
 
 let basicColorizer =
   BufferLineColorizer.create(
