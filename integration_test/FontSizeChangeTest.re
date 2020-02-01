@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -22,11 +23,17 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
     true;
   });
 
-  wait(~name="Font is updated", (state: State.t) =>
-    state.editorFont.measuredWidth == 5.0
-    && state.editorFont.measuredHeight == 10.
-    && state.editorFont.fontSize == 8.
-  );
+  let isClose = (f1, f2) => Float.abs(f1 -. f2) < 0.000001;
+
+  wait(~name="Font is updated", ({editorFont, _}: State.t) => {
+    print_endline(
+      "Font metrics, round 1: " ++ EditorFont.toString(editorFont),
+    );
+
+    isClose(editorFont.measuredWidth, 4.8)
+    && isClose(editorFont.measuredHeight, 9.599976)
+    && isClose(editorFont.fontSize, 8.0);
+  });
 
   wait(~name="Set configuration to large font size", (state: State.t) => {
     let configuration = state.configuration;
@@ -43,9 +50,12 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
     true;
   });
 
-  wait(~name="Font is updated again", (state: State.t) =>
-    state.editorFont.measuredWidth == 14.0
-    && state.editorFont.measuredHeight == 29.
-    && state.editorFont.fontSize == 24.
-  );
+  wait(~name="Font is updated again", ({editorFont, _}: State.t) => {
+    print_endline(
+      "Font metrics, round 2: " ++ EditorFont.toString(editorFont),
+    );
+    isClose(editorFont.measuredWidth, 14.4)
+    && isClose(editorFont.measuredHeight, 28.799927)
+    && isClose(editorFont.fontSize, 24.);
+  });
 });

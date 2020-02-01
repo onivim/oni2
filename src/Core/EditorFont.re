@@ -29,3 +29,13 @@ let create =
   measuredHeight,
   descenderHeight,
 };
+
+let toString = editorFont => {
+  Printf.sprintf(
+    "fontFile: %s\n fontSize: %f\n measuredWidth: %f\n measuredHeight: %f\n",
+    editorFont.fontFile,
+    editorFont.fontSize,
+    editorFont.measuredWidth,
+    editorFont.measuredHeight,
+  );
+};
