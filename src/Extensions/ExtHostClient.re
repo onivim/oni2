@@ -39,7 +39,12 @@ type msg =
       handle: int,
       scheme: string,
     })
-  | UnregisterTextContentProvider({handle: int});
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int});
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -221,6 +226,22 @@ let start =
         [`Int(handle)],
       ) =>
       dispatch(UnregisterTextContentProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$registerDecorationProvider",
+        [`Int(handle), `String(label)],
+      ) =>
+      dispatch(RegisterDecorationProvider({handle, label}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$unregisterDecorationProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterDecorationProvider({handle: handle}));
       Ok(None);
 
     | (scope, method, argsAsJson) =>

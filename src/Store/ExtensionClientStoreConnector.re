@@ -11,7 +11,6 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 
-module Uri = Oni_Core.Uri;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
@@ -328,6 +327,12 @@ let start = (extensions, setup: Setup.t) => {
 
     | UnregisterTextContentProvider({handle}) =>
       dispatch(LostTextContentProvider({handle: handle}))
+
+    | RegisterDecorationProvider({handle, label}) =>
+      dispatch(Actions.SCM(SCM.NewDecorationProvider({handle, label})))
+
+    | UnregisterDecorationProvider({handle}) =>
+      dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
     };
 
   let onOutput = Log.info;
@@ -579,6 +584,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers: [
               SCM.Provider.{
                 handle,
@@ -601,6 +607,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.filter(
                 (it: SCM.Provider.t) => it.handle != handle,
@@ -615,6 +622,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -631,6 +639,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -646,6 +655,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -680,6 +690,35 @@ let start = (extensions, setup: Setup.t) => {
               Option.map(Buffer.setOriginalLines(lines)),
               state.buffers,
             ),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewDecorationProvider({handle, label})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders: [
+              SCM.DecorationProvider.{handle, label},
+              ...state.scm.decorationProviders,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostDecorationProvider({handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders:
+              List.filter(
+                (it: SCM.DecorationProvider.t) => it.handle != handle,
+                state.scm.decorationProviders,
+              ),
+          },
         },
         Isolinear.Effect.none,
       )

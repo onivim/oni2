@@ -24,7 +24,12 @@ type msg =
       handle: int,
       scheme: string,
     })
-  | UnregisterTextContentProvider({handle: int});
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int});
 
 type unitCallback = unit => unit;
 
