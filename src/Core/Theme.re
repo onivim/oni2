@@ -473,3 +473,16 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
 
   (background, foreground);
 };
+
+let getCustomColor = (color, _theme) =>
+  switch (color) {
+  | "gitDecoration.addedResourceForeground" => Some(Color.hex("#81b88b"))
+  | "gitDecoration.modifiedResourceForeground" => Some(Color.hex("#E2C08D"))
+  | "gitDecoration.deletedResourceForeground" => Some(Color.hex("#c74e39"))
+  | "gitDecoration.untrackedResourceForeground" => Some(Color.hex("#73C991"))
+  | "gitDecoration.ignoredResourceForeground" => Some(Color.hex("#8C8C8C"))
+  | "gitDecoration.conflictingResourceForeground" =>
+    Some(Color.hex("#6c6cc4"))
+  | "gitDecoration.submoduleResourceForeground" => Some(Color.hex("#8db9e2"))
+  | _ => None
+  };
