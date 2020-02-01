@@ -60,7 +60,9 @@ let runTest =
     Timber.App.disableColors();
   };
 
+  Revery.App.initConsole();
   Printexc.record_backtrace(true);
+
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
