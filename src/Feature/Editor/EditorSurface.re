@@ -565,8 +565,8 @@ let%component make =
       let rect = r#getBoundingBox();
       let (minX, minY, _, _) = Revery.Math.BoundingBox2d.getBounds(rect);
 
-      let relY = evt.mouseY -. minX;
-      let relX = evt.mouseX -. minY;
+      let relY = evt.mouseY -. minY;
+      let relX = evt.mouseX -. minX;
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
