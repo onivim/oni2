@@ -333,6 +333,8 @@ let start = (extensions, setup: Setup.t) => {
 
     | UnregisterDecorationProvider({handle}) =>
       dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+    | DecorationsDidChange({handle, uris}) =>
+      dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
     };
 
   let onOutput = Log.info;
@@ -517,6 +519,23 @@ let start = (extensions, setup: Setup.t) => {
              },
            );
          });
+    });
+
+  let provideDecorationsEffect = (handle, uri) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.provideDecorations", dispatch => {
+      let promise =
+        Oni_Extensions.ExtHostClient.provideDecorations(
+          handle,
+          uri,
+          extHostClient,
+        );
+
+      Lwt.on_success(promise, decorations =>
+        dispatch(
+          Actions.SCM(SCM.GotDecorations({handle, uri, decorations})),
+        )
+      );
     });
 
   let updater = (state: State.t, action) =>
@@ -717,6 +736,38 @@ let start = (extensions, setup: Setup.t) => {
               List.filter(
                 (it: SCM.DecorationProvider.t) => it.handle != handle,
                 state.scm.decorationProviders,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.DecorationsChanged({handle, uris})) => (
+        state,
+        Isolinear.Effect.batch(
+          uris |> List.map(provideDecorationsEffect(handle)),
+        ),
+      )
+
+    | Actions.SCM(SCM.GotDecorations({handle, uri, decorations})) => (
+        {
+          ...state,
+          fileExplorer: {
+            ...state.fileExplorer,
+            decorations:
+              StringMap.update(
+                Uri.toFileSystemPath(uri),
+                fun
+                | Some(existing) => {
+                    let existing =
+                      List.filter(
+                        (it: SCMDecoration.t) => it.handle != handle,
+                        existing,
+                      );
+                    Some(decorations @ existing);
+                  }
+                | None => Some(decorations),
+                state.fileExplorer.decorations,
               ),
           },
         },

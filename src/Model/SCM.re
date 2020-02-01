@@ -73,4 +73,13 @@ type msg =
       handle: int,
       label: string,
     })
-  | LostDecorationProvider({handle: int});
+  | LostDecorationProvider({handle: int})
+  | DecorationsChanged({
+      handle: int,
+      uris: list(Uri.t),
+    })
+  | GotDecorations({
+      handle: int,
+      uri: Uri.t,
+      decorations: list(SCMDecoration.t),
+    });

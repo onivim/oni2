@@ -44,7 +44,11 @@ type msg =
       handle: int,
       label: string,
     })
-  | UnregisterDecorationProvider({handle: int});
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Uri.t),
+    });
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -244,6 +248,19 @@ let start =
       dispatch(UnregisterDecorationProvider({handle: handle}));
       Ok(None);
 
+    | (
+        "MainThreadDecorations",
+        "$onDidChange",
+        [`Int(handle), `List(resources)],
+      ) =>
+      let uris =
+        resources
+        |> List.filter_map(json =>
+             Uri.of_yojson(json) |> Utility.Result.to_option
+           );
+      dispatch(DecorationsDidChange({handle, uris}));
+      Ok(None);
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -317,6 +334,46 @@ let provideCompletions = (id, uri, position, client) => {
       f,
     );
   promise;
+};
+
+let provideDecorations = (handle, uri, client) => {
+  let decodeItem =
+    fun
+    | (
+        _requestId,
+        `List([
+          `Int(_),
+          `Bool(_),
+          `String(tooltip),
+          `String(letter),
+          `Assoc([("id", `String(color))]),
+          `String(source),
+        ]),
+      ) =>
+      Some(SCMDecoration.{handle, tooltip, letter, color, source})
+    | (_, json) => {
+        Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
+        None;
+      };
+
+  ExtHostTransport.request(
+    ~msgType=MessageType.requestJsonArgsWithCancellation,
+    client,
+    Out.Decorations.provideDecorations(handle, uri),
+    json =>
+    switch (json) {
+    | `Assoc(items) => items |> List.filter_map(decodeItem)
+
+    | _ =>
+      failwith(
+        Printf.sprintf(
+          "Unexpected response from provideDecorations for %s: \n  %s",
+          Uri.toString(uri),
+          Yojson.Safe.to_string(json),
+        ),
+      )
+    }
+  );
 };
 
 let provideDefinition = (id, uri, position, client) => {
