@@ -27,19 +27,33 @@ module Styles = {
     height(Constants.default.tabHeight),
   ];
 
-  let item = (~isFocus, ~theme: Theme.t) => [
+  let item = (~isFocus, ~isActive, ~theme: Theme.t) => [
     flexDirection(`Row),
     flexGrow(1),
     alignItems(`Center),
     backgroundColor(
-      isFocus ? theme.menuSelectionBackground : theme.sideBarBackground,
+      if (isFocus) {
+        theme.listFocusBackground;
+      } else if (isActive) {
+        theme.listActiveSelectionBackground;
+      } else {
+        Colors.transparentWhite;
+      },
     ),
   ];
 
-  let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
+  let text = (~isFocus, ~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
     fontSize(11),
     fontFamily(font.fontFile),
-    color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
+    color(
+      if (isFocus) {
+        theme.listFocusForeground;
+      } else if (isActive) {
+        theme.listActiveSelectionForeground;
+      } else {
+        theme.foreground;
+      },
+    ),
     marginLeft(10),
     marginVertical(2),
     textWrap(TextWrapping.NoWrap),
@@ -94,12 +108,9 @@ let nodeView =
     | _ => <icon />
     };
 
-  <View style={Styles.item(~isFocus, ~theme)}>
+  <View style={Styles.item(~isFocus, ~isActive, ~theme)}>
     <icon />
-    <Text
-      text={node.displayName}
-      style={Styles.text(~theme, ~isActive, ~font)}
-    />
+    <Text text style={Styles.text(~isFocus, ~isActive, ~theme, ~font)} />
   </View>;
 };
 
