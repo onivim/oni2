@@ -550,7 +550,10 @@ let start = (extensions, setup: Setup.t) => {
 
     | Actions.BufferUpdate(bu) => (
         state,
-        modelChangedEffect(state.buffers, bu),
+        Isolinear.Effect.batch([
+          modelChangedEffect(state.buffers, bu),
+          executeContributedCommandEffect("git.refresh"),
+        ]),
       )
 
     | Actions.CommandExecuteContributed(cmd) => (
