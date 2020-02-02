@@ -10,7 +10,6 @@ let drawUnderline =
       ~buffer,
       ~leftVisibleColumn,
       ~transform,
-      ~gutterWidth,
       ~scrollY,
       ~editorFont: EditorFont.t,
       ~color=Colors.black,
@@ -37,11 +36,7 @@ let drawUnderline =
 
   Shapes.drawRect(
     ~transform,
-    ~x=
-      gutterWidth
-      +. float(startOffset)
-      *. editorFont.measuredWidth
-      -. halfOffset,
+    ~x=float(startOffset) *. editorFont.measuredWidth -. halfOffset,
     ~y=
       editorFont.measuredHeight
       *. float(Index.toZeroBased(r.start.line))
@@ -64,7 +59,6 @@ let renderRange =
       ~buffer,
       ~leftVisibleColumn,
       ~transform,
-      ~gutterWidth,
       ~scrollY,
       ~editorFont: EditorFont.t,
       ~color=Colors.black,
@@ -93,11 +87,7 @@ let renderRange =
 
     Shapes.drawRect(
       ~transform,
-      ~x=
-        gutterWidth
-        +. float(startOffset)
-        *. editorFont.measuredWidth
-        -. halfOffset,
+      ~x=float(startOffset) *. editorFont.measuredWidth -. halfOffset,
       ~y=
         editorFont.measuredHeight
         *. float(Index.toZeroBased(r.start.line))

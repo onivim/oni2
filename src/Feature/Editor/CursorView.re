@@ -12,7 +12,6 @@ let make =
       ~editorFont: EditorFont.t,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
-      ~gutterWidth,
       (),
     ) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);
@@ -51,11 +50,7 @@ let make =
 
   let cursorPixelX =
     int_of_float(
-      gutterWidth
-      +. editorFont.measuredWidth
-      *. float(cursorOffset)
-      -. editor.scrollX
-      +. 0.5,
+      editorFont.measuredWidth *. float(cursorOffset) -. editor.scrollX +. 0.5,
     );
 
   let style =

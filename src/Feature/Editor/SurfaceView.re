@@ -11,11 +11,11 @@ module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 module Styles = {
   open Style;
 
-  let bufferViewClipped = bufferPixelWidth => [
+  let bufferViewClipped = (offsetLeft, bufferPixelWidth) => [
     overflow(`Hidden),
     position(`Absolute),
     top(0),
-    left(0),
+    left(int_of_float(offsetLeft)),
     width(int_of_float(bufferPixelWidth)),
     bottom(0),
   ];
@@ -25,7 +25,6 @@ let drawCurrentLineHighlight =
     (
       line,
       ~transform,
-      ~gutterWidth,
       ~metrics: EditorMetrics.t,
       ~scrollY,
       ~lineHeight,
@@ -33,10 +32,10 @@ let drawCurrentLineHighlight =
     ) =>
   Shapes.drawRect(
     ~transform,
-    ~x=gutterWidth,
+    ~x=0.,
     ~y=lineHeight *. float(Index.toZeroBased(line)) -. scrollY,
     ~height=lineHeight,
-    ~width=float(metrics.pixelWidth) -. gutterWidth,
+    ~width=float(metrics.pixelWidth),
     ~color=theme.editorLineHighlightBackground,
     (),
   );
@@ -53,62 +52,43 @@ let drawRuler = (x, ~transform, ~metrics: EditorMetrics.t, ~theme: Theme.t) =>
   );
 
 let renderRulers =
-    (
-      ~rulers,
-      ~gutterWidth,
-      ~scrollX,
-      ~scrollY,
-      ~editorFont,
-      ~transform,
-      ~metrics,
-      ~theme,
-    ) =>
+    (~rulers, ~scrollX, ~scrollY, ~editorFont, ~transform, ~metrics, ~theme) =>
   rulers
-  |> List.map(
-       bufferPositionToPixel(
-         ~gutterWidth,
-         ~scrollX,
-         ~scrollY,
-         ~editorFont,
-         0,
-       ),
-     )
+  |> List.map(bufferPositionToPixel(~scrollX, ~scrollY, ~editorFont, 0))
   |> List.map(fst)
   |> List.iter(drawRuler(~transform, ~metrics, ~theme));
 
-let make =
-    (
-      ~onScroll,
-      ~elementRef,
-      ~buffer,
-      ~editor,
-      ~metrics,
-      ~gutterWidth,
-      ~theme,
-      ~showLineNumbers,
-      ~topVisibleLine,
-      ~onCursorChange,
-      ~layout: EditorLayout.t,
-      ~cursorPosition: Location.t,
-      ~rulers,
-      ~lineNumberWidth,
-      ~editorFont: EditorFont.t,
-      ~diffMarkers,
-      ~leftVisibleColumn,
-      ~diagnosticsMap,
-      ~selectionRanges,
-      ~matchingPairs,
-      ~bufferHighlights,
-      ~definition,
-      ~bufferSyntaxHighlights,
-      ~shouldRenderWhitespace,
-      ~shouldRenderIndentGuides,
-      ~bottomVisibleLine,
-      ~shouldHighlightActiveIndentGuides,
-      ~mode,
-      ~isActiveSplit,
-      (),
-    ) => {
+let%component make =
+              (
+                ~onScroll,
+                ~buffer,
+                ~editor,
+                ~metrics,
+                ~theme,
+                ~topVisibleLine,
+                ~onCursorChange,
+                ~layout: EditorLayout.t,
+                ~cursorPosition: Location.t,
+                ~rulers,
+                ~editorFont: EditorFont.t,
+                ~leftVisibleColumn,
+                ~diagnosticsMap,
+                ~selectionRanges,
+                ~matchingPairs,
+                ~bufferHighlights,
+                ~definition,
+                ~bufferSyntaxHighlights,
+                ~shouldRenderWhitespace,
+                ~shouldRenderIndentGuides,
+                ~bottomVisibleLine,
+                ~shouldHighlightActiveIndentGuides,
+                ~mode,
+                ~isActiveSplit,
+                ~gutterWidth,
+                (),
+              ) => {
+  let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
+
   let Editor.{scrollX, scrollY, _} = editor;
   let bufferPixelWidth =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
@@ -135,12 +115,7 @@ let make =
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
-        Editor.pixelPositionToLineColumn(
-          editor,
-          metrics,
-          relX -. gutterWidth,
-          relY,
-        );
+        Editor.pixelPositionToLineColumn(editor, metrics, relX, relY);
 
       if (line < numberOfLines) {
         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
@@ -173,9 +148,15 @@ let make =
     ];
 
   <View
-    style={Styles.bufferViewClipped(bufferPixelWidth)} onMouseUp onMouseWheel>
+    ref={node => setElementRef(Some(node))}
+    style={Styles.bufferViewClipped(
+      gutterWidth,
+      bufferPixelWidth -. gutterWidth,
+    )}
+    onMouseUp
+    onMouseWheel>
     <OpenGL
-      style={Styles.bufferViewClipped(bufferPixelWidth)}
+      style={Styles.bufferViewClipped(0., bufferPixelWidth -. gutterWidth)}
       render={(transform, _ctx) => {
         let count = lineCount;
         let height = metrics.pixelHeight;
@@ -184,7 +165,6 @@ let make =
         drawCurrentLineHighlight(
           cursorPosition.line,
           ~transform,
-          ~gutterWidth,
           ~metrics,
           ~scrollY,
           ~lineHeight={editorFont.measuredHeight},
@@ -194,7 +174,6 @@ let make =
         renderRulers(
           ~rulers,
           ~editorFont,
-          ~gutterWidth,
           ~scrollX,
           ~scrollY,
           ~transform,
@@ -202,27 +181,8 @@ let make =
           ~theme,
         );
 
-        GutterView.render(
-          ~showLineNumbers,
-          ~transform,
-          ~lineNumberWidth,
-          ~height,
-          ~theme,
-          ~scrollY,
-          ~rowHeight,
-          ~count,
-          ~editorFont,
-          ~cursorLine=Index.toZeroBased(cursorPosition.line),
-          ~diffMarkers,
-        );
-
         let bufferPositionToPixel =
-          bufferPositionToPixel(
-            ~gutterWidth,
-            ~scrollX,
-            ~scrollY,
-            ~editorFont,
-          );
+          bufferPositionToPixel(~scrollX, ~scrollY, ~editorFont);
 
         ContentView.render(
           ~scrollY,
@@ -232,7 +192,6 @@ let make =
           ~transform,
           ~buffer,
           ~editor,
-          ~gutterWidth,
           ~leftVisibleColumn,
           ~theme,
           ~diagnosticsMap,
@@ -265,15 +224,7 @@ let make =
         };
       }}
     />
-    <CursorView
-      buffer
-      mode
-      isActiveSplit
-      cursorPosition
-      editor
-      editorFont
-      gutterWidth
-    />
+    <CursorView buffer mode isActiveSplit cursorPosition editor editorFont />
     <View style=horizontalScrollBarStyle>
       <EditorHorizontalScrollbar
         editor

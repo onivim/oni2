@@ -116,39 +116,37 @@ let minimap =
 
 // VIEW
 
-let%component make =
-              (
-                ~buffer,
-                ~onDimensionsChanged,
-                ~isActiveSplit: bool,
-                ~metrics: EditorMetrics.t,
-                ~editor: Editor.t,
-                ~theme: Theme.t,
-                ~rulers=[],
-                ~showLineNumbers=LineNumber.On,
-                ~editorFont: EditorFont.t,
-                ~mode: Vim.Mode.t,
-                ~showMinimap=true,
-                ~showMinimapSlider=true,
-                ~maxMinimapCharacters=50,
-                ~matchingPairsEnabled=true,
-                ~bufferHighlights,
-                ~bufferSyntaxHighlights,
-                ~onScroll,
-                ~diagnostics,
-                ~completions,
-                ~tokenTheme,
-                ~hoverDelay=Time.ms(1000),
-                ~isHoverEnabled=true,
-                ~onCursorChange,
-                ~definition,
-                ~shouldRenderWhitespace=ConfigurationValues.None,
-                ~shouldRenderIndentGuides=false,
-                ~shouldHighlightActiveIndentGuides=false,
-                (),
-              ) => {
-  let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
-
+let make =
+    (
+      ~buffer,
+      ~onDimensionsChanged,
+      ~isActiveSplit: bool,
+      ~metrics: EditorMetrics.t,
+      ~editor: Editor.t,
+      ~theme: Theme.t,
+      ~rulers=[],
+      ~showLineNumbers=LineNumber.On,
+      ~editorFont: EditorFont.t,
+      ~mode: Vim.Mode.t,
+      ~showMinimap=true,
+      ~showMinimapSlider=true,
+      ~maxMinimapCharacters=50,
+      ~matchingPairsEnabled=true,
+      ~bufferHighlights,
+      ~bufferSyntaxHighlights,
+      ~onScroll,
+      ~diagnostics,
+      ~completions,
+      ~tokenTheme,
+      ~hoverDelay=Time.ms(1000),
+      ~isHoverEnabled=true,
+      ~onCursorChange,
+      ~definition,
+      ~shouldRenderWhitespace=ConfigurationValues.None,
+      ~shouldRenderIndentGuides=false,
+      ~shouldHighlightActiveIndentGuides=false,
+      (),
+    ) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
@@ -201,27 +199,30 @@ let%component make =
   let gutterWidth =
     lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
 
-  <View
-    style={Styles.container(~theme)}
-    ref={node => setElementRef(Some(node))}
-    onDimensionsChanged>
+  <View style={Styles.container(~theme)} onDimensionsChanged>
+    <GutterView
+      showLineNumbers
+      height={metrics.pixelHeight}
+      theme
+      scrollY={editor.scrollY}
+      rowHeight={metrics.lineHeight}
+      count=lineCount
+      editorFont
+      cursorLine={Index.toZeroBased(cursorPosition.line)}
+      diffMarkers
+    />
     <SurfaceView
       onScroll
-      elementRef
       buffer
       editor
       metrics
-      gutterWidth
       theme
-      showLineNumbers
       topVisibleLine
       onCursorChange
       layout
       cursorPosition
       rulers
       editorFont
-      lineNumberWidth
-      diffMarkers
       leftVisibleColumn
       diagnosticsMap
       selectionRanges
@@ -235,6 +236,7 @@ let%component make =
       shouldHighlightActiveIndentGuides
       mode
       isActiveSplit
+      gutterWidth
     />
     {showMinimap
        ? <minimap

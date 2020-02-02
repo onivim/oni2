@@ -4,8 +4,8 @@ open Oni_Core;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
 let bufferPositionToPixel =
-    (~gutterWidth, ~scrollX, ~scrollY, ~editorFont: EditorFont.t, line, char) => {
-  let x = float(char) *. editorFont.measuredWidth -. scrollX +. gutterWidth;
+    (~scrollX, ~scrollY, ~editorFont: EditorFont.t, line, char) => {
+  let x = float(char) *. editorFont.measuredWidth -. scrollX;
   let y = float(line) *. editorFont.measuredHeight -. scrollY;
   (x, y);
 };

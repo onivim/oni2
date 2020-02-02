@@ -14,7 +14,6 @@ let renderLine =
     (
       ~transform,
       ~buffer,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~scrollY,
       ~editorFont,
@@ -30,7 +29,6 @@ let renderLine =
   let renderDiagnostics = (d: Diagnostic.t) =>
     DrawPrimitives.drawUnderline(
       ~buffer,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~transform,
       ~scrollY,
@@ -51,7 +49,6 @@ let renderLine =
     List.iter(
       DrawPrimitives.renderRange(
         ~buffer,
-        ~gutterWidth,
         ~leftVisibleColumn,
         ~transform,
         ~scrollY,
@@ -69,7 +66,6 @@ let renderLine =
   | Some((startPos, endPos)) =>
     DrawPrimitives.renderRange(
       ~buffer,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~transform,
       ~scrollY,
@@ -79,7 +75,6 @@ let renderLine =
     );
     DrawPrimitives.renderRange(
       ~buffer,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~transform,
       ~scrollY,
@@ -99,7 +94,6 @@ let renderLine =
        DrawPrimitives.renderRange(
          ~buffer,
          ~editorFont,
-         ~gutterWidth,
          ~leftVisibleColumn,
          ~transform,
          ~scrollY,
@@ -118,7 +112,6 @@ let renderEmbellishments =
       ~transform,
       ~buffer,
       ~editorFont,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~theme,
       ~diagnosticsMap,
@@ -137,7 +130,6 @@ let renderEmbellishments =
         ~buffer,
         ~scrollY,
         ~editorFont,
-        ~gutterWidth,
         ~leftVisibleColumn,
         ~theme,
         ~diagnosticsMap,
@@ -154,7 +146,6 @@ let renderDefinition =
       ~layout: EditorLayout.t,
       ~cursorPosition: Location.t,
       ~buffer,
-      ~gutterWidth,
       ~transform,
       ~scrollY,
       ~editorFont,
@@ -188,7 +179,6 @@ let renderDefinition =
        DrawPrimitives.drawUnderline(
          ~buffer,
          ~editorFont,
-         ~gutterWidth,
          ~leftVisibleColumn,
          ~transform,
          ~scrollY,
@@ -229,7 +219,6 @@ let renderWhitespace =
 let renderTokens =
     (
       editorFont: EditorFont.t,
-      gutterWidth: float,
       theme: Theme.t,
       tokens,
       xOffset: float,
@@ -242,8 +231,7 @@ let renderTokens =
 
   let f = (token: BufferViewTokenizer.t) => {
     let x =
-      gutterWidth
-      +. editorFont.measuredWidth
+      editorFont.measuredWidth
       *. float(Index.toZeroBased(token.startPosition))
       -. xF;
     let y = yF;
@@ -307,7 +295,6 @@ let renderText =
       ~leftVisibleColumn,
       ~layout: EditorLayout.t,
       ~editorFont,
-      ~gutterWidth,
       ~editor: Editor.t,
       ~transform,
       ~shouldRenderWhitespace,
@@ -346,7 +333,6 @@ let renderText =
         let _ =
           renderTokens(
             editorFont,
-            gutterWidth,
             theme,
             tokens,
             editor.scrollX,
@@ -369,7 +355,6 @@ let render =
       ~buffer,
       ~editor,
       ~editorFont,
-      ~gutterWidth,
       ~leftVisibleColumn,
       ~theme,
       ~diagnosticsMap,
@@ -390,7 +375,6 @@ let render =
     ~transform,
     ~buffer,
     ~editorFont,
-    ~gutterWidth,
     ~leftVisibleColumn,
     ~theme,
     ~diagnosticsMap,
@@ -410,7 +394,6 @@ let render =
       ~cursorPosition,
       ~buffer,
       ~editorFont,
-      ~gutterWidth,
       ~transform,
       ~scrollY,
       ~bufferHighlights,
@@ -434,7 +417,6 @@ let render =
     ~bufferSyntaxHighlights,
     ~leftVisibleColumn,
     ~layout,
-    ~gutterWidth,
     ~editor,
     ~editorFont,
     ~transform,

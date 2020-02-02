@@ -1,4 +1,5 @@
 open Revery.Draw;
+open Revery.UI;
 open Oni_Core;
 
 module Option = Utility.Option;
@@ -110,7 +111,6 @@ let renderLineNumbers =
 let render =
     (
       ~showLineNumbers,
-      ~transform,
       ~lineNumberWidth,
       ~height,
       ~theme,
@@ -120,6 +120,8 @@ let render =
       ~count,
       ~cursorLine,
       ~diffMarkers,
+      transform,
+      _ctx,
     ) => {
   if (showLineNumbers != LineNumber.Off) {
     renderLineNumbers(
@@ -149,4 +151,56 @@ let render =
     ),
     diffMarkers,
   );
+};
+
+let make =
+    (
+      ~showLineNumbers,
+      ~height,
+      ~theme,
+      ~editorFont: EditorFont.t,
+      ~scrollY,
+      ~rowHeight,
+      ~count,
+      ~cursorLine,
+      ~diffMarkers,
+      (),
+    ) => {
+  let lineNumberWidth =
+    showLineNumbers != LineNumber.Off
+      ? LineNumber.getLineNumberPixelWidth(
+          ~lines=count,
+          ~fontPixelWidth=editorFont.measuredWidth,
+          (),
+        )
+      : 0.0;
+
+  let gutterWidth =
+    lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
+
+  let style =
+    Style.[
+      overflow(`Hidden),
+      position(`Absolute),
+      top(0),
+      left(0),
+      width(int_of_float(gutterWidth)),
+      bottom(0),
+    ];
+
+  let render =
+    render(
+      ~showLineNumbers,
+      ~lineNumberWidth,
+      ~height,
+      ~theme,
+      ~editorFont,
+      ~scrollY,
+      ~rowHeight,
+      ~count,
+      ~cursorLine,
+      ~diffMarkers,
+    );
+
+  <OpenGL style render />;
 };
