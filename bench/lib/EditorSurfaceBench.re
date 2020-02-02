@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Model;
 open BenchFramework;
 open Feature_Editor;
@@ -6,6 +7,8 @@ open Helpers;
 
 open Revery.UI;
 
+module Option = Utility.Option;
+
 let rootNode =
   React.RenderedElement.{
     node: (new node)(),
@@ -13,6 +16,10 @@ let rootNode =
     deleteNode: React.deleteNode,
     moveNode: React.moveNode,
   };
+
+let buffer =
+  Selectors.getBufferForEditor(thousandLineState, simpleEditor)
+  |> Option.value(~default=Buffer.empty);
 
 let setup = () => ();
 
@@ -23,10 +30,7 @@ let editorSurfaceMinimalState = () => {
       <EditorSurface
         isActiveSplit=true
         editor=simpleEditor
-        activeBuffer={Selectors.getBufferForEditor(
-          thousandLineState,
-          simpleEditor,
-        )}
+        buffer
         metrics
         onScroll={_ => ()}
         onDimensionsChanged={_ => ()}
@@ -52,10 +56,7 @@ let editorSurfaceThousandLineState = () => {
       <EditorSurface
         isActiveSplit=true
         editor=simpleEditor
-        activeBuffer={Selectors.getBufferForEditor(
-          thousandLineState,
-          simpleEditor,
-        )}
+        buffer
         metrics
         onScroll={_ => ()}
         onDimensionsChanged={_ => ()}
@@ -81,10 +82,7 @@ let editorSurfaceThousandLineStateWithIndents = () => {
       <EditorSurface
         isActiveSplit=true
         editor=simpleEditor
-        activeBuffer={Selectors.getBufferForEditor(
-          thousandLineState,
-          simpleEditor,
-        )}
+        buffer
         metrics
         onScroll={_ => ()}
         onDimensionsChanged={_ => ()}
@@ -110,10 +108,7 @@ let editorSurfaceHundredThousandLineState = () => {
       <EditorSurface
         isActiveSplit=true
         editor=simpleEditor
-        activeBuffer={Selectors.getBufferForEditor(
-          thousandLineState,
-          simpleEditor,
-        )}
+        buffer
         metrics
         onScroll={_ => ()}
         onDimensionsChanged={_ => ()}
@@ -145,10 +140,7 @@ let setupSurfaceThousandLineLayout = () => {
     <EditorSurface
       isActiveSplit=true
       editor=simpleEditor
-      activeBuffer={Selectors.getBufferForEditor(
-        thousandLineState,
-        simpleEditor,
-      )}
+      buffer
       metrics
       onScroll={_ => ()}
       onDimensionsChanged={_ => ()}
