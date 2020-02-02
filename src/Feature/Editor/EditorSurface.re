@@ -70,10 +70,9 @@ module Styles = {
 };
 
 let bufferPositionToPixel =
-    (~gutterWidth, ~editor: Editor.t, ~editorFont: EditorFont.t, line, char) => {
-  let x =
-    float(char) *. editorFont.measuredWidth -. editor.scrollX +. gutterWidth;
-  let y = float(line) *. editorFont.measuredHeight -. editor.scrollY;
+    (~gutterWidth, ~scrollX, ~scrollY, ~editorFont: EditorFont.t, line, char) => {
+  let x = float(char) *. editorFont.measuredWidth -. scrollX +. gutterWidth;
+  let y = float(line) *. editorFont.measuredHeight -. scrollY;
   (x, y);
 };
 
@@ -193,7 +192,7 @@ module Primitives = {
         ~leftVisibleColumn,
         ~transform,
         ~gutterWidth,
-        ~editor: Editor.t,
+        ~scrollY,
         ~editorFont: EditorFont.t,
         ~color=Colors.black,
         r: Range.t,
@@ -227,7 +226,7 @@ module Primitives = {
       ~y=
         editorFont.measuredHeight
         *. float(Index.toZeroBased(r.start.line))
-        -. editor.scrollY
+        -. scrollY
         -. halfOffset
         +. (editorFont.measuredHeight -. 2.),
       ~height=1.,
@@ -247,7 +246,7 @@ module Primitives = {
         ~leftVisibleColumn,
         ~transform,
         ~gutterWidth,
-        ~editor: Editor.t,
+        ~scrollY,
         ~editorFont: EditorFont.t,
         ~color=Colors.black,
         r: Range.t,
@@ -283,7 +282,7 @@ module Primitives = {
         ~y=
           editorFont.measuredHeight
           *. float(Index.toZeroBased(r.start.line))
-          -. editor.scrollY
+          -. scrollY
           -. halfOffset,
         ~height=editorFont.measuredHeight +. offset,
         ~width=
@@ -447,14 +446,14 @@ let drawCurrentLineHighlight =
       ~transform,
       ~gutterWidth,
       ~metrics: EditorMetrics.t,
-      ~editor: Editor.t,
+      ~scrollY,
       ~lineHeight,
       ~theme: Theme.t,
     ) =>
   Shapes.drawRect(
     ~transform,
     ~x=gutterWidth,
-    ~y=lineHeight *. float(Index.toZeroBased(line)) -. editor.scrollY,
+    ~y=lineHeight *. float(Index.toZeroBased(line)) -. scrollY,
     ~height=lineHeight,
     ~width=float(metrics.pixelWidth) -. gutterWidth,
     ~color=theme.editorLineHighlightBackground,
@@ -476,14 +475,23 @@ let renderRulers =
     (
       ~rulers,
       ~gutterWidth,
-      ~editor,
+      ~scrollX,
+      ~scrollY,
       ~editorFont,
       ~transform,
       ~metrics,
       ~theme,
     ) =>
   rulers
-  |> List.map(bufferPositionToPixel(~gutterWidth, ~editor, ~editorFont, 0))
+  |> List.map(
+       bufferPositionToPixel(
+         ~gutterWidth,
+         ~scrollX,
+         ~scrollY,
+         ~editorFont,
+         0,
+       ),
+     )
   |> List.map(fst)
   |> List.iter(drawRuler(~transform, ~metrics, ~theme));
 
@@ -496,7 +504,7 @@ module Content = {
         ~buffer,
         ~gutterWidth,
         ~leftVisibleColumn,
-        ~editor: Editor.t,
+        ~scrollY,
         ~editorFont,
         ~theme: Theme.t,
         ~diagnosticsMap,
@@ -513,7 +521,7 @@ module Content = {
         ~gutterWidth,
         ~leftVisibleColumn,
         ~transform,
-        ~editor,
+        ~scrollY,
         ~editorFont,
         ~color=Colors.red,
         d.range,
@@ -534,7 +542,7 @@ module Content = {
           ~gutterWidth,
           ~leftVisibleColumn,
           ~transform,
-          ~editor,
+          ~scrollY,
           ~editorFont,
           ~color=theme.editorSelectionBackground,
         ),
@@ -552,7 +560,7 @@ module Content = {
         ~gutterWidth,
         ~leftVisibleColumn,
         ~transform,
-        ~editor,
+        ~scrollY,
         ~editorFont,
         ~color=matchColor,
         Range.{start: startPos, stop: startPos},
@@ -562,7 +570,7 @@ module Content = {
         ~gutterWidth,
         ~leftVisibleColumn,
         ~transform,
-        ~editor,
+        ~scrollY,
         ~editorFont,
         ~color=matchColor,
         Range.{start: endPos, stop: endPos},
@@ -582,7 +590,7 @@ module Content = {
            ~gutterWidth,
            ~leftVisibleColumn,
            ~transform,
-           ~editor,
+           ~scrollY,
            ~offset=2.0,
            ~color=theme.editorFindMatchBackground,
          ),
@@ -597,7 +605,6 @@ module Content = {
         ~count,
         ~transform,
         ~buffer,
-        ~editor,
         ~editorFont,
         ~gutterWidth,
         ~leftVisibleColumn,
@@ -616,7 +623,7 @@ module Content = {
         renderLine(
           ~transform,
           ~buffer,
-          ~editor,
+          ~scrollY,
           ~editorFont,
           ~gutterWidth,
           ~leftVisibleColumn,
@@ -637,7 +644,7 @@ module Content = {
         ~buffer,
         ~gutterWidth,
         ~transform,
-        ~editor,
+        ~scrollY,
         ~editorFont,
         ~bufferHighlights,
         ~theme,
@@ -675,7 +682,7 @@ module Content = {
            ~gutterWidth,
            ~leftVisibleColumn,
            ~transform,
-           ~editor,
+           ~scrollY,
            ~color=token.color,
            range,
          );
@@ -878,7 +885,6 @@ module Content = {
       ~count,
       ~transform,
       ~buffer,
-      ~editor,
       ~editorFont,
       ~gutterWidth,
       ~leftVisibleColumn,
@@ -902,7 +908,7 @@ module Content = {
         ~editorFont,
         ~gutterWidth,
         ~transform,
-        ~editor,
+        ~scrollY,
         ~bufferHighlights,
         ~theme,
         ~matchingPairs,
@@ -1142,6 +1148,7 @@ module Surface = {
         ~isActiveSplit,
         (),
       ) => {
+    let Editor.{scrollX, scrollY, _} = editor;
     let bufferPixelWidth =
       layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
     let lineCount = Buffer.getNumberOfLines(buffer);
@@ -1214,14 +1221,13 @@ module Surface = {
           let count = lineCount;
           let height = metrics.pixelHeight;
           let rowHeight = metrics.lineHeight;
-          let scrollY = editor.scrollY;
 
           drawCurrentLineHighlight(
             cursorPosition.line,
             ~transform,
             ~gutterWidth,
             ~metrics,
-            ~editor,
+            ~scrollY,
             ~lineHeight={editorFont.measuredHeight},
             ~theme,
           );
@@ -1230,7 +1236,8 @@ module Surface = {
             ~rulers,
             ~editorFont,
             ~gutterWidth,
-            ~editor,
+            ~scrollX,
+            ~scrollY,
             ~transform,
             ~metrics,
             ~theme,
@@ -1251,7 +1258,12 @@ module Surface = {
           );
 
           let bufferPositionToPixel =
-            bufferPositionToPixel(~gutterWidth, ~editor, ~editorFont);
+            bufferPositionToPixel(
+              ~gutterWidth,
+              ~scrollX,
+              ~scrollY,
+              ~editorFont,
+            );
 
           Content.render(
             ~scrollY,
