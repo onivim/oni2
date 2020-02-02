@@ -688,7 +688,7 @@ module Content = {
          );
        });
 
-  let renderSpaces =
+  let renderWhitespace =
       (
         ~editorFont: EditorFont.t,
         ~x: float,
@@ -698,15 +698,12 @@ module Content = {
         ~theme: Theme.t,
         (),
       ) => {
-    let i = ref(0);
-
     let size = 2.;
     let xOffset = editorFont.measuredWidth /. 2. -. 1.;
     let yOffset = editorFont.measuredHeight /. 2. -. 1.;
 
-    while (i^ < count) {
-      let iF = float(i^);
-      let xPos = x +. editorFont.measuredWidth *. iF;
+    for (i in 0 to count - 1) {
+      let xPos = x +. editorFont.measuredWidth *. float(i);
 
       Shapes.drawRect(
         ~transform,
@@ -717,8 +714,6 @@ module Content = {
         ~color=theme.editorWhitespaceForeground,
         (),
       );
-
-      incr(i);
     };
   };
 
@@ -772,7 +767,7 @@ module Content = {
           FontIcon.codeToIcon(0xf30b),
         )
       | Whitespace =>
-        renderSpaces(
+        renderWhitespace(
           ~editorFont,
           ~x,
           ~y,
