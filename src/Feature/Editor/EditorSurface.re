@@ -172,8 +172,7 @@ let renderTokens =
       +. fontWidth
       *. float(Index.toZeroBased(token.startPosition))
       -. xF;
-    let y = yF;
-    let offset = fontHeight -. descenderHeight;
+    let y = yF +. fontHeight -. descenderHeight;
 
     switch (token.tokenType) {
     | Text =>
@@ -185,14 +184,14 @@ let renderTokens =
       CanvasContext.drawText(
         ~paint=tokenPaint,
         ~x,
-        ~y=yF +. offset,
+        ~y,
         ~text=shapedText,
         canvasContext,
       );
     | Tab =>
       CanvasContext.Deprecated.drawString(
         ~x=x +. fontWidth /. 4.,
-        ~y=y +. fontHeight /. 4.,
+        ~y=y,
         ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10.,
