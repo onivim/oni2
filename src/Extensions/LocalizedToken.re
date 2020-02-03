@@ -2,14 +2,16 @@
  * LocalizedToken.re
  */
 
+open Oni_Core.Utility;
+
+module Json = Oni_Core.Json;
+
 [@deriving show]
 type t = {
   raw: string,
   token: option(string),
   localized: option(string),
 };
-
-open Oni_Core.Utility;
 
 let regex = Re.Posix.re("^%(.*)%$") |> Re.compile;
 
@@ -29,19 +31,7 @@ let localize = (dictionary: LocalizationDictionary.t, {raw, token, _}: t) => {
   {raw, token, localized};
 };
 
-exception LocalizedTokenParseException;
-
-let of_yojson =
-  fun
-  | `String(v) => Ok(parse(v))
-  | _ => Error("Expected string");
-
-let of_yojson_exn =
-  fun
-  | `String(v) => parse(v)
-  | _ => raise(LocalizedTokenParseException);
-
-let to_yojson = _ => `Null;
+let decode = Json.Decode.(string |> map(parse));
 
 let to_string = ({raw, localized, _}: t) => {
   Option.value(~default=raw, localized);
