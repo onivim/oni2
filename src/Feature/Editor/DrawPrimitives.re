@@ -4,6 +4,8 @@ open Revery.Draw;
 
 open Oni_Core;
 
+module FontIcon = Oni_Components.FontIcon;
+
 let drawUnderline =
     (
       ~offset=0.,
@@ -103,3 +105,98 @@ let renderRange =
     );
   };
 };
+
+let renderToken =
+    (
+      ~editorFont: EditorFont.t,
+      ~theme: Theme.t,
+      ~scrollX: float,
+      ~scrollY: float,
+      ~transform,
+      token: BufferViewTokenizer.t,
+    ) => {
+  let x =
+    editorFont.measuredWidth
+    *. float(Index.toZeroBased(token.startPosition))
+    -. scrollX;
+  let y = scrollY;
+
+  let backgroundColor = token.backgroundColor;
+
+  switch (token.tokenType) {
+  | Text =>
+    Revery.Draw.Text.drawString(
+      ~window=Revery.UI.getActiveWindow(),
+      ~transform,
+      ~x,
+      ~y,
+      ~backgroundColor,
+      ~color=token.color,
+      ~fontFamily=editorFont.fontFile,
+      ~fontSize=editorFont.fontSize,
+      token.text,
+    )
+
+  | Tab =>
+    Revery.Draw.Text.drawString(
+      ~window=Revery.UI.getActiveWindow(),
+      ~transform,
+      ~x=x +. editorFont.measuredWidth /. 4.,
+      ~y=y +. editorFont.measuredHeight /. 4.,
+      ~backgroundColor,
+      ~color=theme.editorWhitespaceForeground,
+      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontSize=10,
+      FontIcon.codeToIcon(0xf30b),
+    )
+
+  | Whitespace =>
+    let size = 2.;
+    let xOffset = editorFont.measuredWidth /. 2. -. 1.;
+    let yOffset = editorFont.measuredHeight /. 2. -. 1.;
+
+    for (i in 0 to String.length(token.text) - 1) {
+      let xPos = x +. editorFont.measuredWidth *. float(i);
+
+      Shapes.drawRect(
+        ~transform,
+        ~x=xPos +. xOffset,
+        ~y=y +. yOffset,
+        ~width=size,
+        ~height=size,
+        ~color=theme.editorWhitespaceForeground,
+        (),
+      );
+    };
+  };
+};
+
+let drawRuler = (~transform, ~metrics: EditorMetrics.t, ~color, x) =>
+  Shapes.drawRect(
+    ~transform,
+    ~x,
+    ~y=0.0,
+    ~height=float(metrics.pixelHeight),
+    ~width=1.,
+    ~color,
+    (),
+  );
+
+let drawLineHighlight =
+    (
+      ~transform,
+      ~metrics: EditorMetrics.t,
+      ~scrollY,
+      ~lineHeight,
+      ~color,
+      line,
+    ) =>
+  Shapes.drawRect(
+    ~transform,
+    ~x=0.,
+    ~y=lineHeight *. float(Index.toZeroBased(line)) -. scrollY,
+    ~height=lineHeight,
+    ~width=float(metrics.pixelWidth),
+    ~color,
+    (),
+  );

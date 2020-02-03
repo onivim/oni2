@@ -1,12 +1,10 @@
 open EditorCoreTypes;
 open Revery;
-open Revery.Draw;
 
 open Oni_Core;
 
 open Helpers;
 
-module FontIcon = Oni_Components.FontIcon;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Definition = Feature_LanguageSupport.Definition;
 
@@ -187,96 +185,27 @@ let renderDefinition =
        );
      });
 
-let renderWhitespace =
-    (
-      ~editorFont: EditorFont.t,
-      ~x: float,
-      ~y: float,
-      ~transform,
-      ~count: int,
-      ~theme: Theme.t,
-      (),
-    ) => {
-  let size = 2.;
-  let xOffset = editorFont.measuredWidth /. 2. -. 1.;
-  let yOffset = editorFont.measuredHeight /. 2. -. 1.;
-
-  for (i in 0 to count - 1) {
-    let xPos = x +. editorFont.measuredWidth *. float(i);
-
-    Shapes.drawRect(
-      ~transform,
-      ~x=xPos +. xOffset,
-      ~y=y +. yOffset,
-      ~width=size,
-      ~height=size,
-      ~color=theme.editorWhitespaceForeground,
-      (),
-    );
-  };
-};
-
 let renderTokens =
     (
-      editorFont: EditorFont.t,
-      theme: Theme.t,
-      tokens,
-      xOffset: float,
-      yOffset: float,
-      transform,
-      whitespaceSetting: ConfigurationValues.editorRenderWhitespace,
+      ~editorFont,
+      ~theme,
+      ~tokens,
+      ~scrollX,
+      ~scrollY,
+      ~transform,
+      ~shouldRenderWhitespace,
     ) => {
-  let yF = yOffset;
-  let xF = xOffset;
-
-  let f = (token: BufferViewTokenizer.t) => {
-    let x =
-      editorFont.measuredWidth
-      *. float(Index.toZeroBased(token.startPosition))
-      -. xF;
-    let y = yF;
-
-    let backgroundColor = token.backgroundColor;
-
-    switch (token.tokenType) {
-    | Text =>
-      Revery.Draw.Text.drawString(
-        ~window=Revery.UI.getActiveWindow(),
-        ~transform,
-        ~x,
-        ~y,
-        ~backgroundColor,
-        ~color=token.color,
-        ~fontFamily=editorFont.fontFile,
-        ~fontSize=editorFont.fontSize,
-        token.text,
-      )
-    | Tab =>
-      Revery.Draw.Text.drawString(
-        ~window=Revery.UI.getActiveWindow(),
-        ~transform,
-        ~x=x +. editorFont.measuredWidth /. 4.,
-        ~y=y +. editorFont.measuredHeight /. 4.,
-        ~backgroundColor,
-        ~color=theme.editorWhitespaceForeground,
-        ~fontFamily="FontAwesome5FreeSolid.otf",
-        ~fontSize=10,
-        FontIcon.codeToIcon(0xf30b),
-      )
-    | Whitespace =>
-      renderWhitespace(
-        ~editorFont,
-        ~x,
-        ~y,
-        ~transform,
-        ~count=String.length(token.text),
-        ~theme,
-        (),
-      )
-    };
-  };
-
-  tokens |> WhitespaceTokenFilter.filter(whitespaceSetting) |> List.iter(f);
+  tokens
+  |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
+  |> List.iter(
+       DrawPrimitives.renderToken(
+         ~editorFont,
+         ~theme,
+         ~scrollX,
+         ~scrollY,
+         ~transform,
+       ),
+     );
 };
 
 let renderText =
@@ -332,13 +261,13 @@ let renderText =
 
         let _ =
           renderTokens(
-            editorFont,
-            theme,
-            tokens,
-            editor.scrollX,
-            offset,
-            transform,
-            shouldRenderWhitespace,
+            ~editorFont,
+            ~theme,
+            ~tokens,
+            ~scrollX=editor.scrollX,
+            ~scrollY=offset,
+            ~transform,
+            ~shouldRenderWhitespace,
           );
         ();
       },

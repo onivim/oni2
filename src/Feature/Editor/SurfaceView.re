@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Revery.Draw;
 open Revery.UI;
 
 open Oni_Core;
@@ -22,41 +21,36 @@ module Styles = {
 };
 
 let drawCurrentLineHighlight =
-    (
-      line,
-      ~transform,
-      ~metrics: EditorMetrics.t,
-      ~scrollY,
-      ~lineHeight,
-      ~theme: Theme.t,
-    ) =>
-  Shapes.drawRect(
+    (~transform, ~metrics, ~scrollY, ~lineHeight, ~theme: Theme.t, line) =>
+  DrawPrimitives.drawLineHighlight(
     ~transform,
-    ~x=0.,
-    ~y=lineHeight *. float(Index.toZeroBased(line)) -. scrollY,
-    ~height=lineHeight,
-    ~width=float(metrics.pixelWidth),
+    ~metrics,
+    ~scrollY,
+    ~lineHeight,
     ~color=theme.editorLineHighlightBackground,
-    (),
-  );
-
-let drawRuler = (x, ~transform, ~metrics: EditorMetrics.t, ~theme: Theme.t) =>
-  Shapes.drawRect(
-    ~transform,
-    ~x,
-    ~y=0.0,
-    ~height=float(metrics.pixelHeight),
-    ~width=1.,
-    ~color=theme.editorRulerForeground,
-    (),
+    line,
   );
 
 let renderRulers =
-    (~rulers, ~scrollX, ~scrollY, ~editorFont, ~transform, ~metrics, ~theme) =>
+    (
+      ~rulers,
+      ~scrollX,
+      ~scrollY,
+      ~editorFont,
+      ~transform,
+      ~metrics,
+      ~theme: Theme.t,
+    ) =>
   rulers
   |> List.map(bufferPositionToPixel(~scrollX, ~scrollY, ~editorFont, 0))
   |> List.map(fst)
-  |> List.iter(drawRuler(~transform, ~metrics, ~theme));
+  |> List.iter(
+       DrawPrimitives.drawRuler(
+         ~transform,
+         ~metrics,
+         ~color=theme.editorRulerForeground,
+       ),
+     );
 
 let%component make =
               (
