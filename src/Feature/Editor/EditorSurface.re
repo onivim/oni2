@@ -191,7 +191,7 @@ let renderTokens =
     | Tab =>
       CanvasContext.Deprecated.drawString(
         ~x=x +. fontWidth /. 4.,
-        ~y=y,
+        ~y,
         ~color=theme.editorWhitespaceForeground,
         ~fontFamily="FontAwesome5FreeSolid.otf",
         ~fontSize=10.,
@@ -203,7 +203,7 @@ let renderTokens =
         ~fontWidth,
         ~fontHeight,
         ~x,
-        ~y,
+        ~y=yF,
         ~count=String.length(token.text),
         ~theme,
         canvasContext,
