@@ -175,7 +175,7 @@ let make =
         )
       : 0.0;
 
-  let gutterWidth =
+  let totalWidth =
     lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
 
   let style =
@@ -184,7 +184,7 @@ let make =
       position(`Absolute),
       top(0),
       left(0),
-      width(int_of_float(gutterWidth)),
+      width(int_of_float(totalWidth)),
       bottom(0),
     ];
 
@@ -202,5 +202,5 @@ let make =
       ~diffMarkers,
     );
 
-  <OpenGL style render />;
+  (totalWidth, <OpenGL style render />);
 };

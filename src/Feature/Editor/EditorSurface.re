@@ -184,22 +184,7 @@ let make =
     lineCount < Constants.diffMarkersMaxLineCount
       ? EditorDiffMarkers.generate(buffer) : None;
 
-  /* TODO: Selection! */
-  /*let editorMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-    };*/
-  let lineNumberWidth =
-    showLineNumbers != LineNumber.Off
-      ? LineNumber.getLineNumberPixelWidth(
-          ~lines=lineCount,
-          ~fontPixelWidth=editorFont.measuredWidth,
-          (),
-        )
-      : 0.0;
-
-  let gutterWidth =
-    lineNumberWidth +. Constants.diffMarkerWidth +. Constants.gutterMargin;
-
-  <View style={Styles.container(~theme)} onDimensionsChanged>
+  let (gutterWidth, gutterView) =
     <GutterView
       showLineNumbers
       height={metrics.pixelHeight}
@@ -210,7 +195,10 @@ let make =
       editorFont
       cursorLine={Index.toZeroBased(cursorPosition.line)}
       diffMarkers
-    />
+    />;
+
+  <View style={Styles.container(~theme)} onDimensionsChanged>
+    gutterView
     <SurfaceView
       onScroll
       buffer
