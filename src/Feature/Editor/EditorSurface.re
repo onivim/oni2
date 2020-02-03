@@ -614,7 +614,6 @@ let%component make =
                  let lineNumberPaint = Skia.Paint.make();
                  Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
                  Skia.Paint.setAntiAlias(lineNumberPaint, true);
-                 Skia.Paint.setSubpixelText(lineNumberPaint, true);
                  Skia.Paint.setLcdRenderText(lineNumberPaint, true);
                  Skia.Paint.setTextSize(lineNumberPaint, fontSize);
                  Skia.Paint.setTypeface(
@@ -631,7 +630,6 @@ let%component make =
                  Skia.Paint.setTextEncoding(paint, GlyphId);
                  Skia.Paint.setAntiAlias(paint, true);
                  Skia.Paint.setLcdRenderText(paint, true);
-                 //Skia.Paint.setSubpixel(paint, true);
                  Skia.Paint.setTextSize(paint, fontSize);
                  Skia.Paint.setTypeface(
                    paint,
