@@ -83,7 +83,7 @@ let renderLine =
          ~context,
          ~buffer,
          ~leftVisibleColumn,
-         ~offset=2.0,
+         ~padding=1.,
          ~color=theme.editorFindMatchBackground,
        ),
      );
