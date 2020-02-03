@@ -548,6 +548,23 @@ module OutgoingNotifications = {
     };
   };
 
+  module Decorations = {
+    let provideDecorations = (handle: int, uri: Uri.t) =>
+      _buildNotification(
+        "ExtHostDecorations",
+        "$provideDecorations",
+        `List([
+          `List([
+            `Assoc([
+              ("id", `Int(0)),
+              ("handle", `Int(handle)),
+              ("uri", Uri.to_yojson(uri)),
+            ]),
+          ]),
+        ]),
+      );
+  };
+
   module Documents = {
     let acceptModelChanged =
         (uri: Uri.t, modelChangedEvent: ModelChangedEvent.t, isDirty: bool) => {

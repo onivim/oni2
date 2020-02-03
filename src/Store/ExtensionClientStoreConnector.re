@@ -11,7 +11,6 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 
-module Uri = Oni_Core.Uri;
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
@@ -328,6 +327,14 @@ let start = (extensions, setup: Setup.t) => {
 
     | UnregisterTextContentProvider({handle}) =>
       dispatch(LostTextContentProvider({handle: handle}))
+
+    | RegisterDecorationProvider({handle, label}) =>
+      dispatch(Actions.SCM(SCM.NewDecorationProvider({handle, label})))
+
+    | UnregisterDecorationProvider({handle}) =>
+      dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+    | DecorationsDidChange({handle, uris}) =>
+      dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
     };
 
   let onOutput = Log.info;
@@ -514,6 +521,23 @@ let start = (extensions, setup: Setup.t) => {
          });
     });
 
+  let provideDecorationsEffect = (handle, uri) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.provideDecorations", dispatch => {
+      let promise =
+        Oni_Extensions.ExtHostClient.provideDecorations(
+          handle,
+          uri,
+          extHostClient,
+        );
+
+      Lwt.on_success(promise, decorations =>
+        dispatch(
+          Actions.SCM(SCM.GotDecorations({handle, uri, decorations})),
+        )
+      );
+    });
+
   let updater = (state: State.t, action) =>
     switch (action) {
     | Actions.Init => (
@@ -526,7 +550,10 @@ let start = (extensions, setup: Setup.t) => {
 
     | Actions.BufferUpdate(bu) => (
         state,
-        modelChangedEffect(state.buffers, bu),
+        Isolinear.Effect.batch([
+          modelChangedEffect(state.buffers, bu),
+          executeContributedCommandEffect("git.refresh"),
+        ]),
       )
 
     | Actions.CommandExecuteContributed(cmd) => (
@@ -579,6 +606,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers: [
               SCM.Provider.{
                 handle,
@@ -601,6 +629,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.filter(
                 (it: SCM.Provider.t) => it.handle != handle,
@@ -615,6 +644,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -631,6 +661,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -646,6 +677,7 @@ let start = (extensions, setup: Setup.t) => {
         {
           ...state,
           scm: {
+            ...state.scm,
             providers:
               List.map(
                 (it: SCM.Provider.t) =>
@@ -680,6 +712,67 @@ let start = (extensions, setup: Setup.t) => {
               Option.map(Buffer.setOriginalLines(lines)),
               state.buffers,
             ),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewDecorationProvider({handle, label})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders: [
+              SCM.DecorationProvider.{handle, label},
+              ...state.scm.decorationProviders,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostDecorationProvider({handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders:
+              List.filter(
+                (it: SCM.DecorationProvider.t) => it.handle != handle,
+                state.scm.decorationProviders,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.DecorationsChanged({handle, uris})) => (
+        state,
+        Isolinear.Effect.batch(
+          uris |> List.map(provideDecorationsEffect(handle)),
+        ),
+      )
+
+    | Actions.SCM(SCM.GotDecorations({handle, uri, decorations})) => (
+        {
+          ...state,
+          fileExplorer: {
+            ...state.fileExplorer,
+            decorations:
+              StringMap.update(
+                Uri.toFileSystemPath(uri),
+                fun
+                | Some(existing) => {
+                    let existing =
+                      List.filter(
+                        (it: SCMDecoration.t) => it.handle != handle,
+                        existing,
+                      );
+                    Some(decorations @ existing);
+                  }
+                | None => Some(decorations),
+                state.fileExplorer.decorations,
+              ),
+          },
         },
         Isolinear.Effect.none,
       )
