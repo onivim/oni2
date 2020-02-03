@@ -6,7 +6,10 @@
 
 open Revery.Draw;
 
+open EditorCoreTypes;
 open Oni_Core;
+
+open Helpers;
 
 let rec getIndentLevel =
         (
@@ -63,21 +66,18 @@ let rec getIndentLevel =
 
 let render =
     (
-      ~transform,
+      ~context: DrawPrimitives.context,
       ~buffer: Buffer.t,
       ~startLine: int,
       ~endLine: int,
-      ~lineHeight: float,
-      ~fontWidth: float,
-      ~bufferPositionToPixel,
-      ~cursorLine,
+      ~cursorPosition: Location.t,
       ~theme: Theme.t,
-      ~indentationSettings: IndentationSettings.t,
       ~showActive: bool,
-      (),
+      indentationSettings: IndentationSettings.t,
     ) => {
   /* First, render *all* indent guides */
   let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  let cursorLine = Index.toZeroBased(cursorPosition.line);
   let startLine = max(0, startLine);
   let endLine = min(bufferLineCount, endLine);
 
@@ -85,7 +85,7 @@ let render =
   let previousIndentLevel = ref(0);
 
   let indentationWidthInPixels =
-    float_of_int(indentationSettings.tabSize) *. fontWidth;
+    float(indentationSettings.tabSize) *. context.charWidth;
 
   let l = ref(startLine);
 
@@ -101,16 +101,16 @@ let render =
         previousIndentLevel^,
       );
 
-    let (x, y) = bufferPositionToPixel(line, 0);
+    let (x, y) = bufferPositionToPixel(~context, line, 0);
 
     let i = ref(0);
     while (i^ < level) {
       Shapes.drawRect(
-        ~transform,
-        ~x=x +. indentationWidthInPixels *. float_of_int(i^),
+        ~transform=context.transform,
+        ~x=x +. indentationWidthInPixels *. float(i^),
         ~y,
         ~width=1.,
-        ~height=lineHeight,
+        ~height=context.lineHeight,
         ~color=theme.editorIndentGuideBackground,
         (),
       );
@@ -175,19 +175,16 @@ let render =
       };
     };
 
-    let (x, topY) = bufferPositionToPixel(topLine^, 0);
-    let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
+    let (x, topY) = bufferPositionToPixel(~context, topLine^, 0);
+    let (_, bottomY) = bufferPositionToPixel(~context, bottomLine^, 0);
 
     if (cursorLineIndentLevel^ >= 1) {
       Shapes.drawRect(
-        ~transform,
-        ~x=
-          x
-          +. indentationWidthInPixels
-          *. float_of_int(cursorLineIndentLevel^ - 1),
-        ~y=topY +. lineHeight,
+        ~transform=context.transform,
+        ~x=x +. indentationWidthInPixels *. float(cursorLineIndentLevel^ - 1),
+        ~y=topY +. context.lineHeight,
         ~width=1.,
-        ~height=bottomY -. topY -. lineHeight,
+        ~height=bottomY -. topY -. context.lineHeight,
         ~color=theme.editorIndentGuideActiveBackground,
         (),
       );

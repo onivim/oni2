@@ -3,10 +3,9 @@ open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
-let bufferPositionToPixel =
-    (~scrollX, ~scrollY, ~editorFont: EditorFont.t, line, char) => {
-  let x = float(char) *. editorFont.measuredWidth -. scrollX;
-  let y = float(line) *. editorFont.measuredHeight -. scrollY;
+let bufferPositionToPixel = (~context: DrawPrimitives.context, line, char) => {
+  let x = float(char) *. context.charWidth -. context.scrollX;
+  let y = float(line) *. context.charHeight -. context.scrollY;
   (x, y);
 };
 

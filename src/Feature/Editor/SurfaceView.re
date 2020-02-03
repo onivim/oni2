@@ -20,36 +20,19 @@ module Styles = {
   ];
 };
 
-let drawCurrentLineHighlight =
-    (~transform, ~metrics, ~scrollY, ~lineHeight, ~theme: Theme.t, line) =>
+let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
   DrawPrimitives.drawLineHighlight(
-    ~transform,
-    ~metrics,
-    ~scrollY,
-    ~lineHeight,
+    ~context,
     ~color=theme.editorLineHighlightBackground,
     line,
   );
 
-let renderRulers =
-    (
-      ~rulers,
-      ~scrollX,
-      ~scrollY,
-      ~editorFont,
-      ~transform,
-      ~metrics,
-      ~theme: Theme.t,
-    ) =>
+let renderRulers = (~context, ~theme: Theme.t, rulers) =>
   rulers
-  |> List.map(bufferPositionToPixel(~scrollX, ~scrollY, ~editorFont, 0))
+  |> List.map(bufferPositionToPixel(~context, 0))
   |> List.map(fst)
   |> List.iter(
-       DrawPrimitives.drawRuler(
-         ~transform,
-         ~metrics,
-         ~color=theme.editorRulerForeground,
-       ),
+       DrawPrimitives.drawRuler(~context, ~color=theme.editorRulerForeground),
      );
 
 let%component make =
@@ -83,7 +66,6 @@ let%component make =
               ) => {
   let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
 
-  let Editor.{scrollX, scrollY, _} = editor;
   let bufferPixelWidth =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -152,40 +134,28 @@ let%component make =
     <OpenGL
       style={Styles.bufferViewClipped(0., bufferPixelWidth -. gutterWidth)}
       render={(transform, _ctx) => {
-        let count = lineCount;
-        let height = metrics.pixelHeight;
-        let rowHeight = metrics.lineHeight;
+        let context =
+          DrawPrimitives.{
+            transform,
+            width: metrics.pixelWidth,
+            height: metrics.pixelHeight,
+            scrollX: editor.scrollX,
+            scrollY: editor.scrollY,
+            lineHeight: editorFont.measuredHeight,
+            fontFamily: editorFont.fontFile,
+            fontSize: editorFont.fontSize,
+            charWidth: editorFont.measuredWidth,
+            charHeight: editorFont.measuredHeight,
+          };
 
-        drawCurrentLineHighlight(
-          cursorPosition.line,
-          ~transform,
-          ~metrics,
-          ~scrollY,
-          ~lineHeight={editorFont.measuredHeight},
-          ~theme,
-        );
+        drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
 
-        renderRulers(
-          ~rulers,
-          ~editorFont,
-          ~scrollX,
-          ~scrollY,
-          ~transform,
-          ~metrics,
-          ~theme,
-        );
-
-        let bufferPositionToPixel =
-          bufferPositionToPixel(~scrollX, ~scrollY, ~editorFont);
+        renderRulers(~context, ~theme, rulers);
 
         ContentView.render(
-          ~scrollY,
-          ~rowHeight,
-          ~height,
-          ~count,
-          ~transform,
+          ~context,
+          ~count=lineCount,
           ~buffer,
-          ~editor,
           ~leftVisibleColumn,
           ~theme,
           ~diagnosticsMap,
@@ -196,24 +166,19 @@ let%component make =
           ~definition,
           ~layout,
           ~bufferSyntaxHighlights,
-          ~editorFont,
           ~shouldRenderWhitespace,
         );
 
         if (shouldRenderIndentGuides) {
           IndentLineRenderer.render(
-            ~transform,
+            ~context,
             ~buffer,
             ~startLine=topVisibleLine - 1,
             ~endLine=bottomVisibleLine + 1,
-            ~lineHeight=editorFont.measuredHeight,
-            ~fontWidth=editorFont.measuredWidth,
-            ~cursorLine=Index.toZeroBased(cursorPosition.line),
+            ~cursorPosition,
             ~theme,
-            ~indentationSettings=indentation,
-            ~bufferPositionToPixel,
             ~showActive=shouldHighlightActiveIndentGuides,
-            (),
+            indentation,
           );
         };
       }}
