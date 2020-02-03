@@ -32,13 +32,11 @@ let renderImmediate = (~context, ~count, render) =>
 let drawUnderline =
     (
       ~context,
-      ~offset=0.,
       ~buffer,
       ~leftVisibleColumn,
       ~color=Colors.black,
       r: Range.t,
     ) => {
-  let halfOffset = offset /. 2.0;
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
   let endC = Index.toZeroBased(r.stop.column);
@@ -59,16 +57,15 @@ let drawUnderline =
 
   Shapes.drawRect(
     ~transform=context.transform,
-    ~x=float(startOffset) *. context.charWidth -. halfOffset,
+    ~x=float(startOffset) *. context.charWidth,
     ~y=
       context.charHeight
       *. float(Index.toZeroBased(r.start.line))
       -. context.scrollY
-      -. halfOffset
       +. (context.charHeight -. 2.),
     ~height=1.,
     ~width=
-      offset +. max(float(endOffset - startOffset), 1.0) *. context.charWidth,
+      max(float(endOffset - startOffset), 1.0) *. context.charWidth,
     ~color,
     (),
   );
