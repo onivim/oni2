@@ -35,7 +35,7 @@ describe("dropLast", ({test, _}) => {
   });
 });
 
-describe("JsonUtil", ({describe, _}) => {
+describe("JsonEx", ({describe, _}) => {
   let explodedAbc =
     `Assoc([("a", `Assoc([("b", `Assoc([("c", `Int(1))]))]))]);
   let explodedAbcdef =
@@ -50,12 +50,12 @@ describe("JsonUtil", ({describe, _}) => {
     ]);
   describe("getKeys", ({test, _}) => {
     test("simple a.b.c case", ({expect, _}) => {
-      let keys = explodedAbc |> Json.getKeys;
+      let keys = explodedAbc |> JsonEx.getKeys;
 
       expect.equal(keys, ["a.b.c"]);
     });
     test("abcdef case", ({expect, _}) => {
-      let keys = explodedAbcdef |> Json.getKeys;
+      let keys = explodedAbcdef |> JsonEx.getKeys;
 
       expect.equal(keys, ["a.b.c", "a.b.d", "a.e.f"]);
     });
@@ -64,13 +64,13 @@ describe("JsonUtil", ({describe, _}) => {
     test("simple a.b.c case", ({expect, _}) => {
       let json = `Assoc([("a.b.c", `Int(1))]);
 
-      let result = Json.explode(json);
+      let result = JsonEx.explode(json);
       expect.bool(Yojson.Safe.equal(result, explodedAbc)).toBe(true);
     });
     test("nested b.c case", ({expect, _}) => {
       let json = `Assoc([("a", `Assoc([("b.c", `Int(1))]))]);
 
-      let result = Json.explode(json);
+      let result = JsonEx.explode(json);
       expect.bool(Yojson.Safe.equal(result, explodedAbc)).toBe(true);
     });
     test("multiple subkeys (abcdef)", ({expect, _}) => {
@@ -81,7 +81,7 @@ describe("JsonUtil", ({describe, _}) => {
           ("a.e.f", `Int(3)),
         ]);
 
-      let result = Json.explode(json);
+      let result = JsonEx.explode(json);
       expect.bool(Yojson.Safe.equal(result, explodedAbcdef)).toBe(true);
     });
   });

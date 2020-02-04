@@ -2,6 +2,8 @@
  * LocalizedToken.rei
  */
 
+open Oni_Core;
+
 [@deriving show]
 type t;
 
@@ -12,11 +14,7 @@ let parse: string => t;
 */
 let localize: (LocalizationDictionary.t, t) => t;
 
-exception LocalizedTokenParseException;
-
-let of_yojson: Yojson.Safe.t => result(t, string);
-let of_yojson_exn: Yojson.Safe.t => t;
-let to_yojson: t => Yojson.Safe.t;
+let decode: Json.decoder(t);
 
 /*
   [to_string(token)] returns a string representation.

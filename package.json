@@ -222,7 +222,8 @@
     "editor-core-types": "*",
     "timber": "*",
     "refmterr": "*",
-    "@esy-ocaml/libffi": "*"
+    "@esy-ocaml/libffi": "*",
+    "@opam/decoders-yojson": "*"
   },
   "resolutions": {
     "@esy-ocaml/libffi": "esy-ocaml/libffi#599bc3567",
@@ -243,7 +244,7 @@
     "@opam/merlin-extend": "0.4",
     "rench": "github:bryphe/rench#4860ef4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#7532bd7",
+    "revery": "revery-ui/revery#ed59d02",
     "reason-skia": "revery-ui/reason-skia#9f58229",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
