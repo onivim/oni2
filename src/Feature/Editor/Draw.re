@@ -29,7 +29,7 @@ let renderImmediate = (~context, ~count, render) =>
     (),
   );
 
-let drawRect = (~context, ~x, ~y, ~width, ~height, ~color) =>
+let rect = (~context, ~x, ~y, ~width, ~height, ~color) =>
   Shapes.drawRect(
     ~transform=context.transform,
     ~x=x -. context.scrollX,
@@ -40,7 +40,7 @@ let drawRect = (~context, ~x, ~y, ~width, ~height, ~color) =>
     (),
   );
 
-let drawText =
+let text =
     (
       ~context,
       ~x,
@@ -63,7 +63,7 @@ let drawText =
     text,
   );
 
-let drawUnderline =
+let underline =
     (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
@@ -83,7 +83,7 @@ let drawUnderline =
       endC,
     );
 
-  drawRect(
+  rect(
     ~context,
     ~x=float(startOffset) *. context.charWidth,
     ~y=
@@ -96,7 +96,7 @@ let drawUnderline =
   );
 };
 
-let renderRange =
+let range =
     (
       ~context,
       ~padding=0.,
@@ -127,7 +127,7 @@ let renderRange =
       );
     let length = max(float(endOffset - startOffset), 1.0);
 
-    drawRect(
+    rect(
       ~context,
       ~x=float(startOffset) *. context.charWidth -. padding,
       ~y=
@@ -141,7 +141,7 @@ let renderRange =
   };
 };
 
-let renderToken =
+let token =
     (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
   let y = offsetY;
@@ -150,17 +150,10 @@ let renderToken =
 
   switch (token.tokenType) {
   | Text =>
-    drawText(
-      ~context,
-      ~x,
-      ~y,
-      ~backgroundColor,
-      ~color=token.color,
-      token.text,
-    )
+    text(~context, ~x, ~y, ~backgroundColor, ~color=token.color, token.text)
 
   | Tab =>
-    drawText(
+    text(
       ~context,
       ~x=x +. context.charWidth /. 4.,
       ~y=y +. context.charHeight /. 4.,
@@ -179,7 +172,7 @@ let renderToken =
     for (i in 0 to String.length(token.text) - 1) {
       let xPos = x +. context.charWidth *. float(i);
 
-      drawRect(
+      rect(
         ~context,
         ~x=xPos +. xOffset,
         ~y=y +. yOffset,
@@ -191,8 +184,8 @@ let renderToken =
   };
 };
 
-let drawRuler = (~context, ~color, x) =>
-  drawRect(
+let ruler = (~context, ~color, x) =>
+  rect(
     ~context,
     ~x,
     ~y=0.0,
@@ -201,8 +194,8 @@ let drawRuler = (~context, ~color, x) =>
     ~color,
   );
 
-let drawLineHighlight = (~context, ~color, line) =>
-  drawRect(
+let lineHighlight = (~context, ~color, line) =>
+  rect(
     ~context,
     ~x=0.,
     ~y=context.lineHeight *. float(Index.toZeroBased(line)),

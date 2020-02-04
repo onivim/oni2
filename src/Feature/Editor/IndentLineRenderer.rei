@@ -6,7 +6,7 @@
 
 let render:
   (
-    ~context: DrawPrimitives.context,
+    ~context: Draw.context,
     ~buffer: Oni_Core.Buffer.t,
     ~startLine: int,
     ~endLine: int,

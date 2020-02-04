@@ -66,7 +66,7 @@ let rec getIndentLevel =
 
 let render =
     (
-      ~context: DrawPrimitives.context,
+      ~context: Draw.context,
       ~buffer: Buffer.t,
       ~startLine: int,
       ~endLine: int,

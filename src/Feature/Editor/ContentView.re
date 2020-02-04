@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Revery;
 
 open Oni_Core;
 
@@ -23,11 +22,11 @@ let renderLine =
     ) => {
   let index = Index.fromZeroBased(item);
   let renderDiagnostics = (d: Diagnostic.t) =>
-    DrawPrimitives.drawUnderline(
+    Draw.underline(
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~color=Colors.red,
+      ~color=Revery.Colors.red,
       d.range,
     );
 
@@ -41,7 +40,7 @@ let renderLine =
   | None => ()
   | Some(v) =>
     List.iter(
-      DrawPrimitives.renderRange(
+      Draw.range(
         ~context,
         ~buffer,
         ~leftVisibleColumn,
@@ -56,14 +55,14 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    DrawPrimitives.renderRange(
+    Draw.range(
       ~context,
       ~buffer,
       ~leftVisibleColumn,
       ~color=matchColor,
       Range.{start: startPos, stop: startPos},
     );
-    DrawPrimitives.renderRange(
+    Draw.range(
       ~context,
       ~buffer,
       ~leftVisibleColumn,
@@ -79,7 +78,7 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       DrawPrimitives.renderRange(
+       Draw.range(
          ~context,
          ~buffer,
          ~leftVisibleColumn,
@@ -101,7 +100,7 @@ let renderEmbellishments =
       ~matchingPairs,
       ~bufferHighlights,
     ) =>
-  DrawPrimitives.renderImmediate(
+  Draw.renderImmediate(
     ~context,
     ~count,
     renderLine(
@@ -150,7 +149,7 @@ let renderDefinition =
            stop:
              Location.{line: cursorPosition.line, column: token.endPosition},
          };
-       DrawPrimitives.drawUnderline(
+       Draw.underline(
          ~context,
          ~buffer,
          ~leftVisibleColumn,
@@ -163,7 +162,7 @@ let renderTokens =
     (~context, ~offsetY, ~theme, ~tokens, ~shouldRenderWhitespace) => {
   tokens
   |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
-  |> List.iter(DrawPrimitives.renderToken(~context, ~offsetY, ~theme));
+  |> List.iter(Draw.token(~context, ~offsetY, ~theme));
 };
 
 let renderText =
@@ -181,7 +180,7 @@ let renderText =
       ~layout: EditorLayout.t,
       ~shouldRenderWhitespace,
     ) =>
-  DrawPrimitives.renderImmediate(
+  Draw.renderImmediate(
     ~context,
     ~count,
     (item, offsetY) => {

@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Revery.UI;
+open Revery.Math;
 
 open Oni_Core;
 
@@ -21,7 +22,7 @@ module Styles = {
 };
 
 let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
-  DrawPrimitives.drawLineHighlight(
+  Draw.lineHighlight(
     ~context,
     ~color=theme.editorLineHighlightBackground,
     line,
@@ -31,9 +32,7 @@ let renderRulers = (~context, ~theme: Theme.t, rulers) =>
   rulers
   |> List.map(bufferPositionToPixel(~context, 0))
   |> List.map(fst)
-  |> List.iter(
-       DrawPrimitives.drawRuler(~context, ~color=theme.editorRulerForeground),
-     );
+  |> List.iter(Draw.ruler(~context, ~color=theme.editorRulerForeground));
 
 let%component make =
               (
@@ -84,10 +83,10 @@ let%component make =
     switch (elementRef) {
     | None => ()
     | Some(r) =>
-      let rect = r#getBoundingBox() |> Revery.Math.Rectangle.ofBoundingBox;
+      let rect = r#getBoundingBox() |> Rectangle.ofBoundingBox;
 
-      let relY = evt.mouseY -. Revery.Math.Rectangle.getY(rect);
-      let relX = evt.mouseX -. Revery.Math.Rectangle.getX(rect);
+      let relY = evt.mouseY -. Rectangle.getY(rect);
+      let relX = evt.mouseX -. Rectangle.getX(rect);
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
@@ -135,7 +134,7 @@ let%component make =
       style={Styles.bufferViewClipped(0., bufferPixelWidth -. gutterWidth)}
       render={(transform, _ctx) => {
         let context =
-          DrawPrimitives.{
+          Draw.{
             transform,
             width: metrics.pixelWidth,
             height: metrics.pixelHeight,

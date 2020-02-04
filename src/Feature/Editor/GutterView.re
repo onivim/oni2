@@ -13,7 +13,7 @@ module Constants = {
 
 let renderLineNumber =
     (
-      ~context: DrawPrimitives.context,
+      ~context: Draw.context,
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
@@ -48,7 +48,7 @@ let renderLineNumber =
         *. context.charWidth
         /. 2.;
 
-  DrawPrimitives.drawText(
+  Draw.text(
     ~context,
     ~x=lineNumberXOffset,
     ~y=yF,
@@ -68,7 +68,7 @@ let renderLineNumbers =
       ~showLineNumbers,
       ~cursorLine,
     ) => {
-  DrawPrimitives.drawRect(
+  Draw.rect(
     ~context,
     ~x=0.,
     ~y=0.,
@@ -77,7 +77,7 @@ let renderLineNumbers =
     ~color=theme.editorLineNumberBackground,
   );
 
-  DrawPrimitives.renderImmediate(~context, ~count, (item, offset) =>
+  Draw.renderImmediate(~context, ~count, (item, offset) =>
     renderLineNumber(
       ~context,
       item,
@@ -94,6 +94,7 @@ let render =
     (
       ~showLineNumbers,
       ~lineNumberWidth,
+      ~width,
       ~height,
       ~theme,
       ~editorFont: EditorFont.t,
@@ -106,10 +107,10 @@ let render =
       _ctx,
     ) => {
   let context =
-    DrawPrimitives.{
+    Draw.{
       transform,
-      width: 0,
-      height: 0,
+      width,
+      height,
       scrollX: 0.,
       scrollY,
       lineHeight,
@@ -185,6 +186,7 @@ let make =
     render(
       ~showLineNumbers,
       ~lineNumberWidth,
+      ~width=int_of_float(totalWidth),
       ~height,
       ~theme,
       ~editorFont,
