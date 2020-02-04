@@ -20,6 +20,16 @@ type msg =
     })
   // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
+  | RegisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | UnregisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,

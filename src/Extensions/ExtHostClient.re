@@ -34,6 +34,16 @@ type msg =
     })
   // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
+  | RegisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | UnregisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -213,6 +223,18 @@ let start =
             features |> member("commitTemplate") |> to_string_option,
         }),
       );
+      Ok(None);
+
+    | (
+        "MainThreadSCM",
+        "$registerGroup",
+        [`Int(provider), `Int(handle), `String(id), `String(label)],
+      ) =>
+      dispatch(RegisterSCMResourceGroup({provider, handle, id, label}));
+      Ok(None);
+
+    | ("MainThreadSCM", "$unregisterGroup", [`Int(handle), `Int(provider)]) =>
+      dispatch(UnregisterSCMResourceGroup({provider, handle}));
       Ok(None);
 
     | (

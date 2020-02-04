@@ -296,6 +296,14 @@ let start = (extensions, setup: Setup.t) => {
     | UnregisterSourceControl({handle}) =>
       dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
 
+    | RegisterSCMResourceGroup({provider, handle, id, label}) =>
+      dispatch(
+        Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})),
+      )
+
+    | UnregisterSCMResourceGroup({provider, handle}) =>
+      dispatch(Actions.SCM(SCM.LostResourceGroup({provider, handle})))
+
     | UpdateSourceControl({
         handle,
         hasQuickDiffProvider,
@@ -332,6 +340,7 @@ let start = (extensions, setup: Setup.t) => {
 
     | UnregisterDecorationProvider({handle}) =>
       dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+
     | DecorationsDidChange({handle, uris}) =>
       dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
     };
@@ -612,7 +621,7 @@ let start = (extensions, setup: Setup.t) => {
                 id,
                 label,
                 rootUri,
-                groups: [],
+                resourceGroups: [],
                 hasQuickDiffProvider: false,
                 count: 0,
                 commitTemplate: "",
@@ -682,6 +691,60 @@ let start = (extensions, setup: Setup.t) => {
                 (it: SCM.Provider.t) =>
                   it.handle == handle
                     ? {...it, commitTemplate: template} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (p: SCM.Provider.t) =>
+                  p.handle == provider
+                    ? {
+                      ...p,
+                      resourceGroups: [
+                        SCM.ResourceGroup.{
+                          handle,
+                          id,
+                          label,
+                          hideWhenEmpty: false,
+                        },
+                        ...p.resourceGroups,
+                      ],
+                    }
+                    : p,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostResourceGroup({provider, handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (p: SCM.Provider.t) =>
+                  p.handle == provider
+                    ? {
+                      ...p,
+                      resourceGroups:
+                        List.filter(
+                          (g: SCM.ResourceGroup.t) => g.handle != handle,
+                          p.resourceGroups,
+                        ),
+                    }
+                    : p,
                 state.scm.providers,
               ),
           },

@@ -1,6 +1,6 @@
 open Oni_Core;
 
-module Group = {
+module ResourceGroup = {
   [@deriving show({with_path: false})]
   type t = {
     handle: int,
@@ -17,7 +17,7 @@ module Provider = {
     id: string,
     label: string,
     rootUri: option(Uri.t),
-    groups: list(Group.t),
+    resourceGroups: list(ResourceGroup.t),
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
@@ -49,6 +49,16 @@ type msg =
       rootUri: option(Uri.t),
     })
   | LostProvider({handle: int})
+  | NewResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | LostResourceGroup({
+      provider: int,
+      handle: int,
+    })
   | CountChanged({
       handle: int,
       count: int,
