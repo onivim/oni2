@@ -576,7 +576,7 @@ let%component make =
         );
 
       let col = col < 0 ? 0 : col;
-      let line = line < 0 ? 0: line;
+      let line = line < 0 ? 0 : line;
 
       if (line < numberOfLines) {
         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
