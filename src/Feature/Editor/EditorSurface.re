@@ -575,6 +575,9 @@ let%component make =
           relY,
         );
 
+      let col = col < 0 ? 0 : col;
+      let line = line < 0 ? 0 : line;
+
       if (line < numberOfLines) {
         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
