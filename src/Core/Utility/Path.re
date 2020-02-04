@@ -18,6 +18,8 @@ let join = paths => {
   List.fold_left((accum, p) => accum ++ sep ++ p, head, rest);
 };
 
+let hasTrailingSeparator = path => true;
+
 let trimTrailingSeparator = path => {
   let len = String.length(path);
   let last = path.[len - 1];
