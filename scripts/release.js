@@ -98,6 +98,7 @@ if (process.platform == "linux") {
     "Oni2",
     "Oni2_editor",
     "rg",
+    "rls",
     "node"
   ];
 
