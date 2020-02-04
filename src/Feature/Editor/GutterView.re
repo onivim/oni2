@@ -1,4 +1,3 @@
-open Revery.Draw;
 open Revery.UI;
 open Oni_Core;
 
@@ -14,14 +13,13 @@ module Constants = {
 
 let renderLineNumber =
     (
+      ~context: DrawPrimitives.context,
       lineNumber: int,
       lineNumberWidth: float,
       theme: Theme.t,
-      editorFont: EditorFont.t,
       lineSetting,
       cursorLine: int,
       yOffset: float,
-      transform,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
   let lineNumberTextColor =
@@ -47,64 +45,48 @@ let renderLineNumber =
       : lineNumberWidth
         /. 2.
         -. float(String.length(lineNumber))
-        *. editorFont.measuredWidth
+        *. context.charWidth
         /. 2.;
 
-  Revery.Draw.Text.drawString(
-    ~window=Revery.UI.getActiveWindow(),
-    ~transform,
+  DrawPrimitives.drawText(
+    ~context,
     ~x=lineNumberXOffset,
     ~y=yF,
     ~backgroundColor=theme.editorLineNumberBackground,
     ~color=lineNumberTextColor,
-    ~fontFamily=editorFont.fontFile,
-    ~fontSize=editorFont.fontSize,
     lineNumber,
   );
 };
 
 let renderLineNumbers =
     (
-      ~transform,
+      ~context,
       ~lineNumberWidth,
       ~height,
       ~theme: Theme.t,
-      ~editorFont,
-      ~scrollY,
-      ~rowHeight,
       ~count,
       ~showLineNumbers,
       ~cursorLine,
     ) => {
-  Shapes.drawRect(
-    ~transform,
+  DrawPrimitives.drawRect(
+    ~context,
     ~x=0.,
     ~y=0.,
     ~width=lineNumberWidth,
     ~height=float(height),
     ~color=theme.editorLineNumberBackground,
-    (),
   );
 
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight,
-    ~height=float(height),
-    ~count,
-    ~render=
-      (item, offset) => {
-        renderLineNumber(
-          item,
-          lineNumberWidth,
-          theme,
-          editorFont,
-          showLineNumbers,
-          cursorLine,
-          offset,
-          transform,
-        )
-      },
-    (),
+  DrawPrimitives.renderImmediate(~context, ~count, (item, offset) =>
+    renderLineNumber(
+      ~context,
+      item,
+      lineNumberWidth,
+      theme,
+      showLineNumbers,
+      cursorLine,
+      offset,
+    )
   );
 };
 
@@ -114,24 +96,35 @@ let render =
       ~lineNumberWidth,
       ~height,
       ~theme,
-      ~editorFont,
+      ~editorFont: EditorFont.t,
       ~scrollY,
-      ~rowHeight,
+      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
       transform,
       _ctx,
     ) => {
+  let context =
+    DrawPrimitives.{
+      transform,
+      width: 0,
+      height: 0,
+      scrollX: 0.,
+      scrollY,
+      lineHeight,
+      fontFamily: editorFont.fontFile,
+      fontSize: editorFont.fontSize,
+      charWidth: editorFont.measuredWidth,
+      charHeight: editorFont.measuredHeight,
+    };
+
   if (showLineNumbers != LineNumber.Off) {
     renderLineNumbers(
-      ~transform,
+      ~context,
       ~lineNumberWidth,
       ~height,
       ~theme,
-      ~editorFont,
-      ~scrollY,
-      ~rowHeight,
       ~count,
       ~showLineNumbers,
       ~cursorLine,
@@ -140,13 +133,13 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~scrollY,
-      ~rowHeight,
+      ~scrollY=context.scrollY,
+      ~rowHeight=context.lineHeight,
       ~x=lineNumberWidth,
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
       ~count,
-      ~transform,
+      ~transform=context.transform,
       ~theme,
     ),
     diffMarkers,
@@ -160,7 +153,7 @@ let make =
       ~theme,
       ~editorFont: EditorFont.t,
       ~scrollY,
-      ~rowHeight,
+      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
@@ -196,7 +189,7 @@ let make =
       ~theme,
       ~editorFont,
       ~scrollY,
-      ~rowHeight,
+      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,

@@ -25,8 +25,42 @@ let renderImmediate = (~context, ~count, render) =>
     ~rowHeight=context.lineHeight,
     ~height=float(context.height),
     ~count,
-    ~render,
+    ~render=(i, offsetY) => render(i, offsetY +. context.scrollY),
     (),
+  );
+
+let drawRect = (~context, ~x, ~y, ~width, ~height, ~color) =>
+  Shapes.drawRect(
+    ~transform=context.transform,
+    ~x=x -. context.scrollX,
+    ~y=y -. context.scrollY,
+    ~height,
+    ~width,
+    ~color,
+    (),
+  );
+
+let drawText =
+    (
+      ~context,
+      ~x,
+      ~y,
+      ~backgroundColor,
+      ~color,
+      ~fontFamily=context.fontFamily,
+      ~fontSize=context.fontSize,
+      text,
+    ) =>
+  Revery.Draw.Text.drawString(
+    ~window=Revery.UI.getActiveWindow(),
+    ~transform=context.transform,
+    ~x=x -. context.scrollX,
+    ~y=y -. context.scrollY,
+    ~backgroundColor,
+    ~color,
+    ~fontFamily,
+    ~fontSize,
+    text,
   );
 
 let drawUnderline =
@@ -49,18 +83,16 @@ let drawUnderline =
       endC,
     );
 
-  Shapes.drawRect(
-    ~transform=context.transform,
+  drawRect(
+    ~context,
     ~x=float(startOffset) *. context.charWidth,
     ~y=
       context.charHeight
       *. float(Index.toZeroBased(r.start.line))
-      -. context.scrollY
       +. (context.charHeight -. 2.),
     ~height=1.,
     ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
     ~color,
-    (),
   );
 };
 
@@ -95,50 +127,41 @@ let renderRange =
       );
     let length = max(float(endOffset - startOffset), 1.0);
 
-    Shapes.drawRect(
-      ~transform=context.transform,
+    drawRect(
+      ~context,
       ~x=float(startOffset) *. context.charWidth -. padding,
       ~y=
         context.charHeight
         *. float(Index.toZeroBased(r.start.line))
-        -. context.scrollY
         -. padding,
       ~height=context.charHeight +. doublePadding,
       ~width=length *. context.charWidth +. doublePadding,
       ~color,
-      (),
     );
   };
 };
 
 let renderToken =
     (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
-  let x =
-    context.charWidth
-    *. float(Index.toZeroBased(token.startPosition))
-    -. context.scrollX;
+  let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
   let y = offsetY;
 
   let backgroundColor = token.backgroundColor;
 
   switch (token.tokenType) {
   | Text =>
-    Revery.Draw.Text.drawString(
-      ~window=Revery.UI.getActiveWindow(),
-      ~transform=context.transform,
+    drawText(
+      ~context,
       ~x,
       ~y,
       ~backgroundColor,
       ~color=token.color,
-      ~fontFamily=context.fontFamily,
-      ~fontSize=context.fontSize,
       token.text,
     )
 
   | Tab =>
-    Revery.Draw.Text.drawString(
-      ~window=Revery.UI.getActiveWindow(),
-      ~transform=context.transform,
+    drawText(
+      ~context,
       ~x=x +. context.charWidth /. 4.,
       ~y=y +. context.charHeight /. 4.,
       ~backgroundColor,
@@ -156,38 +179,34 @@ let renderToken =
     for (i in 0 to String.length(token.text) - 1) {
       let xPos = x +. context.charWidth *. float(i);
 
-      Shapes.drawRect(
-        ~transform=context.transform,
+      drawRect(
+        ~context,
         ~x=xPos +. xOffset,
         ~y=y +. yOffset,
         ~width=size,
         ~height=size,
         ~color=theme.editorWhitespaceForeground,
-        (),
       );
     };
   };
 };
 
 let drawRuler = (~context, ~color, x) =>
-  Shapes.drawRect(
-    ~transform=context.transform,
+  drawRect(
+    ~context,
     ~x,
     ~y=0.0,
     ~height=float(context.height),
     ~width=1.,
     ~color,
-    (),
   );
 
 let drawLineHighlight = (~context, ~color, line) =>
-  Shapes.drawRect(
-    ~transform=context.transform,
+  drawRect(
+    ~context,
     ~x=0.,
-    ~y=
-      context.lineHeight *. float(Index.toZeroBased(line)) -. context.scrollY,
+    ~y=context.lineHeight *. float(Index.toZeroBased(line)),
     ~height=context.lineHeight,
     ~width=float(context.width),
     ~color,
-    (),
   );

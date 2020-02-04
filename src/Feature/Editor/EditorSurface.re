@@ -190,7 +190,7 @@ let make =
       height={metrics.pixelHeight}
       theme
       scrollY={editor.scrollY}
-      rowHeight={metrics.lineHeight}
+      lineHeight={metrics.lineHeight}
       count=lineCount
       editorFont
       cursorLine={Index.toZeroBased(cursorPosition.line)}
