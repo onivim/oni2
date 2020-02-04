@@ -1,5 +1,5 @@
 {
-  "checksum": "3d8895d274f69e21a2f9755ba8205ff0",
+  "checksum": "e45df700774d9a5161de1a8b9b4f519e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -133,7 +133,7 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#e514427@d41d8cd9",
+        "reason-skia@github:glennsl/reason-skia#dd0bf60@d41d8cd9",
         "reason-sdl2@2.10.3016@d41d8cd9",
         "reason-harfbuzz@1.91.5003@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
@@ -312,19 +312,19 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-skia@github:revery-ui/reason-skia#e514427@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#e514427@d41d8cd9",
+    "reason-skia@github:glennsl/reason-skia#dd0bf60@d41d8cd9": {
+      "id": "reason-skia@github:glennsl/reason-skia#dd0bf60@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#e514427",
+      "version": "github:glennsl/reason-skia#dd0bf60",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#e514427" ]
+        "source": [ "github:glennsl/reason-skia#dd0bf60" ]
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3016@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
-        "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-freetype2@2.9.1007@d41d8cd9", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@opam/ctypes-foreign@opam:0.4.0@72ef8de2",
@@ -1097,7 +1097,7 @@
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@opam/camomile@opam:1.0.1@c82ecdb5",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9",
-        "@esy-ocaml/libffi@github:glennsl/libffi#0b48e21@d41d8cd9"
+        "@esy-ocaml/libffi@github:glennsl/libffi#0d21ddb@d41d8cd9"
       ],
       "devDependencies": [
         "shelljs@0.8.3@d41d8cd9", "reperf@1.5.0@d41d8cd9",
@@ -2740,7 +2740,7 @@
         "@opam/conf-pkg-config@opam:1.1@67c69c0c",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9",
-        "@esy-ocaml/libffi@github:glennsl/libffi#0b48e21@d41d8cd9"
+        "@esy-ocaml/libffi@github:glennsl/libffi#0d21ddb@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.8.1000@d41d8cd9", "@opam/integers@opam:0.3.0@d6eefd3a",
@@ -3182,13 +3182,13 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "@esy-ocaml/libffi@github:glennsl/libffi#0b48e21@d41d8cd9": {
-      "id": "@esy-ocaml/libffi@github:glennsl/libffi#0b48e21@d41d8cd9",
+    "@esy-ocaml/libffi@github:glennsl/libffi#0d21ddb@d41d8cd9": {
+      "id": "@esy-ocaml/libffi@github:glennsl/libffi#0d21ddb@d41d8cd9",
       "name": "@esy-ocaml/libffi",
-      "version": "github:glennsl/libffi#0b48e21",
+      "version": "github:glennsl/libffi#0d21ddb",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/libffi#0b48e21" ]
+        "source": [ "github:glennsl/libffi#0d21ddb" ]
       },
       "overrides": [],
       "dependencies": [],
