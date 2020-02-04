@@ -253,7 +253,8 @@
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6",
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
-    "reason-textmate": "onivim/reason-textmate#5f0dc38"
+    "reason-textmate": "onivim/reason-textmate#5f0dc38",
+    "@esy-ocaml/libffi": "glennsl/libffi#0b48e21"
   },
   "devDependencies": {
     "ocaml": "~4.8.1",
