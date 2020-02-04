@@ -58,7 +58,10 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
     print_endline(
       "Font metrics, round 2: " ++ EditorFont.toString(editorFont),
     );
-    isClose(editorFont.measuredWidth, 14.4)
+    (
+      /* mac/win */ isClose(editorFont.measuredWidth, 14.4)
+      || /* linux */ isClose(editorFont.measuredWidth, 14.0)
+    )
     // Apparently the line height can vary between platforms!
     // && isClose(editorFont.measuredHeight, 28.799927)
     && isClose(editorFont.fontSize, 24.);
