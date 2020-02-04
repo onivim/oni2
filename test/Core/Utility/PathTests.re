@@ -28,7 +28,7 @@ describe("Path", ({test, _}) => {
       ("a/", "a"),
       ("b\\", "b"),
       ("a/b/", "a/b"),
-      ("a\\b\\", "a\\b\\"),
+      ("a\\b\\", "a\\b"),
     ];
 
     let runCase = ((path, expectedResult)) => {
