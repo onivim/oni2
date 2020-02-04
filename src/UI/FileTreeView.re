@@ -25,7 +25,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Constants.default.tabHeight),
+    height(Constants.tabHeight),
   ];
 
   let item = (~isFocus, ~isActive, ~theme: Theme.t) => [

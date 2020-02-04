@@ -30,7 +30,7 @@ let create = (~bufferId=0, ()) => {
     bufferId,
     scrollX: 0.,
     scrollY: 0.,
-    minimapMaxColumnWidth: Constants.default.minimapMaxColumn,
+    minimapMaxColumnWidth: Constants.minimapMaxColumn,
     minimapScrollY: 0.,
     maxLineLength: 0,
     viewLines: 0,
