@@ -14,17 +14,31 @@ let parseBool = json =>
   | _ => false
   };
 
-let parseInt = json =>
+let parseInt = (~default=0, json) =>
   switch (json) {
   | `Int(v) => v
-  | _ => 0
+  | `Float(v) => int_of_float(v +. 0.5)
+  | `String(str) =>
+    switch (int_of_string_opt(str)) {
+    | None => default
+    | Some(v) => v
+    }
+  | _ => default
   };
 
-let parseFloat = json =>
+let parseFloat = (~default=0., json) =>
   switch (json) {
   | `Int(v) => float_of_int(v)
   | `Float(v) => v
-  | _ => 0.
+  | `String(str) =>
+    let floatMaybe = float_of_string_opt(str);
+    let floatFromIntMaybe = int_of_string_opt(str)
+    |> Option.map(float_of_int);
+
+    floatMaybe
+    |> OptionEx.or_(floatFromIntMaybe)
+    |> Option.value(~default);
+  | _ => default
   };
 
 let parseStringList = json => {
@@ -107,6 +121,14 @@ let parseRenderWhitespace = json =>
   | _ => All
   };
 
+let parseEditorFontSize = json =>
+  json
+  |> parseFloat(~default=Constants.defaultFontSize)
+  |> (
+    result =>
+      result > Constants.minimumFontSize ? result : Constants.minimumFontSize
+  );
+
 let parseString = json =>
   switch (json) {
   | `String(v) => v
@@ -129,7 +151,13 @@ let configurationParsers: list(configurationTuple) = [
     "editor.fontFamily",
     (s, v) => {...s, editorFontFamily: parseStringOption(v)},
   ),
-  ("editor.fontSize", (s, v) => {...s, editorFontSize: parseFloat(v)}),
+  (
+    "editor.fontSize",
+    (config, json) => {
+      ...config,
+      editorFontSize: parseEditorFontSize(json),
+    },
+  ),
   ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
   (
     "editor.hover.enabled",

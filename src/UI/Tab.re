@@ -58,7 +58,7 @@ let make =
       backgroundColor(theme.editorBackground),
       borderTop(~color=borderColor, ~width=2),
       borderBottom(~color=theme.editorBackground, ~width=2),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       minWidth(minWidth_),
       flexDirection(`Row),
       justifyContent(`Center),
@@ -83,7 +83,7 @@ let make =
   let iconContainerStyle =
     Style.[
       width(32),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       alignItems(`Center),
       justifyContent(`Center),
     ];

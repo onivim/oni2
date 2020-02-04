@@ -41,9 +41,9 @@ let renderLine =
       let endPosition = Index.toZeroBased(token.endPosition);
       let tokenWidth = endPosition - startPosition;
 
-      let x = float(Constants.default.minimapCharacterWidth * startPosition);
-      let height = float(Constants.default.minimapCharacterHeight);
-      let width = float(tokenWidth * Constants.default.minimapCharacterWidth);
+      let x = float(Constants.minimapCharacterWidth * startPosition);
+      let height = float(Constants.minimapCharacterHeight);
+      let width = float(tokenWidth * Constants.minimapCharacterWidth);
 
       let emphasis = shouldHighlight(startPosition);
       let color =
@@ -121,10 +121,7 @@ let%component make =
                 (),
               ) => {
   let rowHeight =
-    float(
-      Constants.default.minimapCharacterHeight
-      + Constants.default.minimapLineSpacing,
-    );
+    float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
   let%hook (mouseState, dispatch) =
     React.Hooks.reducer(~initialState, reducer);
@@ -132,8 +129,7 @@ let%component make =
   let getScrollTo = (mouseY: float) => {
     let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
     let visibleHeight: int = metrics.pixelHeight;
-    let offsetMouseY: int =
-      int_of_float(mouseY) - Constants.default.tabHeight;
+    let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
 
@@ -157,8 +153,7 @@ let%component make =
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     let scrollTo = getScrollTo(evt.mouseY);
     let minimapLineSize =
-      Constants.default.minimapLineSpacing
-      + Constants.default.minimapCharacterHeight;
+      Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
     let linesInMinimap = metrics.pixelHeight / minimapLineSize;
     if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
       onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
@@ -168,8 +163,7 @@ let%component make =
           evt => {
             let scrollTo = getScrollTo(evt.mouseY);
             let minimapLineSize =
-              Constants.default.minimapLineSpacing
-              + Constants.default.minimapCharacterHeight;
+              Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
             let linesInMinimap = metrics.pixelHeight / minimapLineSize;
             onScroll(scrollTo -. float(linesInMinimap));
           },
@@ -215,7 +209,7 @@ let%component make =
             rowHeight
             *. float(Index.toZeroBased(cursorPosition.line))
             -. scrollY,
-          ~height=float(Constants.default.minimapCharacterHeight),
+          ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
           ~paint=minimapPaint,
           canvasContext,
@@ -224,18 +218,18 @@ let%component make =
         let renderRange = (~color, ~offset, range: Range.t) =>
           {let startX =
              float(Index.toZeroBased(range.start.column))
-             *. float(Constants.default.minimapCharacterWidth)
+             *. float(Constants.minimapCharacterWidth)
              +. Constants.leftMargin
              +. Constants.gutterWidth;
            let endX =
              float(Index.toZeroBased(range.stop.column))
-             *. float(Constants.default.minimapCharacterWidth);
+             *. float(Constants.minimapCharacterWidth);
 
            Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
            CanvasContext.drawRectLtwh(
              ~left=startX -. 1.0,
              ~top=offset -. 1.0,
-             ~height=float(Constants.default.minimapCharacterHeight) +. 2.0,
+             ~height=float(Constants.minimapCharacterHeight) +. 2.0,
              ~width=endX -. startX +. 2.,
              ~paint=minimapPaint,
              canvasContext,
@@ -244,17 +238,17 @@ let%component make =
         let renderUnderline = (~color, ~offset, range: Range.t) =>
           {let startX =
              float(Index.toZeroBased(range.start.column))
-             *. float(Constants.default.minimapCharacterWidth)
+             *. float(Constants.minimapCharacterWidth)
              +. Constants.leftMargin
              +. Constants.gutterWidth;
            let endX =
              float(Index.toZeroBased(range.stop.column))
-             *. float(Constants.default.minimapCharacterWidth);
+             *. float(Constants.minimapCharacterWidth);
 
            Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
            CanvasContext.drawRectLtwh(
              ~left=startX -. 1.0,
-             ~top=offset +. float(Constants.default.minimapCharacterHeight),
+             ~top=offset +. float(Constants.minimapCharacterHeight),
              ~height=1.0,
              ~width=endX -. startX +. 2.,
              ~paint=minimapPaint,
@@ -304,7 +298,7 @@ let%component make =
                   ~left=0.,
                   ~top=rowHeight *. float(item) -. scrollY -. 1.0,
                   ~height=
-                    float(Constants.default.minimapCharacterHeight) +. 2.0,
+                    float(Constants.minimapCharacterHeight) +. 2.0,
                   ~width=float(width),
                   ~paint=minimapPaint,
                   canvasContext,
