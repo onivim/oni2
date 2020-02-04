@@ -447,7 +447,7 @@ let%component make =
     layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
   let minimapPixelWidth =
-    layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
+    layout.minimapWidthInPixels + Constants.minimapPadding * 2;
   let minimapViewStyle =
     Style.[
       position(`Absolute),
@@ -463,7 +463,7 @@ let%component make =
       position(`Absolute),
       top(0),
       left(int_of_float(bufferPixelWidth +. float(minimapPixelWidth))),
-      width(Constants.default.scrollBarThickness),
+      width(Constants.scrollBarThickness),
       backgroundColor(theme.scrollbarSliderBackground),
       bottom(0),
     ];
@@ -473,7 +473,7 @@ let%component make =
       position(`Absolute),
       bottom(0),
       left(int_of_float(layout.lineNumberWidthInPixels)),
-      height(Constants.default.scrollBarThickness),
+      height(Constants.scrollBarThickness),
       width(int_of_float(layout.bufferWidthInPixels)),
     ];
 
@@ -939,7 +939,7 @@ let%component make =
       <EditorVerticalScrollbar
         editor
         metrics
-        width={Constants.default.scrollBarThickness}
+        width=Constants.scrollBarThickness
         height={metrics.pixelHeight}
         diagnostics=diagnosticsMap
         theme

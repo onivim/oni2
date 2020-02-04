@@ -65,7 +65,7 @@ type t = {
 let default = {
   editorDetectIndentation: true,
   editorFontFamily: Some("FiraCode-Regular.ttf"),
-  editorFontSize: 14,
+  editorFontSize: Constants.defaultFontSize,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
@@ -73,7 +73,7 @@ let default = {
   editorAcceptSuggestionOnEnter: `on,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
+  editorMinimapMaxColumn: Constants.minimapMaxColumn,
   editorLineNumbers: On,
   editorInsertSpaces: false,
   editorIndentSize: 4,

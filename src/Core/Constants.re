@@ -5,50 +5,37 @@
  * to pull out to configuration values
  */
 
-type t = {
-  fontAwesomeRegularPath: string,
-  fontAwesomeSolidPath: string,
-  /* Horizontal padding on each side of the minimap */
-  minimapPadding: int,
-  /*
-   * Width of characters in minimap, in pixels
-   */
-  minimapCharacterWidth: int,
-  /*
-   * Height of characters in minimap, in pixels
-   */
-  minimapCharacterHeight: int,
-  /*
-   * Number of pixels between each line in the minimap
-   */
-  minimapLineSpacing: int,
-  scrollBarThickness: int,
-  minimapMaxColumn: int,
-  tabHeight: int,
-  /*
-   * The line count considered a 'large file' - if a file exceeds this limit,
-   * some features like syntax highlighting will be disabled.
-   */
-  largeFileLineCountThreshold: int,
-  notificationWidth: int,
-};
+let minimumFontSize = 6;
+let defaultFontSize = 14;
 
-let default: t = {
-  fontAwesomeRegularPath: "FontAwesome5FreeRegular.otf",
-  fontAwesomeSolidPath: "FontAwesome5FreeSolid.otf",
-  minimapPadding: 0,
-  minimapCharacterWidth: 1,
-  minimapCharacterHeight: 2,
-  minimapLineSpacing: 1,
-  scrollBarThickness: 15,
-  minimapMaxColumn: 120,
-  tabHeight: 35,
-  notificationWidth: 300,
+let fontAwesomeRegularPath = "FontAwesome5FreeRegular.otf";
+let fontAwesomeSolidPath = "FontAwesome5FreeSolid.otf";
 
-  /*
-   * The threshold we set right now is artificially low,
-   * because our current textmate highlighting strategy is very slow.
-   * We'll switch to a native strategy, and bump this up.
-   */
-  largeFileLineCountThreshold: 1000,
-};
+/* Horizontal padding on each side of the minimap */
+let minimapPadding = 0;
+
+/*
+ * Width of characters in minimap, in pixels
+ */
+let minimapCharacterWidth = 1;
+/*
+ * Height of characters in minimap, in pixels
+ */
+let minimapCharacterHeight = 2;
+/*
+ * Number of pixels between each line in the minimap
+ */
+let minimapLineSpacing = 1;
+let scrollBarThickness = 15;
+let minimapMaxColumn = 120;
+let tabHeight = 35;
+let notificationWidth = 300;
+
+/*
+ * The line count considered a 'large file' - if a file exceeds this limit,
+ * some features like syntax highlighting will be disabled.
+ * The threshold we set right now is artificially low,
+ * because our current textmate highlighting strategy is very slow.
+ * We'll switch to a native strategy, and bump this up.
+ */
+let largeFileLineCountThreshold = 1000;

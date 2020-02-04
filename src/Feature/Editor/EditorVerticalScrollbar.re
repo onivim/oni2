@@ -81,7 +81,7 @@ let make =
              position(`Absolute),
              top(diagTop),
              right(0),
-             width(Constants.default.scrollBarThickness / 3),
+             width(Constants.scrollBarThickness / 3),
              height(cursorSize),
              backgroundColor(Colors.red),
            ];
