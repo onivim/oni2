@@ -297,8 +297,7 @@ let%component make =
                 CanvasContext.drawRectLtwh(
                   ~left=0.,
                   ~top=rowHeight *. float(item) -. scrollY -. 1.0,
-                  ~height=
-                    float(Constants.minimapCharacterHeight) +. 2.0,
+                  ~height=float(Constants.minimapCharacterHeight) +. 2.0,
                   ~width=float(width),
                   ~paint=minimapPaint,
                   canvasContext,

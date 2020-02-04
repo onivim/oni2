@@ -32,12 +32,10 @@ let parseFloat = (~default=0., json) =>
   | `Float(v) => v
   | `String(str) =>
     let floatMaybe = float_of_string_opt(str);
-    let floatFromIntMaybe = int_of_string_opt(str)
-    |> Option.map(float_of_int);
+    let floatFromIntMaybe =
+      int_of_string_opt(str) |> Option.map(float_of_int);
 
-    floatMaybe
-    |> OptionEx.or_(floatFromIntMaybe)
-    |> Option.value(~default);
+    floatMaybe |> OptionEx.or_(floatFromIntMaybe) |> Option.value(~default);
   | _ => default
   };
 
