@@ -6,6 +6,7 @@
 open Kernel;
 open ConfigurationValues;
 open LineNumber;
+open Utility;
 
 let parseBool = json =>
   switch (json) {
