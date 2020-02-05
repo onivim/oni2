@@ -20,7 +20,7 @@ let render:
     ~height: float,
     ~width: float,
     ~count: int,
-    ~transform: Reglm.Mat4.t,
+    ~canvasContext: Revery.Draw.CanvasContext.t,
     ~theme: Theme.t,
     t
   ) =>

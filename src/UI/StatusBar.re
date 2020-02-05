@@ -49,7 +49,7 @@ module Notification = {
 
     let text = (~foreground, ~background, font: UiFont.t) => [
       fontFamily(font.fontFile),
-      fontSize(11),
+      fontSize(11.),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
       color(foreground),
@@ -106,7 +106,7 @@ module Notification = {
     let icon = () =>
       <FontIcon
         icon={iconFor(item)}
-        fontSize=16
+        fontSize=16.
         backgroundColor=background
         color=foreground
       />;
@@ -160,7 +160,7 @@ module Styles = {
 
   let text = (~color, ~background, uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(11),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -168,7 +168,7 @@ module Styles = {
 
   let textBold = (~color, ~background, font: UiFont.t) => [
     fontFamily(font.fontFileSemiBold),
-    fontSize(11),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),

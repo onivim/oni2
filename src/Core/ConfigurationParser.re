@@ -26,11 +26,17 @@ let parseInt = (~default=0, json) =>
   | _ => default
   };
 
-let parseFloat = json =>
+let parseFloat = (~default=0., json) =>
   switch (json) {
   | `Int(v) => float_of_int(v)
   | `Float(v) => v
-  | _ => 0.
+  | `String(str) =>
+    let floatMaybe = float_of_string_opt(str);
+    let floatFromIntMaybe =
+      int_of_string_opt(str) |> Option.map(float_of_int);
+
+    floatMaybe |> OptionEx.or_(floatFromIntMaybe) |> Option.value(~default);
+  | _ => default
   };
 
 let parseStringList = json => {
@@ -115,7 +121,7 @@ let parseRenderWhitespace = json =>
 
 let parseEditorFontSize = json =>
   json
-  |> parseInt(~default=Constants.defaultFontSize)
+  |> parseFloat(~default=Constants.defaultFontSize)
   |> (
     result =>
       result > Constants.minimumFontSize ? result : Constants.minimumFontSize

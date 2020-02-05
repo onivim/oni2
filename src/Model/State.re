@@ -84,9 +84,10 @@ let create: unit => t =
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14,
+        ~fontSize=14.,
         ~measuredWidth=1.,
         ~measuredHeight=1.,
+        ~descenderHeight=0.,
         (),
       ),
     extensions: Extensions.empty,

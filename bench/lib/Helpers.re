@@ -26,9 +26,10 @@ let simpleState =
     Actions.SetEditorFont(
       EditorFont.create(
         ~fontFile="dummy",
-        ~fontSize=14,
+        ~fontSize=14.,
         ~measuredWidth=14.,
         ~measuredHeight=14.,
+        ~descenderHeight=1.,
         (),
       ),
     ),

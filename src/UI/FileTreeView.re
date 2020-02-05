@@ -45,7 +45,7 @@ module Styles = {
 
   let text =
       (~isFocus, ~isActive, ~decoration, ~theme: Theme.t, ~font: UiFont.t) => [
-    fontSize(11),
+    fontSize(11.),
     fontFamily(font.fontFile),
     color(
       switch (
@@ -75,10 +75,10 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
       fontFamily("seti.ttf"),
-      fontSize(int_of_float(float(size) *. 2.)),
+      fontSize(size *. 2.),
       color(fg),
-      width(int_of_float(float(size) *. 1.5)),
-      height(int_of_float(float(size) *. 1.75)),
+      width(int_of_float(size *. 1.5)),
+      height(int_of_float(size *. 1.75)),
       textWrap(TextWrapping.NoWrap),
       marginLeft(-4),
     ]

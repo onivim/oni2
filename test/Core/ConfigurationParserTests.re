@@ -130,7 +130,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         getFontSize({|
         { "editor.fontSize": "12" }
       |});
-      expect.int(fontSize).toBe(12);
+      expect.float(fontSize).toBeCloseTo(12.);
     });
 
     test("uses default size if unable to parse", ({expect}) => {
@@ -138,7 +138,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         getFontSize({|
         { "editor.fontSize": "true" }
       |});
-      expect.int(fontSize).toBe(Constants.defaultFontSize);
+      expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
     });
 
     test("does not allow value lower than minimum size", ({expect}) => {
@@ -146,7 +146,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         getFontSize({|
         { "editor.fontSize": 1 }
       |});
-      expect.int(fontSize).toBe(Constants.minimumFontSize);
+      expect.float(fontSize).toBeCloseTo(Constants.minimumFontSize);
     });
   });
 

@@ -6,7 +6,7 @@
 
 let render:
   (
-    ~transform: Reglm.Mat4.t,
+    ~canvasContext: Revery.Draw.CanvasContext.t,
     ~buffer: Oni_Core.Buffer.t,
     ~startLine: int,
     ~endLine: int,

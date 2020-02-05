@@ -71,7 +71,6 @@ let start =
       ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
-      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);
@@ -140,7 +139,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
+  let fontUpdater = FontStoreConnector.start();
   let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
 
   let completionUpdater = CompletionStoreConnector.start();

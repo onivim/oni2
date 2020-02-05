@@ -25,7 +25,7 @@ module Styles = {
   let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(20),
+      fontSize(20.),
       backgroundColor(theme.background),
       color(theme.foreground),
       marginTop(-40),
@@ -34,7 +34,7 @@ module Styles = {
   let commandText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(12),
+      fontSize(12.),
       backgroundColor(theme.background),
       color(theme.editorForeground),
     ];
@@ -90,7 +90,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=uiFont.fontFile,
-          ~fontSize=14,
+          ~fontSize=14.,
         )}
         text=name
       />
@@ -99,7 +99,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=editorFont.fontFile,
-          ~fontSize=11,
+          ~fontSize=11.,
         )}
         text=shortcut
       />

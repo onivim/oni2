@@ -25,10 +25,12 @@ module Constants = {
 
 let lineStyle = Style.[position(`Absolute), top(0)];
 
+let minimapPaint = Skia.Paint.make();
+
 let renderLine =
     (
       shouldHighlight,
-      transform,
+      canvasContext,
       yOffset,
       tokens: list(BufferViewTokenizer.t),
     ) => {
@@ -57,7 +59,15 @@ let renderLine =
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      Shapes.drawRect(~transform, ~y, ~x, ~color, ~width, ~height, ());
+      Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+      CanvasContext.drawRectLtwh(
+        ~top=y,
+        ~left=x,
+        ~paint=minimapPaint,
+        ~width,
+        ~height,
+        canvasContext,
+      );
     | _ => ()
     };
   };
@@ -165,38 +175,44 @@ let%component make =
   };
 
   <View style=absoluteStyle onMouseDown>
-    <OpenGL
+    <Canvas
       style=absoluteStyle
-      render={(transform, _) => {
+      render={canvasContext => {
         if (showSlider) {
           /* Draw slider/viewport */
-          Shapes.drawRect(
-            ~transform,
-            ~x=0.,
-            ~y=
+          Skia.Paint.setColor(
+            minimapPaint,
+            Color.toSkia(theme.scrollbarSliderHoverBackground),
+          );
+          CanvasContext.drawRectLtwh(
+            ~left=0.,
+            ~top=
               rowHeight
               *. float(Editor.getTopVisibleLine(editor, metrics) - 1)
               -. scrollY,
             ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
             ~width=float(width),
-            ~color=theme.scrollbarSliderHoverBackground,
-            (),
+            ~paint=minimapPaint,
+            canvasContext,
           );
         };
 
         let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
-        Shapes.drawRect(
-          ~transform,
-          ~x=Constants.leftMargin,
-          ~y=
+        Skia.Paint.setColor(
+          minimapPaint,
+          Color.toSkia(theme.editorLineHighlightBackground),
+        );
+        CanvasContext.drawRectLtwh(
+          ~left=Constants.leftMargin,
+          ~top=
             rowHeight
             *. float(Index.toZeroBased(cursorPosition.line))
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
-          ~color=theme.editorLineHighlightBackground,
-          (),
+          ~paint=minimapPaint,
+          canvasContext,
         );
 
         let renderRange = (~color, ~offset, range: Range.t) =>
@@ -209,14 +225,14 @@ let%component make =
              float(Index.toZeroBased(range.stop.column))
              *. float(Constants.minimapCharacterWidth);
 
-           Shapes.drawRect(
-             ~transform,
-             ~x=startX -. 1.0,
-             ~y=offset -. 1.0,
+           Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+           CanvasContext.drawRectLtwh(
+             ~left=startX -. 1.0,
+             ~top=offset -. 1.0,
              ~height=float(Constants.minimapCharacterHeight) +. 2.0,
              ~width=endX -. startX +. 2.,
-             ~color,
-             (),
+             ~paint=minimapPaint,
+             canvasContext,
            )};
 
         let renderUnderline = (~color, ~offset, range: Range.t) =>
@@ -229,14 +245,14 @@ let%component make =
              float(Index.toZeroBased(range.stop.column))
              *. float(Constants.minimapCharacterWidth);
 
-           Shapes.drawRect(
-             ~transform,
-             ~x=startX -. 1.0,
-             ~y=offset +. float(Constants.minimapCharacterHeight),
+           Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+           CanvasContext.drawRectLtwh(
+             ~left=startX -. 1.0,
+             ~top=offset +. float(Constants.minimapCharacterHeight),
              ~height=1.0,
              ~width=endX -. startX +. 2.,
-             ~color,
-             (),
+             ~paint=minimapPaint,
+             canvasContext,
            )};
 
         ImmediateList.render(
@@ -276,19 +292,20 @@ let%component make =
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
               | Some(_) =>
-                Shapes.drawRect(
-                  ~transform,
-                  ~x=0.,
-                  ~y=rowHeight *. float(item) -. scrollY -. 1.0,
+                let color = Color.rgba(1.0, 0.0, 0.0, 0.3);
+                Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+                CanvasContext.drawRectLtwh(
+                  ~left=0.,
+                  ~top=rowHeight *. float(item) -. scrollY -. 1.0,
                   ~height=float(Constants.minimapCharacterHeight) +. 2.0,
                   ~width=float(width),
-                  ~color=Color.rgba(1.0, 0.0, 0.0, 0.3),
-                  (),
-                )
+                  ~paint=minimapPaint,
+                  canvasContext,
+                );
               | None => ()
               };
 
-              renderLine(shouldHighlight, transform, offset, tokens);
+              renderLine(shouldHighlight, canvasContext, offset, tokens);
             },
           (),
         );
@@ -324,7 +341,7 @@ let%component make =
             ~height=float(height),
             ~width=2.,
             ~count,
-            ~transform,
+            ~canvasContext,
             ~theme,
           ),
           diffMarkers,

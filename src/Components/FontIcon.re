@@ -14,7 +14,7 @@ let make =
     (
       ~icon,
       ~fontFamily=FontAwesome.fontFamily,
-      ~fontSize=15,
+      ~fontSize=15.,
       ~backgroundColor,
       ~color,
       ~margin=0,
@@ -28,8 +28,8 @@ let make =
       Style.color(color),
       Style.backgroundColor(backgroundColor),
       Style.margin(margin),
-      Style.height(fontSize),
-      Style.width(fontSize),
+      Style.height(fontSize |> int_of_float),
+      Style.width(fontSize |> int_of_float),
       Style.textWrap(Revery.TextWrapping.NoWrap),
     ]
   />;

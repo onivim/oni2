@@ -20,7 +20,7 @@ type vimUseSystemClipboard = {
 type t = {
   editorDetectIndentation: bool,
   editorFontFamily: option(string),
-  editorFontSize: int,
+  editorFontSize: float,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,

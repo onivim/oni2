@@ -4,8 +4,8 @@
  * Logic for rendering indent lines in the buffer view
  */
 
+open Revery;
 open Revery.Draw;
-
 open Oni_Core;
 
 let rec getIndentLevel =
@@ -61,9 +61,11 @@ let rec getIndentLevel =
   };
 };
 
+let paint = Skia.Paint.make();
+
 let render =
     (
-      ~transform,
+      ~canvasContext,
       ~buffer: Buffer.t,
       ~startLine: int,
       ~endLine: int,
@@ -105,14 +107,17 @@ let render =
 
     let i = ref(0);
     while (i^ < level) {
-      Shapes.drawRect(
-        ~transform,
-        ~x=x +. indentationWidthInPixels *. float_of_int(i^),
-        ~y,
+      Skia.Paint.setColor(
+        paint,
+        Color.toSkia(theme.editorIndentGuideBackground),
+      );
+      CanvasContext.drawRectLtwh(
+        ~left=x +. indentationWidthInPixels *. float_of_int(i^),
+        ~top=y,
         ~width=1.,
         ~height=lineHeight,
-        ~color=theme.editorIndentGuideBackground,
-        (),
+        ~paint,
+        canvasContext,
       );
 
       incr(i);
@@ -179,17 +184,20 @@ let render =
     let (_, bottomY) = bufferPositionToPixel(bottomLine^, 0);
 
     if (cursorLineIndentLevel^ >= 1) {
-      Shapes.drawRect(
-        ~transform,
-        ~x=
+      Skia.Paint.setColor(
+        paint,
+        Color.toSkia(theme.editorIndentGuideActiveBackground),
+      );
+      CanvasContext.drawRectLtwh(
+        ~left=
           x
           +. indentationWidthInPixels
           *. float_of_int(cursorLineIndentLevel^ - 1),
-        ~y=topY +. lineHeight,
+        ~top=topY +. lineHeight,
         ~width=1.,
         ~height=bottomY -. topY -. lineHeight,
-        ~color=theme.editorIndentGuideActiveBackground,
-        (),
+        ~paint,
+        canvasContext,
       );
     };
   };
