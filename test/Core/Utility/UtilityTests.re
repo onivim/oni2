@@ -2,36 +2,93 @@ open TestFramework;
 
 open Oni_Core.Utility;
 
-describe("last", ({test, _}) => {
-  open ListEx;
+describe("ListEx", ({describe, _}) => {
+  describe("last", ({test, _}) => {
+    open ListEx;
 
-  test("empty", ({expect}) =>
-    expect.bool(last([]) == None).toBe(true)
-  );
+    test("empty", ({expect}) =>
+      expect.bool(last([]) == None).toBe(true)
+    );
 
-  test("one", ({expect}) =>
-    expect.bool(last([1]) == Some(1)).toBe(true)
-  );
+    test("one", ({expect}) =>
+      expect.bool(last([1]) == Some(1)).toBe(true)
+    );
 
-  test("many", ({expect}) =>
-    expect.bool(last([1, 2]) == Some(2)).toBe(true)
-  );
-});
+    test("many", ({expect}) =>
+      expect.bool(last([1, 2]) == Some(2)).toBe(true)
+    );
+  });
 
-describe("dropLast", ({test, _}) => {
-  open ListEx;
+  describe("dropLast", ({test, _}) => {
+    open ListEx;
 
-  test("empty", ({expect}) =>
-    expect.list(dropLast([])).toEqual([])
-  );
+    test("empty", ({expect}) =>
+      expect.list(dropLast([])).toEqual([])
+    );
 
-  test("one", ({expect}) =>
-    expect.list(dropLast([1])).toEqual([])
-  );
+    test("one", ({expect}) =>
+      expect.list(dropLast([1])).toEqual([])
+    );
 
-  test("many", ({expect}) => {
-    expect.list(dropLast([1, 2])).toEqual([1]);
-    expect.list(dropLast([1, 2, 3])).toEqual([1, 2]);
+    test("many", ({expect}) => {
+      expect.list(dropLast([1, 2])).toEqual([1]);
+      expect.list(dropLast([1, 2, 3])).toEqual([1, 2]);
+    });
+  });
+
+  describe("safeMap", ({test, _}) => {
+    test("empty", ({expect}) =>
+      expect.list(ListEx.safeMap(x => x, [])).toEqual([])
+    );
+
+    test("one", ({expect}) =>
+      expect.list(ListEx.safeMap(x => x, [1])).toEqual([1])
+    );
+
+    test("many", ({expect}) => {
+      expect.list(ListEx.safeMap(x => x, [1, 2, 3])).toEqual([1, 2, 3])
+    });
+
+    test("int_to_string", ({expect}) => {
+      expect.list(ListEx.safeMap(string_of_int, [1, 2, 3])).toEqual([
+        "1",
+        "2",
+        "3",
+      ])
+    });
+  });
+
+  describe("safeConcat", ({test, _}) => {
+    test("empty", ({expect}) =>
+      expect.list(ListEx.safeConcat([])).toEqual([])
+    );
+
+    test("one of one", ({expect}) =>
+      expect.list(ListEx.safeConcat([[1]])).toEqual([1])
+    );
+
+    test("one of many", ({expect}) => {
+      expect.list(ListEx.safeConcat([[1, 2, 3]])).toEqual([1, 2, 3])
+    });
+
+    test("many of one", ({expect}) => {
+      expect.list(ListEx.safeConcat([[1], [2], [3]])).toEqual([1, 2, 3])
+    });
+
+    test("many of many", ({expect}) => {
+      expect.list(ListEx.safeConcat([[1, 2, 3], [4, 5, 6], [7, 8, 9]])).
+        toEqual([
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+      ])
+    });
   });
 });
 
@@ -271,61 +328,6 @@ describe("StringEx", ({describe, _}) => {
       expect.int(charStart).toBe(61);
       expect.int(charEnd).toBe(68);
     });
-  });
-});
-
-describe("ListEx.safeMap", ({test, _}) => {
-  test("empty", ({expect}) =>
-    expect.list(ListEx.safeMap(x => x, [])).toEqual([])
-  );
-
-  test("one", ({expect}) =>
-    expect.list(ListEx.safeMap(x => x, [1])).toEqual([1])
-  );
-
-  test("many", ({expect}) => {
-    expect.list(ListEx.safeMap(x => x, [1, 2, 3])).toEqual([1, 2, 3])
-  });
-
-  test("int_to_string", ({expect}) => {
-    expect.list(ListEx.safeMap(string_of_int, [1, 2, 3])).toEqual([
-      "1",
-      "2",
-      "3",
-    ])
-  });
-});
-
-describe("ListEx.safeConcat", ({test, _}) => {
-  test("empty", ({expect}) =>
-    expect.list(ListEx.safeConcat([])).toEqual([])
-  );
-
-  test("one of one", ({expect}) =>
-    expect.list(ListEx.safeConcat([[1]])).toEqual([1])
-  );
-
-  test("one of many", ({expect}) => {
-    expect.list(ListEx.safeConcat([[1, 2, 3]])).toEqual([1, 2, 3])
-  });
-
-  test("many of one", ({expect}) => {
-    expect.list(ListEx.safeConcat([[1], [2], [3]])).toEqual([1, 2, 3])
-  });
-
-  test("many of many", ({expect}) => {
-    expect.list(ListEx.safeConcat([[1, 2, 3], [4, 5, 6], [7, 8, 9]])).
-      toEqual([
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-    ])
   });
 });
 
