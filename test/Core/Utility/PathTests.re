@@ -40,11 +40,10 @@ describe("Path", ({test, _}) => {
     List.iter(runCase, cases);
   });
 
-  test("toRelative", ({expect}) => {
-    // POSIX-style paths
+  test("toRelative (POSIX)", ({expect}) => {
+    if (!Sys.win32) {
     expect.string(
       Path.toRelative(
-        ~separator="/",
         ~base="/Applications",
         "/Applications/Onivim2.app",
       ),
@@ -55,7 +54,6 @@ describe("Path", ({test, _}) => {
 
     expect.string(
       Path.toRelative(
-        ~separator="/",
         ~base="/Applications/",
         "/Applications/Onivim2.app",
       ),
@@ -65,25 +63,28 @@ describe("Path", ({test, _}) => {
     );
 
     expect.string(
-      Path.toRelative(~separator="/", ~base="/", "/Applications/Onivim2.app"),
+      Path.toRelative(~base="/", "/Applications/Onivim2.app"),
     ).
       toEqual(
       "Applications/Onivim2.app",
     );
+    }
+  });
 
-    // Windows-style paths
-
-    expect.string(
-      Path.toRelative(~separator="\\", ~base="D:", "D:\\Onivim2"),
-    ).
-      toEqual(
-      "Onivim2",
-    );
-    expect.string(
-      Path.toRelative(~separator="\\", ~base="D:\\", "D:\\Onivim2"),
-    ).
-      toEqual(
-      "Onivim2",
-    );
+  test("toRelative (Windows)", ({expect}) => {
+    if (Sys.win32) {
+      expect.string(
+        Path.toRelative(~base="D:", "D:\\Onivim2"),
+      ).
+        toEqual(
+        "Onivim2",
+      );
+      expect.string(
+        Path.toRelative(~base="D:\\", "D:\\Onivim2"),
+      ).
+        toEqual(
+        "Onivim2",
+      );
+    };
   });
 });
