@@ -90,6 +90,126 @@ describe("ListEx", ({describe, _}) => {
       ])
     });
   });
+
+  describe("splice", ({test, _}) => {
+    test("empty", ({expect}) =>
+      expect.list(ListEx.splice(~start=0, ~deleteCount=0, ~additions=[], [])).
+        toEqual(
+        [],
+      )
+    );
+
+    test("start > source length", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=8, ~deleteCount=2, ~additions=[3, 4], [1, 2]),
+      ).
+        toEqual([
+        1,
+        2,
+        3,
+        4,
+      ])
+    );
+
+    test("delete first", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=0, ~deleteCount=1, ~additions=[], [1, 2, 3]),
+      ).
+        toEqual([
+        2,
+        3,
+      ])
+    );
+
+    test("delete last", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=2, ~deleteCount=1, ~additions=[], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        2,
+      ])
+    );
+
+    test("delete middle", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=1, ~deleteCount=1, ~additions=[], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        3,
+      ])
+    );
+
+    test("add first", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=0, ~deleteCount=0, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        9,
+        1,
+        2,
+        3,
+      ])
+    );
+
+    test("add last", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=3, ~deleteCount=0, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        2,
+        3,
+        9,
+      ])
+    );
+
+    test("add middle", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=1, ~deleteCount=0, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        9,
+        2,
+        3,
+      ])
+    );
+
+    test("replace first", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=0, ~deleteCount=1, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        9,
+        2,
+        3,
+      ])
+    );
+
+    test("replace last", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=2, ~deleteCount=1, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        2,
+        9,
+      ])
+    );
+
+    test("replace middle", ({expect}) =>
+      expect.list(
+        ListEx.splice(~start=1, ~deleteCount=1, ~additions=[9], [1, 2, 3]),
+      ).
+        toEqual([
+        1,
+        9,
+        3,
+      ])
+    );
+  });
 });
 
 describe("JsonEx", ({describe, _}) => {
