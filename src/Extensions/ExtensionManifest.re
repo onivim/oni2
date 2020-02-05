@@ -3,7 +3,6 @@
  *
  * Module to describing metadata about an extension
  */
-open Oni_Core.Utility;
 module Path = Rench.Path;
 
 module Json = Oni_Core.Json;

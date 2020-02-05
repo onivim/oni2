@@ -6,8 +6,6 @@
 
 open Oni_Core;
 
-module List = Utility.List;
-
 // MODEL
 
 // We group key presses in time together,

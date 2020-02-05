@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Oni_Model;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
 
@@ -39,7 +38,7 @@ let start =
   };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
-    let _ =
+    let _: unit => unit =
       Vim.AutoCommands.onDispatch((cmd, buffer) => {
         let bufferFileName =
           switch (Vim.Buffer.getFilename(buffer)) {
@@ -85,11 +84,15 @@ let start =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
       defaultConfigurationFileName
       |> getConfigurationFile
-      |> Result.bind(ConfigurationParser.ofFile)
       |> (
-        fun
-        | Ok(config) => dispatch(Actions.ConfigurationSet(config))
-        | Error(err) => Log.error("Error loading configuration file: " ++ err)
+        result =>
+          Stdlib.Result.bind(result, ConfigurationParser.ofFile)
+          |> (
+            fun
+            | Ok(config) => dispatch(Actions.ConfigurationSet(config))
+            | Error(err) =>
+              Log.error("Error loading configuration file: " ++ err)
+          )
       )
     });
 

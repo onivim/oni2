@@ -1,6 +1,5 @@
 module Core = Oni_Core;
 module Utility = Core.Utility;
-module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;

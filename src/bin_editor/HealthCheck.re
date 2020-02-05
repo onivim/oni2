@@ -30,14 +30,16 @@ let commonChecks = [
       Oniguruma.(
         {
           OnigRegExp.create("(@selector\\()(.*?)(\\))")
-          |> Result.map(OnigRegExp.search("@selector(windowWillClose:)", 0))
-          |> Result.map(result => {
+          |> Stdlib.Result.map(
+               OnigRegExp.search("@selector(windowWillClose:)", 0),
+             )
+          |> Stdlib.Result.map(result => {
                OnigRegExp.(
                  Match.getText(result[1]) == "@selector("
                  && Match.getText(result[3]) == ")"
                )
              })
-          |> Result.value(~default=false);
+          |> Stdlib.Result.value(~default=false);
         }
       );
     },

@@ -4,7 +4,6 @@
  * Model for working with the window title
  */
 open Oni_Core;
-open Utility;
 
 type titleSections =
   | Text(string, bool)

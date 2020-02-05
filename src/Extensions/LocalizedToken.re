@@ -2,8 +2,6 @@
  * LocalizedToken.re
  */
 
-open Oni_Core.Utility;
-
 module Json = Oni_Core.Json;
 
 [@deriving show]

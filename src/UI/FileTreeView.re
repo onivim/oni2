@@ -6,7 +6,6 @@ open Revery.UI;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
-module Option = Utility.Option;
 
 module Styles = {
   open Style;

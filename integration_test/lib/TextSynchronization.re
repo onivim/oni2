@@ -3,7 +3,6 @@
  */
 open EditorCoreTypes;
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 

@@ -4,7 +4,6 @@
  * In-memory text buffer representation
  */
 open EditorCoreTypes;
-module Option = Utility.Option;
 module ArrayEx = Utility.ArrayEx;
 
 type t = {

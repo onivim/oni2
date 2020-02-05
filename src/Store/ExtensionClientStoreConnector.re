@@ -9,7 +9,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 

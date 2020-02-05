@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 open Revery.Draw;
 

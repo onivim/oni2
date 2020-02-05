@@ -15,7 +15,6 @@ open Oni_Core.CamomileBundled.Camomile;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
-module Option = Utility.Option;
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Completions = Feature_LanguageSupport.Completions;
@@ -609,11 +608,11 @@ let%component make =
         style={Styles.bufferViewClipped(bufferPixelWidth)}
         render={canvasContext => {
           let fontMaybe =
-            Revery.Font.load(fontFamily) |> Utility.Result.to_option;
+            Revery.Font.load(fontFamily) |> Stdlib.Result.to_option;
 
           let lineNumberPaint =
             fontMaybe
-            |> Utility.Option.map(font => {
+            |> Option.map(font => {
                  let lineNumberPaint = Skia.Paint.make();
                  Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
                  Skia.Paint.setAntiAlias(lineNumberPaint, true);
@@ -628,7 +627,7 @@ let%component make =
 
           let tokenPaint =
             fontMaybe
-            |> Utility.Option.map(font => {
+            |> Option.map(font => {
                  let paint = Skia.Paint.make();
                  Skia.Paint.setTextEncoding(paint, GlyphId);
                  Skia.Paint.setAntiAlias(paint, true);
@@ -832,7 +831,7 @@ let%component make =
                 ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
                 cursorPosition,
               )
-              |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+              |> Option.iter((token: BufferViewTokenizer.t) => {
                    let range =
                      Range.{
                        start:
@@ -853,7 +852,7 @@ let%component make =
           };
 
           tokenPaint
-          |> Utility.Option.iter(((font, paint)) => {
+          |> Option.iter(((font, paint)) => {
                ImmediateList.render(
                  ~scrollY,
                  ~rowHeight,
@@ -916,7 +915,7 @@ let%component make =
             );
 
             lineNumberPaint
-            |> Utility.Option.iter(paint => {
+            |> Option.iter(paint => {
                  ImmediateList.render(
                    ~scrollY,
                    ~rowHeight,

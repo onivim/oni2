@@ -6,9 +6,6 @@
 open Oni_Core;
 open Rench;
 
-module Option = Utility.Option;
-module Result = Utility.Result;
-
 module Command = {
   [@deriving show]
   type t = {
