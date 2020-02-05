@@ -234,7 +234,6 @@
     "reasonFuzz": "github:CrossR/reasonFuzz#d36e084",
     "pesy": "0.4.1",
     "@opam/ppx_tools_versioned": "5.2.3",
-    "reason-fontkit": "2.7.0",
     "@opam/camomile": "1.0.1",
     "@opam/ocamlfind": "1.8.1",
     "@opam/biniou": "1.2.0",
@@ -242,7 +241,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#ed59d02",
+    "revery": "revery-ui/revery#63fff7c",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
@@ -253,8 +252,7 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
-    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
-    "reason-skia": "revery-ui/reason-skia#b588454"
+    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d"
   },
   "devDependencies": {
     "ocaml": "~4.8.1",
