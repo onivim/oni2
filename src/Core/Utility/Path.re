@@ -11,8 +11,8 @@ let hasTrailingSeparator = path => {
   };
 };
 
-let toRelative = (~base, path) => {
-  let base = hasTrailingSeparator(base) ? base : base ++ Filename.dir_sep;
+let toRelative = (~separator=Filename.dir_sep, ~base, path) => {
+  let base = hasTrailingSeparator(base) ? base : base ++ separator;
   Str.replace_first(Str.regexp_string(base), "", path);
 };
 
