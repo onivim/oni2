@@ -241,7 +241,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#63fff7c",
+    "revery": "revery-ui/revery#26f25df",
     "reason-libvim": "onivim/reason-libvim#3782892",
     "editor-core-types": "onivim/editor-core-types#16dd98e",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
@@ -252,7 +252,8 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
-    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d"
+    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
+    "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520"
   },
   "devDependencies": {
     "ocaml": "~4.8.1",

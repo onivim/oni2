@@ -1,5 +1,5 @@
 {
-  "checksum": "96d4da57ee9383574bb29240481f4b52",
+  "checksum": "d03a3bc6e3baeb333933759ee7d0e65f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -118,13 +118,13 @@
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#63fff7c@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#63fff7c@d41d8cd9",
+    "revery@github:revery-ui/revery#26f25df@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#26f25df@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#63fff7c",
+      "version": "github:revery-ui/revery#26f25df",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#63fff7c" ]
+        "source": [ "github:revery-ui/revery#26f25df" ]
       },
       "overrides": [],
       "dependencies": [
@@ -133,9 +133,9 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#7a753c6@d41d8cd9",
+        "reason-skia@github:revery-ui/reason-skia#69743dc@d41d8cd9",
         "reason-sdl2@2.10.3016@d41d8cd9",
-        "reason-harfbuzz@1.91.5003@d41d8cd9",
+        "reason-harfbuzz@github:revery-ui/reason-harfbuzz#0848520@d41d8cd9",
         "reason-gl-matrix@0.9.9306@d41d8cd9",
         "reason-font-manager@2.0.1@d41d8cd9", "flex@1.2.2@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
@@ -312,13 +312,13 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-skia@github:revery-ui/reason-skia#7a753c6@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#7a753c6@d41d8cd9",
+    "reason-skia@github:revery-ui/reason-skia#69743dc@d41d8cd9": {
+      "id": "reason-skia@github:revery-ui/reason-skia#69743dc@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#7a753c6",
+      "version": "github:revery-ui/reason-skia#69743dc",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#7a753c6" ]
+        "source": [ "github:revery-ui/reason-skia#69743dc" ]
       },
       "overrides": [],
       "dependencies": [
@@ -414,15 +414,14 @@
         "ocaml@4.8.1000@d41d8cd9", "@opam/merlin@opam:3.3.3@d653b06a"
       ]
     },
-    "reason-harfbuzz@1.91.5003@d41d8cd9": {
-      "id": "reason-harfbuzz@1.91.5003@d41d8cd9",
+    "reason-harfbuzz@github:revery-ui/reason-harfbuzz#0848520@d41d8cd9": {
+      "id":
+        "reason-harfbuzz@github:revery-ui/reason-harfbuzz#0848520@d41d8cd9",
       "name": "reason-harfbuzz",
-      "version": "1.91.5003",
+      "version": "github:revery-ui/reason-harfbuzz#0848520",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-harfbuzz/-/reason-harfbuzz-1.91.5003.tgz#sha1:4966a99d2460a07b9d264bcaae5866f40704ad6b"
-        ]
+        "source": [ "github:revery-ui/reason-harfbuzz#0848520" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1070,7 +1069,7 @@
       "overrides": [],
       "dependencies": [
         "timber@github:glennsl/timber#ae065bb@d41d8cd9",
-        "revery@github:revery-ui/revery#63fff7c@d41d8cd9",
+        "revery@github:revery-ui/revery#26f25df@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
