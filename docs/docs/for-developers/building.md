@@ -29,6 +29,7 @@ the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installin
 Some Linux distributions may need other packages:
 
  - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
+ - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel` for `libvim`
 
 ## Build and Run
 
