@@ -30,7 +30,7 @@ let item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
   let color = theme.activityBarForeground;
 
   <Sneakable onClick style=Styles.item>
-    <FontIcon backgroundColor color icon />
+    <FontIcon backgroundColor color fontSize=22. icon />
   </Sneakable>;
 };
 
