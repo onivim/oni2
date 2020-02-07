@@ -6,7 +6,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
@@ -32,9 +31,23 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
+    })
+  // acceptInputCommand: option(_),
+  // statusBarCommands: option(_),
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Uri.t),
     });
-// acceptInputCommand: option(_),
-// statusBarCommands: option(_),
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -175,7 +188,7 @@ let start =
     | ("MainThreadSCM", "$registerSourceControl", args) =>
       switch (args) {
       | [`Int(handle), `String(id), `String(label), rootUri] =>
-        let rootUri = Core.Uri.of_yojson(rootUri) |> Utility.Result.to_option;
+        let rootUri = Core.Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
         dispatch(RegisterSourceControl({handle, id, label, rootUri}));
       | _ =>
         Log.error(
@@ -200,6 +213,51 @@ let start =
             features |> member("commitTemplate") |> to_string_option,
         }),
       );
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$registerTextContentProvider",
+        [`Int(handle), `String(scheme)],
+      ) =>
+      dispatch(RegisterTextContentProvider({handle, scheme}));
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$unregisterTextContentProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterTextContentProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$registerDecorationProvider",
+        [`Int(handle), `String(label)],
+      ) =>
+      dispatch(RegisterDecorationProvider({handle, label}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$unregisterDecorationProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterDecorationProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$onDidChange",
+        [`Int(handle), `List(resources)],
+      ) =>
+      let uris =
+        resources
+        |> List.filter_map(json =>
+             Uri.of_yojson(json) |> Stdlib.Result.to_option
+           );
+      dispatch(DecorationsDidChange({handle, uris}));
       Ok(None);
 
     | (scope, method, argsAsJson) =>
@@ -277,6 +335,46 @@ let provideCompletions = (id, uri, position, client) => {
   promise;
 };
 
+let provideDecorations = (handle, uri, client) => {
+  let decodeItem =
+    fun
+    | (
+        _requestId,
+        `List([
+          `Int(_),
+          `Bool(_),
+          `String(tooltip),
+          `String(letter),
+          `Assoc([("id", `String(color))]),
+          `String(source),
+        ]),
+      ) =>
+      Some(SCMDecoration.{handle, tooltip, letter, color, source})
+    | (_, json) => {
+        Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
+        None;
+      };
+
+  ExtHostTransport.request(
+    ~msgType=MessageType.requestJsonArgsWithCancellation,
+    client,
+    Out.Decorations.provideDecorations(handle, uri),
+    json =>
+    switch (json) {
+    | `Assoc(items) => items |> List.filter_map(decodeItem)
+
+    | _ =>
+      failwith(
+        Printf.sprintf(
+          "Unexpected response from provideDecorations for %s: \n  %s",
+          Uri.toString(uri),
+          Yojson.Safe.to_string(json),
+        ),
+      )
+    }
+  );
+};
+
 let provideDefinition = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let json =
@@ -335,6 +433,18 @@ let provideDocumentSymbols = (id, uri, client) => {
   promise;
 };
 
+let provideOriginalResource = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.SCM.provideOriginalResource(id, uri),
+      json =>
+      Core.Uri.of_yojson(json) |> Stdlib.Result.get_ok
+    );
+  promise;
+};
+
 let provideReferences = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(LocationWithUri.t) = [];
@@ -351,6 +461,20 @@ let provideReferences = (id, uri, position, client) => {
       client,
       Out.LanguageFeatures.provideReferences(id, uri, position),
       f,
+    );
+  promise;
+};
+
+let provideTextDocumentContent = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.DocumentContent.provideTextDocumentContent(id, uri),
+      fun
+      | `String(content) => content
+      | json =>
+        failwith("Unexpected response: " ++ Yojson.Safe.to_string(json)),
     );
   promise;
 };

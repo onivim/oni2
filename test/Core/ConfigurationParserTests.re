@@ -4,6 +4,7 @@ open Oni_Core.ConfigurationValues;
 
 module Configuration = Oni_Core.Configuration;
 module ConfigurationParser = Oni_Core.ConfigurationParser;
+module Constants = Oni_Core.Constants;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
   describe("per-filetype handling", ({test, _}) => {
@@ -114,6 +115,41 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
+  let getExpectedValue = (valueGetter, configuration) => {
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(parsedConfig) => Configuration.getValue(valueGetter, parsedConfig)
+    | Error(_) => failwith("Unable to parse configuration: " ++ configuration)
+    };
+  };
+
+  let getFontSize = getExpectedValue(c => c.editorFontSize);
+
+  describe("editor.fontSize", ({test, _}) => {
+    test("parses string if possible", ({expect}) => {
+      let fontSize =
+        getFontSize({|
+        { "editor.fontSize": "12" }
+      |});
+      expect.float(fontSize).toBeCloseTo(12.);
+    });
+
+    test("uses default size if unable to parse", ({expect}) => {
+      let fontSize =
+        getFontSize({|
+        { "editor.fontSize": "true" }
+      |});
+      expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
+    });
+
+    test("does not allow value lower than minimum size", ({expect}) => {
+      let fontSize =
+        getFontSize({|
+        { "editor.fontSize": 1 }
+      |});
+      expect.float(fontSize).toBeCloseTo(Constants.minimumFontSize);
+    });
+  });
+
   test("vimUseSystemClipboard value", ({expect}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
@@ -190,6 +226,22 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
         80,
         120,
+      ])
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("list of strings", ({expect}) => {
+    let configuration = {|
+     { "experimental.viml": ["first thing", "second thing", "third thing"] }
+     |};
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.list(Configuration.getValue(c => c.experimentalVimL, v)).toEqual([
+        "first thing",
+        "second thing",
+        "third thing",
       ])
     | Error(_) => expect.bool(false).toBe(true)
     };

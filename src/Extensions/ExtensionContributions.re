@@ -4,129 +4,241 @@
  * Types for VSCode Extension contribution points
  */
 open Oni_Core;
-open Utility;
 open Rench;
 
-module Commands = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+module Command = {
+  [@deriving show]
   type t = {
     command: string,
     title: LocalizedToken.t,
-    category: [@default None] option(string),
+    category: option(string),
   };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          command: field.required("command", string),
+          title: field.required("title", LocalizedToken.decode),
+          category: field.optional("category", string),
+        }
+      )
+    );
+
+  let encode = command =>
+    Json.Encode.(
+      obj([
+        ("command", command.command |> string),
+        ("title", null),
+        ("category", command.category |> option(string)),
+      ])
+    );
 };
 
 module Configuration = {
   [@deriving show]
-  type config = {
+  type t = list(property)
+
+  and property = {
     name: string,
-    [@opaque]
-    default: Yojson.Safe.json,
+    default: [@opaque] Json.t,
     // TODO:
     // type
     // description
     // scope
   };
 
-  let config_of_yojson_exn = (~name, json) => {
-    Yojson.Safe.(
-      {
-        let default = Util.member("default", json);
-        {name, default};
-      }
-    );
+  module Decode = {
+    open Json.Decode;
+
+    let property = name =>
+      field_opt("default", value)
+      |> default(Json.Encode.null)
+      |> map(default => {name, default});
+
+    let properties = key_value_pairs_seq(property);
+
+    let configuration = {
+      let simple = field("properties", properties);
+
+      one_of([
+        ("single", simple),
+        ("list", list(simple) |> map(List.flatten)),
+      ]);
+    };
   };
 
-  [@deriving show]
-  type t = list(config);
-
-  let of_yojson_exn = json => {
-    Yojson.Safe.(
-      {
-        let parseConfigSection = json => {
-          let properties = Util.member("properties", json) |> Util.to_assoc;
-          properties
-          |> List.map(prop => {
-               let (key, configJson) = prop;
-               config_of_yojson_exn(~name=key, configJson);
-             });
-        };
-
-        switch (json) {
-        | `List(items) => List.map(parseConfigSection, items) |> List.flatten
-        | json => parseConfigSection(json)
-        };
-      }
-    );
-  };
-
-  let of_yojson = json =>
-    ResultEx.guard(() => of_yojson_exn(json))
-    |> Result.map_error(_ => "Error parsing");
-
-  let to_yojson = _v => `Null;
+  let decode = Decode.configuration;
 };
 
 module Language = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+  [@deriving show]
   type t = {
     id: string,
-    extensions: [@default []] list(string),
-    aliases: [@default []] list(string),
-    configuration: [@default None] option(string),
+    extensions: list(string),
+    aliases: list(string),
+    configuration: option(string),
   };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          extensions: field.withDefault("extensions", [], list(string)),
+          aliases: field.withDefault("aliases", [], list(string)),
+          configuration: field.optional("configuration", string),
+        }
+      )
+    );
+
+  let encode = language =>
+    Json.Encode.(
+      obj([
+        ("id", language.id |> string),
+        ("extensions", language.extensions |> list(string)),
+        ("aliases", language.aliases |> list(string)),
+        ("configuration", language.configuration |> option(string)),
+      ])
+    );
 };
 
 module Grammar = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+  [@deriving show]
   type t = {
-    language: [@default None] option(string),
+    language: option(string),
     scopeName: string,
     path: string,
-    treeSitterPath: [@default None] option(string),
+    treeSitterPath: option(string),
   };
 
-  let toAbsolutePath = (path: string, g: t) => {
-    let grammarPath = Path.join(path, g.path);
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          language: field.optional("language", string),
+          scopeName: field.required("scopeName", string),
+          path: field.required("path", string),
+          treeSitterPath: field.optional("treeSitterPath", string),
+        }
+      )
+    );
+
+  let encode = grammar =>
+    Json.Encode.(
+      obj([
+        ("language", grammar.language |> option(string)),
+        ("scopeName", grammar.scopeName |> string),
+        ("path", grammar.path |> string),
+        ("treeSitterPath", grammar.treeSitterPath |> option(string)),
+      ])
+    );
+
+  let toAbsolutePath = (base: string, grammar) => {
+    let path = Path.join(base, grammar.path);
 
     let treeSitterPath =
-      switch (g.treeSitterPath) {
-      | Some(v) => Some(Path.join(path, v))
-      | None => None
-      };
+      grammar.treeSitterPath |> Option.map(Path.join(base));
 
-    {...g, path: grammarPath, treeSitterPath};
+    {...grammar, path, treeSitterPath};
   };
 };
 
 module Theme = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+  [@deriving show]
   type t = {
     label: string,
     uiTheme: string,
     path: string,
   };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          label: field.required("label", string),
+          uiTheme: field.required("uiTheme", string),
+          path: field.required("path", string),
+        }
+      )
+    );
+
+  let encode = theme =>
+    Json.Encode.(
+      obj([
+        ("label", theme.label |> string),
+        ("uiTheme", theme.uiTheme |> string),
+        ("path", theme.path |> string),
+      ])
+    );
 };
 
 module IconTheme = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
+  [@deriving show]
   type t = {
     id: string,
     label: string,
     path: string,
   };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          label: field.required("label", string),
+          path: field.required("path", string),
+        }
+      )
+    );
+
+  let encode = theme =>
+    Json.Encode.(
+      obj([
+        ("id", theme.id |> string),
+        ("label", theme.label |> string),
+        ("path", theme.path |> string),
+      ])
+    );
 };
 
-[@deriving (show, yojson({strict: false, exn: true}))]
+[@deriving show]
 type t = {
-  commands: [@default []] list(Commands.t),
-  languages: [@default []] list(Language.t),
-  grammars: [@default []] list(Grammar.t),
-  themes: [@default []] list(Theme.t),
-  iconThemes: [@default []] list(IconTheme.t),
-  [@default None]
-  configuration: option(Configuration.t),
+  commands: list(Command.t),
+  languages: list(Language.t),
+  grammars: list(Grammar.t),
+  themes: list(Theme.t),
+  iconThemes: list(IconTheme.t),
+  configuration: Configuration.t,
 };
+
+let decode =
+  Json.Decode.(
+    obj(({field, _}) =>
+      {
+        commands: field.withDefault("commands", [], list(Command.decode)),
+        languages: field.withDefault("languages", [], list(Language.decode)),
+        grammars: field.withDefault("grammars", [], list(Grammar.decode)),
+        themes: field.withDefault("themes", [], list(Theme.decode)),
+        iconThemes:
+          field.withDefault("iconThemes", [], list(IconTheme.decode)),
+        configuration:
+          field.withDefault("configuration", [], Configuration.decode),
+      }
+    )
+  );
+
+let encode = data =>
+  Json.Encode.(
+    obj([
+      ("commands", data.commands |> list(Command.encode)),
+      ("languages", data.languages |> list(Language.encode)),
+      ("grammars", data.grammars |> list(Grammar.encode)),
+      ("themes", data.themes |> list(Theme.encode)),
+      ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
+      ("configuration", null),
+    ])
+  );
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);
@@ -156,7 +268,7 @@ let _remapIconThemes = (path: string, themes: list(IconTheme.t)) => {
 let _localizeCommands = (loc, cmds) => {
   cmds
   |> List.map(cmd =>
-       Commands.{...cmd, title: LocalizedToken.localize(loc, cmd.title)}
+       Command.{...cmd, title: LocalizedToken.localize(loc, cmd.title)}
      );
 };
 
@@ -171,8 +283,4 @@ let remapPaths = (path: string, contributions: t) => {
 let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
   ...contributions,
   commands: _localizeCommands(locDictionary, contributions.commands),
-};
-
-let getConfiguration = (manifest: t) => {
-  Utility.Option.value(~default=[], manifest.configuration);
 };

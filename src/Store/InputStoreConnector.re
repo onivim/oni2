@@ -6,11 +6,11 @@
 
 open Oni_Core;
 open Oni_Input;
-open Utility;
 
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
+module Completions = Feature_LanguageSupport.Completions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
@@ -36,7 +36,7 @@ let conditionsOfState = (state: State.t) => {
   | None => ()
   };
 
-  if (Model.Completions.isActive(state.completions)) {
+  if (Completions.isActive(state.completions)) {
     Hashtbl.add(ret, "suggestWidgetVisible", true);
   };
 

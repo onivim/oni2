@@ -26,7 +26,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
+    height(Core.Constants.tabHeight),
   ];
 };
 

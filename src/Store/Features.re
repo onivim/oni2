@@ -29,6 +29,20 @@ let update = (state: State.t, action: Actions.t) =>
     | None => (state, Effect.none)
     }
 
+  | NotifyKeyPressed(time, key) =>
+    switch (state.keyDisplayer) {
+    | Some(model) when Oni_Input.Filter.filter(key) => (
+        {
+          ...state,
+          keyDisplayer:
+            Some(Oni_Components.KeyDisplayer.add(~time, key, model)),
+        },
+        Effect.none,
+      )
+
+    | _ => (state, Effect.none)
+    }
+
   | _ => (state, Effect.none)
   };
 

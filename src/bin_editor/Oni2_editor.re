@@ -16,7 +16,6 @@ module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, cli) => {
@@ -130,7 +129,7 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _ =
+    let _: unit => unit =
       Tick.interval(
         _dt =>
           if (isDirty^) {
@@ -141,12 +140,6 @@ if (cliOptions.syntaxHighlightService) {
           },
         Time.seconds(0),
       );
-
-    let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
-    };
-
-    let getTime = () => Time.now() |> Time.toFloatSeconds;
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -170,10 +163,8 @@ if (cliOptions.syntaxHighlightService) {
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
-        ~getTime,
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
-        ~getScaleFactor,
         ~getZoom,
         ~setZoom,
         ~setTitle,

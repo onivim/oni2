@@ -7,8 +7,12 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
+
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
+
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
 
 type tabAction = unit => unit;
 
@@ -54,7 +58,7 @@ let make =
       backgroundColor(theme.editorBackground),
       borderTop(~color=borderColor, ~width=2),
       borderBottom(~color=theme.editorBackground, ~width=2),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       minWidth(minWidth_),
       flexDirection(`Row),
       justifyContent(`Center),
@@ -79,7 +83,7 @@ let make =
   let iconContainerStyle =
     Style.[
       width(32),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       alignItems(`Center),
       justifyContent(`Center),
     ];
@@ -101,7 +105,7 @@ let make =
         backgroundColor={theme.editorBackground}
         color={v.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
-        fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
+        fontSize={uiFont.fontSize *. 1.5}
       />
     | None => React.empty
     };
@@ -133,7 +137,7 @@ let make =
         icon
         backgroundColor={theme.editorBackground}
         color={theme.tabActiveForeground}
-        fontSize={modified ? 10 : 12}
+        fontSize={modified ? 10. : 12.}
       />
     </Sneakable>
   </View>;

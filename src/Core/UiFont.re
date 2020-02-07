@@ -4,7 +4,7 @@ type t = {
   fontFileBold: string,
   fontFileSemiBold: string,
   fontFileSemiBoldItalic: string,
-  fontSize: int,
+  fontSize: float,
 };
 
 let create =
@@ -32,6 +32,6 @@ let default =
     ~fontFileItalic="Inter-UI-Italic.ttf",
     ~fontFileSemiBold="Inter-UI-Medium.ttf",
     ~fontFileSemiBoldItalic="Inter-UI-MediumItalic.ttf",
-    ~fontSize=12,
+    ~fontSize=12.,
     (),
   );

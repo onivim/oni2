@@ -4,8 +4,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Option = Utility.Option;
-
 module Constants = {
   let menuWidth = 200;
   // let maxMenuHeight = 600;
@@ -49,7 +47,7 @@ type t('data) = {
 
 module MenuItem = {
   module Constants = {
-    let fontSize = 12;
+    let fontSize = 12.;
   };
 
   module Styles = {

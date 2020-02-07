@@ -21,6 +21,12 @@ let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;
 
+let getOriginalUri: t => option(Uri.t);
+let setOriginalUri: (Uri.t, t) => t;
+
+let getOriginalLines: t => option(array(string));
+let setOriginalLines: (array(string), t) => t;
+
 let getVersion: t => int;
 let setVersion: (int, t) => t;
 

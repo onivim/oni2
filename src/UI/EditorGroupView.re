@@ -9,10 +9,11 @@
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 module Model = Oni_Model;
 
 module Window = WindowManager;
+
+module EditorSurface = Feature_Editor.EditorSurface;
 
 let noop = () => ();
 
@@ -115,17 +116,122 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
+        let onDimensionsChanged =
+            ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+          GlobalContext.current().notifyEditorSizeChanged(
+            ~editorGroupId=editorGroup.editorGroupId,
+            ~width,
+            ~height,
+            (),
+          );
+        };
+        let onScroll = deltaY => {
+          let () =
+            GlobalContext.current().editorScrollDelta(
+              ~editorId=editor.editorId,
+              ~deltaY,
+              (),
+            );
+          ();
+        };
+        let onCursorChange = cursor =>
+          GlobalContext.current().dispatch(
+            Actions.EditorCursorMove(editor.editorId, [cursor]),
+          );
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
         | BufferRenderer.Editor =>
+          let activeBuffer = Selectors.getBufferForEditor(state, editor);
+          let rulers =
+            Configuration.getValue(c => c.editorRulers, state.configuration);
+          let showLineNumbers =
+            Configuration.getValue(
+              c => c.editorLineNumbers,
+              state.configuration,
+            );
+          let fontSize =
+            Configuration.getValue(
+              c => c.editorFontSize,
+              state.configuration,
+            );
+          let showMinimap =
+            Configuration.getValue(
+              c => c.editorMinimapEnabled,
+              state.configuration,
+            );
+          let maxMinimapCharacters =
+            Configuration.getValue(
+              c => c.editorMinimapMaxColumn,
+              state.configuration,
+            );
+          let matchingPairsEnabled =
+            Selectors.getConfigurationValue(
+              state, Option.value(activeBuffer, ~default=Buffer.empty), c =>
+              c.editorMatchBrackets
+            );
+          let shouldRenderWhitespace =
+            Configuration.getValue(
+              c => c.editorRenderWhitespace,
+              state.configuration,
+            );
+          let shouldRenderIndentGuides =
+            Configuration.getValue(
+              c => c.editorRenderIndentGuides,
+              state.configuration,
+            );
+          let shouldHighlightActiveIndentGuides =
+            Configuration.getValue(
+              c => c.editorHighlightActiveIndentGuide,
+              state.configuration,
+            );
+          let showMinimapSlider =
+            Configuration.getValue(
+              c => c.editorMinimapShowSlider,
+              state.configuration,
+            );
+          let hoverDelay =
+            Configuration.getValue(
+              c => c.editorHoverDelay,
+              state.configuration,
+            )
+            |> Revery.Time.ms;
+          let isHoverEnabled =
+            Configuration.getValue(
+              c => c.editorHoverEnabled,
+              state.configuration,
+            );
+
           <EditorSurface
             isActiveSplit=isActive
-            editorGroup
             metrics
             editor
-            state
-          />
+            activeBuffer
+            onDimensionsChanged
+            onCursorChange
+            onScroll
+            theme
+            rulers
+            showLineNumbers
+            editorFont={state.editorFont}
+            fontSize
+            mode
+            showMinimap
+            maxMinimapCharacters
+            matchingPairsEnabled
+            bufferHighlights={state.bufferHighlights}
+            bufferSyntaxHighlights={state.bufferSyntaxHighlights}
+            diagnostics={state.diagnostics}
+            completions={state.completions}
+            tokenTheme={state.tokenTheme}
+            definition={state.definition}
+            shouldRenderWhitespace
+            showMinimapSlider
+            hoverDelay
+            isHoverEnabled
+            shouldRenderIndentGuides
+            shouldHighlightActiveIndentGuides
+          />;
         | BufferRenderer.Welcome => <WelcomeView state />
         };
       | None => React.empty

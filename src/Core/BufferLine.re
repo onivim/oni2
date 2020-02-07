@@ -3,8 +3,6 @@
  *
  * In-memory text buffer representation
  */
-module Option = Utility.Option;
-
 exception OutOfBounds;
 
 open CamomileBundled.Camomile;

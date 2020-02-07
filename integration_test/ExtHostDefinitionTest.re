@@ -2,6 +2,8 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Feature_LanguageSupport;
+open Feature_Editor;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
