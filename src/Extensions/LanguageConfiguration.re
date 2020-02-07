@@ -35,7 +35,7 @@ module AutoClosingPair = {
   
   };
 
-  let decode = Decode.decode;
+  let decode = Decode.tuple;
 };
 
 type t = {
