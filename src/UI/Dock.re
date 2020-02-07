@@ -14,18 +14,22 @@ module Styles = {
     bottom(0),
     backgroundColor(theme.activityBarBackground),
     alignItems(`Center),
-    width(50),
     transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let button = [marginVertical(24)];
+  let item = [
+    height(50),
+    width(50),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 };
 
 let item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
   let backgroundColor = theme.activityBarBackground;
   let color = theme.activityBarForeground;
 
-  <Sneakable onClick style=Styles.button>
+  <Sneakable onClick style=Styles.item>
     <FontIcon backgroundColor color icon />
   </Sneakable>;
 };
