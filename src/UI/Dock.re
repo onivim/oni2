@@ -18,24 +18,29 @@ module Styles = {
     transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let item = (~isHovered, ~theme: Theme.t) => [
+  let item = (~isHovered, ~isActive, ~theme: Theme.t) => [
     height(50),
     width(50),
     justifyContent(`Center),
     alignItems(`Center),
+    borderLeft(
+      ~width=2,
+      ~color=
+        isActive ? theme.oniNormalModeBackground : Colors.transparentWhite,
+    ),
     backgroundColor(
       isHovered ? theme.menuSelectionBackground : Colors.transparentWhite,
     ),
   ];
 };
 
-let%component item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
+let%component item = (~onClick, ~theme: Theme.t, ~isActive, ~icon, ()) => {
   let%hook (isHovered, setHovered) = Hooks.state(false);
   let onMouseOver = _ => setHovered(_ => true);
   let onMouseOut = _ => setHovered(_ => false);
 
   <View onMouseOver onMouseOut>
-    <Sneakable onClick style={Styles.item(~isHovered, ~theme)}>
+    <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
       <FontIcon color={theme.activityBarForeground} fontSize=22. icon />
     </Sneakable>
   </View>;
@@ -65,13 +70,36 @@ let animation =
     |> delay(Revery.Time.milliseconds(75))
   );
 
-let%component make = (~theme, ()) => {
+let%component make = (~theme, ~sideBar: SideBar.t, ~pane: Pane.t, ()) => {
   let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
+  let isSidebarVisible = it => SideBar.isVisible(it, sideBar);
+  let isPaneVisible = it => Pane.isVisible(it, pane);
+
   <View style={Styles.container(~theme, ~offsetX)}>
-    <item onClick=onExplorerClick theme icon=FontAwesome.copy />
-    <item onClick=onSearchClick theme icon=FontAwesome.search />
-    <item onClick=onSCMClick theme icon=FontAwesome.codeBranch />
-    <item onClick=onExtensionsClick theme icon=FontAwesome.thLarge />
+    <item
+      onClick=onExplorerClick
+      theme
+      isActive={isSidebarVisible(FileExplorer)}
+      icon=FontAwesome.copy
+    />
+    <item
+      onClick=onSearchClick
+      theme
+      isActive={isPaneVisible(Search)}
+      icon=FontAwesome.search
+    />
+    <item
+      onClick=onSCMClick
+      theme
+      isActive={isSidebarVisible(SCM)}
+      icon=FontAwesome.codeBranch
+    />
+    <item
+      onClick=onExtensionsClick
+      theme
+      isActive={isSidebarVisible(Extensions)}
+      icon=FontAwesome.thLarge
+    />
   </View>;
 };

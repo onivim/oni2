@@ -47,6 +47,7 @@ let make = (~state: State.t, ()) => {
         editorFont,
         sideBar,
         zenMode,
+        pane,
         _,
       } = state;
 
@@ -70,7 +71,7 @@ let make = (~state: State.t, ()) => {
       c.workbenchSideBarVisible
     )
     && !zenMode
-    && SideBar.isOpen(sideBar);
+    && sideBar.isOpen;
 
   let statusBarHeight = statusBarVisible ? 25 : 0;
 
@@ -84,7 +85,7 @@ let make = (~state: State.t, ()) => {
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock theme />,
+          <Dock theme sideBar pane />,
           <WindowHandle direction=Vertical theme />,
         ])
       : React.empty;
