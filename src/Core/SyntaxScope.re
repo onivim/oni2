@@ -1,44 +1,31 @@
-module StringUtil = Utility.StringUtil;
+module StringEx = Utility.StringEx;
 
 // Type defining a simplified 'syntax scope' of a token -
 // is it a comment, string, both, or neither?
 // This is important for features like auto-closing pairs -
 // we may not care to close certain characters in contexts like strings or comments.
-type t = 
-| None
-| String
-| Comment
-| StringAndComment;
+type t = {
+	isComment: bool,
+	isString: bool,
+};
+
+let none = { isComment: false, isString: false };
 
 let ofScopes = (scopes: list(string)) => {
 	let anyStrings = scopes
-	|> List.exists((scope) => StringUtil.startsWith(~prefix="string", scope));
+	|> List.exists((scope) => StringEx.startsWith(~prefix="string", scope));
 
 	let anyComments = scopes
-	|> List.exists((scope) => StringUtil.startsWith(~prefix="comments", scope));
+	|> List.exists((scope) => StringEx.startsWith(~prefix="comments", scope));
 
-	if (anyStrings && anyComments) {
-		StringAndComment
-	} else if(anyStrings) {
-		String
-	} else if (anyComments) {
-		Comment
-	} else {
-		StringAndComment
-	}
+	let isString = anyStrings;
+	let isComment = anyComments;
+	{ isString, isComment };
 };
 
 let ofScope = scope => {
-	let isString = StringUtil.startsWith(~prefix="string", scope);
-	let isComment = StringUtil.startsWith(~prefix="comments", scope);
+	let isString = StringEx.startsWith(~prefix="string", scope);
+	let isComment = StringEx.startsWith(~prefix="comments", scope);
+	{ isString, isComment }
 
-	if (isString && isComment) {
-		StringAndComment
-	} else if(isString) {
-		String
-	} else if (isComment) {
-		Comment
-	} else {
-		StringAndComment
-	}
 }
