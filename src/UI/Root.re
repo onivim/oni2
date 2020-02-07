@@ -84,7 +84,7 @@ let make = (~state: State.t, ()) => {
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock state />,
+          <Dock theme />,
           <WindowHandle direction=Vertical theme />,
         ])
       : React.empty;

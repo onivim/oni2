@@ -1,11 +1,34 @@
 open Revery.UI;
 
+open Oni_Core;
 open Oni_Model;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
-let button = Style.[marginVertical(24)];
+module Styles = {
+  open Style;
+
+  let container = (~theme: Theme.t, ~offsetX) => [
+    top(0),
+    bottom(0),
+    backgroundColor(theme.activityBarBackground),
+    alignItems(`Center),
+    width(50),
+    transform(Transform.[TranslateX(offsetX)]),
+  ];
+
+  let button = [marginVertical(24)];
+};
+
+let item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
+  let backgroundColor = theme.activityBarBackground;
+  let color = theme.activityBarForeground;
+
+  <Sneakable onClick style=Styles.button>
+    <FontIcon backgroundColor color icon />
+  </Sneakable>;
+};
 
 let onExplorerClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
@@ -31,33 +54,13 @@ let animation =
     |> delay(Revery.Time.milliseconds(75))
   );
 
-let%component make = (~state: State.t, ()) => {
-  let bg = state.theme.activityBarBackground;
-  let fg = state.theme.activityBarForeground;
+let%component make = (~theme, ()) => {
+  let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
-  let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
-
-  <View
-    style=Style.[
-      top(0),
-      bottom(0),
-      backgroundColor(bg),
-      alignItems(`Center),
-      width(50),
-      transform(Transform.[TranslateX(transition)]),
-    ]>
-    <Sneakable onClick=onExplorerClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.copy />
-    </Sneakable>
-    <Sneakable onClick=onSearchClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
-    </Sneakable>
-    <Sneakable onClick=onSCMClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.codeBranch />
-    </Sneakable>
-    <Sneakable onClick=onExtensionsClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.thLarge />
-    </Sneakable>
+  <View style={Styles.container(~theme, ~offsetX)}>
+    <item onClick=onExplorerClick theme icon=FontAwesome.copy />
+    <item onClick=onSearchClick theme icon=FontAwesome.search />
+    <item onClick=onSCMClick theme icon=FontAwesome.codeBranch />
+    <item onClick=onExtensionsClick theme icon=FontAwesome.thLarge />
   </View>;
 };
