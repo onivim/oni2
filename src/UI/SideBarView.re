@@ -51,12 +51,14 @@ let%component make = (~state: State.t, ()) => {
   let title =
     switch (sideBarType) {
     | FileExplorer => "Explorer"
+    | SCM => "Source Control"
     | Extensions => "Extensions"
     };
 
   let elem =
     switch (sideBarType) {
     | FileExplorer => <FileExplorerView state />
+    | SCM => <SCMPane state />
     | Extensions => <ExtensionListView state />
     };
 

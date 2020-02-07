@@ -1,5 +1,6 @@
 type sideBarType =
   | FileExplorer
+  | SCM
   | Extensions;
 
 type t;

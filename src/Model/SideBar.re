@@ -1,5 +1,6 @@
 type sideBarType =
   | FileExplorer
+  | SCM
   | Extensions;
 
 type t = {
@@ -7,7 +8,7 @@ type t = {
   activeType: sideBarType,
 };
 
-let initial = {isOpen: true, activeType: FileExplorer};
+let initial = {isOpen: true, activeType: SCM};
 
 let setOpen = sideBarType => {isOpen: true, activeType: sideBarType};
 

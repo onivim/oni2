@@ -2,4 +2,5 @@
 type action =
   | FileExplorerClick
   | SearchClick
+  | SCMClick
   | ExtensionsClick;

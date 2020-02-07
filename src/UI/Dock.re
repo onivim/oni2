@@ -15,6 +15,10 @@ let onSearchClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
 };
 
+let onSCMClick = _ => {
+  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
+};
+
 let onExtensionsClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
 };
@@ -48,6 +52,9 @@ let%component make = (~state: State.t, ()) => {
     </Sneakable>
     <Sneakable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
+    </Sneakable>
+    <Sneakable onClick=onSCMClick style=button>
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.codeBranch />
     </Sneakable>
     <Sneakable onClick=onExtensionsClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
