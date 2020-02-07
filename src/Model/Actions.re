@@ -135,6 +135,11 @@ type t =
   | Sneak(Sneak.action)
   | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
+  | WindowFocusGained
+  | WindowFocusLost
+  | WindowMaximized
+  | WindowMinimized
+  | WindowRestored
   | WindowCloseBlocked
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed

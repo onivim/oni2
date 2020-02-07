@@ -113,12 +113,15 @@ let start = setTitle => {
     | BufferEnter(_) => (state, Effects.updateTitle(state))
     | BufferSetModified(_) => (state, Effects.updateTitle(state))
 
-    // TODO: This shouldn't exist, but needs to  be here because it deoends on
-    // `setTitle` being passed in. It would however be ebtter to have a more
+    // TODO: This shouldn't exist, but needs to  be here because it depends on
+    // `setTitle` being passed in. It would however be better to have a more
     // general mechanism, like "Effect actions" handled by an injected dependency
     // or have effects parameterized by an "environment" passed in along with
     // `dispatch`
-    | SetTitle(title) => (state, internalSetTitleEffect(title))
+    | SetTitle(title) => (
+        {...state, windowTitle: title},
+        internalSetTitleEffect(title),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };
