@@ -65,7 +65,9 @@ let%component itemView =
   let displayName = Path.toRelative(~base, path);
 
   let onClick = () =>
-    GlobalContext.current().dispatch(Actions.OpenFileByPath(path, None, None));
+    GlobalContext.current().dispatch(
+      Actions.OpenFileByPath(path, None, None),
+    );
 
   <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
     <Sneakable onClick>
