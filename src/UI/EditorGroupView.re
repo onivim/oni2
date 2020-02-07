@@ -202,6 +202,12 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
               state.configuration,
             );
 
+          let smoothScroll =
+            Configuration.getValue(
+              c => c.experimentalEditorSmoothScroll,
+              state.configuration,
+            );
+
           <EditorSurface
             isActiveSplit=isActive
             metrics
@@ -231,6 +237,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             isHoverEnabled
             shouldRenderIndentGuides
             shouldHighlightActiveIndentGuides
+            smoothScroll
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
         };

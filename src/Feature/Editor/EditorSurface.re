@@ -213,6 +213,9 @@ let renderTokens =
   tokens |> WhitespaceTokenFilter.filter(whitespaceSetting) |> List.iter(f);
 };
 
+let scrollSpringOptions =
+  Spring.Options.create(~stiffness=310., ~damping=30., ());
+
 let%component make =
               (
                 ~activeBuffer,
@@ -243,6 +246,7 @@ let%component make =
                 ~shouldRenderWhitespace=ConfigurationValues.None,
                 ~shouldRenderIndentGuides=false,
                 ~shouldHighlightActiveIndentGuides=false,
+                ~smoothScroll=false,
                 (),
               ) => {
   let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
@@ -302,21 +306,21 @@ let%component make =
       (0, 1);
     };
 
-  let superStiff = Spring.Options.create(~stiffness=310., ~damping=25., ());
-
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
       ~target=editor.scrollY,
       ~restThreshold=100.,
-      superStiff,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
       ~target=editor.scrollX,
       ~restThreshold=100.,
-      superStiff,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
     );
-      
+
   let bufferPositionToPixel = (line, char) => {
     let x = float(char) *. fontWidth -. scrollX +. gutterWidth;
     let y = float(line) *. fontHeight -. scrollY;

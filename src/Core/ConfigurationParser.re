@@ -292,6 +292,10 @@ let configurationParsers: list(configurationTuple) = [
     "experimental.viml",
     (s, v) => {...s, experimentalVimL: parseStringList(v)},
   ),
+  (
+    "experimental.editor.smoothScroll",
+    (s, v) => {...s, experimentalEditorSmoothScroll: parseBool(v)},
+  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

@@ -59,6 +59,7 @@ type t = {
   // - JSON
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
+  experimentalEditorSmoothScroll: bool,
   experimentalVimL: list(string),
 };
 
@@ -105,4 +106,5 @@ let default = {
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
   experimentalVimL: [],
+  experimentalEditorSmoothScroll: false,
 };
