@@ -83,7 +83,6 @@ module Make = (Model: TreeModel) => {
         fontSize=Constants.arrowSize
         color=Colors.white
         icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
-        backgroundColor=Colors.transparentWhite
       />
     </View>;
 

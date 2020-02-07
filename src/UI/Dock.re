@@ -25,14 +25,10 @@ module Styles = {
   ];
 };
 
-let item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
-  let backgroundColor = theme.activityBarBackground;
-  let color = theme.activityBarForeground;
-
+let item = (~onClick, ~theme: Theme.t, ~icon, ()) =>
   <Sneakable onClick style=Styles.item>
-    <FontIcon backgroundColor color fontSize=22. icon />
+    <FontIcon color={theme.activityBarForeground} fontSize=22. icon />
   </Sneakable>;
-};
 
 let onExplorerClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));

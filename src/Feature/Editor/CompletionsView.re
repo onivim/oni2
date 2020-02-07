@@ -98,6 +98,7 @@ module Styles = {
     flexGrow(0),
     backgroundColor(color),
     width(25),
+    padding(4),
   ];
 
   let label = [flexGrow(1), margin(4)];
@@ -165,9 +166,7 @@ let itemView =
     <View style={Styles.icon(~color=iconColor)}>
       <FontIcon
         icon
-        backgroundColor=iconColor
         color={theme.editorSuggestWidgetBackground}
-        margin=4
         // Not sure why, but specifying a font size fails to render the icon!
         // Might be a bug with Revery font loading / re - rendering in this case?
       />
