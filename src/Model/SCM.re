@@ -7,6 +7,7 @@ module ResourceGroup = {
     id: string,
     label: string,
     hideWhenEmpty: bool,
+    resources: list(SCMResource.t),
   };
 };
 
@@ -58,6 +59,13 @@ type msg =
   | LostResourceGroup({
       provider: int,
       handle: int,
+    })
+  | ResourceStatesChanged({
+      provider: int,
+      group: int,
+      spliceStart: int,
+      deleteCount: int,
+      additions: list(SCMResource.t),
     })
   | CountChanged({
       handle: int,

@@ -30,6 +30,13 @@ type msg =
       provider: int,
       handle: int,
     })
+  | SpliceSCMResourceStates({
+      provider: int,
+      group: int,
+      start: int,
+      deleteCount: int,
+      additions: list(Core.SCMResource.t),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,

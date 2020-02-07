@@ -44,6 +44,13 @@ type msg =
       provider: int,
       handle: int,
     })
+  | SpliceSCMResourceStates({
+      provider: int,
+      group: int,
+      start: int,
+      deleteCount: int,
+      additions: list(SCMResource.t),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -235,6 +242,38 @@ let start =
 
     | ("MainThreadSCM", "$unregisterGroup", [`Int(handle), `Int(provider)]) =>
       dispatch(UnregisterSCMResourceGroup({provider, handle}));
+      Ok(None);
+
+    | (
+        "MainThreadSCM",
+        "$spliceResourceStates",
+        [`Int(provider), `List(groupSplices)],
+      ) =>
+      List.iter(
+        fun
+        | `List([`Int(group), `List(splices)]) =>
+          List.iter(
+            splice =>
+              switch (splice) {
+              | `List([`Int(start), `Int(deleteCount), `List(additions)]) =>
+                let additions = List.map(In.SCM.parseResource, additions);
+                dispatch(
+                  SpliceSCMResourceStates({
+                    provider,
+                    group,
+                    start,
+                    deleteCount,
+                    additions,
+                  }),
+                );
+
+              | _ => Log.warn("spliceResourceStates: Unexpected json")
+              },
+            splices,
+          )
+        | _ => Log.warn("spliceResourceStates: Unexpected json"),
+        groupSplices,
+      );
       Ok(None);
 
     | (
