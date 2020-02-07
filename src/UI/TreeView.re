@@ -5,6 +5,9 @@ open Revery.UI.Components;
 open Oni_Core;
 open Utility;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
 module type TreeModel = {
@@ -16,7 +19,8 @@ module type TreeModel = {
 };
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
+  let arrowSizeI = 15;
   let indentSize = 12.;
   let scrollWheelMultiplier = 25;
   let scrollBarThickness = 6;
@@ -81,7 +85,10 @@ module Make = (Model: TreeModel) => {
 
   let noArrow = () =>
     <View
-      style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)]
+      style=Style.[
+        width(Constants.arrowSizeI),
+        height(Constants.arrowSizeI),
+      ]
     />;
 
   let rec nodeView =

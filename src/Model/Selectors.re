@@ -8,6 +8,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 
 module Ext = Oni_Extensions;
+module Editor = Feature_Editor.Editor;
 
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);

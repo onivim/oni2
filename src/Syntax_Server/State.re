@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;

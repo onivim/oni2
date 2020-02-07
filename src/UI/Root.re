@@ -9,6 +9,7 @@ open Revery.UI;
 open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
 
 module Styles = {
   open Style;
@@ -125,7 +126,10 @@ let make = (~state: State.t, ()) => {
          | _ => <QuickmenuView theme configuration state=quickmenu font />
          }
        }}
-      <KeyDisplayerView state />
+      {switch (state.keyDisplayer) {
+       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
+       | None => React.empty
+       }}
     </Overlay>
     statusBar
     {switch (contextMenu) {

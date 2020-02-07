@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Extensions;
 
 type t = {
@@ -5,7 +6,8 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string) // path
+  focus: option(string), // path
+  decorations: StringMap.t(list(SCMDecoration.t)),
 };
 
 [@deriving show]

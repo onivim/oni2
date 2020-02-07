@@ -125,30 +125,25 @@ let start = () => {
     | _ => s
     };
 
-  let updater = (state: Model.State.t, action: Model.Actions.t) =>
-    switch (action) {
-    | Model.Actions.Tick(_) => (state, Isolinear.Effect.none)
-    | action =>
-      let state = windowUpdater(state, action);
+  let updater = (state: Model.State.t, action: Model.Actions.t) => {
+    let state = windowUpdater(state, action);
 
-      let effect =
-        switch (action) {
-        | Init => initializeDefaultViewEffect(state)
-        // When opening a file, ensure that the active editor is getting focus
-        | ViewCloseEditor(_) =>
-          if (List.length(
-                WindowTree.getSplits(state.windowManager.windowTree),
-              )
-              == 0) {
-            quitEffect;
-          } else {
-            Isolinear.Effect.none;
-          }
-        | _ => Isolinear.Effect.none
-        };
+    let effect =
+      switch (action) {
+      | Init => initializeDefaultViewEffect(state)
+      // When opening a file, ensure that the active editor is getting focus
+      | ViewCloseEditor(_) =>
+        if (List.length(WindowTree.getSplits(state.windowManager.windowTree))
+            == 0) {
+          quitEffect;
+        } else {
+          Isolinear.Effect.none;
+        }
+      | _ => Isolinear.Effect.none
+      };
 
-      (state, effect);
-    };
+    (state, effect);
+  };
 
   (updater, stream);
 };

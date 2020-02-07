@@ -3,78 +3,105 @@
  *
  * Module to describing metadata about an extension
  */
-open Oni_Core.Utility;
 module Path = Rench.Path;
 
-module ExtensionKind = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
-  type t =
-    | [@name "ui"] Ui
-    | [@name "workspace"] Workspace;
-};
+module Json = Oni_Core.Json;
 
-module Author = {
-  [@deriving show]
-  type t = option(string);
-
-  let of_yojson_exn =
-    fun
-    | `String(v) => Some(v)
-    | v =>
-      Yojson.Safe.(
-        {
-          Util.member("name", v) |> Util.to_string_option;
-        }
-      );
-
-  let of_yojson = json =>
-    ResultEx.guard(() => of_yojson_exn(json))
-    |> Result.map_error(_ => "Error parsing author");
-
-  let to_yojson = _author => `Null;
-};
-
-module Engine = {
-  [@deriving (show, yojson({strict: false, exn: true}))]
-  type t = {vscode: string};
-};
-
-[@deriving (show, yojson({strict: false, exn: true}))]
+[@deriving show]
 type t = {
   name: string,
   version: string,
-  author: [@default None] Author.t,
-  displayName: [@default None] option(LocalizedToken.t),
-  description: [@default None] option(string),
-  publisher: [@default None] option(string),
-  main: [@default None] option(string),
-  icon: [@default None] option(string),
-  categories: [@default []] list(string),
-  keywords: [@default []] list(string),
-  engines: Engine.t,
-  activationEvents: [@default []] list(string),
-  extensionDependencies: [@default []] list(string),
-  extensionPack: [@default []] list(string),
-  extensionKind: [@default Ui] ExtensionKind.t,
+  author: string,
+  displayName: option(LocalizedToken.t),
+  description: option(string),
+  // publisher: option(string),
+  main: option(string),
+  icon: option(string),
+  categories: list(string),
+  keywords: list(string),
+  engines: string,
+  activationEvents: list(string),
+  extensionDependencies: list(string),
+  extensionPack: list(string),
+  extensionKind: kind,
   contributes: ExtensionContributions.t,
-  enableProposedApi: [@default false] bool,
+  enableProposedApi: bool,
+}
+
+and kind =
+  | Ui
+  | Workspace;
+
+module Decode = {
+  open Json.Decode;
+
+  let kind =
+    string
+    |> map(
+         fun
+         | "ui" => Ui
+         | "workspace" => Workspace
+         | _ => Ui,
+       );
+
+  let author =
+    one_of([("string", string), ("object", field("name", string))]);
+
+  let engine = field("vscode", string);
+
+  let manifest =
+    Json.Decode.(
+      obj(({field, whatever, _}) =>
+        {
+          name: field.required("name", string),
+          version: field.required("version", string),
+          author:
+            whatever(
+              one_of([
+                ("author", field.monadic("author", author)),
+                ("publisher", field.monadic("publisher", string)),
+                ("default", succeed("Unknown Author")),
+              ]),
+            ),
+          displayName: field.optional("displayName", LocalizedToken.decode),
+          description: field.optional("description", string),
+          main: field.optional("main", string),
+          icon: field.optional("icon", string),
+          categories: field.withDefault("categories", [], list(string)),
+          keywords: field.withDefault("keywords", [], list(string)),
+          engines: field.required("engines", engine),
+          activationEvents:
+            field.withDefault("activationEvents", [], list(string)),
+          extensionDependencies:
+            field.withDefault("extensionDependencies", [], list(string)),
+          extensionPack:
+            field.withDefault("extensionPack", [], list(string)),
+          extensionKind: field.withDefault("extensionKind", Ui, kind),
+          contributes:
+            field.required("contributes", ExtensionContributions.decode),
+          enableProposedApi:
+            field.withDefault("enableProposedApi", false, bool),
+        }
+      )
+    );
 };
+
+module Encode = {
+  let kind =
+    Json.Encode.(
+      fun
+      | Ui => string("ui")
+      | Workspace => string("workspace")
+    );
+};
+
+let decode = Decode.manifest;
 
 let getDisplayName = (manifest: t) => {
   manifest.displayName
   |> Option.map(tok => LocalizedToken.to_string(tok))
   |> Option.value(~default=manifest.name);
 };
-
-let getAuthor = manifest => {
-  manifest.author
-  |> OptionEx.or_(manifest.publisher)
-  |> Option.value(~default="Unknown Author");
-};
-
-let getVersion = manifest => manifest.version;
-
-let getIcon = (manifest: t) => manifest.icon;
 
 let remapPaths = (rootPath: string, manifest: t) => {
   ...manifest,

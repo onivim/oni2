@@ -4,7 +4,7 @@ module InputModel = Oni_Components.InputModel;
 module StringEx = Oni_Core.Utility.StringEx;
 
 type callback = unit => unit;
-type bounds = unit => option(Rectangle.t);
+type bounds = unit => option(BoundingBox2d.t);
 
 type sneakInfo = {
   callback,

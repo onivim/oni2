@@ -3,8 +3,11 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Constants = {
-  let fontSize = 20;
+  let fontSize = 20.;
 };
 
 module Styles = {
@@ -41,7 +44,7 @@ module Styles = {
           Style.[
             fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
-            fontSize(12),
+            fontSize(12.),
             color(theme.menuForeground),
             backgroundColor(bg(~theme, ~isFocused)),
           ],

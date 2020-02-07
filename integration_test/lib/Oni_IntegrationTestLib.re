@@ -1,6 +1,5 @@
 module Core = Oni_Core;
 module Utility = Core.Utility;
-module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -21,15 +20,12 @@ let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
 let setTime = v => _currentTime := v;
-let getTime = () => _currentTime^;
 
 let setTitle = title => _currentTitle := title;
 let getTitle = () => _currentTitle^;
 
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
-
-let getScaleFactor = () => 1.0;
 
 let setVsync = vsync => _currentVsync := vsync;
 
@@ -63,7 +59,9 @@ let runTest =
     Timber.App.disableColors();
   };
 
+  Revery.App.initConsole();
   Printexc.record_backtrace(true);
+
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
@@ -98,8 +96,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getScaleFactor,
-      ~getTime,
       ~setTitle,
       ~getZoom,
       ~setZoom,

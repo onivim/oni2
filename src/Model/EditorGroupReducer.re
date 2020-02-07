@@ -13,7 +13,7 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
   let editors =
     switch (v.activeEditorId, EditorGroup.getActiveEditor(v)) {
     | (Some(id), Some(e)) =>
-      IntMap.add(id, Editor.reduce(e, action, metrics), v.editors)
+      IntMap.add(id, EditorReducer.reduce(e, action, metrics), v.editors)
     | _ => v.editors
     };
 

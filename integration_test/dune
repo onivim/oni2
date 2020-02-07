@@ -24,9 +24,9 @@
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
            Regression1097Test
+           SCMGitTest
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
-           TickTest
            AddRemoveSplitTest
            TypingBatchedTest
            TypingUnbatchedTest
@@ -68,11 +68,11 @@
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
+        SCMGitTest.exe
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
         AddRemoveSplitTest.exe
-        TickTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         VimlConfigurationTest.exe

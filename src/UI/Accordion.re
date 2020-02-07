@@ -12,7 +12,7 @@ module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
 };
 
 module Styles = {

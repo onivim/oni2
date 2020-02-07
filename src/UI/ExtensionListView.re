@@ -29,7 +29,7 @@ let make = (~state: State.t, ()) => {
     let extension = extensions[idx];
 
     let icon =
-      switch (ExtensionManifest.getIcon(extension.manifest)) {
+      switch (extension.manifest.icon) {
       | None => <Container color=Colors.darkGray width=32 height=32 />
       | Some(iconPath) => <Image src=iconPath width=32 height=32 />
       };
@@ -57,7 +57,7 @@ let make = (~state: State.t, ()) => {
             ]>
             <Text
               style={Styles.text(~font=uiFont, ~theme)}
-              text={ExtensionManifest.getAuthor(extension.manifest)}
+              text={extension.manifest.author}
             />
           </View>
           <View
@@ -68,7 +68,7 @@ let make = (~state: State.t, ()) => {
             ]>
             <Text
               style={Styles.text(~font=uiFont, ~theme)}
-              text={ExtensionManifest.getVersion(extension.manifest)}
+              text={extension.manifest.version}
             />
           </View>
         </View>

@@ -1,8 +1,8 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 open Oni_Model;
 open Oni_Store;
+open Feature_Editor;
 
 let metrics = EditorMetrics.create();
 
@@ -25,9 +25,10 @@ let simpleState =
     Actions.SetEditorFont(
       EditorFont.create(
         ~fontFile="dummy",
-        ~fontSize=14,
+        ~fontSize=14.,
         ~measuredWidth=14.,
         ~measuredHeight=14.,
+        ~descenderHeight=1.,
         (),
       ),
     ),

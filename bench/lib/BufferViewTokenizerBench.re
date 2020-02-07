@@ -1,7 +1,7 @@
 open Oni_Core;
-open Oni_Model;
 open BenchFramework;
 open Revery;
+open Feature_Editor;
 
 let giantString =
   String.make(1000, 'a')

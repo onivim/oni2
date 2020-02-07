@@ -14,6 +14,10 @@ open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -94,7 +98,7 @@ let start =
     };
   });
 
-  let _ =
+  let _: unit => unit =
     Vim.onGoto((_position, _definitionType) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
@@ -122,7 +126,7 @@ let start =
       |> Option.iter(action => dispatch(action));
     });
 
-  let _ =
+  let _: unit => unit =
     // Unhandled escape is called when there is an `<esc>` sent to Vim,
     // but nothing to escape from (ie, in normal mode with no pending operator)
     Vim.onUnhandledEscape(() => {
@@ -133,15 +137,15 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
 
-  let _ =
+  let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
       dispatch(Actions.VimDirectoryChanged(newDir))
     );
 
-  let _ =
+  let _: unit => unit =
     Vim.onMessage((priority, title, msg) => {
       open Vim.Types;
       let (priorityString, kind) =
@@ -156,7 +160,7 @@ let start =
       dispatch(ShowNotification(Notification.create(~kind, msg)));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.onYank(({lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
@@ -178,7 +182,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -200,13 +204,13 @@ let start =
       dispatch(Actions.BufferEnter(meta, fileType));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onModifiedChanged((id, modified) => {
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
@@ -225,14 +229,14 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Search.onStopSearchHighlight(() => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
       dispatch(Actions.SearchClearHighlights(id));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
@@ -240,7 +244,7 @@ let start =
       }
     );
 
-  let _ =
+  let _: unit => unit =
     Vim.Visual.onRangeChanged(vr => {
       open Vim.VisualRange;
 
@@ -262,7 +266,7 @@ let start =
       dispatch(SelectionChanged(vr));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Window.onSplit((splitType, buf) => {
       /* If buf wasn't specified, use the filepath from the current buffer */
       let buf =
@@ -288,7 +292,7 @@ let start =
       dispatch(command);
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
       Log.trace("Vim.Window.onMovement");
       let currentState = getState();
@@ -323,7 +327,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
       let meta = {
         ...Vim.BufferMetadata.ofBuffer(buf),
@@ -342,7 +346,7 @@ let start =
       dispatch(Actions.BufferEnter(meta, fileType));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.debugf(m => m("Buffer update: %n", update.id));
@@ -394,7 +398,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onEnter(c =>
       dispatch(Actions.QuickmenuShow(Wildmenu(c.cmdType)))
     );
@@ -425,7 +429,7 @@ let start =
     dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
       dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
@@ -461,7 +465,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onLeave(() => {
       lastCompletionMeet := None;
       isCompleting := false;
@@ -486,7 +490,6 @@ let start =
   let currentBufferId: ref(option(int)) = ref(None);
 
   let updateActiveEditorCursors = cursors => {
-    open Oni_Core.Utility;
     let () =
       getState()
       |> Selectors.getActiveEditorGroup
@@ -499,8 +502,6 @@ let start =
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
-        open Oni_Core.Utility;
-
         // Set cursors based on current editor
         let editor =
           getState()
@@ -546,8 +547,6 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      open Oni_Core.Utility;
-
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
