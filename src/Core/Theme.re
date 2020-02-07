@@ -116,6 +116,11 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  titleBarActiveBackground: Color.t,
+  titleBarActiveForeground: Color.t,
+  titleBarInactiveBackground: Color.t,
+  titleBarInactiveForeground: Color.t,
+  titleBarBorder: Color.t,
   editorGutterModifiedBackground: Color.t,
   editorGutterAddedBackground: Color.t,
   editorGutterDeletedBackground: Color.t,
@@ -187,6 +192,11 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  titleBarActiveBackground: Color.hex("#282C35"),
+  titleBarActiveForeground: Color.hex("#ECEFF4"),
+  titleBarInactiveBackground: Color.hex("#282C35"),
+  titleBarInactiveForeground: Color.hex("#ECEFF4"),
+  titleBarBorder: Colors.transparentWhite,
   editorGutterModifiedBackground: Color.hex("#0C7D9D"),
   editorGutterAddedBackground: Color.hex("#587C0C"),
   editorGutterDeletedBackground: Color.hex("#94151B"),
@@ -327,9 +337,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       [
         "menu.selectionBackground",
         "list.activeSelectionBackground",
+        "editor.selectionHighlightBackground",
         "list.focusBackground",
         "list.hoverBackground",
-        "menu.background",
         "background",
         "editor.background",
       ],
@@ -384,6 +394,42 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let sneakBackground = menuSelectionBackground;
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
+
+  let titleBarActiveBackground =
+    getColor(
+      defaultBackground,
+      ["titleBar.activeBackground", "background", "editor.background"],
+    );
+
+  let titleBarInactiveBackground =
+    getColor(
+      defaultBackground,
+      [
+        "titleBar.inactiveBackground",
+        "titleBar.activeBackground",
+        "background",
+        "editor.background",
+      ],
+    );
+
+  let titleBarActiveForeground =
+    getColor(
+      defaultForeground,
+      ["titleBar.activeForeground", "background", "editor.foreground"],
+    );
+
+  let titleBarInactiveForeground =
+    getColor(
+      defaultForeground,
+      [
+        "titleBar.inactiveForeground",
+        "titlebar.activeForeground",
+        "foreground",
+        "editor.foreground",
+      ],
+    );
+
+  let titleBarBorder = getColor("#0000", ["titleBar.border"]);
 
   {
     ...default,
@@ -448,6 +494,11 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    titleBarActiveForeground,
+    titleBarActiveBackground,
+    titleBarInactiveForeground,
+    titleBarInactiveBackground,
+    titleBarBorder,
   };
 };
 
