@@ -5,25 +5,16 @@
  */
 
 [@deriving show({with_path: false})]
-type paneType =
+type pane =
   | Search
   | Diagnostics
   | Notifications;
 
 type t = {
-  activePane: paneType,
+  selected: pane,
   isOpen: bool,
 };
 
-let initial = {activePane: Search, isOpen: false};
+let initial = {selected: Search, isOpen: false};
 
-let getType = pane => !pane.isOpen ? None : Some(pane.activePane);
-
-let isOpen = pane => pane.isOpen;
-
-let isTypeOpen = (paneType, pane) =>
-  pane.isOpen && pane.activePane == paneType;
-
-let setClosed = pane => {...pane, isOpen: false};
-
-let setOpen = paneType => {activePane: paneType, isOpen: true};
+let isVisible = (pane, model) => model.isOpen && model.selected == pane;

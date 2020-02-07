@@ -133,7 +133,7 @@ type t =
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
-  | PaneTabClicked(Pane.paneType)
+  | PaneTabClicked(Pane.pane)
   | VimDirectoryChanged(string)
   | WindowCloseBlocked
   | WindowCloseDiscardConfirmed
