@@ -48,7 +48,7 @@ let%component make = (~state: State.t, ()) => {
       transform(Transform.[TranslateX(transition)]),
     ]>
     <Sneakable onClick=onExplorerClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.copy />
     </Sneakable>
     <Sneakable onClick=onSearchClick style=button>
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
@@ -57,7 +57,7 @@ let%component make = (~state: State.t, ()) => {
       <FontIcon backgroundColor=bg color=fg icon=FontAwesome.codeBranch />
     </Sneakable>
     <Sneakable onClick=onExtensionsClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
+      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.thLarge />
     </Sneakable>
   </View>;
 };
