@@ -6,7 +6,8 @@ module Json = Oni_Core.Json;
 module AutoClosingPair = {
   type scopes =
   | String
-  | Comment;
+  | Comment
+  | Other(string)
 
   type t = {
     openPair: string,
@@ -20,6 +21,13 @@ module AutoClosingPair = {
     // Pulled this from: https://github.com/mattjbray/ocaml-decoders/blob/550c05c16384c9f8d2ab6a36eebc8e1a2684a7e0/src/decode.mli#L106
     let (>>==::) = (fst, rest) => uncons(rest, fst);
 
+    let scope = string
+    |> map(fun
+    | "string" => String
+    | "comment" => Comment
+    | v => Other(v)
+    );
+
     let tuple = 
       string
       >>==:: (openPair =>
@@ -32,7 +40,7 @@ module AutoClosingPair = {
     let obj = obj(({field, _}) => {
        openPair: field.required("open", string),
        closePair: field.required("close", string),
-       notIn: [],
+       notIn: field.withDefault("notIn", [], list(scope)),
     });
 
     let decode = {
