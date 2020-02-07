@@ -31,11 +31,65 @@ module Styles = {
 
   let groupItems = [marginLeft(6)];
 
-  let item = [marginVertical(2)];
+  let item = (~isHovered, ~theme: Theme.t) => [
+    isHovered
+      ? backgroundColor(theme.listHoverBackground)
+      : backgroundColor(theme.sideBarBackground),
+    paddingVertical(2),
+    cursor(MouseCursors.pointer),
+  ];
+};
+
+let%component itemView =
+              (
+                ~provider: SCM.Provider.t,
+                ~resource: SCMResource.t,
+                ~theme,
+                ~font,
+                ~workspace: Workspace.t,
+                (),
+              ) => {
+  open Base;
+  let%hook (isHovered, setHovered) = Hooks.state(false);
+  let onMouseOver = _ => setHovered(_ => true);
+  let onMouseOut = _ => setHovered(_ => false);
+
+  let base =
+    Option.first_some(
+      Option.map(provider.rootUri, ~f=Uri.toFileSystemPath),
+      Option.map(workspace, ~f=w => w.workingDirectory),
+    )
+    |> Option.value(~default="/");
+
+  let displayName =
+    Path.toRelative(~base, Uri.toFileSystemPath(resource.uri));
+
+  <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
+    <Text style={Styles.text(~font, ~theme)} text=displayName />
+  </View>;
+};
+
+let groupView =
+    (~provider, ~group: SCM.ResourceGroup.t, ~theme, ~font, ~workspace, ()) => {
+  let label = String.uppercase_ascii(group.label);
+  <View style=Styles.group>
+    <View style=Styles.groupLabel>
+      <Text style={Styles.groupLabelText(~font, ~theme)} text=label />
+    </View>
+    <View style=Styles.groupItems>
+      ...{
+           group.resources
+           |> List.map(resource =>
+                <itemView provider resource theme font workspace />
+              )
+           |> React.listToElement
+         }
+    </View>
+  </View>;
 };
 
 let make = (~state: State.t, ()) => {
-  let {theme, uiFont, _}: State.t = state;
+  let {theme, uiFont as font, workspace, _}: State.t = state;
 
   let groups = {
     open Base.List.Let_syntax;
@@ -46,47 +100,12 @@ let make = (~state: State.t, ()) => {
     return((provider, group));
   };
 
-  let itemView = (~provider: SCM.Provider.t, ~resource: SCMResource.t, ()) => {
-    open Base;
-
-    let base =
-      Option.first_some(
-        Option.map(provider.rootUri, ~f=Uri.toFileSystemPath),
-        Option.map(state.workspace, ~f=w => w.workingDirectory),
-      )
-      |> Option.value(~default="/");
-
-    let displayName =
-      Path.toRelative(~base, Uri.toFileSystemPath(resource.uri));
-
-    <View style=Styles.item>
-      <Text style={Styles.text(~font=uiFont, ~theme)} text=displayName />
-    </View>;
-  };
-
-  let groupView = (~provider, ~group: SCM.ResourceGroup.t, ()) => {
-    let label = String.uppercase_ascii(group.label);
-    <View style=Styles.group>
-      <View style=Styles.groupLabel>
-        <Text
-          style={Styles.groupLabelText(~font=uiFont, ~theme)}
-          text=label
-        />
-      </View>
-      <View style=Styles.groupItems>
-        ...{
-             group.resources
-             |> List.map(resource => <itemView provider resource />)
-             |> React.listToElement
-           }
-      </View>
-    </View>;
-  };
-
   <View style=Styles.container>
     ...{
          groups
-         |> List.map(((provider, group)) => <groupView provider group />)
+         |> List.map(((provider, group)) =>
+              <groupView provider group theme font workspace />
+            )
          |> React.listToElement
        }
   </View>;
