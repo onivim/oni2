@@ -9,6 +9,13 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 type t = {
   buffers: Buffers.t,
@@ -16,13 +23,13 @@ type t = {
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
+  contextMenu: option(ContextMenu.t(Actions.t)),
   mode: Vim.Mode.t,
   completions: Completions.t,
   diagnostics: Diagnostics.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
-  hover: Hover.t,
   quickmenu: option(Quickmenu.t),
   configuration: Configuration.t,
   sideBar: SideBar.t,
@@ -34,12 +41,13 @@ type t = {
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   keyBindings: Keybindings.t,
-  keyDisplayer: KeyDisplayer.t,
+  keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   references: References.t,
+  scm: SCM.t,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,
@@ -53,8 +61,10 @@ type t = {
   darkMode: bool,
   // State of the bottom pane
   pane: Pane.t,
-  searchPane: Search.t,
+  searchPane: Feature_Search.model,
   focus: Focus.stack,
+  modal: option(Modal.t(Actions.t)),
+  textContentProviders: list((int, string)),
 };
 
 let create: unit => t =
@@ -64,35 +74,37 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    completions: Completions.default,
+    contextMenu: None,
+    completions: Completions.initial,
     configuration: Configuration.default,
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    hover: Hover.empty,
     mode: Normal,
     quickmenu: None,
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14,
+        ~fontSize=14.,
         ~measuredWidth=1.,
         ~measuredHeight=1.,
+        ~descenderHeight=0.,
         (),
       ),
     extensions: Extensions.empty,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
-    uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
+    uiFont: UiFont.default,
     sideBar: SideBar.initial,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
     keyBindings: Keybindings.empty,
-    keyDisplayer: KeyDisplayer.empty,
+    keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
-    notifications: Notifications.default,
+    notifications: Notifications.initial,
     references: References.initial,
+    scm: SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
@@ -102,6 +114,8 @@ let create: unit => t =
     zenMode: false,
     darkMode: true,
     pane: Pane.initial,
-    searchPane: Search.initial,
+    searchPane: Feature_Search.initial,
     focus: Focus.initial,
+    modal: None,
+    textContentProviders: [],
   };

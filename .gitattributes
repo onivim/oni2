@@ -5,8 +5,12 @@
 # gets choked up on the extra `\r` character.
 *.sh text eol=lf
 
+# Linguist override
+*.re linguist-language=Reason
+*.rei linguist-language=Reason
+
 # Hide lockfile updates
 *esy.lock/* linguist-generated
 
 # Hide vendored extension code
-extensions/css-language-features/* linguist-generated
+extensions/* linguist-generated

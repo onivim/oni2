@@ -1,22 +1,34 @@
 open Oni_Core;
 open Oni_Extensions;
 
+module Log = (val Log.withNamespace("Oni2.Model.FileExplorer"));
+
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
-  scrollOffset: [ | `Start(float) | `Middle(float)],
+  scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string) // path
+  focus: option(string), // path
+  decorations: StringMap.t(list(SCMDecoration.t)),
 };
 
 [@deriving show({with_path: false})]
 type action =
-  | TreeLoaded([@opaque] FsTreeNode.t)
-  | NodeLoaded(string, [@opaque] FsTreeNode.t)
-  | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
-  | NodeClicked([@opaque] FsTreeNode.t)
-  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
+  | TreeLoaded(FsTreeNode.t)
+  | NodeLoaded(FsTreeNode.t)
+  | FocusNodeLoaded(FsTreeNode.t)
+  | NodeClicked(FsTreeNode.t)
+  | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
   | KeyboardInput(string);
+
+let initial = {
+  tree: None,
+  isOpen: true,
+  scrollOffset: `Start(0.),
+  active: None,
+  focus: None,
+  decorations: StringMap.empty,
+};
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
@@ -31,19 +43,16 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
 
 let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
 
-let printUnixError = (error, fn, arg) =>
-  Printf.sprintf(
-    "Error: %s encountered in %s called with %s",
-    Unix.error_message(error),
-    fn,
-    arg,
-  )
-  |> Log.error;
+let logUnixError = (error, fn, arg) =>
+  Log.errorf(m => {
+    let msg = Unix.error_message(error);
+    m("%s encountered in %s called with %s", msg, fn, arg);
+  });
 
 let attempt = (~defaultValue, func) => {
   try%lwt(func()) {
   | Unix.Unix_error(error, fn, arg) =>
-    printUnixError(error, fn, arg);
+    logUnixError(error, fn, arg);
     Lwt.return(defaultValue);
   | Failure(e) =>
     Log.error(e);
@@ -121,12 +130,4 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> List.sort(sortByLoweredDisplayName);
 
   FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
-};
-
-let initial = {
-  tree: None,
-  isOpen: true,
-  scrollOffset: `Start(0.),
-  active: None,
-  focus: None,
 };

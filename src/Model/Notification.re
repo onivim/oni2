@@ -1,12 +1,29 @@
-open Actions;
+[@deriving show({with_path: false})]
+type t = {
+  id: int,
+  kind,
+  message: string,
+}
 
-let nextId = ref(0);
+and kind =
+  | Success
+  | Info
+  | Warning
+  | Error;
 
-type t = Actions.notification;
+module Internal = {
+  let generateId = {
+    let lastId = ref(0);
 
-let create = (~notificationType=Actions.Info, ~message, ~title, ()) => {
-  let id = nextId^;
-  incr(nextId);
+    () => {
+      lastId := lastId^ + 1;
+      lastId^;
+    };
+  };
+};
 
-  {id, notificationType, message, title};
+let create = (~kind=Info, message) => {
+  id: Internal.generateId(),
+  kind,
+  message,
 };

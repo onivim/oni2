@@ -7,90 +7,57 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.FontStoreConnector"));
+module Log = (val Log.withNamespace("Oni2.Store.Font"));
 
-let minFontSize = 6;
+let minFontSize = 6.;
 let defaultFontFamily = "FiraCode-Regular.ttf";
-let defaultFontSize = 14;
+let defaultFontSize = 14.;
 
 let requestId = ref(0);
 
 let loadAndValidateEditorFont =
-    (~onSuccess, ~onError, ~requestId: int, scaleFactor, fullPath, fontSize) => {
-  Log.info(
-    "loadAndValidateEditorFont filePath: "
-    ++ fullPath
-    ++ " | size: "
-    ++ string_of_int(fontSize),
+    (~onSuccess, ~onError, ~requestId: int, fullPath, fontSize: float) => {
+  Log.tracef(m =>
+    m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
 
-  let adjSize = int_of_float(float_of_int(fontSize) *. scaleFactor +. 0.5);
+  let fontResult = Revery.Font.FontCache.load(fullPath);
 
-  Fontkit.fk_new_face(
-    fullPath,
-    adjSize,
-    font => {
-      /* Measure text */
-      let shapedText = Fontkit.fk_shape(font, "Hi");
-      let firstShape = shapedText[0];
-      let secondShape = shapedText[1];
+  switch (fontResult) {
+  | Error(msg) => onError(msg)
+  | Ok(font) =>
+    let character1 = Revery.Font.FontRenderer.measure(font, fontSize, "H");
+    let character2 = Revery.Font.FontRenderer.measure(font, fontSize, "i");
 
-      Log.info(
-        "Checking font rendering - glyph1: "
-        ++ string_of_int(firstShape.glyphId)
-        ++ " glyph2: "
-        ++ string_of_int(secondShape.glyphId),
-      );
+    if (!Float.equal(character1.width, character2.width)) {
+      onError("Not a monospace font");
+    } else {
+      let measuredWidth = character1.width;
+      let {lineHeight, descent, _}: Revery.Font.FontMetrics.t =
+        Revery.Font.getMetrics(font, fontSize);
 
-      let glyph = Fontkit.renderGlyph(font, firstShape.glyphId);
-      Log.info("Got glyph for firstShape");
-      let secondGlyph = Fontkit.renderGlyph(font, secondShape.glyphId);
-      Log.info("Got glyph for secondShape");
+      Log.debugf(m => m("Measured width: %f ", measuredWidth));
+      Log.debugf(m => m("Line height: %f ", lineHeight));
 
-      if (glyph.advance != secondGlyph.advance) {
-        onError("Not a monospace font.");
-      } else if (firstShape.glyphId == secondShape.glyphId) {
-        onError("Unable to load glyphs.");
-      } else {
-        let metrics = Fontkit.fk_get_metrics(font);
-        let actualHeight =
-          float_of_int(fontSize)
-          *. float_of_int(metrics.height)
-          /. float_of_int(metrics.unitsPerEm);
-
-        let measuredWidth =
-          float_of_int(glyph.advance) /. (64. *. scaleFactor);
-        let measuredHeight = floor(actualHeight +. 0.5);
-
-        Log.info(
-          "Font loaded! Measured width: "
-          ++ string_of_float(measuredWidth)
-          ++ " Measured height: "
-          ++ string_of_float(measuredHeight),
-        );
-        /* Set editor text based on measurements */
-        onSuccess((
-          requestId,
-          EditorFont.create(
-            ~fontFile=fullPath,
-            ~fontSize,
-            ~measuredWidth,
-            ~measuredHeight,
-            (),
-          ),
-        ));
-      };
-    },
-    _ => onError("Unable to load font."),
-  );
+      onSuccess((
+        requestId,
+        EditorFont.create(
+          ~fontFile=fullPath,
+          ~fontSize,
+          ~measuredWidth,
+          ~measuredHeight=lineHeight,
+          ~descenderHeight=descent,
+          (),
+        ),
+      ));
+    };
+  };
 };
 
-let start = (~getScaleFactor, ()) => {
-  let setFont = (dispatch1, fontFamily, fontSize) => {
+let start = () => {
+  let setFont = (dispatch1, maybeFontFamily, fontSize: float) => {
     let dispatch = action =>
       Revery.App.runOnMainThread(() => dispatch1(action));
-
-    let scaleFactor = getScaleFactor();
 
     incr(requestId);
     let req = requestId^;
@@ -103,31 +70,34 @@ let start = (~getScaleFactor, ()) => {
           let fontSize = max(fontSize, minFontSize);
 
           let (name, fullPath) =
-            switch (fontFamily) {
+            switch (maybeFontFamily) {
             | None => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
-            | Some(v) when v == "FiraCode-Regular.ttf" => (
+
+            | Some(fontFamily) when fontFamily == "FiraCode-Regular.ttf" => (
                 defaultFontFamily,
-                Utility.executingDirectory ++ defaultFontFamily,
+                Revery.Environment.executingDirectory ++ defaultFontFamily,
               )
-            | Some(v) =>
-              Log.info("setFont - discovering font: " ++ v);
-              Rench.Path.isAbsolute(v)
-                ? (v, v)
-                : {
-                  let descriptor =
-                    Revery.Font.find(
-                      ~mono=true,
-                      ~weight=Revery.Font.Weight.Normal,
-                      v,
-                    );
-                  Log.info(
-                    "setFont - discovering font at path: " ++ descriptor.path,
+
+            | Some(fontFamily) =>
+              Log.debug("Discovering font: " ++ fontFamily);
+
+              if (Rench.Path.isAbsolute(fontFamily)) {
+                (fontFamily, fontFamily);
+              } else {
+                let descriptor =
+                  Revery.Font.Discovery.find(
+                    ~mono=true,
+                    ~weight=Revery.Font.Weight.Normal,
+                    fontFamily,
                   );
-                  (v, descriptor.path);
-                };
+
+                Log.debug("  at path: " ++ descriptor.path);
+
+                (fontFamily, descriptor.path);
+              };
             };
 
           let onSuccess = ((reqId, editorFont)) =>
@@ -136,15 +106,17 @@ let start = (~getScaleFactor, ()) => {
             };
 
           let onError = errorMsg => {
-            Log.error("setFont: Failed to load font " ++ fullPath);
+            Log.error("Failed to load font " ++ fullPath);
 
             dispatch(
               ShowNotification(
                 Notification.create(
-                  ~notificationType=Actions.Error,
-                  ~title="Unable to load font",
-                  ~message=name ++ ": " ++ errorMsg,
-                  (),
+                  ~kind=Error,
+                  Printf.sprintf(
+                    "Unable to load font: %s: %s",
+                    name,
+                    errorMsg,
+                  ),
                 ),
               ),
             );
@@ -154,7 +126,6 @@ let start = (~getScaleFactor, ()) => {
             ~onSuccess,
             ~onError,
             ~requestId=req,
-            scaleFactor,
             fullPath,
             fontSize,
           );
@@ -166,14 +137,14 @@ let start = (~getScaleFactor, ()) => {
 
   let synchronizeConfiguration = (configuration: Configuration.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.syncConfig", dispatch => {
+      Log.trace("synchronizeConfiguration");
+
       // TODO
       let editorFontFamily =
         Configuration.getValue(c => c.editorFontFamily, configuration);
 
       let editorFontSize =
         Configuration.getValue(c => c.editorFontSize, configuration);
-
-      Log.info("synchronizeConfiguration");
 
       setFont(dispatch, editorFontFamily, editorFontSize);
     });

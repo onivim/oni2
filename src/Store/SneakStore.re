@@ -8,8 +8,6 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Sneak = Model.Sneak;
 
-module Log = Core.Log;
-
 module SneakRegistry = Oni_UI.SneakRegistry;
 
 let start = () => {

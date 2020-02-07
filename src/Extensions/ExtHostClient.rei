@@ -4,6 +4,37 @@ module Core = Oni_Core;
 
 type t;
 
+type msg =
+  | RegisterSourceControl({
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Core.Uri.t),
+    })
+  | UnregisterSourceControl({handle: int})
+  | UpdateSourceControl({
+      handle: int,
+      hasQuickDiffProvider: option(bool),
+      count: option(int),
+      commitTemplate: option(string),
+    })
+  // acceptInputCommand: option(_),
+  // statusBarCommands: option(_),
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Core.Uri.t),
+    });
+
 type unitCallback = unit => unit;
 
 let start:
@@ -33,6 +64,7 @@ let start:
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
     ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
+    ~dispatch: msg => unit,
     Core.Setup.t
   ) =>
   t;
@@ -45,6 +77,8 @@ let updateDocument:
 let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
+let provideDecorations:
+  (int, Core.Uri.t, t) => Lwt.t(list(Core.SCMDecoration.t));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);
@@ -53,8 +87,10 @@ let provideDocumentHighlights:
   Lwt.t(list(Protocol.DocumentHighlight.t));
 let provideDocumentSymbols:
   (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
+let provideOriginalResource: (int, Core.Uri.t, t) => Lwt.t(Core.Uri.t);
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
+let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;

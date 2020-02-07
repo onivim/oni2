@@ -8,6 +8,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 
 module Ext = Oni_Extensions;
+module Editor = Feature_Editor.Editor;
 
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
@@ -50,7 +51,7 @@ let getActiveBuffer = (state: State.t) => {
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)
-    |> Option.bind(buf =>
+    |> OptionEx.flatMap(buf =>
          Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
        )
     |> Option.iter(((buf, ft)) => f(buf, ft));

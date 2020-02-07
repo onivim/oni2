@@ -33,9 +33,8 @@ runTestWithInput(
     ~name="Wait for oni-dev filetype to show up",
     (state: State.t) => {
       let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
+        Selectors.getActiveBuffer(state)
+        |> OptionEx.flatMap(Buffer.getFileType);
 
       switch (fileType) {
       | Some("oni-dev") => true
@@ -53,7 +52,7 @@ runTestWithInput(
   wait(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
-    (state: State.t) => {
-    List.length(state.completions.filteredCompletions) > 0
-  });
+    (state: State.t) =>
+    Array.length(state.completions.filtered) > 0
+  );
 });

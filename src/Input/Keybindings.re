@@ -1,8 +1,3 @@
-open Oni_Core;
-
-module List = Utility.List;
-module Result = Utility.Result;
-
 module Keybinding = {
   type t = {
     key: string,
@@ -144,7 +139,7 @@ let of_yojson_with_errors = json => {
     let res = bindingsJson |> Internal.of_yojson_with_errors;
 
     Ok(res)
-    |> Result.map(((bindings, errors)) => {
+    |> Stdlib.Result.map(((bindings, errors)) => {
          (Legacy.upgrade(bindings), errors)
        });
   | _ => Error("Unable to parse keybindings - not a JSON array.")

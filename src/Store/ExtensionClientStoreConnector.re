@@ -7,27 +7,26 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Uri = Core.Uri;
-open Oni_Core.Utility;
-module Model = Oni_Model;
+open Oni_Core;
+open Oni_Model;
 
-module Log = (
-  val Core.Log.withNamespace("Oni2.ExtensionClientStoreConnector")
-);
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module Protocol = Extensions.ExtHostProtocol;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module Workspace = Protocol.Workspace;
 
 module ExtensionCompletionProvider = {
   let suggestionItemToCompletionItem:
-    Protocol.SuggestionItem.t => Model.CompletionItem.t =
+    Protocol.SuggestionItem.t => CompletionItem.t =
     suggestion => {
       let completionKind =
-        suggestion.kind |> Option.bind(CompletionItemKind.ofInt);
+        Option.bind(suggestion.kind, CompletionItemKind.ofInt);
 
       {
         label: suggestion.label,
@@ -37,7 +36,7 @@ module ExtensionCompletionProvider = {
     };
 
   let suggestionsToCompletionItems:
-    option(Protocol.Suggestions.t) => list(Model.CompletionItem.t) =
+    option(Protocol.Suggestions.t) => list(CompletionItem.t) =
     fun
     | Some(suggestions) =>
       List.map(suggestionItemToCompletionItem, suggestions)
@@ -53,7 +52,7 @@ module ExtensionCompletionProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
         ExtHostClient.provideCompletions(id, uri, position, client)
         |> Lwt.map(suggestionsToCompletionItems);
@@ -69,7 +68,7 @@ module ExtensionDefinitionProvider = {
     let originRange =
       originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
 
-    Model.LanguageFeatures.DefinitionResult.create(
+    LanguageFeatures.DefinitionResult.create(
       ~originRange,
       ~uri,
       ~location=start,
@@ -82,7 +81,7 @@ module ExtensionDefinitionProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
         ExtHostClient.provideDefinition(id, uri, position, client)
         |> Lwt.map(definitionToModel);
@@ -107,7 +106,7 @@ module ExtensionDocumentHighlightProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
 
         ExtHostClient.provideDocumentHighlights(id, uri, position, client)
@@ -124,7 +123,7 @@ module ExtensionFindAllReferencesProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         let position = Protocol.OneBasedPosition.ofPosition(location);
 
         ExtHostClient.provideReferences(id, uri, position, client);
@@ -140,14 +139,14 @@ module ExtensionDocumentSymbolProvider = {
       ~buffer,
       ~selector,
       () => {
-        let uri = Core.Buffer.getUri(buffer);
+        let uri = Buffer.getUri(buffer);
         ExtHostClient.provideDocumentSymbols(id, uri, client);
       },
     );
   };
 };
 
-let start = (extensions, setup: Core.Setup.t) => {
+let start = (extensions, setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let manifests =
@@ -167,7 +166,7 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let initialConfiguration = Configuration.create(~defaults, ~user, ());
 
-  let onExtHostClosed = () => Log.info("ext host closed");
+  let onExtHostClosed = () => Log.debug("ext host closed");
 
   let extensionInfo =
     extensions
@@ -176,22 +175,22 @@ let start = (extensions, setup: Core.Setup.t) => {
        );
 
   let onDiagnosticsClear = owner => {
-    dispatch(Model.Actions.DiagnosticsClear(owner));
+    dispatch(Actions.DiagnosticsClear(owner));
   };
 
   let onDiagnosticsChangeMany =
       (diagCollection: Protocol.DiagnosticsCollection.t) => {
-    let protocolDiagToDiag: Protocol.Diagnostic.t => Model.Diagnostic.t =
+    let protocolDiagToDiag: Protocol.Diagnostic.t => Diagnostic.t =
       d => {
         let range = Protocol.OneBasedRange.toRange(d.range);
         let message = d.message;
-        Model.Diagnostic.create(~range, ~message, ());
+        Diagnostic.create(~range, ~message, ());
       };
 
     let f = (d: Protocol.Diagnostics.t) => {
       let diagnostics = List.map(protocolDiagToDiag, snd(d));
       let uri = fst(d);
-      Model.Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
+      Actions.DiagnosticsSet(uri, diagCollection.name, diagnostics);
     };
 
     diagCollection.perFileDiagnostics
@@ -201,11 +200,11 @@ let start = (extensions, setup: Core.Setup.t) => {
 
   let onStatusBarSetEntry = ((id, text, alignment, priority)) => {
     dispatch(
-      Model.Actions.StatusBarAddItem(
-        Model.StatusBarModel.Item.create(
+      Actions.StatusBarAddItem(
+        StatusBarModel.Item.create(
           ~id,
           ~text,
-          ~alignment=Model.StatusBarModel.Alignment.ofInt(alignment),
+          ~alignment=StatusBarModel.Alignment.ofInt(alignment),
           ~priority,
           (),
         ),
@@ -218,15 +217,12 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let definitionProvider =
       ExtensionDefinitionProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DefinitionProviderAvailable(
-          id,
-          definitionProvider,
-        ),
+      Actions.LanguageFeature(
+        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
 
   let onRegisterDocumentSymbolProvider = (client, provider) => {
@@ -236,9 +232,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       );
     let documentSymbolProvider =
       ExtensionDocumentSymbolProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DocumentSymbolProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentSymbolProviderAvailable(
           id,
           documentSymbolProvider,
         ),
@@ -251,9 +248,10 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let findAllReferencesProvider =
       ExtensionFindAllReferencesProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.FindAllReferencesProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.FindAllReferencesProviderAvailable(
           id,
           findAllReferencesProvider,
         ),
@@ -266,16 +264,14 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
     let documentHighlightProvider =
       ExtensionDocumentHighlightProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.DocumentHighlightProviderAvailable(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentHighlightProviderAvailable(
           id,
           documentHighlightProvider,
         ),
       ),
-    );
-    Log.infof(m =>
-      m("Registered document highlight provider with ID: %n", provider.id)
     );
   };
 
@@ -284,29 +280,70 @@ let start = (extensions, setup: Core.Setup.t) => {
       Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
     let completionProvider =
       ExtensionCompletionProvider.create(client, provider);
+
     dispatch(
-      Oni_Model.Actions.LanguageFeature(
-        Model.LanguageFeatures.CompletionProviderAvailable(
-          id,
-          completionProvider,
-        ),
+      Actions.LanguageFeature(
+        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       ),
     );
-    Log.infof(m => m("Registered suggest provider with ID: %n", provider.id));
   };
+
+  let onClientMessage = (msg: ExtHostClient.msg) =>
+    switch (msg) {
+    | RegisterSourceControl({handle, id, label, rootUri}) =>
+      dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
+
+    | UnregisterSourceControl({handle}) =>
+      dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
+
+    | UpdateSourceControl({
+        handle,
+        hasQuickDiffProvider,
+        count,
+        commitTemplate,
+      }) =>
+      Option.iter(
+        available =>
+          dispatch(
+            Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})),
+          ),
+        hasQuickDiffProvider,
+      );
+      Option.iter(
+        count => dispatch(Actions.SCM(SCM.CountChanged({handle, count}))),
+        count,
+      );
+      Option.iter(
+        template =>
+          dispatch(
+            Actions.SCM(SCM.CommitTemplateChanged({handle, template})),
+          ),
+        commitTemplate,
+      );
+
+    | RegisterTextContentProvider({handle, scheme}) =>
+      dispatch(NewTextContentProvider({handle, scheme}))
+
+    | UnregisterTextContentProvider({handle}) =>
+      dispatch(LostTextContentProvider({handle: handle}))
+
+    | RegisterDecorationProvider({handle, label}) =>
+      dispatch(Actions.SCM(SCM.NewDecorationProvider({handle, label})))
+
+    | UnregisterDecorationProvider({handle}) =>
+      dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+    | DecorationsDidChange({handle, uris}) =>
+      dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
+    };
 
   let onOutput = Log.info;
 
   let onDidActivateExtension = id => {
-    dispatch(Model.Actions.Extension(Model.Extensions.Activated(id)));
+    dispatch(Actions.Extension(Oni_Model.Extensions.Activated(id)));
   };
 
   let onShowMessage = message => {
-    dispatch(
-      Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(~title="Extension", ~message, ()),
-      ),
-    );
+    dispatch(Actions.ShowNotification(Notification.create(message)));
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -327,6 +364,7 @@ let start = (extensions, setup: Core.Setup.t) => {
       ~onRegisterSuggestProvider,
       ~onShowMessage,
       ~onOutput,
+      ~dispatch=onClientMessage,
       setup,
     );
 
@@ -334,10 +372,11 @@ let start = (extensions, setup: Core.Setup.t) => {
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Log.info("Creating model for filetype: " ++ ft);
+      Log.trace("Creating model for filetype: " ++ ft);
+
       Some(
         Protocol.ModelAddedDelta.create(
-          ~uri=Core.Uri.fromPath(fp),
+          ~uri=Uri.fromPath(fp),
           ~versionId=bm.version,
           ~lines=[""],
           ~modeId=ft,
@@ -353,15 +392,11 @@ let start = (extensions, setup: Core.Setup.t) => {
   let activateFileType = (fileType: option(string)) =>
     fileType
     |> Option.iter(ft =>
-         Hashtbl.find_opt(activatedFileTypes, ft)
-         // If no entry, we haven't activated yet
-         |> Option.iter_none(() => {
-              ExtHostClient.activateByEvent(
-                "onLanguage:" ++ ft,
-                extHostClient,
-              );
-              Hashtbl.add(activatedFileTypes, ft, true);
-            })
+         if (!Hashtbl.mem(activatedFileTypes, ft)) {
+           // If no entry, we haven't activated yet
+           ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
+           Hashtbl.add(activatedFileTypes, ft, true);
+         }
        );
 
   let sendBufferEnterEffect =
@@ -375,12 +410,12 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let modelChangedEffect = (buffers: Model.Buffers.t, bu: Core.BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Buffers.t, bu: BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Model.Buffers.getBuffer(bu.id, buffers)) {
+      switch (Buffers.getBuffer(bu.id, buffers)) {
       | None => ()
       | Some(v) =>
-        Core.Log.perf("exthost.bufferUpdate", () => {
+        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Protocol.ModelContentChange.ofBufferUpdate(
               bu,
@@ -394,7 +429,7 @@ let start = (extensions, setup: Core.Setup.t) => {
               (),
             );
 
-          let uri = Core.Buffer.getUri(v);
+          let uri = Buffer.getUri(v);
 
           ExtHostClient.updateDocument(
             uri,
@@ -406,55 +441,6 @@ let start = (extensions, setup: Core.Setup.t) => {
       }
     );
 
-  let getAndDispatchCompletions =
-      (~languageFeatures, ~buffer, ~meet, ~location, ()) => {
-    let completionPromise =
-      Model.LanguageFeatures.requestCompletions(
-        ~buffer,
-        ~meet,
-        ~location,
-        languageFeatures,
-      );
-
-    Lwt.on_success(completionPromise, completions => {
-      dispatch(Model.Actions.CompletionAddItems(meet, completions))
-    });
-  };
-
-  let checkCompletionsEffect = state =>
-    Isolinear.Effect.create(~name="exthost.checkCompletions", () => {
-      Model.Selectors.getActiveBuffer(state)
-      |> Option.iter(buf => {
-           let uri = Core.Buffer.getUri(buf);
-           let maybeMeet = Model.Completions.getMeet(state.completions);
-
-           let maybeLocation =
-             maybeMeet |> Option.map(Model.CompletionMeet.getLocation);
-
-           let request = (meet: Model.CompletionMeet.t, location: Location.t) => {
-             Log.infof(m =>
-               m(
-                 "Completions - requesting at %s for %s",
-                 Core.Uri.toString(uri),
-                 Location.show(location),
-               )
-             );
-             let languageFeatures = state.languageFeatures;
-             let () =
-               getAndDispatchCompletions(
-                 ~languageFeatures,
-                 ~buffer=buf,
-                 ~meet,
-                 ~location,
-                 (),
-               );
-             ();
-           };
-
-           Option.iter2(request, maybeMeet, maybeLocation);
-         })
-    });
-
   let executeContributedCommandEffect = cmd =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
@@ -464,7 +450,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
       dispatch(
-        Model.Actions.Extension(Model.Extensions.Discovered(extensions)),
+        Actions.Extension(Oni_Model.Extensions.Discovered(extensions)),
       )
     );
 
@@ -472,7 +458,7 @@ let start = (extensions, setup: Core.Setup.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
-        Model.Actions.RegisterQuitCleanup(
+        Actions.RegisterQuitCleanup(
           () => ExtHostClient.close(extHostClient),
         ),
       )
@@ -486,35 +472,310 @@ let start = (extensions, setup: Core.Setup.t) => {
       )
     });
 
-  let updater = (state: Model.State.t, action) =>
+  let getOriginalUri = (bufferId, path, providers: list(SCM.Provider.t)) =>
+    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
+      // Try our luck with every provider. If several returns Last-Writer-Wins
+      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
+      providers
+      |> List.iter((provider: SCM.Provider.t) => {
+           let promise =
+             ExtHostClient.provideOriginalResource(
+               provider.handle,
+               Uri.fromPath(path),
+               extHostClient,
+             );
+
+           Lwt.on_success(promise, uri =>
+             dispatch(Actions.SCM(SCM.GotOriginalUri({bufferId, uri})))
+           );
+         })
+    });
+
+  let getOriginalContent = (bufferId, uri, providers) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="scm.getOriginalSourceLines", dispatch => {
+      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.iter(provider => {
+           let (handle, _) = provider;
+           let promise =
+             ExtHostClient.provideTextDocumentContent(
+               handle,
+               uri,
+               extHostClient,
+             );
+
+           Lwt.on_success(
+             promise,
+             content => {
+               let lines =
+                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+
+               dispatch(
+                 Actions.SCM(SCM.GotOriginalContent({bufferId, lines})),
+               );
+             },
+           );
+         });
+    });
+
+  let provideDecorationsEffect = (handle, uri) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="exthost.provideDecorations", dispatch => {
+      let promise =
+        Oni_Extensions.ExtHostClient.provideDecorations(
+          handle,
+          uri,
+          extHostClient,
+        );
+
+      Lwt.on_success(promise, decorations =>
+        dispatch(
+          Actions.SCM(SCM.GotDecorations({handle, uri, decorations})),
+        )
+      );
+    });
+
+  let updater = (state: State.t, action) =>
     switch (action) {
-    | Model.Actions.Init => (
+    | Actions.Init => (
         state,
         Isolinear.Effect.batch([
           registerQuitCleanupEffect,
           discoveredExtensionsEffect(extensions),
         ]),
       )
-    | Model.Actions.BufferUpdate(bu) => (
+
+    | Actions.BufferUpdate(bu) => (
         state,
-        modelChangedEffect(state.buffers, bu),
+        Isolinear.Effect.batch([
+          modelChangedEffect(state.buffers, bu),
+          executeContributedCommandEffect("git.refresh"),
+        ]),
       )
-    | Model.Actions.CommandExecuteContributed(cmd) => (
+
+    | Actions.CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
       )
-    | Model.Actions.CompletionStart(_completionMeet) => (
-        state,
-        checkCompletionsEffect(state),
-      )
-    | Model.Actions.VimDirectoryChanged(path) => (
+
+    | Actions.VimDirectoryChanged(path) => (
         state,
         changeWorkspaceEffect(path),
       )
-    | Model.Actions.BufferEnter(bm, fileTypeOpt) => (
-        state,
-        sendBufferEnterEffect(bm, fileTypeOpt),
+
+    | Actions.BufferEnter(metadata, fileTypeOpt) =>
+      let eff =
+        switch (metadata.filePath) {
+        | Some(path) =>
+          Isolinear.Effect.batch([
+            sendBufferEnterEffect(metadata, fileTypeOpt),
+            getOriginalUri(metadata.id, path, state.scm.providers),
+          ])
+
+        | None => sendBufferEnterEffect(metadata, fileTypeOpt)
+        };
+      (state, eff);
+
+    | Actions.NewTextContentProvider({handle, scheme}) => (
+        {
+          ...state,
+          textContentProviders: [
+            (handle, scheme),
+            ...state.textContentProviders,
+          ],
+        },
+        Isolinear.Effect.none,
       )
+
+    | Actions.LostTextContentProvider({handle}) => (
+        {
+          ...state,
+          textContentProviders:
+            List.filter(
+              ((h, _)) => h != handle,
+              state.textContentProviders,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers: [
+              SCM.Provider.{
+                handle,
+                id,
+                label,
+                rootUri,
+                groups: [],
+                hasQuickDiffProvider: false,
+                count: 0,
+                commitTemplate: "",
+              },
+              ...state.scm.providers,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostProvider({handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.filter(
+                (it: SCM.Provider.t) => it.handle != handle,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle
+                    ? {...it, hasQuickDiffProvider: available} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.CountChanged({handle, count})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle ? {...it, count} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.CommitTemplateChanged({handle, template})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (it: SCM.Provider.t) =>
+                  it.handle == handle
+                    ? {...it, commitTemplate: template} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.GotOriginalUri({bufferId, uri})) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalUri(uri)),
+              state.buffers,
+            ),
+        },
+        getOriginalContent(bufferId, uri, state.textContentProviders),
+      )
+
+    | Actions.SCM(SCM.GotOriginalContent({bufferId, lines})) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalLines(lines)),
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewDecorationProvider({handle, label})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders: [
+              SCM.DecorationProvider.{handle, label},
+              ...state.scm.decorationProviders,
+            ],
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostDecorationProvider({handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            decorationProviders:
+              List.filter(
+                (it: SCM.DecorationProvider.t) => it.handle != handle,
+                state.scm.decorationProviders,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.DecorationsChanged({handle, uris})) => (
+        state,
+        Isolinear.Effect.batch(
+          uris |> List.map(provideDecorationsEffect(handle)),
+        ),
+      )
+
+    | Actions.SCM(SCM.GotDecorations({handle, uri, decorations})) => (
+        {
+          ...state,
+          fileExplorer: {
+            ...state.fileExplorer,
+            decorations:
+              StringMap.update(
+                Uri.toFileSystemPath(uri),
+                fun
+                | Some(existing) => {
+                    let existing =
+                      List.filter(
+                        (it: SCMDecoration.t) => it.handle != handle,
+                        existing,
+                      );
+                    Some(decorations @ existing);
+                  }
+                | None => Some(decorations),
+                state.fileExplorer.decorations,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
 

@@ -3,7 +3,6 @@
  */
 
 open Oni_Core;
-open Oni_Core.Utility;
 
 type t = {
   rendererById: IntMap.t(BufferRenderer.t),

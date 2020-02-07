@@ -1,0 +1,17 @@
+(library
+    (name Oni_Components)
+    (public_name Oni2.components)
+    (preprocess (pps brisk-reconciler.ppx ppx_deriving.show))
+    (libraries 
+        str
+        bigarray
+        zed_oni
+        lwt
+        lwt.unix
+        Oni2.core
+        Oni2.input
+        Rench
+        Revery
+        editor-core-types
+        isolinear
+    ))

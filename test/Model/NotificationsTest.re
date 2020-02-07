@@ -8,12 +8,8 @@ describe("Notifications", ({describe, _}) =>
     test("retrieves oldest notification", ({expect, _}) => {
       open Oni_Model.Actions;
 
-      let title = "testMsg";
-      let notification1 = Notification.create(~title, ~message="a", ());
-      let notification2 = Notification.create(~title, ~message="b", ());
-
-      let n1_id = notification1.id;
-      //let n2_id = notification2.id;
+      let notification1 = Notification.create("a");
+      let notification2 = Notification.create("b");
 
       let state = [];
       let state =
@@ -21,9 +17,9 @@ describe("Notifications", ({describe, _}) =>
       let state =
         Notifications.reduce(state, ShowNotification(notification2));
 
-      let oldest = Notifications.getOldestId(state);
+      let oldest = Notifications.getOldest(state);
 
-      expect.int(oldest).toBe(n1_id);
+      expect.same(oldest, notification1);
     })
   )
 );

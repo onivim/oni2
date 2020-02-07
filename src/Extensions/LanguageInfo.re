@@ -62,9 +62,7 @@ let getGrammarPathFromScope = (li: t, scope: string) => {
 };
 
 let getTreesitterPathFromScope = (li: t, scope: string) => {
-  li.scopeToTreesitterPath
-  |> StringMap.find_opt(scope)
-  |> Utility.Option.flatten;
+  li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
 };
 
 let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {

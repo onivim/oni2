@@ -8,35 +8,50 @@ open Revery;
 open Revery.UI;
 open Oni_Model;
 
-module Styles = {
-  let root = (background, foreground) =>
-    Style.[
-      backgroundColor(background),
-      color(foreground),
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-      justifyContent(`Center),
-      alignItems(`Stretch),
-    ];
+module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
 
-  let surface = Style.[flexGrow(1), flexDirection(`Row)];
+module Styles = {
+  open Style;
+
+  let root = (background, foreground) => [
+    backgroundColor(background),
+    color(foreground),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+    justifyContent(`Center),
+    alignItems(`Stretch),
+  ];
+
+  let surface = [flexGrow(1), flexDirection(`Row)];
 
   let workspace = Style.[flexGrow(1), flexDirection(`Column)];
 
-  let statusBar = statusBarHeight =>
-    Style.[
-      backgroundColor(Color.hex("#21252b")),
-      height(statusBarHeight),
-      justifyContent(`Center),
-      alignItems(`Center),
-    ];
+  let statusBar = statusBarHeight => [
+    backgroundColor(Color.hex("#21252b")),
+    height(statusBarHeight),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 };
 
 let make = (~state: State.t, ()) => {
-  let State.{theme, configuration, uiFont, editorFont, sideBar, zenMode, _} = state;
+  let State.{
+        theme,
+        configuration,
+        contextMenu,
+        uiFont as font,
+        editorFont,
+        sideBar,
+        zenMode,
+        _,
+      } = state;
+
+  let onContextMenuUpdate = model =>
+    GlobalContext.current().dispatch(ContextMenuUpdated(model));
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -62,7 +77,7 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar height=statusBarHeight state />
+          <StatusBar state contextMenu onContextMenuUpdate />
         </View>
       : React.empty;
 
@@ -98,14 +113,32 @@ let make = (~state: State.t, ()) => {
          switch (quickmenu.variant) {
          | Wildmenu(_) => <WildmenuView theme configuration state=quickmenu />
 
-         | _ =>
-           <QuickmenuView theme configuration state=quickmenu font=uiFont />
+         | _ => <QuickmenuView theme configuration state=quickmenu font />
          }
        }}
-      <KeyDisplayerView state />
-      <NotificationsView state />
+      {switch (state.keyDisplayer) {
+       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
+       | None => React.empty
+       }}
     </Overlay>
     statusBar
+    {switch (contextMenu) {
+     | Some(model) =>
+       let onOverlayClick = () =>
+         GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+       let onItemSelect = item =>
+         GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+
+       <ContextMenu.Overlay
+         theme
+         font=uiFont
+         model
+         onOverlayClick
+         onItemSelect
+       />;
+     | None => React.empty
+     }}
+    <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
 };

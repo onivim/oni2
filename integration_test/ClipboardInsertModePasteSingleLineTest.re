@@ -2,6 +2,10 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
+module Log = (
+  val Log.withNamespace("IntegrationTest.ClipboardInsertModePasteSingleLine")
+);
+
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
@@ -28,7 +32,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "AdefB");
     }

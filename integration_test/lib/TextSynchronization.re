@@ -3,7 +3,6 @@
  */
 open EditorCoreTypes;
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 
@@ -23,8 +22,7 @@ let _getTextForVimBuffer = () => {
 };
 
 let _getTextForOnivimBuffer = state => {
-  Some(state)
-  |> Option.bind(Model.Selectors.getActiveBuffer)
+  Model.Selectors.getActiveBuffer(state)
   |> Option.map(Core.Buffer.getLines)
   |> Option.map(Array.to_list)
   |> Option.map(String.concat("|"))

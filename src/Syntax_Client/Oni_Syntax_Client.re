@@ -2,15 +2,17 @@
  Syntax client
  */
 
-module Core = Oni_Core;
+open Oni_Core;
+open Utility;
+
 module Ext = Oni_Extensions;
 
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module ServerToClient = Protocol.ServerToClient;
 
-module ClientLog = (val Core.Log.withNamespace("Oni2.SyntaxClient"));
-module ServerLog = (val Core.Log.withNamespace("Oni2.SyntaxServer"));
+module ClientLog = (val Log.withNamespace("Oni2.Syntax.Client"));
+module ServerLog = (val Log.withNamespace("Oni2.Syntax.Server"));
 
 type connectedCallback = unit => unit;
 type closeCallback = int => unit;
@@ -29,8 +31,8 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
 
 let start =
     (
-      ~onConnected=Core.Utility.noop,
-      ~onClose=Core.Utility.noop1,
+      ~onConnected=() => (),
+      ~onClose=_ => (),
       ~scheduler,
       ~onHighlights,
       ~onHealthCheckResult,
@@ -49,31 +51,27 @@ let start =
   Unix.set_close_on_exec(stderr);
 
   let parentPid = Unix.getpid() |> string_of_int;
-  let camomilePath = Core.Setup.(setup.camomilePath);
+  let camomilePath = Setup.(setup.camomilePath);
 
   // Remove ONI2_LOG_FILE from environment of syntax server
   let envList =
     Unix.environment()
     |> Array.to_list
-    |> List.filter(str =>
-         !Core.Utility.StringUtil.contains("ONI2_LOG_FILE", str)
-       );
+    |> List.filter(str => !StringEx.contains("ONI2_LOG_FILE", str));
 
   let env = [
-    Core.EnvironmentVariables.parentPid ++ "=" ++ parentPid,
-    Core.EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
+    EnvironmentVariables.parentPid ++ "=" ++ parentPid,
+    EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
     ...envList,
   ];
 
-  let executableName =
-    Revery.Environment.executingDirectory
-    ++ "Oni2_editor"
-    ++ (Sys.win32 ? ".exe" : "");
+  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
-  ClientLog.infof(m =>
+  ClientLog.debugf(m =>
     m(
       "Starting executable: %s with camomilePath: %s and parentPid: %s",
-      executableName,
+      executablePath,
       camomilePath,
       parentPid,
     )
@@ -81,8 +79,8 @@ let start =
 
   let pid =
     Unix.create_process_env(
-      executableName,
-      [|executableName, "--syntax-highlight-service"|],
+      executablePath,
+      [|executablePath, "--syntax-highlight-service"|],
       Array.of_list(env),
       pstdin,
       pstdout,
@@ -102,7 +100,7 @@ let start =
   Stdlib.set_binary_mode_in(in_channel, true);
   Stdlib.set_binary_mode_out(out_channel, true);
 
-  let scheduler = cb => Core.Scheduler.run(cb, scheduler);
+  let scheduler = cb => Scheduler.run(cb, scheduler);
 
   let safeClose = channel =>
     switch (Unix.close(channel)) {
@@ -112,28 +110,28 @@ let start =
     };
 
   let _waitThread =
-    Core.ThreadHelper.create(
+    ThreadHelper.create(
       ~name="SyntaxThread.wait",
       () => {
         let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
         let code =
           switch (status) {
           | Unix.WEXITED(0) =>
-            ClientLog.info("Syntax process exited safely.");
+            ClientLog.debug("Syntax process exited safely.");
             0;
           | Unix.WEXITED(code) =>
-            ClientLog.error(
-              "Syntax process exited with code: " ++ string_of_int(code),
+            ClientLog.errorf(m =>
+              m("Syntax process exited with code: %i", code)
             );
             code;
           | Unix.WSIGNALED(signal) =>
-            ClientLog.error(
-              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            ClientLog.errorf(m =>
+              m("Syntax process stopped with signal: %i", signal)
             );
             signal;
           | Unix.WSTOPPED(signal) =>
-            ClientLog.error(
-              "Syntax process stopped with signal: " ++ string_of_int(signal),
+            ClientLog.errorf(m =>
+              m("Syntax process stopped with signal: %i", signal)
             );
             signal;
           };
@@ -145,27 +143,35 @@ let start =
     );
 
   let readThread =
-    Core.ThreadHelper.create(
+    ThreadHelper.create(
       ~name="SyntaxThread.read",
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stdout);
+
           let result: ServerToClient.t = Marshal.from_channel(in_channel);
           switch (result) {
           | ServerToClient.Initialized => scheduler(onConnected)
+
           | ServerToClient.EchoReply(result) =>
             scheduler(() =>
-              ClientLog.info("got message from channel: |" ++ result ++ "|")
+              ClientLog.tracef(m =>
+                m("got message from channel: |%s|", result)
+              )
             )
-          | ServerToClient.Log(msg) => scheduler(() => ServerLog.info(msg))
+
+          | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
+
           | ServerToClient.Closing =>
-            scheduler(() => ServerLog.info("Closing"))
+            scheduler(() => ServerLog.debug("Closing"))
+
           | ServerToClient.HealthCheckPass(res) =>
             scheduler(() => onHealthCheckResult(res))
+
           | ServerToClient.TokenUpdate(tokens) =>
             scheduler(() => {
               onHighlights(tokens);
-              ClientLog.info("Tokens applied");
+              ClientLog.trace("Tokens applied");
             })
           };
         };
@@ -176,22 +182,22 @@ let start =
     );
 
   let _readStderr =
-    Core.ThreadHelper.create(
+    ThreadHelper.create(
       ~name="SyntaxThread.stderr",
       () => {
         while (! shouldClose^) {
           Thread.wait_read(stderr);
           switch (input_line(err_channel)) {
           | exception End_of_file => shouldClose := true
-          | v => scheduler(() => ServerLog.info(v))
+          | msg => scheduler(() => ServerLog.debug(msg))
           };
         };
         safeClose(stderr);
-        scheduler(() => ServerLog.info("stderr thread done!"));
+        scheduler(() => ServerLog.debug("stderr thread done!"));
       },
       (),
     );
-  ClientLog.info("started syntax client");
+  ClientLog.debug("started syntax client");
   let syntaxClient = {in_channel, out_channel, readThread};
   write(
     syntaxClient,
@@ -203,20 +209,19 @@ let start =
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
     Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
-  ClientLog.info("Sending bufferUpdate notification...");
+  ClientLog.trace("Sending bufferUpdate notification...");
   write(v, message);
 };
 
 let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  ClientLog.info("TODO - Send Buffer leave.");
+  ClientLog.warn("TODO - Send Buffer leave.");
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
-let notifyConfigurationChanged =
-    (v: t, configuration: Oni_Core.Configuration.t) => {
+let notifyConfigurationChanged = (v: t, configuration: Configuration.t) => {
   write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
 };
 
@@ -225,22 +230,17 @@ let healthCheck = (v: t) => {
 };
 
 let notifyBufferUpdate =
-    (
-      v: t,
-      bufferUpdate: Oni_Core.BufferUpdate.t,
-      lines: array(string),
-      scope,
-    ) => {
-  ClientLog.info("Sending bufferUpdate notification...");
+    (v: t, bufferUpdate: BufferUpdate.t, lines: array(string), scope) => {
+  ClientLog.trace("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
 };
 
 let notifyVisibilityChanged = (v: t, visibility) => {
-  ClientLog.info("Sending visibleRangesChanged notification...");
+  ClientLog.trace("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
 let close = (syntaxClient: t) => {
-  ClientLog.info("Sending close request...");
+  ClientLog.debug("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
 };

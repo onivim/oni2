@@ -14,7 +14,7 @@ However, there may be bugs or features missing as we are still pushing towards o
 
 ### What are the system requirements?
 
-The system requirements are listed [here](https://onivim.github.io/docs/installation.md#system-requirements).
+The system requirements are listed [here](https://onivim.github.io/docs/getting-started/installation#system-requirements).
 
 ### Where can I download a build?
 

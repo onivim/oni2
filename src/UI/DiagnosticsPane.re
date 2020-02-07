@@ -2,6 +2,10 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
+module LocationList = Oni_Components.LocationList;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];
 
@@ -21,7 +25,7 @@ let toLocListItem = (diagWithUri: (Uri.t, Diagnostic.t)) => {
   let (uri, diag) = diagWithUri;
   let file = Uri.toFileSystemPath(uri);
   let location = Diagnostic.(diag.range.start);
-  LocationListItem.{file, location, text: diag.message, highlight: None};
+  LocationList.{file, location, text: diag.message, highlight: None};
 };
 
 let make = (~state: State.t, ()) => {
@@ -33,6 +37,11 @@ let make = (~state: State.t, ()) => {
     |> List.map(toLocListItem)
     |> Array.of_list;
 
+  let onSelectItem = (item: LocationList.item) =>
+    GlobalContext.current().dispatch(
+      Actions.OpenFileByPath(item.file, None, Some(item.location)),
+    );
+
   let innerElement =
     if (Array.length(items) == 0) {
       <View style=Styles.noResultsContainer>
@@ -42,7 +51,7 @@ let make = (~state: State.t, ()) => {
         />
       </View>;
     } else {
-      <LocationListView theme uiFont editorFont items />;
+      <LocationList theme uiFont editorFont items onSelectItem />;
     };
 
   <View style=Styles.pane> innerElement </View>;

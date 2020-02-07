@@ -12,8 +12,7 @@ let create = (~uri, ~range) => {uri, range};
 let of_yojson_exn = json => {
   Yojson.Safe.Util.(
     {
-      let uri =
-        json |> member("uri") |> Uri.of_yojson |> Utility.resultToException;
+      let uri = json |> member("uri") |> Uri.of_yojson |> Stdlib.Result.get_ok;
       let range =
         json
         |> member("range")

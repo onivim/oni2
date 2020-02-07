@@ -2,13 +2,12 @@
  * LanguageHelpers.re
  */
 module Core = Oni_Core;
-module Log = Core.Log;
-module Option = Core.Utility.Option;
+module Log = (val Core.Log.withNamespace("IntegrationTest.ExtensionHelpers"));
 
 module Model = Oni_Model;
 
 module State = Model.State;
-module LanguageFeatures = Model.LanguageFeatures;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let waitForExtensionToActivate =
     (~extensionId, waitForState: Types.waitForState) => {

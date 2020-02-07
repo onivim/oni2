@@ -38,17 +38,16 @@ module TextRun = {
 
 type splitFunc = (int, UChar.t, int, UChar.t) => bool;
 
-type measureFunc = UChar.t => int;
-
-let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
+let _getNextBreak =
+    (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
   let pos = ref(start);
   let found = ref(false);
 
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
-    let char = Zed_utf8.get(s, firstPos);
-    let nextChar = Zed_utf8.get(s, secondPos);
+    let char = BufferLine.getUCharExn(~index=firstPos, bufferLine);
+    let nextChar = BufferLine.getUCharExn(~index=secondPos, bufferLine);
 
     if (f(firstPos, char, secondPos, nextChar)) {
       found := true;
@@ -62,39 +61,18 @@ let _getNextBreak = (s: string, start: int, max: int, f: splitFunc) => {
   pos^;
 };
 
-let defaultMeasure: measureFunc = _ => 1;
-
-let getOffsetFromStart = (~measure, ~idx, s) =>
-  if (idx <= 0) {
-    0;
-  } else {
-    let offset = ref(0);
-    let i = ref(0);
-
-    while (i^ < idx) {
-      offset := offset^ + measure(Zed_utf8.get(s, i^));
-      incr(i);
-    };
-
-    offset^;
-  };
-
 let tokenize =
-    (
-      ~startIndex=0,
-      ~endIndex=(-1),
-      ~f: splitFunc,
-      ~measure=defaultMeasure,
-      s: string,
-    ) => {
-  let len = Zed_utf8.length(s);
+    (~startIndex=0, ~endIndex, ~f: splitFunc, bufferLine: BufferLine.t) => {
+  let len = BufferLine.lengthBounded(~max=endIndex, bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    let initialOffset = getOffsetFromStart(~measure, ~idx=startIndex, s);
+    let (initialOffset, _) =
+      BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
+
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
@@ -103,12 +81,17 @@ let tokenize =
     while (idx^ < maxIndex) {
       let startToken = idx^;
       let startOffset = offset^;
-      let endToken = _getNextBreak(s, startToken, maxIndex, f) + 1;
+      let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
-      let text = Zed_utf8.sub(s, startToken, endToken - startToken);
-      let endOffset =
-        startOffset
-        + Zed_utf8.fold((char, prev) => prev + measure(char), text, 0);
+      let (endOffset, _) =
+        BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
+
+      let text =
+        BufferLine.subExn(
+          ~index=startToken,
+          ~length=endToken - startToken,
+          bufferLine,
+        );
 
       let textRun =
         TextRun.create(

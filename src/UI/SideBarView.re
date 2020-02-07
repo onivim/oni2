@@ -16,7 +16,7 @@ module Styles = {
 
   let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
-    fontFamily(font.fontFile),
+    fontFamily(font.fontFileSemiBold),
     backgroundColor(bg),
     color(fg),
   ];
@@ -26,7 +26,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
+    height(Core.Constants.tabHeight),
   ];
 };
 

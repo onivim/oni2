@@ -2,6 +2,8 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Feature_LanguageSupport;
+open Feature_Editor;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
@@ -33,9 +35,8 @@ runTestWithInput(
     ~name="Wait for oni-dev filetype to show up",
     (state: State.t) => {
       let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
+        Selectors.getActiveBuffer(state)
+        |> OptionEx.flatMap(Buffer.getFileType);
 
       switch (fileType) {
       | Some("oni-dev") => true
@@ -76,7 +77,7 @@ runTestWithInput(
         );
       };
 
-      Option.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
+      OptionEx.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
       |> Option.value(~default=false);
     },
   );

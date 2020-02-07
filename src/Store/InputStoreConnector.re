@@ -10,11 +10,9 @@ open Oni_Input;
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
+module Completions = Feature_LanguageSupport.Completions;
 
-module Log = (val Log.withNamespace("Oni2.InputStore"));
-
-module Option = Utility.Option;
-module List = Utility.List;
+module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
 let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
 
@@ -38,8 +36,14 @@ let conditionsOfState = (state: State.t) => {
   | None => ()
   };
 
-  if (Model.Completions.isActive(state.completions)) {
+  if (Completions.isActive(state.completions)) {
     Hashtbl.add(ret, "suggestWidgetVisible", true);
+  };
+
+  switch (state.configuration.default.editorAcceptSuggestionOnEnter) {
+  | `on
+  | `smart => Hashtbl.add(ret, "acceptSuggestionOnEnter", true)
+  | `off => ()
   };
 
   // HACK: Because we don't have AND conditions yet for input
@@ -170,7 +174,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
 
-          | Search => [Actions.SearchInput(k)]
+          | Search => [Actions.Search(Feature_Search.Input(k))]
+
+          | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
           };
         };
 
@@ -229,20 +235,18 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   //  SUBSCRIPTIONS
 
   switch (window) {
-  | None => Log.error("no window to subscribe to events")
+  | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyDown, event =>
+      Revery.Window.onKeyDown(window, event =>
         dispatch(Actions.KeyDown(event))
       );
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyUp, event =>
-        dispatch(Actions.KeyUp(event))
-      );
+      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event)));
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onTextInputCommit, event =>
+      Revery.Window.onTextInputCommit(window, event =>
         dispatch(Actions.TextInput(event))
       );
     ();

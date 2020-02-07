@@ -10,11 +10,15 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+module ContextMenu = Oni_Components.ContextMenu;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | Tick(tick)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
@@ -30,13 +34,10 @@ type t =
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
-  | CompletionStart([@opaque] CompletionMeet.t)
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
-  | CompletionBaseChanged(string)
-  | CompletionEnd
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -58,13 +59,16 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
+  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
+  | ContextMenuOverlayClicked
+  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, int)
+  | LoadEditorFont(string, float)
   | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
@@ -74,15 +78,16 @@ type t =
   | WindowSetActive(int, int)
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
-  | EditorGroupAdd(editorGroup)
+  | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorCursorMove(EditorId.t, [@opaque] list(Vim.Cursor.t))
-  | EditorSetScroll(EditorId.t, float)
-  | EditorScroll(EditorId.t, float)
-  | EditorScrollToLine(EditorId.t, int)
-  | EditorScrollToColumn(EditorId.t, int)
-  | ShowNotification(notification)
-  | HideNotification(int)
+  | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
+  | EditorSetScroll(Feature_Editor.EditorId.t, float)
+  | EditorScroll(Feature_Editor.EditorId.t, float)
+  | EditorScrollToLine(Feature_Editor.EditorId.t, int)
+  | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
+  | ShowNotification(Notification.t)
+  | HideNotification(Notification.t)
+  | ClearNotifications
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -123,14 +128,23 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SCM(SCM.msg)
   | SearchStart
   | SearchHotkey
-  | SearchInput(string)
-  | SearchInputClicked(int)
-  | SearchUpdate([@opaque] list(Ripgrep.Match.t))
-  | SearchComplete
+  | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
+  | PaneTabClicked(Pane.paneType)
   | VimDirectoryChanged(string)
+  | WindowCloseBlocked
+  | WindowCloseDiscardConfirmed
+  | WindowCloseSaveAllConfirmed
+  | WindowCloseCanceled
+  | NewTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | LostTextContentProvider({handle: int})
+  | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | Noop
@@ -143,50 +157,9 @@ and command = {
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
-and notificationType =
-  | Success
-  | Info
-  | Warning
-  | Error
 and tick = {
   deltaTime: float,
   totalTime: float,
-}
-and notification = {
-  id: int,
-  notificationType,
-  title: string,
-  message: string,
-}
-and editor = {
-  editorId: EditorId.t,
-  bufferId: int,
-  scrollX: float,
-  scrollY: float,
-  minimapMaxColumnWidth: int,
-  minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
-  cursors: [@opaque] list(Vim.Cursor.t),
-  selection: [@opaque] VisualRange.t,
-}
-and editorMetrics = {
-  pixelWidth: int,
-  pixelHeight: int,
-  lineHeight: float,
-  characterWidth: float,
-}
-and editorGroup = {
-  editorGroupId: int,
-  activeEditorId: option(int),
-  editors: [@opaque] IntMap.t(editor),
-  bufferIdToEditorId: [@opaque] IntMap.t(int),
-  reverseTabOrder: list(int),
-  metrics: editorMetrics,
 }
 and menuItem = {
   category: option(string),

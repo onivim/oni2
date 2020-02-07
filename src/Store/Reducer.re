@@ -6,10 +6,11 @@
 
 open Oni_Model;
 
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
     switch (a) {
-    | Actions.Tick(_) => s
     | a =>
       let s = {
         ...s,
@@ -20,7 +21,6 @@ let reduce: (State.t, Actions.t) => State.t =
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         commands: Commands.reduce(s.commands, a),
-        completions: Completions.reduce(s.completions, a),
         definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups: EditorGroups.reduce(s.editorGroups, a),
         extensions: ExtensionsReducer.reduce(a, s.extensions),

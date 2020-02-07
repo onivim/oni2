@@ -2,6 +2,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Feature_LanguageSupport;
 
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
@@ -25,9 +26,8 @@ runTestWithInput(
         ~name="Validate we have a TypeScript filetype",
         (state: State.t) => {
           let fileType =
-            Some(state)
-            |> Option.bind(Selectors.getActiveBuffer)
-            |> Option.bind(Buffer.getFileType);
+            Selectors.getActiveBuffer(state)
+            |> OptionEx.flatMap(Buffer.getFileType);
 
           switch (fileType) {
           | Some("typescript") => true
@@ -71,8 +71,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -83,10 +82,9 @@ runTestWithInput(
   wait(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
-    (state: State.t) => {
-    Model.Completions.getCompletions(state.completions)
-    |> (comp => List.length(comp) > 0)
-  });
+    (state: State.t) =>
+    Array.length(state.completions.filtered) > 0
+  );
 
   // Fix error, finish identifier
   input("indow");
@@ -99,8 +97,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

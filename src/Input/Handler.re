@@ -5,8 +5,8 @@
  */
 
 open Revery;
-module Log = Oni_Core.Log;
 
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Handler"));
 module Zed_utf8 = Oni_Core.ZedBundled;
 
 let keyCodeToVimString = (keycode, keyString) => {
@@ -47,7 +47,7 @@ let keyCodeToVimString = (keycode, keyString) => {
 let keyPressToString =
     (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, keycode) => {
   let keyString = Revery.Key.Keycode.getName(keycode);
-  Log.info("Input - keyPressToString - key name: " ++ keyString);
+  Log.trace("keyPressToString - key name: " ++ keyString);
 
   let keyString =
     if (!shiftKey && String.length(keyString) == 1) {
@@ -56,12 +56,7 @@ let keyPressToString =
       keyString;
     };
 
-  Log.info(
-    "Input - keyPressToString - processing keycode: "
-    ++ string_of_int(keycode)
-    ++ "|"
-    ++ keyString,
-  );
+  Log.tracef(m => m("Processing keycode: %i|%s", keycode, keyString));
 
   let vimString = keyCodeToVimString(keycode, keyString);
   let vimStringLength =
@@ -80,11 +75,7 @@ let keyPressToString =
         || vimStringLength > 1
       : true;
 
-  switch (isKeyAllowed) {
-  | false =>
-    Log.info("keyPressToString - key blocked: " ++ keyString);
-    None;
-  | true =>
+  if (isKeyAllowed) {
     switch (vimString) {
     | None => None
     | Some(s) =>
@@ -97,9 +88,13 @@ let keyPressToString =
       let s = superKey ? "D-" ++ s : s;
 
       let ret = Zed_utf8.length(s) > 1 ? "<" ++ s ++ ">" : s;
-      Log.info("keyPressToString - sending key: " ++ ret);
+
+      Log.trace("Sending key: " ++ ret);
       Some(ret);
-    }
+    };
+  } else {
+    Log.trace("Key blocked: " ++ keyString);
+    None;
   };
 };
 

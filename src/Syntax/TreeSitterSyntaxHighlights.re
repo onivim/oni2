@@ -6,6 +6,10 @@ open EditorCoreTypes;
 open Oni_Core;
 open Treesitter;
 
+module Log = (
+  val Log.withNamespace("Oni2.Syntax.TreeSitterSyntaxHighlights")
+);
+
 type t = {
   parser: Parser.t,
   tree: Tree.t,
@@ -80,7 +84,7 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
     );
 
   let (tree, newBaseline) =
-    Log.perf("TreeSitter::parse", () =>
+    Oni_Core.Log.perf("TreeSitter::parse", () =>
       TreeSitter.ArrayParser.parse(parser, Some(delta), lines)
     );
 

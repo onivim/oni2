@@ -69,7 +69,7 @@ let validateBuffer =
   };
 
   let f = (i, expected) => {
-    let actual = Buffer.getLine(actualBuffer, i);
+    let actual = Buffer.getLine(i, actualBuffer) |> BufferLine.raw;
     validateLine(actual, expected);
   };
 

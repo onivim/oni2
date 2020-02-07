@@ -10,7 +10,7 @@ open Reason_jsonrpc;
 open Rench;
 /* open Revery; */
 
-module Log = (val Log.withNamespace("Oni2.ExtHostTransport"));
+module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostTransport"));
 
 module Protocol = ExtHostProtocol;
 
@@ -136,7 +136,7 @@ let start =
     };
 
   let handleReply = (reqId: int, payload: Yojson.Safe.t) => {
-    Log.debugf(m =>
+    Log.tracef(m =>
       m("Reply ID: %d payload: %s\n", reqId, Yojson.Safe.to_string(payload))
     );
     switch (Hashtbl.find_opt(replyIdToResolver, reqId)) {
@@ -149,7 +149,7 @@ let start =
 
   let _sendInitData = () => {
     let _: int =
-      send(MessageType.initData, ExtHostInitData.to_yojson(initData));
+      send(MessageType.initData, ExtHostInitData.encode(initData));
     ();
   };
 

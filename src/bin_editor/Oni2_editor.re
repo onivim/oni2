@@ -14,32 +14,29 @@ module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
-module Log = (val Core.Log.withNamespace("Oni2.Oni2_editor"));
+module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
+module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (extensionPath, cli) => {
-  Store.Utility.getUserExtensionsDirectory(cli)
-  |> Option.map(extensionFolder => {
-       let promise = ExtM.install(~extensionFolder, ~extensionPath);
+let installExtension = (path, cli) => {
+  switch (Store.Utility.getUserExtensionsDirectory(cli)) {
+  | Some(extensionsFolder) =>
+    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
 
-       let result = Core.Utility.LwtUtil.sync(promise);
-       switch (result) {
-       | Ok(_) =>
-         Printf.printf(
-           "Successfully installed extension: %s\n",
-           extensionPath,
-         );
-         0;
-       | Error(_) =>
-         Printf.printf("Failed to install extension: %s\n", extensionPath);
-         1;
-       };
-     })
-  |> Option.tap_none(() => {
-       prerr_endline("Error locating user extension folder.")
-     })
-  |> Option.value(~default=1);
+    switch (result) {
+    | Ok(_) =>
+      Printf.printf("Successfully installed extension: %s\n", path);
+      0;
+
+    | Error(_) =>
+      Printf.printf("Failed to install extension: %s\n", path);
+      1;
+    };
+
+  | None =>
+    prerr_endline("Error locating user extension folder.");
+    1;
+  };
 };
 
 let uninstallExtension = (_extensionId, _cli) => {
@@ -56,32 +53,43 @@ let listExtensions = cli => {
   0;
 };
 
+let printVersion = _cli => {
+  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
+  0;
+};
+
 let cliOptions =
   Core.Cli.parse(
     ~installExtension,
     ~uninstallExtension,
     ~checkHealth=HealthCheck.run(~checks=All),
-    ~listExtensions=cli => {
-      let extensions = Store.Utility.getUserExtensions(cli);
-      let printExtension = (ext: Ext.ExtensionScanner.t) => {
-        print_endline(ext.manifest.name);
-      };
-      List.iter(printExtension, extensions);
-      1;
-    },
+    ~listExtensions=
+      cli => {
+        let extensions = Store.Utility.getUserExtensions(cli);
+        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+          print_endline(ext.manifest.name);
+        };
+        List.iter(printExtension, extensions);
+        1;
+      },
+    ~printVersion,
   );
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start(~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
   );
 } else {
-  Log.info("Starting Onivim 2.");
+  Log.infof(m =>
+    m(
+      "Starting Onivim 2.%s (%s)",
+      Core.BuildInfo.version,
+      Core.BuildInfo.commitId,
+    )
+  );
 
   /* The 'main' function for our app */
   let init = app => {
-    Log.info("Init");
-
-    let _ = Revery.Log.listen((_, msg) => ReveryLog.info(msg));
+    Log.debug("Init");
 
     let w =
       App.createWindow(
@@ -97,9 +105,9 @@ if (cliOptions.syntaxHighlightService) {
         "Oni2",
       );
 
-    Log.info("Initializing setup.");
+    Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-    Log.info("Startup: Parsing CLI options");
+    Log.debug("Startup: Parsing CLI options");
 
     Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
     switch (Sys.chdir(cliOptions.folder)) {
@@ -121,7 +129,7 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _ =
+    let _: unit => unit =
       Tick.interval(
         _dt =>
           if (isDirty^) {
@@ -132,12 +140,6 @@ if (cliOptions.syntaxHighlightService) {
           },
         Time.seconds(0),
       );
-
-    let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
-    };
-
-    let getTime = () => Time.now() |> Time.toFloatSeconds;
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -152,19 +154,17 @@ if (cliOptions.syntaxHighlightService) {
     let setVsync = vsync => Window.setVsync(w, vsync);
 
     let quit = code => {
-      App.quit(~code, app);
+      App.quit(~askNicely=false, ~code, app);
     };
 
-    Log.info("Startup: Starting StoreThread");
+    Log.debug("Startup: Starting StoreThread");
     let (dispatch, runEffects) =
       Store.StoreThread.start(
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
-        ~getTime,
-        ~executingDirectory=Core.Utility.executingDirectory,
+        ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
-        ~getScaleFactor,
         ~getZoom,
         ~setZoom,
         ~setTitle,
@@ -174,7 +174,7 @@ if (cliOptions.syntaxHighlightService) {
         ~quit,
         (),
       );
-    Log.info("Startup: StoreThread started!");
+    Log.debug("Startup: StoreThread started!");
 
     GlobalContext.set({
       getState: () => currentState^,
@@ -216,6 +216,6 @@ if (cliOptions.syntaxHighlightService) {
   };
 
   /* Let's get this party started! */
-  Log.info("Calling App.start");
+  Log.debug("Calling App.start");
   App.start(init);
 };

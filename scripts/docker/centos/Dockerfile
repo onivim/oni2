@@ -19,7 +19,8 @@ RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/r/
 RUN node -v
 RUN npm -v
 
-RUN npm install --global --unsafe-perm=true esy@0.5.8
+RUN npm install --global --unsafe-perm=true esy@0.6.1
+RUN npm install --global node-gyp
 
 RUN yum -y install epel-release
 RUN yum -y remove git

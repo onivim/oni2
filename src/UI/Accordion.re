@@ -6,11 +6,13 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Components;
+
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
 };
 
 module Styles = {
@@ -50,7 +52,8 @@ let make =
     ) => {
   let list =
     expanded
-      ? <FlatList rowHeight count render=renderItem focused /> : React.empty;
+      ? <FlatList rowHeight count focused> ...renderItem </FlatList>
+      : React.empty;
 
   <View style={Styles.container(expanded)}>
     <View style={Styles.titleBar(theme)}>
