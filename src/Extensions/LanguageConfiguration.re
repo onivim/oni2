@@ -29,13 +29,22 @@ module AutoClosingPair = {
           notIn: [],
         })));
 
+    let obj = obj(({field, _}) => {
+       openPair: field.required("open", string),
+       closePair: field.required("close", string),
+       notIn: [],
+    });
+
     let decode = {
-      tuple;
+      one_of([
+      ("tuple", tuple),
+      ("object", obj)
+      ]);
     }
   
   };
 
-  let decode = Decode.tuple;
+  let decode = Decode.decode;
 };
 
 type t = {
