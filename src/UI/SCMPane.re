@@ -94,6 +94,7 @@ let groupView =
 };
 
 let make = (~state: State.t, ()) => {
+  [@warning "-27"]
   let {theme, uiFont as font, workspace, _}: State.t = state;
 
   let groups = {
