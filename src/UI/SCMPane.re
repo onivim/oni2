@@ -61,11 +61,16 @@ let%component itemView =
     )
     |> Option.value(~default="/");
 
-  let displayName =
-    Path.toRelative(~base, Uri.toFileSystemPath(resource.uri));
+  let path = Uri.toFileSystemPath(resource.uri);
+  let displayName = Path.toRelative(~base, path);
+
+  let onClick = () =>
+    GlobalContext.current().dispatch(Actions.OpenFileByPath(path, None, None));
 
   <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
-    <Text style={Styles.text(~font, ~theme)} text=displayName />
+    <Sneakable onClick>
+      <Text style={Styles.text(~font, ~theme)} text=displayName />
+    </Sneakable>
   </View>;
 };
 
