@@ -1,3 +1,4 @@
+open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -17,18 +18,28 @@ module Styles = {
     transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let item = [
+  let item = (~isHovered, ~theme: Theme.t) => [
     height(50),
     width(50),
     justifyContent(`Center),
     alignItems(`Center),
+    backgroundColor(
+      isHovered ? theme.menuSelectionBackground : Colors.transparentWhite,
+    ),
   ];
 };
 
-let item = (~onClick, ~theme: Theme.t, ~icon, ()) =>
-  <Sneakable onClick style=Styles.item>
-    <FontIcon color={theme.activityBarForeground} fontSize=22. icon />
-  </Sneakable>;
+let%component item = (~onClick, ~theme: Theme.t, ~icon, ()) => {
+  let%hook (isHovered, setHovered) = Hooks.state(false);
+  let onMouseOver = _ => setHovered(_ => true);
+  let onMouseOut = _ => setHovered(_ => false);
+
+  <View onMouseOver onMouseOut>
+    <Sneakable onClick style={Styles.item(~isHovered, ~theme)}>
+      <FontIcon color={theme.activityBarForeground} fontSize=22. icon />
+    </Sneakable>
+  </View>;
+};
 
 let onExplorerClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
