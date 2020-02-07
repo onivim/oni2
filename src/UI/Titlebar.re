@@ -22,7 +22,7 @@ module Styles = {
 
   let text = (~background, ~foreground, ~font: UiFont.t) => [
     flexGrow(0),
-    fontSize(12),
+    fontSize(12.),
     fontFamily(font.fontFileSemiBold),
     backgroundColor(background),
     color(foreground),
