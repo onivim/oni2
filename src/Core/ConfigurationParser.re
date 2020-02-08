@@ -107,16 +107,6 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseAutoClosingBrackets = json => {
-  switch (json) {
-  | `Bool(false) => Never
-  | `Bool(true) => LanguageDefined
-  | `String(acb) =>
-    // TODO
-    LanguageDefined
-  };
-};
-
 let parseRenderWhitespace = json =>
   switch (json) {
   | `String(v) =>

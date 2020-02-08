@@ -39,16 +39,14 @@ module AutoClosingPair = {
 
     let scopeToList = scope |> map(v => [v]);
 
-    // Pulled this from: https://github.com/mattjbray/ocaml-decoders/blob/550c05c16384c9f8d2ab6a36eebc8e1a2684a7e0/src/decode.mli#L106
-    let (>>==::) = (fst, rest) => uncons(rest, fst);
-
     let tuple =
-      string
-      >>==:: (
-        openPair =>
-          string
-          >>==:: (closePair => succeed({openPair, closePair, notIn: []}))
-      );
+      list(string)
+      |> and_then(
+           fun
+           | [openPair, closePair] =>
+             succeed({openPair, closePair, notIn: []})
+           | _ => fail("Expected a 2-element tuple"),
+         );
 
     let obj =
       obj(({field, whatever, _}) =>
