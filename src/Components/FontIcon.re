@@ -8,28 +8,22 @@ open Revery.UI;
 open Oni_Core.CamomileBundled.Camomile;
 module ZedBundled = Oni_Core.ZedBundled;
 
+module Styles = {
+  open Style;
+
+  let text = (~fontFamily, ~fontSize, ~color) => [
+    Style.fontFamily(fontFamily),
+    Style.fontSize(fontSize),
+    Style.color(color),
+    textWrap(Revery.TextWrapping.NoWrap),
+  ];
+};
+
 let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
 
 let make =
-    (
-      ~icon,
-      ~fontFamily=FontAwesome.fontFamily,
-      ~fontSize=15.,
-      ~backgroundColor,
-      ~color,
-      ~margin=0,
-      (),
-    ) =>
+    (~icon, ~fontFamily=FontAwesome.fontFamily, ~fontSize=15., ~color, ()) =>
   <Text
     text={codeToIcon(icon)}
-    style=[
-      Style.fontFamily(fontFamily),
-      Style.fontSize(fontSize),
-      Style.color(color),
-      Style.backgroundColor(backgroundColor),
-      Style.margin(margin),
-      Style.height(fontSize |> int_of_float),
-      Style.width(fontSize |> int_of_float),
-      Style.textWrap(Revery.TextWrapping.NoWrap),
-    ]
+    style={Styles.text(~fontFamily, ~fontSize, ~color)}
   />;

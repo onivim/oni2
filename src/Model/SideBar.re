@@ -1,25 +1,20 @@
-type sideBarType =
+type pane =
   | FileExplorer
+  | SCM
   | Extensions;
 
 type t = {
   isOpen: bool,
-  activeType: sideBarType,
+  selected: pane,
 };
 
-let initial = {isOpen: true, activeType: FileExplorer};
+let initial = {isOpen: true, selected: FileExplorer};
 
-let setOpen = sideBarType => {isOpen: true, activeType: sideBarType};
+let isVisible = (pane, model) => model.isOpen && model.selected == pane;
 
-let setClosed = (sideBar: t) => {...sideBar, isOpen: false};
-
-let getType = sideBar => sideBar.activeType;
-
-let isOpen = sideBar => sideBar.isOpen;
-
-let toggle = (sideBarType, state: t) =>
-  if (sideBarType == state.activeType) {
+let toggle = (pane, state: t) =>
+  if (pane == state.selected) {
     {...state, isOpen: !state.isOpen};
   } else {
-    {isOpen: true, activeType: sideBarType};
+    {isOpen: true, selected: pane};
   };

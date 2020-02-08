@@ -139,8 +139,6 @@ let start =
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
   let fontUpdater = FontStoreConnector.start();
-  let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
-
   let completionUpdater = CompletionStoreConnector.start();
 
   let (languageFeatureUpdater, languageFeatureStream) =
@@ -173,7 +171,6 @@ let start =
           indentationUpdater,
           windowUpdater,
           themeUpdater,
-          acpUpdater,
           languageFeatureUpdater,
           completionUpdater,
           titleUpdater,

@@ -503,10 +503,9 @@ let start =
     Isolinear.Effect.create(~name="vim.input", () =>
       if (Oni_Input.Filter.filter(key)) {
         // Set cursors based on current editor
+        let state = getState();
         let editor =
-          getState()
-          |> Selectors.getActiveEditorGroup
-          |> Selectors.getActiveEditor;
+          state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
         let cursors =
           editor
@@ -517,7 +516,7 @@ let start =
           editor
           |> Option.iter(e => {
                let () =
-                 getState()
+                 state
                  |> Selectors.getActiveEditorGroup
                  |> Option.map(EditorGroup.getMetrics)
                  |> Option.iter(metrics => {
@@ -528,7 +527,30 @@ let start =
                ();
              });
 
-        let cursors = Vim.input(~cursors, key);
+        let acpEnabled =
+          Core.Configuration.getValue(
+            c => c.experimentalAutoClosingPairs,
+            state.configuration,
+          );
+
+        let autoClosingPairs =
+          if (acpEnabled) {
+            Some(
+              Vim.AutoClosingPairs.create(
+                Vim.AutoClosingPairs.[
+                  AutoClosingPair.create(~opening="`", ~closing="`", ()),
+                  AutoClosingPair.create(~opening={|"|}, ~closing={|"|}, ()),
+                  AutoClosingPair.create(~opening="[", ~closing="]", ()),
+                  AutoClosingPair.create(~opening="(", ~closing=")", ()),
+                  AutoClosingPair.create(~opening="{", ~closing="}", ()),
+                ],
+              ),
+            );
+          } else {
+            None;
+          };
+
+        let cursors = Vim.input(~autoClosingPairs?, ~cursors, key);
 
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();

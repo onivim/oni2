@@ -113,7 +113,6 @@ let nodeView =
       <FontIcon
         color={theme.sideBarForeground}
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-        backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
