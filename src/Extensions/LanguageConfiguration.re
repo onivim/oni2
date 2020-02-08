@@ -101,3 +101,7 @@ module Decode = {
 };
 
 let decode = Decode.configuration;
+
+let toVimAutoClosingPairs = (scopes: AutoClosingPair.scopes, configuration: t) => {
+  Vim.AutoClosingPairs.empty
+};
