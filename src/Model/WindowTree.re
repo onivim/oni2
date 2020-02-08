@@ -9,12 +9,13 @@ type direction =
   | Horizontal
   | Vertical;
 
+type splitSize =
+  | Percent(float);
+
 [@deriving show({with_path: false})]
 type split = {
   id: int,
   editorGroupId: int,
-  width: option(int),
-  height: option(int),
 };
 
 [@deriving show({with_path: false})]
@@ -25,11 +26,9 @@ type t =
 
 let empty = Parent(Vertical, [Empty]);
 
-let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
+let createSplit = (~editorGroupId, ()) => {
   id: WindowSplitId.getUniqueId(),
   editorGroupId,
-  width,
-  height,
 };
 
 let getSplits = (tree: t) => {

@@ -76,37 +76,88 @@ let move = (id, dirX, dirY, splits: list(t)) => {
   };
 };
 
+let distribute = (~f, ~totalSize, children) => {
+  // First, collect the total specified widths, and subtract from totalSize
+
+  let childCount = max(List.length(children), 1);
+  let calculatedSizes = Array.make(childCount, 0);
+
+  // The number of children that have fixed sizes.
+  // These don't need to be distributed over later;
+  let fixedChildren = ref(0);
+  let availableSize = ref(totalSize);
+  List.iteri(
+    (idx, child) => {
+      switch (f(child, totalSize)) {
+      | None => ()
+      | Some(size) =>
+        incr(fixedChildren);
+        calculatedSizes[idx] = size;
+        availableSize := availableSize^ - size;
+      }
+    },
+    children,
+  );
+
+  let childrenToDistributeOver = childCount - fixedChildren^;
+  let distributionSize =
+    childrenToDistributeOver > 0
+      ? availableSize^ / childrenToDistributeOver : 0;
+
+  List.iteri(
+    (idx, child) => {
+      switch (f(child, totalSize)) {
+      | None => calculatedSizes[idx] = distributionSize
+      | Some(_) => ()
+      }
+    },
+    children,
+  );
+
+  let calculatedSizesAndOffsets = Array.make(childCount, (0, 0));
+
+  let idx = ref(0);
+  let currentOffset = ref(0);
+  while (idx^ < childCount) {
+    let i = idx^;
+    let currentSize = calculatedSizes[i];
+    let offset = currentOffset^;
+    calculatedSizesAndOffsets[i] = (currentSize, offset);
+    currentOffset := offset + currentSize;
+    incr(idx);
+  };
+
+  calculatedSizesAndOffsets;
+};
+
 let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) => {
   switch (tree) {
   | Parent(direction, children) =>
     let startX = x;
     let startY = y;
-    let count = max(List.length(children), 1);
-    let individualWidth = width / count;
-    let individualHeight = height / count;
+
+    let distributedWidths =
+      distribute(~f=(_child, _size) => None, ~totalSize=width, children);
+
+    let distributedHeights =
+      distribute(~f=(_child, _size) => None, ~totalSize=height, children);
 
     let result =
       switch (direction) {
       | Horizontal =>
         List.mapi(
-          i =>
-            layout(
-              startX,
-              startY + individualHeight * i,
-              width,
-              individualHeight,
-            ),
+          i => {
+            let (size, offset) = distributedHeights[i];
+            layout(startX, startY + offset, width, size);
+          },
           children,
         )
       | Vertical =>
         List.mapi(
-          i =>
-            layout(
-              startX + individualWidth * i,
-              startY,
-              individualWidth,
-              height,
-            ),
+          i => {
+            let (size, offset) = distributedWidths[i];
+            layout(startX + offset, startY, size, height);
+          },
           children,
         )
       };
