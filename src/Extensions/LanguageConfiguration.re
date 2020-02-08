@@ -66,6 +66,8 @@ module AutoClosingPair = {
 
 type t = {autoClosingPairs: list(AutoClosingPair.t)};
 
+let default = {autoClosingPairs: []};
+
 module Decode = {
   open Json.Decode;
 
