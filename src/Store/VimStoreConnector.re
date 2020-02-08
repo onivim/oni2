@@ -60,6 +60,9 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  let languageConfigLoader =
+    Ext.LanguageConfigurationLoader.create(languageInfo);
+
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -535,17 +538,17 @@ let start =
 
         let autoClosingPairs =
           if (acpEnabled) {
-            Some(
-              Vim.AutoClosingPairs.create(
-                Vim.AutoClosingPairs.[
-                  AutoClosingPair.create(~opening="`", ~closing="`", ()),
-                  AutoClosingPair.create(~opening={|"|}, ~closing={|"|}, ()),
-                  AutoClosingPair.create(~opening="[", ~closing="]", ()),
-                  AutoClosingPair.create(~opening="(", ~closing=")", ()),
-                  AutoClosingPair.create(~opening="{", ~closing="}", ()),
-                ],
-              ),
-            );
+            state
+            |> Selectors.getActiveBuffer
+            |> OptionEx.flatMap(Core.Buffer.getFileType)
+            |> OptionEx.flatMap(
+                 Ext.LanguageConfigurationLoader.get_opt(
+                   languageConfigLoader,
+                 ),
+               )
+            |> Option.map(
+                 Ext.LanguageConfiguration.toVimAutoClosingPairs(None),
+               );
           } else {
             None;
           };

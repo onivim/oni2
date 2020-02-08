@@ -16,6 +16,7 @@ module ExtHostTransport = ExtHostTransport;
 module ExtensionManifest = ExtensionManifest;
 module ExtensionScanner = ExtensionScanner;
 module LanguageConfiguration = LanguageConfiguration;
+module LanguageConfigurationLoader = LanguageConfigurationLoader;
 module LanguageInfo = LanguageInfo;
 module LocationWithUri = LocationWithUri;
 module LocalizationDictionary = LocalizationDictionary;

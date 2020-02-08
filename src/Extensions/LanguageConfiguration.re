@@ -1,6 +1,7 @@
 /*
  * LanguageConfiguration.re
  */
+
 open Oni_Core.Utility;
 module Json = Oni_Core.Json;
 
@@ -8,7 +9,8 @@ module AutoClosingPair = {
   type scopes =
     | String
     | Comment
-    | Other(string);
+    | Other(string)
+    | None;
 
   type t = {
     openPair: string,
@@ -116,5 +118,20 @@ module Decode = {
 let decode = Decode.configuration;
 
 let toVimAutoClosingPairs = (scopes: AutoClosingPair.scopes, configuration: t) => {
-  Vim.AutoClosingPairs.empty;
+  let pairs =
+    List.map(
+      ({openPair, closePair, _}: AutoClosingPair.t) => {
+        Vim.AutoClosingPairs.AutoClosingPair.create(
+          ~opening=openPair,
+          ~closing=closePair,
+          (),
+        )
+      },
+      configuration.autoClosingPairs,
+    );
+
+  Vim.AutoClosingPairs.create(
+    ~allowBefore=configuration.autoCloseBefore,
+    pairs,
+  );
 };

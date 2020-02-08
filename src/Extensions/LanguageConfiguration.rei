@@ -9,7 +9,8 @@ module AutoClosingPair: {
   type scopes =
     | String
     | Comment
-    | Other(string);
+    | Other(string)
+    | None;
 
   type t = {
     openPair: string,
