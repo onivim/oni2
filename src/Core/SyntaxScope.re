@@ -18,7 +18,7 @@ let ofScopes = (scopes: list(string)) => {
 
   let anyComments =
     scopes
-    |> List.exists(scope => StringEx.startsWith(~prefix="comments", scope));
+    |> List.exists(scope => StringEx.startsWith(~prefix="comment", scope));
 
   let isString = anyStrings;
   let isComment = anyComments;
@@ -27,6 +27,14 @@ let ofScopes = (scopes: list(string)) => {
 
 let ofScope = scope => {
   let isString = StringEx.startsWith(~prefix="string", scope);
-  let isComment = StringEx.startsWith(~prefix="comments", scope);
+  let isComment = StringEx.startsWith(~prefix="comment", scope);
   {isString, isComment};
+};
+
+let toString = scope => {
+  Printf.sprintf(
+    "SyntaxScope: isComment: %s isString: %s",
+    string_of_bool(scope.isComment),
+    string_of_bool(scope.isString),
+  );
 };
