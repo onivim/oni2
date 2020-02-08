@@ -37,6 +37,7 @@ module Log = Kernel.Log;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
 module SCMDecoration = SCMDecoration;
+module SCMResource = SCMResource;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
 module StringMap = Kernel.StringMap;
