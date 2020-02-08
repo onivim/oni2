@@ -18,9 +18,9 @@ type vimUseSystemClipboard = {
 };
 
 [@deriving show({with_path: false})]
-type autoClosingBrackets = 
-| Never
-| LanguageDefined;
+type autoClosingBrackets =
+  | Never
+  | LanguageDefined;
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,

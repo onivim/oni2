@@ -114,8 +114,8 @@ let parseAutoClosingBrackets = json => {
   | `String(acb) =>
     // TODO
     LanguageDefined
-  }
-}
+  };
+};
 
 let parseRenderWhitespace = json =>
   switch (json) {
