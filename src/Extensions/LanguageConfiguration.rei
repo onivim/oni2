@@ -2,7 +2,6 @@
  * LanguageConfiguration.rei
  */
 
-open Oni_Core.Utility;
 module Json = Oni_Core.Json;
 module SyntaxScope = Oni_Core.SyntaxScope;
 

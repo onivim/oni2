@@ -1,20 +1,16 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core_Test;
 open Oni_Extensions;
 
 open TestFramework;
 
-open ExtHostProtocol;
-
 let json = Yojson.Safe.from_string;
 
-describe("LanguageConfiguration", ({describe, test}) => {
+describe("LanguageConfiguration", ({describe, test, _}) => {
   describe("AutoClosingPair", ({test, _}) => {
     open LanguageConfiguration.AutoClosingPair;
     test("decode tuple", ({expect, _}) => {
       let result = json({|["a", "b"]|}) |> Json.Decode.decode_value(decode);
-      //let result = decode("erroneous");
 
       switch (result) {
       | Ok({openPair, closePair, _}) =>
@@ -27,7 +23,6 @@ describe("LanguageConfiguration", ({describe, test}) => {
       let result =
         json({|{"open": "c", "close": "d"}|})
         |> Json.Decode.decode_value(decode);
-      //let result = decode("erroneous");
 
       switch (result) {
       | Ok({openPair, closePair, notIn}) =>
@@ -41,7 +36,6 @@ describe("LanguageConfiguration", ({describe, test}) => {
       let result =
         json({|{"open": "c", "close": "d", "notIn": ["string"]}|})
         |> Json.Decode.decode_value(decode);
-      //let result = decode("erroneous");
 
       switch (result) {
       | Ok({openPair, closePair, notIn}) =>
@@ -55,7 +49,6 @@ describe("LanguageConfiguration", ({describe, test}) => {
       let result =
         json({|{"open": "c", "close": "d", "notIn": "comment"}|})
         |> Json.Decode.decode_value(decode);
-      //let result = decode("erroneous");
 
       switch (result) {
       | Ok({openPair, closePair, notIn}) =>

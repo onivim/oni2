@@ -7,34 +7,6 @@ open Rench;
 
 open ExtensionScanner;
 
-module LazyLoader = {
-  type loadFunction('a) = string => result('a, string);
-
-  type t('a) = {
-    loader: loadFunction('a),
-    cache: Hashtbl.t(string, result('a, string)),
-  };
-
-  let create = loader => {
-    let cache = Hashtbl.create(16);
-    {loader, cache};
-  };
-
-  let get = ({cache, loader}, key) => {
-    switch (Hashtbl.find_opt(cache, key)) {
-    | Some(cachedResult) => cachedResult
-    | None =>
-      // TODO: Trace load
-      let loadedResult = loader(key);
-      Hashtbl.add(cache, key, loadedResult);
-      loadedResult;
-    };
-  };
-
-  let fail = create((_: string) => Error("Fail"));
-  let success = v => create((_: string) => Ok(v));
-};
-
 type t = {
   grammars: list(ExtensionContributions.Grammar.t),
   languages: list(ExtensionContributions.Language.t),
@@ -157,7 +129,7 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
   let languageToConfigurationPath =
     languages
     |> List.fold_left(
-         (prev, {id, configuration}: ExtensionContributions.Language.t) => {
+         (prev, {id, configuration, _}: ExtensionContributions.Language.t) => {
            switch (configuration) {
            | None => prev
            | Some(configPath) => StringMap.add(id, configPath, prev)
