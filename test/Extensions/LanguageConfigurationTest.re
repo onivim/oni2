@@ -31,9 +31,36 @@ describe("LanguageConfiguration", ({describe, _}) => {
       //let result = decode("erroneous");
 
       switch(result) {
-      | Ok({openPair, closePair, _}) =>
+      | Ok({openPair, closePair, notIn}) =>
           expect.string(openPair).toEqual("c");
           expect.string(closePair).toEqual("d");
+          expect.equal(notIn, [])
+      | _ => failwith("parse failed");
+      }
+    });
+    test("decode object with notIn list", ({expect, _}) => {
+      let result = json({|{"open": "c", "close": "d", "notIn": ["string"]}|})
+      |> Json.Decode.decode_value(decode);
+      //let result = decode("erroneous");
+
+      switch(result) {
+      | Ok({openPair, closePair, notIn}) =>
+          expect.string(openPair).toEqual("c");
+          expect.string(closePair).toEqual("d");
+          expect.equal(notIn, [String])
+      | _ => failwith("parse failed");
+      }
+    });
+    test("decode object with notIn string", ({expect, _}) => {
+      let result = json({|{"open": "c", "close": "d", "notIn": "comment"}|})
+      |> Json.Decode.decode_value(decode);
+      //let result = decode("erroneous");
+
+      switch(result) {
+      | Ok({openPair, closePair, notIn}) =>
+          expect.string(openPair).toEqual("c");
+          expect.string(closePair).toEqual("d");
+          expect.equal(notIn, [Comment])
       | _ => failwith("parse failed");
       }
     });
