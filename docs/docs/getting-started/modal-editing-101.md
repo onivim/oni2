@@ -36,6 +36,17 @@ The cursor will switch to a caret, and you'll see an indication in the status ba
 
 Once you have finished typing, you can press `Escape`, `Control+c`, or `Control+[` to return to _normal mode_ - pick whichever one is most comfortable for you.
 
+### Ex Commands
+
+Onivim also exposes a vast number of vim's ex commands, which are key sequences starting with `:`. Some useful ones to get started with are:
+
+- `:cd <directory>` to change the working directory
+- `:e <filename>` to open a file for editing, or create a new file if it doesn't exist
+- `:w` to save the current file
+- `:w <filename>` to save the current file with a new name
+- `:q` to close the current file, and the editor if it the last open file
+- `:wq` as a shorthand to save and close
+
 ### Next Steps
 
 Play around with switching between insert mode and normal mode, and when you're ready, let's dive-in to some more advanced editing:
