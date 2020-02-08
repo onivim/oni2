@@ -67,12 +67,25 @@ module AutoClosingPair = {
 
 type t = {
   autoCloseBefore: list(string),
-  autoClosingPairs: list(AutoClosingPair.t)
+  autoClosingPairs: list(AutoClosingPair.t),
 };
 
 let default = {
-  autoCloseBefore: [";", ":", ".", ",", "=", "}", "]", ")", ">", "`", " ", "\t"],
-  autoClosingPairs: []
+  autoCloseBefore: [
+    ";",
+    ":",
+    ".",
+    ",",
+    "=",
+    "}",
+    "]",
+    ")",
+    ">",
+    "`",
+    " ",
+    "\t",
+  ],
+  autoClosingPairs: [],
 };
 
 module Decode = {
@@ -103,5 +116,5 @@ module Decode = {
 let decode = Decode.configuration;
 
 let toVimAutoClosingPairs = (scopes: AutoClosingPair.scopes, configuration: t) => {
-  Vim.AutoClosingPairs.empty
+  Vim.AutoClosingPairs.empty;
 };
