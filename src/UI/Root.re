@@ -36,6 +36,9 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
   ];
+
+  let titleBar = background =>
+    Style.[flexGrow(0), height(22), backgroundColor(background)];
 };
 
 let make = (~state: State.t, ()) => {
@@ -47,6 +50,7 @@ let make = (~state: State.t, ()) => {
         editorFont,
         sideBar,
         zenMode,
+        pane,
         _,
       } = state;
 
@@ -70,7 +74,7 @@ let make = (~state: State.t, ()) => {
       c.workbenchSideBarVisible
     )
     && !zenMode
-    && SideBar.isOpen(sideBar);
+    && sideBar.isOpen;
 
   let statusBarHeight = statusBarVisible ? 25 : 0;
 
@@ -84,7 +88,7 @@ let make = (~state: State.t, ()) => {
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock state />,
+          <Dock theme sideBar pane />,
           <WindowHandle direction=Vertical theme />,
         ])
       : React.empty;
@@ -98,6 +102,13 @@ let make = (~state: State.t, ()) => {
       : React.empty;
 
   <View style={Styles.root(theme.background, theme.foreground)}>
+    <Titlebar
+      focused={state.windowIsFocused}
+      maximized={state.windowIsMaximized}
+      font={state.uiFont}
+      title={state.windowTitle}
+      theme={state.theme}
+    />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         activityBar

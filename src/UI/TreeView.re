@@ -72,16 +72,19 @@ module Styles = {
     fontSize(12),
     color(Colors.white),
   ];
+
+  let arrow = size => [width(size), height(size)];
 };
 
 module Make = (Model: TreeModel) => {
   let arrow = (~isOpen, ()) =>
-    <FontIcon
-      fontSize=Constants.arrowSize
-      color=Colors.white
-      icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
-      backgroundColor=Colors.transparentWhite
-    />;
+    <View style={Styles.arrow(int_of_float(Constants.arrowSize))}>
+      <FontIcon
+        fontSize=Constants.arrowSize
+        color=Colors.white
+        icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
+      />
+    </View>;
 
   let noArrow = () =>
     <View

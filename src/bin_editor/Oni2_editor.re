@@ -99,6 +99,7 @@ if (cliOptions.syntaxHighlightService) {
             ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
+            ~titlebarStyle=WindowStyles.Transparent,
             (),
           ),
         app,
@@ -115,6 +116,8 @@ if (cliOptions.syntaxHighlightService) {
       Log.error("Folder does not exist: " ++ msg)
     | v => v
     };
+
+    Revery.Window.setBackgroundColor(w, Colors.black);
 
     PreflightChecks.run();
 
@@ -175,6 +178,19 @@ if (cliOptions.syntaxHighlightService) {
         (),
       );
     Log.debug("Startup: StoreThread started!");
+
+    let _: Window.unsubscribe =
+      Window.onMaximized(w, () => dispatch(Model.Actions.WindowMaximized));
+    let _: Window.unsubscribe =
+      Window.onMinimized(w, () => dispatch(Model.Actions.WindowMinimized));
+    let _: Window.unsubscribe =
+      Window.onRestored(w, () => dispatch(Model.Actions.WindowRestored));
+    let _: Window.unsubscribe =
+      Window.onFocusGained(w, () =>
+        dispatch(Model.Actions.WindowFocusGained)
+      );
+    let _: Window.unsubscribe =
+      Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
       getState: () => currentState^,

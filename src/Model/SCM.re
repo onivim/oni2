@@ -1,12 +1,13 @@
 open Oni_Core;
 
-module Group = {
+module ResourceGroup = {
   [@deriving show({with_path: false})]
   type t = {
     handle: int,
     id: string,
     label: string,
     hideWhenEmpty: bool,
+    resources: list(SCMResource.t),
   };
 };
 
@@ -17,7 +18,7 @@ module Provider = {
     id: string,
     label: string,
     rootUri: option(Uri.t),
-    groups: list(Group.t),
+    resourceGroups: list(ResourceGroup.t),
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
@@ -49,6 +50,23 @@ type msg =
       rootUri: option(Uri.t),
     })
   | LostProvider({handle: int})
+  | NewResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | LostResourceGroup({
+      provider: int,
+      handle: int,
+    })
+  | ResourceStatesChanged({
+      provider: int,
+      group: int,
+      spliceStart: int,
+      deleteCount: int,
+      additions: list(SCMResource.t),
+    })
   | CountChanged({
       handle: int,
       count: int,
