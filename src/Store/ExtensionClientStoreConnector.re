@@ -475,6 +475,13 @@ let start = (extensions, setup: Setup.t) => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
     });
 
+  let gitRefreshEffect = (scm: SCM.t) =>
+    if (scm.providers == []) {
+      Isolinear.Effect.none;
+    } else {
+      executeContributedCommandEffect("git.refresh");
+    };
+
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
@@ -580,7 +587,7 @@ let start = (extensions, setup: Setup.t) => {
         state,
         Isolinear.Effect.batch([
           modelChangedEffect(state.buffers, bu),
-          executeContributedCommandEffect("git.refresh"),
+          gitRefreshEffect(state.scm),
         ]),
       )
 
