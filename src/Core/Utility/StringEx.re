@@ -18,6 +18,12 @@ let contains = (query, str) => {
   };
 };
 
+let explode = str =>
+  str
+  |> String.to_seq
+  |> List.of_seq
+  |> List.map(c => String.make(1, c));
+
 let startsWith = (~prefix, str) => {
   let prefixLength = String.length(prefix);
   let strLength = String.length(str);

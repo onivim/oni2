@@ -1,6 +1,7 @@
 /*
  * LanguageConfiguration.re
  */
+open Oni_Core.Utility;
 module Json = Oni_Core.Json;
 
 module AutoClosingPair = {
@@ -64,16 +65,31 @@ module AutoClosingPair = {
   let decode = Decode.decode;
 };
 
-type t = {autoClosingPairs: list(AutoClosingPair.t)};
+type t = {
+  autoCloseBefore: list(string),
+  autoClosingPairs: list(AutoClosingPair.t)
+};
 
-let default = {autoClosingPairs: []};
+let default = {
+  autoCloseBefore: [";", ":", ".", ",", "=", "}", "]", ")", ">", "`", " ", "\t"],
+  autoClosingPairs: []
+};
 
 module Decode = {
+  let _defaultConfig = default;
   open Json.Decode;
+
+  let autoCloseBeforeDecode = string |> map(StringEx.explode);
 
   let configuration =
     obj(({field, _}) =>
       {
+        autoCloseBefore:
+          field.withDefault(
+            "autoCloseBefore",
+            _defaultConfig.autoCloseBefore,
+            autoCloseBeforeDecode,
+          ),
         autoClosingPairs:
           field.withDefault(
             "autoClosingPairs",

@@ -9,8 +9,8 @@ open ExtHostProtocol;
 
 let json = Yojson.Safe.from_string;
 
-describe("LanguageConfiguration", ({describe, _}) => {
-  LanguageConfiguration.(
+describe("LanguageConfiguration", ({describe, test}) => {
+  LanguageConfiguration.({
     describe("AutoClosingPair", ({test, _}) => {
       open AutoClosingPair;
       test("decode tuple", ({expect, _}) => {
@@ -68,5 +68,18 @@ describe("LanguageConfiguration", ({describe, _}) => {
         };
       });
     })
-  )
+
+  test("decode autoCloseBefore", ({expect, _}) => {
+        let result =
+          json({|{"autoCloseBefore": "abc"}|})
+          |> Json.Decode.decode_value(decode);
+        
+        switch (result) {
+        | Ok({autoCloseBefore, _}) =>
+        expect.equal(autoCloseBefore, ["a", "b", "c"]);
+        | _ => failwith("parse failed");
+        }
+
+  });
+  });
 });
