@@ -102,7 +102,6 @@ let make =
       <FontIcon
         fontFamily="seti.ttf"
         icon={v.fontCharacter}
-        backgroundColor={theme.editorBackground}
         color={v.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
         fontSize={uiFont.fontSize *. 1.5}
@@ -135,7 +134,6 @@ let make =
     <Sneakable onClick=onClose style=iconContainerStyle>
       <FontIcon
         icon
-        backgroundColor={theme.editorBackground}
         color={theme.tabActiveForeground}
         fontSize={modified ? 10. : 12.}
       />

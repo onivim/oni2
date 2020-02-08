@@ -9,6 +9,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
@@ -296,6 +297,33 @@ let start = (extensions, setup: Setup.t) => {
     | UnregisterSourceControl({handle}) =>
       dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
 
+    | RegisterSCMResourceGroup({provider, handle, id, label}) =>
+      dispatch(
+        Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})),
+      )
+
+    | UnregisterSCMResourceGroup({provider, handle}) =>
+      dispatch(Actions.SCM(SCM.LostResourceGroup({provider, handle})))
+
+    | SpliceSCMResourceStates({
+        provider,
+        group,
+        start,
+        deleteCount,
+        additions,
+      }) =>
+      dispatch(
+        Actions.SCM(
+          SCM.ResourceStatesChanged({
+            provider,
+            group,
+            spliceStart: start,
+            deleteCount,
+            additions,
+          }),
+        ),
+      )
+
     | UpdateSourceControl({
         handle,
         hasQuickDiffProvider,
@@ -332,6 +360,7 @@ let start = (extensions, setup: Setup.t) => {
 
     | UnregisterDecorationProvider({handle}) =>
       dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+
     | DecorationsDidChange({handle, uris}) =>
       dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
     };
@@ -612,7 +641,7 @@ let start = (extensions, setup: Setup.t) => {
                 id,
                 label,
                 rootUri,
-                groups: [],
+                resourceGroups: [],
                 hasQuickDiffProvider: false,
                 count: 0,
                 commitTemplate: "",
@@ -682,6 +711,106 @@ let start = (extensions, setup: Setup.t) => {
                 (it: SCM.Provider.t) =>
                   it.handle == handle
                     ? {...it, commitTemplate: template} : it,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (p: SCM.Provider.t) =>
+                  p.handle == provider
+                    ? {
+                      ...p,
+                      resourceGroups: [
+                        SCM.ResourceGroup.{
+                          handle,
+                          id,
+                          label,
+                          hideWhenEmpty: false,
+                          resources: [],
+                        },
+                        ...p.resourceGroups,
+                      ],
+                    }
+                    : p,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(SCM.LostResourceGroup({provider, handle})) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (p: SCM.Provider.t) =>
+                  p.handle == provider
+                    ? {
+                      ...p,
+                      resourceGroups:
+                        List.filter(
+                          (g: SCM.ResourceGroup.t) => g.handle != handle,
+                          p.resourceGroups,
+                        ),
+                    }
+                    : p,
+                state.scm.providers,
+              ),
+          },
+        },
+        Isolinear.Effect.none,
+      )
+
+    | Actions.SCM(
+        SCM.ResourceStatesChanged({
+          provider,
+          group,
+          spliceStart,
+          deleteCount,
+          additions,
+        }),
+      ) => (
+        {
+          ...state,
+          scm: {
+            ...state.scm,
+            providers:
+              List.map(
+                (p: SCM.Provider.t) =>
+                  p.handle == provider
+                    ? {
+                      ...p,
+                      resourceGroups:
+                        List.map(
+                          (g: SCM.ResourceGroup.t) =>
+                            g.handle == group
+                              ? {
+                                ...g,
+                                resources:
+                                  ListEx.splice(
+                                    ~start=spliceStart,
+                                    ~deleteCount,
+                                    ~additions,
+                                    g.resources,
+                                  ),
+                              }
+                              : g,
+                          p.resourceGroups,
+                        ),
+                    }
+                    : p,
                 state.scm.providers,
               ),
           },

@@ -5,18 +5,16 @@
  */
 
 [@deriving show({with_path: false})]
-type paneType =
+type pane =
   | Search
   | Diagnostics
   | Notifications;
 
-type t;
+type t = {
+  selected: pane,
+  isOpen: bool,
+};
 
 let initial: t;
 
-let getType: t => option(paneType);
-let isOpen: t => bool;
-let isTypeOpen: (paneType, t) => bool;
-
-let setClosed: t => t;
-let setOpen: paneType => t;
+let isVisible: (pane, t) => bool;

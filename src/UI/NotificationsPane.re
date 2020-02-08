@@ -58,7 +58,6 @@ module Notification = {
       <FontIcon
         icon={iconFor(item)}
         fontSize=16.
-        backgroundColor={theme.background}
         color={colorFor(item, ~theme)}
       />;
 
@@ -69,7 +68,6 @@ module Notification = {
         <FontIcon
           icon=FontAwesome.times
           fontSize=13.
-          backgroundColor={theme.background}
           color={theme.foreground}
         />
       </Clickable>;
