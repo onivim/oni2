@@ -4,18 +4,25 @@
 
 open Oni_Core.Utility;
 module Json = Oni_Core.Json;
+module SyntaxScope = Oni_Core.SyntaxScope;
 
 module AutoClosingPair = {
   type scopes =
     | String
     | Comment
-    | Other(string)
-    | None;
+    | Other(string);
 
   type t = {
     openPair: string,
     closePair: string,
     notIn: list(scopes),
+  };
+
+  let isActive = ({isComment, isString}: SyntaxScope.t, acp: t) => {
+    let disallowString = acp.notIn |> List.exists(notIn => notIn == String);
+    let disallowComment = acp.notIn |> List.exists(notIn => notIn == Comment);
+
+    (!isComment || !disallowComment) && (!isString || !disallowString);
   };
 
   module Decode = {
@@ -117,18 +124,17 @@ module Decode = {
 
 let decode = Decode.configuration;
 
-let toVimAutoClosingPairs = (scopes: AutoClosingPair.scopes, configuration: t) => {
+let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
   let pairs =
-    List.map(
-      ({openPair, closePair, _}: AutoClosingPair.t) => {
-        Vim.AutoClosingPairs.AutoClosingPair.create(
-          ~opening=openPair,
-          ~closing=closePair,
-          (),
-        )
-      },
-      configuration.autoClosingPairs,
-    );
+    configuration.autoClosingPairs
+    |> List.filter(AutoClosingPair.isActive(syntaxScope))
+    |> List.map(({openPair, closePair, _}: AutoClosingPair.t) => {
+         Vim.AutoClosingPairs.AutoClosingPair.create(
+           ~opening=openPair,
+           ~closing=closePair,
+           (),
+         )
+       });
 
   Vim.AutoClosingPairs.create(
     ~allowBefore=configuration.autoCloseBefore,

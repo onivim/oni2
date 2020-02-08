@@ -18,7 +18,6 @@ let get = ({cache, loader}, key) => {
   switch (Hashtbl.find_opt(cache, key)) {
   | Some(cachedResult) => cachedResult
   | None =>
-    // TODO: Trace load
     let loadedResult = loader(key);
     Hashtbl.add(cache, key, loadedResult);
     loadedResult;

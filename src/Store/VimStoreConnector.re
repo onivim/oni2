@@ -547,7 +547,9 @@ let start =
                  ),
                )
             |> Option.map(
-                 Ext.LanguageConfiguration.toVimAutoClosingPairs(None),
+                 Ext.LanguageConfiguration.toVimAutoClosingPairs(
+                   Core.SyntaxScope.none,
+                 ),
                );
           } else {
             None;
