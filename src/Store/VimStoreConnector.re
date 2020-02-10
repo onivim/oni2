@@ -18,6 +18,7 @@ module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -59,6 +60,9 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let languageConfigLoader =
+    Ext.LanguageConfigurationLoader.create(languageInfo);
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
@@ -512,6 +516,8 @@ let start =
           |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
+        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
+
         let () =
           editor
           |> Option.iter(e => {
@@ -527,6 +533,27 @@ let start =
                ();
              });
 
+        let syntaxScope =
+          state
+          |> Selectors.getActiveBuffer
+          |> OptionEx.map2(
+               (primaryCursor, buffer) => {
+                 let bufferId = Core.Buffer.getId(buffer);
+                 let {line, column}: Location.t = primaryCursor;
+
+                 BufferSyntaxHighlights.getSyntaxScope(
+                   ~bufferId,
+                   ~line,
+                   // TODO: Reconcile 'byte position' vs 'character position'
+                   // in cursor.
+                   ~bytePosition=Index.toZeroBased(column),
+                   state.bufferSyntaxHighlights,
+                 );
+               },
+               primaryCursor,
+             )
+          |> Option.value(~default=Core.SyntaxScope.none);
+
         let acpEnabled =
           Core.Configuration.getValue(
             c => c.experimentalAutoClosingPairs,
@@ -535,17 +562,17 @@ let start =
 
         let autoClosingPairs =
           if (acpEnabled) {
-            Some(
-              Vim.AutoClosingPairs.create(
-                Vim.AutoClosingPairs.[
-                  AutoClosingPair.create(~opening="`", ~closing="`", ()),
-                  AutoClosingPair.create(~opening={|"|}, ~closing={|"|}, ()),
-                  AutoClosingPair.create(~opening="[", ~closing="]", ()),
-                  AutoClosingPair.create(~opening="(", ~closing=")", ()),
-                  AutoClosingPair.create(~opening="{", ~closing="}", ()),
-                ],
-              ),
-            );
+            state
+            |> Selectors.getActiveBuffer
+            |> OptionEx.flatMap(Core.Buffer.getFileType)
+            |> OptionEx.flatMap(
+                 Ext.LanguageConfigurationLoader.get_opt(
+                   languageConfigLoader,
+                 ),
+               )
+            |> Option.map(
+                 Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
+               );
           } else {
             None;
           };
