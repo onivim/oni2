@@ -33,7 +33,12 @@ let update = (model, msg) => {
 
     let model =
       switch (key) {
-      | "<CR>" => {...model, query: model.queryInput, hits: []}
+      | "<CR>" =>
+        if (model.query == model.queryInput) {
+          model; // Do nothing if the query hasn't changed
+        } else {
+          {...model, query: model.queryInput, hits: []};
+        }
 
       | _ =>
         let (queryInput, cursorPosition) =
