@@ -119,13 +119,13 @@ let renderDefinition =
     (
       ~context,
       ~leftVisibleColumn,
-      ~layout: EditorLayout.t,
       ~cursorPosition: Location.t,
       ~buffer,
       ~bufferHighlights,
       ~theme,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
+      ~bufferWidthInCharacters,
     ) =>
   getTokenAtPosition(
     ~buffer,
@@ -135,7 +135,7 @@ let renderDefinition =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~startIndex=leftVisibleColumn,
-    ~endIndex=leftVisibleColumn + layout.bufferWidthInCharacters,
+    ~endIndex=leftVisibleColumn + bufferWidthInCharacters,
     cursorPosition,
   )
   |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
@@ -177,8 +177,8 @@ let renderText =
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~leftVisibleColumn,
-      ~layout: EditorLayout.t,
       ~shouldRenderWhitespace,
+      ~bufferWidthInCharacters,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -204,7 +204,7 @@ let renderText =
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
           leftVisibleColumn,
-          leftVisibleColumn + layout.bufferWidthInCharacters,
+          leftVisibleColumn + bufferWidthInCharacters,
           item,
         );
 
@@ -231,9 +231,9 @@ let render =
       ~bufferHighlights,
       ~cursorPosition: Location.t,
       ~definition,
-      ~layout,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
+      ~bufferWidthInCharacters,
     ) => {
   renderEmbellishments(
     ~context,
@@ -255,13 +255,13 @@ let render =
     renderDefinition(
       ~context,
       ~leftVisibleColumn,
-      ~layout,
       ~cursorPosition,
       ~buffer,
       ~bufferHighlights,
       ~theme,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
+      ~bufferWidthInCharacters,
     );
   };
 
@@ -276,7 +276,7 @@ let render =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~leftVisibleColumn,
-    ~layout,
     ~shouldRenderWhitespace,
+    ~bufferWidthInCharacters,
   );
 };

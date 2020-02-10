@@ -54,14 +54,12 @@ let scrollToLine = (view, line, metrics: EditorMetrics.t) => {
 let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
   let newScrollX = max(0., newScrollX);
 
-  let layout = getLayout(view, metrics);
-
   let availableScroll =
     max(
       0.,
       float_of_int(view.maxLineLength)
       *. metrics.characterWidth
-      -. layout.bufferWidthInPixels,
+      -. float(metrics.pixelWidth),
     );
   let scrollX = min(newScrollX, availableScroll);
 

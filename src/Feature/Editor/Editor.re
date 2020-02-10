@@ -131,11 +131,6 @@ let getLayout = (view, metrics: EditorMetrics.t) => {
   layout;
 };
 
-let getLinesAndColumns = (view, metrics: EditorMetrics.t) => {
-  let layout = getLayout(view, metrics);
-
-  (layout.bufferHeightInCharacters, layout.bufferWidthInCharacters);
-};
 let getLeftVisibleColumn = (view, metrics: EditorMetrics.t) => {
   int_of_float(view.scrollX /. metrics.characterWidth);
 };

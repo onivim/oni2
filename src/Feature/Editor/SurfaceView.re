@@ -19,6 +19,14 @@ module Styles = {
     width(int_of_float(bufferPixelWidth)),
     bottom(0),
   ];
+
+  let horizontalScrollBar = [
+    position(`Absolute),
+    bottom(0),
+    left(0),
+    right(0),
+    height(Constants.default.scrollBarThickness),
+  ];
 };
 
 let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
@@ -43,7 +51,6 @@ let%component make =
                 ~theme,
                 ~topVisibleLine,
                 ~onCursorChange,
-                ~layout: EditorLayout.t,
                 ~cursorPosition: Location.t,
                 ~rulers,
                 ~editorFont: EditorFont.t,
@@ -61,12 +68,11 @@ let%component make =
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
+                ~bufferWidthInCharacters,
                 (),
               ) => {
   let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
 
-  let bufferPixelWidth =
-    layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
   let lineCount = Buffer.getNumberOfLines(buffer);
   let indentation =
     switch (Buffer.getIndentation(buffer)) {
@@ -113,25 +119,19 @@ let%component make =
     };
   };
 
-  let horizontalScrollBarStyle =
-    Style.[
-      position(`Absolute),
-      bottom(0),
-      left(int_of_float(layout.lineNumberWidthInPixels)),
-      height(Constants.default.scrollBarThickness),
-      width(int_of_float(layout.bufferWidthInPixels)),
-    ];
-
   <View
     ref={node => setElementRef(Some(node))}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      bufferPixelWidth -. gutterWidth,
+      float(metrics.pixelWidth) -. gutterWidth,
     )}
     onMouseUp
     onMouseWheel>
     <OpenGL
-      style={Styles.bufferViewClipped(0., bufferPixelWidth -. gutterWidth)}
+      style={Styles.bufferViewClipped(
+        0.,
+        float(metrics.pixelWidth) -. gutterWidth,
+      )}
       render={(transform, _ctx) => {
         let context =
           Draw.{
@@ -163,9 +163,9 @@ let%component make =
           ~bufferHighlights,
           ~cursorPosition,
           ~definition,
-          ~layout,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace,
+          ~bufferWidthInCharacters,
         );
 
         if (shouldRenderIndentGuides) {
@@ -183,11 +183,11 @@ let%component make =
       }}
     />
     <CursorView buffer mode isActiveSplit cursorPosition editor editorFont />
-    <View style=horizontalScrollBarStyle>
+    <View style=Styles.horizontalScrollBar>
       <EditorHorizontalScrollbar
         editor
         metrics
-        width={int_of_float(layout.bufferWidthInPixels)}
+        width={metrics.pixelWidth}
         theme
       />
     </View>

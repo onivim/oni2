@@ -16,12 +16,12 @@ module Definition = Feature_LanguageSupport.Definition;
 module Styles = {
   open Style;
 
-  let bufferViewOverlay = bufferPixelWidth => [
+  let bufferViewOverlay = [
     pointerEvents(`Ignore),
     position(`Absolute),
     top(0),
     left(0),
-    width(int_of_float(bufferPixelWidth)),
+    right(0),
     bottom(0),
   ];
 };
@@ -56,7 +56,6 @@ let make =
       ~isHoverEnabled,
       ~diagnostics,
       ~mode,
-      ~layout: EditorLayout.t,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
@@ -68,9 +67,6 @@ let make =
     ) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);
   let lineCount = Buffer.getNumberOfLines(buffer);
-
-  let bufferPixelWidth =
-    layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
 
   let (cursorOffset, _cursorCharacterWidth) =
     if (lineCount > 0 && cursorLine < lineCount) {
@@ -104,7 +100,7 @@ let make =
     );
 
   isActiveSplit
-    ? <View style={Styles.bufferViewOverlay(bufferPixelWidth)}>
+    ? <View style=Styles.bufferViewOverlay>
         <HoverView
           x=cursorPixelX
           y=cursorPixelY

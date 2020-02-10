@@ -44,7 +44,6 @@ module Styles = {
     Style.[
       position(`Absolute),
       top(0),
-      // left(int_of_float(bufferPixelWidth +. float(minimapPixelWidth))),
       right(0),
       width(Constants.default.scrollBarThickness),
       backgroundColor(theme.scrollbarSliderBackground),
@@ -54,7 +53,6 @@ module Styles = {
 
 let minimap =
     (
-      ~layout: EditorLayout.t,
       ~buffer,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
@@ -68,18 +66,19 @@ let minimap =
       ~diffMarkers,
       ~metrics: EditorMetrics.t,
       ~diagnosticsMap,
+      ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
+      ~minimapWidthInPixels,
       (),
     ) => {
-  let bufferPixelWidth =
-    layout.lineNumberWidthInPixels +. layout.bufferWidthInPixels;
   let minimapPixelWidth =
-    layout.minimapWidthInPixels + Constants.default.minimapPadding * 2;
+    minimapWidthInPixels + Constants.default.minimapPadding * 2;
   let style =
     Style.[
       position(`Absolute),
       overflow(`Hidden),
       top(0),
-      left(int_of_float(bufferPixelWidth)),
+      right(Constants.default.scrollBarThickness),
       width(minimapPixelWidth),
       bottom(0),
     ];
@@ -89,7 +88,7 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
-      width={layout.minimapWidthInPixels}
+      width=minimapPixelWidth
       height={metrics.pixelHeight}
       count={Buffer.getNumberOfLines(buffer)}
       diagnostics=diagnosticsMap
@@ -102,7 +101,7 @@ let minimap =
         ~matchingPairs,
         ~bufferSyntaxHighlights,
         0,
-        layout.bufferWidthInCharacters,
+        bufferWidthInCharacters,
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
@@ -207,7 +206,6 @@ let make =
       theme
       topVisibleLine
       onCursorChange
-      layout
       cursorPosition
       rulers
       editorFont
@@ -225,6 +223,7 @@ let make =
       mode
       isActiveSplit
       gutterWidth
+      bufferWidthInCharacters={layout.bufferWidthInCharacters}
     />
     {showMinimap
        ? <minimap
@@ -237,11 +236,13 @@ let make =
            theme
            matchingPairs
            bufferSyntaxHighlights
-           layout
            selectionRanges
            showMinimapSlider
            diffMarkers
            onScroll
+           bufferWidthInCharacters={layout.bufferWidthInCharacters}
+           bufferWidthInPixels={layout.bufferWidthInPixels}
+           minimapWidthInPixels={layout.minimapWidthInPixels}
          />
        : React.empty}
     <OverlaysView
@@ -251,7 +252,6 @@ let make =
       isHoverEnabled
       diagnostics
       mode
-      layout
       cursorPosition
       editor
       gutterWidth
