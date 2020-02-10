@@ -105,8 +105,12 @@ function activate(context) {
 	}));
     
 	cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
-		// Display a message box to the user
-		vscode.window.showInformationMessage("rootPath: " + vscode.workspace.rootPath);
+		vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath);
+	}));
+    
+	cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceFolders', () => {
+		vscode.window.showInformationMessage("Workspace folders: " +
+            JSON.stringify(vscode.workspace.workspaceFolders));
 	}));
 
     // Helper command to show buffer text
