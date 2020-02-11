@@ -19,6 +19,7 @@ module Protocol = Extensions.ExtHostProtocol;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module SCM = Feature_SCM;
 
 module Workspace = Protocol.Workspace;
 

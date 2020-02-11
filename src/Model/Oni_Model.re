@@ -31,7 +31,6 @@ module Notification = Notification;
 module Notifications = Notifications;
 module Pane = Pane;
 module References = References;
-module SCM = SCM;
 module Selectors = Selectors;
 module SideBar = SideBar;
 module Sneak = Sneak;
