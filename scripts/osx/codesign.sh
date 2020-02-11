@@ -52,3 +52,4 @@ else
    echo "Validation complete!"
 
    ditto -c -k --rsrc --keepParent _release/Onivim2.app _release/Onivim2.app.zip
+fi
