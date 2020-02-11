@@ -42,6 +42,18 @@ jsonfile@^4.0.0:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
+nan@2.12.1:
+  version "2.12.1"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.12.1.tgz#7b1aa193e9aa86057e3c7bbd0ac448e770925552"
+  integrity sha512-JY7V6lRkStKcKTvHO5NVSQRv+RV+FIL5pvDoLiAtSL9pKlC5x9PKQcZDsq7m4FO4d57mkhC6Z+QhAh3Jdk5JFw==
+
+node-pty@0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.8.1.tgz#94b457bec013e7a09b8d9141f63b0787fa25c23f"
+  integrity sha512-j+/g0Q5dR+vkELclpJpz32HcS3O/3EdPSGPvDXJZVJQLCvgG0toEbfmymxAEyQyZEpaoKHAcoL+PvKM+4N9nlw==
+  dependencies:
+    nan "2.12.1"
+
 pend@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/pend/-/pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50"
@@ -67,13 +79,14 @@ universalify@^0.1.0:
   resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.1.2.tgz#b646f69be3942dabcecc9d6639c80dc105efaa66"
   integrity sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==
 
-vscode-exthost@1.33.4:
-  version "1.33.4"
-  resolved "https://registry.yarnpkg.com/vscode-exthost/-/vscode-exthost-1.33.4.tgz#f076ef6f753b46f1d3ea6c3cb121ee5eb89f9efd"
-  integrity sha512-V6hikfsZTgwqNITMpwoYwxkoJq99UmX1xZm0AquxHcKKfcksGql5k1dg0jQe7SyLNp0LEW9WhZUIbZIRwSNCkA==
+vscode-exthost@1.33.5:
+  version "1.33.5"
+  resolved "https://registry.yarnpkg.com/vscode-exthost/-/vscode-exthost-1.33.5.tgz#ac7ef28d34d82f30f067064b129e56c144a4e63d"
+  integrity sha512-9snPG1ZxytO0HFmkqItRt3W6SGDhZ1JIUsIYXYQ2eKu5jx/NSow3/SYJJhFzsRqtLfbx9gL/6AWh50Vz62llog==
   dependencies:
     graceful-fs "4.1.11"
     iconv-lite "0.4.23"
+    node-pty "0.8.1"
     semver "^5.5.0"
     vscode-jsonrpc "4.0.0"
 
