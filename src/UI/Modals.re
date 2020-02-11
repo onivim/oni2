@@ -54,7 +54,7 @@ module Styles = {
     fontFamily(font.fontFile),
     color(theme.editorForeground),
     backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     textWrap(TextWrapping.NoWrap),
   ];
 
@@ -64,7 +64,7 @@ module Styles = {
     fontFamily(font.fontFile),
     color(theme.foreground),
     backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     textWrap(TextWrapping.NoWrap),
   ];
 };

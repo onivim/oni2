@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 open Revery.Draw;
 
@@ -72,8 +71,9 @@ let generate = buffer =>
        markers;
      });
 
+let markerPaint = Skia.Paint.make();
 let renderMarker =
-    (~x, ~y, ~rowHeight, ~width, ~transform, ~theme: Theme.t, marker) => {
+    (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~theme: Theme.t, marker) => {
   let (y, height) =
     switch (marker) {
     | Modified
@@ -92,7 +92,16 @@ let renderMarker =
     | Unmodified => failwith("unreachable")
     };
 
-  Shapes.drawRect(~transform, ~x, ~y, ~height, ~width, ~color, ());
+  let color = Revery.Color.toSkia(color);
+  Skia.Paint.setColor(markerPaint, color);
+  CanvasContext.drawRectLtwh(
+    ~left=x,
+    ~top=y,
+    ~height,
+    ~width,
+    ~paint=markerPaint,
+    canvasContext,
+  );
 };
 
 let render =
@@ -103,7 +112,7 @@ let render =
       ~height,
       ~width,
       ~count,
-      ~transform,
+      ~canvasContext,
       ~theme,
       markers,
     ) =>
@@ -120,7 +129,7 @@ let render =
             ~y,
             ~rowHeight,
             ~width,
-            ~transform,
+            ~canvasContext,
             ~theme,
             markers[i],
           );

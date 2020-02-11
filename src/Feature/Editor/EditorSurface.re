@@ -15,7 +15,6 @@ open Helpers;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
-module Option = Utility.Option;
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Completions = Feature_LanguageSupport.Completions;
@@ -264,7 +263,7 @@ let make =
       <EditorVerticalScrollbar
         editor
         metrics
-        width={Constants.default.scrollBarThickness}
+        width=Constants.scrollBarThickness
         height={metrics.pixelHeight}
         diagnostics=diagnosticsMap
         theme

@@ -92,10 +92,7 @@ let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) =
 };
 
 let colorEqual = (c1: Color.t, c2: Color.t) => {
-  Float.equal(c1.r, c2.r)
-  && Float.equal(c1.g, c2.g)
-  && Float.equal(c1.b, c2.b)
-  && Float.equal(c1.a, c2.a);
+  Color.equals(c1, c2);
 };
 
 let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {

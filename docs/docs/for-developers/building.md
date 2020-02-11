@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.0__ is required)
+- Install [Esy](https://esy.sh) (__0.6.2__ is required)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
@@ -29,12 +29,15 @@ the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installin
 Some Linux distributions may need other packages:
 
  - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
+ - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel` for `libvim`
 
 ## Build and Run
 
 ### Build the front-end
 
-> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions (more info here: https://github.com/esy/esy/issues/389).
+> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions. More info at [esy/esy#389](https://github.com/esy/esy/issues/389).
+
+> __NOTE:__ On macOS, if you receive an `error: Too many open files`, you can run `ulimit -Sn 4096` to increase the file limit. More info at [esy/esy#1057](https://github.com/esy/esy/issues/1057)
 
 ```sh
 git clone https://github.com/onivim/oni2

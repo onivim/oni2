@@ -6,7 +6,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
@@ -35,11 +34,37 @@ type msg =
     })
   // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
+  | RegisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | UnregisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+    })
+  | SpliceSCMResourceStates({
+      provider: int,
+      group: int,
+      start: int,
+      deleteCount: int,
+      additions: list(SCMResource.t),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
     })
-  | UnregisterTextContentProvider({handle: int});
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Uri.t),
+    });
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -180,7 +205,7 @@ let start =
     | ("MainThreadSCM", "$registerSourceControl", args) =>
       switch (args) {
       | [`Int(handle), `String(id), `String(label), rootUri] =>
-        let rootUri = Core.Uri.of_yojson(rootUri) |> Utility.Result.to_option;
+        let rootUri = Core.Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
         dispatch(RegisterSourceControl({handle, id, label, rootUri}));
       | _ =>
         Log.error(
@@ -208,6 +233,50 @@ let start =
       Ok(None);
 
     | (
+        "MainThreadSCM",
+        "$registerGroup",
+        [`Int(provider), `Int(handle), `String(id), `String(label)],
+      ) =>
+      dispatch(RegisterSCMResourceGroup({provider, handle, id, label}));
+      Ok(None);
+
+    | ("MainThreadSCM", "$unregisterGroup", [`Int(handle), `Int(provider)]) =>
+      dispatch(UnregisterSCMResourceGroup({provider, handle}));
+      Ok(None);
+
+    | (
+        "MainThreadSCM",
+        "$spliceResourceStates",
+        [`Int(provider), `List(groupSplices)],
+      ) =>
+      List.iter(
+        fun
+        | `List([`Int(group), `List(splices)]) =>
+          List.iter(
+            splice =>
+              switch (splice) {
+              | `List([`Int(start), `Int(deleteCount), `List(additions)]) =>
+                let additions = List.map(In.SCM.parseResource, additions);
+                dispatch(
+                  SpliceSCMResourceStates({
+                    provider,
+                    group,
+                    start,
+                    deleteCount,
+                    additions,
+                  }),
+                );
+
+              | _ => Log.warn("spliceResourceStates: Unexpected json")
+              },
+            splices,
+          )
+        | _ => Log.warn("spliceResourceStates: Unexpected json"),
+        groupSplices,
+      );
+      Ok(None);
+
+    | (
         "MainThreadDocumentContentProviders",
         "$registerTextContentProvider",
         [`Int(handle), `String(scheme)],
@@ -221,6 +290,35 @@ let start =
         [`Int(handle)],
       ) =>
       dispatch(UnregisterTextContentProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$registerDecorationProvider",
+        [`Int(handle), `String(label)],
+      ) =>
+      dispatch(RegisterDecorationProvider({handle, label}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$unregisterDecorationProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterDecorationProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$onDidChange",
+        [`Int(handle), `List(resources)],
+      ) =>
+      let uris =
+        resources
+        |> List.filter_map(json =>
+             Uri.of_yojson(json) |> Stdlib.Result.to_option
+           );
+      dispatch(DecorationsDidChange({handle, uris}));
       Ok(None);
 
     | (scope, method, argsAsJson) =>
@@ -298,6 +396,46 @@ let provideCompletions = (id, uri, position, client) => {
   promise;
 };
 
+let provideDecorations = (handle, uri, client) => {
+  let decodeItem =
+    fun
+    | (
+        _requestId,
+        `List([
+          `Int(_),
+          `Bool(_),
+          `String(tooltip),
+          `String(letter),
+          `Assoc([("id", `String(color))]),
+          `String(source),
+        ]),
+      ) =>
+      Some(SCMDecoration.{handle, tooltip, letter, color, source})
+    | (_, json) => {
+        Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
+        None;
+      };
+
+  ExtHostTransport.request(
+    ~msgType=MessageType.requestJsonArgsWithCancellation,
+    client,
+    Out.Decorations.provideDecorations(handle, uri),
+    json =>
+    switch (json) {
+    | `Assoc(items) => items |> List.filter_map(decodeItem)
+
+    | _ =>
+      failwith(
+        Printf.sprintf(
+          "Unexpected response from provideDecorations for %s: \n  %s",
+          Uri.toString(uri),
+          Yojson.Safe.to_string(json),
+        ),
+      )
+    }
+  );
+};
+
 let provideDefinition = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let json =
@@ -363,7 +501,7 @@ let provideOriginalResource = (id, uri, client) => {
       client,
       Out.SCM.provideOriginalResource(id, uri),
       json =>
-      Core.Uri.of_yojson(json) |> Utility.Result.get_ok
+      Core.Uri.of_yojson(json) |> Stdlib.Result.get_ok
     );
   promise;
 };

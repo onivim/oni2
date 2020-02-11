@@ -76,6 +76,12 @@ type t = {
   editorFindMatchHighlightBackground: Color.t,
   editorIndentGuideBackground: Color.t,
   editorIndentGuideActiveBackground: Color.t,
+  listActiveSelectionBackground: Color.t,
+  listActiveSelectionForeground: Color.t,
+  listFocusBackground: Color.t,
+  listFocusForeground: Color.t,
+  listHoverBackground: Color.t,
+  listHoverForeground: Color.t,
   menuBackground: Color.t,
   menuForeground: Color.t,
   menuSelectionBackground: Color.t,
@@ -110,6 +116,11 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  titleBarActiveBackground: Color.t,
+  titleBarActiveForeground: Color.t,
+  titleBarInactiveBackground: Color.t,
+  titleBarInactiveForeground: Color.t,
+  titleBarBorder: Color.t,
   editorGutterModifiedBackground: Color.t,
   editorGutterAddedBackground: Color.t,
   editorGutterDeletedBackground: Color.t,
@@ -140,6 +151,12 @@ let default: t = {
   editorOverviewRulerBracketMatchForeground: Color.hex("#A0A0A0"),
   editorActiveLineNumberForeground: Color.hex("#737984"),
   editorSelectionBackground: Color.hex("#687595"),
+  listActiveSelectionBackground: Color.hex("#495162"),
+  listActiveSelectionForeground: Color.hex("#FFFFFF"),
+  listFocusBackground: Color.hex("#495162"),
+  listFocusForeground: Color.hex("#FFFFFF"),
+  listHoverBackground: Color.hex("#495162"),
+  listHoverForeground: Color.hex("#FFFFFF"),
   scrollbarSliderBackground: Color.rgba(0., 0., 0., 0.2),
   scrollbarSliderActiveBackground: Color.hex("#2F3440"),
   editorIndentGuideBackground: Color.hex("#3b4048"),
@@ -175,6 +192,11 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  titleBarActiveBackground: Color.hex("#282C35"),
+  titleBarActiveForeground: Color.hex("#ECEFF4"),
+  titleBarInactiveBackground: Color.hex("#282C35"),
+  titleBarInactiveForeground: Color.hex("#ECEFF4"),
+  titleBarBorder: Colors.transparentWhite,
   editorGutterModifiedBackground: Color.hex("#0C7D9D"),
   editorGutterAddedBackground: Color.hex("#587C0C"),
   editorGutterDeletedBackground: Color.hex("#94151B"),
@@ -315,9 +337,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       [
         "menu.selectionBackground",
         "list.activeSelectionBackground",
+        "editor.selectionHighlightBackground",
         "list.focusBackground",
         "list.hoverBackground",
-        "menu.background",
         "background",
         "editor.background",
       ],
@@ -373,6 +395,42 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
 
+  let titleBarActiveBackground =
+    getColor(
+      defaultBackground,
+      ["titleBar.activeBackground", "background", "editor.background"],
+    );
+
+  let titleBarInactiveBackground =
+    getColor(
+      defaultBackground,
+      [
+        "titleBar.inactiveBackground",
+        "titleBar.activeBackground",
+        "background",
+        "editor.background",
+      ],
+    );
+
+  let titleBarActiveForeground =
+    getColor(
+      defaultForeground,
+      ["titleBar.activeForeground", "background", "editor.foreground"],
+    );
+
+  let titleBarInactiveForeground =
+    getColor(
+      defaultForeground,
+      [
+        "titleBar.inactiveForeground",
+        "titlebar.activeForeground",
+        "foreground",
+        "editor.foreground",
+      ],
+    );
+
+  let titleBarBorder = getColor("#0000", ["titleBar.border"]);
+
   {
     ...default,
     background,
@@ -393,6 +451,36 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorSuggestWidgetBorder,
     editorSuggestWidgetHighlightForeground,
     editorSuggestWidgetSelectedBackground,
+    listActiveSelectionBackground:
+      getColor(
+        defaultBackground,
+        ["list.activeSelectionBackground", "menu.selectionBackground"],
+      ),
+    listActiveSelectionForeground:
+      getColor(
+        defaultForeground,
+        ["list.activeSelectionForeground", "menu.foreground"],
+      ),
+    listFocusBackground:
+      getColor(
+        defaultBackground,
+        ["list.focusBackground", "menu.selectionBackground"],
+      ),
+    listFocusForeground:
+      getColor(
+        defaultForeground,
+        ["list.focusForeground", "menu.foreground"],
+      ),
+    listHoverBackground:
+      getColor(
+        defaultBackground,
+        ["list.hoverBackground", "menu.selectionBackground"],
+      ),
+    listHoverForeground:
+      getColor(
+        defaultForeground,
+        ["list.hoverForeground", "menu.foreground"],
+      ),
     menuBackground,
     menuForeground,
     menuSelectionBackground,
@@ -406,6 +494,11 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    titleBarActiveForeground,
+    titleBarActiveBackground,
+    titleBarInactiveForeground,
+    titleBarInactiveBackground,
+    titleBarBorder,
   };
 };
 
@@ -431,3 +524,16 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
 
   (background, foreground);
 };
+
+let getCustomColor = (color, _theme) =>
+  switch (color) {
+  | "gitDecoration.addedResourceForeground" => Some(Color.hex("#81b88b"))
+  | "gitDecoration.modifiedResourceForeground" => Some(Color.hex("#E2C08D"))
+  | "gitDecoration.deletedResourceForeground" => Some(Color.hex("#c74e39"))
+  | "gitDecoration.untrackedResourceForeground" => Some(Color.hex("#73C991"))
+  | "gitDecoration.ignoredResourceForeground" => Some(Color.hex("#8C8C8C"))
+  | "gitDecoration.conflictingResourceForeground" =>
+    Some(Color.hex("#6c6cc4"))
+  | "gitDecoration.submoduleResourceForeground" => Some(Color.hex("#8db9e2"))
+  | _ => None
+  };

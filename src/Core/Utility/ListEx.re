@@ -50,3 +50,21 @@ let rec sublist = (beginning, terminus, l) =>
       [h, ...tail];
     };
   };
+
+// Like Array.prototype.splice in JavaScript, but for lists
+let splice = (~start, ~deleteCount, ~additions, source) => {
+  let rec loop = (i, source, deleteCount, additions, acc) =>
+    switch (source) {
+    | [item, ...rest] when i < start =>
+      loop(i + 1, rest, deleteCount, additions, [item, ...acc])
+    | [_, ...rest] when deleteCount > 0 =>
+      loop(i + 1, rest, deleteCount - 1, additions, acc)
+    | _ =>
+      acc
+      |> List.rev_append(additions)
+      |> List.rev_append(source)
+      |> List.rev
+    };
+
+  loop(0, source, deleteCount, additions, []);
+};

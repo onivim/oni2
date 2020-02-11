@@ -6,8 +6,6 @@
 
 open Oni_Core;
 
-module List = Utility.List;
-
 // MODEL
 
 // We group key presses in time together,
@@ -89,7 +87,7 @@ module Styles = {
 
   let text = (uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(24),
+    fontSize(24.),
     textWrap(TextWrapping.NoWrap),
     Style.backgroundColor(backgroundColor),
     color(Colors.white),

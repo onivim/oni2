@@ -68,7 +68,7 @@ type t =
   | SelectionChanged([@opaque] VisualRange.t)
   // LoadEditorFont is the request to load a new font
   // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, int)
+  | LoadEditorFont(string, float)
   | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
@@ -133,8 +133,13 @@ type t =
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
-  | PaneTabClicked(Pane.paneType)
+  | PaneTabClicked(Pane.pane)
   | VimDirectoryChanged(string)
+  | WindowFocusGained
+  | WindowFocusLost
+  | WindowMaximized
+  | WindowMinimized
+  | WindowRestored
   | WindowCloseBlocked
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed

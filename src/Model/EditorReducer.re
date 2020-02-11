@@ -35,8 +35,7 @@ let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
   let scrollPercentage =
     newScrollY /. (availableScroll -. float_of_int(metrics.pixelHeight));
   let minimapLineSize =
-    Constants.default.minimapCharacterWidth
-    + Constants.default.minimapCharacterHeight;
+    Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
   let linesInMinimap = metrics.pixelHeight / minimapLineSize;
   let availableMinimapScroll =
     max(view.viewLines - linesInMinimap, 0) * minimapLineSize;

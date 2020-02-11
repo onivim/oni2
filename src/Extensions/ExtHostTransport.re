@@ -149,7 +149,7 @@ let start =
 
   let _sendInitData = () => {
     let _: int =
-      send(MessageType.initData, ExtHostInitData.to_yojson(initData));
+      send(MessageType.initData, ExtHostInitData.encode(initData));
     ();
   };
 

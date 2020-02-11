@@ -31,7 +31,6 @@ jobs:
   - script: brew update
   - script: brew install libpng ragel
   - template: .ci/swap-xcode.yml
-  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
   - template: .ci/publish-build-cache.yml
@@ -99,7 +98,6 @@ jobs:
   - script: brew update
   - script: brew install libpng ragel
   - template: .ci/swap-xcode.yml
-  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:

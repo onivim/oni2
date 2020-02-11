@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 
 module Editor = Feature_Editor.Editor;
 module EditorMetrics = Feature_Editor.EditorMetrics;
@@ -49,8 +48,7 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   };
 
   let minimapLineHeight =
-    Constants.default.minimapCharacterHeight
-    + Constants.default.minimapLineSpacing;
+    Constants.minimapCharacterHeight + Constants.minimapLineSpacing;
 
   let minimapTopLine =
     int_of_float(editor.minimapScrollY /. float_of_int(minimapLineHeight));

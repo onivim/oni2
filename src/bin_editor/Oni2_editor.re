@@ -16,7 +16,6 @@ module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, cli) => {
@@ -100,6 +99,7 @@ if (cliOptions.syntaxHighlightService) {
             ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
+            ~titlebarStyle=WindowStyles.Transparent,
             (),
           ),
         app,
@@ -117,6 +117,8 @@ if (cliOptions.syntaxHighlightService) {
     | v => v
     };
 
+    Revery.Window.setBackgroundColor(w, Colors.black);
+
     PreflightChecks.run();
 
     let initialState = Model.State.create();
@@ -130,7 +132,7 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _ =
+    let _: unit => unit =
       Tick.interval(
         _dt =>
           if (isDirty^) {
@@ -141,10 +143,6 @@ if (cliOptions.syntaxHighlightService) {
           },
         Time.seconds(0),
       );
-
-    let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
-    };
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -170,7 +168,6 @@ if (cliOptions.syntaxHighlightService) {
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~onStateChanged,
-        ~getScaleFactor,
         ~getZoom,
         ~setZoom,
         ~setTitle,
@@ -181,6 +178,19 @@ if (cliOptions.syntaxHighlightService) {
         (),
       );
     Log.debug("Startup: StoreThread started!");
+
+    let _: Window.unsubscribe =
+      Window.onMaximized(w, () => dispatch(Model.Actions.WindowMaximized));
+    let _: Window.unsubscribe =
+      Window.onMinimized(w, () => dispatch(Model.Actions.WindowMinimized));
+    let _: Window.unsubscribe =
+      Window.onRestored(w, () => dispatch(Model.Actions.WindowRestored));
+    let _: Window.unsubscribe =
+      Window.onFocusGained(w, () =>
+        dispatch(Model.Actions.WindowFocusGained)
+      );
+    let _: Window.unsubscribe =
+      Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
       getState: () => currentState^,

@@ -49,7 +49,7 @@ module Notification = {
 
     let text = (~foreground, ~background, font: UiFont.t) => [
       fontFamily(font.fontFile),
-      fontSize(11),
+      fontSize(11.),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
       color(foreground),
@@ -104,12 +104,7 @@ module Notification = {
       Hooks.animation(Animations.sequence, ~active=true);
 
     let icon = () =>
-      <FontIcon
-        icon={iconFor(item)}
-        fontSize=16
-        backgroundColor=background
-        color=foreground
-      />;
+      <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
 
     <View style={Styles.container(~background, ~yOffset)}>
       <icon />
@@ -160,7 +155,7 @@ module Styles = {
 
   let text = (~color, ~background, uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(11),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -168,7 +163,7 @@ module Styles = {
 
   let textBold = (~color, ~background, font: UiFont.t) => [
     fontFamily(font.fontFileSemiBold),
-    fontSize(11),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -251,12 +246,9 @@ let notificationCount =
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.bell
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.bell color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
@@ -276,12 +268,9 @@ let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) =>
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.timesCircle
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.timesCircle color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;

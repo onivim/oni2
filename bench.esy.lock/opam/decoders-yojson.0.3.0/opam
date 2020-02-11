@@ -1,0 +1,43 @@
+opam-version: "2.0"
+maintainer: "Matt Bray <matt@aestheticintegration.com>"
+authors: ["Matt Bray <matt@aestheticintegration.com>"]
+synopsis: "Interface to yojson for decoders"
+description: """
+A combinator library for "decoding" JSON-like values into your own Ocaml types, inspired by Elm's `Json.Decode` and `Json.Encode`.
+
+> Eh?
+
+An Ocaml program having a JSON (or YAML) data source usually goes something like this:
+
+1. Get your data from somewhere. Now you have a `string`.
+2. *Parse* the `string` as JSON (or YAML). Now you have a `Yojson.Basic.json`, or maybe an `Ezjsonm.value`, or perhaps a `Ocyaml.yaml`.
+3. *Decode* the JSON value to an Ocaml type that's actually useful for your program's domain.
+
+This library helps with step 3.
+"""
+homepage: "https://github.com/mattjbray/ocaml-decoders"
+doc: "https://mattjbray.github.io/ocaml-decoders/decoders-yojson"
+bug-reports: "https://github.com/mattjbray/ocaml-decoders/issues"
+license: "ISC"
+dev-repo: "git+https://github.com/mattjbray/ocaml-decoders.git"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+  ["dune" "build" "@doc" "-p" name "-j" jobs] {with-doc}
+]
+depends: [
+  "dune" {>= "1.0"}
+  "ounit" {with-test}
+  "decoders"
+  "yojson"
+  "odoc" {with-doc}
+  "ocaml" { >= "4.03.0" }
+]
+url {
+  src:
+    "https://github.com/mattjbray/ocaml-decoders/releases/download/v0.3.0/decoders-v0.3.0.tbz"
+  checksum: [
+    "sha256=a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d"
+    "sha512=2f596f444ec815759234b50a53e3a67e7413f871d5fce1ae950e145dd5e81c4507acf784334ca86c935344b59ea619baa96ac07a0207cfb70681986dd81e2079"
+  ]
+}

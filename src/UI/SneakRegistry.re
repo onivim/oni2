@@ -1,6 +1,4 @@
-open Oni_Core;
 open Oni_Model;
-open Utility;
 
 type callback = unit => unit;
 type sneakInfo = {

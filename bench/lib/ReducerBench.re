@@ -34,9 +34,10 @@ let changeEditorFont = () => {
       Actions.SetEditorFont(
         EditorFont.create(
           ~fontFile="dummy",
-          ~fontSize=10,
+          ~fontSize=10.,
           ~measuredWidth=10.,
           ~measuredHeight=10.,
+          ~descenderHeight=1.,
           (),
         ),
       ),

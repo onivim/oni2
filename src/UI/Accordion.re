@@ -12,7 +12,7 @@ module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
 };
 
 module Styles = {
@@ -61,7 +61,6 @@ let make =
         fontSize=Constants.arrowSize
         color=Colors.white
         icon={expanded ? FontAwesome.caretDown : FontAwesome.caretRight}
-        backgroundColor=Colors.transparentWhite
       />
       <Text style={Styles.titleText(~theme, ~font=uiFont)} text=title />
     </View>

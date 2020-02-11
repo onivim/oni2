@@ -7,7 +7,6 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
-open Utility;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;

@@ -38,12 +38,12 @@ let getLayout =
       : 0.0;
 
   let minimapPadding =
-    isMinimapShown ? float_of_int(Constants.default.minimapPadding) : 0.0;
+    isMinimapShown ? float_of_int(Constants.minimapPadding) : 0.0;
 
   let availableWidthInPixels =
     pixelWidth
     -. lineNumberWidthInPixels
-    -. float_of_int(Constants.default.scrollBarThickness)
+    -. float_of_int(Constants.scrollBarThickness)
     -. minimapPadding
     *. 2.;
 
@@ -58,10 +58,7 @@ let getLayout =
        */
       int_of_float(
         availableWidthInPixels
-        /. (
-          characterWidth
-          +. float_of_int(Constants.default.minimapCharacterWidth)
-        ),
+        /. (characterWidth +. float_of_int(Constants.minimapCharacterWidth)),
       );
     } else {
       int_of_float(availableWidthInPixels /. characterWidth);
@@ -76,7 +73,7 @@ let getLayout =
     };
 
   let minimapWidthInPixels =
-    Constants.default.minimapCharacterWidth * minimapWidthInCharacters;
+    Constants.minimapCharacterWidth * minimapWidthInCharacters;
 
   /* Recalculate available buffer width - might be extra room if minimap is truncated! */
   let availableBufferWidth =
@@ -94,8 +91,7 @@ let getLayout =
       ? int_of_float(
           pixelHeight
           /. float_of_int(
-               Constants.default.minimapCharacterHeight
-               + Constants.default.minimapLineSpacing,
+               Constants.minimapCharacterHeight + Constants.minimapLineSpacing,
              ),
         )
       : 0;
@@ -105,7 +101,7 @@ let getLayout =
     -. bufferWidthInPixels
     -. float_of_int(minimapWidthInPixels)
     -. lineNumberWidthInPixels
-    -. float_of_int(Constants.default.scrollBarThickness)
+    -. float_of_int(Constants.scrollBarThickness)
     -. minimapPadding
     *. 2.;
 

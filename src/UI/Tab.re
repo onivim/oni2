@@ -58,7 +58,7 @@ let make =
       backgroundColor(theme.editorBackground),
       borderTop(~color=borderColor, ~width=2),
       borderBottom(~color=theme.editorBackground, ~width=2),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       minWidth(minWidth_),
       flexDirection(`Row),
       justifyContent(`Center),
@@ -83,7 +83,7 @@ let make =
   let iconContainerStyle =
     Style.[
       width(32),
-      height(Constants.default.tabHeight),
+      height(Constants.tabHeight),
       alignItems(`Center),
       justifyContent(`Center),
     ];
@@ -102,10 +102,9 @@ let make =
       <FontIcon
         fontFamily="seti.ttf"
         icon={v.fontCharacter}
-        backgroundColor={theme.editorBackground}
         color={v.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
-        fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
+        fontSize={uiFont.fontSize *. 1.5}
       />
     | None => React.empty
     };
@@ -135,9 +134,8 @@ let make =
     <Sneakable onClick=onClose style=iconContainerStyle>
       <FontIcon
         icon
-        backgroundColor={theme.editorBackground}
         color={theme.tabActiveForeground}
-        fontSize={modified ? 10 : 12}
+        fontSize={modified ? 10. : 12.}
       />
     </Sneakable>
   </View>;

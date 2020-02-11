@@ -8,7 +8,6 @@
  */
 
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
 
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
@@ -71,7 +70,6 @@ let start =
       ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
-      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);
@@ -140,9 +138,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let (windowUpdater, windowStream) = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
-  let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
-
+  let fontUpdater = FontStoreConnector.start();
   let completionUpdater = CompletionStoreConnector.start();
 
   let (languageFeatureUpdater, languageFeatureStream) =
@@ -175,7 +171,6 @@ let start =
           indentationUpdater,
           windowUpdater,
           themeUpdater,
-          acpUpdater,
           languageFeatureUpdater,
           completionUpdater,
           titleUpdater,

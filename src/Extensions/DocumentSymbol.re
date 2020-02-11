@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 
 module Protocol = ExtHostProtocol;
 
@@ -30,7 +29,7 @@ let rec of_yojson_exn: Yojson.Safe.t => t =
           json
           |> member("detail")
           |> to_string_option
-          |> Utility.Option.value(~default="");
+          |> Option.value(~default="");
         let range =
           json
           |> member("range")

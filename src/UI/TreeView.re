@@ -19,7 +19,8 @@ module type TreeModel = {
 };
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
+  let arrowSizeI = 15;
   let indentSize = 12.;
   let scrollWheelMultiplier = 25;
   let scrollBarThickness = 6;
@@ -71,20 +72,26 @@ module Styles = {
     fontSize(12),
     color(Colors.white),
   ];
+
+  let arrow = size => [width(size), height(size)];
 };
 
 module Make = (Model: TreeModel) => {
   let arrow = (~isOpen, ()) =>
-    <FontIcon
-      fontSize=Constants.arrowSize
-      color=Colors.white
-      icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
-      backgroundColor=Colors.transparentWhite
-    />;
+    <View style={Styles.arrow(int_of_float(Constants.arrowSize))}>
+      <FontIcon
+        fontSize=Constants.arrowSize
+        color=Colors.white
+        icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
+      />
+    </View>;
 
   let noArrow = () =>
     <View
-      style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)]
+      style=Style.[
+        width(Constants.arrowSizeI),
+        height(Constants.arrowSizeI),
+      ]
     />;
 
   let rec nodeView =

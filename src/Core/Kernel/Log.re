@@ -1,11 +1,3 @@
-// TODO: Remove after 4.08
-module Option = {
-  let iter = f =>
-    fun
-    | Some(x) => f(x)
-    | None => ();
-};
-
 include Timber.Log;
 
 module type Logger = Timber.Logger;

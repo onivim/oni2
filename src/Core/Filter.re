@@ -10,13 +10,6 @@ open CamomileBundled.Camomile;
 module IndexEx = Utility.IndexEx;
 module Zed_utf8 = ZedBundled;
 
-module Option = {
-  let map = f =>
-    fun
-    | Some(x) => Some(f(x))
-    | None => None;
-};
-
 type result('a) = {
   item: 'a,
   highlight: list((int, int)),

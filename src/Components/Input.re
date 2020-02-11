@@ -2,8 +2,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Option = Oni_Core.Utility.Option;
-
 module Cursor = {
   type state = {
     time: Time.t,
@@ -145,7 +143,7 @@ let%component make =
     open Style;
     include Styles;
 
-    let fontSize = Selector.select(style, FontSize, 18);
+    let fontSize = Selector.select(style, FontSize, 18.);
     let textColor = Selector.select(style, Color, Colors.black);
     let fontFamily = Selector.select(style, FontFamily, "Roboto-Regular.ttf");
 
@@ -191,10 +189,8 @@ let%component make =
   };
 
   let measureTextWidth = text => {
-    let window = Revery_UI.getActiveWindow();
     let dimensions =
       Revery_Draw.Text.measure(
-        ~window,
         ~fontFamily=Styles.fontFamily,
         ~fontSize=Styles.fontSize,
         text,
@@ -217,7 +213,8 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(displayValue, 0, cursorPosition));
+      measureTextWidth(String.sub(displayValue, 0, cursorPosition))
+      |> int_of_float;
 
     switch (Option.bind(textRef, r => r#getParent())) {
     | Some(containerNode) =>
@@ -249,7 +246,8 @@ let%component make =
         if (i > String.length(value)) {
           i - 1;
         } else {
-          let width = measureTextWidth(String.sub(value, 0, i));
+          let width =
+            measureTextWidth(String.sub(value, 0, i)) |> int_of_float;
 
           if (width > offset) {
             let isCurrentNearest = width - offset < offset - last;
@@ -277,7 +275,8 @@ let%component make =
   let cursor = () => {
     let (startStr, _) =
       getStringParts(cursorPosition + String.length(prefix), displayValue);
-    let textWidth = measureTextWidth(startStr);
+
+    let textWidth = measureTextWidth(startStr) |> int_of_float;
 
     let offset = textWidth - scrollOffset^;
 
@@ -285,7 +284,7 @@ let%component make =
       <Opacity opacity=cursorOpacity>
         <Container
           width=Constants.cursorWidth
-          height=Styles.fontSize
+          height={Styles.fontSize |> int_of_float}
           color=cursorColor
         />
       </Opacity>

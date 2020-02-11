@@ -19,7 +19,7 @@ open ExtensionScanner;
  * https://github.com/onivim/vscode/blob/051b81fd1fa4fb656a5e1dab7235ac62dea58cfd/src/vs/workbench/api/node/extHost.protocol.ts#L79
  */
 module ExtensionInfo = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving show({with_path: false})]
   type t = {
     /* TODO:  */
     /* isBuiltIn: bool, */
@@ -31,10 +31,10 @@ module ExtensionInfo = {
     /* publisher: string, */
     main: option(string),
     version: string,
-    engines: Engine.t,
+    engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
-    extensionKind: ExtensionKind.t,
+    extensionKind: ExtensionManifest.kind,
     contributes: ExtensionContributions.t,
     enableProposedApi: bool,
   };
@@ -57,24 +57,55 @@ module ExtensionInfo = {
       enableProposedApi: manifest.enableProposedApi,
     };
   };
+
+  let encode = data =>
+    Json.Encode.(
+      obj([
+        ("identifier", data.identifier |> string),
+        ("extensionLocationPath", data.extensionLocationPath |> string),
+        ("name", data.name |> string),
+        ("main", data.main |> option(string)),
+        ("version", data.version |> string),
+        ("engines", data.engines |> string),
+        ("activationEvents", data.activationEvents |> list(string)),
+        (
+          "extensionDependencies",
+          data.extensionDependencies |> list(string),
+        ),
+        (
+          "extensionKind",
+          data.extensionKind |> ExtensionManifest.Encode.kind,
+        ),
+        ("contributes", data.contributes |> ExtensionContributions.encode),
+        ("enableProposedApi", data.enableProposedApi |> bool),
+      ])
+    );
 };
 
 module Workspace = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving show({with_path: false})]
   type t = {__test: string};
+
+  let encode = workspace =>
+    Json.Encode.(obj([("__test", workspace.__test |> string)]));
 };
 
 module Environment = {
-  [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+  [@deriving show({with_path: false})]
   type t = {globalStorageHomePath: string};
 
   let create = (~globalStorageHomePath=Filesystem.unsafeFindHome(), ()) => {
     let ret: t = {globalStorageHomePath: globalStorageHomePath};
     ret;
   };
+
+  let encode = env =>
+    Json.Encode.(
+      obj([("globalStorageHomePath", env.globalStorageHomePath |> string)])
+    );
 };
 
-[@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
+[@deriving show({with_path: false})]
 type t = {
   extensions: list(ExtensionInfo.t),
   parentPid: int,
@@ -102,3 +133,15 @@ let create =
     __test: "",
   },
 };
+
+let encode = data =>
+  Json.Encode.(
+    obj([
+      ("extensions", data.extensions |> list(ExtensionInfo.encode)),
+      ("parentPid", data.parentPid |> int),
+      ("environment", data.environment |> Environment.encode),
+      ("logsLocationPath", data.logsLocationPath |> string),
+      ("autoStart", data.autoStart |> bool),
+      ("workspace", data.workspace |> Workspace.encode),
+    ])
+  );

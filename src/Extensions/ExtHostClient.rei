@@ -20,11 +20,37 @@ type msg =
     })
   // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
+  | RegisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+      id: string,
+      label: string,
+    })
+  | UnregisterSCMResourceGroup({
+      provider: int,
+      handle: int,
+    })
+  | SpliceSCMResourceStates({
+      provider: int,
+      group: int,
+      start: int,
+      deleteCount: int,
+      additions: list(Core.SCMResource.t),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
     })
-  | UnregisterTextContentProvider({handle: int});
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Core.Uri.t),
+    });
 
 type unitCallback = unit => unit;
 
@@ -68,6 +94,8 @@ let updateDocument:
 let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
+let provideDecorations:
+  (int, Core.Uri.t, t) => Lwt.t(list(Core.SCMDecoration.t));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);

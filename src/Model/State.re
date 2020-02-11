@@ -54,6 +54,8 @@ type t = {
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
+  windowIsFocused: bool,
+  windowIsMaximized: bool,
   workspace: Workspace.t,
   zenMode: bool,
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
@@ -84,9 +86,10 @@ let create: unit => t =
     editorFont:
       EditorFont.create(
         ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14,
+        ~fontSize=14.,
         ~measuredWidth=1.,
         ~measuredHeight=1.,
+        ~descenderHeight=0.,
         (),
       ),
     extensions: Extensions.empty,
@@ -108,6 +111,8 @@ let create: unit => t =
     statusBar: StatusBarModel.create(),
     windowManager: WindowManager.create(),
     windowTitle: "",
+    windowIsFocused: true,
+    windowIsMaximized: false,
     workspace: Workspace.initial,
     fileExplorer: FileExplorer.initial,
     zenMode: false,

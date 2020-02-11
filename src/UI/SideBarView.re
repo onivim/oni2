@@ -26,7 +26,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
+    height(Core.Constants.tabHeight),
   ];
 };
 
@@ -43,20 +43,20 @@ let%component make = (~state: State.t, ()) => {
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
 
-  let sideBarType = SideBar.getType(sideBar);
-
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
   let title =
-    switch (sideBarType) {
+    switch (sideBar.selected) {
     | FileExplorer => "Explorer"
+    | SCM => "Source Control"
     | Extensions => "Extensions"
     };
 
   let elem =
-    switch (sideBarType) {
+    switch (sideBar.selected) {
     | FileExplorer => <FileExplorerView state />
+    | SCM => <SCMPane state />
     | Extensions => <ExtensionListView state />
     };
 

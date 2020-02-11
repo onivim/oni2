@@ -25,17 +25,17 @@ module Styles = {
     backgroundColor(Color.rgba(0., 0., 0., 0.3)),
     color(Colors.white),
     fontFamily(font),
-    fontSize(14),
+    fontSize(14.),
   ];
 
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
-  let menuItem = [fontSize(14), cursor(Revery.MouseCursors.pointer)];
+  let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
 
   let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
     fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
-    fontSize(12),
+    fontSize(12.),
     backgroundColor(
       isFocused ? theme.menuSelectionBackground : theme.menuBackground,
     ),
