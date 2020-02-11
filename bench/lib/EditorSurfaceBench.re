@@ -7,8 +7,6 @@ open Helpers;
 
 open Revery.UI;
 
-module Option = Utility.Option;
-
 let rootNode =
   React.RenderedElement.{
     node: (new node)(),

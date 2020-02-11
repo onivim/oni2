@@ -1,8 +1,6 @@
 open Revery.UI;
 open Oni_Core;
 
-module Option = Utility.Option;
-
 module Constants = {
   include Constants;
 
@@ -22,12 +20,7 @@ let renderLineNumber =
       yOffset: float,
     ) => {
   let isActiveLine = lineNumber == cursorLine;
-  let lineNumberTextColor =
-    isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
-
-  let yF = yOffset;
+  let y = yOffset -. context.fontMetrics.ascent;
 
   let lineNumber =
     string_of_int(
@@ -48,14 +41,19 @@ let renderLineNumber =
         *. context.charWidth
         /. 2.;
 
-  Draw.text(
-    ~context,
-    ~x=lineNumberXOffset,
-    ~y=yF,
-    ~backgroundColor=theme.editorLineNumberBackground,
-    ~color=lineNumberTextColor,
-    lineNumber,
-  );
+  let lineNumberTextColor =
+    isActiveLine
+      ? theme.editorActiveLineNumberForeground
+      : theme.editorLineNumberForeground;
+  let paint = Skia.Paint.make();
+  Skia.Paint.setColor(paint, Revery.Color.toSkia(lineNumberTextColor));
+  Skia.Paint.setTextEncoding(paint, Utf8);
+  Skia.Paint.setAntiAlias(paint, true);
+  Skia.Paint.setLcdRenderText(paint, true);
+  Skia.Paint.setTextSize(paint, context.fontSize);
+  Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+
+  Draw.text(~context, ~x=lineNumberXOffset, ~y, ~paint, lineNumber);
 };
 
 let renderLineNumbers =
@@ -68,13 +66,19 @@ let renderLineNumbers =
       ~showLineNumbers,
       ~cursorLine,
     ) => {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setColor(
+    paint,
+    Revery.Color.toSkia(theme.editorLineNumberBackground),
+  );
+
   Draw.rect(
     ~context,
     ~x=0.,
     ~y=0.,
     ~width=lineNumberWidth,
     ~height=float(height),
-    ~color=theme.editorLineNumberBackground,
+    ~paint,
   );
 
   Draw.renderImmediate(~context, ~count, (item, offset) =>
@@ -103,22 +107,18 @@ let render =
       ~count,
       ~cursorLine,
       ~diffMarkers,
-      transform,
-      _ctx,
+      canvasContext,
     ) => {
   let context =
-    Draw.{
-      transform,
-      width,
-      height,
-      scrollX: 0.,
-      scrollY,
-      lineHeight,
-      fontFamily: editorFont.fontFile,
-      fontSize: editorFont.fontSize,
-      charWidth: editorFont.measuredWidth,
-      charHeight: editorFont.measuredHeight,
-    };
+    Draw.createContext(
+      ~canvasContext,
+      ~width,
+      ~height,
+      ~scrollX=0.,
+      ~scrollY,
+      ~lineHeight,
+      ~editorFont,
+    );
 
   if (showLineNumbers != LineNumber.Off) {
     renderLineNumbers(
@@ -140,7 +140,7 @@ let render =
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
       ~count,
-      ~transform=context.transform,
+      ~canvasContext,
       ~theme,
     ),
     diffMarkers,
@@ -197,5 +197,5 @@ let make =
       ~diffMarkers,
     );
 
-  (totalWidth, <OpenGL style render />);
+  (totalWidth, <Canvas style render />);
 };

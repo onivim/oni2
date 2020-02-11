@@ -25,7 +25,7 @@ module Styles = {
     bottom(0),
     left(0),
     right(0),
-    height(Constants.default.scrollBarThickness),
+    height(Constants.scrollBarThickness),
   ];
 };
 
@@ -89,10 +89,10 @@ let%component make =
     switch (elementRef) {
     | None => ()
     | Some(r) =>
-      let rect = r#getBoundingBox() |> Rectangle.ofBoundingBox;
+      let (minX, minY, _, _) = r#getBoundingBox() |> BoundingBox2d.getBounds;
 
-      let relY = evt.mouseY -. Rectangle.getY(rect);
-      let relX = evt.mouseX -. Rectangle.getX(rect);
+      let relY = evt.mouseY -. minY;
+      let relX = evt.mouseX -. minX;
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
       let (line, col) =
@@ -127,25 +127,22 @@ let%component make =
     )}
     onMouseUp
     onMouseWheel>
-    <OpenGL
+    <Canvas
       style={Styles.bufferViewClipped(
         0.,
         float(metrics.pixelWidth) -. gutterWidth,
       )}
-      render={(transform, _ctx) => {
+      render={canvasContext => {
         let context =
-          Draw.{
-            transform,
-            width: metrics.pixelWidth,
-            height: metrics.pixelHeight,
-            scrollX: editor.scrollX,
-            scrollY: editor.scrollY,
-            lineHeight: editorFont.measuredHeight,
-            fontFamily: editorFont.fontFile,
-            fontSize: editorFont.fontSize,
-            charWidth: editorFont.measuredWidth,
-            charHeight: editorFont.measuredHeight,
-          };
+          Draw.createContext(
+            ~canvasContext,
+            ~width=metrics.pixelWidth,
+            ~height=metrics.pixelHeight,
+            ~scrollX=editor.scrollX,
+            ~scrollY=editor.scrollY,
+            ~lineHeight=editorFont.measuredHeight,
+            ~editorFont,
+          );
 
         drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
 

@@ -7,16 +7,45 @@ open Oni_Core;
 module FontIcon = Oni_Components.FontIcon;
 
 type context = {
-  transform: Reglm.Mat4.t,
+  canvasContext: CanvasContext.t,
   width: int,
   height: int,
   scrollX: float,
   scrollY: float,
   lineHeight: float,
-  fontFamily: string,
-  fontSize: int,
+  font: Revery.Font.t,
+  fontMetrics: Revery.Font.FontMetrics.t,
+  fontSize: float,
   charWidth: float,
   charHeight: float,
+};
+
+let createContext =
+    (
+      ~canvasContext,
+      ~width,
+      ~height,
+      ~scrollX,
+      ~scrollY,
+      ~lineHeight,
+      ~editorFont: EditorFont.t,
+    ) => {
+  let font = Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.get_ok;
+  let fontMetrics = Revery.Font.getMetrics(font, editorFont.fontSize);
+
+  {
+    canvasContext,
+    width,
+    height,
+    scrollX,
+    scrollY,
+    lineHeight,
+    font,
+    fontMetrics,
+    fontSize: editorFont.fontSize,
+    charWidth: editorFont.measuredWidth,
+    charHeight: editorFont.measuredHeight,
+  };
 };
 
 let renderImmediate = (~context, ~count, render) =>
@@ -29,39 +58,26 @@ let renderImmediate = (~context, ~count, render) =>
     (),
   );
 
-let rect = (~context, ~x, ~y, ~width, ~height, ~color) =>
-  Shapes.drawRect(
-    ~transform=context.transform,
-    ~x=x -. context.scrollX,
-    ~y=y -. context.scrollY,
-    ~height,
+let drawRect = (~context, ~x, ~y, ~width, ~height, ~paint) =>
+  CanvasContext.drawRectLtwh(
+    ~left=x -. context.scrollX,
+    ~top=y -. context.scrollY,
     ~width,
-    ~color,
-    (),
+    ~height,
+    ~paint,
+    context.canvasContext,
   );
+let rect = drawRect;
 
-let text =
-    (
-      ~context,
-      ~x,
-      ~y,
-      ~backgroundColor,
-      ~color,
-      ~fontFamily=context.fontFamily,
-      ~fontSize=context.fontSize,
-      text,
-    ) =>
-  Revery.Draw.Text.drawString(
-    ~window=Revery.UI.getActiveWindow(),
-    ~transform=context.transform,
+let drawText = (~context, ~x, ~y, ~paint, text) =>
+  CanvasContext.drawText(
     ~x=x -. context.scrollX,
     ~y=y -. context.scrollY,
-    ~backgroundColor,
-    ~color,
-    ~fontFamily,
-    ~fontSize,
-    text,
+    ~paint,
+    ~text,
+    context.canvasContext,
   );
+let text = drawText;
 
 let underline =
     (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
@@ -83,7 +99,10 @@ let underline =
       endC,
     );
 
-  rect(
+  let paint = Skia.Paint.make();
+  Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+
+  drawRect(
     ~context,
     ~x=float(startOffset) *. context.charWidth,
     ~y=
@@ -92,7 +111,7 @@ let underline =
       +. (context.charHeight -. 2.),
     ~height=1.,
     ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
-    ~color,
+    ~paint,
   );
 };
 
@@ -127,7 +146,10 @@ let range =
       );
     let length = max(float(endOffset - startOffset), 1.0);
 
-    rect(
+    let paint = Skia.Paint.make();
+    Skia.Paint.setColor(paint, Color.toSkia(color));
+
+    drawRect(
       ~context,
       ~x=float(startOffset) *. context.charWidth -. padding,
       ~y=
@@ -136,7 +158,7 @@ let range =
         -. padding,
       ~height=context.charHeight +. doublePadding,
       ~width=length *. context.charWidth +. doublePadding,
-      ~color,
+      ~paint,
     );
   };
 };
@@ -144,24 +166,33 @@ let range =
 let token =
     (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
-  let y = offsetY;
-
-  let backgroundColor = token.backgroundColor;
+  let y = offsetY -. context.fontMetrics.ascent;
 
   switch (token.tokenType) {
   | Text =>
-    text(~context, ~x, ~y, ~backgroundColor, ~color=token.color, token.text)
+    let paint = Skia.Paint.make();
+    Skia.Paint.setTextEncoding(paint, GlyphId);
+    Skia.Paint.setAntiAlias(paint, true);
+    Skia.Paint.setLcdRenderText(paint, true);
+    Skia.Paint.setTextSize(paint, context.fontSize);
+    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+    Skia.Paint.setColor(paint, Color.toSkia(token.color));
+
+    let text =
+      Revery.Font.shape(context.font, token.text)
+      |> Revery.Font.ShapeResult.getGlyphString;
+
+    drawText(~context, ~x, ~y, ~paint, text);
 
   | Tab =>
-    text(
-      ~context,
+    CanvasContext.Deprecated.drawString(
       ~x=x +. context.charWidth /. 4.,
-      ~y=y +. context.charHeight /. 4.,
-      ~backgroundColor,
+      ~y,
       ~color=theme.editorWhitespaceForeground,
       ~fontFamily="FontAwesome5FreeSolid.otf",
-      ~fontSize=10,
-      FontIcon.codeToIcon(0xf30b),
+      ~fontSize=10.,
+      ~text=FontIcon.codeToIcon(0xf30b),
+      context.canvasContext,
     )
 
   | Whitespace =>
@@ -169,37 +200,51 @@ let token =
     let xOffset = context.charWidth /. 2. -. 1.;
     let yOffset = context.charHeight /. 2. -. 1.;
 
+    let paint = Skia.Paint.make();
+    Skia.Paint.setColor(
+      paint,
+      Color.toSkia(theme.editorWhitespaceForeground),
+    );
+
     for (i in 0 to String.length(token.text) - 1) {
       let xPos = x +. context.charWidth *. float(i);
 
-      rect(
+      drawRect(
         ~context,
         ~x=xPos +. xOffset,
-        ~y=y +. yOffset,
+        ~y=y -. yOffset,
         ~width=size,
         ~height=size,
-        ~color=theme.editorWhitespaceForeground,
+        ~paint,
       );
     };
   };
 };
 
-let ruler = (~context, ~color, x) =>
-  rect(
+let ruler = (~context, ~color, x) => {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setColor(paint, Color.toSkia(color));
+
+  drawRect(
     ~context,
     ~x,
     ~y=0.0,
     ~height=float(context.height),
     ~width=1.,
-    ~color,
+    ~paint,
   );
+};
 
-let lineHighlight = (~context, ~color, line) =>
-  rect(
+let lineHighlight = (~context, ~color, line) => {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setColor(paint, Color.toSkia(color));
+
+  drawRect(
     ~context,
     ~x=0.,
     ~y=context.lineHeight *. float(Index.toZeroBased(line)),
     ~height=context.lineHeight,
     ~width=float(context.width),
-    ~color,
+    ~paint,
   );
+};

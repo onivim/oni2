@@ -3,8 +3,6 @@
  *
  * Logic for rendering indent lines in the buffer view
  */
-
-open Revery;
 open Revery.Draw;
 
 open EditorCoreTypes;
@@ -90,10 +88,7 @@ let render =
   let indentationWidthInPixels =
     float(indentationSettings.tabSize) *. context.charWidth;
 
-  let l = ref(startLine);
-
-  while (l^ < endLine) {
-    let line = l^;
+  for (line in startLine to endLine - 1) {
     let level =
       getIndentLevel(
         indentationSettings,
@@ -106,25 +101,21 @@ let render =
 
     let (x, y) = bufferPositionToPixel(~context, line, 0);
 
-    let i = ref(0);
-    while (i^ < level) {
+    for (i in 0 to level - 1) {
       Skia.Paint.setColor(
         paint,
-        Color.toSkia(theme.editorIndentGuideBackground),
+        Revery.Color.toSkia(theme.editorIndentGuideBackground),
       );
       CanvasContext.drawRectLtwh(
-        ~left=x +. indentationWidthInPixels *. float_of_int(i^),
+        ~left=x +. indentationWidthInPixels *. float(i),
         ~top=y,
         ~width=1.,
-        ~height=lineHeight,
+        ~height=context.lineHeight,
         ~paint,
         context.canvasContext,
       );
-
-      incr(i);
     };
 
-    incr(l);
     previousIndentLevel := level;
 
     if (line == cursorLine) {
@@ -187,16 +178,14 @@ let render =
     if (cursorLineIndentLevel^ >= 1) {
       Skia.Paint.setColor(
         paint,
-        Color.toSkia(theme.editorIndentGuideActiveBackground),
+        Revery.Color.toSkia(theme.editorIndentGuideActiveBackground),
       );
       CanvasContext.drawRectLtwh(
         ~left=
-          x
-          +. indentationWidthInPixels
-          *. float_of_int(cursorLineIndentLevel^ - 1),
-        ~top=topY +. lineHeight,
+          x +. indentationWidthInPixels *. float(cursorLineIndentLevel^ - 1),
+        ~top=topY +. context.lineHeight,
         ~width=1.,
-        ~height=bottomY -. topY -. lineHeight,
+        ~height=bottomY -. topY -. context.lineHeight,
         ~paint,
         context.canvasContext,
       );

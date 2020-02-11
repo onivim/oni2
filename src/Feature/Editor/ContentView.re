@@ -138,7 +138,7 @@ let renderDefinition =
     ~endIndex=leftVisibleColumn + bufferWidthInCharacters,
     cursorPosition,
   )
-  |> Utility.Option.iter((token: BufferViewTokenizer.t) => {
+  |> Option.iter((token: BufferViewTokenizer.t) => {
        let range =
          Range.{
            start:

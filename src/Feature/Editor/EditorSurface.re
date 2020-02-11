@@ -44,7 +44,7 @@ module Styles = {
       position(`Absolute),
       top(0),
       right(0),
-      width(Constants.default.scrollBarThickness),
+      width(Constants.scrollBarThickness),
       backgroundColor(theme.scrollbarSliderBackground),
       bottom(0),
     ];
@@ -66,18 +66,16 @@ let minimap =
       ~metrics: EditorMetrics.t,
       ~diagnosticsMap,
       ~bufferWidthInCharacters,
-      ~bufferWidthInPixels,
       ~minimapWidthInPixels,
       (),
     ) => {
-  let minimapPixelWidth =
-    minimapWidthInPixels + Constants.default.minimapPadding * 2;
+  let minimapPixelWidth = minimapWidthInPixels + Constants.minimapPadding * 2;
   let style =
     Style.[
       position(`Absolute),
       overflow(`Hidden),
       top(0),
-      right(Constants.default.scrollBarThickness),
+      right(Constants.scrollBarThickness),
       width(minimapPixelWidth),
       bottom(0),
     ];
@@ -240,7 +238,6 @@ let make =
            diffMarkers
            onScroll
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
-           bufferWidthInPixels={layout.bufferWidthInPixels}
            minimapWidthInPixels={layout.minimapWidthInPixels}
          />
        : React.empty}
