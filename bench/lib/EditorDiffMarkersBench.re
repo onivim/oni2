@@ -67,7 +67,7 @@ module Tests = {
 // PLUMBING
 
 let setup = () => ();
-let options = Reperf.Options.create(~iterations=1000, ());
+let options = Reperf.Options.create(~iterations=100, ());
 
 bench(
   ~name="EditorDiffMarkers: 10k lines, no changes",
@@ -101,7 +101,7 @@ bench(
   (),
 );
 
-let options = Reperf.Options.create(~iterations=100, ());
+let options = Reperf.Options.create(~iterations=10, ());
 
 bench(
   ~name="EditorDiffMarkers: 100k lines, no changes",
