@@ -9,6 +9,27 @@ type t = {providers: list(Provider.t)};
 
 let initial = {providers: []};
 
+// EFFECTS
+
+module Effects = {
+  let getOriginalUri = (extHostClient, model, path, toMsg) =>
+    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
+      // Try our luck with every provider. If several returns Last-Writer-Wins
+      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
+      model.providers
+      |> List.iter((provider: Provider.t) => {
+           let promise =
+             Oni_Extensions.SCM.provideOriginalResource(
+               provider.handle,
+               Uri.fromPath(path),
+               extHostClient,
+             );
+
+           Lwt.on_success(promise, uri => dispatch(toMsg(uri)));
+         })
+    });
+};
+
 // UPDATE
 
 [@deriving show({with_path: false})]

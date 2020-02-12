@@ -37,19 +37,6 @@ module Decode = {
     | _ => failwith("Unexpected json for scm resource");
 };
 
-let provideOriginalResource = (handle, uri, client) =>
-  ExtHostTransport.request(
-    ~msgType=MessageType.requestJsonArgsWithCancellation,
-    client,
-    ExtHostProtocol.OutgoingNotifications._buildNotification(
-      "ExtHostSCM",
-      "$provideOriginalResource",
-      `List([`Int(handle), Uri.to_yojson(uri)]),
-    ),
-    json =>
-    Uri.of_yojson(json) |> Stdlib.Result.get_ok
-  );
-
 type msg =
   | RegisterSourceControl({
       handle: int,
@@ -177,3 +164,16 @@ let handleMessage = (~dispatch, method, args) =>
       )
     )
   };
+
+let provideOriginalResource = (handle, uri, client) =>
+  ExtHostTransport.request(
+    ~msgType=MessageType.requestJsonArgsWithCancellation,
+    client,
+    ExtHostProtocol.OutgoingNotifications._buildNotification(
+      "ExtHostSCM",
+      "$provideOriginalResource",
+      `List([`Int(handle), Uri.to_yojson(uri)]),
+    ),
+    json =>
+    Uri.of_yojson(json) |> Stdlib.Result.get_ok
+  );

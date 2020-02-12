@@ -512,26 +512,6 @@ let start = (extensions, setup: Setup.t) => {
       )
     });
 
-  let getOriginalUri =
-      (bufferId, path, providers: list(SCMModels.Provider.t)) =>
-    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-      // Try our luck with every provider. If several returns Last-Writer-Wins
-      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-      providers
-      |> List.iter((provider: SCMModels.Provider.t) => {
-           let promise =
-             Oni_Extensions.SCM.provideOriginalResource(
-               provider.handle,
-               Uri.fromPath(path),
-               extHostClient,
-             );
-
-           Lwt.on_success(promise, uri =>
-             dispatch(Actions.GotOriginalUri({bufferId, uri}))
-           );
-         })
-    });
-
   let getOriginalContent = (bufferId, uri, providers) =>
     Isolinear.Effect.createWithDispatch(
       ~name="scm.getOriginalSourceLines", dispatch => {
@@ -608,7 +588,10 @@ let start = (extensions, setup: Setup.t) => {
         | Some(path) =>
           Isolinear.Effect.batch([
             sendBufferEnterEffect(metadata, fileTypeOpt),
-            getOriginalUri(metadata.id, path, state.scm.providers),
+            Feature_SCM.Effects.getOriginalUri(
+              extHostClient, state.scm, path, uri =>
+              Actions.GotOriginalUri({bufferId: metadata.id, uri})
+            ),
           ])
 
         | None => sendBufferEnterEffect(metadata, fileTypeOpt)
