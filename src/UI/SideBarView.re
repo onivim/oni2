@@ -61,12 +61,23 @@ let%component make = (~state: State.t, ()) => {
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
         GlobalContext.current().dispatch(
-          Actions.OpenFileByPath(Oni_Core.Uri.toFileSystemPath(resource.uri), None, None),
+          Actions.OpenFileByPath(
+            Oni_Core.Uri.toFileSystemPath(resource.uri),
+            None,
+            None,
+          ),
         );
 
-      let workingDirectory = Option.map(w => w.Workspace.workingDirectory, state.workspace);
+      let workingDirectory =
+        Option.map(w => w.Workspace.workingDirectory, state.workspace);
 
-      <Feature_SCM.Pane model=state.scm workingDirectory onItemClick theme font />
+      <Feature_SCM.Pane
+        model={state.scm}
+        workingDirectory
+        onItemClick
+        theme
+        font
+      />;
 
     | Extensions => <ExtensionListView state />
     };

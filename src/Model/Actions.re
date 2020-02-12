@@ -152,6 +152,14 @@ type t =
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: [@opaque] array(string),
+    })
   | NewDecorationProvider({
       handle: int,
       label: string,

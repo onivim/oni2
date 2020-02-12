@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 // MODEL
 
@@ -86,29 +87,162 @@ type msg =
   | CommitTemplateChanged({
       handle: int,
       template: string,
-    })
-  | GotOriginalUri({
-      bufferId: int,
-      uri: Uri.t,
-    })
-  | GotOriginalContent({
-      bufferId: int,
-      lines: [@opaque] array(string),
-    })
-  | NewDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | LostDecorationProvider({handle: int})
-  | DecorationsChanged({
-      handle: int,
-      uris: list(Uri.t),
-    })
-  | GotDecorations({
-      handle: int,
-      uri: Uri.t,
-      decorations: list(SCMDecoration.t),
     });
+
+let update = (action, model) =>
+  switch (action) {
+  | NewProvider({handle, id, label, rootUri}) => (
+      {
+        providers: [
+          Provider.{
+            handle,
+            id,
+            label,
+            rootUri,
+            resourceGroups: [],
+            hasQuickDiffProvider: false,
+            count: 0,
+            commitTemplate: "",
+          },
+          ...model.providers,
+        ],
+      },
+      Isolinear.Effect.none,
+    )
+
+  | LostProvider({handle}) => (
+      {
+        providers:
+          List.filter(
+            (it: Provider.t) => it.handle != handle,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | QuickDiffProviderChanged({handle, available}) => (
+      {
+        providers:
+          List.map(
+            (it: Provider.t) =>
+              it.handle == handle
+                ? {...it, hasQuickDiffProvider: available} : it,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | CountChanged({handle, count}) => (
+      {
+        providers:
+          List.map(
+            (it: Provider.t) => it.handle == handle ? {...it, count} : it,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | CommitTemplateChanged({handle, template}) => (
+      {
+        providers:
+          List.map(
+            (it: Provider.t) =>
+              it.handle == handle ? {...it, commitTemplate: template} : it,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | NewResourceGroup({provider, handle, id, label}) => (
+      {
+        providers:
+          List.map(
+            (p: Provider.t) =>
+              p.handle == provider
+                ? {
+                  ...p,
+                  resourceGroups: [
+                    ResourceGroup.{
+                      handle,
+                      id,
+                      label,
+                      hideWhenEmpty: false,
+                      resources: [],
+                    },
+                    ...p.resourceGroups,
+                  ],
+                }
+                : p,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | LostResourceGroup({provider, handle}) => (
+      {
+        providers:
+          List.map(
+            (p: Provider.t) =>
+              p.handle == provider
+                ? {
+                  ...p,
+                  resourceGroups:
+                    List.filter(
+                      (g: ResourceGroup.t) => g.handle != handle,
+                      p.resourceGroups,
+                    ),
+                }
+                : p,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+
+  | ResourceStatesChanged({
+      provider,
+      group,
+      spliceStart,
+      deleteCount,
+      additions,
+    }) => (
+      {
+        providers:
+          List.map(
+            (p: Provider.t) =>
+              p.handle == provider
+                ? {
+                  ...p,
+                  resourceGroups:
+                    List.map(
+                      (g: ResourceGroup.t) =>
+                        g.handle == group
+                          ? {
+                            ...g,
+                            resources:
+                              ListEx.splice(
+                                ~start=spliceStart,
+                                ~deleteCount,
+                                ~additions,
+                                g.resources,
+                              ),
+                          }
+                          : g,
+                      p.resourceGroups,
+                    ),
+                }
+                : p,
+            model.providers,
+          ),
+      },
+      Isolinear.Effect.none,
+    )
+  };
 
 // VIEW
 
@@ -187,7 +321,15 @@ module Pane = {
   };
 
   let groupView =
-      (~provider, ~group: ResourceGroup.t, ~theme, ~font, ~workingDirectory, ~onItemClick, ()) => {
+      (
+        ~provider,
+        ~group: ResourceGroup.t,
+        ~theme,
+        ~font,
+        ~workingDirectory,
+        ~onItemClick,
+        (),
+      ) => {
     let label = String.uppercase_ascii(group.label);
     <View style=Styles.group>
       <View style=Styles.groupLabel>
@@ -195,12 +337,19 @@ module Pane = {
       </View>
       <View style=Styles.groupItems>
         ...{
-            group.resources
-            |> List.map(resource =>
-                  <itemView provider resource theme font workingDirectory onClick={() => onItemClick(resource)} />
+             group.resources
+             |> List.map(resource =>
+                  <itemView
+                    provider
+                    resource
+                    theme
+                    font
+                    workingDirectory
+                    onClick={() => onItemClick(resource)}
+                  />
                 )
-            |> React.listToElement
-          }
+             |> React.listToElement
+           }
       </View>
     </View>;
   };
@@ -217,12 +366,19 @@ module Pane = {
 
     <View style=Styles.container>
       ...{
-          groups
-          |> List.map(((provider, group)) =>
-                <groupView provider group theme font workingDirectory onItemClick />
+           groups
+           |> List.map(((provider, group)) =>
+                <groupView
+                  provider
+                  group
+                  theme
+                  font
+                  workingDirectory
+                  onItemClick
+                />
               )
-          |> React.listToElement
-        }
+           |> React.listToElement
+         }
     </View>;
   };
 };

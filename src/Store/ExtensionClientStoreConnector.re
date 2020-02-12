@@ -9,7 +9,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
@@ -292,27 +291,29 @@ let start = (extensions, setup: Setup.t) => {
 
   let onClientMessage = (msg: ExtHostClient.msg) =>
     switch (msg) {
-    | RegisterSourceControl({handle, id, label, rootUri}) =>
+    | SCM(RegisterSourceControl({handle, id, label, rootUri})) =>
       dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
 
-    | UnregisterSourceControl({handle}) =>
+    | SCM(UnregisterSourceControl({handle})) =>
       dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
 
-    | RegisterSCMResourceGroup({provider, handle, id, label}) =>
+    | SCM(RegisterSCMResourceGroup({provider, handle, id, label})) =>
       dispatch(
         Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})),
       )
 
-    | UnregisterSCMResourceGroup({provider, handle}) =>
+    | SCM(UnregisterSCMResourceGroup({provider, handle})) =>
       dispatch(Actions.SCM(SCM.LostResourceGroup({provider, handle})))
 
-    | SpliceSCMResourceStates({
-        provider,
-        group,
-        start,
-        deleteCount,
-        additions,
-      }) =>
+    | SCM(
+        SpliceSCMResourceStates({
+          provider,
+          group,
+          start,
+          deleteCount,
+          additions,
+        }),
+      ) =>
       dispatch(
         Actions.SCM(
           SCM.ResourceStatesChanged({
@@ -325,12 +326,14 @@ let start = (extensions, setup: Setup.t) => {
         ),
       )
 
-    | UpdateSourceControl({
-        handle,
-        hasQuickDiffProvider,
-        count,
-        commitTemplate,
-      }) =>
+    | SCM(
+        UpdateSourceControl({
+          handle,
+          hasQuickDiffProvider,
+          count,
+          commitTemplate,
+        }),
+      ) =>
       Option.iter(
         available =>
           dispatch(
@@ -357,13 +360,13 @@ let start = (extensions, setup: Setup.t) => {
       dispatch(LostTextContentProvider({handle: handle}))
 
     | RegisterDecorationProvider({handle, label}) =>
-      dispatch(Actions.SCM(SCM.NewDecorationProvider({handle, label})))
+      dispatch(NewDecorationProvider({handle, label}))
 
     | UnregisterDecorationProvider({handle}) =>
-      dispatch(Actions.SCM(SCM.LostDecorationProvider({handle: handle})))
+      dispatch(LostDecorationProvider({handle: handle}))
 
     | DecorationsDidChange({handle, uris}) =>
-      dispatch(Actions.SCM(SCM.DecorationsChanged({handle, uris})))
+      dispatch(DecorationsChanged({handle, uris}))
     };
 
   let onOutput = Log.info;
@@ -516,14 +519,14 @@ let start = (extensions, setup: Setup.t) => {
       providers
       |> List.iter((provider: SCM.Provider.t) => {
            let promise =
-             ExtHostClient.provideOriginalResource(
+             Oni_Extensions.SCM.provideOriginalResource(
                provider.handle,
                Uri.fromPath(path),
                extHostClient,
              );
 
            Lwt.on_success(promise, uri =>
-             dispatch(Actions.SCM(SCM.GotOriginalUri({bufferId, uri})))
+             dispatch(Actions.GotOriginalUri({bufferId, uri}))
            );
          })
     });
@@ -549,9 +552,7 @@ let start = (extensions, setup: Setup.t) => {
                let lines =
                  content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
 
-               dispatch(
-                 Actions.SCM(SCM.GotOriginalContent({bufferId, lines})),
-               );
+               dispatch(Actions.GotOriginalContent({bufferId, lines}));
              },
            );
          });
@@ -636,195 +637,7 @@ let start = (extensions, setup: Setup.t) => {
         Isolinear.Effect.none,
       )
 
-    | Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers: [
-              SCM.Provider.{
-                handle,
-                id,
-                label,
-                rootUri,
-                resourceGroups: [],
-                hasQuickDiffProvider: false,
-                count: 0,
-                commitTemplate: "",
-              },
-              ...state.scm.providers,
-            ],
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.LostProvider({handle})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.filter(
-                (it: SCM.Provider.t) => it.handle != handle,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (it: SCM.Provider.t) =>
-                  it.handle == handle
-                    ? {...it, hasQuickDiffProvider: available} : it,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.CountChanged({handle, count})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (it: SCM.Provider.t) =>
-                  it.handle == handle ? {...it, count} : it,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.CommitTemplateChanged({handle, template})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (it: SCM.Provider.t) =>
-                  it.handle == handle
-                    ? {...it, commitTemplate: template} : it,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (p: SCM.Provider.t) =>
-                  p.handle == provider
-                    ? {
-                      ...p,
-                      resourceGroups: [
-                        SCM.ResourceGroup.{
-                          handle,
-                          id,
-                          label,
-                          hideWhenEmpty: false,
-                          resources: [],
-                        },
-                        ...p.resourceGroups,
-                      ],
-                    }
-                    : p,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.LostResourceGroup({provider, handle})) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (p: SCM.Provider.t) =>
-                  p.handle == provider
-                    ? {
-                      ...p,
-                      resourceGroups:
-                        List.filter(
-                          (g: SCM.ResourceGroup.t) => g.handle != handle,
-                          p.resourceGroups,
-                        ),
-                    }
-                    : p,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(
-        SCM.ResourceStatesChanged({
-          provider,
-          group,
-          spliceStart,
-          deleteCount,
-          additions,
-        }),
-      ) => (
-        {
-          ...state,
-          scm: {
-            ...state.scm,
-            providers:
-              List.map(
-                (p: SCM.Provider.t) =>
-                  p.handle == provider
-                    ? {
-                      ...p,
-                      resourceGroups:
-                        List.map(
-                          (g: SCM.ResourceGroup.t) =>
-                            g.handle == group
-                              ? {
-                                ...g,
-                                resources:
-                                  ListEx.splice(
-                                    ~start=spliceStart,
-                                    ~deleteCount,
-                                    ~additions,
-                                    g.resources,
-                                  ),
-                              }
-                              : g,
-                          p.resourceGroups,
-                        ),
-                    }
-                    : p,
-                state.scm.providers,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
-
-    | Actions.SCM(SCM.GotOriginalUri({bufferId, uri})) => (
+    | GotOriginalUri({bufferId, uri}) => (
         {
           ...state,
           buffers:
@@ -837,7 +650,7 @@ let start = (extensions, setup: Setup.t) => {
         getOriginalContent(bufferId, uri, state.textContentProviders),
       )
 
-    | Actions.SCM(SCM.GotOriginalContent({bufferId, lines})) => (
+    | GotOriginalContent({bufferId, lines}) => (
         {
           ...state,
           buffers:
@@ -904,6 +717,10 @@ let start = (extensions, setup: Setup.t) => {
         },
         Isolinear.Effect.none,
       )
+
+    | Actions.SCM(msg) =>
+      let (scm, eff) = Feature_SCM.update(msg, state.scm);
+      ({...state, scm}, eff);
 
     | _ => (state, Isolinear.Effect.none)
     };
