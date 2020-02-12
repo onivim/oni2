@@ -6,8 +6,8 @@ open Feature_Editor;
 
 let metrics =
   EditorMetrics.{
-    pixelWidth: 1600,
-    pixelHeight: 1200,
+    pixelWidth: 3440,
+    pixelHeight: 1440,
     lineHeight: 10.,
     characterWidth: 10.,
   };

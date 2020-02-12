@@ -1,18 +1,7 @@
-//open Oni_Model;
 open BenchFramework;
 open Feature_Editor;
 
 open Helpers;
-
-open Revery.UI;
-
-let rootNode =
-  React.RenderedElement.{
-    node: (new node)(),
-    insertNode: React.insertNode,
-    deleteNode: React.deleteNode,
-    moveNode: React.moveNode,
-  };
 
 let setup = () => {
   let hwnd =
