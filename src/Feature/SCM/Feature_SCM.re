@@ -2,6 +2,21 @@ open Oni_Core;
 
 // MODEL
 
+module Resource = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    uri: Uri.t,
+    icons: list(string),
+    tooltip: string,
+    strikeThrough: bool,
+    faded: bool,
+    source: option(string),
+    letter: option(string),
+    color: option(string),
+  };
+};
+
 module ResourceGroup = {
   [@deriving show({with_path: false})]
   type t = {
@@ -9,7 +24,7 @@ module ResourceGroup = {
     id: string,
     label: string,
     hideWhenEmpty: bool,
-    resources: list(SCMResource.t),
+    resources: list(Resource.t),
   };
 };
 
@@ -32,7 +47,7 @@ type t = {providers: list(Provider.t)};
 
 let initial = {providers: []};
 
-let initial = {providers: [], decorationProviders: []};
+// UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
@@ -58,7 +73,7 @@ type msg =
       group: int,
       spliceStart: int,
       deleteCount: int,
-      additions: list(SCMResource.t),
+      additions: list(Resource.t),
     })
   | CountChanged({
       handle: int,
@@ -142,7 +157,7 @@ module Pane = {
   let%component itemView =
                 (
                   ~provider: Provider.t,
-                  ~resource: SCMResource.t,
+                  ~resource: Resource.t,
                   ~theme,
                   ~font,
                   ~workingDirectory: option(string),
