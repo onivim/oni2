@@ -95,7 +95,7 @@ let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
 let provideDecorations:
-  (int, Core.Uri.t, t) => Lwt.t(list(Core.SCMDecoration.t));
+  (int, Core.Uri.t, t) => Lwt.t(list(Core.Decoration.t));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);

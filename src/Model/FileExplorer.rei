@@ -7,7 +7,7 @@ type t = {
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
   focus: option(string), // path
-  decorations: StringMap.t(list(SCMDecoration.t)),
+  decorations: StringMap.t(list(Decoration.t)),
 };
 
 [@deriving show]

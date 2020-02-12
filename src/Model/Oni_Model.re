@@ -13,6 +13,7 @@ module BufferRenderer = BufferRenderer;
 module BufferRenderers = BufferRenderers;
 module Command = Command;
 module Commands = Commands;
+module DecorationProvider = DecorationProvider;
 module EditorGroup = EditorGroup;
 module EditorGroups = EditorGroups;
 module EditorVisibleRanges = EditorVisibleRanges;

@@ -568,9 +568,7 @@ let start = (extensions, setup: Setup.t) => {
         );
 
       Lwt.on_success(promise, decorations =>
-        dispatch(
-          Actions.SCM(SCM.GotDecorations({handle, uri, decorations})),
-        )
+        dispatch(Actions.GotDecorations({handle, uri, decorations}))
       );
     });
 
@@ -852,43 +850,37 @@ let start = (extensions, setup: Setup.t) => {
         Isolinear.Effect.none,
       )
 
-    | Actions.SCM(SCM.NewDecorationProvider({handle, label})) => (
+    | NewDecorationProvider({handle, label}) => (
         {
           ...state,
-          scm: {
-            ...state.scm,
-            decorationProviders: [
-              SCM.DecorationProvider.{handle, label},
-              ...state.scm.decorationProviders,
-            ],
-          },
+          decorationProviders: [
+            DecorationProvider.{handle, label},
+            ...state.decorationProviders,
+          ],
         },
         Isolinear.Effect.none,
       )
 
-    | Actions.SCM(SCM.LostDecorationProvider({handle})) => (
+    | LostDecorationProvider({handle}) => (
         {
           ...state,
-          scm: {
-            ...state.scm,
-            decorationProviders:
-              List.filter(
-                (it: SCM.DecorationProvider.t) => it.handle != handle,
-                state.scm.decorationProviders,
-              ),
-          },
+          decorationProviders:
+            List.filter(
+              (it: DecorationProvider.t) => it.handle != handle,
+              state.decorationProviders,
+            ),
         },
         Isolinear.Effect.none,
       )
 
-    | Actions.SCM(SCM.DecorationsChanged({handle, uris})) => (
+    | DecorationsChanged({handle, uris}) => (
         state,
         Isolinear.Effect.batch(
           uris |> List.map(provideDecorationsEffect(handle)),
         ),
       )
 
-    | Actions.SCM(SCM.GotDecorations({handle, uri, decorations})) => (
+    | GotDecorations({handle, uri, decorations}) => (
         {
           ...state,
           fileExplorer: {
@@ -900,7 +892,7 @@ let start = (extensions, setup: Setup.t) => {
                 | Some(existing) => {
                     let existing =
                       List.filter(
-                        (it: SCMDecoration.t) => it.handle != handle,
+                        (it: Decoration.t) => it.handle != handle,
                         existing,
                       );
                     Some(decorations @ existing);

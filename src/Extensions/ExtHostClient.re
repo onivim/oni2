@@ -410,7 +410,7 @@ let provideDecorations = (handle, uri, client) => {
           `String(source),
         ]),
       ) =>
-      Some(SCMDecoration.{handle, tooltip, letter, color, source})
+      Some(Decoration.{handle, tooltip, letter, color, source})
     | (_, json) => {
         Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
         None;

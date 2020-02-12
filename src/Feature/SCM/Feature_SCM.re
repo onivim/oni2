@@ -27,19 +27,10 @@ module Provider = {
   };
 };
 
-module DecorationProvider = {
-  [@deriving show({with_path: false})]
-  type t = {
-    handle: int,
-    label: string,
-  };
-};
-
 [@deriving show({with_path: false})]
-type t = {
-  providers: list(Provider.t),
-  decorationProviders: list(DecorationProvider.t),
-};
+type t = {providers: list(Provider.t)};
+
+let initial = {providers: []};
 
 let initial = {providers: [], decorationProviders: []};
 

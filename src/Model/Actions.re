@@ -152,6 +152,20 @@ type t =
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | NewDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | LostDecorationProvider({handle: int})
+  | DecorationsChanged({
+      handle: int,
+      uris: list(Uri.t),
+    })
+  | GotDecorations({
+      handle: int,
+      uri: Uri.t,
+      decorations: list(Decoration.t),
+    })
   | Noop
 and command = {
   commandCategory: option(string),
