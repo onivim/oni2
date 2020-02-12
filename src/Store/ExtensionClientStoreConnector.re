@@ -512,12 +512,13 @@ let start = (extensions, setup: Setup.t) => {
       )
     });
 
-  let getOriginalUri = (bufferId, path, providers: list(SCM.Provider.t)) =>
+  let getOriginalUri =
+      (bufferId, path, providers: list(SCMModels.Provider.t)) =>
     Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
       // Try our luck with every provider. If several returns Last-Writer-Wins
       // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
       providers
-      |> List.iter((provider: SCM.Provider.t) => {
+      |> List.iter((provider: SCMModels.Provider.t) => {
            let promise =
              Oni_Extensions.SCM.provideOriginalResource(
                provider.handle,

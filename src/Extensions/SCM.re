@@ -16,7 +16,7 @@ module Decode = {
         letter,
         color,
       ]) =>
-      Feature_SCM.Resource.{
+      SCMModels.Resource.{
         handle,
         uri: Uri.of_yojson(uri) |> Stdlib.Result.get_ok,
         icons:
@@ -81,7 +81,7 @@ type msg =
       group: int,
       start: int,
       deleteCount: int,
-      additions: list(Feature_SCM.Resource.t),
+      additions: list(SCMModels.Resource.t),
     });
 
 let handleMessage = (~dispatch, method, args) =>
