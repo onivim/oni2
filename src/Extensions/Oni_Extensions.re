@@ -24,4 +24,5 @@ module LocalizedToken = LocalizedToken;
 module NodeProcess = NodeProcess;
 module NodeTask = NodeTask;
 module ProviderUtility = ProviderUtility;
+module SCM = SCM;
 module SymbolKind = SymbolKind;
