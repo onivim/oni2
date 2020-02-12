@@ -11,6 +11,7 @@ type t = {
   grammars: list(ExtensionContributions.Grammar.t),
   languages: list(ExtensionContributions.Language.t),
   extToLanguage: StringMap.t(string),
+  languageToConfigurationPath: StringMap.t(string),
   languageToScope: StringMap.t(string),
   scopeToGrammarPath: StringMap.t(string),
   scopeToTreesitterPath: StringMap.t(option(string)),
@@ -20,6 +21,7 @@ let initial = {
   grammars: [],
   languages: [],
   extToLanguage: StringMap.empty,
+  languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
   scopeToGrammarPath: StringMap.empty,
   scopeToTreesitterPath: StringMap.empty,
@@ -47,6 +49,10 @@ let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
   | None => defaultLanguage
   | Some(v) => getLanguageFromFilePath(li, v)
   };
+};
+
+let getLanguageConfigurationPath = (li: t, languageId: string) => {
+  StringMap.find_opt(languageId, li.languageToConfigurationPath);
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {
@@ -120,10 +126,23 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          StringMap.empty,
        );
 
+  let languageToConfigurationPath =
+    languages
+    |> List.fold_left(
+         (prev, {id, configuration, _}: ExtensionContributions.Language.t) => {
+           switch (configuration) {
+           | None => prev
+           | Some(configPath) => StringMap.add(id, configPath, prev)
+           }
+         },
+         StringMap.empty,
+       );
+
   {
     grammars,
     languages,
     extToLanguage,
+    languageToConfigurationPath,
     languageToScope,
     scopeToGrammarPath,
     scopeToTreesitterPath,

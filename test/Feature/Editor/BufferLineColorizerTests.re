@@ -23,18 +23,21 @@ let basicTokens = [
     ~index=1,
     ~backgroundColor,
     ~foregroundColor=Colors.green,
+    ~syntaxScope=SyntaxScope.none,
     (),
   ),
   ColorizedToken.create(
     ~index=5,
     ~backgroundColor,
     ~foregroundColor=Colors.red,
+    ~syntaxScope=SyntaxScope.none,
     (),
   ),
   ColorizedToken.create(
     ~index=10,
     ~backgroundColor,
     ~foregroundColor=Colors.blue,
+    ~syntaxScope=SyntaxScope.none,
     (),
   ),
 ];

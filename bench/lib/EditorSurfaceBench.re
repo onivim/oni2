@@ -1,144 +1,23 @@
-open Oni_Core;
-open Oni_Model;
 open BenchFramework;
 open Feature_Editor;
 
 open Helpers;
 
-open Revery.UI;
-
-let rootNode =
-  React.RenderedElement.{
-    node: (new node)(),
-    insertNode: React.insertNode,
-    deleteNode: React.deleteNode,
-    moveNode: React.moveNode,
-  };
-
-let buffer =
-  Selectors.getBufferForEditor(thousandLineState, simpleEditor)
-  |> Option.value(~default=Buffer.empty);
-
-let setup = () => ();
-
-let editorSurfaceMinimalState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface
-        isActiveSplit=true
-        editor=simpleEditor
-        buffer
-        metrics
-        onScroll={_ => ()}
-        onDimensionsChanged={_ => ()}
-        onCursorChange={_ => ()}
-        bufferHighlights={thousandLineState.bufferHighlights}
-        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
-        diagnostics={thousandLineState.diagnostics}
-        completions={thousandLineState.completions}
-        tokenTheme={thousandLineState.tokenTheme}
-        definition={thousandLineState.definition}
-        mode={thousandLineState.mode}
-        theme={thousandLineState.theme}
-        editorFont={thousandLineState.editorFont}
-      />,
+let setup = () => {
+  let hwnd =
+    Revery.Utility.HeadlessWindow.create(
+      Revery.WindowCreateOptions.create(~width=3440, ~height=1440, ()),
     );
-  ();
+  hwnd;
 };
 
-let editorSurfaceThousandLineState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface
-        isActiveSplit=true
-        editor=simpleEditor
-        buffer
-        metrics
-        onScroll={_ => ()}
-        onDimensionsChanged={_ => ()}
-        onCursorChange={_ => ()}
-        bufferHighlights={thousandLineState.bufferHighlights}
-        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
-        diagnostics={thousandLineState.diagnostics}
-        completions={thousandLineState.completions}
-        tokenTheme={thousandLineState.tokenTheme}
-        definition={thousandLineState.definition}
-        mode={thousandLineState.mode}
-        theme={thousandLineState.theme}
-        editorFont={thousandLineState.editorFont}
-      />,
-    );
-  ();
-};
-
-let editorSurfaceThousandLineStateWithIndents = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface
-        isActiveSplit=true
-        editor=simpleEditor
-        buffer
-        metrics
-        onScroll={_ => ()}
-        onDimensionsChanged={_ => ()}
-        onCursorChange={_ => ()}
-        bufferHighlights={thousandLineState.bufferHighlights}
-        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
-        diagnostics={thousandLineState.diagnostics}
-        completions={thousandLineState.completions}
-        tokenTheme={thousandLineState.tokenTheme}
-        definition={thousandLineState.definition}
-        mode={thousandLineState.mode}
-        theme={thousandLineState.theme}
-        editorFont={thousandLineState.editorFont}
-      />,
-    );
-  ();
-};
-
-let editorSurfaceHundredThousandLineState = () => {
-  let _ =
-    React.RenderedElement.render(
-      rootNode,
-      <EditorSurface
-        isActiveSplit=true
-        editor=simpleEditor
-        buffer
-        metrics
-        onScroll={_ => ()}
-        onDimensionsChanged={_ => ()}
-        onCursorChange={_ => ()}
-        bufferHighlights={thousandLineState.bufferHighlights}
-        bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
-        diagnostics={thousandLineState.diagnostics}
-        completions={thousandLineState.completions}
-        tokenTheme={thousandLineState.tokenTheme}
-        definition={thousandLineState.definition}
-        mode={thousandLineState.mode}
-        theme={thousandLineState.theme}
-        editorFont={thousandLineState.editorFont}
-      />,
-    );
-  ();
-};
-
-let setupSurfaceThousandLineLayout = () => {
-  let rootNode = (new viewNode)();
-
-  rootNode#setStyle(
-    Style.make(~position=LayoutTypes.Relative, ~width=1600, ~height=1200, ()),
-  );
-
-  let container = Container.create(rootNode);
-  Container.update(
-    container,
+let editorSurfaceMinimalState = hwnd => {
+  Revery.Utility.HeadlessWindow.render(
+    hwnd,
     <EditorSurface
       isActiveSplit=true
       editor=simpleEditor
-      buffer
+      buffer=thousandLineBuffer
       metrics
       onScroll={_ => ()}
       onDimensionsChanged={_ => ()}
@@ -153,59 +32,155 @@ let setupSurfaceThousandLineLayout = () => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
     />,
-  )
-  |> ignore;
-
-  rootNode;
-};
-
-let editorSurfaceThousandLineLayout = rootNode => {
-  Layout.layout(~force=true, rootNode);
-};
-
-let options = Reperf.Options.create(~iterations=100, ());
-
-bench(
-  ~name="EditorSurface - Rendering: Minimal state",
-  ~options,
-  ~setup,
-  ~f=editorSurfaceMinimalState,
-  (),
-);
-
-bench(
-  ~name="EditorSurface - Rendering: 1000 Lines state",
-  ~options,
-  ~setup,
-  ~f=editorSurfaceThousandLineState,
-  (),
-);
-
-bench(
-  ~name="EditorSurface - Rendering: 1000 Lines state (Indented)",
-  ~options,
-  ~setup,
-  ~f=editorSurfaceThousandLineStateWithIndents,
-  (),
-);
-
-bench(
-  ~name="EditorSurface - Rendering: 100000 Lines state",
-  ~options,
-  ~setup,
-  ~f=editorSurfaceHundredThousandLineState,
-  (),
-);
-
-/*
- * Bug: This benchmark fails on Linux CI currently
- */
-if (Revery.Environment.os == Windows || Revery.Environment.os === Mac) {
-  bench(
-    ~name="EditorSurface - Layout: 1000 Lines state",
-    ~options,
-    ~setup=setupSurfaceThousandLineLayout,
-    ~f=editorSurfaceThousandLineLayout,
-    (),
   );
 };
+
+let editorSurfaceThousandLineState = hwnd => {
+  Revery.Utility.HeadlessWindow.render(
+    hwnd,
+    <EditorSurface
+      isActiveSplit=true
+      editor=simpleEditor
+      buffer=thousandLineBuffer
+      metrics
+      onScroll={_ => ()}
+      onDimensionsChanged={_ => ()}
+      onCursorChange={_ => ()}
+      bufferHighlights={thousandLineState.bufferHighlights}
+      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      diagnostics={thousandLineState.diagnostics}
+      completions={thousandLineState.completions}
+      tokenTheme={thousandLineState.tokenTheme}
+      definition={thousandLineState.definition}
+      mode={thousandLineState.mode}
+      theme={thousandLineState.theme}
+      editorFont={thousandLineState.editorFont}
+    />,
+  );
+};
+
+let editorSurfaceThousandLineStateWithIndents = hwnd => {
+  Revery.Utility.HeadlessWindow.render(
+    hwnd,
+    <EditorSurface
+      isActiveSplit=true
+      editor=simpleEditor
+      buffer=thousandLineBuffer
+      metrics
+      onScroll={_ => ()}
+      onDimensionsChanged={_ => ()}
+      onCursorChange={_ => ()}
+      bufferHighlights={thousandLineState.bufferHighlights}
+      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      diagnostics={thousandLineState.diagnostics}
+      completions={thousandLineState.completions}
+      tokenTheme={thousandLineState.tokenTheme}
+      definition={thousandLineState.definition}
+      mode={thousandLineState.mode}
+      theme={thousandLineState.theme}
+      editorFont={thousandLineState.editorFont}
+      shouldRenderIndentGuides=true
+    />,
+  );
+  ();
+};
+let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
+  Revery.Utility.HeadlessWindow.render(
+    hwnd,
+    <EditorSurface
+      isActiveSplit=true
+      editor=simpleEditor
+      buffer=thousandLineBuffer
+      metrics
+      onScroll={_ => ()}
+      onDimensionsChanged={_ => ()}
+      onCursorChange={_ => ()}
+      bufferHighlights={thousandLineState.bufferHighlights}
+      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      diagnostics={thousandLineState.diagnostics}
+      completions={thousandLineState.completions}
+      tokenTheme={thousandLineState.tokenTheme}
+      definition={thousandLineState.definition}
+      mode={thousandLineState.mode}
+      theme={thousandLineState.theme}
+      editorFont={thousandLineState.editorFont}
+      showMinimap=false
+    />,
+  );
+};
+
+let editorSurfaceHundredThousandLineState = hwnd => {
+  Revery.Utility.HeadlessWindow.render(
+    hwnd,
+    <EditorSurface
+      isActiveSplit=true
+      editor=simpleEditor
+      buffer=thousandLineBuffer
+      metrics
+      onScroll={_ => ()}
+      onDimensionsChanged={_ => ()}
+      onCursorChange={_ => ()}
+      bufferHighlights={thousandLineState.bufferHighlights}
+      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      diagnostics={thousandLineState.diagnostics}
+      completions={thousandLineState.completions}
+      tokenTheme={thousandLineState.tokenTheme}
+      definition={thousandLineState.definition}
+      mode={thousandLineState.mode}
+      theme={thousandLineState.theme}
+      editorFont={thousandLineState.editorFont}
+    />,
+  );
+};
+
+let runUIBench = (~name, ~screenshotFile, f) => {
+  let setupWithScreenshot = () => {
+    let hwnd = setup();
+
+    switch (Sys.getenv_opt("ONI2_BENCH_SCREENSHOT")) {
+    | None => ()
+    | Some(_) =>
+      print_endline(
+        "Outputting screenshot for: " ++ name ++ " as " ++ screenshotFile,
+      );
+      f(hwnd);
+      Revery.Utility.HeadlessWindow.takeScreenshot(hwnd, screenshotFile);
+    };
+
+    hwnd;
+  };
+
+  let options = Reperf.Options.create(~iterations=10, ());
+
+  bench(~name, ~options, ~setup=setupWithScreenshot, ~f, ());
+};
+
+runUIBench(
+  ~name="EditorSurface - Rendering: Minimal state",
+  ~screenshotFile="minimal.png",
+  editorSurfaceMinimalState,
+);
+
+runUIBench(
+  ~name="EditorSurface - Rendering: 1000 Lines state",
+  ~screenshotFile="thousand.png",
+  editorSurfaceThousandLineState,
+);
+
+runUIBench(
+  ~name="EditorSurface - Rendering: 1000 Lines state - With indent guides",
+  ~screenshotFile="thousand_plus_indents.png",
+  editorSurfaceThousandLineStateWithIndents,
+);
+
+runUIBench(
+  ~name="EditorSurface - Rendering: 100000 Lines state",
+  ~screenshotFile="hundred_thousand.png",
+  editorSurfaceHundredThousandLineState,
+);
+
+runUIBench(
+  ~name="EditorSurface - Rendering: 100000 Lines state - No minimap",
+  ~screenshotFile="hundred_thousand_no_minimap.png",
+  editorSurfaceHundredThousandLineStateNoMinimap,
+);

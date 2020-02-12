@@ -28,6 +28,27 @@ let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
   |> Option.value(~default=noTokens);
 };
 
+let getSyntaxScope =
+    (~bufferId: int, ~line: Index.t, ~bytePosition: int, highlights: t) => {
+  let tokens = getTokens(bufferId, line, highlights);
+
+  let rec loop = (syntaxScope, currentTokens) => {
+    ColorizedToken.(
+      switch (currentTokens) {
+      // Reached the end... return what we have
+      | [] => syntaxScope
+      | [{index, syntaxScope, _}, ...rest] when index <= bytePosition =>
+        loop(syntaxScope, rest)
+      // Gone past the relevant tokens, return
+      // the scope we ended up with
+      | _ => syntaxScope
+      }
+    );
+  };
+
+  loop(SyntaxScope.none, tokens);
+};
+
 let setTokensForLine =
     (bufferId: int, line: int, tokens: list(ColorizedToken.t), highlights: t) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {

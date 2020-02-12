@@ -80,7 +80,7 @@ function activate(context) {
            latestText = e.document.getText().split(os.EOL).join("|");
         }
 
-		//vscode.window.showInformationMessage('Changed!');
+        //vscode.window.showInformationMessage('Changed!');
         const document = e.document;
         if (document && path.basename(document.uri.fsPath) == "test.oni-dev") {
            collection.set(document.uri, [{
@@ -94,25 +94,29 @@ function activate(context) {
         }
     }));
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	cleanup(vscode.commands.registerCommand('developer.oni.showNotification', () => {
-		// The code you place here will be executed every time your command is executed
+    // The command has been defined in the package.json file
+    // Now provide the implementation of the command with  registerCommand
+    // The commandId parameter must match the command field in package.json
+    cleanup(vscode.commands.registerCommand('developer.oni.showNotification', () => {
+        // The code you place here will be executed every time your command is executed
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello from extension!');
-	}));
+        // Display a message box to the user
+        vscode.window.showInformationMessage('Hello from extension!');
+    }));
     
-	cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
-		// Display a message box to the user
-		vscode.window.showInformationMessage("rootPath: " + vscode.workspace.rootPath);
-	}));
+    cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
+        vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath);
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceFolders', () => {
+        vscode.window.showInformationMessage("Workspace folders: " +
+            JSON.stringify(vscode.workspace.workspaceFolders));
+    }));
 
     // Helper command to show buffer text
     // This helps us create a test case to validate buffer manipulations
-	cleanup(vscode.commands.registerCommand('developer.oni.getBufferText', () => {
-		vscode.window.showInformationMessage("fulltext:" + latestText);
+    cleanup(vscode.commands.registerCommand('developer.oni.getBufferText', () => {
+        vscode.window.showInformationMessage("fulltext:" + latestText);
     }));
     
     function createResourceUri(relativePath) {
@@ -158,6 +162,6 @@ function activate(context) {
 function deactivate() {}
 
 module.exports = {
-	activate,
-	deactivate
+    activate,
+    deactivate
 }

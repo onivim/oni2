@@ -69,12 +69,7 @@ let make = (~state: State.t, ()) => {
     )
     && !zenMode;
 
-  let sideBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchSideBarVisible
-    )
-    && !zenMode
-    && sideBar.isOpen;
+  let sideBarVisible = !zenMode && sideBar.isOpen;
 
   let statusBarHeight = statusBarVisible ? 25 : 0;
 

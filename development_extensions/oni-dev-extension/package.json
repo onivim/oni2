@@ -23,7 +23,11 @@
 			},
 			{
 				"command": "developer.oni.showWorkspaceRootPath",
-				"title": "Onivim - Developer: Show Root Path"
+				"title": "Onivim - Developer: Show Workspace Root Path"
+			},
+			{
+				"command": "developer.oni.showWorkspaceFolders",
+				"title": "Onivim - Developer: Show Workspace Folders"
 			}
 		],
 		"languages": [{
