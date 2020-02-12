@@ -860,7 +860,6 @@ let%component make =
                  ~count,
                  ~render=
                    (item, offset) => {
-                   
                      let index = Index.fromZeroBased(item);
                      let selectionRange =
                        switch (Hashtbl.find_opt(selectionRanges, index)) {

@@ -4,12 +4,13 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
-let metrics = EditorMetrics.{
-  pixelWidth: 1600,
-  pixelHeight: 1200,
-  lineHeight: 10.,
-  characterWidth: 10.,
-};
+let metrics =
+  EditorMetrics.{
+    pixelWidth: 1600,
+    pixelHeight: 1200,
+    lineHeight: 10.,
+    characterWidth: 10.,
+  };
 
 /* Create a state with some editor size */
 let simpleState = {
@@ -29,7 +30,8 @@ let simpleState =
     simpleState,
     Actions.SetEditorFont(
       EditorFont.create(
-        ~fontFile=Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        ~fontFile=
+          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
         ~fontSize=10.,
         ~measuredWidth=10.,
         ~measuredHeight=10.,
