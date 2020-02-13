@@ -48,7 +48,7 @@ type t = {
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   references: References.t,
-  scm: Feature_SCM.t,
+  scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
   windowManager: WindowManager.t,

@@ -422,8 +422,8 @@ let start = (extensions, setup: Setup.t) => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
     });
 
-  let gitRefreshEffect = (scm: Feature_SCM.t) =>
-    if (scm.providers == []) {
+  let gitRefreshEffect = (scm: Feature_SCM.model) =>
+    if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
       executeContributedCommandEffect("git.refresh");

@@ -46,15 +46,15 @@ module Provider: {
 };
 
 [@deriving show]
-type t = {providers: list(Provider.t)};
+type model;
 
-let initial: t;
+let initial: model;
 
 // EFFECTS
 
 module Effects: {
   let getOriginalUri:
-    (Oni_Extensions.ExtHostClient.t, t, string, Uri.t => 'msg) =>
+    (Oni_Extensions.ExtHostClient.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -63,7 +63,7 @@ module Effects: {
 [@deriving show]
 type msg;
 
-let update: (msg, t) => (t, Isolinear.Effect.t(msg));
+let update: (msg, model) => (model, Isolinear.Effect.t(msg));
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;
@@ -73,7 +73,7 @@ let handleExtensionMessage:
 module Pane: {
   let make:
     (
-      ~model: t,
+      ~model: model,
       ~workingDirectory: option(string),
       ~onItemClick: Resource.t => unit,
       ~theme: Theme.t,
