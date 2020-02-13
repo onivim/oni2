@@ -2,15 +2,6 @@ open Oni_Core;
 open Revery;
 open Revery.UI;
 
-let debounce = (delay, f) => {
-  let clear = ref(() => ());
-
-  x => {
-    clear^();
-    clear := Tick.timeout(() => f(x), delay);
-  };
-};
-
 module Constants = {
   let delay = Time.ms(400);
 };
