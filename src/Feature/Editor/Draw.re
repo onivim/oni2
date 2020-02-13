@@ -79,6 +79,7 @@ let drawText = (~context, ~x, ~y, ~paint, text) =>
   );
 let text = drawText;
 
+let underlinePaint = Skia.Paint.make();
 let underline =
     (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
   let line = Index.toZeroBased(r.start.line);
@@ -99,8 +100,7 @@ let underline =
       endC,
     );
 
-  let paint = Skia.Paint.make();
-  Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+  Skia.Paint.setColor(underlinePaint, Revery.Color.toSkia(color));
 
   drawRect(
     ~context,
@@ -111,10 +111,11 @@ let underline =
       +. (context.charHeight -. 2.),
     ~height=1.,
     ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
-    ~paint,
+    ~paint=underlinePaint,
   );
 };
 
+let rangePaint = Skia.Paint.make();
 let range =
     (
       ~context,
@@ -146,8 +147,7 @@ let range =
       );
     let length = max(float(endOffset - startOffset), 1.0);
 
-    let paint = Skia.Paint.make();
-    Skia.Paint.setColor(paint, Color.toSkia(color));
+    Skia.Paint.setColor(rangePaint, Color.toSkia(color));
 
     drawRect(
       ~context,
@@ -158,11 +158,16 @@ let range =
         -. padding,
       ~height=context.charHeight +. doublePadding,
       ~width=length *. context.charWidth +. doublePadding,
-      ~paint,
+      ~paint=rangePaint,
     );
   };
 };
 
+let textPaint = Skia.Paint.make();
+Skia.Paint.setTextEncoding(textPaint, GlyphId);
+Skia.Paint.setAntiAlias(textPaint, true);
+Skia.Paint.setLcdRenderText(textPaint, true);
+let whitespacePaint = Skia.Paint.make();
 let token =
     (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
@@ -170,10 +175,7 @@ let token =
 
   switch (token.tokenType) {
   | Text =>
-    let paint = Skia.Paint.make();
-    Skia.Paint.setTextEncoding(paint, GlyphId);
-    Skia.Paint.setAntiAlias(paint, true);
-    Skia.Paint.setLcdRenderText(paint, true);
+    let paint = textPaint;
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Color.toSkia(token.color));
@@ -182,7 +184,7 @@ let token =
       Revery.Font.shape(context.font, token.text)
       |> Revery.Font.ShapeResult.getGlyphString;
 
-    drawText(~context, ~x, ~y, ~paint, text);
+    drawText(~context, ~x, ~y, ~paint=textPaint, text);
 
   | Tab =>
     CanvasContext.Deprecated.drawString(
@@ -200,9 +202,8 @@ let token =
     let xOffset = context.charWidth /. 2. -. 1.;
     let yOffset = context.charHeight /. 2. -. 1.;
 
-    let paint = Skia.Paint.make();
     Skia.Paint.setColor(
-      paint,
+      whitespacePaint,
       Color.toSkia(theme.editorWhitespaceForeground),
     );
 
@@ -215,15 +216,15 @@ let token =
         ~y=y -. yOffset,
         ~width=size,
         ~height=size,
-        ~paint,
+        ~paint=whitespacePaint,
       );
     };
   };
 };
 
+let rulerPaint = Skia.Paint.make();
 let ruler = (~context, ~color, x) => {
-  let paint = Skia.Paint.make();
-  Skia.Paint.setColor(paint, Color.toSkia(color));
+  Skia.Paint.setColor(rulerPaint, Color.toSkia(color));
 
   drawRect(
     ~context,
@@ -231,13 +232,13 @@ let ruler = (~context, ~color, x) => {
     ~y=0.0,
     ~height=float(context.height),
     ~width=1.,
-    ~paint,
+    ~paint=rulerPaint,
   );
 };
 
+let lineHighlightPaint = Skia.Paint.make();
 let lineHighlight = (~context, ~color, line) => {
-  let paint = Skia.Paint.make();
-  Skia.Paint.setColor(paint, Color.toSkia(color));
+  Skia.Paint.setColor(lineHighlightPaint, Color.toSkia(color));
 
   drawRect(
     ~context,
@@ -245,6 +246,6 @@ let lineHighlight = (~context, ~color, line) => {
     ~y=context.lineHeight *. float(Index.toZeroBased(line)),
     ~height=context.lineHeight,
     ~width=float(context.width),
-    ~paint,
+    ~paint=lineHighlightPaint,
   );
 };

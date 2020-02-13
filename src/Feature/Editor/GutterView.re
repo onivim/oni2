@@ -9,6 +9,10 @@ module Constants = {
   let gutterMargin = 3.;
 };
 
+let lineNumberPaint = Skia.Paint.make();
+Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
+Skia.Paint.setAntiAlias(lineNumberPaint, true);
+Skia.Paint.setLcdRenderText(lineNumberPaint, true);
 let renderLineNumber =
     (
       ~context: Draw.context,
@@ -45,11 +49,8 @@ let renderLineNumber =
     isActiveLine
       ? theme.editorActiveLineNumberForeground
       : theme.editorLineNumberForeground;
-  let paint = Skia.Paint.make();
+  let paint = lineNumberPaint;
   Skia.Paint.setColor(paint, Revery.Color.toSkia(lineNumberTextColor));
-  Skia.Paint.setTextEncoding(paint, Utf8);
-  Skia.Paint.setAntiAlias(paint, true);
-  Skia.Paint.setLcdRenderText(paint, true);
   Skia.Paint.setTextSize(paint, context.fontSize);
   Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
 
