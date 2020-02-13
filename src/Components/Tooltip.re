@@ -2,6 +2,15 @@ open Oni_Core;
 open Revery;
 open Revery.UI;
 
+let debounce = (delay, f) => {
+  let clear = ref(() => ());
+
+  x => {
+    clear^();
+    clear := Tick.timeout(() => f(x), delay);
+  };
+};
+
 module Constants = {
   let delay = Time.ms(400);
 };
@@ -69,16 +78,16 @@ module Overlay = {
     };
   };
 
-  let setTooltip = tooltip => internalSetTooltip^(_ => Some(tooltip));
+  let setTooltip = debounce(Constants.delay, tooltip => internalSetTooltip^(_ => Some(tooltip)));
 };
 
 // HOTSPOT
 
 module Trigger = {
   let make = (~children, ~text, ~style=[], ()) => {
-    let onMouseMove = _ => ();
-    let onMouseOut = (evt: NodeEvents.mouseMoveEventParams) =>
+    let onMouseOver = (evt: NodeEvents.mouseMoveEventParams) =>
       Overlay.setTooltip({text, x: evt.mouseX, y: evt.mouseY});
+    let onMouseMove = onMouseOver;
 
     <View style onMouseMove onMouseOut> children </View>;
   };
