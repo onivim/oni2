@@ -9,54 +9,44 @@ module Constants = {
   let gutterMargin = 3.;
 };
 
-let renderLineNumber = {
-  let paint = Skia.Paint.make();
-  Skia.Paint.setTextEncoding(paint, Utf8);
-  Skia.Paint.setAntiAlias(paint, true);
-  Skia.Paint.setLcdRenderText(paint, true);
+let renderLineNumber =
+    (
+      ~context: Draw.context,
+      lineNumber: int,
+      lineNumberWidth: float,
+      theme: Theme.t,
+      lineSetting,
+      cursorLine: int,
+      yOffset: float,
+    ) => {
+  let isActiveLine = lineNumber == cursorLine;
+  let y = yOffset -. context.fontMetrics.ascent;
 
-  (
-    ~context: Draw.context,
-    lineNumber: int,
-    lineNumberWidth: float,
-    theme: Theme.t,
-    lineSetting,
-    cursorLine: int,
-    yOffset: float,
-  ) => {
-    let isActiveLine = lineNumber == cursorLine;
-    let y = yOffset -. context.fontMetrics.ascent;
+  let lineNumber =
+    string_of_int(
+      LineNumber.getLineNumber(
+        ~bufferLine=lineNumber + 1,
+        ~cursorLine=cursorLine + 1,
+        ~setting=lineSetting,
+        (),
+      ),
+    );
 
-    let lineNumber =
-      string_of_int(
-        LineNumber.getLineNumber(
-          ~bufferLine=lineNumber + 1,
-          ~cursorLine=cursorLine + 1,
-          ~setting=lineSetting,
-          (),
-        ),
-      );
+  let lineNumberXOffset =
+    isActiveLine
+      ? 0.
+      : lineNumberWidth
+        /. 2.
+        -. float(String.length(lineNumber))
+        *. context.charWidth
+        /. 2.;
 
-    let lineNumberXOffset =
-      isActiveLine
-        ? 0.
-        : lineNumberWidth
-          /. 2.
-          -. float(String.length(lineNumber))
-          *. context.charWidth
-          /. 2.;
+  let color =
+    isActiveLine
+      ? theme.editorActiveLineNumberForeground
+      : theme.editorLineNumberForeground;
 
-    let lineNumberTextColor =
-      isActiveLine
-        ? theme.editorActiveLineNumberForeground
-        : theme.editorLineNumberForeground;
-
-    Skia.Paint.setColor(paint, Revery.Color.toSkia(lineNumberTextColor));
-    Skia.Paint.setTextSize(paint, context.fontSize);
-    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
-
-    Draw.text(~context, ~x=lineNumberXOffset, ~y, ~paint, lineNumber);
-  };
+  Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
 };
 
 let renderLineNumbers =

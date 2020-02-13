@@ -93,16 +93,26 @@ let drawShapedText = {
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
 
-    CanvasContext.drawText(
-      ~x=x -. context.scrollX,
-      ~y=y -. context.scrollY,
-      ~paint,
-      ~text,
-      context.canvasContext,
-    );
+    drawText(~context, ~x, ~y, ~paint, text);
   };
 };
 let shapedText = drawShapedText;
+
+let drawUtf8Text = {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setTextEncoding(paint, Utf8);
+  Skia.Paint.setAntiAlias(paint, true);
+  Skia.Paint.setLcdRenderText(paint, true);
+
+  (~context, ~x, ~y, ~color, text) => {
+    Skia.Paint.setTextSize(paint, context.fontSize);
+    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+    Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+
+    drawText(~context, ~x, ~y, ~paint, text);
+  };
+};
+let utf8Text = drawUtf8Text;
 
 let underline = {
   let paint = Skia.Paint.make();
