@@ -1,8 +1,11 @@
 open Oni_Core;
-open SCMModels;
 open Utility;
 
 // MODEL
+
+module Resource = Oni_Extensions.SCM.Resource;
+module ResourceGroup = Oni_Extensions.SCM.ResourceGroup;
+module Provider = Oni_Extensions.SCM.Provider;
 
 [@deriving show({with_path: false})]
 type t = {providers: list(Provider.t)};

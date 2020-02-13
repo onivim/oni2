@@ -2,6 +2,48 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.SCM"));
 
+// MODEL
+
+module Resource = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    uri: Uri.t,
+    icons: list(string),
+    tooltip: string,
+    strikeThrough: bool,
+    faded: bool,
+    source: option(string),
+    letter: option(string),
+    color: option(string),
+  };
+};
+
+module ResourceGroup = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    hideWhenEmpty: bool,
+    resources: list(Resource.t),
+  };
+};
+
+module Provider = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    rootUri: option(Uri.t),
+    resourceGroups: list(ResourceGroup.t),
+    hasQuickDiffProvider: bool,
+    count: int,
+    commitTemplate: string,
+  };
+};
+
 module Decode = {
   let resource =
     fun
@@ -16,7 +58,7 @@ module Decode = {
         letter,
         color,
       ]) =>
-      SCMModels.Resource.{
+      Resource.{
         handle,
         uri: Uri.of_yojson(uri) |> Stdlib.Result.get_ok,
         icons:
@@ -36,6 +78,8 @@ module Decode = {
 
     | _ => failwith("Unexpected json for scm resource");
 };
+
+// UPDATE
 
 type msg =
   | RegisterSourceControl({
@@ -68,7 +112,7 @@ type msg =
       group: int,
       start: int,
       deleteCount: int,
-      additions: list(SCMModels.Resource.t),
+      additions: list(Resource.t),
     });
 
 let handleMessage = (~dispatch, method, args) =>
@@ -164,6 +208,8 @@ let handleMessage = (~dispatch, method, args) =>
       )
     )
   };
+
+// REQUESTS
 
 let provideOriginalResource = (handle, uri, client) =>
   ExtHostTransport.request(

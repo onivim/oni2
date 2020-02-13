@@ -59,7 +59,7 @@ let%component make = (~state: State.t, ()) => {
     switch (sideBar.selected) {
     | FileExplorer => <FileExplorerView state />
     | SCM =>
-      let onItemClick = (resource: Core.SCMModels.Resource.t) =>
+      let onItemClick = (resource: Feature_SCM.Resource.t) =>
         GlobalContext.current().dispatch(
           Actions.OpenFileByPath(
             Oni_Core.Uri.toFileSystemPath(resource.uri),
