@@ -6,6 +6,7 @@ open Revery.UI;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Tooltip = Oni_Components.Tooltip;
 
 module Styles = {
   open Style;
@@ -123,13 +124,13 @@ let nodeView =
     | [] => None
     };
 
-  <View style={Styles.item(~isFocus, ~isActive, ~theme)}>
+  <Tooltip text={node.path} style={Styles.item(~isFocus, ~isActive, ~theme)}>
     <icon />
     <Text
       text={node.displayName}
       style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme, ~font)}
     />
-  </View>;
+  </Tooltip>;
 };
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
