@@ -54,33 +54,14 @@ module Tooltip = {
 
 // OVERLAY
 
-module Overlay = {
+module Overlay: {
+  let setTooltip: t => unit;
+  let clearTooltip: unit => unit;
+
+  let make:
+    (~key: React.Key.t=?, ~theme: Theme.t, ~font: UiFont.t, unit) => element;
+} = {
   let internalSetTooltip = ref(_ => ());
-
-  module Styles = {
-    open Style;
-
-    let overlay = [
-      position(`Absolute),
-      top(0),
-      bottom(0),
-      left(0),
-      right(0),
-      pointerEvents(`Allow),
-      cursor(MouseCursors.arrow),
-    ];
-  };
-
-  let%component make = (~theme, ~font, ()) => {
-    let%hook (current, setCurrent) = Hooks.state(None);
-    internalSetTooltip := setCurrent;
-
-    switch (current) {
-    | Some({text, x, y}) => <Tooltip text x y theme font />
-    | None => React.empty
-    };
-  };
-
   let debouncedSetTooltip = {
     let clearTimeout = ref(() => ());
 
@@ -100,6 +81,16 @@ module Overlay = {
 
   let setTooltip = tooltip => debouncedSetTooltip(Some(tooltip));
   let clearTooltip = () => debouncedSetTooltip(None);
+
+  let%component make = (~theme, ~font, ()) => {
+    let%hook (current, setCurrent) = Hooks.state(None);
+    internalSetTooltip := setCurrent;
+
+    switch (current) {
+    | Some({text, x, y}) => <Tooltip text x y theme font />
+    | None => React.empty
+    };
+  };
 };
 
 // HOTSPOT
