@@ -271,7 +271,6 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
-open Utility;
 
 module Pane = {
   module Styles = {
