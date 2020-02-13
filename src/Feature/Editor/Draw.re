@@ -79,6 +79,31 @@ let drawText = (~context, ~x, ~y, ~paint, text) =>
   );
 let text = drawText;
 
+let drawShapedText = {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setTextEncoding(paint, GlyphId);
+  Skia.Paint.setAntiAlias(paint, true);
+  Skia.Paint.setLcdRenderText(paint, true);
+
+  (~context, ~x, ~y, ~color, text) => {
+    let text =
+      Revery.Font.(shape(context.font, text) |> ShapeResult.getGlyphString);
+
+    Skia.Paint.setTextSize(paint, context.fontSize);
+    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+    Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+
+    CanvasContext.drawText(
+      ~x=x -. context.scrollX,
+      ~y=y -. context.scrollY,
+      ~paint,
+      ~text,
+      context.canvasContext,
+    );
+  };
+};
+let shapedText = drawShapedText;
+
 let underline = {
   let paint = Skia.Paint.make();
 
@@ -168,10 +193,6 @@ let range = {
 };
 
 let token = {
-  let textPaint = Skia.Paint.make();
-  Skia.Paint.setTextEncoding(textPaint, GlyphId);
-  Skia.Paint.setAntiAlias(textPaint, true);
-  Skia.Paint.setLcdRenderText(textPaint, true);
   let whitespacePaint = Skia.Paint.make();
 
   (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
@@ -180,20 +201,7 @@ let token = {
     let y = offsetY -. context.fontMetrics.ascent;
 
     switch (token.tokenType) {
-    | Text =>
-      let paint = textPaint;
-      Skia.Paint.setTextSize(paint, context.fontSize);
-      Skia.Paint.setTypeface(
-        paint,
-        Revery.Font.getSkiaTypeface(context.font),
-      );
-      Skia.Paint.setColor(paint, Color.toSkia(token.color));
-
-      let text =
-        Revery.Font.shape(context.font, token.text)
-        |> Revery.Font.ShapeResult.getGlyphString;
-
-      drawText(~context, ~x, ~y, ~paint=textPaint, text);
+    | Text => drawShapedText(~context, ~x, ~y, ~color=token.color, token.text)
 
     | Tab =>
       CanvasContext.Deprecated.drawString(
