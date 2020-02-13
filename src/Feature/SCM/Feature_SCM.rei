@@ -61,43 +61,7 @@ module Effects: {
 // UPDATE
 
 [@deriving show]
-type msg =
-  | NewProvider({
-      handle: int,
-      id: string,
-      label: string,
-      rootUri: option(Uri.t),
-    })
-  | LostProvider({handle: int})
-  | NewResourceGroup({
-      provider: int,
-      handle: int,
-      id: string,
-      label: string,
-    })
-  | LostResourceGroup({
-      provider: int,
-      handle: int,
-    })
-  | ResourceStatesChanged({
-      provider: int,
-      group: int,
-      spliceStart: int,
-      deleteCount: int,
-      additions: list(Resource.t),
-    })
-  | CountChanged({
-      handle: int,
-      count: int,
-    })
-  | QuickDiffProviderChanged({
-      handle: int,
-      available: bool,
-    })
-  | CommitTemplateChanged({
-      handle: int,
-      template: string,
-    });
+type msg;
 
 let update: (msg, t) => (t, Isolinear.Effect.t(msg));
 
