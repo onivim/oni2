@@ -124,7 +124,14 @@ let nodeView =
     | [] => None
     };
 
-  <Tooltip text={node.path} style={Styles.item(~isFocus, ~isActive, ~theme)}>
+  let tooltipText =
+    switch (decoration) {
+    | Some((decoration: SCMDecoration.t)) =>
+      node.path ++ " • " ++ decoration.tooltip
+    | None => node.path
+    };
+
+  <Tooltip text=tooltipText style={Styles.item(~isFocus, ~isActive, ~theme)}>
     <icon />
     <Text
       text={node.displayName}

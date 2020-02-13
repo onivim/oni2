@@ -42,6 +42,7 @@ module Tooltip = {
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       color(theme.menuForeground),
+      textWrap(TextWrapping.NoWrap),
     ];
   };
 
