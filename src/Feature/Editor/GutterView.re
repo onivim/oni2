@@ -9,52 +9,54 @@ module Constants = {
   let gutterMargin = 3.;
 };
 
-let lineNumberPaint = Skia.Paint.make();
-Skia.Paint.setTextEncoding(lineNumberPaint, Utf8);
-Skia.Paint.setAntiAlias(lineNumberPaint, true);
-Skia.Paint.setLcdRenderText(lineNumberPaint, true);
-let renderLineNumber =
-    (
-      ~context: Draw.context,
-      lineNumber: int,
-      lineNumberWidth: float,
-      theme: Theme.t,
-      lineSetting,
-      cursorLine: int,
-      yOffset: float,
-    ) => {
-  let isActiveLine = lineNumber == cursorLine;
-  let y = yOffset -. context.fontMetrics.ascent;
+let renderLineNumber = {
+  let paint = Skia.Paint.make();
+  Skia.Paint.setTextEncoding(paint, Utf8);
+  Skia.Paint.setAntiAlias(paint, true);
+  Skia.Paint.setLcdRenderText(paint, true);
 
-  let lineNumber =
-    string_of_int(
-      LineNumber.getLineNumber(
-        ~bufferLine=lineNumber + 1,
-        ~cursorLine=cursorLine + 1,
-        ~setting=lineSetting,
-        (),
-      ),
-    );
+  (
+    ~context: Draw.context,
+    lineNumber: int,
+    lineNumberWidth: float,
+    theme: Theme.t,
+    lineSetting,
+    cursorLine: int,
+    yOffset: float,
+  ) => {
+    let isActiveLine = lineNumber == cursorLine;
+    let y = yOffset -. context.fontMetrics.ascent;
 
-  let lineNumberXOffset =
-    isActiveLine
-      ? 0.
-      : lineNumberWidth
-        /. 2.
-        -. float(String.length(lineNumber))
-        *. context.charWidth
-        /. 2.;
+    let lineNumber =
+      string_of_int(
+        LineNumber.getLineNumber(
+          ~bufferLine=lineNumber + 1,
+          ~cursorLine=cursorLine + 1,
+          ~setting=lineSetting,
+          (),
+        ),
+      );
 
-  let lineNumberTextColor =
-    isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
-  let paint = lineNumberPaint;
-  Skia.Paint.setColor(paint, Revery.Color.toSkia(lineNumberTextColor));
-  Skia.Paint.setTextSize(paint, context.fontSize);
-  Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+    let lineNumberXOffset =
+      isActiveLine
+        ? 0.
+        : lineNumberWidth
+          /. 2.
+          -. float(String.length(lineNumber))
+          *. context.charWidth
+          /. 2.;
 
-  Draw.text(~context, ~x=lineNumberXOffset, ~y, ~paint, lineNumber);
+    let lineNumberTextColor =
+      isActiveLine
+        ? theme.editorActiveLineNumberForeground
+        : theme.editorLineNumberForeground;
+
+    Skia.Paint.setColor(paint, Revery.Color.toSkia(lineNumberTextColor));
+    Skia.Paint.setTextSize(paint, context.fontSize);
+    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
+
+    Draw.text(~context, ~x=lineNumberXOffset, ~y, ~paint, lineNumber);
+  };
 };
 
 let renderLineNumbers =
