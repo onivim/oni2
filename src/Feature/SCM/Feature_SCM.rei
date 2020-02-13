@@ -101,6 +101,9 @@ type msg =
 
 let update: (msg, t) => (t, Isolinear.Effect.t(msg));
 
+let handleExtensionMessage:
+  (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;
+
 // VIEW
 
 module Pane: {

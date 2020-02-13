@@ -229,6 +229,43 @@ let update = (action, model) =>
     )
   };
 
+let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
+  switch (msg) {
+  | RegisterSourceControl({handle, id, label, rootUri}) =>
+    dispatch(NewProvider({handle, id, label, rootUri}))
+
+  | UnregisterSourceControl({handle}) =>
+    dispatch(LostProvider({handle: handle}))
+
+  | RegisterSCMResourceGroup({provider, handle, id, label}) =>
+    dispatch(NewResourceGroup({provider, handle, id, label}))
+
+  | UnregisterSCMResourceGroup({provider, handle}) =>
+    dispatch(LostResourceGroup({provider, handle}))
+
+  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
+    dispatch(
+      ResourceStatesChanged({
+        provider,
+        group,
+        spliceStart: start,
+        deleteCount,
+        additions,
+      }),
+    )
+
+  | UpdateSourceControl({handle, hasQuickDiffProvider, count, commitTemplate}) =>
+    Option.iter(
+      available => dispatch(QuickDiffProviderChanged({handle, available})),
+      hasQuickDiffProvider,
+    );
+    Option.iter(count => dispatch(CountChanged({handle, count})), count);
+    Option.iter(
+      template => dispatch(CommitTemplateChanged({handle, template})),
+      commitTemplate,
+    );
+  };
+
 // VIEW
 
 open Revery;

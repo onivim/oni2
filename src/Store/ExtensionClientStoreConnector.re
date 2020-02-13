@@ -18,7 +18,6 @@ module Protocol = Extensions.ExtHostProtocol;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module SCM = Feature_SCM;
 
 module Workspace = Protocol.Workspace;
 
@@ -291,67 +290,11 @@ let start = (extensions, setup: Setup.t) => {
 
   let onClientMessage = (msg: ExtHostClient.msg) =>
     switch (msg) {
-    | SCM(RegisterSourceControl({handle, id, label, rootUri})) =>
-      dispatch(Actions.SCM(SCM.NewProvider({handle, id, label, rootUri})))
-
-    | SCM(UnregisterSourceControl({handle})) =>
-      dispatch(Actions.SCM(SCM.LostProvider({handle: handle})))
-
-    | SCM(RegisterSCMResourceGroup({provider, handle, id, label})) =>
-      dispatch(
-        Actions.SCM(SCM.NewResourceGroup({provider, handle, id, label})),
+    | SCM(msg) =>
+      Feature_SCM.handleExtensionMessage(
+        ~dispatch=msg => dispatch(Actions.SCM(msg)),
+        msg,
       )
-
-    | SCM(UnregisterSCMResourceGroup({provider, handle})) =>
-      dispatch(Actions.SCM(SCM.LostResourceGroup({provider, handle})))
-
-    | SCM(
-        SpliceSCMResourceStates({
-          provider,
-          group,
-          start,
-          deleteCount,
-          additions,
-        }),
-      ) =>
-      dispatch(
-        Actions.SCM(
-          SCM.ResourceStatesChanged({
-            provider,
-            group,
-            spliceStart: start,
-            deleteCount,
-            additions,
-          }),
-        ),
-      )
-
-    | SCM(
-        UpdateSourceControl({
-          handle,
-          hasQuickDiffProvider,
-          count,
-          commitTemplate,
-        }),
-      ) =>
-      Option.iter(
-        available =>
-          dispatch(
-            Actions.SCM(SCM.QuickDiffProviderChanged({handle, available})),
-          ),
-        hasQuickDiffProvider,
-      );
-      Option.iter(
-        count => dispatch(Actions.SCM(SCM.CountChanged({handle, count}))),
-        count,
-      );
-      Option.iter(
-        template =>
-          dispatch(
-            Actions.SCM(SCM.CommitTemplateChanged({handle, template})),
-          ),
-        commitTemplate,
-      );
 
     | RegisterTextContentProvider({handle, scheme}) =>
       dispatch(NewTextContentProvider({handle, scheme}))
@@ -479,7 +422,7 @@ let start = (extensions, setup: Setup.t) => {
       ExtHostClient.executeContributedCommand(cmd, extHostClient)
     });
 
-  let gitRefreshEffect = (scm: SCM.t) =>
+  let gitRefreshEffect = (scm: Feature_SCM.t) =>
     if (scm.providers == []) {
       Isolinear.Effect.none;
     } else {
