@@ -78,7 +78,25 @@ module Overlay = {
     };
   };
 
-  let setTooltip = debounce(Constants.delay, tooltip => internalSetTooltip^(_ => Some(tooltip)));
+  let debouncedSetTooltip = {
+    let clearTimeout = ref(() => ());
+
+    maybeTooltip => {
+      clearTimeout^();
+      switch (maybeTooltip) {
+      | Some(tooltip) =>
+        clearTimeout :=
+          Tick.timeout(
+            () => internalSetTooltip^(_ => Some(tooltip)),
+            Constants.delay,
+          )
+      | None => internalSetTooltip^(_ => None)
+      };
+    };
+  };
+
+  let setTooltip = tooltip => debouncedSetTooltip(Some(tooltip));
+  let clearTooltip = () => debouncedSetTooltip(None);
 };
 
 // HOTSPOT
@@ -88,8 +106,9 @@ module Trigger = {
     let onMouseOver = (evt: NodeEvents.mouseMoveEventParams) =>
       Overlay.setTooltip({text, x: evt.mouseX, y: evt.mouseY});
     let onMouseMove = onMouseOver;
+    let onMouseOut = _ => Overlay.clearTooltip();
 
-    <View style onMouseMove onMouseOut> children </View>;
+    <View style onMouseOver onMouseMove onMouseOut> children </View>;
   };
 };
 
