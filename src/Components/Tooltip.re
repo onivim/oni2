@@ -4,6 +4,8 @@ open Revery.UI;
 
 module Constants = {
   let delay = Time.ms(400);
+  let offsetX = 10;
+  let offsetY = 10;
 };
 
 // MODEL
@@ -22,9 +24,18 @@ module Tooltip = {
 
     let tooltip = (~theme: Theme.t, ~x, ~y) => [
       position(`Absolute),
-      left(int_of_float(x)),
-      top(int_of_float(y)),
+      left(int_of_float(x) + Constants.offsetX),
+      top(int_of_float(y) + Constants.offsetY),
       backgroundColor(theme.menuBackground),
+      paddingVertical(3),
+      paddingHorizontal(8),
+      boxShadow(
+        ~xOffset=3.,
+        ~yOffset=3.,
+        ~blurRadius=5.,
+        ~spreadRadius=0.,
+        ~color=Color.rgba(0., 0., 0., 0.2),
+      ),
     ];
 
     let tooltipText = (~theme: Theme.t, ~font: UiFont.t) => [
