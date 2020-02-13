@@ -58,15 +58,22 @@ let renderImmediate = (~context, ~count, render) =>
     (),
   );
 
-let drawRect = (~context, ~x, ~y, ~width, ~height, ~paint) =>
-  CanvasContext.drawRectLtwh(
-    ~left=x -. context.scrollX,
-    ~top=y -. context.scrollY,
-    ~width,
-    ~height,
-    ~paint,
-    context.canvasContext,
-  );
+let drawRect = {
+  let paint = Skia.Paint.make();
+
+  (~context, ~x, ~y, ~width, ~height, ~color) => {
+    Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+
+    CanvasContext.drawRectLtwh(
+      ~left=x -. context.scrollX,
+      ~top=y -. context.scrollY,
+      ~width,
+      ~height,
+      ~paint,
+      context.canvasContext,
+    );
+  };
+};
 let rect = drawRect;
 
 let drawText = (~context, ~x, ~y, ~paint, text) =>
@@ -114,14 +121,55 @@ let drawUtf8Text = {
 };
 let utf8Text = drawUtf8Text;
 
-let underline = {
-  let paint = Skia.Paint.make();
+let underline =
+    (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
+  let line = Index.toZeroBased(r.start.line);
+  let start = Index.toZeroBased(r.start.column);
+  let endC = Index.toZeroBased(r.stop.column);
 
-  (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
-    let line = Index.toZeroBased(r.start.line);
-    let start = Index.toZeroBased(r.start.column);
-    let endC = Index.toZeroBased(r.stop.column);
+  let text = Buffer.getLine(line, buffer);
+  let (startOffset, _) =
+    BufferViewTokenizer.getCharacterPositionAndWidth(
+      ~viewOffset=leftVisibleColumn,
+      text,
+      start,
+    );
+  let (endOffset, _) =
+    BufferViewTokenizer.getCharacterPositionAndWidth(
+      ~viewOffset=leftVisibleColumn,
+      text,
+      endC,
+    );
 
+  drawRect(
+    ~context,
+    ~x=float(startOffset) *. context.charWidth,
+    ~y=
+      context.charHeight
+      *. float(Index.toZeroBased(r.start.line))
+      +. (context.charHeight -. 2.),
+    ~height=1.,
+    ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
+    ~color,
+  );
+};
+
+let range =
+    (
+      ~context,
+      ~padding=0.,
+      ~buffer,
+      ~leftVisibleColumn,
+      ~color=Colors.black,
+      r: Range.t,
+    ) => {
+  let doublePadding = padding *. 2.;
+  let line = Index.toZeroBased(r.start.line);
+  let start = Index.toZeroBased(r.start.column);
+  let endC = Index.toZeroBased(r.stop.column);
+
+  let lines = Buffer.getNumberOfLines(buffer);
+  if (line < lines) {
     let text = Buffer.getLine(line, buffer);
     let (startOffset, _) =
       BufferViewTokenizer.getCharacterPositionAndWidth(
@@ -135,151 +183,77 @@ let underline = {
         text,
         endC,
       );
-
-    Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+    let length = max(float(endOffset - startOffset), 1.0);
 
     drawRect(
       ~context,
-      ~x=float(startOffset) *. context.charWidth,
+      ~x=float(startOffset) *. context.charWidth -. padding,
       ~y=
         context.charHeight
         *. float(Index.toZeroBased(r.start.line))
-        +. (context.charHeight -. 2.),
-      ~height=1.,
-      ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
-      ~paint,
+        -. padding,
+      ~height=context.charHeight +. doublePadding,
+      ~width=length *. context.charWidth +. doublePadding,
+      ~color,
     );
   };
 };
 
-let range = {
-  let paint = Skia.Paint.make();
+let token =
+    (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
+  let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
+  let y = offsetY -. context.fontMetrics.ascent;
 
-  (
-    ~context,
-    ~padding=0.,
-    ~buffer,
-    ~leftVisibleColumn,
-    ~color=Colors.black,
-    r: Range.t,
-  ) => {
-    let doublePadding = padding *. 2.;
-    let line = Index.toZeroBased(r.start.line);
-    let start = Index.toZeroBased(r.start.column);
-    let endC = Index.toZeroBased(r.stop.column);
+  switch (token.tokenType) {
+  | Text => drawShapedText(~context, ~x, ~y, ~color=token.color, token.text)
 
-    let lines = Buffer.getNumberOfLines(buffer);
-    if (line < lines) {
-      let text = Buffer.getLine(line, buffer);
-      let (startOffset, _) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          ~viewOffset=leftVisibleColumn,
-          text,
-          start,
-        );
-      let (endOffset, _) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          ~viewOffset=leftVisibleColumn,
-          text,
-          endC,
-        );
-      let length = max(float(endOffset - startOffset), 1.0);
+  | Tab =>
+    CanvasContext.Deprecated.drawString(
+      ~x=x +. context.charWidth /. 4.,
+      ~y,
+      ~color=theme.editorWhitespaceForeground,
+      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontSize=10.,
+      ~text=FontIcon.codeToIcon(0xf30b),
+      context.canvasContext,
+    )
 
-      Skia.Paint.setColor(paint, Color.toSkia(color));
+  | Whitespace =>
+    let size = 2.;
+    let xOffset = context.charWidth /. 2. -. 1.;
+    let yOffset = context.charHeight /. 2. -. 1.;
+
+    for (i in 0 to String.length(token.text) - 1) {
+      let xPos = x +. context.charWidth *. float(i);
 
       drawRect(
         ~context,
-        ~x=float(startOffset) *. context.charWidth -. padding,
-        ~y=
-          context.charHeight
-          *. float(Index.toZeroBased(r.start.line))
-          -. padding,
-        ~height=context.charHeight +. doublePadding,
-        ~width=length *. context.charWidth +. doublePadding,
-        ~paint,
-      );
-    };
-  };
-};
-
-let token = {
-  let whitespacePaint = Skia.Paint.make();
-
-  (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
-    let x =
-      context.charWidth *. float(Index.toZeroBased(token.startPosition));
-    let y = offsetY -. context.fontMetrics.ascent;
-
-    switch (token.tokenType) {
-    | Text => drawShapedText(~context, ~x, ~y, ~color=token.color, token.text)
-
-    | Tab =>
-      CanvasContext.Deprecated.drawString(
-        ~x=x +. context.charWidth /. 4.,
-        ~y,
+        ~x=xPos +. xOffset,
+        ~y=y -. yOffset,
+        ~width=size,
+        ~height=size,
         ~color=theme.editorWhitespaceForeground,
-        ~fontFamily="FontAwesome5FreeSolid.otf",
-        ~fontSize=10.,
-        ~text=FontIcon.codeToIcon(0xf30b),
-        context.canvasContext,
-      )
-
-    | Whitespace =>
-      let size = 2.;
-      let xOffset = context.charWidth /. 2. -. 1.;
-      let yOffset = context.charHeight /. 2. -. 1.;
-
-      Skia.Paint.setColor(
-        whitespacePaint,
-        Color.toSkia(theme.editorWhitespaceForeground),
       );
-
-      for (i in 0 to String.length(token.text) - 1) {
-        let xPos = x +. context.charWidth *. float(i);
-
-        drawRect(
-          ~context,
-          ~x=xPos +. xOffset,
-          ~y=y -. yOffset,
-          ~width=size,
-          ~height=size,
-          ~paint=whitespacePaint,
-        );
-      };
     };
   };
 };
 
-let ruler = {
-  let paint = Skia.Paint.make();
+let ruler = (~context, ~color, x) =>
+  drawRect(
+    ~context,
+    ~x,
+    ~y=0.0,
+    ~height=float(context.height),
+    ~width=1.,
+    ~color,
+  );
 
-  (~context, ~color, x) => {
-    Skia.Paint.setColor(paint, Color.toSkia(color));
-
-    drawRect(
-      ~context,
-      ~x,
-      ~y=0.0,
-      ~height=float(context.height),
-      ~width=1.,
-      ~paint,
-    );
-  };
-};
-
-let lineHighlight = {
-  let paint = Skia.Paint.make();
-
-  (~context, ~color, line) => {
-    Skia.Paint.setColor(paint, Color.toSkia(color));
-
-    drawRect(
-      ~context,
-      ~x=0.,
-      ~y=context.lineHeight *. float(Index.toZeroBased(line)),
-      ~height=context.lineHeight,
-      ~width=float(context.width),
-      ~paint,
-    );
-  };
-};
+let lineHighlight = (~context, ~color, line) =>
+  drawRect(
+    ~context,
+    ~x=0.,
+    ~y=context.lineHeight *. float(Index.toZeroBased(line)),
+    ~height=context.lineHeight,
+    ~width=float(context.width),
+    ~color,
+  );

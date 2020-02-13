@@ -59,19 +59,13 @@ let renderLineNumbers =
       ~showLineNumbers,
       ~cursorLine,
     ) => {
-  let paint = Skia.Paint.make();
-  Skia.Paint.setColor(
-    paint,
-    Revery.Color.toSkia(theme.editorLineNumberBackground),
-  );
-
   Draw.rect(
     ~context,
     ~x=0.,
     ~y=0.,
     ~width=lineNumberWidth,
     ~height=float(height),
-    ~paint,
+    ~color=theme.editorLineNumberBackground,
   );
 
   Draw.renderImmediate(~context, ~count, (item, offset) =>
