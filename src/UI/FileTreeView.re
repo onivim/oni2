@@ -126,7 +126,7 @@ let nodeView =
 
   let tooltipText =
     switch (decoration) {
-    | Some((decoration: SCMDecoration.t)) =>
+    | Some((decoration: Decoration.t)) =>
       node.path ++ " • " ++ decoration.tooltip
     | None => node.path
     };
