@@ -1,6 +1,8 @@
 open Oni_Core;
 open Utility;
 
+module InputModel = Oni_Components.InputModel;
+
 // MODEL
 
 module Resource = Oni_Extensions.SCM.Resource;
@@ -8,9 +10,25 @@ module ResourceGroup = Oni_Extensions.SCM.ResourceGroup;
 module Provider = Oni_Extensions.SCM.Provider;
 
 [@deriving show({with_path: false})]
-type model = {providers: list(Provider.t)};
+type model = {
+  providers: list(Provider.t),
+  inputBox,
+}
 
-let initial = {providers: []};
+and inputBox = {
+  value: string,
+  cursorPosition: int,
+  placeholder: string,
+};
+
+let initial = {
+  providers: [],
+  inputBox: {
+    value: "",
+    cursorPosition: 0,
+    placeholder: "Do the commit thing!",
+  },
+};
 
 // EFFECTS
 
@@ -72,12 +90,22 @@ type msg =
   | CommitTemplateChanged({
       handle: int,
       template: string,
-    });
+    })
+  | KeyPressed({key: string})
+  | InputBoxClicked({cursorPosition: int});
 
-let update = (action, model) =>
-  switch (action) {
+module Msg = {
+  let keyPressed = key => KeyPressed({key: key});
+};
+
+type outmsg =
+  | Focus;
+
+let update = (model, msg) =>
+  switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
+        ...model,
         providers: [
           Provider.{
             handle,
@@ -92,22 +120,24 @@ let update = (action, model) =>
           ...model.providers,
         ],
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | LostProvider({handle}) => (
       {
+        ...model,
         providers:
           List.filter(
             (it: Provider.t) => it.handle != handle,
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) =>
@@ -116,22 +146,24 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | CountChanged({handle, count}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) => it.handle == handle ? {...it, count} : it,
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | CommitTemplateChanged({handle, template}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) =>
@@ -139,11 +171,12 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -165,11 +198,12 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | LostResourceGroup({provider, handle}) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -186,7 +220,7 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
     )
 
   | ResourceStatesChanged({
@@ -197,6 +231,7 @@ let update = (action, model) =>
       additions,
     }) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -225,7 +260,38 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      None,
+    )
+
+  | KeyPressed({key}) =>
+    let (value, cursorPosition) =
+      InputModel.handleInput(
+        ~text=model.inputBox.value,
+        ~cursorPosition=model.inputBox.cursorPosition,
+        key,
+      );
+
+    (
+      {
+        ...model,
+        inputBox: {
+          ...model.inputBox,
+          value,
+          cursorPosition,
+        },
+      },
+      None,
+    );
+
+  | InputBoxClicked({cursorPosition}) => (
+      {
+        ...model,
+        inputBox: {
+          ...model.inputBox,
+          cursorPosition,
+        },
+      },
+      Some(Focus),
     )
   };
 
@@ -272,6 +338,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+module Input = Oni_Components.Input;
+
 module Pane = {
   module Styles = {
     open Style;
@@ -284,6 +352,15 @@ module Pane = {
       color(theme.sideBarForeground),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
+    ];
+
+    let input = (~font: UiFont.t) => [
+      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+      color(Colors.white),
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
+      flexGrow(1),
     ];
 
     let group = [];
@@ -375,7 +452,17 @@ module Pane = {
     </View>;
   };
 
-  let make = (~model, ~workingDirectory, ~onItemClick, ~theme, ~font, ()) => {
+  let make =
+      (
+        ~model,
+        ~workingDirectory,
+        ~onItemClick,
+        ~isFocused,
+        ~theme,
+        ~font,
+        ~dispatch,
+        (),
+      ) => {
     let groups = {
       open Base.List.Let_syntax;
 
@@ -386,20 +473,27 @@ module Pane = {
     };
 
     <View style=Styles.container>
-      ...{
-           groups
-           |> List.map(((provider, group)) =>
-                <groupView
-                  provider
-                  group
-                  theme
-                  font
-                  workingDirectory
-                  onItemClick
-                />
-              )
-           |> React.listToElement
-         }
+      <Input
+        style={Styles.input(~font)}
+        cursorColor=Colors.gray
+        value={model.inputBox.value}
+        cursorPosition={model.inputBox.cursorPosition}
+        placeholder={model.inputBox.placeholder}
+        isFocused
+        onClick={pos => dispatch(InputBoxClicked({cursorPosition: pos}))}
+      />
+      {groups
+       |> List.map(((provider, group)) =>
+            <groupView
+              provider
+              group
+              theme
+              font
+              workingDirectory
+              onItemClick
+            />
+          )
+       |> React.listToElement}
     </View>;
   };
 };

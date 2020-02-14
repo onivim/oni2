@@ -645,13 +645,6 @@ let start = (extensions, setup: Setup.t) => {
         Isolinear.Effect.none,
       )
 
-    | Actions.SCM(msg) =>
-      let (scm, eff) = Feature_SCM.update(msg, state.scm);
-      (
-        {...state, scm},
-        eff |> Isolinear.Effect.map(msg => Actions.SCM(msg)),
-      );
-
     | _ => (state, Isolinear.Effect.none)
     };
 

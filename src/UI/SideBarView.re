@@ -75,8 +75,10 @@ let%component make = (~state: State.t, ()) => {
         model={state.scm}
         workingDirectory
         onItemClick
+        isFocused={FocusManager.current(state) == Focus.SCM}
         theme
         font
+        dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
       />;
 
     | Extensions => <ExtensionListView state />

@@ -5,6 +5,7 @@ type focusable =
   | Quickmenu
   | Search
   | FileExplorer
+  | SCM
   | Sneak
   | Modal;
 

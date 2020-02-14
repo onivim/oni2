@@ -60,7 +60,12 @@ module Effects: {
 [@deriving show]
 type msg;
 
-let update: (msg, model) => (model, Isolinear.Effect.t(msg));
+module Msg: {let keyPressed: string => msg;};
+
+type outmsg =
+  | Focus;
+
+let update: (model, msg) => (model, option(outmsg));
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;
@@ -73,8 +78,10 @@ module Pane: {
       ~model: model,
       ~workingDirectory: option(string),
       ~onItemClick: Resource.t => unit,
+      ~isFocused: bool,
       ~theme: Theme.t,
       ~font: UiFont.t,
+      ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;

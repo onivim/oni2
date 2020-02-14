@@ -7,14 +7,25 @@ open Actions;
 
 let update = (state: State.t, action: Actions.t) =>
   switch (action) {
-  | Search(model) =>
-    let (model, maybeOutmsg) =
-      Feature_Search.update(state.searchPane, model);
+  | Search(msg) =>
+    let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
 
     let state =
       switch (maybeOutmsg) {
       | Some(Feature_Search.Focus) => FocusManager.push(Focus.Search, state)
+      | None => state
+      };
+
+    (state, Effect.none);
+
+  | SCM(msg) =>
+    let (model, maybeOutmsg) = Feature_SCM.update(state.scm, msg);
+    let state = {...state, scm: model};
+
+    let state =
+      switch (maybeOutmsg) {
+      | Some(Feature_SCM.Focus) => FocusManager.push(Focus.SCM, state)
       | None => state
       };
 
