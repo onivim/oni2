@@ -219,10 +219,14 @@ module Overlay = {
     };
 };
 
+// INSTANCE
+
 module Make = (()) => {
   let id = Id.create();
 
   let init = items => {id, placement: None, items};
+
+  // ANCHOR
 
   module Anchor = {
     let component = React.Expert.component("Anchor");
