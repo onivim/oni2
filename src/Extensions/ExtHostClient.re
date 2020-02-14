@@ -273,7 +273,7 @@ let addDocument = (doc, client) => {
   );
 };
 
-let updateDocument = (uri, modelChange, dirty, client) => {
+let updateDocument = (uri, modelChange, ~dirty, client) => {
   ExtHostTransport.send(
     client,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),

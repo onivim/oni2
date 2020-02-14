@@ -63,31 +63,29 @@ let start = (extensions, extHostClient) => {
       }
     );
 
-  let modelChangedEffect = (buffers: Buffers.t, bu: BufferUpdate.t) =>
+  let modelChangedEffect = (buffers: Buffers.t, update: BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Buffers.getBuffer(bu.id, buffers)) {
+      switch (Buffers.getBuffer(update.id, buffers)) {
       | None => ()
-      | Some(v) =>
+      | Some(buffer) =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Protocol.ModelContentChange.ofBufferUpdate(
-              bu,
+              update,
               Protocol.Eol.default,
             );
           let modelChangedEvent =
             Protocol.ModelChangedEvent.create(
               ~changes=[modelContentChange],
               ~eol=Protocol.Eol.default,
-              ~versionId=bu.version,
+              ~versionId=update.version,
               (),
             );
 
-          let uri = Buffer.getUri(v);
-
           ExtHostClient.updateDocument(
-            uri,
+            Buffer.getUri(buffer),
             modelChangedEvent,
-            true,
+            ~dirty=Buffer.isModified(buffer),
             extHostClient,
           );
         })

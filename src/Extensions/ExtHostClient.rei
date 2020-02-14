@@ -59,7 +59,7 @@ let executeContributedCommand: (string, t) => unit;
 let acceptWorkspaceData: (Workspace.t, t) => unit;
 let addDocument: (Protocol.ModelAddedDelta.t, t) => unit;
 let updateDocument:
-  (Core.Uri.t, Protocol.ModelChangedEvent.t, bool, t) => unit;
+  (Core.Uri.t, Protocol.ModelChangedEvent.t, ~dirty: bool, t) => unit;
 let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
