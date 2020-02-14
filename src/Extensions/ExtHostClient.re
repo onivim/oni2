@@ -251,8 +251,11 @@ let activateByEvent = (evt, client) => {
   ExtHostTransport.send(client, Out.ExtensionService.activateByEvent(evt));
 };
 
-let executeContributedCommand = (cmd, client) => {
-  ExtHostTransport.send(client, Out.Commands.executeContributedCommand(cmd));
+let executeContributedCommand = (~arguments=[], cmd, client) => {
+  ExtHostTransport.send(
+    client,
+    Out.Commands.executeContributedCommand(cmd, arguments),
+  );
 };
 
 let acceptWorkspaceData = (workspace: Workspace.t, client) => {

@@ -55,7 +55,8 @@ let start:
   ) =>
   t;
 let activateByEvent: (string, t) => unit;
-let executeContributedCommand: (string, t) => unit;
+let executeContributedCommand:
+  (~arguments: list(Core.Json.t)=?, string, t) => unit;
 let acceptWorkspaceData: (Workspace.t, t) => unit;
 let addDocument: (Protocol.ModelAddedDelta.t, t) => unit;
 let updateDocument:
