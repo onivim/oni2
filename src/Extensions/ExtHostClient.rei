@@ -2,41 +2,10 @@ module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
 module Core = Oni_Core;
 
-type t;
+type t = ExtHostTransport.t;
 
 type msg =
-  | RegisterSourceControl({
-      handle: int,
-      id: string,
-      label: string,
-      rootUri: option(Core.Uri.t),
-    })
-  | UnregisterSourceControl({handle: int})
-  | UpdateSourceControl({
-      handle: int,
-      hasQuickDiffProvider: option(bool),
-      count: option(int),
-      commitTemplate: option(string),
-    })
-  // acceptInputCommand: option(_),
-  // statusBarCommands: option(_),
-  | RegisterSCMResourceGroup({
-      provider: int,
-      handle: int,
-      id: string,
-      label: string,
-    })
-  | UnregisterSCMResourceGroup({
-      provider: int,
-      handle: int,
-    })
-  | SpliceSCMResourceStates({
-      provider: int,
-      group: int,
-      start: int,
-      deleteCount: int,
-      additions: list(Core.SCMResource.t),
-    })
+  | SCM(SCM.msg)
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -95,7 +64,7 @@ let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
 let provideDecorations:
-  (int, Core.Uri.t, t) => Lwt.t(list(Core.SCMDecoration.t));
+  (int, Core.Uri.t, t) => Lwt.t(list(Core.Decoration.t));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);
@@ -104,7 +73,6 @@ let provideDocumentHighlights:
   Lwt.t(list(Protocol.DocumentHighlight.t));
 let provideDocumentSymbols:
   (int, Core.Uri.t, t) => Lwt.t(list(DocumentSymbol.t));
-let provideOriginalResource: (int, Core.Uri.t, t) => Lwt.t(Core.Uri.t);
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));

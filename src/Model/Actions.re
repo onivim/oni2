@@ -128,7 +128,7 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | SCM(SCM.msg)
+  | SCM(Feature_SCM.msg)
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
@@ -152,6 +152,28 @@ type t =
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: [@opaque] array(string),
+    })
+  | NewDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | LostDecorationProvider({handle: int})
+  | DecorationsChanged({
+      handle: int,
+      uris: list(Uri.t),
+    })
+  | GotDecorations({
+      handle: int,
+      uri: Uri.t,
+      decorations: list(Decoration.t),
+    })
   | Noop
 and command = {
   commandCategory: option(string),

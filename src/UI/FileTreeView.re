@@ -49,7 +49,7 @@ module Styles = {
     fontFamily(font.fontFile),
     color(
       switch (
-        Option.bind(decoration, (decoration: SCMDecoration.t) =>
+        Option.bind(decoration, (decoration: Decoration.t) =>
           Theme.getCustomColor(decoration.color, theme)
         )
       ) {
