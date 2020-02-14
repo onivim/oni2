@@ -39,6 +39,7 @@ module Provider: {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
+    acceptInputCommand: option(string),
   };
 };
 

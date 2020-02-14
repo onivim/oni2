@@ -41,6 +41,7 @@ module Provider = {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
+    acceptInputCommand: option(string),
   };
 };
 
@@ -94,8 +95,8 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
+      acceptInputCommand: option(string),
     })
-  // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
   | RegisterSCMResourceGroup({
       provider: int,
@@ -145,6 +146,14 @@ let handleMessage = (~dispatch, method, args) =>
             count: features |> member("count") |> to_int_option,
             commitTemplate:
               features |> member("commitTemplate") |> to_string_option,
+            acceptInputCommand:
+              features
+              |> member("acceptInputCommand")
+              |> (
+                fun
+                | `Assoc(_) as obj => obj |> member("id") |> to_string_option
+                | _ => None
+              ),
           }),
         )
       )

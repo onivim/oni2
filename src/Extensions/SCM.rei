@@ -39,6 +39,7 @@ module Provider: {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
+    acceptInputCommand: option(string),
   };
 };
 
@@ -57,8 +58,8 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
+      acceptInputCommand: option(string),
     })
-  // acceptInputCommand: option(_),
   // statusBarCommands: option(_),
   | RegisterSCMResourceGroup({
       provider: int,

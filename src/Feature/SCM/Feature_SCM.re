@@ -91,6 +91,10 @@ type msg =
       handle: int,
       template: string,
     })
+  | AcceptInputCommandChanged({
+      handle: int,
+      id: string,
+    })
   | KeyPressed({key: string})
   | InputBoxClicked({cursorPosition: int});
 
@@ -116,6 +120,7 @@ let update = (model, msg) =>
             hasQuickDiffProvider: false,
             count: 0,
             commitTemplate: "",
+            acceptInputCommand: None,
           },
           ...model.providers,
         ],
@@ -168,6 +173,20 @@ let update = (model, msg) =>
           List.map(
             (it: Provider.t) =>
               it.handle == handle ? {...it, commitTemplate: template} : it,
+            model.providers,
+          ),
+      },
+      None,
+    )
+
+  | AcceptInputCommandChanged({handle, id}) => (
+      {
+        ...model,
+        providers:
+          List.map(
+            (it: Provider.t) =>
+              it.handle == handle
+                ? {...it, acceptInputCommand: Some(id)} : it,
             model.providers,
           ),
       },
@@ -320,7 +339,13 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
       }),
     )
 
-  | UpdateSourceControl({handle, hasQuickDiffProvider, count, commitTemplate}) =>
+  | UpdateSourceControl({
+      handle,
+      hasQuickDiffProvider,
+      count,
+      commitTemplate,
+      acceptInputCommand,
+    }) =>
     Option.iter(
       available => dispatch(QuickDiffProviderChanged({handle, available})),
       hasQuickDiffProvider,
@@ -329,6 +354,10 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
     Option.iter(
       template => dispatch(CommitTemplateChanged({handle, template})),
       commitTemplate,
+    );
+    Option.iter(
+      id => dispatch(AcceptInputCommandChanged({handle, id})),
+      acceptInputCommand,
     );
   };
 
