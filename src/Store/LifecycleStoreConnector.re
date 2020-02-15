@@ -8,8 +8,6 @@
 open Oni_Model;
 
 let start = quit => {
-  let (stream, dispatch) = Isolinear.Stream.create();
-
   let saveAllAndQuitEffect =
     Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () => {
       Vim.input("<ESC>") |> (ignore: list(Vim.Cursor.t) => unit);
@@ -35,7 +33,7 @@ let start = quit => {
   };
 
   let quitBufferEffect = (state: State.t, buffer: Vim.Buffer.t, force) => {
-    Isolinear.Effect.create(~name="lifecycle.quitBuffer", () => {
+    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitBuffer", (dispatch) => {
       let editorGroup = Selectors.getActiveEditorGroup(state);
       switch (Selectors.getActiveEditor(editorGroup)) {
       | None => ()
@@ -84,5 +82,5 @@ let start = quit => {
     };
   };
 
-  (updater, stream);
+  updater;
 };

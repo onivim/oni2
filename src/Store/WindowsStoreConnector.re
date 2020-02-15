@@ -8,24 +8,23 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 
 open Model;
+open Model.Actions;
 
 let start = () => {
-  let (stream, dispatch) = Isolinear.Stream.create();
-
   let quitEffect =
-    Isolinear.Effect.create(~name="windows.quitEffect", () =>
+    Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", (dispatch) =>
       dispatch(Model.Actions.Quit(false))
     );
 
   let initializeDefaultViewEffect = (state: State.t) =>
-    Isolinear.Effect.create(~name="windows.init", () => {
+    Isolinear.Effect.createWithDispatch(~name="windows.init", (dispatch) => {
       let editor =
         WindowTree.createSplit(
           ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
           (),
         );
 
-      dispatch(AddSplit(Vertical, editor));
+      dispatch(Actions.AddSplit(Vertical, editor));
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
@@ -145,5 +144,5 @@ let start = () => {
     (state, effect);
   };
 
-  (updater, stream);
+  updater;
 };

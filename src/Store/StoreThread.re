@@ -133,10 +133,10 @@ let start =
 
   let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
 
-  let (lifecycleUpdater, lifecycleStream) =
+  let lifecycleUpdater =
     LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
-  let (windowUpdater, windowStream) = WindowsStoreConnector.start();
+  let windowUpdater = WindowsStoreConnector.start();
 
   let fontUpdater = FontStoreConnector.start();
   let completionUpdater = CompletionStoreConnector.start();
@@ -150,55 +150,69 @@ let start =
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
+    let updater = 
+    Isolinear.Updater.combine([
+      Isolinear.Updater.ofReducer(Reducer.reduce),
+      inputUpdater,
+      quickmenuUpdater,
+      vimUpdater,
+      syntaxUpdater,
+      extHostUpdater,
+      fontUpdater,
+      configurationUpdater,
+      keyBindingsUpdater,
+      commandUpdater,
+      lifecycleUpdater,
+      fileExplorerUpdater,
+      indentationUpdater,
+      windowUpdater,
+      themeUpdater,
+      languageFeatureUpdater,
+      completionUpdater,
+      titleUpdater,
+      sneakUpdater,
+      Features.update,
+      contextMenuUpdater,
+      ]);
 
-  let (storeDispatch, storeStream) =
-    Isolinear.Store.create(
-      ~initialState=state,
-      ~updater=
-        Isolinear.Updater.combine([
-          Isolinear.Updater.ofReducer(Reducer.reduce),
-          inputUpdater,
-          quickmenuUpdater,
-          vimUpdater,
-          syntaxUpdater,
-          extHostUpdater,
-          fontUpdater,
-          configurationUpdater,
-          keyBindingsUpdater,
-          commandUpdater,
-          lifecycleUpdater,
-          fileExplorerUpdater,
-          indentationUpdater,
-          windowUpdater,
-          themeUpdater,
-          languageFeatureUpdater,
-          completionUpdater,
-          titleUpdater,
-          sneakUpdater,
-          Features.update,
-          contextMenuUpdater,
-        ]),
-      (),
-    );
+  module Store = Isolinear.Store.Make({
+    type msg = Model.Actions.t;
+    type model = Model.State.t;
 
+    let initial = state;
+    let updater = updater;
+    let subscriptions = _ => Isolinear.Sub.none;
+  });
+
+  let storeStream = Store.Deprecated.getStoreStream();
+
+  let _unsubscribe = Store.onModelChanged((newState) => { 
+    latestState := newState;
+    onStateChanged(newState);
+  });
+  
   let rec dispatch = (action: Model.Actions.t) => {
     DispatchLog.info(Model.Actions.show(action));
 
     let lastState = latestState^;
-    let (newState, effect) = storeDispatch(action);
+    let () = Store.dispatch(action);
+    let newState = Store.getModel();
+    /*let (newState, effect) = storeDispatch(action);
     accumulatedEffects := [effect, ...accumulatedEffects^];
     latestState := newState;
 
     if (newState !== lastState) {
       onStateChanged(newState);
-    };
+    };*/
 
     Features.updateSubscriptions(setup, newState, dispatch);
 
     onAfterDispatch(action);
   };
 
-  let runEffects = () => {
+  let runEffects = Store.runPendingEffects;
+
+  /*let runEffects = () => {
     let effects = accumulatedEffects^;
     accumulatedEffects := [];
 
@@ -206,12 +220,13 @@ let start =
     |> List.filter(e => e != Isolinear.Effect.none)
     |> List.rev
     |> List.iter(e => {
+         // TODO: Before/after effect handlers
          Log.debugf(m =>
            m("Running effect: %s", Isolinear.Effect.getName(e))
          );
          Isolinear.Effect.run(e, dispatch);
        });
-  };
+  };*/
 
   latestRunEffects := Some(runEffects);
 
@@ -228,6 +243,7 @@ let start =
     window,
   );
 
+  // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
@@ -241,6 +257,7 @@ let start =
       }
     );
 
+  // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, inputStream);
   let _: Isolinear.Stream.unsubscribeFunc =
@@ -255,10 +272,6 @@ let start =
     Isolinear.Stream.connect(dispatch, quickmenuStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, explorerStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, lifecycleStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, windowStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, languageFeatureStream);
 
