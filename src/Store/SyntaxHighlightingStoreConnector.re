@@ -16,27 +16,53 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-let start =
-    (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t, cli: Core.Cli.t) => {
-  let (stream, dispatch) = Isolinear.Stream.create();
+type subscriptionParams('msg) = {
+    id: string,
+    languageInfo: Ext.LanguageInfo.t,
+    setup: Core.Setup.t,
+    onStart: Oni_Syntax_Client.t => 'msg,
+    onClose: unit => 'msg,
+    onHighlights: list(Oni_Syntax.Protocol.TokenUpdate.t) => 'msg,
+};
 
-  if (!cli.shouldSyntaxHighlight) {
-    let updater = (state, _action) => (state, Isolinear.Effect.none);
-    (updater, stream);
-  } else {
-    let onHighlights = tokenUpdates => {
-      dispatch(Model.Actions.BufferSyntaxHighlights(tokenUpdates));
-    };
+module Subscription = Isolinear.Sub.Make({
+  type msg = Model.Actions.t;
+  type model = Model.State.t;
 
-    let _syntaxClient =
-      Oni_Syntax_Client.start(
-        ~onClose=_ => dispatch(Model.Actions.SyntaxServerClosed),
+  type params = subscriptionParams(msg);
+
+  type state = Oni_Syntax_Client.t;
+
+  let subscriptionName = "SyntaxSubscription";
+  let getUniqueId = params => params.id;
+
+  let init = (~params, ~dispatch) => {
+      let client = Oni_Syntax_Client.start(
+        ~onClose=_ => dispatch(params.onClose()),
         ~scheduler=Core.Scheduler.mainThread,
-        ~onHighlights,
+        ~onHighlights=highlights => {
+            string_of_int(List.length(highlights)));
+          dispatch(params.onHighlights(highlights))
+        },
         ~onHealthCheckResult=_ => (),
-        languageInfo,
-        setup,
+        params.languageInfo,
+        params.setup,
       );
+
+     dispatch(params.onStart(client));
+     client;
+  };
+
+  let update = (~params, ~state, ~dispatch) => state;
+
+  let dispose = (~params, ~state) => {
+     let () = Oni_Syntax_Client.close(state);
+  };
+});
+
+let start =
+    (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
+  let (stream, dispatch) = Isolinear.Stream.create();
 
     let getLines = (state: Model.State.t, id: int) => {
       switch (Model.Buffers.getBuffer(id, state.buffers)) {
@@ -52,56 +78,52 @@ let start =
       };
     };
 
-    let bufferEnterEffect = (id: int, fileType) =>
+    let bufferEnterEffect = (syntaxClientMaybe, id: int, fileType) =>
       Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
-        fileType
-        |> Option.iter(fileType =>
-             Oni_Syntax_Client.notifyBufferEnter(_syntaxClient, id, fileType)
+        OptionEx.iter2((syntaxClient, fileType) => {
+             Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)},
+             syntaxClientMaybe,
+             fileType
            )
       });
 
     let bufferUpdateEffect =
-        (bufferUpdate: Oni_Core.BufferUpdate.t, lines, maybeScope) =>
+        (syntaxClientMaybe, bufferUpdate: Oni_Core.BufferUpdate.t, lines, scopeMaybe) =>
       Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-        switch (maybeScope) {
-        | None => ()
-        | Some(scope) =>
+        OptionEx.iter2((syntaxClient, scope) => {
           Oni_Syntax_Client.notifyBufferUpdate(
-            _syntaxClient,
+            syntaxClient,
             bufferUpdate,
             lines,
             scope,
           )
-        }
+        },
+        syntaxClientMaybe,
+        scopeMaybe);
       });
 
-    let configurationChangeEffect = (config: Core.Configuration.t) =>
+    let configurationChangeEffect = (syntaxClientMaybe, config: Core.Configuration.t) =>
       Isolinear.Effect.create(~name="syntax.configurationChange", () => {
-        Oni_Syntax_Client.notifyConfigurationChanged(_syntaxClient, config)
+        Option.iter((syntaxClient) => 
+        Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config),
+        syntaxClientMaybe);
       });
 
-    let themeChangeEffect = theme =>
+    let themeChangeEffect = (syntaxClientMaybe, theme) =>
       Isolinear.Effect.create(~name="syntax.theme", () => {
-        Oni_Syntax_Client.notifyThemeChanged(_syntaxClient, theme)
+        Option.iter((syntaxClient) => {
+        Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)
+        }, syntaxClientMaybe);
       });
 
-    let visibilityChangedEffect = visibleRanges =>
+    let visibilityChangedEffect = (syntaxClientMaybe, visibleRanges) =>
       Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
+        Option.iter(syntaxClient =>
         Oni_Syntax_Client.notifyVisibilityChanged(
-          _syntaxClient,
+          syntaxClient,
           visibleRanges,
-        )
+        ), syntaxClientMaybe);
       });
-
-    let registerQuitCleanupEffect =
-      Isolinear.Effect.createWithDispatch(
-        ~name="syntax.registerQuitCleanup", dispatch =>
-        dispatch(
-          Model.Actions.RegisterQuitCleanup(
-            () => Oni_Syntax_Client.close(_syntaxClient),
-          ),
-        )
-      );
 
     let isVersionValid = (updateVersion, bufferVersion) => {
       bufferVersion != (-1) && updateVersion == bufferVersion;
@@ -119,14 +141,33 @@ let start =
     let updater = (state: Model.State.t, action) => {
       let default = (state, Isolinear.Effect.none);
       switch (action) {
-      | Model.Actions.Init => (state, registerQuitCleanupEffect)
+      | Model.Actions.SyntaxHighlightingEnabled => (
+        ({...state, syntaxHighlightingEnabled: true }), 
+        Isolinear.Effect.none)
+      | Model.Actions.SyntaxHighlightingDisabled => (
+        ({...state, syntaxHighlightingEnabled: false }), 
+        Isolinear.Effect.none)
+      | Model.Actions.SyntaxServerClosed => 
+        ({
+          ...state,
+          syntaxClient: None,
+        }, Isolinear.Effect.none)
+      | Model.Actions.SyntaxServerStarted(client) => 
+        ({
+          ...state,
+          syntaxClient: Some(client),
+        }, Isolinear.Effect.none)
+      | Model.Actions.ReallyQuitting => ({
+        ...state,
+        syntaxHighlightingEnabled: false,
+      }, Isolinear.Effect.none)
       | Model.Actions.ConfigurationSet(config) => (
           state,
-          configurationChangeEffect(config),
+          configurationChangeEffect(state.syntaxClient, config),
         )
       | Model.Actions.SetTokenTheme(tokenTheme) => (
           state,
-          themeChangeEffect(tokenTheme),
+          themeChangeEffect(state.syntaxClient, tokenTheme),
         )
       | Model.Actions.BufferEnter(metadata, fileType) =>
         let visibleBuffers =
@@ -134,8 +175,8 @@ let start =
 
         let combinedEffects =
           Isolinear.Effect.batch([
-            visibilityChangedEffect(visibleBuffers),
-            bufferEnterEffect(Vim.BufferMetadata.(metadata.id), fileType),
+            visibilityChangedEffect(state.syntaxClient, visibleBuffers),
+            bufferEnterEffect(state.syntaxClient, Vim.BufferMetadata.(metadata.id), fileType),
           ]);
 
         (state, combinedEffects);
@@ -152,7 +193,7 @@ let start =
       | Model.Actions.ViewCloseEditor(_) =>
         let visibleBuffers =
           Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-        (state, visibilityChangedEffect(visibleBuffers));
+        (state, visibilityChangedEffect(state.syntaxClient, visibleBuffers));
       // When there is a buffer update, send it over to the syntax highlight
       // strategy to handle the parsing.
       | Model.Actions.BufferUpdate(bu) =>
@@ -162,7 +203,7 @@ let start =
         if (!isVersionValid(version, bu.version)) {
           default;
         } else {
-          (state, bufferUpdateEffect(bu, lines, scope));
+          (state, bufferUpdateEffect(state.syntaxClient, bu, lines, scope));
         };
       | _ => default
       };
@@ -170,4 +211,3 @@ let start =
 
     (updater, stream);
   };
-};

@@ -109,7 +109,7 @@ let start =
     );
 
   let (syntaxUpdater, syntaxStream) =
-    SyntaxHighlightingStoreConnector.start(languageInfo, setup, cliOptions);
+    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostUpdater, extHostStream) =
@@ -169,6 +169,23 @@ let start =
       contextMenuUpdater,
     ]);
 
+  let subscriptions = (state: Model.State.t) =>
+    if (state.syntaxHighlightingEnabled) {
+      SyntaxHighlightingStoreConnector.(
+        SyntaxHighlightingStoreConnector.Subscription.create({
+          id: "syntax-highlighter",
+          languageInfo,
+          setup,
+          onStart: client => Model.Actions.SyntaxServerStarted(client),
+          onClose: () => Model.Actions.SyntaxServerClosed,
+          onHighlights: highlights =>
+            Model.Actions.BufferSyntaxHighlights(highlights),
+        })
+      );
+    } else {
+      Isolinear.Sub.none;
+    };
+
   module Store =
     Isolinear.Store.Make({
       type msg = Model.Actions.t;
@@ -176,7 +193,7 @@ let start =
 
       let initial = state;
       let updater = updater;
-      let subscriptions = _ => Isolinear.Sub.none;
+      let subscriptions = subscriptions;
     });
 
   let storeStream = Store.Deprecated.getStoreStream();
@@ -254,6 +271,10 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+
+  if (cliOptions.shouldSyntaxHighlight) {
+    dispatch(Model.Actions.SyntaxHighlightingEnabled);
+  };
 
   /* Set icon theme */
 

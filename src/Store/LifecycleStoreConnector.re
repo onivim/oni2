@@ -24,8 +24,9 @@ let start = quit => {
     let anyModified = Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
 
-    Isolinear.Effect.create(~name="lifecycle.quitAll", () =>
+    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitAll", dispatch =>
       if (canClose) {
+        dispatch(Actions.ReallyQuitting);
         List.iter(h => h(), handlers);
         quit(0);
       }
