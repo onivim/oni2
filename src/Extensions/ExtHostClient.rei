@@ -80,3 +80,8 @@ let provideReferences:
 let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
+
+module Effects: {
+  let executeContributedCommand:
+    (t, ~arguments: list(Core.Json.t)=?, string) => Isolinear.Effect.t(_);
+};

@@ -433,3 +433,11 @@ let provideTextDocumentContent = (id, uri, client) => {
 let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);
+
+module Effects = {
+  let executeContributedCommand = (extHostClient, ~arguments=[], id) =>
+    Isolinear.Effect.create(
+      ~name="extHostClient.executeContributedCommand", () =>
+      executeContributedCommand(id, ~arguments, extHostClient)
+    );
+};
