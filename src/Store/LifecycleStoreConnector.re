@@ -33,7 +33,7 @@ let start = quit => {
   };
 
   let quitBufferEffect = (state: State.t, buffer: Vim.Buffer.t, force) => {
-    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitBuffer", (dispatch) => {
+    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitBuffer", dispatch => {
       let editorGroup = Selectors.getActiveEditorGroup(state);
       switch (Selectors.getActiveEditor(editorGroup)) {
       | None => ()

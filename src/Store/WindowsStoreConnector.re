@@ -12,12 +12,12 @@ open Model.Actions;
 
 let start = () => {
   let quitEffect =
-    Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", (dispatch) =>
+    Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", dispatch =>
       dispatch(Model.Actions.Quit(false))
     );
 
   let initializeDefaultViewEffect = (state: State.t) =>
-    Isolinear.Effect.createWithDispatch(~name="windows.init", (dispatch) => {
+    Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
       let editor =
         WindowTree.createSplit(
           ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
