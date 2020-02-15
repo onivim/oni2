@@ -2,8 +2,11 @@ open Oni_Core;
 
 // MODEL
 
+[@deriving show]
+type command;
+
 module Resource: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     uri: Uri.t,
@@ -18,7 +21,7 @@ module Resource: {
 };
 
 module ResourceGroup: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -29,7 +32,7 @@ module ResourceGroup: {
 };
 
 module Provider: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -39,7 +42,7 @@ module Provider: {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
-    acceptInputCommand: option(string),
+    acceptInputCommand: option(command),
   };
 };
 
@@ -64,9 +67,11 @@ type msg;
 module Msg: {let keyPressed: string => msg;};
 
 type outmsg =
-  | Focus;
+  | Effect(Isolinear.Effect.t(msg))
+  | Focus
+  | Nothing;
 
-let update: (model, msg) => (model, option(outmsg));
+let update: (Oni_Extensions.ExtHostClient.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;

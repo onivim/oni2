@@ -5,7 +5,7 @@ open Actions;
 
 // UPDATE
 
-let update = (state: State.t, action: Actions.t) =>
+let update = (extHostClient, state: State.t, action: Actions.t) =>
   switch (action) {
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
@@ -20,16 +20,18 @@ let update = (state: State.t, action: Actions.t) =>
     (state, Effect.none);
 
   | SCM(msg) =>
-    let (model, maybeOutmsg) = Feature_SCM.update(state.scm, msg);
+    let (model, maybeOutmsg) =
+      Feature_SCM.update(extHostClient, state.scm, msg);
     let state = {...state, scm: model};
 
-    let state =
-      switch (maybeOutmsg) {
-      | Some(Feature_SCM.Focus) => FocusManager.push(Focus.SCM, state)
-      | None => state
+    let (state, eff) =
+      switch ((maybeOutmsg: Feature_SCM.outmsg)) {
+      | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
+      | Effect(eff) => (FocusManager.push(Focus.SCM, state), eff)
+      | Nothing => (state, Effect.none)
       };
 
-    (state, Effect.none);
+    (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
   | Modal(msg) =>
     switch (state.modal) {

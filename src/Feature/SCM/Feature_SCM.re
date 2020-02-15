@@ -2,8 +2,12 @@ open Oni_Core;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
+module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 // MODEL
+
+[@deriving show]
+type command = Oni_Extensions.SCM.command;
 
 module Resource = Oni_Extensions.SCM.Resource;
 module ResourceGroup = Oni_Extensions.SCM.ResourceGroup;
@@ -34,21 +38,12 @@ let initial = {
 
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-      // Try our luck with every provider. If several returns Last-Writer-Wins
-      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-      model.providers
-      |> List.iter((provider: Provider.t) => {
-           let promise =
-             Oni_Extensions.SCM.provideOriginalResource(
-               provider.handle,
-               Uri.fromPath(path),
-               extHostClient,
-             );
-
-           Lwt.on_success(promise, uri => dispatch(toMsg(uri)));
-         })
-    });
+    Oni_Extensions.SCM.Effects.provideOriginalResource(
+      extHostClient,
+      model.providers,
+      path,
+      toMsg,
+    );
 };
 
 // UPDATE
@@ -93,7 +88,7 @@ type msg =
     })
   | AcceptInputCommandChanged({
       handle: int,
-      id: string,
+      command,
     })
   | KeyPressed({key: string})
   | InputBoxClicked({cursorPosition: int});
@@ -103,9 +98,11 @@ module Msg = {
 };
 
 type outmsg =
-  | Focus;
+  | Effect(Isolinear.Effect.t(msg))
+  | Focus
+  | Nothing;
 
-let update = (model, msg) =>
+let update = (extHostClient, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
@@ -125,7 +122,7 @@ let update = (model, msg) =>
           ...model.providers,
         ],
       },
-      None,
+      Nothing,
     )
 
   | LostProvider({handle}) => (
@@ -137,7 +134,7 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
@@ -151,7 +148,7 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | CountChanged({handle, count}) => (
@@ -163,7 +160,7 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | CommitTemplateChanged({handle, template}) => (
@@ -176,21 +173,21 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
-  | AcceptInputCommandChanged({handle, id}) => (
+  | AcceptInputCommandChanged({handle, command}) => (
       {
         ...model,
         providers:
           List.map(
             (it: Provider.t) =>
               it.handle == handle
-                ? {...it, acceptInputCommand: Some(id)} : it,
+                ? {...it, acceptInputCommand: Some(command)} : it,
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
@@ -217,7 +214,7 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | LostResourceGroup({provider, handle}) => (
@@ -239,7 +236,7 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
     )
 
   | ResourceStatesChanged({
@@ -279,7 +276,27 @@ let update = (model, msg) =>
             model.providers,
           ),
       },
-      None,
+      Nothing,
+    )
+
+  | KeyPressed({key: "<CR>"}) => (
+      model,
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               switch (provider.acceptInputCommand) {
+               | Some(command) =>
+                 ExtHostClient.Effects.executeContributedCommand(
+                   extHostClient,
+                   command.id,
+                   ~arguments=command.arguments,
+                 )
+               | None => Isolinear.Effect.none
+               }
+             ),
+        ),
+      ),
     )
 
   | KeyPressed({key}) =>
@@ -299,7 +316,18 @@ let update = (model, msg) =>
           cursorPosition,
         },
       },
-      None,
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map(provider =>
+               Oni_Extensions.SCM.Effects.onInputBoxValueChange(
+                 extHostClient,
+                 provider,
+                 value,
+               )
+             ),
+        ),
+      ),
     );
 
   | InputBoxClicked({cursorPosition}) => (
@@ -310,7 +338,7 @@ let update = (model, msg) =>
           cursorPosition,
         },
       },
-      Some(Focus),
+      Focus,
     )
   };
 
@@ -356,7 +384,7 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
       commitTemplate,
     );
     Option.iter(
-      id => dispatch(AcceptInputCommandChanged({handle, id})),
+      command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
   };

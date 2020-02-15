@@ -2,8 +2,15 @@ open Oni_Core;
 
 // MODEL
 
+[@deriving show]
+type command = {
+  id: string,
+  title: string,
+  arguments: list(Json.t),
+};
+
 module Resource: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     uri: Uri.t,
@@ -18,7 +25,7 @@ module Resource: {
 };
 
 module ResourceGroup: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -29,7 +36,7 @@ module ResourceGroup: {
 };
 
 module Provider: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -39,7 +46,7 @@ module Provider: {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
-    acceptInputCommand: option(string),
+    acceptInputCommand: option(command),
   };
 };
 
@@ -58,7 +65,7 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
-      acceptInputCommand: option(string),
+      acceptInputCommand: option(command),
     })
   // statusBarCommands: option(_),
   | RegisterSCMResourceGroup({
@@ -81,6 +88,13 @@ type msg =
 
 let handleMessage: (~dispatch: msg => unit, string, list(Json.t)) => unit;
 
-// REQUESTS
+// EFFECTS
 
-let provideOriginalResource: (int, Uri.t, ExtHostTransport.t) => Lwt.t(Uri.t);
+module Effects: {
+  let provideOriginalResource:
+    (ExtHostTransport.t, list(Provider.t), string, Uri.t => 'msg) =>
+    Isolinear.Effect.t('msg);
+
+  let onInputBoxValueChange:
+    (ExtHostTransport.t, Provider.t, string) => Isolinear.Effect.t(_);
+};

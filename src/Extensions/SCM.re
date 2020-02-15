@@ -4,6 +4,13 @@ module Log = (val Log.withNamespace("Oni2.Extensions.SCM"));
 
 // MODEL
 
+[@deriving show({with_path: false})]
+type command = {
+  id: string,
+  title: string,
+  arguments: list([@opaque] Json.t),
+};
+
 module Resource = {
   [@deriving show({with_path: false})]
   type t = {
@@ -41,7 +48,7 @@ module Provider = {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
-    acceptInputCommand: option(string),
+    acceptInputCommand: option(command),
   };
 };
 
@@ -95,7 +102,7 @@ type msg =
       hasQuickDiffProvider: option(bool),
       count: option(int),
       commitTemplate: option(string),
-      acceptInputCommand: option(string),
+      acceptInputCommand: option(command),
     })
   // statusBarCommands: option(_),
   | RegisterSCMResourceGroup({
@@ -151,7 +158,12 @@ let handleMessage = (~dispatch, method, args) =>
               |> member("acceptInputCommand")
               |> (
                 fun
-                | `Assoc(_) as obj => obj |> member("id") |> to_string_option
+                | `Assoc(_) as obj =>
+                  Some({
+                    id: obj |> member("id") |> to_string,
+                    title: obj |> member("title") |> to_string,
+                    arguments: obj |> member("arguments") |> to_list,
+                  })
                 | _ => None
               ),
           }),
@@ -220,15 +232,52 @@ let handleMessage = (~dispatch, method, args) =>
 
 // REQUESTS
 
-let provideOriginalResource = (handle, uri, client) =>
-  ExtHostTransport.request(
-    ~msgType=MessageType.requestJsonArgsWithCancellation,
-    client,
-    ExtHostProtocol.OutgoingNotifications._buildNotification(
-      "ExtHostSCM",
-      "$provideOriginalResource",
-      `List([`Int(handle), Uri.to_yojson(uri)]),
-    ),
-    json =>
-    Uri.of_yojson(json) |> Stdlib.Result.get_ok
-  );
+module Requests = {
+  let provideOriginalResource = (handle, uri, client) =>
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostSCM",
+        "$provideOriginalResource",
+        `List([`Int(handle), Uri.to_yojson(uri)]),
+      ),
+      json =>
+      Uri.of_yojson(json) |> Stdlib.Result.get_ok
+    );
+
+  let onInputBoxValueChange = (handle, value, client) =>
+    ExtHostTransport.send(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostSCM",
+        "$onInputBoxValueChange",
+        `List([`Int(handle), `String(value)]),
+      ),
+    );
+};
+
+module Effects = {
+  let provideOriginalResource = (extHostClient, providers, path, toMsg) =>
+    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
+      // Try our luck with every provider. If several returns Last-Writer-Wins
+      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
+      providers
+      |> List.iter((provider: Provider.t) => {
+           let promise =
+             Requests.provideOriginalResource(
+               provider.handle,
+               Uri.fromPath(path),
+               extHostClient,
+             );
+
+           Lwt.on_success(promise, uri => dispatch(toMsg(uri)));
+         })
+    });
+
+  let onInputBoxValueChange = (extHostClient, provider: Provider.t, value) =>
+    Isolinear.Effect.create(~name="scm.onInputBoxValueChange", () =>
+      Requests.onInputBoxValueChange(provider.handle, value, extHostClient)
+    );
+};

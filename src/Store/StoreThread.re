@@ -178,7 +178,7 @@ let start =
           completionUpdater,
           titleUpdater,
           sneakUpdater,
-          Features.update,
+          Features.update(extHostClient),
           contextMenuUpdater,
         ]),
       (),
