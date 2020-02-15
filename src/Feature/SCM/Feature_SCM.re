@@ -7,11 +7,11 @@ module ExtHostClient = Oni_Extensions.ExtHostClient;
 // MODEL
 
 [@deriving show]
-type command = Oni_Extensions.SCM.command;
+type command = ExtHostClient.SCM.command;
 
-module Resource = Oni_Extensions.SCM.Resource;
-module ResourceGroup = Oni_Extensions.SCM.ResourceGroup;
-module Provider = Oni_Extensions.SCM.Provider;
+module Resource = ExtHostClient.SCM.Resource;
+module ResourceGroup = ExtHostClient.SCM.ResourceGroup;
+module Provider = ExtHostClient.SCM.Provider;
 
 [@deriving show({with_path: false})]
 type model = {
@@ -38,7 +38,7 @@ let initial = {
 
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    Oni_Extensions.SCM.Effects.provideOriginalResource(
+    ExtHostClient.SCM.Effects.provideOriginalResource(
       extHostClient,
       model.providers,
       path,
@@ -320,7 +320,7 @@ let update = (extHostClient, model, msg) =>
         Isolinear.Effect.batch(
           model.providers
           |> List.map(provider =>
-               Oni_Extensions.SCM.Effects.onInputBoxValueChange(
+               ExtHostClient.SCM.Effects.onInputBoxValueChange(
                  extHostClient,
                  provider,
                  value,
@@ -342,7 +342,7 @@ let update = (extHostClient, model, msg) =>
     )
   };
 
-let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
+let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
   switch (msg) {
   | RegisterSourceControl({handle, id, label, rootUri}) =>
     dispatch(NewProvider({handle, id, label, rootUri}))

@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Extensions;
 
 // MODEL
 
@@ -55,7 +56,7 @@ let initial: model;
 
 module Effects: {
   let getOriginalUri:
-    (Oni_Extensions.ExtHostClient.t, model, string, Uri.t => 'msg) =>
+    (ExtHostClient.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -71,10 +72,10 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update: (Oni_Extensions.ExtHostClient.t, model, msg) => (model, outmsg);
+let update: (ExtHostClient.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
-  (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;
+  (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;
 
 // VIEW
 

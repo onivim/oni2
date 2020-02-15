@@ -18,6 +18,8 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
 
+module SCM = ExtHostClient_SCM;
+
 type msg =
   | SCM(SCM.msg)
   | RegisterTextContentProvider({
