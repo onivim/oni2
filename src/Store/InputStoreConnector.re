@@ -174,6 +174,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
 
+          | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
           | Search => [Actions.Search(Feature_Search.Input(k))]
 
           | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]

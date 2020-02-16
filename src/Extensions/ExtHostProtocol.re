@@ -528,11 +528,11 @@ module OutgoingNotifications = {
   };
 
   module Commands = {
-    let executeContributedCommand = cmd => {
+    let executeContributedCommand = (cmd, arguments) => {
       _buildNotification(
         "ExtHostCommands",
         "$executeContributedCommand",
-        `List([`String(cmd)]),
+        `List([`String(cmd), ...arguments]),
       );
     };
   };

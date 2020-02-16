@@ -115,8 +115,11 @@ let start =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup, cliOptions);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  let (extHostUpdater, extHostStream) =
-    ExtensionClientStoreConnector.start(extensions, setup);
+  let (extHostClient, extHostStream) =
+    ExtensionClient.create(~extensions, ~setup);
+
+  let extHostUpdater =
+    ExtensionClientStoreConnector.start(extensions, extHostClient);
 
   let (quickmenuUpdater, quickmenuStream) =
     QuickmenuStoreConnector.start(themeInfo);
@@ -175,7 +178,7 @@ let start =
           completionUpdater,
           titleUpdater,
           sneakUpdater,
-          Features.update,
+          Features.update(extHostClient),
           contextMenuUpdater,
         ]),
       (),

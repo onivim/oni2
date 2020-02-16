@@ -1,9 +1,13 @@
 open Oni_Core;
+open Oni_Extensions;
 
 // MODEL
 
+[@deriving show]
+type command;
+
 module Resource: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     uri: Uri.t,
@@ -18,7 +22,7 @@ module Resource: {
 };
 
 module ResourceGroup: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -29,7 +33,7 @@ module ResourceGroup: {
 };
 
 module Provider: {
-  [@deriving show({with_path: false})]
+  [@deriving show]
   type t = {
     handle: int,
     id: string,
@@ -39,6 +43,7 @@ module Provider: {
     hasQuickDiffProvider: bool,
     count: int,
     commitTemplate: string,
+    acceptInputCommand: option(command),
   };
 };
 
@@ -51,7 +56,7 @@ let initial: model;
 
 module Effects: {
   let getOriginalUri:
-    (Oni_Extensions.ExtHostClient.t, model, string, Uri.t => 'msg) =>
+    (ExtHostClient.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -60,10 +65,17 @@ module Effects: {
 [@deriving show]
 type msg;
 
-let update: (msg, model) => (model, Isolinear.Effect.t(msg));
+module Msg: {let keyPressed: string => msg;};
+
+type outmsg =
+  | Effect(Isolinear.Effect.t(msg))
+  | Focus
+  | Nothing;
+
+let update: (ExtHostClient.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
-  (~dispatch: msg => unit, Oni_Extensions.SCM.msg) => unit;
+  (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;
 
 // VIEW
 
@@ -73,8 +85,10 @@ module Pane: {
       ~model: model,
       ~workingDirectory: option(string),
       ~onItemClick: Resource.t => unit,
+      ~isFocused: bool,
       ~theme: Theme.t,
       ~font: UiFont.t,
+      ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;

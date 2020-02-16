@@ -18,6 +18,8 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
 
+module SCM = ExtHostClient_SCM;
+
 type msg =
   | SCM(SCM.msg)
   | RegisterTextContentProvider({
@@ -251,8 +253,11 @@ let activateByEvent = (evt, client) => {
   ExtHostTransport.send(client, Out.ExtensionService.activateByEvent(evt));
 };
 
-let executeContributedCommand = (cmd, client) => {
-  ExtHostTransport.send(client, Out.Commands.executeContributedCommand(cmd));
+let executeContributedCommand = (~arguments=[], cmd, client) => {
+  ExtHostTransport.send(
+    client,
+    Out.Commands.executeContributedCommand(cmd, arguments),
+  );
 };
 
 let acceptWorkspaceData = (workspace: Workspace.t, client) => {
@@ -273,7 +278,7 @@ let addDocument = (doc, client) => {
   );
 };
 
-let updateDocument = (uri, modelChange, dirty, client) => {
+let updateDocument = (uri, modelChange, ~dirty, client) => {
   ExtHostTransport.send(
     client,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
@@ -430,3 +435,11 @@ let provideTextDocumentContent = (id, uri, client) => {
 let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);
+
+module Effects = {
+  let executeContributedCommand = (extHostClient, ~arguments=[], id) =>
+    Isolinear.Effect.create(
+      ~name="extHostClient.executeContributedCommand", () =>
+      executeContributedCommand(id, ~arguments, extHostClient)
+    );
+};

@@ -1,36 +1,49 @@
 open Oni_Core;
 open Utility;
 
+module InputModel = Oni_Components.InputModel;
+module ExtHostClient = Oni_Extensions.ExtHostClient;
+
 // MODEL
 
-module Resource = Oni_Extensions.SCM.Resource;
-module ResourceGroup = Oni_Extensions.SCM.ResourceGroup;
-module Provider = Oni_Extensions.SCM.Provider;
+[@deriving show]
+type command = ExtHostClient.SCM.command;
+
+module Resource = ExtHostClient.SCM.Resource;
+module ResourceGroup = ExtHostClient.SCM.ResourceGroup;
+module Provider = ExtHostClient.SCM.Provider;
 
 [@deriving show({with_path: false})]
-type model = {providers: list(Provider.t)};
+type model = {
+  providers: list(Provider.t),
+  inputBox,
+}
 
-let initial = {providers: []};
+and inputBox = {
+  value: string,
+  cursorPosition: int,
+  placeholder: string,
+};
+
+let initial = {
+  providers: [],
+  inputBox: {
+    value: "",
+    cursorPosition: 0,
+    placeholder: "Do the commit thing!",
+  },
+};
 
 // EFFECTS
 
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-      // Try our luck with every provider. If several returns Last-Writer-Wins
-      // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-      model.providers
-      |> List.iter((provider: Provider.t) => {
-           let promise =
-             Oni_Extensions.SCM.provideOriginalResource(
-               provider.handle,
-               Uri.fromPath(path),
-               extHostClient,
-             );
-
-           Lwt.on_success(promise, uri => dispatch(toMsg(uri)));
-         })
-    });
+    ExtHostClient.SCM.Effects.provideOriginalResource(
+      extHostClient,
+      model.providers,
+      path,
+      toMsg,
+    );
 };
 
 // UPDATE
@@ -72,12 +85,28 @@ type msg =
   | CommitTemplateChanged({
       handle: int,
       template: string,
-    });
+    })
+  | AcceptInputCommandChanged({
+      handle: int,
+      command,
+    })
+  | KeyPressed({key: string})
+  | InputBoxClicked({cursorPosition: int});
 
-let update = (action, model) =>
-  switch (action) {
+module Msg = {
+  let keyPressed = key => KeyPressed({key: key});
+};
+
+type outmsg =
+  | Effect(Isolinear.Effect.t(msg))
+  | Focus
+  | Nothing;
+
+let update = (extHostClient, model, msg) =>
+  switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
+        ...model,
         providers: [
           Provider.{
             handle,
@@ -88,26 +117,29 @@ let update = (action, model) =>
             hasQuickDiffProvider: false,
             count: 0,
             commitTemplate: "",
+            acceptInputCommand: None,
           },
           ...model.providers,
         ],
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | LostProvider({handle}) => (
       {
+        ...model,
         providers:
           List.filter(
             (it: Provider.t) => it.handle != handle,
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) =>
@@ -116,22 +148,24 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | CountChanged({handle, count}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) => it.handle == handle ? {...it, count} : it,
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | CommitTemplateChanged({handle, template}) => (
       {
+        ...model,
         providers:
           List.map(
             (it: Provider.t) =>
@@ -139,11 +173,26 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
+    )
+
+  | AcceptInputCommandChanged({handle, command}) => (
+      {
+        ...model,
+        providers:
+          List.map(
+            (it: Provider.t) =>
+              it.handle == handle
+                ? {...it, acceptInputCommand: Some(command)} : it,
+            model.providers,
+          ),
+      },
+      Nothing,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -165,11 +214,12 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | LostResourceGroup({provider, handle}) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -186,7 +236,7 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
     )
 
   | ResourceStatesChanged({
@@ -197,6 +247,7 @@ let update = (action, model) =>
       additions,
     }) => (
       {
+        ...model,
         providers:
           List.map(
             (p: Provider.t) =>
@@ -225,11 +276,73 @@ let update = (action, model) =>
             model.providers,
           ),
       },
-      Isolinear.Effect.none,
+      Nothing,
+    )
+
+  | KeyPressed({key: "<CR>"}) => (
+      model,
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               switch (provider.acceptInputCommand) {
+               | Some(command) =>
+                 ExtHostClient.Effects.executeContributedCommand(
+                   extHostClient,
+                   command.id,
+                   ~arguments=command.arguments,
+                 )
+               | None => Isolinear.Effect.none
+               }
+             ),
+        ),
+      ),
+    )
+
+  | KeyPressed({key}) =>
+    let (value, cursorPosition) =
+      InputModel.handleInput(
+        ~text=model.inputBox.value,
+        ~cursorPosition=model.inputBox.cursorPosition,
+        key,
+      );
+
+    (
+      {
+        ...model,
+        inputBox: {
+          ...model.inputBox,
+          value,
+          cursorPosition,
+        },
+      },
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map(provider =>
+               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+                 extHostClient,
+                 provider,
+                 value,
+               )
+             ),
+        ),
+      ),
+    );
+
+  | InputBoxClicked({cursorPosition}) => (
+      {
+        ...model,
+        inputBox: {
+          ...model.inputBox,
+          cursorPosition,
+        },
+      },
+      Focus,
     )
   };
 
-let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
+let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
   switch (msg) {
   | RegisterSourceControl({handle, id, label, rootUri}) =>
     dispatch(NewProvider({handle, id, label, rootUri}))
@@ -254,7 +367,13 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
       }),
     )
 
-  | UpdateSourceControl({handle, hasQuickDiffProvider, count, commitTemplate}) =>
+  | UpdateSourceControl({
+      handle,
+      hasQuickDiffProvider,
+      count,
+      commitTemplate,
+      acceptInputCommand,
+    }) =>
     Option.iter(
       available => dispatch(QuickDiffProviderChanged({handle, available})),
       hasQuickDiffProvider,
@@ -264,6 +383,10 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
       template => dispatch(CommitTemplateChanged({handle, template})),
       commitTemplate,
     );
+    Option.iter(
+      command => dispatch(AcceptInputCommandChanged({handle, command})),
+      acceptInputCommand,
+    );
   };
 
 // VIEW
@@ -271,6 +394,8 @@ let handleExtensionMessage = (~dispatch, msg: Oni_Extensions.SCM.msg) =>
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
+
+module Input = Oni_Components.Input;
 
 module Pane = {
   module Styles = {
@@ -284,6 +409,15 @@ module Pane = {
       color(theme.sideBarForeground),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
+    ];
+
+    let input = (~font: UiFont.t) => [
+      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
+      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
+      color(Colors.white),
+      fontFamily(font.fontFile),
+      fontSize(font.fontSize),
+      flexGrow(1),
     ];
 
     let group = [];
@@ -375,7 +509,17 @@ module Pane = {
     </View>;
   };
 
-  let make = (~model, ~workingDirectory, ~onItemClick, ~theme, ~font, ()) => {
+  let make =
+      (
+        ~model,
+        ~workingDirectory,
+        ~onItemClick,
+        ~isFocused,
+        ~theme,
+        ~font,
+        ~dispatch,
+        (),
+      ) => {
     let groups = {
       open Base.List.Let_syntax;
 
@@ -386,20 +530,27 @@ module Pane = {
     };
 
     <View style=Styles.container>
-      ...{
-           groups
-           |> List.map(((provider, group)) =>
-                <groupView
-                  provider
-                  group
-                  theme
-                  font
-                  workingDirectory
-                  onItemClick
-                />
-              )
-           |> React.listToElement
-         }
+      <Input
+        style={Styles.input(~font)}
+        cursorColor=Colors.gray
+        value={model.inputBox.value}
+        cursorPosition={model.inputBox.cursorPosition}
+        placeholder={model.inputBox.placeholder}
+        isFocused
+        onClick={pos => dispatch(InputBoxClicked({cursorPosition: pos}))}
+      />
+      {groups
+       |> List.map(((provider, group)) =>
+            <groupView
+              provider
+              group
+              theme
+              font
+              workingDirectory
+              onItemClick
+            />
+          )
+       |> React.listToElement}
     </View>;
   };
 };
