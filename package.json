@@ -257,7 +257,7 @@
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520"
   },
   "devDependencies": {
-    "ocaml": "~4.9",
+    "ocaml": "~4.8",
     "@opam/merlin": "~3.3.2",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
