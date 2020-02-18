@@ -28,7 +28,6 @@ type subscriptionParams('msg) = {
 module Subscription =
   Isolinear.Sub.Make({
     type msg = Model.Actions.t;
-    type model = Model.State.t;
 
     type params = subscriptionParams(msg);
 
@@ -53,15 +52,15 @@ module Subscription =
       client;
     };
 
-    let update = (~params, ~state, ~dispatch) => state;
+    let update = (~params as _, ~state, ~dispatch as _) => state;
 
-    let dispose = (~params, ~state) => {
+    let dispose = (~params as _, ~state) => {
       let () = Oni_Syntax_Client.close(state);
       ();
     };
   });
 
-let start = (languageInfo: Ext.LanguageInfo.t, setup: Core.Setup.t) => {
+let start = (languageInfo: Ext.LanguageInfo.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
     | None => [||]

@@ -108,8 +108,7 @@ let start =
       setClipboardText,
     );
 
-  let syntaxUpdater =
-    SyntaxHighlightingStoreConnector.start(languageInfo, setup);
+  let syntaxUpdater = SyntaxHighlightingStoreConnector.start(languageInfo);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =
@@ -210,10 +209,7 @@ let start =
   let _unsubscribe: unit => unit =
     Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
 
-  let rec dispatch = (action: Model.Actions.t) => {
-    let () = Store.dispatch(action);
-    ();
-  };
+  let dispatch = Store.dispatch;
 
   let _unsubscribe: unit => unit =
     Store.onAfterMsg((msg, model) => {
