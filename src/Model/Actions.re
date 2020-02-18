@@ -29,8 +29,6 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
-  | SyntaxHighlightingDisabled
-  | SyntaxHighlightingEnabled
   | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
   | Command(string)

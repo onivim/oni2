@@ -16,20 +16,20 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-type subscriptionParams('msg) = {
+type subscriptionParams = {
   id: string,
   languageInfo: Ext.LanguageInfo.t,
   setup: Core.Setup.t,
-  onStart: Oni_Syntax_Client.t => 'msg,
-  onClose: unit => 'msg,
-  onHighlights: list(Oni_Syntax.Protocol.TokenUpdate.t) => 'msg,
+  onStart: Oni_Syntax_Client.t => Model.Actions.t,
+  onClose: unit => Model.Actions.t,
+  onHighlights: list(Oni_Syntax.Protocol.TokenUpdate.t) => Model.Actions.t,
 };
 
 module Subscription =
   Isolinear.Sub.Make({
     type msg = Model.Actions.t;
 
-    type params = subscriptionParams(msg);
+    type params = subscriptionParams;
 
     type state = Oni_Syntax_Client.t;
 
@@ -75,20 +75,20 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
     };
   };
 
-  let bufferEnterEffect = (syntaxClientMaybe, id: int, fileType) =>
+  let bufferEnterEffect = (maybeSyntaxClient, id: int, fileType) =>
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       OptionEx.iter2(
         (syntaxClient, fileType) => {
           Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
         },
-        syntaxClientMaybe,
+        maybeSyntaxClient,
         fileType,
       )
     });
 
   let bufferUpdateEffect =
       (
-        syntaxClientMaybe,
+        maybeSyntaxClient,
         bufferUpdate: Oni_Core.BufferUpdate.t,
         lines,
         scopeMaybe,
@@ -103,32 +103,32 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
             scope,
           )
         },
-        syntaxClientMaybe,
+        maybeSyntaxClient,
         scopeMaybe,
       )
     });
 
   let configurationChangeEffect =
-      (syntaxClientMaybe, config: Core.Configuration.t) =>
+      (maybeSyntaxClient, config: Core.Configuration.t) =>
     Isolinear.Effect.create(~name="syntax.configurationChange", () => {
       Option.iter(
         syntaxClient =>
           Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config),
-        syntaxClientMaybe,
+        maybeSyntaxClient,
       )
     });
 
-  let themeChangeEffect = (syntaxClientMaybe, theme) =>
+  let themeChangeEffect = (maybeSyntaxClient, theme) =>
     Isolinear.Effect.create(~name="syntax.theme", () => {
       Option.iter(
         syntaxClient => {
           Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)
         },
-        syntaxClientMaybe,
+        maybeSyntaxClient,
       )
     });
 
-  let visibilityChangedEffect = (syntaxClientMaybe, visibleRanges) =>
+  let visibilityChangedEffect = (maybeSyntaxClient, visibleRanges) =>
     Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
       Option.iter(
         syntaxClient =>
@@ -136,7 +136,7 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
             syntaxClient,
             visibleRanges,
           ),
-        syntaxClientMaybe,
+        maybeSyntaxClient,
       )
     });
 
@@ -156,14 +156,6 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.SyntaxHighlightingEnabled => (
-        {...state, syntaxHighlightingEnabled: true},
-        Isolinear.Effect.none,
-      )
-    | Model.Actions.SyntaxHighlightingDisabled => (
-        {...state, syntaxHighlightingEnabled: false},
-        Isolinear.Effect.none,
-      )
     | Model.Actions.SyntaxServerClosed => (
         {...state, syntaxClient: None},
         Isolinear.Effect.none,
