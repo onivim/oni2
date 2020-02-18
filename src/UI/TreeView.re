@@ -292,7 +292,7 @@ module Make = (Model: TreeModel) => {
 
     <View
       style=Styles.container
-      onDimensionsChanged={({height}) => setMenuHeight(_ => height)}
+      onDimensionsChanged={({height, _}) => setMenuHeight(_ => height)}
       onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
