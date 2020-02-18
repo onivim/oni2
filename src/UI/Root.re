@@ -10,6 +10,7 @@ open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Tooltip = Oni_Components.Tooltip;
 
 module Styles = {
   open Style;
@@ -144,6 +145,7 @@ let make = (~state: State.t, ()) => {
        />;
      | None => React.empty
      }}
+    <Tooltip.Overlay theme font=uiFont />
     <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;

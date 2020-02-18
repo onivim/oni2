@@ -222,7 +222,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.updateDocument(
             Uri.fromPath("/root/test.txt"),
             modelChangedEvent,
-            true,
+            ~dirty=true,
             client,
           );
 

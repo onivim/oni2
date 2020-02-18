@@ -39,7 +39,9 @@ let animation =
   );
 
 let%component make = (~state: State.t, ()) => {
-  let State.{theme, sideBar, uiFont, _} = state;
+  [@warning "-27"]
+  let State.{theme, sideBar, uiFont: font, _} = state;
+
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
 
@@ -56,13 +58,35 @@ let%component make = (~state: State.t, ()) => {
   let elem =
     switch (sideBar.selected) {
     | FileExplorer => <FileExplorerView state />
-    | SCM => <SCMPane state />
+    | SCM =>
+      let onItemClick = (resource: Feature_SCM.Resource.t) =>
+        GlobalContext.current().dispatch(
+          Actions.OpenFileByPath(
+            Oni_Core.Uri.toFileSystemPath(resource.uri),
+            None,
+            None,
+          ),
+        );
+
+      let workingDirectory =
+        Option.map(w => w.Workspace.workingDirectory, state.workspace);
+
+      <Feature_SCM.Pane
+        model={state.scm}
+        workingDirectory
+        onItemClick
+        isFocused={FocusManager.current(state) == Focus.SCM}
+        theme
+        font
+        dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
+      />;
+
     | Extensions => <ExtensionListView state />
     };
 
   <View style={Styles.container(~bg, ~transition)}>
     <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font=uiFont)} />
+      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
     elem
   </View>;

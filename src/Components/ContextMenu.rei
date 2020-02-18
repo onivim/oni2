@@ -1,5 +1,4 @@
 open Oni_Core;
-
 open Revery.UI;
 
 [@deriving show]
@@ -21,7 +20,7 @@ module Overlay: {
       ~onItemSelect: item('data) => unit,
       unit
     ) =>
-    React.element(React.node);
+    element;
 };
 
 module Make:
@@ -43,6 +42,6 @@ module Make:
           ~onUpdate: t('data) => unit,
           unit
         ) =>
-        React.element(React.node);
+        element;
     };
   };

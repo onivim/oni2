@@ -224,7 +224,7 @@
     "@opam/decoders-yojson": "*"
   },
   "resolutions": {
-    "reason-jsonrpc": "github:bryphe/reason-jsonrpc#95f2427",
+    "reason-jsonrpc": "onivim/reason-jsonrpc#ebadf6d",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "3.5.2",
@@ -257,7 +257,7 @@
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520"
   },
   "devDependencies": {
-    "ocaml": "~4.9",
+    "ocaml": "~4.8",
     "@opam/merlin": "~3.3.2",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
