@@ -108,7 +108,7 @@ let start =
       setClipboardText,
     );
 
-  let (syntaxUpdater, syntaxStream) =
+  let syntaxUpdater =
     SyntaxHighlightingStoreConnector.start(languageInfo, setup);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
@@ -265,8 +265,6 @@ let start =
     Isolinear.Stream.connect(dispatch, vimStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, syntaxStream);
   let _: Isolinear.Stream.unsubscribeFunc =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
