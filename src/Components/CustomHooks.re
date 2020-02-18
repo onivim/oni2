@@ -38,8 +38,11 @@ let colorTransition =
 
 let useExpiration = (~equals=(==), ~expireAfter, items) => {
   let%hook (active, setActive) = Hooks.state([]);
-  let%hook (expired, setExpired) = Hooks.ref([]);
+  let%hook (expired) = Hooks.ref([]);
   let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
+
+  print_endline ("HI FROM USE EXPIRATION");
+  print_endline ("LENGTH: " ++ string_of_int(List.length(expired^)));
 
   let (stillActive, freshlyExpired) =
     List.partition(
@@ -50,10 +53,9 @@ let useExpiration = (~equals=(==), ~expireAfter, items) => {
   if (freshlyExpired != []) {
     setActive(_ => stillActive);
 
-    freshlyExpired
+    expired := freshlyExpired
     |> List.map(((item, _t)) => item)
-    |> List.rev_append(expired)
-    |> setExpired;
+    |> List.rev_append(expired^);
   };
 
   let%hook () =
@@ -62,7 +64,7 @@ let useExpiration = (~equals=(==), ~expireAfter, items) => {
       () => {
         let untracked =
           items
-          |> List.filter(item => !List.exists(equals(item), expired))
+          |> List.filter(item => !List.exists(equals(item), expired^))
           |> List.filter(item =>
                !List.exists(((it, _t)) => equals(it, item), active)
              );

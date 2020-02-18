@@ -240,9 +240,9 @@ module Make = (()) => {
           (),
         ) =>
       component(hooks => {
-        let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
+        let (maybeRef, hooks) = Hooks.ref(None, hooks);
 
-        switch (maybeModel, maybeRef) {
+        switch (maybeModel, maybeRef^) {
         | (Some(model), Some(node)) =>
           if (model.id == id) {
             let (x, y, width, _) =
@@ -270,7 +270,7 @@ module Make = (()) => {
         | _ => ()
         };
 
-        (<View ref={node => setRef(Some(node))} />, hooks);
+        (<View ref={node => maybeRef := (Some(node))} />, hooks);
       });
   };
 };

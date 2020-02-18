@@ -162,7 +162,7 @@ let%component make =
                 ~onSelectItem: item => unit,
                 (),
               ) => {
-  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+  let%hook (outerRef) = Hooks.ref(None);
   let%hook (hovered, setHovered) = Hooks.state(-1);
 
   let editorFont = {
@@ -175,7 +175,7 @@ let%component make =
   };
 
   let width =
-    outerRef
+    outerRef^
     |> Option.map(node => node#measurements().Dimensions.width)
     |> Option.value(
          ~default=
@@ -207,7 +207,7 @@ let%component make =
     rowHeight=20
     count={Array.length(items)}
     focused=None
-    ref={ref => setOuterRef(Some(ref))}>
+    ref={ref => outerRef := (Some(ref))}>
     ...renderItem
   </FlatList>;
 };
