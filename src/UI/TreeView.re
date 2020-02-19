@@ -165,7 +165,7 @@ module Make = (Model: TreeModel) => {
 
   let useScroll = (~itemHeight, ~count, ~viewportHeight, ~scrollOffset) => {
     // We need to keep the previous value to know which edge to align a revealed item to
-    let%hook (prevScrollTop) = Hooks.ref(0);
+    let%hook prevScrollTop = Hooks.ref(0);
     // The internal value is used if scrollOffset isn't being passed in
     let%hook (internalScrollTop, setInternalScrollTop) = Hooks.state(0);
 
