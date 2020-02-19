@@ -223,9 +223,13 @@ let start =
     | ("MainThreadSCM", method, args) =>
       SCM.handleMessage(~dispatch=msg => dispatch(SCM(msg)), method, args);
       Ok(None);
-    
+
     | ("MainThreadTerminalService", method, args) =>
-      Terminal.handleMessage(~dispatch=msg => dispatch(Terminal(msg)), method, args);
+      Terminal.handleMessage(
+        ~dispatch=msg => dispatch(Terminal(msg)),
+        method,
+        args,
+      );
       Ok(None);
 
     | (scope, method, argsAsJson) =>

@@ -303,7 +303,7 @@ let create = (~extensions, ~setup: Setup.t) => {
     | DecorationsDidChange({handle, uris}) =>
       dispatch(DecorationsChanged({handle, uris}))
     // TODO:
-    | Terminal(_) => ();
+    | Terminal(_) => ()
     };
 
   let onOutput = Log.info;
