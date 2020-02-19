@@ -8,7 +8,9 @@
 %left AND
 %nonassoc NOT
 
-%start <Expression.t> main
+%start <Types.expr> main
+
+%{ open Types %}
 
 %%
 
@@ -17,12 +19,12 @@ main:
 
 expr:
 | s = VAR
-    { Expression.Variable(s) }
+    { Variable(s) }
 | LPAREN e = expr RPAREN
     { e }
 | e1 = expr AND e2 = expr
-    { Expression.And(e1, e2) }
+    { And(e1, e2) }
 | e1 = expr OR e2 = expr
-    { Expression.Or(e1, e2) }
+    { Or(e1, e2) }
 | NOT e = expr %prec NOT
-    { Expression.Not(e) }
+    { Not(e) }

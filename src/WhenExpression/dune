@@ -7,6 +7,5 @@
 (library
     (name WhenExpression)
     (public_name Oni2.whenExpression)
-    (libraries 
-        Oni2.core
-    ))
+    (modules_without_implementation types)
+    (libraries  Oni2.core))
