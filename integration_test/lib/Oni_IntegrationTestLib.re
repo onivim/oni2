@@ -113,7 +113,7 @@ let runTest =
 
   InitLog.info("Sending init event");
 
-  dispatch(Model.Actions.Init);
+  dispatch(Model.Actions.Init({syntaxHighlightingEnabled: true}));
 
   let wrappedRunEffects = () => {
     runEffects();
