@@ -1,6 +1,7 @@
 module Core = Oni_Core;
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
+module Terminal = ExtHostClient_Terminal;
 
 type t;
 
@@ -110,6 +111,7 @@ module SCM: {
 
 type msg =
   | SCM(SCM.msg)
+  | Terminal(Terminal.msg)
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
