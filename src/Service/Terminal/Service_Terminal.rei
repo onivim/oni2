@@ -21,5 +21,5 @@ module Sub: {
 };
 
 module Effect: {
-  let input: (~id: int, ~input: string) => Isolinear.Effect.t(Msg.t);
+  let input: (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(Msg.t);
 };

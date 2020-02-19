@@ -11,5 +11,5 @@ module Sub = {
 };
 
 module Effect = {
-  let input = (~id, ~input) => Isolinear.Effect.none;
+  let input = (~id, ~input, extHostClient) => Isolinear.Effect.none;
 };
