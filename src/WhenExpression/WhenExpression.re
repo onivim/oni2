@@ -1,19 +1,9 @@
 module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpression"));
 
+[@deriving show]
 type t =
   Types.expr =
     | Variable(string) | And(t, t) | Or(t, t) | Not(t) | True | False;
-
-let rec toString = (v: t) =>
-  switch (v) {
-  | Variable(s) => Printf.sprintf("Variable(%s)", s)
-  | And(v1, v2) =>
-    Printf.sprintf("And(%s, %s)", toString(v1), toString(v2))
-  | Or(v1, v2) => Printf.sprintf("Or(%s, %s)", toString(v1), toString(v2))
-  | Not(v) => "!" ++ toString(v)
-  | True => "true"
-  | False => "false"
-  };
 
 let of_list_or = items => {
   let rec build = (list, accum) => {
@@ -39,7 +29,7 @@ let evaluate = (v: t, getValue) => {
   let ret = eval(v);
 
   Log.tracef(m =>
-    m("Expression %s evaluated to: %s", toString(v), ret ? "true" : "false")
+    m("Expression %s evaluated to: %s", show(v), ret ? "true" : "false")
   );
 
   ret;

@@ -8,4 +8,5 @@
     (name WhenExpression)
     (public_name Oni2.whenExpression)
     (modules_without_implementation types)
-    (libraries  Oni2.core))
+    (preprocess (pps ppx_deriving.show))
+    (libraries Oni2.core))
