@@ -241,7 +241,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#a1e3540",
+    "revery": "revery-ui/revery#a525e7f",
     "reason-libvim": "onivim/reason-libvim#1daf653",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",

@@ -133,8 +133,8 @@ let%component make =
                 ~onClick,
                 (),
               ) => {
-  let%hook (textRef) = Hooks.ref(None);
-  let%hook (scrollOffset) = Hooks.ref(0);
+  let%hook textRef = Hooks.ref(None);
+  let%hook scrollOffset = Hooks.ref(0);
 
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
@@ -293,7 +293,7 @@ let%component make =
 
   let text = () =>
     <Text
-      ref={node => textRef := (Some(node))}
+      ref={node => textRef := Some(node)}
       text={showPlaceholder ? placeholder : displayValue}
       style=Styles.text
     />;

@@ -94,7 +94,7 @@ let%component make =
                 ~ref as onRef=_ => (),
                 (),
               ) => {
-  let%hook (outerRef) = Hooks.ref(None);
+  let%hook outerRef = Hooks.ref(None);
   let setOuterRef = ref => {
     outerRef := Some(ref);
     onRef(ref);

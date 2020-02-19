@@ -71,7 +71,7 @@ let%component make =
                 ~bufferWidthInCharacters,
                 (),
               ) => {
-  let%hook (elementRef) = React.Hooks.ref(None);
+  let%hook elementRef = React.Hooks.ref(None);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let indentation =
@@ -120,7 +120,7 @@ let%component make =
   };
 
   <View
-    ref={node => elementRef := (Some(node))}
+    ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
       float(metrics.pixelWidth) -. gutterWidth,

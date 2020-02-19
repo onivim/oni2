@@ -270,7 +270,7 @@ module Make = (()) => {
         | _ => ()
         };
 
-        (<View ref={node => maybeRef := (Some(node))} />, hooks);
+        (<View ref={node => maybeRef := Some(node)} />, hooks);
       });
   };
 };
