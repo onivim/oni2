@@ -18,7 +18,7 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
-  | Init
+  | Init([@opaque] Cli.t)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)

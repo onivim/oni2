@@ -269,10 +269,6 @@ let start =
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
-  if (cliOptions.shouldSyntaxHighlight) {
-    dispatch(Model.Actions.SyntaxHighlightingEnabled);
-  };
-
   /* Set icon theme */
 
   let setIconTheme = s => {
